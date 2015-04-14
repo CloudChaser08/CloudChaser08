@@ -1,2 +1,2 @@
 
-DROP TABLE ndc_product;
+DROP TABLE ndc_package;
