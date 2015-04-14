@@ -6,6 +6,5 @@ CREATE TABLE place_of_service (
   pos_type  VARCHAR(64),
   description VARCHAR(1024),
   start_date DATE,
-  end_date DATE,
-  other VARCHAR(32)
+  end_date DATE
 );
