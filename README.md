@@ -4,10 +4,10 @@ Reference Data Import Routines
 ## Data Types
 
 ### HCPCS
-Table I use to look up the description of the procedure code- in this case specifically HCPCS codes
-HCPCS are alphanumeric codes
 
-Pronounced “hick picks”
+This is used to look up the description of procedure codes, in this case specifically HCPCS codes. HCPCS are alphanumeric codes.
+
+Pronounced "hick picks."
 
 ### ICD9 (CMS32_*)
 
