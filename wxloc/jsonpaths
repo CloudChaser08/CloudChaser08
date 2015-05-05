@@ -1,0 +1,29 @@
+{
+  "jsonpaths": [
+    "$['devicedata']['model']",
+    "$['devicedata']['appVersion']",
+    "$['devicedata']['os']",
+    "$['devicedata']['sdk']",
+    "$['devicedata']['brand']",
+    "$['devicedata']['formFactor']",
+    "$['devicedata']['manufacturer']",
+    "$['devicedata']['product']",
+    "$['factualid']",
+    "$['wxdid']",
+    "$['pressure']",
+    "$['adid']",
+    "$['timestamp']",
+    "$['tags']",
+    "$['accuracy']",
+    "$['tz']",
+    "$['fixtype']",
+    "$['dma']",
+    "$['version']",
+    "$['postalcode']",
+    "$['profileid']",
+    "$['lon']",
+    "$['platform']",
+    "$['lat']",
+    "$['eventid']"
+  ]
+}
