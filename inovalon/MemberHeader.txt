@@ -1,0 +1,1 @@
+MemberUID	BirthYear	GenderCode	StateCode	Zip3Value	RaceEthnicityTypeCode

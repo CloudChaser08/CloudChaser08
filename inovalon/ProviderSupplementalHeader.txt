@@ -1,0 +1,1 @@
+ProviderUID	NamePrefix	Name	NameSuffix	Address1	Address2	City	State	Zip	Phone	Fax	DEANumber	NPINumber
