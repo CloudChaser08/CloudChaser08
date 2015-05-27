@@ -1,1 +1,0 @@
-MemberUID	EffectiveDate	TerminationDate	PayerGroupCode	PayerTypeCode	ProductCode	MedicalInd	RxInd	SourceID

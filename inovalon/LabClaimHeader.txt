@@ -1,1 +1,0 @@
-LabClaimUID	MemberUID	ProviderUID	ClaimStatusCode	ServiceDate	CPTCode	LOINCCode	ResultNumber	ResultText	PosNegResultInd	UnitName

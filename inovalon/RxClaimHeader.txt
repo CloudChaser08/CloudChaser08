@@ -1,1 +1,0 @@
-RxClaimUID	MemberUID	ProviderUID	ClaimStatusCode	FillDate	NDC11Code	SupplyDaysCount	DispensedQuantity	BilledAmount	AllowedAmount	CopayAmount	PaidAmount	CostAmount

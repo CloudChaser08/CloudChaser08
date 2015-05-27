@@ -1,1 +1,0 @@
-ClaimUID	MemberUID	ProviderUID	ClaimStatusCode	ServiceDate	ServiceThruDate	UBPatientDischargeStatusCode	ServiceUnitQuantity	DeniedDaysCount	BilledAmount	AllowedAmount	CopayAmount	PaidAmount	CostAmount	RxProviderInd	PCPProviderInd	RoomBoardInd	MajorSurgeryInd	ExcludeDischargeInd
