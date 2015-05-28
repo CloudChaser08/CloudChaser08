@@ -1,6 +1,8 @@
 
-COPY weather_pings FROM 's3://healthverity/incoming/weatherchannel' 
+COPY weather_pings FROM 's3://salusv/provider/weatherchannel/2015/03'
 WITH CREDENTIALS :'AWS_CREDENTIALS'
 JSON as 's3://vhxwdata/jsonpaths'
 TIMEFORMAT AS 'epochmillisecs'
-ROUNDEC;
+ROUNDEC
+COMPUPDATE ON
+GZIP;

@@ -2,7 +2,7 @@
 CREATE TABLE weather_pings (
   dev_model             VARCHAR(64),
   dev_appver            VARCHAR(8),
-  dev_os                VARCHAR(70),
+  dev_os                VARCHAR(100),
   dev_sdk               VARCHAR(8),
   dev_brand             VARCHAR(32),
   dev_formfactor        VARCHAR(8),
@@ -12,7 +12,7 @@ CREATE TABLE weather_pings (
   wxdid                 VARCHAR(42),
   pressure              VARCHAR(32),
   adid                  VARCHAR(40),
-  timestamp             TIMESTAMP,
+  timestamp             TIMESTAMP sortkey,
   tags                  VARCHAR(40),
   accuracy              DECIMAL(18,4),
   tz                    INT2,
@@ -21,8 +21,8 @@ CREATE TABLE weather_pings (
   version               INT2,
   postalcode            CHAR(8),
   profileid             VARCHAR(64),
-  lon                   DECIMAL(12,10),
+  lon                   DECIMAL(14,10),
   platform              VARCHAR(12),
-  lat                   DECIMAL(12,10),
+  lat                   DECIMAL(14,10),
   eventid               VARCHAR(36)
 );
