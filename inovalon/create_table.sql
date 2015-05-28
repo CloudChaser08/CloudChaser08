@@ -1,10 +1,10 @@
 
 CREATE TABLE inovalon_claim_raw (
-  claim_uid                               CHAR(11),
+  claim_uid                               CHAR(11) distkey,
   member_uid                              VARCHAR(10),
   provider_uid                            VARCHAR(10),
   claim_status_code                       VARCHAR(1),
-  service_date                            DATE,
+  service_date                            DATE sortkey,
   service_thru_date                       DATE,
   ub_patient_discharge_status_code        CHAR(2),
   service_unit_quantity                   INTEGER,
@@ -23,9 +23,9 @@ CREATE TABLE inovalon_claim_raw (
 
 
 CREATE TABLE inovalon_claim_code_raw (
-  claim_uid                             CHAR(11),
+  claim_uid                             CHAR(11) distkey,
   member_uid                            VARCHAR(10),
-  service_date                          DATE,
+  service_date                          DATE sortkey,
   service_thru_date                     DATE,
   code_type                             VARCHAR(64),
   ordinal_position                      VARCHAR(64),
