@@ -12,7 +12,7 @@ CREATE TABLE weather_pings (
   wxdid                 VARCHAR(42),
   pressure              VARCHAR(32),
   adid                  VARCHAR(40),
-  timestamp             TIMESTAMP sortkey,
+  timestamp             TIMESTAMP,
   tags                  VARCHAR(40),
   accuracy              DECIMAL(18,4),
   tz                    INT2,
@@ -25,4 +25,5 @@ CREATE TABLE weather_pings (
   platform              VARCHAR(12),
   lat                   DECIMAL(14,10),
   eventid               VARCHAR(36)
-);
+)
+SORTKEY(timestamp, lat, lon);
