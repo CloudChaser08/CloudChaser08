@@ -4,7 +4,7 @@ CREATE TABLE inovalon_claim_raw (
   member_uid                              VARCHAR(10),
   provider_uid                            VARCHAR(10),
   claim_status_code                       VARCHAR(1),
-  service_date                            DATE sortkey,
+  service_date                            DATE,
   service_thru_date                       DATE,
   ub_patient_discharge_status_code        CHAR(2),
   service_unit_quantity                   INTEGER,
@@ -19,19 +19,21 @@ CREATE TABLE inovalon_claim_raw (
   room_board                              BOOLEAN,
   major_surgery                           BOOLEAN,
   exclude_discharge                       BOOLEAN
-);
+)
+SORTKEY (service_date, service_thru_date);
 
 
 CREATE TABLE inovalon_claim_code_raw (
   claim_uid                             CHAR(11) distkey,
   member_uid                            VARCHAR(10),
-  service_date                          DATE sortkey,
+  service_date                          DATE,
   service_thru_date                     DATE,
   code_type                             VARCHAR(64),
   ordinal_position                      VARCHAR(64),
   code_value                            VARCHAR(64),
   derived                               BOOLEAN
-);
+)
+SORTKEY (service_date, service_thru_date, code_type, code_value);
 
 CREATE TABLE inovalon_claim_code (
   claim_uid                             CHAR(11),
@@ -119,7 +121,7 @@ CREATE TABLE inovalon_provider (
 
 
 CREATE TABLE inovalon_rxclaim (
-  claim_uid                             CHAR(11),
+  claim_uid                             CHAR(11) distkey,
   member_uid                            VARCHAR(10),
   provider_uid                          VARCHAR(10),
   claim_status_code                     VARCHAR(1),
@@ -132,7 +134,8 @@ CREATE TABLE inovalon_rxclaim (
   copay_amount                          NUMERIC(19,4),
   paid_amount                           NUMERIC(19,4),
   cost_amount                           NUMERIC(19,4)
-);
+)
+SORTKEY(fill_date);
 
 CREATE TABLE inovalon_provider_supplemental (
   provider_uid                          VARCHAR(10),
