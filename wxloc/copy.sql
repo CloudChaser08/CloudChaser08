@@ -5,5 +5,5 @@ JSON as 's3://vhxwdata/jsonpaths'
 TIMEFORMAT AS 'epochmillisecs'
 ROUNDEC
 COMPUPDATE ON
-MAXERROR 20
+MAXERROR 5000
 GZIP;
