@@ -1,8 +1,8 @@
 CREATE TABLE tmobile_pings (
-  created               TIMESTAMP,
-  msisdn                CHAR(64) distkey,
-  lat                   DECIMAL(14,10),
-  lon                   DECIMAL(14,10),
-  cellname              VARCHAR(32)
+  created               TIMESTAMP encode lzo,
+  msisdn                CHAR(64) distkey encode lzo,
+  lat                   DECIMAL(14,10) encode lzo,
+  lon                   DECIMAL(14,10) encode lzo,
+  cellname              VARCHAR(32) encode lzo
 )
 SORTKEY(created, lat, lon);
