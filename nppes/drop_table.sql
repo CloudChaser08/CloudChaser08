@@ -1,2 +1,2 @@
 
-DROP TABLE cpt_codes;
+DROP TABLE nppes;

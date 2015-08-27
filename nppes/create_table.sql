@@ -1,6 +1,6 @@
 
 
-CREATE TABLE cpt_codes (
+CREATE TABLE nppes (
   code VARCHAR(6),
   short_description VARCHAR(32),
   long_description VARCHAR
