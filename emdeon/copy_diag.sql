@@ -1,0 +1,8 @@
+
+COPY emdeon_diag FROM 's3://healthveritydev/emdeonTransactions8/diag.out'
+WITH CREDENTIALS :'AWS_CREDENTIALS'
+DATEFORMAT 'YYYYMMDD'
+ACCEPTANYDATE
+DELIMITER '|'
+MAXERROR 50
+COMPUPDATE ON;
