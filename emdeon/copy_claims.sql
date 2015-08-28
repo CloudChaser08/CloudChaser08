@@ -1,0 +1,7 @@
+
+COPY emdeon_claim FROM 's3://healthveritydev/emdeonTransactions8/claims.out'
+WITH CREDENTIALS :'AWS_CREDENTIALS'
+DATEFORMAT 'YYYYMMDD'
+DELIMITER '|'
+MAXERROR 50
+COMPUPDATE ON;
