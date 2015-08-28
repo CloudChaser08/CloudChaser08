@@ -1,299 +1,332 @@
 
-
 CREATE TABLE nppes (
-  code VARCHAR(6),
-  short_description VARCHAR(32),
-  long_description VARCHAR
+  npi INT distkey,
+  entity_type CHAR(1),
+  replacement_npi INT,
+  ein VARCHAR(9),
+  org_name VARCHAR(70),
+  last_name VARCHAR(35),
+  first_name VARCHAR(20),
+  middle_name VARCHAR(20),
+  name_prefix VARCHAR(5),
+  name_suffix VARCHAR(5),
+  credential VARCHAR(20),
+  oth_org_name VARCHAR(70),
+  oth_org_name_type VARCHAR(1),
+  oth_last_name VARCHAR(35),
+  oth_first_name VARCHAR(20),
+  oth_middle_name VARCHAR(20),
+  oth_name_prefix VARCHAR(5),
+  oth_name_suffix VARCHAR(5),
+  oth_credential VARCHAR(20),
+  oth_last_name_type char(1),
+  mail_address1 VARCHAR(55),
+  mail_address2 VARCHAR(55),
+  mail_city VARCHAR(40),
+  mail_state VARCHAR(40),
+  mail_postal VARCHAR(20),
+  mail_country VARCHAR(2),
+  mail_phone VARCHAR(20),
+  mail_fax VARCHAR(20),
+  practice_address1 VARCHAR(55),
+  practice_address2 VARCHAR(55),
+  practice_city VARCHAR(40),
+  practice_state VARCHAR(40),
+  practice_postal VARCHAR(20),
+  practice_country VARCHAR(2),
+  practice_phone VARCHAR(20),
+  practice_fax VARCHAR(20),
+  enumeration_date DATE,
+  update_date DATE,
+  npi_deactivation_readon varchar(2),
+  npi_deactivation_date DATE,
+  npi_reactivation_date DATE,
+  gender VARCHAR(1),
+  authorized_official_last VARCHAR(35),
+  authorized_official_first VARCHAR(20),
+  authorized_official_middle VARCHAR(20),
+  authorized_official_title VARCHAR(35),
+  authorized_official_phone VARCHAR(20),
+  taxonomy_code_1 VARCHAR(10),
+  license_number_1 VARCHAR(20),
+  license_number_state_code_1 VARCHAR(2),
+  primary_taxonomy_switch_1 CHAR(1),
+  taxonomy_code_2 VARCHAR(10),
+  license_number_2 VARCHAR(20),
+  license_number_state_code_2 VARCHAR(2),
+  primary_taxonomy_switch_2 CHAR(1),
+  taxonomy_code_3 VARCHAR(10),
+  license_number_3 VARCHAR(20),
+  license_number_state_code_3 VARCHAR(2),
+  primary_taxonomy_switch_3 CHAR(1),
+  taxonomy_code_4 VARCHAR(10),
+  license_number_4 VARCHAR(20),
+  license_number_state_code_4 VARCHAR(2),
+  primary_taxonomy_switch_4 CHAR(1),
+  taxonomy_code_5 VARCHAR(10),
+  license_number_5 VARCHAR(20),
+  license_number_state_code_5 VARCHAR(2),
+  primary_taxonomy_switch_5 CHAR(1),
+  taxonomy_code_6 VARCHAR(10),
+  license_number_6 VARCHAR(20),
+  license_number_state_code_6 VARCHAR(2),
+  primary_taxonomy_switch_6 CHAR(1),
+  taxonomy_code_7 VARCHAR(10),
+  license_number_7 VARCHAR(20),
+  license_number_state_code_7 VARCHAR(2),
+  primary_taxonomy_switch_7 CHAR(1),
+  taxonomy_code_8 VARCHAR(10),
+  license_number_8 VARCHAR(20),
+  license_number_state_code_8 VARCHAR(2),
+  primary_taxonomy_switch_8 CHAR(1),
+  taxonomy_code_9 VARCHAR(10),
+  license_number_9 VARCHAR(20),
+  license_number_state_code_9 VARCHAR(2),
+  primary_taxonomy_switch_9 CHAR(1),
+  taxonomy_code_10 VARCHAR(10),
+  license_number_10 VARCHAR(20),
+  license_number_state_code_10 VARCHAR(2),
+  primary_taxonomy_switch_10 CHAR(1),
+  taxonomy_code_11 VARCHAR(10),
+  license_number_11 VARCHAR(20),
+  license_number_state_code_11 VARCHAR(2),
+  primary_taxonomy_switch_11 CHAR(1),
+  taxonomy_code_12 VARCHAR(10),
+  license_number_12 VARCHAR(20),
+  license_number_state_code_12 VARCHAR(2),
+  primary_taxonomy_switch_12 CHAR(1),
+  taxonomy_code_13 VARCHAR(10),
+  license_number_13 VARCHAR(20),
+  license_number_state_code_13 VARCHAR(2),
+  primary_taxonomy_switch_13 CHAR(1),
+  taxonomy_code_14 VARCHAR(10),
+  license_number_14 VARCHAR(20),
+  license_number_state_code_14 VARCHAR(2),
+  primary_taxonomy_switch_14 CHAR(1),
+  taxonomy_code_15 VARCHAR(10),
+  license_number_15 VARCHAR(20),
+  license_number_state_code_15 VARCHAR(2),
+  primary_taxonomy_switch_15 CHAR(1),
+  oth_id_1 VARCHAR(20),
+  oth_id_type_code_1 VARCHAR(2),
+  oth_id_state_1 VARCHAR(2),
+  oth_id_issuer_1 VARCHAR(80),
+  oth_id_2 VARCHAR(20),
+  oth_id_type_code_2 VARCHAR(2),
+  oth_id_state_2 VARCHAR(2),
+  oth_id_issuer_2 VARCHAR(80),
+  oth_id_3 VARCHAR(20),
+  oth_id_type_code_3 VARCHAR(2),
+  oth_id_state_3 VARCHAR(2),
+  oth_id_issuer_3 VARCHAR(80),
+  oth_id_4 VARCHAR(20),
+  oth_id_type_code_4 VARCHAR(2),
+  oth_id_state_4 VARCHAR(2),
+  oth_id_issuer_4 VARCHAR(80),
+  oth_id_5 VARCHAR(20),
+  oth_id_type_code_5 VARCHAR(2),
+  oth_id_state_5 VARCHAR(2),
+  oth_id_issuer_5 VARCHAR(80),
+  oth_id_6 VARCHAR(20),
+  oth_id_type_code_6 VARCHAR(2),
+  oth_id_state_6 VARCHAR(2),
+  oth_id_issuer_6 VARCHAR(80),
+  oth_id_7 VARCHAR(20),
+  oth_id_type_code_7 VARCHAR(2),
+  oth_id_state_7 VARCHAR(2),
+  oth_id_issuer_7 VARCHAR(80),
+  oth_id_8 VARCHAR(20),
+  oth_id_type_code_8 VARCHAR(2),
+  oth_id_state_8 VARCHAR(2),
+  oth_id_issuer_8 VARCHAR(80),
+  oth_id_9 VARCHAR(20),
+  oth_id_type_code_9 VARCHAR(2),
+  oth_id_state_9 VARCHAR(2),
+  oth_id_issuer_9 VARCHAR(80),
+  oth_id_10 VARCHAR(20),
+  oth_id_type_code_10 VARCHAR(2),
+  oth_id_state_10 VARCHAR(2),
+  oth_id_issuer_10 VARCHAR(80),
+  oth_id_11 VARCHAR(20),
+  oth_id_type_code_11 VARCHAR(2),
+  oth_id_state_11 VARCHAR(2),
+  oth_id_issuer_11 VARCHAR(80),
+  oth_id_12 VARCHAR(20),
+  oth_id_type_code_12 VARCHAR(2),
+  oth_id_state_12 VARCHAR(2),
+  oth_id_issuer_12 VARCHAR(80),
+  oth_id_13 VARCHAR(20),
+  oth_id_type_code_13 VARCHAR(2),
+  oth_id_state_13 VARCHAR(2),
+  oth_id_issuer_13 VARCHAR(80),
+  oth_id_14 VARCHAR(20),
+  oth_id_type_code_14 VARCHAR(2),
+  oth_id_state_14 VARCHAR(2),
+  oth_id_issuer_14 VARCHAR(80),
+  oth_id_15 VARCHAR(20),
+  oth_id_type_code_15 VARCHAR(2),
+  oth_id_state_15 VARCHAR(2),
+  oth_id_issuer_15 VARCHAR(80),
+  oth_id_16 VARCHAR(20),
+  oth_id_type_code_16 VARCHAR(2),
+  oth_id_state_16 VARCHAR(2),
+  oth_id_issuer_16 VARCHAR(80),
+  oth_id_17 VARCHAR(20),
+  oth_id_type_code_17 VARCHAR(2),
+  oth_id_state_17 VARCHAR(2),
+  oth_id_issuer_17 VARCHAR(80),
+  oth_id_18 VARCHAR(20),
+  oth_id_type_code_18 VARCHAR(2),
+  oth_id_state_18 VARCHAR(2),
+  oth_id_issuer_18 VARCHAR(80),
+  oth_id_19 VARCHAR(20),
+  oth_id_type_code_19 VARCHAR(2),
+  oth_id_state_19 VARCHAR(2),
+  oth_id_issuer_19 VARCHAR(80),
+  oth_id_20 VARCHAR(20),
+  oth_id_type_code_20 VARCHAR(2),
+  oth_id_state_20 VARCHAR(2),
+  oth_id_issuer_20 VARCHAR(80),
+  oth_id_21 VARCHAR(20),
+  oth_id_type_code_21 VARCHAR(2),
+  oth_id_state_21 VARCHAR(2),
+  oth_id_issuer_21 VARCHAR(80),
+  oth_id_22 VARCHAR(20),
+  oth_id_type_code_22 VARCHAR(2),
+  oth_id_state_22 VARCHAR(2),
+  oth_id_issuer_22 VARCHAR(80),
+  oth_id_23 VARCHAR(20),
+  oth_id_type_code_23 VARCHAR(2),
+  oth_id_state_23 VARCHAR(2),
+  oth_id_issuer_23 VARCHAR(80),
+  oth_id_24 VARCHAR(20),
+  oth_id_type_code_24 VARCHAR(2),
+  oth_id_state_24 VARCHAR(2),
+  oth_id_issuer_24 VARCHAR(80),
+  oth_id_25 VARCHAR(20),
+  oth_id_type_code_25 VARCHAR(2),
+  oth_id_state_25 VARCHAR(2),
+  oth_id_issuer_25 VARCHAR(80),
+  oth_id_26 VARCHAR(20),
+  oth_id_type_code_26 VARCHAR(2),
+  oth_id_state_26 VARCHAR(2),
+  oth_id_issuer_26 VARCHAR(80),
+  oth_id_27 VARCHAR(20),
+  oth_id_type_code_27 VARCHAR(2),
+  oth_id_state_27 VARCHAR(2),
+  oth_id_issuer_27 VARCHAR(80),
+  oth_id_28 VARCHAR(20),
+  oth_id_type_code_28 VARCHAR(2),
+  oth_id_state_28 VARCHAR(2),
+  oth_id_issuer_28 VARCHAR(80),
+  oth_id_29 VARCHAR(20),
+  oth_id_type_code_29 VARCHAR(2),
+  oth_id_state_29 VARCHAR(2),
+  oth_id_issuer_29 VARCHAR(80),
+  oth_id_30 VARCHAR(20),
+  oth_id_type_code_30 VARCHAR(2),
+  oth_id_state_30 VARCHAR(2),
+  oth_id_issuer_30 VARCHAR(80),
+  oth_id_31 VARCHAR(20),
+  oth_id_type_code_31 VARCHAR(2),
+  oth_id_state_31 VARCHAR(2),
+  oth_id_issuer_31 VARCHAR(80),
+  oth_id_32 VARCHAR(20),
+  oth_id_type_code_32 VARCHAR(2),
+  oth_id_state_32 VARCHAR(2),
+  oth_id_issuer_32 VARCHAR(80),
+  oth_id_33 VARCHAR(20),
+  oth_id_type_code_33 VARCHAR(2),
+  oth_id_state_33 VARCHAR(2),
+  oth_id_issuer_33 VARCHAR(80),
+  oth_id_34 VARCHAR(20),
+  oth_id_type_code_34 VARCHAR(2),
+  oth_id_state_34 VARCHAR(2),
+  oth_id_issuer_34 VARCHAR(80),
+  oth_id_35 VARCHAR(20),
+  oth_id_type_code_35 VARCHAR(2),
+  oth_id_state_35 VARCHAR(2),
+  oth_id_issuer_35 VARCHAR(80),
+  oth_id_36 VARCHAR(20),
+  oth_id_type_code_36 VARCHAR(2),
+  oth_id_state_36 VARCHAR(2),
+  oth_id_issuer_36 VARCHAR(80),
+  oth_id_37 VARCHAR(20),
+  oth_id_type_code_37 VARCHAR(2),
+  oth_id_state_37 VARCHAR(2),
+  oth_id_issuer_37 VARCHAR(80),
+  oth_id_38 VARCHAR(20),
+  oth_id_type_code_38 VARCHAR(2),
+  oth_id_state_38 VARCHAR(2),
+  oth_id_issuer_38 VARCHAR(80),
+  oth_id_39 VARCHAR(20),
+  oth_id_type_code_39 VARCHAR(2),
+  oth_id_state_39 VARCHAR(2),
+  oth_id_issuer_39 VARCHAR(80),
+  oth_id_40 VARCHAR(20),
+  oth_id_type_code_40 VARCHAR(2),
+  oth_id_state_40 VARCHAR(2),
+  oth_id_issuer_40 VARCHAR(80),
+  oth_id_41 VARCHAR(20),
+  oth_id_type_code_41 VARCHAR(2),
+  oth_id_state_41 VARCHAR(2),
+  oth_id_issuer_41 VARCHAR(80),
+  oth_id_42 VARCHAR(20),
+  oth_id_type_code_42 VARCHAR(2),
+  oth_id_state_42 VARCHAR(2),
+  oth_id_issuer_42 VARCHAR(80),
+  oth_id_43 VARCHAR(20),
+  oth_id_type_code_43 VARCHAR(2),
+  oth_id_state_43 VARCHAR(2),
+  oth_id_issuer_43 VARCHAR(80),
+  oth_id_44 VARCHAR(20),
+  oth_id_type_code_44 VARCHAR(2),
+  oth_id_state_44 VARCHAR(2),
+  oth_id_issuer_44 VARCHAR(80),
+  oth_id_45 VARCHAR(20),
+  oth_id_type_code_45 VARCHAR(2),
+  oth_id_state_45 VARCHAR(2),
+  oth_id_issuer_45 VARCHAR(80),
+  oth_id_46 VARCHAR(20),
+  oth_id_type_code_46 VARCHAR(2),
+  oth_id_state_46 VARCHAR(2),
+  oth_id_issuer_46 VARCHAR(80),
+  oth_id_47 VARCHAR(20),
+  oth_id_type_code_47 VARCHAR(2),
+  oth_id_state_47 VARCHAR(2),
+  oth_id_issuer_47 VARCHAR(80),
+  oth_id_48 VARCHAR(20),
+  oth_id_type_code_48 VARCHAR(2),
+  oth_id_state_48 VARCHAR(2),
+  oth_id_issuer_48 VARCHAR(80),
+  oth_id_49 VARCHAR(20),
+  oth_id_type_code_49 VARCHAR(2),
+  oth_id_state_49 VARCHAR(2),
+  oth_id_issuer_49 VARCHAR(80),
+  oth_id_50 VARCHAR(20),
+  oth_id_type_code_50 VARCHAR(2),
+  oth_id_state_50 VARCHAR(2),
+  oth_id_issuer_50 VARCHAR(80),
+  is_sole_proprietor CHAR(1),
+  is_org_subpart CHAR(1),
+  parent_org_lbn VARCHAR(70),
+  parent_org_tin VARCHAR(9),
+  authorized_official_prefix VARCHAR(5),
+  authorized_official_suffix VARCHAR(5),
+  authorized_official_credential VARCHAR(20),
+  taxonomy_group_1 VARCHAR(70),
+  taxonomy_group_2 VARCHAR(70),
+  taxonomy_group_3 VARCHAR(70),
+  taxonomy_group_4 VARCHAR(70),
+  taxonomy_group_5 VARCHAR(70),
+  taxonomy_group_6 VARCHAR(70),
+  taxonomy_group_7 VARCHAR(70),
+  taxonomy_group_8 VARCHAR(70),
+  taxonomy_group_9 VARCHAR(70),
+  taxonomy_group_10 VARCHAR(70),
+  taxonomy_group_11 VARCHAR(70),
+  taxonomy_group_12 VARCHAR(70),
+  taxonomy_group_13 VARCHAR(70),
+  taxonomy_group_14 VARCHAR(70),
+  taxonomy_group_15 VARCHAR(70)
 );
-
-
-NPI ,NUMBER ,10
-Entity Type Code ,NUMBER ,1
-Replacement NPI ,NUMBER ,10
-Employer Identification Number (EIN) ,VARCHAR ,9
-Provider Organization Name (Legal Business Name) ,VARCHAR ,70
-Provider Last Name (Legal Name) ,VARCHAR ,35
-Provider First Name ,VARCHAR ,20
-Provider Middle Name ,VARCHAR ,20
-Provider Name Prefix Text ,VARCHAR ,5
-Provider Name Suffix Text ,VARCHAR ,5
-Provider Credential Text ,VARCHAR ,20
-Provider Other Organization Name ,VARCHAR ,70
-Provider Other Organization Name Type Code ,VARCHAR ,1
-Provider Other Last Name ,VARCHAR ,35
-Provider Other First Name ,VARCHAR ,20
-Provider Other Middle Name ,VARCHAR ,20
-Provider Other Name Prefix Text ,VARCHAR ,5
-Provider Other Name Suffix Text ,VARCHAR ,5
-Provider Other Credential Text ,VARCHAR ,20
-Provider Other Last Name Type Code ,NUMBER ,1
-Provider First Line Business Mailing Address ,VARCHAR ,55
-Provider Second Line Business Mailing Address ,VARCHAR ,55
-Provider Business Mailing Address City Name ,VARCHAR ,40
-Provider Business Mailing Address State Name ,VARCHAR ,40
-Provider Business Mailing Address Postal Code ,VARCHAR ,20
-Provider Business Mailing Address Country Code (If outside U.S.) ,VARCHAR ,2
-Provider Business Mailing Address Telephone Number ,VARCHAR ,20
-Provider Business Mailing Address Fax Number ,VARCHAR ,20
-Provider First Line Business Practice Location Address ,VARCHAR ,55
-Provider Second Line Business Practice Location Address ,VARCHAR ,55
-Provider Business Practice Location Address City Name ,VARCHAR ,40
-Provider Business Practice Location Address State Name ,VARCHAR ,40
-Provider Business Practice Location Address Postal Code ,VARCHAR ,20
-Provider Business Practice Location Address Country Code (If outside U.S.) ,VARCHAR ,2
-Provider Business Practice Location Address Telephone Number ,VARCHAR ,20
-Provider Business Practice Location Address Fax Number ,VARCHAR ,20
-NPI Deactivation Date ,DATE ,10 (MM/DD/YYYY) 
-NPI Reactivation Date ,DATE ,10 (MM/DD/YYYY) 
-Provider Gender Code ,VARCHAR ,1
-Authorized Official Last Name ,VARCHAR ,35
-Authorized Official First Name ,VARCHAR ,20
-Authorized Official Middle Name ,VARCHAR ,20
-Authorized Official Title or Position ,VARCHAR ,35
-Authorized Official Telephone Number ,VARCHAR ,20
-Healthcare Provider Taxonomy Code_1 ,VARCHAR ,10
-Provider License Number_1 ,VARCHAR ,20
-Provider License Number State Code_1 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_1 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_2 ,VARCHAR ,10
-Provider License Number_2 ,VARCHAR ,20
-Provider License Number State Code_2 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_2 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_3 ,VARCHAR ,10
-Provider License Number_3 ,VARCHAR ,20
-Provider License Number State Code_3 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_4 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_5 ,VARCHAR ,10
-Provider License Number_5 ,VARCHAR ,20
-Provider License Number State Code_5 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_5 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_6 ,VARCHAR ,10
-Provider License Number_6 ,VARCHAR ,20
-Provider License Number State Code_6 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_6 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_7 ,VARCHAR ,10
-Provider License Number_7 ,VARCHAR ,20
-Provider License Number State Code_7 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_7 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_8 ,VARCHAR ,10
-Provider License Number_8 ,VARCHAR ,20
-Provider License Number State Code_8 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_8 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_9 ,VARCHAR ,10
-Provider License Number_9 ,VARCHAR ,20
-Provider License Number State Code_10 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_10 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_11 ,VARCHAR ,10
-Provider License Number_11 ,VARCHAR ,20
-Provider License Number State Code_11 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_11 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_12 ,VARCHAR ,10
-Provider License Number_12 ,VARCHAR ,20
-Provider License Number State Code_12 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_12 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_13 ,VARCHAR ,10
-Provider License Number_13 ,VARCHAR ,20
-Provider License Number State Code_13 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_13 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_14 ,VARCHAR ,10
-Provider License Number_14 ,VARCHAR ,20
-Provider License Number State Code_14 ,VARCHAR ,2
-Healthcare Provider Primary Taxonomy Switch_14 ,VARCHAR ,1
-Healthcare Provider Taxonomy Code_15 ,VARCHAR ,10
-Other Provider Identifier Type Code_1 ,VARCHAR ,2
-Other Provider Identifier State_1 ,VARCHAR ,2
-Other Provider Identifier Issuer_1 ,VARCHAR ,80
-Other Provider Identifier_2 ,VARCHAR ,20
-Other Provider Identifier Type Code_2 ,VARCHAR ,2
-Other Provider Identifier State_2 ,VARCHAR ,2
-Other Provider Identifier Issuer_2 ,VARCHAR ,80
-Other Provider Identifier_3 ,VARCHAR ,20
-Other Provider Identifier Type Code_3 ,VARCHAR ,2
-Other Provider Identifier State_3 ,VARCHAR ,2
-Other Provider Identifier Issuer_3 ,VARCHAR ,80
-Other Provider Identifier_4 ,VARCHAR ,20
-Other Provider Identifier Type Code_4 ,VARCHAR ,2
-Other Provider Identifier State_4 ,VARCHAR ,2
-Other Provider Identifier Issuer_4 ,VARCHAR ,80
-Other Provider Identifier_5 ,VARCHAR ,20
-Other Provider Identifier Type Code_5 ,VARCHAR ,2
-Other Provider Identifier State_5 ,VARCHAR ,2
-Other Provider Identifier Issuer_5 ,VARCHAR ,80
-Other Provider Identifier_6 ,VARCHAR ,20
-Other Provider Identifier_7 ,VARCHAR ,20
-Other Provider Identifier Type Code_7 ,VARCHAR ,2
-Other Provider Identifier State_7 ,VARCHAR ,2
-Other Provider Identifier Issuer_7 ,VARCHAR ,80
-Other Provider Identifier_8 ,VARCHAR ,20
-Other Provider Identifier Type Code_8 ,VARCHAR ,2
-Other Provider Identifier State_8 ,VARCHAR ,2
-Other Provider Identifier Issuer_8 ,VARCHAR ,80
-Other Provider Identifier_9 ,VARCHAR ,20
-Other Provider Identifier Type Code_9 ,VARCHAR ,2
-Other Provider Identifier State_9 ,VARCHAR ,2
-Other Provider Identifier Issuer_9 ,VARCHAR ,80
-Other Provider Identifier_10 ,VARCHAR ,20
-Other Provider Identifier Type Code_10 ,VARCHAR ,2
-Other Provider Identifier State_10 ,VARCHAR ,2
-Other Provider Identifier Issuer_10 ,VARCHAR ,80
-Other Provider Identifier_11 ,VARCHAR ,20
-Other Provider Identifier Type Code_11 ,VARCHAR ,2
-Other Provider Identifier State_11 ,VARCHAR ,2
-Other Provider Identifier Issuer_11 ,VARCHAR ,80
-Other Provider Identifier Issuer_12 ,VARCHAR ,80
-Other Provider Identifier_13 ,VARCHAR ,20
-Other Provider Identifier Type Code_13 ,VARCHAR ,2
-Other Provider Identifier State_13 ,VARCHAR ,2
-Other Provider Identifier Issuer_13 ,VARCHAR ,80
-Other Provider Identifier_14 ,VARCHAR ,20
-Other Provider Identifier Type Code_14 ,VARCHAR ,2
-Other Provider Identifier State_14 ,VARCHAR ,2
-Other Provider Identifier Issuer_14 ,VARCHAR ,80
-Other Provider Identifier_15 ,VARCHAR ,20
-Other Provider Identifier Type Code_15 ,VARCHAR ,2
-Other Provider Identifier State_15 ,VARCHAR ,2
-Other Provider Identifier Issuer_15 ,VARCHAR ,80
-Other Provider Identifier_16 ,VARCHAR ,20
-Other Provider Identifier Type Code_16 ,VARCHAR ,2
-Other Provider Identifier State_16 ,VARCHAR ,2
-Other Provider Identifier Issuer_16 ,VARCHAR ,80
-Other Provider Identifier_17 ,VARCHAR ,20
-Other Provider Identifier Type Code_17 ,VARCHAR ,2
-Other Provider Identifier State_17 ,VARCHAR ,2
-Other Provider Identifier State_18 ,VARCHAR ,2
-Other Provider Identifier Issuer_18 ,VARCHAR ,80
-Other Provider Identifier_19 ,VARCHAR ,20
-Other Provider Identifier Type Code_19 ,VARCHAR ,2
-Other Provider Identifier State_19 ,VARCHAR ,2
-Other Provider Identifier Issuer_19 ,VARCHAR ,80
-Other Provider Identifier_20 ,VARCHAR ,20
-Other Provider Identifier Type Code_20 ,VARCHAR ,2
-Other Provider Identifier State_20 ,VARCHAR ,2
-Other Provider Identifier Issuer_20 ,VARCHAR ,80
-Other Provider Identifier_21 ,VARCHAR ,20
-Other Provider Identifier Type Code_21 ,VARCHAR ,2
-Other Provider Identifier State_21 ,VARCHAR ,2
-Other Provider Identifier Issuer_21 ,VARCHAR ,80
-Other Provider Identifier_22 ,VARCHAR ,20
-Other Provider Identifier Type Code_22 ,VARCHAR ,2
-Other Provider Identifier State_22 ,VARCHAR ,2
-Other Provider Identifier Issuer_22 ,VARCHAR ,80
-Other Provider Identifier_23 ,VARCHAR ,20
-Other Provider Identifier Type Code_23 ,VARCHAR ,2
-Other Provider Identifier Type Code_24 ,VARCHAR ,2
-Other Provider Identifier State_24 ,VARCHAR ,2
-Other Provider Identifier Issuer_24 ,VARCHAR ,80
-Other Provider Identifier_25 ,VARCHAR ,20
-Other Provider Identifier Type Code_25 ,VARCHAR ,2
-Other Provider Identifier State_25 ,VARCHAR ,2
-Other Provider Identifier Issuer_25 ,VARCHAR ,80
-Other Provider Identifier_26 ,VARCHAR ,20
-Other Provider Identifier Type Code_26 ,VARCHAR ,2
-Other Provider Identifier State_26 ,VARCHAR ,2
-Other Provider Identifier Issuer_26 ,VARCHAR ,80
-Other Provider Identifier_27 ,VARCHAR ,20
-Other Provider Identifier Type Code_27 ,VARCHAR ,2
-Other Provider Identifier State_27 ,VARCHAR ,2
-Other Provider Identifier Issuer_27 ,VARCHAR ,80
-Other Provider Identifier_28 ,VARCHAR ,20
-Other Provider Identifier Type Code_28 ,VARCHAR ,2
-Other Provider Identifier State_28 ,VARCHAR ,2
-Other Provider Identifier Issuer_28 ,VARCHAR ,80
-Other Provider Identifier_29 ,VARCHAR ,20
-Other Provider Identifier_30 ,VARCHAR ,20
-Other Provider Identifier Type Code_30 ,VARCHAR ,2
-Other Provider Identifier State_30 ,VARCHAR ,2
-Other Provider Identifier Issuer_30 ,VARCHAR ,80
-Other Provider Identifier_31 ,VARCHAR ,20
-Other Provider Identifier Type Code_31 ,VARCHAR ,2
-Other Provider Identifier State_31 ,VARCHAR ,2
-Other Provider Identifier Issuer_31 ,VARCHAR ,80
-Other Provider Identifier_32 ,VARCHAR ,20
-Other Provider Identifier Type Code_32 ,VARCHAR ,2
-Other Provider Identifier State_32 ,VARCHAR ,2
-Other Provider Identifier Issuer_32 ,VARCHAR ,80
-Other Provider Identifier_33 ,VARCHAR ,20
-Other Provider Identifier Type Code_33 ,VARCHAR ,2
-Other Provider Identifier State_33 ,VARCHAR ,2
-Other Provider Identifier Issuer_33 ,VARCHAR ,80
-Other Provider Identifier_34 ,VARCHAR ,20
-Other Provider Identifier Type Code_34 ,VARCHAR ,2
-Other Provider Identifier State_34 ,VARCHAR ,2
-Other Provider Identifier Issuer_34 ,VARCHAR ,80
-Other Provider Identifier Issuer_35 ,VARCHAR ,80
-Other Provider Identifier_36 ,VARCHAR ,20
-Other Provider Identifier Type Code_36 ,VARCHAR ,2
-Other Provider Identifier State_36 ,VARCHAR ,2
-Other Provider Identifier Issuer_36 ,VARCHAR ,80
-Other Provider Identifier_37 ,VARCHAR ,20
-Other Provider Identifier Type Code_37 ,VARCHAR ,2
-Other Provider Identifier State_37 ,VARCHAR ,2
-Other Provider Identifier Issuer_37 ,VARCHAR ,80
-Other Provider Identifier_38 ,VARCHAR ,20
-Other Provider Identifier Type Code_38 ,VARCHAR ,2
-Other Provider Identifier State_38 ,VARCHAR ,2
-Other Provider Identifier Issuer_38 ,VARCHAR ,80
-Other Provider Identifier_39 ,VARCHAR ,20
-Other Provider Identifier Type Code_39 ,VARCHAR ,2
-Other Provider Identifier State_39 ,VARCHAR ,2
-Other Provider Identifier Issuer_39 ,VARCHAR ,80
-Other Provider Identifier_40 ,VARCHAR ,20
-Other Provider Identifier Type Code_40 ,VARCHAR ,2
-Other Provider Identifier State_40 ,VARCHAR ,2
-Other Provider Identifier Type Code_41 ,VARCHAR ,2
-Other Provider Identifier State_41 ,VARCHAR ,2
-Other Provider Identifier Issuer_41 ,VARCHAR ,80
-Other Provider Identifier_42 ,VARCHAR ,20
-Other Provider Identifier Type Code_42 ,VARCHAR ,2
-Other Provider Identifier State_42 ,VARCHAR ,2
-Other Provider Identifier Issuer_42 ,VARCHAR ,80
-Other Provider Identifier_43 ,VARCHAR ,20
-Other Provider Identifier Type Code_43 ,VARCHAR ,2
-Other Provider Identifier State_43 ,VARCHAR ,2
-Other Provider Identifier Issuer_43 ,VARCHAR ,80
-Other Provider Identifier_44 ,VARCHAR ,20
-Other Provider Identifier Type Code_44 ,VARCHAR ,2
-Other Provider Identifier State_44 ,VARCHAR ,2
-Other Provider Identifier Issuer_44 ,VARCHAR ,80
-Other Provider Identifier_45 ,VARCHAR ,20
-Other Provider Identifier Type Code_45 ,VARCHAR ,2
-Other Provider Identifier State_45 ,VARCHAR ,2
-Other Provider Identifier Issuer_45 ,VARCHAR ,80
-Other Provider Identifier_46 ,VARCHAR ,20
-Other Provider Identifier_47 ,VARCHAR ,20
-Other Provider Identifier Type Code_47 ,VARCHAR ,2
-Other Provider Identifier State_47 ,VARCHAR ,2
-Other Provider Identifier Issuer_47 ,VARCHAR ,80
-Other Provider Identifier_48 ,VARCHAR ,20
-Other Provider Identifier Type Code_48 ,VARCHAR ,2
-Other Provider Identifier State_48 ,VARCHAR ,2
-Other Provider Identifier Issuer_48 ,VARCHAR ,80
-Other Provider Identifier_49 ,VARCHAR ,20
-Other Provider Identifier Type Code_49 ,VARCHAR ,2
-Other Provider Identifier State_49 ,VARCHAR ,2
-Other Provider Identifier Issuer_49 ,VARCHAR ,80
-Other Provider Identifier_50 ,VARCHAR ,20
-Other Provider Identifier Type Code_50 ,VARCHAR ,2
-Other Provider Identifier State_50 ,VARCHAR ,2
-Other Provider Identifier Issuer_50 ,VARCHAR ,80
-Is Sole Proprietor ,VARCHAR ,1
-Is Organization Subpart ,VARCHAR ,1
-Parent Organization LBN ,VARCHAR ,70
-Parent Organization TIN ,VARCHAR ,9
-Authorized Official Credential Text ,VARCHAR ,20
-Healthcare Provider Taxonomy Group_1 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_2 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_3 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_4 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_5 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_6 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_7 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_8 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_9 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_10 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_11 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_12 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_13 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_14 ,VARCHAR ,70
-Healthcare Provider Taxonomy Group_15 ,VARCHAR ,70
-
