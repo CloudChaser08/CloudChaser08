@@ -2,6 +2,10 @@
 create:
 	psql -h ${RS_HOST} -p 5439 -d dev -U ${RS_USER} -f create_table.sql
 
+createrx:
+	psql -h ${RS_HOST} -p 5439 -d dev -U ${RS_USER} -f create_rx_table.sql
+
+
 all: drop create claims service
 
 drop: 
