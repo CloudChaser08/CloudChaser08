@@ -1,0 +1,33 @@
+
+-- CREATE ROLES AND PERMISSIONS
+
+CREATE ROLE admin CREATEROLE;
+CREATE ROLE staff LOGIN;
+
+CREATE ROLE ro INHERIT;
+GRANT staff to ro;
+GRANT USAGE ON SCHEMA public TO ro;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+   GRANT SELECT ON TABLES TO ro;
+
+CREATE ROLE rw INHERIT;
+GRANT ro to rw;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+   GRANT INSERT, UPDATE, DELETE ON TABLES TO rw;
+
+
+
+-- DATA FEEDS
+
+CREATE TABLE data_feeds (
+    feed_id varchar(64) primary key,
+    name varchar(64) not null,
+    description varchar(255) not null
+);
+ALTER TABLE data_feeds OWNER TO hv;
+
+REVOKE ALL ON TABLE data_feeds FROM PUBLIC;
+REVOKE ALL ON TABLE data_feeds FROM hv;
+GRANT ALL ON TABLE data_feeds TO hv;
