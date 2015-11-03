@@ -9,8 +9,8 @@ primary key(hvid)
 
 CREATE TABLE market_search (
   feed INTEGER NOT NULL,
-  key TEXT,
-  value TEXT,
+  key TEXT NOT NULL,
+  value TEXT NOT NULL,
   hvid INTEGER NOT NULL,
   foreign key(hvid) references patients(hvid) )
 distkey(hvid)

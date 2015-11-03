@@ -1,0 +1,9 @@
+{
+    "jsonpaths": [
+        "1",
+        "icd9",
+        "$['diagnosis']",
+        "$['hvid']"
+    ]
+}
+

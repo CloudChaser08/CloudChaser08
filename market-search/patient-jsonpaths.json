@@ -1,6 +1,9 @@
 {
     "jsonpaths": [
-        "$['id']"
+        "$['id']",
+        "$['gender']",
+        "$['zip3']",
+        "$['year_of_birth']"
     ]
 }
 
