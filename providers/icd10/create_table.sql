@@ -1,6 +1,6 @@
 
 
-CREATE TABLE icd10_diagnosis_codes (
+CREATE TABLE raw_icd10dx_codes (
   ordernum VARCHAR(5),
   code VARCHAR(7),
   header CHAR(1),
@@ -9,7 +9,7 @@ CREATE TABLE icd10_diagnosis_codes (
 );
 
 
-CREATE TABLE icd10_procedure_codes (
+CREATE TABLE raw_icd10pcs_codes (
   ordernum VARCHAR(5),
   code VARCHAR(7),
   header CHAR(1),
