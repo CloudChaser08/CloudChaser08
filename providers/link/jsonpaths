@@ -1,0 +1,6 @@
+{
+  "jsonpaths": [
+    "$['hvid']",
+    "$['claimId']"
+  ]
+}
