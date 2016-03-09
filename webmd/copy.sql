@@ -1,0 +1,112 @@
+CREATE TABLE webmd_NPI_DRUG (
+ NPI_NUMBER text,
+ ME_NUMBER text,
+ ZIP_CODE text,
+ COUNTRY text,
+ MSA_NAME text,
+ DMA_NAME text,
+ AGE_RANGE text,
+ NPI_SPECIALTY text,
+ TRANSACTION_DATE text,
+ TITLE text,
+ CONTENT_TYPE text,
+ LEAD_CONCEPT text,
+ USER_AGENT_TYPE text,
+ TIME_SPENT text
+);
+
+COPY webmd_NPI_DRUG FROM 's3://healthverity/incoming/webmd/SAMPLE_NPI_DRUG.txt.gz'
+    WITH CREDENTIALS :'AWS_CREDENTIALS'
+    DELIMITER '|'
+    ACCEPTINVCHARS
+    GZIP
+    TRUNCATECOLUMNS
+    COMPUPDATE ON;
+
+
+
+
+CREATE TABLE webmd_NPI_SEARCH (
+ NPI_NUMBER text,
+ ME_NUMBER text,
+ ZIP_CODE text,
+ COUNTRY text,
+ MSA_NAME text,
+ DMA_NAME text,
+ AGE_RANGE text,
+ NPI_SPECIALTY text,
+ TRANSACTION_DATE text,
+ TITLE text,
+ CONTENT_TYPE text,
+ LEAD_CONCEPT text,
+ USER_AGENT_TYPE text,
+ TIME_SPENT_INDX text
+);
+
+COPY webmd_NPI_SEARCH FROM 's3://healthverity/incoming/webmd/SAMPLE_NPI_SEARCH.txt.gz'
+    WITH CREDENTIALS :'AWS_CREDENTIALS'
+    DELIMITER '|'
+    ACCEPTINVCHARS
+    GZIP
+    TRUNCATECOLUMNS
+    COMPUPDATE ON;
+
+
+
+
+CREATE TABLE webmd_NPI_CONDITION (
+ NPI_NUMBER text,
+ ME_NUMBER text,
+ ZIP_CODE text,
+ COUNTRY text,
+ MSA_NAME text,
+ DMA_NAME text,
+ AGE_RANGE text,
+ NPI_SPECIALTY text,
+ TRANSACTION_DATE text,
+ TITLE text,
+ CONTENT_TYPE text,
+ LEAD_CONCEPT text,
+ USER_AGENT_TYPE text,
+ TIME_SPENT_INDX text
+);
+
+COPY webmd_NPI_CONDITION FROM 's3://healthverity/incoming/webmd/SAMPLE_NPI_CONDITION.txt.gz'
+    WITH CREDENTIALS :'AWS_CREDENTIALS'
+    DELIMITER '|'
+    ACCEPTINVCHARS
+    GZIP
+    TRUNCATECOLUMNS
+    COMPUPDATE ON;
+
+
+
+
+CREATE TABLE webmd_NPI_ARTICLE (
+ NPI_NUMBER text,
+ ME_NUMBER text,
+ ZIP_CODE text,
+ COUNTRY text,
+ MSA_NAME text,
+ DMA_NAME text,
+ AGE_RANGE text,
+ NPI_SPECIALTY text,
+ TRANSACTION_DATE text,
+ TITLE text,
+ CONTENT_TYPE text,
+ LEAD_CONCEPT text,
+ USER_AGENT_TYPE text,
+ TIME_SPENT_INDX text
+);
+
+COPY webmd_NPI_ARTICLE FROM 's3://healthverity/incoming/webmd/SAMPLE_NPI_ARTICLE.txt.gz'
+    WITH CREDENTIALS :'AWS_CREDENTIALS'
+    DELIMITER '|'
+    ACCEPTINVCHARS
+    GZIP
+    TRUNCATECOLUMNS
+    COMPUPDATE ON;
+
+
+
+
