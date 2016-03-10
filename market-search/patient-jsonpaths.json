@@ -1,9 +1,0 @@
-{
-    "jsonpaths": [
-        "$['id']",
-        "$['gender']",
-        "$['zip3']",
-        "$['year_of_birth']"
-    ]
-}
-
