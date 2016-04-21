@@ -190,4 +190,5 @@ adjudicated_proc_modifier_3 TEXT NULL,
 adjudicated_proc_modifier_4 TEXT NULL,
 procedure_code TEXT NULL,
 principal_proc_ind BOOLEAN NULL,
-diagnosis_code text);
+diagnosis_code text,
+diagnosis_priority INTEGER NULL);
