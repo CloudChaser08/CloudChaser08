@@ -1,0 +1,9 @@
+COPY emdeon_rx_norm FROM 's3://salusv/provider/linked/emdeon/v1/pharmacy/2016-04-26:16:47:09/rx.avro/'
+WITH CREDENTIALS :'AWS_CREDENTIALS'
+DATEFORMAT 'YYYYMMDD'
+ACCEPTANYDATE
+BLANKSASNULL
+EMPTYASNULL
+MAXERROR 100000
+COMPUPDATE ON
+format as avro 'auto';
