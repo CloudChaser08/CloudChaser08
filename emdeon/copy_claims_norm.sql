@@ -21,7 +21,7 @@ revenue_code, ndc_code, ambulance_to_hosp, emergency, tooth_surface, oral_cavity
 bene_not_entitled, patient_reach_max, svc_during_postop, adjudicated_procedure, adjudicated_procedure_qual, adjudicated_proc_modifier_1, adjudicated_proc_modifier_2,
 adjudicated_proc_modifier_3, adjudicated_proc_modifier_4, principal_proc_ind, diagnosis_code, admit_diagnosis_ind, diagnosis_priority,hvid)
 
-FROM 's3://salusv/provider/linked/marketplace/v1/medical/normalized_csv/201501/2016-05-05:14:03:39/'
+FROM :'S3_INPUT_PATH'
 WITH CREDENTIALS :'AWS_CREDENTIALS'
 DATEFORMAT 'YYYYMMDD'
 ACCEPTANYDATE
