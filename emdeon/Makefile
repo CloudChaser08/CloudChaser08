@@ -23,13 +23,15 @@ claims:
 claims_norm:
 	psql \
 	  --set AWS_CREDENTIALS="aws_access_key_id=${AWS_ACCESS_KEY_ID};aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" \
+	  --set S3_INPUT_PATH="s3://salusv/provider/linked/marketplace/v1/medical/normalized_csv/201604/daybyday/" \
 	  -h ${RS_HOST} -p 5439 -d dev -U ${RS_USER}\
 	  -f copy_claims_norm.sql
 
 rx_norm:
 	psql \
 	  --set AWS_CREDENTIALS="aws_access_key_id=${AWS_ACCESS_KEY_ID};aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" \
-	  -h ${RS_HOST} -p 5439 -d dev -U ${RS_USER}\
+	  --set S3_INPUT_PATH="s3://salusv/provider/linked/emdeon/v1/pharmacy/2016/2016-05-09:14:23:14/rx.csv/" \
+	  -h ${RS_HOST} -p 5439 -d dev -U ${RS_USER} \
 	  -f copy_rx_norm.sql
 
 service:
