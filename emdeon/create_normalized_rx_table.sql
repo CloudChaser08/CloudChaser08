@@ -143,4 +143,5 @@ errors TEXT NULL,
 hvid TEXT NULL,
 matchid TEXT NULL,
 matchscore TEXT NULL,
-parentid TEXT NULL);
+parentid TEXT NULL,
+patient_state TEXT NULL);
