@@ -35,7 +35,7 @@ split:
 	cd data && gzip npi_part-*
 
 push:
-	cd data && for i in $(ls npi_part*); do aws s3 cp --sse AES256 ${i} s3://salusv/reference/nppes/${DAY}/; done;
+	aws s3 sync --sse AES256 --exclude="*" --include="npi_part-*" data/ s3://salusv/reference/nppes/${DAY}/
 
 clean:
 	rm -rf data
