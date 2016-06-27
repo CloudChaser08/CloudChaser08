@@ -31,7 +31,7 @@ fetch:
 
 split:
 	cd data && split -d -C 500M npidata_20050523-20160612.csv npi_part-
-	cd data && sed -i'' '1d' npi_part-00
+	cd data && sed -i'' -e '1d' npi_part-00
 	cd data && gzip npi_part-*
 
 push:
