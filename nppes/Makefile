@@ -1,27 +1,41 @@
 
-all: drop create import
+export PGHOST=${RS_HOST}
+export PGUSER=${RS_USER}
+export PGPORT=5439
+export PGDATABASE=dev
+AWS_CREDENTIALS="aws_access_key_id=${AWS_ACCESS_KEY_ID};aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}"
+
+DAY=$(shell date +'%Y-%m-%d')
+SRC_FILE='http://download.cms.gov/nppes/NPPES_Data_Dissemination_June_2016.zip'
+
+all: prep drop create import clean
 
 drop: 
-	psql -h ${RS_HOST} -p 5439 -d dev -U ${RS_USER} -f drop_table.sql
+	psql -f drop_table.sql
 
 create:
-	psql -h ${RS_HOST} -p 5439 -d dev -U ${RS_USER} -f create_table.sql
+	psql -f create_table.sql
 
 import:
 	psql \
-	  --set AWS_CREDENTIALS="aws_access_key_id=${AWS_ACCESS_KEY_ID};aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" \
-	  -h ${RS_HOST} -p 5439 -d dev -U ${RS_USER}\
+	  --set AWS_CREDENTIALS=${AWS_CREDENTIALS} \
+	  --set SOURCE="s3://salusv/reference/nppes/${DAY}/" \
 	  -f copy.sql
 
+prep: fetch split push
+
 fetch:
-	mkdir -p nppes_data
-	cd nppes_data && wget http://download.cms.gov/nppes/NPPES_Data_Dissemination_Aug_2015.zip
-	cd nppes_data && 7za x NPPES_Data_Dissemination_Aug_2015.zip
+	mkdir -p data
+	cd data && wget ${SRC_FILE}
+	cd data && 7z -y x NPPES_Data_Dissemination_June_2016.zip
 
 split:
-	cd nppes_data && split -d -C 500M npidata_20050523-20150809.csv npi_part-
-	cd nppes_data && sed -i'' '1d' npi_part-00
-	cd nppes_data && gzip npi_part-*
+	cd data && split -d -C 500M npidata_20050523-20160612.csv npi_part-
+	cd data && sed -i '' '1d' npi_part-00
+	cd data && gzip npi_part-*
 
 push:
-	cd nppes_data && for i in $(ls npi_part*); do; s3 cp $i s3://healthverity/incoming/nppes/20050523-20150809/; done;
+	aws s3 sync --sse AES256 --exclude="*" --include="npi_part-*" data/ s3://salusv/reference/nppes/${DAY}/
+
+clean:
+	rm -rf data
