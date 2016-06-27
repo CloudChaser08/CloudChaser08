@@ -31,11 +31,11 @@ fetch:
 
 split:
 	cd data && split -d -C 500M npidata_20050523-20160612.csv npi_part-
-	cd data && sed -i -e '1d' npi_part-00
+	cd data && sed -i '' '1d' npi_part-00
 	cd data && gzip npi_part-*
 
 push:
-	cd data && for i in $(ls npi_part*); do; aws s3 cp --sse AES256 $i s3://salusv/reference/nppes/${DAY}/; done;
+	cd data && for i in $(ls npi_part*); do aws s3 cp --sse AES256 ${i} s3://salusv/reference/nppes/${DAY}/; done;
 
 clean:
 	rm -rf data
