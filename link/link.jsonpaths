@@ -1,0 +1,11 @@
+{
+  "jsonpaths": [
+    "$['parentid']",
+    "$['hvid']",
+    "$['claimId']",
+    "$['threeDigitZip']",
+    "$['isInvalid']",
+    "$['multi_match']",
+    "$['candidates']"
+  ]
+}
