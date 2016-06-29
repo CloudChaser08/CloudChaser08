@@ -5,8 +5,9 @@ export PGPORT=5439
 export PGDATABASE=dev
 AWS_CREDENTIALS="aws_access_key_id=${AWS_ACCESS_KEY_ID};aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}"
 
+export DATE=$(shell date '+%B_%Y')
 DAY=$(shell date +'%Y-%m-%d')
-SRC_FILE='http://download.cms.gov/nppes/NPPES_Data_Dissemination_June_2016.zip'
+SRC_FILE="http://download.cms.gov/nppes/NPPES_Data_Dissemination_${DATE}.zip"
 
 all: prep drop create import clean
 
@@ -27,7 +28,7 @@ prep: fetch split push
 fetch:
 	mkdir -p data
 	cd data && wget ${SRC_FILE}
-	cd data && 7z -y x NPPES_Data_Dissemination_June_2016.zip
+	cd data && 7z -y x NPPES_Data_Dissemination_${DATE}.zip
 
 split:
 	cd data && split -d -C 500M npidata_20050523-20160612.csv npi_part-
