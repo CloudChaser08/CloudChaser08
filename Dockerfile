@@ -35,10 +35,4 @@ COPY bin/run.sh     /root/run.sh
 COPY bin/xls2csv.py /usr/local/bin/xls2csv.py
 COPY providers      /root/providers
 
-ENV PGHOST=hvrs.cz8slgfda3sg.us-east-1.redshift.amazonaws.com
-ENV PGPORT=5439
-ENV PGDATABASE=dev
-ENV PGUSER=hv
-ENV PGPASSWORD=FYc2Loi?4&6N
-
 ENTRYPOINT ["/root/run.sh"]
