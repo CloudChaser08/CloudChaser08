@@ -1,3 +1,3 @@
-#!/bin/sh
+#!/bin/bash
 
-cd providers/$1 && make $2
+cd providers/$1 && make ${@:2}
