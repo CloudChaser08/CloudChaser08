@@ -1,13 +1,9 @@
 
-CREATE TABLE claim_link_raw(claim_number varchar distkey, hvid integer);
-
-COPY claim_link_raw (claim_number, hvid)
+COPY claim_link (hvid, childid, claim_number, zip3, invalid, multi_match, candidates)
 FROM :'SOURCE'
 CREDENTIALS :'AWS_CREDENTIALS'
-GZIP
-DELIMITER ','
-JSON as 's3://salusv/redshift/link.jsonpaths'
+FORMAT AS JSON 's3://salusv/redshift/link.jsonpaths'
+MAXERROR 20
+gzip;
 
-INSERT INTO claim_link (claim_number, provider_id, hvid) SELECT claim_number, :'PROVIDER', hvid FROM claim_link_raw;
-
-DROP TABLE claim_link_raw;
+update claim_link set hvid = childid where hvid is null and invalid is False;

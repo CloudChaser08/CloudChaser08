@@ -1,30 +1,36 @@
 
-	exit
+export PGHOST=${RS_HOST}
+export PGUSER=${RS_USER}
+export PGPORT=5439
+export PGDATABASE=dev
+AWS_CREDENTIALS="aws_access_key_id=${AWS_ACCESS_KEY_ID};aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}"
 
+S3SRC='s3://salusv/matching/prodgz/payload/86396771-0345-4d67-83b3-7e22fded9e1d/2016'
 
 create:
 	psql -f create_table.sql
-
-all: drop create claims service
 
 drop:
 	psql -f drop_table.sql
 
 import: jsonpaths
-ifdef PROVIDER
-ifdef SETID
 	psql \
-		-e \
-		--set AWS_CREDENTIALS="aws_access_key_id=${AWS_ACCESS_KEY_ID};aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" \
-		--set PROVIDER="$(PROVIDER)"  \
-		--set SOURCE="s3://salusv/provider/$(PROVIDER)/$(PROVIDER)_$(SETID).json.gz" \
-		-f copy.sql
-else
-	echo "ERROR: No Set ID"
-endif
-else
-	echo "ERROR: No Provider ID"
-endif
+	  --set AWS_CREDENTIALS=${AWS_CREDENTIALS} \
+	  --set SOURCE=${S3SRC} \
+	  -f copy.sql
+
+link:
+	psql \
+	  --set AWS_CREDENTIALS=${AWS_CREDENTIALS} \
+	  -f link.sql
+
+unload:
+	psql \
+	  --set AWS_CREDENTIALS=${AWS_CREDENTIALS} \
+	  --set DEST="s3://salusv/link_dump2/" \
+	  -f unload.sql
 
 jsonpaths:
-	aws s3 cp --sse AES256 jsonpaths s3://salusv/redshift/link.jsonpaths
+	aws s3 cp --sse AES256 link.jsonpaths s3://salusv/redshift/link.jsonpaths
+
+all: drop create import

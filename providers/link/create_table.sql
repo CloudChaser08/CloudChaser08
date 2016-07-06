@@ -1,6 +1,10 @@
 
 CREATE TABLE claim_link (
+    hvid integer,
+    childid integer,
     claim_number varchar distkey,
-    provider_id varchar,
-    hvid integer
+    zip3 char(3),
+    invalid boolean,
+    multi_match boolean,
+    candidates integer
 );
