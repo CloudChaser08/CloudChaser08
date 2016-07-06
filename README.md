@@ -20,7 +20,7 @@ Please have the following environment variables:
 Runtime follows this pattern:
 
 ```Shell
-% ./dewey *provider* *command*
+% ./dewey <provider> <target>
 ```
 
 For example, to run all targets (ie download and update the tables in redshift
@@ -35,4 +35,15 @@ for icd10)
 Providers are any sources of data we might have both external and internal. 
 
 
+## Targets
+
+General targets include things like:
+
+* prep
+* all
+* import
+* etc...
+
+You will typicall want to run "all" or "prep" which bucket a number of
+appropriate targets
 
