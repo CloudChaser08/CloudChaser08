@@ -9,7 +9,13 @@
 # RS_USER
 # RS_PASS
 
-
+: "${AWS_ACCESS_KEY_ID?Need to set AWS_ACCESS_KEY_ID}"
+: "${AWS_SECRET_ACCESS_KEY?Need to set AWS_SECRET_ACCESS_KEY}"
+: "${RS_HOST?Need to set RS_HOST}"
+: "${RS_PORT?Need to set RS_PORT}"
+: "${RS_DB?Need to set RS_DB}"
+: "${RS_USER?Need to set RS_USER}"
+: "${RS_PASS?Need to set RS_PASS}"
 
 docker run -it \
   -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
