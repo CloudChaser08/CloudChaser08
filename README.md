@@ -19,12 +19,16 @@ Please have the following environment variables:
 
 Runtime follows this pattern:
 
+```Shell
 % ./dewey _provider_ _command_
+```
 
 For example, to run all targets (ie download and update the tables in redshift
 for icd10)
 
+```Shell
 % ./dewey icd10 all
+```
 
 ## Data Providers
 
