@@ -20,7 +20,7 @@ Please have the following environment variables:
 Runtime follows this pattern:
 
 ```Shell
-% ./dewey _provider_ _command_
+% ./dewey *provider* *command*
 ```
 
 For example, to run all targets (ie download and update the tables in redshift
