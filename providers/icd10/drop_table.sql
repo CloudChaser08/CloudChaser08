@@ -1,3 +1,3 @@
 
-DROP TABLE raw_icd10dx_codes;
-DROP TABLE raw_icd10pcs_codes;
+DROP TABLE icd10_diagnosis_codes;
+DROP TABLE icd10_procedure_codes;
