@@ -1,8 +1,4 @@
 
-export PGHOST=${RS_HOST}
-export PGUSER=${RS_USER}
-export PGPORT=5439
-export PGDATABASE=dev
 AWS_CREDENTIALS="aws_access_key_id=${AWS_ACCESS_KEY_ID};aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}"
 
 DAY=$(shell date +'%Y-%m-%d')
