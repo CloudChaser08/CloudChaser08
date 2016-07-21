@@ -5,7 +5,7 @@ export PGPORT=5439
 export PGDATABASE=dev
 AWS_CREDENTIALS="aws_access_key_id=${AWS_ACCESS_KEY_ID};aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}"
 
-S3SRC='s3://salusv/matching/prodgz/payload/86396771-0345-4d67-83b3-7e22fded9e1d/2016'
+S3SRC='s3://salusv/matching/prodgzrx/payload/86396771-0345-4d67-83b3-7e22fded9e1d/2016-07-09-to-2016-07-16/'
 
 create:
 	psql -f create_table.sql
