@@ -27,7 +27,7 @@ fetch:
 	cd data && 7z -y x NPPES_Data_Dissemination_${DATE}.zip
 
 split:
-	cd data && split -d -C 500M npidata_20050523-20160612.csv npi_part-
+	cd data && split -d -C 500M $(shell /bin/bash -c "cd data && ls npidata_*.csv | grep -v FileHeader") npi_part-
 	cd data && sed -i'' -e '1d' npi_part-00
 	cd data && gzip npi_part-*
 
