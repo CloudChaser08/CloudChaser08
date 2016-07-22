@@ -25,4 +25,4 @@ docker run -it \
   -e PGDATABASE=${RS_DB} \
   -e PGUSER=${RS_USER}   \
   -e PGPASSWORD=${RS_PASS}   \
-  --rm dewey "$@"
+  --rm 581191604223.dkr.ecr.us-east-1.amazonaws.com/dewey "$@"
