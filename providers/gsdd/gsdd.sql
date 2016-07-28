@@ -3,7 +3,7 @@ CREATE TABLE gsdd_Product_CMSName (
  CMSName text
 );
 
-COPY gsdd_Product_CMSName FROM 's3://healthverity/incoming/gsdd/Product_CMSName.txt'
+COPY gsdd_Product_CMSName FROM 's3://salusv/reference/gsdd/Product_CMSName.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -17,7 +17,7 @@ CREATE TABLE gsdd_CVXCode_VaccineGroup (
  VaccineGroup text
 );
 
-COPY gsdd_CVXCode_VaccineGroup FROM 's3://healthverity/incoming/gsdd/CVXCode_VaccineGroup.txt'
+COPY gsdd_CVXCode_VaccineGroup FROM 's3://salusv/reference/gsdd/CVXCode_VaccineGroup.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -31,7 +31,7 @@ CREATE TABLE gsdd_AGS_Beers_Strength_Of_Recommendation (
  StrengthOfRecommendationText text
 );
 
-COPY gsdd_AGS_Beers_Strength_Of_Recommendation FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Strength_Of_Recommendation.txt'
+COPY gsdd_AGS_Beers_Strength_Of_Recommendation FROM 's3://salusv/reference/gsdd/AGS_Beers_Strength_Of_Recommendation.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -45,7 +45,7 @@ CREATE TABLE gsdd_Scoring (
  ScoringName text
 );
 
-COPY gsdd_Scoring FROM 's3://healthverity/incoming/gsdd/Scoring.txt'
+COPY gsdd_Scoring FROM 's3://salusv/reference/gsdd/Scoring.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -60,7 +60,7 @@ CREATE TABLE gsdd_Nondrug_Item_Version_Color (
  ColorID text
 );
 
-COPY gsdd_Nondrug_Item_Version_Color FROM 's3://healthverity/incoming/gsdd/Nondrug_Item_Version_Color.txt'
+COPY gsdd_Nondrug_Item_Version_Color FROM 's3://salusv/reference/gsdd/Nondrug_Item_Version_Color.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -76,7 +76,7 @@ CREATE TABLE gsdd_Marketed_Product_RxNorm (
  RxNormType text
 );
 
-COPY gsdd_Marketed_Product_RxNorm FROM 's3://healthverity/incoming/gsdd/Marketed_Product_RxNorm.txt'
+COPY gsdd_Marketed_Product_RxNorm FROM 's3://salusv/reference/gsdd/Marketed_Product_RxNorm.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -93,7 +93,7 @@ CREATE TABLE gsdd_Package_Version_Drug_Item_Version (
  CompanyID text
 );
 
-COPY gsdd_Package_Version_Drug_Item_Version FROM 's3://healthverity/incoming/gsdd/Package_Version_Drug_Item_Version.txt'
+COPY gsdd_Package_Version_Drug_Item_Version FROM 's3://salusv/reference/gsdd/Package_Version_Drug_Item_Version.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -111,7 +111,7 @@ CREATE TABLE gsdd_Marketed_Product (
  Repackaged text
 );
 
-COPY gsdd_Marketed_Product FROM 's3://healthverity/incoming/gsdd/Marketed_Product.txt'
+COPY gsdd_Marketed_Product FROM 's3://salusv/reference/gsdd/Marketed_Product.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -126,7 +126,7 @@ CREATE TABLE gsdd_AGS_Beers_Disease_Syndrome_Statement (
  DiseaseSyndromeCategoryId text
 );
 
-COPY gsdd_AGS_Beers_Disease_Syndrome_Statement FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Disease_Syndrome_Statement.txt'
+COPY gsdd_AGS_Beers_Disease_Syndrome_Statement FROM 's3://salusv/reference/gsdd/AGS_Beers_Disease_Syndrome_Statement.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -162,7 +162,7 @@ CREATE TABLE gsdd_Product_Strength_Route_Form (
  TopLevelDoseFormName text
 );
 
-COPY gsdd_Product_Strength_Route_Form FROM 's3://healthverity/incoming/gsdd/Product_Strength_Route_Form.txt'
+COPY gsdd_Product_Strength_Route_Form FROM 's3://salusv/reference/gsdd/Product_Strength_Route_Form.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -183,7 +183,7 @@ CREATE TABLE gsdd_Nondrug_Item_Ingredient (
  BaseEquivalent text
 );
 
-COPY gsdd_Nondrug_Item_Ingredient FROM 's3://healthverity/incoming/gsdd/Nondrug_Item_Ingredient.txt'
+COPY gsdd_Nondrug_Item_Ingredient FROM 's3://salusv/reference/gsdd/Nondrug_Item_Ingredient.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -198,7 +198,7 @@ CREATE TABLE gsdd_AGS_Beers_Avoid_Caution (
  TableId text
 );
 
-COPY gsdd_AGS_Beers_Avoid_Caution FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Avoid_Caution.txt'
+COPY gsdd_AGS_Beers_Avoid_Caution FROM 's3://salusv/reference/gsdd/AGS_Beers_Avoid_Caution.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -212,7 +212,7 @@ CREATE TABLE gsdd_Drug_Item_Version_Attribute (
  AttributeName text
 );
 
-COPY gsdd_Drug_Item_Version_Attribute FROM 's3://healthverity/incoming/gsdd/Drug_Item_Version_Attribute.txt'
+COPY gsdd_Drug_Item_Version_Attribute FROM 's3://salusv/reference/gsdd/Drug_Item_Version_Attribute.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -228,7 +228,7 @@ CREATE TABLE gsdd_Package_Drug_Item (
  PackageItemUnitID text
 );
 
-COPY gsdd_Package_Drug_Item FROM 's3://healthverity/incoming/gsdd/Package_Drug_Item.txt'
+COPY gsdd_Package_Drug_Item FROM 's3://salusv/reference/gsdd/Package_Drug_Item.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -242,7 +242,7 @@ CREATE TABLE gsdd_GSTerm_ICD10 (
  GSTermId text
 );
 
-COPY gsdd_GSTerm_ICD10 FROM 's3://healthverity/incoming/gsdd/GSTerm_ICD10.txt'
+COPY gsdd_GSTerm_ICD10 FROM 's3://salusv/reference/gsdd/GSTerm_ICD10.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -260,7 +260,7 @@ CREATE TABLE gsdd_Company (
  MVX text
 );
 
-COPY gsdd_Company FROM 's3://healthverity/incoming/gsdd/Company.txt'
+COPY gsdd_Company FROM 's3://salusv/reference/gsdd/Company.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -279,7 +279,7 @@ CREATE TABLE gsdd_Nondrug_Item_Version (
  ScoringID text
 );
 
-COPY gsdd_Nondrug_Item_Version FROM 's3://healthverity/incoming/gsdd/Nondrug_Item_Version.txt'
+COPY gsdd_Nondrug_Item_Version FROM 's3://salusv/reference/gsdd/Nondrug_Item_Version.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -294,7 +294,7 @@ CREATE TABLE gsdd_Ingredient_RxNorm_UNII (
  UniiCode text
 );
 
-COPY gsdd_Ingredient_RxNorm_UNII FROM 's3://healthverity/incoming/gsdd/Ingredient_RxNorm_UNII.txt'
+COPY gsdd_Ingredient_RxNorm_UNII FROM 's3://salusv/reference/gsdd/Ingredient_RxNorm_UNII.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -309,7 +309,7 @@ CREATE TABLE gsdd_Script_Form (
  FormName text
 );
 
-COPY gsdd_Script_Form FROM 's3://healthverity/incoming/gsdd/Script_Form.txt'
+COPY gsdd_Script_Form FROM 's3://salusv/reference/gsdd/Script_Form.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -326,7 +326,7 @@ CREATE TABLE gsdd_Product_SSMS (
  SourceCount text
 );
 
-COPY gsdd_Product_SSMS FROM 's3://healthverity/incoming/gsdd/Product_SSMS.txt'
+COPY gsdd_Product_SSMS FROM 's3://salusv/reference/gsdd/Product_SSMS.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -341,7 +341,7 @@ CREATE TABLE gsdd_AGS_Beers_Modifier (
  ModifierText text
 );
 
-COPY gsdd_AGS_Beers_Modifier FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Modifier.txt'
+COPY gsdd_AGS_Beers_Modifier FROM 's3://salusv/reference/gsdd/AGS_Beers_Modifier.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -356,7 +356,7 @@ CREATE TABLE gsdd_DESI_Status (
  CMSID text
 );
 
-COPY gsdd_DESI_Status FROM 's3://healthverity/incoming/gsdd/DESI_Status.txt'
+COPY gsdd_DESI_Status FROM 's3://salusv/reference/gsdd/DESI_Status.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -371,7 +371,7 @@ CREATE TABLE gsdd_Product_Branded_Name_Stub (
  Default text
 );
 
-COPY gsdd_Product_Branded_Name_Stub FROM 's3://healthverity/incoming/gsdd/Product_Branded_Name_Stub.txt'
+COPY gsdd_Product_Branded_Name_Stub FROM 's3://salusv/reference/gsdd/Product_Branded_Name_Stub.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -385,7 +385,7 @@ CREATE TABLE gsdd_DEA_Classification (
  Classification text
 );
 
-COPY gsdd_DEA_Classification FROM 's3://healthverity/incoming/gsdd/DEA_Classification.txt'
+COPY gsdd_DEA_Classification FROM 's3://salusv/reference/gsdd/DEA_Classification.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -426,7 +426,7 @@ CREATE TABLE gsdd_Package (
  MinimumDispenseQuantityIsManual text
 );
 
-COPY gsdd_Package FROM 's3://healthverity/incoming/gsdd/Package.txt'
+COPY gsdd_Package FROM 's3://salusv/reference/gsdd/Package.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -440,7 +440,7 @@ CREATE TABLE gsdd_AGS_Beers_Disease_Syndrome_Category (
  DiseaseSyndromeCategoryText text
 );
 
-COPY gsdd_AGS_Beers_Disease_Syndrome_Category FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Disease_Syndrome_Category.txt'
+COPY gsdd_AGS_Beers_Disease_Syndrome_Category FROM 's3://salusv/reference/gsdd/AGS_Beers_Disease_Syndrome_Category.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -465,7 +465,7 @@ CREATE TABLE gsdd_Product_Ingredient_Hazardous_Waste_Code (
  U_CodeQualifier text
 );
 
-COPY gsdd_Product_Ingredient_Hazardous_Waste_Code FROM 's3://healthverity/incoming/gsdd/Product_Ingredient_Hazardous_Waste_Code.txt'
+COPY gsdd_Product_Ingredient_Hazardous_Waste_Code FROM 's3://salusv/reference/gsdd/Product_Ingredient_Hazardous_Waste_Code.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -479,7 +479,7 @@ CREATE TABLE gsdd_GSTerm_SNOMED (
  GSTermId text
 );
 
-COPY gsdd_GSTerm_SNOMED FROM 's3://healthverity/incoming/gsdd/GSTerm_SNOMED.txt'
+COPY gsdd_GSTerm_SNOMED FROM 's3://salusv/reference/gsdd/GSTerm_SNOMED.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -493,7 +493,7 @@ CREATE TABLE gsdd_Product_CVXCode (
  CVXCode text
 );
 
-COPY gsdd_Product_CVXCode FROM 's3://healthverity/incoming/gsdd/Product_CVXCode.txt'
+COPY gsdd_Product_CVXCode FROM 's3://salusv/reference/gsdd/Product_CVXCode.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -507,7 +507,7 @@ CREATE TABLE gsdd_Product_Therapeutic_Equivalence (
  EquivalenceCode text
 );
 
-COPY gsdd_Product_Therapeutic_Equivalence FROM 's3://healthverity/incoming/gsdd/Product_Therapeutic_Equivalence.txt'
+COPY gsdd_Product_Therapeutic_Equivalence FROM 's3://salusv/reference/gsdd/Product_Therapeutic_Equivalence.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -521,7 +521,7 @@ CREATE TABLE gsdd_ATC_Active_Composition_Generic_Group (
  ActiveCompositionGenericGroupID text
 );
 
-COPY gsdd_ATC_Active_Composition_Generic_Group FROM 's3://healthverity/incoming/gsdd/ATC_Active_Composition_Generic_Group.txt'
+COPY gsdd_ATC_Active_Composition_Generic_Group FROM 's3://salusv/reference/gsdd/ATC_Active_Composition_Generic_Group.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -535,7 +535,7 @@ CREATE TABLE gsdd_Therapeutic_Concept (
  ConceptName text
 );
 
-COPY gsdd_Therapeutic_Concept FROM 's3://healthverity/incoming/gsdd/Therapeutic_Concept.txt'
+COPY gsdd_Therapeutic_Concept FROM 's3://salusv/reference/gsdd/Therapeutic_Concept.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -549,7 +549,7 @@ CREATE TABLE gsdd_AGS_Beers_Quality_Of_Evidence (
  QualityOfEvidenceText text
 );
 
-COPY gsdd_AGS_Beers_Quality_Of_Evidence FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Quality_Of_Evidence.txt'
+COPY gsdd_AGS_Beers_Quality_Of_Evidence FROM 's3://salusv/reference/gsdd/AGS_Beers_Quality_Of_Evidence.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -563,7 +563,7 @@ CREATE TABLE gsdd_Imprint_Location (
  ImprintLocationDescription text
 );
 
-COPY gsdd_Imprint_Location FROM 's3://healthverity/incoming/gsdd/Imprint_Location.txt'
+COPY gsdd_Imprint_Location FROM 's3://salusv/reference/gsdd/Imprint_Location.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -577,7 +577,7 @@ CREATE TABLE gsdd_Product_Name_Type (
  TypeName text
 );
 
-COPY gsdd_Product_Name_Type FROM 's3://healthverity/incoming/gsdd/Product_Name_Type.txt'
+COPY gsdd_Product_Name_Type FROM 's3://salusv/reference/gsdd/Product_Name_Type.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -592,7 +592,7 @@ CREATE TABLE gsdd_License_Type (
  LicenseTypeDescription text
 );
 
-COPY gsdd_License_Type FROM 's3://healthverity/incoming/gsdd/License_Type.txt'
+COPY gsdd_License_Type FROM 's3://salusv/reference/gsdd/License_Type.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -606,7 +606,7 @@ CREATE TABLE gsdd_Outer_Package_Unit (
  UnitName text
 );
 
-COPY gsdd_Outer_Package_Unit FROM 's3://healthverity/incoming/gsdd/Outer_Package_Unit.txt'
+COPY gsdd_Outer_Package_Unit FROM 's3://salusv/reference/gsdd/Outer_Package_Unit.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -639,7 +639,7 @@ CREATE TABLE gsdd_Product (
  BulkChemical text
 );
 
-COPY gsdd_Product FROM 's3://healthverity/incoming/gsdd/Product.txt'
+COPY gsdd_Product FROM 's3://salusv/reference/gsdd/Product.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -658,7 +658,7 @@ CREATE TABLE gsdd_Drug_Item_Version (
  ScoringID text
 );
 
-COPY gsdd_Drug_Item_Version FROM 's3://healthverity/incoming/gsdd/Drug_Item_Version.txt'
+COPY gsdd_Drug_Item_Version FROM 's3://salusv/reference/gsdd/Drug_Item_Version.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -674,7 +674,7 @@ CREATE TABLE gsdd_Imprint (
  ImprintText text
 );
 
-COPY gsdd_Imprint FROM 's3://healthverity/incoming/gsdd/Imprint.txt'
+COPY gsdd_Imprint FROM 's3://salusv/reference/gsdd/Imprint.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -688,7 +688,7 @@ CREATE TABLE gsdd_Therapeutic_Equivalence (
  EquivalenceDescription text
 );
 
-COPY gsdd_Therapeutic_Equivalence FROM 's3://healthverity/incoming/gsdd/Therapeutic_Equivalence.txt'
+COPY gsdd_Therapeutic_Equivalence FROM 's3://salusv/reference/gsdd/Therapeutic_Equivalence.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -703,7 +703,7 @@ CREATE TABLE gsdd_AGS_Beers_Rationale (
  AvoidCautionId text
 );
 
-COPY gsdd_AGS_Beers_Rationale FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Rationale.txt'
+COPY gsdd_AGS_Beers_Rationale FROM 's3://salusv/reference/gsdd/AGS_Beers_Rationale.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -717,7 +717,7 @@ CREATE TABLE gsdd_GSTerm_ICD9 (
  GSTermId text
 );
 
-COPY gsdd_GSTerm_ICD9 FROM 's3://healthverity/incoming/gsdd/GSTerm_ICD9.txt'
+COPY gsdd_GSTerm_ICD9 FROM 's3://salusv/reference/gsdd/GSTerm_ICD9.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -731,7 +731,7 @@ CREATE TABLE gsdd_Color (
  ColorName text
 );
 
-COPY gsdd_Color FROM 's3://healthverity/incoming/gsdd/Color.txt'
+COPY gsdd_Color FROM 's3://salusv/reference/gsdd/Color.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -746,7 +746,7 @@ CREATE TABLE gsdd_Drug_Item_Version_Color (
  ColorID text
 );
 
-COPY gsdd_Drug_Item_Version_Color FROM 's3://healthverity/incoming/gsdd/Drug_Item_Version_Color.txt'
+COPY gsdd_Drug_Item_Version_Color FROM 's3://salusv/reference/gsdd/Drug_Item_Version_Color.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -760,7 +760,7 @@ CREATE TABLE gsdd_Shape (
  ShapeName text
 );
 
-COPY gsdd_Shape FROM 's3://healthverity/incoming/gsdd/Shape.txt'
+COPY gsdd_Shape FROM 's3://salusv/reference/gsdd/Shape.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -774,7 +774,7 @@ CREATE TABLE gsdd_Unit (
  UnitName text
 );
 
-COPY gsdd_Unit FROM 's3://healthverity/incoming/gsdd/Unit.txt'
+COPY gsdd_Unit FROM 's3://salusv/reference/gsdd/Unit.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -789,7 +789,7 @@ CREATE TABLE gsdd__GSDD_TableList (
  ModuleName text
 );
 
-COPY gsdd__GSDD_TableList FROM 's3://healthverity/incoming/gsdd/_GSDD_TableList.txt'
+COPY gsdd__GSDD_TableList FROM 's3://salusv/reference/gsdd/_GSDD_TableList.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -803,7 +803,7 @@ CREATE TABLE gsdd_Product_Storage (
  StorageID text
 );
 
-COPY gsdd_Product_Storage FROM 's3://healthverity/incoming/gsdd/Product_Storage.txt'
+COPY gsdd_Product_Storage FROM 's3://salusv/reference/gsdd/Product_Storage.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -817,7 +817,7 @@ CREATE TABLE gsdd_Branded_Name_Stub (
  BrandedNameStub text
 );
 
-COPY gsdd_Branded_Name_Stub FROM 's3://healthverity/incoming/gsdd/Branded_Name_Stub.txt'
+COPY gsdd_Branded_Name_Stub FROM 's3://salusv/reference/gsdd/Branded_Name_Stub.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -831,7 +831,7 @@ CREATE TABLE gsdd_NCPDP_Unit (
  UnitName text
 );
 
-COPY gsdd_NCPDP_Unit FROM 's3://healthverity/incoming/gsdd/NCPDP_Unit.txt'
+COPY gsdd_NCPDP_Unit FROM 's3://salusv/reference/gsdd/NCPDP_Unit.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -845,7 +845,7 @@ CREATE TABLE gsdd_Package_CMSName (
  CMSName text
 );
 
-COPY gsdd_Package_CMSName FROM 's3://healthverity/incoming/gsdd/Package_CMSName.txt'
+COPY gsdd_Package_CMSName FROM 's3://salusv/reference/gsdd/Package_CMSName.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -864,7 +864,7 @@ CREATE TABLE gsdd_Nondrug_Item (
  SpecificNondrugItemID text
 );
 
-COPY gsdd_Nondrug_Item FROM 's3://healthverity/incoming/gsdd/Nondrug_Item.txt'
+COPY gsdd_Nondrug_Item FROM 's3://salusv/reference/gsdd/Nondrug_Item.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -880,7 +880,7 @@ CREATE TABLE gsdd_Package_Nondrug_Item (
  PackageItemUnitID text
 );
 
-COPY gsdd_Package_Nondrug_Item FROM 's3://healthverity/incoming/gsdd/Package_Nondrug_Item.txt'
+COPY gsdd_Package_Nondrug_Item FROM 's3://salusv/reference/gsdd/Package_Nondrug_Item.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -895,7 +895,7 @@ CREATE TABLE gsdd_Nondrug_Item_Version_Attributes (
  NondrugItemVersionAttributeID text
 );
 
-COPY gsdd_Nondrug_Item_Version_Attributes FROM 's3://healthverity/incoming/gsdd/Nondrug_Item_Version_Attributes.txt'
+COPY gsdd_Nondrug_Item_Version_Attributes FROM 's3://salusv/reference/gsdd/Nondrug_Item_Version_Attributes.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -910,7 +910,7 @@ CREATE TABLE gsdd_Therapeutic_Concept_Tree (
  TherapeuticConceptID text
 );
 
-COPY gsdd_Therapeutic_Concept_Tree FROM 's3://healthverity/incoming/gsdd/Therapeutic_Concept_Tree.txt'
+COPY gsdd_Therapeutic_Concept_Tree FROM 's3://salusv/reference/gsdd/Therapeutic_Concept_Tree.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -924,7 +924,7 @@ CREATE TABLE gsdd_AGS_Beers_Therapeutic_Category_Organ_System (
  TherapeuticCategoryOrganSystemText text
 );
 
-COPY gsdd_AGS_Beers_Therapeutic_Category_Organ_System FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Therapeutic_Category_Organ_System.txt'
+COPY gsdd_AGS_Beers_Therapeutic_Category_Organ_System FROM 's3://salusv/reference/gsdd/AGS_Beers_Therapeutic_Category_Organ_System.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -940,7 +940,7 @@ CREATE TABLE gsdd_NonSplittable_Product (
  NonSplittable text
 );
 
-COPY gsdd_NonSplittable_Product FROM 's3://healthverity/incoming/gsdd/NonSplittable_Product.txt'
+COPY gsdd_NonSplittable_Product FROM 's3://salusv/reference/gsdd/NonSplittable_Product.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -954,7 +954,7 @@ CREATE TABLE gsdd_GS_Form (
  FormName text
 );
 
-COPY gsdd_GS_Form FROM 's3://healthverity/incoming/gsdd/GS_Form.txt'
+COPY gsdd_GS_Form FROM 's3://salusv/reference/gsdd/GS_Form.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -971,7 +971,7 @@ CREATE TABLE gsdd_Package_Version_Nondrug_Item_Version (
  CompanyID text
 );
 
-COPY gsdd_Package_Version_Nondrug_Item_Version FROM 's3://healthverity/incoming/gsdd/Package_Version_Nondrug_Item_Version.txt'
+COPY gsdd_Package_Version_Nondrug_Item_Version FROM 's3://salusv/reference/gsdd/Package_Version_Nondrug_Item_Version.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -985,7 +985,7 @@ CREATE TABLE gsdd_Storage (
  StorageConcept text
 );
 
-COPY gsdd_Storage FROM 's3://healthverity/incoming/gsdd/Storage.txt'
+COPY gsdd_Storage FROM 's3://salusv/reference/gsdd/Storage.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -999,7 +999,7 @@ CREATE TABLE gsdd_Nondrug_Item_Version_Attribute (
  AttributeName text
 );
 
-COPY gsdd_Nondrug_Item_Version_Attribute FROM 's3://healthverity/incoming/gsdd/Nondrug_Item_Version_Attribute.txt'
+COPY gsdd_Nondrug_Item_Version_Attribute FROM 's3://salusv/reference/gsdd/Nondrug_Item_Version_Attribute.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1013,7 +1013,7 @@ CREATE TABLE gsdd_Active_Composition_Generic_Group_Active_Composition_Generic (
  ActiveCompositionGenericID text
 );
 
-COPY gsdd_Active_Composition_Generic_Group_Active_Composition_Generic FROM 's3://healthverity/incoming/gsdd/Active_Composition_Generic_Group_Active_Composition_Generic.txt'
+COPY gsdd_Active_Composition_Generic_Group_Active_Composition_Generic FROM 's3://salusv/reference/gsdd/Active_Composition_Generic_Group_Active_Composition_Generic.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1028,7 +1028,7 @@ CREATE TABLE gsdd_AGS_Beers_Table (
  TableDescription text
 );
 
-COPY gsdd_AGS_Beers_Table FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Table.txt'
+COPY gsdd_AGS_Beers_Table FROM 's3://salusv/reference/gsdd/AGS_Beers_Table.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1050,7 +1050,7 @@ CREATE TABLE gsdd_AGS_Beers_Criteria_Item (
  ProfessionalNotes text
 );
 
-COPY gsdd_AGS_Beers_Criteria_Item FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Criteria_Item.txt'
+COPY gsdd_AGS_Beers_Criteria_Item FROM 's3://salusv/reference/gsdd/AGS_Beers_Criteria_Item.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1067,7 +1067,7 @@ CREATE TABLE gsdd_Maintenance_Medications (
  NDC11 text
 );
 
-COPY gsdd_Maintenance_Medications FROM 's3://healthverity/incoming/gsdd/Maintenance_Medications.txt'
+COPY gsdd_Maintenance_Medications FROM 's3://salusv/reference/gsdd/Maintenance_Medications.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1084,7 +1084,7 @@ CREATE TABLE gsdd_Ingredient_Name (
  isBaseIngredient text
 );
 
-COPY gsdd_Ingredient_Name FROM 's3://healthverity/incoming/gsdd/Ingredient_Name.txt'
+COPY gsdd_Ingredient_Name FROM 's3://salusv/reference/gsdd/Ingredient_Name.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1100,7 +1100,7 @@ CREATE TABLE gsdd_Product_Generic_Name_Stub (
  GenericSynonym text
 );
 
-COPY gsdd_Product_Generic_Name_Stub FROM 's3://healthverity/incoming/gsdd/Product_Generic_Name_Stub.txt'
+COPY gsdd_Product_Generic_Name_Stub FROM 's3://salusv/reference/gsdd/Product_Generic_Name_Stub.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1114,7 +1114,7 @@ CREATE TABLE gsdd_Product_Ingredient_Federal_Narcotic (
  IngredientID text
 );
 
-COPY gsdd_Product_Ingredient_Federal_Narcotic FROM 's3://healthverity/incoming/gsdd/Product_Ingredient_Federal_Narcotic.txt'
+COPY gsdd_Product_Ingredient_Federal_Narcotic FROM 's3://salusv/reference/gsdd/Product_Ingredient_Federal_Narcotic.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1135,7 +1135,7 @@ CREATE TABLE gsdd_Drug_Item_Active_Ingredient (
  BaseEquivalent text
 );
 
-COPY gsdd_Drug_Item_Active_Ingredient FROM 's3://healthverity/incoming/gsdd/Drug_Item_Active_Ingredient.txt'
+COPY gsdd_Drug_Item_Active_Ingredient FROM 's3://salusv/reference/gsdd/Drug_Item_Active_Ingredient.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1149,7 +1149,7 @@ CREATE TABLE gsdd_Package_Item_Unit (
  UnitName text
 );
 
-COPY gsdd_Package_Item_Unit FROM 's3://healthverity/incoming/gsdd/Package_Item_Unit.txt'
+COPY gsdd_Package_Item_Unit FROM 's3://salusv/reference/gsdd/Package_Item_Unit.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1163,7 +1163,7 @@ CREATE TABLE gsdd_Implicit_Route (
  Route text
 );
 
-COPY gsdd_Implicit_Route FROM 's3://healthverity/incoming/gsdd/Implicit_Route.txt'
+COPY gsdd_Implicit_Route FROM 's3://salusv/reference/gsdd/Implicit_Route.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1177,7 +1177,7 @@ CREATE TABLE gsdd_Legend_Status (
  StatusName text
 );
 
-COPY gsdd_Legend_Status FROM 's3://healthverity/incoming/gsdd/Legend_Status.txt'
+COPY gsdd_Legend_Status FROM 's3://salusv/reference/gsdd/Legend_Status.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1194,7 +1194,7 @@ CREATE TABLE gsdd_Route_Of_Administration (
  SigAbbreviation text
 );
 
-COPY gsdd_Route_Of_Administration FROM 's3://healthverity/incoming/gsdd/Route_Of_Administration.txt'
+COPY gsdd_Route_Of_Administration FROM 's3://salusv/reference/gsdd/Route_Of_Administration.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1227,7 +1227,7 @@ CREATE TABLE gsdd_Package_Version (
  PackageSize text
 );
 
-COPY gsdd_Package_Version FROM 's3://healthverity/incoming/gsdd/Package_Version.txt'
+COPY gsdd_Package_Version FROM 's3://salusv/reference/gsdd/Package_Version.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1242,7 +1242,7 @@ CREATE TABLE gsdd_Drug_Item_Version_Attributes (
  DrugItemVersionAttributeID text
 );
 
-COPY gsdd_Drug_Item_Version_Attributes FROM 's3://healthverity/incoming/gsdd/Drug_Item_Version_Attributes.txt'
+COPY gsdd_Drug_Item_Version_Attributes FROM 's3://salusv/reference/gsdd/Drug_Item_Version_Attributes.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1256,7 +1256,7 @@ CREATE TABLE gsdd_Flavor (
  FlavorName text
 );
 
-COPY gsdd_Flavor FROM 's3://healthverity/incoming/gsdd/Flavor.txt'
+COPY gsdd_Flavor FROM 's3://salusv/reference/gsdd/Flavor.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1270,7 +1270,7 @@ CREATE TABLE gsdd_Therapeutic_Concept_Tree_Specific_Product (
  SpecificProductID text
 );
 
-COPY gsdd_Therapeutic_Concept_Tree_Specific_Product FROM 's3://healthverity/incoming/gsdd/Therapeutic_Concept_Tree_Specific_Product.txt'
+COPY gsdd_Therapeutic_Concept_Tree_Specific_Product FROM 's3://salusv/reference/gsdd/Therapeutic_Concept_Tree_Specific_Product.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1288,7 +1288,7 @@ CREATE TABLE gsdd_GSTerms (
  AllowedForAdverseReaction text
 );
 
-COPY gsdd_GSTerms FROM 's3://healthverity/incoming/gsdd/GSTerms.txt'
+COPY gsdd_GSTerms FROM 's3://salusv/reference/gsdd/GSTerms.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1304,7 +1304,7 @@ CREATE TABLE gsdd_NonSplittable_Package (
  NonSplittable text
 );
 
-COPY gsdd_NonSplittable_Package FROM 's3://healthverity/incoming/gsdd/NonSplittable_Package.txt'
+COPY gsdd_NonSplittable_Package FROM 's3://salusv/reference/gsdd/NonSplittable_Package.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1330,7 +1330,7 @@ CREATE TABLE gsdd_FDA_Form_NCIt_Term (
  NCItDefinition text
 );
 
-COPY gsdd_FDA_Form_NCIt_Term FROM 's3://healthverity/incoming/gsdd/FDA_Form_NCIt_Term.txt'
+COPY gsdd_FDA_Form_NCIt_Term FROM 's3://salusv/reference/gsdd/FDA_Form_NCIt_Term.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1344,7 +1344,7 @@ CREATE TABLE gsdd_SSMS_Type (
  SourceType text
 );
 
-COPY gsdd_SSMS_Type FROM 's3://healthverity/incoming/gsdd/SSMS_Type.txt'
+COPY gsdd_SSMS_Type FROM 's3://salusv/reference/gsdd/SSMS_Type.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1362,7 +1362,7 @@ CREATE TABLE gsdd_CVXCode (
  LastUpdated text
 );
 
-COPY gsdd_CVXCode FROM 's3://healthverity/incoming/gsdd/CVXCode.txt'
+COPY gsdd_CVXCode FROM 's3://salusv/reference/gsdd/CVXCode.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1376,7 +1376,7 @@ CREATE TABLE gsdd_Product_Attribute (
  AttributeName text
 );
 
-COPY gsdd_Product_Attribute FROM 's3://healthverity/incoming/gsdd/Product_Attribute.txt'
+COPY gsdd_Product_Attribute FROM 's3://salusv/reference/gsdd/Product_Attribute.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1390,7 +1390,7 @@ CREATE TABLE gsdd_Product_Product_Attribute (
  ProductAttributeID text
 );
 
-COPY gsdd_Product_Product_Attribute FROM 's3://healthverity/incoming/gsdd/Product_Product_Attribute.txt'
+COPY gsdd_Product_Product_Attribute FROM 's3://salusv/reference/gsdd/Product_Product_Attribute.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1404,7 +1404,7 @@ CREATE TABLE gsdd_ATC_Specific_Product (
  SpecificProductId text
 );
 
-COPY gsdd_ATC_Specific_Product FROM 's3://healthverity/incoming/gsdd/ATC_Specific_Product.txt'
+COPY gsdd_ATC_Specific_Product FROM 's3://salusv/reference/gsdd/ATC_Specific_Product.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1421,7 +1421,7 @@ CREATE TABLE gsdd_Package_SSMS (
  SourceCount text
 );
 
-COPY gsdd_Package_SSMS FROM 's3://healthverity/incoming/gsdd/Package_SSMS.txt'
+COPY gsdd_Package_SSMS FROM 's3://salusv/reference/gsdd/Package_SSMS.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1437,7 +1437,7 @@ CREATE TABLE gsdd_AGS_Beers_Criteria_Generic_Product_Product (
  GenericProductClinicalID text
 );
 
-COPY gsdd_AGS_Beers_Criteria_Generic_Product_Product FROM 's3://healthverity/incoming/gsdd/AGS_Beers_Criteria_Generic_Product_Product.txt'
+COPY gsdd_AGS_Beers_Criteria_Generic_Product_Product FROM 's3://salusv/reference/gsdd/AGS_Beers_Criteria_Generic_Product_Product.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1456,7 +1456,7 @@ CREATE TABLE gsdd_Drug_Item (
  SpecificDrugItemID text
 );
 
-COPY gsdd_Drug_Item FROM 's3://healthverity/incoming/gsdd/Drug_Item.txt'
+COPY gsdd_Drug_Item FROM 's3://salusv/reference/gsdd/Drug_Item.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1470,7 +1470,7 @@ CREATE TABLE gsdd_Nondrug_Item_Route (
  RouteID text
 );
 
-COPY gsdd_Nondrug_Item_Route FROM 's3://healthverity/incoming/gsdd/Nondrug_Item_Route.txt'
+COPY gsdd_Nondrug_Item_Route FROM 's3://salusv/reference/gsdd/Nondrug_Item_Route.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1484,7 +1484,7 @@ CREATE TABLE gsdd_FDA_Form (
  FormName text
 );
 
-COPY gsdd_FDA_Form FROM 's3://healthverity/incoming/gsdd/FDA_Form.txt'
+COPY gsdd_FDA_Form FROM 's3://salusv/reference/gsdd/FDA_Form.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1504,7 +1504,7 @@ CREATE TABLE gsdd_Therapeutic_Concept_Tree_DENORM (
  Parent6 text
 );
 
-COPY gsdd_Therapeutic_Concept_Tree_DENORM FROM 's3://healthverity/incoming/gsdd/Therapeutic_Concept_Tree_DENORM.txt'
+COPY gsdd_Therapeutic_Concept_Tree_DENORM FROM 's3://salusv/reference/gsdd/Therapeutic_Concept_Tree_DENORM.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1518,7 +1518,7 @@ CREATE TABLE gsdd_Coating (
  CoatingName text
 );
 
-COPY gsdd_Coating FROM 's3://healthverity/incoming/gsdd/Coating.txt'
+COPY gsdd_Coating FROM 's3://salusv/reference/gsdd/Coating.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1532,7 +1532,7 @@ CREATE TABLE gsdd_Inner_Package_Unit (
  UnitName text
 );
 
-COPY gsdd_Inner_Package_Unit FROM 's3://healthverity/incoming/gsdd/Inner_Package_Unit.txt'
+COPY gsdd_Inner_Package_Unit FROM 's3://salusv/reference/gsdd/Inner_Package_Unit.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1546,7 +1546,7 @@ CREATE TABLE gsdd_Brand_Generic_Status (
  StatusName text
 );
 
-COPY gsdd_Brand_Generic_Status FROM 's3://healthverity/incoming/gsdd/Brand_Generic_Status.txt'
+COPY gsdd_Brand_Generic_Status FROM 's3://salusv/reference/gsdd/Brand_Generic_Status.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS
@@ -1560,7 +1560,7 @@ CREATE TABLE gsdd_Drug_Item_Route (
  RouteID text
 );
 
-COPY gsdd_Drug_Item_Route FROM 's3://healthverity/incoming/gsdd/Drug_Item_Route.txt'
+COPY gsdd_Drug_Item_Route FROM 's3://salusv/reference/gsdd/Drug_Item_Route.txt'
     WITH CREDENTIALS :'AWS_CREDENTIALS'
     DELIMITER '|'
     TRUNCATECOLUMNS

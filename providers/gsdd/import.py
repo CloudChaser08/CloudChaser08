@@ -1,4 +1,4 @@
-#!env python2.7
+#!/usr/bin/python2.7
 
 import os
 from subprocess import check_output as call
