@@ -1,3 +1,39 @@
+COPY gsdd_product_contraindications FROM 's3://salusv/reference/gsdd/Product_Indications.txt'
+    WITH CREDENTIALS :'AWS_CREDENTIALS'
+    DELIMITER '|'
+    TRUNCATECOLUMNS
+    COMPUPDATE ON;
+
+CREATE TABLE gsdd_product_indications(
+ ProductID text,
+ GSTermID text,
+ MinAge text,
+ MaxAge text,
+ AgeUnit text,
+ Gender text,
+ IsOffLabel text,
+ RouteCode text,
+ SectionID text
+);
+
+CREATE TABLE gsdd_product_contraindications(
+ ProductID text,
+ GSTermID text,
+ MinAge text,
+ MaxAge text,
+ AgeUnits text,
+ Gender text,
+ IsContraindication text,
+ IsBoxedWarning text,
+ SectionID text
+);
+
+COPY gsdd_product_contraindications FROM 's3://salusv/reference/gsdd/Product_Contraindications.txt'
+    WITH CREDENTIALS :'AWS_CREDENTIALS'
+    DELIMITER '|'
+    TRUNCATECOLUMNS
+    COMPUPDATE ON;
+
 CREATE TABLE gsdd_Product_CMSName (
  ProductID text,
  CMSName text
@@ -9,9 +45,6 @@ COPY gsdd_Product_CMSName FROM 's3://salusv/reference/gsdd/Product_CMSName.txt'
     TRUNCATECOLUMNS
     COMPUPDATE ON;
 
-
-
-
 CREATE TABLE gsdd_CVXCode_VaccineGroup (
  CVXCode text,
  VaccineGroup text
@@ -22,8 +55,6 @@ COPY gsdd_CVXCode_VaccineGroup FROM 's3://salusv/reference/gsdd/CVXCode_VaccineG
     DELIMITER '|'
     TRUNCATECOLUMNS
     COMPUPDATE ON;
-
-
 
 
 CREATE TABLE gsdd_AGS_Beers_Strength_Of_Recommendation (
@@ -368,7 +399,7 @@ COPY gsdd_DESI_Status FROM 's3://salusv/reference/gsdd/DESI_Status.txt'
 CREATE TABLE gsdd_Product_Branded_Name_Stub (
  ProductID text,
  BrandedNameStubID text,
- Default text
+ Defaults text
 );
 
 COPY gsdd_Product_Branded_Name_Stub FROM 's3://salusv/reference/gsdd/Product_Branded_Name_Stub.txt'
