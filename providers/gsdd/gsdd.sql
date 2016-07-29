@@ -1,9 +1,3 @@
-COPY gsdd_product_contraindications FROM 's3://salusv/reference/gsdd/Product_Indications.txt'
-    WITH CREDENTIALS :'AWS_CREDENTIALS'
-    DELIMITER '|'
-    TRUNCATECOLUMNS
-    COMPUPDATE ON;
-
 CREATE TABLE gsdd_product_indications(
  ProductID text,
  GSTermID text,
@@ -15,6 +9,13 @@ CREATE TABLE gsdd_product_indications(
  RouteCode text,
  SectionID text
 );
+
+COPY gsdd_product_indications FROM 's3://salusv/reference/gsdd/Product_Indications.txt'
+    WITH CREDENTIALS :'AWS_CREDENTIALS'
+    DELIMITER '|'
+    TRUNCATECOLUMNS
+    COMPUPDATE ON;
+
 
 CREATE TABLE gsdd_product_contraindications(
  ProductID text,
