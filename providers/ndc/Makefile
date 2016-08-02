@@ -34,8 +34,8 @@ fetch:
 	cd data && 7z -y x ndctext.zip
 
 push:
-	aws s3 cp --sse AES256 data/product.txt s3://salusv/reference/ndc/${DAY}/product.txt
-	aws s3 cp --sse AES256 data/package.txt s3://salusv/reference/ndc/${DAY}/package.txt
+	/usr/local/bin/aws s3 cp --sse AES256 data/product.txt s3://salusv/reference/ndc/${DAY}/product.txt
+	/usr/local/bin/aws s3 cp --sse AES256 data/package.txt s3://salusv/reference/ndc/${DAY}/package.txt
 
 clean:
 	rm -rf data
