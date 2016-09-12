@@ -4,6 +4,7 @@ import re
 import argparse
 import time
 
+TODAY = time.strftime('%Y-%m-%d', time.localtime())
 S3_EMDEON_IN = 's3://salusv/incoming/medicalclaims/emdeon/'
 S3_EMDEON_OUT = 's3://salusv/processed/medicalclaims/emdeon/'
 S3_EMDEON_MPL = 's3://salusv/matching/payload/medicalclaims/emdeon/'
@@ -32,7 +33,8 @@ udf = [x for x in psql]
 udf.extend([db, '<', 'udf.sql'])
 
 create_tables = [x for x in psql]
-create_tables.extend(['-v', 'filename="\'' + args.setid + '\'"', db, '<', 'create_tables.sql'])
+create_tables.extend(['-v', 'filename="\'' + args.setid + '\'"',
+        '-v', 'today="\'' + TODAY + '\'"', db, '<', 'create_tables.sql'])
 
 normalize = [x for x in psql]
 normalize.extend(['-v', 'credentials="\'' + args.s3_credentials + '\'"',
