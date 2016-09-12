@@ -887,8 +887,8 @@ threeDigitZip as patient_zip3,
 state as patient_state,
 claim_type,
 date_received,
-date_service,
-date_service_end,
+CASE WHEN char_length(statement_from) >= 8 THEN regexp_replace(statement_from, '(....)(..)(..)', '\\1-\\2-\\3') ELSE NULL END,
+CASE WHEN char_length(statement_to) >= 8 THEN regexp_replace(statement_to, '(....)(..)(..)', '\\1-\\2-\\3') ELSE NULL END,
 inst_date_admitted,
 inst_admit_type_std_id,
 inst_admit_source_std_id,
@@ -1126,8 +1126,11 @@ FROM emdeon_institutional_claims_all b
     LEFT JOIN matching_payload ON b.claim_id = claimId
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3;
 
+DROP TABLE IF EXISTS service_loc;
+SELECT DISTINCT claim_id, place_of_service_std_id INTO service_loc FROM emdeon_dx_raw_service;
+
 DROP TABLE IF EXISTS emdeon_institutional_claims_unrelated;
-SELECT *, uniquify((COALESCE(primary_diagnosis, '')  || ':' || COALESCE(diagnosis_code_2, '')  || ':' || COALESCE(diagnosis_code_3, '')  || ':' || COALESCE(diagnosis_code_4, '')  || ':' || COALESCE(diagnosis_code_5, '')  || ':' || COALESCE(diagnosis_code_6, '')  || ':' || COALESCE(diagnosis_code_7, '')  || ':' || COALESCE(diagnosis_code_8, '')  || ':' || COALESCE(diagnosis_code_9, '')  || ':' || COALESCE(diagnosis_code_10, '')  || ':' || COALESCE(diagnosis_code_11, '')  || ':' || COALESCE(diagnosis_code_12, '')  || ':' || COALESCE(diagnosis_code_13, '')  || ':' || COALESCE(diagnosis_code_14, '')  || ':' || COALESCE(diagnosis_code_15, '')  || ':' || COALESCE(diagnosis_code_16, '')  || ':' || COALESCE(diagnosis_code_17, '')  || ':' || COALESCE(diagnosis_code_18, '')  || ':' || COALESCE(diagnosis_code_19, '')  || ':' || COALESCE(diagnosis_code_20, '')  || ':' || COALESCE(diagnosis_code_21, '')  || ':' || COALESCE(diagnosis_code_22, '')  || ':' || COALESCE(diagnosis_code_23, '')  || ':' || COALESCE(diagnosis_code_24, '')  || ':' || COALESCE(diagnosis_code_25, '')  || ':' || COALESCE(admit_diagnosis, ''))) as diag_concat INTO emdeon_institutional_claims_unrelated FROM emdeon_institutional_claims_extended;
+SELECT *, uniquify((COALESCE(primary_diagnosis, '')  || ':' || COALESCE(diagnosis_code_2, '')  || ':' || COALESCE(diagnosis_code_3, '')  || ':' || COALESCE(diagnosis_code_4, '')  || ':' || COALESCE(diagnosis_code_5, '')  || ':' || COALESCE(diagnosis_code_6, '')  || ':' || COALESCE(diagnosis_code_7, '')  || ':' || COALESCE(diagnosis_code_8, '')  || ':' || COALESCE(diagnosis_code_9, '')  || ':' || COALESCE(diagnosis_code_10, '')  || ':' || COALESCE(diagnosis_code_11, '')  || ':' || COALESCE(diagnosis_code_12, '')  || ':' || COALESCE(diagnosis_code_13, '')  || ':' || COALESCE(diagnosis_code_14, '')  || ':' || COALESCE(diagnosis_code_15, '')  || ':' || COALESCE(diagnosis_code_16, '')  || ':' || COALESCE(diagnosis_code_17, '')  || ':' || COALESCE(diagnosis_code_18, '')  || ':' || COALESCE(diagnosis_code_19, '')  || ':' || COALESCE(diagnosis_code_20, '')  || ':' || COALESCE(diagnosis_code_21, '')  || ':' || COALESCE(diagnosis_code_22, '')  || ':' || COALESCE(diagnosis_code_23, '')  || ':' || COALESCE(diagnosis_code_24, '')  || ':' || COALESCE(diagnosis_code_25, '')  || ':' || COALESCE(admit_diagnosis, ''))) as diag_concat INTO emdeon_institutional_claims_unrelated FROM emdeon_institutional_claims_extended LEFT JOIN service_loc USING (claim_id);
 
 
 INSERT INTO final_output (claim_id,
@@ -1139,12 +1142,15 @@ patient_zip3,
 patient_state,
 claim_type,
 date_received,
+date_service,
+date_service_end,
 inst_date_admitted,
 inst_admit_type_std_id,
 inst_admit_source_std_id,
 inst_discharge_status_std_id,
 inst_type_of_bill_std_id,
 inst_drg_std_id,
+place_of_service_std_id,
 diagnosis_code,
 diagnosis_code_qual,
 admit_diagnosis_ind,
@@ -1210,12 +1216,15 @@ threeDigitZip as patient_zip3,
 state as patient_state,
 claim_type,
 date_received,
+CASE WHEN char_length(statement_from) >= 8 THEN regexp_replace(statement_from, '(....)(..)(..)', '\\1-\\2-\\3') ELSE NULL END,
+CASE WHEN char_length(statement_to) >= 8 THEN regexp_replace(statement_to, '(....)(..)(..)', '\\1-\\2-\\3') ELSE NULL END,
 inst_date_admitted,
 inst_admit_type_std_id,
 inst_admit_source_std_id,
 inst_discharge_status_std_id,
 inst_type_of_bill_std_id,
 inst_drg_std_id,
+place_of_service_std_id,
 UPPER(LTRIM(RTRIM(split_part(diag_concat,':',n)))) AS diagnosis_code,
 diagnosis_code_qual,
 CASE WHEN LEN(UPPER(LTRIM(RTRIM(split_part(diag_concat,':',n))))) AND UPPER(LTRIM(RTRIM(split_part(diag_concat,':',n)))) = UPPER(LTRIM(RTRIM(admit_diagnosis))) THEN 1 ELSE NULL END AS admit_diagnosis_ind,
