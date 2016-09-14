@@ -125,7 +125,7 @@ CASE WHEN char_length(ltrim(date_service, '0')) >= 8 THEN substring(date_service
 CASE WHEN char_length(ltrim(date_written, '0')) >= 8 THEN substring(date_written from 1 for 4) || '-' || substring(date_written from 5 for 2) || '-' || substring(date_written from 7 for 2) ELSE NULL END,
 CASE WHEN char_length(ltrim(date_injury, '0')) >= 8 THEN substring(date_injury from 1 for 4) || '-' || substring(date_injury from 5 for 2) || '-' || substring(date_injury from 7 for 2) ELSE NULL END,
 CASE WHEN char_length(ltrim(date_authorized, '0')) >= 8 THEN substring(date_authorized from 1 for 4) || '-' || substring(date_authorized from 5 for 2) || '-' || substring(date_authorized from 7 for 2) ELSE NULL END,
-CASE WHEN char_length(ltrim(time_authorized, '0')) >= 4 THEN substring(time_authorized from 1 for 2) || ':' || substring(time_authorized from 3 for 2) ELSE NULL END,
+CASE WHEN char_length(time_authorized) >= 4 THEN substring(time_authorized from 1 for 2) || ':' || substring(time_authorized from 3 for 2) ELSE NULL END,
 ltrim(transaction_code),
 ltrim(response_code),
 ltrim(reject_reason_code_1),
