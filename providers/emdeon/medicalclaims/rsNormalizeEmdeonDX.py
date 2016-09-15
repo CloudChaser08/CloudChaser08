@@ -15,7 +15,7 @@ parser.add_argument('--matching_path', type=str)
 parser.add_argument('--output_path', type=str)
 parser.add_argument('--database', type=str, nargs='?')
 parser.add_argument('--setid', type=str)
-parser.add_argument('--cluster_endpoint', type=str)
+parser.add_argument('--cluster_endpoint', type=str, nargs='?')
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--rs_user', type=str, nargs='?')
 parser.add_argument('--rs_password', type=str, nargs='?')
@@ -23,25 +23,30 @@ args = parser.parse_args()
 
 db = args.database if args.database else 'dev'
 
-psql = ['psql', '-h', args.cluster_endpoint, '-p', '5439']
+psql = ['psql', '-p', '5439']
+if args.cluster_endpoint:
+    psql.extend(['-h', args.cluster_endpoint])
 if args.rs_user:
-    psql.append('-U')
-    psql.append(args.rs_user)
-    psql.append('-W')
+    psql.extend(['-U', args.rs_user, '-W'])
 
-udf = [x for x in psql]
-udf.extend([db, '<', 'udf.sql'])
-
-create_tables = [x for x in psql]
-create_tables.extend(['-v', 'filename="\'' + args.setid + '\'"',
-        '-v', 'today="\'' + TODAY + '\'"', db, '<', 'create_tables.sql'])
-
-normalize = [x for x in psql]
-normalize.extend(['-v', 'credentials="\'' + args.s3_credentials + '\'"',
-        '-v', 'input_path="\'' + args.input_path + '\'"',
-        '-v', 'output_path="\'' + args.output_path + '\'"',
-        '-v', 'matching_path="\'' + args.matching_path + '\'"', db, '<', 'normalize_emdeon_dx.sql'])
-
-subprocess.call(' '.join(udf), shell=True)
-subprocess.call(' '.join(create_tables), shell=True)
-subprocess.call(' '.join(normalize), shell=True)
+subprocess.call(' '.join(psql + [db, '<', 'user_defined_functions.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', 'create_helper_tables.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/zip3_to_state.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'filename="\'' + args.setid + '\'"'] + 
+    ['-v', 'today="\'' + TODAY + '\'"'] +
+    ['-v', 'feedname="\'webmd medical claims\'"'] +
+    ['-v', 'vendor="\'webmd\'"'] +
+    [db, '<', '../../redshift_norm_common/medicalclaims_common_model.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'input_path="\'' + args.input_path + '\'"'] +
+    ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
+    [db, '<', 'load_transactions.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'matching_path="\'' + args.matching_path + '\'"'] +
+    ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
+    [db, '<', 'load_matching_payload.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', 'split_raw_transactions.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', 'normalize_professional_claims.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', 'normalize_institutional_claims.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'output_path="\'' + args.output_path + '\'"'] +
+    ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
+    ['-v', 'select_from_common_model_table="\'SELECT * FROM medicalclaims_common_model\'"'] +
+    [db, '<', '../../redshift_norm_common/unload_common_model.sql']), shell=True)
