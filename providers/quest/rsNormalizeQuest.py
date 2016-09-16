@@ -28,6 +28,8 @@ if args.rs_user:
     psql.append(args.rs_user)
     psql.append('-W')
 
+set_pass=['export', 'PGPASSWORD=' + args.rs_password]
+
 # udf = [x for x in psql]
 # udf.extend([db, '<', 'udf.sql'])
 
@@ -43,6 +45,7 @@ normalize.extend(['-v', 'credentials="\'' + args.s3_credentials + '\'"',
                   '-v', 'matching_path="\'' + args.matching_path + '\'"',
                   db, '<', 'normalize.sql'])
 
+subprocess.call(' '.join(set_pass), shell=True)
 # subprocess.call(' '.join(udf), shell=True)
 subprocess.call(' '.join(create_tables), shell=True)
 subprocess.call(' '.join(normalize), shell=True)

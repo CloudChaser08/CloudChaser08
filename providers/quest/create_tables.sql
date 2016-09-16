@@ -1,22 +1,34 @@
-DROP TABLE IF EXISTS quest_raw;
-CREATE TABLE quest_raw (
-        accn_id              text ENCODE lzo,
-        dosid                text ENCODE lzo,
-        local_order_code     text ENCODE lzo,
-        standard_order_code  text ENCODE lzo,
-        order_name           text ENCODE lzo,
-        loinc_code           text ENCODE lzo,
-        local_result_code    text ENCODE lzo,
-        result_name          text ENCODE lzo,
-        date_of_service      text ENCODE lzo,
-        date_collected       text ENCODE lzo,
-        diagnosis_code       text ENCODE lzo,
-        icd_codeset_ind      text ENCODE lzo
-        );
+-- DROP TABLE IF EXISTS transactional_raw;
+-- CREATE TABLE transactional_raw (
+        -- accn_id              text ENCODE lzo,
+        -- dosid                text ENCODE lzo,
+        -- local_order_code     text ENCODE lzo,
+        -- standard_order_code  text ENCODE lzo,
+        -- order_name           text ENCODE lzo,
+        -- loinc_code           text ENCODE lzo,
+        -- local_result_code    text ENCODE lzo,
+        -- result_name          text ENCODE lzo,
+        -- date_of_service      text ENCODE lzo,
+        -- date_collected       text ENCODE lzo,
+        -- diagnosis_code       text ENCODE lzo,
+        -- icd_codeset_ind      text ENCODE lzo
+        -- );
+
+-- DROP TABLE IF EXISTS matching_payload;
+-- CREATE TABLE matching_payload (
+        -- claimid        varchar ENCODE lzo,
+        -- hvid           text ENCODE lzo,
+        -- parentid       text ENCODE lzo,
+        -- threeDigitZip  char(3) ENCODE lzo,
+        -- yearOfBirth    text ENCODE lzo,
+        -- gender         text ENCODE lzo,
+        -- state          text ENCODE lzo,
+        -- age            text ENCODE lzo
+        -- ) DISTKEY(claimid) SORTKEY(claimid);
 
 DROP TABLE IF EXISTS normalized_output;
 CREATE TABLE normalized_output (
-        record_id               int IDENTITY(0,1),
+        record_id               bigint IDENTITY(0,1),
         claim_id                text ENCODE lzo,
         hvid                    text ENCODE lzo,
         created                 date DEFAULT :today,
