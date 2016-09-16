@@ -1,7 +1,7 @@
 -- Load MERGED transaction data into table
-copy quest_raw from :input_path credentials :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY quest_raw FROM :input_path credentials :credentials BZIP2 EMPTYASNULL DELIMITER '|';
 
-insert into normalized_output (
+INSERT INTO normalized_output (
         claim_id,
         hvid,
         patient_gender,
@@ -29,17 +29,19 @@ insert into normalized_output (
         diagnosis_code,
         diagnosis_code_qual
         )
-with numbers as (
-select n::int
-from
-    (select 
-        row_number() over (order by true) as n
-    from quest_raw)
-    cross join
-    (select 
-        max(length(diagnosis_code) - length(replace(diagnosis_code, '^', ''))) as max_num 
-    from quest_raw)
-where
+WITH numbers AS (
+SELECT n::int
+FROM (
+    SELECT
+        row_number() over (ORDER BY true) AS n
+    FROM quest_raw 
+        )
+    CROSS JOIN (
+    SELECT
+        MAX(LENGTH(diagnosis_code) - LENGTH(replace(diagnosis_code, '^', ''))) AS max_num 
+    FROM quest_raw 
+        )
+WHERE
     n <= max_num + 1
     )
 SELECT accn_id,                                                             --claim_id
@@ -49,11 +51,11 @@ SELECT accn_id,                                                             --cl
     '',                                                                     --patient_year_of_birth
     '',                                                                     --patient_zip3
     '',                                                                     --patient_state
-    CASE WHEN char_length(ltrim(date_of_service, '0')) >= 8 
-    THEN substring(date_of_service from 1 for 4) || '-' || substring(date_of_service from 5 for 2) || '-' || substring(date_of_service from 7 for 2) 
+    CASE WHEN CHAR_LENGTH(lTRIM(date_of_service, '0')) >= 8 
+    THEN SUBSTRING(date_of_service FROM 1 FOR 4) || '-' || SUBSTRING(date_of_service FROM 5 FOR 2) || '-' || SUBSTRING(date_of_service FROM 7 FOR 2) 
     ELSE NULL END,                                                          --date_service
-    CASE WHEN char_length(ltrim(date_collected, '0')) >= 8 
-    THEN substring(date_collected from 1 for 4) || '-' || substring(date_collected from 5 for 2) || '-' || substring(date_collected from 7 for 2) 
+    CASE WHEN CHAR_LENGTH(lTRIM(date_collected, '0')) >= 8 
+    THEN SUBSTRING(date_collected FROM 1 FOR 4) || '-' || SUBSTRING(date_collected FROM 5 FOR 2) || '-' || SUBSTRING(date_collected FROM 7 FOR 2) 
     ELSE NULL END,                                                          --date_specimen
     loinc_code,                                                             --loinc_code
     '',                                                                     --lab_id
@@ -70,11 +72,11 @@ SELECT accn_id,                                                             --cl
     '',                                                                     --result_unit_of_measure
     '',                                                                     --result_desc
     '',                                                                     --result_comments
-    split_part(upper(trim(replace(diagnosis_code,'.',''))),'^',numbers.n),  --diagnosis_code
+    split_part(UPPER(TRIM(replace(diagnosis_code,'.',''))),'^',numbers.n),  --diagnosis_code
     icd_codeset_ind                                                         --diagnosis_code_qual
 FROM quest_raw
-cross join numbers
-WHERE split_part(trim(diagnosis_code),'^',numbers.n) is not null
-    AND split_part(trim(diagnosis_code),'^',numbers.n) != '' 
+CROSS JOIN numbers
+WHERE split_part(TRIM(diagnosis_code),'^',numbers.n) IS NOT NULL
+    AND split_part(TRIM(diagnosis_code),'^',numbers.n) != '' 
     ;
 
