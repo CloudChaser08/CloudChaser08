@@ -28,7 +28,7 @@ if args.rs_user:
     psql.append(args.rs_user)
     psql.append('-W')
 
-set_pass=['export', 'PGPASSWORD=' + args.rs_password]
+set_pass = ['export', 'PGPASSWORD=' + args.rs_password]
 
 # udf = [x for x in psql]
 # udf.extend([db, '<', 'udf.sql'])
@@ -49,3 +49,10 @@ subprocess.call(' '.join(set_pass), shell=True)
 # subprocess.call(' '.join(udf), shell=True)
 subprocess.call(' '.join(create_tables), shell=True)
 subprocess.call(' '.join(normalize), shell=True)
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'output_path="\'' + args.output_path + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
+    + [db, '<', '../../redshift_norm_common/unload_common_model.sql']
+), shell=True)
