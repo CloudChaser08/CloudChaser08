@@ -1,6 +1,6 @@
 -- Load MERGED transaction data into table
--- COPY transactional_raw FROM :input_path CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
--- COPY matching_payload FROM :matching_path CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/payloadpaths.json';
+COPY transactional_raw FROM :input_path CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY matching_payload FROM :matching_path CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/payloadpaths.json';
 
 INSERT INTO normalized_output (
         claim_id,
