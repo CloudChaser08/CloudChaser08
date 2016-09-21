@@ -12,6 +12,6 @@ CREATE TABLE transactional_raw (
         date_collected       text ENCODE lzo,
         diagnosis_code       text ENCODE lzo,
         icd_codeset_ind      text ENCODE lzo
-        );
+        ) DISTKEY(accn_id) SORTKEY(accn_id);
 
 COPY transactional_raw FROM :input_path CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';

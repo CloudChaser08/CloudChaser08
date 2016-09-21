@@ -26,21 +26,6 @@ INSERT INTO lab_common_model (
         diagnosis_code,
         diagnosis_code_qual
         )
-WITH numbers AS (
-    SELECT n::int
-    FROM (
-        SELECT
-            row_number() over (ORDER BY true) AS n
-        FROM transactional_raw
-            )
-        CROSS JOIN (
-        SELECT
-            MAX(LENGTH(diagnosis_code) - LENGTH(replace(diagnosis_code, '^', ''))) AS max_num 
-        FROM transactional_raw
-            )
-    WHERE
-        n <= max_num + 1
-    )
 SELECT TRIM(q.accn_id),                                                 --claim_id
     mp.hvid,                                                            --hvid
     mp.gender,                                                          --patient_gender
@@ -85,7 +70,7 @@ SELECT TRIM(q.accn_id),                                                 --claim_
     q.icd_codeset_ind                                                   --diagnosis_code_qual
 FROM transactional_raw q
     LEFT JOIN matching_payload mp on TRIM(q.accn_id) = TRIM(mp.claimid)
-    CROSS JOIN numbers n
+    CROSS JOIN diagnosis_exploder n
 WHERE split_part(TRIM(q.diagnosis_code),'^',n.n) IS NOT NULL
     AND split_part(TRIM(q.diagnosis_code),'^',n.n) != '' 
     ;

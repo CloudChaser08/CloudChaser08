@@ -32,6 +32,9 @@ subprocess.call(' '.join(
     psql + [db, '<', '../redshift_norm_common/user_defined_functions.sql']
 ), shell=True)
 
+# create helper tables
+subprocess.call(' '.join(psql + [db, '<', 'create_helper_tables.sql']), shell=True)
+
 # create table for lab common model
 subprocess.call(' '.join(
     psql
@@ -49,12 +52,12 @@ subprocess.call(' '.join(
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'load_transactions.sql']
 ), shell=True)
-# subprocess.call(' '.join(
-    # psql
-    # + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
-    # + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    # + [db, '<', 'load_matching_payload.sql']
-# ), shell=True)
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + [db, '<', 'load_matching_payload.sql']
+), shell=True)
 
 # normalize
 subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
