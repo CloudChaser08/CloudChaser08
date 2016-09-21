@@ -45,19 +45,27 @@ SELECT TRIM(q.accn_id),                                                 --claim_
     mp.hvid,                                                            --hvid
     mp.gender,                                                          --patient_gender
     CASE 
-    WHEN mp.age~E'^\\d+$' THEN '0' 
+    WHEN mp.age~E'^\\d+$' THEN NULL
     WHEN mp.age::int >= 85 THEN '90' 
     ELSE mp.age
     END,                                                                --patient_age
-    mp.yearOfBirth,                                                     --patient_year_of_birth
+    CASE 
+    WHEN mp.yearOfBirth~E'^\\d+$' THEN NULL
+    WHEN mp.yearOfBirth::int NOT BETWEEN 1900 AND EXTRACT(YEAR FROM CURRENT_DATE) THEN NULL
+    ELSE mp.yearOfBirth
+    END,                                                                --patient_year_of_birth
     mp.threeDigitZip,                                                   --patient_zip3
     mp.state,                                                           --patient_state
-    CASE WHEN (LENGTH(LTRIM(q.date_of_service, '0')) == 8 AND is_date_valid(LTRIM(q.date_of_service,'0')))
-    THEN SUBSTRING(q.date_of_service FROM 1 FOR 4) || '-' || SUBSTRING(q.date_of_service FROM 5 FOR 2) || '-' || SUBSTRING(q.date_of_service FROM 7 FOR 2) 
-    ELSE NULL END,                                                      --date_service
-    CASE WHEN (LENGTH(LTRIM(q.date_collected, '0')) == 8 AND is_date_valid(LTRIM(q.date_collected,'0')))
-    THEN SUBSTRING(q.date_collected FROM 1 FOR 4) || '-' || SUBSTRING(q.date_collected FROM 5 FOR 2) || '-' || SUBSTRING(q.date_collected FROM 7 FOR 2) 
-    ELSE NULL END,                                                      --date_specimen
+    CASE 
+    WHEN LENGTH(LTRIM(q.date_of_service, '0')) != 8 THEN NULL
+    WHEN NOT is_date_valid(LTRIM(q.date_of_service,'0'))) THEN NULL
+    ELSE SUBSTRING(q.date_of_service FROM 1 FOR 4) || '-' || SUBSTRING(q.date_of_service FROM 5 FOR 2) || '-' || SUBSTRING(q.date_of_service FROM 7 FOR 2) 
+    END,                                                                --date_service
+    CASE 
+    WHEN LENGTH(LTRIM(q.date_collected, '0')) != 8 THEN NULL
+    WHEN NOT is_date_valid(LTRIM(q.date_collected,'0')) THEN NULL
+    ELSE SUBSTRING(q.date_collected FROM 1 FOR 4) || '-' || SUBSTRING(q.date_collected FROM 5 FOR 2) || '-' || SUBSTRING(q.date_collected FROM 7 FOR 2) 
+    END,                                                                --date_specimen
     q.loinc_code,                                                       --loinc_code
     '',                                                                 --lab_id ** we don't have this yet
     '',                                                                 --test_id
