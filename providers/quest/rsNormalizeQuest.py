@@ -4,9 +4,6 @@ import argparse
 import time
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
-S3_EMDEON_IN = 's3://salusv/incoming/lab/quest/'
-S3_EMDEON_OUT = 's3://salusv/processed/lab/quest/'
-# S3_EMDEON_MPL = 's3://salusv/matching/payload/medicalclaims/emdeon/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_path', type=str)
@@ -30,29 +27,43 @@ if args.rs_user:
 
 set_pass = ['export', 'PGPASSWORD=' + args.rs_password]
 
-# udf = [x for x in psql]
-# udf.extend([db, '<', 'udf.sql'])
+# declare udfs
+subprocess.call(' '.join(
+    psql + [db, '<', '../redshift_norm_common/user_defined_functions.sql']
+), shell=True)
 
-create_tables = [x for x in psql]
-create_tables.extend(['-v', 'filename="\'' + args.setid + '\'"',
-                      '-v', 'today="\'' + TODAY + '\'"', db, '<',
-                      'create_tables.sql'])
+# create table for lab common model
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'filename="\'' + args.setid + '\'"']
+    + ['-v', 'today="\'' + TODAY + '\'"']
+    + ['-v', 'feedname="\'quest lab\'"']
+    + ['-v', 'vendor="\'quest\'"']
+    + [db, '<', '../redshift_norm_common/lab_common_model.sql']
+), shell=True)
 
-normalize = [x for x in psql]
-normalize.extend(['-v', 'credentials="\'' + args.s3_credentials + '\'"',
-                  '-v', 'input_path="\'' + args.input_path + '\'"',
-                  '-v', 'output_path="\'' + args.output_path + '\'"',
-                  '-v', 'matching_path="\'' + args.matching_path + '\'"',
-                  db, '<', 'normalize.sql'])
+# load data
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'input_path="\'' + args.input_path + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + [db, '<', 'load_transactions.sql']
+), shell=True)
+# subprocess.call(' '.join(
+    # psql
+    # + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
+    # + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    # + [db, '<', 'load_matching_payload.sql']
+# ), shell=True)
 
-subprocess.call(' '.join(set_pass), shell=True)
-# subprocess.call(' '.join(udf), shell=True)
-subprocess.call(' '.join(create_tables), shell=True)
-subprocess.call(' '.join(normalize), shell=True)
+# normalize
+subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
+
+# unload to s3
 subprocess.call(' '.join(
     psql
     + ['-v', 'output_path="\'' + args.output_path + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
-    + [db, '<', '../../redshift_norm_common/unload_common_model.sql']
+    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
 ), shell=True)

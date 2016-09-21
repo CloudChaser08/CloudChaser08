@@ -1,8 +1,4 @@
--- Load MERGED transaction data into table
-COPY transactional_raw FROM :input_path CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
-COPY matching_payload FROM :matching_path CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/payloadpaths.json';
-
-INSERT INTO normalized_output (
+INSERT INTO lab_common_model (
         claim_id,
         hvid,
         patient_gender,
@@ -48,14 +44,18 @@ WITH numbers AS (
 SELECT TRIM(q.accn_id),                                                 --claim_id
     mp.hvid,                                                            --hvid
     mp.gender,                                                          --patient_gender
-    mp.age,                                                             --patient_age
+    CASE 
+    WHEN mp.age~E'^\\d+$' THEN '0' 
+    WHEN mp.age::int >= 85 THEN '90' 
+    ELSE mp.age
+    END,                                                                --patient_age
     mp.yearOfBirth,                                                     --patient_year_of_birth
     mp.threeDigitZip,                                                   --patient_zip3
     mp.state,                                                           --patient_state
-    CASE WHEN CHAR_LENGTH(LTRIM(q.date_of_service, '0')) >= 8 
+    CASE WHEN (LENGTH(LTRIM(q.date_of_service, '0')) == 8 AND is_date_valid(LTRIM(q.date_of_service,'0')))
     THEN SUBSTRING(q.date_of_service FROM 1 FOR 4) || '-' || SUBSTRING(q.date_of_service FROM 5 FOR 2) || '-' || SUBSTRING(q.date_of_service FROM 7 FOR 2) 
     ELSE NULL END,                                                      --date_service
-    CASE WHEN CHAR_LENGTH(lTRIM(q.date_collected, '0')) >= 8 
+    CASE WHEN (LENGTH(LTRIM(q.date_collected, '0')) == 8 AND is_date_valid(LTRIM(q.date_collected,'0')))
     THEN SUBSTRING(q.date_collected FROM 1 FOR 4) || '-' || SUBSTRING(q.date_collected FROM 5 FOR 2) || '-' || SUBSTRING(q.date_collected FROM 7 FOR 2) 
     ELSE NULL END,                                                      --date_specimen
     q.loinc_code,                                                       --loinc_code
