@@ -14,4 +14,16 @@ CREATE TABLE transactional_raw (
         icd_codeset_ind      text ENCODE lzo
         ) DISTKEY(accn_id) SORTKEY(accn_id);
 
-COPY transactional_raw FROM :input_path CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2015/08' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2015/09' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2015/10' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2015/11' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2015/12' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2016/01' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2016/02' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2016/03' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2016/04' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2016/05' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2016/06' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2016/07' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY transactional_raw FROM 's3://healthverity/incoming/quest/merged/2016/08' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';

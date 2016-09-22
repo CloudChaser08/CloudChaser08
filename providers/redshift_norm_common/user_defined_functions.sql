@@ -7,6 +7,8 @@
  */
 CREATE OR REPLACE FUNCTION is_date_valid(d varchar(8)) RETURNS boolean IMMUTABLE
 AS $$
+    if d is None:
+        return False
 
     import datetime
     now = datetime.datetime.now()
