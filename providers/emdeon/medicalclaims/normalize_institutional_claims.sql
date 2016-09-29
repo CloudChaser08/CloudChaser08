@@ -49,6 +49,7 @@ prov_referring_npi,
 prov_facility_npi,
 payer_vendor_id,
 payer_name,
+payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_state_license,
 prov_rendering_upin,
@@ -133,8 +134,9 @@ prov_rendering_npi,
 prov_billing_npi,
 prov_referring_npi,
 prov_facility_npi,
-payer_vendor_id,
-payer_name,
+payer_mapping.payer_vendor_id,
+payer_mapping.payer_name,
+payer_mapping.payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_state_license,
 prov_rendering_upin,
@@ -181,7 +183,8 @@ cob_payer_claim_filing_ind_code_2,
 cob_ins_type_code_2
 FROM emdeon_institutional_claims_all b
     LEFT JOIN matching_payload ON b.claim_id = claimId
-    LEFT JOIN zip3_to_state ON threeDigitZip = zip3;
+    LEFT JOIN zip3_to_state ON threeDigitZip = zip3
+    LEFT JOIN payer_mapping USING (payer_vendor_id);
 
 DROP TABLE IF EXISTS service_loc;
 SELECT DISTINCT claim_id, place_of_service_std_id INTO service_loc FROM emdeon_dx_raw_service;
@@ -220,6 +223,7 @@ prov_referring_npi,
 prov_facility_npi,
 payer_vendor_id,
 payer_name,
+payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_state_license,
 prov_rendering_upin,
@@ -293,8 +297,9 @@ prov_rendering_npi,
 prov_billing_npi,
 prov_referring_npi,
 prov_facility_npi,
-payer_vendor_id,
-payer_name,
+payer_mapping.payer_vendor_id,
+payer_mapping.payer_name,
+payer_mapping.payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_state_license,
 prov_rendering_upin,
@@ -345,6 +350,7 @@ FROM emdeon_institutional_claims_unrelated b
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
     LEFT JOIN dates statement_from_date ON statement_from = statement_from_date.date
     LEFT JOIN dates statement_to_date ON statement_to = statement_to_date.date
+    LEFT JOIN payer_mapping USING (payer_vendor_id)
 WHERE split_part(diag_concat,':',n) IS NOT NULL AND split_part(diag_concat,':',n) != '';
 
 DROP TABLE IF EXISTS together;        
@@ -391,6 +397,7 @@ prov_referring_npi,
 prov_facility_npi,
 payer_vendor_id,
 payer_name,
+payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_state_license,
 prov_rendering_upin,
@@ -461,8 +468,9 @@ prov_rendering_npi,
 prov_billing_npi,
 prov_referring_npi,
 prov_facility_npi,
-payer_vendor_id,
-payer_name,
+payer_mapping.payer_vendor_id,
+payer_mapping.payer_name,
+payer_mapping.payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_state_license,
 prov_rendering_upin,
@@ -511,4 +519,5 @@ FROM emdeon_institutional_claims_unrelated_procs b
     CROSS JOIN split_indices
     LEFT JOIN matching_payload ON b.claim_id = claimid
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
+    LEFT JOIN payer_mapping USING (payer_vendor_id)
 WHERE split_part(unrelated,':',n) IS NOT NULL AND split_part(unrelated,':',n) != '';

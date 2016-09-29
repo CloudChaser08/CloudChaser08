@@ -603,6 +603,7 @@ prov_referring_npi,
 prov_facility_npi,
 payer_vendor_id,
 payer_name,
+payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_upin,
 prov_rendering_name_1,
@@ -687,8 +688,9 @@ prov_rendering_npi,
 prov_billing_npi,
 prov_referring_npi,
 prov_facility_npi,
-payer_vendor_id,
-payer_name,
+payer_mapping.payer_vendor_id,
+payer_mapping.payer_name,
+payer_mapping.payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_upin,
 prov_rendering_name_1,
@@ -736,6 +738,7 @@ FROM emdeon_professional_claims_base b
     CROSS JOIN split_indices
     LEFT JOIN matching_payload ON b.claim_id = claimid
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
+    LEFT JOIN payer_mapping USING (payer_vendor_id)
 WHERE split_part(related,':',n) IS NOT NULL AND split_part(related,':',n) != '';
 
 -- There can be a lot of raws with the same diagnosis. Only extract unique ones
@@ -875,6 +878,7 @@ prov_referring_npi,
 prov_facility_npi,
 payer_vendor_id,
 payer_name,
+payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_upin,
 prov_rendering_name_1,
@@ -932,8 +936,9 @@ prov_rendering_npi,
 prov_billing_npi,
 prov_referring_npi,
 prov_facility_npi,
-payer_vendor_id,
-payer_name,
+payer_mapping.payer_vendor_id,
+payer_mapping.payer_name,
+payer_mapping.payer_parent_name,
 prov_rendering_tax_id,
 prov_rendering_upin,
 prov_rendering_name_1,
@@ -970,5 +975,6 @@ FROM emdeon_professional_claims_unrelated b
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
     LEFT JOIN dates statement_from_date ON statement_from = statement_from_date.date
     LEFT JOIN dates statement_to_date ON statement_to = statement_to_date.date
+    LEFT JOIN payer_mapping USING (payer_vendor_id)
 WHERE split_part(unrelated,':',n) IS NOT NULL AND split_part(unrelated,':',n) != '';
 
