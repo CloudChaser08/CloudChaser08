@@ -95,7 +95,7 @@ if args.command == 'delete':
     cmd = ['aws', 'redshift', 'delete-cluster', '--cluster-identifier', args.identifier,
             '--skip-final-cluster-snapshot']
     try:
-        subprocess.check_call(cmd, stdout=FNULL, stderr=subprocess.OUT_ERR_REDIRECT)
+        subprocess.check_call(cmd, stdout=FNULL, stderr=OUT_ERR_REDIRECT)
         print sys.stderr, "Deleting cluster {}".format(args.identifier)
     except Exception as err:
         print sys.stderr, "An error occurred while trying to delete cluster {}\n{}".format(args.identifier, err)
