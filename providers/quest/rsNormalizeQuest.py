@@ -8,7 +8,7 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_path', type=str)
 parser.add_argument('--matching_path', type=str)
-# parser.add_argument('--output_path', type=str)
+parser.add_argument('--output_path', type=str)
 parser.add_argument('--database', type=str, nargs='?')
 parser.add_argument('--setid', type=str)
 parser.add_argument('--cluster_endpoint', type=str)
@@ -23,11 +23,6 @@ psql = ['psql', '-h', args.cluster_endpoint, '-p', '5439']
 if args.rs_user:
     psql.append('-U')
     psql.append(args.rs_user)
-
-# declare udfs
-subprocess.call(' '.join(
-    psql + [db, '<', '../redshift_norm_common/user_defined_functions.sql']
-), shell=True)
 
 # create helper tables
 subprocess.call(' '.join(
@@ -75,21 +70,52 @@ subprocess.call(' '.join(
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'load_transactions.sql']
 ), shell=True)
-# subprocess.call(' '.join(
-    # psql
-    # + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
-    # + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    # + [db, '<', 'load_matching_payload.sql']
-# ), shell=True)
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + [db, '<', 'load_matching_payload.sql']
+), shell=True)
 
 # normalize
 subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
 
 # unload to s3
-# subprocess.call(' '.join(
-    # psql
-    # + ['-v', 'output_path="\'' + args.output_path + '\'"']
-    # + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    # + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
-    # + [db, '<', '../redshift_norm_common/unload_common_model.sql']
-# ), shell=True)
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'output_path="\'' + args.output_path + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
+    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+), shell=True)
+
+# unload patient hlls
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'output_path="\'' + args.output_path + '/testing_script/diagnosis/' + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'select_for_hvid="\'SELECT diagnosis_code, hvid FROM lab_common_model\'"']
+    + [db, '<', 'unload_hlls.sql']
+), shell=True)
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'output_path="\'' + args.output_path + '/testing_script/gender/' + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'select_for_hvid="\'SELECT patient_gender, hvid FROM lab_common_model\'"']
+    + [db, '<', 'unload_hlls.sql']
+), shell=True)
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'output_path="\'' + args.output_path + '/testing_script/age/' + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'select_for_hvid="\'SELECT patient_age, hvid FROM lab_common_model\'"']
+    + [db, '<', 'unload_hlls.sql']
+), shell=True)
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'output_path="\'' + args.output_path + '/testing_script/state/' + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'select_for_hvid="\'SELECT patient_state, hvid FROM lab_common_model\'"']
+    + [db, '<', 'unload_hlls.sql']
+), shell=True)
+
