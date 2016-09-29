@@ -97,7 +97,8 @@ SELECT b.claim_id,
 hvid,
 patient_gender,
 patient_age,
-patient_dob as patient_year_of_birth,
+-- 32873 is roughly 90 years, Redshift doesn't support year intervals
+CASE WHEN date_service IS NOT NULL AND (patient_dob >= (extract('year' from date_service::date - '32873 days'::interval)::text)) AND patient_dob <= (extract('year' from getdate())::text) THEN patient_dob ELSE NULL END as patient_year_of_birth,
 threeDigitZip as patient_zip3,
 state as patient_state,
 claim_type,
@@ -267,13 +268,14 @@ SELECT b.claim_id,
 hvid,
 patient_gender,
 patient_age,
-patient_dob as patient_year_of_birth,
+-- 32873 is roughly 90 years, Redshift doesn't support year intervals
+CASE WHEN statement_from IS NOT NULL AND (patient_dob >= (extract('year' from statement_from::date - '32873 days'::interval)::text)) AND patient_dob <= (extract('year' from getdate())::text) THEN patient_dob ELSE NULL END as patient_year_of_birth,
 threeDigitZip as patient_zip3,
 state as patient_state,
 claim_type,
 date_received,
-CASE WHEN char_length(statement_from) >= 8 THEN substring(statement_from from 1 for 4) || '-' || substring(statement_from from 5 for 2) || '-' || substring(statement_from from 7 for 2) ELSE NULL END,
-CASE WHEN char_length(statement_to) >= 8 THEN substring(statement_to from 1 for 4) || '-' || substring(statement_to from 5 for 2) || '-' || substring(statement_to from 7 for 2) ELSE NULL END,
+statement_from_date.formatted,
+statement_to_date.formatted,
 inst_date_admitted,
 inst_admit_type_std_id,
 inst_admit_source_std_id,
@@ -341,7 +343,12 @@ FROM emdeon_institutional_claims_unrelated b
     CROSS JOIN split_indices
     LEFT JOIN matching_payload ON b.claim_id = claimid
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
+    LEFT JOIN dates statement_from_date ON statement_from = statement_from_date.date
+    LEFT JOIN dates statement_to_date ON statement_to = statement_to_date.date
 WHERE split_part(diag_concat,':',n) IS NOT NULL AND split_part(diag_concat,':',n) != '';
+
+DROP TABLE IF EXISTS together;        
+CREATE TABLE together (claim_id text ENCODE lzo, unrelated varchar(5000) ENCODE lzo, principal_procedure_check text ENCODE lzo);
 
 INSERT INTO together
 SELECT a.claim_id, string_set_diff(unrelated_concat, related_concat) AS unrelated, principal_procedure_check
@@ -432,7 +439,8 @@ SELECT b.claim_id,
 hvid,
 patient_gender,
 patient_age,
-patient_dob as patient_year_of_birth,
+-- 32873 is roughly 90 years, Redshift doesn't support year intervals
+CASE WHEN inst_date_admitted IS NOT NULL AND (patient_dob >= (extract('year' from inst_date_admitted::date - '32873 days'::interval)::text)) AND patient_dob <= (extract('year' from getdate())::text) THEN patient_dob ELSE NULL END as patient_year_of_birth,
 threeDigitZip as patient_zip3,
 state as patient_state,
 claim_type,

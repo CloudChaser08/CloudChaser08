@@ -378,7 +378,7 @@ column109,
 column110,
 column111
 FROM emdeon_dx_raw
-    LEFT JOIN dates receive_date ON column5 = receive_date.date
+    LEFT JOIN dates date_received ON column5 = date_received.date
     LEFT JOIN dates inst_date_admitted ON column92 = inst_date_admitted.date
 WHERE column2 = 'C';
 
@@ -388,8 +388,8 @@ WHERE column2 = 'C';
 -- Normalize date columns (column4 => date_service, column5 => date_service_ends)
 INSERT INTO emdeon_dx_raw_service SELECT column1,
 column3,
-CASE WHEN char_length(column4) >= 8 THEN substring(column4 from 1 for 4) || '-' || substring(column4 from 5 for 2) || '-' || substring(column4 from 7 for 2) ELSE NULL END,
-CASE WHEN char_length(column5) >= 8 THEN substring(column5 from 1 for 4) || '-' || substring(column5 from 5 for 2) || '-' || substring(column5 from 7 for 2) ELSE NULL END,
+date_service.formatted,
+date_service_ends.formatted,
 column6,
 column7,
 column8,
@@ -433,7 +433,11 @@ column39,
 column40,
 column41,
 column42
-FROM emdeon_dx_raw WHERE column2 = 'S';
+FROM emdeon_dx_raw
+    LEFT JOIN dates date_service ON column4 = date_service.date
+    LEFT JOIN dates date_service_ends ON column5 = date_service_ends.date
+WHERE column2 = 'S';
+    
 
 -- Select medical diagnosis data (column2 = 'D') from the transactions table and insert the first 99 columns into the diagnoses table. A diagnosis row consists of all 171 columns, but only the first 99 are relevant for us
 -- Drop column2 (record type), we won't need it anymore
