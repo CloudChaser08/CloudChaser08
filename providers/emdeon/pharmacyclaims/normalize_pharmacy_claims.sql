@@ -1,3 +1,5 @@
+UPDATE emdeon_rx_raw SET claim_id = ltrim(claim_id);
+
 INSERT INTO pharmacyclaims_common_model (
 claim_id,
 hvid,
@@ -114,8 +116,7 @@ SELECT
 ltrim(claim_id),
 hvid,
 CASE WHEN UPPER(gender_code) = 'M' OR gender_code = '1' THEN 'M' WHEN UPPER(gender_code) = 'F' OR gender_code = '2' THEN 'F' ELSE 'U' END,
--- 32873 is roughly 90 years, Redshift doesn't support year intervals
-CASE WHEN date_service IS NOT NULL AND (year_of_birth >= (extract('year' from date_service::date - '32873 days'::interval)::text)) AND year_of_birth <= (extract('year' from getdate())::text) THEN year_of_birth ELSE NULL END as patient_year_of_birth,
+year_of_birth,
 threeDigitZip,
 state,
 dates_service.formatted,
@@ -294,11 +295,16 @@ ltrim(other_payer_coverage_qual),
 other_payer_dates.formatted,
 ltrim(other_payer_coverage_code)
 FROM emdeon_rx_raw
-    LEFT JOIN matching_payload ON ltrim(claim_id) = claimid
-    LEFT JOIN zip3_to_state ON threeDigitZip = ltrim(zip3)
-    LEFT JOIN payer_mapping USING ltrim(payer_id) = payer_mapping.payer_id
-    LEFT JOIN dates dates_service USING date_service = dates_service.date
-    LEFT JOIN dates dates_written USING date_service = dates_written.date
-    LEFT JOIN dates dates_injury USING date_service = dates_injury.date
-    LEFT JOIN dates dates_authorized USING date_service = dates_authorized.date
-    LEFT JOIN dates other_payer_dates USING other_payer_date = other_payer_dates.date;
+    LEFT JOIN matching_payload ON claim_id = claimid
+    LEFT JOIN zip3_to_state ON threeDigitZip = zip3
+    LEFT JOIN payer_mapping ON ltrim(emdeon_rx_raw.payer_id) = payer_mapping.payer_id
+    LEFT JOIN dates dates_service ON date_service = dates_service.date
+    LEFT JOIN dates dates_written ON date_service = dates_written.date
+    LEFT JOIN dates dates_injury ON date_service = dates_injury.date
+    LEFT JOIN dates dates_authorized ON date_service = dates_authorized.date
+    LEFT JOIN dates other_payer_dates ON other_payer_date = other_payer_dates.date;
+
+UPDATE pharmacyclaims_common_model SET patient_year_of_birth=NULL
+WHERE
+-- 32873 is roughly 90 years, Redshift doesn't support year intervals
+date_service IS NULL OR (patient_year_of_birth < (extract('year' from date_service::date - '32873 days'::interval)::text)) OR patient_year_of_birth > (extract('year' from getdate())::text);
