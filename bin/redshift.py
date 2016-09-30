@@ -13,7 +13,7 @@ parser.add_argument('--identifier', type=str, help='Redshift cluster identifier'
 parser.add_argument('--rs_user', type=str, nargs='?', help='Master username for the Redshift database')
 parser.add_argument('--rs_password', type=str, nargs='?', help='Password for the Redshift master username')
 parser.add_argument('--num_nodes', type=int, nargs='?', help='Number of nodes for the Redshift cluster')
-parser.add_argument('--node_type', type=int, nargs='?', help='EC2 node type for the Redshift cluster')
+parser.add_argument('--node_type', type=str, nargs='?', help='EC2 node type for the Redshift cluster')
 parser.add_argument('--debug', help='Show debugging messages', action='store_true')
 args = parser.parse_args()
 
