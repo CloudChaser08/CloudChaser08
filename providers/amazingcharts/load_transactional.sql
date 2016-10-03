@@ -83,3 +83,17 @@ CREATE TABLE matching_payload (
         ) DISTKEY(personId) SORTKEY(personId);
 
 COPY matching_payload FROM 's3://salusv/matching/prod/payload/f00ca57c-4935-494e-9e40-b064fd38afda/HV-DEID-20160610.decrypted.json.2016-09-16T16-56-17.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/ac_payloadpaths.json';
+
+DROP TABLE IF EXISTS full_transactional;
+CREATE TABLE full_transactional (
+    record_id       bigint IDENTITY(0,1),
+    hvid            text ENCODE lzo,
+    patient_gender  text ENCODE lzo,
+    patient_state   text ENCODE lzo,
+    patient_age     text ENCODE lzo,
+    drug            text ENCODE lzo,
+    diagnosis       text ENCODE lzo,
+    lab             text ENCODE lzo,
+    procedure       text ENCODE lzo
+)
+
