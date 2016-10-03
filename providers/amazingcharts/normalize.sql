@@ -10,7 +10,7 @@ INSERT INTO full_transactional (
         )
 SELECT mp.hvid,
     mp.gender,
-    mp.state,
+    upper(mp.state),
     CASE 
     WHEN mp.yearOfBirth !~ '^[0-9]{4}$' THEN NULL
     WHEN (EXTRACT(year from current_date) - mp.yearOfBirth) >= 90 THEN '90'
