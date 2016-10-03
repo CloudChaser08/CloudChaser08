@@ -1,4 +1,4 @@
-INSERT INTO full_transacational (
+INSERT INTO full_transactional (
         hvid, 
         patient_gender, 
         patient_state, 
@@ -11,45 +11,49 @@ INSERT INTO full_transacational (
 SELECT mp.hvid,
     mp.gender,
     mp.state,
-    mp.yearOfBirth,
-    t.drug,
-    t.diagnosis,
-    t.lab,
-    t.procedure
+    CASE 
+    WHEN mp.yearOfBirth !~ '^[0-9]{4}$' THEN NULL
+    WHEN (EXTRACT(year from current_date) - mp.yearOfBirth) >= 90 THEN '90'
+    ELSE (EXTRACT(year from current_date) - mp.yearOfBirth)::varchar
+    END,
+    transactional.drug,
+    transactional.diagnosis,
+    transactional.lab,
+    transactional.procedure
 FROM (
         (
         SELECT patient_key, 
             replace(problem_icd,'.','') as diagnosis, 
-            "" as drug, 
-            "" as procedure,
-            "" as lab
+            '' as drug, 
+            '' as procedure,
+            '' as lab
         FROM f_diagnosis diag
             ) 
     UNION ALL (
         SELECT med.patient_key, 
-            "" as diagnosis, 
+            '' as diagnosis, 
             drug.ndc as drug,
-            "" as procedure,
-            "" as lab
+            '' as procedure,
+            '' as lab
         FROM f_medication med 
             INNER JOIN d_drug drug on med.drug_key = drug.drug_key
             )
     UNION ALL (
         SELECT proc.patient_key,
-            "" as diagnosis,
-            "" as drug,
+            '' as diagnosis,
+            '' as drug,
             cpt.cpt_code as procedure,
-            "" as lab
+            '' as lab
         FROM f_procedure proc
             INNER JOIN d_cpt cpt on proc.cpt_key = cpt.cpt_key
             )
     UNION ALL (
         SELECT patient_key,
-            "" as diagnosis,
-            "" as drug,
-            "" as procedure,
+            '' as diagnosis,
+            '' as drug,
+            '' as procedure,
             loinc_test_code as lab
         FROM f_lab
             )
-        ) transactional t
-    LEFT JOIN matching_payload mp ON t.patient_key = mp.personId
+        ) transactional
+    LEFT JOIN matching_payload mp ON transactional.patient_key = mp.personId
