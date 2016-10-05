@@ -60,6 +60,23 @@ subprocess.call(' '.join(psql + ['-v', 'matching_path="\'' + args.matching_path 
 subprocess.call(' '.join(psql + ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
     [db, '<', 'load_payer_mapping.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', 'normalize_pharmacy_claims.sql']), shell=True)
+
+# Privacy filtering
+subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
+    ['-v', 'column_name=diagnosis_code'] +
+    [db, '<', '../../redshift_norm_common/nullify_icd9_blacklist.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
+    ['-v', 'column_name=diagnosis_code'] +
+    [db, '<', '../../redshift_norm_common/nullify_icd10_blacklist.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
+    ['-v', 'column_name=diagnosis_code'] +
+    [db, '<', '../../redshift_norm_common/genericize_icd9.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
+    ['-v', 'column_name=diagnosis_code'] +
+    [db, '<', '../../redshift_norm_common/genericize_icd10.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/hash_rx_number.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/nullify_sales_tax.sql']), shell=True)
+
 subprocess.call(' '.join(psql + ['-v', 'output_path="\'' + args.output_path + '\'"'] +
     ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
     ['-v', 'select_from_common_model_table="\'SELECT * FROM pharmacyclaims_common_model\'"'] +
