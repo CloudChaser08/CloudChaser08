@@ -10,7 +10,7 @@
 -- 14 Group Home
 -- 33 Custodial Care Facility
 
-UPDATE :table_name
+UPDATE medicalclaims_common_model
 SET place_of_service_std_id=99,
 prov_rendering_npi=NULL,
 prov_rendering_tax_id=NULL,
@@ -71,6 +71,6 @@ prov_facility_city=NULL,
 prov_facility_state=NULL,
 prov_facility_zip=NULL,
 prov_facility_vendor_id=NULL,
-prov_facility_dea_id=NULL,
+prov_facility_dea_id=NULL
 WHERE place_of_service_std_id IN ('5', '6', '7', '8', '9', '12', '13', '14', '33');
 
