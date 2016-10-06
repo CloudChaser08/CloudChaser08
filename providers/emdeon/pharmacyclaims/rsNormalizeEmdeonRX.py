@@ -76,6 +76,9 @@ subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model']
     [db, '<', '../../redshift_norm_common/genericize_icd10.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/hash_rx_number.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/nullify_sales_tax.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
+    ['-v', 'column_name=patient_age'] +
+    [db, '<', '../../redshift_norm_common/cap_age.sql']), shell=True)
 
 subprocess.call(' '.join(psql + ['-v', 'output_path="\'' + args.output_path + '\'"'] +
     ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +

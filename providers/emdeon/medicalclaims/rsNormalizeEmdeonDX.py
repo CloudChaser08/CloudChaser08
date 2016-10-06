@@ -81,6 +81,9 @@ subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] 
 subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/scrub_place_of_service.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/scrub_discharge_status.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/nullify_drg_blacklist.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
+    ['-v', 'column_name=patient_age'] +
+    [db, '<', '../../redshift_norm_common/cap_age.sql']), shell=True)
     
 
 subprocess.call(' '.join(psql + ['-v', 'output_path="\'' + args.output_path + '\'"'] +
