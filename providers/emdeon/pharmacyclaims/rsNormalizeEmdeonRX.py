@@ -48,7 +48,7 @@ subprocess.call(' '.join(psql + ['-v', 'min_valid_date="\'' + min_date + '\'"'] 
 
 subprocess.call(' '.join(psql + ['-v', 'filename="\'' + args.setid + '\'"'] + 
     ['-v', 'today="\'' + TODAY + '\'"'] +
-    ['-v', 'feedname="\'webmd medical claims\'"'] +
+    ['-v', 'feedname="\'webmd pharmacy claims\'"'] +
     ['-v', 'vendor="\'webmd\'"'] +
     [db, '<', '../../redshift_norm_common/pharmacyclaims_common_model.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'input_path="\'' + args.input_path + '\'"'] +
