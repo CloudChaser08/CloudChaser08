@@ -14,4 +14,5 @@
 
 UPDATE :table_name
 SET :column_name=NULL
-WHERE regexp_count(:column_name, '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$') > 0;
+WHERE :qual_column_name='10'
+AND regexp_count(:column_name, '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$') > 0;

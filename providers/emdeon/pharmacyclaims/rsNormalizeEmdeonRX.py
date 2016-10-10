@@ -64,15 +64,19 @@ subprocess.call(' '.join(psql + [db, '<', 'normalize_pharmacy_claims.sql']), she
 # Privacy filtering
 subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
+    ['-v', 'qual_column_name=diagnosis_code_qual'] +
     [db, '<', '../../redshift_norm_common/nullify_icd9_blacklist.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
+    ['-v', 'qual_column_name=diagnosis_code_qual'] +
     [db, '<', '../../redshift_norm_common/nullify_icd10_blacklist.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
+    ['-v', 'qual_column_name=diagnosis_code_qual'] +
     [db, '<', '../../redshift_norm_common/genericize_icd9.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=pharmacyclaims_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
+    ['-v', 'qual_column_name=diagnosis_code_qual'] +
     [db, '<', '../../redshift_norm_common/genericize_icd10.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/hash_rx_number.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/nullify_sales_tax.sql']), shell=True)

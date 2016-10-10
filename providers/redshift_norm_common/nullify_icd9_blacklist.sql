@@ -15,4 +15,5 @@
 
 UPDATE :table_name
 SET :column_name=NULL
-WHERE regexp_count(:column_name, '^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$') > 0;
+WHERE :qual_column_name='9'
+AND regexp_count(:column_name, '^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$') > 0;
