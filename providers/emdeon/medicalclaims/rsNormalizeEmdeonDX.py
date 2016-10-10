@@ -32,6 +32,22 @@ if args.rs_user:
 subprocess.call(' '.join(psql + [db, '<', 'user_defined_functions.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', 'create_helper_tables.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/zip3_to_state.sql']), shell=True)
+
+# Create a table for valid dates and their correct format
+min_date = '2012-01-01'
+subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/prep_date_offset_table.sql']), shell=True)
+while True:
+    res1 = subprocess.check_output(['psql', '-c', 'SELECT count(*) FROM tmp;']);
+    res2 = subprocess.check_output(['psql', '-c', 'SELECT extract(\'days\' FROM (getdate() - \'' + min_date + '\'))::int;']);
+    rows = int(res1.split("\n")[2].lstrip().rstrip())
+    target = int(res2.split("\n")[2].lstrip().rstrip())
+    if rows > target + 1:
+        break
+    else:
+        subprocess.call(' '.join(psql + [db, '<', '../../redshift_norm_common/expand_date_offset_table.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'min_valid_date="\'' + min_date + '\'"'] +
+    [db, '<', '../../redshift_norm_common/create_date_formatting_table.sql']), shell=True)
+
 subprocess.call(' '.join(psql + ['-v', 'filename="\'' + args.setid + '\'"'] + 
     ['-v', 'today="\'' + TODAY + '\'"'] +
     ['-v', 'feedname="\'webmd medical claims\'"'] +
@@ -43,6 +59,8 @@ subprocess.call(' '.join(psql + ['-v', 'input_path="\'' + args.input_path + '\'"
 subprocess.call(' '.join(psql + ['-v', 'matching_path="\'' + args.matching_path + '\'"'] +
     ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
     [db, '<', 'load_matching_payload.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
+    [db, '<', 'load_payer_mapping.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', 'split_raw_transactions.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', 'normalize_professional_claims.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', 'normalize_institutional_claims.sql']), shell=True)

@@ -266,7 +266,7 @@ DISTKEY(claim_id);
 INSERT INTO emdeon_dx_raw_claims SELECT column1,
 column3,
 column4,
-CASE WHEN char_length(column5) >= 8 THEN substring(column5 from 1 for 4) || '-' || substring(column5 from 5 for 2) || '-' || substring(column5 from 7 for 2) ELSE NULL END,
+date_received.formatted,
 column6,
 column7,
 column8,
@@ -357,7 +357,7 @@ column88,
 column89,
 column90,
 column91,
-CASE WHEN char_length(column92) >= 8 THEN substring(column92 from 1 for 4) || '-' || substring(column92 from 5 for 2) || '-' || substring(column92 from 7 for 2) ELSE NULL END,
+inst_date_admitted.formatted,
 column93,
 column94,
 column95,
@@ -377,7 +377,10 @@ column108,
 column109,
 column110,
 column111
-FROM emdeon_dx_raw WHERE column2 = 'C';
+FROM emdeon_dx_raw
+    LEFT JOIN dates date_received ON column5 = date_received.date
+    LEFT JOIN dates inst_date_admitted ON column92 = inst_date_admitted.date
+WHERE column2 = 'C';
 
 -- Select medical service data (column2 = 'S') from the transactions table and insert the first 42 columns into the services table. A service row only consists of 42 columns
 -- Drop column2 (record type), we won't need it anymore
@@ -385,8 +388,8 @@ FROM emdeon_dx_raw WHERE column2 = 'C';
 -- Normalize date columns (column4 => date_service, column5 => date_service_ends)
 INSERT INTO emdeon_dx_raw_service SELECT column1,
 column3,
-CASE WHEN char_length(column4) >= 8 THEN substring(column4 from 1 for 4) || '-' || substring(column4 from 5 for 2) || '-' || substring(column4 from 7 for 2) ELSE NULL END,
-CASE WHEN char_length(column5) >= 8 THEN substring(column5 from 1 for 4) || '-' || substring(column5 from 5 for 2) || '-' || substring(column5 from 7 for 2) ELSE NULL END,
+date_service.formatted,
+date_service_ends.formatted,
 column6,
 column7,
 column8,
@@ -430,7 +433,11 @@ column39,
 column40,
 column41,
 column42
-FROM emdeon_dx_raw WHERE column2 = 'S';
+FROM emdeon_dx_raw
+    LEFT JOIN dates date_service ON column4 = date_service.date
+    LEFT JOIN dates date_service_ends ON column5 = date_service_ends.date
+WHERE column2 = 'S';
+    
 
 -- Select medical diagnosis data (column2 = 'D') from the transactions table and insert the first 99 columns into the diagnoses table. A diagnosis row consists of all 171 columns, but only the first 99 are relevant for us
 -- Drop column2 (record type), we won't need it anymore

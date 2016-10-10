@@ -1,3 +1,5 @@
+UPDATE emdeon_rx_raw SET claim_id = ltrim(claim_id);
+
 INSERT INTO pharmacyclaims_common_model (
 claim_id,
 hvid,
@@ -37,6 +39,8 @@ pharmacy_npi,
 prov_dispensing_npi,
 payer_id,
 payer_id_qual,
+payer_name,
+payer_parent_name,
 payer_plan_id,
 payer_plan_name,
 payer_type,
@@ -112,13 +116,13 @@ SELECT
 ltrim(claim_id),
 hvid,
 CASE WHEN UPPER(gender_code) = 'M' OR gender_code = '1' THEN 'M' WHEN UPPER(gender_code) = 'F' OR gender_code = '2' THEN 'F' ELSE 'U' END,
-ltrim(year_of_birth),
+year_of_birth,
 threeDigitZip,
 state,
-CASE WHEN char_length(ltrim(date_service, '0')) >= 8 THEN substring(date_service from 1 for 4) || '-' || substring(date_service from 5 for 2) || '-' || substring(date_service from 7 for 2) ELSE NULL END,
-CASE WHEN char_length(ltrim(date_written, '0')) >= 8 THEN substring(date_written from 1 for 4) || '-' || substring(date_written from 5 for 2) || '-' || substring(date_written from 7 for 2) ELSE NULL END,
-CASE WHEN char_length(ltrim(date_injury, '0')) >= 8 THEN substring(date_injury from 1 for 4) || '-' || substring(date_injury from 5 for 2) || '-' || substring(date_injury from 7 for 2) ELSE NULL END,
-CASE WHEN char_length(ltrim(date_authorized, '0')) >= 8 THEN substring(date_authorized from 1 for 4) || '-' || substring(date_authorized from 5 for 2) || '-' || substring(date_authorized from 7 for 2) ELSE NULL END,
+dates_service.formatted,
+dates_written.formatted,
+dates_injury.formatted,
+dates_authorized.formatted,
 CASE WHEN char_length(time_authorized) >= 4 THEN substring(time_authorized from 1 for 2) || ':' || substring(time_authorized from 3 for 2) ELSE NULL END,
 ltrim(transaction_code),
 ltrim(response_code),
@@ -149,8 +153,10 @@ CASE WHEN (length(days_supply)-length(replace(days_supply,'.',''))) = 1 THEN
 ELSE ('0' || regexp_replace(days_supply, '[^0-9]'))::int::text END,
 ltrim(pharmacy_npi),
 CASE WHEN prov_dispensing_qual in ('1','01') then provider_id else NULL end as prov_dispensing_npi,
-ltrim(payer_id),
+payer_mapping.payer_id,
 ltrim(payer_id_qual),
+payer_mapping.payer_name,
+payer_mapping.payer_parent_name,
 ltrim(payer_plan_id),
 ltrim(payer_plan_name),
 ltrim(payer_type),
@@ -286,8 +292,19 @@ ltrim(prov_primary_care_qual),
 ltrim(other_payer_coverage_type),
 ltrim(other_payer_coverage_id),
 ltrim(other_payer_coverage_qual),
-CASE WHEN char_length(ltrim(other_payer_date, '0')) >= 8 THEN substring(other_payer_date from 1 for 4) || '-' || substring(other_payer_date from 5 for 2) || '-' || substring(other_payer_date from 7 for 2) ELSE NULL END,
+other_payer_dates.formatted,
 ltrim(other_payer_coverage_code)
 FROM emdeon_rx_raw
-    LEFT JOIN matching_payload ON ltrim(claim_id) = claimid
-    LEFT JOIN zip3_to_state ON threeDigitZip = ltrim(zip3);
+    LEFT JOIN matching_payload ON claim_id = claimid
+    LEFT JOIN zip3_to_state ON threeDigitZip = zip3
+    LEFT JOIN payer_mapping ON ltrim(emdeon_rx_raw.payer_id) = payer_mapping.payer_id
+    LEFT JOIN dates dates_service ON date_service = dates_service.date
+    LEFT JOIN dates dates_written ON date_service = dates_written.date
+    LEFT JOIN dates dates_injury ON date_service = dates_injury.date
+    LEFT JOIN dates dates_authorized ON date_service = dates_authorized.date
+    LEFT JOIN dates other_payer_dates ON other_payer_date = other_payer_dates.date;
+
+UPDATE pharmacyclaims_common_model SET patient_year_of_birth=NULL
+WHERE
+-- 32873 is roughly 90 years, Redshift doesn't support year intervals
+date_service IS NULL OR (patient_year_of_birth < (extract('year' from date_service::date - '32873 days'::interval)::text)) OR patient_year_of_birth > (extract('year' from getdate())::text);
