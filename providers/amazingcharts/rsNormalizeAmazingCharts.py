@@ -60,7 +60,7 @@ subprocess.call(' '.join(
     psql
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + ['-v', 'output_path="\'' + args.output_path + '/patient/age\'"']
-    + ['-v', 'select_statement="\'select distinct patient_age as age,hvid from full_transactional where patient_age != \\\'\\\'order by 1\'"']
+    + ['-v', 'select_statement="\'select distinct case when patient_age between 0 and 18 then \\\'0-17\\\' when patient_age between 18 and 45 then \\\'18-44\\\' when patient_age between 45 and 65 then \\\'45-64\\\' when patient_age >= 65 then \\\'65+\\\' else null end as age, hvid from full_transactional where patient_age != \\\'\\\'order by 1\'"']
     + [db, '<', 'unload.sql']
 ), shell=True)
 
@@ -133,7 +133,7 @@ subprocess.call(' '.join(
     psql
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + ['-v', 'output_path="\'' + args.output_path + '/record/age\'"']
-    + ['-v', 'select_statement="\'select patient_age as age, record_id from full_transactional where patient_age != \\\'\\\'order by 1\'"']
+    + ['-v', 'select_statement="\'select case when patient_age between 0 and 18 then \\\'0-17\\\' when patient_age between 18 and 45 then \\\'18-44\\\' when patient_age between 45 and 65 then \\\'45-64\\\' when patient_age >= 65 then \\\'65+\\\' else null end as age, record_id from full_transactional where patient_age != \\\'\\\'order by 1\'"']
     + [db, '<', 'unload.sql']
 ), shell=True)
 
