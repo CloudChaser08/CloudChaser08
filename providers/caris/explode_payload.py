@@ -8,8 +8,7 @@ payload = sys.argv[2]
 patient_key_counts = {}
 with open(transactional_root, 'r') as f:
     for line in f:
-        patient_key_counts[line.split('|')[142][:-2]] = \
-            patient_key_counts.get(line.split('|')[142][:-2], 0) + 1
+        patient_key_counts[line.split(' ')[0]] = int(line.split(' ')[1].replace('\n',''))
 
 # explode json file based on patient counts
 with open(payload, 'r') as payload_json, open('exploded.json', 'w') as output:
