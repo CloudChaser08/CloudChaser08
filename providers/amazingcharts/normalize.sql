@@ -8,7 +8,7 @@ INSERT INTO full_transactional (
         lab, 
         procedure
         )
-SELECT mp.hvid,
+SELECT coalesce(mp.parentId, mp.hvid, mp.childId) as hvid,
     mp.gender,
     upper(mp.state),
     CASE 
