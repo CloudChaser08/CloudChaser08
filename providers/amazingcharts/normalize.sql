@@ -1,3 +1,17 @@
+INSERT INTO matching_payload (
+        hvid, 
+        state,
+        gender,
+        yearOfBirth
+        )
+SELECT COALESCE(pcm.parentId, mp.hvid)
+    mp.state,
+    mp.gender,
+    mp.yearOfBirth
+FROM matching_payload_broken mp
+LEFT JOIN parent_child_map pcm ON mp.hvid = pcm.hvid
+;
+
 INSERT INTO full_transactional (
         hvid, 
         patient_gender, 
@@ -8,7 +22,7 @@ INSERT INTO full_transactional (
         lab, 
         procedure
         )
-SELECT coalesce(pcm.parentId, mp.hvid, mp.childId) as hvid,
+SELECT mp.hvid,
     mp.gender,
     upper(mp.state),
     CASE 
@@ -57,4 +71,4 @@ FROM (
             )
         ) transactional
     LEFT JOIN matching_payload mp ON transactional.patient_key = mp.personId
-    LEFT JOIN parent_child_map pcm ON coalesce(mp.hvid, mp.childId) = pcm.hvid
+ ;

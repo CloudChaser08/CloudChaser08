@@ -73,8 +73,8 @@ CREATE TABLE d_lab_directory (
 
 COPY d_lab_directory FROM 's3://healthveritydev/musifer/amazingchartstransactional/d_lab_directory.txt' CREDENTIALS :credentials EMPTYASNULL IGNOREHEADER 1 DELIMITER '\t';
 
-DROP TABLE IF EXISTS matching_payload;
-CREATE TABLE matching_payload (
+DROP TABLE IF EXISTS matching_payload_broken;
+CREATE TABLE matching_payload_broken (
         hvid         text ENCODE lzo,
         parentId     text ENCODE lzo,
         childId      text ENCODE lzo,
@@ -84,7 +84,7 @@ CREATE TABLE matching_payload (
         yearOfBirth  text ENCODE lzo
         ) DISTKEY(personId) SORTKEY(personId);
 
-COPY matching_payload FROM 's3://salusv/matching/prod/payload/f00ca57c-4935-494e-9e40-b064fd38afda/HV-DEID-20160610.decrypted.json.2016-09-16T16-56-17.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/ac_payloadpaths.json';
+COPY matching_payload_broken FROM 's3://salusv/matching/prod/payload/f00ca57c-4935-494e-9e40-b064fd38afda/HV-DEID-20160610.decrypted.json.2016-09-16T16-56-17.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/ac_payloadpaths.json';
 
 DROP TABLE IF EXISTS parent_child_map;
 CREATE TABLE parent_child_map (
@@ -93,6 +93,14 @@ CREATE TABLE parent_child_map (
         ) DISTKEY(hvid) SORTKEY(hvid);
 
 COPY parent_child_map FROM 's3://salusv/matching/fetch-parent-ids/payload/fetch-parent-ids/20160705_Claims_US_CF_Hash_File_HV_Encrypt.dat.decrypted.json2016-10-13T22-06-23.0-1000000.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/parent-child-payloadpaths.json';
+
+DROP TABLE IF EXISTS matching_payload;
+CREATE TABLE matching_payload_broken (
+        hvid         text ENCODE lzo,
+        state        text ENCODE lzo,
+        gender       text ENCODE lzo,
+        yearOfBirth  text ENCODE lzo
+        ) DISTKEY(personId) SORTKEY(personId);
 
 DROP TABLE IF EXISTS full_transactional;
 CREATE TABLE full_transactional (
@@ -106,4 +114,4 @@ CREATE TABLE full_transactional (
     lab             text ENCODE lzo,
     procedure       text ENCODE lzo
     )
-
+ 
