@@ -8,7 +8,7 @@ INSERT INTO full_transactional (
         lab, 
         procedure
         )
-SELECT coalesce(mp.parentId, mp.hvid, mp.childId) as hvid,
+SELECT coalesce(pcm.parentId, mp.hvid, mp.childId) as hvid,
     mp.gender,
     upper(mp.state),
     CASE 
@@ -57,3 +57,4 @@ FROM (
             )
         ) transactional
     LEFT JOIN matching_payload mp ON transactional.patient_key = mp.personId
+    LEFT JOIN parent_child_map pcm ON coalesce(mp.hvid, mp.childId) = pcm.hvid
