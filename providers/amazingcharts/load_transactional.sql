@@ -95,8 +95,9 @@ CREATE TABLE parent_child_map (
 COPY parent_child_map FROM 's3://salusv/matching/fetch-parent-ids/payload/fetch-parent-ids/20160705_Claims_US_CF_Hash_File_HV_Encrypt.dat.decrypted.json2016-10-13T22-06-23.0-1000000.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/parent-child-payloadpaths.json';
 
 DROP TABLE IF EXISTS matching_payload;
-CREATE TABLE matching_payload_broken (
+CREATE TABLE matching_payload (
         hvid         text ENCODE lzo,
+        personId     text ENCODE lzo,
         state        text ENCODE lzo,
         gender       text ENCODE lzo,
         yearOfBirth  text ENCODE lzo

@@ -1,16 +1,18 @@
 INSERT INTO matching_payload (
         hvid, 
+        personId,
         state,
         gender,
         yearOfBirth
         )
-SELECT COALESCE(pcm.parentId, mp.hvid)
+SELECT COALESCE(pcm.parentId, mp.hvid),
+    mp.personId,
     mp.state,
     mp.gender,
     mp.yearOfBirth
 FROM matching_payload_broken mp
-LEFT JOIN parent_child_map pcm ON mp.hvid = pcm.hvid
-;
+    LEFT JOIN parent_child_map pcm ON mp.hvid = pcm.hvid
+    ;
 
 INSERT INTO full_transactional (
         hvid, 
@@ -71,4 +73,4 @@ FROM (
             )
         ) transactional
     LEFT JOIN matching_payload mp ON transactional.patient_key = mp.personId
- ;
+    ;
