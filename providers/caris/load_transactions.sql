@@ -22,9 +22,10 @@ COPY parent_child_map FROM 's3://salusv/matching/fetch-parent-ids/payload/fetch-
 
 DROP TABLE IF EXISTS full_exploded_payload;
 CREATE TABLE full_exploded_payload (
+        pk           text ENCODE lzo,
         hvid         text ENCODE lzo,
         personId     text ENCODE lzo,
         state        text ENCODE lzo,
         gender       text ENCODE lzo,
-        yearOfBirth  text ENCODE lzo
+        age          text ENCODE lzo
         ) DISTKEY(hvid) SORTKEY(hvid);
