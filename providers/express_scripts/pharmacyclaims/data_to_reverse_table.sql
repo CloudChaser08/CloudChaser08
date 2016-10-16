@@ -1,13 +1,13 @@
-DROP TABLE IF EXISTS pharmacyclaims_common_model;
-CREATE TABLE pharmacyclaims_common_model(
-record_id int identity(0, 1),
+DROP TABLE IF EXISTS normalized_claims;
+CREATE TABLE normalized_claims(
+record_id int,
 claim_id text encode lzo,
 hvid text encode lzo,
-created date DEFAULT :today,
-model_version text DEFAULT '1' ENCODE lzo,
-data_set text DEFAULT :filename ENCODE lzo,
-data_feed text DEFAULT :feedname ENCODE lzo,
-data_vendor text DEFAULT :vendor ENCODE lzo,
+created date,
+model_version text,
+data_set text,
+data_feed text,
+data_vendor text,
 source_version text encode lzo,
 patient_gender text encode lzo,
 patient_age text encode lzo,
