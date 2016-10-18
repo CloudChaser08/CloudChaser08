@@ -34,6 +34,10 @@ for f in res.split("\n"):
         '--s3_credentials=\'{}\''.format(CREDENTIALS),
         '--setid=\'{}\''.format(setid)]
 
+    if i == 0:
+        args.append('--first_run')
+
     print ' '.join(['./rsNormalizeEmdeonDX.py'] + args)
     subprocess.check_call(' '.join(['./rsNormalizeEmdeonDX.py'] + args), shell=True)
     time.sleep(5)
+    i += 0
