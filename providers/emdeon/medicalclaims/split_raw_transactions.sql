@@ -318,10 +318,10 @@ column53,
 column54,
 CASE WHEN (length(column55)-length(replace(column55,'.',''))) = 1 THEN
 ('0' || regexp_replace(column55, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(column55, '[^0-9.]'))::int::text END,
+ELSE ('0' || regexp_replace(column55, '[^0-9.]'))::bigint::text END,
 CASE WHEN (length(column56)-length(replace(column56,'.',''))) = 1 THEN
 ('0' || regexp_replace(column56, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(column56, '[^0-9.]'))::int::text END,
+ELSE ('0' || regexp_replace(column56, '[^0-9.]'))::bigint::text END,
 column57,
 column58,
 column59,
@@ -399,13 +399,13 @@ column11,
 column12,
 CASE WHEN (length(column13)-length(replace(column13,'.',''))) = 1 THEN
 ('0' || regexp_replace(column13, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(column13, '[^0-9.]'))::int::text END,
+ELSE ('0' || regexp_replace(column13, '[^0-9.]'))::bigint::text END,
 CASE WHEN (length(column14)-length(replace(column14,'.',''))) = 1 THEN
 ('0' || regexp_replace(column14, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(column14, '[^0-9.]'))::int::text END,
+ELSE ('0' || regexp_replace(column14, '[^0-9.]'))::bigint::text END,
 CASE WHEN (length(column15)-length(replace(column15,'.',''))) = 1 THEN
 ('0' || regexp_replace(column15, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(column15, '[^0-9.]'))::int::text END,
+ELSE ('0' || regexp_replace(column15, '[^0-9.]'))::bigint::text END,
 column16,
 column17,
 column18,

@@ -146,11 +146,11 @@ ltrim(fill_number),
 ltrim(refill_auth_amount),
 CASE WHEN (length(dispensed_quantity)-length(replace(dispensed_quantity,'.',''))) = 1 THEN
 ('0' || regexp_replace(dispensed_quantity, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(dispensed_quantity, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(dispensed_quantity, '[^0-9]'))::bigint::text END,
 ltrim(unit_of_measure),
 CASE WHEN (length(days_supply)-length(replace(days_supply,'.',''))) = 1 THEN
 ('0' || regexp_replace(days_supply, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(days_supply, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(days_supply, '[^0-9]'))::bigint::text END,
 ltrim(pharmacy_npi),
 CASE WHEN (ltrim(prov_dispensing_qual) in ('1','01')) OR (ltrim(prov_dispensing_qual) in ('5', '05') AND regexp_count(ltrim(provider_id), '^[0-9]{10}$') = 1) then ltrim(provider_id) else NULL end as prov_dispensing_npi,
 payer_mapping.payer_id,
@@ -169,7 +169,7 @@ ltrim(orig_prescribed_product_service_code),
 ltrim(orig_prescribed_product_service_code_qual),
 CASE WHEN (length(orig_prescribed_quantity)-length(replace(orig_prescribed_quantity,'.',''))) = 1 THEN
 ('0' || regexp_replace(orig_prescribed_quantity, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(orig_prescribed_quantity, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(orig_prescribed_quantity, '[^0-9]'))::bigint::text END,
 ltrim(prior_auth_type_code),
 ltrim(level_of_service),
 ltrim(reason_for_service),
@@ -180,102 +180,102 @@ CASE WHEN (ltrim(prov_primary_care_qual) in ('1','01')) OR (ltrim(prov_primary_c
 ltrim(cob_count),
 CASE WHEN (length(usual_and_customary_charge)-length(replace(usual_and_customary_charge,'.',''))) = 1 THEN
 ('0' || regexp_replace(usual_and_customary_charge, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(usual_and_customary_charge, '[^0-9.]'))::int::text END,
+ELSE ('0' || regexp_replace(usual_and_customary_charge, '[^0-9.]'))::bigint::text END,
 CASE WHEN (length(sales_tax)-length(replace(sales_tax,'.',''))) = 1 THEN
 ('0' || regexp_replace(sales_tax, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(sales_tax, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(sales_tax, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(product_selection_attributed)-length(replace(product_selection_attributed,'.',''))) = 1 THEN
 ('0' || regexp_replace(product_selection_attributed, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(product_selection_attributed, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(product_selection_attributed, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(other_payer_recognized)-length(replace(other_payer_recognized,'.',''))) = 1 THEN
 ('0' || regexp_replace(other_payer_recognized, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(other_payer_recognized, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(other_payer_recognized, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(periodic_deductible_applied)-length(replace(periodic_deductible_applied,'.',''))) = 1 THEN
 ('0' || regexp_replace(periodic_deductible_applied, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(periodic_deductible_applied, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(periodic_deductible_applied, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(periodic_benefit_exceed)-length(replace(periodic_benefit_exceed,'.',''))) = 1 THEN
 ('0' || regexp_replace(periodic_benefit_exceed, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(periodic_benefit_exceed, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(periodic_benefit_exceed, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(accumulated_deductible)-length(replace(accumulated_deductible,'.',''))) = 1 THEN
 ('0' || regexp_replace(accumulated_deductible, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(accumulated_deductible, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(accumulated_deductible, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(remaining_deductible)-length(replace(remaining_deductible,'.',''))) = 1 THEN
 ('0' || regexp_replace(remaining_deductible, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(remaining_deductible, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(remaining_deductible, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(remaining_benefit)-length(replace(remaining_benefit,'.',''))) = 1 THEN
 ('0' || regexp_replace(remaining_benefit, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(remaining_benefit, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(remaining_benefit, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(copay_coinsurance)-length(replace(copay_coinsurance,'.',''))) = 1 THEN
 ('0' || regexp_replace(copay_coinsurance, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(copay_coinsurance, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(copay_coinsurance, '[^0-9]'))::bigint::text END,
 ltrim(basis_of_cost_determination),
 CASE WHEN (length(submitted_ingredient_cost)-length(replace(submitted_ingredient_cost,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_ingredient_cost, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_ingredient_cost, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_ingredient_cost, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_dispensing_fee)-length(replace(submitted_dispensing_fee,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_dispensing_fee, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_dispensing_fee, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_dispensing_fee, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_dispensing_fee)-length(replace(submitted_dispensing_fee,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_dispensing_fee, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_dispensing_fee, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_dispensing_fee, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_gross_due)-length(replace(submitted_gross_due,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_gross_due, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_gross_due, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_gross_due, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_professional_service_fee)-length(replace(submitted_professional_service_fee,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_professional_service_fee, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_professional_service_fee, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_professional_service_fee, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_flat_sales_tax)-length(replace(submitted_flat_sales_tax,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_flat_sales_tax, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_flat_sales_tax, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_flat_sales_tax, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_percent_sales_tax_basis)-length(replace(submitted_percent_sales_tax_basis,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_percent_sales_tax_basis, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_percent_sales_tax_basis, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_percent_sales_tax_basis, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_percent_sales_tax_rate)-length(replace(submitted_percent_sales_tax_rate,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_percent_sales_tax_rate, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_percent_sales_tax_rate, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_percent_sales_tax_rate, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_percent_sales_tax_amount)-length(replace(submitted_percent_sales_tax_amount,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_percent_sales_tax_amount, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_percent_sales_tax_amount, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_percent_sales_tax_amount, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_patient_pay)-length(replace(submitted_patient_pay,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_patient_pay, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_patient_pay, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_patient_pay, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_other_claimed_qual)-length(replace(submitted_other_claimed_qual,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_other_claimed_qual, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_other_claimed_qual, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_other_claimed_qual, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(submitted_other_claimed)-length(replace(submitted_other_claimed,'.',''))) = 1 THEN
 ('0' || regexp_replace(submitted_other_claimed, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(submitted_other_claimed, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(submitted_other_claimed, '[^0-9]'))::bigint::text END,
 ltrim(basis_of_reimbursement_determination),
 CASE WHEN (length(paid_ingredient_cost)-length(replace(paid_ingredient_cost,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_ingredient_cost, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_ingredient_cost, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_ingredient_cost, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(paid_dispensing_fee)-length(replace(paid_dispensing_fee,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_dispensing_fee, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_dispensing_fee, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_dispensing_fee, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(paid_gross_due)-length(replace(paid_gross_due,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_gross_due, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_gross_due, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_gross_due, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(paid_professional_service_fee)-length(replace(paid_professional_service_fee,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_professional_service_fee, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_professional_service_fee, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_professional_service_fee, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(paid_flat_sales_tax)-length(replace(paid_flat_sales_tax,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_flat_sales_tax, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_flat_sales_tax, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_flat_sales_tax, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(paid_percent_sales_tax_basis)-length(replace(paid_percent_sales_tax_basis,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_percent_sales_tax_basis, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_percent_sales_tax_basis, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_percent_sales_tax_basis, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(paid_percent_sales_tax_rate)-length(replace(paid_percent_sales_tax_rate,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_percent_sales_tax_rate, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_percent_sales_tax_rate, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_percent_sales_tax_rate, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(paid_patient_pay)-length(replace(paid_patient_pay,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_patient_pay, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_patient_pay, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_patient_pay, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(paid_other_claimed_qual)-length(replace(paid_other_claimed_qual,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_other_claimed_qual, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_other_claimed_qual, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_other_claimed_qual, '[^0-9]'))::bigint::text END,
 CASE WHEN (length(paid_other_claimed)-length(replace(paid_other_claimed,'.',''))) = 1 THEN
 ('0' || regexp_replace(paid_other_claimed, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(paid_other_claimed, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(paid_other_claimed, '[^0-9]'))::bigint::text END,
 ltrim(tax_exempt_indicator),
 ltrim(coupon_type),
 ltrim(coupon_number),
