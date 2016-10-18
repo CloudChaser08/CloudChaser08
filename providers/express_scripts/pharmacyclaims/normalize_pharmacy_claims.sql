@@ -59,11 +59,11 @@ ltrim(fill_number),
 ltrim(number_of_refills_authorized),
 CASE WHEN (length(quantity_dispensed)-length(replace(quantity_dispensed,'.',''))) = 1 THEN
 ('0' || regexp_replace(quantity_dispensed, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(quantity_dispensed, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(quantity_dispensed, '[^0-9]'))::bigint::text END,
 ltrim(unit_of_measure),
 CASE WHEN (length(days_supply)-length(replace(days_supply,'.',''))) = 1 THEN
 ('0' || regexp_replace(days_supply, '[^0-9.]') || '0')::float::text
-ELSE ('0' || regexp_replace(days_supply, '[^0-9]'))::int::text END,
+ELSE ('0' || regexp_replace(days_supply, '[^0-9]'))::bigint::text END,
 CASE WHEN (ltrim(service_provider_id_qualifier) in ('1','01')) OR (ltrim(service_provider_id_qualifier) in ('5', '05') AND regexp_count(ltrim(service_provider_id), '^[0-9]{10}$') = 1) then ltrim(service_provider_id) else NULL end as pharmacy_npi,
 ltrim(compound_code),
 ltrim(unit_dose_indicator),
