@@ -6,7 +6,7 @@ CREATE TABLE raw_transactional (
         gender                         text ENCODE lzo,
         zip_code                       text ENCODE lzo,
         street_address                 text ENCODE lzo,
-        street_address 2               text ENCODE lzo,
+        street_address_2               text ENCODE lzo,
         city                           text ENCODE lzo,
         state                          text ENCODE lzo,
         customer__patient_id           text ENCODE lzo,
@@ -17,9 +17,9 @@ CREATE TABLE raw_transactional (
         fish_her2__neu                 text ENCODE lzo,
         fish_pik3ca                    text ENCODE lzo,
         fish_top2a                     text ENCODE lzo,
-        fish-mutational_1p19q          text ENCODE lzo,
-        fish-mutational_alk            text ENCODE lzo,
-        fish-mutational_ros1           text ENCODE lzo,
+        fish_mutational_1p19q          text ENCODE lzo,
+        fish_mutational_alk            text ENCODE lzo,
+        fish_mutational_ros1           text ENCODE lzo,
         cish_cmet                      text ENCODE lzo,
         cish_egfr                      text ENCODE lzo,
         cish_her2__neu                 text ENCODE lzo,
@@ -33,12 +33,12 @@ CREATE TABLE raw_transactional (
         ihc_bcrp                       text ENCODE lzo,
         ihc_bombesin                   text ENCODE lzo,
         ihc_brcp                       text ENCODE lzo,
-        ihc_ca 19.9                    text ENCODE lzo,
+        ihc_ca_19_9                    text ENCODE lzo,
         ihc_calcitonin                 text ENCODE lzo,
         ihc_calret                     text ENCODE lzo,
         ihc_calretinin                 text ENCODE lzo,
-        ihc_cam5.2                     text ENCODE lzo,
-        ihc_cav-1                      text ENCODE lzo,
+        ihc_cam5_2                     text ENCODE lzo,
+        ihc_cav_1                      text ENCODE lzo,
         ihc_cd10                       text ENCODE lzo,
         ihc_cd20                       text ENCODE lzo,
         ihc_cd20__l26                  text ENCODE lzo,
@@ -61,11 +61,11 @@ CREATE TABLE raw_transactional (
         ihc_ck5__6                     text ENCODE lzo,
         ihc_ck7                        text ENCODE lzo,
         ihc_ck8                        text ENCODE lzo,
-        ihc_c-kit                      text ENCODE lzo,
+        ihc_c_kit                      text ENCODE lzo,
         ihc_cmet                       text ENCODE lzo,
         ihc_cox2                       text ENCODE lzo,
-        ihc_cyclin-d1                  text ENCODE lzo,
-        ihc_dog-1                      text ENCODE lzo,
+        ihc_cyclin_d1                  text ENCODE lzo,
+        ihc_dog_1                      text ENCODE lzo,
         ihc_ebv                        text ENCODE lzo,
         ihc_ecad                       text ENCODE lzo,
         ihc_egfr                       text ENCODE lzo,
@@ -74,7 +74,7 @@ CREATE TABLE raw_transactional (
         ihc_ercc1                      text ENCODE lzo,
         ihc_gcdfp                      text ENCODE lzo,
         ihc_gcdfp__brst_ii             text ENCODE lzo,
-        ihc_gcdfp-15                   text ENCODE lzo,
+        ihc_gcdfp_15                   text ENCODE lzo,
         ihc_h3k36me3                   text ENCODE lzo,
         ihc_hcg                        text ENCODE lzo,
         ihc_her2__neu                  text ENCODE lzo,
@@ -87,7 +87,7 @@ CREATE TABLE raw_transactional (
         ihc_l26                        text ENCODE lzo,
         ihc_lca                        text ENCODE lzo,
         ihc_mammaglobin                text ENCODE lzo,
-        ihc_mart-1                     text ENCODE lzo,
+        ihc_mart_1                     text ENCODE lzo,
         ihc_melana                     text ENCODE lzo,
         ihc_melanoma_specific_antigen  text ENCODE lzo,
         ihc_mgmt                       text ENCODE lzo,
@@ -103,9 +103,9 @@ CREATE TABLE raw_transactional (
         ihc_p95                        text ENCODE lzo,
         ihc_pap                        text ENCODE lzo,
         ihc_pbrm1                      text ENCODE lzo,
-        ihc_pd-1                       text ENCODE lzo,
+        ihc_pd_1                       text ENCODE lzo,
         ihc_pdgfr                      text ENCODE lzo,
-        ihc_pd-l1                      text ENCODE lzo,
+        ihc_pd_l1                      text ENCODE lzo,
         ihc_pgp                        text ENCODE lzo,
         ihc_pms2                       text ENCODE lzo,
         ihc_pr                         text ENCODE lzo,
@@ -131,62 +131,41 @@ CREATE TABLE raw_transactional (
         ihc_ttf                        text ENCODE lzo,
         ihc_ttf1                       text ENCODE lzo,
         ihc_tubb3                      text ENCODE lzo,
-        ihc_uchl-1                     text ENCODE lzo,
+        ihc_uchl_1                     text ENCODE lzo,
         ihc_vegf                       text ENCODE lzo,
         ihc_vimentin                   text ENCODE lzo,
         ihc_wt1                        text ENCODE lzo,
-        ihc-h-score_egfr               text ENCODE lzo,
-        ihc-ia_ecad                    text ENCODE lzo,
-        ihc-ia_er                      text ENCODE lzo,
-        ihc-ia_her2__neu               text ENCODE lzo,
-        ihc-ia_ki67                    text ENCODE lzo,
-        ihc-ia_p53                     text ENCODE lzo,
-        ihc-ia_pr                      text ENCODE lzo
-) DISTKEY(customer__patient_id) SORTKEY(customer__patient_id);
+        ihc_h_score_egfr               text ENCODE lzo,
+        ihc_ia_ecad                    text ENCODE lzo,
+        ihc_ia_er                      text ENCODE lzo,
+        ihc_ia_her2__neu               text ENCODE lzo,
+        ihc_ia_ki67                    text ENCODE lzo,
+        ihc_ia_p53                     text ENCODE lzo,
+        ihc_ia_pr                      text ENCODE lzo,
+        hv_key                         text ENCODE lzo
+);
 
-COPY raw_transactional FROM 's3://healthveritydev/musifer/caris/transactional.bz2' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY raw_transactional FROM 's3://healthveritydev/musifer/caris/transactions.bz2' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
 
-DROP TABLE IF EXISTS matching_payload;
-CREATE TABLE exploded_payload (
-        pk             text ENCODE lzo,
-        hvid           text ENCODE lzo,
-        parentId       text ENCODE lzo,
-        childId        text ENCODE lzo,
-        personId       text ENCODE lzo,
-        threeDigitZip  text ENCODE lzo,
-        gender         text ENCODE lzo,
-        yearOfBirth    text ENCODE lzo
-        ) DISTKEY(hvid) SORTKEY(hvid);
+-- DROP TABLE IF EXISTS matching_payload;
+-- CREATE TABLE matching_payload (
+        -- claimId        text ENCODE lzo,
+        -- hvid           text ENCODE lzo,
+        -- childId        text ENCODE lzo,
+        -- parentId       text ENCODE lzo,
+        -- personId       text ENCODE lzo,
+        -- threeDigitZip  text ENCODE lzo,
+        -- gender         text ENCODE lzo,
+        -- yearOfBirth    text ENCODE lzo
+        -- ) DISTKEY(hvid) SORTKEY(hvid);
 
--- an exploded payload is all is needed to generate hlls
-DROP TABLE IF EXISTS exploded_payload;
-CREATE TABLE exploded_payload (
-        pk             text ENCODE lzo,
-        hvid           text ENCODE lzo,
-        parentId       text ENCODE lzo,
-        childId        text ENCODE lzo,
-        personId       text ENCODE lzo,
-        threeDigitZip  text ENCODE lzo,
-        gender         text ENCODE lzo,
-        yearOfBirth    text ENCODE lzo
-        ) DISTKEY(hvid) SORTKEY(hvid);
+-- COPY matching_payload FROM 's3://healthveritydev/musifer/caris/payload.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/caris/payloadpaths.json';
 
-COPY exploded_payload FROM 's3://healthveritydev/musifer/caris/exploded.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/payloadpaths/caris_explodedpayloadpaths.json';
+-- DROP TABLE IF EXISTS parent_child_map;
+-- CREATE TABLE parent_child_map (
+        -- hvid         text ENCODE lzo,
+        -- parentId     text ENCODE lzo
+        -- ) DISTKEY(hvid) SORTKEY(hvid);
 
-DROP TABLE IF EXISTS parent_child_map;
-CREATE TABLE parent_child_map (
-        hvid         text ENCODE lzo,
-        parentId     text ENCODE lzo
-        ) DISTKEY(hvid) SORTKEY(hvid);
+-- COPY parent_child_map FROM 's3://salusv/matching/fetch-parent-ids/payload/fetch-parent-ids/20160705_Claims_US_CF_Hash_File_HV_Encrypt.dat.decrypted.json2016-10-13T22-06-23.0-1000000.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/payloadpaths/parent-child-payloadpaths.json';
 
-COPY parent_child_map FROM 's3://salusv/matching/fetch-parent-ids/payload/fetch-parent-ids/20160705_Claims_US_CF_Hash_File_HV_Encrypt.dat.decrypted.json2016-10-13T22-06-23.0-1000000.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/payloadpaths/parent-child-payloadpaths.json';
-
-DROP TABLE IF EXISTS full_exploded_payload;
-CREATE TABLE full_exploded_payload (
-        pk           text ENCODE lzo,
-        hvid         text ENCODE lzo,
-        personId     text ENCODE lzo,
-        state        text ENCODE lzo,
-        gender       text ENCODE lzo,
-        age          text ENCODE lzo
-        ) DISTKEY(hvid) SORTKEY(hvid);
