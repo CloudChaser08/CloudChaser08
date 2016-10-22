@@ -147,25 +147,25 @@ CREATE TABLE raw_transactional (
 
 COPY raw_transactional FROM 's3://healthveritydev/musifer/caris/transactions.bz2' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
 
--- DROP TABLE IF EXISTS matching_payload;
--- CREATE TABLE matching_payload (
-        -- claimId        text ENCODE lzo,
-        -- hvid           text ENCODE lzo,
-        -- childId        text ENCODE lzo,
-        -- parentId       text ENCODE lzo,
-        -- personId       text ENCODE lzo,
-        -- threeDigitZip  text ENCODE lzo,
-        -- gender         text ENCODE lzo,
-        -- yearOfBirth    text ENCODE lzo
-        -- ) DISTKEY(hvid) SORTKEY(hvid);
+DROP TABLE IF EXISTS matching_payload;
+CREATE TABLE matching_payload (
+        claimId        text ENCODE lzo,
+        hvid           text ENCODE lzo,
+        childId        text ENCODE lzo,
+        parentId       text ENCODE lzo,
+        hvJoinKey       text ENCODE lzo,
+        threeDigitZip  text ENCODE lzo,
+        gender         text ENCODE lzo,
+        yearOfBirth    text ENCODE lzo
+        ) DISTKEY(hvid) SORTKEY(hvid);
 
--- COPY matching_payload FROM 's3://healthveritydev/musifer/caris/payload.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/caris/payloadpaths.json';
+COPY matching_payload FROM 's3://healthveritydev/musifer/caris/payload.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/caris/payloadpaths.json';
 
--- DROP TABLE IF EXISTS parent_child_map;
--- CREATE TABLE parent_child_map (
-        -- hvid         text ENCODE lzo,
-        -- parentId     text ENCODE lzo
-        -- ) DISTKEY(hvid) SORTKEY(hvid);
+DROP TABLE IF EXISTS parent_child_map;
+CREATE TABLE parent_child_map (
+        hvid         text ENCODE lzo,
+        parentId     text ENCODE lzo
+        ) DISTKEY(hvid) SORTKEY(hvid);
 
--- COPY parent_child_map FROM 's3://salusv/matching/fetch-parent-ids/payload/fetch-parent-ids/20160705_Claims_US_CF_Hash_File_HV_Encrypt.dat.decrypted.json2016-10-13T22-06-23.0-1000000.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/payloadpaths/parent-child-payloadpaths.json';
+COPY parent_child_map FROM 's3://salusv/matching/fetch-parent-ids/payload/fetch-parent-ids/20160705_Claims_US_CF_Hash_File_HV_Encrypt.dat.decrypted.json2016-10-13T22-06-23.0-1000000.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/payloadpaths/parent-child-payloadpaths.json';
 

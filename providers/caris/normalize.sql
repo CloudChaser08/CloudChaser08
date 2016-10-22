@@ -161,7 +161,7 @@ SELECT * FROM (
             FROM raw_transactional
                 )
             ) t
-        LEFT JOIN matching_payload mp ON t.hv_key = mp.personId
+        LEFT JOIN matching_payload mp ON t.hv_key = mp.hvJoinKey
         LEFT JOIN parent_child_map pcm ON mp.hvid = pcm.hvid
         LEFT JOIN zip3_to_state zip3 ON mp.threeDigitZip = zip3.zip3
         ) main
