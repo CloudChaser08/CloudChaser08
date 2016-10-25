@@ -48,4 +48,3 @@ FROM transactional_raw q
 WHERE split_part(TRIM(q.diagnosis_code),'^',n.n) IS NOT NULL
     AND split_part(TRIM(q.diagnosis_code),'^',n.n) != '' 
     ;
-
