@@ -124,4 +124,4 @@ other_payer_coverage_id text encode lzo,
 other_payer_coverage_qual text encode lzo,
 other_payer_date text encode lzo,
 other_payer_coverage_code text encode lzo,
-logical_delete_reason text encode lzo);
+logical_delete_reason text encode lzo) DISTKEY(pharmacy_npi) SORTKEY(pharmacy_npi);
