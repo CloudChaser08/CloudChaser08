@@ -111,7 +111,8 @@ other_payer_coverage_type,
 other_payer_coverage_id,
 other_payer_coverage_qual,
 other_payer_date,
-other_payer_coverage_code)
+other_payer_coverage_code,
+logical_delete_reason)
 SELECT
 ltrim(claim_id),
 hvid,
@@ -119,10 +120,10 @@ CASE WHEN UPPER(gender_code) = 'M' OR gender_code = '1' THEN 'M' WHEN UPPER(gend
 year_of_birth,
 threeDigitZip,
 state,
-dates_service.formatted,
-dates_written.formatted,
-dates_injury.formatted,
-dates_authorized.formatted,
+date_service,
+date_written,
+date_injury,
+date_authorized,
 CASE WHEN char_length(time_authorized) >= 4 THEN substring(time_authorized from 1 for 2) || ':' || substring(time_authorized from 3 for 2) ELSE NULL END,
 ltrim(transaction_code),
 ltrim(response_code),
@@ -131,7 +132,7 @@ ltrim(reject_reason_code_2),
 ltrim(reject_reason_code_3),
 ltrim(reject_reason_code_4),
 ltrim(reject_reason_code_5),
-ltrim(upper(replace(replace(replace(diagnosis_code, '.', ''), ',', '') ' ', ''))),
+ltrim(upper(replace(replace(replace(diagnosis_code, '.', ''), ',', ''), ' ', ''))),
 ltrim(diagnosis_code_qual),
 CASE WHEN ltrim(product_service_id_qualifier) in ('7','8','9','07','08','09') then ltrim(product_service_id) else NULL END as procedure_code,
 CASE WHEN ltrim(product_service_id_qualifier) in ('7','8','9','07','08','09') then ltrim(product_service_id_qualifier) else NULL END as procedure_code_qual,
@@ -292,17 +293,45 @@ CASE WHEN (ltrim(prov_primary_care_qual) not in ('1','01')) AND (ltrim(prov_prim
 ltrim(other_payer_coverage_type),
 ltrim(other_payer_coverage_id),
 ltrim(other_payer_coverage_qual),
-other_payer_dates.formatted,
-ltrim(other_payer_coverage_code)
+other_payer_date,
+ltrim(other_payer_coverage_code),
+CASE WHEN transaction_code = 'B2' THEN 'Reversal' WHEN transaction_code = 'B1' AND response_code = 'R' THEN 'Claim Rejected' ELSE NULL END
 FROM emdeon_rx_raw
     LEFT JOIN matching_payload ON claim_id = claimid
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
-    LEFT JOIN payer_mapping ON ltrim(emdeon_rx_raw.payer_id) = payer_mapping.payer_id
-    LEFT JOIN dates dates_service ON date_service = dates_service.date
-    LEFT JOIN dates dates_written ON date_service = dates_written.date
-    LEFT JOIN dates dates_injury ON date_service = dates_injury.date
-    LEFT JOIN dates dates_authorized ON date_service = dates_authorized.date
-    LEFT JOIN dates other_payer_dates ON other_payer_date = other_payer_dates.date;
+    LEFT JOIN payer_mapping ON ltrim(emdeon_rx_raw.payer_id) = payer_mapping.payer_id;
+
+UPDATE pharmacyclaims_common_model
+SET date_service = dates.formatted
+FROM dates
+WHERE date_service = dates.date;
+
+UPDATE pharmacyclaims_common_model
+SET date_written = dates.formatted
+FROM dates
+WHERE date_written = dates.date;
+
+UPDATE pharmacyclaims_common_model
+SET date_injury = dates.formatted
+FROM dates
+WHERE date_injury = dates.date;
+
+UPDATE pharmacyclaims_common_model
+SET date_authorized = dates.formatted
+FROM dates
+WHERE date_authorized = dates.date;
+
+UPDATE pharmacyclaims_common_model
+SET other_payer_date = dates.formatted
+FROM dates
+WHERE other_payer_date = dates.date;
+
+UPDATE pharmacyclaims_common_model SET
+date_service = CASE WHEN length(date_service) <> 10 THEN NULL ELSE date_service END,
+date_written = CASE WHEN length(date_written) <> 10 THEN NULL ELSE date_written END,
+date_injury = CASE WHEN length(date_injury) <> 10 THEN NULL ELSE date_injury END,
+date_authorized = CASE WHEN length(date_authorized) <> 10 THEN NULL ELSE date_authorized END,
+other_payer_date = CASE WHEN length(other_payer_date) <> 10 THEN NULL ELSE other_payer_date END;
 
 UPDATE pharmacyclaims_common_model SET patient_year_of_birth=NULL
 WHERE

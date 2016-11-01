@@ -1,0 +1,8 @@
+{
+    "jsonpaths": [
+        "$['claimdId']",
+        "$['PCN']",
+        "$['groupId']",
+        "$['groupName']"
+    ]
+}
