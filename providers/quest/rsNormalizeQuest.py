@@ -74,6 +74,10 @@ subprocess.call(' '.join(
 ), shell=True)
 subprocess.call(' '.join(
     psql
+    + [db, '<', '../redshift_norm_common/load_hvid_parent_child_map.sql']
+), shell=True)
+subprocess.call(' '.join(
+    psql
     + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'load_matching_payload.sql']
