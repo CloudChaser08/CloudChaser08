@@ -5,7 +5,7 @@ CREATE TABLE parent_child_map (
         parentId     text ENCODE lzo
         ) DISTKEY(hvid) SORTKEY(hvid);
 
-COPY parent_child_map FROM 's3://salusv/matching/fetch-parent-ids/payload/fetch-parent-ids/20160705_Claims_US_CF_Hash_File_HV_Encrypt.dat.decrypted.json2016-10-13T22-06-23.0-1000000.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/parent-child-payloadpaths.json';xb
+COPY parent_child_map FROM 's3://salusv/matching/fetch-parent-ids/payload/fetch-parent-ids/20160705_Claims_US_CF_Hash_File_HV_Encrypt.dat.decrypted.json2016-10-13T22-06-23.0-1000000.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/parent-child-payloadpaths.json';
 
 -- raw payload data
 DROP TABLE IF EXISTS matching_payload_broken;
