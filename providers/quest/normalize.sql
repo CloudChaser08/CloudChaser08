@@ -39,7 +39,9 @@ SELECT TRIM(q.accn_id),                                                 --claim_
     q.order_name,                                                       --test_ordered_name
     q.result_name,                                                      --result_name
     split_part(UPPER(TRIM(replace(q.diagnosis_code,'.',''))),'^',n.n),  --diagnosis_code
-    q.icd_codeset_ind                                                   --diagnosis_code_qual
+    CASE q.icd_codeset_ind
+    WHEN '9' THEN '01' ELSE WHEN '0' THEN '02'
+    END                                                                 --diagnosis_code_qual
 FROM transactional_raw q
     LEFT JOIN matching_payload mp ON q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key
     LEFT JOIN dates service ON q.date_of_service = service.date
