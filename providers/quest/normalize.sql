@@ -41,7 +41,7 @@ SELECT TRIM(q.accn_id),                                                 --claim_
     split_part(UPPER(TRIM(replace(q.diagnosis_code,'.',''))),'^',n.n),  --diagnosis_code
     q.icd_codeset_ind                                                   --diagnosis_code_qual
 FROM transactional_raw q
-    LEFT JOIN matching_payload mp ON q.accn_id = mp.claimid
+    LEFT JOIN matching_payload mp ON q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key
     LEFT JOIN dates service ON q.date_of_service = service.date
     LEFT JOIN dates collected ON q.date_collected = collected.date
     CROSS JOIN diagnosis_exploder n
