@@ -1,0 +1,13 @@
+-- raw payload data
+DROP TABLE IF EXISTS matching_payload_broken;
+CREATE TABLE matching_payload_broken (
+        claimid        varchar ENCODE lzo,
+        hvid           text ENCODE lzo,
+        parentid       text ENCODE lzo,
+        threeDigitZip  char(3) ENCODE lzo,
+        yearOfBirth    text ENCODE lzo,
+        gender         text ENCODE lzo,
+        state          text ENCODE lzo
+        ) DISTKEY(claimid) SORTKEY(claimid);
+
+COPY matching_payload FROM :matching_path CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/practice-insight-normalization/payloadpaths.json';
