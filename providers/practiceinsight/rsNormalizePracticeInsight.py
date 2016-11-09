@@ -58,6 +58,11 @@ subprocess.call(' '.join(
     psql + [db, '<', 'create_exploded_diagnosis_map.sql']
 ), shell=True)
 
+# explode all procedure codes
+subprocess.call(' '.join(
+    psql + [db, '<', 'create_exploded_procedure_map.sql']
+), shell=True)
+
 # normalize
 subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
 
@@ -80,13 +85,13 @@ subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
     [db, '<', '../redshift_norm_common/genericize_icd10.sql']), shell=True)
 
 # unload to s3
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'output_path="\'' + args.output_path + '\'"']
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
-    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
-), shell=True)
+# subprocess.call(' '.join(
+    # psql
+    # + ['-v', 'output_path="\'' + args.output_path + '\'"']
+    # + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    # + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
+    # + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+# ), shell=True)
 
 # # # unload patient hlls
 # # subprocess.call(' '.join(
