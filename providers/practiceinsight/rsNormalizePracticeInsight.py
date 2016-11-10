@@ -24,12 +24,12 @@ if args.rs_user:
     psql.append('-U')
     psql.append(args.rs_user)
 
-# create helper tables
+# # create helper tables
 subprocess.call(' '.join(
     psql + [db, '<', 'create_helper_tables.sql']
 ), shell=True)
 
-# create table for lab common model
+# # create table for medical claims common model
 subprocess.call(' '.join(
     psql
     + ['-v', 'filename="\'' + args.setid + '\'"']
@@ -39,7 +39,7 @@ subprocess.call(' '.join(
     + [db, '<', '../redshift_norm_common/medicalclaims_common_model.sql']
 ), shell=True)
 
-# load data
+# # load data
 subprocess.call(' '.join(
     psql
     + ['-v', 'input_path="\'' + args.input_path + '\'"']
@@ -53,73 +53,42 @@ subprocess.call(' '.join(
     + [db, '<', 'load_matching_payload.sql']
 ), shell=True)
 
-# explode all diagnosis codes
+# # explode all diagnosis codes
 subprocess.call(' '.join(
     psql + [db, '<', 'create_exploded_diagnosis_map.sql']
 ), shell=True)
 
-# explode all procedure codes
+# # explode all procedure codes
 subprocess.call(' '.join(
     psql + [db, '<', 'create_exploded_procedure_map.sql']
 ), shell=True)
 
 # normalize
-subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True) 
 
 # privacy filtering
-subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
+subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
-    ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/nullify_icd9_blacklist.sql']), shell=True)
-subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
+    ['-v', 'service_date=date_service'] +
+    [db, '<', '../redshift_norm_common/nullify_icd9_blacklist_noqual.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
-    ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/nullify_icd10_blacklist.sql']), shell=True)
-subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
+    ['-v', 'service_date=date_service'] +
+    [db, '<', '../redshift_norm_common/nullify_icd10_blacklist_noqual.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
-    ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/genericize_icd9.sql']), shell=True)
-subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
+    ['-v', 'service_date=date_service'] +
+    [db, '<', '../redshift_norm_common/genericize_icd9_noqual.sql']), shell=True)
+subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
-    ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/genericize_icd10.sql']), shell=True)
+    ['-v', 'service_date=date_service'] +
+    [db, '<', '../redshift_norm_common/genericize_icd10_noqual.sql']), shell=True)
 
 # unload to s3
-# subprocess.call(' '.join(
-    # psql
-    # + ['-v', 'output_path="\'' + args.output_path + '\'"']
-    # + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    # + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
-    # + [db, '<', '../redshift_norm_common/unload_common_model.sql']
-# ), shell=True)
-
-# # # unload patient hlls
-# # subprocess.call(' '.join(
-# #     psql
-# #     + ['-v', 'output_path="\'' + args.output_path + '/testing_script/diagnosis/' + '\'"']
-# #     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-# #     + ['-v', 'select_for_hvid="\'SELECT diagnosis_code, hvid FROM lab_common_model\'"']
-# #     + [db, '<', 'unload_hlls.sql']
-# # ), shell=True)
-# # subprocess.call(' '.join(
-# #     psql
-# #     + ['-v', 'output_path="\'' + args.output_path + '/testing_script/gender/' + '\'"']
-# #     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-# #     + ['-v', 'select_for_hvid="\'SELECT patient_gender, hvid FROM lab_common_model\'"']
-# #     + [db, '<', 'unload_hlls.sql']
-# # ), shell=True)
-# # subprocess.call(' '.join(
-# #     psql
-# #     + ['-v', 'output_path="\'' + args.output_path + '/testing_script/age/' + '\'"']
-# #     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-# #     + ['-v', 'select_for_hvid="\'SELECT patient_age, hvid FROM lab_common_model\'"']
-# #     + [db, '<', 'unload_hlls.sql']
-# # ), shell=True)
-# # subprocess.call(' '.join(
-# #     psql
-# #     + ['-v', 'output_path="\'' + args.output_path + '/testing_script/state/' + '\'"']
-# #     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-# #     + ['-v', 'select_for_hvid="\'SELECT patient_state, hvid FROM lab_common_model\'"']
-# #     + [db, '<', 'unload_hlls.sql']
-# # ), shell=True)
-
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'output_path="\'' + args.output_path + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'select_from_common_model_table="\'SELECT * FROM medicalclaims_common_model\'"']
+    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+), shell=True)
