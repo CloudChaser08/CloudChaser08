@@ -1,6 +1,6 @@
 -- raw payload data
-DROP TABLE IF EXISTS matching_payload_broken;
-CREATE TABLE matching_payload_broken (
+DROP TABLE IF EXISTS matching_payload;
+CREATE TABLE matching_payload (
         claimid        varchar ENCODE lzo,
         hvid           text ENCODE lzo,
         parentid       text ENCODE lzo,
