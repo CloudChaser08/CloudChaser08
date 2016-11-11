@@ -107,6 +107,9 @@ subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] 
     ['-v', 'column_name=diagnosis_code'] +
     ['-v', 'service_date=date_service'] +
     [db, '<', '../redshift_norm_common/genericize_icd10_noqual.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/scrub_place_of_service.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/scrub_discharge_status.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/nullify_drg_blacklist.sql']), shell=True)
 
 # unload to s3
 subprocess.call(' '.join(

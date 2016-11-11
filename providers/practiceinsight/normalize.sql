@@ -80,9 +80,11 @@ SELECT DISTINCT
     mp.threeDigitZip,                                                                  -- patient_zip3
     UPPER(mp.state),                                                                   -- patient_state
     transactional.claim_type_cd,                                                       -- claim_type
-    edi_interchange_creation.formatted,                                                -- date_received
+    transactional.edi_interchange_creation_dt,                                         -- date_received
     CASE 
     WHEN transactional.svc_from_dt IS NOT NULL 
+    AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
+        transactional.diag_cd_3, transactional.diag_cd_4)
     THEN svc_from.formatted
     WHEN transactional.stmnt_from_dt IS NOT NULL 
     THEN stmnt_from.formatted
@@ -95,6 +97,8 @@ SELECT DISTINCT
     END,                                                                               -- date_service
     CASE 
     WHEN transactional.svc_from_dt IS NOT NULL 
+    AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
+        transactional.diag_cd_3, transactional.diag_cd_4)
     THEN svc_to.formatted
     WHEN transactional.stmnt_from_dt IS NOT NULL
     THEN stmnt_to.formatted
@@ -254,7 +258,6 @@ FROM transactional_raw transactional
     LEFT JOIN matching_payload mp ON transactional.src_claim_id = mp.claimid
 
     -- fix dates
-    LEFT JOIN dates edi_interchange_creation ON transactional.edi_interchange_creation_dt = edi_interchange_creation.date
     LEFT JOIN dates svc_to ON transactional.svc_to_dt = svc_to.date
     LEFT JOIN dates svc_from ON transactional.svc_from_dt = svc_from.date
     LEFT JOIN dates stmnt_to ON transactional.stmnt_to_dt = stmnt_to.date
@@ -346,7 +349,7 @@ SELECT DISTINCT
     mp.threeDigitZip,                                                                  -- patient_zip3
     UPPER(mp.state),                                                                   -- patient_state
     transactional.claim_type_cd,                                                       -- claim_type
-    edi_interchange_creation.formatted,                                                -- date_received
+    transactional.edi_interchange_creation_dt,                                                -- date_received
     CASE 
     WHEN transactional.svc_from_dt IS NOT NULL 
     THEN svc_from.formatted
@@ -430,7 +433,6 @@ FROM transactional_raw transactional
     LEFT JOIN matching_payload mp ON transactional.src_claim_id = mp.claimid
 
     -- fix dates
-    LEFT JOIN dates edi_interchange_creation ON transactional.edi_interchange_creation_dt = edi_interchange_creation.formatted
     LEFT JOIN dates svc_to ON transactional.svc_to_dt = svc_to.date
     LEFT JOIN dates svc_from ON transactional.svc_from_dt = svc_from.date
     LEFT JOIN dates stmnt_to ON transactional.stmnt_to_dt = stmnt_to.date
@@ -447,3 +449,17 @@ WHERE transactional.src_claim_id IN (
         AND diagnosis_code IS NOT NULL
         )
     ;
+
+-- delete diagnosis codes that should not have been added
+DELETE FROM medicalclaims_common_model
+WHERE record_id IN (
+    SELECT record_id 
+    FROM medicalclaims_common_model base 
+    WHERE base.service_line_number IS NULL
+        AND base.diagnosis_code IN (
+        SELECT sub.diagnosis_code
+        FROM medicalclaims_common_model sub
+        WHERE sub.claim_id = base.claim_id
+            AND sub.service_line_number IS NOT NULL
+            )
+        )
