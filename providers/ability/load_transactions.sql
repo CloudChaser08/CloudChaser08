@@ -74,7 +74,7 @@ CREATE TABLE transactional_serviceline (
         processdate               text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_serviceline FROM :serviceline_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 DELIMITER '|';
+COPY transactional_serviceline FROM :serviceline_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 10 DELIMITER '|';
 
 DROP TABLE IF EXISTS transactional_servicelineaffiliation;
 CREATE TABLE transactional_servicelineaffiliation (
@@ -97,7 +97,7 @@ CREATE TABLE transactional_servicelineaffiliation (
         claimid        text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_servicelineaffiliation FROM :servicelineaffiliation_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 DELIMITER '|';
+COPY transactional_servicelineaffiliation FROM :servicelineaffiliation_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 100 DELIMITER '|';
 
 DROP TABLE IF EXISTS transactional_diagnosis;
 CREATE TABLE transactional_diagnosis (
@@ -109,7 +109,7 @@ CREATE TABLE transactional_diagnosis (
         processdate         text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_diagnosis FROM :diagnosis_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 DELIMITER '|';
+COPY transactional_diagnosis FROM :diagnosis_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 10 DELIMITER '|';
 
 DROP TABLE IF EXISTS transactional_procedure;
 CREATE TABLE transactional_procedure (
