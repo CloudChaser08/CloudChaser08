@@ -79,7 +79,7 @@ default_args = {
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval="@once",
+    schedule_interval="@daily",
     default_args=default_args
 )
 
@@ -96,6 +96,7 @@ validate_fetch_transaction_config = {
 validate_fetch_transaction_file_dag = SubDagOperator(
     subdag=emdeon_validate_fetch_file(DAG_NAME, TRANSACTION_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_transaction_config),
     task_id=TRANSACTION_DAG_NAME,
+    retries=0,
     dag=mdag
 )
 
@@ -113,6 +114,7 @@ validate_fetch_transaction_mft_file_dag = SubDagOperator(
     subdag=emdeon_validate_fetch_file(DAG_NAME, TRANSACTION_MFT_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_transaction_mft_config),
     task_id=TRANSACTION_MFT_DAG_NAME,
     trigger_rule='all_done',
+    retries=0,
     dag=mdag
 )
 
@@ -130,6 +132,7 @@ validate_fetch_deid_file_dag = SubDagOperator(
     subdag=emdeon_validate_fetch_file(DAG_NAME, DEID_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_deid_config),
     task_id=DEID_DAG_NAME,
     trigger_rule='all_done',
+    retries=0,
     dag=mdag
 )
 
