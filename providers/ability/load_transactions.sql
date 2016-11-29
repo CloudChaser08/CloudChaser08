@@ -69,8 +69,8 @@ CREATE TABLE transactional_serviceline (
         drugprice                 text ENCODE lzo,
         drugquantity              text ENCODE lzo,
         drugunit                  text ENCODE lzo,
-        lineitemcontrolnumber     text ENCODE lzo,
         sequencenumber            text ENCODE lzo,
+        lineitemcontrolnumber     text ENCODE lzo,
         processdate               text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
@@ -168,4 +168,3 @@ CREATE TABLE transactional_payer (
         ) DISTKEY(claimid) SORTKEY(claimid);
 
 COPY transactional_payer FROM :payer_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS DELIMITER '|';
-
