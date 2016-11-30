@@ -145,7 +145,7 @@ CREATE TABLE raw_transactional (
         hv_key                         text ENCODE lzo
 );
 
-COPY raw_transactional FROM 's3://healthveritydev/musifer/caris/transactions.bz2' CREDENTIALS :credentials BZIP2 EMPTYASNULL DELIMITER '|';
+COPY raw_transactional FROM :input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
 
 DROP TABLE IF EXISTS matching_payload;
 CREATE TABLE matching_payload (
@@ -159,7 +159,7 @@ CREATE TABLE matching_payload (
         yearOfBirth    text ENCODE lzo
         ) DISTKEY(hvid) SORTKEY(hvid);
 
-COPY matching_payload FROM 's3://healthveritydev/musifer/caris/payload.json.bz2' CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/caris/payloadpaths.json';
+COPY matching_payload FROM :matching_path CREDENTIALS :credentials BZIP2 FORMAT AS JSON 's3://healthveritydev/musifer/caris/payloadpaths.json';
 
 DROP TABLE IF EXISTS parent_child_map;
 CREATE TABLE parent_child_map (
