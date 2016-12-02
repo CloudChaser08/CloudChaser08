@@ -15,11 +15,10 @@ if sys.modules.get('subdags.emdeon_validate_fetch_file'):
 from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
 
 # Applies to all files
-TMP_PATH='/tmp/webmd/era/'
-TMP_PATH_PARTS='/tmp/webmd/era/parts/'
+TMP_PATH_TEMPLATE='/tmp/webmd/era/{}/'
+TMP_PATH_PARTS_TEMPLATE='/tmp/webmd/era/{}/parts/'
 DAG_NAME='emdeon_era_pre_matching_pipeline'
 DATATYPE='era'
-DAILY_NUM_FILES=3
 
 # Transaction file
 TRANSACTION_FILE_DESCRIPTION='WebMD ERA transaction file'
@@ -36,34 +35,40 @@ TRANSACTION_MFT_DAG_NAME='validate_fetch_transaction_mft_file'
 MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 
 def do_unzip_file(ds, **kwargs):
-    file_list = os.listdir(TMP_PATH)
-    file_path = TMP_PATH + file_list[0]
+    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
+    file_list = os.listdir(tmp_path)
+    file_path = tmp_path + file_list[0]
     check_call(['gzip', '-d', '-k', '-f', file_path])
 
 def do_split_file(ds, **kwargs):
-    file_list = os.listdir(TMP_PATH)
+    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
+    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
+    file_list = os.listdir(tmp_path)
     file_name = filter(lambda x: not re.search('.gz$', x), file_list)[0]
-    file_path = TMP_PATH + file_name
-    check_call(['mkdir', '-p', TMP_PATH_PARTS])
-    check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(TMP_PATH_PARTS, file_name)])
+    file_path = tmp_path + file_name
+    check_call(['mkdir', '-p', tmp_path_parts])
+    check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(tmp_path_parts, file_name)])
 
 def do_zip_part_files(ds, **kwargs):
-    file_list = os.listdir(TMP_PATH_PARTS)
+    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
+    file_list = os.listdir(tmp_path_parts)
     for file_name in file_list:
-        check_call(['lbzip2', '{}{}'.format(TMP_PATH_PARTS, file_name)])
+        check_call(['lbzip2', '{}{}'.format(tmp_path_parts, file_name)])
 
 def do_push_splits_to_s3(ds, **kwargs):
-    file_list = os.listdir(TMP_PATH)
+    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
+    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
+    file_list = os.listdir(tmp_path)
     file_name = filter(lambda x: x.find('.gz') == (len(x) - 3), file_list)[0]
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
     env = os.environ
     env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
     env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
-    check_call(['aws', 's3', 'cp', '--recursive', TMP_PATH_PARTS, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)], env=env)
+    check_call(['aws', 's3', 'cp', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)], env=env)
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2016, 10, 1, 12),
+    'start_date': datetime(2016, 12, 1, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -71,16 +76,15 @@ default_args = {
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval="@daily",
+    schedule_interval="0 12 * * *",
     default_args=default_args
 )
 
 validate_fetch_transaction_config = {
-    'tmp_path' : TMP_PATH,
+    'tmp_path_template' : TMP_PATH_TEMPLATE,
     's3_raw_path' : S3_TRANSACTION_RAW_PATH,
     'file_name_template' : TRANSACTION_FILE_NAME_TEMPLATE,
     'datatype' : DATATYPE,
-    'daily_num_files' : DAILY_NUM_FILES,
     'minimum_file_size' : MINIMUM_TRANSACTION_FILE_SIZE,
     'file_description' : TRANSACTION_FILE_DESCRIPTION
 }
@@ -93,11 +97,10 @@ validate_fetch_transaction_file_dag = SubDagOperator(
 )
 
 validate_fetch_transaction_mft_config = {
-    'tmp_path' : TMP_PATH,
+    'tmp_path_template' : TMP_PATH_TEMPLATE,
     's3_raw_path' : S3_TRANSACTION_MFT_RAW_PATH,
     'file_name_template' : TRANSACTION_MFT_FILE_NAME_TEMPLATE,
     'datatype' : DATATYPE,
-    'daily_num_files' : DAILY_NUM_FILES,
     'minimum_file_size' : MINIMUM_TRANSACTION_MFT_FILE_SIZE,
     'file_description' : TRANSACTION_MFT_FILE_DESCRIPTION
 }
