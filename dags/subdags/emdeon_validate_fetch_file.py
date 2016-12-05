@@ -12,9 +12,8 @@ import re
 SLACK_CHANNEL='#dev'
 
 def do_is_valid_new_file(ds, **kwargs):
-    # We expect the files that were made available on the FTP server yesterday to have the date from 2 days ago in the name
-    two_days_ago = (kwargs['execution_date'] + timedelta(-2))
-    expected_file_name  = kwargs['file_name_template'].format(two_days_ago.strftime('%Y%m%d'))
+    # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
+    expected_file_name  = kwargs['file_name_template'].format(kwargs['yesterday_ds_nodash'])
 
     sftp_config = json_loads(Variable.get('Emdeon SFTP Configuration'))[kwargs['datatype']]
     with pysftp.Connection(sftp_config['source_host'], username=sftp_config['user'], password=sftp_config['password']) as conn:
@@ -38,9 +37,8 @@ def do_is_valid_new_file(ds, **kwargs):
     return kwargs['is_new_valid']
         
 def do_fetch_file(ds, **kwargs):
-    # We expect the files that were made available on the FTP server yesterday to have the date from 2 days ago in the name
-    two_days_ago = (kwargs['execution_date'] + timedelta(-2))
-    expected_file_name  = kwargs['file_name_template'].format(two_days_ago.strftime('%Y%m%d'))
+    # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
+    expected_file_name  = kwargs['file_name_template'].format(kwargs['yesterday_ds_nodash'])
 
     tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
 
@@ -49,9 +47,8 @@ def do_fetch_file(ds, **kwargs):
         conn.get("{}/{}".format(sftp_config['source_path'], expected_file_name), "{}/{}".format(tmp_path, expected_file_name))
 
 def do_push_raw_to_s3(ds, **kwargs):
-    # We expect the files that were made available on the FTP server yesterday to have the date from 2 days ago in the name
-    two_days_ago = (kwargs['execution_date'] + timedelta(-2))
-    expected_file_name  = kwargs['file_name_template'].format(two_days_ago.strftime('%Y%m%d'))
+    # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
+    expected_file_name  = kwargs['file_name_template'].format(kwargs['yesterday_ds_nodash'])
 
     tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
 
