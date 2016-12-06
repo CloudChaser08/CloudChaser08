@@ -2,7 +2,7 @@
     "jsonpaths": [
         "$['hvJoinKey']",
         "$['hvid']",
-        "$['parentid']",
+        "$['parentId']",
         "$['threeDigitZip']",
         "$['gender']",
         "$['yearOfBirth']"
