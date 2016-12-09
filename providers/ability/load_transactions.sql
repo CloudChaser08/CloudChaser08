@@ -74,7 +74,7 @@ CREATE TABLE transactional_serviceline (
         processdate               text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_serviceline FROM :serviceline_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 10 DELIMITER '|';
+COPY transactional_serviceline FROM :serviceline_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 100 DELIMITER '|';
 
 DROP TABLE IF EXISTS transactional_servicelineaffiliation;
 CREATE TABLE transactional_servicelineaffiliation (
