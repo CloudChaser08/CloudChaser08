@@ -35,12 +35,14 @@ def format_and_save(lines,file_name):
         #f.write(s1+"\t"+s2+"\t"+s3+"\t"+s4+"\t"+s5)
         # input file style (needed for next year)
         f.write("{:5} {:7} {:1} {:60} {}".format(s1,s2,s3,s4,s5))
+        #print("{:5} {:7} {:1} {:60} {}".format(s1,s2,s3,s4,s5))
 
     f.close()
 
 def main():
     codes_added = 0
     codes_modified = 0
+    codes_removed = []
     options, remainder = getopt.getopt(sys.argv[1:], 'o:n:h:du:')
     for opt, arg in options:
         if opt in ('-o'):
@@ -58,6 +60,9 @@ def main():
 
     # first, find diffs, update to new one if found
     for code in old_lines:
+        if code not in new_lines:
+            codes_removed.append(code)
+            continue
         if(old_lines[code] != new_lines[code]):
             print("Line with code "+code+" differs, updating")
             print("Old line is "+old_lines[code])
@@ -73,7 +78,9 @@ def main():
             codes_added = codes_added+1
 
     format_and_save(old_lines,updated_file_name)
-    print("Complete, added "+str(codes_added)+", updated "+str(codes_modified))
+    print("Complete, added "+str(codes_added)+", updated "+str(codes_modified)+" removed "+str(len(codes_removed)))
+    print("Codes removed, but we didn't actually remove them:")
+    print(codes_removed)
 
 if __name__ == "__main__":
     main()
