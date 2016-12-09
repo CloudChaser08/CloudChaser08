@@ -35,7 +35,6 @@ def format_and_save(lines,file_name):
         #f.write(s1+"\t"+s2+"\t"+s3+"\t"+s4+"\t"+s5)
         # input file style (needed for next year)
         f.write("{:5} {:7} {:1} {:60} {}".format(s1,s2,s3,s4,s5))
-        print("{:5} {:7} {:1} {:60} {}".format(s1,s2,s3,s4,s5))
 
     f.close()
 
