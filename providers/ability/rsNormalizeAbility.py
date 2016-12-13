@@ -61,31 +61,31 @@ subprocess.call(' '.join(
 ), shell=True)
 
 # normalize
-subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True) 
+subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
 
 # privacy filtering
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
-    ['-v', 'column_name=diagnosis_code'] +
-    ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/nullify_icd9_blacklist.sql']), shell=True)
+                        ['-v', 'column_name=diagnosis_code'] +
+                        ['-v', 'qual_column_name=diagnosis_code_qual'] +
+                        [db, '<', '../redshift_norm_common/nullify_icd9_blacklist.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
-    ['-v', 'column_name=diagnosis_code'] +
-    ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/nullify_icd10_blacklist.sql']), shell=True)
+                        ['-v', 'column_name=diagnosis_code'] +
+                        ['-v', 'qual_column_name=diagnosis_code_qual'] +
+                        [db, '<', '../redshift_norm_common/nullify_icd10_blacklist.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
-    ['-v', 'column_name=diagnosis_code'] +
-    ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/genericize_icd9.sql']), shell=True)
+                        ['-v', 'column_name=diagnosis_code'] +
+                        ['-v', 'qual_column_name=diagnosis_code_qual'] +
+                        [db, '<', '../redshift_norm_common/genericize_icd9.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
-    ['-v', 'column_name=diagnosis_code'] +
-    ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/genericize_icd10.sql']), shell=True)
+                        ['-v', 'column_name=diagnosis_code'] +
+                        ['-v', 'qual_column_name=diagnosis_code_qual'] +
+                        [db, '<', '../redshift_norm_common/genericize_icd10.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/scrub_place_of_service.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/scrub_discharge_status.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/nullify_drg_blacklist.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
-    ['-v', 'column_name=patient_age'] +
-    [db, '<', '../../redshift_norm_common/cap_age.sql']), shell=True)
+                        ['-v', 'column_name=patient_age'] +
+                        [db, '<', '../redshift_norm_common/cap_age.sql']), shell=True)
 
 # unload to s3
 subprocess.call(' '.join(
