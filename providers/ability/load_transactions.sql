@@ -213,7 +213,7 @@ CREATE TABLE transactional_diagnosis_dupes (
         processdate         text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_diagnosis_dupes FROM :diagnosis_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 10 DELIMITER '|';
+COPY transactional_diagnosis_dupes FROM :diagnosis_path CREDENTIALS :credentials EMPTYASNULL ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 100 DELIMITER '|';
 
 DROP TABLE IF EXISTS transactional_diagnosis CASCADE;
 CREATE TABLE transactional_diagnosis (
