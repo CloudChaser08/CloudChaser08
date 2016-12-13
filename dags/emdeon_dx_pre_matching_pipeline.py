@@ -9,6 +9,7 @@ import os
 import pysftp
 import re
 import sys
+import utils.file_utils as file_utils
 
 if sys.modules.get('subdags.emdeon_validate_fetch_file'):
     del sys.modules['subdags.emdeon_validate_fetch_file']
@@ -41,6 +42,7 @@ S3_DEID_RAW_PATH='s3://healthverity/incoming/medicalclaims/emdeon/deid/'
 DEID_FILE_NAME_TEMPLATE='{}_Claims_US_CF_Hash_File_HV_Encrypt.dat.gz'
 DEID_DAG_NAME='validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE=500
+
 
 def do_unzip_file(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
@@ -86,6 +88,7 @@ def do_trigger_post_matching_dag(context, dag_run_obj):
             "ds_yesterday": context['yesterday_ds']
         }
     return dag_run_obj
+
 
 default_args = {
     'owner': 'airflow',
@@ -154,28 +157,28 @@ validate_fetch_deid_file_dag = SubDagOperator(
 unzip_file = PythonOperator(
     task_id='unzip_file',
     provide_context=True,
-    python_callable=do_unzip_file,
+    python_callable=file_utils.unzip_file(TMP_PATH_TEMPLATE),
     dag=mdag
 )
 
 split_file = PythonOperator(
     task_id='split_file',
     provide_context=True,
-    python_callable=do_split_file,
+    python_callable=file_utils.split_file,
     dag=mdag
 )
 
 zip_part_files = PythonOperator(
     task_id='zip_part_files',
     provide_context=True,
-    python_callable=do_zip_part_files,
+    python_callable=file_utils.bzip_part_files,
     dag=mdag
 )
 
 push_splits_to_s3 = PythonOperator(
     task_id='push_splits_to_s3',
     provide_context=True,
-    python_callable=do_push_splits_to_s3,
+    python_callable=file_utils.push_splits_to_s3,
     dag=mdag
 )
 

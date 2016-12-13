@@ -8,8 +8,7 @@ import logging
 import os
 import pysftp
 import re
-
-SLACK_CHANNEL='#dev'
+import config
 
 def do_is_valid_new_file(ds, **kwargs):
     # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
@@ -93,7 +92,7 @@ def emdeon_validate_fetch_file(parent_dag_name, child_dag_name, start_date, sche
         method='chat.postMessage',
         retries=0,
         api_params={
-            'channel'  : SLACK_CHANNEL,
+            'channel'  : config.SLACK_CHANNEL,
             'text'     : 'No new {} matching expected patten found'.format(dag_config['file_description']),
             'username' : 'AirFlow',
             'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
@@ -107,7 +106,7 @@ def emdeon_validate_fetch_file(parent_dag_name, child_dag_name, start_date, sche
         method='chat.postMessage',
         retries=0,
         api_params={
-            'channel'  : SLACK_CHANNEL,
+            'channel'  : config.SLACK_CHANNEL,
             'text'     : 'No new {} found'.format(dag_config['file_description']),
             'username' : 'AirFlow',
             'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
@@ -121,7 +120,7 @@ def emdeon_validate_fetch_file(parent_dag_name, child_dag_name, start_date, sche
         method='chat.postMessage',
         retries=0,
         api_params={
-            'channel'  : SLACK_CHANNEL,
+            'channel'  : config.SLACK_CHANNEL,
             'text'     : '{} is of an unexpected size'.format(dag_config['file_description']),
             'username' : 'AirFlow',
             'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
