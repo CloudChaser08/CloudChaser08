@@ -2,12 +2,6 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
-from subprocess import check_output, check_call, STDOUT
-from json import loads as json_loads
-import logging
-import os
-import pysftp
-import re
 import sys
 import utils.file_utils as file_utils
 
@@ -157,28 +151,34 @@ validate_fetch_deid_file_dag = SubDagOperator(
 unzip_file = PythonOperator(
     task_id='unzip_file',
     provide_context=True,
-    python_callable=file_utils.unzip_file(TMP_PATH_TEMPLATE),
+    python_callable=file_utils.unzip(TMP_PATH_TEMPLATE),
     dag=mdag
 )
 
 split_file = PythonOperator(
     task_id='split_file',
     provide_context=True,
-    python_callable=file_utils.split_file,
+    python_callable=file_utils.split_file(
+        TMP_PATH_TEMPLATE, TMP_PATH_PARTS_TEMPLATE
+    ),
     dag=mdag
 )
 
 zip_part_files = PythonOperator(
     task_id='zip_part_files',
     provide_context=True,
-    python_callable=file_utils.bzip_part_files,
+    python_callable=file_utils.bzip_part_files(TMP_PATH_PARTS_TEMPLATE),
     dag=mdag
 )
 
 push_splits_to_s3 = PythonOperator(
     task_id='push_splits_to_s3',
     provide_context=True,
-    python_callable=file_utils.push_splits_to_s3,
+    python_callable=file_utils.push_splits_to_s3(
+        TMP_PATH_TEMPLATE, TMP_PATH_PARTS_TEMPLATE, S3_TRANSACTION_SPLIT_PATH,
+        Variable.get('AWS_ACCESS_KEY_ID'),
+        Variable.get('AWS_SECRET_ACCESS_KEY')
+    ),
     dag=mdag
 )
 
