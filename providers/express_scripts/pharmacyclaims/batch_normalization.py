@@ -17,13 +17,13 @@ for f in res.split("\n"):
     in_path = re.sub('[^/]+$', '', in_path)
     matching_path = re.sub('incoming', 'matching/payload', in_path)
     setid = f.split('/')[-1]
-    extra_pieces_path = ('s3://salusv/matching/esi-rx-numbers/payload/'
-        'f726747e-9dc0-4023-9523-e077949ae865/' + re.findall('10130X.*c\d{6}', setid)[0]
-        )
+#    extra_pieces_path = ('s3://salusv/matching/esi-rx-numbers/payload/'
+#        'f726747e-9dc0-4023-9523-e077949ae865/' + re.findall('10130X.*c\d{6}', setid)[0]
+#        )
 
     args = ['--input_path=\'{}\''.format(in_path),
         '--matching_path=\'{}\''.format(matching_path),
-        '--extra_pieces_path=\'{}\''.format(extra_pieces_path),
+#        '--extra_pieces_path=\'{}\''.format(extra_pieces_path),
         '--s3_credentials=\'{}\''.format(CREDENTIALS),
         '--setid=\'{}\''.format(setid)]
 

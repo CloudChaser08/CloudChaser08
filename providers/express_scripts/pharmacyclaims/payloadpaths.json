@@ -5,6 +5,7 @@
         "$['parentId']",
         "$['threeDigitZip']",
         "$['gender']",
-        "$['yearOfBirth']"
+        "$['yearOfBirth']",
+        "$['RXNumber']"
     ]
 }

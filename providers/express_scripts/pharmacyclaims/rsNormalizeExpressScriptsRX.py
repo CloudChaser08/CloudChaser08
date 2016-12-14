@@ -9,7 +9,7 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_path', type=str)
 parser.add_argument('--matching_path', type=str)
-parser.add_argument('--extra_pieces_path', type=str)
+parser.add_argument('--extra_pieces_path', type=str, nargs='?')
 parser.add_argument('--output_path', type=str, nargs='?')
 parser.add_argument('--database', type=str, nargs='?')
 parser.add_argument('--setid', type=str) # set id of the data we are normalizing
@@ -57,9 +57,9 @@ subprocess.call(' '.join(psql + ['-v', 'input_path="\'' + args.input_path + '\'"
 subprocess.call(' '.join(psql + ['-v', 'matching_path="\'' + args.matching_path + '\'"'] +
     ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
     [db, '<', 'load_matching_payload.sql']), shell=True)
-subprocess.call(' '.join(psql + ['-v', 'extra_pieces_path="\'' + args.extra_pieces_path + '\'"'] +
-    ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
-    [db, '<', 'load_extra_pieces.sql']), shell=True)
+#subprocess.call(' '.join(psql + ['-v', 'extra_pieces_path="\'' + args.extra_pieces_path + '\'"'] +
+#    ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
+#    [db, '<', 'load_extra_pieces.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', 'normalize_pharmacy_claims.sql']), shell=True)
 
 # Privacy filtering

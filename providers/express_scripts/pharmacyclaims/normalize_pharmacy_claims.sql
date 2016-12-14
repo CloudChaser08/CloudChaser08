@@ -52,7 +52,7 @@ CASE WHEN ltrim(product_service_id_qualifier) in ('7','8','9','07','08','09') th
 CASE WHEN ltrim(product_service_id_qualifier) in ('3','03') then ltrim(product_service_id) else NULL END as ndc_code,
 CASE WHEN ltrim(product_service_id_qualifier) not in ('7','8','9','07','08','09','3','03') then ltrim(product_service_id) else NULL end as product_service_id,
 CASE WHEN ltrim(product_service_id_qualifier) not in ('7','8','9','07','08','09','3','03') then ltrim(product_service_id_qualifier) else NULL end as product_service_id_qual,
-ltrim(extra.rxnumber),
+ltrim(mat.rxnumber),
 ltrim(prescription_service_reference_number_qualifier),
 ltrim(processor_control_number),
 ltrim(fill_number),
@@ -76,7 +76,6 @@ CASE WHEN (ltrim(prescriber_id_qualifier) not in ('1','01')) AND (ltrim(prescrib
 CASE WHEN (ltrim(prescriber_id_qualifier) not in ('1','01')) AND (ltrim(prescriber_id_qualifier) not in ('5', '05') OR regexp_count(ltrim(prescriber_id), '^[0-9]{10}$') = 0) then ltrim(prescriber_id_qualifier) else NULL end as prescribing_id_qual
 FROM express_scripts_rx_raw
     LEFT JOIN matching_payload mat ON hv_join_key = mat.hvJoinKey
-    LEFT JOIN extra_pieces extra ON hv_join_key = extra.hvJoinKey
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
     LEFT JOIN dates dates_service ON date_of_service = dates_service.date
     LEFT JOIN dates dates_written ON date_prescription_written = dates_written.date;
