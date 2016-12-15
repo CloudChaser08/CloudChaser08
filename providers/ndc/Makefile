@@ -31,8 +31,8 @@ import:
 prep: fetch ingest-new push 
 
 ingest-new:
-	bin/prepare_ndc_package.py -o data/yesterday_package.txt -n data/package.txt -u data/package_updated.out
-	bin/prepare_ndc_product.py -o data/yesterday_product.txt -n data/product.txt -u data/product_updated.out
+	bin/prepare_ndc_package.py -o data/yesterday_package.txt -n data/package.txt -u data/package_updated.txt
+	bin/prepare_ndc_product.py -o data/yesterday_product.txt -n data/product.txt -u data/product_updated.txt
 
 fetch:
 	mkdir -p data
