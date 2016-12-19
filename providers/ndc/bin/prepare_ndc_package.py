@@ -34,6 +34,8 @@ def get_lines(file_name):
 def format_and_save(lines,file_name):
     f = open(file_name,'w')
     for code in lines:
+        if code == "NDCPACKAGECODE":
+            continue
         # unpack what we know is an adequate length string
         f.write(lines[code])
 
