@@ -130,14 +130,24 @@ SELECT DISTINCT
     CASE 
     WHEN serviceline.ServiceStart IS NOT NULL 
     AND serviceline.ServiceStart <> 'NULL'
-    THEN serviceline.ServiceEnd
+    THEN 
+    CASE 
+    WHEN serviceline.ServiceEnd = 'NULL'
+    THEN NULL
+    ELSE serviceline.ServiceEnd
+    END
     WHEN header.StartDate IS NOT NULL
-    AND serviceline.ServiceStart <> 'NULL'
-    THEN header.EndDate
+    AND header.StartDate <> 'NULL'
+    CASE 
+    WHEN header.EndDate = 'NULL'
+    THEN NULL
+    ELSE header.EndDate
+    END
     ELSE (
     SELECT MIN(sl2.ServiceEnd) 
     FROM transactional_serviceline sl2 
     WHERE sl2.ClaimId = serviceline.ClaimId
+        AND sl2.ServiceEnd <> 'NULL'
         )
     END,                             -- date_service_end
     CASE 
@@ -837,11 +847,16 @@ SELECT DISTINCT
     CASE 
     WHEN header.StartDate IS NOT NULL
     AND header.StartDate <> 'NULL'
-    THEN header.EndDate
+    CASE 
+    WHEN header.EndDate = 'NULL'
+    THEN NULL
+    ELSE header.EndDate
+    END
     ELSE (
     SELECT MIN(sl2.ServiceEnd) 
     FROM transactional_serviceline sl2 
     WHERE sl2.ClaimId = header.ClaimId
+        AND sl2.ServiceEnd <> 'NULL'
         )
     END,                             -- date_service_end
     CASE
@@ -1422,11 +1437,16 @@ SELECT DISTINCT
     CASE 
     WHEN header.StartDate IS NOT NULL
     AND header.StartDate <> 'NULL'
-    THEN header.EndDate
+    CASE 
+    WHEN header.EndDate = 'NULL'
+    THEN NULL
+    ELSE header.EndDate
+    END
     ELSE (
     SELECT MIN(sl2.ServiceEnd) 
     FROM transactional_serviceline sl2 
     WHERE sl2.ClaimId = header.ClaimId
+        AND sl2.ServiceEnd <> 'NULL'
         )
     END,                             -- date_service_end
     CASE
