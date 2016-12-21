@@ -1,0 +1,10 @@
+{
+    "jsonpaths": [
+        "$['hvJoinKey']",
+        "$['hvid']",
+        "$['parentId']",
+        "$['threeDigitZip']",
+        "$['gender']",
+        "$['yearOfBirth']"
+    ]
+}
