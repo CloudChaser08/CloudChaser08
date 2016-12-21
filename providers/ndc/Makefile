@@ -44,7 +44,9 @@ fetch:
 
 push:
 	/usr/local/bin/aws s3 cp --sse AES256 data/product_updated.txt s3://salusv/reference/ndc/${DAY}/product.txt
+	/usr/local/bin/aws s3 cp --sse AES256 data/product_updated.txt s3://salusv/reference/ndc/${DAY}/product/product.txt
 	/usr/local/bin/aws s3 cp --sse AES256 data/package_updated.txt s3://salusv/reference/ndc/${DAY}/package.txt
+	/usr/local/bin/aws s3 cp --sse AES256 data/package_updated.txt s3://salusv/reference/ndc/${DAY}/package/package.txt
 
 clean:
 	rm -rf data
