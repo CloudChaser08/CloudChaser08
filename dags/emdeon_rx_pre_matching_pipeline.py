@@ -44,15 +44,13 @@ MINIMUM_DEID_FILE_SIZE=500
 
 def do_unzip_file(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    file_list = os.listdir(tmp_path)
-    file_path = tmp_path + file_list[0]
+    file_path = tmp_path + TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds_nodash'])
     check_call(['gzip', '-d', '-k', '-f', file_path])
 
 def do_split_file(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
     tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
-    file_list = os.listdir(tmp_path)
-    file_name = filter(lambda x: not re.search('.gz$', x), file_list)[0]
+    file_name = TRANSACTION_FILE_NAME_TEMPLATE.replace('.gz', '').format(kwargs['yesterday_ds_nodash'])
     file_path = tmp_path + file_name
     check_call(['mkdir', '-p', tmp_path_parts])
     check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(tmp_path_parts, file_name)])
@@ -69,8 +67,8 @@ def do_push_splits_to_s3(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
     tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
 
-    file_list = os.listdir(tmp_path)
-    file_name = filter(lambda x: x.find('.gz') == (len(x) - 3), file_list)[0]
+    file_list = os.listdir(tmp_path_parts)
+    file_name = file_list[0]
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
     env = os.environ
     env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
@@ -180,6 +178,6 @@ unzip_file.set_upstream(validate_fetch_transaction_file_dag)
 split_file.set_upstream(unzip_file)
 zip_part_files.set_upstream(split_file)
 push_splits_to_s3.set_upstream(zip_part_files)
-validate_fetch_transaction_mft_file_dag.set_upstream(push_splits_to_s3)
-validate_fetch_deid_file_dag.set_upstream(validate_fetch_transaction_mft_file_dag)
-clean_up_workspace.set_upstream(validate_fetch_deid_file_dag)
+push_splits_to_s3.set_downstream(clean_up_workspace)
+validate_fetch_transaction_mft_file_dag.set_downstream(clean_up_workspace)
+validate_fetch_deid_file_dag.set_downstream(clean_up_workspace)

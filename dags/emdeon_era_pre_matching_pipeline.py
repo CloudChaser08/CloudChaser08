@@ -36,8 +36,7 @@ MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 
 def do_unzip_file(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    file_list = os.listdir(tmp_path)
-    file_path = tmp_path + file_list[0]
+    file_path = tmp_path + TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_yesterday_nodash'])
     check_call(['gzip', '-d', '-k', '-f', file_path])
 
 def do_split_file(ds, **kwargs):
@@ -141,6 +140,13 @@ validate_fetch_transaction_mft_file_dag = SubDagOperator(
 #    dag=mdag
 #)
 
+clean_up_workspace = BashOperator(
+    task_id='clean_up_workspace',
+    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}')),
+    trigger_rule='all_done',
+    dag=mdag
+)
+
 #unzip_file.set_upstream(validate_fetch_transaction_file_dag)
 #split_file.set_upstream(unzip_file)
 #zip_part_files.set_upstream(split_file)
@@ -148,4 +154,5 @@ validate_fetch_transaction_mft_file_dag = SubDagOperator(
 
 # We don't do anything with the ERA files yet
 # Just make sure they are in the right locations
-validate_fetch_transaction_mft_file_dag.set_upstream(validate_fetch_transaction_file_dag)
+validate_fetch_transaction_mft_file_dag.set_downstream(clean_up_workspace)
+validate_fetch_transaction_file_dag.set_downstream(clean_up_workspace)
