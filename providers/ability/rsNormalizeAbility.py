@@ -2,6 +2,9 @@
 import subprocess
 import argparse
 import time
+import sys
+sys.path.append(os.path.abspath("../redshift_norm_common/"))
+import create_date_validation_table as date_validator
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
@@ -29,6 +32,9 @@ psql = ['psql', '-h', args.cluster_endpoint, '-p', '5439']
 if args.rs_user:
     psql.append('-U')
     psql.append(args.rs_user)
+
+# generate date validation table
+date_validator.generate(psql, db, args.s3_credentials)
 
 # create table for medical claims common model
 subprocess.call(' '.join(

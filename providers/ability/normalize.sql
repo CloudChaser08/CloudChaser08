@@ -89,11 +89,7 @@ INSERT INTO medicalclaims_common_model (
         cob_ins_type_code_2
         ) 
 SELECT DISTINCT
-    CASE 
-    WHEN header.ClaimId = 'NULL'
-    THEN NULL
-    ELSE header.ClaimId
-    END,                             -- claim_id
+    header.ClaimId,                             -- claim_id
     COALESCE(mp.parentid, mp.hvid),  -- hvid
     1,                               -- source_version
     mp.gender,                       -- patient_gender
@@ -102,24 +98,16 @@ SELECT DISTINCT
     mp.threeDigitZip,                -- patient_zip3
     mp.state,                        -- patient_state
     CASE
-    WHEN header.Type = 'NULL'
-    THEN NULL
     WHEN header.Type = 'Institutional'
     THEN 'I'
     WHEN header.Type = 'Professional'
     THEN 'P'
     END,                             -- claim_type
-    CASE
-    WHEN header.ProcessDate = 'NULL'
-    THEN NULL
-    ELSE header.ProcessDate
-    END,                             -- date_received
+    header.ProcessDate,                             -- date_received
     CASE 
     WHEN serviceline.ServiceStart IS NOT NULL 
-    AND serviceline.ServiceStart <> 'NULL'
     THEN serviceline.ServiceStart
     WHEN header.StartDate IS NOT NULL
-    AND header.StartDate <> 'NULL'
     THEN header.StartDate
     ELSE (
     SELECT MIN(sl2.ServiceStart) 
@@ -129,75 +117,47 @@ SELECT DISTINCT
     END,                             -- date_service
     CASE 
     WHEN serviceline.ServiceStart IS NOT NULL 
-    AND serviceline.ServiceStart <> 'NULL'
-    THEN 
-    CASE 
-    WHEN serviceline.ServiceEnd = 'NULL'
-    THEN NULL
-    ELSE serviceline.ServiceEnd
-    END
+    THEN serviceline.ServiceEnd
     WHEN header.StartDate IS NOT NULL
-    AND header.StartDate <> 'NULL'
-    CASE 
-    WHEN header.EndDate = 'NULL'
-    THEN NULL
-    ELSE header.EndDate
-    END
+    THEN header.EndDate
     ELSE (
     SELECT MIN(sl2.ServiceEnd) 
     FROM transactional_serviceline sl2 
     WHERE sl2.ClaimId = serviceline.ClaimId
-        AND sl2.ServiceEnd <> 'NULL'
         )
     END,                             -- date_service_end
     CASE 
     WHEN header.Type = 'Institutional'
-    AND header.AdmissionType <> 'NULL'
     THEN header.AdmissionType
     END,                             -- inst_admit_type_std_id
     CASE 
     WHEN header.Type = 'Institutional'
-    AND header.AdmissionSource <> 'NULL'
     THEN header.AdmissionSource
     END,                             -- inst_admit_source_std_id
     CASE 
     WHEN header.Type = 'Institutional'
-    AND header.DischargeStatus <> 'NULL'
     THEN header.DischargeStatus
     END,                             -- inst_discharge_status_std_id
     CASE 
     WHEN header.Type <> 'Institutional'
     THEN NULL
     WHEN header.InstitutionalType IS NOT NULL
-    AND header.InstitutionalType <> 'NULL'
     THEN header.InstitutionalType || header.ClaimFrequencyCode
     END,                             -- inst_type_of_bill_std_id
     CASE 
     WHEN header.Type = 'Institutional'
-    AND header.DrgCode <> 'NULL'
     THEN header.DrgCode
     END,                             -- inst_drg_std_id
     CASE 
     WHEN header.Type <> 'Professional'
     THEN NULL
     WHEN ServiceLine.PlaceOfService IS NOT NULL 
-    AND ServiceLine.PlaceOfService <> 'NULL'
     THEN ServiceLine.PlaceOfService
     ELSE header.InstitutionalType
     END,                             -- place_of_service_std_id
+    serviceline.SequenceNumber,                             -- service_line_number
+    diagnosis.DiagnosisCode,                             -- diagnosis_code
     CASE
-    WHEN serviceline.SequenceNumber = 'NULL'
-    THEN NULL
-    ELSE serviceline.SequenceNumber
-    END,                             -- service_line_number
-    CASE
-    WHEN diagnosis.DiagnosisCode = 'NULL'
-    THEN NULL
-    ELSE diagnosis.DiagnosisCode
-    END,                             -- diagnosis_code
-    CASE
-    WHEN diagnosis.type = 'NULL'
-    THEN NULL
     WHEN diagnosis.type LIKE 'A%'
     THEN '02'
     WHEN diagnosis.type LIKE 'B%'
@@ -222,15 +182,12 @@ SELECT DISTINCT
     END,                             -- admit_diagnosis_ind
     CASE 
     WHEN header.Type = 'Professional'
-    AND serviceline.ProcedureCode <> 'NULL'
     THEN serviceline.ProcedureCode 
     WHEN header.Type = 'Institutional'
     AND serviceline.procedurecode IS NOT NULL 
-    AND serviceline.procedurecode <> 'NULL'
     THEN serviceline.procedurecode
     WHEN header.Type = 'Institutional'
     AND proc.procedurecode IS NOT NULL
-    AND proc.procedurecode <> 'NULL'
     THEN proc.procedurecode
     END,                             -- procedure_code
     serviceline.qualifier,           -- procedure_code_qual
@@ -242,367 +199,176 @@ SELECT DISTINCT
     THEN 'Y'
     ELSE 'N'
     END,                             -- principal_proc_ind
+    serviceline.amount,                             -- procedure_units
+    serviceline.modifier1,                             -- procedure_modifier_1
+    serviceline.modifier2,                             -- procedure_modifier_2
+    serviceline.modifier3,                             -- procedure_modifier_3
+    serviceline.modifier4,                             -- procedure_modifier_4
+    serviceline.revenuecode,                             -- revenue_code
+    serviceline.drugcode,                             -- ndc_code
+    payer1.claimfileindicator,                             -- medical_coverage_type
+    serviceline.linecharge,                             -- line_charge
+    header.totalcharge,                             -- total_charge
     CASE
-    WHEN serviceline.amount = 'NULL'
-    THEN NULL
-    ELSE serviceline.amount
-    END,                             -- procedure_units
-    CASE
-    WHEN serviceline.modifier1 = 'NULL'
-    THEN NULL
-    ELSE serviceline.modifier1
-    END,                             -- procedure_modifier_1
-    CASE
-    WHEN serviceline.modifier2 = 'NULL'
-    THEN NULL
-    ELSE serviceline.modifier2
-    END,                             -- procedure_modifier_2
-    CASE
-    WHEN serviceline.modifier3 = 'NULL'
-    THEN NULL
-    ELSE serviceline.modifier3
-    END,                             -- procedure_modifier_3
-    CASE
-    WHEN serviceline.modifier4 = 'NULL'
-    THEN NULL
-    ELSE serviceline.modifier4
-    END,                             -- procedure_modifier_4
-    CASE
-    WHEN serviceline.revenuecode = 'NULL'
-    THEN NULL
-    ELSE serviceline.revenuecode
-    END,                             -- revenue_code
-    CASE
-    WHEN serviceline.drugcode = 'NULL'
-    THEN NULL
-    ELSE serviceline.drugcode
-    END,                             -- ndc_code
-    CASE
-    WHEN payer1.claimfileindicator = 'NULL'
-    THEN NULL
-    ELSE payer1.claimfileindicator
-    END,                             -- medical_coverage_type
-    CASE
-    WHEN serviceline.linecharge = 'NULL'
-    THEN NULL
-    ELSE serviceline.linecharge
-    END,                             -- line_charge
-    CASE
-    WHEN header.totalcharge = 'NULL'
-    THEN NULL
-    ELSE header.totalcharge
-    END,                             -- total_charge
-    CASE
-    WHEN rendering.npi <> 'NULL'
-    AND rendering.npi IS NOT NULL
+    WHEN rendering.npi IS NOT NULL
     THEN rendering.npi
-    WHEN supervising.npi <> 'NULL'
-    AND supervising.npi IS NOT NULL
+    WHEN supervising.npi IS NOT NULL
     THEN supervising.npi
-    WHEN operating.npi <> 'NULL'
-    AND operating.npi IS NOT NULL
+    WHEN operating.npi IS NOT NULL
     THEN operating.npi
-    WHEN purchased.npi <> 'NULL'
-    AND purchased.npi IS NOT NULL
+    WHEN purchased.npi IS NOT NULL
     THEN purchased.npi
-    WHEN other.npi <> 'NULL'
-    AND other.npi IS NOT NULL
+    WHEN other.npi IS NOT NULL
     THEN other.npi
     ELSE NULL
     END,                             -- prov_rendering_npi
+    billing.npi,                             -- prov_billing_npi
+    referring.npi,                             -- prov_referring_npi
     CASE
-    WHEN billing.npi = 'NULL'
-    THEN NULL
-    ELSE billing.npi
-    END,                             -- prov_billing_npi
-    CASE
-    WHEN referring.npi = 'NULL'
-    THEN NULL
-    ELSE referring.npi
-    END,                             -- prov_referring_npi
-    CASE
-    WHEN servicelocation.npi <> 'NULL'
-    AND servicelocation.npi IS NOT NULL
+    WHEN servicelocation.npi IS NOT NULL
     THEN servicelocation.npi
-    WHEN ambulancedropoff.npi <> 'NULL'
-    AND ambulancedropoff.npi IS NOT NULL
+    WHEN ambulancedropoff.npi IS NOT NULL
     THEN ambulancedropoff.npi
     ELSE NULL
     END,                             -- prov_facility_npi
+    payer1.sourcepayerid,                             -- payer_vendor_id
+    payer1.name,                             -- payer_name
+    payer1.payerclassification,                             -- payer_type
     CASE
-    WHEN payer1.sourcepayerid = 'NULL'
-    THEN NULL
-    ELSE payer1.sourcepayerid
-    END,                             -- payer_vendor_id
-    CASE
-    WHEN payer1.name = 'NULL'
-    THEN NULL
-    ELSE payer1.name
-    END,                             -- payer_name
-    CASE
-    WHEN payer1.payerclassification = 'NULL'
-    THEN NULL
-    ELSE payer1.payerclassification
-    END,                             -- payer_type
-    CASE
-    WHEN rendering.npi <> 'NULL'
-    AND rendering.npi IS NOT NULL
+    WHEN rendering.npi IS NOT NULL
     THEN rendering.lastname
-    WHEN supervising.npi <> 'NULL'
-    AND supervising.npi IS NOT NULL
+    WHEN supervising.npi IS NOT NULL
     THEN supervising.lastname
-    WHEN operating.npi <> 'NULL'
-    AND operating.npi IS NOT NULL
+    WHEN operating.npi IS NOT NULL
     THEN operating.lastname
-    WHEN purchased.npi <> 'NULL'
-    AND purchased.npi IS NOT NULL
+    WHEN purchased.npi IS NOT NULL
     THEN purchased.lastname
-    WHEN other.npi <> 'NULL'
-    AND other.npi IS NOT NULL
+    WHEN other.npi IS NOT NULL
     THEN other.lastname
     ELSE NULL
     END,                             -- prov_rendering_name_1
     CASE
-    WHEN rendering.npi <> 'NULL'
-    AND rendering.npi IS NOT NULL
+    WHEN rendering.npi IS NOT NULL
     THEN rendering.firstname
-    WHEN supervising.npi <> 'NULL'
-    AND supervising.npi IS NOT NULL
+    WHEN supervising.npi IS NOT NULL
     THEN supervising.firstname
-    WHEN operating.npi <> 'NULL'
-    AND operating.npi IS NOT NULL
+    WHEN operating.npi IS NOT NULL
     THEN operating.firstname
-    WHEN purchased.npi <> 'NULL'
-    AND purchased.npi IS NOT NULL
+    WHEN purchased.npi IS NOT NULL
     THEN purchased.firstname
-    WHEN other.npi <> 'NULL'
-    AND other.npi IS NOT NULL
+    WHEN other.npi IS NOT NULL
     THEN other.firstname
     ELSE NULL
     END,                             -- prov_rendering_name_2
     CASE
-    WHEN rendering.npi <> 'NULL'
-    AND rendering.npi IS NOT NULL
+    WHEN rendering.npi IS NOT NULL
     THEN rendering.addr1
-    WHEN supervising.npi <> 'NULL'
-    AND supervising.npi IS NOT NULL
+    WHEN supervising.npi IS NOT NULL
     THEN supervising.addr1
-    WHEN operating.npi <> 'NULL'
-    AND operating.npi IS NOT NULL
+    WHEN operating.npi IS NOT NULL
     THEN operating.addr1
-    WHEN purchased.npi <> 'NULL'
-    AND purchased.npi IS NOT NULL
+    WHEN purchased.npi IS NOT NULL
     THEN purchased.addr1
-    WHEN other.npi <> 'NULL'
-    AND other.npi IS NOT NULL
+    WHEN other.npi IS NOT NULL
     THEN other.addr1
     ELSE NULL
     END,                             -- prov_rendering_address_1
     CASE
-    WHEN rendering.npi <> 'NULL'
-    AND rendering.npi IS NOT NULL
+    WHEN rendering.npi IS NOT NULL
     THEN rendering.addr2
-    WHEN supervising.npi <> 'NULL'
-    AND supervising.npi IS NOT NULL
+    WHEN supervising.npi IS NOT NULL
     THEN supervising.addr2
-    WHEN operating.npi <> 'NULL'
-    AND operating.npi IS NOT NULL
+    WHEN operating.npi IS NOT NULL
     THEN operating.addr2
-    WHEN purchased.npi <> 'NULL'
-    AND purchased.npi IS NOT NULL
+    WHEN purchased.npi IS NOT NULL
     THEN purchased.addr2
-    WHEN other.npi <> 'NULL'
-    AND other.npi IS NOT NULL
+    WHEN other.npi IS NOT NULL
     THEN other.addr2
     ELSE NULL
     END,                             -- prov_rendering_address_2
     CASE
-    WHEN rendering.npi <> 'NULL'
-    AND rendering.npi IS NOT NULL
+    WHEN rendering.npi IS NOT NULL
     THEN rendering.city
-    WHEN supervising.npi <> 'NULL'
-    AND supervising.npi IS NOT NULL
+    WHEN supervising.npi IS NOT NULL
     THEN supervising.city
-    WHEN operating.npi <> 'NULL'
-    AND operating.npi IS NOT NULL
+    WHEN operating.npi IS NOT NULL
     THEN operating.city
-    WHEN purchased.npi <> 'NULL'
-    AND purchased.npi IS NOT NULL
+    WHEN purchased.npi IS NOT NULL
     THEN purchased.city
-    WHEN other.npi <> 'NULL'
-    AND other.npi IS NOT NULL
+    WHEN other.npi IS NOT NULL
     THEN other.city
     ELSE NULL
     END,                             -- prov_rendering_city
     CASE
-    WHEN rendering.npi <> 'NULL'
-    AND rendering.npi IS NOT NULL
+    WHEN rendering.npi IS NOT NULL
     THEN rendering.state
-    WHEN supervising.npi <> 'NULL'
-    AND supervising.npi IS NOT NULL
+    WHEN supervising.npi IS NOT NULL
     THEN supervising.state
-    WHEN operating.npi <> 'NULL'
-    AND operating.npi IS NOT NULL
+    WHEN operating.npi IS NOT NULL
     THEN operating.state
-    WHEN purchased.npi <> 'NULL'
-    AND purchased.npi IS NOT NULL
+    WHEN purchased.npi IS NOT NULL
     THEN purchased.state
-    WHEN other.npi <> 'NULL'
-    AND other.npi IS NOT NULL
+    WHEN other.npi IS NOT NULL
     THEN other.state
     ELSE NULL
     END,                             -- prov_rendering_state
     CASE
-    WHEN rendering.npi <> 'NULL'
-    AND rendering.npi IS NOT NULL
+    WHEN rendering.npi IS NOT NULL
     THEN rendering.zip
-    WHEN supervising.npi <> 'NULL'
-    AND supervising.npi IS NOT NULL
+    WHEN supervising.npi IS NOT NULL
     THEN supervising.zip
-    WHEN operating.npi <> 'NULL'
-    AND operating.npi IS NOT NULL
+    WHEN operating.npi IS NOT NULL
     THEN operating.zip
-    WHEN purchased.npi <> 'NULL'
-    AND purchased.npi IS NOT NULL
+    WHEN purchased.npi IS NOT NULL
     THEN purchased.zip
-    WHEN other.npi <> 'NULL'
-    AND other.npi IS NOT NULL
+    WHEN other.npi IS NOT NULL
     THEN other.zip
     ELSE NULL
     END,                             -- prov_rendering_zip
     CASE
-    WHEN rendering.npi <> 'NULL'
-    AND rendering.npi IS NOT NULL
+    WHEN rendering.npi IS NOT NULL
     THEN rendering.taxonomy
-    WHEN supervising.npi <> 'NULL'
-    AND supervising.npi IS NOT NULL
+    WHEN supervising.npi IS NOT NULL
     THEN supervising.taxonomy
-    WHEN operating.npi <> 'NULL'
-    AND operating.npi IS NOT NULL
+    WHEN operating.npi IS NOT NULL
     THEN operating.taxonomy
-    WHEN purchased.npi <> 'NULL'
-    AND purchased.npi IS NOT NULL
+    WHEN purchased.npi IS NOT NULL
     THEN purchased.taxonomy
-    WHEN other.npi <> 'NULL'
-    AND other.npi IS NOT NULL
+    WHEN other.npi IS NOT NULL
     THEN other.taxonomy
     ELSE NULL
     END,                             -- prov_rendering_std_taxonomy
+    billing.taxid,                             -- prov_billing_tax_id
+    billing.ssn,                             -- prov_billing_ssn
+    billing.stlic,                             -- prov_billing_state_license
+    billing.upin,                             -- prov_billing_upin
+    billing.lastname,                             -- prov_billing_name_1
+    billing.firstname,                             -- prov_billing_name_2
+    billing.addr1,                             -- prov_billing_address_1
+    billing.addr2,                             -- prov_billing_address_2
+    billing.city,                             -- prov_billing_city
+    billing.state,                             -- prov_billing_state
+    billing.zip,                             -- prov_billing_zip
+    billing.taxonomy,                             -- prov_billing_std_taxonomy
+    referring.lastname,                             -- prov_referring_name_1
+    referring.firstname,                             -- prov_referring_name_2
+    referring.addr1,                             -- prov_referring_address_1
+    referring.addr2,                             -- prov_referring_address_2
+    referring.city,                             -- prov_referring_city
+    referring.state,                             -- prov_referring_state
+    referring.zip,                             -- prov_referring_zip
+    referring.taxonomy,                             -- prov_referring_std_taxonomy
     CASE
-    WHEN billing.taxid = 'NULL'
-    THEN NULL
-    ELSE billing.taxid
-    END,                             -- prov_billing_tax_id
-    CASE
-    WHEN billing.ssn = 'NULL'
-    THEN NULL
-    ELSE billing.ssn
-    END,                             -- prov_billing_ssn
-    CASE
-    WHEN billing.stlic = 'NULL'
-    THEN NULL
-    ELSE billing.stlic
-    END,                             -- prov_billing_state_license
-    CASE
-    WHEN billing.upin = 'NULL'
-    THEN NULL
-    ELSE billing.upin
-    END,                             -- prov_billing_upin
-    CASE
-    WHEN billing.lastname = 'NULL'
-    THEN NULL
-    ELSE billing.lastname
-    END,                             -- prov_billing_name_1
-    CASE
-    WHEN billing.firstname = 'NULL'
-    THEN NULL
-    ELSE billing.firstname
-    END,                             -- prov_billing_name_2
-    CASE
-    WHEN billing.addr1 = 'NULL'
-    THEN NULL
-    ELSE billing.addr1
-    END,                             -- prov_billing_address_1
-    CASE
-    WHEN billing.addr2 = 'NULL'
-    THEN NULL
-    ELSE billing.addr2
-    END,                             -- prov_billing_address_2
-    CASE
-    WHEN billing.city = 'NULL'
-    THEN NULL
-    ELSE billing.city
-    END,                             -- prov_billing_city
-    CASE
-    WHEN billing.state = 'NULL'
-    THEN NULL
-    ELSE billing.state
-    END,                             -- prov_billing_state
-    CASE
-    WHEN billing.zip = 'NULL'
-    THEN NULL
-    ELSE billing.zip
-    END,                             -- prov_billing_zip
-    CASE
-    WHEN billing.taxonomy = 'NULL'
-    THEN NULL
-    ELSE billing.taxonomy
-    END,                             -- prov_billing_std_taxonomy
-    CASE
-    WHEN referring.lastname = 'NULL'
-    THEN NULL
-    ELSE referring.lastname
-    END,                             -- prov_referring_name_1
-    CASE
-    WHEN referring.firstname = 'NULL'
-    THEN NULL
-    ELSE referring.firstname
-    END,                             -- prov_referring_name_2
-    CASE
-    WHEN referring.addr1 = 'NULL'
-    THEN NULL
-    ELSE referring.addr1
-    END,                             -- prov_referring_address_1
-    CASE
-    WHEN referring.addr2 = 'NULL'
-    THEN NULL
-    ELSE referring.addr2
-    END,                             -- prov_referring_address_2
-    CASE
-    WHEN referring.city = 'NULL'
-    THEN NULL
-    ELSE referring.city
-    END,                             -- prov_referring_city
-    CASE
-    WHEN referring.state = 'NULL'
-    THEN NULL
-    ELSE referring.state
-    END,                             -- prov_referring_state
-    CASE
-    WHEN referring.zip = 'NULL'
-    THEN NULL
-    ELSE referring.zip
-    END,                             -- prov_referring_zip
-    CASE
-    WHEN referring.taxonomy = 'NULL'
-    THEN NULL
-    ELSE referring.taxonomy
-    END,                             -- prov_referring_std_taxonomy
-    CASE
-    WHEN servicelocation.npi <> 'NULL'
-    AND servicelocation.npi IS NOT NULL
+    WHEN servicelocation.npi IS NOT NULL
     THEN servicelocation.lastname
-    WHEN ambulancedropoff.npi <> 'NULL'
-    AND ambulancedropoff.npi IS NOT NULL
+    WHEN ambulancedropoff.npi IS NOT NULL
     THEN ambulancedropoff.lastname
     ELSE NULL
     END,                             -- prov_facility_name_1
     CASE
-    WHEN servicelocation.npi <> 'NULL'
-    AND servicelocation.npi IS NOT NULL
+    WHEN servicelocation.npi IS NOT NULL
     THEN servicelocation.firstname
-    WHEN ambulancedropoff.npi <> 'NULL'
-    AND ambulancedropoff.npi IS NOT NULL
+    WHEN ambulancedropoff.npi IS NOT NULL
     THEN ambulancedropoff.firstname
     ELSE NULL
     END,                             -- prov_facility_name_2
