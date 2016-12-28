@@ -2,6 +2,11 @@
 import subprocess
 import argparse
 import time
+import hashlib
+import sys
+import os
+sys.path.append(os.path.abspath("../redshift_norm_common/"))
+import create_date_validation_table as date_validator
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
@@ -30,35 +35,16 @@ subprocess.call(' '.join(
 ), shell=True)
 
 # create date table
-from datetime import timedelta, date, datetime
-
-subprocess.call(' '.join(
-    psql + [db, '-c', '"DROP TABLE IF EXISTS dates"']
-), shell=True)
-subprocess.call(' '.join(
-    psql + [db, '-c', '"CREATE TABLE dates (date text encode lzo, formatted text encode lzo) DISTSTYLE ALL"']
-), shell=True)
-
-start_date = date(2013, 1, 1)
-end_date = datetime.now().date()
-date_range = [start_date + timedelta(n) for n in range(int ((end_date - start_date).days))]
-
-with open('temp.csv','w') as output:
-    for single_date in date_range:
-        output.write(single_date.strftime("%Y%m%d") + ',' + single_date.strftime("%Y-%m-%d") + '\n')
-
-subprocess.call('aws s3 cp temp.csv s3://healthveritydev/musifer/practice-insight_normalization/', shell=True)
-
-subprocess.call(' '.join(
-    psql + [db, '-c', '"COPY dates FROM \'s3://healthveritydev/musifer/practice-insight_normalization/temp.csv\' CREDENTIALS \'' + args.s3_credentials + '\' FORMAT AS CSV;"']
-), shell=True)
+date_validator.generate(psql, db, args.s3_credentials)
 
 # create table for medical claims common model
+prov_id_hash = hashlib.md5()
+prov_id_hash.update("22")
 subprocess.call(' '.join(
     psql
     + ['-v', 'filename="\'' + args.setid + '\'"']
     + ['-v', 'today="\'' + TODAY + '\'"']
-    + ['-v', 'feedname="\'practice insight medical claims\'"']
+    + ['-v', 'feedname="\'' + prov_id_hash.hexdigest() + '\'"']
     + ['-v', 'vendor="\'practice insight\'"']
     + [db, '<', '../redshift_norm_common/medicalclaims_common_model.sql']
 ), shell=True)
