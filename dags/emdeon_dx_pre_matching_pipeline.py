@@ -167,6 +167,21 @@ push_splits_to_s3 = PythonOperator(
     dag=mdag
 )
 
+environ = {'AWS_ACCESS_KEY_ID' : Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER'),
+           'AWS_SECRET_ACCESS_KEY' : Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')}
+
+queue_up_for_matching = BashOperator(
+    task_id='queue_up_for_matching',
+    bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3.sh {}{}'.format(
+                     S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}')) +
+                 ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}',
+    params={'sequence_num' : 0,
+            'matching_engine_env' : 'prod-matching-engine',
+            'priority' : 'priority3'},
+    env=environ,
+    dag=mdag
+)
+
 clean_up_workspace = BashOperator(
     task_id='clean_up_workspace',
     bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}')),
@@ -180,4 +195,5 @@ zip_part_files.set_upstream(split_file)
 push_splits_to_s3.set_upstream(zip_part_files)
 push_splits_to_s3.set_downstream(clean_up_workspace)
 validate_fetch_transaction_mft_file_dag.set_downstream(clean_up_workspace)
-validate_fetch_deid_file_dag.set_downstream(clean_up_workspace)
+queue_up_for_matching.set_upstream(validate_fetch_deid_file_dag)
+queue_up_for_matching.set_downstream(clean_up_workspace)
