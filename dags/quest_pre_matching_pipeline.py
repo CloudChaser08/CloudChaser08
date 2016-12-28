@@ -2,11 +2,15 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import BashOperator, PythonOperator
 from datetime import datetime, timedelta
+import sys
+
+if sys.modules.get('util.file_utils'):
+    del sys.modules['util.file_utils']
 import util.file_utils as file_utils
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
-DAG_NAME = 'quest pre_matching_pipeline'
+DAG_NAME = 'quest_pre_matching_pipeline'
 DATATYPE = 'labtests'
 
 # Applies to all transaction files
@@ -33,7 +37,7 @@ MINIMUM_TRANSACTION_ADDON_FILE_SIZE = 15
 # Deid file
 DEID_FILE_DESCRIPTION = 'Quest deid file'
 S3_DEID_RAW_PATH = 's3://healthverity/incoming/labtests/quest/'
-DEID_FILE_NAME_TEMPLATE = 'HealthVerity {}_1_DeID.txt.zip'
+DEID_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt.zip'
 DEID_DAG_NAME = 'validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE = 500
 
@@ -41,33 +45,59 @@ default_args = {
     'owner': 'airflow',
     'start_date': datetime(2016, 12, 1, 12),
     'depends_on_past': False,
-    'retries': 3,
+    'schedule_interval': "*/3 * * * *",
+    # 'retries': 1,
     'retry_delay': timedelta(minutes=2)
 }
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * *",
+    schedule_interval="*/3 * * * *",
     default_args=default_args
 )
 
+today = "201609010902"
 
-def unzip_step(tmp_path):
+
+def fetch_step(task_id, s3_path, local_path):
     return PythonOperator(
-        task_id='unzip_file_' + tmp_path.substring(
-            0, len(tmp_path)-1
-        ).split('/').last,
+        task_id='fetch_' + task_id,
         provide_context=True,
-        python_callable=file_utils.unzip(tmp_path),
+        python_callable=file_utils.fetch_file_from_s3(
+            Variable.get("AWS_ACCESS_KEY_ID"),
+            Variable.get("AWS_SECRET_ACCESS_KEY"),
+            s3_path,
+            local_path
+        ),
         dag=mdag
     )
-unzip_trunk = unzip_step(TRANSACTION_TRUNK_TMP_PATH_TEMPLATE)
-unzip_addon = unzip_step(TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
+fetch_trunk = fetch_step(
+    "trunk",
+    "{}{}".format(S3_TRANSACTION_RAW_PATH, TRANSACTION_TRUNK_FILE_NAME_TEMPLATE.format(today)),
+    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format(today)
+)
+fetch_addon = fetch_step(
+    "addon",
+    "{}{}".format(S3_TRANSACTION_RAW_PATH, TRANSACTION_ADDON_FILE_NAME_TEMPLATE.format(today)), 
+    TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format(today)
+)
+
+
+def unzip_step(task_id, tmp_path):
+    return PythonOperator(
+        task_id='unzip_file_' + task_id,
+        provide_context=True,
+        python_callable=file_utils.unzip(today, tmp_path),
+        dag=mdag
+    )
+unzip_trunk = unzip_step("trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE)
+unzip_addon = unzip_step("addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
 
 decrypt_trunk = PythonOperator(
     task_id='decrypt_file',
     provide_context=True,
     python_callable=file_utils.decrypt(
+        today,
         Variable.get('AWS_ACCESS_KEY_ID'),
         Variable.get('AWS_SECRET_ACCESS_KEY'),
         TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
@@ -76,70 +106,66 @@ decrypt_trunk = PythonOperator(
 )
 
 
-def gunzip_step(tmp_path):
+def gunzip_step(task_id, tmp_path):
     return PythonOperator(
-        task_id='gunzip_file_' + tmp_path.substring(
-            0, len(tmp_path)-1
-        ).split('/').last,
+        task_id='gunzip_file_' + task_id,
         provide_context=True,
-        python_callable=file_utils.gunzip(tmp_path),
+        python_callable=file_utils.gunzip(today, tmp_path),
         dag=mdag
     )
-gunzip_trunk = gunzip_step(TRANSACTION_TRUNK_TMP_PATH_TEMPLATE)
-gunzip_addon = gunzip_step(TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
+gunzip_trunk = gunzip_step("trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE)
+gunzip_addon = gunzip_step("addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
 
 
-def split_step(tmp_path, tmp_parts_path):
+def split_step(task_id, tmp_path, tmp_parts_path):
     return PythonOperator(
-        task_id='split_file_' + tmp_path.substring(
-            0, len(tmp_path)-1
-        ).split('/').last,
+        task_id='split_file_' + task_id,
         provide_context=True,
-        python_callable=file_utils.split_file(tmp_path, tmp_parts_path),
+        python_callable=file_utils.split(today, tmp_path, tmp_parts_path),
         dag=mdag
     )
 split_trunk = split_step(
+    "trunk",
     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
     TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
 )
 split_addon = split_step(
+    "addon",
     TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
     TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE
 )
 
 
-def bzip_parts_step(tmp_parts_path):
+def bzip_parts_step(task_id, tmp_parts_path):
     return PythonOperator(
-        task_id='bzip_part_files_' + tmp_parts_path.substring(
-            0, len(tmp_parts_path)-1
-        ).split('/').last,
+        task_id='bzip_part_files_' + task_id,
         provide_context=True,
-        python_callable=file_utils.bzip_part_files(tmp_parts_path),
+        python_callable=file_utils.bzip_part_files(today, tmp_parts_path),
         dag=mdag
     )
-bzip_parts_trunk = bzip_parts_step(TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE)
-bzip_parts_addon = bzip_parts_step(TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE)
+bzip_parts_trunk = bzip_parts_step("trunk", TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE)
+bzip_parts_addon = bzip_parts_step("addon", TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE)
 
 
-def push_splits_to_s3_step(tmp_path, tmp_parts_path, s3_path):
-    PythonOperator(
-        task_id='push_splits_to_s3_' + tmp_path.substring(
-            0, len(tmp_path)-1
-        ).split('/').last,
+def push_splits_to_s3_step(task_id, tmp_path, tmp_parts_path, s3_path):
+    return PythonOperator(
+        task_id='push_splits_to_s3_' + task_id,
         provide_context=True,
         python_callable=file_utils.push_splits_to_s3(
-            tmp_path, tmp_parts_path, s3_path,
+            today, tmp_path, tmp_parts_path, s3_path,
             Variable.get('AWS_ACCESS_KEY_ID'),
             Variable.get('AWS_SECRET_ACCESS_KEY')
         ),
         dag=mdag
     )
 push_splits_to_s3_trunk = push_splits_to_s3_step(
+    "trunk",
     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
     TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE,
     TRANSACTION_TRUNK_S3_SPLIT_PATH
 )
 push_splits_to_s3_addon = push_splits_to_s3_step(
+    "addon",
     TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
     TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE,
     TRANSACTION_ADDON_S3_SPLIT_PATH
@@ -149,13 +175,14 @@ push_splits_to_s3_addon = push_splits_to_s3_step(
 clean_up_workspace = BashOperator(
     task_id='clean_up_workspace',
     bash_command='rm -rf {};'.format(
-        TMP_PATH_TEMPLATE.format('{{ ds_nodash }}')
+        TMP_PATH_TEMPLATE.format(today)
     ),
     trigger_rule='all_done',
     dag=mdag
 )
 
 # trunk
+unzip_trunk.set_upstream(fetch_trunk)
 decrypt_trunk.set_upstream(unzip_trunk)
 gunzip_trunk.set_upstream(decrypt_trunk)
 split_trunk.set_upstream(gunzip_trunk)
@@ -163,6 +190,7 @@ bzip_parts_trunk.set_upstream(split_trunk)
 push_splits_to_s3_trunk.set_upstream(bzip_parts_trunk)
 
 # addon
+unzip_addon.set_upstream(fetch_addon)
 gunzip_addon.set_upstream(unzip_addon)
 split_addon.set_upstream(gunzip_addon)
 bzip_parts_addon.set_upstream(split_addon)

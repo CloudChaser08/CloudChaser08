@@ -3,7 +3,7 @@ from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
 import sys
-import utils.file_utils as file_utils
+import util.file_utils as file_utils
 
 if sys.modules.get('subdags.emdeon_validate_fetch_file'):
     del sys.modules['subdags.emdeon_validate_fetch_file']
