@@ -126,23 +126,12 @@ def bzip_part_files(formatted_date, tmp_path_parts_template):
 
 
 def push_splits_to_s3(
-        formatted_date, tmp_path_template, tmp_path_parts_template,
-        s3_transaction_split_path, aws_id, aws_key
+        tmp_path_parts_template, s3_transaction_split_path, aws_id, aws_key
 ):
     """Push each file in a directory up to a specified s3 location"""
     def execute(ds, **kwargs):
-        tmp_path = tmp_path_template.format(formatted_date)
         tmp_path_parts = tmp_path_parts_template.format(formatted_date)
-        file_name = filter(
-            lambda x: x.find('.gz') == (len(x) - 3),
-            _get_files(tmp_path)
-        )[0].split('/')[-1]
-        date = '{}/{}/{}'.format(
-            re.sub('[^0-9]','', formatted_date)[0:4], 
-            re.sub('[^0-9]','', formatted_date)[4:6], 
-            re.sub('[^0-9]','', formatted_date)[6:8]
-        )
         env = _get_s3_env(aws_id, aws_key)
-        check_call(['aws', 's3', 'cp', '--recursive', tmp_path_parts, "{}{}/"
-                    .format(s3_transaction_split_path, date)], env=env)
+        check_call(['aws', 's3', 'cp', '--recursive', tmp_path_parts, "{}"
+                    .format(s3_transaction_split_path)], env=env)
     return execute
