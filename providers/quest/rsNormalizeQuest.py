@@ -66,12 +66,12 @@ subprocess.call(' '.join(
 ), shell=True)
 
 # load data
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'input_path="\'' + args.input_path + '\'"']
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + [db, '<', 'load_transactions.sql']
-), shell=True)
+# subprocess.call(' '.join(
+#     psql
+#     + ['-v', 'input_path="\'' + args.input_path + '\'"']
+#     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+#     + [db, '<', 'load_transactions.sql']
+# ), shell=True)
 subprocess.call(' '.join(
     psql
     + [db, '<', '../redshift_norm_common/load_hvid_parent_child_map.sql']
@@ -83,13 +83,13 @@ subprocess.call(' '.join(
     + [db, '<', 'load_matching_payload.sql']
 ), shell=True)
 
-# subprocess.call(' '.join(
-#     psql
-#     + ['-v', 'trunk_path="\'' + args.trunk_path + '\'"']
-#     + ['-v', 'addon_path="\'' + args.addon_path + '\'"']
-#     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-#     + [db, '<', 'load_and_merge_transactions.sql']
-# ), shell=True)
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'trunk_path="\'' + args.trunk_path + '\'"']
+    + ['-v', 'addon_path="\'' + args.addon_path + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + [db, '<', 'load_and_merge_transactions.sql']
+), shell=True)
 
 # normalize
 subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
