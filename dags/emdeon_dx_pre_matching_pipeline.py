@@ -1,6 +1,6 @@
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators import BashOperator, PythonOperator, DummyOperator, BranchPythonOperator, SlackAPIOperator, SubDagOperator
+from airflow.operators import *
 from datetime import datetime, timedelta
 from subprocess import check_output, check_call, STDOUT
 from json import loads as json_loads
@@ -74,6 +74,13 @@ def do_push_splits_to_s3(ds, **kwargs):
     env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
     env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
     check_call(['aws', 's3', 'cp', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)], env=env)
+
+def do_trigger_post_matching_dag(context, dag_run_obj):
+    file_dir = TMP_PATH_TEMPLATE.format(context['ds_nodash'])
+    file_name = TRANSACTION_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
+    row_count = check_output(['zgrep', '-c', '^[^|]*|C|', file_dir + file_name])
+    dag_run_obj.payload = {"deid_filename":file_name.replace('.gz', ''), "row_count":str(row_count)}
+    return dag_run_obj
 
 default_args = {
     'owner': 'airflow',
@@ -182,6 +189,13 @@ queue_up_for_matching = BashOperator(
     dag=mdag
 )
 
+trigger_post_matching_dag = TriggerDagRunOperator(
+    task_id='trigger_post_matching_dag',
+    trigger_dag_id='emdeon_dx_post_matching_pipeline',
+    python_callable=do_trigger_post_matching_dag,
+    dag=mdag
+)
+
 clean_up_workspace = BashOperator(
     task_id='clean_up_workspace',
     bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}')),
@@ -193,7 +207,8 @@ unzip_file.set_upstream(validate_fetch_transaction_file_dag)
 split_file.set_upstream(unzip_file)
 zip_part_files.set_upstream(split_file)
 push_splits_to_s3.set_upstream(zip_part_files)
-push_splits_to_s3.set_downstream(clean_up_workspace)
-validate_fetch_transaction_mft_file_dag.set_downstream(clean_up_workspace)
+push_splits_to_s3.set_downstream(trigger_post_matching_dag)
+validate_fetch_transaction_mft_file_dag.set_downstream(trigger_post_matching_dag)
 queue_up_for_matching.set_upstream(validate_fetch_deid_file_dag)
-queue_up_for_matching.set_downstream(clean_up_workspace)
+queue_up_for_matching.set_downstream(trigger_post_matching_dag)
+clean_up_workspace.set_upstream(trigger_post_matching_dag)
