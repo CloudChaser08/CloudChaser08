@@ -6,9 +6,8 @@ import time
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--input_path', type=str)
-# parser.add_argument('--trunk_path', type=str)
-# parser.add_argument('--addon_path', type=str)
+parser.add_argument('--trunk_path', type=str)
+parser.add_argument('--addon_path', type=str)
 parser.add_argument('--matching_path', type=str)
 parser.add_argument('--output_path', type=str)
 parser.add_argument('--database', type=str, nargs='?')
@@ -66,16 +65,6 @@ subprocess.call(' '.join(
 ), shell=True)
 
 # load data
-# subprocess.call(' '.join(
-#     psql
-#     + ['-v', 'input_path="\'' + args.input_path + '\'"']
-#     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-#     + [db, '<', 'load_transactions.sql']
-# ), shell=True)
-subprocess.call(' '.join(
-    psql
-    + [db, '<', '../redshift_norm_common/load_hvid_parent_child_map.sql']
-), shell=True)
 subprocess.call(' '.join(
     psql
     + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
