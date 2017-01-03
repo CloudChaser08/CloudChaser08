@@ -3,6 +3,7 @@ from airflow.models import Variable
 from airflow.operators import BashOperator, PythonOperator
 from datetime import datetime, timedelta
 import sys
+import re
 
 if sys.modules.get('util.file_utils'):
     del sys.modules['util.file_utils']
@@ -58,6 +59,7 @@ mdag = DAG(
 yesterday = datetime.today() - timedelta(1)
 two_days_ago = yesterday - timedelta(1)
 formatted_date = two_days_ago.strftime('%Y%m%d') + yesterday.strftime('%m%d')
+
 
 def fetch_step(task_id, s3_path, local_path):
     return PythonOperator(
@@ -163,9 +165,9 @@ push_splits_to_s3_addon = push_splits_to_s3_step(
     TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
     TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE,
     TRANSACTION_ADDON_S3_SPLIT_PATH.format(
-        re.sub('[^0-9]','', formatted_date)[0:4], 
-        re.sub('[^0-9]','', formatted_date)[4:6], 
-        re.sub('[^0-9]','', formatted_date)[6:8]
+        re.sub('[^0-9]', '', formatted_date)[0:4],
+        re.sub('[^0-9]', '', formatted_date)[4:6],
+        re.sub('[^0-9]', '', formatted_date)[6:8]
     )
 )
 push_splits_to_s3_trunk = push_splits_to_s3_step(
@@ -173,9 +175,9 @@ push_splits_to_s3_trunk = push_splits_to_s3_step(
     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
     TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE,
     TRANSACTION_TRUNK_S3_SPLIT_PATH.format(
-        re.sub('[^0-9]','', formatted_date)[0:4], 
-        re.sub('[^0-9]','', formatted_date)[4:6], 
-        re.sub('[^0-9]','', formatted_date)[6:8]
+        re.sub('[^0-9]', '', formatted_date)[0:4],
+        re.sub('[^0-9]', '', formatted_date)[4:6],
+        re.sub('[^0-9]', '', formatted_date)[6:8]
     )
 )
 
