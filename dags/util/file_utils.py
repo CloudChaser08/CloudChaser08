@@ -7,7 +7,7 @@ from subprocess import check_call
 import config
 
 
-def _get_s3_env(aws_id, aws_key):
+def get_s3_env(aws_id, aws_key):
     env = os.environ
     env["AWS_ACCESS_KEY_ID"] = aws_id
     env["AWS_SECRET_ACCESS_KEY"] = aws_key
@@ -44,7 +44,7 @@ def unzip(formatted_date, tmp_path_template):
 def fetch_file_from_s3(aws_id, aws_key, s3_path, local_path):
     """Download a file from S3"""
     def execute(ds, **kwargs):
-        env = _get_s3_env(aws_id, aws_key)
+        env = get_s3_env(aws_id, aws_key)
         check_call(['aws', 's3', 'cp', s3_path, local_path], env=env)
     return execute
 
@@ -56,7 +56,7 @@ def decrypt(aws_id, aws_key, formatted_date, tmp_path_template):
     DECRYPTOR_KEY = TMP_DECRYPTOR_LOCATION + "private.reformat"
 
     def execute(ds, **kwargs):
-        env = _get_s3_env(aws_id, aws_key)
+        env = get_s3_env(aws_id, aws_key)
         check_call([
             'aws', 's3', 'cp',
             config.DECRYPTOR_JAR_LOCATION, DECRYPTOR_JAR
@@ -131,7 +131,7 @@ def push_splits_to_s3(
     """Push each file in a directory up to a specified s3 location"""
     def execute(ds, **kwargs):
         tmp_path_parts = tmp_path_parts_template.format(formatted_date)
-        env = _get_s3_env(aws_id, aws_key)
+        env = get_s3_env(aws_id, aws_key)
         check_call(['aws', 's3', 'cp', '--recursive', tmp_path_parts, "{}"
                     .format(s3_transaction_split_path)], env=env)
     return execute

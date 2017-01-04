@@ -181,6 +181,20 @@ push_splits_to_s3_trunk = push_splits_to_s3_step(
     )
 )
 
+queue_up_for_matching = BashOperator(
+    task_id='queue_up_for_matching',
+    bash_command='resources/push_file_to_s3.sh {}{}'.format(
+        S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format(formatted_date)) +
+    ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}',
+    params={'sequence_num': 0,
+            'matching_engine_env': 'prod-matching-engine',
+            'priority': 'priority3'},
+    env=file_utils._get_s3_env(
+        Variable.get('AWS_ACCESS_KEY_ID'),
+        Variable.get('AWS_SECRET_ACCESS_KEY')
+    ),
+    dag=mdag
+)
 
 clean_up_workspace = BashOperator(
     task_id='clean_up_workspace',
