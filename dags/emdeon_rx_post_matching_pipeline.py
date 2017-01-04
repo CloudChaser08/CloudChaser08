@@ -52,7 +52,7 @@ default_args = {
 
 mdag = DAG(
     dag_id='emdeon_rx_post_matching_pipeline',
-    schedule_interval="@once",
+    schedule_interval="None",
     default_args=default_args
 )
 
