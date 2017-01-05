@@ -10,7 +10,7 @@ INSERT INTO lab_common_model (
         ) 
 SELECT * FROM (
     SELECT t.customer__patient_id,
-        COALESCE(pcm.parentId, mp.hvid),
+        COALESCE(mp.parentId, mp.hvid),
         mp.gender,
         CASE
         WHEN (EXTRACT('year' FROM CURRENT_DATE) - mp.yearOfBirth) > 90 
@@ -162,7 +162,6 @@ SELECT * FROM (
                 )
             ) t
         LEFT JOIN matching_payload mp ON t.hv_key = mp.hvJoinKey
-        LEFT JOIN parent_child_map pcm ON mp.hvid = pcm.hvid
         LEFT JOIN zip3_to_state zip3 ON mp.threeDigitZip = zip3.zip3
         ) main
 WHERE main.lab_name IS NOT NULL

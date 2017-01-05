@@ -2,6 +2,7 @@
 import subprocess
 import argparse
 import time
+import hashlib
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
@@ -27,9 +28,11 @@ if args.rs_user:
 
 subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/zip3_to_state.sql']), shell=True)
 
+prov_id_hash = hashlib.md5()
+prov_id_hash.update("14")
 subprocess.call(' '.join(psql + ['-v', 'filename="\'' + args.setid + '\'"'] + 
     ['-v', 'today="\'' + TODAY + '\'"'] +
-    ['-v', 'feedname="\'caris lab tests\'"'] +
+    ['-v', 'feedname="\'' + prov_id_hash.hexdigest() + '\'"'] +
     ['-v', 'vendor="\'caris\'"'] +
     [db, '<', '../redshift_norm_common/lab_common_model.sql']), shell=True)
 
@@ -38,3 +41,11 @@ subprocess.call(' '.join(psql + ['-v', 'credentials="\'' + args.s3_credentials +
     ['-v', 'matching_path="\'' + args.matching_path + '\'"'] +
     [db, '<', 'load_transactions.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
+
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'output_path="\'' + args.output_path + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
+    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+), shell=True)
