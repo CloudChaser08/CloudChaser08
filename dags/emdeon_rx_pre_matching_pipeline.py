@@ -77,9 +77,10 @@ def do_push_splits_to_s3(ds, **kwargs):
 
 def do_trigger_post_matching_dag(context, dag_run_obj):
     file_dir = TMP_PATH_TEMPLATE.format(context['ds_nodash'])
-    file_name = TRANSACTION_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
-    row_count = check_output(['zgrep', '-c', '^', file_dir + file_name])
-    dag_run_obj.payload = {"deid_filename":file_name.replace('.gz', ''), "row_count":str(row_count)}
+    transaction_file_name = TRANSACTION_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
+    deid_file_name = DEID_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
+    row_count = check_output(['zgrep', '-c', '^', file_dir + transaction_file_name])
+    dag_run_obj.payload = {"deid_filename":deid_file_name.replace('.gz', ''), "row_count":str(row_count)}
     return dag_run_obj
 
 default_args = {
