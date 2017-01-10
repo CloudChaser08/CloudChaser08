@@ -17,7 +17,7 @@ INSERT INTO lab_common_model (
         diagnosis_code_qual
         )
 SELECT TRIM(q.accn_id),                                                 --claim_id
-    mp.hvid,                                                            --hvid
+    COALESCE(mp.parentId,mp.hvid),                                      --hvid
     mp.gender,                                                          --patient_gender
     CASE 
     WHEN mp.age !~ '^[0-9]+$' THEN NULL
@@ -40,7 +40,7 @@ SELECT TRIM(q.accn_id),                                                 --claim_
     q.result_name,                                                      --result_name
     split_part(UPPER(TRIM(replace(q.diagnosis_code,'.',''))),'^',n.n),  --diagnosis_code
     CASE q.icd_codeset_ind
-    WHEN '9' THEN '01' ELSE WHEN '0' THEN '02'
+    WHEN '9' THEN '01' WHEN '0' THEN '02'
     END                                                                 --diagnosis_code_qual
 FROM transactional_raw q
     LEFT JOIN matching_payload mp ON q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key
