@@ -3,11 +3,13 @@ from airflow.models import Variable
 from airflow.operators import PythonOperator
 import airflow.hooks.S3_hook
 from datetime import datetime, timedelta
+import os
 import logging
 import sys
 import re
-from subprocess import check_call
+from subprocess import check_call, Popen
 import time
+import config
 
 if sys.modules.get('util.file_utils'):
     del sys.modules['util.file_utils']
@@ -78,7 +80,6 @@ def get_formatted_date(kwargs):
 #
 # Pre-Matching
 #
-
 def fetch_step(task_id, s3_path_template, local_path_template):
     def execute(ds, **kwargs):
         file_utils.fetch_file_from_s3(
@@ -354,9 +355,10 @@ move_matching_payload = move_matching_payload_step()
 # Normalization
 #
 CLUSTER_ID_TEMPLATE = 'quest-norm-{}'
-RS_HOST_TEMPLATE = CLUSTER_ID_TEMPLATE + '.cz8slgfda3sg.us-east-1.redshift.amazonaws.com'
-REDSHIFT_DELETE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py delete \\
---identifier {{ params.cluster_id }}"""
+RS_HOST_TEMPLATE = config.REDSHIFT_HOST_URL_TEMPLATE.format(
+    CLUSTER_ID_TEMPLATE
+)
+RS_NUM_NODES = 5
 
 
 def create_redshift_cluster_step():
@@ -384,24 +386,29 @@ def normalize_step():
                 kwargs['yesterday_ds'], '%Y-%m-%d'
             ) - timedelta(days=1)
         ).strftime('%Y/%m/%d')
-        s3_key = hook.list_keys('salusv', 'incoming/medicalclaims/quest/{}'.format(file_date))[0]
-    setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
-    s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
-                         Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY')
-                     )
-    command = [
-        '/home/airflow/airflow/dags/providers/quest/rsNormalizeQuest.py',
-        '--date', file_date, '--setid', setid, '--s3_credentials', s3_credentials, '--first_run'
-    ]
-    env = dict(os.environ)
-    env['PGHOST'] = RS_HOST
-    env['PGUSER'] = RS_USER
-    env['PGDATABASE'] = RS_DATABASE
-    env['PGPORT'] = RS_PORT
-    env['PGPASSWORD'] = Variable.get('rs_norm_password')
-    cwd = '/home/airflow/airflow/dags/providers/emdeon/medicalclaims/'
-    p = Popen(command, env=env, cwd=cwd)
-    p.wait()
+        s3_key = hook.list_keys(
+            'salusv', 'incoming/medicalclaims/quest/{}'.format(file_date)
+        )[0]
+        setid = s3_key.split('/')[-1].replace('.bz2', '')[0:-3]
+        s3_credentials = 'aws_access_key_id={};' + \
+                         'aws_secret_access_key={}'.format(
+                             Variable.get('AWS_ACCESS_KEY_ID'),
+                             Variable.get('AWS_SECRET_ACCESS_KEY')
+                         )
+        command = [
+            '/home/airflow/airflow/dags/providers/quest/rsNormalizeQuest.py',
+            '--date', file_date, '--setid', setid,
+            '--s3_credentials', s3_credentials
+        ]
+        env = dict(os.environ)
+        env['PGHOST'] = RS_HOST_TEMPLATE.format(get_formatted_date(kwargs))
+        env['PGUSER'] = config.REDSHIFT_USER
+        env['PGDATABASE'] = config.REDSHIFT_DATABASE
+        env['PGPORT'] = config.REDSHIFT_PORT
+        env['PGPASSWORD'] = Variable.get('rs_norm_password')
+        cwd = '/home/airflow/airflow/dags/providers/quest/'
+        p = Popen(command, env=env, cwd=cwd)
+        p.wait()
     return PythonOperator(
         task_id='normalize',
         provide_context=True,
@@ -451,4 +458,6 @@ detect_matching_done.set_upstream(clean_up_workspace)
 move_matching_payload.set_upstream(detect_matching_done)
 
 # normalization
-
+create_redshift_cluster.set_upstream(move_matching_payload)
+normalize.set_upstream(create_redshift_cluster)
+delete_redshift_cluster.set_upstream(normalize)

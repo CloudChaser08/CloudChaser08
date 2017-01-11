@@ -12,16 +12,23 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--method', type=str)
-parser.add_argument('--input_path', type=str)
-parser.add_argument('--matching_path', type=str)
-parser.add_argument('--output_path', type=str)
-parser.add_argument('--database', type=str, nargs='?')
+parser.add_argument('--date', type=str)
 parser.add_argument('--setid', type=str)
-parser.add_argument('--cluster_endpoint', type=str)
 parser.add_argument('--s3_credentials', type=str)
-parser.add_argument('--rs_user', type=str, nargs='?')
-parser.add_argument('--rs_password', type=str, nargs='?')
 args = parser.parse_args()
+
+input_path = 's3://salusv/incoming/labtests/quest/{}/'.format(
+    args.date.replace('-', '/')
+)
+trunk_path = input_path + 'trunk/'
+addon_path = input_path + 'addon/'
+
+matching_path = 's3://salusv/matching/payload/labtests/quest/{}/'.format(
+    args.date.replace('-', '/')
+)
+output_path = 's3://salusv/warehouse/text/labtests/quest/{}/'.format(
+    args.date.replace('-', '/')
+)
 
 db = args.database if args.database else 'dev'
 
@@ -59,7 +66,7 @@ subprocess.call(' '.join(
 # load data
 subprocess.call(' '.join(
     psql
-    + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
+    + ['-v', 'matching_path="\'' + matching_path + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'load_matching_payload.sql']
 ), shell=True)
@@ -69,15 +76,15 @@ subprocess.call(' '.join(
 if args.period is 'current':
     subprocess.call(' '.join(
         psql
-        + ['-v', 'trunk_path="\'' + args.input_path + 'trunk/' + '\'"']
-        + ['-v', 'addon_path="\'' + args.input_path + 'addon/' + '\'"']
+        + ['-v', 'trunk_path="\'' + trunk_path + '\'"']
+        + ['-v', 'addon_path="\'' + addon_path + 'addon/' + '\'"']
         + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
         + [db, '<', 'load_and_merge_transactions.sql']
     ), shell=True)
 elif args.period is 'hist':
     subprocess.call(' '.join(
         psql
-        + ['-v', 'input_path="\'' + args.input_path + '\'"']
+        + ['-v', 'input_path="\'' + input_path + '\'"']
         + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
         + [db, '<', 'load_transactions.sql']
     ), shell=True)
@@ -107,7 +114,7 @@ subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
 # unload to s3
 subprocess.call(' '.join(
     psql
-    + ['-v', 'output_path="\'' + args.output_path + '\'"']
+    + ['-v', 'output_path="\'' + output_path + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
     + [db, '<', '../../redshift_norm_common/unload_common_model.sql']
