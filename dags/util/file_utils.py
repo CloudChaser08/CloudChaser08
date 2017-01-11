@@ -4,8 +4,6 @@
 import os
 import re
 from subprocess import check_call
-import config
-
 
 def _get_files(path):
     """Get all files in a path"""
@@ -42,6 +40,7 @@ def unzip(path):
 
 def decrypt(aws_id, aws_key, decryptor_path, file_path):
     """Decrypt correct file in tmp path dir"""
+    import config
     DECRYPTOR_JAR = decryptor_path + "decryptor.jar"
     DECRYPTOR_KEY = decryptor_path + "private.reformat"
 

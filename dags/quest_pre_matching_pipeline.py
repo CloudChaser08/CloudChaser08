@@ -9,6 +9,9 @@ import sys
 import re
 from subprocess import check_call, Popen
 import time
+
+if sys.modules.get('config'):
+    del sys.modules['config']
 import config
 
 if sys.modules.get('util.file_utils'):
@@ -52,10 +55,10 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2016, 12, 30, 12),
-    'depends_on_past': False,
-    'retries': 3,
-    'retry_delay': timedelta(minutes=2)
+    'start_date': datetime(2017, 02, 01, 12),
+    'depends_on_past': False
+    # 'retries': 3,
+    # 'retry_delay': timedelta(minutes=2)
 }
 
 mdag = DAG(
@@ -94,22 +97,22 @@ def fetch_step(task_id, s3_path_template, local_path_template):
         python_callable=execute,
         dag=mdag
     )
-fetch_addon = fetch_step(
-    "addon",
-    "{}{}".format(
-        S3_TRANSACTION_RAW_PATH,
-        TRANSACTION_ADDON_FILE_NAME_TEMPLATE
-    ),
-    TRANSACTION_ADDON_TMP_PATH_TEMPLATE
-)
-fetch_trunk = fetch_step(
-    "trunk",
-    '{}{}'.format(
-        S3_TRANSACTION_RAW_PATH,
-        TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
-    ),
-    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
-)
+# fetch_addon = fetch_step(
+#     "addon",
+#     "{}{}".format(
+#         S3_TRANSACTION_RAW_PATH,
+#         TRANSACTION_ADDON_FILE_NAME_TEMPLATE
+#     ),
+#     TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+# )
+# fetch_trunk = fetch_step(
+#     "trunk",
+#     '{}{}'.format(
+#         S3_TRANSACTION_RAW_PATH,
+#         TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
+#     ),
+#     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+# )
 
 
 def unzip_step(task_id, tmp_path_template):
@@ -125,12 +128,12 @@ def unzip_step(task_id, tmp_path_template):
         python_callable=execute,
         dag=mdag
     )
-unzip_addon = unzip_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
-)
-unzip_trunk = unzip_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
-)
+# unzip_addon = unzip_step(
+#     "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+# )
+# unzip_trunk = unzip_step(
+#     "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+# )
 
 
 def decrypt_step(task_id, tmp_path_template):
@@ -151,7 +154,7 @@ def decrypt_step(task_id, tmp_path_template):
         python_callable=execute,
         dag=mdag
     )
-decrypt_addon = decrypt_step("addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
+# decrypt_addon = decrypt_step("addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
 
 
 def gunzip_step(task_id, tmp_path_template):
@@ -167,12 +170,12 @@ def gunzip_step(task_id, tmp_path_template):
         python_callable=execute,
         dag=mdag
     )
-gunzip_addon = gunzip_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
-)
-gunzip_trunk = gunzip_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
-)
+# gunzip_addon = gunzip_step(
+#     "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+# )
+# gunzip_trunk = gunzip_step(
+#     "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+# )
 
 
 def split_step(task_id, tmp_path_template, tmp_parts_path_template):
@@ -191,16 +194,16 @@ def split_step(task_id, tmp_path_template, tmp_parts_path_template):
         python_callable=execute,
         dag=mdag
     )
-split_addon = split_step(
-    "addon",
-    TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
-    TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE
-)
-split_trunk = split_step(
-    "trunk",
-    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
-    TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
-)
+# split_addon = split_step(
+#     "addon",
+#     TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
+#     TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE
+# )
+# split_trunk = split_step(
+#     "trunk",
+#     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
+#     TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
+# )
 
 
 def bzip_parts_step(task_id, tmp_parts_path_template):
@@ -216,12 +219,12 @@ def bzip_parts_step(task_id, tmp_parts_path_template):
         python_callable=execute,
         dag=mdag
     )
-bzip_parts_addon = bzip_parts_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE
-)
-bzip_parts_trunk = bzip_parts_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
-)
+# bzip_parts_addon = bzip_parts_step(
+#     "addon", TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE
+# )
+# bzip_parts_trunk = bzip_parts_step(
+#     "trunk", TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
+# )
 
 
 def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
@@ -243,16 +246,16 @@ def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
         python_callable=execute,
         dag=mdag
     )
-push_splits_to_s3_addon = push_splits_to_s3_step(
-    "addon",
-    TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE,
-    TRANSACTION_ADDON_S3_SPLIT_PATH
-)
-push_splits_to_s3_trunk = push_splits_to_s3_step(
-    "trunk",
-    TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE,
-    TRANSACTION_TRUNK_S3_SPLIT_PATH
-)
+# push_splits_to_s3_addon = push_splits_to_s3_step(
+#     "addon",
+#     TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE,
+#     TRANSACTION_ADDON_S3_SPLIT_PATH
+# )
+# push_splits_to_s3_trunk = push_splits_to_s3_step(
+#     "trunk",
+#     TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE,
+#     TRANSACTION_TRUNK_S3_SPLIT_PATH
+# )
 
 
 def queue_up_for_matching_step(seq_num, engine_env, priority):
@@ -274,9 +277,9 @@ def queue_up_for_matching_step(seq_num, engine_env, priority):
         python_callable=execute,
         dag=mdag
     )
-queue_up_for_matching = queue_up_for_matching_step(
-    '0', 'prod-matching-engine', 'priority3'
-)
+# queue_up_for_matching = queue_up_for_matching_step(
+#     '0', 'prod-matching-engine', 'priority3'
+# )
 
 
 def clean_up_workspace_step():
@@ -291,7 +294,7 @@ def clean_up_workspace_step():
         trigger_rule='all_done',
         dag=mdag
     )
-clean_up_workspace = clean_up_workspace_step()
+# clean_up_workspace = clean_up_workspace_step()
 
 #
 # Post-Matching
@@ -321,7 +324,7 @@ def detect_matching_done_step():
     return PythonOperator(
         task_id='detect_matching_done',
         provide_context=True,
-        python_callable=detect_matching_done_step,
+        python_callable=execute,
         execution_timeout=timedelta(hours=6),
         dag=mdag
     )
@@ -375,7 +378,7 @@ def create_redshift_cluster_step():
         python_callable=execute,
         dag=mdag
     )
-create_redshift_cluster = create_redshift_cluster_step()
+# create_redshift_cluster = create_redshift_cluster_step()
 
 
 def normalize_step():
@@ -415,7 +418,7 @@ def normalize_step():
         python_callable=execute,
         dag=mdag
     )
-normalize = normalize_step()
+# normalize = normalize_step()
 
 
 def delete_redshift_cluster_step():
@@ -431,33 +434,33 @@ def delete_redshift_cluster_step():
         python_callable=execute,
         dag=mdag
     )
-delete_redshift_cluster = delete_redshift_cluster_step()
+# delete_redshift_cluster = delete_redshift_cluster_step()
 
-# addon
-unzip_addon.set_upstream(fetch_addon)
-decrypt_addon.set_upstream(unzip_addon)
-gunzip_addon.set_upstream(decrypt_addon)
-split_addon.set_upstream(gunzip_addon)
-bzip_parts_addon.set_upstream(split_addon)
-push_splits_to_s3_addon.set_upstream(bzip_parts_addon)
+# # addon
+# unzip_addon.set_upstream(fetch_addon)
+# decrypt_addon.set_upstream(unzip_addon)
+# gunzip_addon.set_upstream(decrypt_addon)
+# split_addon.set_upstream(gunzip_addon)
+# bzip_parts_addon.set_upstream(split_addon)
+# push_splits_to_s3_addon.set_upstream(bzip_parts_addon)
 
-# trunk
-fetch_trunk.set_upstream(push_splits_to_s3_addon)
-unzip_trunk.set_upstream(fetch_trunk)
-gunzip_trunk.set_upstream(unzip_trunk)
-split_trunk.set_upstream(gunzip_trunk)
-bzip_parts_trunk.set_upstream(split_trunk)
-push_splits_to_s3_trunk.set_upstream(bzip_parts_trunk)
+# # trunk
+# fetch_trunk.set_upstream(push_splits_to_s3_addon)
+# unzip_trunk.set_upstream(fetch_trunk)
+# gunzip_trunk.set_upstream(unzip_trunk)
+# split_trunk.set_upstream(gunzip_trunk)
+# bzip_parts_trunk.set_upstream(split_trunk)
+# push_splits_to_s3_trunk.set_upstream(bzip_parts_trunk)
 
-# queue and cleanup
-queue_up_for_matching.set_upstream(push_splits_to_s3_trunk)
-clean_up_workspace.set_upstream(queue_up_for_matching)
+# # queue and cleanup
+# queue_up_for_matching.set_upstream(push_splits_to_s3_trunk)
+# clean_up_workspace.set_upstream(queue_up_for_matching)
 
 # post-matching
-detect_matching_done.set_upstream(clean_up_workspace)
+# detect_matching_done.set_upstream(clean_up_workspace)
 move_matching_payload.set_upstream(detect_matching_done)
 
 # normalization
-create_redshift_cluster.set_upstream(move_matching_payload)
-normalize.set_upstream(create_redshift_cluster)
-delete_redshift_cluster.set_upstream(normalize)
+# create_redshift_cluster.set_upstream(move_matching_payload)
+# normalize.set_upstream(create_redshift_cluster)
+# delete_redshift_cluster.set_upstream(normalize)
