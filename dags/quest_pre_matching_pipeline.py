@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 import sys
 import re
-from subprocess import check_call, check_output
+from subprocess import check_call
 import time
 
 if sys.modules.get('util.file_utils'):
@@ -354,16 +354,18 @@ move_matching_payload = move_matching_payload_step()
 # Normalization
 #
 CLUSTER_ID_TEMPLATE = 'quest-norm-{}'
+RS_HOST_TEMPLATE = CLUSTER_ID_TEMPLATE + '.cz8slgfda3sg.us-east-1.redshift.amazonaws.com'
+REDSHIFT_DELETE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py delete \\
+--identifier {{ params.cluster_id }}"""
 
 
 def create_redshift_cluster_step():
     def execute(ds, **kwargs):
         check_call([
-            'aws', 'redshift', 'create-cluster', '--cluster-identifier',
+            '/home/airflow/airflow/dags/resources/redshift.py', 'create',
+            '--identifier',
             CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            '--node-type', 'dc1.large', '--cluster-type', 'multi-node',
-            '--number-of-nodes', '2', '--master-username', 'hvuser',
-            '--master-user-password', 'HV1user2'
+            '--num_nodes', 2
         ], env=env)
     return PythonOperator(
         task_id='create-redshift-cluster',
@@ -374,37 +376,55 @@ def create_redshift_cluster_step():
 create_redshift_cluster = create_redshift_cluster_step()
 
 
-def wait_for_redshift_cluster_step():
-    def execute(ds, **kwargs):
-        status = filter(
-            lambda x: x['ClusterIdentifier'] == CLUSTER_ID_TEMPLATE.format(
-                get_formatted_date(kwargs)
-            ),
-            check_output([
-                'aws', 'redshift', 'describe-clusters'
-            ], env=env).decode('UTF-8')['Clusters']
-        )[0]['ClusterStatus']
-        if status is not 'available':
-            time.sleep(60)
-    return PythonOperator(
-        task_id='wait-for-redshift-cluster',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-wait_for_redshift_cluster = wait_for_redshift_cluster_step()
-
-
 def normalize_step():
     def execute(ds, **kwargs):
-        
-    return PythonExecutor(
+        hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
+        file_date = (
+            datetime.strptime(
+                kwargs['yesterday_ds'], '%Y-%m-%d'
+            ) - timedelta(days=1)
+        ).strftime('%Y/%m/%d')
+        s3_key = hook.list_keys('salusv', 'incoming/medicalclaims/quest/{}'.format(file_date))[0]
+    setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
+    s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
+                         Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY')
+                     )
+    command = [
+        '/home/airflow/airflow/dags/providers/quest/rsNormalizeQuest.py',
+        '--date', file_date, '--setid', setid, '--s3_credentials', s3_credentials, '--first_run'
+    ]
+    env = dict(os.environ)
+    env['PGHOST'] = RS_HOST
+    env['PGUSER'] = RS_USER
+    env['PGDATABASE'] = RS_DATABASE
+    env['PGPORT'] = RS_PORT
+    env['PGPASSWORD'] = Variable.get('rs_norm_password')
+    cwd = '/home/airflow/airflow/dags/providers/emdeon/medicalclaims/'
+    p = Popen(command, env=env, cwd=cwd)
+    p.wait()
+    return PythonOperator(
         task_id='normalize',
         provide_context=True,
         python_callable=execute,
         dag=mdag
     )
 normalize = normalize_step()
+
+
+def delete_redshift_cluster_step():
+    def execute(ds, **kwargs):
+        check_call([
+            '/home/airflow/airflow/dags/resources/redshift.py', 'delete',
+            '--identifier',
+            CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
+        ], env=env)
+    return PythonOperator(
+        task_id='delete-redshift-cluster',
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
+delete_redshift_cluster = delete_redshift_cluster_step()
 
 # addon
 unzip_addon.set_upstream(fetch_addon)
