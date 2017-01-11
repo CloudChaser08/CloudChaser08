@@ -21,7 +21,10 @@ def run_psql_script(script, variables=[]):
     args = ['psql', '-f', script]
     for var in variables:
         args.append('-v')
-        args.append('{}={}'.format(var[0], var[1]))
+        if (len(var) == 3 and var[2] == False):
+       	    args.append("{}={}".format(var[0], var[1]))
+        else:
+            args.append("{}='{}'".format(var[0], var[1]))
     subprocess.check_call(args)
 
 def run_psql_query(query, return_output=False):
@@ -39,14 +42,15 @@ def enqueue_psql_script(script, variables=[]):
 
 def execute_queue(debug=False):
     global psql_scripts, psql_variables
-    if debug:
-        for i in xrange(len(psql_scripts)):
-            run_psql_script(psql_scripts[i], psql_variables[i])
-    else:
-        v = reduce(lambda x,y: x.extend(y), [])
-        with open('full_normalization_routine.sql', 'w') as fout:
-            subprocess.check_call(['cat'] + psql_scripts, stdout=fout)
-        run_psql_script('full_normalization_routine.sql', v)
+    for i in xrange(len(psql_scripts)):
+        run_psql_script(psql_scripts[i], psql_variables[i])
+
+# DISABLED for now. Must resolve psql variable collision first
+#    else:
+#        v = reduce(lambda x,y: x + y, psql_variables, [])
+#        with open('full_normalization_routine.sql', 'w') as fout:
+#            subprocess.check_call(['cat'] + psql_scripts, stdout=fout)
+#        run_psql_script('full_normalization_routine.sql', v)
 
 if args.first_run:
     enqueue_psql_script('user_defined_functions.sql')
@@ -61,7 +65,7 @@ if args.first_run:
     run_psql_script('../../redshift_norm_common/prep_date_offset_table.sql')
     while True:
         res1 = run_psql_query('SELECT count(*) FROM tmp;', True)
-        res2 = run_psql_query('SELECT extract(\'days\' FROM (getdate() - \'' + min_date + '\'))::int;')
+        res2 = run_psql_query('SELECT extract(\'days\' FROM (getdate() - \'' + min_date + '\'))::int;', True)
         rows = int(res1.split("\n")[2].lstrip().rstrip())
         target = int(res2.split("\n")[2].lstrip().rstrip())
         if rows > target + 1:
@@ -72,6 +76,8 @@ if args.first_run:
         ['min_valid_date', min_date]
     ])
 
+date_path = args.date.replace('-', '/')
+
 enqueue_psql_script('../../redshift_norm_common/medicalclaims_common_model.sql', [
     ['filename', args.setid],
     ['today', TODAY],
@@ -79,11 +85,11 @@ enqueue_psql_script('../../redshift_norm_common/medicalclaims_common_model.sql',
     ['vendor', 'webmd']
 ])
 enqueue_psql_script('load_transactions.sql', [
-    ['input_path', S3_EMDEON_IN + args.date + '/'],
+    ['input_path', S3_EMDEON_IN + date_path + '/'],
     ['credentials', args.s3_credentials]
 ])
 enqueue_psql_script('load_matching_payload.sql', [
-    ['matching_path', S3_EMDEON_MATCHING + args.date + '/'],
+    ['matching_path', S3_EMDEON_MATCHING + date_path + '/'],
     ['credentials', args.s3_credentials]
 ])
 enqueue_psql_script('split_raw_transactions.sql')
@@ -92,35 +98,35 @@ enqueue_psql_script('normalize_institutional_claims.sql')
 
 # Privacy filtering
 enqueue_psql_script('../../redshift_norm_common/nullify_icd9_blacklist.sql', [
-    ['table_name', 'medicalclaims_common_model'],
-    ['column_name', 'diagnosis_code'],
-    ['qual_column_name', 'diagnosis_code_qual']
+    ['table_name', 'medicalclaims_common_model', False],
+    ['column_name', 'diagnosis_code', False],
+    ['qual_column_name', 'diagnosis_code_qual', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/nullify_icd10_blacklist.sql', [
-    ['table_name', 'medicalclaims_common_model'],
-    ['column_name', 'diagnosis_code'],
-    ['qual_column_name', 'diagnosis_code_qual']
+    ['table_name', 'medicalclaims_common_model', False],
+    ['column_name', 'diagnosis_code', False],
+    ['qual_column_name', 'diagnosis_code_qual', False]
 ])
-enqueue_psql_script('../../redshift_norm_common/genericize_icd9_blacklist.sql', [
-    ['table_name', 'medicalclaims_common_model'],
-    ['column_name', 'diagnosis_code'],
-    ['qual_column_name', 'diagnosis_code_qual']
+enqueue_psql_script('../../redshift_norm_common/genericize_icd9.sql', [
+    ['table_name', 'medicalclaims_common_model', False],
+    ['column_name', 'diagnosis_code', False],
+    ['qual_column_name', 'diagnosis_code_qual', False]
 ])
-enqueue_psql_script('../../redshift_norm_common/genericize_icd10_blacklist.sql', [
-    ['table_name', 'medicalclaims_common_model'],
-    ['column_name', 'diagnosis_code'],
-    ['qual_column_name', 'diagnosis_code_qual']
+enqueue_psql_script('../../redshift_norm_common/genericize_icd10.sql', [
+    ['table_name', 'medicalclaims_common_model', False],
+    ['column_name', 'diagnosis_code', False],
+    ['qual_column_name', 'diagnosis_code_qual', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/scrub_place_of_service.sql')
 enqueue_psql_script('../../redshift_norm_common/scrub_discharge_status.sql')
 enqueue_psql_script('../../redshift_norm_common/nullify_drg_blacklist.sql')
 enqueue_psql_script('../../redshift_norm_common/cap_age.sql', [
-    ['table_name', 'medicalclaims_common_model'],
-    ['column_name', 'patient_age']
+    ['table_name', 'medicalclaims_common_model', False],
+    ['column_name', 'patient_age', False]
 ])
 
 enqueue_psql_script('../../redshift_norm_common/unload_common_model.sql', [
-    ['output_path', args.output_path],
+    ['output_path', S3_EMDEON_OUT + date_path + '/'],
     ['credentials', args.s3_credentials],
     ['select_from_common_model_table', 'SELECT * FROM medicalclaims_common_model']
 ])
