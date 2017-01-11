@@ -356,10 +356,13 @@ WHERE split_part(diag_concat,':',n) IS NOT NULL AND split_part(diag_concat,':',n
 DROP TABLE IF EXISTS together;        
 CREATE TABLE together (claim_id text ENCODE lzo, unrelated varchar(5000) ENCODE lzo, principal_procedure_check text ENCODE lzo);
 
+DROP TABLE IF EXISTS emdeon_institutional_claims_procedures;
+SELECT DISTINCT claim_id, procedure_code INTO emdeon_institutional_claims_procedures FROM emdeon_institutional_claims_all;
+
 INSERT INTO together
 SELECT a.claim_id, string_set_diff(unrelated_concat, related_concat) AS unrelated, principal_procedure_check
 FROM
-(SELECT claim_id, listagg(procedure_code, ':') within group (order by procedure_code) AS related_concat FROM emdeon_institutional_claims_all group by claim_id) a
+(SELECT claim_id, listagg(procedure_code, ':') within group (order by procedure_code) AS related_concat FROM emdeon_institutional_claims_procedures group by claim_id) a
 INNER JOIN
 (SELECT claim_id, principal_procedure as principal_procedure_check, (
 COALESCE(principal_procedure, '') || ':' || COALESCE(other_proc_code_2, '') || ':' || COALESCE(other_proc_code_3, '') || ':' || COALESCE(other_proc_code_4, '') || ':' || COALESCE(other_proc_code_5, '') || ':' || COALESCE(other_proc_code_6, '') || ':' || COALESCE(other_proc_code_7, '') || ':' || COALESCE(other_proc_code_8, '') || ':' || COALESCE(other_proc_code_9, '') || ':' || COALESCE(other_proc_code_10, '') || ':' || COALESCE(other_proc_code_11, '') || ':' || COALESCE(other_proc_code_12, '') || ':' || COALESCE(other_proc_code_13, '') || ':' || COALESCE(other_proc_code_14, '') || ':' || COALESCE(other_proc_code_15, '') || ':' || COALESCE(other_proc_code_16, '') || ':' || COALESCE(other_proc_code_17, '') || ':' || COALESCE(other_proc_code_18, '') || ':' || COALESCE(other_proc_code_19, '') || ':' || COALESCE(other_proc_code_20, '') || ':' || COALESCE(other_proc_code_21, '') || ':' || COALESCE(other_proc_code_22, '') || ':' || COALESCE(other_proc_code_23, '') || ':' || COALESCE(other_proc_code_24, '') || ':' || COALESCE(other_proc_code_25, '') ) AS unrelated_concat
