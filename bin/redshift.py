@@ -42,7 +42,7 @@ if args.command == 'create' or args.command == 'create-no-wait':
             '--node-type', node, '--cluster-type', cluster_type, '--master-username', user,
             '--master-user-password', password, '--tags', 'Key=temporary,Value=1',
             '--no-publicly-accessible', '--vpc-security-group-ids', 'sg-ca9fabae',
-            '--cluster-subnet-group', 'vpcrsgroup']
+            '--enhanced-vpc-routing', '--cluster-subnet-group', 'vpcrsgroup']
     if num_nodes > 1:
         cmd.extend(['--number-of-nodes', str(num_nodes)])
 
