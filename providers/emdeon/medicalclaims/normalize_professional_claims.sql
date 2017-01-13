@@ -657,8 +657,8 @@ threedigitzip as patient_zip3,
 state as patient_state,
 claim_type,
 date_received,
-date_service,
-date_service_end,
+CASE WHEN date_service IS NOT NULL THEN date_service ELSE statement_from END,
+CASE WHEN date_service_end IS NOT NULL THEN date_service ELSE statement_to END,
 inst_date_admitted,
 inst_admit_type_std_id,
 inst_admit_source_std_id,
@@ -919,8 +919,8 @@ threeDigitZip as patient_zip3,
 state as patient_state,
 claim_type,
 date_received,
-statement_from_date.formatted,
-statement_to_date.formatted,
+CASE WHEN date_service IS NOT NULL THEN date_service ELSE statement_from END,
+CASE WHEN date_service_end IS NOT NULL THEN date_service ELSE statement_to END,
 inst_date_admitted,
 inst_admit_type_std_id,
 inst_admit_source_std_id,
@@ -973,8 +973,6 @@ FROM emdeon_professional_claims_unrelated b
     CROSS JOIN split_indices
     LEFT JOIN matching_payload ON b.claim_id = claimid
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
-    LEFT JOIN dates statement_from_date ON statement_from = statement_from_date.date
-    LEFT JOIN dates statement_to_date ON statement_to = statement_to_date.date
     LEFT JOIN payer_mapping USING (payer_vendor_id)
 WHERE split_part(unrelated,':',n) IS NOT NULL AND split_part(unrelated,':',n) != '';
 

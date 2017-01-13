@@ -314,8 +314,8 @@ column49,
 column50,
 column51,
 column52,
-column53,
-column54,
+statement_from.formatted,
+statement_to.formatted,
 CASE WHEN (length(column55)-length(replace(column55,'.',''))) = 1 THEN
 ('0' || regexp_replace(column55, '[^0-9.]') || '0')::float::text
 ELSE ('0' || regexp_replace(column55, '[^0-9]'))::bigint::text END,
@@ -379,6 +379,8 @@ column110,
 column111
 FROM emdeon_dx_raw
     LEFT JOIN dates date_received ON column5 = date_received.date
+    LEFT JOIN dates statement_from ON column53 = statement_from.date
+    LEFT JOIN dates statement_to ON column54 = statement_to.date
     LEFT JOIN dates inst_date_admitted ON column92 = inst_date_admitted.date
 WHERE column2 = 'C';
 
