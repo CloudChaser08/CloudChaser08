@@ -55,7 +55,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 02, 01, 12),
+    'start_date': datetime(2017, 01, 11, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -63,7 +63,7 @@ default_args = {
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 13 * * *",
+    schedule_interval="0 12 * * *",
     default_args=default_args
 )
 
