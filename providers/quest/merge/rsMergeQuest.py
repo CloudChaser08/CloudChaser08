@@ -22,11 +22,6 @@ if args.rs_user:
     psql.append('-U')
     psql.append(args.rs_user)
 
-# create tables
-subprocess.call(' '.join(
-    psql + [db, '<', 'create_tables.sql']
-), shell=True)
-
 # import originals
 subprocess.call(' '.join(
     psql
@@ -43,5 +38,17 @@ subprocess.call(' '.join(
     + [db, '<', 'copy_retro.sql']
 ), shell=True)
 
+# unique addons
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'input_path="\'' + args.addon_path + '\'"']
+    + [db, '<', 'unique_retro.sql']
+), shell=True)
+
 # merge
-subprocess.call(' '.join(psql + [db, '<', 'merge.sql']), shell=True)
+subprocess.call(' '.join(psql + [db, '<', 'create_merged.sql']), shell=True)
+for i in [2014, 2015, 2016]:
+    subprocess.call(' '.join(
+        psql + ['-v', 'year="\'' + str(i) + '%\'"', db, '<', 'merge.sql']
+    ), shell=True)
