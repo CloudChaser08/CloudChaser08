@@ -3,14 +3,15 @@ import subprocess
 import argparse
 import time
 import sys
+import os
 sys.path.append(os.path.abspath("../redshift_norm_common/"))
 import create_date_validation_table as date_validator
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--trunk_path', type=str)
-parser.add_argument('--addon_path', type=str)
+parser.add_argument('--method', type=str)
+parser.add_argument('--input_path', type=str)
 parser.add_argument('--matching_path', type=str)
 parser.add_argument('--output_path', type=str)
 parser.add_argument('--database', type=str, nargs='?')
@@ -22,6 +23,10 @@ parser.add_argument('--rs_password', type=str, nargs='?')
 args = parser.parse_args()
 
 db = args.database if args.database else 'dev'
+
+if args.period not in ['hist', 'current']:
+    print('\'period\' argument must be either \'hist\' or \'current\'.')
+    exit(1)
 
 psql = ['psql', '-h', args.cluster_endpoint, '-p', '5439']
 if args.rs_user:
@@ -54,13 +59,23 @@ subprocess.call(' '.join(
     + [db, '<', 'load_matching_payload.sql']
 ), shell=True)
 
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'trunk_path="\'' + args.trunk_path + '\'"']
-    + ['-v', 'addon_path="\'' + args.addon_path + '\'"']
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + [db, '<', 'load_and_merge_transactions.sql']
-), shell=True)
+# Quest data must be ingested differently based on when it was sent -
+# they changed the format on 2016/08/31
+if args.period is 'current':
+    subprocess.call(' '.join(
+        psql
+        + ['-v', 'trunk_path="\'' + args.input_path + 'trunk/' + '\'"']
+        + ['-v', 'addon_path="\'' + args.input_path + 'addon/' + '\'"']
+        + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+        + [db, '<', 'load_and_merge_transactions.sql']
+    ), shell=True)
+elif args.period is 'hist':
+    subprocess.call(' '.join(
+        psql
+        + ['-v', 'input_path="\'' + args.input_path + '\'"']
+        + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+        + [db, '<', 'load_transactions.sql']
+    ), shell=True)
 
 # normalize
 subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
