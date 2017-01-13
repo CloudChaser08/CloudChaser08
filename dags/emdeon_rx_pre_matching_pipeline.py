@@ -80,7 +80,11 @@ def do_trigger_post_matching_dag(context, dag_run_obj):
     transaction_file_name = TRANSACTION_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
     deid_file_name = DEID_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
     row_count = check_output(['zgrep', '-c', '^', file_dir + transaction_file_name])
-    dag_run_obj.payload = {"deid_filename":deid_file_name.replace('.gz', ''), "row_count":str(row_count)}
+    dag_run_obj.payload = {
+            "deid_filename": deid_file_name.replace('.gz', ''),
+            "row_count": str(row_count),
+            "ds_yesterday": context['yesterday_ds']
+        }
     return dag_run_obj
 
 default_args = {

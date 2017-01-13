@@ -80,7 +80,11 @@ def do_trigger_post_matching_dag(context, dag_run_obj):
     transaction_file_name = TRANSACTION_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
     deid_file_name = DEID_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
     row_count = check_output(['zgrep', '-c', '^[^|]*|C|', file_dir + transaction_file_name])
-    dag_run_obj.payload = {"deid_filename":deid_file_name.replace('.gz', ''), "row_count":str(row_count)}
+    dag_run_obj.payload = {
+            "deid_filename": deid_file_name.replace('.gz', ''),
+            "row_count": str(row_count),
+            "ds_yesterday": context['yesterday_ds']
+        }
     return dag_run_obj
 
 default_args = {
@@ -181,8 +185,8 @@ environ = {'AWS_ACCESS_KEY_ID' : Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER'),
 queue_up_for_matching = BashOperator(
     task_id='queue_up_for_matching',
     bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3.sh {}{}'.format(
-                     S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}')) +
-                 ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}',
+                 S3_DEID_RAW_PATH, (DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}'))
+                 ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}'),
     params={'sequence_num' : 0,
             'matching_engine_env' : 'prod-matching-engine',
             'priority' : 'priority3'},
@@ -208,8 +212,7 @@ unzip_file.set_upstream(validate_fetch_transaction_file_dag)
 split_file.set_upstream(unzip_file)
 zip_part_files.set_upstream(split_file)
 push_splits_to_s3.set_upstream(zip_part_files)
-push_splits_to_s3.set_downstream(trigger_post_matching_dag)
-validate_fetch_transaction_mft_file_dag.set_downstream(trigger_post_matching_dag)
+push_splits_to_s3.set_downstream(clean_up_workspace)
+validate_fetch_transaction_mft_file_dag.set_downstream(clean_up_workspace)
 queue_up_for_matching.set_upstream(validate_fetch_deid_file_dag)
-queue_up_for_matching.set_downstream(trigger_post_matching_dag)
-clean_up_workspace.set_upstream(trigger_post_matching_dag)
+queue_up_for_matching.set_downstream(clean_up_workspace)

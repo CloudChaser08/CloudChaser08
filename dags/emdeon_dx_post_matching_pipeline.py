@@ -2,18 +2,49 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
-from subprocess import check_output, check_call, STDOUT
-from json import loads as json_loads
+from subprocess import check_output, check_call, STDOUT, Popen
 import airflow.hooks.S3_hook
 import logging
 import os
 import time
+import json
 
-REDSHIFT_DB='dev'
-REDSHIFT_HOST='emdeon-dx-norm'
 S3_PATH_PREFIX='s3://salusv/matching/prod/payload/86396771-0345-4d67-83b3-7e22fded9e1d/'
 S3_PREFIX='matching/prod/payload/86396771-0345-4d67-83b3-7e22fded9e1d/'
 S3_PAYLOAD_LOC='s3://salusv/matching/payload/medicalclaims/emdeon/'
+REDSHIFT_CREATE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py create \\
+--identifier {{ params.cluster_id }} --num_nodes {{ params.num_nodes }}"""
+REDSHIFT_DELETE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py delete \\
+--identifier {{ params.cluster_id }}"""
+EMR_CREATE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/launchEMR \\
+{{ params.cluster_name }} {{ params.num_nodes }} {{ params.node_type }} "{{ params.applications }}" \\
+{{ params.use_ebs }} {{ params.ebs_volume_size }}"""
+EMR_DELETE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py delete \\
+--identifier {{ params.cluster_id }}"""
+EMR_COPY_MELLON_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar",'
+    'ActionOnFailure=CONTINUE,Args=[aws,s3,cp,s3://healthverityreleases/mellon/mellon-assembly-latest.jar,'
+    '/tmp/mellon-assembly-latest.jar]')
+EMR_TRANSFORM_TO_PARQUET_STEP = ('Type=Spark,Name="Transform Emdeon DX to Parquet",ActionOnFailure=CONTINUE, '
+    'Args=[--class,com.healthverity.parquet.Main,--conf,spark.sql.parquet.compression.codec=gzip,'
+    '/tmp/mellon-assembly-latest.jar,{},{},pharmacy,hdfs:///parquet/medicalclaims/emdeon/{},'
+    's3a://salusv/warehouse/text/medicalclaims/emdeon/{},20,"|"]')
+EMR_DELETE_OLD_PARQUET = ('Type=CUSTOM_JAR,Name="Delete old data from S3",Jar="command-runner.jar",'
+    'ActionOnFailure=CONTINUE,Args=[aws,s3,rm,--recursive,s3://salusv/warehouse/parquet/medicalclaims/emdeon/{}]')
+EMR_DISTCP_TO_S3 = ('Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",' 
+    'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src=hdfs:///parquet/medicalclaims/emdeon",'
+    '"--dest=s3://salusv/warehouse/parquet/medicalclaims/emdeon/"]')
+RS_CLUSTER_ID="emdeon-dx-norm"
+RS_HOST=RS_CLUSTER_ID + '.cz8slgfda3sg.us-east-1.redshift.amazonaws.com'
+RS_USER='hvuser'
+RS_DATABASE='dev'
+RS_PORT='5439'
+RS_NUM_NODES=5
+EMR_CLUSTER_ID="emdeon-dx-norm"
+EMR_NUM_NODES=5
+EMR_NODE_TYPE="c4.xlarge"
+EMR_APPLICATIONS="Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
+EMR_USE_EBS="false"
+EMR_EBS_VOLUME_SIZE="0"
 
 def do_move_matching_payload(ds, **kwargs):
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
@@ -41,6 +72,57 @@ def do_detect_matching_done(ds, **kwargs):
     logging.info('Poking for key : {}'.format(s3_key))
     while not hook.check_for_wildcard_key(s3_key, None):
         time.sleep(60)
+
+def do_run_normalization_routine(ds, **kwargs):
+    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
+    file_date = kwargs['dag_run'].conf['ds_yesterday']
+    s3_key = hook.list_keys('salusv', 'incoming/medicalclaims/emdeon/{}'.format(file_date.replace('-', '/')))[0]
+    setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
+    s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
+                         Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY')
+                     )
+    command = ['/home/airflow/airflow/dags/providers/emdeon/medicalclaims/rsNormalizeEmdeonDX.py',
+        '--date', file_date, '--setid', setid, '--s3_credentials', s3_credentials, '--first_run']
+    env = dict(os.environ)
+    env['PGHOST'] = RS_HOST
+    env['PGUSER'] = RS_USER
+    env['PGDATABASE'] = RS_DATABASE
+    env['PGPORT'] = RS_PORT
+    env['PGPASSWORD'] = Variable.get('rs_norm_password')
+    cwd = '/home/airflow/airflow/dags/providers/emdeon/medicalclaims/'
+    p = Popen(command, env=env, cwd=cwd)
+    p.wait()
+
+def get_emr_cluster_id(cluster_name):
+    clusters = json.loads(check_output(['aws', 'emr', 'list-clusters', '--active']))
+    for cluster in clusters['Clusters']:
+        if cluster['Name'] == cluster_name:
+            return cluster['Id']
+
+def do_transform_to_parquet(ds, **kwargs):
+    file_date = kwargs['params']['ds_yesterday'].replace('-','/')
+    cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME)
+    transform_step = EMR_TRANSFORM_TO_PARQUET_STEP.format(
+        Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY'), file_date, file_date)
+    check_call(['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
+                '--steps', EMR_COPY_MELLON_STEP, transform_step, EMR_DISTCP_TO_S3])
+    cluster_steps = json.loads(check_output(['aws', 'emr', 'list-steps', '--cluster-id', cluster_id]))
+    incomplete_steps=1
+    failed_steps=0
+    while incomplete_steps > 0:
+        incomplete_steps=0
+        time.sleep(60)
+        for step in cluster_steps['Steps']:
+            if step['Status']['State'] == "PENDING" or step['Status']['State'] == "RUNNING":
+                incomplete_steps += 1
+            elif step['Status']['State'] == "FAILED":
+                failed_steps += 1
+    if failed_steps > 0:
+        logging.info("ITS ALL BROKEN")
+
+def do_delete_emr_cluster(ds, **kwargs):
+    cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME)
+    check_call(['aws', 'emr', 'terminate-clusters', '--cluster-ids', cluster_id])
 
 default_args = {
     'owner': 'airflow',
@@ -71,4 +153,60 @@ detect_matching_done = PythonOperator(
     dag=mdag
 )
 
+env = os.environ
+env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID')
+env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY')
+
+create_redshift_cluster = BashOperator(
+    task_id='create_redshift_cluster',
+    bash_command=REDSHIFT_CREATE_COMMAND_TEMPLATE,
+    params={"cluster_id" : RS_CLUSTER_ID, "num_nodes" : RS_NUM_NODES},
+    dag=mdag
+)
+
+run_normalization_routine = PythonOperator(
+    task_id='run_normalization_routine',
+    provide_context=True,
+    python_callable=do_run_normalization_routine,
+    dag=mdag
+)
+
+delete_redshift_cluster = BashOperator(
+    task_id='delete_redshift_cluster',
+    bash_command=REDSHIFT_DELETE_COMMAND_TEMPLATE,
+    params={"cluster_id" : RS_CLUSTER_ID},
+    dag=mdag
+)
+
+create_emr_cluster = BashOperator(
+    task_id='create_emr_cluster',
+    bash_command=EMR_CREATE_COMMAND_TEMPLATE,
+    params={
+        "cluster_name" : EMR_CLUSTER_ID, "num_nodes" : EMR_NUM_NODES,
+        "node_type" : EMR_NODE_TYPE, "applications" : EMR_APPLICATIONS,
+        "use_ebs" : EMR_USE_EBS, "ebs_volume_size" : EMR_EBS_VOLUME_SIZE
+    },
+    dag=mdag
+)
+
+transform_to_parquet = PythonOperator(
+    task_id='transform_to_parquet',
+    provide_context=True,
+    python_callable=do_transform_to_parquet,
+    dag=mdag
+)
+
+delete_emr_cluster = PythonOperator(
+    task_id='delete_emr_cluster',
+    provide_context=True,
+    python_callable=do_delete_emr_cluster,
+    dag=mdag
+)
+
 move_matching_payload.set_upstream(detect_matching_done)
+create_redshift_cluster.set_upstream(detect_matching_done)
+run_normalization_routine.set_upstream([create_redshift_cluster, move_matching_payload])
+delete_redshift_cluster.set_upstream(run_normalization_routine)
+create_emr_cluster.set_upstream(run_normalization_routine)
+transform_to_parquet.set_upstream(create_emr_cluster)
+delete_emr_cluster.set_upstream(transform_to_parquet)
