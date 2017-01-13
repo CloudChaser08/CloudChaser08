@@ -1,27 +1,16 @@
 #
-# Utility Functions for processing Files
+# Utility Functions for processing files
 #
 import os
 import re
+import aws_utils
 from subprocess import check_call
+
 
 def _get_files(path):
     """Get all files in a path"""
     file_list = os.listdir(path)
     return map(lambda x: path + x, file_list)
-
-
-def get_s3_env(aws_id, aws_key):
-    env = os.environ
-    env["AWS_ACCESS_KEY_ID"] = aws_id
-    env["AWS_SECRET_ACCESS_KEY"] = aws_key
-    return env
-
-
-def fetch_file_from_s3(aws_id, aws_key, s3_path, local_path):
-    """Download a file from S3"""
-    env = get_s3_env(aws_id, aws_key)
-    check_call(['aws', 's3', 'cp', s3_path, local_path], env=env)
 
 
 def unzip(path):
@@ -44,7 +33,7 @@ def decrypt(aws_id, aws_key, decryptor_path, file_path):
     DECRYPTOR_JAR = decryptor_path + "decryptor.jar"
     DECRYPTOR_KEY = decryptor_path + "private.reformat"
 
-    env = get_s3_env(aws_id, aws_key)
+    env = aws_utils.get_aws_env()
 
     check_call(["mkdir", decryptor_path], env=env)
     check_call([
@@ -97,12 +86,3 @@ def bzip_part_files(parts_path):
                 parts_path, file_name.split('/')[-1]
             )
         ])
-
-
-def push_splits_to_s3(
-        parts_path, s3_transaction_split_path, aws_id, aws_key
-):
-    """Push each file in a directory up to a specified s3 location"""
-    env = get_s3_env(aws_id, aws_key)
-    check_call(['aws', 's3', 'cp', '--recursive', parts_path, "{}"
-                .format(s3_transaction_split_path)], env=env)

@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator
-import airflow.hooks.S3_hook
+
 from datetime import datetime, timedelta
 import os
 import logging
@@ -18,6 +18,10 @@ if sys.modules.get('util.file_utils'):
     del sys.modules['util.file_utils']
 import util.file_utils as file_utils
 
+if sys.modules.get('util.aws_utils'):
+    del sys.modules['util.aws_utils']
+import util.aws_utils as aws_utils
+
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
 DAG_NAME = 'quest_pre_matching_pipeline'
@@ -25,6 +29,7 @@ DATATYPE = 'labtests'
 
 # Applies to all transaction files
 S3_TRANSACTION_RAW_PATH = 's3://healthverity/incoming/quest/'
+S3_TRANSACTION_PROCESSED_PATH_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
 
 # Decryptor Config
 TMP_DECRYPTOR_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'decrypt/'
@@ -32,7 +37,7 @@ TMP_DECRYPTOR_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'decrypt/'
 # Transaction Addon file
 TRANSACTION_ADDON_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/addon/'
 TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE = TMP_PATH_TEMPLATE + 'parts/addon/'
-TRANSACTION_ADDON_S3_SPLIT_PATH = 's3://salusv/incoming/labtests/quest/{}/{}/{}/addon/'
+TRANSACTION_ADDON_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'addon/'
 TRANSACTION_ADDON_FILE_DESCRIPTION = 'Quest transaction addon file'
 TRANSACTION_ADDON_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt.zip'
 TRANSACTION_ADDON_DAG_NAME = 'validate_fetch_transaction_addon_file'
@@ -41,7 +46,7 @@ MINIMUM_TRANSACTION_FILE_SIZE = 500
 # Transaction Trunk file
 TRANSACTION_TRUNK_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/trunk/'
 TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE = TMP_PATH_TEMPLATE + 'parts/trunk/'
-TRANSACTION_TRUNK_S3_SPLIT_PATH = 's3://salusv/incoming/labtests/quest/{}/{}/{}/trunk/'
+TRANSACTION_TRUNK_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'trunk/'
 TRANSACTION_TRUNK_FILE_DESCRIPTION = 'Quest transaction trunk file'
 TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2'
 TRANSACTION_TRUNK_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2.gz.zip'
@@ -80,14 +85,20 @@ row_count = 0
 def get_formatted_date(kwargs):
     return kwargs['yesterday_ds_nodash'] + kwargs['ds_nodash'][4:8]
 
+
+def insert_current_date(template, kwargs):
+    return template.format(
+        kwargs['ds_nodash'][0:4],
+        kwargs['ds_nodash'][4:6],
+        kwargs['ds_nodash'][6:8]
+    )
+
 #
 # Pre-Matching
 #
 def fetch_step(task_id, s3_path_template, local_path_template):
     def execute(ds, **kwargs):
-        file_utils.fetch_file_from_s3(
-            Variable.get("AWS_ACCESS_KEY_ID"),
-            Variable.get("AWS_SECRET_ACCESS_KEY"),
+        aws_utils.fetch_file_from_s3(
             s3_path_template.format(get_formatted_date(kwargs)),
             local_path_template.format(get_formatted_date(kwargs))
         )
@@ -251,15 +262,13 @@ def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
     def execute(ds, **kwargs):
         formatted_date = get_formatted_date(kwargs)
         dest_date = kwargs['ds_nodash']
-        file_utils.push_splits_to_s3(
+        aws_utils.push_splits_to_s3(
             tmp_parts_path.format(formatted_date),
             s3_path.format(
                 dest_date[0:4],
                 dest_date[4:6],
                 dest_date[6:8]
-            ),
-            Variable.get('AWS_ACCESS_KEY_ID'),
-            Variable.get('AWS_SECRET_ACCESS_KEY')
+            )
         )
     return PythonOperator(
         task_id='push_splits_to_s3_' + task_id,
@@ -399,21 +408,16 @@ move_matching_payload = move_matching_payload_step()
 #
 # Normalization
 #
-CLUSTER_ID_TEMPLATE = 'quest-norm-{}'
-RS_HOST_TEMPLATE = config.REDSHIFT_HOST_URL_TEMPLATE.format(
-    CLUSTER_ID_TEMPLATE
-)
-RS_NUM_NODES = 5
+RS_CLUSTER_ID_TEMPLATE = 'quest-norm-{}'
+RS_NUM_NODES = '5'
 
 
 def create_redshift_cluster_step():
     def execute(ds, **kwargs):
-        check_call([
-            '/home/airflow/airflow/dags/resources/redshift.py', 'create',
-            '--identifier',
-            CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            '--num_nodes', '2'
-        ], env=env)
+        aws_utils.create_redshift_cluster(
+            RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
+            RS_NUM_NODES
+        )
     return PythonOperator(
         task_id='create-redshift-cluster',
         provide_context=True,
@@ -425,37 +429,25 @@ create_redshift_cluster = create_redshift_cluster_step()
 
 def normalize_step():
     def execute(ds, **kwargs):
-        hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-        file_date = '{}/{}/{}'.format(
-            kwargs['ds_nodash'][0:4],
-            kwargs['ds_nodash'][4:6],
-            kwargs['ds_nodash'][6:8]
+        path = insert_current_date(
+            S3_TRANSACTION_PROCESSED_PATH_TEMPLATE, kwargs
         )
-        s3_key = hook.list_keys(
-            'salusv', 'incoming/labtests/quest/{}'.format(file_date)
-        )[0]
-        setid = s3_key.split('/')[-1].replace('.bz2', '')[0:-3]
-        s3_credentials = (
-            'aws_access_key_id={};aws_secret_access_key={}'
-        ).format(
-            Variable.get('AWS_ACCESS_KEY_ID'),
-            Variable.get('AWS_SECRET_ACCESS_KEY')
+        curdate = insert_current_date(
+            '{}/{}/{}', kwargs
         )
+        setid = aws_utils.list_keys(path)[0]  \
+                         .split('/')[-1]      \
+                         .replace('.bz2', '')[0:-3]
         command = [
             '/home/airflow/airflow/dags/providers/quest/rsNormalizeQuest.py',
-            '--date', file_date, '--setid', setid,
-            '--s3_credentials', s3_credentials
+            '--date', curdate, '--setid', setid,
+            '--s3_credentials', aws_utils.get_rs_s3_credentials_str
         ]
-        env = dict(os.environ)
-        # env['PGHOST'] = RS_HOST_TEMPLATE.format(get_formatted_date(kwargs))
-        env['PGHOST'] = RS_HOST_TEMPLATE.format(get_formatted_date(kwargs))
-        env['PGUSER'] = config.REDSHIFT_USER
-        env['PGDATABASE'] = config.REDSHIFT_DATABASE
-        env['PGPORT'] = config.REDSHIFT_PORT
-        env['PGPASSWORD'] = Variable.get('rs_norm_password')
         cwd = '/home/airflow/airflow/dags/providers/quest/'
-        p = Popen(command, env=env, cwd=cwd)
-        p.wait()
+        aws_utils.run_rs_query_file(
+            RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
+            command, cwd
+        )
     return PythonOperator(
         task_id='normalize',
         provide_context=True,
@@ -470,7 +462,7 @@ def delete_redshift_cluster_step():
         check_call([
             '/home/airflow/airflow/dags/resources/redshift.py', 'delete',
             '--identifier',
-            CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
+            RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
         ], env=env)
     return PythonOperator(
         task_id='delete-redshift-cluster',
@@ -479,6 +471,31 @@ def delete_redshift_cluster_step():
         dag=mdag
     )
 delete_redshift_cluster = delete_redshift_cluster_step()
+
+#
+# Parquet
+#
+EMR_CLUSTER_ID_TEMPLATE = 'quest-parquet-{}'
+EMR_NUM_NODES = 5
+EMR_NODE_TYPE = 'c4.xlarge'
+EMR_APPLICATIONS = "Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
+EMR_USE_EBS = 'false'
+EMR_EBS_VOLUME_SIZE = 0
+
+
+def create_emr_cluster_step():
+    def execute(ds, **kwargs):
+        aws_utils.create_emr_cluster(
+            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
+            EMR_NUM_NODES, EMR_NODE_TYPE, 0
+        )
+    return PythonOperator(
+        task_id='create-emr-cluster',
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
+create_emr_cluster = create_emr_cluster_step()
 
 # addon
 unzip_addon.set_upstream(fetch_addon)
@@ -515,3 +532,5 @@ move_matching_payload.set_upstream(detect_matching_done)
 create_redshift_cluster.set_upstream(move_matching_payload)
 normalize.set_upstream(create_redshift_cluster)
 delete_redshift_cluster.set_upstream(normalize)
+
+# parquet
