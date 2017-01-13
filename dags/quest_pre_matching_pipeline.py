@@ -7,7 +7,7 @@ import os
 import logging
 import sys
 import re
-from subprocess import check_call, Popen
+from subprocess import check_call, Popen, check_output
 import time
 
 if sys.modules.get('config'):
@@ -43,6 +43,7 @@ TRANSACTION_TRUNK_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/trunk/'
 TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE = TMP_PATH_TEMPLATE + 'parts/trunk/'
 TRANSACTION_TRUNK_S3_SPLIT_PATH = 's3://salusv/incoming/labtests/quest/{}/{}/{}/trunk/'
 TRANSACTION_TRUNK_FILE_DESCRIPTION = 'Quest transaction trunk file'
+TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2'
 TRANSACTION_TRUNK_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2.gz.zip'
 TRANSACTION_TRUNK_DAG_NAME = 'validate_fetch_transaction_trunk_file'
 MINIMUM_TRANSACTION_TRUNK_FILE_SIZE = 15
@@ -50,20 +51,21 @@ MINIMUM_TRANSACTION_TRUNK_FILE_SIZE = 15
 # Deid file
 DEID_FILE_DESCRIPTION = 'Quest deid file'
 DEID_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt.zip'
+DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt'
 DEID_DAG_NAME = 'validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 01, 11, 12),
-    'depends_on_past': False,
+    'start_date': datetime(2017, 05, 11, 12),
+    'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * *",
+    schedule_interval="0 13 * * *",
     default_args=default_args
 )
 
@@ -71,6 +73,8 @@ env = file_utils.get_s3_env(
     Variable.get('AWS_ACCESS_KEY_ID'),
     Variable.get('AWS_SECRET_ACCESS_KEY')
 )
+
+row_count = 0
 
 
 def get_formatted_date(kwargs):
@@ -174,6 +178,26 @@ gunzip_trunk = gunzip_step(
 )
 
 
+def set_row_count_step():
+    def execute(ds, **kwargs):
+        global row_count
+        row_count = check_output([
+            'wc', '-l',
+            TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format(
+                get_formatted_date(kwargs)
+            ) + TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE.format(
+                get_formatted_date(kwargs)
+            )
+        ])
+    return PythonOperator(
+        task_id='set_row_count',
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
+set_row_count = set_row_count_step()
+
+
 def split_step(task_id, tmp_path_template, tmp_parts_path_template):
     def execute(ds, **kwargs):
         file_utils.split(
@@ -230,9 +254,9 @@ def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
         file_utils.push_splits_to_s3(
             tmp_parts_path.format(formatted_date),
             s3_path.format(
-                re.sub('[^0-9]', '', dest_date)[0:4],
-                re.sub('[^0-9]', '', dest_date)[4:6],
-                re.sub('[^0-9]', '', dest_date)[6:8]
+                dest_date[0:4],
+                dest_date[4:6],
+                dest_date[6:8]
             ),
             Variable.get('AWS_ACCESS_KEY_ID'),
             Variable.get('AWS_SECRET_ACCESS_KEY')
@@ -260,13 +284,13 @@ def clean_up_workspace_step(task_id, template):
         check_call([
             'rm', '-rf', template.format(get_formatted_date(kwargs))
         ])
-        return PythonOperator(
-            task_id='clean_up_workspace_' + task_id,
-            provide_context=True,
-            python_callable=execute,
-            trigger_rule='all_done',
-            dag=mdag
-        )
+    return PythonOperator(
+        task_id='clean_up_workspace_' + task_id,
+        provide_context=True,
+        python_callable=execute,
+        trigger_rule='all_done',
+        dag=mdag
+    )
 clean_up_workspace_addon = clean_up_workspace_step(
     "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
 )
@@ -309,27 +333,30 @@ queue_up_for_matching = queue_up_for_matching_step(
 #
 # Post-Matching
 #
-S3_PAYLOAD_BUCKET = 'salusv'
-S3_PAYLOAD_KEY = 'matching/prod/payload/1b3f553d-7db8-43f3-8bb0-6e0b327320d9/'
+S3_PAYLOAD_LOCATION_BUCKET = 'salusv'
+S3_PAYLOAD_LOCATION_KEY = 'matching/prod/payload/1b3f553d-7db8-43f3-8bb0-6e0b327320d9/'
+S3_PAYLOAD_LOCATION = 's3://' + S3_PAYLOAD_LOCATION_BUCKET + '/' + S3_PAYLOAD_LOCATION_KEY
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
 
 
 def detect_matching_done_step():
     def execute(ds, **kwargs):
+        global row_count
         hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-        row_count = int(kwargs['dag_run'].conf['row_count'])
         chunk_start = row_count / 1000000 * 1000000
-        deid_filename = kwargs['dag_run'].conf['deid_filename']
         template = '{}{}'
         if row_count >= 1000000:
             template += '{}-{}'
         template += '*'
         s3_key = template.format(
-            S3_PAYLOAD_BUCKET + '/' + S3_PAYLOAD_KEY,
-            deid_filename, chunk_start, row_count
+            S3_PAYLOAD_LOCATION,
+            DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
+                get_formatted_date(kwargs)
+            ), chunk_start, row_count
         )
         logging.info('Poking for key : {}'.format(s3_key))
         while not hook.check_for_wildcard_key(s3_key, None):
+            print("Looking for: " + s3_key)
             time.sleep(60)
     return PythonOperator(
         task_id='detect_matching_done',
@@ -338,23 +365,28 @@ def detect_matching_done_step():
         execution_timeout=timedelta(hours=6),
         dag=mdag
     )
-# detect_matching_done = detect_matching_done_step()
+detect_matching_done = detect_matching_done_step()
 
 
 def move_matching_payload_step():
     def execute(ds, **kwargs):
         hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-        deid_filename = kwargs['dag_run'].conf['deid_filename']
+        dest_date = '{}/{}/{}'.format(
+            kwargs['ds_nodash'][0:4],
+            kwargs['ds_nodash'][4:6],
+            kwargs['ds_nodash'][6:8]
+        )
         for payload_file in hook.list_keys(
-                S3_PAYLOAD_BUCKET, S3_PAYLOAD_KEY + '/' + deid_filename
+                S3_PAYLOAD_LOCATION_BUCKET,
+                S3_PAYLOAD_LOCATION_KEY +
+                DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
+                    get_formatted_date(kwargs)
+                )
         ):
-            date = '{}/{}/{}'.format(
-                deid_filename[0:4], deid_filename[4:6], deid_filename[6:8]
-            )
             check_call([
                 'aws', 's3', 'cp',
-                's3://' + S3_PAYLOAD_BUCKET + '/' + payload_file,
-                S3_PAYLOAD_DEST + date + '/' + payload_file.split('/')[-1]
+                's3://' + S3_PAYLOAD_LOCATION_BUCKET + '/' + payload_file,
+                S3_PAYLOAD_DEST + dest_date + '/' + payload_file.split('/')[-1]
             ], env=env)
     return PythonOperator(
         task_id='move_matching_payload',
@@ -362,7 +394,7 @@ def move_matching_payload_step():
         python_callable=execute,
         dag=mdag
     )
-# move_matching_payload = move_matching_payload_step()
+move_matching_payload = move_matching_payload_step()
 
 #
 # Normalization
@@ -380,7 +412,7 @@ def create_redshift_cluster_step():
             '/home/airflow/airflow/dags/resources/redshift.py', 'create',
             '--identifier',
             CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            '--num_nodes', 2
+            '--num_nodes', '2'
         ], env=env)
     return PythonOperator(
         task_id='create-redshift-cluster',
@@ -388,32 +420,34 @@ def create_redshift_cluster_step():
         python_callable=execute,
         dag=mdag
     )
-# create_redshift_cluster = create_redshift_cluster_step()
+create_redshift_cluster = create_redshift_cluster_step()
 
 
 def normalize_step():
     def execute(ds, **kwargs):
         hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-        file_date = (
-            datetime.strptime(
-                kwargs['yesterday_ds'], '%Y-%m-%d'
-            ) - timedelta(days=1)
-        ).strftime('%Y/%m/%d')
+        file_date = '{}/{}/{}'.format(
+            kwargs['ds_nodash'][0:4],
+            kwargs['ds_nodash'][4:6],
+            kwargs['ds_nodash'][6:8]
+        )
         s3_key = hook.list_keys(
-            'salusv', 'incoming/medicalclaims/quest/{}'.format(file_date)
+            'salusv', 'incoming/labtests/quest/{}'.format(file_date)
         )[0]
         setid = s3_key.split('/')[-1].replace('.bz2', '')[0:-3]
-        s3_credentials = 'aws_access_key_id={};' + \
-                         'aws_secret_access_key={}'.format(
-                             Variable.get('AWS_ACCESS_KEY_ID'),
-                             Variable.get('AWS_SECRET_ACCESS_KEY')
-                         )
+        s3_credentials = (
+            'aws_access_key_id={};aws_secret_access_key={}'
+        ).format(
+            Variable.get('AWS_ACCESS_KEY_ID'),
+            Variable.get('AWS_SECRET_ACCESS_KEY')
+        )
         command = [
             '/home/airflow/airflow/dags/providers/quest/rsNormalizeQuest.py',
             '--date', file_date, '--setid', setid,
             '--s3_credentials', s3_credentials
         ]
         env = dict(os.environ)
+        # env['PGHOST'] = RS_HOST_TEMPLATE.format(get_formatted_date(kwargs))
         env['PGHOST'] = RS_HOST_TEMPLATE.format(get_formatted_date(kwargs))
         env['PGUSER'] = config.REDSHIFT_USER
         env['PGDATABASE'] = config.REDSHIFT_DATABASE
@@ -428,7 +462,7 @@ def normalize_step():
         python_callable=execute,
         dag=mdag
     )
-# normalize = normalize_step()
+normalize = normalize_step()
 
 
 def delete_redshift_cluster_step():
@@ -444,7 +478,7 @@ def delete_redshift_cluster_step():
         python_callable=execute,
         dag=mdag
     )
-# delete_redshift_cluster = delete_redshift_cluster_step()
+delete_redshift_cluster = delete_redshift_cluster_step()
 
 # addon
 unzip_addon.set_upstream(fetch_addon)
@@ -457,10 +491,10 @@ push_splits_to_s3_addon.set_upstream(bzip_parts_addon)
 clean_up_workspace_addon_parts.set_upstream(push_splits_to_s3_addon)
 
 # trunk
-fetch_trunk.set_upstream(push_splits_to_s3_addon)
 unzip_trunk.set_upstream(fetch_trunk)
 gunzip_trunk.set_upstream(unzip_trunk)
-split_trunk.set_upstream(gunzip_trunk)
+set_row_count.set_upstream(gunzip_trunk)
+split_trunk.set_upstream(set_row_count)
 clean_up_workspace_trunk.set_upstream(split_trunk)
 bzip_parts_trunk.set_upstream(clean_up_workspace_trunk)
 push_splits_to_s3_trunk.set_upstream(bzip_parts_trunk)
@@ -474,10 +508,10 @@ queue_up_for_matching.set_upstream(clean_up_workspace)
 
 
 # post-matching
-# detect_matching_done.set_upstream(clean_up_workspace)
-# move_matching_payload.set_upstream(detect_matching_done)
+detect_matching_done.set_upstream(queue_up_for_matching)
+move_matching_payload.set_upstream(detect_matching_done)
 
 # normalization
-# create_redshift_cluster.set_upstream(move_matching_payload)
-# normalize.set_upstream(create_redshift_cluster)
-# delete_redshift_cluster.set_upstream(normalize)
+create_redshift_cluster.set_upstream(move_matching_payload)
+normalize.set_upstream(create_redshift_cluster)
+delete_redshift_cluster.set_upstream(normalize)

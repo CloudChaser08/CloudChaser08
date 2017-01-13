@@ -31,7 +31,7 @@ def unzip(path):
         _get_files(path)
     )[0]
     check_call([
-        'unzip', zip_file, '-d', path
+        'unzip', '-o', zip_file, '-d', path
     ])
     check_call([
         'rm', zip_file
