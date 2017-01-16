@@ -3,8 +3,12 @@
 #
 import os
 import re
-import aws_utils
+import sys
 from subprocess import check_call
+
+if sys.modules.get('aws_utils'):
+    del sys.modules['aws_utils']
+import aws_utils
 
 
 def _get_files(path):

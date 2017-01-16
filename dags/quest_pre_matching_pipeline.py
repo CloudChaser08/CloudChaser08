@@ -3,11 +3,9 @@ from airflow.models import Variable
 from airflow.operators import PythonOperator
 
 from datetime import datetime, timedelta
-import os
 import logging
 import sys
-import re
-from subprocess import check_call, Popen, check_output
+from subprocess import check_call, check_output
 import time
 
 if sys.modules.get('config'):
@@ -74,10 +72,7 @@ mdag = DAG(
     default_args=default_args
 )
 
-env = file_utils.get_s3_env(
-    Variable.get('AWS_ACCESS_KEY_ID'),
-    Variable.get('AWS_SECRET_ACCESS_KEY')
-)
+env = aws_utils.get_aws_env()
 
 row_count = 0
 
@@ -262,7 +257,7 @@ def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
     def execute(ds, **kwargs):
         formatted_date = get_formatted_date(kwargs)
         dest_date = kwargs['ds_nodash']
-        aws_utils.push_splits_to_s3(
+        aws_utils.push_local_dir_to_s3(
             tmp_parts_path.format(formatted_date),
             s3_path.format(
                 dest_date[0:4],
@@ -324,10 +319,7 @@ def queue_up_for_matching_step(seq_num, engine_env, priority):
         check_call([
             '/home/airflow/airflow/dags/resources/push_file_to_s3.sh',
             deid_file, seq_num, engine_env, priority
-        ], env=file_utils.get_s3_env(
-            Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER'),
-            Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')
-        ))
+        ], env=aws_utils.get_aws_env("_MATCH_PUSHER"))
     return PythonOperator(
         task_id='queue_up_for_matching',
         provide_context=True,
@@ -351,7 +343,6 @@ S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
 def detect_matching_done_step():
     def execute(ds, **kwargs):
         global row_count
-        hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
         chunk_start = row_count / 1000000 * 1000000
         template = '{}{}'
         if row_count >= 1000000:
@@ -364,7 +355,7 @@ def detect_matching_done_step():
             ), chunk_start, row_count
         )
         logging.info('Poking for key : {}'.format(s3_key))
-        while not hook.check_for_wildcard_key(s3_key, None):
+        while not aws_utils.s3_key_exists(s3_key):
             print("Looking for: " + s3_key)
             time.sleep(60)
     return PythonOperator(
@@ -379,15 +370,13 @@ detect_matching_done = detect_matching_done_step()
 
 def move_matching_payload_step():
     def execute(ds, **kwargs):
-        hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
         dest_date = '{}/{}/{}'.format(
             kwargs['ds_nodash'][0:4],
             kwargs['ds_nodash'][4:6],
             kwargs['ds_nodash'][6:8]
         )
-        for payload_file in hook.list_keys(
-                S3_PAYLOAD_LOCATION_BUCKET,
-                S3_PAYLOAD_LOCATION_KEY +
+        for payload_file in aws_utils.list_s3_bucket(
+                S3_PAYLOAD_LOCATION +
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
                     get_formatted_date(kwargs)
                 )
@@ -435,17 +424,18 @@ def normalize_step():
         curdate = insert_current_date(
             '{}/{}/{}', kwargs
         )
-        setid = aws_utils.list_keys(path)[0]  \
-                         .split('/')[-1]      \
+        setid = aws_utils.list_s3_bucket(path)[0]  \
+                         .split('/')[-1]           \
                          .replace('.bz2', '')[0:-3]
         command = [
             '/home/airflow/airflow/dags/providers/quest/rsNormalizeQuest.py',
             '--date', curdate, '--setid', setid,
-            '--s3_credentials', aws_utils.get_rs_s3_credentials_str
+            '--s3_credentials', aws_utils.get_rs_s3_credentials_str()
         ]
         cwd = '/home/airflow/airflow/dags/providers/quest/'
         aws_utils.run_rs_query_file(
-            RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
+            # RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
+            RS_CLUSTER_ID_TEMPLATE.format('201701110112'),
             command, cwd
         )
     return PythonOperator(
@@ -478,8 +468,6 @@ delete_redshift_cluster = delete_redshift_cluster_step()
 EMR_CLUSTER_ID_TEMPLATE = 'quest-parquet-{}'
 EMR_NUM_NODES = 5
 EMR_NODE_TYPE = 'c4.xlarge'
-EMR_APPLICATIONS = "Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
-EMR_USE_EBS = 'false'
 EMR_EBS_VOLUME_SIZE = 0
 
 
@@ -495,7 +483,7 @@ def create_emr_cluster_step():
         python_callable=execute,
         dag=mdag
     )
-create_emr_cluster = create_emr_cluster_step()
+# create_emr_cluster = create_emr_cluster_step()
 
 # addon
 unzip_addon.set_upstream(fetch_addon)
