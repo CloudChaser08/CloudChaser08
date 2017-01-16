@@ -40,7 +40,7 @@ RS_DATABASE='dev'
 RS_PORT='5439'
 RS_NUM_NODES=10
 EMR_CLUSTER_NAME="emdeon-rx-norm"
-EMR_NUM_NODES=5
+EMR_NUM_NODES='5'
 EMR_NODE_TYPE="c4.xlarge"
 EMR_APPLICATIONS="Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
 EMR_USE_EBS="false"
@@ -98,7 +98,7 @@ def get_emr_cluster_id(cluster_name):
             return cluster['Id']
 
 def do_transform_to_parquet(ds, **kwargs):
-    file_date = kwargs['dag_run']['ds_yesterday']
+    file_date = kwargs['dag_run'].conf['ds_yesterday']
     cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME)
     transform_steps = []
     delete_steps = []
@@ -110,12 +110,12 @@ def do_transform_to_parquet(ds, **kwargs):
     check_call(['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
                 '--steps', EMR_COPY_MELLON_STEP] + transform_steps + delete_steps +
                 [EMR_DISTCP_TO_S3])
-    cluster_steps = json.loads(check_output(['aws', 'emr', 'list-steps', '--cluster-id', cluster_id]))
     incomplete_steps=1
     failed_steps=0
     while incomplete_steps > 0:
         incomplete_steps=0
         time.sleep(60)
+        cluster_steps = json.loads(check_output(['aws', 'emr', 'list-steps', '--cluster-id', cluster_id]))
         for step in cluster_steps['Steps']:
             if step['Status']['State'] == "PENDING" or step['Status']['State'] == "RUNNING":
                 incomplete_steps += 1
@@ -123,6 +123,18 @@ def do_transform_to_parquet(ds, **kwargs):
                 failed_steps += 1
     if failed_steps > 0:
         logging.info("ITS ALL BROKEN")
+
+def do_create_emr_cluster(ds, **kwargs):
+    cluster_details = json.loads(check_output([
+        '/home/airflow/airflow/dags/resources/launchEMR',
+        EMR_CLUSTER_NAME,
+        EMR_NUM_NODES,
+        EMR_NODE_TYPE,
+        EMR_APPLICATIONS,
+        EMR_USE_EBS,
+        EMR_EBS_VOLUME_SIZE
+    ]))
+    check_call(['aws', 'emr', 'wait', 'cluster-running', '--cluster-id', cluster_details['ClusterId']])
 
 def do_delete_emr_cluster(ds, **kwargs):
     cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME)
@@ -146,11 +158,6 @@ move_matching_payload = PythonOperator(
     task_id='move_matching_payload',
     provide_context=True,
     python_callable=do_move_matching_payload,
-    dag=mdag
-)
-
-start_redshift_cluster = DummyOperator(
-    task_id='start_redshift_cluster',
     dag=mdag
 )
 
@@ -187,14 +194,10 @@ delete_redshift_cluster = BashOperator(
     dag=mdag
 )
 
-create_emr_cluster = BashOperator(
+create_emr_cluster = PythonOperator(
     task_id='create_emr_cluster',
-    bash_command=EMR_CREATE_COMMAND_TEMPLATE,
-    params={
-        "cluster_name" : EMR_CLUSTER_NAME, "num_nodes" : EMR_NUM_NODES,
-        "node_type" : EMR_NODE_TYPE, "applications" : EMR_APPLICATIONS,
-        "use_ebs" : EMR_USE_EBS, "ebs_volume_size" : EMR_EBS_VOLUME_SIZE
-    },
+    provide_context=True,
+    python_callable=do_create_emr_cluster,
     dag=mdag
 )
 

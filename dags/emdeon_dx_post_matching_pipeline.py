@@ -16,9 +16,7 @@ REDSHIFT_CREATE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redsh
 --identifier {{ params.cluster_id }} --num_nodes {{ params.num_nodes }}"""
 REDSHIFT_DELETE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py delete \\
 --identifier {{ params.cluster_id }}"""
-EMR_CREATE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/launchEMR \\
-{{ params.cluster_name }} {{ params.num_nodes }} {{ params.node_type }} "{{ params.applications }}" \\
-{{ params.use_ebs }} {{ params.ebs_volume_size }}"""
+EMR_CREATE_COMMAND_TEMPLATE = '/home/airflow/airflow/dags/resources/launchEMR {} {} {} "{}" {} {}'
 EMR_DELETE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py delete \\
 --identifier {{ params.cluster_id }}"""
 EMR_COPY_MELLON_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar",'
@@ -39,8 +37,8 @@ RS_USER='hvuser'
 RS_DATABASE='dev'
 RS_PORT='5439'
 RS_NUM_NODES=5
-EMR_CLUSTER_ID="emdeon-dx-norm"
-EMR_NUM_NODES=5
+EMR_CLUSTER_NAME="emdeon-dx-norm"
+EMR_NUM_NODES="5"
 EMR_NODE_TYPE="c4.xlarge"
 EMR_APPLICATIONS="Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
 EMR_USE_EBS="false"
@@ -100,18 +98,18 @@ def get_emr_cluster_id(cluster_name):
             return cluster['Id']
 
 def do_transform_to_parquet(ds, **kwargs):
-    file_date = kwargs['params']['ds_yesterday'].replace('-','/')
+    file_date = kwargs['dag_run'].conf['ds_yesterday'].replace('-','/')
     cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME)
     transform_step = EMR_TRANSFORM_TO_PARQUET_STEP.format(
         Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY'), file_date, file_date)
     check_call(['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
                 '--steps', EMR_COPY_MELLON_STEP, transform_step, EMR_DISTCP_TO_S3])
-    cluster_steps = json.loads(check_output(['aws', 'emr', 'list-steps', '--cluster-id', cluster_id]))
     incomplete_steps=1
     failed_steps=0
     while incomplete_steps > 0:
         incomplete_steps=0
         time.sleep(60)
+        cluster_steps = json.loads(check_output(['aws', 'emr', 'list-steps', '--cluster-id', cluster_id]))
         for step in cluster_steps['Steps']:
             if step['Status']['State'] == "PENDING" or step['Status']['State'] == "RUNNING":
                 incomplete_steps += 1
@@ -119,6 +117,18 @@ def do_transform_to_parquet(ds, **kwargs):
                 failed_steps += 1
     if failed_steps > 0:
         logging.info("ITS ALL BROKEN")
+
+def do_create_emr_cluster(ds, **kwargs):
+    cluster_details = json.loads(check_output([
+        '/home/airflow/airflow/dags/resources/launchEMR',
+        EMR_CLUSTER_NAME,
+        EMR_NUM_NODES,
+        EMR_NODE_TYPE,
+        EMR_APPLICATIONS,
+        EMR_USE_EBS,
+        EMR_EBS_VOLUME_SIZE
+    ]))
+    check_call(['aws', 'emr', 'wait', 'cluster-running', '--cluster-id', cluster_details['ClusterId']])
 
 def do_delete_emr_cluster(ds, **kwargs):
     cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME)
@@ -178,14 +188,10 @@ delete_redshift_cluster = BashOperator(
     dag=mdag
 )
 
-create_emr_cluster = BashOperator(
+create_emr_cluster = PythonOperator(
     task_id='create_emr_cluster',
-    bash_command=EMR_CREATE_COMMAND_TEMPLATE,
-    params={
-        "cluster_name" : EMR_CLUSTER_ID, "num_nodes" : EMR_NUM_NODES,
-        "node_type" : EMR_NODE_TYPE, "applications" : EMR_APPLICATIONS,
-        "use_ebs" : EMR_USE_EBS, "ebs_volume_size" : EMR_EBS_VOLUME_SIZE
-    },
+    provide_context=True,
+    python_callable=do_create_emr_cluster,
     dag=mdag
 )
 
