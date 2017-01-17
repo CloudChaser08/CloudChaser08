@@ -424,12 +424,13 @@ def normalize_step():
         curdate = insert_current_date(
             '{}/{}/{}', kwargs
         )
+        period = 'hist' if curdate < '2016/09/01' else 'current'
         setid = aws_utils.list_s3_bucket(path)[0]  \
                          .split('/')[-1]           \
                          .replace('.bz2', '')[0:-3]
         command = [
-            '/home/airflow/airflow/dags/providers/quest/rsNormalizeQuest.py',
-            '--date', curdate, '--setid', setid,
+            '/home/airflow/airflow/dags/providers/quest/norm/rsNormalizeQuest.py',
+            '--date', curdate, '--setid', setid, '--period', period,
             '--s3_credentials', aws_utils.get_rs_s3_credentials_str()
         ]
         cwd = '/home/airflow/airflow/dags/providers/quest/'
@@ -521,4 +522,4 @@ create_redshift_cluster.set_upstream(move_matching_payload)
 normalize.set_upstream(create_redshift_cluster)
 delete_redshift_cluster.set_upstream(normalize)
 
-# parquet
+# # parquet
