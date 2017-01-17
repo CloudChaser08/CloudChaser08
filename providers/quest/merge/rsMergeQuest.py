@@ -52,3 +52,13 @@ for i in [2014, 2015, 2016]:
     subprocess.call(' '.join(
         psql + ['-v', 'year="\'' + str(i) + '%\'"', db, '<', 'merge.sql']
     ), shell=True)
+
+# unload
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'output_path="\'' + args.output_path + '\'"']
+    + ['-v', 'select_from_common_model_table="\''
+       + 'select * from quest_merged_new where date_of_service = ${D} order by date_of_service\'"']
+    + [db, '<', '../../redshift_norm_common/unload_common_model.sql']
+))

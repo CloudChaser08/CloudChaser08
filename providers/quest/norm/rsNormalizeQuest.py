@@ -48,7 +48,7 @@ subprocess.call(' '.join(
     + ['-v', 'today="\'' + TODAY + '\'"']
     + ['-v', 'feedname="\'quest lab\'"']
     + ['-v', 'vendor="\'quest\'"']
-    + [db, '<', '../redshift_norm_common/lab_common_model.sql']
+    + [db, '<', '../../redshift_norm_common/lab_common_model.sql']
 ), shell=True)
 
 # load data
@@ -85,19 +85,19 @@ subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
     ['-v'
 , 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/nullify_icd9_blacklist.sql']), shell=True)
+    [db, '<', '../../redshift_norm_common/nullify_icd9_blacklist.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
     ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/nullify_icd10_blacklist.sql']), shell=True)
+    [db, '<', '../../redshift_norm_common/nullify_icd10_blacklist.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
     ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/genericize_icd9.sql']), shell=True)
+    [db, '<', '../../redshift_norm_common/genericize_icd9.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=lab_common_model'] +
     ['-v', 'column_name=diagnosis_code'] +
     ['-v', 'qual_column_name=diagnosis_code_qual'] +
-    [db, '<', '../redshift_norm_common/genericize_icd10.sql']), shell=True)
+    [db, '<', '../../redshift_norm_common/genericize_icd10.sql']), shell=True)
 
 # unload to s3
 subprocess.call(' '.join(
@@ -105,5 +105,5 @@ subprocess.call(' '.join(
     + ['-v', 'output_path="\'' + args.output_path + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
-    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+    + [db, '<', '../../redshift_norm_common/unload_common_model.sql']
 ), shell=True)
