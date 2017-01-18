@@ -229,4 +229,4 @@ CREATE TABLE transactional_raw (
         eightthirtyfive_svc_cas                        text ENCODE lzo
         ) DISTKEY(src_claim_id) SORTKEY(src_claim_id);
 
-COPY transactional_raw FROM :input_path CREDENTIALS :credentials GZIP EMPTYASNULL ACCEPTINVCHARS ESCAPE DELIMITER '|';
+COPY transactional_raw FROM :input_path CREDENTIALS :credentials GZIP EMPTYASNULL ACCEPTINVCHARS REMOVEQUOTES MAXERROR 1000 ESCAPE DELIMITER '|';
