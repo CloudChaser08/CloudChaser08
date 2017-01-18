@@ -4,6 +4,7 @@ import argparse
 import time
 import sys
 import os
+import hashlib
 sys.path.append(os.path.abspath("../redshift_norm_common/"))
 import create_date_validation_table as date_validator
 
@@ -42,12 +43,16 @@ subprocess.call(' '.join(
 date_validator.generate(psql, db, args.s3_credentials)
 
 # create table for lab common model
+prov_id_hash = hashlib.md5()
+prov_id_hash.update("18")
+prov_hash = hashlib.md5()
+prov_hash.update("quest")
 subprocess.call(' '.join(
     psql
     + ['-v', 'filename="\'' + args.setid + '\'"']
     + ['-v', 'today="\'' + TODAY + '\'"']
-    + ['-v', 'feedname="\'quest lab\'"']
-    + ['-v', 'vendor="\'quest\'"']
+    + ['-v', 'feedname="\'' + prov_id_hash.hexdigest() + '\'"']
+    + ['-v', 'vendor="\'' + prov_hash.hexdigest() + '\'"']
     + [db, '<', '../../redshift_norm_common/lab_common_model.sql']
 ), shell=True)
 
