@@ -22,8 +22,7 @@ import util.aws_utils as aws_utils
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
-DAG_NAME = 'quest_pre_matching_pipeline'
-DATATYPE = 'labtests'
+DAG_NAME = 'quest_pipeline'
 
 # Applies to all transaction files
 S3_TRANSACTION_RAW_PATH = 's3://healthverity/incoming/quest/'
@@ -60,8 +59,8 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 05, 11, 12),
-    'depends_on_past': True,
+    'start_date': datetime(2017, 01, 18, 12),
+    'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
@@ -552,11 +551,13 @@ detect_matching_done.set_upstream(queue_up_for_matching)
 move_matching_payload.set_upstream(detect_matching_done)
 
 # normalization
-create_redshift_cluster.set_upstream(move_matching_payload)
-normalize.set_upstream(create_redshift_cluster)
+create_redshift_cluster.set_upstream(detect_matching_done)
+normalize.set_upstream(
+    [create_redshift_cluster, move_matching_payload]
+)
 delete_redshift_cluster.set_upstream(normalize)
 
 # parquet
-create_emr_cluster.set_upstream(delete_redshift_cluster)
+create_emr_cluster.set_upstream(normalize)
 transform_to_parquet.set_upstream(create_emr_cluster)
 delete_emr_cluster.set_upstream(transform_to_parquet)
