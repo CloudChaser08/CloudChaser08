@@ -2,7 +2,10 @@
 # Operators for interacting with AWS
 #
 import os
-from subprocess import check_call, Popen
+import json
+import hashlib
+import time
+from subprocess import check_call, Popen, check_output
 from airflow.models import Variable
 import airflow.hooks.S3_hook
 
@@ -102,12 +105,99 @@ def run_rs_query_file(cluster_name, command, cwd):
 # EMR
 #
 EMR_APPLICATIONS = "Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
+EMR_COPY_MELLON_STEP = (
+    'Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar",'
+    'ActionOnFailure=CONTINUE,Args=['
+    'aws,s3,cp,s3://healthverityreleases/mellon/mellon-assembly-latest.jar,'
+    '/tmp/mellon-assembly-latest.jar'
+    ']'
+)
+EMR_TRANSFORM_TO_PARQUET_STEP = (
+    'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
+    'Args=[--class,com.healthverity.parquet.Main,'
+    '--conf,spark.sql.parquet.compression.codec=gzip,'
+    '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/,'
+    's3a://salusv/warehouse/text/medicalclaims/emdeon/{},20,"|"]'
+)
+EMR_DISTCP_TO_S3 = (
+    'Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",'
+    'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src={}","--dest={}"]'
+)
+
+
+def _get_emr_cluster_id(cluster_name):
+    clusters = json.loads(check_output([
+        'aws', 'emr', 'list-clusters', '--active'
+    ]))
+    for cluster in clusters['Clusters']:
+        if cluster['Name'] == cluster_name:
+            return cluster['Id']
+    print("Cluster not found. " + cluster_name)
+
+def _wait_for_steps(cluster_id):
+    incomplete_steps = 1
+    failed_steps = 0
+    while incomplete_steps > 0:
+        incomplete_steps = 0
+        time.sleep(60)
+        cluster_steps = json.loads(check_output([
+            'aws', 'emr', 'list-steps', '--cluster-id', cluster_id
+        ]))
+        for step in cluster_steps['Steps']:
+            if step['Status']['State'] == "PENDING" \
+               or step['Status']['State'] == "RUNNING":
+                incomplete_steps += 1
+            elif step['Status']['State'] == "FAILED":
+                failed_steps += 1
+    if failed_steps > 0:
+        print("Step failed on cluster: " + cluster_id)
 
 
 def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
     """Create an EMR cluster"""
+    cluster_details = json.loads(
+        check_output([
+            '/home/airflow/airflow/dags/resources/launchEMR',
+            cluster_name, num_nodes, node_type, '"' + EMR_APPLICATIONS + '"',
+            (ebs_volume_size > 0), ebs_volume_size
+        ], env=get_aws_env())
+    )
     check_call([
-        '/home/airflow/airflow/dags/resources/launchEMR',
-        cluster_name, num_nodes, node_type, '"' + EMR_APPLICATIONS + '"',
-        (ebs_volume_size > 0), ebs_volume_size
-    ], env=get_aws_env())
+        'aws', 'emr', 'wait', 'cluster-running',
+        '--cluster-id', cluster_details['ClusterId']
+    ])
+
+
+def transform_to_parquet(cluster_name, src_file, dest_file, model):
+    file_id_hash = hashlib.md5
+    file_id_hash.update(src_file)
+    file_id = file_id_hash.hexdigest()
+    parquet_step = (
+        'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
+        'Args=[--class,com.healthverity.parquet.Main,'
+        '--conf,spark.sql.parquet.compression.codec=gzip,'
+        '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/{}/,'
+        '{},20,"|"]'
+    ).format(
+        Variable.get('AWS_ACCESS_KEY_ID'),
+        Variable.get('AWS_SECRET_ACCESS_KEY'),
+        model, file_id, src_file
+    )
+    cluster_id = _get_emr_cluster_id(cluster_name)
+    check_call([
+        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
+        '--steps', EMR_COPY_MELLON_STEP, parquet_step,
+        EMR_DISTCP_TO_S3.format(
+            "hdfs:///parquet/{}/".format(
+                file_id
+            ), dest_file
+        )
+    ])
+    _wait_for_steps(cluster_id)
+
+
+def delete_emr_cluster(cluster_name):
+    cluster_id = _get_emr_cluster_id(cluster_name)
+    check_call([
+        'aws', 'emr', 'terminate-clusters', '--cluster-ids', cluster_id
+    ])

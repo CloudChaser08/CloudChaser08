@@ -375,6 +375,7 @@ def move_matching_payload_step():
             kwargs['ds_nodash'][4:6],
             kwargs['ds_nodash'][6:8]
         )
+
         for payload_file in aws_utils.list_s3_bucket(
                 S3_PAYLOAD_LOCATION +
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
@@ -470,6 +471,8 @@ EMR_CLUSTER_ID_TEMPLATE = 'quest-parquet-{}'
 EMR_NUM_NODES = 5
 EMR_NODE_TYPE = 'c4.xlarge'
 EMR_EBS_VOLUME_SIZE = 0
+PARQUET_SOURCE_TEMPLATE = "s3://salusv/warehouse/text/labtests/quest/{}/{}/{}/"
+PARQUET_DESTINATION_TEMPLATE = "s3://salusv/warehouse/parquet/labtests/quest/{}/{}/{}/"
 
 
 def create_emr_cluster_step():
@@ -484,7 +487,38 @@ def create_emr_cluster_step():
         python_callable=execute,
         dag=mdag
     )
-# create_emr_cluster = create_emr_cluster_step()
+create_emr_cluster = create_emr_cluster_step()
+
+
+def transform_to_parquet_step():
+    def execute(ds, **kwargs):
+        aws_utils.transform_to_parquet(
+            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
+            insert_current_date(PARQUET_SOURCE_TEMPLATE, kwargs),
+            insert_current_date(PARQUET_DESTINATION_TEMPLATE, kwargs),
+            "lab"
+        )
+    return PythonOperator(
+        task_id='parquet',
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
+transform_to_parquet = transform_to_parquet_step()
+
+
+def delete_emr_cluster_step():
+    def execute(ds, **kwargs):
+        aws_utils.delete_emr_cluster(
+            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
+        )
+    return PythonOperator(
+        task_id='delete_emr_cluster',
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
+delete_emr_cluster = delete_emr_cluster_step()
 
 # addon
 unzip_addon.set_upstream(fetch_addon)
@@ -522,4 +556,7 @@ create_redshift_cluster.set_upstream(move_matching_payload)
 normalize.set_upstream(create_redshift_cluster)
 delete_redshift_cluster.set_upstream(normalize)
 
-# # parquet
+# parquet
+create_emr_cluster.set_upstream(delete_redshift_cluster)
+transform_to_parquet.set_upstream(create_emr_cluster)
+delete_emr_cluster.set_upstream(transform_to_parquet)
