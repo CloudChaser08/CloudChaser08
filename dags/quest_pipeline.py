@@ -5,6 +5,7 @@ from airflow.operators import PythonOperator
 from datetime import datetime, timedelta
 import logging
 import sys
+import os
 from subprocess import check_call, check_output
 import time
 
@@ -59,15 +60,17 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 01, 18, 12),
-    'depends_on_past': False,
+    'start_date': datetime(2017, 01, 25, 12),
+    'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 13 * * *",
+    schedule_interval="0 12 * * *" if Variable.get(
+        "AIRFLOW_ENV", default_var=''
+    ) == "prod" else None,
     default_args=default_args
 )
 
