@@ -28,6 +28,7 @@ CREATE TABLE lab_common_model (
         test_ordered_local_id   text ENCODE lzo,
         test_ordered_std_id     text ENCODE lzo,
         test_ordered_name       text ENCODE lzo,
+        result_id               text ENCODE lzo,
         result                  text ENCODE lzo,
         result_name             text ENCODE lzo,
         result_unit_of_measure  text ENCODE lzo,

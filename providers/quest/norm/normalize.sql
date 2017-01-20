@@ -9,6 +9,8 @@ INSERT INTO lab_common_model (
         date_service,
         date_specimen,
         loinc_code,
+        lab_id,
+        result_id,
         test_ordered_local_id,
         test_ordered_std_id,
         test_ordered_name,
@@ -16,7 +18,7 @@ INSERT INTO lab_common_model (
         diagnosis_code,
         diagnosis_code_qual
         )
-SELECT TRIM(q.accn_id),                                                 --claim_id
+SELECT TRIM(q.accn_id) || '_' || q.dosid,                               --claim_id
     COALESCE(mp.parentId,mp.hvid),                                      --hvid
     mp.gender,                                                          --patient_gender
     CASE 
@@ -34,11 +36,13 @@ SELECT TRIM(q.accn_id),                                                 --claim_
     service.formatted,                                                  --date_service
     collected.formatted,                                                --date_specimen
     q.loinc_code,                                                       --loinc_code
+    q.lab_id,                                                           --lab_id
+    q.local_result_code,                                                --result_id
     q.local_order_code,                                                 --test_ordered_local_id
     q.standard_order_code,                                              --test_ordered_std_id
     q.order_name,                                                       --test_ordered_name
     q.result_name,                                                      --result_name
-    split_part(UPPER(TRIM(replace(q.diagnosis_code,'.',''))),'^',n.n),  --diagnosis_code
+    SPLIT_PART(UPPER(TRIM(REPLACE(q.diagnosis_code,'.',''))),'^',n.n),  --diagnosis_code
     CASE q.icd_codeset_ind
     WHEN '9' THEN '01' WHEN '0' THEN '02'
     END                                                                 --diagnosis_code_qual
