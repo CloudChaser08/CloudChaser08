@@ -24,10 +24,27 @@ def get_aws_env(suffix=""):
 #
 # S3
 #
+def _transform_path_to_bucket_key(path):
+    return {
+        'bucket': path[5:].split('/')[0],
+        'key': '/'.join(path[5:].split('/')[1:])
+    }
+
+
+def _get_s3_hook():
+    return airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
+
+
 def fetch_file_from_s3(s3_path, local_path):
     """Download a file from S3"""
     check_call([
         'aws', 's3', 'cp', s3_path, local_path
+    ], env=get_aws_env())
+
+
+def copy_file(src_path, dest_path):
+    check_call([
+        'aws', 's3', 'cp', src_path, dest_path
     ], env=get_aws_env())
 
 
@@ -43,10 +60,29 @@ def list_s3_bucket(path):
     Get a list of keys in an s3 path.
     This function expects a full url: s3://bucket/key/
     """
-    bucket = path[5:].split('/')[0]
-    key = '/'.join(path[5:].split('/')[1:])
-    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-    return hook.list_keys(bucket, key)
+    bucket_key = _transform_path_to_bucket_key(path)
+    return map(
+        lambda k: 's3://' + bucket_key('bucket') + '/' + k,
+        _get_s3_hook().list_keys(bucket_key('bucket'), bucket_key('key'))
+    )
+
+
+def get_file_size(path):
+    """
+    Get the size of a file on s3
+    """
+    bucket_key = _transform_path_to_bucket_key(path)
+    return _get_s3_hook().get_key(bucket_key['key'], bucket_key['bucket']).size
+
+
+def get_file_last_modified(path):
+    """
+    Get the size of a file on s3
+    """
+    bucket_key = _transform_path_to_bucket_key(path)
+    return _get_s3_hook().get_key(
+        bucket_key('key'), bucket_key('bucket')
+    ).last_modified
 
 
 def s3_key_exists(path):

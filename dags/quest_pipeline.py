@@ -1,11 +1,9 @@
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators import PythonOperator
-
+from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 import logging
 import sys
-import os
 from subprocess import check_call, check_output
 import time
 
@@ -20,6 +18,10 @@ import util.file_utils as file_utils
 if sys.modules.get('util.aws_utils'):
     del sys.modules['util.aws_utils']
 import util.aws_utils as aws_utils
+
+if sys.modules.get('subdags.validate'):
+    del sys.modules['subdags.validate']
+from subdags.validate import validate_file
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
@@ -55,7 +57,6 @@ MINIMUM_TRANSACTION_TRUNK_FILE_SIZE = 15
 DEID_FILE_DESCRIPTION = 'Quest deid file'
 DEID_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt.zip'
 DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt'
-DEID_DAG_NAME = 'validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
@@ -93,6 +94,27 @@ def insert_current_date(template, kwargs):
 #
 # Pre-Matching
 #
+def validate_step(task_id, s3_path_template, minimum_file_size):
+    return SubDagOperator(
+        subdag=validate_file(
+            DAG_NAME, task_id, s3_path_template,
+            get_formatted_date, 10000000000
+        ),
+        task_id='validate_' + task_id,
+        trigger_rule='all_done',
+        retries=0,
+        dag=mdag
+    )
+validate_addon = validate_step(
+    'addon', S3_TRANSACTION_RAW_PATH + TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
+    1000000
+)
+validate_trunk = validate_step(
+    'trunk', S3_TRANSACTION_RAW_PATH + TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+    10000000
+)
+
+
 def fetch_step(task_id, s3_path_template, local_path_template):
     def execute(ds, **kwargs):
         aws_utils.fetch_file_from_s3(
@@ -384,11 +406,10 @@ def move_matching_payload_step():
                     get_formatted_date(kwargs)
                 )
         ):
-            check_call([
-                'aws', 's3', 'cp',
-                's3://' + S3_PAYLOAD_LOCATION_BUCKET + '/' + payload_file,
+            aws_utils.copy_file(
+                payload_file,
                 S3_PAYLOAD_DEST + dest_date + '/' + payload_file.split('/')[-1]
-            ], env=env)
+            )
     return PythonOperator(
         task_id='move_matching_payload',
         provide_context=True,
@@ -523,6 +544,7 @@ def delete_emr_cluster_step():
 delete_emr_cluster = delete_emr_cluster_step()
 
 # addon
+fetch_addon.set_upstream(validate_addon)
 unzip_addon.set_upstream(fetch_addon)
 decrypt_addon.set_upstream(unzip_addon)
 gunzip_addon.set_upstream(decrypt_addon)
@@ -533,6 +555,7 @@ push_splits_to_s3_addon.set_upstream(bzip_parts_addon)
 clean_up_workspace_addon_parts.set_upstream(push_splits_to_s3_addon)
 
 # trunk
+fetch_trunk.set_upstream(validate_trunk)
 unzip_trunk.set_upstream(fetch_trunk)
 gunzip_trunk.set_upstream(unzip_trunk)
 set_row_count.set_upstream(gunzip_trunk)
