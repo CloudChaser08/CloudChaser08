@@ -33,6 +33,13 @@ transactional_encounters = args.transactional_path + 'Encounters.txt'
 transactional_appointments = args.transactional_path + 'Appointments.txt'
 transactional_allergies = args.transactional_path + 'Allergies.txt'
 
+# create common model table
+subprocess.call(' '.join(
+    psql
+    + [db, '<', '../redshift_norm_common/emr_common_model.sql']
+), shell=True)
+
+# load transactional data
 subprocess.call(' '.join(
     psql
     + ['-v', 'transactional_vaccines_input_path="\'' + transactional_vaccines + '\'"']
@@ -49,3 +56,6 @@ subprocess.call(' '.join(
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'load_transactions.sql']
 ), shell=True)
+
+# normalize
+
