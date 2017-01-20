@@ -24,6 +24,10 @@ if args.rs_user:
 # load data
 subprocess.call(' '.join(
     psql
+    + [db, '<', '../redshift_norm_common/emr_common_model.sql']
+), shell=True)
+subprocess.call(' '.join(
+    psql
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'load_transactional.sql']
 ), shell=True)
@@ -35,149 +39,11 @@ subprocess.call(' '.join(
     + [db, '<', 'normalize.sql']
 ), shell=True)
 
-# unload data
-# patient
-# gender
+# unload
 subprocess.call(' '.join(
     psql
+    + ['-v', 'output_path="\'' + args.output_path + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/patient/gender\'"']
-    + ['-v', 'select_statement="\'select distinct patient_gender as gender,hvid from full_transactional where patient_gender != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# state
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/patient/state\'"']
-    + ['-v', 'select_statement="\'select distinct patient_state as state, hvid from full_transactional where patient_state != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# age
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/patient/age\'"']
-    + ['-v', 'select_statement="\'select distinct case when patient_age between 0 and 18 then \\\'0-17\\\' when patient_age between 18 and 45 then \\\'18-44\\\' when patient_age between 45 and 65 then \\\'45-64\\\' when patient_age >= 65 then \\\'65+\\\' else null end as age, hvid from full_transactional where patient_age != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# diagnosis
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/patient/diagnosis\'"']
-    + ['-v', 'select_statement="\'select distinct diagnosis,hvid from full_transactional where diagnosis != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# drug
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/patient/drug\'"']
-    + ['-v', 'select_statement="\'select distinct drug,hvid from full_transactional where drug != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# procedure
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/patient/procedure\'"']
-    + ['-v', 'select_statement="\'select distinct procedure,hvid from full_transactional where procedure != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# lab
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/patient/lab\'"']
-    + ['-v', 'select_statement="\'select distinct lab,hvid from full_transactional where lab != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# total
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/patient/total\'"']
-    + ['-v', 'select_statement="\'select distinct \\\'amazingcharts\\\',hvid from full_transactional\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# record
-# gender
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/record/gender\'"']
-    + ['-v', 'select_statement="\'select patient_gender as gender, record_id from full_transactional where patient_gender != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# state
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/record/state\'"']
-    + ['-v', 'select_statement="\'select patient_state as state,  record_id from full_transactional where patient_state != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# age
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/record/age\'"']
-    + ['-v', 'select_statement="\'select case when patient_age between 0 and 18 then \\\'0-17\\\' when patient_age between 18 and 45 then \\\'18-44\\\' when patient_age between 45 and 65 then \\\'45-64\\\' when patient_age >= 65 then \\\'65+\\\' else null end as age, record_id from full_transactional where patient_age != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# diagnosis
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/record/diagnosis\'"']
-    + ['-v', 'select_statement="\'select diagnosis, record_id from full_transactional where diagnosis != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# drug
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/record/drug\'"']
-    + ['-v', 'select_statement="\'select drug, record_id from full_transactional where drug != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# procedure
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/record/procedure\'"']
-    + ['-v', 'select_statement="\'select procedure, record_id from full_transactional where procedure != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# lab
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/record/lab\'"']
-    + ['-v', 'select_statement="\'select lab, record_id from full_transactional where lab != \\\'\\\'order by 1\'"']
-    + [db, '<', 'unload.sql']
-), shell=True)
-
-# total
-subprocess.call(' '.join(
-    psql
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'output_path="\'' + args.output_path + '/record/total\'"']
-    + ['-v', 'select_statement="\'select \\\'amazingcharts\\\', record_id from full_transactional\'"']
-    + [db, '<', 'unload.sql']
+    + ['-v', 'select_from_common_model_table="\'SELECT * FROM emr_common_model\'"']
+    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
 ), shell=True)

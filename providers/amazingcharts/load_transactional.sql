@@ -102,17 +102,3 @@ CREATE TABLE matching_payload (
         gender       text ENCODE lzo,
         yearOfBirth  text ENCODE lzo
         ) DISTKEY(personId) SORTKEY(personId);
-
-DROP TABLE IF EXISTS full_transactional;
-CREATE TABLE full_transactional (
-    record_id       bigint IDENTITY(0,1),
-    hvid            text ENCODE lzo,
-    patient_gender  text ENCODE lzo,
-    patient_state   text ENCODE lzo,
-    patient_age     text ENCODE lzo,
-    drug            text ENCODE lzo,
-    diagnosis       text ENCODE lzo,
-    lab             text ENCODE lzo,
-    procedure       text ENCODE lzo
-    )
- 

@@ -14,7 +14,7 @@ FROM matching_payload_broken mp
     LEFT JOIN parent_child_map pcm ON mp.hvid = pcm.hvid
     ;
 
-INSERT INTO full_transactional (
+INSERT INTO emr_common_model (
         hvid, 
         patient_gender, 
         patient_state, 
