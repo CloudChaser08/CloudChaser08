@@ -7,27 +7,37 @@ import os
 from subprocess import check_call
 import time
 
-if sys.modules.get('config'):
-    del sys.modules['config']
-import config
+modules = [
+    'modules.file_utils',
+    'modules.s3_utils',
+    'modules.emr_utils',
+    'modules.redshift_utils'
+]
 
-if sys.modules.get('util.file_utils'):
-    del sys.modules['util.file_utils']
-import util.file_utils as file_utils
-
-if sys.modules.get('util.aws_utils'):
-    del sys.modules['util.aws_utils']
-import util.aws_utils as aws_utils
-
+subdags = [
+    'subdags.s3_validate_file',
+    'subdags.s3_fetch_file',
+    'subdags.decrypt_file',
+    'subdags.decompress_split_push_file',
+    'subdags.queue_up_for_matching'
+]
 for subdag in subdags:
     if sys.modules.get(subdag):
         del sys.modules[subdag]
+for module in modules:
+    if sys.modules.get(module):
+        del sys.modules[module]
 
 from subdags.s3_validate_file import s3_validate_file
 from subdags.s3_fetch_file import s3_fetch_file
 from subdags.decrypt_file import decrypt_file
 from subdags.decompress_split_push_file import decompress_split_push_file
 from subdags.queue_up_for_matching import queue_up_for_matching
+
+import modules.file_utils as file_utils
+import modules.s3_utils as s3_utils
+import modules.emr_utils as emr_utils
+import modules.redshift_utils as redshift_utils
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
@@ -271,7 +281,8 @@ bzip_parts_trunk = bzip_parts_step(
 def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
     def execute(ds, **kwargs):
         formatted_date = get_formatted_date(kwargs)
-        aws_utils.push_local_dir_to_s3(
+        dest_date = kwargs['ds_nodash']
+        s3_utils.push_local_dir_to_s3(
             tmp_parts_path.format(formatted_date),
             insert_current_date(s3_path, kwargs)
         )
@@ -353,13 +364,13 @@ detect_matching_done = detect_matching_done_step()
 
 def move_matching_payload_step():
     def execute(ds, **kwargs):
-        for payload_file in aws_utils.list_s3_bucket(
+        for payload_file in s3_utils.list_s3_bucket(
                 S3_PAYLOAD_LOCATION +
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
                     get_formatted_date(kwargs)
                 )
         ):
-            aws_utils.copy_file(
+            s3_utils.copy_file(
                 payload_file,
                 insert_current_date(
                     S3_PAYLOAD_DEST + '{}/{}/{}/' + payload_file.split('/')[-1],
@@ -383,7 +394,7 @@ RS_NUM_NODES = '5'
 
 def create_redshift_cluster_step():
     def execute(ds, **kwargs):
-        aws_utils.create_redshift_cluster(
+        redshift_utils.create_redshift_cluster(
             RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
             RS_NUM_NODES
         )
@@ -405,16 +416,16 @@ def normalize_step():
             '{}/{}/{}', kwargs
         )
         period = 'hist' if curdate < '2016/09/01' else 'current'
-        setid = aws_utils.list_s3_bucket(path)[0]  \
-                         .split('/')[-1]           \
-                         .replace('.bz2', '')[0:-3]
+        setid = s3_utils.list_s3_bucket(path)[0]  \
+                        .split('/')[-1]          \
+                        .replace('.bz2', '')[0:-3]
         command = [
             '/home/airflow/airflow/dags/providers/quest/norm/rsNormalizeQuest.py',
             '--date', curdate, '--setid', setid, '--period', period,
-            '--s3_credentials', aws_utils.get_rs_s3_credentials_str()
+            '--s3_credentials', redshift_utils.get_rs_s3_credentials_str()
         ]
         cwd = '/home/airflow/airflow/dags/providers/quest/'
-        aws_utils.run_rs_query_file(
+        redshift_utils.run_rs_query_file(
             RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
             command, cwd
         )
@@ -429,11 +440,9 @@ normalize = normalize_step()
 
 def delete_redshift_cluster_step():
     def execute(ds, **kwargs):
-        check_call([
-            '/home/airflow/airflow/dags/resources/redshift.py', 'delete',
-            '--identifier',
+        redshift_utils.delete_redshift_cluster(
             RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
-        ])
+        )
     return PythonOperator(
         task_id='delete_redshift_cluster',
         provide_context=True,
@@ -455,7 +464,7 @@ PARQUET_DESTINATION_TEMPLATE = "s3://salusv/warehouse/parquet/labtests/quest/{}/
 
 def create_emr_cluster_step():
     def execute(ds, **kwargs):
-        aws_utils.create_emr_cluster(
+        emr_utils.create_emr_cluster(
             EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
             EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
         )
@@ -470,7 +479,7 @@ create_emr_cluster = create_emr_cluster_step()
 
 def transform_to_parquet_step():
     def execute(ds, **kwargs):
-        aws_utils.transform_to_parquet(
+        emr_utils.transform_to_parquet(
             EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
             insert_current_date(PARQUET_SOURCE_TEMPLATE, kwargs),
             insert_current_date(PARQUET_DESTINATION_TEMPLATE, kwargs),
@@ -487,7 +496,7 @@ transform_to_parquet = transform_to_parquet_step()
 
 def delete_emr_cluster_step():
     def execute(ds, **kwargs):
-        aws_utils.delete_emr_cluster(
+        emr_utils.delete_emr_cluster(
             EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
         )
     return PythonOperator(
@@ -502,12 +511,6 @@ delete_emr_cluster = delete_emr_cluster_step()
 fetch_addon.set_upstream(validate_addon)
 unzip_addon.set_upstream(fetch_addon)
 decrypt_addon.set_upstream(unzip_addon)
-gunzip_addon.set_upstream(decrypt_addon)
-split_addon.set_upstream(gunzip_addon)
-clean_up_workspace_addon.set_upstream(split_addon)
-bzip_parts_addon.set_upstream(clean_up_workspace_addon)
-push_splits_to_s3_addon.set_upstream(bzip_parts_addon)
-clean_up_workspace_addon_parts.set_upstream(push_splits_to_s3_addon)
 
 # trunk
 fetch_trunk.set_upstream(validate_trunk)
@@ -521,7 +524,7 @@ clean_up_workspace_trunk_parts.set_upstream(push_splits_to_s3_trunk)
 
 # cleanup
 clean_up_workspace.set_upstream(
-    [clean_up_workspace_trunk_parts, clean_up_workspace_addon_parts]
+    [clean_up_workspace_trunk_parts, decrypt_addon]
 )
 
 # matching

@@ -50,9 +50,16 @@ def create_redshift_cluster(cluster_name, num_nodes):
     check_call([
         '/home/airflow/airflow/dags/resources/redshift.py', 'create',
         '--identifier', cluster_name, '--num_nodes', num_nodes
-    ], env=get_aws_env())
+    ], env=get_rs_env())
 
 
 def run_rs_query_file(cluster_name, command, cwd):
     p = Popen(command, env=get_rs_env(cluster_name), cwd=cwd)
     p.wait()
+
+
+def delete_redshift_cluster(cluster_name):
+    check_call([
+        '/home/airflow/airflow/dags/resources/redshift.py', 'delete',
+        '--identifier', cluster_name
+    ], env=get_rs_env())
