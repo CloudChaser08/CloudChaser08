@@ -443,6 +443,8 @@ def delete_redshift_cluster_step():
         redshift_utils.delete_redshift_cluster(
             RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
         )
+
+
     return PythonOperator(
         task_id='delete_redshift_cluster',
         provide_context=True,
