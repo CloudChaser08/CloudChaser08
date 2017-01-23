@@ -19,9 +19,15 @@ if sys.modules.get('util.aws_utils'):
     del sys.modules['util.aws_utils']
 import util.aws_utils as aws_utils
 
-if sys.modules.get('subdags.validate'):
-    del sys.modules['subdags.validate']
-from subdags.validate import validate_file
+for subdag in subdags:
+    if sys.modules.get(subdag):
+        del sys.modules[subdag]
+
+from subdags.s3_validate_file import s3_validate_file
+from subdags.s3_fetch_file import s3_fetch_file
+from subdags.decrypt_file import decrypt_file
+from subdags.decompress_split_push_file import decompress_split_push_file
+from subdags.queue_up_for_matching import queue_up_for_matching
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
@@ -71,7 +77,7 @@ mdag = DAG(
     dag_id=DAG_NAME,
     schedule_interval="0 12 * * *" if Variable.get(
         "AIRFLOW_ENV", default_var=''
-    ) == "prod" else None,
+    ).find('prod') != -1 else None,
     default_args=default_args
 )
 
@@ -87,25 +93,36 @@ def insert_current_date(template, kwargs):
         kwargs['yesterday_ds_nodash'][6:8]
     )
 
-#
-# Pre-Matching
-#
-def validate_step(task_id, s3_path_template, minimum_file_size):
+
+def generate_transaction_file_validation_dag(
+        task_id, path_template, minimum_file_size
+):
     return SubDagOperator(
-        subdag=validate_file(
-            DAG_NAME, task_id, s3_path_template,
-            get_formatted_date, minimum_file_size
+        subdag=s3_validate_file(
+            DAG_NAME,
+            'validate_transaction_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'expected_file_name_func': lambda k: path_template.format(
+                    get_formatted_date(k)
+                ),
+                'file_name_pattern_func': lambda k: path_template.format(
+                    '\d{10}'
+                ),
+                'minimum_file_size': minimum_file_size,
+                's3_prefix': S3_TRANSACTION_RAW_PATH,
+                'file_description': 'Quest ' + task_id + 'file'
+            }
         ),
-        task_id='validate_' + task_id,
-        trigger_rule='all_done',
-        retries=0,
+        task_id='validate_' + task_id + '_file',
         dag=mdag
     )
-validate_addon = validate_step(
+validate_addon = generate_transaction_file_validation_dag(
     'addon', S3_TRANSACTION_RAW_PATH + TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
     1000000
 )
-validate_trunk = validate_step(
+validate_trunk = generate_transaction_file_validation_dag(
     'trunk', S3_TRANSACTION_RAW_PATH + TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
     10000000
 )
@@ -115,33 +132,38 @@ validate_deid = validate_step(
 )
 
 
-def fetch_step(task_id, s3_path_template, local_path_template):
-    def execute(ds, **kwargs):
-        aws_utils.fetch_file_from_s3(
-            s3_path_template.format(get_formatted_date(kwargs)),
-            local_path_template.format(get_formatted_date(kwargs))
-        )
-    return PythonOperator(
-        task_id='fetch_' + task_id,
-        provide_context=True,
-        python_callable=execute,
+def generate_fetch_dag(
+        task_id, s3_path_template, local_path_template, file_name_template
+):
+    return SubDagOperator(
+        subdag=s3_fetch_file(
+            DAG_NAME,
+            'fetch_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_path_template': local_path_template,
+                'expected_file_name_func': lambda k: file_name_template.format(
+                    get_formatted_date(k)
+                ),
+                's3_prefix': s3_path_template
+            }
+        ),
+        task_id='fetch_' + task_id + '_file',
         dag=mdag
     )
-fetch_addon = fetch_step(
+fetch_addon = generate_fetch_dag(
     "addon",
-    "{}{}".format(
-        S3_TRANSACTION_RAW_PATH,
-        TRANSACTION_ADDON_FILE_NAME_TEMPLATE
-    ),
-    TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+    S3_TRANSACTION_RAW_PATH,
+    TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
+    TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
+
 )
-fetch_trunk = fetch_step(
+fetch_trunk = generate_fetch_dag(
     "trunk",
-    '{}{}'.format(
-        S3_TRANSACTION_RAW_PATH,
-        TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
-    ),
-    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+    S3_TRANSACTION_RAW_PATH,
+    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
+    TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
 )
 
 
@@ -166,26 +188,25 @@ unzip_trunk = unzip_step(
 )
 
 
-def decrypt_step(task_id, tmp_path_template):
-    def execute(ds, **kwargs):
-        env = dict(os.environ)
-        file_utils.decrypt(
-            env['AWS_ACCESS_KEY_ID'],
-            env['AWS_SECRET_ACCESS_KEY'],
-            TMP_DECRYPTOR_PATH_TEMPLATE.format(
-                get_formatted_date(kwargs)
+decrypt_addon = SubDagOperator(
+    subdag=decrypt_file(
+        DAG_NAME,
+        'decrypt_addon_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE,
+            'encrypted_file_name_func': lambda k: TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format(
+                get_formatted_date(k)
             ),
-            TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format(
-                get_formatted_date(kwargs)
-            )
-        )
-    return PythonOperator(
-        task_id='decrypt_file_' + task_id,
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-decrypt_addon = decrypt_step("addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
+            'decrypted_file_name_func': lambda k: TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format(
+                get_formatted_date(k)
+            ) + '.gz'
+        }
+    ),
+    task_id='decrypt_transaction_file',
+    dag=mdag
+)
 
 
 def gunzip_step(task_id, tmp_path_template):
@@ -201,9 +222,6 @@ def gunzip_step(task_id, tmp_path_template):
         python_callable=execute,
         dag=mdag
     )
-gunzip_addon = gunzip_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
-)
 gunzip_trunk = gunzip_step(
     "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
 )
@@ -225,11 +243,6 @@ def split_step(task_id, tmp_path_template, tmp_parts_path_template):
         python_callable=execute,
         dag=mdag
     )
-split_addon = split_step(
-    "addon",
-    TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
-    TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE
-)
 split_trunk = split_step(
     "trunk",
     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
@@ -250,9 +263,6 @@ def bzip_parts_step(task_id, tmp_parts_path_template):
         python_callable=execute,
         dag=mdag
     )
-bzip_parts_addon = bzip_parts_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE
-)
 bzip_parts_trunk = bzip_parts_step(
     "trunk", TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
 )
@@ -271,11 +281,6 @@ def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
         python_callable=execute,
         dag=mdag
     )
-push_splits_to_s3_addon = push_splits_to_s3_step(
-    "addon",
-    TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE,
-    TRANSACTION_ADDON_S3_SPLIT_PATH
-)
 push_splits_to_s3_trunk = push_splits_to_s3_step(
     "trunk",
     TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE,
@@ -286,7 +291,7 @@ push_splits_to_s3_trunk = push_splits_to_s3_step(
 def clean_up_workspace_step(task_id, template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', template.format(get_formatted_date(kwargs))
+            'rm', '-rf', template.format(kwargs['ds_nodash'])
         ])
     return PythonOperator(
         task_id='clean_up_workspace_' + task_id,
@@ -295,44 +300,30 @@ def clean_up_workspace_step(task_id, template):
         trigger_rule='all_done',
         dag=mdag
     )
-clean_up_workspace_addon = clean_up_workspace_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
-)
 clean_up_workspace_trunk = clean_up_workspace_step(
     "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
-)
-clean_up_workspace_addon_parts = clean_up_workspace_step(
-    "addon_parts", TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE
 )
 clean_up_workspace_trunk_parts = clean_up_workspace_step(
     "trunk_parts", TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
 )
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
-
-def queue_up_for_matching_step(seq_num, engine_env, priority):
-    def execute(ds, **kwargs):
-        deid_file = '{}{}'.format(
-            S3_TRANSACTION_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format(
-                get_formatted_date(kwargs)
-            ))
-        env = dict(os.environ)
-        env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER')
-        env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')
-        check_call([
-            '/home/airflow/airflow/dags/resources/push_file_to_s3_batchless_v4.sh',
-            deid_file, seq_num, engine_env, priority
-        ], env=env)
-    return PythonOperator(
-        task_id='queue_up_for_matching',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-queue_up_for_matching = queue_up_for_matching_step(
-    '0', 'prod-matching-engine', 'priority3'
+queue_up_for_matching = SubDagOperator(
+    subdag=queue_up_for_matching(
+        DAG_NAME,
+        'queue_up_for_matching',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_file_name_func': lambda k: DEID_FILE_NAME_TEMPLATE.format(
+                get_formatted_date(k)
+            ),
+            's3_prefix': S3_TRANSACTION_RAW_PATH
+        }
+    ),
+    task_id='queue_up_for_matching',
+    dag=mdag
 )
-
 
 #
 # Post-Matching
