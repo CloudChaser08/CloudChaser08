@@ -55,7 +55,7 @@ def do_push_raw_to_s3(ds, **kwargs):
     env = os.environ
     env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
     env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
-    check_call(['aws', 's3', 'cp', "{}{}".format(tmp_path, expected_file_name), "{}".format(kwargs['s3_raw_path'])], env=env)
+    check_call(['aws', 's3', 'cp', '--sse', 'AES256', "{}{}".format(tmp_path, expected_file_name), "{}".format(kwargs['s3_raw_path'])], env=env)
 
 def emdeon_validate_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {

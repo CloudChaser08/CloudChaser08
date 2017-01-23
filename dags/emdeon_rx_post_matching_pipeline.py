@@ -55,7 +55,7 @@ def do_move_matching_payload(ds, **kwargs):
         env = os.environ
         env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
         env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
-        check_call(['aws', 's3', 'cp', 's3://salusv/' + payload_file, S3_PAYLOAD_LOC + date + '/' + payload_file.split('/')[-1]])
+        check_call(['aws', 's3', 'cp', '--sse', 'AES256', 's3://salusv/' + payload_file, S3_PAYLOAD_LOC + date + '/' + payload_file.split('/')[-1]])
 
 def do_detect_matching_done(ds, **kwargs):
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')

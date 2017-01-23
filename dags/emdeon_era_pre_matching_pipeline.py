@@ -63,7 +63,7 @@ def do_push_splits_to_s3(ds, **kwargs):
     env = os.environ
     env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
     env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
-    check_call(['aws', 's3', 'cp', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)], env=env)
+    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)], env=env)
 
 default_args = {
     'owner': 'airflow',
