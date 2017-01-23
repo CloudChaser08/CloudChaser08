@@ -89,7 +89,7 @@ INSERT INTO medicalclaims_common_model (
         cob_ins_type_code_2
         ) 
 SELECT DISTINCT
-    header.ClaimId,                             -- claim_id
+    header.ClaimId,                  -- claim_id
     COALESCE(mp.parentid, mp.hvid),  -- hvid
     1,                               -- source_version
     mp.gender,                       -- patient_gender
@@ -103,7 +103,7 @@ SELECT DISTINCT
     WHEN header.Type = 'Professional'
     THEN 'P'
     END,                             -- claim_type
-    header.ProcessDate,                             -- date_received
+    header.ProcessDate,              -- date_received
     CASE 
     WHEN serviceline.ServiceStart IS NOT NULL 
     THEN serviceline.ServiceStart
@@ -155,8 +155,8 @@ SELECT DISTINCT
     THEN ServiceLine.PlaceOfService
     ELSE header.InstitutionalType
     END,                             -- place_of_service_std_id
-    serviceline.SequenceNumber,                             -- service_line_number
-    diagnosis.DiagnosisCode,                             -- diagnosis_code
+    serviceline.SequenceNumber,      -- service_line_number
+    diagnosis.DiagnosisCode,         -- diagnosis_code
     CASE
     WHEN diagnosis.type LIKE 'A%'
     THEN '02'
@@ -199,16 +199,16 @@ SELECT DISTINCT
     THEN 'Y'
     ELSE 'N'
     END,                             -- principal_proc_ind
-    serviceline.amount,                             -- procedure_units
-    serviceline.modifier1,                             -- procedure_modifier_1
-    serviceline.modifier2,                             -- procedure_modifier_2
-    serviceline.modifier3,                             -- procedure_modifier_3
-    serviceline.modifier4,                             -- procedure_modifier_4
-    serviceline.revenuecode,                             -- revenue_code
-    serviceline.drugcode,                             -- ndc_code
-    payer1.claimfileindicator,                             -- medical_coverage_type
-    serviceline.linecharge,                             -- line_charge
-    header.totalcharge,                             -- total_charge
+    serviceline.amount,              -- procedure_units
+    serviceline.modifier1,           -- procedure_modifier_1
+    serviceline.modifier2,           -- procedure_modifier_2
+    serviceline.modifier3,           -- procedure_modifier_3
+    serviceline.modifier4,           -- procedure_modifier_4
+    serviceline.revenuecode,         -- revenue_code
+    serviceline.drugcode,            -- ndc_code
+    payer1.claimfileindicator,       -- medical_coverage_type
+    serviceline.linecharge,          -- line_charge
+    header.totalcharge,              -- total_charge
     CASE
     WHEN rendering.npi IS NOT NULL
     THEN rendering.npi
@@ -222,8 +222,8 @@ SELECT DISTINCT
     THEN other.npi
     ELSE NULL
     END,                             -- prov_rendering_npi
-    billing.npi,                             -- prov_billing_npi
-    referring.npi,                             -- prov_referring_npi
+    billing.npi,                     -- prov_billing_npi
+    referring.npi,                   -- prov_referring_npi
     CASE
     WHEN servicelocation.npi IS NOT NULL
     THEN servicelocation.npi
@@ -231,9 +231,9 @@ SELECT DISTINCT
     THEN ambulancedropoff.npi
     ELSE NULL
     END,                             -- prov_facility_npi
-    payer1.sourcepayerid,                             -- payer_vendor_id
-    payer1.name,                             -- payer_name
-    payer1.payerclassification,                             -- payer_type
+    payer1.sourcepayerid,            -- payer_vendor_id
+    payer1.name,                     -- payer_name
+    payer1.payerclassification,      -- payer_type
     CASE
     WHEN rendering.npi IS NOT NULL
     THEN rendering.lastname
@@ -338,26 +338,26 @@ SELECT DISTINCT
     THEN other.taxonomy
     ELSE NULL
     END,                             -- prov_rendering_std_taxonomy
-    billing.taxid,                             -- prov_billing_tax_id
-    billing.ssn,                             -- prov_billing_ssn
-    billing.stlic,                             -- prov_billing_state_license
-    billing.upin,                             -- prov_billing_upin
-    billing.lastname,                             -- prov_billing_name_1
-    billing.firstname,                             -- prov_billing_name_2
-    billing.addr1,                             -- prov_billing_address_1
-    billing.addr2,                             -- prov_billing_address_2
-    billing.city,                             -- prov_billing_city
-    billing.state,                             -- prov_billing_state
-    billing.zip,                             -- prov_billing_zip
-    billing.taxonomy,                             -- prov_billing_std_taxonomy
-    referring.lastname,                             -- prov_referring_name_1
-    referring.firstname,                             -- prov_referring_name_2
-    referring.addr1,                             -- prov_referring_address_1
-    referring.addr2,                             -- prov_referring_address_2
-    referring.city,                             -- prov_referring_city
-    referring.state,                             -- prov_referring_state
-    referring.zip,                             -- prov_referring_zip
-    referring.taxonomy,                             -- prov_referring_std_taxonomy
+    billing.taxid,                   -- prov_billing_tax_id
+    billing.ssn,                     -- prov_billing_ssn
+    billing.stlic,                   -- prov_billing_state_license
+    billing.upin,                    -- prov_billing_upin
+    billing.lastname,                -- prov_billing_name_1
+    billing.firstname,               -- prov_billing_name_2
+    billing.addr1,                   -- prov_billing_address_1
+    billing.addr2,                   -- prov_billing_address_2
+    billing.city,                    -- prov_billing_city
+    billing.state,                   -- prov_billing_state
+    billing.zip,                     -- prov_billing_zip
+    billing.taxonomy,                -- prov_billing_std_taxonomy
+    referring.lastname,              -- prov_referring_name_1
+    referring.firstname,             -- prov_referring_name_2
+    referring.addr1,                 -- prov_referring_address_1
+    referring.addr2,                 -- prov_referring_address_2
+    referring.city,                  -- prov_referring_city
+    referring.state,                 -- prov_referring_state
+    referring.zip,                   -- prov_referring_zip
+    referring.taxonomy,              -- prov_referring_std_taxonomy
     CASE
     WHEN servicelocation.npi IS NOT NULL
     THEN servicelocation.lastname
@@ -469,6 +469,8 @@ FROM transactional_header header
     LEFT JOIN matching_payload mp ON header.claimid = mp.claimid
     LEFT JOIN transactional_serviceline serviceline ON header.claimid = serviceline.claimid
     LEFT JOIN transactional_billing billing ON header.claimid = billing.claimid
+
+    -- providers
     LEFT JOIN transactional_servicelineaffiliation rendering ON serviceline.servicelineid = rendering.servicelineid 
     AND serviceline.claimid = rendering.claimid
     AND rendering.type = 'Rendering'
@@ -493,12 +495,16 @@ FROM transactional_header header
     LEFT JOIN transactional_servicelineaffiliation other ON serviceline.servicelineid = other.servicelineid 
     AND serviceline.claimid = other.claimid
     AND other.type = 'Other'
+
+    -- payers
     LEFT JOIN transactional_payer payer1 ON header.claimid = payer1.claimid
     AND payer1.sequencenumber = '1'
     LEFT JOIN transactional_payer payer2 ON header.claimid = payer2.claimid
     AND payer2.sequencenumber = '2'
     LEFT JOIN transactional_payer payer3 ON header.claimid = payer3.claimid
     AND payer3.sequencenumber = '3'
+
+    -- diag/proc
     LEFT JOIN transactional_diagnosis diagnosis ON diagnosis.claimid = header.claimid
     AND header.Type = 'Professional'
     AND (
@@ -508,6 +514,9 @@ FROM transactional_header header
         OR serviceline.diagnosiscodepointer4 = diagnosis.sequencenumber 
         )
     LEFT JOIN transactional_procedure proc ON proc.claimid = header.claimid
+
+    -- fix dates
+    LEFT JOIN dates svc_
 ;
 
 -- insert rows for professional claims that do not correspond to a service line

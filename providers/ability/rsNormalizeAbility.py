@@ -2,6 +2,7 @@
 import subprocess
 import argparse
 import time
+import hashlib
 import sys
 sys.path.append(os.path.abspath("../redshift_norm_common/"))
 import create_date_validation_table as date_validator
@@ -37,12 +38,14 @@ if args.rs_user:
 date_validator.generate(psql, db, args.s3_credentials)
 
 # create table for medical claims common model
+prov_hash = hashlib.md5()
+prov_hash.update("ability")
 subprocess.call(' '.join(
     psql
     + ['-v', 'filename="\'' + args.setid + '\'"']
     + ['-v', 'today="\'' + TODAY + '\'"']
-    + ['-v', 'feedname="\'ability medical claims\'"']
-    + ['-v', 'vendor="\'ability\'"']
+    + ['-v', 'feedname="\'15\'"']
+    + ['-v', 'vendor="\'' + prov_hash.hexdigest() + '\'"']
     + [db, '<', '../redshift_norm_common/medicalclaims_common_model.sql']
 ), shell=True)
 
