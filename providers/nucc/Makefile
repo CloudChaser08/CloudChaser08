@@ -14,4 +14,4 @@ import:
 	  -f copy.sql
 
 fetch:
-	curl http://www.nucc.org/images/stories/CSV/nucc_taxonomy_151.csv | aws s3 cp - s3://healthverity/incoming/nucc/nucc_taxonomy_151.csv
+	curl http://www.nucc.org/images/stories/CSV/nucc_taxonomy_151.csv | aws s3 cp --sse AES256 - s3://healthverity/incoming/nucc/nucc_taxonomy_151.csv
