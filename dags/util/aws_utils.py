@@ -62,8 +62,8 @@ def list_s3_bucket(path):
     """
     bucket_key = _transform_path_to_bucket_key(path)
     return map(
-        lambda k: 's3://' + bucket_key('bucket') + '/' + k,
-        _get_s3_hook().list_keys(bucket_key('bucket'), bucket_key('key'))
+        lambda k: 's3://' + bucket_key['bucket'] + '/' + k,
+        _get_s3_hook().list_keys(bucket_key['bucket'], bucket_key['key'])
     )
 
 
@@ -170,6 +170,7 @@ def _get_emr_cluster_id(cluster_name):
             return cluster['Id']
     print("Cluster not found. " + cluster_name)
 
+
 def _wait_for_steps(cluster_id):
     incomplete_steps = 1
     failed_steps = 0
@@ -194,8 +195,8 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
     cluster_details = json.loads(
         check_output([
             '/home/airflow/airflow/dags/resources/launchEMR',
-            cluster_name, num_nodes, node_type, '"' + EMR_APPLICATIONS + '"',
-            (ebs_volume_size > 0), ebs_volume_size
+            cluster_name, num_nodes, node_type, EMR_APPLICATIONS,
+            "true" if (ebs_volume_size > 0) else "false", str(ebs_volume_size)
         ], env=get_aws_env())
     )
     check_call([
@@ -205,7 +206,7 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
 
 
 def transform_to_parquet(cluster_name, src_file, dest_file, model):
-    file_id_hash = hashlib.md5
+    file_id_hash = hashlib.md5()
     file_id_hash.update(src_file)
     file_id = file_id_hash.hexdigest()
     parquet_step = (

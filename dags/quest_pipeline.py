@@ -98,7 +98,7 @@ def validate_step(task_id, s3_path_template, minimum_file_size):
     return SubDagOperator(
         subdag=validate_file(
             DAG_NAME, task_id, s3_path_template,
-            get_formatted_date, 10000000000
+            get_formatted_date, minimum_file_size
         ),
         task_id='validate_' + task_id,
         trigger_rule='all_done',
@@ -432,7 +432,7 @@ def create_redshift_cluster_step():
             RS_NUM_NODES
         )
     return PythonOperator(
-        task_id='create-redshift-cluster',
+        task_id='create_redshift_cluster',
         provide_context=True,
         python_callable=execute,
         dag=mdag
@@ -459,8 +459,7 @@ def normalize_step():
         ]
         cwd = '/home/airflow/airflow/dags/providers/quest/'
         aws_utils.run_rs_query_file(
-            # RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            RS_CLUSTER_ID_TEMPLATE.format('201701110112'),
+            RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
             command, cwd
         )
     return PythonOperator(
@@ -480,7 +479,7 @@ def delete_redshift_cluster_step():
             RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
         ], env=env)
     return PythonOperator(
-        task_id='delete-redshift-cluster',
+        task_id='delete_redshift_cluster',
         provide_context=True,
         python_callable=execute,
         dag=mdag
@@ -491,7 +490,7 @@ delete_redshift_cluster = delete_redshift_cluster_step()
 # Parquet
 #
 EMR_CLUSTER_ID_TEMPLATE = 'quest-parquet-{}'
-EMR_NUM_NODES = 5
+EMR_NUM_NODES = "5"
 EMR_NODE_TYPE = 'c4.xlarge'
 EMR_EBS_VOLUME_SIZE = 0
 PARQUET_SOURCE_TEMPLATE = "s3://salusv/warehouse/text/labtests/quest/{}/{}/{}/"
@@ -502,10 +501,10 @@ def create_emr_cluster_step():
     def execute(ds, **kwargs):
         aws_utils.create_emr_cluster(
             EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            EMR_NUM_NODES, EMR_NODE_TYPE, 0
+            EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
         )
     return PythonOperator(
-        task_id='create-emr-cluster',
+        task_id='create_emr_cluster',
         provide_context=True,
         python_callable=execute,
         dag=mdag

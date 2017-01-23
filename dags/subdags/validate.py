@@ -27,6 +27,8 @@ def do_is_valid_new_s3_file(ds, **kwargs):
     if aws_utils.get_file_size(expected_file_name) < minimum_file_size:
         return kwargs['is_not_valid']
 
+    return kwargs['success']
+
 
 def validate_file(
         parent_dag_name, file_description, file_name_template,
@@ -54,7 +56,8 @@ def validate_file(
             'kwargs_fn': kwargs_fn,
             'minimum_file_size': minimum_file_size,
             'is_not_valid': 'alert_file_size_problem',
-            'is_not_new': 'alert_no_new_file'
+            'is_not_new': 'alert_no_new_file',
+            'success': 'success'
         },
         dag=dag
     )
@@ -95,6 +98,12 @@ def validate_file(
         task_id='force_failure',
         bash_command='exit 1;',
         trigger_rule='one_success',
+        dag=dag
+    )
+
+    success = BashOperator(
+        task_id='success',
+        bash_command='echo "Validation complete."',
         dag=dag
     )
 
