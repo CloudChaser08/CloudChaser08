@@ -1,37 +1,27 @@
 from airflow import DAG
-from airflow.models import Variable
 from airflow.operators import BashOperator, PythonOperator
-from datetime import datetime, timedelta
 from subprocess import check_call
-import os
-import logging
 
-def do_decompress_file(ds, **kwargs):
-    tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    decrypted_file = tmp_dir + kwargs['params']['decrypted_file_name_func'](ds, kwargs)
-
-    check_call(['gzip', '-d', '-k', decrypted_file])
 
 def do_split_file(ds, **kwargs):
     tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    expected_file_name = kwargs['params']['decompressed_file_name_func'](ds, kwargs)
-    decompressed_file = tmp_dir + expected_file_name
+    expected_file_name = kwargs['params']['source_file_name_func'](kwargs)
+    source_file = tmp_dir + expected_file_name
 
     check_call([
-        'split', '-n', 'l/' + str(kwargs['params']['num_splits']), decompressed_file,
+        'split', '-n', 'l/' + str(kwargs['params']['num_splits']), source_file,
         tmp_dir + 'parts/' + expected_file_name + '.'
     ])
-    
+
+
 def do_clean_up(ds, **kwargs):
     tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    decrypted_file = tmp_dir + kwargs['params']['decrypted_file_name_func'](ds, kwargs)
-    decompressed_file = tmp_dir + kwargs['params']['decompressed_file_name_func'](ds, kwargs)
-
-    check_call(['rm', decrypted_file])
-    check_call(['rm', decompressed_file])
+    source_file = tmp_dir + kwargs['params']['source_file_name_func'](kwargs)
+    check_call(['rm', source_file])
     check_call(['rm', '-r', tmp_dir + 'parts'])
 
-def decompress_split_push_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
+
+def split_push_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
         'owner': 'airflow',
         'depends_on_past': False,
@@ -43,14 +33,6 @@ def decompress_split_push_file(parent_dag_name, child_dag_name, start_date, sche
         schedule_interval='@daily',
         start_date=start_date,
         default_args=default_args
-    )
-
-    decompress_file = PythonOperator(
-        task_id='decompress_file',
-        provide_context=True,
-        python_callable=do_decompress_file,
-        params=dag_config,
-        dag=dag
     )
 
     tmp_path_jinja = dag_config['tmp_path_template'].format('{{ ds_nodash }}')
@@ -99,7 +81,7 @@ def decompress_split_push_file(parent_dag_name, child_dag_name, start_date, sche
         dag=dag
     )
 
-    split_file.set_upstream([decompress_file, create_parts_dir])
+    split_file.set_upstream(create_parts_dir)
     bzip_part_files.set_upstream(split_file)
     bzip_part_files.set_downstream(file_push_tasks)
     clean_up.set_upstream(file_push_tasks)

@@ -40,6 +40,13 @@ def do_run_decryption(ds, **kwargs):
     ])
 
 
+def do_decompress_file(ds, **kwargs):
+    tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
+    decrypted_file = tmp_dir + kwargs['params']['decrypted_file_name_func'](kwargs)
+
+    check_call(['gzip', '-d', '-k', decrypted_file])
+
+
 def do_clean_up(ds, **kwargs):
     tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
     encrypted_file_name = tmp_dir + kwargs['encrypted_file_name_func'](ds, kwargs)
@@ -84,6 +91,14 @@ def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval,
         dag=dag
     )
 
+    decompress_file = PythonOperator(
+        task_id='decompress_file',
+        python_callable=do_decompress_file,
+        provide_context=True,
+        op_kwargs=dag_config,
+        dag=dag
+    )
+
     clean_up = PythonOperator(
         task_id='clean_up',
         python_callable=do_clean_up,
@@ -93,6 +108,7 @@ def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval,
     )
 
     run_decryption.set_upstream(fetch_decryption_files)
-    clean_up.set_upstream(run_decryption)
+    decompress_file.set_upstream(run_decryption)
+    clean_up.set_upstream(decompress_file)
 
     return dag
