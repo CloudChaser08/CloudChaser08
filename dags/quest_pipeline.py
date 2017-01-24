@@ -173,11 +173,11 @@ fetch_trunk = generate_fetch_dag(
 
 def unzip_step(task_id, tmp_path_template):
     def execute(ds, **kwargs):
-        file_utils.unzip(
-            tmp_path_template.format(
-                get_formatted_date(kwargs)
+        check_call([
+            'unzip', tmp_path_template.format(
+                kwargs['ds_nodash']
             )
-        )
+        ])
     return PythonOperator(
         task_id='unzip_file_' + task_id,
         provide_context=True,
@@ -215,11 +215,12 @@ decrypt_addon = SubDagOperator(
 
 def gunzip_step(task_id, tmp_path_template):
     def execute(ds, **kwargs):
-        file_utils.gunzip(
-            tmp_path_template.format(
-                get_formatted_date(kwargs)
+        check_call([
+            'gzip', '-d', tmp_path_template.format(
+                kwargs['ds_nodash']
             )
-        )
+        ])
+
     return PythonOperator(
         task_id='gunzip_file_' + task_id,
         provide_context=True,
