@@ -67,7 +67,9 @@ def get_file_size(path):
     Get the size of a file on s3
     """
     bucket_key = _transform_path_to_bucket_key(path)
-    return _get_s3_hook().get_key(bucket_key['key'], bucket_key['bucket']).content_length
+    return _get_s3_hook().get_key(
+        bucket_key['key'], bucket_key['bucket']
+    ).content_length
 
 
 def get_file_last_modified(path):
