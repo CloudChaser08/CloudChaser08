@@ -18,7 +18,7 @@ subdags = [
     'subdags.s3_validate_file',
     'subdags.s3_fetch_file',
     'subdags.decrypt_file',
-    'subdags.decompress_split_push_file',
+    'subdags.split_push_file',
     'subdags.queue_up_for_matching'
 ]
 for subdag in subdags:
@@ -31,7 +31,7 @@ for module in modules:
 from subdags.s3_validate_file import s3_validate_file
 from subdags.s3_fetch_file import s3_fetch_file
 from subdags.decrypt_file import decrypt_file
-from subdags.decompress_split_push_file import decompress_split_push_file
+from subdags.split_push_file import split_push_file
 from subdags.queue_up_for_matching import queue_up_for_matching
 
 import modules.file_utils as file_utils
@@ -47,12 +47,8 @@ DAG_NAME = 'quest_pipeline'
 S3_TRANSACTION_RAW_PATH = 's3://healthverity/incoming/quest/'
 S3_TRANSACTION_PROCESSED_PATH_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
 
-# Decryptor Config
-TMP_DECRYPTOR_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'decrypt/'
-
 # Transaction Addon file
 TRANSACTION_ADDON_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/addon/'
-TRANSACTION_ADDON_TMP_PATH_PARTS_TEMPLATE = TMP_PATH_TEMPLATE + 'parts/addon/'
 TRANSACTION_ADDON_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'addon/'
 TRANSACTION_ADDON_FILE_DESCRIPTION = 'Quest transaction addon file'
 TRANSACTION_ADDON_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt.zip'
@@ -61,7 +57,6 @@ MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Transaction Trunk file
 TRANSACTION_TRUNK_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/trunk/'
-TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE = TMP_PATH_TEMPLATE + 'parts/trunk/'
 TRANSACTION_TRUNK_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'trunk/'
 TRANSACTION_TRUNK_FILE_DESCRIPTION = 'Quest transaction trunk file'
 TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2'
@@ -236,65 +231,29 @@ gunzip_trunk = gunzip_step(
 )
 
 
-def split_step(task_id, tmp_path_template, tmp_parts_path_template):
-    def execute(ds, **kwargs):
-        file_utils.split(
-            tmp_path_template.format(
-                get_formatted_date(kwargs)
-            ),
-            tmp_parts_path_template.format(
-                get_formatted_date(kwargs)
-            )
-        )
-    return PythonOperator(
-        task_id='split_file_' + task_id,
-        provide_context=True,
-        python_callable=execute,
+def split_step(task_id, tmp_name_template, num_splits):
+    return SubDagOperator(
+        subdag=split_push_file(
+            DAG_NAME,
+            'split_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_path_template': TMP_PATH_TEMPLATE,
+                'source_file_name_func': lambda k: tmp_name_template.format(
+                    get_formatted_date(k)
+                ),
+                'num_splits': num_splits
+            }
+        ),
+        task_id='split_transaction_file',
         dag=mdag
     )
+split_addon = split_step(
+    "addon", TRANSACTION_ADDON_FILE_NAME_TEMPLATE, 20
+)
 split_trunk = split_step(
-    "trunk",
-    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
-    TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
-)
-
-
-def bzip_parts_step(task_id, tmp_parts_path_template):
-    def execute(ds, **kwargs):
-        file_utils.bzip_part_files(
-            tmp_parts_path_template.format(
-                get_formatted_date(kwargs)
-            )
-        )
-    return PythonOperator(
-        task_id='bzip_part_files_' + task_id,
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-bzip_parts_trunk = bzip_parts_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
-)
-
-
-def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
-    def execute(ds, **kwargs):
-        formatted_date = get_formatted_date(kwargs)
-        dest_date = kwargs['ds_nodash']
-        s3_utils.push_local_dir_to_s3(
-            tmp_parts_path.format(formatted_date),
-            insert_current_date(s3_path, kwargs)
-        )
-    return PythonOperator(
-        task_id='push_splits_to_s3_' + task_id,
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-push_splits_to_s3_trunk = push_splits_to_s3_step(
-    "trunk",
-    TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE,
-    TRANSACTION_TRUNK_S3_SPLIT_PATH
+    "trunk", TRANSACTION_TRUNK_FILE_NAME_TEMPLATE, 20
 )
 
 
@@ -310,12 +269,6 @@ def clean_up_workspace_step(task_id, template):
         trigger_rule='all_done',
         dag=mdag
     )
-clean_up_workspace_trunk = clean_up_workspace_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
-)
-clean_up_workspace_trunk_parts = clean_up_workspace_step(
-    "trunk_parts", TRANSACTION_TRUNK_TMP_PATH_PARTS_TEMPLATE
-)
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
 queue_up_for_matching = SubDagOperator(
@@ -512,20 +465,17 @@ delete_emr_cluster = delete_emr_cluster_step()
 fetch_addon.set_upstream(validate_addon)
 unzip_addon.set_upstream(fetch_addon)
 decrypt_addon.set_upstream(unzip_addon)
+split_addon.set_upstream(decrypt_addon)
 
 # trunk
 fetch_trunk.set_upstream(validate_trunk)
 unzip_trunk.set_upstream(fetch_trunk)
 gunzip_trunk.set_upstream(unzip_trunk)
 split_trunk.set_upstream(gunzip_trunk)
-clean_up_workspace_trunk.set_upstream(split_trunk)
-bzip_parts_trunk.set_upstream(clean_up_workspace_trunk)
-push_splits_to_s3_trunk.set_upstream(bzip_parts_trunk)
-clean_up_workspace_trunk_parts.set_upstream(push_splits_to_s3_trunk)
 
 # cleanup
 clean_up_workspace.set_upstream(
-    [clean_up_workspace_trunk_parts, decrypt_addon]
+    [split_trunk, split_addon]
 )
 
 # matching
