@@ -11,11 +11,7 @@ INSERT INTO emr_common_model (
         ndc_code
         )
 SELECT DISTINCT
-    CASE
-    WHEN payload.parentid IS NOT NULL 
-    THEN 'AS13842-' || payload.parentid
-    ELSE payload.hvid
-    END,
+    COALESCE(payload.parentid, payload.hvid),
     '1',
     encounters.encounterDTTM,
     as_patients.dobyear,
