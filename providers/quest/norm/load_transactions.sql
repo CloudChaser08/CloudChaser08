@@ -8,6 +8,7 @@ CREATE TABLE transactional_raw (
         loinc_code           text ENCODE lzo,
         local_result_code    text ENCODE lzo,
         result_name          text ENCODE lzo,
+        lab_id               text ENCODE lzo,
         date_of_service      text ENCODE lzo,
         date_collected       text ENCODE lzo,
         diagnosis_code       text ENCODE lzo,

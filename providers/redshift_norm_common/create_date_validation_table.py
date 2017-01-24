@@ -3,14 +3,13 @@ import subprocess
 from datetime import timedelta, date, datetime
 
 
-def generate(psql, db, creds):
+def generate(creds):
 
-    subprocess.call(' '.join(
-        psql + [db, '-c', '"DROP TABLE IF EXISTS dates"']
-    ), shell=True)
-    subprocess.call(' '.join(
-        psql + [db, '-c', '"CREATE TABLE dates (date text encode lzo, formatted text encode lzo) DISTSTYLE ALL"']
-    ), shell=True)
+    subprocess.call('psql dev -c "DROP TABLE IF EXISTS dates"', shell=True)
+    subprocess.call(
+        'psql dev -c "CREATE TABLE dates (date text encode lzo, formatted text encode lzo) DISTSTYLE ALL"',
+        shell=True
+    )
 
     start_date = date(2012, 1, 1)
     end_date = datetime.now().date()
@@ -22,9 +21,10 @@ def generate(psql, db, creds):
 
     subprocess.call('aws s3 cp temp.csv s3://healthveritydev/musifer/tmp/', shell=True)
 
-    subprocess.call(' '.join(
-        psql + [db, '-c', '"COPY dates FROM \'s3://healthveritydev/musifer/tmp/temp.csv\' CREDENTIALS \''
-                + creds + '\' FORMAT AS CSV;"']
-    ), shell=True)
+    subprocess.call(
+        'psql dev -c "COPY dates FROM \'s3://healthveritydev/musifer/tmp/temp.csv\' CREDENTIALS \''
+        + creds + '\' FORMAT AS CSV;"',
+        shell=True
+    )
 
 
