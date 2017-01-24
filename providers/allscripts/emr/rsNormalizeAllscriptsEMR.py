@@ -7,6 +7,7 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--transactional_path', type=str)
+parser.add_argument('--matching_path', type=str)
 parser.add_argument('--database', type=str, nargs='?')
 parser.add_argument('--cluster_endpoint', type=str)
 parser.add_argument('--s3_credentials', type=str)
@@ -36,7 +37,7 @@ transactional_allergies = args.transactional_path + 'Allergies.txt'
 # create common model table
 subprocess.call(' '.join(
     psql
-    + [db, '<', '../redshift_norm_common/emr_common_model.sql']
+    + [db, '<', '../../redshift_norm_common/emr_common_model.sql']
 ), shell=True)
 
 # load transactional data
@@ -56,6 +57,15 @@ subprocess.call(' '.join(
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'load_transactions.sql']
 ), shell=True)
+
+# load matching payload
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + [db, '<', 'load_matching_payload.sql']
+))
+
 
 # normalize
 

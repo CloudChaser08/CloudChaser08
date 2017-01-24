@@ -1,61 +1,126 @@
--- this is from reyna
+INSERT INTO emr_common_model (
+        hvid,
+        source_version,
+        patient_year_of_birth,
+        patient_zip,
+        patient_gender,
+        diagnosis_code,
+        procedure_code,
+        loinc_code,
+        ndc_code
+        )
+SELECT DISTINCT
+    COALESCE(payload.parentid, payload.hvid),
+    '1',
+    as_patients.dobyear,
+    payload.threeDigitZip,
+    CASE as_patients.gender 
+    WHEN 'Male' THEN 'M'
+    WHEN 'Female' THEN 'F'
+    ELSE 'Unknown'
+    END,
+    codes.diagnosis_code,
+    codes.procedure_code,
+    codes.loinc_code,
+    codes.ndc_code
+FROM transactional_encounters encounters
+    INNER JOIN (
+    -- diagnoses
+    SELECT
+        encounterid,
+        genpatientID,
+        gen2patientID,
+        billingicd10code AS diagnosis_code,
+        null AS procedure_code,
+        null as ndc_code,
+        null as loinc_code
+    FROM transactional_orders
+    UNION ALL
+    SELECT DISTINCT
+        encounterid,
+        genpatientID,
+        gen2patientID,
+        icd10 AS diagnosis_code,
+        null AS procedure_code,
+        null as ndc_code,
+        null as loinc_code
+    FROM transactional_problems
+    WHERE errorflag = 'N'
 
-/* GET LIST OF PATIENTS WITH A VISIT IN THE RIGHT TIME PERIOD*/
-create table as_enc as
-select distinct hvid, encounterid
-from encounters
-where encounterDTTM between '2015-10-01' and '2016-09-30'
+    -- procedures
+    UNION ALL
+    SELECT
+        encounterid,
+        genpatientID,
+        gen2patientID,
+        null AS diagnosis_code,
+        cpt4 AS procedure_code,
+        null as ndc_code,
+        null as loinc_code
+    FROM transactional_orders
+    UNION ALL
+    SELECT
+        encounterid,
+        genpatientID,
+        gen2patientID,
+        null AS diagnosis_code,
+        hcpcs AS procedure_code,
+        null as ndc_code,
+        null as loinc_code
+    FROM transactional_orders
+    UNION ALL
+    SELECT
+        encounterid,
+        genpatientID,
+        gen2patientID,
+        null AS diagnosis_code
+        cptcode AS procedure_code,
+        null AS ndc_code,
+        null AS loinc_code
+    FROM transactional_problems
+    WHERE errorflag='N'
 
+    -- drugs
+    UNION ALL
+    SELECT
+        encounterid,
+        genpatientID,
+        gen2patientID,
+        null AS diagnosis_code,
+        null AS procedure_code,
+        ndc AS ndc_code,
+        null AS loinc_code
+    FROM transactional_medications
+    WHERE errorflag='N'
+    UNION ALL
+    SELECT
+        encounterid,
+        genpatientID,
+        gen2patientID,
+        null AS diagnosis_code,
+        null AS procedure_code,
+        ndc AS ndc_code,
+        null AS loinc_code
+    FROM transactional_vaccines
 
-/* GET DIAGS */
-create table as_diags as
-select hvid, code
-from 
-	(select distinct hvid, billingicd10code as code, encounterid
-	from orders
-	UNION
-	select distinct hvid, icd10 as code, encounterid
-	from problems
-	where errorflag='N'
-	) a
-	inner join as_enc b on a.hvid=b.hvid
-
-
-/* GET PROCS */
-create table as_procs as
-select hvid, code
-from 
-	(select distinct hvid, cpt4 as code, encounterid
-	from orders
-	UNION
-	select distinct hvid, hcpcs as code, encounterid
-	from orders
-	UNION
-	select distinct hvid, cptcode as code, encounterid
-	from problems
-	where errorflag='N'
-	) a
-	inner join as_enc b on a.hvid=b.hvid and a.encounterid=b.encounterid
-
-
-/* GET DRUGS */
-create table as_ndc as
-select hvid, code
-from 
-	(select distinct hvid, ndc, encounterid
-	from medications
-	where errorflag='N'
-	UNION
-	select distinct hvid, ndc, encounterid
-	from vaccines
-	) a
-	inner join as_enc b on a.hvid=b.hvid and a.encounterid=b.encounterid
-
-
-/* GET LOINC */
-create table as_loinc as
-select distinct hvid, loinc as code
-from results a
-	inner join as_enc b on a.hvid=b.hvid and a.encounterid=b.encounterid
-
-
+    -- lab
+    UNION ALL
+    SELECT
+        encounterid,
+        genpatientID,
+        gen2patientID,
+        null AS diagnosis_code,
+        null AS procedure_code,
+        null AS ndc_code,
+        loinc AS code
+    FROM transactional_results 
+        ) codes
+    ON encounters.encounterid = codes.encounterid
+    AND encounters.genpatientID = codes.genpatientID
+    AND encounters.gen2patientID = codes.gen2patientID
+    INNER JOIN transactional_patients as_patients
+    ON encounters.genpatientID = as_patients.genpatientID
+    AND encounters.gen2patientID = as_patients.gen2patientID
+    INNER JOIN matching_payload payload
+    ON encounters.genpatientID = payload.claimid
+    AND encounters.gen2patientID = payload.personid
