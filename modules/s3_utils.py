@@ -32,9 +32,9 @@ def _get_s3_hook():
 
 def fetch_file_from_s3(s3_path, local_path):
     """Download a file from S3"""
-    check_call([
-        'aws', 's3', 'cp', s3_path, local_path
-    ], env=get_aws_env())
+    bucket_key = _transform_path_to_bucket_key(s3_path)
+    key = _get_s3_hook().get_key(bucket_key['key'], bucket_key['bucket'])
+    key.get_contents_to_filename(local_path)
 
 
 def copy_file(src_path, dest_path):

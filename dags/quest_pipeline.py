@@ -166,8 +166,7 @@ fetch_addon = generate_fetch_dag(
     "addon",
     S3_TRANSACTION_RAW_PATH,
     TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
-    TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
-
+    TRANSACTION_ADDON_FILE_NAME_TEMPLATE
 )
 fetch_trunk = generate_fetch_dag(
     "trunk",
