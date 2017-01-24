@@ -37,6 +37,10 @@ transactional_allergies = args.transactional_path + 'Allergies.txt'
 # create common model table
 subprocess.call(' '.join(
     psql
+    + ['-v', 'today="\'' + TODAY + '\'"']
+    + ['-v', 'filename="\'' + args.transactional_path.split('/')[-1] + '\'"']
+    + ['-v', 'feedname="\'' + '25' + '\'"']
+    + ['-v', 'vendor="\'' + 'allscripts' + '\'"']
     + [db, '<', '../../redshift_norm_common/emr_common_model.sql']
 ), shell=True)
 
@@ -64,8 +68,10 @@ subprocess.call(' '.join(
     + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'load_matching_payload.sql']
-))
-
+), shell=True)
 
 # normalize
-
+subprocess.call(' '.join(
+    psql
+    + [db, '<', 'normalize.sql']
+), shell=True)
