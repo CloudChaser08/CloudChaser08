@@ -1,57 +1,57 @@
-DROP TABLE IF EXISTS transactional_allergies;
-CREATE TABLE transactional_allergies (
-        rectype         text ENCODE lzo,
-        rectypeversion  text ENCODE lzo,
-        genclientID     text ENCODE lzo,
-        gen2clientID    text ENCODE lzo,
-        genpatientID    text ENCODE lzo,
-        gen2patientID   text ENCODE lzo,
-        encounterID     text ENCODE lzo,
-        allergyID       text ENCODE lzo,
-        versionID       text ENCODE lzo,
-        auditdataflag   text ENCODE lzo,
-        name            text ENCODE lzo,
-        type            text ENCODE lzo,
-        status          text ENCODE lzo,
-        reactions       text ENCODE lzo,
-        ndc             text ENCODE lzo,
-        ddi             text ENCODE lzo,
-        gpi             text ENCODE lzo,
-        rxnorm          text ENCODE lzo,
-        snomed          text ENCODE lzo,
-        unverifiedflag  text ENCODE lzo,
-        reactionDTTM    text ENCODE lzo,
-        recordedDTTM    text ENCODE lzo,
-        genproviderID   text ENCODE lzo,
-        gen2providerID  text ENCODE lzo,
-        primarykey      text ENCODE lzo
-        ) DISTKEY(encounterID) SORTKEY(encounterID);
+-- DROP TABLE IF EXISTS transactional_allergies;
+-- CREATE TABLE transactional_allergies (
+--         rectype         text ENCODE lzo,
+--         rectypeversion  text ENCODE lzo,
+--         genclientID     text ENCODE lzo,
+--         gen2clientID    text ENCODE lzo,
+--         genpatientID    text ENCODE lzo,
+--         gen2patientID   text ENCODE lzo,
+--         encounterID     text ENCODE lzo,
+--         allergyID       text ENCODE lzo,
+--         versionID       text ENCODE lzo,
+--         auditdataflag   text ENCODE lzo,
+--         name            text ENCODE lzo,
+--         type            text ENCODE lzo,
+--         status          text ENCODE lzo,
+--         reactions       text ENCODE lzo,
+--         ndc             text ENCODE lzo,
+--         ddi             text ENCODE lzo,
+--         gpi             text ENCODE lzo,
+--         rxnorm          text ENCODE lzo,
+--         snomed          text ENCODE lzo,
+--         unverifiedflag  text ENCODE lzo,
+--         reactionDTTM    text ENCODE lzo,
+--         recordedDTTM    text ENCODE lzo,
+--         genproviderID   text ENCODE lzo,
+--         gen2providerID  text ENCODE lzo,
+--         primarykey      text ENCODE lzo
+--         ) DISTKEY(encounterID) SORTKEY(encounterID);
 
-COPY transactional_allergies FROM :transactional_allergies_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+-- COPY transactional_allergies FROM :transactional_allergies_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
 		
-DROP TABLE IF EXISTS transactional_appointments;
-CREATE TABLE transactional_appointments (
-    rectype                       text ENCODE lzo,
-    rectypeversion                text ENCODE lzo,
-    genclientID                   text ENCODE lzo,
-    gen2clientID                  text ENCODE lzo,
-    genpatientID                  text ENCODE lzo,
-    gen2patientID                 text ENCODE lzo,
-    encounterID                   text ENCODE lzo,
-    appointmentID                 text ENCODE lzo,
-    versionID                     text ENCODE lzo,
-    auditdataflag                 text ENCODE lzo,
-    status                        text ENCODE lzo,
-    primaryinsurancemedicareflag  text ENCODE lzo,
-    startdttm                     text ENCODE lzo,
-    enddttm                       text ENCODE lzo,
-    recordedDTTM                  text ENCODE lzo,
-    genproviderID                 text ENCODE lzo,
-    gen2ProviderID                text ENCODE lzo,
-    primarykey                    text ENCODE lzo
-    ) DISTKEY(encounterID) SORTKEY(encounterID);
+-- DROP TABLE IF EXISTS transactional_appointments;
+-- CREATE TABLE transactional_appointments (
+--     rectype                       text ENCODE lzo,
+--     rectypeversion                text ENCODE lzo,
+--     genclientID                   text ENCODE lzo,
+--     gen2clientID                  text ENCODE lzo,
+--     genpatientID                  text ENCODE lzo,
+--     gen2patientID                 text ENCODE lzo,
+--     encounterID                   text ENCODE lzo,
+--     appointmentID                 text ENCODE lzo,
+--     versionID                     text ENCODE lzo,
+--     auditdataflag                 text ENCODE lzo,
+--     status                        text ENCODE lzo,
+--     primaryinsurancemedicareflag  text ENCODE lzo,
+--     startdttm                     text ENCODE lzo,
+--     enddttm                       text ENCODE lzo,
+--     recordedDTTM                  text ENCODE lzo,
+--     genproviderID                 text ENCODE lzo,
+--     gen2ProviderID                text ENCODE lzo,
+--     primarykey                    text ENCODE lzo
+--     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
-COPY transactional_appointments FROM :transactional_appointments_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+-- COPY transactional_appointments FROM :transactional_appointments_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
 		
 DROP TABLE IF EXISTS transactional_encounters;
 CREATE TABLE transactional_encounters (
@@ -248,35 +248,35 @@ CREATE TABLE transactional_problems (
 
 COPY transactional_problems FROM :transactional_problems_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
 		
-DROP TABLE IF EXISTS transactional_providers;
-CREATE TABLE transactional_providers (
-    rectype                  text ENCODE lzo,
-    rectypeversion           text ENCODE lzo,
-    genclientID              text ENCODE lzo,
-    gen2clientID             text ENCODE lzo,
-    genproviderID            text ENCODE lzo,
-    gen2providerID           text ENCODE lzo,
-    NPI_Title                text ENCODE lzo,
-    NPI_Gender               text ENCODE lzo,
-    NPI_TxnCode              text ENCODE lzo,
-    NPI_TxnClass             text ENCODE lzo,
-    NPI_TxnType              text ENCODE lzo,
-    NPI_TxnSpecialty         text ENCODE lzo,
-    NPI_TPVerifiedSpecialty  text ENCODE lzo,
-    NPI_DOByear              text ENCODE lzo,
-    NPI_State                text ENCODE lzo,
-    specialty                text ENCODE lzo,
-    credential               text ENCODE lzo,
-    type                     text ENCODE lzo,
-    NPI                      text ENCODE lzo,
-    pcpflag                  text ENCODE lzo,
-    state                    text ENCODE lzo,
-    inactiveflag             text ENCODE lzo,
-    lastupdateDTTM           text ENCODE lzo,
-    primarykey               text ENCODE lzo
-    ) DISTKEY(genproviderID) SORTKEY(genproviderID);
+-- DROP TABLE IF EXISTS transactional_providers;
+-- CREATE TABLE transactional_providers (
+--     rectype                  text ENCODE lzo,
+--     rectypeversion           text ENCODE lzo,
+--     genclientID              text ENCODE lzo,
+--     gen2clientID             text ENCODE lzo,
+--     genproviderID            text ENCODE lzo,
+--     gen2providerID           text ENCODE lzo,
+--     NPI_Title                text ENCODE lzo,
+--     NPI_Gender               text ENCODE lzo,
+--     NPI_TxnCode              text ENCODE lzo,
+--     NPI_TxnClass             text ENCODE lzo,
+--     NPI_TxnType              text ENCODE lzo,
+--     NPI_TxnSpecialty         text ENCODE lzo,
+--     NPI_TPVerifiedSpecialty  text ENCODE lzo,
+--     NPI_DOByear              text ENCODE lzo,
+--     NPI_State                text ENCODE lzo,
+--     specialty                text ENCODE lzo,
+--     credential               text ENCODE lzo,
+--     type                     text ENCODE lzo,
+--     NPI                      text ENCODE lzo,
+--     pcpflag                  text ENCODE lzo,
+--     state                    text ENCODE lzo,
+--     inactiveflag             text ENCODE lzo,
+--     lastupdateDTTM           text ENCODE lzo,
+--     primarykey               text ENCODE lzo
+--     ) DISTKEY(genproviderID) SORTKEY(genproviderID);
 
-COPY transactional_providers FROM :transactional_providers_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+-- COPY transactional_providers FROM :transactional_providers_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
 		
 DROP TABLE IF EXISTS transactional_results;
 CREATE TABLE transactional_results (
@@ -344,30 +344,30 @@ CREATE TABLE transactional_vaccines (
 
 COPY transactional_vaccines FROM :transactional_vaccines_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
 		
-DROP TABLE IF EXISTS transactional_vitals;
-CREATE TABLE transactional_vitals (
-    rectype         text ENCODE lzo,
-    rectypeversion  text ENCODE lzo,
-    genclientID     text ENCODE lzo,
-    gen2clientID    text ENCODE lzo,
-    genpatientID    text ENCODE lzo,
-    gen2patientID   text ENCODE lzo,
-    encounterID     text ENCODE lzo,
-    vitalID         text ENCODE lzo,
-    versionID       text ENCODE lzo,
-    auditdataflag   text ENCODE lzo,
-    name            text ENCODE lzo,
-    status          text ENCODE lzo,
-    value           text ENCODE lzo,
-    units           text ENCODE lzo,
-    refrange        text ENCODE lzo,
-    errorflag       text ENCODE lzo,
-    clinicalDTTM    text ENCODE lzo,
-    performedDTTM   text ENCODE lzo,
-    recordedDTTM    text ENCODE lzo,
-    genproviderID   text ENCODE lzo,
-    gen2providerID  text ENCODE lzo,
-    primarykey      text ENCODE lzo
-    ) DISTKEY(encounterID) SORTKEY(encounterID);
+-- DROP TABLE IF EXISTS transactional_vitals;
+-- CREATE TABLE transactional_vitals (
+--     rectype         text ENCODE lzo,
+--     rectypeversion  text ENCODE lzo,
+--     genclientID     text ENCODE lzo,
+--     gen2clientID    text ENCODE lzo,
+--     genpatientID    text ENCODE lzo,
+--     gen2patientID   text ENCODE lzo,
+--     encounterID     text ENCODE lzo,
+--     vitalID         text ENCODE lzo,
+--     versionID       text ENCODE lzo,
+--     auditdataflag   text ENCODE lzo,
+--     name            text ENCODE lzo,
+--     status          text ENCODE lzo,
+--     value           text ENCODE lzo,
+--     units           text ENCODE lzo,
+--     refrange        text ENCODE lzo,
+--     errorflag       text ENCODE lzo,
+--     clinicalDTTM    text ENCODE lzo,
+--     performedDTTM   text ENCODE lzo,
+--     recordedDTTM    text ENCODE lzo,
+--     genproviderID   text ENCODE lzo,
+--     gen2providerID  text ENCODE lzo,
+--     primarykey      text ENCODE lzo
+--     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
-COPY transactional_vitals FROM :transactional_vitals_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+-- COPY transactional_vitals FROM :transactional_vitals_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
