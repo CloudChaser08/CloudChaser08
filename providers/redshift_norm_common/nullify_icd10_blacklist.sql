@@ -14,5 +14,5 @@
 
 UPDATE :table_name
 SET :column_name=NULL
-WHERE :qual_column_name='02'
+WHERE (:qual_column_name='02' OR (:qual_column_name is null AND :service_date_column_name >= '2015-10-01'))
 AND regexp_count(:column_name, '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$') > 0;
