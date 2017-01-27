@@ -15,7 +15,8 @@ subdags = [
     'subdags.s3_fetch_file',
     'subdags.decrypt_file',
     'subdags.decompress_split_push_file',
-    'subdags.queue_up_for_matching'
+    'subdags.queue_up_for_matching',
+    'subdags.detect_move_normalize'
 ]
 
 for subdag in subdags:
@@ -27,6 +28,7 @@ from subdags.s3_fetch_file import s3_fetch_file
 from subdags.decrypt_file import decrypt_file
 from subdags.decompress_split_push_file import decompress_split_push_file
 from subdags.queue_up_for_matching import queue_up_for_matching
+from subdags.detect_move_normalize import detect_move_normalize
 
 # Applies to all files
 TMP_PATH_TEMPLATE='/tmp/express_scripts/pharmacyclaims/{}/'
@@ -34,7 +36,8 @@ DAG_NAME='express_scripts_pipeline'
 
 # Transaction file
 TRANSACTION_FILE_DESCRIPTION='Express Scripts transaction file'
-S3_TRANSACTION_SPLIT_PATH='s3://salusv/incoming/pharmacyclaims/esi/'
+S3_TRANSACTION_PREFIX='incoming/pharmacyclaims/esi/'
+S3_TRANSACTION_SPLIT_PATH='s3://salusv/' + S3_TRANSACTION_PREFIX
 S3_TRANSACTION_RAW_PATH='incoming/esi/'
 TRANSACTION_FILE_NAME_TEMPLATE='10130X001_HV_RX_Claims_D{}.txt'
 MINIMUM_TRANSACTION_FILE_SIZE=500
@@ -45,23 +48,40 @@ S3_DEID_RAW_PATH='incoming/esi/'
 DEID_FILE_NAME_TEMPLATE='10130X001_HV_RX_Claims_D{}_key.txt'
 MINIMUM_DEID_FILE_SIZE=500
 
+S3_EXPRESS_SCRIPTS_PREFIX = 'warehouse/text/pharmacyclaims/express_scripts/'
+S3_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_EXPRESS_SCRIPTS_PREFIX
+
+S3_PAYLOAD_LOC_PATH = 's3://salusv/matching/payload/pharmacyclaims/esi/'
+
 def get_expected_transaction_file_name(kwargs):
-    kwargs['ds_nodash'] = '20170117'
     return TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash'])
 
 def get_expected_transaction_file_name_gz(kwargs):
-    kwargs['ds_nodash'] = '20170117'
     return TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash']) + '.gz'
 
 def get_expected_transaction_file_regex(kwargs):
     return TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
 
 def get_expected_deid_file_name(kwargs):
-    kwargs['ds_nodash'] = '20170117'
     return DEID_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash'])
 
 def get_expected_deid_file_regex(kwargs):
     return DEID_FILE_NAME_TEMPLATE.format('\d{8}')
+
+def get_file_date(kwargs):
+    return kwargs['ds'].replace('-', '/')
+
+def get_parquet_dates(kwargs):
+    date_path = kwargs['ds'].replace('-', '/')
+
+    warehouse_files = subprocess.check_output(['aws', 's3', 'ls', '--recursive', S3_EXPRESS_SCRIPTS_WAREHOUSE]).split("\n")
+    file_dates = map(lambda f: '/'.join(f.split(' ')[-1].replace(S3_EXPRESS_SCRIPTS_PREFIX, '').split('/')[:-1]), warehouse_files)
+    file_dates = filter(lambda d: len(d) == 10, file_dates)
+    file_dates = sorted(list(set(file_dates)))
+    return filter(lambda d: d < date_path, file_dates)[-2:]
+
+def get_row_count(kwargs):
+    return 3000000
 
 default_args = {
     'owner': 'airflow',
@@ -180,7 +200,32 @@ queue_up_for_matching_dag = SubDagOperator(
     dag=mdag
 )
 
+detect_move_normalize_dag = SubDagOperator(
+    subdag=detect_move_normalize(
+        DAG_NAME,
+        'detect_move_normalize',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_deid_file_name_func': get_expected_deid_file_name,
+            'file_date_func': get_file_date,
+            'incoming_path': S3_TRANSACTION_PREFIX,
+            'normalization_routine_directory': '/home/airflow/airflow/dags/providers/express_scripts/pharmacyclaims/',
+            'normalization_routine_script': '/home/airflow/airflow/dags/providers/express_scripts/pharmacyclaims/rsNormalizeExpressScriptsRX.py',
+            'parquet_dates_func': get_parquet_dates,
+            'row_count_func': get_row_count,
+            's3_path_prefix': S3_EXPRESS_SCRIPTS_PREFIX,
+            's3_payload_loc': S3_PAYLOAD_LOC_PATH,
+            'vendor_description': 'Express Scripts RX',
+            'vendor_uuid': 'f726747e-9dc0-4023-9523-e077949ae865'
+        }
+    ),
+    task_id='detect_move_normalize',
+    dag=mdag
+)
+
 fetch_transaction_file_dag.set_upstream(validate_transaction_file_dag)
 decrypt_transaction_file_dag.set_upstream(fetch_transaction_file_dag)
 decompress_split_push_transaction_file_dag.set_upstream(decrypt_transaction_file_dag)
 queue_up_for_matching_dag.set_upstream(validate_deid_file_dag)
+detect_move_normalize_dag.set_upstream(queue_up_for_matching_dag)
