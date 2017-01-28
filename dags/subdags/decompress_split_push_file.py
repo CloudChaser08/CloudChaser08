@@ -75,9 +75,6 @@ def decompress_split_push_file(parent_dag_name, child_dag_name, start_date, sche
         dag=dag
     )
 
-    env = dict(os.environ)
-    env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID')
-    env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY')
     file_push_tasks = []
     for i in xrange(5):
         file_push_tasks.append(BashOperator(
@@ -91,7 +88,6 @@ def decompress_split_push_file(parent_dag_name, child_dag_name, start_date, sche
                 'task_idx': i, 
                 's3_destination_prefix': dag_config['s3_destination_prefix']
             },
-            env=env,
             dag=dag
         ))
 

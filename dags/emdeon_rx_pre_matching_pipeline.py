@@ -70,10 +70,7 @@ def do_push_splits_to_s3(ds, **kwargs):
     file_list = os.listdir(tmp_path_parts)
     file_name = file_list[0]
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
-    env = os.environ
-    env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
-    env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
-    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)], env=env)
+    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
 
 def do_trigger_post_matching_dag(context, dag_run_obj):
     file_dir = TMP_PATH_TEMPLATE.format(context['ds_nodash'])
@@ -179,9 +176,6 @@ push_splits_to_s3 = PythonOperator(
     dag=mdag
 )
 
-environ = {'AWS_ACCESS_KEY_ID' : Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER'),
-           'AWS_SECRET_ACCESS_KEY' : Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')}
-
 queue_up_for_matching = BashOperator(
     task_id='queue_up_for_matching',
     bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3.sh {}{}'.format(
@@ -190,7 +184,6 @@ queue_up_for_matching = BashOperator(
     params={'sequence_num' : 0,
             'matching_engine_env' : 'prod-matching-engine',
             'priority' : 'priority3'},
-    env=environ,
     dag=mdag
 )
 

@@ -108,11 +108,12 @@ def get_rs_env(cluster_name):
 
 
 def get_rs_s3_credentials_str():
+    env = dict(os.environ)
     return (
         'aws_access_key_id={};aws_secret_access_key={}'
     ).format(
-        Variable.get('AWS_ACCESS_KEY_ID'),
-        Variable.get('AWS_SECRET_ACCESS_KEY')
+        env['AWS_ACCESS_KEY_ID'],
+        env['AWS_SECRET_ACCESS_KEY']
     )
 
 
@@ -190,6 +191,7 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
 
 
 def transform_to_parquet(cluster_name, src_file, dest_file, model):
+    env = dict(os.environ)
     parquet_step = (
         'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
         'Args=[--class,com.healthverity.parquet.Main,'
@@ -197,8 +199,8 @@ def transform_to_parquet(cluster_name, src_file, dest_file, model):
         '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/,'
         '{},20,"|"]'
     ).format(
-        Variable.get('AWS_ACCESS_KEY_ID'),
-        Variable.get('AWS_SECRET_ACCESS_KEY'),
+        env['AWS_ACCESS_KEY_ID'),
+        env['AWS_SECRET_ACCESS_KEY'),
         model, src_file
     )
     cluster_id = _get_emr_cluster_id(cluster_name)

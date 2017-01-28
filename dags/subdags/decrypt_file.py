@@ -43,16 +43,12 @@ def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval,
         default_args=default_args
     )
 
-    env = dict(os.environ)
-    env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID')
-    env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY')
     fetch_decryptor_jar = BashOperator(
         task_id='fetch_decryptor_jar',
         bash_command='aws s3 cp {{ params.jar_src }} ' + dag_config['tmp_path_template'].format('{{ ds_nodash }}'),
         params={
             'jar_src': Variable.get('DECRYPTOR_JAR_REMOTE_LOCATION')
         },
-        env=env,
         dag=dag
     )
 

@@ -50,9 +50,6 @@ def do_move_matching_payload(ds, **kwargs):
     s3_prefix = '{}{}'.format(S3_PREFIX, deid_filename)
     for payload_file in hook.list_keys('salusv', s3_prefix):
         date = '{}/{}/{}'.format(deid_filename[0:4], deid_filename[4:6], deid_filename[6:8])
-        env = os.environ
-        env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
-        env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
         check_call(['aws', 's3', 'cp', '--sse', 'AES256', 's3://salusv/' + payload_file, S3_PAYLOAD_LOC + date + '/' + payload_file.split('/')[-1]])
 
 # This is essentially what S3KeySensorOperator does, but with the
@@ -76,12 +73,12 @@ def do_run_normalization_routine(ds, **kwargs):
     file_date = kwargs['dag_run'].conf['ds_yesterday']
     s3_key = hook.list_keys('salusv', 'incoming/medicalclaims/emdeon/{}'.format(file_date.replace('-', '/')))[0]
     setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
+    env = dict(os.environ)
     s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
-                         Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY')
+                         env['AWS_ACCESS_KEY_ID'], env['AWS_SECRET_ACCESS_KEY']
                      )
     command = ['/home/airflow/airflow/dags/providers/emdeon/medicalclaims/rsNormalizeEmdeonDX.py',
         '--date', file_date, '--setid', setid, '--s3_credentials', s3_credentials, '--first_run']
-    env = dict(os.environ)
     env['PGHOST'] = RS_HOST
     env['PGUSER'] = RS_USER
     env['PGDATABASE'] = RS_DATABASE
@@ -100,8 +97,9 @@ def get_emr_cluster_id(cluster_name):
 def do_transform_to_parquet(ds, **kwargs):
     file_date = kwargs['dag_run'].conf['ds_yesterday'].replace('-','/')
     cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME)
+    env = dict(os.environ)
     transform_step = EMR_TRANSFORM_TO_PARQUET_STEP.format(
-        Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY'), file_date, file_date)
+        env['AWS_ACCESS_KEY_ID'], env['AWS_SECRET_ACCESS_KEY'], file_date, file_date)
     check_call(['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
                 '--steps', EMR_COPY_MELLON_STEP, transform_step, EMR_DISTCP_TO_S3])
     incomplete_steps=1
@@ -162,10 +160,6 @@ detect_matching_done = PythonOperator(
     execution_timeout=timedelta(hours=6),
     dag=mdag
 )
-
-env = os.environ
-env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID')
-env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY')
 
 create_redshift_cluster = BashOperator(
     task_id='create_redshift_cluster',
