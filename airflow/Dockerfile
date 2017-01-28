@@ -4,14 +4,6 @@ FROM ubuntu:14.04
 ARG AIRFLOW_VERSION=1.7.1.3
 ENV AIRFLOW_HOME /usr/local/airflow
 
-# Define en_US.
-ENV LANGUAGE en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
-ENV LC_CTYPE en_US.UTF-8
-ENV LC_MESSAGES en_US.UTF-8
-ENV LC_ALL  en_US.UTF-8
-
 RUN apt-get update
 RUN apt-get install -y software-properties-common
 
@@ -43,7 +35,6 @@ RUN apt-get update -yqq \
         curl \
         netcat \
         jq \
-        locales \
         sqlite3 \
         libpq-dev
 
