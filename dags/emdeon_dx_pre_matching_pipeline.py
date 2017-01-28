@@ -185,7 +185,7 @@ environ = {'AWS_ACCESS_KEY_ID' : Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER'),
 queue_up_for_matching = BashOperator(
     task_id='queue_up_for_matching',
     bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3.sh {}{}'.format(
-                 S3_DEID_RAW_PATH, (DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}'))
+                 S3_DEID_RAW_PATH, (DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}')) + 
                  ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}'),
     params={'sequence_num' : 0,
             'matching_engine_env' : 'prod-matching-engine',
