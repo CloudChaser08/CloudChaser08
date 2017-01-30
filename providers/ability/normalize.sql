@@ -105,24 +105,26 @@ SELECT DISTINCT
     END,                                           -- claim_type
     header.ProcessDate,                            -- date_received
     CASE 
-    WHEN serviceline.ServiceStart IS NOT NULL 
-    THEN serviceline.ServiceStart
-    WHEN header.StartDate IS NOT NULL
-    THEN header.StartDate
+    WHEN svc_start_date.formatted IS NOT NULL 
+    THEN svc_start_date.formatted
+    WHEN start_date.formatted IS NOT NULL
+    THEN start_date.formatted
     ELSE (
-    SELECT MIN(sl2.ServiceStart) 
-    FROM transactional_serviceline sl2 
+    SELECT MIN(clean.formatted) 
+    FROM transactional_serviceline sl2
+        LEFT JOIN dates clean ON sl2.ServiceStart = clean.formatted
     WHERE sl2.ClaimId = serviceline.ClaimId
         )
     END,                                           -- date_service
     CASE 
-    WHEN serviceline.ServiceStart IS NOT NULL 
+    WHEN svc_start_date.formatted IS NOT NULL 
     THEN serviceline.ServiceEnd
-    WHEN header.StartDate IS NOT NULL
+    WHEN start_date.formatted IS NOT NULL
     THEN header.EndDate
     ELSE (
-    SELECT MIN(sl2.ServiceEnd) 
-    FROM transactional_serviceline sl2 
+    SELECT MIN(clean.formatted) 
+    FROM transactional_serviceline sl2
+        LEFT JOIN dates clean ON sl2.ServiceEnd = clean.formatted
     WHERE sl2.ClaimId = serviceline.ClaimId
         )
     END,                                           -- date_service_end
@@ -636,8 +638,12 @@ FROM transactional_header header
         )
     LEFT JOIN transactional_procedure proc ON proc.claimid = header.claimid
 
-    -- fix dates
-    LEFT JOIN dates svc_
+    -- clean dates
+    LEFT JOIN dates process_date ON header.ProcessDate = process_date.formatted
+    LEFT JOIN dates svc_start_date ON serviceline.ServiceStart = svc_start_date.formatted
+    LEFT JOIN dates svc_end_date ON serviceline.ServiceEnd = svc_end_date.formatted
+    LEFT JOIN dates start_date ON header.StartDate = start_date.formatted
+    LEFT JOIN dates end_date ON header.EndDate = end_date.formatted
 ;
 
 -- insert rows for professional claims that do not correspond to a service line
