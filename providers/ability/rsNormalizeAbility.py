@@ -3,6 +3,7 @@ import subprocess
 import argparse
 import time
 import sys
+import os
 sys.path.append(os.path.abspath("../redshift_norm_common/"))
 import create_date_validation_table as date_validator
 
