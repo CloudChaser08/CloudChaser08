@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--header_path', type=str)
 parser.add_argument('--serviceline_path', type=str)
 parser.add_argument('--servicelineaffiliation_path', type=str)
+parser.add_argument('--claimaffiliation_path', type=str)
 parser.add_argument('--diagnosis_path', type=str)
 parser.add_argument('--procedure_path', type=str)
 parser.add_argument('--billing_path', type=str)
@@ -52,6 +53,7 @@ subprocess.call(' '.join(
     + ['-v', 'header_path="\'' + args.header_path + '\'"']
     + ['-v', 'serviceline_path="\'' + args.serviceline_path + '\'"']
     + ['-v', 'servicelineaffiliation_path="\'' + args.servicelineaffiliation_path + '\'"']
+    + ['-v', 'claimaffiliation_path="\'' + args.claimaffiliation_path + '\'"']
     + ['-v', 'diagnosis_path="\'' + args.diagnosis_path + '\'"']
     + ['-v', 'procedure_path="\'' + args.procedure_path + '\'"']
     + ['-v', 'billing_path="\'' + args.billing_path + '\'"']
