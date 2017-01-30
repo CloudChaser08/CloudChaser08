@@ -83,5 +83,5 @@ subprocess.call(' '.join(
     + ['-v', 'output_path="\'' + args.output_path + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + ['-v', 'select_from_common_model_table="\'SELECT * FROM emr_common_model\'"']
-    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+    + [db, '<', '../../redshift_norm_common/unload_common_model.sql']
 ), shell=True)
