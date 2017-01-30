@@ -103,7 +103,7 @@ SELECT DISTINCT
     WHEN header.Type = 'Professional'
     THEN 'P'
     END,                                           -- claim_type
-    header.ProcessDate,                            -- date_received
+    process_date.formatted,                        -- date_received
     CASE 
     WHEN svc_start_date.formatted IS NOT NULL 
     THEN svc_start_date.formatted
@@ -564,14 +564,14 @@ SELECT DISTINCT
     WHEN ambulancedropoff_claim.npi IS NOT NULL
     THEN ambulancedropoff_claim.taxonomy
     END,                                           -- prov_facility_std_taxonomy
-    payer2.sequencenumber,                                           -- cob_payer_seq_code_1
-    payer2.payerid,                                           -- cob_payer_hpid_1
-    payer2.claimfileindicator,                                           -- cob_payer_claim_filing_ind_code_1
-    payer2.payerclassification,                                           -- cob_ins_type_code_1
-    payer3.sequencenumber,                                           -- cob_payer_seq_code_2
-    payer3.payerid,                                           -- cob_payer_hpid_2
-    payer3.claimfileindicator,                                           -- cob_payer_claim_filing_ind_code_2
-    payer3.payerclassification                                            -- cob_ins_type_code_2
+    payer2.sequencenumber,                         -- cob_payer_seq_code_1
+    payer2.payerid,                                -- cob_payer_hpid_1
+    payer2.claimfileindicator,                     -- cob_payer_claim_filing_ind_code_1
+    payer2.payerclassification,                    -- cob_ins_type_code_1
+    payer3.sequencenumber,                         -- cob_payer_seq_code_2
+    payer3.payerid,                                -- cob_payer_hpid_2
+    payer3.claimfileindicator,                     -- cob_payer_claim_filing_ind_code_2
+    payer3.payerclassification                     -- cob_ins_type_code_2
 FROM transactional_header header 
     LEFT JOIN matching_payload mp ON header.claimid = mp.claimid
     LEFT JOIN transactional_serviceline serviceline ON header.claimid = serviceline.claimid
@@ -727,22 +727,24 @@ SELECT DISTINCT
     mp.threeDigitZip,                -- patient_zip3
     mp.state,                        -- patient_state
     'P',                             -- claim_type
-    header.ProcessDate,              -- date_received
+    process_date.formatted,          -- date_received
     CASE 
-    WHEN header.StartDate IS NOT NULL
-    THEN header.StartDate
+    WHEN start_date.formatted IS NOT NULL
+    THEN start_date.formatted
     ELSE (
-    SELECT MIN(sl2.ServiceStart) 
-    FROM transactional_serviceline sl2 
+    SELECT MIN(clean.formatted) 
+    FROM transactional_serviceline sl2
+        LEFT JOIN dates clean ON sl2.ServiceStart = clean.formatted
     WHERE sl2.ClaimId = header.ClaimId
         )
     END,                             -- date_service
     CASE 
-    WHEN header.StartDate IS NOT NULL
+    WHEN start_date.formatted IS NOT NULL
     THEN header.EndDate
     ELSE (
-    SELECT MIN(sl2.ServiceEnd) 
-    FROM transactional_serviceline sl2 
+    SELECT MIN(clean.formatted) 
+    FROM transactional_serviceline sl2
+        LEFT JOIN dates clean ON sl2.ServiceEnd = clean.formatted
     WHERE sl2.ClaimId = header.ClaimId
         )
     END,                             -- date_service_end
@@ -984,6 +986,11 @@ FROM transactional_header header
     -- diag
     LEFT JOIN transactional_diagnosis diagnosis ON diagnosis.claimid = header.claimid
 
+    -- clean dates
+    LEFT JOIN dates process_date ON header.ProcessDate = process_date.formatted
+    LEFT JOIN dates start_date ON header.StartDate = start_date.formatted
+    LEFT JOIN dates end_date ON header.EndDate = end_date.formatted
+
 WHERE header.Type = 'Professional'
     AND diagnosis.diagnosiscode NOT IN (
     SELECT m2.diagnosis_code 
@@ -1077,22 +1084,24 @@ SELECT DISTINCT
     mp.threeDigitZip,                -- patient_zip3
     mp.state,                        -- patient_state
     'I',                             -- claim_type
-    header.ProcessDate,              -- date_received
+    process_date.formatted,          -- date_received
     CASE 
-    WHEN header.StartDate IS NOT NULL
-    THEN header.StartDate
+    WHEN start_date.formatted IS NOT NULL
+    THEN start_date.formatted
     ELSE (
-    SELECT MIN(sl2.ServiceStart) 
-    FROM transactional_serviceline sl2 
+    SELECT MIN(clean.formatted) 
+    FROM transactional_serviceline sl2
+        LEFT JOIN dates clean ON sl2.ServiceStart = clean.formatted
     WHERE sl2.ClaimId = header.ClaimId
         )
     END,                             -- date_service
     CASE 
-    WHEN header.StartDate IS NOT NULL
+    WHEN start_date.formatted IS NOT NULL
     THEN header.EndDate
     ELSE (
-    SELECT MIN(sl2.ServiceEnd) 
-    FROM transactional_serviceline sl2 
+    SELECT MIN(clean.formatted) 
+    FROM transactional_serviceline sl2
+        LEFT JOIN dates clean ON sl2.ServiceEnd = clean.formatted
     WHERE sl2.ClaimId = header.ClaimId
         )
     END,                             -- date_service_end
@@ -1340,5 +1349,10 @@ FROM transactional_header header
 
     -- diag
     LEFT JOIN transactional_diagnosis diagnosis ON diagnosis.claimid = header.claimid
+
+    -- clean dates
+    LEFT JOIN dates process_date ON header.ProcessDate = process_date.formatted
+    LEFT JOIN dates start_date ON header.StartDate = start_date.formatted
+    LEFT JOIN dates end_date ON header.EndDate = end_date.formatted
 WHERE header.Type = 'Institutional'
 ;
