@@ -39,7 +39,7 @@ for d in date_range:
     output = (
         args.output_path if args.output_path.endswith('/')
         else args.output_path + '/'
-    ) + str(d.year) + '/' + str(d.month) + '/' + str(d.day) + '/'
+    ) + str(d.year) + '/' + str(d.month).zfill(2) + '/' + str(d.day).zfill(2) + '/'
 
     # import originals
     subprocess.call(' '.join(
