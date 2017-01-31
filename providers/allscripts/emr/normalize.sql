@@ -21,7 +21,7 @@ SELECT DISTINCT
     WHEN 'Female' THEN 'F'
     ELSE 'Unknown'
     END,
-    codes.diagnosis_code,
+    TRIM(replace(codes.diagnosis_code,'.','')))
     codes.procedure_code,
     codes.loinc_code,
     codes.ndc_code
