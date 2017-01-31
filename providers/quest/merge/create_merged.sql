@@ -9,6 +9,7 @@ CREATE TABLE quest_merged_new (
   loinc_code text encode lzo,
   local_result_code text encode lzo,
   result_name text encode lzo,
+  lab_id text encode lzo,
   date_of_service text sortkey encode lzo,
   date_of_collection text encode lzo,
   diag_code text encode lzo,

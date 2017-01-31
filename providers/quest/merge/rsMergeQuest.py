@@ -7,6 +7,7 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 parser = argparse.ArgumentParser()
 parser.add_argument('--trunk_path', type=str)
 parser.add_argument('--addon_path', type=str)
+parser.add_argument('--lab_path', type=str)
 parser.add_argument('--output_path', type=str)
 parser.add_argument('--database', type=str, nargs='?')
 parser.add_argument('--cluster_endpoint', type=str)
@@ -44,6 +45,14 @@ subprocess.call(' '.join(
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + ['-v', 'input_path="\'' + args.addon_path + '\'"']
     + [db, '<', 'unique_retro.sql']
+), shell=True)
+
+# import lab
+subprocess.call(' '.join(
+    psql
+    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+    + ['-v', 'input_path="\'' + args.lab_path + '\'"']
+    + [db, '<', 'copy_lab.sql']
 ), shell=True)
 
 # merge
