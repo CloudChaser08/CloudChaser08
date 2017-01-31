@@ -5,7 +5,7 @@ import time
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--trunk_path', type=str)
+parser.add_argument('--trunk_manifest', type=str)
 parser.add_argument('--addon_path', type=str)
 parser.add_argument('--lab_path', type=str)
 parser.add_argument('--output_path', type=str)
@@ -26,7 +26,7 @@ if args.rs_user:
 # import originals
 subprocess.call(' '.join(
     psql
-    + ['-v', 'input_path="\'' + args.trunk_path + '\'"']
+    + ['-v', 'input_path="\'' + args.trunk_manifest + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'copy.sql']
 ), shell=True)
