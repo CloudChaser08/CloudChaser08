@@ -4,16 +4,21 @@ import time
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
+#
+# Trunk path is on the day level, addon and lab paths are on the year
+# level
+#
 parser = argparse.ArgumentParser()
-parser.add_argument('--trunk_manifest', type=str)
+parser.add_argument('--trunk_path', type=str)
 parser.add_argument('--addon_path', type=str)
 parser.add_argument('--lab_path', type=str)
 parser.add_argument('--output_path', type=str)
-parser.add_argument('--database', type=str, nargs='?')
+parser.add_argument('--database', type=str)
 parser.add_argument('--cluster_endpoint', type=str)
 parser.add_argument('--s3_credentials', type=str)
-parser.add_argument('--rs_user', type=str, nargs='?')
-parser.add_argument('--rs_password', type=str, nargs='?')
+parser.add_argument('--rs_user', type=str)
+parser.add_argument('--rs_password', type=str)
+parser.add_argument('--new_year', type=bool)
 args = parser.parse_args()
 
 db = args.database if args.database else 'dev'
@@ -57,10 +62,9 @@ subprocess.call(' '.join(
 
 # merge
 subprocess.call(' '.join(psql + [db, '<', 'create_merged.sql']), shell=True)
-for i in [2014, 2015, 2016]:
-    subprocess.call(' '.join(
-        psql + ['-v', 'year="\'' + str(i) + '%\'"', db, '<', 'merge.sql']
-    ), shell=True)
+subprocess.call(' '.join(
+    psql + [db, '<', 'merge.sql']
+), shell=True)
 
 # unload
 subprocess.call(' '.join(
@@ -68,6 +72,6 @@ subprocess.call(' '.join(
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + ['-v', 'output_path="\'' + args.output_path + '\'"']
     + ['-v', 'select_from_common_model_table="\''
-       + 'select * from quest_merged_new where date_of_service = ${D} order by date_of_service\'"']
+       + 'select * from quest_merged_new\'"']
     + [db, '<', '../../redshift_norm_common/unload_common_model.sql']
 ))

@@ -15,5 +15,4 @@ INSERT INTO quest_merged_new SELECT
 FROM quest q
     INNER JOIN quest_dos_unique d USING (accn_id, dos_id)
     INNER JOIN quest_lab l USING (accn_id, dos_id)
-WHERE d.date_of_service like :year
 ORDER BY d.date_of_service;
