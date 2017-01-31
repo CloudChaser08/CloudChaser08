@@ -613,7 +613,7 @@ FROM transactional_header header
     AND purchased.type = 'Purchased'
     LEFT JOIN transactional_claimaffiliation purchased_claim ON header.claimid = purchased_claim.claimid 
     AND purchased_claim.type = 'Purchased'
-    LEFT JOIN transactional_servicelineaffiliation other ON bserviceline.servicelineid = other.servicelineid 
+    LEFT JOIN transactional_servicelineaffiliation other ON serviceline.servicelineid = other.servicelineid 
     AND serviceline.claimid = other.claimid
     AND other.type = 'Other'
     LEFT JOIN transactional_claimaffiliation other_claim ON header.claimid = other_claim.claimid 
