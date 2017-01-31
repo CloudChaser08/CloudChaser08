@@ -14,5 +14,5 @@ INSERT INTO quest_merged_new SELECT
     d.icd_codeset_ind 
 FROM quest q
     INNER JOIN quest_dos_unique d USING (accn_id, dos_id)
-    INNER JOIN quest_lab l USING (accn_id, dos_id)
+    INNER JOIN quest_lab_unique l USING (accn_id, dos_id)
 ORDER BY d.date_of_service;
