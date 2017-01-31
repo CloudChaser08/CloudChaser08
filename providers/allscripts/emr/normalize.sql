@@ -1,7 +1,9 @@
 INSERT INTO emr_common_model (
         hvid,
         source_version,
+        claim_type,
         date_start,
+        encounter_id,
         patient_year_of_birth,
         patient_zip,
         patient_gender,
@@ -13,7 +15,9 @@ INSERT INTO emr_common_model (
 SELECT DISTINCT
     COALESCE(payload.parentid, payload.hvid),
     '1',
+    codes.claim_type,
     encounters.encounterDTTM,
+    encounters.encounterid,
     as_patients.dobyear,
     payload.threeDigitZip,
     CASE as_patients.gender 
@@ -31,6 +35,7 @@ FROM transactional_encounters encounters
     SELECT
         encounterid,
         gen2patientID,
+        'ORDERS' as claim_type,
         billingicd10code AS diagnosis_code,
         null AS procedure_code,
         null as ndc_code,
@@ -40,6 +45,7 @@ FROM transactional_encounters encounters
     SELECT DISTINCT
         encounterid,
         gen2patientID,
+        'PROBLEMS' as claim_type,
         icd10 AS diagnosis_code,
         null AS procedure_code,
         null as ndc_code,
@@ -52,6 +58,7 @@ FROM transactional_encounters encounters
     SELECT
         encounterid,
         gen2patientID,
+        'ORDERS' as claim_type,
         null AS diagnosis_code,
         cpt4 AS procedure_code,
         null as ndc_code,
@@ -61,6 +68,7 @@ FROM transactional_encounters encounters
     SELECT
         encounterid,
         gen2patientID,
+        'ORDERS' as claim_type,
         null AS diagnosis_code,
         hcpcs AS procedure_code,
         null AS ndc_code,
@@ -70,6 +78,7 @@ FROM transactional_encounters encounters
     SELECT
         encounterid,
         gen2patientID,
+        'PROBLEMS' as claim_type,
         null AS diagnosis_code,
         cptcode AS procedure_code,
         null AS ndc_code,
@@ -82,6 +91,7 @@ FROM transactional_encounters encounters
     SELECT
         encounterid,
         gen2patientID,
+        'MEDICATIONS' as claim_type,
         null AS diagnosis_code,
         null AS procedure_code,
         ndc AS ndc_code,
@@ -92,6 +102,7 @@ FROM transactional_encounters encounters
     SELECT
         encounterid,
         gen2patientID,
+        'VACCINES' as claim_type,
         null AS diagnosis_code,
         null AS procedure_code,
         ndc AS ndc_code,
@@ -103,6 +114,7 @@ FROM transactional_encounters encounters
     SELECT
         encounterid,
         gen2patientID,
+        'RESULTS' as claim_type,
         null AS diagnosis_code,
         null AS procedure_code,
         null AS ndc_code,
