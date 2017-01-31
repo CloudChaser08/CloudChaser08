@@ -113,6 +113,10 @@ validate_trunk = validate_step(
     'trunk', S3_TRANSACTION_RAW_PATH + TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
     10000000
 )
+validate_deid = validate_step(
+    'deid', S3_TRANSACTION_RAW_PATH + DEID_FILE_NAME_TEMPLATE,
+    10000000
+)
 
 
 def fetch_step(task_id, s3_path_template, local_path_template):
@@ -564,12 +568,13 @@ bzip_parts_trunk.set_upstream(clean_up_workspace_trunk)
 push_splits_to_s3_trunk.set_upstream(bzip_parts_trunk)
 clean_up_workspace_trunk_parts.set_upstream(push_splits_to_s3_trunk)
 
-# queue and cleanup
+# cleanup
 clean_up_workspace.set_upstream(
     [clean_up_workspace_trunk_parts, clean_up_workspace_addon_parts]
 )
-queue_up_for_matching.set_upstream(clean_up_workspace)
 
+# matching
+queue_up_for_matching.set_upstream(validate_deid)
 
 # post-matching
 detect_matching_done.set_upstream(queue_up_for_matching)
@@ -578,7 +583,10 @@ move_matching_payload.set_upstream(detect_matching_done)
 # normalization
 create_redshift_cluster.set_upstream(detect_matching_done)
 normalize.set_upstream(
-    [create_redshift_cluster, move_matching_payload]
+    [
+        create_redshift_cluster, move_matching_payload,
+        push_splits_to_s3_addon, push_splits_to_s3_trunk
+    ]
 )
 delete_redshift_cluster.set_upstream(normalize)
 
