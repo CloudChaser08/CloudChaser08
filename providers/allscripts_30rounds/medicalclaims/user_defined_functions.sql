@@ -15,7 +15,8 @@ AS $$
         ps = map(lambda x: x+1, ps)
     
     ps = filter(lambda x: x > 0 and x <= len(ds), ps)
-    return ':'.join(map(lambda p: ds[p-1] + '_' + str(p), ps))
+    related = []
+    return ':'.join([ds[p-1] + '_' + str(i+1) for i, p in enumerate(ps)])
 $$ LANGUAGE plpythonu;
 
 CREATE OR REPLACE FUNCTION string_set_diff(s1 varchar(5000), s2 varchar(5000)) RETURNS varchar(5000) IMMUTABLE

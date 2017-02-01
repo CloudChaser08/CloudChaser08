@@ -419,4 +419,4 @@ column413 text ENCODE lzo
 DISTKEY(column0) SORTKEY(column1);
 
 -- Load transaction data into table
-copy allscripts_dx_raw from :input_path credentials :credentials BZIP2 EMPTYASNULL FILLRECORD;
+copy allscripts_dx_raw from :input_path credentials :credentials BZIP2 BLANKSASNULL FILLRECORD;
