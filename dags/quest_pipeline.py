@@ -74,8 +74,6 @@ mdag = DAG(
     default_args=default_args
 )
 
-env = aws_utils.get_aws_env()
-
 
 def get_formatted_date(kwargs):
     return kwargs['yesterday_ds_nodash'] + kwargs['ds_nodash'][4:8]
@@ -447,7 +445,7 @@ def delete_redshift_cluster_step():
             '/home/airflow/airflow/dags/resources/redshift.py', 'delete',
             '--identifier',
             RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
-        ], env=env)
+        ])
     return PythonOperator(
         task_id='delete_redshift_cluster',
         provide_context=True,

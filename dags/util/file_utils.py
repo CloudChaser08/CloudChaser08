@@ -37,24 +37,22 @@ def decrypt(aws_id, aws_key, decryptor_path, file_path):
     DECRYPTOR_JAR = decryptor_path + "decryptor.jar"
     DECRYPTOR_KEY = decryptor_path + "private.reformat"
 
-    env = aws_utils.get_aws_env()
-
-    check_call(["mkdir", decryptor_path], env=env)
+    check_call(["mkdir", decryptor_path])
     check_call([
         "aws", "s3", "cp", config.DECRYPTOR_JAR_LOCATION, DECRYPTOR_JAR
-    ], env=env)
+    ])
     check_call([
         "aws", "s3", "cp", config.DECRYPTOR_KEY_LOCATION, DECRYPTOR_KEY
-    ], env=env)
+    ])
 
     file_name = _get_files(file_path)[0]
     check_call([
         "java", "-jar", DECRYPTOR_JAR,
         "-i", file_name, "-o", file_name + ".gz",
         "-k", DECRYPTOR_KEY
-    ], env=env)
+    ])
 
-    check_call(["rm", "-rf", decryptor_path], env=env)
+    check_call(["rm", "-rf", decryptor_path])
 
 
 def gunzip(path):
