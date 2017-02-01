@@ -77,8 +77,6 @@ mdag = DAG(
 
 env = aws_utils.get_aws_env()
 
-row_count = 0
-
 
 def get_formatted_date(kwargs):
     return kwargs['yesterday_ds_nodash'] + kwargs['ds_nodash'][4:8]
@@ -210,26 +208,6 @@ gunzip_addon = gunzip_step(
 gunzip_trunk = gunzip_step(
     "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
 )
-
-
-def set_row_count_step():
-    def execute(ds, **kwargs):
-        global row_count
-        row_count = check_output([
-            'wc', '-l',
-            TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format(
-                get_formatted_date(kwargs)
-            ) + TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE.format(
-                get_formatted_date(kwargs)
-            )
-        ])
-    return PythonOperator(
-        task_id='set_row_count',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-set_row_count = set_row_count_step()
 
 
 def split_step(task_id, tmp_path_template, tmp_parts_path_template):
@@ -370,21 +348,10 @@ S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
 
 def detect_matching_done_step():
     def execute(ds, **kwargs):
-        global row_count
-        chunk_start = row_count / 1000000 * 1000000
-        template = '{}{}'
-        if row_count >= 1000000:
-            template += '{}-{}'
-        template += '*'
-        s3_key = template.format(
-            S3_PAYLOAD_LOCATION,
-            DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
-                get_formatted_date(kwargs)
-            ), chunk_start, row_count
-        )
-        logging.info('Poking for key : {}'.format(s3_key))
-        while not aws_utils.s3_key_exists(s3_key):
-            print("Looking for: " + s3_key)
+        while not filter(
+                lambda k: get_formatted_date(kwargs) in k and 'DONE' in k,
+                aws_utils.list_keys(S3_PAYLOAD_LOCATION)
+        ):
             time.sleep(60)
     return PythonOperator(
         task_id='detect_matching_done',
@@ -561,8 +528,7 @@ clean_up_workspace_addon_parts.set_upstream(push_splits_to_s3_addon)
 fetch_trunk.set_upstream(validate_trunk)
 unzip_trunk.set_upstream(fetch_trunk)
 gunzip_trunk.set_upstream(unzip_trunk)
-set_row_count.set_upstream(gunzip_trunk)
-split_trunk.set_upstream(set_row_count)
+split_trunk.set_upstream(gunzip_trunk)
 clean_up_workspace_trunk.set_upstream(split_trunk)
 bzip_parts_trunk.set_upstream(clean_up_workspace_trunk)
 push_splits_to_s3_trunk.set_upstream(bzip_parts_trunk)
