@@ -4,5 +4,5 @@
 
 UPDATE :table_name
 SET :column_name='Z684'
-WHERE :qual_column_name='02'
+WHERE (:qual_column_name='02' OR (:qual_column_name IS NULL AND :service_date_column_name >= '2015-10-01'))
 AND regexp_count(:column_name, '^Z684[1-5]$') > 0;
