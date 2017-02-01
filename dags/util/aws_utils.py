@@ -38,6 +38,9 @@ def _get_s3_hook():
 def fetch_file_from_s3(s3_path, local_path):
     """Download a file from S3"""
     check_call([
+        'mkdir', '-p', local_path
+    ], env=get_aws_env())
+    check_call([
         'aws', 's3', 'cp', s3_path, local_path
     ], env=get_aws_env())
 

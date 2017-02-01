@@ -2,9 +2,8 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
-import logging
 import sys
-from subprocess import check_call, check_output
+from subprocess import check_call
 import time
 
 if sys.modules.get('config'):
@@ -62,7 +61,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 01, 25, 12),
-    'depends_on_past': True,
+    'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
