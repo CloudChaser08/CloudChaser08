@@ -12,6 +12,8 @@ parser.add_argument('--cluster_endpoint', type=str)
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--rs_user', type=str)
 parser.add_argument('--rs_password', type=str)
+parser.add_argument('--start_date', type=str)
+parser.add_argument('--end_date', type=str)
 args = parser.parse_args()
 
 db = 'dev'
@@ -20,16 +22,19 @@ if args.rs_user:
     psql.append('-U')
     psql.append(args.rs_user)
 
-# we only need to merge this date range
-start_date = date(2014, 9, 2)
-end_date = date(2016, 9, 1)
+# we only need to merge this date range - [2014-09-01 - 2016-08-31)
+# use start date and end date args if they exist
+start_date = datetime.strptime(args.start_date, '%Y-%m-%d') \
+             if args.start_date else date(2014, 9, 1)
+end_date = datetime.strptime(args.end_date, '%Y-%m-%d') \
+           if args.end_date else date(2016, 8, 31)
 date_range = [
     start_date + timedelta(n) for n in range(int((end_date - start_date).days))
 ]
 
 for d in date_range:
     # how quest indicates the current date
-    formatted_date = (d - timedelta(1)).strftime('%Y%m%d') + d.strftime('%m%d')
+    formatted_date = d.strftime('%Y%m%d') + (d + timedelta(1)).strftime('%m%d')
 
     print('Merging ' + formatted_date)
 
@@ -52,7 +57,7 @@ for d in date_range:
     # only need to do this if we're starting a new year
     if (
             d.year == 2014 and formatted_date[4:8] == '0901'
-    ) or formatted_date[4:8] == '1231':
+    ) or formatted_date[4:8] == '0101':
         print('New year! Recreating addon and lab tables')
 
         addon_path = base + 'unzipped/HVRetro' + str(d.year)
