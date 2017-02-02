@@ -2,7 +2,6 @@
 # Operators for interacting with AWS
 #
 import json
-import hashlib
 import time
 from subprocess import check_call, Popen, check_output
 from airflow.models import Variable
@@ -139,13 +138,6 @@ EMR_COPY_MELLON_STEP = (
     '/tmp/mellon-assembly-latest.jar'
     ']'
 )
-EMR_TRANSFORM_TO_PARQUET_STEP = (
-    'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
-    'Args=[--class,com.healthverity.parquet.Main,'
-    '--conf,spark.sql.parquet.compression.codec=gzip,'
-    '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/,'
-    's3a://salusv/warehouse/text/medicalclaims/emdeon/{},20,"|"]'
-)
 EMR_DISTCP_TO_S3 = (
     'Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src={}","--dest={}"]'
@@ -197,28 +189,23 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
 
 
 def transform_to_parquet(cluster_name, src_file, dest_file, model):
-    file_id_hash = hashlib.md5()
-    file_id_hash.update(src_file)
-    file_id = file_id_hash.hexdigest()
     parquet_step = (
         'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
         'Args=[--class,com.healthverity.parquet.Main,'
         '--conf,spark.sql.parquet.compression.codec=gzip,'
-        '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/{}/,'
+        '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/,'
         '{},20,"|"]'
     ).format(
         Variable.get('AWS_ACCESS_KEY_ID'),
         Variable.get('AWS_SECRET_ACCESS_KEY'),
-        model, file_id, src_file
+        model, src_file
     )
     cluster_id = _get_emr_cluster_id(cluster_name)
     check_call([
         'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
         '--steps', EMR_COPY_MELLON_STEP, parquet_step,
         EMR_DISTCP_TO_S3.format(
-            "hdfs:///parquet/{}/".format(
-                file_id
-            ), dest_file
+            "hdfs:///parquet/", dest_file
         )
     ])
     _wait_for_steps(cluster_id)
