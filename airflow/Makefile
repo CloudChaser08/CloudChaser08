@@ -1,7 +1,14 @@
 
+DOCKER_REG=581191604223.dkr.ecr.us-east-1.amazonaws.com
+REPO=${DOCKER_REG}/hvairflow
 
 build:
-	docker build -t hvairflow .
+	docker build -t ${REPO}:${USER} .
+	docker tag ${REPO}:${USER} ${REPO}:latest
+
+push:
+	docker push ${REPO}:${USER}
+	docker push ${REPO}:latest
 
 run:
 	docker run -d \
@@ -11,7 +18,7 @@ run:
 	-v ${PWD}/../dags:/usr/local/airflow/dags \
 	-p 8080:8080 \
 	--name airflow \
-	hvairflow
+	${DOCKER_REG}${REPO}:latest
 
 
 shell:
