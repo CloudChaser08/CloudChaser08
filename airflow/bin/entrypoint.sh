@@ -25,9 +25,14 @@ sqlite3 $AIRFLOW_HOME/airflow.db \
   "INSERT INTO variable (\"key\", val, is_encrypted)
    VALUES ('DECRYPTION_KEY_REMOTE_LOCATION','gAAAAABYi8416gMCIkCxvtPDz7GrXJWOoPKvWGFu42B6LJc0kHAcrMv_o0ZhsHDIcCPFXujI06zCQbg4epduYKJKVU6LW2lkFVwCUBiuf0n1EYmCC7ydLC7xSqPK9Tc_A13hFpB2p4H-qHdh2-VnAkJ6SIN87C11RQ==',1)"
 
-$CMD variables -s 'Slack Token' 'testing'
+sqlite3 $AIRFLOW_HOME/airflow.db \
+  "INSERT INTO variable (\"key\", val, is_encrypted)
+   VALUES ('SlackToken','gAAAAABYjE_8QzxBp-NiGrm1MpI-ldKBju_A8CaIZmtbZb8w3zGUPrhtlwL456PTsZtBQlhltWS3P404A8EyaBwLlHPJAqfwHA==',1)"
+
+$CMD initdb
 
 echo "Starting Webserver..."
-$CMD webserver -D --stderr /dev/stdout
+$CMD webserver -D # --stderr /dev/stdout
 
+echo "Starting Scheduler..."
 exec $CMD scheduler
