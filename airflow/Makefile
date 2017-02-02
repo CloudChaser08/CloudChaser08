@@ -18,7 +18,7 @@ run:
 	-v ${PWD}/../dags:/usr/local/airflow/dags \
 	-p 8080:8080 \
 	--name airflow \
-	${DOCKER_REG}${REPO}:latest
+	${REPO}:latest
 
 
 shell:
