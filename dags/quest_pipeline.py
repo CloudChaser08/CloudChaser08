@@ -3,6 +3,7 @@ from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 import sys
+import os
 from subprocess import check_call
 import time
 
@@ -261,7 +262,7 @@ def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
         formatted_date = get_formatted_date(kwargs)
         aws_utils.push_local_dir_to_s3(
             tmp_parts_path.format(formatted_date),
-            insert_current_date(s3_path)
+            insert_current_date(s3_path, kwargs)
         )
     return PythonOperator(
         task_id='push_splits_to_s3_' + task_id,
@@ -314,10 +315,13 @@ def queue_up_for_matching_step(seq_num, engine_env, priority):
             S3_TRANSACTION_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format(
                 get_formatted_date(kwargs)
             ))
+        env = dict(os.environ)
+        env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER')
+        env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')
         check_call([
             '/home/airflow/airflow/dags/resources/push_file_to_s3.sh',
             deid_file, seq_num, engine_env, priority
-        ], env=aws_utils.get_aws_env("_MATCH_PUSHER"))
+        ], env=env)
     return PythonOperator(
         task_id='queue_up_for_matching',
         provide_context=True,
@@ -342,7 +346,7 @@ def detect_matching_done_step():
     def execute(ds, **kwargs):
         while not filter(
                 lambda k: get_formatted_date(kwargs) in k and 'DONE' in k,
-                aws_utils.list_keys(S3_PAYLOAD_LOCATION)
+                aws_utils.list_s3_bucket(S3_PAYLOAD_LOCATION)
         ):
             time.sleep(60)
     return PythonOperator(
@@ -366,7 +370,8 @@ def move_matching_payload_step():
             aws_utils.copy_file(
                 payload_file,
                 insert_current_date(
-                    S3_PAYLOAD_DEST + '{}/{}/{}/' + payload_file.split('/')[-1]
+                    S3_PAYLOAD_DEST + '{}/{}/{}/' + payload_file.split('/')[-1],
+                    kwargs
                 )
             )
     return PythonOperator(
