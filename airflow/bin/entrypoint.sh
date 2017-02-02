@@ -4,14 +4,14 @@ AIRFLOW_HOME="/usr/local/airflow"
 CMD="airflow"
 
 # Generate Fernet key
-: ${FERNET_KEY:=$(python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print FERNET_KEY")}
-sed -i "s|\$FERNET_KEY|$FERNET_KEY|" "$AIRFLOW_HOME"/airflow.cfg
+: ${FERNET_KEY:=$(python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print FERNET_KEY")} sed -i "s|\$FERNET_KEY|$FERNET_KEY|" "$AIRFLOW_HOME"/airflow.cfg
 
 echo "Reset database..."
 
+touch $AIRFLOW_HOME/airflow.db
 
 $CMD initdb
-$CMD resetdb
+$CMD resetdb -y
 
 sqlite3 $AIRFLOW_HOME/airflow.db \
   "INSERT INTO connection (conn_id, conn_type, host, schema, login, password, port, extra, is_encrypted, is_extra_encrypted)
