@@ -170,7 +170,8 @@ def decrypt_step(task_id, tmp_path_template):
     def execute(ds, **kwargs):
         env = dict(os.environ)
         file_utils.decrypt(
-            env['AWS_ACCESS_KEY_ID'], env['AWS_SECRET_ACCESS_KEY']
+            env['AWS_ACCESS_KEY_ID'],
+            env['AWS_SECRET_ACCESS_KEY'],
             TMP_DECRYPTOR_PATH_TEMPLATE.format(
                 get_formatted_date(kwargs)
             ),
