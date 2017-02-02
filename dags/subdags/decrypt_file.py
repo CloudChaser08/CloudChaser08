@@ -58,7 +58,6 @@ def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval,
         params={
             'key_src': Variable.get('DECRYPTION_KEY_REMOTE_LOCATION')
         },
-        env=env,
         dag=dag
     )
 

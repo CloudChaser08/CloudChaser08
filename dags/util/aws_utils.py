@@ -199,8 +199,8 @@ def transform_to_parquet(cluster_name, src_file, dest_file, model):
         '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/,'
         '{},20,"|"]'
     ).format(
-        env['AWS_ACCESS_KEY_ID'),
-        env['AWS_SECRET_ACCESS_KEY'),
+        env['AWS_ACCESS_KEY_ID'],
+        env['AWS_SECRET_ACCESS_KEY'],
         model, src_file
     )
     cluster_id = _get_emr_cluster_id(cluster_name)

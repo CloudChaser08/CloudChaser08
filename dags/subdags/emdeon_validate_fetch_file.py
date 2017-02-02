@@ -86,7 +86,7 @@ def emdeon_validate_fetch_file(parent_dag_name, child_dag_name, start_date, sche
     
     alert_is_bad_name = SlackAPIOperator(
         task_id='alert_is_bad_name',
-        token=Variable.get('Slack Token'),
+        token=Variable.get('SlackToken'),
         method='chat.postMessage',
         retries=0,
         api_params={
@@ -100,7 +100,7 @@ def emdeon_validate_fetch_file(parent_dag_name, child_dag_name, start_date, sche
     
     alert_no_new_file = SlackAPIOperator(
         task_id='alert_no_new_file',
-        token=Variable.get('Slack Token'),
+        token=Variable.get('SlackToken'),
         method='chat.postMessage',
         retries=0,
         api_params={
@@ -114,7 +114,7 @@ def emdeon_validate_fetch_file(parent_dag_name, child_dag_name, start_date, sche
     
     alert_file_size_problem = SlackAPIOperator(
         task_id='alert_file_size_problem',
-        token=Variable.get('Slack Token'),
+        token=Variable.get('SlackToken'),
         method='chat.postMessage',
         retries=0,
         api_params={
