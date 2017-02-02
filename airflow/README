@@ -1,0 +1,27 @@
+
+
+## Build Airflow Dev Container
+
+```shell
+make build
+```
+
+## Start Container
+
+```shell
+make run
+```
+
+## See what Airflow is doing
+
+```shell
+docker logs -f airflow
+```
+
+## Run Airflow commands in the container
+
+```shell
+./airflow.sh trigger_dag update_ndc
+```
+
+
