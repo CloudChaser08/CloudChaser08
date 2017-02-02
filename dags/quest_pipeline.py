@@ -81,9 +81,9 @@ def get_formatted_date(kwargs):
 
 def insert_current_date(template, kwargs):
     return template.format(
-        kwargs['ds_nodash'][0:4],
-        kwargs['ds_nodash'][4:6],
-        kwargs['ds_nodash'][6:8]
+        kwargs['yesterday_ds_nodash'][0:4],
+        kwargs['yesterday_ds_nodash'][4:6],
+        kwargs['yesterday_ds_nodash'][6:8]
     )
 
 #
@@ -259,14 +259,9 @@ bzip_parts_trunk = bzip_parts_step(
 def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
     def execute(ds, **kwargs):
         formatted_date = get_formatted_date(kwargs)
-        dest_date = kwargs['ds_nodash']
         aws_utils.push_local_dir_to_s3(
             tmp_parts_path.format(formatted_date),
-            s3_path.format(
-                dest_date[0:4],
-                dest_date[4:6],
-                dest_date[6:8]
-            )
+            insert_current_date(s3_path)
         )
     return PythonOperator(
         task_id='push_splits_to_s3_' + task_id,
@@ -362,12 +357,6 @@ detect_matching_done = detect_matching_done_step()
 
 def move_matching_payload_step():
     def execute(ds, **kwargs):
-        dest_date = '{}/{}/{}'.format(
-            kwargs['ds_nodash'][0:4],
-            kwargs['ds_nodash'][4:6],
-            kwargs['ds_nodash'][6:8]
-        )
-
         for payload_file in aws_utils.list_s3_bucket(
                 S3_PAYLOAD_LOCATION +
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
@@ -376,7 +365,9 @@ def move_matching_payload_step():
         ):
             aws_utils.copy_file(
                 payload_file,
-                S3_PAYLOAD_DEST + dest_date + '/' + payload_file.split('/')[-1]
+                insert_current_date(
+                    S3_PAYLOAD_DEST + '{}/{}/{}/' + payload_file.split('/')[-1]
+                )
             )
     return PythonOperator(
         task_id='move_matching_payload',
