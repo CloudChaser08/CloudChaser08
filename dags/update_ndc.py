@@ -16,7 +16,8 @@ import csv
 import struct
 from datetime import timedelta, datetime
 
-SRC_FILE='http://www.accessdata.fda.gov/cder/ndctext.zip'
+SRC_PATH='http://www.accessdata.fda.gov/cder/'
+SRC_FILE='ndctext.zip'
 TMP_PATH='/tmp/ndc_'
 
 if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
@@ -243,12 +244,12 @@ fetch_yesterday = BashOperator(
 
 fetch_new = BashOperator(
     task_id='fetch_new',
-    bash_command='cd /tmp/ndc_{{ ds }} && wget ' + SRC_FILE,
+    bash_command='cd /tmp/ndc_{{ ds }} && wget ' + SRC_PATH + SRC_FILE,
     dag=dag)
 
 decompress_new = BashOperator(
     task_id='decompress_new',
-    bash_command='cd /tmp/ndc_{{ ds }} && unzip -o ndctext.zip',
+    bash_command='cd /tmp/ndc_{{ ds }} && unzip -o ' + SRC_FILE,
     retries=3,
     dag=dag)
 
