@@ -461,7 +461,7 @@ EMR_CLUSTER_ID_TEMPLATE = 'quest-parquet-{}'
 EMR_NUM_NODES = "5"
 EMR_NODE_TYPE = 'c4.xlarge'
 EMR_EBS_VOLUME_SIZE = 0
-PARQUET_SOURCE_TEMPLATE = "s3://salusv/warehouse/text/labtests/quest/{}/{}/{}/"
+PARQUET_SOURCE_TEMPLATE = "s3a://salusv/warehouse/text/labtests/quest/{}/{}/{}/"
 PARQUET_DESTINATION_TEMPLATE = "s3://salusv/warehouse/parquet/labtests/quest/{}/{}/{}/"
 
 
