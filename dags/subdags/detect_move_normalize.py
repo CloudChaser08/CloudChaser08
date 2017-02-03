@@ -45,26 +45,26 @@ EMR_EBS_VOLUME_SIZE="0"
 
 def do_detect_matching_done(ds, **kwargs):
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-    row_count = int(kwargs['row_count_func'](kwargs))
+    row_count = int(kwargs['row_count_func'](ds, kwargs))
     chunk_start = row_count / 1000000 * 1000000
-    deid_filename = kwargs['expected_deid_file_name_func'](kwargs)
-    s3_path_prefix = S3_PATH_PREFIX + vendor_uuid + '/'
+    deid_filename = kwargs['expected_deid_file_name_func'](ds, kwargs)
+    s3_path_prefix = S3_PATH_PREFIX + kwargs['vendor_uuid'] + '/'
     template = '{}{}*'
     if row_count >= 1000000:
         template += '{}-{}'
     template += '*'
-    s3_key = template.format(S3_PATH_PREFIX, deid_filename, chunk_start, row_count)
+    s3_key = template.format(s3_path_prefix, deid_filename, chunk_start, row_count)
     logging.info('Poking for key : {}'.format(s3_key))
     while not hook.check_for_wildcard_key(s3_key, None):
         time.sleep(60)
 
 def do_move_matching_payload(ds, **kwargs):
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-    deid_filename = kwargs['expected_deid_file_name_func'](kwargs)
+    deid_filename = kwargs['expected_deid_file_name_func'](ds, kwargs)
     vendor_uuid = kwargs['vendor_uuid']
     s3_prefix = S3_PREFIX + vendor_uuid + '/' + deid_filename
     for payload_file in hook.list_keys('salusv', s3_prefix):
-        date = kwargs['file_date_func'](kwargs)
+        date = kwargs['file_date_func'](ds, kwargs)
         env = dict(os.environ)
         env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
         env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
@@ -72,8 +72,8 @@ def do_move_matching_payload(ds, **kwargs):
 
 def do_run_normalization_routine(ds, **kwargs):
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-    file_date = kwargs['file_date_func'](kwargs)
-    s3_key = hook.list_keys('salusv', kwargs['incoming_path'])[0]
+    file_date = kwargs['file_date_func'](ds, kwargs)
+    s3_key = hook.list_keys('salusv', kwargs['incoming_path'] + file_date.replace('-', '/') + '/')[0]
     setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
     s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
                          Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY')
@@ -82,7 +82,7 @@ def do_run_normalization_routine(ds, **kwargs):
             '--s3_credentials', s3_credentials, '--first_run']
 
     env = dict(os.environ)
-    env['PGHOST'] = kwargs['vendor_uuid'] + RX_HOST_TLD
+    env['PGHOST'] = kwargs['vendor_uuid'] + RS_HOST_TLD
     env['PGUSER'] = RS_USER
     env['PGDATABASE'] = RS_DATABASE
     env['PGPORT'] = RS_PORT
@@ -102,13 +102,18 @@ def do_transform_to_parquet(ds, **kwargs):
     cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'])
     transform_steps = []
     delete_steps = []
-    for d in kwargs['parquet_dates_func'](kwargs):
+    for d in kwargs['parquet_dates_func'](ds, kwargs):
         transform_steps.append(EMR_TRANSFORM_TO_PARQUET_STEP.format(kwargs['vendor_description'],
-            Variable.get('AWS_ACCESS_KEY_ID'),Variable.get('AWS_SECRET_ACCESS_KEY'),d,kwargs['s3_path_prefix'],d))
-        delete_steps.append(EMR_DELETE_OLD_PARQUET.format(kwargs['s3_path_prefix'],d))
-    check_call(['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
-                '--steps', EMR_COPY_MELLON_STEP] + transform_steps + delete_steps +
-                [EMR_DISTCP_TO_S3.format(kwargs['s3_path_prefix'])])
+            Variable.get('AWS_ACCESS_KEY_ID'),Variable.get('AWS_SECRET_ACCESS_KEY'),d,kwargs['s3_text_path_prefix'],d))
+        delete_steps.append(EMR_DELETE_OLD_PARQUET.format(kwargs['s3_parquet_path_prefix'],d))
+    command = ['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
+                  '--steps', EMR_COPY_MELLON_STEP] + \
+              transform_steps + \
+              delete_steps + \
+              [EMR_DISTCP_TO_S3.format(kwargs['s3_parquet_path_prefix'])]
+    logging.info(command)
+    check_call(command)
+                
     incomplete_steps=1
     failed_steps=0
     while incomplete_steps > 0:
@@ -126,7 +131,7 @@ def do_transform_to_parquet(ds, **kwargs):
 def do_create_emr_cluster(ds, **kwargs):
     cluster_details = json.loads(check_output([
         '/home/airflow/airflow/dags/resources/launchEMR',
-        EMR_CLUSTER_NAME + kwargs['vendor_uuid'],
+        EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'],
         EMR_NUM_NODES,
         EMR_NODE_TYPE,
         EMR_APPLICATIONS,
@@ -227,5 +232,5 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
     create_emr_cluster.set_upstream(run_normalization_routine)
     transform_to_parquet.set_upstream(create_emr_cluster)
     delete_emr_cluster.set_upstream(transform_to_parquet)
-    
+
     return dag

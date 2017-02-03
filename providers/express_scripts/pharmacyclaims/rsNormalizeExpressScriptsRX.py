@@ -5,10 +5,10 @@ import argparse
 import time
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
-S3_EXPRESS_SCRIPTS_IN = 's3://salusv/incoming/pharmacyclaims/express_scripts/'
+S3_EXPRESS_SCRIPTS_IN = 's3://salusv/incoming/pharmacyclaims/esi/'
 S3_EXPRESS_SCRIPTS_PREFIX = 'warehouse/text/pharmacyclaims/express_scripts/'
 S3_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_EXPRESS_SCRIPTS_PREFIX
-S3_EXPRESS_SCRIPTS_MATCHING = 's3://salusv/matching/payload/pharmacyclaims/express_scripts/'
+S3_EXPRESS_SCRIPTS_MATCHING = 's3://salusv/matching/payload/pharmacyclaims/esi/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
@@ -55,9 +55,6 @@ def execute_queue(debug=False):
 
 if args.first_run:
     enqueue_psql_script('../../redshift_norm_common/zip3_to_state.sql')
-    enqueue_psql_script('load_payer_mapping.sql', [
-        ['credentials', args.s3_credentials]
-    ])
 
     # Create a table for valid dates and their correct format
     min_date = '2008-01-01'
@@ -101,7 +98,7 @@ setid_path_to_unload[args.setid] = S3_EXPRESS_SCRIPTS_WAREHOUSE + date_path + '/
 enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
     ['filename', args.setid],
     ['today', TODAY],
-    ['feedname', 'express scripts pharmacy claims']
+    ['feedname', 'express scripts pharmacy claims'],
     ['vendor', 'express scripts']
 ])
 enqueue_psql_script('load_transactions.sql', [

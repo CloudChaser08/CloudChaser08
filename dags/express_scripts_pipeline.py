@@ -48,40 +48,41 @@ S3_DEID_RAW_PATH='incoming/esi/'
 DEID_FILE_NAME_TEMPLATE='10130X001_HV_RX_Claims_D{}_key.txt'
 MINIMUM_DEID_FILE_SIZE=500
 
-S3_EXPRESS_SCRIPTS_PREFIX = 'warehouse/text/pharmacyclaims/express_scripts/'
-S3_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_EXPRESS_SCRIPTS_PREFIX
+S3_TEXT_EXPRESS_SCRIPTS_PREFIX = 'warehouse/text/pharmacyclaims/express_scripts/'
+S3_PARQUET_EXPRESS_SCRIPTS_PREFIX = 'warehouse/parquet/pharmacyclaims/express_scripts/'
+S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_TEXT_EXPRESS_SCRIPTS_PREFIX
 
 S3_PAYLOAD_LOC_PATH = 's3://salusv/matching/payload/pharmacyclaims/esi/'
 
-def get_expected_transaction_file_name(kwargs):
+def get_expected_transaction_file_name(ds, kwargs):
     return TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash'])
 
-def get_expected_transaction_file_name_gz(kwargs):
+def get_expected_transaction_file_name_gz(ds, kwargs):
     return TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash']) + '.gz'
 
-def get_expected_transaction_file_regex(kwargs):
+def get_expected_transaction_file_regex(ds, kwargs):
     return TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
 
-def get_expected_deid_file_name(kwargs):
+def get_expected_deid_file_name(ds, kwargs):
     return DEID_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash'])
 
-def get_expected_deid_file_regex(kwargs):
+def get_expected_deid_file_regex(ds, kwargs):
     return DEID_FILE_NAME_TEMPLATE.format('\d{8}')
 
-def get_file_date(kwargs):
-    return kwargs['ds'].replace('-', '/')
+def get_file_date(ds, kwargs):
+    return ds.replace('-', '/')
 
-def get_parquet_dates(kwargs):
-    date_path = kwargs['ds'].replace('-', '/')
+def get_parquet_dates(ds, kwargs):
+    date_path = ds.replace('-', '/')
 
-    warehouse_files = subprocess.check_output(['aws', 's3', 'ls', '--recursive', S3_EXPRESS_SCRIPTS_WAREHOUSE]).split("\n")
-    file_dates = map(lambda f: '/'.join(f.split(' ')[-1].replace(S3_EXPRESS_SCRIPTS_PREFIX, '').split('/')[:-1]), warehouse_files)
+    warehouse_files = check_output(['aws', 's3', 'ls', '--recursive', S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE]).split("\n")
+    file_dates = map(lambda f: '/'.join(f.split(' ')[-1].replace(S3_TEXT_EXPRESS_SCRIPTS_PREFIX, '').split('/')[:-1]), warehouse_files)
     file_dates = filter(lambda d: len(d) == 10, file_dates)
     file_dates = sorted(list(set(file_dates)))
-    return filter(lambda d: d < date_path, file_dates)[-2:]
+    return filter(lambda d: d < date_path, file_dates)[-2:] + [date_path]
 
-def get_row_count(kwargs):
-    return 3000000
+def get_row_count(ds, kwargs):
+    return 10825021
 
 default_args = {
     'owner': 'airflow',
@@ -214,7 +215,8 @@ detect_move_normalize_dag = SubDagOperator(
             'normalization_routine_script': '/home/airflow/airflow/dags/providers/express_scripts/pharmacyclaims/rsNormalizeExpressScriptsRX.py',
             'parquet_dates_func': get_parquet_dates,
             'row_count_func': get_row_count,
-            's3_path_prefix': S3_EXPRESS_SCRIPTS_PREFIX,
+            's3_text_path_prefix': S3_TEXT_EXPRESS_SCRIPTS_PREFIX,
+            's3_parquet_path_prefix': S3_PARQUET_EXPRESS_SCRIPTS_PREFIX,
             's3_payload_loc': S3_PAYLOAD_LOC_PATH,
             'vendor_description': 'Express Scripts RX',
             'vendor_uuid': 'f726747e-9dc0-4023-9523-e077949ae865'
