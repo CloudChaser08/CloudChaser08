@@ -29,7 +29,15 @@ else:
     S3_TEXT='s3://healthveritydev/jcap/ndc/'
     S3_PARQUET='s3a://healthveritydev/jcap/parquet/ndc/'
 
-hive = HiveServer2Hook(hiveserver2_conn_id='hive_analytics')
+
+def hive_execute(sqls):
+    hive_hook = HiveServer2Hook(hiveserver2_conn_id='hive_analytics')
+    conn = hive_hook.get_conn()
+    for statement in sqls:
+        print("SQL: " + statement + "\n")
+        with conn.cursor() as cur:
+            cur.execute(statement)
+
 
 default_args = {
     'owner': 'airflow',
@@ -141,7 +149,8 @@ def create_temp_tables(ds, schema, s3, **kwars):
         ROW FORMAT DELIMITED
         FIELDS TERMINATED BY '\t'
         LINES  TERMINATED BY '\n'
-        LOCATION '{}/{}/package/'""".format(schema, s3, ds),
+        STORED AS TEXTFILE
+        LOCATION '{}{}/package/'""".format(schema, s3, ds),
 
         """CREATE EXTERNAL TABLE {}.temp_ref_ndc_product (
             product_id                string,
@@ -166,10 +175,11 @@ def create_temp_tables(ds, schema, s3, **kwars):
         ROW FORMAT DELIMITED
         FIELDS TERMINATED BY '\t'
         LINES TERMINATED BY '\n'
-        LOCATION '{}/{}/product/'""".format(schema, s3, ds)
+        STORED AS TEXTFILE
+        LOCATION '{}{}/product/'""".format(schema, s3, ds)
     ]
     
-    hive.get_records(sqls)
+    hive_execute(sqls)
 
 
 def create_new_ndc_table(ds, schema, s3, **kwargs):
@@ -195,7 +205,7 @@ def create_new_ndc_table(ds, schema, s3, **kwargs):
             pharm_classes               string
         )
         STORED AS PARQUET
-        LOCATION '{}/{}/'""".format(schema, s3, ds),
+        LOCATION '{}{}/'""".format(schema, s3, ds),
 
         """ INSERT INTO {}.ref_ndc_code_new
         SELECT a.ndc_code, a.package_description, b.product_type, b.proprietary_name, b.proprietary_name_suffix,
@@ -211,24 +221,24 @@ def create_new_ndc_table(ds, schema, s3, **kwargs):
                    WHEN substr(ndc_package_code, 6, 1)='-' and substr(ndc_package_code, 11, 1)='-' then
                       CONCAT(replace(substr(ndc_package_code, 1, 10),'-',''),'0',substr(ndc_package_code, 12, 1))
                    ELSE 'ERROR' end as ndc_code
-            from ndc_package n
+            from {}.temp_ref_ndc_package n
            ) a
-           LEFT JOIN ndc_product b on a.product_ndc=b.product_ndc""".format(schema)
+           LEFT JOIN {}.temp_ref_ndc_product b on a.product_ndc=b.product_ndc""".format(schema, schema, schema)
     ]
 
-    hive.get_records(sqls)
+    hive_execute(sqls)
 
 def replace_old_table(ds, schema, s3, **kwargs):
     sqls = [
         """CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_ndc_code LIKE {}.ref_ndc_code_new""".format(schema, schema),
         """DROP TABLE {}.ref_ndc_code_new""".format(schema),
-        """ALTER TABLE {}.ref_ndc_code SET LOCATION '{}/{}/'""".format(schema, s3, ds),
+        """ALTER TABLE {}.ref_ndc_code SET LOCATION '{}{}/'""".format(schema, s3, ds),
 
         """DROP TABLE IF EXISTS {}.temp_ref_ndc_product""".format(schema),
         """DROP TABLE IF EXISTS {}.temp_ref_ndc_package""".format(schema)
     ]
 
-    hive.get_records(sqls)
+    hive_execute(sqls)
 
 
 
