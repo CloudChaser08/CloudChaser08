@@ -3,6 +3,7 @@
 #
 import json
 import time
+import os
 from subprocess import check_call, Popen, check_output
 from airflow.models import Variable
 import airflow.hooks.S3_hook
@@ -97,7 +98,7 @@ def get_rs_env(cluster_name):
     Get an environ instance with aws perms
     and redshift variables set for given cluster name.
     """
-    aws_env = get_aws_env()
+    aws_env = dict(os.environ)
     aws_env['PGHOST'] = REDSHIFT_HOST_URL_TEMPLATE.format(cluster_name)
     aws_env['PGUSER'] = REDSHIFT_USER
     aws_env['PGDATABASE'] = REDSHIFT_DATABASE
