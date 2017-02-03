@@ -1,25 +1,12 @@
 #
 # Operators for interacting with AWS
 #
-import os
 import json
-import hashlib
 import time
 from subprocess import check_call, Popen, check_output
 from airflow.models import Variable
 import airflow.hooks.S3_hook
 
-
-def get_aws_env(suffix=""):
-    """Get an environ instance with aws perms attached"""
-    aws_env = os.environ
-    aws_env['AWS_ACCESS_KEY_ID'] = Variable.get(
-        'AWS_ACCESS_KEY_ID' + suffix
-    )
-    aws_env['AWS_SECRET_ACCESS_KEY'] = Variable.get(
-        'AWS_SECRET_ACCESS_KEY' + suffix
-    )
-    return aws_env
 
 #
 # S3
@@ -38,21 +25,24 @@ def _get_s3_hook():
 def fetch_file_from_s3(s3_path, local_path):
     """Download a file from S3"""
     check_call([
+        'mkdir', '-p', local_path
+    ])
+    check_call([
         'aws', 's3', 'cp', s3_path, local_path
-    ], env=get_aws_env())
+    ])
 
 
 def copy_file(src_path, dest_path):
     check_call([
         'aws', 's3', 'cp', src_path, dest_path
-    ], env=get_aws_env())
+    ])
 
 
 def push_local_dir_to_s3(local_path, s3_path):
     """Push each file in a local directory up to a specified s3 location"""
     check_call([
         'aws', 's3', 'cp', '--recursive', local_path, s3_path
-    ], env=get_aws_env())
+    ])
 
 
 def list_s3_bucket(path):
@@ -129,7 +119,7 @@ def create_redshift_cluster(cluster_name, num_nodes):
     check_call([
         '/home/airflow/airflow/dags/resources/redshift.py', 'create',
         '--identifier', cluster_name, '--num_nodes', num_nodes
-    ], env=get_aws_env())
+    ])
 
 
 def run_rs_query_file(cluster_name, command, cwd):
@@ -147,13 +137,6 @@ EMR_COPY_MELLON_STEP = (
     'aws,s3,cp,s3://healthverityreleases/mellon/mellon-assembly-latest.jar,'
     '/tmp/mellon-assembly-latest.jar'
     ']'
-)
-EMR_TRANSFORM_TO_PARQUET_STEP = (
-    'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
-    'Args=[--class,com.healthverity.parquet.Main,'
-    '--conf,spark.sql.parquet.compression.codec=gzip,'
-    '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/,'
-    's3a://salusv/warehouse/text/medicalclaims/emdeon/{},20,"|"]'
 )
 EMR_DISTCP_TO_S3 = (
     'Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",'
@@ -197,7 +180,7 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
             '/home/airflow/airflow/dags/resources/launchEMR',
             cluster_name, num_nodes, node_type, EMR_APPLICATIONS,
             "true" if (ebs_volume_size > 0) else "false", str(ebs_volume_size)
-        ], env=get_aws_env())
+        ])
     )
     check_call([
         'aws', 'emr', 'wait', 'cluster-running',
@@ -206,28 +189,23 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
 
 
 def transform_to_parquet(cluster_name, src_file, dest_file, model):
-    file_id_hash = hashlib.md5()
-    file_id_hash.update(src_file)
-    file_id = file_id_hash.hexdigest()
     parquet_step = (
         'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
         'Args=[--class,com.healthverity.parquet.Main,'
         '--conf,spark.sql.parquet.compression.codec=gzip,'
-        '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/{}/,'
+        '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/,'
         '{},20,"|"]'
     ).format(
         Variable.get('AWS_ACCESS_KEY_ID'),
         Variable.get('AWS_SECRET_ACCESS_KEY'),
-        model, file_id, src_file
+        model, src_file
     )
     cluster_id = _get_emr_cluster_id(cluster_name)
     check_call([
         'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
         '--steps', EMR_COPY_MELLON_STEP, parquet_step,
         EMR_DISTCP_TO_S3.format(
-            "hdfs:///parquet/{}/".format(
-                file_id
-            ), dest_file
+            "hdfs:///parquet/", dest_file
         )
     ])
     _wait_for_steps(cluster_id)

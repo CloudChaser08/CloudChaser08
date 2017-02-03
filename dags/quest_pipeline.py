@@ -2,9 +2,9 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
-import logging
 import sys
-from subprocess import check_call, check_output
+import os
+from subprocess import check_call
 import time
 
 if sys.modules.get('config'):
@@ -62,7 +62,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 01, 25, 12),
-    'depends_on_past': True,
+    'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
@@ -75,10 +75,6 @@ mdag = DAG(
     default_args=default_args
 )
 
-env = aws_utils.get_aws_env()
-
-row_count = 0
-
 
 def get_formatted_date(kwargs):
     return kwargs['yesterday_ds_nodash'] + kwargs['ds_nodash'][4:8]
@@ -86,9 +82,9 @@ def get_formatted_date(kwargs):
 
 def insert_current_date(template, kwargs):
     return template.format(
-        kwargs['ds_nodash'][0:4],
-        kwargs['ds_nodash'][4:6],
-        kwargs['ds_nodash'][6:8]
+        kwargs['yesterday_ds_nodash'][0:4],
+        kwargs['yesterday_ds_nodash'][4:6],
+        kwargs['yesterday_ds_nodash'][6:8]
     )
 
 #
@@ -111,6 +107,10 @@ validate_addon = validate_step(
 )
 validate_trunk = validate_step(
     'trunk', S3_TRANSACTION_RAW_PATH + TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+    10000000
+)
+validate_deid = validate_step(
+    'deid', S3_TRANSACTION_RAW_PATH + DEID_FILE_NAME_TEMPLATE,
     10000000
 )
 
@@ -208,26 +208,6 @@ gunzip_trunk = gunzip_step(
 )
 
 
-def set_row_count_step():
-    def execute(ds, **kwargs):
-        global row_count
-        row_count = check_output([
-            'wc', '-l',
-            TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format(
-                get_formatted_date(kwargs)
-            ) + TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE.format(
-                get_formatted_date(kwargs)
-            )
-        ])
-    return PythonOperator(
-        task_id='set_row_count',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-set_row_count = set_row_count_step()
-
-
 def split_step(task_id, tmp_path_template, tmp_parts_path_template):
     def execute(ds, **kwargs):
         file_utils.split(
@@ -280,14 +260,9 @@ bzip_parts_trunk = bzip_parts_step(
 def push_splits_to_s3_step(task_id, tmp_parts_path, s3_path):
     def execute(ds, **kwargs):
         formatted_date = get_formatted_date(kwargs)
-        dest_date = kwargs['ds_nodash']
         aws_utils.push_local_dir_to_s3(
             tmp_parts_path.format(formatted_date),
-            s3_path.format(
-                dest_date[0:4],
-                dest_date[4:6],
-                dest_date[6:8]
-            )
+            insert_current_date(s3_path, kwargs)
         )
     return PythonOperator(
         task_id='push_splits_to_s3_' + task_id,
@@ -340,10 +315,13 @@ def queue_up_for_matching_step(seq_num, engine_env, priority):
             S3_TRANSACTION_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format(
                 get_formatted_date(kwargs)
             ))
+        env = dict(os.environ)
+        env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER')
+        env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')
         check_call([
             '/home/airflow/airflow/dags/resources/push_file_to_s3.sh',
             deid_file, seq_num, engine_env, priority
-        ], env=aws_utils.get_aws_env("_MATCH_PUSHER"))
+        ], env=env)
     return PythonOperator(
         task_id='queue_up_for_matching',
         provide_context=True,
@@ -366,21 +344,10 @@ S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
 
 def detect_matching_done_step():
     def execute(ds, **kwargs):
-        global row_count
-        chunk_start = row_count / 1000000 * 1000000
-        template = '{}{}'
-        if row_count >= 1000000:
-            template += '{}-{}'
-        template += '*'
-        s3_key = template.format(
-            S3_PAYLOAD_LOCATION,
-            DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
-                get_formatted_date(kwargs)
-            ), chunk_start, row_count
-        )
-        logging.info('Poking for key : {}'.format(s3_key))
-        while not aws_utils.s3_key_exists(s3_key):
-            print("Looking for: " + s3_key)
+        while not filter(
+                lambda k: get_formatted_date(kwargs) in k and 'DONE' in k,
+                aws_utils.list_s3_bucket(S3_PAYLOAD_LOCATION)
+        ):
             time.sleep(60)
     return PythonOperator(
         task_id='detect_matching_done',
@@ -394,12 +361,6 @@ detect_matching_done = detect_matching_done_step()
 
 def move_matching_payload_step():
     def execute(ds, **kwargs):
-        dest_date = '{}/{}/{}'.format(
-            kwargs['ds_nodash'][0:4],
-            kwargs['ds_nodash'][4:6],
-            kwargs['ds_nodash'][6:8]
-        )
-
         for payload_file in aws_utils.list_s3_bucket(
                 S3_PAYLOAD_LOCATION +
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
@@ -408,7 +369,10 @@ def move_matching_payload_step():
         ):
             aws_utils.copy_file(
                 payload_file,
-                S3_PAYLOAD_DEST + dest_date + '/' + payload_file.split('/')[-1]
+                insert_current_date(
+                    S3_PAYLOAD_DEST + '{}/{}/{}/' + payload_file.split('/')[-1],
+                    kwargs
+                )
             )
     return PythonOperator(
         task_id='move_matching_payload',
@@ -477,7 +441,7 @@ def delete_redshift_cluster_step():
             '/home/airflow/airflow/dags/resources/redshift.py', 'delete',
             '--identifier',
             RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
-        ], env=env)
+        ])
     return PythonOperator(
         task_id='delete_redshift_cluster',
         provide_context=True,
@@ -493,7 +457,7 @@ EMR_CLUSTER_ID_TEMPLATE = 'quest-parquet-{}'
 EMR_NUM_NODES = "5"
 EMR_NODE_TYPE = 'c4.xlarge'
 EMR_EBS_VOLUME_SIZE = 0
-PARQUET_SOURCE_TEMPLATE = "s3://salusv/warehouse/text/labtests/quest/{}/{}/{}/"
+PARQUET_SOURCE_TEMPLATE = "s3a://salusv/warehouse/text/labtests/quest/{}/{}/{}/"
 PARQUET_DESTINATION_TEMPLATE = "s3://salusv/warehouse/parquet/labtests/quest/{}/{}/{}/"
 
 
@@ -557,19 +521,19 @@ clean_up_workspace_addon_parts.set_upstream(push_splits_to_s3_addon)
 fetch_trunk.set_upstream(validate_trunk)
 unzip_trunk.set_upstream(fetch_trunk)
 gunzip_trunk.set_upstream(unzip_trunk)
-set_row_count.set_upstream(gunzip_trunk)
-split_trunk.set_upstream(set_row_count)
+split_trunk.set_upstream(gunzip_trunk)
 clean_up_workspace_trunk.set_upstream(split_trunk)
 bzip_parts_trunk.set_upstream(clean_up_workspace_trunk)
 push_splits_to_s3_trunk.set_upstream(bzip_parts_trunk)
 clean_up_workspace_trunk_parts.set_upstream(push_splits_to_s3_trunk)
 
-# queue and cleanup
+# cleanup
 clean_up_workspace.set_upstream(
     [clean_up_workspace_trunk_parts, clean_up_workspace_addon_parts]
 )
-queue_up_for_matching.set_upstream(clean_up_workspace)
 
+# matching
+queue_up_for_matching.set_upstream(validate_deid)
 
 # post-matching
 detect_matching_done.set_upstream(queue_up_for_matching)
@@ -578,7 +542,10 @@ move_matching_payload.set_upstream(detect_matching_done)
 # normalization
 create_redshift_cluster.set_upstream(detect_matching_done)
 normalize.set_upstream(
-    [create_redshift_cluster, move_matching_payload]
+    [
+        create_redshift_cluster, move_matching_payload,
+        push_splits_to_s3_addon, push_splits_to_s3_trunk
+    ]
 )
 delete_redshift_cluster.set_upstream(normalize)
 
