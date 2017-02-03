@@ -15,7 +15,7 @@ $CMD resetdb -y
 
 sqlite3 $AIRFLOW_HOME/airflow.db \
   "INSERT INTO connection (conn_id, conn_type, host, schema, login, password, port, extra, is_encrypted, is_extra_encrypted)
-    VALUES ('hive_analytics','hiveserver2','analytics.aws.healthverity.com','default','airflow','','10000','',0,0)"
+    VALUES ('hive_analytics','hiveserver2','analytics.aws.healthverity.com','default','hadoop','','10000','',0,0)"
 
 sqlite3 $AIRFLOW_HOME/airflow.db \
   "INSERT INTO variable (\"key\", val, is_encrypted)
