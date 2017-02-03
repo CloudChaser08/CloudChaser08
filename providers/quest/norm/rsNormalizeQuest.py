@@ -5,6 +5,7 @@ import time
 import sys
 import os
 import hashlib
+from datetime import datetime, timedelta
 
 
 def get_rel_path(relative_filename):
@@ -23,9 +24,14 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 parser = argparse.ArgumentParser()
 parser.add_argument('--period', type=str)
 parser.add_argument('--date', type=str)
-parser.add_argument('--setid', type=str)
 parser.add_argument('--s3_credentials', type=str)
 args = parser.parse_args()
+
+date_obj = datetime.strptime(args.date, '%Y-%m-%d')
+
+setid = 'HealthVerity_' + \
+        date_obj.strftime('%Y%m%d') + \
+        (date_obj + timedelta(days=1)).strftime('%m%d')
 
 input_path = 's3://salusv/incoming/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
@@ -55,7 +61,7 @@ prov_hash = hashlib.md5()
 prov_hash.update("quest")
 subprocess.call(' '.join(
     ['psql']
-    + ['-v', 'filename="\'' + args.setid + '\'"']
+    + ['-v', 'filename="\'' + setid + '\'"']
     + ['-v', 'today="\'' + TODAY + '\'"']
     + ['-v', 'feedname="\'' + prov_id_hash.hexdigest() + '\'"']
     + ['-v', 'vendor="\'' + prov_hash.hexdigest() + '\'"']
