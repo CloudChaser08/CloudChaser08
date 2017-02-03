@@ -17,9 +17,9 @@ def do_queue_up_for_matching(ds, **kwargs):
     }
 
     check_call([
-        '/home/airflow/airflow/dags/resources/push_file_to_s3.sh',
+        '/home/airflow/airflow/dags/resources/push_file_to_s3_batchless_v3.sh',
         's3://healthverity/' + s3_prefix + expected_file_name, '0',
-        'prod-matching-ending', 'priority3'
+        'prod-matching-engine', 'priority3'
     ], env=environ)
 
 def queue_up_for_matching(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
