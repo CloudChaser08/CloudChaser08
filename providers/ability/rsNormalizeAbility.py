@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python
 import subprocess
 import argparse
 import time
@@ -97,10 +97,19 @@ subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] 
                         [db, '<', '../redshift_norm_common/cap_age.sql']), shell=True)
 
 # unload to s3
-subprocess.call(' '.join(
+year_months = subprocess.check_output(' '.join(
     psql
-    + ['-v', 'output_path="\'' + args.output_path + '\'"']
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'select_from_common_model_table="\'SELECT * FROM medicalclaims_common_model\'"']
-    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+    + [db, '-c', '\'select distinct substring(date_service, 0, 8) from medicalclaims_common_model\'']
 ), shell=True)
+
+for ym in map(
+        lambda x: x.strip(),
+        year_months.decode('utf-8').split('\n')[2:-3]
+):
+    subprocess.call(' '.join(
+        psql
+        + ['-v', 'output_path="\'' + args.output_path + ym + '/\'"']
+        + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+        + ['-v', 'select_from_common_model_table="\'SELECT * FROM medicalclaims_common_model WHERE substring(date_service, 0, 8) =  \\\'' + ym + '\\\'\'"']
+        + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+    ), shell=True)
