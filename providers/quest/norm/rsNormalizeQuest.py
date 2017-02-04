@@ -42,9 +42,7 @@ addon_path = input_path + 'addon/'
 matching_path = 's3://salusv/matching/payload/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
-output_path = 's3://salusv/warehouse/text/labtests/quest/{}/'.format(
-    args.date.replace('-', '/')
-)
+output_path = 's3://salusv/warehouse/text/labtests/quest/'
 
 # create helper tables
 subprocess.call('psql dev < ' + get_rel_path(
@@ -147,12 +145,21 @@ subprocess.call(' '.join(
 ), shell=True)
 
 # unload to s3
-subprocess.call(' '.join(
+year_months = subprocess.check_output(' '.join(
     ['psql']
-    + ['-v', 'output_path="\'' + output_path + '\'"']
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model\'"']
-    + ['dev', '<', get_rel_path(
-        '../../redshift_norm_common/unload_common_model.sql'
-    )]
+    + ['dev', '-c', '\'select distinct substring(date_service, 0, 8) from lab_common_model\'']
 ), shell=True)
+
+for ym in map(
+        lambda x: x.strip(),
+        year_months.decode('utf-8').split('\n')[2:-3]
+):
+    subprocess.call(' '.join(
+        ['psql']
+        + ['-v', 'output_path="\'' + output_path + ym + '/\'"']
+        + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+        + ['-v', 'select_from_common_model_table="\'SELECT * FROM lab_common_model WHERE substring(date_service, 0, 8) =  \\\'' + ym + '\\\'\'"']
+        + ['dev', '<', get_rel_path(
+            '../../redshift_norm_common/unload_common_model.sql'
+        )]
+    ), shell=True)
