@@ -64,7 +64,7 @@ def validate_file(
 
     alert_no_new_file = SlackAPIOperator(
         task_id='alert_no_new_file',
-        token=Variable.get('Slack Token'),
+        token=Variable.get('SlackToken'),
         method='chat.postMessage',
         retries=0,
         api_params={
@@ -80,7 +80,7 @@ def validate_file(
 
     alert_file_size_problem = SlackAPIOperator(
         task_id='alert_file_size_problem',
-        token=Variable.get('Slack Token'),
+        token=Variable.get('SlackToken'),
         method='chat.postMessage',
         retries=0,
         api_params={

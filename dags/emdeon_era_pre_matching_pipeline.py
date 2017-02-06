@@ -60,10 +60,7 @@ def do_push_splits_to_s3(ds, **kwargs):
     file_list = os.listdir(tmp_path)
     file_name = filter(lambda x: x.find('.gz') == (len(x) - 3), file_list)[0]
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
-    env = os.environ
-    env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
-    env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
-    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)], env=env)
+    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
 
 default_args = {
     'owner': 'airflow',
