@@ -51,7 +51,7 @@ default_args = {
 dag = DAG(
     'update_ndc', 
     default_args=default_args, 
-    start_date=datetime(2017, 2, 3),
+    start_date=datetime(2017, 2, 6),
     schedule_interval='@daily' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
 )
 
