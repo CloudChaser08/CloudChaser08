@@ -108,7 +108,7 @@ for ym in map(
 ):
     subprocess.call(' '.join(
         psql
-        + ['-v', 'output_path="\'' + args.output_path + ym + '/\'"']
+        + ['-v', 'output_path="\'' + args.output_path + ym + '/' + args.setid + '\'"']
         + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
         + ['-v', 'select_from_common_model_table="\'SELECT * FROM medicalclaims_common_model WHERE substring(date_service, 0, 8) =  \\\'' + ym + '\\\'\'"']
         + [db, '<', '../redshift_norm_common/unload_common_model.sql']
