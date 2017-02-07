@@ -9,6 +9,8 @@ from airflow.hooks.hive_hooks import HiveServer2Hook
 
 from airflow.models import Variable
 
+import datadog
+
 import re
 import os
 import sys
@@ -29,6 +31,14 @@ else:
     S3_TEXT='s3://healthveritydev/jcap/ndc/'
     S3_PARQUET='s3a://healthveritydev/jcap/parquet/ndc/'
 
+
+options = {
+    'api_key': '',
+    'app_key': ''
+}
+datadog.initialize(**options)
+
+dd_hook = HiveServer2Hook(hiveserver2_conn_id='hive_analytics')
 
 def hive_execute(sqls):
     hive_hook = HiveServer2Hook(hiveserver2_conn_id='hive_analytics')
