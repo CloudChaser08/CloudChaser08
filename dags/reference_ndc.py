@@ -39,7 +39,9 @@ options = {
 
 datadog.initialize(**options)
 
-def dd_eventer(dag, task, task_instance, run_id):
+def dd_eventer(context):
+    task = context['task']
+    task_instance = context['task_instance']
     title = "Task: " + task.task_id
     type  = 'info'
     if task_instance.state == 'success':
@@ -51,9 +53,9 @@ def dd_eventer(dag, task, task_instance, run_id):
 
     datadog.api.Event.create(title=title,
                              text='',
-                             host='',
+                             host=task_instance.hostname,
                              alert_type=type,
-                             aggregation_key=run_id)
+                             aggregation_key=context['run_id'])
 
 def hive_execute(sqls):
     hive_hook = HiveServer2Hook(hiveserver2_conn_id='hive_analytics')
@@ -318,7 +320,7 @@ push_updated = BashOperator(
 )
 
 cleanup_temp = BashOperator(
-    task_id='push_updated',
+    task_id='cleanup_temp',
     params={ "TMP_PATH": TMP_PATH},
     bash_command='rm -rf /tmp/ndc_{{ tomorrow_ds }}',
     dag=dag
