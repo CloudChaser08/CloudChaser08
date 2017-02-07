@@ -254,7 +254,7 @@ fetch_yesterday = BashOperator(
 
 fetch_new = BashOperator(
     task_id='fetch_new',
-    bash_command='cd /tmp/ndc_{{ ds }} && wget ' + SRC_PATH + SRC_FILE,
+    bash_command='cd /tmp/ndc_{{ tomorrow_ds }} && wget ' + SRC_PATH + SRC_FILE,
     dag=dag)
 
 decompress_new = BashOperator(
@@ -287,7 +287,14 @@ push_updated = BashOperator(
         /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/package_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/package/package.txt
     """, 
     dag=dag
-) 
+)
+
+cleanup_temp = BashOperator(
+    task_id='push_updated',
+    params={ "TMP_PATH": TMP_PATH},
+    bash_command='rm -rf /tmp/ndc_{{ tomorrow_ds }}',
+    dag=dag
+)
 
 create_temp = PythonOperator(
     task_id='create_temp',
@@ -321,6 +328,7 @@ prepare_product.set_upstream(decompress_new)
 
 push_updated.set_upstream([prepare_package, prepare_product])
 
+cleanup_temp.set_upstream(push_updated)
 create_temp.set_upstream(push_updated)
 create_new.set_upstream(create_temp)
 
