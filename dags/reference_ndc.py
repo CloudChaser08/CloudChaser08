@@ -49,7 +49,7 @@ default_args = {
 }
 
 dag = DAG(
-    'update_ndc', 
+    'reference_ndc', 
     default_args=default_args, 
     start_date=datetime(2017, 2, 6),
     schedule_interval='@daily' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
@@ -96,14 +96,14 @@ def get_lines(file_type, file_name):
     return lines
 
 
-def prepare_ndcfile(ds, file_type, yesterday, today, updated, **kwargs):
+def prepare_ndcfile(tomorrow_ds, file_type, yesterday, today, updated, **kwargs):
     codes_added    = 0
     codes_modified = 0
     codes_removed  = []
 
-    old_file_name     = '/tmp/ndc_' + ds + '/' + yesterday
-    new_file_name     = '/tmp/ndc_' + ds + '/' + today
-    updated_file_name = '/tmp/ndc_' + ds + '/' + updated
+    old_file_name     = '/tmp/ndc_' + tomorrow_ds + '/' + yesterday
+    new_file_name     = '/tmp/ndc_' + tomorrow_ds + '/' + today
+    updated_file_name = '/tmp/ndc_' + tomorrow_ds + '/' + updated
 
     # read the files in
     old_lines = get_lines(file_type, old_file_name)
@@ -254,12 +254,12 @@ fetch_yesterday = BashOperator(
 
 fetch_new = BashOperator(
     task_id='fetch_new',
-    bash_command='cd /tmp/ndc_{{ ds }} && wget ' + SRC_PATH + SRC_FILE,
+    bash_command='cd /tmp/ndc_{{ tomorrow_ds }} && wget ' + SRC_PATH + SRC_FILE,
     dag=dag)
 
 decompress_new = BashOperator(
     task_id='decompress_new',
-    bash_command='cd /tmp/ndc_{{ ds }} && unzip -o ' + SRC_FILE,
+    bash_command='cd /tmp/ndc_{{ tomorrow_ds }} && unzip -o ' + SRC_FILE,
     retries=3,
     dag=dag)
 
@@ -283,11 +283,18 @@ push_updated = BashOperator(
     task_id='push_updated',
     params={ "TMP_PATH": TMP_PATH, "S3_TEXT": S3_TEXT},
     bash_command="""
-        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ ds }}/product_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/product/product.txt
-        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ ds }}/package_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/package/package.txt
+        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/product_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/product/product.txt
+        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/package_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/package/package.txt
     """, 
     dag=dag
-) 
+)
+
+cleanup_temp = BashOperator(
+    task_id='push_updated',
+    params={ "TMP_PATH": TMP_PATH},
+    bash_command='rm -rf /tmp/ndc_{{ tomorrow_ds }}',
+    dag=dag
+)
 
 create_temp = PythonOperator(
     task_id='create_temp',
@@ -321,6 +328,7 @@ prepare_product.set_upstream(decompress_new)
 
 push_updated.set_upstream([prepare_package, prepare_product])
 
+cleanup_temp.set_upstream(push_updated)
 create_temp.set_upstream(push_updated)
 create_new.set_upstream(create_temp)
 
