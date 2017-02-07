@@ -96,14 +96,14 @@ def get_lines(file_type, file_name):
     return lines
 
 
-def prepare_ndcfile(ds, file_type, yesterday, today, updated, **kwargs):
+def prepare_ndcfile(tomorrow_ds, file_type, yesterday, today, updated, **kwargs):
     codes_added    = 0
     codes_modified = 0
     codes_removed  = []
 
-    old_file_name     = '/tmp/ndc_' + ds + '/' + yesterday
-    new_file_name     = '/tmp/ndc_' + ds + '/' + today
-    updated_file_name = '/tmp/ndc_' + ds + '/' + updated
+    old_file_name     = '/tmp/ndc_' + tomorrow_ds + '/' + yesterday
+    new_file_name     = '/tmp/ndc_' + tomorrow_ds + '/' + today
+    updated_file_name = '/tmp/ndc_' + tomorrow_ds + '/' + updated
 
     # read the files in
     old_lines = get_lines(file_type, old_file_name)
