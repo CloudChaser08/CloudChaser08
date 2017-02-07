@@ -259,7 +259,7 @@ fetch_new = BashOperator(
 
 decompress_new = BashOperator(
     task_id='decompress_new',
-    bash_command='cd /tmp/ndc_{{ ds }} && unzip -o ' + SRC_FILE,
+    bash_command='cd /tmp/ndc_{{ tomorrow_ds }} && unzip -o ' + SRC_FILE,
     retries=3,
     dag=dag)
 
@@ -283,8 +283,8 @@ push_updated = BashOperator(
     task_id='push_updated',
     params={ "TMP_PATH": TMP_PATH, "S3_TEXT": S3_TEXT},
     bash_command="""
-        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ ds }}/product_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/product/product.txt
-        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ ds }}/package_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/package/package.txt
+        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/product_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/product/product.txt
+        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/package_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/package/package.txt
     """, 
     dag=dag
 ) 
