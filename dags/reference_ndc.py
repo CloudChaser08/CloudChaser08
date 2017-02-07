@@ -33,12 +33,27 @@ else:
 
 
 options = {
-    'api_key': '',
-    'app_key': ''
+    'api_key': Variable.get('DATADOG_API'),
+    'app_key': Variable.get('DATADOG_APP')
 }
+
 datadog.initialize(**options)
 
-dd_hook = HiveServer2Hook(hiveserver2_conn_id='hive_analytics')
+def dd_eventer(dag, task, task_instance, run_id):
+    title = "Task: " + task.task_id
+    type  = 'info'
+    if task_instance.state == 'success':
+        type = 'success'
+    elif task_instance.state == 'failed':
+        type = 'error'
+    elif task_instance.state == 'up_for_retry':
+        type = 'warning'
+
+    datadog.api.Event.create(title=title,
+                             text='',
+                             host='',
+                             alert_type=type,
+                             aggregation_key=run_id)
 
 def hive_execute(sqls):
     hive_hook = HiveServer2Hook(hiveserver2_conn_id='hive_analytics')
@@ -55,12 +70,15 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
-    'retry_delay': timedelta(minutes=5)
+    'retry_delay': timedelta(minutes=5),
+    'on_success_callback': dd_eventer,
+    'on_retry_callback': dd_eventer,
+    'on_failure_callback': dd_eventer
 }
 
 dag = DAG(
-    'reference_ndc', 
-    default_args=default_args, 
+    'reference_ndc',
+    default_args=default_args,
     start_date=datetime(2017, 2, 6),
     schedule_interval='@daily' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
 )
