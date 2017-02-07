@@ -89,7 +89,9 @@ enqueue_psql_script('load_linking.sql', [
 enqueue_psql_script('load_matching_payload.sql', [
     ['matching_path', S3_ALLSCRIPTS_MATCHING + date_path + '/']
 ])
-enqueue_psql_script('split_raw_transactions.sql')
+enqueue_psql_script('split_raw_transactions.sql', [
+    ['max_allowed_date', args.date.replace('-', '')]
+])
 enqueue_psql_script('normalize_claims.sql', [
     ['filename', args.setid],
     ['today', TODAY],

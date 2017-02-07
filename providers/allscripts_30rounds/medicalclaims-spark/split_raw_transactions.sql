@@ -109,7 +109,8 @@ Referring_Provider_NPI string
 -- Normalize numeric columns (column62 => total_charge, column48 => year_of_birth)
 -- Normalize date columns (column4 => date_received)
 INSERT INTO allscripts_dx_raw_claims SELECT
-cast(cast(concat_ws('-', substring(column4, 1, 4), substring(column4, 5, 2), substring(column4, 7, 2)) as date) as string),
+CASE WHEN column4 >= '20130101' AND column4 <= {max_allowed_date} THEN
+    cast(cast(concat_ws('-', substring(column4, 1, 4), substring(column4, 5, 2), substring(column4, 7, 2)) as date) as string) ELSE NULL END,
 CASE WHEN trim(column6) = '' THEN NULL ELSE column6 END AS column6,
 CASE WHEN trim(column7) = '' THEN NULL ELSE column7 END AS column7,
 CASE WHEN trim(column9) = '' THEN NULL ELSE column9 END AS column9,
@@ -200,8 +201,10 @@ CASE WHEN trim(column13) = '' THEN NULL ELSE column13 END AS column13,
 CASE WHEN trim(column14) = '' THEN NULL ELSE column14 END AS column14,
 CASE WHEN trim(column15) = '' THEN NULL ELSE column15 END AS column15,
 CASE WHEN trim(column16) = '' THEN NULL ELSE column16 END AS column16,
-cast(cast(concat_ws('-', substring(column57, 1, 4), substring(column57, 5, 2), substring(column57, 7, 2)) as date) as string),
-cast(cast(concat_ws('-', substring(column58, 1, 4), substring(column58, 5, 2), substring(column58, 7, 2)) as date) as string),
+CASE WHEN column57 >= '20130101' AND column57 <= {max_allowed_date} THEN
+    cast(cast(concat_ws('-', substring(column57, 1, 4), substring(column57, 5, 2), substring(column57, 7, 2)) as date) as string) ELSE NULL END,
+CASE WHEN column58 >= '20130101' AND column58 <= {max_allowed_date} THEN
+    cast(cast(concat_ws('-', substring(column58, 1, 4), substring(column58, 5, 2), substring(column58, 7, 2)) as date) as string) ELSE NULL END,
 CASE WHEN trim(column104) = '' THEN NULL ELSE column104 END AS column104,
 CASE WHEN trim(column109) = '' THEN NULL ELSE column109 END AS column109,
 CASE WHEN trim(column110) = '' THEN NULL ELSE column110 END AS column110,
