@@ -4,13 +4,13 @@ import argparse
 import time
 from datetime import timedelta, datetime, date
 from pyspark.sql import HiveContext, SparkSession
-from providers.spark_norm_common.runner import Runner
-from providers.spark_norm_common.user_defined_functions \
+from spark.runner import Runner
+from spark.common.user_defined_functions \
     import get_diagnosis_with_priority, string_set_diff, uniquify
-from providers.spark_norm_common.post_normalization_cleanup \
+from spark.common.post_normalization_cleanup \
     import clean_up_diagnosis_code, obscure_place_of_service, \
     filter_due_to_place_of_service
-import providers.spark_norm_common.create_date_validation_table \
+import spark.common.create_date_validation_table \
     as date_validator
 
 
@@ -90,7 +90,7 @@ runner.enqueue_psql_script(get_rel_path(
 date_validator.generate(runner, date(2013, 9, 1), date_obj)
 
 runner.enqueue_psql_script(get_rel_path(
-    '../../spark_norm_common/lab_common_model.sql'
+    '../../common/lab_common_model.sql'
 ))
 
 runner.enqueue_psql_script(get_rel_path('load_matching_payload.sql'), [
@@ -123,17 +123,18 @@ runner.enqueue_psql_script(get_rel_path('normalize.sql'), [
 
 # Privacy filtering
 runner.enqueue_psql_script(
-    get_rel_path('../../spark_norm_common/lab_post_normalization_cleanup.sql')
+    get_rel_path('../../common/lab_post_normalization_cleanup.sql')
 )
 
 runner.execute_queue(args.debug)
 
 runner.run_spark_script(
-    get_rel_path('../../spark_norm_common/create_unload_lab_table.sql'),
-    ['output_path', output_path]
+    get_rel_path('../../common/create_unload_lab_table.sql'), [
+        ['output_path', output_path]
+    ]
 )
 runner.run_spark_script(
-    get_rel_path('../../spark_norm_common/unload_common_model.sql'), [
+    get_rel_path('../../common/unload_common_model.sql'), [
         [
             'select_statement',
             "SELECT *, 'NULL' as magic_date "
@@ -144,7 +145,7 @@ runner.run_spark_script(
     ]
 )
 runner.run_spark_script(
-    get_rel_path('../../spark_norm_common/unload_common_model.sql'), [
+    get_rel_path('../../common/unload_common_model.sql'), [
         [
             'select_statement',
             "SELECT *, regexp_replace(cast(date_service as string), '-..$', '') as magic_date "
