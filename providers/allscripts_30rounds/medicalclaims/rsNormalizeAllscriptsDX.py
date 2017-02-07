@@ -129,10 +129,23 @@ enqueue_psql_script('../../redshift_norm_common/cap_age.sql', [
     ['column_name', 'patient_age', False]
 ])
 
-enqueue_psql_script('../../redshift_norm_common/unload_common_model.sql', [
-    ['output_path', S3_ALLSCRIPTS_OUT + date_path + '/'],
-    ['credentials', args.s3_credentials],
-    ['select_from_common_model_table', 'SELECT * FROM medicalclaims_common_model']
-])
-
 execute_queue(args.debug)
+
+months = run_psql_query('SELECT DISTINCT regexp_replace(date_service, \'-..$\', \'\') FROM medicalclaims_common_model;', True)
+for m in months.split("\n")[2:-3]:
+    m = m.strip()
+    if m == '':
+        m = "NULL"
+    print m
+    if m != 'NULL':
+        run_psql_script('../../redshift_norm_common/unload_common_model.sql', [
+            ['output_path', S3_ALLSCRIPTS_OUT + m + '/' + args.date + '_'],
+            ['credentials', args.s3_credentials],
+            ['select_from_common_model_table', 'SELECT * FROM medicalclaims_common_model WHERE date_service LIKE \\\'{}%\\\''.format(m)]
+        ])
+    else:
+        run_psql_script('../../redshift_norm_common/unload_common_model.sql', [
+            ['output_path', S3_ALLSCRIPTS_OUT + m + '/' + args.date + '_'],
+            ['credentials', args.s3_credentials],
+            ['select_from_common_model_table', 'SELECT * FROM medicalclaims_common_model WHERE date_service IS NULL'.format(m)]
+        ])
