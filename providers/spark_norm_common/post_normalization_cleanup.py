@@ -47,7 +47,7 @@ def clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service):
                                        and date_service >= date(2015, 10, 01)):
         if re.search('^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$', diagnosis_code):
             return None
-        if re.search(diagnosis_code, '^Z684[1-5]$'):
+        if re.search('^Z684[1-5]$', diagnosis_code):
             return 'Z684'
     return diagnosis_code
 

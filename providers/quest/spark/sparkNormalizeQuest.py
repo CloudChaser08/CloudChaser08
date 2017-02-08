@@ -147,7 +147,7 @@ runner.run_spark_script(
     get_rel_path('../../spark_norm_common/unload_common_model.sql'), [
         [
             'select_statement',
-            "SELECT *, regexp_replace(date_service, '-..$', '') as magic_date "
+            "SELECT *, regexp_replace(cast(date_service as string), '-..$', '') as magic_date "
             + "FROM lab_common_model "
             + "WHERE date_service IS NOT NULL",
             False
