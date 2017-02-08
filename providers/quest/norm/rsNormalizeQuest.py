@@ -42,7 +42,8 @@ addon_path = input_path + 'addon/'
 matching_path = 's3://salusv/matching/payload/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
-output_path = 's3://salusv/warehouse/text/labtests/quest/'
+# output_path = 's3://salusv/warehouse/text/labtests/quest/'
+output_path = 's3://healthveritydev/musifer/scratch/quest-spark/rscompare/'
 
 # create helper tables
 subprocess.call('psql dev < ' + get_rel_path(
@@ -112,6 +113,7 @@ subprocess.call(' '.join(
     + ['-v', 'table_name=lab_common_model']
     + ['-v', 'column_name=diagnosis_code']
     + ['-v', 'qual_column_name=diagnosis_code_qual']
+    + ['-v', 'service_date_column_name=date_service']
     + ['dev', '<', get_rel_path(
         '../../redshift_norm_common/nullify_icd9_blacklist.sql'
     )]
@@ -121,6 +123,7 @@ subprocess.call(' '.join(
     + ['-v', 'table_name=lab_common_model']
     + ['-v', 'column_name=diagnosis_code']
     + ['-v', 'qual_column_name=diagnosis_code_qual']
+    + ['-v', 'service_date_column_name=date_service']
     + ['dev', '<', get_rel_path(
         '../../redshift_norm_common/nullify_icd10_blacklist.sql'
     )]
@@ -130,6 +133,7 @@ subprocess.call(' '.join(
     + ['-v', 'table_name=lab_common_model']
     + ['-v', 'column_name=diagnosis_code']
     + ['-v', 'qual_column_name=diagnosis_code_qual']
+    + ['-v', 'service_date_column_name=date_service']
     + ['dev', '<', get_rel_path(
         '../../redshift_norm_common/genericize_icd9.sql'
     )]
@@ -139,6 +143,7 @@ subprocess.call(' '.join(
     + ['-v', 'table_name=lab_common_model']
     + ['-v', 'column_name=diagnosis_code']
     + ['-v', 'qual_column_name=diagnosis_code_qual']
+    + ['-v', 'service_date_column_name=date_service']
     + ['dev', '<', get_rel_path(
         '../../redshift_norm_common/genericize_icd10.sql'
     )]
