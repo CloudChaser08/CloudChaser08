@@ -8,13 +8,13 @@ import logging
 
 def do_decompress_file(ds, **kwargs):
     tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    decrypted_file = tmp_dir + kwargs['params']['decrypted_file_name_func'](kwargs)
+    decrypted_file = tmp_dir + kwargs['params']['decrypted_file_name_func'](ds, kwargs)
 
     check_call(['gzip', '-d', '-k', decrypted_file])
 
 def do_split_file(ds, **kwargs):
     tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    expected_file_name = kwargs['params']['decompressed_file_name_func'](kwargs)
+    expected_file_name = kwargs['params']['decompressed_file_name_func'](ds, kwargs)
     decompressed_file = tmp_dir + expected_file_name
 
     check_call([
@@ -24,8 +24,8 @@ def do_split_file(ds, **kwargs):
     
 def do_clean_up(ds, **kwargs):
     tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    decrypted_file = tmp_dir + kwargs['params']['decrypted_file_name_func'](kwargs)
-    decompressed_file = tmp_dir + kwargs['params']['decompressed_file_name_func'](kwargs)
+    decrypted_file = tmp_dir + kwargs['params']['decrypted_file_name_func'](ds, kwargs)
+    decompressed_file = tmp_dir + kwargs['params']['decompressed_file_name_func'](ds, kwargs)
 
     check_call(['rm', decrypted_file])
     check_call(['rm', decompressed_file])
