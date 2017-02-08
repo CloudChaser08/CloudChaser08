@@ -5,12 +5,12 @@ import time
 from datetime import timedelta, datetime, date
 from pyspark.sql import HiveContext, SparkSession
 from spark.runner import Runner
-from spark.common.user_defined_functions \
+from spark.helpers.udf.user_defined_functions \
     import get_diagnosis_with_priority, string_set_diff, uniquify
-from spark.common.post_normalization_cleanup \
+from spark.helpers.udf.post_normalization_cleanup \
     import clean_up_diagnosis_code, obscure_place_of_service, \
     filter_due_to_place_of_service
-import spark.common.create_date_validation_table \
+import spark.helpers.create_date_validation_table \
     as date_validator
 
 
