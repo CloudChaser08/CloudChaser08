@@ -28,6 +28,7 @@ CREATE TABLE lab_common_model (
         test_ordered_local_id   string,
         test_ordered_std_id     string,
         test_ordered_name       string,
+        result_id               string,
         result                  string,
         result_name             string,
         result_unit_of_measure  string,

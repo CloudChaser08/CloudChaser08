@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS transactions_trunk;
-CREATE TABLE transactions_trunk (
+DROP TABLE IF EXISTS transactions_trunk_dupes;
+CREATE TABLE transactions_trunk_dupes (
         accn_id              string,
         dosid                string,
         local_order_code     string,
@@ -11,14 +11,18 @@ CREATE TABLE transactions_trunk (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (
-        'separatorChar' = '|'
+        'separatorChar' = '\t'
         )
     STORED AS TEXTFILE
     LOCATION {trunk_path}
     ;
 
-DROP TABLE IF EXISTS transactions_addon;
-CREATE TABLE transactions_addon (
+DROP TABLE IF EXISTS transactions_trunk;
+CREATE TABLE transactions_trunk
+AS SELECT DISTINCT * FROM transactions_trunk_dupes;
+
+DROP TABLE IF EXISTS transactions_addon_dupes;
+CREATE TABLE transactions_addon_dupes (
         accn_id              string,
         date_of_service      string,
         dosid                string,
@@ -41,11 +45,15 @@ CREATE TABLE transactions_addon (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (
-        'separatorChar' = '|'
+        'separatorChar' = '\t'
         )
     STORED AS TEXTFILE
     LOCATION {addon_path}
     ;
+
+DROP TABLE IF EXISTS transactions_addon;
+CREATE TABLE transactions_addon
+AS SELECT DISTINCT * FROM transactions_addon_dupes;
 
 DROP TABLE IF EXISTS transactional_raw;
 CREATE TABLE transactional_raw (

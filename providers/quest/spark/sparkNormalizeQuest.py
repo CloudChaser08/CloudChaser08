@@ -117,8 +117,8 @@ else:
 runner.enqueue_psql_script(get_rel_path('normalize.sql'), [
     ['filename', setid],
     ['today', TODAY],
-    ['feedname', '26'],
-    ['vendor', '35']
+    ['feedname', '18'],
+    ['vendor', '7']
 ])
 
 # Privacy filtering

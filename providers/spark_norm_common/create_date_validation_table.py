@@ -26,7 +26,7 @@ def generate(runner):
         'CREATE EXTERNAL TABLE dates (date string, formatted string) '
         + 'ROW FORMAT SERDE \'org.apache.hadoop.hive.serde2.OpenCSVSerde\' '
         + 'WITH SERDEPROPERTIES ('
-        + '\'separatorChar\' = \'|\''
+        + '\'separatorChar\' = \',\''
         + ') '
         + 'STORED AS TEXTFILE '
         + 'LOCATION \'' + LOCATION + '\''
