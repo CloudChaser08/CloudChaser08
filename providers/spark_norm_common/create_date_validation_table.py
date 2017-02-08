@@ -23,7 +23,7 @@ def generate(runner):
 
     runner.enqueue_psql_query('DROP TABLE IF EXISTS dates')
     runner.enqueue_psql_query(
-        'CREATE EXTERNAL TABLE dates (date string, formatted string) '
+        'CREATE EXTERNAL TABLE dates (date string, formatted date) '
         + 'ROW FORMAT SERDE \'org.apache.hadoop.hive.serde2.OpenCSVSerde\' '
         + 'WITH SERDEPROPERTIES ('
         + '\'separatorChar\' = \',\''
