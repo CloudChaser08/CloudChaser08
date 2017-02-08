@@ -62,7 +62,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--period', type=str)
 parser.add_argument('--date', type=str)
 parser.add_argument('--debug', default=False, action='store_true')
-parser.add_argument('--s3_credentials', type=str)
 args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
@@ -80,8 +79,7 @@ addon_path = input_path + 'addon/'
 matching_path = 's3://salusv/matching/payload/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
-# output_path = 's3://salusv/warehouse/text/labtests/quest/'
-output_path = 's3://healthveritydev/musifer/scratch/'
+output_path = 'hdfs:///out/'
 
 # create helper tables
 runner.enqueue_psql_script(get_rel_path(
