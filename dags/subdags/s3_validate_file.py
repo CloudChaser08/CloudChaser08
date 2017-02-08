@@ -11,8 +11,8 @@ SLACK_CHANNEL='#dev'
 def do_is_valid_new_file(ds, **kwargs):
     # We expect the files that were made available on HealthVerity's S3
     s3_prefix          = kwargs['s3_prefix']
-    file_name_pattern  = kwargs['file_name_pattern_func'](kwargs)
-    expected_file_name = kwargs['expected_file_name_func'](kwargs)
+    file_name_pattern  = kwargs['file_name_pattern_func'](ds, kwargs)
+    expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
     minimum_file_size  = kwargs['minimum_file_size']
 
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')

@@ -8,7 +8,7 @@ import logging
 
 def do_queue_up_for_matching(ds, **kwargs):
     # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
-    expected_file_name = kwargs['params']['expected_file_name_func'](kwargs)
+    expected_file_name = kwargs['params']['expected_file_name_func'](ds, kwargs)
     s3_prefix          = kwargs['params']['s3_prefix']
 
     check_call([

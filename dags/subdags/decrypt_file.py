@@ -10,8 +10,8 @@ DECRYPTION_KEY='hv_record_private.base64.reformat'
 
 def do_run_decryption(ds, **kwargs):
     tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
-    encrypted_file_name = tmp_dir + kwargs['encrypted_file_name_func'](kwargs)
-    decrypted_file_name = tmp_dir + kwargs['decrypted_file_name_func'](kwargs)
+    encrypted_file_name = tmp_dir + kwargs['encrypted_file_name_func'](ds, kwargs)
+    decrypted_file_name = tmp_dir + kwargs['decrypted_file_name_func'](ds, kwargs)
     decryptor_jar = tmp_dir + DECRYPTOR_JAR
     decryption_key = tmp_dir + DECRYPTION_KEY
 
@@ -22,7 +22,7 @@ def do_run_decryption(ds, **kwargs):
 
 def do_clean_up(ds, **kwargs):
     tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
-    encrypted_file_name = tmp_dir + kwargs['encrypted_file_name_func'](kwargs)
+    encrypted_file_name = tmp_dir + kwargs['encrypted_file_name_func'](ds, kwargs)
     decryptor_jar = tmp_dir + DECRYPTOR_JAR
     decryption_key = tmp_dir + DECRYPTION_KEY
 

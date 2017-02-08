@@ -7,8 +7,8 @@ import logging
 
 def do_fetch_file(ds, **kwargs):
     # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
-    expected_file_name = kwargs['expected_file_name_func'](kwargs)
-    new_file_name      = kwargs['new_file_name_func'](kwargs)
+    expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
+    new_file_name      = kwargs['new_file_name_func'](ds, kwargs)
     s3_prefix          = kwargs['s3_prefix']
 
     tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
