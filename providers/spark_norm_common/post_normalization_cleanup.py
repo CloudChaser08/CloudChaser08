@@ -1,4 +1,5 @@
 #! /usr/bin/python
+from datetime import date
 
 # These codes are specific enough that along with other public fields they pose a
 # re-identification risk, nullify them
@@ -36,15 +37,17 @@
 #   Z68.41 - Z68.45 Body Mass Index 40 and over
 def clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service):
     import re
-    if diagnosis_code_qual == '01' or (diagnosis_code_qual == None and date_service < '2015-10-01'):
-        if re.search(diagnosis_code, '^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$'):
+    if diagnosis_code_qual == '01' or (diagnosis_code_qual is None
+                                       and date_service < date(2015, 10, 01)):
+        if re.search('^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$', diagnosis_code):
             return None
         if re.search(diagnosis_code, '^V854[1-5]$'):
             return 'V854'
-    if diagnosis_code_qual == '02' or (diagnosis_code_qual == None and date_service >= '2015-10-01'):
-        if re.search(diagnosis_code, '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$'):
+    if diagnosis_code_qual == '02' or (diagnosis_code_qual is None
+                                       and date_service >= date(2015, 10, 01)):
+        if re.search('^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$', diagnosis_code):
             return None
-        if re.search(diagnosis_code, '^Z684[1-5]$'):
+        if re.search('^Z684[1-5]$', diagnosis_code):
             return 'Z684'
     return diagnosis_code
 
