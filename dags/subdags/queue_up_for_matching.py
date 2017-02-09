@@ -12,7 +12,7 @@ def do_queue_up_for_matching(ds, **kwargs):
     s3_prefix          = kwargs['params']['s3_prefix']
 
     check_call([
-        '/home/airflow/airflow/dags/resources/push_file_to_s3_batchless_v3.sh',
+        '/home/airflow/airflow/dags/resources/push_file_to_s3_batchless_v4.sh',
         's3://healthverity/' + s3_prefix + expected_file_name, '0',
         'prod-matching-ending', 'priority3'
     ])
