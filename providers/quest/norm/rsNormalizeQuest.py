@@ -42,8 +42,7 @@ addon_path = input_path + 'addon/'
 matching_path = 's3://salusv/matching/payload/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
-# output_path = 's3://salusv/warehouse/text/labtests/quest/'
-output_path = 's3://healthveritydev/musifer/scratch/quest-spark/rscompare/'
+output_path = 's3://salusv/warehouse/text/labtests/quest/'
 
 # create helper tables
 subprocess.call('psql dev < ' + get_rel_path(
