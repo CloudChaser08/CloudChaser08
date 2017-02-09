@@ -61,7 +61,7 @@ CREATE TABLE final_unload (
         ordering_market_type    string,
         ordering_specialty      string
         )
-    PARTITIONED BY (magic_date  string)
+    PARTITIONED BY (part_best_date  string)
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (
         'separatorChar' = '|'
