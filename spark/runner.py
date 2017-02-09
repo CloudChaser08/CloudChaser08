@@ -1,4 +1,10 @@
+import logging
+
+
 class Runner:
+    """
+    Run spark queries and scripts
+    """
 
     def __init__(self, sqlContext):
         self.sqlContext = sqlContext
@@ -20,7 +26,7 @@ class Runner:
         for statement in content.split(';'):
             if len(statement.strip()) == 0:
                 continue
-            print "STATEMENT: " + statement
+            logging.info("STATEMENT: " + statement)
             self.run_spark_query(statement)
 
     def run_spark_query(self, query, return_output=False):

@@ -37,13 +37,13 @@ setid = 'HealthVerity_' + \
         date_obj.strftime('%Y%m%d') + \
         (date_obj + timedelta(days=1)).strftime('%m%d')
 
-input_path = 's3://salusv/incoming/labtests/quest/{}/'.format(
+input_path = 's3a://salusv/incoming/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
 trunk_path = input_path + 'trunk/'
 addon_path = input_path + 'addon/'
 
-matching_path = 's3://salusv/matching/payload/labtests/quest/{}/'.format(
+matching_path = 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
 output_path = 'hdfs:///out/'
@@ -92,8 +92,6 @@ runner.run_spark_script(get_rel_path('normalize.sql'), [
 runner.run_spark_script(
     get_rel_path('../../common/lab_post_normalization_cleanup.sql')
 )
-
-runner.execute_queue(args.debug)
 
 runner.run_spark_script(
     get_rel_path('../../common/create_unload_lab_table.sql'), [
