@@ -81,9 +81,6 @@ def get_parquet_dates(ds, kwargs):
     file_dates = sorted(list(set(file_dates)))
     return filter(lambda d: d < date_path, file_dates)[-2:] + [date_path]
 
-def get_row_count(ds, kwargs):
-    return 10825021
-
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2016, 12, 1, 12),
@@ -214,7 +211,6 @@ detect_move_normalize_dag = SubDagOperator(
             'normalization_routine_directory': '/home/airflow/airflow/dags/providers/express_scripts/pharmacyclaims/',
             'normalization_routine_script': '/home/airflow/airflow/dags/providers/express_scripts/pharmacyclaims/rsNormalizeExpressScriptsRX.py',
             'parquet_dates_func': get_parquet_dates,
-            'row_count_func': get_row_count,
             's3_text_path_prefix': S3_TEXT_EXPRESS_SCRIPTS_PREFIX,
             's3_parquet_path_prefix': S3_PARQUET_EXPRESS_SCRIPTS_PREFIX,
             's3_payload_loc': S3_PAYLOAD_LOC_PATH,
