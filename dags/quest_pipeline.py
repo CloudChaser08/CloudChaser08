@@ -320,7 +320,7 @@ def queue_up_for_matching_step(seq_num, engine_env, priority):
         env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER')
         env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')
         check_call([
-            '/home/airflow/airflow/dags/resources/push_file_to_s3.sh',
+            '/home/airflow/airflow/dags/resources/push_file_to_s3_batchless_v4.sh',
             deid_file, seq_num, engine_env, priority
         ], env=env)
     return PythonOperator(
