@@ -41,7 +41,7 @@ def clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service):
                                        and date_service < date(2015, 10, 01)):
         if re.search('^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$', diagnosis_code):
             return None
-        if re.search(diagnosis_code, '^V854[1-5]$'):
+        if re.search('^V854[1-5]$', diagnosis_code):
             return 'V854'
     if diagnosis_code_qual == '02' or (diagnosis_code_qual is None
                                        and date_service >= date(2015, 10, 01)):
