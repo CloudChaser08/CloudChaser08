@@ -3,13 +3,8 @@ import os
 import argparse
 import time
 from datetime import timedelta, datetime, date
-from pyspark.sql import HiveContext, SparkSession
 from spark.runner import Runner
-from spark.helpers.udf.user_defined_functions \
-    import get_diagnosis_with_priority, string_set_diff, uniquify
-from spark.helpers.udf.post_normalization_cleanup \
-    import clean_up_diagnosis_code, obscure_place_of_service, \
-    filter_due_to_place_of_service
+import spark.spark
 import spark.helpers.create_date_validation_table \
     as date_validator
 
@@ -23,35 +18,7 @@ def get_rel_path(relative_filename):
     )
 
 # init
-spark = SparkSession.builder                                            \
-                    .master("yarn")                                     \
-                    .appName("Quest Normalization")                     \
-                    .config('spark.sql.catalogImplementation', 'hive')  \
-                    .getOrCreate()
-
-sqlContext = HiveContext(spark.sparkContext)
-
-# register udfs
-sqlContext.registerFunction(
-    'get_diagnosis_with_priority', get_diagnosis_with_priority
-)
-sqlContext.registerFunction(
-    'string_set_diff', string_set_diff
-)
-sqlContext.registerFunction(
-    'uniquify', uniquify
-)
-
-# register privacy filters
-sqlContext.registerFunction(
-    'filter_due_to_place_of_service', filter_due_to_place_of_service
-)
-sqlContext.registerFunction(
-    'obscure_place_of_service', obscure_place_of_service
-)
-sqlContext.registerFunction(
-    'clean_up_diagnosis_code', clean_up_diagnosis_code
-)
+spark, sqlContext = spark.init()
 
 # initialize runner
 runner = Runner(sqlContext)
