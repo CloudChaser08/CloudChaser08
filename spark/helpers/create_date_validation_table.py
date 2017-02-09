@@ -18,13 +18,13 @@ def generate(runner, start_date, end_date):
                 single_date.strftime("%Y-%m-%d") + '\n'
             )
 
-    runner.enqueue_psql_query('DROP TABLE IF EXISTS dates')
-    runner.enqueue_psql_query(
+    runner.run_spark_query('DROP TABLE IF EXISTS dates')
+    runner.run_spark_query(
         'CREATE EXTERNAL TABLE dates (date string, formatted date) '
         + 'ROW FORMAT SERDE \'org.apache.hadoop.hive.serde2.OpenCSVSerde\' '
         + 'STORED AS TEXTFILE '
         + 'LOCATION \'' + LOCATION + '\''
     )
-    runner.enqueue_psql_query(
+    runner.run_spark_query(
         'LOAD DATA INPATH \'temp.csv\' INTO TABLE dates'
     )

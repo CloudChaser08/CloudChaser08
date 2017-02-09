@@ -4,7 +4,7 @@ import argparse
 import time
 from datetime import timedelta, datetime, date
 from spark.runner import Runner
-import spark.spark
+from spark.spark import init
 import spark.helpers.create_date_validation_table \
     as date_validator
 
@@ -18,7 +18,7 @@ def get_rel_path(relative_filename):
     )
 
 # init
-spark, sqlContext = spark.init()
+spark, sqlContext = init("Quest")
 
 # initialize runner
 runner = Runner(sqlContext)
@@ -49,30 +49,30 @@ matching_path = 's3://salusv/matching/payload/labtests/quest/{}/'.format(
 output_path = 'hdfs:///out/'
 
 # create helper tables
-runner.enqueue_psql_script(get_rel_path(
+runner.run_spark_script(get_rel_path(
     'create_helper_tables.sql'
 ))
 
 # create date table
-date_validator.generate(runner, date(2013, 9, 1), date_obj)
+date_validator.generate(runner, date(2013, 9, 1), date_obj.date())
 
-runner.enqueue_psql_script(get_rel_path(
+runner.run_spark_script(get_rel_path(
     '../../common/lab_common_model.sql'
 ))
 
-runner.enqueue_psql_script(get_rel_path('load_matching_payload.sql'), [
+runner.run_spark_script(get_rel_path('load_matching_payload.sql'), [
     ['matching_path', matching_path]
 ])
 
 if args.period == 'current':
-    runner.enqueue_psql_script(
+    runner.run_spark_script(
         get_rel_path('load_and_merge_transactions.sql'), [
             ['trunk_path', trunk_path],
             ['addon_path', addon_path]
         ]
     )
 elif args.period == 'hist':
-    runner.enqueue_psql_script(
+    runner.run_spark_script(
         get_rel_path('load_transactions.sql'), [
             ['input_path', input_path]
         ]
@@ -81,7 +81,7 @@ else:
     print("Invalid period '" + args.period + "'")
     exit(1)
 
-runner.enqueue_psql_script(get_rel_path('normalize.sql'), [
+runner.run_spark_script(get_rel_path('normalize.sql'), [
     ['filename', setid],
     ['today', TODAY],
     ['feedname', '18'],
@@ -89,7 +89,7 @@ runner.enqueue_psql_script(get_rel_path('normalize.sql'), [
 ])
 
 # Privacy filtering
-runner.enqueue_psql_script(
+runner.run_spark_script(
     get_rel_path('../../common/lab_post_normalization_cleanup.sql')
 )
 
