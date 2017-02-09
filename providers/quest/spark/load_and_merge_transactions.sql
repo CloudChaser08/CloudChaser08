@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS transactions_trunk_dupes;
-CREATE TABLE transactions_trunk_dupes (
+CREATE EXTERNAL TABLE transactions_trunk_dupes (
         accn_id              string,
         dosid                string,
         local_order_code     string,
@@ -22,7 +22,7 @@ CREATE TABLE transactions_trunk
 AS SELECT DISTINCT * FROM transactions_trunk_dupes;
 
 DROP TABLE IF EXISTS transactions_addon_dupes;
-CREATE TABLE transactions_addon_dupes (
+CREATE EXTERNAL TABLE transactions_addon_dupes (
         accn_id              string,
         date_of_service      string,
         dosid                string,

@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS transactional_raw;
-CREATE TABLE transactional_raw (
+CREATE EXTERNAL TABLE transactional_raw (
         accn_id              string,
         dosid                string,
         local_order_code     string,

@@ -1,6 +1,6 @@
 -- Create a table for the matching payload data
 DROP TABLE IF EXISTS matching_payload;
-CREATE TABLE matching_payload (
+CREATE EXTERNAL TABLE matching_payload (
         hvJoinKey      string,
         claimid        string,
         hvid           string,
