@@ -45,15 +45,10 @@ EMR_EBS_VOLUME_SIZE="0"
 
 def do_detect_matching_done(ds, **kwargs):
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-    row_count = int(kwargs['row_count_func'](ds, kwargs))
-    chunk_start = row_count / 1000000 * 1000000
     deid_filename = kwargs['expected_deid_file_name_func'](ds, kwargs)
     s3_path_prefix = S3_PATH_PREFIX + kwargs['vendor_uuid'] + '/'
-    template = '{}{}*'
-    if row_count >= 1000000:
-        template += '{}-{}'
-    template += '*'
-    s3_key = template.format(s3_path_prefix, deid_filename, chunk_start, row_count)
+    template = '{}{}*DONE*'
+    s3_key = template.format(s3_path_prefix, deid_filename)
     logging.info('Poking for key : {}'.format(s3_key))
     while not hook.check_for_wildcard_key(s3_key, None):
         time.sleep(60)
