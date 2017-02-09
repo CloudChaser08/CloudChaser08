@@ -2,7 +2,7 @@
 import os
 import argparse
 import time
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 from pyspark.sql import HiveContext, SparkSession
 from providers.spark_norm_common.runner import Runner
 from providers.spark_norm_common.user_defined_functions \
@@ -24,8 +24,8 @@ def get_rel_path(relative_filename):
 
 # init
 spark = SparkSession.builder                                            \
-                    .master("yarn-client")                              \
-                    .appName("Allscripts Normalization")                \
+                    .master("yarn")                                     \
+                    .appName("Quest Normalization")                     \
                     .config('spark.sql.catalogImplementation', 'hive')  \
                     .getOrCreate()
 
@@ -87,7 +87,7 @@ runner.enqueue_psql_script(get_rel_path(
 ))
 
 # create date table
-date_validator.generate(runner)
+date_validator.generate(runner, date(2013, 9, 1), date_obj)
 
 runner.enqueue_psql_script(get_rel_path(
     '../../spark_norm_common/lab_common_model.sql'

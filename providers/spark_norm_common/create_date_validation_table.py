@@ -1,14 +1,11 @@
 # create date table
-import subprocess
-from datetime import timedelta, date, datetime
+from datetime import timedelta
 
 LOCATION = 's3://healthveritydev/musifer/tmp/'
 
 
-def generate(runner):
+def generate(runner, start_date, end_date):
 
-    start_date = date(2012, 1, 1)
-    end_date = datetime.now().date()
     date_range = [
         start_date + timedelta(n)
         for n in range(int((end_date - start_date).days))
@@ -25,9 +22,6 @@ def generate(runner):
     runner.enqueue_psql_query(
         'CREATE EXTERNAL TABLE dates (date string, formatted date) '
         + 'ROW FORMAT SERDE \'org.apache.hadoop.hive.serde2.OpenCSVSerde\' '
-        + 'WITH SERDEPROPERTIES ('
-        + '\'separatorChar\' = \',\''
-        + ') '
         + 'STORED AS TEXTFILE '
         + 'LOCATION \'' + LOCATION + '\''
     )

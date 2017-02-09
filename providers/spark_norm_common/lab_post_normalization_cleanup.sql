@@ -10,8 +10,14 @@ SELECT monotonically_increasing_id() AS record_id,
     data_vendor,
     source_version,
     patient_gender,
-    CASE WHEN cast(patient_age as int) > 85 THEN '90' ELSE patient_age END as patient_age,
-    patient_year_of_birth,
+    CASE WHEN CAST(patient_age as int) > 85 THEN '90' ELSE patient_age END AS patient_age,
+    CASE
+    WHEN date_service IS NULL or date_service = ''
+    THEN NULL
+    WHEN YEAR(date_service) - CAST(patient_year_of_birth AS int) > 80
+    OR CAST(patient_age as int) > 85
+    THEN CAST(YEAR(date_service) - 90 AS string)
+    END,
     patient_zip3,
     patient_state,
     date_service,

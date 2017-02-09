@@ -17,7 +17,7 @@ CREATE TABLE lab_common_model (
         date_service            date,
         date_specimen           date,
         date_report             date,
-        time_report             string,
+        time_report             time,
         loinc_code              string,
         lab_id                  string,
         test_id                 string,
