@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS final_unload;
-CREATE TABLE final_unload (
+DROP TABLE IF EXISTS lab_common_model;
+CREATE TABLE lab_common_model (
         record_id               int,
         claim_id                string,
         hvid                    string,
@@ -17,7 +17,7 @@ CREATE TABLE final_unload (
         date_service            date,
         date_specimen           date,
         date_report             date,
-        time_report             time,
+        time_report             timestamp,
         loinc_code              string,
         lab_id                  string,
         test_id                 string,
@@ -60,10 +60,4 @@ CREATE TABLE final_unload (
         ordering_other_qual     string,
         ordering_market_type    string,
         ordering_specialty      string
-        )
-    PARTITIONED BY (magic_date  string)
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    WITH SERDEPROPERTIES (
-        'separatorChar' = '|'
-        )
-    LOCATION {output_path};
+        );
