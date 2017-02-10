@@ -13,8 +13,13 @@ import re
 import os
 import sys
 import csv
+from json import loads
 import struct
 from datetime import timedelta, datetime
+
+if sys.modules.get('util.hv_datadog'):
+    del sys.modules['util.hv_datadog']
+from util.hv_datadog import hv_datadog, start_dag_op, end_dag_op
 
 SRC_PATH='http://www.accessdata.fda.gov/cder/'
 SRC_FILE='ndctext.zip'
@@ -24,11 +29,15 @@ if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
     SCHEMA='default'
     S3_TEXT='s3://salusv/reference/ndc/'
     S3_PARQUET='s3a://salusv/reference/parquet/ndc/'
+    AIRFLOW_ENV='prod'
 else:
     SCHEMA='dev'
     S3_TEXT='s3://healthveritydev/jcap/ndc/'
     S3_PARQUET='s3a://healthveritydev/jcap/parquet/ndc/'
+    AIRFLOW_ENV='dev'
 
+
+dd = hv_datadog(env=AIRFLOW_ENV, keys=loads(Variable.get('DATADOG_KEYS')))
 
 def hive_execute(sqls):
     hive_hook = HiveServer2Hook(hiveserver2_conn_id='hive_analytics')
@@ -45,17 +54,18 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
-    'retry_delay': timedelta(minutes=5)
+    'retry_delay': timedelta(minutes=5),
+    'on_success_callback': dd.dd_eventer,
+    'on_retry_callback':   dd.dd_eventer,
+    'on_failure_callback': dd.dd_eventer
 }
 
 dag = DAG(
-    'reference_ndc', 
-    default_args=default_args, 
+    'reference_ndc',
+    default_args=default_args,
     start_date=datetime(2017, 2, 6),
     schedule_interval='@daily' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
 )
-
-
 
 
 def format_and_save(lines,file_name):
@@ -240,7 +250,8 @@ def replace_old_table(tomorrow_ds, schema, s3, **kwargs):
 
     hive_execute(sqls)
 
-
+start_run = start_dag_op(dag, dd)
+end_run   = end_dag_op(dag, dd)
 
 fetch_yesterday = BashOperator(
     task_id='fetch_yesterday',
@@ -290,7 +301,7 @@ push_updated = BashOperator(
 )
 
 cleanup_temp = BashOperator(
-    task_id='push_updated',
+    task_id='cleanup_temp',
     params={ "TMP_PATH": TMP_PATH},
     bash_command='rm -rf /tmp/ndc_{{ tomorrow_ds }}',
     dag=dag
@@ -320,6 +331,8 @@ replace_old = PythonOperator(
     dag=dag
 )
 
+fetch_yesterday.set_upstream(start_run)
+
 fetch_new.set_upstream(fetch_yesterday)
 decompress_new.set_upstream(fetch_new)
 
@@ -334,4 +347,5 @@ create_new.set_upstream(create_temp)
 
 replace_old.set_upstream(create_new)
 
+end_run.set_upstream(replace_old)
 

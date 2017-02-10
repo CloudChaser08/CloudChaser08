@@ -52,6 +52,7 @@ RUN pip install \
       thrift_sasl \
       psycopg2 \
       awscli \
+      datadog \
       celery
 
 RUN pip install pandas
