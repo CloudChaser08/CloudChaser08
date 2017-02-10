@@ -184,6 +184,8 @@ queue_up_for_matching = BashOperator(
     params={'sequence_num' : 0,
             'matching_engine_env' : 'prod-matching-engine',
             'priority' : 'priority3'},
+    env={'AWS_ACCESS_KEY_ID' : Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER'),
+         'AWS_SECRET_ACCESS_KEY' : Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')},
     dag=mdag
 )
 
