@@ -85,7 +85,11 @@ runner.run_spark_script(get_rel_path('normalize.sql'), [
     ['filename', setid],
     ['today', TODAY],
     ['feedname', '18'],
-    ['vendor', '7']
+    ['vendor', '7'],
+    ['join', (
+        'q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key'
+        if args.period == 'current' else 'q.accn_id = mp.claimid'
+    ), False]
 ])
 
 # Privacy filtering

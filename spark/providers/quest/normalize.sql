@@ -63,7 +63,7 @@ SELECT
     NULL,                                                                            --ordering_market_type    
     NULL                                                                             --ordering_specialty
 FROM transactional_raw q
-    LEFT JOIN matching_payload mp ON q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key
+    LEFT JOIN matching_payload mp ON {join}
     LEFT JOIN dates service ON q.date_of_service = service.date
     LEFT JOIN dates collected ON q.date_collected = collected.date
     CROSS JOIN diagnosis_exploder n
