@@ -16,7 +16,8 @@ subdags = [
     'subdags.decrypt_file',
     'subdags.decompress_split_push_file',
     'subdags.queue_up_for_matching',
-    'subdags.detect_move_normalize'
+    'subdags.detect_move_normalize',
+    'subdags.clean_up_tmp_dir'
 ]
 
 for subdag in subdags:
@@ -29,6 +30,7 @@ from subdags.decrypt_file import decrypt_file
 from subdags.decompress_split_push_file import decompress_split_push_file
 from subdags.queue_up_for_matching import queue_up_for_matching
 from subdags.detect_move_normalize import detect_move_normalize
+from subdags.clean_up_tmp_dir import clean_up_tmp_dir
 
 # Applies to all files
 TMP_PATH_TEMPLATE='/tmp/express_scripts/pharmacyclaims/{}/'
@@ -53,6 +55,8 @@ S3_PARQUET_EXPRESS_SCRIPTS_PREFIX = 'warehouse/parquet/pharmacyclaims/express_sc
 S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_TEXT_EXPRESS_SCRIPTS_PREFIX
 
 S3_PAYLOAD_LOC_PATH = 's3://salusv/matching/payload/pharmacyclaims/esi/'
+
+S3_ORIGIN_BUCKET = 'healthverity'
 
 def get_expected_transaction_file_name(ds, kwargs):
     return TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash'])
@@ -107,6 +111,7 @@ validate_transaction_file_dag = SubDagOperator(
             'file_name_pattern_func' : get_expected_transaction_file_regex,
             'minimum_file_size'      : MINIMUM_TRANSACTION_FILE_SIZE,
             's3_prefix'              : S3_TRANSACTION_RAW_PATH,
+            's3_bucket'              : S3_ORIGIN_BUCKET,
             'file_description'       : TRANSACTION_FILE_DESCRIPTION
         }
     ),
@@ -125,6 +130,7 @@ validate_deid_file_dag = SubDagOperator(
             'file_name_pattern_func' : get_expected_deid_file_regex,
             'minimum_file_size'      : MINIMUM_DEID_FILE_SIZE,
             's3_prefix'              : S3_DEID_RAW_PATH,
+            's3_bucket'              : S3_ORIGIN_BUCKET,
             'file_description'       : DEID_FILE_DESCRIPTION
         }
     ),
@@ -222,8 +228,23 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+clean_up_tmp_dir_dag = SubDagOperator(
+    subdag=clean_up_tmp_dir(
+        DAG_NAME,
+        'clean_up_tmp_dir',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template'      : TMP_PATH_TEMPLATE,
+        }
+    ),
+    task_id='clean_up_tmp_dir',
+    dag=mdag
+)
+
 fetch_transaction_file_dag.set_upstream(validate_transaction_file_dag)
 decrypt_transaction_file_dag.set_upstream(fetch_transaction_file_dag)
 decompress_split_push_transaction_file_dag.set_upstream(decrypt_transaction_file_dag)
 queue_up_for_matching_dag.set_upstream(validate_deid_file_dag)
-detect_move_normalize_dag.set_upstream(queue_up_for_matching_dag)
+detect_move_normalize_dag.set_upstream([queue_up_for_matching_dag, decompress_split_push_transaction_file_dag])
+clean_up_tmp_dir_dag.set_upstream(decompress_split_push_transaction_file_dag)
