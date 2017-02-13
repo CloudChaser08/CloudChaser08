@@ -1,8 +1,9 @@
-#! /usr/bin/python
+#!/usr/bin/python
 import subprocess
 import argparse
 import time
 import sys
+import os
 sys.path.append(os.path.abspath("../redshift_norm_common/"))
 import create_date_validation_table as date_validator
 
@@ -12,6 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--header_path', type=str)
 parser.add_argument('--serviceline_path', type=str)
 parser.add_argument('--servicelineaffiliation_path', type=str)
+parser.add_argument('--claimaffiliation_path', type=str)
 parser.add_argument('--diagnosis_path', type=str)
 parser.add_argument('--procedure_path', type=str)
 parser.add_argument('--billing_path', type=str)
@@ -41,8 +43,8 @@ subprocess.call(' '.join(
     psql
     + ['-v', 'filename="\'' + args.setid + '\'"']
     + ['-v', 'today="\'' + TODAY + '\'"']
-    + ['-v', 'feedname="\'ability medical claims\'"']
-    + ['-v', 'vendor="\'ability\'"']
+    + ['-v', 'feedname="\'15\'"']
+    + ['-v', 'vendor="\'14\'"']
     + [db, '<', '../redshift_norm_common/medicalclaims_common_model.sql']
 ), shell=True)
 
@@ -52,6 +54,7 @@ subprocess.call(' '.join(
     + ['-v', 'header_path="\'' + args.header_path + '\'"']
     + ['-v', 'serviceline_path="\'' + args.serviceline_path + '\'"']
     + ['-v', 'servicelineaffiliation_path="\'' + args.servicelineaffiliation_path + '\'"']
+    + ['-v', 'claimaffiliation_path="\'' + args.claimaffiliation_path + '\'"']
     + ['-v', 'diagnosis_path="\'' + args.diagnosis_path + '\'"']
     + ['-v', 'procedure_path="\'' + args.procedure_path + '\'"']
     + ['-v', 'billing_path="\'' + args.billing_path + '\'"']
@@ -94,10 +97,19 @@ subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] 
                         [db, '<', '../redshift_norm_common/cap_age.sql']), shell=True)
 
 # unload to s3
-subprocess.call(' '.join(
+year_months = subprocess.check_output(' '.join(
     psql
-    + ['-v', 'output_path="\'' + args.output_path + '\'"']
-    + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + ['-v', 'select_from_common_model_table="\'SELECT * FROM medicalclaims_common_model\'"']
-    + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+    + [db, '-c', '\'select distinct substring(date_service, 0, 8) from medicalclaims_common_model\'']
 ), shell=True)
+
+for ym in map(
+        lambda x: x.strip(),
+        year_months.decode('utf-8').split('\n')[2:-3]
+):
+    subprocess.call(' '.join(
+        psql
+        + ['-v', 'output_path="\'' + args.output_path + ym + '/' + args.setid + '\'"']
+        + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+        + ['-v', 'select_from_common_model_table="\'SELECT * FROM medicalclaims_common_model WHERE substring(date_service, 0, 8) =  \\\'' + ym + '\\\'\'"']
+        + [db, '<', '../redshift_norm_common/unload_common_model.sql']
+    ), shell=True)
