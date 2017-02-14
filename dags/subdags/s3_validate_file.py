@@ -12,7 +12,8 @@ SLACK_CHANNEL='#airflow_alerts'
 
 def do_is_valid_new_file(ds, **kwargs):
     # We expect the files that were made available on HealthVerity's S3
-    s3_prefix          = kwargs['s3_prefix']
+    s3_prefix          = kwargs['s3_prefix'][:-1] if kwargs['s3_prefix'].endswith('/') \
+                         else kwargs['s3_prefix']
     file_name_pattern  = kwargs['file_name_pattern_func'](ds, kwargs)
     expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
     minimum_file_size  = kwargs['minimum_file_size']
@@ -29,7 +30,7 @@ def do_is_valid_new_file(ds, **kwargs):
     s3_key = filter(lambda k: k.split('/')[-1] == expected_file_name, s3_keys)[0]
 
     if s3_utils.get_file_size(
-            's3://healthverity/' + s3_prefix + s3_key
+            's3://healthverity/' + s3_prefix + '/' + s3_key
     ) < minimum_file_size:
         return kwargs['is_not_valid']
 
