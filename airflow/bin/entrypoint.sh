@@ -29,6 +29,10 @@ sqlite3 $AIRFLOW_HOME/airflow.db \
   "INSERT INTO variable (\"key\", val, is_encrypted)
    VALUES ('SlackToken','gAAAAABYjE_8QzxBp-NiGrm1MpI-ldKBju_A8CaIZmtbZb8w3zGUPrhtlwL456PTsZtBQlhltWS3P404A8EyaBwLlHPJAqfwHA==',1)"
 
+sqlite3 $AIRFLOW_HOME/airflow.db \
+  "INSERT INTO variable (\"key\", val, is_encrypted)
+   VALUES ('DATADOG_KEYS','gAAAAABYofrNQTWIzONIoUSlL7x4gHYR1bKyG-YPVDSp2ymF3Zjj5Za3wWDzQTqxlJB1tPiAZ1-6jkP-NRqOxpvGzLp0AHBT-DwhMcVwvI6iJk9dsGTn4FgZoCrv7cAa00_e2FhPsp9ISH-r4NJsUM7r_Ixb0jVLgmGL0BQihGflPbAziCdJo83_1LryCiZTClA4WnhU2xQhCCJXQztK3D7NCuw7QqOABRfA2Zqju3CvtDoPcZXbd4o='1)"
+
 $CMD initdb
 
 echo "Starting Webserver..."
