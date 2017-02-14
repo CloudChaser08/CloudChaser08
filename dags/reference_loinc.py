@@ -367,6 +367,8 @@ replace_old = PythonOperator(
     dag=dag
 )
 
+start_run.set_downstream(create_tmp_dir)
+
 fetch_new.set_upstream(create_tmp_dir)
 decompress_new.set_upstream(fetch_new)
 
