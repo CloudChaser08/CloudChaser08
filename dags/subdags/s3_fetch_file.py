@@ -2,9 +2,9 @@ from airflow import DAG
 from airflow.operators import BashOperator, PythonOperator
 import sys
 
-if sys.modules.get('modules.s3_utils'):
-    del sys.modules['modules.s3_utils']
-import modules.s3_utils as s3_utils
+if sys.modules.get('util.s3_utils'):
+    del sys.modules['util.s3_utils']
+import util.s3_utils as s3_utils
 
 def do_fetch_file(ds, **kwargs):
     # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name

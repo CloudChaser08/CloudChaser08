@@ -3,15 +3,13 @@ from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 import sys
-import os
 from subprocess import check_call
 import time
 
 modules = [
-    'modules.file_utils',
-    'modules.s3_utils',
-    'modules.emr_utils',
-    'modules.redshift_utils'
+    'util.s3_utils',
+    'util.emr_utils',
+    'util.redshift_utils'
 ]
 
 subdags = [
@@ -34,10 +32,9 @@ from subdags.decrypt_file import decrypt_file
 from subdags.split_push_file import split_push_file
 from subdags.queue_up_for_matching import queue_up_for_matching
 
-import modules.file_utils as file_utils
-import modules.s3_utils as s3_utils
-import modules.emr_utils as emr_utils
-import modules.redshift_utils as redshift_utils
+import util.s3_utils as s3_utils
+import util.emr_utils as emr_utils
+import util.redshift_utils as redshift_utils
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
@@ -105,7 +102,7 @@ def generate_transaction_file_validation_dag(
     return SubDagOperator(
         subdag=s3_validate_file(
             DAG_NAME,
-            'validate_transaction_file',
+            'validate_' + task_id + '_file',
             default_args['start_date'],
             mdag.schedule_interval,
             {
@@ -131,7 +128,7 @@ validate_trunk = generate_transaction_file_validation_dag(
     'trunk', S3_TRANSACTION_RAW_PATH + TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
     10000000
 )
-validate_deid = validate_step(
+validate_deid = generate_transaction_file_validation_dag(
     'deid', S3_TRANSACTION_RAW_PATH + DEID_FILE_NAME_TEMPLATE,
     10000000
 )
@@ -208,7 +205,7 @@ decrypt_addon = SubDagOperator(
             ) + '.gz'
         }
     ),
-    task_id='decrypt_transaction_file',
+    task_id='decrypt_addon_file',
     dag=mdag
 )
 
@@ -232,7 +229,7 @@ gunzip_trunk = gunzip_step(
 )
 
 
-def split_step(task_id, tmp_name_template, num_splits):
+def split_step(task_id, tmp_name_template, s3_destination, num_splits):
     return SubDagOperator(
         subdag=split_push_file(
             DAG_NAME,
@@ -244,17 +241,20 @@ def split_step(task_id, tmp_name_template, num_splits):
                 'source_file_name_func': lambda k: tmp_name_template.format(
                     get_formatted_date(k)
                 ),
+                's3_destination_prefix': s3_destination,
                 'num_splits': num_splits
             }
         ),
-        task_id='split_transaction_file',
+        task_id='split_' + task_id + '_file',
         dag=mdag
     )
 split_addon = split_step(
-    "addon", TRANSACTION_ADDON_FILE_NAME_TEMPLATE, 20
+    "addon", TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
+    TRANSACTION_ADDON_S3_SPLIT_PATH, 20
 )
 split_trunk = split_step(
-    "trunk", TRANSACTION_TRUNK_FILE_NAME_TEMPLATE, 20
+    "trunk", TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+    TRANSACTION_TRUNK_S3_SPLIT_PATH, 20
 )
 
 
@@ -491,7 +491,7 @@ create_redshift_cluster.set_upstream(detect_matching_done)
 normalize.set_upstream(
     [
         create_redshift_cluster, move_matching_payload,
-        push_splits_to_s3_addon, push_splits_to_s3_trunk
+        split_addon, split_trunk
     ]
 )
 delete_redshift_cluster.set_upstream(normalize)

@@ -4,10 +4,11 @@ from airflow.operators import BashOperator, PythonOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
 import os
+import sys
 
-if sys.modules.get('modules.s3_utils'):
-    del sys.modules['modules.s3_utils']
-import modules.s3_utils as s3_utils
+if sys.modules.get('util.s3_utils'):
+    del sys.modules['util.s3_utils']
+import util.s3_utils as s3_utils
 
 DECRYPTOR_JAR='HVDecryptor.jar'
 DECRYPTION_KEY='hv_record_private.base64.reformat'
@@ -70,10 +71,6 @@ def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval,
         start_date=start_date,
         default_args=default_args
     )
-
-    env = dict(os.environ)
-    env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID')
-    env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY')
 
     fetch_decryption_files = PythonOperator(
         task_id='fetch_decryption_files',

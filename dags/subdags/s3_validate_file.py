@@ -4,9 +4,9 @@ from airflow.operators import BashOperator, BranchPythonOperator, SlackAPIOperat
 import re
 import sys
 
-if sys.modules.get('modules.s3_utils'):
-    del sys.modules['modules.s3_utils']
-import modules.s3_utils as s3_utils
+if sys.modules.get('util.s3_utils'):
+    del sys.modules['util.s3_utils']
+import util.s3_utils as s3_utils
 
 SLACK_CHANNEL='#airflow_alerts'
 
