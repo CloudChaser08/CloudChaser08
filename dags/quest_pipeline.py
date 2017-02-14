@@ -106,14 +106,14 @@ def generate_transaction_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': lambda k: path_template.format(
+                'expected_file_name_func': lambda ds, k: path_template.format(
                     get_formatted_date(k)
                 ),
-                'file_name_pattern_func': lambda k: path_template.format(
-                    '\d{10}'
+                'file_name_pattern_func': lambda ds, k: path_template.format(
+                    '\d{12}'
                 ),
                 'minimum_file_size': minimum_file_size,
-                's3_prefix': S3_TRANSACTION_RAW_PATH,
+                's3_prefix': '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
                 'file_description': 'Quest ' + task_id + 'file'
             }
         ),
@@ -121,15 +121,15 @@ def generate_transaction_file_validation_dag(
         dag=mdag
     )
 validate_addon = generate_transaction_file_validation_dag(
-    'addon', S3_TRANSACTION_RAW_PATH + TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
+    'addon', TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
     1000000
 )
 validate_trunk = generate_transaction_file_validation_dag(
-    'trunk', S3_TRANSACTION_RAW_PATH + TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+    'trunk', TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
     10000000
 )
 validate_deid = generate_transaction_file_validation_dag(
-    'deid', S3_TRANSACTION_RAW_PATH + DEID_FILE_NAME_TEMPLATE,
+    'deid', DEID_FILE_NAME_TEMPLATE,
     10000000
 )
 
@@ -145,7 +145,7 @@ def generate_fetch_dag(
             mdag.schedule_interval,
             {
                 'tmp_path_template': local_path_template,
-                'expected_file_name_func': lambda k: file_name_template.format(
+                'expected_file_name_func': lambda ds, k: file_name_template.format(
                     get_formatted_date(k)
                 ),
                 's3_prefix': s3_path_template
@@ -302,7 +302,7 @@ def detect_matching_done_step():
     def execute(ds, **kwargs):
         while not filter(
                 lambda k: get_formatted_date(kwargs) in k and 'DONE' in k,
-                aws_utils.list_s3_bucket(S3_PAYLOAD_LOCATION)
+                s3_utils.list_s3_bucket(S3_PAYLOAD_LOCATION)
         ):
             time.sleep(60)
     return PythonOperator(
@@ -396,8 +396,6 @@ def delete_redshift_cluster_step():
         redshift_utils.delete_redshift_cluster(
             RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
         )
-
-
     return PythonOperator(
         task_id='delete_redshift_cluster',
         provide_context=True,
