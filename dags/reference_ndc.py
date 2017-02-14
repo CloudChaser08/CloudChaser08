@@ -5,8 +5,6 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 
-from airflow.hooks.hive_hooks import HiveServer2Hook
-
 from airflow.models import Variable
 
 import re
@@ -20,6 +18,10 @@ from datetime import timedelta, datetime
 if sys.modules.get('util.hv_datadog'):
     del sys.modules['util.hv_datadog']
 from util.hv_datadog import hv_datadog, start_dag_op, end_dag_op
+
+if sys.modules.get('util.hive'):
+    del sys.modules['util.hive']
+from util.hive import hive_execute
 
 SRC_PATH='http://www.accessdata.fda.gov/cder/'
 SRC_FILE='ndctext.zip'
@@ -38,15 +40,6 @@ else:
 
 
 dd = hv_datadog(env=AIRFLOW_ENV, keys=loads(Variable.get('DATADOG_KEYS')))
-
-def hive_execute(sqls):
-    hive_hook = HiveServer2Hook(hiveserver2_conn_id='hive_analytics')
-    conn = hive_hook.get_conn()
-    for statement in sqls:
-        print("SQL: " + statement + "\n")
-        with conn.cursor() as cur:
-            cur.execute(statement)
-
 
 default_args = {
     'owner': 'airflow',
