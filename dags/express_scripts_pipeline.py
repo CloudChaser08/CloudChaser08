@@ -14,7 +14,7 @@ subdags = [
     'subdags.s3_validate_file',
     'subdags.s3_fetch_file',
     'subdags.decrypt_file',
-    'subdags.decompress_split_push_file',
+    'subdags.split_push_file',
     'subdags.queue_up_for_matching',
     'subdags.detect_move_normalize',
     'subdags.clean_up_tmp_dir'
@@ -27,7 +27,7 @@ for subdag in subdags:
 from subdags.s3_validate_file import s3_validate_file
 from subdags.s3_fetch_file import s3_fetch_file
 from subdags.decrypt_file import decrypt_file
-from subdags.decompress_split_push_file import decompress_split_push_file
+from subdags.split_push_file import split_push_file
 from subdags.queue_up_for_matching import queue_up_for_matching
 from subdags.detect_move_normalize import detect_move_normalize
 from subdags.clean_up_tmp_dir import clean_up_tmp_dir
@@ -171,7 +171,7 @@ decrypt_transaction_file_dag = SubDagOperator(
 )
 
 decompress_split_push_transaction_file_dag = SubDagOperator(
-    subdag=decompress_split_push_file(
+    subdag=split_push_file(
         DAG_NAME,
         'decompress_split_push_transaction_file',
         default_args['start_date'],
