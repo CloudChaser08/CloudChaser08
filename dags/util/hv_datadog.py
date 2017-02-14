@@ -20,14 +20,7 @@ def end_dag_op(dag, dd):
 class hv_datadog():
     def __init__(self, env, keys):
         initialize(**keys)
-        self.epoch = datetime.datetime.utcfromtimestamp(0)
         self.env = env
-
-    def exectime(self, context):
-        if self.env == 'prod':
-            return (context['execution_date'] - self.epoch).total_seconds()
-        else:
-            return (datetime.datetime.utcnow() - self.epoch).total_seconds()
 
     def dd_eventer(self, context):
         task   = context['task']
@@ -47,33 +40,49 @@ class hv_datadog():
 
         title = 'Task ' + suffix + ': ' + task.task_id
 
-            
+        tags=['application:airflow',
+              'env:'+self.env,
+              'dag:'+context['dag'].dag_id,
+              'dag_ds:'+context['ds'],
+              'task:'+task.task_id]
 
         api.Event.create(title=title,
-                                 text='',
-                                 tags=['application:airflow', 'env:'+self.env, 'dag:'+context['dag'].dag_id, 'task:'+task.task_id],
+                                 text="%%% \n**Command:** `" + ti.command() + "`\n\n**Log:** [" + ti.log_url + "](" + ti.log_url + ")\n %%%",
+                                 tags=tags,
                                  host=ti.hostname,
-                                 date_happened = self.exectime(context),
                                  alert_type=type,
                                  aggregation_key=context['run_id'])
 
+        api.Metric.send(metric='airflow.task.'+ti.state, points=1, host=ti.hostname, tags=tags)
+
     def dd_start(self, context):
+        tags=['application:airflow',
+              'env:'+self.env,
+              'dag:'+context['dag'].dag_id,
+              'dag_ds:'+context['ds']]
+
         api.Event.create(title='Dag Started: ' + context['dag'].dag_id,
                                  text='',
-                                 tags=['application:airflow','env:'+self.env,'dag:'+context['dag'].dag_id],
-                                 date_happened = self.exectime(context),
+                                 tags=tags,
                                  host=context['ti'].hostname,
                                  aggregation_key=context['run_id'])
+
+        api.Metric.send(metric='airflow.dag.started', points=1, host=context['ti'].hostname, tags=tags)
 
 
     def dd_complete(self, context):
+        tags=['application:airflow',
+              'env:'+self.env,
+              'dag:'+context['dag'].dag_id,
+              'dag_ds:'+context['ds']]
+
         api.Event.create(title='Dag Complete: ' + context['dag'].dag_id,
                                  text='',
-                                 tags=['application:airflow','env:'+self.env,'dag:'+context['dag'].dag_id],
+                                 tags=tags,
                                  host=context['ti'].hostname,
-                                 date_happened = self.exectime(context),
                                  alert_type='success',
                                  aggregation_key=context['run_id'])
 
+        api.Metric.send(metric='airflow.dag.ended', points=1, host=context['ti'].hostname, tags=tags)
 
 
