@@ -15,6 +15,7 @@ CREATE TABLE emr_common_model (
         claim_error_ind              string,
         patient_age                  string,
         patient_year_of_birth        string,
+        patient_date_of_death        string,
         patient_zip                  string,
         patient_state                string,
         patient_deceased_flag        string,
