@@ -66,7 +66,7 @@ def list_s3_bucket_files(path):
     """
     List just the filenames in the current path
     """
-    map(lambda x: x.replace(path, ''), list_s3_bucket(path))
+    return map(lambda x: x.replace(path, ''), list_s3_bucket(path))
 
 
 def get_file_size(path):
