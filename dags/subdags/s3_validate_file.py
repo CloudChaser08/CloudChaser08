@@ -19,8 +19,7 @@ def do_is_valid_new_file(ds, **kwargs):
     expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
     minimum_file_size  = kwargs['minimum_file_size']
 
-    s3_keys = s3_utils.list_s3_bucket('s3://healthverity/' + s3_prefix + '/')
-    s3_keys = map(lambda x: x.replace('s3://healthverity/' + s3_prefix, ''), s3_keys)
+    s3_keys = s3_utils.list_s3_bucket_files('s3://healthverity/' + s3_prefix + '/')
 
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
         return kwargs['is_bad_name']
