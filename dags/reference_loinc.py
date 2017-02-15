@@ -201,7 +201,20 @@ def create_temp_tables(tomorrow_ds, schema, s3, **kwars):
         ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
         STORED AS TEXTFILE
         LOCATION '{}{}/loinc.csv/'
+        tblproperties ('skip.header.line.count'='1')""".format(schema, s3, tomorrow_ds),
+
+        """DROP TABLE IF EXISTS {}.temp_ref_loinc_map_to""".format(schema),
+        """
+        CREATE EXTERNAL TABLE {}.temp_ref_loinc_map_to (
+            loinc_num string,
+            map_to string,
+            comment string
+        )
+        ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+        STORED AS TEXTFILE
+        LOCATION '{}{}/map_to.csv/'
         tblproperties ('skip.header.line.count'='1')""".format(schema, s3, tomorrow_ds)
+
     ]
 
     hive_execute(sqls)
@@ -281,8 +294,20 @@ def create_new_loinc_table(tomorrow_ds, schema, s3, **kwargs):
                        example_ucum_units, example_si_ucum_units, status_reason, status_text, change_reason_public,
                        common_test_rank, common_order_rank, common_si_test_rank, hl7_attachment_structure,
                        external_copyright_link, paneltype, askatorderentry, associatedobservations
-                  FROM {}.ref_loinc
-           """.format(schema, schema, schema)
+                  FROM {}.ref_loinc WHERE loinc_num NOT IN (SELECT loinc_num FROM {}.temp_ref_loinc)
+           """.format(schema, schema, schema, schema),
+
+        """DROP TABLE IF EXISTS {}.ref_loinc_map_to_new""".format(schema),
+
+        """CREATE EXTERNAL TABLE {}.ref_loinc_map_to_new (
+              loinc_num string,
+              map_to string,
+              comment string
+            )
+            STORED AS PARQUET
+            LOCATION '{}{}/'""".format(schema, s3, tomorrow_ds),
+
+        """INSERT INTO {}.ref_loinc_map_to_new SELECT * FROM {}.temp_ref_loinc_map_to""".format(schema, schema)
     ]
 
     hive_execute(sqls)
@@ -292,7 +317,12 @@ def replace_old_table(tomorrow_ds, schema, s3, **kwargs):
         """DROP TABLE {}.ref_loinc_new""".format(schema),
         """ALTER TABLE {}.ref_loinc SET LOCATION '{}{}/'""".format(schema, s3, tomorrow_ds),
 
+        """CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_loinc_map_to LIKE {}.ref_loinc_map_to_new""".format(schema, schema),
+        """DROP TABLE {}.ref_loinc_map_to_new""".format(schema),
+        """ALTER TABLE {}.ref_loinc_map_to SET LOCATION '{}{}/'""".format(schema, s3, tomorrow_ds),
+
         """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema)
+        """DROP TABLE IF EXISTS {}.temp_ref_loinc_map_to""".format(schema)
     ]
 
     hive_execute(sqls)
