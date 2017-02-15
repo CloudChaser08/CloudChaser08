@@ -84,8 +84,25 @@ mdag = DAG(
 )
 
 
-def get_formatted_date(kwargs):
+def get_formatted_date(ds, kwargs):
     return kwargs['yesterday_ds_nodash'] + kwargs['ds_nodash'][4:8]
+
+
+def insert_formatted_date_function(template):
+    def out(ds, kwargs):
+        return template.format(get_formatted_date(ds, kwargs))
+    return out
+
+def insert_todays_date_function(template):
+    def out(ds, kwargs):
+        return template.format(kwargs['ds_nodash'])
+    return out
+
+
+def insert_formatted_regex_function(template):
+    def out(ds, kwargs):
+        return template.format('\d{10}')
+    return out
 
 
 def insert_current_date(template, kwargs):
@@ -106,11 +123,11 @@ def generate_transaction_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': lambda ds, k: path_template.format(
-                    get_formatted_date(k)
+                'expected_file_name_func': insert_formatted_date_function(
+                    path_template
                 ),
-                'file_name_pattern_func': lambda ds, k: path_template.format(
-                    '\d{12}'
+                'file_name_pattern_func': insert_formatted_regex_function(
+                    path_template
                 ),
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
@@ -120,6 +137,8 @@ def generate_transaction_file_validation_dag(
         task_id='validate_' + task_id + '_file',
         dag=mdag
     )
+
+
 validate_addon = generate_transaction_file_validation_dag(
     'addon', TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
     1000000
@@ -145,8 +164,8 @@ def generate_fetch_dag(
             mdag.schedule_interval,
             {
                 'tmp_path_template': local_path_template,
-                'expected_file_name_func': lambda ds, k: file_name_template.format(
-                    get_formatted_date(k)
+                'expected_file_name_func': insert_formatted_date_function(
+                    file_name_tmeplate
                 ),
                 's3_prefix': s3_path_template
             }
@@ -154,6 +173,8 @@ def generate_fetch_dag(
         task_id='fetch_' + task_id + '_file',
         dag=mdag
     )
+
+
 fetch_addon = generate_fetch_dag(
     "addon",
     S3_TRANSACTION_RAW_PATH,
@@ -171,8 +192,8 @@ fetch_trunk = generate_fetch_dag(
 def unzip_step(task_id, tmp_path_template):
     def execute(ds, **kwargs):
         check_call([
-            'unzip', tmp_path_template.format(
-                kwargs['ds_nodash']
+            'unzip', insert_todays_date_function(
+                tmp_path_template
             )
         ])
     return PythonOperator(
@@ -181,6 +202,8 @@ def unzip_step(task_id, tmp_path_template):
         python_callable=execute,
         dag=mdag
     )
+
+
 unzip_addon = unzip_step(
     "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
 )
@@ -197,12 +220,12 @@ decrypt_addon = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template': TMP_PATH_TEMPLATE,
-            'encrypted_file_name_func': lambda k: TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format(
-                get_formatted_date(k)
+            'encrypted_file_name_func': insert_formatted_date_function(
+                TRANSACTION_ADDON_TMP_PATH_TEMPLATE
             ),
-            'decrypted_file_name_func': lambda k: TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format(
-                get_formatted_date(k)
-            ) + '.gz'
+            'decrypted_file_name_func': insert_formatted_date_function(
+                TRANSACTION_ADDON_TMP_PATH_TEMPLATE + '.gz'
+            )
         }
     ),
     task_id='decrypt_addon_file',
@@ -213,8 +236,8 @@ decrypt_addon = SubDagOperator(
 def gunzip_step(task_id, tmp_path_template):
     def execute(ds, **kwargs):
         check_call([
-            'gzip', '-d', tmp_path_template.format(
-                kwargs['ds_nodash']
+            'gzip', '-d', insert_todays_date_function(
+                tmp_path_template
             )
         ])
 
@@ -224,6 +247,8 @@ def gunzip_step(task_id, tmp_path_template):
         python_callable=execute,
         dag=mdag
     )
+
+
 gunzip_trunk = gunzip_step(
     "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
 )
@@ -238,8 +263,8 @@ def split_step(task_id, tmp_name_template, s3_destination, num_splits):
             mdag.schedule_interval,
             {
                 'tmp_path_template': TMP_PATH_TEMPLATE,
-                'source_file_name_func': lambda k: tmp_name_template.format(
-                    get_formatted_date(k)
+                'source_file_name_func': insert_formatted_date_function(
+                    tmp_name_template
                 ),
                 's3_destination_prefix': s3_destination,
                 'num_splits': num_splits
@@ -248,6 +273,8 @@ def split_step(task_id, tmp_name_template, s3_destination, num_splits):
         task_id='split_' + task_id + '_file',
         dag=mdag
     )
+
+
 split_addon = split_step(
     "addon", TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
     TRANSACTION_ADDON_S3_SPLIT_PATH, 20
@@ -261,7 +288,7 @@ split_trunk = split_step(
 def clean_up_workspace_step(task_id, template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', template.format(kwargs['ds_nodash'])
+            'rm', '-rf', insert_todays_date_function(template)
         ])
     return PythonOperator(
         task_id='clean_up_workspace_' + task_id,
@@ -270,6 +297,8 @@ def clean_up_workspace_step(task_id, template):
         trigger_rule='all_done',
         dag=mdag
     )
+
+
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
 queue_up_for_matching = SubDagOperator(
@@ -279,8 +308,8 @@ queue_up_for_matching = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_file_name_func': lambda k: DEID_FILE_NAME_TEMPLATE.format(
-                get_formatted_date(k)
+            'expected_file_name_func': insert_formatted_date_function(
+                DEID_FILE_NAME_TEMPLATE
             ),
             's3_prefix': S3_TRANSACTION_RAW_PATH
         }
@@ -312,6 +341,8 @@ def detect_matching_done_step():
         execution_timeout=timedelta(hours=6),
         dag=mdag
     )
+
+
 detect_matching_done = detect_matching_done_step()
 
 
@@ -336,6 +367,8 @@ def move_matching_payload_step():
         python_callable=execute,
         dag=mdag
     )
+
+
 move_matching_payload = move_matching_payload_step()
 
 #
@@ -357,6 +390,8 @@ def create_redshift_cluster_step():
         python_callable=execute,
         dag=mdag
     )
+
+
 create_redshift_cluster = create_redshift_cluster_step()
 
 
@@ -388,6 +423,8 @@ def normalize_step():
         python_callable=execute,
         dag=mdag
     )
+
+
 normalize = normalize_step()
 
 
@@ -402,6 +439,8 @@ def delete_redshift_cluster_step():
         python_callable=execute,
         dag=mdag
     )
+
+
 delete_redshift_cluster = delete_redshift_cluster_step()
 
 #
@@ -427,6 +466,8 @@ def create_emr_cluster_step():
         python_callable=execute,
         dag=mdag
     )
+
+
 create_emr_cluster = create_emr_cluster_step()
 
 
@@ -444,6 +485,8 @@ def transform_to_parquet_step():
         python_callable=execute,
         dag=mdag
     )
+
+
 transform_to_parquet = transform_to_parquet_step()
 
 
@@ -458,6 +501,8 @@ def delete_emr_cluster_step():
         python_callable=execute,
         dag=mdag
     )
+
+
 delete_emr_cluster = delete_emr_cluster_step()
 
 # addon
