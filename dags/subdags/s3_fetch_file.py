@@ -12,8 +12,11 @@ def do_fetch_file(ds, **kwargs):
     s3_prefix          = kwargs['s3_prefix']
 
     tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
-    hook = S3Hook(s3_conn_id='my_conn_s3')
-    key = hook.get_key(s3_prefix + expected_file_name, 'healthverity')
+    if kwargs.get('s3_connection'):
+        hook = S3Hook(s3_conn_id=kwargs['s3_connection'])
+    else:
+        hook = S3Hook()
+    key = hook.get_key(s3_prefix + expected_file_name, kwargs['s3_bucket'])
 
     key.get_contents_to_filename(tmp_path + new_file_name)
 

@@ -9,7 +9,7 @@ import os
 import pysftp
 import re
 
-SLACK_CHANNEL='#dev'
+SLACK_CHANNEL='#airflow_alerts'
 
 def do_is_valid_new_file(ds, **kwargs):
     # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name

@@ -6,7 +6,7 @@ import airflow.hooks.S3_hook
 import logging
 import re
 
-SLACK_CHANNEL='#dev'
+SLACK_CHANNEL='#airflow_alerts'
 
 def do_is_valid_new_file(ds, **kwargs):
     # We expect the files that were made available on HealthVerity's S3
@@ -15,8 +15,11 @@ def do_is_valid_new_file(ds, **kwargs):
     expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
     minimum_file_size  = kwargs['minimum_file_size']
 
-    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-    s3_keys = hook.list_keys('healthverity', s3_prefix, '/')
+    if kwargs['s3_connection']:
+        hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id=kwargs['s3_connection'])
+    else:
+        hook = airflow.hooks.S3_hook.S3Hook()
+    s3_keys = hook.list_keys(kwargs['s3_bucket'], s3_prefix, '/')
     s3_keys = map(lambda x: x.replace(s3_prefix, ''), s3_keys)
     
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
@@ -26,7 +29,7 @@ def do_is_valid_new_file(ds, **kwargs):
         return kwargs['is_not_new']
 
     s3_key = filter(lambda k: k.split('/')[-1] == expected_file_name, s3_keys)[0]
-    key = hook.get_key(s3_prefix + s3_key, 'healthverity')
+    key = hook.get_key(s3_prefix + s3_key, kwargs['s3_bucket'])
     if key.content_length < minimum_file_size:
         return kwargs['is_not_valid']
 
@@ -55,6 +58,8 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
             'file_name_pattern_func'  : dag_config['file_name_pattern_func'],
             'minimum_file_size'       : dag_config['minimum_file_size'],
             's3_prefix'    : dag_config['s3_prefix'],
+            's3_bucket'    : dag_config['s3_bucket'],
+            's3_connection': dag_config.get('s3_connection'),
             'is_new_valid' : 'create_tmp_dir',
             'is_not_valid' : 'alert_file_size_problem',
             'is_not_new'   : 'alert_no_new_file',
