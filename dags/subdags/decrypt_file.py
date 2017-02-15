@@ -1,14 +1,11 @@
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators import BashOperator, PythonOperator
-from datetime import datetime, timedelta
+from airflow.operators import PythonOperator
 from subprocess import check_call
-import os
-import sys
 
-if sys.modules.get('util.s3_utils'):
-    del sys.modules['util.s3_utils']
 import util.s3_utils as s3_utils
+
+reload(s3_utils)
 
 DECRYPTOR_JAR='HVDecryptor.jar'
 DECRYPTION_KEY='hv_record_private.base64.reformat'

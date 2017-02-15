@@ -1,10 +1,9 @@
 from airflow import DAG
 from airflow.operators import BashOperator, PythonOperator
-import sys
 
-if sys.modules.get('util.s3_utils'):
-    del sys.modules['util.s3_utils']
 import util.s3_utils as s3_utils
+reload(s3_utils)
+
 
 def do_fetch_file(ds, **kwargs):
     # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
@@ -39,7 +38,7 @@ def s3_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval
         bash_command='mkdir -p {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}')),
         dag=dag
     )
-    
+
     dag_config['new_file_name_func'] = dag_config.get('new_file_name_func', dag_config['expected_file_name_func'])
     fetch_file = PythonOperator(
         task_id='fetch_file',

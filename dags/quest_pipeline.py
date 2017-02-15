@@ -6,35 +6,25 @@ import sys
 from subprocess import check_call
 import time
 
-modules = [
-    'util.s3_utils',
-    'util.emr_utils',
-    'util.redshift_utils'
-]
-
-subdags = [
-    'subdags.s3_validate_file',
-    'subdags.s3_fetch_file',
-    'subdags.decrypt_file',
-    'subdags.split_push_file',
-    'subdags.queue_up_for_matching'
-]
-for subdag in subdags:
-    if sys.modules.get(subdag):
-        del sys.modules[subdag]
-for module in modules:
-    if sys.modules.get(module):
-        del sys.modules[module]
-
-from subdags.s3_validate_file import s3_validate_file
-from subdags.s3_fetch_file import s3_fetch_file
-from subdags.decrypt_file import decrypt_file
-from subdags.split_push_file import split_push_file
-from subdags.queue_up_for_matching import queue_up_for_matching
+# hv-specific modules
+import subdags.s3_validate_file as s3_validate_file
+import subdags.s3_fetch_file as s3_fetch_file
+import subdags.decrypt_file as decrypt_file
+import subdags.split_push_file as split_push_file
+import subdags.queue_up_for_matching as queue_up_for_matching
 
 import util.s3_utils as s3_utils
 import util.emr_utils as emr_utils
 import util.redshift_utils as redshift_utils
+
+reload(s3_validate_file)
+reload(s3_fetch_file)
+reload(decrypt_file)
+reload(split_push_file)
+reload(queue_up_for_matching)
+reload(s3_utils)
+reload(emr_utils)
+reload(redshift_utils)
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
@@ -117,7 +107,7 @@ def generate_transaction_file_validation_dag(
         task_id, path_template, minimum_file_size
 ):
     return SubDagOperator(
-        subdag=s3_validate_file(
+        subdag=s3_validate_file.s3_validate_file(
             DAG_NAME,
             'validate_' + task_id + '_file',
             default_args['start_date'],
@@ -157,7 +147,7 @@ def generate_fetch_dag(
         task_id, s3_path_template, local_path_template, file_name_template
 ):
     return SubDagOperator(
-        subdag=s3_fetch_file(
+        subdag=s3_fetch_file.s3_fetch_file(
             DAG_NAME,
             'fetch_' + task_id + '_file',
             default_args['start_date'],
@@ -165,7 +155,7 @@ def generate_fetch_dag(
             {
                 'tmp_path_template': local_path_template,
                 'expected_file_name_func': insert_formatted_date_function(
-                    file_name_tmeplate
+                    file_name_template
                 ),
                 's3_prefix': s3_path_template
             }
@@ -213,7 +203,7 @@ unzip_trunk = unzip_step(
 
 
 decrypt_addon = SubDagOperator(
-    subdag=decrypt_file(
+    subdag=decrypt_file.decrypt_file(
         DAG_NAME,
         'decrypt_addon_file',
         default_args['start_date'],
@@ -256,7 +246,7 @@ gunzip_trunk = gunzip_step(
 
 def split_step(task_id, tmp_name_template, s3_destination, num_splits):
     return SubDagOperator(
-        subdag=split_push_file(
+        subdag=split_push_file.split_push_file(
             DAG_NAME,
             'split_' + task_id + '_file',
             default_args['start_date'],
@@ -302,7 +292,7 @@ def clean_up_workspace_step(task_id, template):
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
 queue_up_for_matching = SubDagOperator(
-    subdag=queue_up_for_matching(
+    subdag=queue_up_for_matching.queue_up_for_matching(
         DAG_NAME,
         'queue_up_for_matching',
         default_args['start_date'],

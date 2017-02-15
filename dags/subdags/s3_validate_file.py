@@ -1,16 +1,15 @@
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators import BashOperator, BranchPythonOperator, SlackAPIOperator
+from airflow.operators import BashOperator, \
+    BranchPythonOperator, SlackAPIOperator
 import re
-import sys
 
-if sys.modules.get('util.s3_utils'):
-    del sys.modules['util.s3_utils']
 import util.s3_utils as s3_utils
-
-if sys.modules.get('config'):
-    del sys.modules['config']
 import config
+
+reload(s3_utils)
+reload(config)
+
 
 def do_is_valid_new_file(ds, **kwargs):
     # We expect the files that were made available on HealthVerity's S3
