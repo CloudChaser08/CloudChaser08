@@ -15,7 +15,7 @@ DEFAULT_ATTRS = [
 ]
 
 
-def load_matching_payload(runner, location, extra_cols):
+def load(runner, location, extra_cols=[]):
     """
     Load matching data for a provider
     """
