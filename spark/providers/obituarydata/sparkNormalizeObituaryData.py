@@ -6,7 +6,7 @@ from spark.spark import init
 from spark.runner import Runner
 import spark.helpers.create_date_validation_table \
     as date_validator
-import spark.helpers.payload_loader
+import spark.helpers.payload_loader as payload_loader
 
 
 def get_rel_path(relative_filename):
@@ -51,3 +51,7 @@ runner.run_spark_script(get_rel_path(
 ))
 
 payload_loader.load(runner, matching_path, ['claimId'])
+
+runner.run_spark_script(get_rel_path("load_transactions.sql"), [
+    ['input_path', input_path]
+])
