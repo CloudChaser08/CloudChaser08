@@ -75,7 +75,7 @@ def get_expected_ease_file_regex(ds, kwargs):
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2016, 12, 24),
+    'start_date': datetime(2016, 12, 24, 15),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2),
@@ -84,7 +84,7 @@ default_args = {
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval='@daily' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
+    schedule_interval='0 15 * * *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
     default_args=default_args
 )
 
@@ -100,6 +100,8 @@ validate_ap_file_dag = SubDagOperator(
             'minimum_file_size'      : MINIMUM_AP_FILE_SIZE,
             's3_prefix'              : ABILITY_S3_AP_PREFIX,
             's3_bucket'              : ABILITY_S3_BUCKET,
+            'aws_access_key_id'      : Variable.get('Ability_AWS_ACCESS_KEY_ID'),
+            'aws_secret_access_key'  : Variable.get('Ability_AWS_SECRET_ACCESS_KEY'),
             's3_connection'          : ABILITY_S3_CONNECTION,
             'file_description'       : AP_FILE_DESCRIPTION
         }

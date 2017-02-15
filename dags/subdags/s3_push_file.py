@@ -2,7 +2,7 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import BashOperator, PythonOperator
 from datetime import datetime, timedelta
-from airflow.hooks.S3_hook import S3Hook
+import boto3
 import logging
 
 def do_push_file(ds, **kwargs):
@@ -10,11 +10,12 @@ def do_push_file(ds, **kwargs):
     s3_prefix      = kwargs['s3_prefix']
 
     tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
-    if kwargs.get('s3_connection'):
-        hook = S3Hook(s3_conn_id=kwargs['s3_connection'])
+    if kwargs.get('aws_access_key_id'):
+        s3 = boto3.resource('s3', aws_access_key_id=kwargs['aws_access_key_id'], aws_secret_access_key=kwargs['aws_secret_access_key'])
     else:
-        hook = S3Hook()
-    hook.load_file(tmp_path + file_name, s3_prefix + file_name, kwargs['s3_bucket'])
+        s3 = boto3.resource('s3')
+    obj = s3.Object(kwargs['s3_bucket'], s3_prefix + file_name)
+    obj.upload_file(tmp_path + file_name, ExtraArgs={'ServerSideEncryption':'AES256'})
 
 def s3_push_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
