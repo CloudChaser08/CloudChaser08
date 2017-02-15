@@ -42,8 +42,8 @@ def do_run_decryption(ds, **kwargs):
 
 
 def do_decompress_file(ds, **kwargs):
-    tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    decrypted_file = tmp_dir + kwargs['params']['decrypted_file_name_func'](kwargs)
+    tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
+    decrypted_file = tmp_dir + kwargs['decrypted_file_name_func'](ds, kwargs)
 
     check_call(['gzip', '-d', '-k', decrypted_file])
 
