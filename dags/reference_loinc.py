@@ -321,7 +321,7 @@ def replace_old_table(tomorrow_ds, schema, s3, **kwargs):
         """DROP TABLE {}.ref_loinc_map_to_new""".format(schema),
         """ALTER TABLE {}.ref_loinc_map_to SET LOCATION '{}{}/'""".format(schema, s3, tomorrow_ds),
 
-        """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema)
+        """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema),
         """DROP TABLE IF EXISTS {}.temp_ref_loinc_map_to""".format(schema)
     ]
 
