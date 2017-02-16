@@ -1,17 +1,16 @@
 
+import logging
 from airflow.hooks.hive_hooks import HiveServer2Hook
 
 def hive_execute(sqls, conn_id='hive_analytics'):
     hive_hook = HiveServer2Hook(hiveserver2_conn_id=conn_id)
     conn = hive_hook.get_conn()
     with conn.cursor() as cur:
-        print("Setting SSE\n")
+        logging.info("Setting SSE")
         cur.execute('set fs.s3a.server-side-encryption-algorithm=AES256')
         cur.execute('set fs.s3n.server-side-encryption-algorithm=AES256')
-        cur.execute('set fs.s3a.server-side-encryption-algorithm')
-        print cur.fetchall()[0]
         for statement in sqls:
-            print("SQL: " + statement + "\n")
+            logging.info("SQL: " + statement)
             cur.execute(statement)
 
 
