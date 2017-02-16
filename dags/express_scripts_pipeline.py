@@ -10,27 +10,21 @@ import pysftp
 import re
 import sys
 
-subdags = [
-    'subdags.s3_validate_file',
-    'subdags.s3_fetch_file',
-    'subdags.decrypt_file',
-    'subdags.split_push_file',
-    'subdags.queue_up_for_matching',
-    'subdags.detect_move_normalize',
-    'subdags.clean_up_tmp_dir'
-]
+import subdags.s3_validate_file as s3_validate_file
+import subdags.s3_fetch_file as s3_fetch_file
+import subdags.decrypt_file as decrypt_file
+import subdags.split_push_file as split_push_file
+import subdags.queue_up_for_matching as queue_up_for_matching
+import subdags.detect_move_normalize as detect_move_normalize
+import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
-for subdag in subdags:
-    if sys.modules.get(subdag):
-        del sys.modules[subdag]
-    
-from subdags.s3_validate_file import s3_validate_file
-from subdags.s3_fetch_file import s3_fetch_file
-from subdags.decrypt_file import decrypt_file
-from subdags.split_push_file import split_push_file
-from subdags.queue_up_for_matching import queue_up_for_matching
-from subdags.detect_move_normalize import detect_move_normalize
-from subdags.clean_up_tmp_dir import clean_up_tmp_dir
+reload(s3_validate_file)
+reload(s3_fetch_file)
+reload(decrypt_file)
+reload(split_push_file)
+reload(queue_up_for_matching)
+reload(detect_move_normalize)
+reload(clean_up_tmp_dir)
 
 # Applies to all files
 TMP_PATH_TEMPLATE='/tmp/express_scripts/pharmacyclaims/{}/'
@@ -101,7 +95,7 @@ mdag = DAG(
 )
 
 validate_transaction_file_dag = SubDagOperator(
-    subdag=s3_validate_file(
+    subdag=s3_validate_file.s3_validate_file(
         DAG_NAME,
         'validate_transaction_file',
         default_args['start_date'],
@@ -120,7 +114,7 @@ validate_transaction_file_dag = SubDagOperator(
 )
 
 validate_deid_file_dag = SubDagOperator(
-    subdag=s3_validate_file(
+    subdag=s3_validate_file.s3_validate_file(
         DAG_NAME,
         'validate_deid_file',
         default_args['start_date'],
@@ -139,7 +133,7 @@ validate_deid_file_dag = SubDagOperator(
 )
 
 fetch_transaction_file_dag = SubDagOperator(
-    subdag=s3_fetch_file(
+    subdag=s3_fetch_file.s3_fetch_file(
         DAG_NAME,
         'fetch_transaction_file',
         default_args['start_date'],
@@ -155,7 +149,7 @@ fetch_transaction_file_dag = SubDagOperator(
 )
 
 decrypt_transaction_file_dag = SubDagOperator(
-    subdag=decrypt_file(
+    subdag=decrypt_file.decrypt_file(
         DAG_NAME,
         'decrypt_transaction_file',
         default_args['start_date'],
@@ -171,7 +165,7 @@ decrypt_transaction_file_dag = SubDagOperator(
 )
 
 decompress_split_push_transaction_file_dag = SubDagOperator(
-    subdag=split_push_file(
+    subdag=split_push_file.split_push_file(
         DAG_NAME,
         'decompress_split_push_transaction_file',
         default_args['start_date'],
@@ -190,7 +184,7 @@ decompress_split_push_transaction_file_dag = SubDagOperator(
 )
 
 queue_up_for_matching_dag = SubDagOperator(
-    subdag=queue_up_for_matching(
+    subdag=queue_up_for_matching.queue_up_for_matching(
         DAG_NAME,
         'queue_up_for_matching',
         default_args['start_date'],
@@ -205,7 +199,7 @@ queue_up_for_matching_dag = SubDagOperator(
 )
 
 detect_move_normalize_dag = SubDagOperator(
-    subdag=detect_move_normalize(
+    subdag=detect_move_normalize.detect_move_normalize(
         DAG_NAME,
         'detect_move_normalize',
         default_args['start_date'],
@@ -229,7 +223,7 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 clean_up_tmp_dir_dag = SubDagOperator(
-    subdag=clean_up_tmp_dir(
+    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
         DAG_NAME,
         'clean_up_tmp_dir',
         default_args['start_date'],
