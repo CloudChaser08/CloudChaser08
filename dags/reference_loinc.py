@@ -243,7 +243,7 @@ def create_new_loinc_table(tomorrow_ds, schema, s3_loinc, s3_map, ref_loinc_sche
                     UNION DISTINCT
                     SELECT * FROM {0}.ref_loinc r WHERE r.loinc_num NOT IN (SELECT loinc_num FROM {0}.temp_ref_loinc)
                 ) a
-           """.format(schema)
+           """.format(schema),
 
         """DROP TABLE IF EXISTS {}.ref_loinc_map_to_new""".format(schema),
 
