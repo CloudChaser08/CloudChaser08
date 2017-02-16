@@ -234,16 +234,16 @@ def create_new_loinc_table(tomorrow_ds, schema, s3_loinc, s3_map, ref_loinc_sche
             STORED AS PARQUET
             LOCATION 's3n://{}{}/'""".format(schema, ref_loinc_schema, s3_loinc, tomorrow_ds),
 
-        """CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_loinc like {}.ref_loinc_new STORED AS PARQUET""".format(schema, schema),
+        """CREATE EXTERNAL TABLE IF NOT EXISTS {0}.ref_loinc like {0}.ref_loinc_new STORED AS PARQUET""".format(schema),
 
 
-        """ INSERT INTO dev.ref_loinc_new
+        """ INSERT INTO {0}.ref_loinc_new
                 select * from (
-                    SELECT * FROM dev.temp_ref_loinc t
+                    SELECT * FROM {0}.temp_ref_loinc t
                     UNION DISTINCT
-                    SELECT * FROM default.ref_loinc r WHERE r.loinc_num NOT IN (SELECT loinc_num FROM dev.temp_ref_loinc)
+                    SELECT * FROM {0}.ref_loinc r WHERE r.loinc_num NOT IN (SELECT loinc_num FROM {0}.temp_ref_loinc)
                 ) a
-           """.format(schema, schema, schema, schema),
+           """.format(schema)
 
         """DROP TABLE IF EXISTS {}.ref_loinc_map_to_new""".format(schema),
 
@@ -255,7 +255,7 @@ def create_new_loinc_table(tomorrow_ds, schema, s3_loinc, s3_map, ref_loinc_sche
             STORED AS PARQUET
             LOCATION 's3n://{}{}/'""".format(schema, s3_map, tomorrow_ds),
 
-        """INSERT INTO {}.ref_loinc_map_to_new SELECT * FROM {}.temp_ref_loinc_map_to""".format(schema, schema)
+        """INSERT INTO {0}.ref_loinc_map_to_new SELECT * FROM {0}.temp_ref_loinc_map_to""".format(schema)
     ]
 
     hive_execute(sqls)
@@ -265,7 +265,7 @@ def replace_old_table(tomorrow_ds, schema, s3_loinc, s3_map, **kwargs):
         """DROP TABLE {}.ref_loinc_new""".format(schema),
         """ALTER TABLE {}.ref_loinc SET LOCATION 's3a://{}{}/'""".format(schema, s3_loinc, tomorrow_ds),
 
-        """CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_loinc_map_to LIKE {}.ref_loinc_map_to_new""".format(schema, schema),
+        """CREATE EXTERNAL TABLE IF NOT EXISTS {0}.ref_loinc_map_to LIKE {0}.ref_loinc_map_to_new""".format(schema),
         """DROP TABLE {}.ref_loinc_map_to_new""".format(schema),
         """ALTER TABLE {}.ref_loinc_map_to SET LOCATION 's3a://{}{}/'""".format(schema, s3_map, tomorrow_ds),
 
