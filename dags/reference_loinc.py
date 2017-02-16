@@ -306,7 +306,7 @@ for f in FILES_OF_INTEREST:
             params={ "TMP_PATH": TMP_PATH, "S3_TEXT": S3_TEXT, "FOI": f},
             bash_command="""
                 gzip {{ params.TMP_PATH }}{{ tomorrow_ds }}/full/{{ params.FOI }}
-                /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/full/{{ params.FOI }}.gz {{ params.S3_TEXT }}{{ tomorrow_ds }}/{{ params.FOI }}/{{ params.FOI}}.gz
+                /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/full/{{ params.FOI }}.gz s3://{{ params.S3_TEXT }}{{ tomorrow_ds }}/{{ params.FOI }}/{{ params.FOI}}.gz
             """, 
             dag=dag
         )
