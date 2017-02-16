@@ -7,6 +7,9 @@ def hive_execute(sqls, conn_id='hive_analytics'):
     with conn.cursor() as cur:
         print("Setting SSE\n")
         cur.execute('set fs.s3a.server-side-encryption-algorithm=AES256')
+        cur.execute('set fs.s3n.server-side-encryption-algorithm=AES256')
+        cur.execute('set fs.s3a.server-side-encryption-algorithm')
+        print cur.fetchall()[0]
         for statement in sqls:
             print("SQL: " + statement + "\n")
             cur.execute(statement)

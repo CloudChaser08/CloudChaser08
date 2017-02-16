@@ -31,14 +31,66 @@ FILES_OF_INTEREST=['loinc.csv','map_to.csv','source_organization.csv']
 if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
     SCHEMA='default'
     S3_TEXT='s3://salusv/reference/loinc/'
-    S3_PARQUET='s3a://salusv/reference/parquet/loinc/'
+    S3A_TEXT='s3a://salusv/reference/loinc/'
+    S3_PARQUET='s3n://salusv/reference/parquet/loinc/'
+    S3A_PARQUET='s3a://salusv/reference/parquet/loinc/'
     AIRFLOW_ENV='prod'
 else:
     SCHEMA='dev'
     S3_TEXT='s3://healthveritydev/jcap/loinc/'
-    S3_PARQUET='s3a://healthveritydev/jcap/parquet/loinc/'
+    S3A_TEXT='s3a://healthveritydev/jcap/loinc/'
+    S3_PARQUET='s3n://healthveritydev/jcap/parquet/loinc/'
+    S3A_PARQUET='s3a://healthveritydev/jcap/parquet/loinc/'
     AIRFLOW_ENV='dev'
 
+REF_LOINC_SCHEMA = """
+            loinc_num string,
+            component string,
+            property string,
+            time_aspct string,
+            loinc_system string,
+            scale_type string,
+            method_type string,
+            loinc_class string,
+            versionlastchanged string,
+            chng_type string,
+            definitiondescription string,
+            status string,
+            consumer_name string,
+            classtype double,
+            formula string,
+            species string,
+            exmpl_answers string,
+            survey_quest_text string,
+            survey_quest_src string,
+            unitsrequired string,
+            submitted_units string,
+            relatednames2 string,
+            shortname string,
+            order_obs string,
+            cdisc_common_tests string,
+            hl7_field_subfield_id string,
+            external_copyright_notice string,
+            example_units string,
+            long_common_name string,
+            unitsandrange string,
+            document_section string,
+            example_ucum_units string,
+            example_si_ucum_units string,
+            status_reason string,
+            status_text string,
+            change_reason_public string,
+            common_test_rank double,
+            common_order_rank double,
+            common_si_test_rank double,
+            hl7_attachment_structure string,
+            external_copyright_link string,
+            paneltype string,
+            askatorderentry string,
+            associatedobservations string,
+            versionfirstreleased string,
+            validhl7attachmentrequest string
+"""
 
 dd = hv_datadog(env=AIRFLOW_ENV, keys=loads(Variable.get('DATADOG_KEYS')))
 
@@ -145,63 +197,18 @@ def scrape_loinc(tomorrow_ds, **kwargs):
 
 
 
-def create_temp_tables(tomorrow_ds, schema, s3, **kwars):
+def create_temp_tables(tomorrow_ds, schema, s3, ref_loinc_schema, **kwars):
 
     sqls = [
         """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema),
         """
         CREATE EXTERNAL TABLE {}.temp_ref_loinc (
-            loinc_num string,
-            component string,
-            property string,
-            time_aspct string,
-            loinc_system string,
-            scale_type string,
-            method_type string,
-            loinc_class string,
-            versionlastchanged string,
-            chng_type string,
-            definitiondescription string,
-            status string,
-            consumer_name string,
-            classtype double,
-            formula string,
-            species string,
-            exmpl_answers string,
-            survey_quest_text string,
-            survey_quest_src string,
-            unitsrequired string,
-            submitted_units string,
-            relatednames2 string,
-            shortname string,
-            order_obs string,
-            cdisc_common_tests string,
-            hl7_field_subfield_id string,
-            external_copyright_notice string,
-            example_units string,
-            long_common_name string,
-            unitsandrange string,
-            document_section string,
-            example_ucum_units string,
-            example_si_ucum_units string,
-            status_reason string,
-            status_text string,
-            change_reason_public string,
-            common_test_rank double,
-            common_order_rank double,
-            common_si_test_rank double,
-            hl7_attachment_structure string,
-            external_copyright_link string,
-            paneltype string,
-            askatorderentry string,
-            associatedobservations string,
-            versionfirstreleased string,
-            validhl7attachmentrequest string
+            {}
         )
         ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
         STORED AS TEXTFILE
         LOCATION '{}{}/loinc.csv/'
-        tblproperties ('skip.header.line.count'='1')""".format(schema, s3, tomorrow_ds),
+        tblproperties ('skip.header.line.count'='1')""".format(schema, ref_loinc_schema, s3, tomorrow_ds),
 
         """DROP TABLE IF EXISTS {}.temp_ref_loinc_map_to""".format(schema),
         """
@@ -219,82 +226,25 @@ def create_temp_tables(tomorrow_ds, schema, s3, **kwars):
 
     hive_execute(sqls)
 
-def create_new_loinc_table(tomorrow_ds, schema, s3, **kwargs):
+def create_new_loinc_table(tomorrow_ds, schema, s3, ref_loinc_schema, **kwargs):
     sqls = [
         """DROP TABLE IF EXISTS {}.ref_loinc_new""".format(schema),
 
         """CREATE EXTERNAL TABLE {}.ref_loinc_new (
-              loinc_num string,
-              component string,
-              property string,
-              time_aspct string,
-              loinc_system string,
-              scale_type string,
-              method_type string,
-              loinc_class string,
-              versionlastchanged string,
-              chng_type string,
-              definitiondescription string,
-              status string,
-              consumer_name string,
-              classtype double,
-              formula string,
-              species string,
-              exmpl_answers string,
-              survey_quest_text string,
-              survey_quest_src string,
-              unitsrequired string,
-              submitted_units string,
-              relatednames2 string,
-              shortname string,
-              order_obs string,
-              cdisc_common_tests string,
-              hl7_field_subfield_id string,
-              external_copyright_notice string,
-              example_units string,
-              long_common_name string,
-              unitsandrange string,
-              document_section string,
-              example_ucum_units string,
-              example_si_ucum_units string,
-              status_reason string,
-              status_text string,
-              change_reason_public string,
-              common_test_rank double,
-              common_order_rank double,
-              common_si_test_rank double,
-              hl7_attachment_structure string,
-              external_copyright_link string,
-              paneltype string,
-              askatorderentry string,
-              associatedobservations string
+                {}
             )
-            STORED AS PARQUET""".format(schema),
+            STORED AS PARQUET
+            LOCATION '{}{}/'""".format(schema, ref_loinc_schema, s3, tomorrow_ds),
 
-        """CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_loinc LIKE {}.ref_loinc_new""".format(schema, schema),
+        """CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_loinc like {}.ref_loinc_new STORED AS PARQUET""".format(schema, schema),
 
-        """ALTER TABLE {}.ref_loinc_new SET LOCATION '{}{}/'""".format(schema, s3, tomorrow_ds),
 
-        """ INSERT INTO {}.ref_loinc_new
-                SELECT loinc_num, component, property, time_aspct, loinc_system, scale_type, method_type, loinc_class,
-                       versionlastchanged, chng_type, definitiondescription, status, consumer_name, classtype,
-                       formula, species, exmpl_answers, survey_quest_text, survey_quest_src, unitsrequired, 
-                       submitted_units, relatednames2, shortname, order_obs, cdisc_common_tests, hl7_field_subfield_id,
-                       external_copyright_notice, example_units, long_common_name, unitsandrange, document_section,
-                       example_ucum_units, example_si_ucum_units, status_reason, status_text, change_reason_public,
-                       common_test_rank, common_order_rank, common_si_test_rank, hl7_attachment_structure,
-                       external_copyright_link, paneltype, askatorderentry, associatedobservations
-                  FROM {}.temp_ref_loinc
-                UNION DISTINCT
-                SELECT loinc_num, component, property, time_aspct, loinc_system, scale_type, method_type, loinc_class,
-                       versionlastchanged, chng_type, definitiondescription, status, consumer_name, classtype,
-                       formula, species, exmpl_answers, survey_quest_text, survey_quest_src, unitsrequired, 
-                       submitted_units, relatednames2, shortname, order_obs, cdisc_common_tests, hl7_field_subfield_id,
-                       external_copyright_notice, example_units, long_common_name, unitsandrange, document_section,
-                       example_ucum_units, example_si_ucum_units, status_reason, status_text, change_reason_public,
-                       common_test_rank, common_order_rank, common_si_test_rank, hl7_attachment_structure,
-                       external_copyright_link, paneltype, askatorderentry, associatedobservations
-                  FROM {}.ref_loinc WHERE loinc_num NOT IN (SELECT loinc_num FROM {}.temp_ref_loinc)
+        """ INSERT INTO dev.ref_loinc_new
+                select * from (
+                    SELECT * FROM dev.temp_ref_loinc t
+                    UNION DISTINCT
+                    SELECT * FROM default.ref_loinc r WHERE r.loinc_num NOT IN (SELECT loinc_num FROM dev.temp_ref_loinc)
+                ) a
            """.format(schema, schema, schema, schema),
 
         """DROP TABLE IF EXISTS {}.ref_loinc_map_to_new""".format(schema),
@@ -375,7 +325,7 @@ cleanup_temp = BashOperator(
 
 create_temp = PythonOperator(
     task_id='create_temp',
-    op_kwargs = { "schema": SCHEMA, "s3": S3_TEXT },
+    op_kwargs = { "schema": SCHEMA, "s3": S3A_TEXT, "ref_loinc_schema": REF_LOINC_SCHEMA},
     python_callable=create_temp_tables,
     provide_context=True,
     dag=dag
@@ -383,7 +333,7 @@ create_temp = PythonOperator(
 
 create_new = PythonOperator(
     task_id='create_new',
-    op_kwargs = { "schema": SCHEMA, "s3": S3_PARQUET},
+    op_kwargs = { "schema": SCHEMA, "s3": S3_PARQUET, "ref_loinc_schema": REF_LOINC_SCHEMA},
     python_callable=create_new_loinc_table,
     provide_context=True,
     dag=dag
@@ -391,7 +341,7 @@ create_new = PythonOperator(
 
 replace_old = PythonOperator(
     task_id='replace_old',
-    op_kwargs = { "schema": SCHEMA, "s3": S3_PARQUET },
+    op_kwargs = { "schema": SCHEMA, "s3": S3A_PARQUET },
     python_callable=replace_old_table,
     provide_context=True,
     dag=dag
