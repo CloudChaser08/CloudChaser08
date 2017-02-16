@@ -6,6 +6,8 @@ from subprocess import check_call
 from airflow.models import Variable
 import airflow.hooks.S3_hook
 
+DEFAULT_CONNECTION_ID = 'my_conn_s3'
+
 
 def get_aws_env(suffix=""):
     """Get an environ instance with aws perms attached"""
@@ -26,14 +28,18 @@ def _transform_path_to_bucket_key(path):
     }
 
 
-def _get_s3_hook():
-    return airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
+def _get_s3_hook(s3_connection_id=DEFAULT_CONNECTION_ID):
+    return airflow.hooks.S3_hook.S3Hook(s3_conn_id=DEFAULT_CONNECTION_ID)
 
 
-def fetch_file_from_s3(s3_path, local_path):
+def fetch_file_from_s3(
+        s3_path, local_path, s3_connection_id=DEFAULT_CONNECTION_ID
+):
     """Download a file from S3"""
     bucket_key = _transform_path_to_bucket_key(s3_path)
-    key = _get_s3_hook().get_key(bucket_key['key'], bucket_key['bucket'])
+    key = _get_s3_hook(s3_connection_id).get_key(
+        bucket_key['key'], bucket_key['bucket']
+    )
     key.get_contents_to_filename(local_path)
 
 
@@ -50,7 +56,7 @@ def push_local_dir_to_s3(local_path, s3_path):
     ], env=get_aws_env())
 
 
-def list_s3_bucket(path):
+def list_s3_bucket(path, s3_connection_id=DEFAULT_CONNECTION_ID):
     """
     Get a list of keys in an s3 path.
     This function expects a full url: s3://bucket/key/
@@ -58,15 +64,20 @@ def list_s3_bucket(path):
     bucket_key = _transform_path_to_bucket_key(path)
     return map(
         lambda k: 's3://' + bucket_key['bucket'] + '/' + k,
-        _get_s3_hook().list_keys(bucket_key['bucket'], bucket_key['key'])
+        _get_s3_hook(s3_connection_id).list_keys(
+            bucket_key['bucket'], bucket_key['key']
+        )
     )
 
 
-def list_s3_bucket_files(path):
+def list_s3_bucket_files(path, s3_connection_id=DEFAULT_CONNECTION_ID):
     """
     List just the filenames in the current path
     """
-    return map(lambda x: x.replace(path, ''), list_s3_bucket(path))
+    return map(
+        lambda x: x.replace(path, ''),
+        list_s3_bucket(path, s3_connection_id)
+    )
 
 
 def get_file_size(path):

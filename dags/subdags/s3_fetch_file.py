@@ -15,7 +15,9 @@ def do_fetch_file(ds, **kwargs):
 
     s3_utils.fetch_file_from_s3(
         's3://healthverity/' + s3_prefix + expected_file_name,
-        tmp_path + new_file_name
+        tmp_path + new_file_name,
+        kwargs['s3_connection'] if kwargs.get('s3_connection')
+        else s3_utils.DEFAULT_CONNECTION_ID
     )
 
 
