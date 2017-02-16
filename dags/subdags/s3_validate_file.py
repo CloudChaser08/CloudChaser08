@@ -21,8 +21,7 @@ def do_is_valid_new_file(ds, **kwargs):
 
     s3_keys = s3_utils.list_s3_bucket_files(
         's3://healthverity/' + s3_prefix + '/',
-        kwargs['s3_connection'] if kwargs.get('s3_connection')
-        else s3_utils.DEFAULT_CONNECTION_ID
+        kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
     )
 
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
