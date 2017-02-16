@@ -29,13 +29,13 @@ TMP_PATH='/tmp/ndc_'
 
 if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
     SCHEMA='default'
-    S3_TEXT='s3://salusv/reference/ndc/'
-    S3_PARQUET='s3a://salusv/reference/parquet/ndc/'
+    S3_TEXT='salusv/reference/ndc/'
+    S3_PARQUET='salusv/reference/parquet/ndc/'
     AIRFLOW_ENV='prod'
 else:
     SCHEMA='dev'
-    S3_TEXT='s3://healthveritydev/jcap/ndc/'
-    S3_PARQUET='s3a://healthveritydev/jcap/parquet/ndc/'
+    S3_TEXT='healthveritydev/jcap/ndc/'
+    S3_PARQUET='healthveritydev/jcap/parquet/ndc/'
     AIRFLOW_ENV='dev'
 
 
@@ -153,7 +153,7 @@ def create_temp_tables(tomorrow_ds, schema, s3, **kwars):
         FIELDS TERMINATED BY '\t'
         LINES  TERMINATED BY '\n'
         STORED AS TEXTFILE
-        LOCATION '{}{}/package/'""".format(schema, s3, tomorrow_ds),
+        LOCATION 's3a://{}{}/package/'""".format(schema, s3, tomorrow_ds),
 
         """CREATE EXTERNAL TABLE {}.temp_ref_ndc_product (
             product_id                string,
@@ -179,7 +179,7 @@ def create_temp_tables(tomorrow_ds, schema, s3, **kwars):
         FIELDS TERMINATED BY '\t'
         LINES TERMINATED BY '\n'
         STORED AS TEXTFILE
-        LOCATION '{}{}/product/'""".format(schema, s3, tomorrow_ds)
+        LOCATION 's3a://{}{}/product/'""".format(schema, s3, tomorrow_ds)
     ]
     
     hive_execute(sqls)
@@ -208,7 +208,7 @@ def create_new_ndc_table(tomorrow_ds, schema, s3, **kwargs):
             pharm_classes               string
         )
         STORED AS PARQUET
-        LOCATION '{}{}/'""".format(schema, s3, tomorrow_ds),
+        LOCATION 's3n://{}{}/'""".format(schema, s3, tomorrow_ds),
 
         """ INSERT INTO {}.ref_ndc_code_new
         SELECT a.ndc_code, a.package_description, b.product_type, b.proprietary_name, b.proprietary_name_suffix,
@@ -235,7 +235,7 @@ def replace_old_table(tomorrow_ds, schema, s3, **kwargs):
     sqls = [
         """CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_ndc_code LIKE {}.ref_ndc_code_new""".format(schema, schema),
         """DROP TABLE {}.ref_ndc_code_new""".format(schema),
-        """ALTER TABLE {}.ref_ndc_code SET LOCATION '{}{}/'""".format(schema, s3, tomorrow_ds),
+        """ALTER TABLE {}.ref_ndc_code SET LOCATION 's3a://{}{}/'""".format(schema, s3, tomorrow_ds),
 
         """DROP TABLE IF EXISTS {}.temp_ref_ndc_product""".format(schema),
         """DROP TABLE IF EXISTS {}.temp_ref_ndc_package""".format(schema)
@@ -251,8 +251,8 @@ fetch_yesterday = BashOperator(
     params={ "TMP_PATH": TMP_PATH, "S3_TEXT": S3_TEXT},
     bash_command="""
         mkdir {{ params.TMP_PATH}}{{ ds }}
-        /usr/local/bin/aws s3 cp --sse AES256 {{ params.S3_TEXT }}{{ ds }}/product/product.txt {{ params.TMP_PATH }}{{ tomorrow_ds }}/yesterday_product.txt
-        /usr/local/bin/aws s3 cp --sse AES256 {{ params.S3_TEXT }}{{ ds }}/package/package.txt {{ params.TMP_PATH }}{{ tomorrow_ds }}/yesterday_package.txt
+        /usr/local/bin/aws s3 cp --sse AES256 s3://{{ params.S3_TEXT }}{{ ds }}/product/product.txt {{ params.TMP_PATH }}{{ tomorrow_ds }}/yesterday_product.txt
+        /usr/local/bin/aws s3 cp --sse AES256 s3://{{ params.S3_TEXT }}{{ ds }}/package/package.txt {{ params.TMP_PATH }}{{ tomorrow_ds }}/yesterday_package.txt
     """,
     dag=dag)
 
@@ -287,8 +287,8 @@ push_updated = BashOperator(
     task_id='push_updated',
     params={ "TMP_PATH": TMP_PATH, "S3_TEXT": S3_TEXT},
     bash_command="""
-        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/product_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/product/product.txt
-        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/package_updated.txt {{ params.S3_TEXT }}{{ tomorrow_ds }}/package/package.txt
+        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/product_updated.txt s3://{{ params.S3_TEXT }}{{ tomorrow_ds }}/product/product.txt
+        /usr/local/bin/aws s3 cp --sse AES256 {{ params.TMP_PATH }}{{ tomorrow_ds }}/package_updated.txt s3://{{ params.S3_TEXT }}{{ tomorrow_ds }}/package/package.txt
     """, 
     dag=dag
 )
