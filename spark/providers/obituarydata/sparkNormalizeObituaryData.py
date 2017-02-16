@@ -17,6 +17,7 @@ def get_rel_path(relative_filename):
         )
     )
 
+
 # init
 spark, sqlContext = init("ObituaryData")
 
@@ -54,4 +55,10 @@ payload_loader.load(runner, matching_path, ['claimId'])
 
 runner.run_spark_script(get_rel_path("load_transactions.sql"), [
     ['input_path', input_path]
+])
+
+runner.run_spark_script(get_rel_path("normalize.sql"), [
+    ['set', 'obit'],
+    ['feed', '27'],
+    ['vendor', '49']
 ])
