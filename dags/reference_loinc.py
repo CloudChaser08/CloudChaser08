@@ -195,7 +195,7 @@ def scrape_loinc(tomorrow_ds, **kwargs):
 
 
 
-def create_temp_tables(tomorrow_ds, schema, s3, ref_loinc_schema, **kwars):
+def create_temp_tables(tomorrow_ds, schema, s3, ref_loinc_schema, **kwargs):
 
     sqls = [
         """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema),
