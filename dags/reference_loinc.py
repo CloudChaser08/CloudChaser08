@@ -32,11 +32,13 @@ if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
     SCHEMA='default'
     S3_TEXT='salusv/reference/loinc/'
     S3_PARQUET='salusv/reference/parquet/loinc/'
+    S3_PARQUET_MAP='salusv/reference/parquet/loinc_map/'
     AIRFLOW_ENV='prod'
 else:
     SCHEMA='dev'
     S3_TEXT='healthveritydev/jcap/loinc/'
     S3_PARQUET='healthveritydev/jcap/parquet/loinc/'
+    S3_PARQUET_MAP='healthveritydev/jcap/parquet/loinc_map/'
     AIRFLOW_ENV='dev'
 
 REF_LOINC_SCHEMA = """
@@ -222,7 +224,7 @@ def create_temp_tables(tomorrow_ds, schema, s3, ref_loinc_schema, **kwars):
 
     hive_execute(sqls)
 
-def create_new_loinc_table(tomorrow_ds, schema, s3, ref_loinc_schema, **kwargs):
+def create_new_loinc_table(tomorrow_ds, schema, s3_loinc, s3_map, ref_loinc_schema, **kwargs):
     sqls = [
         """DROP TABLE IF EXISTS {}.ref_loinc_new""".format(schema),
 
@@ -230,7 +232,7 @@ def create_new_loinc_table(tomorrow_ds, schema, s3, ref_loinc_schema, **kwargs):
                 {}
             )
             STORED AS PARQUET
-            LOCATION 's3n://{}{}/'""".format(schema, ref_loinc_schema, s3, tomorrow_ds),
+            LOCATION 's3n://{}{}/'""".format(schema, ref_loinc_schema, s3_loinc, tomorrow_ds),
 
         """CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_loinc like {}.ref_loinc_new STORED AS PARQUET""".format(schema, schema),
 
@@ -251,23 +253,23 @@ def create_new_loinc_table(tomorrow_ds, schema, s3, ref_loinc_schema, **kwargs):
               comment string
             )
             STORED AS PARQUET
-            LOCATION 's3n://{}{}/'""".format(schema, s3, tomorrow_ds),
+            LOCATION 's3n://{}{}/'""".format(schema, s3_map, tomorrow_ds),
 
         """INSERT INTO {}.ref_loinc_map_to_new SELECT * FROM {}.temp_ref_loinc_map_to""".format(schema, schema)
     ]
 
     hive_execute(sqls)
 
-def replace_old_table(tomorrow_ds, schema, s3, **kwargs):
+def replace_old_table(tomorrow_ds, schema, s3_loinc, s3_map, **kwargs):
     sqls = [
-        #"""DROP TABLE {}.ref_loinc_new""".format(schema),
-        """ALTER TABLE {}.ref_loinc SET LOCATION 's3a://{}{}/'""".format(schema, s3, tomorrow_ds),
+        """DROP TABLE {}.ref_loinc_new""".format(schema),
+        """ALTER TABLE {}.ref_loinc SET LOCATION 's3a://{}{}/'""".format(schema, s3_loinc, tomorrow_ds),
 
         """CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_loinc_map_to LIKE {}.ref_loinc_map_to_new""".format(schema, schema),
         """DROP TABLE {}.ref_loinc_map_to_new""".format(schema),
-        """ALTER TABLE {}.ref_loinc_map_to SET LOCATION 's3a://{}{}/'""".format(schema, s3, tomorrow_ds),
+        """ALTER TABLE {}.ref_loinc_map_to SET LOCATION 's3a://{}{}/'""".format(schema, s3_map, tomorrow_ds),
 
-        #"""DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema),
+        """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema),
         """DROP TABLE IF EXISTS {}.temp_ref_loinc_map_to""".format(schema)
     ]
 
@@ -329,7 +331,7 @@ create_temp = PythonOperator(
 
 create_new = PythonOperator(
     task_id='create_new',
-    op_kwargs = { "schema": SCHEMA, "s3": S3_PARQUET, "ref_loinc_schema": REF_LOINC_SCHEMA},
+    op_kwargs = { "schema": SCHEMA, "s3_loinc": S3_PARQUET, "s3_map": S3_PARQUET_MAP, "ref_loinc_schema": REF_LOINC_SCHEMA},
     python_callable=create_new_loinc_table,
     provide_context=True,
     dag=dag
@@ -337,7 +339,7 @@ create_new = PythonOperator(
 
 replace_old = PythonOperator(
     task_id='replace_old',
-    op_kwargs = { "schema": SCHEMA, "s3": S3_PARQUET },
+    op_kwargs = { "schema": SCHEMA, "s3_loinc": S3_PARQUET, "s3_map": S3_PARQUET_MAP},
     python_callable=replace_old_table,
     provide_context=True,
     dag=dag
