@@ -19,7 +19,11 @@ SELECT
         t.date_of_record_entry,
         mp.yearOfBirth
         ),                          -- patient_year_of_birth
-    t.date_of_death,                -- patient_date_of_death
+    concat(
+        substring(mp.deathMonth, 0, 2),
+        '-',
+        substring(mp.deathMonth, 2, 6)
+        ),                          -- patient_date_of_death
     mp.threeDigitZip,               -- patient_zip
     mp.state,                       -- patient_state
     'Y',                            -- patient_deceased_flag
@@ -116,4 +120,4 @@ SELECT
     NULL,                           -- unverified
     NULL                            -- electronicrx
 FROM transactional_raw t
-    INNER JOIN matching_payload mp ON t.id = mp.claimid
+    INNER JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey

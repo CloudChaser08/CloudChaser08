@@ -11,7 +11,8 @@ CREATE EXTERNAL TABLE transactional_raw (
         city                   string,
         state                  string,
         date_of_record_entry   string,
-        date_of_record_update  string
+        date_of_record_update  string,
+        hv_join_key            string
         ) 
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (

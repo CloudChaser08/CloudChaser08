@@ -22,7 +22,7 @@ def load(runner, location, extra_cols=[]):
 
     # all keys needed from the payload
     total_attrs = set(DEFAULT_ATTRS + extra_cols)
-    total_cols = set(total_attrs + HVID)
+    total_cols = set(list(total_attrs) + HVID)
 
     raw_payload = runner.sqlContext.read.json(location)
 
@@ -35,4 +35,6 @@ def load(runner, location, extra_cols=[]):
     final_payload = raw_payload.select(
         [coalesce(*HVID).alias('hvid')] + map(lambda x: col(x), total_attrs)
     )
+
+    runner.sqlContext.sql('DROP TABLE IF EXISTS matching_payload')
     final_payload.registerTempTable("matching_payload")

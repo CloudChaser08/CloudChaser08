@@ -98,10 +98,10 @@ def cap_age(age):
 def cap_year_of_birth(age, date_service, year_of_birth):
     if (
             date_service is not None
-            and date_service.year - int(year_of_birth) > 85
+            and int(date(date_service).year) - int(year_of_birth) > 85
     ) or (
             age is not None and date_service is not None and int(age) > 85
     ):
-        str(date_service.year - 90)
+        str(int(date(date_service).year) - 90)
     else:
         year_of_birth
