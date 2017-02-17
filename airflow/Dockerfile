@@ -54,6 +54,7 @@ RUN pip install \
       awscli \
       scrapy \
       datadog \
+      boto3 \
       celery
 
 RUN pip install pandas

@@ -6,6 +6,8 @@ CMD="airflow"
 # Generate Fernet key
 : ${FERNET_KEY:=$(python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print FERNET_KEY")} sed -i "s|\$FERNET_KEY|$FERNET_KEY|" "$AIRFLOW_HOME"/airflow.cfg
 
+sed -i "s|\$WEBSERVER_HOST|$DOCKER_IP|" "$AIRFLOW_HOME"/airflow.cfg
+
 echo "Reset database..."
 
 touch $AIRFLOW_HOME/airflow.db
@@ -31,7 +33,7 @@ sqlite3 $AIRFLOW_HOME/airflow.db \
 
 sqlite3 $AIRFLOW_HOME/airflow.db \
   "INSERT INTO variable (\"key\", val, is_encrypted)
-   VALUES ('DATADOG_KEYS','gAAAAABYofrNQTWIzONIoUSlL7x4gHYR1bKyG-YPVDSp2ymF3Zjj5Za3wWDzQTqxlJB1tPiAZ1-6jkP-NRqOxpvGzLp0AHBT-DwhMcVwvI6iJk9dsGTn4FgZoCrv7cAa00_e2FhPsp9ISH-r4NJsUM7r_Ixb0jVLgmGL0BQihGflPbAziCdJo83_1LryCiZTClA4WnhU2xQhCCJXQztK3D7NCuw7QqOABRfA2Zqju3CvtDoPcZXbd4o='1)"
+   VALUES ('DATADOG_KEYS','gAAAAABYpzpc1doNml_ZlHt0d5acGAWc5bFPQ65NtBGZS101zKsEiD_qzoevLQfMoFxjkRfZZZUVroeFhnIZGgIXhBmougGHEsSwRj5wYRsOL3pQdnCbgUYMfmGuOTvhjsKAVhXFG_4u67hcpdKXj_WSl8gzH6emvyCXj3WLlRfLdxWGUeODeGKQCSGYPN4ka38l7KKd0DSrfGXMkvMKAaZ_XZYPC7AvyWGlaRlULvNlR5gYNzAxDLc=',1)"
 
 $CMD initdb
 
