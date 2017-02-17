@@ -3,7 +3,6 @@ from airflow.models import Variable
 from airflow.operators import BashOperator, \
     BranchPythonOperator, SlackAPIOperator
 import re
-from imp import reload
 
 import dags.util.s3_utils as s3_utils
 import dags.config as config
