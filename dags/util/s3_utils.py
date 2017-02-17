@@ -45,14 +45,7 @@ def fetch_file_from_s3(
 
 def copy_file(src_path, dest_path):
     check_call([
-        'aws', 's3', 'cp', src_path, dest_path
-    ], env=get_aws_env())
-
-
-def push_local_dir_to_s3(local_path, s3_path):
-    """Push each file in a local directory up to a specified s3 location"""
-    check_call([
-        'aws', 's3', 'cp', '--recursive', local_path, s3_path
+        'aws', 's3', 'cp', '--sse', 'AES256', src_path, dest_path
     ], env=get_aws_env())
 
 
@@ -88,16 +81,6 @@ def get_file_size(path):
     return _get_s3_hook().get_key(
         bucket_key['key'], bucket_key['bucket']
     ).content_length
-
-
-def get_file_last_modified(path):
-    """
-    Get the size of a file on s3
-    """
-    bucket_key = _transform_path_to_bucket_key(path)
-    return _get_s3_hook().get_key(
-        bucket_key('key'), bucket_key('bucket')
-    ).last_modified
 
 
 def s3_key_exists(path):

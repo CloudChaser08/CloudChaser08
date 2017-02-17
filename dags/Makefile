@@ -15,9 +15,8 @@ build-test:
 	# required airflow packages
 	python `which pip` install boto
 
-
 	# initialize airflow at the new AIRFLOW_HOME
 	airflow initdb
 
 run-test:
-	python `which nosetests`
+	python `which nosetests` -w test/

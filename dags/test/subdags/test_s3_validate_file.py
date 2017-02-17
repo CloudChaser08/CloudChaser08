@@ -1,6 +1,6 @@
 import unittest
 
-from mock import MagicMock
+import mock
 import dags.util.s3_utils as s3_utils
 import dags.subdags.s3_validate_file as s3_validate_file
 
@@ -33,9 +33,19 @@ class TestFileValidatorSubDag(unittest.TestCase):
 
         }
 
+        # save the state of s3_utils before mocking to prevent mocks
+        # bleeding into other tests
+        self.real_s3_utils_list_s3_bucket_files = s3_utils.list_s3_bucket_files
+        self.real_s3_utils_get_file_size = s3_utils.get_file_size
+
+    def tearDown(self):
+        # reset mocked functions
+        s3_utils.list_s3_bucket_files = self.real_s3_utils_list_s3_bucket_files
+        s3_utils.get_file_size = self.real_s3_utils_get_file_size
+
     def test_func_call(self):
-        s3_utils.list_s3_bucket_files = MagicMock(return_value=[])
-        s3_utils.get_file_size = MagicMock(return_value=0)
+        s3_utils.list_s3_bucket_files = mock.MagicMock(return_value=[])
+        s3_utils.get_file_size = mock.MagicMock(return_value=0)
 
         # run the subdag
         s3_validate_file.do_is_valid_new_file(
@@ -53,11 +63,11 @@ class TestFileValidatorSubDag(unittest.TestCase):
         Ensure that valid files reach the 'is_new_valid' step
         """
 
-        s3_utils.list_s3_bucket_files = MagicMock(return_value=[
+        s3_utils.list_s3_bucket_files = mock.MagicMock(return_value=[
             self.filename_template.format('2016'),
             self.filename_template.format('2017')  # this is our file
         ])
-        s3_utils.get_file_size = MagicMock(return_value=200)
+        s3_utils.get_file_size = mock.MagicMock(return_value=200)
 
         # run the subdag
         out = s3_validate_file.do_is_valid_new_file(
@@ -72,10 +82,10 @@ class TestFileValidatorSubDag(unittest.TestCase):
         which matches the expected pattern
         """
 
-        s3_utils.list_s3_bucket_files = MagicMock(return_value=[
+        s3_utils.list_s3_bucket_files = mock.MagicMock(return_value=[
             self.filename_template.format('BADVAL')
         ])
-        s3_utils.get_file_size = MagicMock(return_value=0)
+        s3_utils.get_file_size = mock.MagicMock(return_value=0)
 
         # run the subdag
         out = s3_validate_file.do_is_valid_new_file(
@@ -90,10 +100,10 @@ class TestFileValidatorSubDag(unittest.TestCase):
         with the expected name
         """
 
-        s3_utils.list_s3_bucket_files = MagicMock(return_value=[
+        s3_utils.list_s3_bucket_files = mock.MagicMock(return_value=[
             self.filename_template.format('2016')  # wrong year
         ])
-        s3_utils.get_file_size = MagicMock(return_value=0)
+        s3_utils.get_file_size = mock.MagicMock(return_value=0)
 
         # run the subdag
         out = s3_validate_file.do_is_valid_new_file(
@@ -108,10 +118,10 @@ class TestFileValidatorSubDag(unittest.TestCase):
         invalid size
         """
 
-        s3_utils.list_s3_bucket_files = MagicMock(return_value=[
+        s3_utils.list_s3_bucket_files = mock.MagicMock(return_value=[
             self.filename_template.format('2017')
         ])
-        s3_utils.get_file_size = MagicMock(return_value=99)  # expects >= 100
+        s3_utils.get_file_size = mock.MagicMock(return_value=99)  # expects >= 100
 
         # run the subdag
         out = s3_validate_file.do_is_valid_new_file(
