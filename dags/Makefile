@@ -19,4 +19,4 @@ build-test:
 	airflow initdb
 
 run-test:
-	python `which nosetests` -w test/
+	python `which nosetests` -w test/ -v
