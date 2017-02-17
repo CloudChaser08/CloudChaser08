@@ -3,9 +3,10 @@ from airflow.models import Variable
 from airflow.operators import BashOperator, \
     BranchPythonOperator, SlackAPIOperator
 import re
+from imp import reload
 
-import util.s3_utils as s3_utils
-import config
+import dags.util.s3_utils as s3_utils
+import dags.config as config
 
 reload(s3_utils)
 reload(config)
@@ -38,6 +39,7 @@ def do_is_valid_new_file(ds, **kwargs):
         return kwargs['is_not_valid']
 
     return kwargs['is_new_valid']
+
 
 def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
