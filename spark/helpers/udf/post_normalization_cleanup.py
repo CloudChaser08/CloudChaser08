@@ -1,5 +1,5 @@
 #! /usr/bin/python
-from datetime import date
+import datetime
 
 # These codes are specific enough that along with other public fields they pose a
 # re-identification risk, nullify them
@@ -40,7 +40,7 @@ def clean_up_diagnosis_code(
 ):
     import re
     if diagnosis_code_qual == '01' or (diagnosis_code_qual is None
-                                       and date_service < date(2015, 10, 1)):
+                                       and date_service < datetime.date(2015, 10, 1)):
         if re.search(
                 '^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$',
                 diagnosis_code
@@ -49,7 +49,7 @@ def clean_up_diagnosis_code(
         if re.search('^V854[1-5]$', diagnosis_code):
             return 'V854'
     if diagnosis_code_qual == '02' or (diagnosis_code_qual is None
-                                       and date_service >= date(2015, 10, 1)):
+                                       and date_service >= datetime.date(2015, 10, 1)):
         if re.search(
                 '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$',
                 diagnosis_code
@@ -97,11 +97,11 @@ def cap_age(age):
 
 def cap_year_of_birth(age, date_service, year_of_birth):
     if (
-            date_service is not None
-            and int(date(date_service).year) - int(year_of_birth) > 85
+        isinstance(date_service, datetime.date)
+        and (date_service.year - int(year_of_birth)) > 85
     ) or (
-            age is not None and date_service is not None and int(age) > 85
+        int(age) > 85 and isinstance(date_service, datetime.date)
     ):
-        str(int(date(date_service).year) - 90)
+        return date_service.year - 90
     else:
-        year_of_birth
+        return year_of_birth

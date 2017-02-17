@@ -16,13 +16,13 @@ SELECT
     cap_age(mp.age),                -- patient_age
     cap_year_of_birth(
         mp.age,
-        t.date_of_record_entry,
+        date_start.formatted,
         mp.yearOfBirth
         ),                          -- patient_year_of_birth
     concat(
-        substring(mp.deathMonth, 0, 2),
+        substring(mp.deathMonth, 3, 6),
         '-',
-        substring(mp.deathMonth, 2, 6)
+        substring(mp.deathMonth, 0, 2)
         ),                          -- patient_date_of_death
     mp.threeDigitZip,               -- patient_zip
     mp.state,                       -- patient_state
@@ -58,7 +58,7 @@ SELECT
     NULL,                           -- encounter_id_qual
     NULL,                           -- description
     NULL,                           -- description_qual
-    t.date_of_record_entry,         -- date_start
+    date_start.formatted,           -- date_start
     NULL,                           -- date_end
     NULL,                           -- date_qual
     NULL,                           -- diagnosis_code
@@ -121,3 +121,4 @@ SELECT
     NULL                            -- electronicrx
 FROM transactional_raw t
     INNER JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey
+    INNER JOIN dates date_start ON date_start.date = REGEXP_REPLACE(t.date_of_record_entry,'/','')

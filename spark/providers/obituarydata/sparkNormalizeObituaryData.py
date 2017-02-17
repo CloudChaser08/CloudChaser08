@@ -51,7 +51,7 @@ runner.run_spark_script(get_rel_path(
     '../../common/emr_common_model.sql'
 ))
 
-payload_loader.load(runner, matching_path, ['claimId'])
+payload_loader.load(runner, matching_path, ['hvJoinKey', 'deathMonth'])
 
 runner.run_spark_script(get_rel_path("load_transactions.sql"), [
     ['input_path', input_path]
