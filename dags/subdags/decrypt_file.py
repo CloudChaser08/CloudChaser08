@@ -3,7 +3,7 @@ from airflow.models import Variable
 from airflow.operators import PythonOperator
 from subprocess import check_call
 
-import util.s3_utils as s3_utils
+import dags.util.s3_utils as s3_utils
 
 reload(s3_utils)
 
