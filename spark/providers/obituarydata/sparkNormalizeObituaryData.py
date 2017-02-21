@@ -7,6 +7,7 @@ from spark.runner import Runner
 import spark.helpers.create_date_validation_table \
     as date_validator
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.constants as constants
 
 
 def get_rel_path(relative_filename):
@@ -49,7 +50,10 @@ date_validator.generate(runner, date(2013, 9, 1), date_obj.date())
 
 runner.run_spark_script(get_rel_path(
     '../../common/emr_common_model.sql'
-))
+), [
+    ['table_name', 'emr_common_model', False],
+    ['properties', '', False]
+])
 
 payload_loader.load(runner, matching_path, ['hvJoinKey', 'deathMonth'])
 
@@ -62,3 +66,38 @@ runner.run_spark_script(get_rel_path("normalize.sql"), [
     ['feed', '27'],
     ['vendor', '49']
 ])
+
+runner.run_spark_script(get_rel_path(
+    '../../common/emr_common_model.sql'
+), [
+    ['table_name', 'final_unload', False],
+    [
+        'properties',
+        constants.unload_properties_template.format(output_path),
+        False
+    ]
+])
+
+runner.run_spark_script(
+    get_rel_path('../../common/unload_common_model.sql'), [
+        [
+            'select_statement',
+            "SELECT *, 'NULL' as best_date "
+            + "FROM emr_common_model "
+            + "WHERE date_start IS NULL",
+            False
+        ]
+    ]
+)
+
+runner.run_spark_script(
+    get_rel_path('../../common/unload_common_model.sql'), [
+        [
+            'select_statement',
+            "SELECT *, regexp_replace(cast(date_start as string), '-..$', '') as best_date "
+            + "FROM emr_common_model "
+            + "WHERE date_start IS NOT NULL",
+            False
+        ]
+    ]
+)

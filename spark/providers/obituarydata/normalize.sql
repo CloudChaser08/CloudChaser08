@@ -27,7 +27,7 @@ SELECT
     mp.threeDigitZip,               -- patient_zip
     mp.state,                       -- patient_state
     'Y',                            -- patient_deceased_flag
-    mp.gender,                      -- patient_gender
+    NULL,                           -- patient_gender
     NULL,                           -- patient_race
     NULL,                           -- patient_ethnicity
     NULL,                           -- provider_client_id_qual

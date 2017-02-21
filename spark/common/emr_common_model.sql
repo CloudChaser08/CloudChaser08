@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS emr_common_model;
-CREATE TABLE emr_common_model (
+DROP TABLE IF EXISTS {table_name};
+CREATE TABLE {table_name} (
         record_id                    int,
         hvid                         string,
         created                      date,
@@ -112,3 +112,4 @@ CREATE TABLE emr_common_model (
         unverified                   string,
         electronicrx                 string
         )
+{properties}
