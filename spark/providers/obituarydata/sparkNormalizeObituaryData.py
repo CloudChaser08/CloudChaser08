@@ -49,9 +49,9 @@ output_path = 'hdfs:///out/'
 date_validator.generate(runner, date(2013, 9, 1), date_obj.date())
 
 runner.run_spark_script(get_rel_path(
-    '../../common/emr_common_model.sql'
+    '../../common/event_common_model.sql'
 ), [
-    ['table_name', 'emr_common_model', False],
+    ['table_name', 'event_common_model', False],
     ['properties', '', False]
 ])
 
@@ -68,7 +68,7 @@ runner.run_spark_script(get_rel_path("normalize.sql"), [
 ])
 
 runner.run_spark_script(get_rel_path(
-    '../../common/emr_common_model.sql'
+    '../../common/event_common_model.sql'
 ), [
     ['table_name', 'final_unload', False],
     [
@@ -83,7 +83,7 @@ runner.run_spark_script(
         [
             'select_statement',
             "SELECT *, 'NULL' as best_date "
-            + "FROM emr_common_model "
+            + "FROM event_common_model "
             + "WHERE date_start IS NULL",
             False
         ]
@@ -95,7 +95,7 @@ runner.run_spark_script(
         [
             'select_statement',
             "SELECT *, regexp_replace(cast(date_start as string), '-..$', '') as best_date "
-            + "FROM emr_common_model "
+            + "FROM event_common_model "
             + "WHERE date_start IS NOT NULL",
             False
         ]
