@@ -10,13 +10,22 @@ CMD="airflow"
   sed -i "s|\$FERNET_KEY|$FERNET_KEY|" "$AIRFLOW_HOME"/airflow.cfg
 
 # Default to Dev Env
-${AIRFLOW_HOME:="/usr/local/airflow"}                  sed -i "s/\$AIRFLOW_HOME/$AIRFLOW_HOME/" "$AIRFLOW_HOME"/airflow.cfg
-${EXECUTOR:="SequentialExecutor"}                      sed -i "s/\$EXECUTOR/$EXECUTOR/" "$AIRFLOW_HOME"/airflow.cfg
-${SQL_CONN:="sqlite:////usr/local/airflow/airflow.db"} sed -i "s/\$SQL_CONN/$SQL_CONN/" "$AIRFLOW_HOME"/airflow.cfg
+: ${AIRFLOW_HOME:="/usr/local/airflow"}
+sed -i "s|\$AIRFLOW_HOME|$AIRFLOW_HOME|" "$AIRFLOW_HOME"/airflow.cfg
+
+: ${EXECUTOR:="SequentialExecutor"}
+sed -i "s|\$EXECUTOR|$EXECUTOR|" $AIRFLOW_HOME/airflow.cfg
+
+: ${SQL_CONN:="sqlite:////usr/local/airflow/airflow.db"}
+sed -i "s|\$SQL_CONN|$SQL_CONN|" $AIRFLOW_HOME/airflow.cfg
+
+# Generate Fernet key
+: ${FERNET_KEY:=$(python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print FERNET_KEY")}
+sed -i "s|\$FERNET_KEY|$FERNET_KEY|" $AIRFLOW_HOME/airflow.cfg
 
 # No good defaults
-sed -i "s/\$BASE_URL/$BASE_URL/" "$AIRFLOW_HOME"/airflow.cfg
-
+sed -i "s|\$BASE_URL|$BASE_URL|" $AIRFLOW_HOME/airflow.cfg
+cat $AIRFLOW_HOME/airflow.cfg
 touch $AIRFLOW_HOME/airflow.db
 
 CMD="airflow"
