@@ -30,6 +30,18 @@ jenkins-push:
 pull:
 	docker pull ${REPO}:latest
 
+runprod:
+	docker run -d \
+	-e FERNET_KEY=ydunNyBBPZOm3atVj6njjhHASM3HfIwW/HDQu93TmPc= \
+	-e BASE_URL='https://airflow-prod.aws.healthverity.com'    \
+	-e SQL_CONN='postgresql+psycopg2:///airflow?host=/var/run/postgresql/' \
+	-e EXECUTOR=LocalExecutor                                  \
+	-v ${PWD}/../dags:/usr/local/airflow/dags                  \
+	-v /var/run/postgresql:/var/run/postgresql                 \
+	-p 8080:8080                                               \
+	--name airflow                                             \
+	${REPO}:latest
+
 run: pull
 	docker run -d \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
@@ -53,6 +65,7 @@ test: pull clean
 	-v ${PWD}/../spark:/usr/local/airflow/spark \
 	--name airflow-test \
 	${REPO}:latest runtests
+
 
 shell:
 	docker exec -it airflow /bin/bash
@@ -78,3 +91,4 @@ jenkins-deploy-dev: jenkins-test clean
 jenkins-deploy: jenkins-test clean
 	${RSYNC_CMD} dags/     airflow@airflow-prod.awsdev.healthverity.com:airflow/dags
 	${RSYNC_CMD} ../spark/ airflow@airflow-prod.awsdev.healthverity.com:spark
+
