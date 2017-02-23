@@ -26,6 +26,12 @@ your running container.
 ./airflow.sh trigger_dag update_ndc
 ```
 
+## Run unit tests for dags (in the container)
+
+```shell
+make test
+```
+
 ## Build Airflow Dev Container
 
 If you would like to build a new container or test changes to the dev
