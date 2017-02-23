@@ -1,40 +1,45 @@
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators import BashOperator, PythonOperator, BranchPythonOperator, SlackAPIOperator
-from datetime import datetime, timedelta
-import airflow.hooks.S3_hook
-import logging
+from airflow.operators import BashOperator, \
+    BranchPythonOperator, SlackAPIOperator
 import re
 
-SLACK_CHANNEL='#airflow_alerts'
+import dags.util.s3_utils as s3_utils
+import dags.config as config
+
+reload(s3_utils)
+reload(config)
+
 
 def do_is_valid_new_file(ds, **kwargs):
     # We expect the files that were made available on HealthVerity's S3
-    s3_prefix          = kwargs['s3_prefix']
+    s3_prefix          = kwargs['s3_prefix'][:-1] if kwargs['s3_prefix'].endswith('/') \
+                         else kwargs['s3_prefix']
     file_name_pattern  = kwargs['file_name_pattern_func'](ds, kwargs)
     expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
     minimum_file_size  = kwargs['minimum_file_size']
 
-    if kwargs['s3_connection']:
-        hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id=kwargs['s3_connection'])
-    else:
-        hook = airflow.hooks.S3_hook.S3Hook()
-    s3_keys = hook.list_keys(kwargs['s3_bucket'], s3_prefix, '/')
-    s3_keys = map(lambda x: x.replace(s3_prefix, ''), s3_keys)
-    
+    s3_keys = s3_utils.list_s3_bucket_files(
+        's3://healthverity/' + s3_prefix + '/',
+        kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
+    )
+
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
         return kwargs['is_bad_name']
-    
+
     if len(filter(lambda k: k.split('/')[-1] == expected_file_name, s3_keys)) == 0:
         return kwargs['is_not_new']
 
     s3_key = filter(lambda k: k.split('/')[-1] == expected_file_name, s3_keys)[0]
-    key = hook.get_key(s3_prefix + s3_key, kwargs['s3_bucket'])
-    if key.content_length < minimum_file_size:
+
+    if s3_utils.get_file_size(
+            's3://healthverity/' + s3_prefix + '/' + s3_key
+    ) < minimum_file_size:
         return kwargs['is_not_valid']
 
     return kwargs['is_new_valid']
-        
+
+
 def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
         'owner': 'airflow',
@@ -74,7 +79,7 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         method='chat.postMessage',
         retries=0,
         api_params={
-            'channel'  : SLACK_CHANNEL,
+            'channel'  : config.SLACK_CHANNEL,
             'text'     : 'No new {} matching expected patten found'.format(dag_config['file_description']),
             'username' : 'AirFlow',
             'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
@@ -88,7 +93,7 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         method='chat.postMessage',
         retries=0,
         api_params={
-            'channel'  : SLACK_CHANNEL,
+            'channel'  : config.SLACK_CHANNEL,
             'text'     : 'No new {} found'.format(dag_config['file_description']),
             'username' : 'AirFlow',
             'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
@@ -102,7 +107,7 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         method='chat.postMessage',
         retries=0,
         api_params={
-            'channel'  : SLACK_CHANNEL,
+            'channel'  : config.SLACK_CHANNEL,
             'text'     : '{} is of an unexpected size'.format(dag_config['file_description']),
             'username' : 'AirFlow',
             'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'

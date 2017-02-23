@@ -1,12 +1,29 @@
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators import BashOperator, PythonOperator
-from datetime import datetime, timedelta
+from airflow.operators import PythonOperator
 from subprocess import check_call
-import os
+
+import dags.util.s3_utils as s3_utils
+
+reload(s3_utils)
 
 DECRYPTOR_JAR='HVDecryptor.jar'
 DECRYPTION_KEY='hv_record_private.base64.reformat'
+
+
+def do_fetch_decryption_files(ds, **kwargs):
+    # jar
+    s3_utils.fetch_file_from_s3(
+        Variable.get('DECRYPTOR_JAR_REMOTE_LOCATION'),
+        kwargs['tmp_path_template'].format('{{ ds_nodash }}')
+    )
+
+    # key
+    s3_utils.fetch_file_from_s3(
+        Variable.get('DECRYPTION_KEY_REMOTE_LOCATION'),
+        kwargs['tmp_path_template'].format('{{ ds_nodash }}')
+    )
+
 
 def do_run_decryption(ds, **kwargs):
     tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
@@ -20,6 +37,14 @@ def do_run_decryption(ds, **kwargs):
         decrypted_file_name, '-k', decryption_key
     ])
 
+
+def do_decompress_file(ds, **kwargs):
+    tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
+    decrypted_file = tmp_dir + kwargs['decrypted_file_name_func'](ds, kwargs)
+
+    check_call(['gzip', '-d', '-k', decrypted_file])
+
+
 def do_clean_up(ds, **kwargs):
     tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
     encrypted_file_name = tmp_dir + kwargs['encrypted_file_name_func'](ds, kwargs)
@@ -28,6 +53,7 @@ def do_clean_up(ds, **kwargs):
 
     for f in [encrypted_file_name, decryptor_jar, decryption_key]:
         check_call(['rm', f])
+
 
 def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
@@ -43,27 +69,25 @@ def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval,
         default_args=default_args
     )
 
-    fetch_decryptor_jar = BashOperator(
-        task_id='fetch_decryptor_jar',
-        bash_command='aws s3 cp {{ params.jar_src }} ' + dag_config['tmp_path_template'].format('{{ ds_nodash }}'),
-        params={
-            'jar_src': Variable.get('DECRYPTOR_JAR_REMOTE_LOCATION')
-        },
-        dag=dag
-    )
-
-    fetch_decryption_key = BashOperator(
-        task_id='fetch_decryption_key',
-        bash_command='aws s3 cp {{ params.key_src }} ' + dag_config['tmp_path_template'].format('{{ ds_nodash }}'),
-        params={
-            'key_src': Variable.get('DECRYPTION_KEY_REMOTE_LOCATION')
-        },
+    fetch_decryption_files = PythonOperator(
+        task_id='fetch_decryption_files',
+        python_callable=do_fetch_decryption_files,
+        provide_context=True,
+        op_kwargs=dag_config,
         dag=dag
     )
 
     run_decryption = PythonOperator(
         task_id='run_decryption',
         python_callable=do_run_decryption,
+        provide_context=True,
+        op_kwargs=dag_config,
+        dag=dag
+    )
+
+    decompress_file = PythonOperator(
+        task_id='decompress_file',
+        python_callable=do_decompress_file,
         provide_context=True,
         op_kwargs=dag_config,
         dag=dag
@@ -77,7 +101,8 @@ def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval,
         dag=dag
     )
 
-    run_decryption.set_upstream([fetch_decryptor_jar, fetch_decryption_key])
-    clean_up.set_upstream(run_decryption)
+    run_decryption.set_upstream(fetch_decryption_files)
+    decompress_file.set_upstream(run_decryption)
+    clean_up.set_upstream(decompress_file)
 
     return dag

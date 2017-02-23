@@ -1,9 +1,9 @@
 from airflow import DAG
-from airflow.models import Variable
 from airflow.operators import BashOperator, PythonOperator
-from datetime import datetime, timedelta
-from airflow.hooks.S3_hook import S3Hook
-import logging
+
+import dags.util.s3_utils as s3_utils
+reload(s3_utils)
+
 
 def do_fetch_file(ds, **kwargs):
     # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
@@ -12,13 +12,13 @@ def do_fetch_file(ds, **kwargs):
     s3_prefix          = kwargs['s3_prefix']
 
     tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
-    if kwargs.get('s3_connection'):
-        hook = S3Hook(s3_conn_id=kwargs['s3_connection'])
-    else:
-        hook = S3Hook()
-    key = hook.get_key(s3_prefix + expected_file_name, kwargs['s3_bucket'])
 
-    key.get_contents_to_filename(tmp_path + new_file_name)
+    s3_utils.fetch_file_from_s3(
+        's3://healthverity/' + s3_prefix + expected_file_name,
+        tmp_path + new_file_name,
+        kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
+    )
+
 
 def s3_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
@@ -39,7 +39,7 @@ def s3_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval
         bash_command='mkdir -p {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}')),
         dag=dag
     )
-    
+
     dag_config['new_file_name_func'] = dag_config.get('new_file_name_func', dag_config['expected_file_name_func'])
     fetch_file = PythonOperator(
         task_id='fetch_file',
