@@ -15,10 +15,13 @@ DEFAULT_ATTRS = [
 ]
 
 
-def load(runner, location, extra_cols=[]):
+def load(runner, location, extra_cols=None):
     """
     Load matching data for a provider
     """
+
+    if extra_cols is None:
+        extra_cols = []
 
     # all keys needed from the payload
     total_attrs = set(DEFAULT_ATTRS + extra_cols)
