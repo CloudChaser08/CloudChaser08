@@ -6,7 +6,7 @@ import airflow
 import boto
 import mock
 import datetime
-import dags.util.s3_utils as s3_utils
+import util.s3_utils as s3_utils
 
 
 class TestS3Utils(unittest.TestCase):

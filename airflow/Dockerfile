@@ -43,23 +43,11 @@ RUN useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow
 RUN pip install -U pip setuptools
 
 RUN pip install \
-      setuptools \
-      cython \
-      pysftp \
-      pytz \
-      cryptography \
-      pyOpenSSL \
-      thrift_sasl \
-      psycopg2 \
-      awscli \
-      scrapy \
-      datadog \
-      boto3 \
-      celery
+  pandas==0.19.2 \
+  numpy==1.12.0
 
-RUN pip install pandas
-
-RUN pip install "airflow[async, celery, crypto, jdbc, hdfs, hive, ldap, s3, slack, postgres]"
+COPY etc/requirements.txt /
+RUN pip install -r /requirements.txt
 
 RUN apt-get clean \
     && rm -rf \

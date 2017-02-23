@@ -1,8 +1,8 @@
 import unittest
 
 import mock
-import dags.util.s3_utils as s3_utils
-import dags.subdags.s3_fetch_file as s3_fetch_file
+import util.s3_utils as s3_utils
+import subdags.s3_fetch_file as s3_fetch_file
 
 
 class TestS3FetchFileSubDag(unittest.TestCase):

@@ -2,8 +2,8 @@ import unittest
 
 import mock
 import airflow.models
-import dags.util.s3_utils as s3_utils
-import dags.subdags.decrypt_file as decrypt_file
+import util.s3_utils as s3_utils
+import subdags.decrypt_file as decrypt_file
 
 
 class TestDecryptFileSubDag(unittest.TestCase):

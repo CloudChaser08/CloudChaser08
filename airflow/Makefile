@@ -18,15 +18,16 @@ run:
 	-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 	-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 	-e DOCKER_IP=${DOCKER_IP} \
-	-v ${PWD}/../dags:/usr/local/airflow/dags \
+	-v ${PWD}/dags:/usr/local/airflow/dags \
 	-p 8080:8080 \
 	--name airflow \
 	${REPO}:latest
 
+test:
+	docker exec -it airflow /bin/bash -c 'cd $$AIRFLOW_HOME && cd dags && nosetests -w test/ -v'
 
 shell:
 	docker exec -it airflow /bin/bash
-
 
 HUP:
 	docker exec -t airflow kill -HUP 1

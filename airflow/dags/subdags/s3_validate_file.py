@@ -4,8 +4,8 @@ from airflow.operators import BashOperator, \
     BranchPythonOperator, SlackAPIOperator
 import re
 
-import dags.util.s3_utils as s3_utils
-import dags.config as config
+import util.s3_utils as s3_utils
+import config as config
 
 reload(s3_utils)
 reload(config)
@@ -63,7 +63,6 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
             'file_name_pattern_func'  : dag_config['file_name_pattern_func'],
             'minimum_file_size'       : dag_config['minimum_file_size'],
             's3_prefix'    : dag_config['s3_prefix'],
-            's3_bucket'    : dag_config['s3_bucket'],
             's3_connection': dag_config.get('s3_connection'),
             'is_new_valid' : 'create_tmp_dir',
             'is_not_valid' : 'alert_file_size_problem',
