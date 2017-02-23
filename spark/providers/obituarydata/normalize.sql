@@ -19,14 +19,14 @@ SELECT
     NULL,                           -- patient_gender
     t.id,                           -- source_record_id
     'OBITUARY',                     -- source_record_qual
-    record_entry_date.formatted,    -- source_record_date
-    'PATIENT_DECEASED',             -- event
+    record_entry_date.formatted,    -- source_record_date TODO: use update date if it's there
+    'DEATH',                        -- event
     concat(
         substring(mp.deathMonth, 3, 6),
         '-',
         substring(mp.deathMonth, 0, 2)
         ),                          -- event_val
-    NULL                            -- event_date
+    NULL                            -- event_date TODO: first day of month
 FROM transactional_raw t
     INNER JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey
     INNER JOIN dates record_entry_date ON date_start.date = REGEXP_REPLACE(t.date_of_record_entry,'/','')
