@@ -10,7 +10,6 @@ CMD="airflow"
   sed -i "s|\$FERNET_KEY|$FERNET_KEY|" "$AIRFLOW_HOME"/airflow.cfg
 
 # Default to Dev Env
-: ${AIRFLOW_HOME:="/usr/local/airflow"}
 sed -i "s|\$AIRFLOW_HOME|$AIRFLOW_HOME|" "$AIRFLOW_HOME"/airflow.cfg
 
 : ${EXECUTOR:="SequentialExecutor"}
