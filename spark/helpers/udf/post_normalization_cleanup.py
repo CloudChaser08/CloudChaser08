@@ -92,10 +92,9 @@ def filter_due_to_place_of_service(prov_detail, place_of_service_std_id):
 
 # Age caps
 def cap_age(age):
-    if age is None:
-        return age
-    else:
-        return '90' if int(age) > 85 else age
+    return '90' if (
+        age is not None and int(age) > 85
+    ) else age
 
 
 def cap_year_of_birth(age, date_service, year_of_birth):
