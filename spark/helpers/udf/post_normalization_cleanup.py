@@ -98,14 +98,13 @@ def cap_age(age):
 
 
 def cap_year_of_birth(age, date_service, year_of_birth):
-    if (
-        isinstance(date_service, datetime.date)
-        and year_of_birth is not None
-        and (date_service.year - int(year_of_birth)) > 85
-    ) or (
-        age is not None and int(age) > 85
-        and isinstance(date_service, datetime.date)
-    ):
-        return date_service.year - 90
-    else:
+    """ Cap year of birth if age or birth year over 85 """
+    try:
+        is_year_cap = (date_service.year - int(year_of_birth)) > 85
+        is_age_cap = int(age) > 85
+
+        if is_year_cap or is_age_cap:
+            year_of_birth = date_service.year - 90
+
+    finally:
         return year_of_birth
