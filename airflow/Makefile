@@ -23,10 +23,11 @@ run:
 	--name airflow \
 	${REPO}:latest
 
+test:
+	docker exec -it airflow /bin/bash -c 'cd $$AIRFLOW_HOME && cd dags && nosetests -w test/ -v'
 
 shell:
 	docker exec -it airflow /bin/bash
-
 
 HUP:
 	docker exec -t airflow kill -HUP 1
