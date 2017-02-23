@@ -11,7 +11,10 @@ SELECT
     cap_age(mp.age),                -- patient_age
     cap_year_of_birth(
         mp.age,
-        date_start.formatted,
+        COALESCE(
+            record_update_date.formatted,
+            record_entry_date.formatted
+            ),
         mp.yearOfBirth
         ),                          -- patient_year_of_birth
     mp.threeDigitZip,               -- patient_zip
