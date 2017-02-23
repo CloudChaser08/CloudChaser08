@@ -4,8 +4,8 @@ from airflow.operators import BashOperator, \
     BranchPythonOperator, SlackAPIOperator
 import re
 
-import dags.util.s3_utils as s3_utils
-import dags.config as config
+import util.s3_utils as s3_utils
+import config as config
 
 reload(s3_utils)
 reload(config)

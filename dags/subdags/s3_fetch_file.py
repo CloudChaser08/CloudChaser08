@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.operators import BashOperator, PythonOperator
 
-import dags.util.s3_utils as s3_utils
+import util.s3_utils as s3_utils
 reload(s3_utils)
 
 
