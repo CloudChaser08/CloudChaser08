@@ -83,7 +83,7 @@ runner.run_spark_script(
             'select_statement',
             "SELECT *, 'NULL' as best_date "
             + "FROM event_common_model "
-            + "WHERE source_record_date IS NULL",
+            + "WHERE event_date IS NULL",
             False
         ]
     ]
@@ -93,9 +93,9 @@ runner.run_spark_script(
     get_rel_path('../../common/unload_common_model.sql'), [
         [
             'select_statement',
-            "SELECT *, regexp_replace(cast(source_record_date as string), '-..$', '') as best_date "
+            "SELECT *, regexp_replace(cast(event_date as string), '-..$', '') as best_date "
             + "FROM event_common_model "
-            + "WHERE source_record_date IS NOT NULL",
+            + "WHERE event_date IS NOT NULL",
             False
         ]
     ]
