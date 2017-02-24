@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS {table_name};
 CREATE TABLE {table_name} (
-        record_id              int,
+        record_id              bigint,
         hvid                   string,
         created                date,
         model_version          string,

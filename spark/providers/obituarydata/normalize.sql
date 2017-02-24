@@ -34,4 +34,4 @@ SELECT
             '-01'
             ) AS date)              -- event_date
 FROM transactional_raw t
-    INNER JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey
+    LEFT JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey
