@@ -136,7 +136,6 @@ def filter_due_to_place_of_service(prov_detail, place_of_service_std_id):
     else:
         return prov_detail
 
-
 def scrub_discharge_status(discharge_status):
     if discharge_status in ['69', '87']:
         return '0'
@@ -153,11 +152,12 @@ def nullify_drg_blacklist(drg_code):
 
 # Age caps
 def cap_age(age):
+    if age is None or age == '':
+        return
     try:
         return '90' if int(age) > 85 else age
     except:
         return None
-
 
 def cap_year_of_birth(age, date_service, year_of_birth):
     """ Cap year of birth if age or birth year over 85 """

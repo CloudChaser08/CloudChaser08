@@ -1,7 +1,7 @@
 from pyspark.sql import HiveContext, SparkSession
 from helpers.udf.post_normalization_cleanup import *
 from helpers.udf.general_helpers import *
-
+from helpers.udf.medicalclaims_helpers import *
 
 def init(provider, local=False):
     spark = SparkSession.builder                                              \
@@ -11,11 +11,11 @@ def init(provider, local=False):
                     .config('spark.sql.crossJoin.enabled', 'true')            \
                     .getOrCreate()
 
-    sqlContext = HiveContext(spark.sparkContext)
+    sqlContext = SQLContext(spark.sparkContext)
 
     # register privacy filters
     sqlContext.registerFunction(
-        'filter_due_to_place_of_service', filter_due_to_place_of_service
+        'filter_due_to_place_of_service', filter_due_to_place_of_service,
     )
     sqlContext.registerFunction(
         'obscure_place_of_service', obscure_place_of_service
@@ -54,6 +54,17 @@ def init(provider, local=False):
     )
     sqlContext.registerFunction(
         'extract_currency', extract_currency
+    )
+
+    # helper functions for normalizing medical claims
+    sqlContext.registerFunction(
+        'get_diagnosis_with_priority', get_diagnosis_with_priority
+    )
+    sqlContext.registerFunction(
+        'uniquify', uniquify
+    )
+    sqlContext.registerFunction(
+        'string_set_diff', string_set_diff
     )
 
     return spark, sqlContext
