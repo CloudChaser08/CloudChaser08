@@ -11,10 +11,12 @@ SELECT
     cap_age(mp.age),                -- patient_age
     cap_year_of_birth(
         mp.age,
-        COALESCE(
-            record_update_date.formatted,
-            record_entry_date.formatted
-            ),
+        CAST(CONCAT(
+                SUBSTRING(mp.deathMonth, 3, 6),
+                '-',
+                SUBSTRING(mp.deathMonth, 0, 2),
+                '-01'
+                ) AS date),
         mp.yearOfBirth
         ),                          -- patient_year_of_birth
     mp.threeDigitZip,               -- patient_zip
@@ -33,5 +35,3 @@ SELECT
             ) AS date)              -- event_date
 FROM transactional_raw t
     INNER JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey
-    LEFT JOIN dates record_entry_date ON record_entry_date.date = REGEXP_REPLACE(t.date_of_record_entry,'/','')
-    LEFT JOIN dates record_update_date ON record_update_date.date = REGEXP_REPLACE(t.date_of_record_update,'/','')
