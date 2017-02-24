@@ -22,18 +22,9 @@ SELECT
     NULL,                           -- patient_gender
     t.id,                           -- source_record_id
     'OBITUARY',                     -- source_record_qual
-    COALESCE(
-        record_update_date.formatted,
-        record_entry_date.formatted
-        ),                          -- source_record_date
+    NULL,                           -- source_record_date
     'DEATH',                        -- event
-    CONCAT(
-        SUBSTRING(mp.deathMonth, 3, 6),
-        '-',
-        SUBSTRING(mp.deathMonth, 0, 2)
-        ),                          -- event_val
-
-    -- event date is rounded to first day of death month
+    NULL,                           -- event_val
     CAST(CONCAT(
             SUBSTRING(mp.deathMonth, 3, 6),
             '-',
@@ -42,5 +33,5 @@ SELECT
             ) AS date)              -- event_date
 FROM transactional_raw t
     INNER JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey
-    INNER JOIN dates record_entry_date ON record_entry_date.date = REGEXP_REPLACE(t.date_of_record_entry,'/','')
-    INNER JOIN dates record_update_date ON record_update_date.date = REGEXP_REPLACE(t.date_of_record_update,'/','')
+    LEFT JOIN dates record_entry_date ON record_entry_date.date = REGEXP_REPLACE(t.date_of_record_entry,'/','')
+    LEFT JOIN dates record_update_date ON record_update_date.date = REGEXP_REPLACE(t.date_of_record_update,'/','')
