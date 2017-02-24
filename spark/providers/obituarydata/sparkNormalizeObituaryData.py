@@ -34,6 +34,8 @@ args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 
+filename = 'OD_record_data_{}_'.format(args.date.replace('-', ''))
+
 input_path = 's3a://salusv/incoming/consumer/obituarydata/{}/'.format(
     args.date.replace('-', '/')
 )
@@ -61,7 +63,7 @@ runner.run_spark_script(get_rel_path("load_transactions.sql"), [
 ])
 
 runner.run_spark_script(get_rel_path("normalize.sql"), [
-    ['set', 'obit'],
+    ['set', filename],
     ['feed', '27'],
     ['vendor', '49']
 ])
