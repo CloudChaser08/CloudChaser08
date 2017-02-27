@@ -67,6 +67,8 @@ def clean_up_numeric_code(code):
 def clean_up_diagnosis_code(
         diagnosis_code, diagnosis_code_qual, date_service
 ):
+    if diagnosis_code == None:
+        return None
     diagnosis_code = uppercase_code(clean_up_alphanumeric_code(diagnosis_code))
     if diagnosis_code_qual == '01' or (
             diagnosis_code_qual is None
