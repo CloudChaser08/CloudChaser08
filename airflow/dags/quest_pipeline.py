@@ -468,16 +468,14 @@ detect_matching_done.set_upstream(queue_up_for_matching)
 move_matching_payload.set_upstream(detect_matching_done)
 
 # normalization
-create_redshift_cluster.set_upstream(detect_matching_done)
+create_emr_cluster.set_upstream(detect_matching_done)
 normalize.set_upstream(
     [
-        create_redshift_cluster, move_matching_payload,
+        create_emr_cluster, move_matching_payload,
         split_addon, split_trunk
     ]
 )
-delete_redshift_cluster.set_upstream(normalize)
 
 # parquet
-create_emr_cluster.set_upstream(normalize)
-transform_to_parquet.set_upstream(create_emr_cluster)
+transform_to_parquet.set_upstream(normalize)
 delete_emr_cluster.set_upstream(transform_to_parquet)
