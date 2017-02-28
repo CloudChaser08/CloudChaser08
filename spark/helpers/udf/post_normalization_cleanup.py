@@ -1,5 +1,5 @@
 #! /usr/bin/python
-from datetime import date
+import datetime
 
 # These codes are specific enough that along with other public fields they pose a
 # re-identification risk, nullify them
@@ -29,30 +29,38 @@ from datetime import date
 #   W65*-W74* Drowning
 #   V* Vehicle accident
 
-# These codes are specific enough that along with other public fields they pose a
-# re-identification risk, make them more generic
+# These codes are specific enough that along with other public fields
+# they pose a re-identification risk, make them more generic
 # ICD9
 #   V85.41 - V85.45 Body Mass Index 40 and over
 # ICD10
 #   Z68.41 - Z68.45 Body Mass Index 40 and over
-def clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service):
+def clean_up_diagnosis_code(
+        diagnosis_code, diagnosis_code_qual, date_service
+):
     import re
     if diagnosis_code_qual == '01' or (diagnosis_code_qual is None
-                                       and date_service < date(2015, 10, 01)):
-        if re.search('^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$', diagnosis_code):
+                                       and date_service < datetime.date(2015, 10, 1)):
+        if re.search(
+                '^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$',
+                diagnosis_code
+        ):
             return None
         if re.search('^V854[1-5]$', diagnosis_code):
             return 'V854'
     if diagnosis_code_qual == '02' or (diagnosis_code_qual is None
-                                       and date_service >= date(2015, 10, 01)):
-        if re.search('^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$', diagnosis_code):
+                                       and date_service >= datetime.date(2015, 10, 1)):
+        if re.search(
+                '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$',
+                diagnosis_code
+        ):
             return None
         if re.search('^Z684[1-5]$', diagnosis_code):
             return 'Z684'
     return diagnosis_code
 
-# These places of service pose a risk of revealing the patient's residence, set them
-# to unkown, and remove data about them
+# These places of service pose a risk of revealing the patient's
+# residence, set them to unkown, and remove data about them
 # 5 Indian Health Service Free-standing Facility
 # 6 Indian Health Service Provider-based Facility
 # 7 Tribal 638 Free-Standing Facility
@@ -63,13 +71,40 @@ def clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service):
 # 14 Group Home
 # 33 Custodial Care Facility
 def obscure_place_of_service(place_of_service_std_id):
-    if place_of_service_std_id in ['5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33']:
+    if place_of_service_std_id in [
+            '5', '05', '6', '06', '7', '07', '8',
+            '08', '9', '09', '12', '13', '14', '33'
+    ]:
         return '99'
     else:
         return place_of_service_std_id
 
+
 def filter_due_to_place_of_service(prov_detail, place_of_service_std_id):
-    if place_of_service_std_id in ['5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33']:
+    if place_of_service_std_id in [
+            '5', '05', '6', '06', '7', '07', '8',
+            '08', '9', '09', '12', '13', '14', '33'
+    ]:
         return None
     else:
         return prov_detail
+
+
+# Age caps
+def cap_age(age):
+    return '90' if (
+        age is not None and int(age) > 85
+    ) else age
+
+
+def cap_year_of_birth(age, date_service, year_of_birth):
+    """ Cap year of birth if age or birth year over 85 """
+    try:
+        is_year_cap = (date_service.year - int(year_of_birth)) > 85
+        is_age_cap = int(age) > 85
+
+        if is_year_cap or is_age_cap:
+            year_of_birth = date_service.year - 90
+
+    finally:
+        return year_of_birth
