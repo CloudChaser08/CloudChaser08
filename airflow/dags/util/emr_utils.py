@@ -22,13 +22,6 @@ def get_aws_env(suffix=""):
     return aws_env
 
 EMR_APPLICATIONS = "Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
-EMR_COPY_MELLON_STEP = (
-    'Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar",'
-    'ActionOnFailure=CONTINUE,Args=['
-    'aws,s3,cp,s3://healthverityreleases/mellon/mellon-assembly-latest.jar,'
-    '/tmp/mellon-assembly-latest.jar'
-    ']'
-)
 EMR_DISTCP_TO_S3 = (
     'Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src={}","--dest={}"]'
@@ -43,6 +36,12 @@ def _get_emr_cluster_id(cluster_name):
         if cluster['Name'] == cluster_name:
             return cluster['Id']
     print("Cluster not found. " + cluster_name)
+
+
+def _get_emr_cluster_dns_name(cluster_id):
+    return json.loads(check_output([
+        'aws', 'emr', 'describe-cluster', '--cluster-id', cluster_id
+    ]))['Cluster']['MasterPublicDnsName']
 
 
 def _wait_for_steps(cluster_id):
@@ -77,6 +76,48 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
         'aws', 'emr', 'wait', 'cluster-running',
         '--cluster-id', cluster_details['ClusterId']
     ])
+
+
+#
+# Normalize
+#
+def _build_dewey(cluster_id):
+    env = dict(os.environ)
+    check_call(['cd', '../../../spark/'])
+    check_call(['make', 'build'])
+    check_call([
+        'scp', '-r', '.',
+        'hadoop@' + _get_emr_cluster_dns_name(cluster_id) + ':spark/'
+    ], env=env)
+
+
+def normalize(cluster_name, script_name, args):
+    """Run a normalization spark script in EMR"""
+    env = dict(os.environ)
+    normalize_step = (
+        'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
+        'Args=[{}]'
+    ).format(
+        script_name + ',' + ','.join(args)
+    )
+    cluster_id = _get_emr_cluster_id(cluster_name)
+    _build_dewey(cluster_id)
+    check_call([
+        'aws', 'emr', 'add-steps', '--cluster_id', cluster_id,
+        '--steps', normalize_step
+    ], env)
+
+
+#
+# Parquet
+#
+EMR_COPY_MELLON_STEP = (
+    'Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar",'
+    'ActionOnFailure=CONTINUE,Args=['
+    'aws,s3,cp,s3://healthverityreleases/mellon/mellon-assembly-latest.jar,'
+    '/tmp/mellon-assembly-latest.jar'
+    ']'
+)
 
 
 def transform_to_parquet(cluster_name, src_file, dest_file, model):
