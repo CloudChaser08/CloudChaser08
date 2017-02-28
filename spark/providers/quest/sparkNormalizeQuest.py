@@ -17,6 +17,7 @@ def get_rel_path(relative_filename):
         )
     )
 
+
 # init
 spark, sqlContext = init("Quest")
 
@@ -26,7 +27,6 @@ runner = Runner(sqlContext)
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--period', type=str)
 parser.add_argument('--date', type=str)
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()

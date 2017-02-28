@@ -83,8 +83,13 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
 #
 def _build_dewey(cluster_id):
     env = dict(os.environ)
-    check_call(['cd', '../../../spark/'])
-    check_call(['make', 'build'])
+    check_call(['cd', os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            '../../../spark/'
+        )
+    )], env=env)
+    check_call(['make', 'build'], env=env)
     check_call([
         'scp', '-r', '.',
         'hadoop@' + _get_emr_cluster_dns_name(cluster_id) + ':spark/'
@@ -96,7 +101,7 @@ def normalize(cluster_name, script_name, args):
     env = dict(os.environ)
     normalize_step = (
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
-        'Args=[{}]'
+        'Args=[--py-files, /home/hadoop/spark/target/dewey.zip, {}]'
     ).format(
         script_name + ',' + ','.join(args)
     )
@@ -106,6 +111,7 @@ def normalize(cluster_name, script_name, args):
         'aws', 'emr', 'add-steps', '--cluster_id', cluster_id,
         '--steps', normalize_step
     ], env)
+    _wait_for_steps(cluster_id)
 
 
 #
