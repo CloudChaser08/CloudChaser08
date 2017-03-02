@@ -37,7 +37,6 @@ RUN apt-get update -yqq \
         apt-utils \
         unzip \
         lbzip2 \
-        watch \
         curl \
         netcat \
         jq \

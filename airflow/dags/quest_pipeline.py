@@ -96,6 +96,16 @@ def insert_formatted_regex_function(template):
     return out
 
 
+def insert_current_date_function(template):
+    def out(ds, kwargs):
+        return template.format(
+            kwargs['yesterday_ds_nodash'][0:4],
+            kwargs['yesterday_ds_nodash'][4:6],
+            kwargs['yesterday_ds_nodash'][6:8]
+        )
+    return out
+
+
 def insert_current_date(template, kwargs):
     return template.format(
         kwargs['yesterday_ds_nodash'][0:4],
@@ -189,7 +199,7 @@ def unzip_step(task_id, tmp_path_template, filename_template):
             '-d', insert_todays_date_function(tmp_path_template)(ds, kwargs)
         ])
     return PythonOperator(
-        task_id='unzip_file_' + task_id,
+        task_id='unzip_' + task_id + '_file',
         provide_context=True,
         python_callable=execute,
         dag=mdag
@@ -260,7 +270,9 @@ def split_step(task_id, tmp_path_template, tmp_name_template, s3_destination, nu
                 'source_file_name_func': insert_formatted_date_function(
                     tmp_name_template
                 ),
-                's3_destination_prefix': s3_destination,
+                's3_dest_path_func': insert_current_date_function(
+                    s3_destination
+                ),
                 'num_splits': num_splits
             }
         ),
