@@ -248,7 +248,7 @@ gunzip_trunk = gunzip_step(
 )
 
 
-def split_step(task_id, tmp_name_template, s3_destination, num_splits):
+def split_step(task_id, tmp_path_template, tmp_name_template, s3_destination, num_splits):
     return SubDagOperator(
         subdag=split_push_file.split_push_file(
             DAG_NAME,
@@ -256,7 +256,7 @@ def split_step(task_id, tmp_name_template, s3_destination, num_splits):
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_path_template': TMP_PATH_TEMPLATE,
+                'tmp_path_template': tmp_path_template,
                 'source_file_name_func': insert_formatted_date_function(
                     tmp_name_template
                 ),
@@ -270,11 +270,13 @@ def split_step(task_id, tmp_name_template, s3_destination, num_splits):
 
 
 split_addon = split_step(
-    "addon", TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
+    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
+    TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE,
     TRANSACTION_ADDON_S3_SPLIT_PATH, 20
 )
 split_trunk = split_step(
-    "trunk", TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
+    TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
     TRANSACTION_TRUNK_S3_SPLIT_PATH, 20
 )
 

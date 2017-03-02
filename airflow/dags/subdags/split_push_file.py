@@ -5,7 +5,7 @@ from subprocess import check_call
 
 def do_split_file(ds, **kwargs):
     tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    expected_file_name = kwargs['params']['source_file_name_func'](kwargs)
+    expected_file_name = kwargs['params']['source_file_name_func'](ds, kwargs)
     source_file = tmp_dir + expected_file_name
 
     check_call([
@@ -16,7 +16,7 @@ def do_split_file(ds, **kwargs):
 
 def do_clean_up(ds, **kwargs):
     tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    source_file = tmp_dir + kwargs['params']['source_file_name_func'](kwargs)
+    source_file = tmp_dir + kwargs['params']['source_file_name_func'](ds, kwargs)
     check_call(['rm', source_file])
     check_call(['rm', '-r', tmp_dir + 'parts'])
 
