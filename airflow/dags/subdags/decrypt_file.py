@@ -15,13 +15,13 @@ def do_fetch_decryption_files(ds, **kwargs):
     # jar
     s3_utils.fetch_file_from_s3(
         Variable.get('DECRYPTOR_JAR_REMOTE_LOCATION'),
-        kwargs['tmp_path_template'].format('{{ ds_nodash }}')
+        kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + DECRYPTOR_JAR
     )
 
     # key
     s3_utils.fetch_file_from_s3(
         Variable.get('DECRYPTION_KEY_REMOTE_LOCATION'),
-        kwargs['tmp_path_template'].format('{{ ds_nodash }}')
+        kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + DECRYPTION_KEY
     )
 
 
@@ -48,11 +48,11 @@ def do_decompress_file(ds, **kwargs):
 def do_clean_up(ds, **kwargs):
     tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
     encrypted_file_name = tmp_dir + kwargs['encrypted_file_name_func'](ds, kwargs)
-    decryptor_jar = tmp_dir + DECRYPTOR_JAR
+    decryptor_jar = tmp_dir + DECRYpPTOR_JAR
     decryption_key = tmp_dir + DECRYPTION_KEY
 
     for f in [encrypted_file_name, decryptor_jar, decryption_key]:
-        check_call(['rm', f])
+        check_call(['rm', '-r', f])
 
 
 def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):

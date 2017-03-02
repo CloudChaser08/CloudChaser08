@@ -2,7 +2,6 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
-import sys
 from subprocess import check_call
 import time
 
@@ -39,6 +38,7 @@ TRANSACTION_ADDON_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/addon/'
 TRANSACTION_ADDON_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'addon/'
 TRANSACTION_ADDON_FILE_DESCRIPTION = 'Quest transaction addon file'
 TRANSACTION_ADDON_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt.zip'
+TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt'
 TRANSACTION_ADDON_DAG_NAME = 'validate_fetch_transaction_addon_file'
 MINIMUM_TRANSACTION_FILE_SIZE = 500
 
@@ -59,7 +59,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 01, 25, 12),
+    'start_date': datetime(2017, 1, 25, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -83,6 +83,7 @@ def insert_formatted_date_function(template):
         return template.format(get_formatted_date(ds, kwargs))
     return out
 
+
 def insert_todays_date_function(template):
     def out(ds, kwargs):
         return template.format(kwargs['ds_nodash'])
@@ -91,7 +92,7 @@ def insert_todays_date_function(template):
 
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format('\d{10}')
+        return template.format('\d{12}')
     return out
 
 
@@ -167,24 +168,25 @@ def generate_fetch_dag(
 
 fetch_addon = generate_fetch_dag(
     "addon",
-    S3_TRANSACTION_RAW_PATH,
+    '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
     TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
     TRANSACTION_ADDON_FILE_NAME_TEMPLATE
 )
 fetch_trunk = generate_fetch_dag(
     "trunk",
-    S3_TRANSACTION_RAW_PATH,
+    '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
     TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
 )
 
 
-def unzip_step(task_id, tmp_path_template):
+def unzip_step(task_id, tmp_path_template, filename_template):
     def execute(ds, **kwargs):
         check_call([
-            'unzip', insert_todays_date_function(
-                tmp_path_template
-            )
+            'unzip', '-o',
+            insert_todays_date_function(tmp_path_template)(ds, kwargs)
+            + filename_template.format(get_formatted_date(ds, kwargs)),
+            '-d', insert_todays_date_function(tmp_path_template)(ds, kwargs)
         ])
     return PythonOperator(
         task_id='unzip_file_' + task_id,
@@ -195,10 +197,12 @@ def unzip_step(task_id, tmp_path_template):
 
 
 unzip_addon = unzip_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
+    TRANSACTION_ADDON_FILE_NAME_TEMPLATE
 )
 unzip_trunk = unzip_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
+    TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
 )
 
 
@@ -209,12 +213,12 @@ decrypt_addon = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template': TMP_PATH_TEMPLATE,
+            'tmp_path_template': TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
             'encrypted_file_name_func': insert_formatted_date_function(
-                TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
             ),
             'decrypted_file_name_func': insert_formatted_date_function(
-                TRANSACTION_ADDON_TMP_PATH_TEMPLATE + '.gz'
+                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE + '.gz'
             )
         }
     ),
