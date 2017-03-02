@@ -28,12 +28,13 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
+parser.add_argument('--output_path', type=str)
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 
-period = 'current' if int(date_obj.strftime('%Y%m%d')) >= '20160831' \
+period = 'current' if date_obj.strftime('%Y%m%d') >= '20160831' \
          else 'hist'
 
 setid = 'HealthVerity_' + \
@@ -49,7 +50,8 @@ addon_path = input_path + 'addon/'
 matching_path = 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
-output_path = 'hdfs:///out/'
+
+
 
 # create helper tables
 runner.run_spark_script(get_rel_path(
@@ -99,7 +101,7 @@ runner.run_spark_script(
 
 runner.run_spark_script(
     get_rel_path('../../common/create_unload_lab_table.sql'), [
-        ['output_path', output_path]
+        ['output_path', args.output_path]
     ]
 )
 runner.run_spark_script(
