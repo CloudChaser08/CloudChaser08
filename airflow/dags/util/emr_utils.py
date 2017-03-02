@@ -32,17 +32,21 @@ EMR_DISTCP_TO_S3 = (
 def _get_emr_cluster_id(cluster_name):
     clusters = json.loads(check_output([
         'aws', 'emr', 'list-clusters', '--active'
-    ]))
+    ], env=get_aws_env()))
     for cluster in clusters['Clusters']:
         if cluster['Name'] == cluster_name:
             return cluster['Id']
     print("Cluster not found. " + cluster_name)
 
 
-def _get_emr_cluster_dns_name(cluster_id):
-    return json.loads(check_output([
-        'aws', 'emr', 'describe-cluster', '--cluster-id', cluster_id
-    ]))['Cluster']['MasterPublicDnsName']
+def _get_emr_cluster_ip_address(cluster_id):
+    return '.'.join(
+        (
+            json.loads(check_output([
+                'aws', 'emr', 'describe-cluster', '--cluster-id', cluster_id
+            ]))['Cluster']['MasterPublicDnsName']
+        ).split('.')[0].split('-')[1:]
+    )
 
 
 def _wait_for_steps(cluster_id):
@@ -89,26 +93,28 @@ def _build_dewey(cluster_id):
                 '${AIRFLOW_HOME}',
                 '../spark/'
             )
-        ), '&&', 'make', 'build', '&&', 'scp', '-r', '.',
-        'hadoop@' + _get_emr_cluster_dns_name(cluster_id) + ':spark/'
+        ), '&&', 'make', 'build', '&&', 'scp', '-i ~/.ssh/emr_deployer',
+        '-r', '.', 'hadoop@' + _get_emr_cluster_ip_address(cluster_id)
+        + ':spark/'
     ]), shell=True)
 
 
 def normalize(cluster_name, script_name, args):
     """Run a normalization spark script in EMR"""
-    env = dict(os.environ)
     normalize_step = (
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
-        'Args=[--py-files, /home/hadoop/spark/target/dewey.zip, {}]'
+        'Args=[--jars,'
+        '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
+        '--py-files, /home/hadoop/spark/target/dewey.zip, {}]'
     ).format(
         script_name + ',' + ','.join(args)
     )
     cluster_id = _get_emr_cluster_id(cluster_name)
     _build_dewey(cluster_id)
     check_call([
-        'aws', 'emr', 'add-steps', '--cluster_id', cluster_id,
+        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
         '--steps', normalize_step
-    ], env)
+    ])
     _wait_for_steps(cluster_id)
 
 
