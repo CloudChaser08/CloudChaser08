@@ -237,16 +237,15 @@ decrypt_addon = SubDagOperator(
 )
 
 
-def gunzip_step(task_id, tmp_path_template):
+def gunzip_step(task_id, tmp_path_template, tmp_file_template):
     def execute(ds, **kwargs):
         check_call([
-            'gzip', '-d', insert_todays_date_function(
-                tmp_path_template
-            )
+            'gzip', '-df', tmp_path_template.format(kwargs['ds_nodash'])
+            + tmp_file_template.format(get_formatted_date(ds, kwargs))
         ])
 
     return PythonOperator(
-        task_id='gunzip_file_' + task_id,
+        task_id='gunzip_' + task_id + '_file',
         provide_context=True,
         python_callable=execute,
         dag=mdag
@@ -254,7 +253,8 @@ def gunzip_step(task_id, tmp_path_template):
 
 
 gunzip_trunk = gunzip_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
+    TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE
 )
 
 
@@ -288,7 +288,7 @@ split_addon = split_step(
 )
 split_trunk = split_step(
     "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
-    TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+    TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE,
     TRANSACTION_TRUNK_S3_SPLIT_PATH, 20
 )
 
@@ -296,7 +296,7 @@ split_trunk = split_step(
 def clean_up_workspace_step(task_id, template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', insert_todays_date_function(template)
+            'rm', '-rf', template.format(kwargs['ds_nodash'])
         ])
     return PythonOperator(
         task_id='clean_up_workspace_' + task_id,
@@ -338,7 +338,7 @@ S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
 def detect_matching_done_step():
     def execute(ds, **kwargs):
         while not filter(
-                lambda k: get_formatted_date(kwargs) in k and 'DONE' in k,
+                lambda k: get_formatted_date(ds, kwargs) in k and 'DONE' in k,
                 s3_utils.list_s3_bucket(S3_PAYLOAD_LOCATION)
         ):
             time.sleep(60)
@@ -359,7 +359,7 @@ def move_matching_payload_step():
         for payload_file in s3_utils.list_s3_bucket(
                 S3_PAYLOAD_LOCATION +
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
-                    get_formatted_date(kwargs)
+                    get_formatted_date(ds, kwargs)
                 )
         ):
             s3_utils.copy_file(
@@ -391,7 +391,7 @@ EMR_EBS_VOLUME_SIZE = 0
 def create_emr_cluster_step():
     def execute(ds, **kwargs):
         emr_utils.create_emr_cluster(
-            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
+            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(ds, kwargs)),
             EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
         )
     return PythonOperator(
@@ -408,7 +408,7 @@ create_emr_cluster = create_emr_cluster_step()
 def normalize_step():
     def execute(ds, **kwargs):
         emr_utils.normalize(
-            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
+            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(ds, kwargs)),
             '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
             ['--date', insert_current_date('{}-{}-{}', kwargs)]
         )
