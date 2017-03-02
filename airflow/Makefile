@@ -12,6 +12,14 @@ push:
 	docker push ${REPO}:${USER}
 	docker push ${REPO}:latest
 
+jenkins-build:
+	docker build -f Dockerfile.base --no-cache=true -t ${REPO}:${TAG_TO_DEPLOY} .
+	docker tag ${REPO}:${TAG_TO_DEPLOY} ${REPO}:latest
+
+jenkins-push:
+	docker push ${REPO}:${TAG_TO_DEPLOY}
+	docker push ${REPO}:latest
+
 run:
 	docker run -d \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
