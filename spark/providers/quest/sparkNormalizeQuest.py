@@ -33,6 +33,9 @@ args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 
+period = 'current' if int(date_obj.strftime('%Y%m%d')) >= '20160831' \
+         else 'hist'
+
 setid = 'HealthVerity_' + \
         date_obj.strftime('%Y%m%d') + \
         (date_obj + timedelta(days=1)).strftime('%m%d')
@@ -64,22 +67,19 @@ runner.run_spark_script(get_rel_path('load_matching_payload.sql'), [
     ['matching_path', matching_path]
 ])
 
-if args.period == 'current':
+if period == 'current':
     runner.run_spark_script(
         get_rel_path('load_and_merge_transactions.sql'), [
             ['trunk_path', trunk_path],
             ['addon_path', addon_path]
         ]
     )
-elif args.period == 'hist':
+elif period == 'hist':
     runner.run_spark_script(
         get_rel_path('load_transactions.sql'), [
             ['input_path', input_path]
         ]
     )
-else:
-    print("Invalid period '" + args.period + "'")
-    exit(1)
 
 runner.run_spark_script(get_rel_path('normalize.sql'), [
     ['filename', setid],
@@ -88,7 +88,7 @@ runner.run_spark_script(get_rel_path('normalize.sql'), [
     ['vendor', '7'],
     ['join', (
         'q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key'
-        if args.period == 'current' else 'q.accn_id = mp.claimid'
+        if period == 'current' else 'q.accn_id = mp.claimid'
     ), False]
 ])
 
