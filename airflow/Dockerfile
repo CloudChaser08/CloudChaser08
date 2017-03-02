@@ -16,6 +16,10 @@ RUN echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true 
 RUN apt-get install -q -y oracle-java7-installer
 RUN apt-get install -q -y oracle-java7-set-default
 
+ENV JAVA_HOME /usr/lib/jvm/java-7-oracle/
+
+ADD bin/UnlimitedJCEPolicyJDK7/local_policy.jar ${JAVA_HOME}/jre/lib/security/
+ADD bin/UnlimitedJCEPolicyJDK7/US_export_policy.jar ${JAVA_HOME}/jre/lib/security/
 
 RUN apt-get update -yqq \
     && apt-get install -yqq --no-install-recommends \
