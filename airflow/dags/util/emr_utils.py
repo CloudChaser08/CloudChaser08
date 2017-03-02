@@ -21,7 +21,8 @@ def get_aws_env(suffix=""):
     )
     return aws_env
 
-EMR_APPLICATIONS = "Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
+
+EMR_APPLICATIONS = '"Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"'
 EMR_DISTCP_TO_S3 = (
     'Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src={}","--dest={}"]'
@@ -66,11 +67,11 @@ def _wait_for_steps(cluster_id):
 def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
     """Create an EMR cluster"""
     cluster_details = json.loads(
-        check_output([
-            '/home/airflow/airflow/dags/resources/launchEMR',
+        check_output([' '.join([
+            '${AIRFLOW_HOME}/dags/resources/launchEMR',
             cluster_name, num_nodes, node_type, EMR_APPLICATIONS,
             "true" if (ebs_volume_size > 0) else "false", str(ebs_volume_size)
-        ])
+        ])], shell=True)
     )
     check_call([
         'aws', 'emr', 'wait', 'cluster-running',
