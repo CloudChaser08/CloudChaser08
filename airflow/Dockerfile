@@ -36,6 +36,7 @@ RUN apt-get update -yqq \
         python-pip \
         apt-utils \
         unzip \
+        zip \
         lbzip2 \
         curl \
         netcat \
