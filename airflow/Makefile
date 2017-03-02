@@ -13,7 +13,7 @@ push:
 	docker push ${REPO}:latest
 
 jenkins-build:
-	docker build -f Dockerfile.base --no-cache=true -t ${REPO}:${TAG_TO_DEPLOY} .
+	docker build -f Dockerfile --no-cache=true -t ${REPO}:${TAG_TO_DEPLOY} .
 	docker tag ${REPO}:${TAG_TO_DEPLOY} ${REPO}:latest
 
 jenkins-push:
