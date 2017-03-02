@@ -93,19 +93,24 @@ def _build_dewey(cluster_id):
                 '${AIRFLOW_HOME}',
                 '../spark/'
             )
-        ), '&&', 'make', 'build', '&&', 'scp', '-i ~/.ssh/emr_deployer',
+        ), '&&', 'make', 'build', '&&', 'scp', '-i', '~/.ssh/emr_deployer',
         '-r', '.', 'hadoop@' + _get_emr_cluster_ip_address(cluster_id)
         + ':spark/'
     ]), shell=True)
 
 
-def normalize(cluster_name, script_name, args):
-    """Run a normalization spark script in EMR"""
+def normalize(cluster_name, script_name, args,
+              s3_text_warehouse, s3_parquet_warehouse, model):
+    """Run normalization and parquet processes in EMR"""
+    staging_dir = 'hdfs:///text-out/'
+
     normalize_step = (
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
         'Args=[--jars,'
         '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
-        '--py-files, /home/hadoop/spark/target/dewey.zip, {}]'
+        '--py-files, /home/hadoop/spark/target/dewey.zip, {}, --output_path,'
+        + staging_dir +
+        ']'
     ).format(
         script_name + ',' + ','.join(args)
     )
@@ -117,6 +122,26 @@ def normalize(cluster_name, script_name, args):
     ])
     _wait_for_steps(cluster_id)
 
+    modified_dirs = check_output(
+        'ssh', '-i', '~/.ssh/emr_deployer',
+        'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
+        'hdfs', 'dfs', '-ls', staging_dir, '|', 'rev', '|',
+        'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
+    )
+
+    check_call([
+        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
+        '--steps', EMR_DISTCP_TO_S3.format(
+            staging_dir, s3_text_warehouse
+        )
+    ])
+    _wait_for_steps(cluster_id)
+
+    for directory in modified_dirs:
+        _transform_to_parquet(
+            cluster_name, staging_dir + directory,
+            s3_parquet_warehouse + directory, model
+        )
 
 #
 # Parquet
@@ -130,7 +155,7 @@ EMR_COPY_MELLON_STEP = (
 )
 
 
-def transform_to_parquet(cluster_name, src_file, dest_file, model):
+def _transform_to_parquet(cluster_name, src_file, dest_file, model):
     env = dict(os.environ)
     parquet_step = (
         'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '

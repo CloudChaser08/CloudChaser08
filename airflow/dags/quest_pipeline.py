@@ -404,13 +404,17 @@ def create_emr_cluster_step():
 
 create_emr_cluster = create_emr_cluster_step()
 
+TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/part_provider=quest/"
+PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/"
+
 
 def normalize_step():
     def execute(ds, **kwargs):
         emr_utils.normalize(
             EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(ds, kwargs)),
             '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
-            ['--date', insert_current_date('{}-{}-{}', kwargs)]
+            ['--date', insert_current_date('{}-{}-{}', kwargs)],
+            TEXT_WAREHOUSE, PARQUET_WAREHOUSE, 'lab'
         )
 
     return PythonOperator(
@@ -422,28 +426,6 @@ def normalize_step():
 
 
 normalize = normalize_step()
-
-PARQUET_SOURCE_TEMPLATE = "s3a://salusv/warehouse/text/labtests/2017-02-13/part_provider=quest/"
-PARQUET_DESTINATION_TEMPLATE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/"
-
-
-def transform_to_parquet_step():
-    def execute(ds, **kwargs):
-        emr_utils.transform_to_parquet(
-            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            insert_current_date(PARQUET_SOURCE_TEMPLATE, kwargs),
-            insert_current_date(PARQUET_DESTINATION_TEMPLATE, kwargs),
-            "lab"
-        )
-    return PythonOperator(
-        task_id='parquet',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-transform_to_parquet = transform_to_parquet_step()
 
 
 def delete_emr_cluster_step():
@@ -494,6 +476,5 @@ normalize.set_upstream(
     ]
 )
 
-# parquet
-transform_to_parquet.set_upstream(normalize)
-delete_emr_cluster.set_upstream(transform_to_parquet)
+# shutdown
+delete_emr_cluster.set_upstream(normalize)
