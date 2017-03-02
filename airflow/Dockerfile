@@ -39,6 +39,7 @@ RUN apt-get update -yqq \
         zip \
         lbzip2 \
         curl \
+        openssh-client \
         netcat \
         jq \
         sqlite3 \
