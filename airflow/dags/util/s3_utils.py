@@ -29,7 +29,7 @@ def _transform_path_to_bucket_key(path):
 
 
 def _get_s3_hook(s3_connection_id=DEFAULT_CONNECTION_ID):
-    return airflow.hooks.S3_hook.S3Hook(s3_conn_id=DEFAULT_CONNECTION_ID)
+    return airflow.hooks.S3_hook.S3Hook(s3_conn_id=s3_connection_id)
 
 
 def fetch_file_from_s3(
