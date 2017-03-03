@@ -414,7 +414,8 @@ def normalize_step():
             EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(ds, kwargs)),
             '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
             ['--date', insert_current_date('{}-{}-{}', kwargs)],
-            TEXT_WAREHOUSE, PARQUET_WAREHOUSE, 'lab'
+            TEXT_WAREHOUSE, PARQUET_WAREHOUSE,
+            insert_current_date('{}-{}-{}', kwargs), 'lab'
         )
 
     return PythonOperator(

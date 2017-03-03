@@ -4,6 +4,7 @@
 import json
 import time
 import os
+import datetime
 from subprocess import check_call, check_output
 from airflow.models import Variable
 
@@ -100,16 +101,17 @@ def _build_dewey(cluster_id):
 
 
 def normalize(cluster_name, script_name, args,
-              s3_text_warehouse, s3_parquet_warehouse, model):
+              s3_text_warehouse, s3_parquet_warehouse,
+              prefix, model):
     """Run normalization and parquet processes in EMR"""
-    staging_dir = 'hdfs:///text-out/'
+    text_staging_dir = 'hdfs:///text-out/'
 
     normalize_step = (
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
         'Args=[--jars,'
         '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
         '--py-files, /home/hadoop/spark/target/dewey.zip, {}, --output_path,'
-        + staging_dir +
+        + text_staging_dir +
         ']'
     ).format(
         script_name + ',' + ','.join(args)
@@ -122,26 +124,52 @@ def normalize(cluster_name, script_name, args,
     ])
     _wait_for_steps(cluster_id)
 
+    # prefix part files with current timestamp to avoid future collisions
+    SCRIPT = """#!/bin/bash
+        for f in $(hdfs dfs -ls {} | awk '{{print $8}}')
+        do
+          for part in $(hdfs dfs -ls $f | awk '{{print $8}}')
+          do
+            hdfs dfs -mv $part \
+              $(echo $part | rev | cut -d/ -f2- | rev)/{}_$(echo $part \
+              | rev | cut -d/ -f1 | rev)
+          done
+        done
+    """.format(
+        text_staging_dir, prefix
+    )
+    with open('tmp_rename_parts.sh', 'w') as writer:
+        writer.write(SCRIPT)
+    check_call(
+        "ssh -T -i ~/.ssh/emr_deployer hadoop@"
+        + _get_emr_cluster_ip_address(cluster_id)
+        + " 'bash -s' < tmp_rename_parts.sh",
+        shell=True
+    )
+    os.remove('tmp_rename_parts.sh')
+
+    # get directories that will need to be transformed to parquet
     modified_dirs = check_output(' '.join([
         'ssh', '-i', '~/.ssh/emr_deployer',
         'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
-        'hdfs', 'dfs', '-ls', staging_dir, '|', 'rev', '|',
+        'hdfs', 'dfs', '-ls', text_staging_dir, '|', 'rev', '|',
         'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
-    ]), shell=True)
+    ]), shell=True).split('\n')
 
     check_call([
         'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
         '--steps', EMR_DISTCP_TO_S3.format(
-            staging_dir, s3_text_warehouse
+            text_staging_dir, s3_text_warehouse
         )
     ])
     _wait_for_steps(cluster_id)
 
     for directory in modified_dirs:
         _transform_to_parquet(
-            cluster_name, staging_dir + directory,
+            cluster_name, s3_text_warehouse + directory,
             s3_parquet_warehouse + directory, model
         )
+
 
 #
 # Parquet
@@ -161,20 +189,17 @@ def _transform_to_parquet(cluster_name, src_file, dest_file, model):
         'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
         'Args=[--class,com.healthverity.parquet.Main,'
         '--conf,spark.sql.parquet.compression.codec=gzip,'
-        '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/,'
-        '{},20,"|"]'
+        '/tmp/mellon-assembly-latest.jar,{},{},{},{},'
+        '{},20,"|","true","true"]'
     ).format(
         env['AWS_ACCESS_KEY_ID'],
         env['AWS_SECRET_ACCESS_KEY'],
-        model, src_file
+        model, dest_file, src_file
     )
     cluster_id = _get_emr_cluster_id(cluster_name)
     check_call([
         'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
-        '--steps', EMR_COPY_MELLON_STEP, parquet_step,
-        EMR_DISTCP_TO_S3.format(
-            "hdfs:///parquet/", dest_file
-        )
+        '--steps', EMR_COPY_MELLON_STEP, parquet_step
     ])
     _wait_for_steps(cluster_id)
 
