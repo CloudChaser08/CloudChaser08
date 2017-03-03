@@ -122,12 +122,12 @@ def normalize(cluster_name, script_name, args,
     ])
     _wait_for_steps(cluster_id)
 
-    modified_dirs = check_output(
+    modified_dirs = check_output(' '.join([
         'ssh', '-i', '~/.ssh/emr_deployer',
         'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
         'hdfs', 'dfs', '-ls', staging_dir, '|', 'rev', '|',
         'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
-    )
+    ]), shell=True)
 
     check_call([
         'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
