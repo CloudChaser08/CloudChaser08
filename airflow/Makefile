@@ -13,6 +13,8 @@ push:
 	docker push ${REPO}:latest
 
 run:
+	docker pull ${REPO}:latest
+
 	docker run -d \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
 	-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
