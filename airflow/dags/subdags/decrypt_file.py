@@ -51,7 +51,7 @@ def do_clean_up(ds, **kwargs):
     decryption_key = tmp_dir + DECRYPTION_KEY
 
     for f in [decryptor_jar, decryption_key]:
-        check_call(['rm', '-r', f])
+        check_call(['rm', f])
 
 
 def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
