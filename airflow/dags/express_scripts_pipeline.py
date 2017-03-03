@@ -79,6 +79,9 @@ def get_parquet_dates(ds, kwargs):
     file_dates = sorted(list(set(file_dates)))
     return filter(lambda d: d < date_path, file_dates)[-2:] + [date_path]
 
+def get_deid_file_paths(ds, kwargs):
+    return ['s3://healthverity/' + S3_DEID_RAW_PATH + get_expected_deid_file_name(ds, kwargs)]
+
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2016, 12, 1, 12),
@@ -193,8 +196,7 @@ queue_up_for_matching_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_file_name_func': get_expected_deid_file_name,
-            's3_prefix'              : S3_DEID_RAW_PATH
+            'source_files_func' : get_deid_file_paths
         }
     ),
     task_id='queue_up_for_matching',
