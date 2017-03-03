@@ -4,9 +4,9 @@
 import json
 import time
 import os
-import datetime
 from subprocess import check_call, check_output
 from airflow.models import Variable
+
 
 #
 # EMR
@@ -111,8 +111,7 @@ def normalize(cluster_name, script_name, args,
         'Args=[--jars,'
         '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
         '--py-files, /home/hadoop/spark/target/dewey.zip, {}, --output_path,'
-        + text_staging_dir +
-        ']'
+        + text_staging_dir + ']'
     ).format(
         script_name + ',' + ','.join(args)
     )
