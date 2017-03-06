@@ -87,7 +87,7 @@ SELECT DISTINCT
     NULL,                                                                   -- place_of_service_vendor_id
     NULL,                                                                   -- place_of_service_vendor_desc
     CASE 
-    WHEN diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
+    WHEN diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     THEN  transactional.line_nbr
     END,                                                                    -- service_line_number

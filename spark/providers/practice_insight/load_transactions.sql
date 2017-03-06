@@ -115,7 +115,7 @@ CREATE EXTERNAL TABLE transactional_raw (
         other_oprtn_provdr_stlc_nbr    string,
         other_oprtn_provdr_last_nm     string,
         other_oprtn_provdr_first_nm    string,
-        other_diag_codes               varchar(2000) ENCODE lzo,
+        other_diag_codes               string,
         src_svc_id                     string,
         line_nbr                       string,
         svc_from_dt                    string,

@@ -1,15 +1,16 @@
 DROP TABLE IF EXISTS exploded_ecodes;
-CREATE TABLE exploded_ecodes AS
-SELECT CONCAT(
-        COALESCE(transactional.src_claim_id,''),
-        COALESCE(transactional.src_svc_id,'')
-        ), -- pk
-    TRIM(REPLACE(SUBSTRING(SPLIT(ecodes, ',')[ecodes_exploder.n], 0, 
-                charindex('=>', SPLIT(ecodes, ',')[ecodes_exploder.n])), '"', '')) as ecodes
-FROM transactional_raw transactional
-    CROSS JOIN diagnosis_exploder ecodes_exploder
-WHERE SPLIT(TRIM(transactional.ecodes), ',')[ecodes_exploder.n] IS NULL
-    OR SPLIT(TRIM(transactional.ecodes), ',')[ecodes_exploder.n] != ''
+CREATE TABLE exploded_ecodes AS (
+    SELECT CONCAT(
+            COALESCE(transactional.src_claim_id,''),
+            COALESCE(transactional.src_svc_id,'')
+            ), -- pk
+        TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(ecodes, ',')[ecodes_exploder.n], 0, 
+                    locate('=>', SPLIT(ecodes, ',')[ecodes_exploder.n])), '"', '')) as ecodes
+    FROM transactional_raw transactional
+        CROSS JOIN diagnosis_exploder ecodes_exploder
+    WHERE SPLIT(TRIM(transactional.ecodes), ',')[ecodes_exploder.n] IS NULL
+        OR SPLIT(TRIM(transactional.ecodes), ',')[ecodes_exploder.n] != ''
+        )
     ;
 
 DROP TABLE IF EXISTS exploded_dx;
@@ -18,8 +19,8 @@ SELECT CONCAT(
         COALESCE(transactional.src_claim_id,''),
         COALESCE(transactional.src_svc_id,'')
         ), -- pk
-    TRIM(REPLACE(SUBSTRING(SPLIT(dx, ',')[dx_exploder.n], 0, 
-                charindex('=>', SPLIT(dx, ',')[dx_exploder.n])), '"', '')) as dx
+    TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(dx, ',')[dx_exploder.n], 0, 
+                locate('=>', SPLIT(dx, ',')[dx_exploder.n])), '"', '')) as dx
 FROM transactional_raw transactional
     CROSS JOIN diagnosis_exploder dx_exploder
 WHERE SPLIT(TRIM(transactional.dx), ',')[dx_exploder.n] IS NULL
@@ -32,8 +33,8 @@ SELECT CONCAT(
         COALESCE(transactional.src_claim_id,''),
         COALESCE(transactional.src_svc_id,'')
         ), -- pk
-    TRIM(REPLACE(SUBSTRING(SPLIT(other_diag_codes, ',')[other_diag_codes_exploder.n], 0, 
-                charindex('=>', SPLIT(other_diag_codes, ',')[other_diag_codes_exploder.n])), '"', '')) as other_diag_codes
+    TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(other_diag_codes, ',')[other_diag_codes_exploder.n], 0, 
+                locate('=>', SPLIT(other_diag_codes, ',')[other_diag_codes_exploder.n])), '"', '')) as other_diag_codes
 FROM transactional_raw transactional
     CROSS JOIN diagnosis_exploder other_diag_codes_exploder
 WHERE SPLIT(TRIM(transactional.other_diag_codes), ',')[other_diag_codes_exploder.n] IS NULL

@@ -2,11 +2,9 @@
 import os
 import argparse
 import time
-from datetime import datetime, date
+from datetime import datetime
 from spark.runner import Runner
 from spark.spark import init
-import spark.helpers.create_date_validation_table \
-    as date_validator
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.constants as constants
 
@@ -42,21 +40,18 @@ input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/'.format(
     str(date_obj.year)
 )
 
-output_path = 's3a://salusv/warehouse/text/medicalclaims/2017-02-24/part_provider=practice_insight/'
-
 matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/'.format(
     str(date_obj.year)
 )
 
-# create date and helper tables
-date_validator.generate(runner, date(2013, 9, 1), date_obj.date())
+# create helper tables
 runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
 
 runner.run_spark_script(get_rel_path(
     '../../common/medicalclaims_common_model.sql'
 ), [
-    ['table_name', 'medicalclaims_common_model'],
-    ['properties', '']
+    ['table_name', 'medicalclaims_common_model', True],
+    ['properties', '', True]
 ])
 
 # load transactions and payload
@@ -83,7 +78,7 @@ runner.run_spark_script(get_rel_path(
     ['table_name', 'final_unload', False],
     [
         'properties',
-        constants.unload_properties_template.format(output_path),
+        constants.unload_properties_template.format(args.output_path),
         False
     ]
 ])
