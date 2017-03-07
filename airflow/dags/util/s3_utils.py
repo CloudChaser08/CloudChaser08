@@ -2,7 +2,7 @@
 # Operators for interacting with S3
 #
 import os
-from subprocess import check_call
+from subprocess import check_call, Popen
 from airflow.models import Variable
 import airflow.hooks.S3_hook
 
@@ -48,6 +48,10 @@ def copy_file(src_path, dest_path):
         'aws', 's3', 'cp', '--sse', 'AES256', src_path, dest_path
     ], env=get_aws_env())
 
+def copy_file_async(src_path, dest_path):
+    return Popen([
+        'aws', 's3', 'cp', '--sse', 'AES256', src_path, dest_path
+    ], env=get_aws_env())
 
 def list_s3_bucket(path, s3_connection_id=DEFAULT_CONNECTION_ID):
     """
@@ -73,20 +77,19 @@ def list_s3_bucket_files(path, s3_connection_id=DEFAULT_CONNECTION_ID):
     )
 
 
-def get_file_size(path):
+def get_file_size(path, s3_connection_id=DEFAULT_CONNECTION_ID):
     """
     Get the size of a file on s3
     """
     bucket_key = _transform_path_to_bucket_key(path)
-    return _get_s3_hook().get_key(
+    return _get_s3_hook(s3_connection_id).get_key(
         bucket_key['key'], bucket_key['bucket']
     ).content_length
 
 
-def s3_key_exists(path):
+def s3_key_exists(path, s3_connection_id=DEFAULT_CONNECTION_ID):
     """
     Get a list of keys in an s3 path.
     This function expects a full url: s3://bucket/key/
     """
-    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
-    return hook.check_for_wildcard_key(path, None)
+    return _get_s3_hook(s3_connection_id).check_for_wildcard_key(path, None)
