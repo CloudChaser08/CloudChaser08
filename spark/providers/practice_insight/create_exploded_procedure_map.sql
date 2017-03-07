@@ -1,8 +1,5 @@
 DROP TABLE IF EXISTS exploded_proc_codes_nulls;
-CREATE TABLE exploded_proc_codes_nulls (
-        claim_svc_num string,
-        proc_code string
-        );
+CREATE TABLE exploded_proc_codes_nulls (claim_svc_num string,proc_code string);
 
 -- insert other proc codes
 INSERT INTO exploded_proc_codes_nulls (
@@ -11,7 +8,7 @@ INSERT INTO exploded_proc_codes_nulls (
             COALESCE(transactional.src_svc_id,'')
             ), -- pk
         TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(other_proc_codes, ',')[other_proc_codes_exploder.n], 
-                    LOCATE('=>', SPLIT(other_proc_codes, ',')[other_proc_codes_exploder.n]) + 1, 
+                    LOCATE('=>', SPLIT(other_proc_codes, ',')[other_proc_codes_exploder.n]) + 2, 
                     LENGTH(SPLIT(other_proc_codes, ',')[other_proc_codes_exploder.n])), '"', '')) as other_proc_codes
     FROM transactional_raw transactional
         CROSS JOIN diagnosis_exploder other_proc_codes_exploder
@@ -38,12 +35,6 @@ INSERT INTO exploded_proc_codes_nulls (
         CROSS JOIN diagnosis_exploder rest_of_codes_exploder
     WHERE SPLIT(TRIM(all_codes.rest_of_codes), ',')[rest_of_codes_exploder.n] IS NULL
         OR SPLIT(TRIM(all_codes.rest_of_codes), ',')[rest_of_codes_exploder.n] != ''
-        );
-
-DROP TABLE IF EXISTS exploded_proc_codes_nulls;
-CREATE TABLE exploded_proc_codes_nulls (
-        claim_svc_num string,
-        proc_code string
         );
 
 -- strip out nulls for claim_svc_nums with populated codes, remove dupes
