@@ -15,6 +15,7 @@ import subdags.queue_up_for_matching as queue_up_for_matching
 import util.s3_utils as s3_utils
 import util.emr_utils as emr_utils
 import util.redshift_utils as redshift_utils
+import util.decompression as decompression
 
 reload(s3_validate_file)
 reload(s3_fetch_file)
@@ -24,6 +25,7 @@ reload(queue_up_for_matching)
 reload(s3_utils)
 reload(emr_utils)
 reload(redshift_utils)
+reload(decompression)
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
@@ -192,12 +194,11 @@ fetch_trunk = generate_fetch_dag(
 
 def unzip_step(task_id, tmp_path_template, filename_template):
     def execute(ds, **kwargs):
-        check_call([
-            'unzip', '-o',
+        decompression.decompress_zip_file(
             insert_todays_date_function(tmp_path_template)(ds, kwargs)
             + filename_template.format(get_formatted_date(ds, kwargs)),
-            '-d', insert_todays_date_function(tmp_path_template)(ds, kwargs)
-        ])
+            insert_todays_date_function(tmp_path_template)(ds, kwargs)
+        )
     return PythonOperator(
         task_id='unzip_' + task_id + '_file',
         provide_context=True,
@@ -239,11 +240,10 @@ decrypt_addon = SubDagOperator(
 
 def gunzip_step(task_id, tmp_path_template, tmp_file_template):
     def execute(ds, **kwargs):
-        check_call([
-            'gzip', '-df', tmp_path_template.format(kwargs['ds_nodash'])
+        decompression.decompress_gzip_file(
+            tmp_path_template.format(kwargs['ds_nodash'])
             + tmp_file_template.format(get_formatted_date(ds, kwargs))
-        ])
-
+        )
     return PythonOperator(
         task_id='gunzip_' + task_id + '_file',
         provide_context=True,

@@ -4,8 +4,10 @@ from airflow.operators import PythonOperator
 from subprocess import check_call
 
 import util.s3_utils as s3_utils
+import util.decompression as decompression
 
 reload(s3_utils)
+reload(decompression)
 
 DECRYPTOR_JAR='HVDecryptor.jar'
 DECRYPTION_KEY='hv_record_private.base64.reformat'
@@ -42,7 +44,9 @@ def do_decompress_file(ds, **kwargs):
     tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
     decrypted_file = tmp_dir + kwargs['decrypted_file_name_func'](ds, kwargs)
 
-    check_call(['gzip', '-df', decrypted_file])
+    decompression.decompress_gzip_file(
+        decrypted_file
+    )
 
 
 def do_clean_up(ds, **kwargs):
