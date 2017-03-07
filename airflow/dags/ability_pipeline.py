@@ -69,14 +69,18 @@ def get_ap_file_paths(ds, kwargs):
 def get_expected_ap_file_regex(ds, kwargs):
     return AP_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}')
 
-def get_ap_transaction_files_paths(ds, kwargs):
-    file_dir = get_ap_transaction_tmp_dir(ds, kwargs)
-    files = os.listdir(file_dir)
-    fs = []
-    for f in files:
-        if f[-4:] == ".txt" or f[-10:] == ".decrypted":
-            fs.append(file_dir + f)
-    return fs
+def get_transaction_files_paths_func(tmp_dir_func):
+    def get_transaction_files_paths(ds, kwargs):
+        file_dir = tmp_dir_func(ds, kwargs)
+        files = os.listdir(file_dir)
+        fs = []
+        for f in files:
+            if f[-4:] == ".txt" or f[-10:] == ".decrypted":
+                fs.append(file_dir + f)
+        return fs
+    return get_transaction_files_paths
+
+get_ap_transaction_files_paths = get_transaction_files_paths_func(get_ap_transaction_tmp_dir)
 
 def get_expected_ses_file_name(ds, kwargs):
     return SES_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds'], ds)
@@ -90,14 +94,7 @@ def get_ses_file_paths(ds, kwargs):
 def get_expected_ses_file_regex(ds, kwargs):
     return SES_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', '\d{4}-\d{2}-\d{2}')
 
-def get_ses_transaction_files_paths(ds, kwargs):
-    file_dir = get_ses_transaction_tmp_dir(ds, kwargs)
-    files = os.listdir(file_dir)
-    fs = []
-    for f in files:
-        if f[-4:] == ".txt" or f[-10:] == ".decrypted":
-            fs.append(file_dir + f)
-    return fs
+get_ses_transaction_files_paths = get_transaction_files_paths_func(get_ses_transaction_tmp_dir)
 
 def get_expected_ease_file_name(ds, kwargs):
     return EASE_FILE_NAME_TEMPLATE.format(ds)
@@ -111,14 +108,7 @@ def get_expected_ease_file_regex(ds, kwargs):
 def get_ease_transaction_tmp_dir(ds, kwargs):
     return get_tmp_dir(ds, kwargs) + 'ease/transaction/'
 
-def get_ease_transaction_files_paths(ds, kwargs):
-    file_dir = get_ease_transaction_tmp_dir(ds, kwargs)
-    files = os.listdir(file_dir)
-    fs = []
-    for f in files:
-        if f[-4:] == ".txt" or f[-10:] == ".decrypted":
-            fs.append(file_dir + f)
-    return fs
+get_ease_transaction_files_paths = get_transaction_files_paths_func(get_ease_transaction_tmp_dir)
 
 def get_s3_transaction_prefix(ds, kwargs):
     return 's3://' + HV_S3_TRANSACTION_BUCKET + '/' + HV_S3_TRANSACTION_PREFIX_TEMPLATE.format(ds.replace('-', '/'))
@@ -204,497 +194,229 @@ mdag = DAG(
     default_args=default_args
 )
 
-validate_ap_file_dag = SubDagOperator(
-    subdag=s3_validate_file.s3_validate_file(
-        DAG_NAME,
-        'validate_ap_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'expected_file_name_func': get_expected_ap_file_name,
-            'file_name_pattern_func' : get_expected_ap_file_regex,
-            'minimum_file_size'      : MINIMUM_AP_FILE_SIZE,
-            's3_prefix'              : ABILITY_S3_AP_PREFIX,
-            's3_bucket'              : ABILITY_S3_BUCKET,
-            'aws_access_key_id'      : Variable.get('Ability_AWS_ACCESS_KEY_ID'),
-            'aws_secret_access_key'  : Variable.get('Ability_AWS_SECRET_ACCESS_KEY'),
-            's3_connection'          : ABILITY_S3_CONNECTION,
-            'file_description'       : AP_FILE_DESCRIPTION
-        }
-    ),
-    task_id='validate_ap_file',
-    dag=mdag
-)
+def validate_file_subdag(product, expected_file_name_func, file_name_pattern_func, minimum_file_size, file_description):
+    return SubDagOperator(
+        subdag=s3_validate_file.s3_validate_file(
+            DAG_NAME,
+            'validate_{}_file'.format(product),
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'expected_file_name_func': expected_file_name_func,
+                'file_name_pattern_func' : file_name_pattern_func,
+                'minimum_file_size'      : minimum_file_size,
+                's3_prefix'              : ABILITY_S3_AP_PREFIX,
+                's3_bucket'              : ABILITY_S3_BUCKET,
+                'aws_access_key_id'      : Variable.get('Ability_AWS_ACCESS_KEY_ID'),
+                'aws_secret_access_key'  : Variable.get('Ability_AWS_SECRET_ACCESS_KEY'),
+                's3_connection'          : ABILITY_S3_CONNECTION,
+                'file_description'       : file_description
+            }
+        ),
+        task_id='validate_{}_file'.format(product),
+        dag=mdag
+    )
 
-fetch_ap_file_dag = SubDagOperator(
-    subdag=s3_fetch_file.s3_fetch_file(
-        DAG_NAME,
-        'fetch_ap_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
+def fetch_file_subdag(product, expected_file_name_func):
+    return SubDagOperator(
+        subdag=s3_fetch_file.s3_fetch_file(
+            DAG_NAME,
+            'fetch_{}_file'.format(product),
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_path_template'      : TMP_PATH_TEMPLATE,
+                'expected_file_name_func': expected_file_name_func,
+                's3_prefix'              : ABILITY_S3_AP_PREFIX,
+                's3_bucket'              : ABILITY_S3_BUCKET,
+                's3_connection'          : ABILITY_S3_CONNECTION
+            }
+        ),
+        task_id='fetch_{}_file'.format(product),
+        dag=mdag
+    )
+
+def push_file_subdag(product, file_paths_func):
+    return SubDagOperator(
+        subdag=s3_push_files.s3_push_files(
+            DAG_NAME,
+            'push_{}_file'.format(product),
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'file_paths_func'        : file_paths_func,
+                's3_prefix_func'         : get_s3_raw_prefix,
+                's3_bucket'              : HV_S3_RAW_BUCKET
+            }
+        ),
+        task_id='push_{}_file'.format(product),
+        dag=mdag
+    )
+
+def unzip_files_operator(product, expected_file_name_func, dest_dir):
+    return PythonOperator(
+        task_id='unzip_{}_files'.format(product),
+        provide_context=True,
+        python_callable=do_unzip_files,
+        op_kwargs={
+            'expected_file_name_func': expected_file_name_func,
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func': get_expected_ap_file_name,
-            's3_prefix'              : ABILITY_S3_AP_PREFIX,
-            's3_bucket'              : ABILITY_S3_BUCKET,
-            's3_connection'          : ABILITY_S3_CONNECTION
-        }
-    ),
-    task_id='fetch_ap_file',
-    dag=mdag
-)
+            'dest_dir'               : dest_dir
+            },
+        dag=mdag
+    )
 
-push_ap_file_dag = SubDagOperator(
-    subdag=s3_push_files.s3_push_files(
-        DAG_NAME,
-        'push_ap_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'file_paths_func'        : get_ap_file_paths,
-            's3_prefix_func'         : get_s3_raw_prefix,
-            's3_bucket'              : HV_S3_RAW_BUCKET
-        }
-    ),
-    task_id='push_ap_file',
-    dag=mdag
-)
-
-unzip_ap_files = PythonOperator(
-    task_id='unzip_ap_files',
-    provide_context=True,
-    python_callable=do_unzip_files,
-    op_kwargs={
-        'expected_file_name_func': get_expected_ap_file_name,
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'dest_dir'               : 'ap/'
-        },
-    dag=mdag
-)
-
-move_ap_deid_files = PythonOperator(
-    task_id='move_ap_deid_files',
-    provide_context=True,
-    python_callable=do_move_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'origin_dir'             : 'ap/',
-        'filename_pattern'       : '^deid',
-        'dest_dir'               : 'ap/deid/'
-        },
-    dag=mdag
-)
-
-move_ap_transaction_files = PythonOperator(
-    task_id='move_ap_transaction_files',
-    provide_context=True,
-    python_callable=do_move_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'origin_dir'             : 'ap/',
-        'filename_pattern'       : '^(?!deid)',
-        'dest_dir'               : 'ap/transaction/'
-        },
-    dag=mdag
-)
-
-rename_ap_deid_files = PythonOperator(
-    task_id='rename_ap_deid_files',
-    provide_context=True,
-    python_callable=do_rename_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'file_dir'               : 'ap/deid/',
-        'prefix'                 : 'ap'
-        },
-    dag=mdag
-)
-
-rename_ap_transaction_files = PythonOperator(
-    task_id='rename_ap_transaction_files',
-    provide_context=True,
-    python_callable=do_rename_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'file_dir'               : 'ap/transaction/',
-        'prefix'                 : 'ap'
-        },
-    dag=mdag
-)
-
-decrypt_ap_transaction_files_dag = SubDagOperator(
-    subdag=decrypt_files.decrypt_files(
-        DAG_NAME,
-        'decrypt_ap_transaction_files',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_dir_func'                        : get_ap_transaction_tmp_dir,
-            'encrypted_decrypted_file_names_func' : get_ap_encrypted_decrypted_file_names
-        }
-    ),
-    task_id='decrypt_ap_transaction_files',
-    dag=mdag
-)
-
-split_push_ap_transaction_files_dag = SubDagOperator(
-    subdag=split_push_files.split_push_files(
-        DAG_NAME,
-        'split_push_ap_transaction_files',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_dir_func'             : get_ap_transaction_tmp_dir,
-            'file_paths_to_split_func' : get_ap_transaction_files_paths,
-            's3_prefix_func'           : get_s3_transaction_prefix,
-            's3_bucket'                : HV_S3_TRANSACTION_BUCKET,
-            'num_splits'               : 1
-        }
-    ),
-    task_id='split_push_ap_transaction_files',
-    dag=mdag
-)
-
-ap_queue_up_for_matching_dag =  SubDagOperator(
-    subdag=queue_up_for_matching.queue_up_for_matching(
-        DAG_NAME,
-        'ap_queue_up_for_matching',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'source_files_func'      : get_ap_deid_file_paths
-        }
-    ),
-    task_id='ap_queue_up_for_matching',
-    dag=mdag
-)
-
-
-validate_ses_file_dag = SubDagOperator(
-    subdag=s3_validate_file.s3_validate_file(
-        DAG_NAME,
-        'validate_ses_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'expected_file_name_func': get_expected_ses_file_name,
-            'file_name_pattern_func' : get_expected_ses_file_regex,
-            'minimum_file_size'      : MINIMUM_SES_FILE_SIZE,
-            's3_prefix'              : ABILITY_S3_SES_PREFIX,
-            's3_bucket'              : ABILITY_S3_BUCKET,
-            's3_connection'          : ABILITY_S3_CONNECTION,
-            'file_description'       : SES_FILE_DESCRIPTION
-        }
-    ),
-    task_id='validate_ses_file',
-    dag=mdag
-)
-
-fetch_ses_file_dag = SubDagOperator(
-    subdag=s3_fetch_file.s3_fetch_file(
-        DAG_NAME,
-        'fetch_ses_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
+def move_files_operator(product, files_type, origin_dir, filename_pattern, dest_dir):
+    return PythonOperator(
+        task_id='move_{}_{}_files'.format(product, files_type),
+        provide_context=True,
+        python_callable=do_move_files,
+        op_kwargs={
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func': get_expected_ses_file_name,
-            's3_prefix'              : ABILITY_S3_SES_PREFIX,
-            's3_bucket'              : ABILITY_S3_BUCKET,
-            's3_connection'          : ABILITY_S3_CONNECTION
-        }
-    ),
-    task_id='fetch_ses_file',
-    dag=mdag
-)
+            'origin_dir'             : origin_dir,
+            'filename_pattern'       : filename_pattern,
+            'dest_dir'               : dest_dir
+            },
+        dag=mdag
+    )
 
-push_ses_file_dag = SubDagOperator(
-    subdag=s3_push_files.s3_push_files(
-        DAG_NAME,
-        'push_ses_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'file_paths_func'        : get_ses_file_paths,
-            's3_prefix_func'         : get_s3_raw_prefix,
-            's3_bucket'              : HV_S3_RAW_BUCKET
-        }
-    ),
-    task_id='push_ses_file',
-    dag=mdag
-)
-
-unzip_ses_files = PythonOperator(
-    task_id='unzip_ses_files',
-    provide_context=True,
-    python_callable=do_unzip_files,
-    op_kwargs={
-        'expected_file_name_func': get_expected_ses_file_name,
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'dest_dir'               : 'ses/'
-        },
-    dag=mdag
-)
-
-move_ses_deid_files = PythonOperator(
-    task_id='move_ses_deid_files',
-    provide_context=True,
-    python_callable=do_move_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'origin_dir'             : 'ses/',
-        'filename_pattern'       : '^deid',
-        'dest_dir'               : 'ses/deid/'
-        },
-    dag=mdag
-)
-
-move_ses_transaction_files = PythonOperator(
-    task_id='move_ses_transaction_files',
-    provide_context=True,
-    python_callable=do_move_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'origin_dir'             : 'ses/',
-        'filename_pattern'       : '^(?!deid)',
-        'dest_dir'               : 'ses/transaction/'
-        },
-    dag=mdag
-)
-
-rename_ses_deid_files = PythonOperator(
-    task_id='rename_ses_deid_files',
-    provide_context=True,
-    python_callable=do_rename_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'file_dir'               : 'ses/deid/',
-        'prefix'                 : 'ses'
-        },
-    dag=mdag
-)
-
-rename_ses_transaction_files = PythonOperator(
-    task_id='rename_ses_transaction_files',
-    provide_context=True,
-    python_callable=do_rename_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'file_dir'               : 'ses/transaction/',
-        'prefix'                 : 'ses'
-        },
-    dag=mdag
-)
-
-decrypt_ses_transaction_files_dag = SubDagOperator(
-    subdag=decrypt_files.decrypt_files(
-        DAG_NAME,
-        'decrypt_ses_transaction_files',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_dir_func'                        : get_ses_transaction_tmp_dir,
-            'encrypted_decrypted_file_names_func' : get_ses_encrypted_decrypted_file_names
-        }
-    ),
-    task_id='decrypt_ses_transaction_files',
-    dag=mdag
-)
-
-split_push_ses_transaction_files_dag = SubDagOperator(
-    subdag=split_push_files.split_push_files(
-        DAG_NAME,
-        'split_push_ses_transaction_files',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_dir_func'             : get_ses_transaction_tmp_dir,
-            'file_paths_to_split_func' : get_ses_transaction_files_paths,
-            's3_prefix_func'           : get_s3_transaction_prefix,
-            's3_bucket'                : HV_S3_TRANSACTION_BUCKET,
-            'num_splits'               : 1
-        }
-    ),
-    task_id='split_push_ses_transaction_files',
-    dag=mdag
-)
-
-ses_queue_up_for_matching_dag =  SubDagOperator(
-    subdag=queue_up_for_matching.queue_up_for_matching(
-        DAG_NAME,
-        'ses_queue_up_for_matching',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'source_files_func'      : get_ses_deid_file_paths
-        }
-    ),
-    task_id='ses_queue_up_for_matching',
-    dag=mdag
-)
-
-validate_ease_file_dag = SubDagOperator(
-    subdag=s3_validate_file.s3_validate_file(
-        DAG_NAME,
-        'validate_ease_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'expected_file_name_func': get_expected_ease_file_name,
-            'file_name_pattern_func' : get_expected_ease_file_regex,
-            'minimum_file_size'      : MINIMUM_EASE_FILE_SIZE,
-            's3_prefix'              : ABILITY_S3_EASE_PREFIX,
-            's3_bucket'              : ABILITY_S3_BUCKET,
-            's3_connection'          : ABILITY_S3_CONNECTION,
-            'file_description'       : EASE_FILE_DESCRIPTION
-        }
-    ),
-    task_id='validate_ease_file',
-    dag=mdag
-)
-
-fetch_ease_file_dag = SubDagOperator(
-    subdag=s3_fetch_file.s3_fetch_file(
-        DAG_NAME,
-        'fetch_ease_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
+def rename_files_operator(product, files_type, file_dir, prefix):
+    return PythonOperator(
+        task_id='rename_{}_{}_files'.format(product, files_type),
+        provide_context=True,
+        python_callable=do_rename_files,
+        op_kwargs={
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func': get_expected_ease_file_name,
-            's3_prefix'              : ABILITY_S3_EASE_PREFIX,
-            's3_bucket'              : ABILITY_S3_BUCKET,
-            's3_connection'          : ABILITY_S3_CONNECTION
-        }
-    ),
-    task_id='fetch_ease_file',
-    dag=mdag
-)
+            'file_dir'               : file_dir,
+            'prefix'                 : prefix
+            },
+        dag=mdag
+    )
 
-push_ease_file_dag = SubDagOperator(
-    subdag=s3_push_files.s3_push_files(
-        DAG_NAME,
-        'push_ease_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'file_paths_func'        : get_ease_file_paths,
-            's3_prefix_func'         : get_s3_raw_prefix,
-            's3_bucket'              : HV_S3_RAW_BUCKET
-        }
-    ),
-    task_id='push_ease_file',
-    dag=mdag
-)
+def decrypt_transaction_files_subdag(product, tmp_dir_func, encrypted_decrypted_file_names_func):
+    return SubDagOperator(
+        subdag=decrypt_files.decrypt_files(
+            DAG_NAME,
+            'decrypt_{}_transaction_files'.format(product),
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_dir_func'                        : tmp_dir_func,
+                'encrypted_decrypted_file_names_func' : encrypted_decrypted_file_names_func
+            }
+        ),
+        task_id='decrypt_{}_transaction_files'.format(product),
+        dag=mdag
+    )
 
-unzip_ease_files = PythonOperator(
-    task_id='unzip_ease_files',
-    provide_context=True,
-    python_callable=do_unzip_files,
-    op_kwargs={
-        'expected_file_name_func': get_expected_ease_file_name,
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'dest_dir'               : 'ease/'
-        },
-    dag=mdag
-)
+def split_push_transaction_files_subdag(product, tmp_dir_func, file_paths_to_split_func):
+    return SubDagOperator(
+        subdag=split_push_files.split_push_files(
+            DAG_NAME,
+            'split_push_{}_transaction_files'.format(product),
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_dir_func'             : tmp_dir_func,
+                'file_paths_to_split_func' : file_paths_to_split_func,
+                's3_prefix_func'           : get_s3_transaction_prefix,
+                'num_splits'               : 1
+            }
+        ),
+        task_id='split_push_{}_transaction_files'.format(product),
+        dag=mdag
+    )
 
-move_ease_deid_files = PythonOperator(
-    task_id='move_ease_deid_files',
-    provide_context=True,
-    python_callable=do_move_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'origin_dir'             : 'ease/',
-        'filename_pattern'       : '^deid',
-        'dest_dir'               : 'ease/deid/'
-        },
-    dag=mdag
-)
+def queue_up_for_matching_subdag(product, source_files_func):
+    return SubDagOperator(
+        subdag=queue_up_for_matching.queue_up_for_matching(
+            DAG_NAME,
+            'queue_up_{}_for_matching'.format(product),
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'source_files_func' : get_ap_deid_file_paths
+            }
+        ),
+        task_id='queue_up_{}_for_matching'.format(product),
+        dag=mdag
+    )
 
-move_ease_transaction_files = PythonOperator(
-    task_id='move_ease_transaction_files',
-    provide_context=True,
-    python_callable=do_move_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'origin_dir'             : 'ease/',
-        'filename_pattern'       : '^(?!deid)',
-        'dest_dir'               : 'ease/transaction/'
-        },
-    dag=mdag
-)
 
-rename_ease_deid_files = PythonOperator(
-    task_id='rename_ease_deid_files',
-    provide_context=True,
-    python_callable=do_rename_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'file_dir'               : 'ease/deid/',
-        'prefix'                 : 'ease'
-        },
-    dag=mdag
-)
+validate_ap_file_dag = validate_file_subdag('ap', get_expected_ap_file_name, get_expected_ap_file_regex,
+        MINIMUM_AP_FILE_SIZE, AP_FILE_DESCRIPTION)
 
-rename_ease_transaction_files = PythonOperator(
-    task_id='rename_ease_transaction_files',
-    provide_context=True,
-    python_callable=do_rename_files,
-    op_kwargs={
-        'tmp_path_template'      : TMP_PATH_TEMPLATE,
-        'file_dir'               : 'ease/transaction/',
-        'prefix'                 : 'ease'
-        },
-    dag=mdag
-)
+fetch_ap_file_dag = fetch_file_subdag('ap', get_expected_ap_file_name)
 
-decrypt_ease_transaction_files_dag = SubDagOperator(
-    subdag=decrypt_files.decrypt_files(
-        DAG_NAME,
-        'decrypt_ease_transaction_files',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_dir_func'                        : get_ease_transaction_tmp_dir,
-            'encrypted_decrypted_file_names_func' : get_ease_encrypted_decrypted_file_names
-        }
-    ),
-    task_id='decrypt_ease_transaction_files',
-    dag=mdag
-)
+push_ap_file_dag = push_file_subdag('ap', get_ap_file_paths)
 
-split_push_ease_transaction_files_dag = SubDagOperator(
-    subdag=split_push_files.split_push_files(
-        DAG_NAME,
-        'split_push_ease_transaction_files',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_dir_func'             : get_ease_transaction_tmp_dir,
-            'file_paths_to_split_func' : get_ease_transaction_files_paths,
-            's3_prefix_func'           : get_s3_transaction_prefix,
-            'num_splits'               : 1
-        }
-    ),
-    task_id='split_push_ease_transaction_files',
-    dag=mdag
-)
+unzip_ap_files = unzip_files_operator('ap', get_expected_ap_file_name, 'ap/')
 
-ease_queue_up_for_matching_dag =  SubDagOperator(
-    subdag=queue_up_for_matching.queue_up_for_matching(
-        DAG_NAME,
-        'ease_queue_up_for_matching',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'source_files_func'      : get_ease_deid_file_paths
-        }
-    ),
-    task_id='ease_queue_up_for_matching',
-    dag=mdag
-)
+move_ap_deid_files = move_files_operator('ap', 'deid', 'ap/', '^deid', 'ap/deid/')
 
+move_ap_transaction_files = move_files_operator('ap', 'transaction', 'ap/', '^(?!deid)', 'ap/transaction/')
+
+rename_ap_deid_files = rename_files_operator('ap', 'deid', 'ap/deid/', 'ap')
+
+rename_ap_transaction_files = rename_files_operator('ap', 'transaction', 'ap/transaction/', 'ap')
+
+decrypt_ap_transaction_files_dag = decrypt_transaction_files_subdag('ap', get_ap_transaction_tmp_dir,
+        get_ap_encrypted_decrypted_file_names)
+
+split_push_ap_transaction_files_dag = split_push_transaction_files_subdag('ap', get_ap_transaction_tmp_dir,
+        get_ap_transaction_files_paths)
+
+queue_up_ap_for_matching_dag = queue_up_for_matching_subdag('ap', get_ap_deid_file_paths)
+
+validate_ses_file_dag = validate_file_subdag('ses', get_expected_ses_file_name, get_expected_ses_file_regex,
+        MINIMUM_SES_FILE_SIZE, SES_FILE_DESCRIPTION)
+
+fetch_ses_file_dag = fetch_file_subdag('ses', get_expected_ses_file_name)
+
+push_ses_file_dag = push_file_subdag('ses', get_ses_file_paths)
+
+unzip_ses_files = unzip_files_operator('ses', get_expected_ses_file_name, 'ses/')
+
+move_ses_deid_files = move_files_operator('ses', 'deid', 'ses/', '^deid', 'ses/deid/')
+
+move_ses_transaction_files = move_files_operator('ses', 'transaction', 'ses/', '^(?!deid)', 'ses/transaction/')
+
+rename_ses_deid_files = rename_files_operator('ses', 'deid', 'ses/deid/', 'ses')
+
+rename_ses_transaction_files = rename_files_operator('ses', 'transaction', 'ses/transaction/', 'ses')
+
+decrypt_ses_transaction_files_dag = decrypt_transaction_files_subdag('ses', get_ses_transaction_tmp_dir,
+        get_ses_encrypted_decrypted_file_names)
+
+split_push_ses_transaction_files_dag = split_push_transaction_files_subdag('ses', get_ses_transaction_tmp_dir,
+        get_ses_transaction_files_paths)
+
+queue_up_ses_for_matching_dag = queue_up_for_matching_subdag('ses', get_ses_deid_file_paths)
+
+validate_ease_file_dag = validate_file_subdag('ease', get_expected_ease_file_name, get_expected_ease_file_regex,
+        MINIMUM_EASE_FILE_SIZE, EASE_FILE_DESCRIPTION)
+
+fetch_ease_file_dag = fetch_file_subdag('ease', get_expected_ease_file_name)
+
+push_ease_file_dag = push_file_subdag('ease', get_ease_file_paths)
+
+unzip_ease_files = unzip_files_operator('ease', get_expected_ease_file_name, 'ease/')
+
+move_ease_deid_files = move_files_operator('ease', 'deid', 'ease/', '^deid', 'ease/deid/')
+
+move_ease_transaction_files = move_files_operator('ease', 'transaction', 'ease/', '^(?!deid)', 'ease/transaction/')
+
+rename_ease_deid_files = rename_files_operator('ease', 'deid', 'ease/deid/', 'ease')
+
+rename_ease_transaction_files = rename_files_operator('ease', 'transaction', 'ease/transaction/', 'ease')
+
+decrypt_ease_transaction_files_dag = decrypt_transaction_files_subdag('ease', get_ease_transaction_tmp_dir,
+        get_ease_encrypted_decrypted_file_names)
+
+split_push_ease_transaction_files_dag = split_push_transaction_files_subdag('ease', get_ease_transaction_tmp_dir,
+        get_ease_transaction_files_paths)
+
+queue_up_ease_for_matching_dag = queue_up_for_matching_subdag('ease', get_ease_deid_file_paths)
 
 clean_up_tmp_dir_dag = SubDagOperator(
     subdag=clean_up_tmp_dir.clean_up_tmp_dir(
@@ -715,7 +437,7 @@ push_ap_file_dag.set_upstream(fetch_ap_file_dag)
 unzip_ap_files.set_upstream(push_ap_file_dag)
 move_ap_deid_files.set_upstream(unzip_ap_files)
 rename_ap_deid_files.set_upstream(move_ap_deid_files)
-ap_queue_up_for_matching_dag.set_upstream(rename_ap_deid_files)
+queue_up_ap_for_matching_dag.set_upstream(rename_ap_deid_files)
 move_ap_transaction_files.set_upstream(unzip_ap_files)
 rename_ap_transaction_files.set_upstream(move_ap_transaction_files)
 decrypt_ap_transaction_files_dag.set_upstream(rename_ap_transaction_files)
@@ -726,7 +448,7 @@ push_ses_file_dag.set_upstream(fetch_ses_file_dag)
 unzip_ses_files.set_upstream(push_ses_file_dag)
 move_ses_deid_files.set_upstream(unzip_ses_files)
 rename_ses_deid_files.set_upstream(move_ses_deid_files)
-ses_queue_up_for_matching_dag.set_upstream(rename_ses_deid_files)
+queue_up_ses_for_matching_dag.set_upstream(rename_ses_deid_files)
 move_ses_transaction_files.set_upstream(unzip_ses_files)
 rename_ses_transaction_files.set_upstream(move_ses_transaction_files)
 decrypt_ses_transaction_files_dag.set_upstream(rename_ses_transaction_files)
@@ -737,7 +459,7 @@ push_ease_file_dag.set_upstream(fetch_ease_file_dag)
 unzip_ease_files.set_upstream(push_ease_file_dag)
 move_ease_deid_files.set_upstream(unzip_ease_files)
 rename_ease_deid_files.set_upstream(move_ease_deid_files)
-ease_queue_up_for_matching_dag.set_upstream(rename_ease_deid_files)
+queue_up_ease_for_matching_dag.set_upstream(rename_ease_deid_files)
 move_ease_transaction_files.set_upstream(unzip_ease_files)
 rename_ease_transaction_files.set_upstream(move_ease_transaction_files)
 decrypt_ease_transaction_files_dag.set_upstream(rename_ease_transaction_files)
@@ -747,7 +469,7 @@ clean_up_tmp_dir_dag.set_upstream([
     split_push_ap_transaction_files_dag,
     split_push_ses_transaction_files_dag,
     split_push_ease_transaction_files_dag,
-    ap_queue_up_for_matching_dag,
-    ses_queue_up_for_matching_dag,
-    ease_queue_up_for_matching_dag
+    queue_up_ap_for_matching_dag,
+    queue_up_ses_for_matching_dag,
+    queue_up_ease_for_matching_dag
 ])
