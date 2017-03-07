@@ -1,4 +1,8 @@
-INSERT INTO medicalclaims_common_model
+CREATE TABLE tmp AS 
+SELECT * FROM medical_claims_model
+;
+
+INSERT INTO tmp
 SELECT DISTINCT  
     monotonically_increasing_id(),                            -- record_id
     transactional.src_claim_id,                               -- claim_id
@@ -431,7 +435,7 @@ FROM transactional_raw transactional
     ;
 
 -- Insert service lines for institutional claims with diagnoses (nulled out above)
-INSERT INTO medicalclaims_common_model
+INSERT INTO tmp
 SELECT DISTINCT
     monotonically_increasing_id(),                            -- record_id
     transactional.src_claim_id,                               -- claim_id
@@ -696,21 +700,23 @@ FROM transactional_raw transactional
     INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, transactional.src_svc_id) = procs.claim_svc_num
 WHERE transactional.src_claim_id IN (
     SELECT DISTINCT claim_id 
-    FROM medicalclaims_common_model
+    FROM tmp
     WHERE claim_type = 'I'
         AND diagnosis_code IS NOT NULL
         )
     ;
 
 -- delete diagnosis codes that should not have been added
-DELETE FROM medicalclaims_common_model
-WHERE record_id IN (
+INSERT INTO medicalclaims_common_model
+SELECT * 
+FROM tmp
+WHERE record_id NOT IN (
     SELECT record_id 
-    FROM medicalclaims_common_model base 
+    FROM tmp base 
     WHERE base.service_line_number IS NULL
         AND base.diagnosis_code IN (
         SELECT sub.diagnosis_code
-        FROM medicalclaims_common_model sub
+        FROM tmp sub
         WHERE sub.claim_id = base.claim_id
             AND sub.service_line_number IS NOT NULL
             )
