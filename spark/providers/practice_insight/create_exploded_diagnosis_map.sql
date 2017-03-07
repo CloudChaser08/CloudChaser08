@@ -1,16 +1,15 @@
 DROP TABLE IF EXISTS exploded_ecodes;
-CREATE TABLE exploded_ecodes AS (
-    SELECT CONCAT(
-            COALESCE(transactional.src_claim_id,''),
-            COALESCE(transactional.src_svc_id,'')
-            ), -- pk
-        TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(ecodes, ',')[ecodes_exploder.n], 0, 
-                    locate('=>', SPLIT(ecodes, ',')[ecodes_exploder.n])), '"', '')) as ecodes
-    FROM transactional_raw transactional
-        CROSS JOIN diagnosis_exploder ecodes_exploder
-    WHERE SPLIT(TRIM(transactional.ecodes), ',')[ecodes_exploder.n] IS NULL
-        OR SPLIT(TRIM(transactional.ecodes), ',')[ecodes_exploder.n] != ''
-        )
+CREATE TABLE exploded_ecodes AS
+SELECT CONCAT(
+        COALESCE(transactional.src_claim_id,''),
+        COALESCE(transactional.src_svc_id,'')
+        ), -- pk
+    TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(ecodes, ',')[ecodes_exploder.n], 0, 
+                locate('=>', SPLIT(ecodes, ',')[ecodes_exploder.n])), '"', '')) as ecodes
+FROM transactional_raw transactional
+    CROSS JOIN diagnosis_exploder ecodes_exploder
+WHERE SPLIT(TRIM(transactional.ecodes), ',')[ecodes_exploder.n] IS NULL
+    OR SPLIT(TRIM(transactional.ecodes), ',')[ecodes_exploder.n] != ''
     ;
 
 DROP TABLE IF EXISTS exploded_dx;

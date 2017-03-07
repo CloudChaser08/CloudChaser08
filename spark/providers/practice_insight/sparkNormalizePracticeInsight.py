@@ -50,8 +50,8 @@ runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
 runner.run_spark_script(get_rel_path(
     '../../common/medicalclaims_common_model.sql'
 ), [
-    ['table_name', 'medicalclaims_common_model', True],
-    ['properties', '', True]
+    ['table_name', 'medicalclaims_common_model', False],
+    ['properties', '', False]
 ])
 
 # load transactions and payload
