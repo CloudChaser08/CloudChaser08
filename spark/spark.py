@@ -5,10 +5,13 @@ from helpers.udf.post_normalization_cleanup import *
 
 
 def init(provider, local=False):
-    spark = SparkSession.builder                                       \
-                    .master("local[*]" if local else "yarn")           \
-                    .appName(provider + " Normalization")              \
-                    .config('spark.sql.catalogImplementation', 'hive') \
+    spark = SparkSession.builder                                              \
+                    .master("local[*]" if local else "yarn")                  \
+                    .appName(provider + " Normalization")                     \
+                    .config('spark.sql.catalogImplementation', 'hive')        \
+                    .config('hive.enforce.bucketing', 'true')                 \
+                    .config('hive.support.concurrency', 'true')               \
+                    .config('hive.exec.dynamic.partition.mode', 'nonstrict')  \
                     .getOrCreate()
 
     sqlContext = HiveContext(spark.sparkContext)
