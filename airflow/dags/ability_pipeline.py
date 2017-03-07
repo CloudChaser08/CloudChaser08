@@ -121,7 +121,7 @@ def get_ease_transaction_files_paths(ds, kwargs):
     return fs
 
 def get_s3_transaction_prefix(ds, kwargs):
-    return HV_S3_TRANSACTION_PREFIX_TEMPLATE.format(ds.replace('-', '/'))
+    return 's3://' + HV_S3_TRANSACTION_BUCKET + '/' + HV_S3_TRANSACTION_PREFIX_TEMPLATE.format(ds.replace('-', '/'))
 
 def get_s3_raw_prefix(ds, kwargs):
     return HV_S3_RAW_PREFIX
@@ -674,7 +674,6 @@ split_push_ease_transaction_files_dag = SubDagOperator(
             'tmp_dir_func'             : get_ease_transaction_tmp_dir,
             'file_paths_to_split_func' : get_ease_transaction_files_paths,
             's3_prefix_func'           : get_s3_transaction_prefix,
-            's3_bucket'                : HV_S3_TRANSACTION_BUCKET,
             'num_splits'               : 1
         }
     ),

@@ -29,8 +29,7 @@ def do_bzip_part_files(ds, **kwargs):
 
 def do_push_part_files(ds, **kwargs):
     tmp_dir   = kwargs['tmp_dir_func'](ds, kwargs) + 'parts/'
-    s3_prefix = 's3://' + kwargs['s3_bucket'] + '/' + kwargs['s3_prefix_func'](ds, kwargs)
-    logging.info(s3_prefix)
+    s3_prefix = kwargs['s3_prefix_func'](ds, kwargs)
     files = os.listdir(tmp_dir)
     for i in xrange(0, len(files), 5):
         processes = []
