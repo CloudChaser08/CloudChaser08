@@ -1,5 +1,5 @@
 CREATE TABLE tmp AS 
-SELECT * FROM medical_claims_model
+SELECT * FROM medicalclaims_common_model
 ;
 
 INSERT INTO tmp
@@ -708,16 +708,12 @@ WHERE transactional.src_claim_id IN (
 
 -- delete diagnosis codes that should not have been added
 INSERT INTO medicalclaims_common_model
-SELECT * 
-FROM tmp
-WHERE record_id NOT IN (
-    SELECT record_id 
-    FROM tmp base 
-    WHERE base.service_line_number IS NULL
-        AND base.diagnosis_code IN (
-        SELECT sub.diagnosis_code
-        FROM tmp sub
-        WHERE sub.claim_id = base.claim_id
-            AND sub.service_line_number IS NOT NULL
-            )
+SELECT *
+FROM tmp base 
+WHERE base.service_line_number IS NOT NULL
+    OR base.diagnosis_code NOT IN (
+    SELECT sub.diagnosis_code
+    FROM tmp sub
+    WHERE sub.claim_id = base.claim_id
+        AND sub.service_line_number IS NOT NULL
         )
