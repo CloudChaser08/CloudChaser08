@@ -9,6 +9,7 @@ def init(provider, local=False):
                     .master("local[*]" if local else "yarn")                  \
                     .appName(provider + " Normalization")                     \
                     .config('spark.sql.catalogImplementation', 'hive')        \
+                    .config('spark.sql.crossJoin.enabled', 'true')            \
                     .getOrCreate()
 
     sqlContext = HiveContext(spark.sparkContext)
