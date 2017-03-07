@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS tmp;
 CREATE TABLE tmp AS 
 SELECT * FROM medicalclaims_common_model
 ;
@@ -711,6 +712,7 @@ INSERT INTO medicalclaims_common_model
 SELECT * 
 FROM tmp base 
 WHERE base.service_line_number IS NOT NULL
+;
 
 INSERT INTO medicalclaims_common_model
 SELECT * 
