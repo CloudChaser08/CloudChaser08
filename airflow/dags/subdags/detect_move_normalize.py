@@ -1,21 +1,22 @@
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
-from datetime import datetime, timedelta
-from subprocess import check_output, check_call, STDOUT, Popen
-import airflow.hooks.S3_hook
+from datetime import timedelta
+from subprocess import check_output, check_call, Popen
 import logging
 import os
 import time
 import json
 
+import util.s3_utils as s3_utils
+import util.emr_utils as emr_utils
+reload(s3_utils)
+reload(emr_utils)
+
 REDSHIFT_CREATE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py create \\
 --identifier {{ params.cluster_id }} --num_nodes {{ params.num_nodes }}"""
 REDSHIFT_DELETE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py delete \\
 --identifier {{ params.cluster_id }}"""
-EMR_CREATE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/launchEMR \\
-{{ params.cluster_name }} {{ params.num_nodes }} {{ params.node_type }} "{{ params.applications }}" \\
-{{ params.use_ebs }} {{ params.ebs_volume_size }}"""
 S3_PREFIX='matching/prod/payload/'
 S3_PATH_PREFIX='s3://salusv/' + S3_PREFIX
 S3_PAYLOAD_LOC='s3://salusv/matching/payload/pharmacyclaims/emdeon/'
@@ -44,28 +45,35 @@ EMR_USE_EBS="false"
 EMR_EBS_VOLUME_SIZE="0"
 
 def do_detect_matching_done(ds, **kwargs):
-    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
     deid_filename = kwargs['expected_deid_file_name_func'](ds, kwargs)
     s3_path_prefix = S3_PATH_PREFIX + kwargs['vendor_uuid'] + '/'
     template = '{}{}*DONE*'
     s3_key = template.format(s3_path_prefix, deid_filename)
     logging.info('Poking for key : {}'.format(s3_key))
-    while not hook.check_for_wildcard_key(s3_key, None):
+    while not s3_utils.s3_key_exists(s3_key):
         time.sleep(60)
 
 def do_move_matching_payload(ds, **kwargs):
-    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
     deid_filename = kwargs['expected_deid_file_name_func'](ds, kwargs)
     vendor_uuid = kwargs['vendor_uuid']
-    s3_prefix = S3_PREFIX + vendor_uuid + '/' + deid_filename
-    for payload_file in hook.list_keys('salusv', s3_prefix):
+    s3_path = S3_PATH_PREFIX + vendor_uuid + '/' + deid_filename
+    for payload_file in s3_utils.list_s3_bucket(s3_path):
         date = kwargs['file_date_func'](ds, kwargs)
-        env = dict(os.environ)
-        env["AWS_ACCESS_KEY_ID"] = Variable.get('AWS_ACCESS_KEY_ID')
-        env["AWS_SECRET_ACCESS_KEY"] = Variable.get('AWS_SECRET_ACCESS_KEY')
-        check_call(['aws', 's3', 'cp', '--sse', 'AES256', 's3://salusv/' + payload_file, kwargs['s3_payload_loc'] + date + '/' + payload_file.split('/')[-1]])
+        s3_utils.copy_file(
+            payload_file,
+            kwargs['s3_payload_loc'] + date + '/' + payload_file.split('/')[-1]
+        )
 
-def do_run_normalization_routine(ds, **kwargs):
+def do_run_pyspark_normalization_routine(ds, **kwargs):
+    emr_utils.normalize(
+        EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'],
+        kwargs['pyspark_normalization_script_name'],
+        kwargs['pyspark_normalization_args_func'](ds, kwargs),
+        kwargs['text_warehouse'], kwargs['parquet_warehouse'],
+        kwargs['part_file_prefix'], kwargs['model']
+    )
+
+def do_run_redshift_normalization_routine(ds, **kwargs):
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
     file_date = kwargs['file_date_func'](ds, kwargs)
     s3_key = hook.list_keys('salusv', kwargs['incoming_path'] + file_date.replace('-', '/') + '/')[0]
@@ -124,16 +132,10 @@ def do_transform_to_parquet(ds, **kwargs):
         logging.info("ITS ALL BROKEN")
 
 def do_create_emr_cluster(ds, **kwargs):
-    cluster_details = json.loads(check_output([
-        '/home/airflow/airflow/dags/resources/launchEMR',
+    emr_utils.create_emr_cluster(
         EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'],
-        EMR_NUM_NODES,
-        EMR_NODE_TYPE,
-        EMR_APPLICATIONS,
-        EMR_USE_EBS,
-        EMR_EBS_VOLUME_SIZE
-    ]))
-    check_call(['aws', 'emr', 'wait', 'cluster-running', '--cluster-id', cluster_details['ClusterId']])
+        EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
+    )
 
 def do_delete_emr_cluster(ds, **kwargs):
     cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'])
@@ -174,40 +176,10 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
     env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID')
     env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY')
 
-    create_redshift_cluster = BashOperator(
-        task_id='create_redshift_cluster',
-        bash_command=REDSHIFT_CREATE_COMMAND_TEMPLATE,
-        params={"cluster_id" : dag_config['vendor_uuid'], "num_nodes" : RS_NUM_NODES},
-        dag=dag
-    )
-
-    run_normalization_routine = PythonOperator(
-        task_id='run_normalization_routine',
-        provide_context=True,
-        python_callable=do_run_normalization_routine,
-        op_kwargs=dag_config,
-        dag=dag
-    )
-
-    delete_redshift_cluster = BashOperator(
-        task_id='delete_redshift_cluster',
-        bash_command=REDSHIFT_DELETE_COMMAND_TEMPLATE,
-        params={"cluster_id" : dag_config['vendor_uuid']},
-        dag=dag
-    )
-
     create_emr_cluster = PythonOperator(
         task_id='create_emr_cluster',
         provide_context=True,
         python_callable=do_create_emr_cluster,
-        op_kwargs=dag_config,
-        dag=dag
-    )
-
-    transform_to_parquet = PythonOperator(
-        task_id='transform_to_parquet',
-        provide_context=True,
-        python_callable=do_transform_to_parquet,
         op_kwargs=dag_config,
         dag=dag
     )
@@ -220,12 +192,56 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         dag=dag
     )
 
-    move_matching_payload.set_upstream(detect_matching_done)
-    create_redshift_cluster.set_upstream(detect_matching_done)
-    run_normalization_routine.set_upstream([create_redshift_cluster, move_matching_payload])
-    delete_redshift_cluster.set_upstream(run_normalization_routine)
-    create_emr_cluster.set_upstream(run_normalization_routine)
-    transform_to_parquet.set_upstream(create_emr_cluster)
-    delete_emr_cluster.set_upstream(transform_to_parquet)
+    if dag_config.get('pyspark', False):
+        run_normalization_routine = PythonOperator(
+            task_id='run_normalization_routine',
+            provide_context=True,
+            python_callable=do_run_pyspark_normalization_routine,
+            op_kwargs=dag_config,
+            dag=dag
+        )
+
+        move_matching_payload.set_upstream(detect_matching_done)
+        create_emr_cluster.set_upstream(detect_matching_done)
+        run_normalization_routine.set_upstream([create_emr_cluster, move_matching_payload])
+        delete_emr_cluster.set_upstream(run_normalization_routine)
+    else:
+        create_redshift_cluster = BashOperator(
+            task_id='create_redshift_cluster',
+            bash_command=REDSHIFT_CREATE_COMMAND_TEMPLATE,
+            params={"cluster_id" : dag_config['vendor_uuid'], "num_nodes" : RS_NUM_NODES},
+            dag=dag
+        )
+
+        run_normalization_routine = PythonOperator(
+            task_id='run_normalization_routine',
+            provide_context=True,
+            python_callable=do_run_redshift_normalization_routine,
+            op_kwargs=dag_config,
+            dag=dag
+        )
+
+        delete_redshift_cluster = BashOperator(
+            # TODO: ask_id='delete_redshift_cluster',
+            bash_command=REDSHIFT_DELETE_COMMAND_TEMPLATE,
+            params={"cluster_id" : dag_config['vendor_uuid']},
+            dag=dag
+        )
+
+        transform_to_parquet = PythonOperator(
+            task_id='transform_to_parquet',
+            provide_context=True,
+            python_callable=do_transform_to_parquet,
+            op_kwargs=dag_config,
+            dag=dag
+        )
+
+        move_matching_payload.set_upstream(detect_matching_done)
+        create_redshift_cluster.set_upstream(detect_matching_done)
+        run_normalization_routine.set_upstream([create_redshift_cluster, move_matching_payload])
+        delete_redshift_cluster.set_upstream(run_normalization_routine)
+        create_emr_cluster.set_upstream(run_normalization_routine)
+        transform_to_parquet.set_upstream(create_emr_cluster)
+        delete_emr_cluster.set_upstream(transform_to_parquet)
 
     return dag
