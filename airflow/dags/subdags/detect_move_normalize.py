@@ -24,8 +24,8 @@ EMR_COPY_MELLON_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.
     '/tmp/mellon-assembly-latest.jar]')
 EMR_TRANSFORM_TO_PARQUET_STEP = ('Type=Spark,Name="Transform {} to Parquet",ActionOnFailure=CONTINUE, '
     'Args=[--class,com.healthverity.parquet.Main,--conf,spark.sql.parquet.compression.codec=gzip,'
-    '/tmp/mellon-assembly-latest.jar,{},{},pharmacy,hdfs:///parquet/{},'
-    's3a://salusv/{}{},20,"|"]')
+    '/tmp/mellon-assembly-latest.jar,{},{},{},hdfs:///parquet/{},'
+    's3a://salusv/{}{},20,"|","false","false"]')
 EMR_DELETE_OLD_PARQUET = ('Type=CUSTOM_JAR,Name="Delete old data from S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[aws,s3,rm,--recursive,s3://salusv/{}{}]')
 EMR_DISTCP_TO_S3 = ('Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",' 
@@ -85,7 +85,7 @@ def do_run_redshift_normalization_routine(ds, **kwargs):
             '--s3_credentials', s3_credentials, '--first_run']
 
     env = dict(os.environ)
-    env['PGHOST'] = kwargs['vendor_uuid'] + RS_HOST_TLD
+    env['PGHOST'] = 'norm-' + kwargs['vendor_uuid'] + RS_HOST_TLD
     env['PGUSER'] = RS_USER
     env['PGDATABASE'] = RS_DATABASE
     env['PGPORT'] = RS_PORT
@@ -107,7 +107,8 @@ def do_transform_to_parquet(ds, **kwargs):
     delete_steps = []
     for d in kwargs['parquet_dates_func'](ds, kwargs):
         transform_steps.append(EMR_TRANSFORM_TO_PARQUET_STEP.format(kwargs['vendor_description'],
-            Variable.get('AWS_ACCESS_KEY_ID'),Variable.get('AWS_SECRET_ACCESS_KEY'),d,kwargs['s3_text_path_prefix'],d))
+            Variable.get('AWS_ACCESS_KEY_ID'),Variable.get('AWS_SECRET_ACCESS_KEY'),kwargs['feed_data_type'],
+            d,kwargs['s3_text_path_prefix'],d))
         delete_steps.append(EMR_DELETE_OLD_PARQUET.format(kwargs['s3_parquet_path_prefix'],d))
     command = ['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
                   '--steps', EMR_COPY_MELLON_STEP] + \
@@ -209,7 +210,7 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         create_redshift_cluster = BashOperator(
             task_id='create_redshift_cluster',
             bash_command=REDSHIFT_CREATE_COMMAND_TEMPLATE,
-            params={"cluster_id" : dag_config['vendor_uuid'], "num_nodes" : RS_NUM_NODES},
+            params={"cluster_id" : 'norm-' + dag_config['vendor_uuid'], "num_nodes" : RS_NUM_NODES},
             dag=dag
         )
 
@@ -222,9 +223,9 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         )
 
         delete_redshift_cluster = BashOperator(
-            # TODO: ask_id='delete_redshift_cluster',
+            task_id='delete_redshift_cluster',
             bash_command=REDSHIFT_DELETE_COMMAND_TEMPLATE,
-            params={"cluster_id" : dag_config['vendor_uuid']},
+            params={"cluster_id" : 'norm-' + dag_config['vendor_uuid']},
             dag=dag
         )
 
