@@ -194,7 +194,8 @@ mdag = DAG(
     default_args=default_args
 )
 
-def validate_file_subdag(product, expected_file_name_func, file_name_pattern_func, minimum_file_size, file_description):
+def validate_file_subdag(product, expected_file_name_func, file_name_pattern_func, minimum_file_size,
+        s3_prefix, file_description):
     return SubDagOperator(
         subdag=s3_validate_file.s3_validate_file(
             DAG_NAME,
@@ -205,7 +206,7 @@ def validate_file_subdag(product, expected_file_name_func, file_name_pattern_fun
                 'expected_file_name_func': expected_file_name_func,
                 'file_name_pattern_func' : file_name_pattern_func,
                 'minimum_file_size'      : minimum_file_size,
-                's3_prefix'              : ABILITY_S3_AP_PREFIX,
+                's3_prefix'              : s3_prefix,
                 's3_bucket'              : ABILITY_S3_BUCKET,
                 'aws_access_key_id'      : Variable.get('Ability_AWS_ACCESS_KEY_ID'),
                 'aws_secret_access_key'  : Variable.get('Ability_AWS_SECRET_ACCESS_KEY'),
@@ -217,7 +218,7 @@ def validate_file_subdag(product, expected_file_name_func, file_name_pattern_fun
         dag=mdag
     )
 
-def fetch_file_subdag(product, expected_file_name_func):
+def fetch_file_subdag(product, expected_file_name_func, s3_prefix):
     return SubDagOperator(
         subdag=s3_fetch_file.s3_fetch_file(
             DAG_NAME,
@@ -227,7 +228,7 @@ def fetch_file_subdag(product, expected_file_name_func):
             {
                 'tmp_path_template'      : TMP_PATH_TEMPLATE,
                 'expected_file_name_func': expected_file_name_func,
-                's3_prefix'              : ABILITY_S3_AP_PREFIX,
+                's3_prefix'              : s3_prefix,
                 's3_bucket'              : ABILITY_S3_BUCKET,
                 's3_connection'          : ABILITY_S3_CONNECTION
             }
@@ -335,7 +336,7 @@ def queue_up_for_matching_subdag(product, source_files_func):
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : get_ap_deid_file_paths
+                'source_files_func' : source_files_func
             }
         ),
         task_id='queue_up_{}_for_matching'.format(product),
@@ -344,9 +345,9 @@ def queue_up_for_matching_subdag(product, source_files_func):
 
 
 validate_ap_file_dag = validate_file_subdag('ap', get_expected_ap_file_name, get_expected_ap_file_regex,
-        MINIMUM_AP_FILE_SIZE, AP_FILE_DESCRIPTION)
+        MINIMUM_AP_FILE_SIZE, ABILITY_S3_AP_PREFIX, AP_FILE_DESCRIPTION)
 
-fetch_ap_file_dag = fetch_file_subdag('ap', get_expected_ap_file_name)
+fetch_ap_file_dag = fetch_file_subdag('ap', get_expected_ap_file_name, ABILITY_S3_AP_PREFIX)
 
 push_ap_file_dag = push_file_subdag('ap', get_ap_file_paths)
 
@@ -369,9 +370,9 @@ split_push_ap_transaction_files_dag = split_push_transaction_files_subdag('ap', 
 queue_up_ap_for_matching_dag = queue_up_for_matching_subdag('ap', get_ap_deid_file_paths)
 
 validate_ses_file_dag = validate_file_subdag('ses', get_expected_ses_file_name, get_expected_ses_file_regex,
-        MINIMUM_SES_FILE_SIZE, SES_FILE_DESCRIPTION)
+        MINIMUM_SES_FILE_SIZE, ABILITY_S3_SES_PREFIX, SES_FILE_DESCRIPTION)
 
-fetch_ses_file_dag = fetch_file_subdag('ses', get_expected_ses_file_name)
+fetch_ses_file_dag = fetch_file_subdag('ses', get_expected_ses_file_name, ABILITY_S3_SES_PREFIX)
 
 push_ses_file_dag = push_file_subdag('ses', get_ses_file_paths)
 
@@ -394,9 +395,9 @@ split_push_ses_transaction_files_dag = split_push_transaction_files_subdag('ses'
 queue_up_ses_for_matching_dag = queue_up_for_matching_subdag('ses', get_ses_deid_file_paths)
 
 validate_ease_file_dag = validate_file_subdag('ease', get_expected_ease_file_name, get_expected_ease_file_regex,
-        MINIMUM_EASE_FILE_SIZE, EASE_FILE_DESCRIPTION)
+        MINIMUM_EASE_FILE_SIZE, ABILITY_S3_EASE_PREFIX, EASE_FILE_DESCRIPTION)
 
-fetch_ease_file_dag = fetch_file_subdag('ease', get_expected_ease_file_name)
+fetch_ease_file_dag = fetch_file_subdag('ease', get_expected_ease_file_name, ABILITY_S3_EASE_PREFIX)
 
 push_ease_file_dag = push_file_subdag('ease', get_ease_file_paths)
 
