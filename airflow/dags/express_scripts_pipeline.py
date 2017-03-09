@@ -44,7 +44,7 @@ S3_TEXT_EXPRESS_SCRIPTS_PREFIX = 'warehouse/text/pharmacyclaims/express_scripts/
 S3_PARQUET_EXPRESS_SCRIPTS_PREFIX = 'warehouse/parquet/pharmacyclaims/express_scripts/'
 S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_TEXT_EXPRESS_SCRIPTS_PREFIX
 
-S3_PAYLOAD_LOC_PATH = 's3://salusv/matching/payload/pharmacyclaims/esi/'
+S3_PAYLOAD_LOC_URL = 's3://salusv/matching/payload/pharmacyclaims/esi/'
 
 S3_ORIGIN_BUCKET = 'healthverity'
 
@@ -89,6 +89,9 @@ def get_parquet_dates(ds, kwargs):
 
 def get_deid_file_paths(ds, kwargs):
     return ['s3://healthverity/' + S3_DEID_RAW_PATH + get_expected_deid_file_name(ds, kwargs)]
+
+def get_expected_matching_files(ds, kwargs):
+    return [get_expected_deid_file_name(ds, kwargs)]
 
 default_args = {
     'owner': 'airflow',
@@ -212,17 +215,17 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_deid_file_name_func': get_expected_deid_file_name,
-            'file_date_func': get_file_date,
-            'incoming_path': S3_TRANSACTION_PREFIX,
+            'expected_matching_files_func'   : get_expected_matching_files,
+            'file_date_func'                 : get_file_date,
+            'incoming_path'                  : S3_TRANSACTION_PREFIX,
             'normalization_routine_directory': '/home/airflow/airflow/dags/providers/express_scripts/pharmacyclaims/',
-            'normalization_routine_script': '/home/airflow/airflow/dags/providers/express_scripts/pharmacyclaims/rsNormalizeExpressScriptsRX.py',
-            'parquet_dates_func': get_parquet_dates,
-            's3_text_path_prefix': S3_TEXT_EXPRESS_SCRIPTS_PREFIX,
-            's3_parquet_path_prefix': S3_PARQUET_EXPRESS_SCRIPTS_PREFIX,
-            's3_payload_loc': S3_PAYLOAD_LOC_PATH,
-            'vendor_description': 'Express Scripts RX',
-            'vendor_uuid': 'f726747e-9dc0-4023-9523-e077949ae865'
+            'normalization_routine_script'   : '/home/airflow/airflow/dags/providers/express_scripts/pharmacyclaims/rsNormalizeExpressScriptsRX.py',
+            'parquet_dates_func'             : get_parquet_dates,
+            's3_text_path_prefix'            : S3_TEXT_EXPRESS_SCRIPTS_PREFIX,
+            's3_parquet_path_prefix'         : S3_PARQUET_EXPRESS_SCRIPTS_PREFIX,
+            's3_payload_loc_url'             : S3_PAYLOAD_LOC_URL,
+            'vendor_description'             : 'Express Scripts RX',
+            'vendor_uuid'                    : 'f726747e-9dc0-4023-9523-e077949ae865'
         }
     ),
     task_id='detect_move_normalize',
