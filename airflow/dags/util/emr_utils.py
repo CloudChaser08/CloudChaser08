@@ -23,7 +23,7 @@ def get_aws_env(suffix=""):
     return aws_env
 
 
-EMR_APPLICATIONS = '"Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"'
+EMR_APPLICATIONS = 'Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark'
 EMR_DISTCP_TO_S3 = (
     'Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src={}","--dest={}",'
@@ -73,18 +73,19 @@ def _wait_for_steps(cluster_id):
 def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
     """Create an EMR cluster"""
     cluster_details = json.loads(
-        check_output([' '.join([
-            os.getenv('AIRFLOW_HOME') + '/dags/resources/launchEMR',
+        check_output([
+            '{}/dags/resources/launchEMR'.format(
+                os.getenv('AIRFLOW_HOME')
+            ),
             cluster_name, num_nodes, node_type, EMR_APPLICATIONS,
             "true" if (int(ebs_volume_size) > 0) else "false",
             str(ebs_volume_size)
-        ])])
+        ])
     )
     check_call([
         'aws', 'emr', 'wait', 'cluster-running',
         '--cluster-id', cluster_details['ClusterId']
     ])
-
 
 #
 # Normalize
@@ -126,28 +127,22 @@ def normalize(cluster_name, script_name, args,
     _wait_for_steps(cluster_id)
 
     # prefix part files with current timestamp to avoid future collisions
-    SCRIPT = """#!/bin/bash
-        for f in $(hdfs dfs -ls {} | awk '{{print $8}}')
-        do
-          for part in $(hdfs dfs -ls $f | awk '{{print $8}}')
-          do
-            hdfs dfs -mv $part \
-              $(echo $part | rev | cut -d/ -f2- | rev)/{}_$(echo $part \
-              | rev | cut -d/ -f1 | rev)
-          done
-        done
-    """.format(
-        text_staging_dir, prefix
-    )
-    with open('tmp_rename_parts.sh', 'w') as writer:
-        writer.write(SCRIPT)
-    check_call(
-        "ssh -T -i ~/.ssh/emr_deployer hadoop@"
-        + _get_emr_cluster_ip_address(cluster_id)
-        + " 'bash -s' < tmp_rename_parts.sh",
-        shell=True
-    )
-    os.remove('tmp_rename_parts.sh')
+    prefix_step = (
+        'Type=CUSTOM_JAR,Name="Prefix Part Files",Jar="command-runner.jar",'
+        'ActionOnFailure=CONTINUE,Args=[/home/hadoop/prefix_part_files.sh,{},{}]'
+    ).format(text_staging_dir, prefix)
+    check_call([
+        'scp', '-i', '{}/.ssh/emr_deployer'.format(
+            os.getenv('HOME')
+        ),
+        '{}/dags/resources/prefix_part_files.sh'.format(
+            os.getenv('AIRFLOW_HOME')
+        ), 'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':'
+    ])
+    check_call([
+        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
+        '--steps', prefix_step
+    ])
 
     # get directories that will need to be transformed to parquet
     # by listing the directories created in hdfs by normalization
