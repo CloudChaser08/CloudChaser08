@@ -201,7 +201,7 @@ def get_expected_matching_files(ds, kwargs):
     return res
     
 def get_file_date(ds, kwargs):
-    return ds.replace('-', '/')
+    return ds
 
 def get_parquet_dates(ds, kwargs):
     return [ds[:7]]
@@ -463,7 +463,8 @@ detect_move_normalize_dag = SubDagOperator(
             's3_parquet_path_prefix'         : S3_PARQUET_ABILITY_PREFIX,
             's3_payload_loc_url'             : S3_PAYLOAD_LOC_ABILITY_URL,
             'vendor_description'             : 'Ability DX',
-            'vendor_uuid'                    : '10d4caa3-056e-42c7-aab9-401ca375fee1'
+            'vendor_uuid'                    : '10d4caa3-056e-42c7-aab9-401ca375fee1',
+            'feed_data_type'                 : 'medical'
         }
     ),
     task_id='detect_move_normalize',

@@ -76,7 +76,7 @@ def get_expected_deid_file_regex(ds, kwargs):
     return DEID_FILE_NAME_TEMPLATE.format('\d{8}')
 
 def get_file_date(ds, kwargs):
-    return ds.replace('-', '/')
+    return ds
 
 def get_parquet_dates(ds, kwargs):
     date_path = ds.replace('-', '/')
@@ -225,7 +225,8 @@ detect_move_normalize_dag = SubDagOperator(
             's3_parquet_path_prefix'         : S3_PARQUET_EXPRESS_SCRIPTS_PREFIX,
             's3_payload_loc_url'             : S3_PAYLOAD_LOC_URL,
             'vendor_description'             : 'Express Scripts RX',
-            'vendor_uuid'                    : 'f726747e-9dc0-4023-9523-e077949ae865'
+            'vendor_uuid'                    : 'f726747e-9dc0-4023-9523-e077949ae865',
+            'feed_data_type'                 : 'pharmacy'
         }
     ),
     task_id='detect_move_normalize',
