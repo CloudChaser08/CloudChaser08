@@ -16,18 +16,18 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--setid', type=str)
-parser.add_argument('--first_run', type=str)
+parser.add_argument('--first_run', default=False, action='store_true')
 args = parser.parse_args()
 
 input_path = S3_ABILITY_INPUT + args.date.replace('-', '/') + '/'
 matching_path = S3_ABILITY_MATCHING + args.date.replace('-', '/') + '/'
-output_path = S3_ABILITY_OUTPUT + args.date.replace('-', '/') + '/'
+output_path = S3_ABILITY_OUTPUT
 db = 'dev'
 
-psql = ['psql', '-h', args.cluster_endpoint, '-p', '5439']
+psql = ['psql', '-p', '5439']
 
 # generate date validation table
-date_validator.generate(psql, db, args.s3_credentials)
+date_validator.generate(args.s3_credentials)
 
 for product in ['ap', 'ses', 'ease']:
     setid = '{}_{}'.format(args.date.replace('-','_'), product)
@@ -57,10 +57,10 @@ for product in ['ap', 'ses', 'ease']:
         + [db, '<', 'load_transactions.sql']
     ), shell=True)
 
-    matching_prefix = args.matching_path + setid + '_'
+    matching_prefix = matching_path + setid + '_'
     subprocess.call(' '.join(
         psql
-        + ['-v', 'matching_path="\'' + matching_prefix +  + '\'"']
+        + ['-v', 'matching_path="\'' + matching_prefix + '\'"']
         + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
         + [db, '<', 'load_matching_payload.sql']
     ), shell=True)
