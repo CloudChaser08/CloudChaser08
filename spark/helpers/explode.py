@@ -30,7 +30,7 @@ def explode_dates(
         table=table,
         date_start=date_start_column,
         date_end=date_end_column
-    ), True).rdd.flatMap(explode).union(
+    ), True).rdd.flatMap(explode).toDF.union(
         runner.run_spark_query((
             "SELECT * "
             + "FROM {table} "
@@ -42,7 +42,7 @@ def explode_dates(
             table=table,
             date_start=date_start_column,
             date_end=date_end_column
-        ), True)).toDF.registerTempTable('{table}_temp'.format(table=table))
+        ), True)).registerTempTable('{table}_temp'.format(table=table))
 
     runner.run_spark_query("DROP TABLE {table}".format(table=table))
     runner.run_spark_query(
