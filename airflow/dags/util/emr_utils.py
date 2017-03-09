@@ -26,7 +26,8 @@ def get_aws_env(suffix=""):
 EMR_APPLICATIONS = '"Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"'
 EMR_DISTCP_TO_S3 = (
     'Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",'
-    'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src={}","--dest={}"]'
+    'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src={}","--dest={}",'
+    '"--s3ServerSideEncryption"]'
 )
 
 
@@ -73,10 +74,11 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
     """Create an EMR cluster"""
     cluster_details = json.loads(
         check_output([' '.join([
-            '${AIRFLOW_HOME}/dags/resources/launchEMR',
+            os.getenv('AIRFLOW_HOME') + '/dags/resources/launchEMR',
             cluster_name, num_nodes, node_type, EMR_APPLICATIONS,
-            "true" if (ebs_volume_size > 0) else "false", str(ebs_volume_size)
-        ])], shell=True)
+            "true" if (int(ebs_volume_size) > 0) else "false",
+            str(ebs_volume_size)
+        ])])
     )
     check_call([
         'aws', 'emr', 'wait', 'cluster-running',
@@ -148,6 +150,7 @@ def normalize(cluster_name, script_name, args,
     os.remove('tmp_rename_parts.sh')
 
     # get directories that will need to be transformed to parquet
+    # by listing the directories created in hdfs by normalization
     modified_dirs = check_output(' '.join([
         'ssh', '-i', '~/.ssh/emr_deployer',
         'hadoop@' + _get_emr_cluster_ip_address(cluster_id),

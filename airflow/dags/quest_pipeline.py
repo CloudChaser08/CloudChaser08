@@ -3,7 +3,6 @@ from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
-import time
 
 # hv-specific modules
 import subdags.s3_validate_file as s3_validate_file
@@ -11,6 +10,7 @@ import subdags.s3_fetch_file as s3_fetch_file
 import subdags.decrypt_file as decrypt_file
 import subdags.split_push_file as split_push_file
 import subdags.queue_up_for_matching as queue_up_for_matching
+import subdags.detect_move_normalize as detect_move_normalize
 
 import util.s3_utils as s3_utils
 import util.emr_utils as emr_utils
@@ -22,6 +22,7 @@ reload(s3_fetch_file)
 reload(decrypt_file)
 reload(split_push_file)
 reload(queue_up_for_matching)
+reload(detect_move_normalize)
 reload(s3_utils)
 reload(emr_utils)
 reload(redshift_utils)
@@ -329,120 +330,39 @@ queue_up_for_matching = SubDagOperator(
 #
 # Post-Matching
 #
-S3_PAYLOAD_LOCATION_BUCKET = 'salusv'
-S3_PAYLOAD_LOCATION_KEY = 'matching/prod/payload/1b3f553d-7db8-43f3-8bb0-6e0b327320d9/'
-S3_PAYLOAD_LOCATION = 's3://' + S3_PAYLOAD_LOCATION_BUCKET + '/' + S3_PAYLOAD_LOCATION_KEY
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
-
-
-def detect_matching_done_step():
-    def execute(ds, **kwargs):
-        while not filter(
-                lambda k: get_formatted_date(ds, kwargs) in k and 'DONE' in k,
-                s3_utils.list_s3_bucket(S3_PAYLOAD_LOCATION)
-        ):
-            time.sleep(60)
-    return PythonOperator(
-        task_id='detect_matching_done',
-        provide_context=True,
-        python_callable=execute,
-        execution_timeout=timedelta(hours=6),
-        dag=mdag
-    )
-
-
-detect_matching_done = detect_matching_done_step()
-
-
-def move_matching_payload_step():
-    def execute(ds, **kwargs):
-        for payload_file in s3_utils.list_s3_bucket(
-                S3_PAYLOAD_LOCATION +
-                DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
-                    get_formatted_date(ds, kwargs)
-                )
-        ):
-            s3_utils.copy_file(
-                payload_file,
-                insert_current_date(
-                    S3_PAYLOAD_DEST + '{}/{}/{}/' + payload_file.split('/')[-1],
-                    kwargs
-                )
-            )
-    return PythonOperator(
-        task_id='move_matching_payload',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-move_matching_payload = move_matching_payload_step()
-
-#
-# Normalization/Parquet
-#
-EMR_CLUSTER_ID_TEMPLATE = 'quest-norm-{}'
-EMR_NUM_NODES = "5"
-EMR_NODE_TYPE = 'c4.xlarge'
-EMR_EBS_VOLUME_SIZE = 0
-
-
-def create_emr_cluster_step():
-    def execute(ds, **kwargs):
-        emr_utils.create_emr_cluster(
-            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(ds, kwargs)),
-            EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
-        )
-    return PythonOperator(
-        task_id='create_emr_cluster',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-create_emr_cluster = create_emr_cluster_step()
-
 TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/part_provider=quest/"
 PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/"
 
-
-def normalize_step():
-    def execute(ds, **kwargs):
-        emr_utils.normalize(
-            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(ds, kwargs)),
-            '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
-            ['--date', insert_current_date('{}-{}-{}', kwargs)],
-            TEXT_WAREHOUSE, PARQUET_WAREHOUSE,
-            insert_current_date('{}-{}-{}', kwargs), 'lab'
-        )
-
-    return PythonOperator(
-        task_id='normalize',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-normalize = normalize_step()
-
-
-def delete_emr_cluster_step():
-    def execute(ds, **kwargs):
-        emr_utils.delete_emr_cluster(
-            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
-        )
-    return PythonOperator(
-        task_id='delete_emr_cluster',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-delete_emr_cluster = delete_emr_cluster_step()
+detect_move_normalize_dag = SubDagOperator(
+    subdag=detect_move_normalize.detect_move_normalize(
+        DAG_NAME,
+        'detect_move_normalize',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_deid_file_name_func': insert_formatted_date_function(
+                DEID_UNZIPPED_FILE_NAME_TEMPLATE
+            ),
+            'file_date_func': insert_current_date_function(
+                '{}/{}/{}'
+            ),
+            's3_payload_loc': S3_PAYLOAD_DEST,
+            'vendor_uuid': '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
+            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
+            'pyspark_normalization_args_func': lambda ds, k: [
+                '--date', insert_current_date('{}-{}-{}', k)
+            ],
+            'text_warehouse': TEXT_WAREHOUSE,
+            'parquet_warehouse': PARQUET_WAREHOUSE,
+            'part_file_prefix_func': insert_current_date_function('{}-{}-{}'),
+            'model': 'lab',
+            'pyspark': True
+        }
+    ),
+    task_id='detect_move_normalize',
+    dag=mdag
+)
 
 # addon
 fetch_addon.set_upstream(validate_addon)
@@ -465,17 +385,6 @@ clean_up_workspace.set_upstream(
 queue_up_for_matching.set_upstream(validate_deid)
 
 # post-matching
-detect_matching_done.set_upstream(queue_up_for_matching)
-move_matching_payload.set_upstream(detect_matching_done)
-
-# normalization
-create_emr_cluster.set_upstream(detect_matching_done)
-normalize.set_upstream(
-    [
-        create_emr_cluster, move_matching_payload,
-        split_addon, split_trunk
-    ]
+detect_move_normalize_dag.set_upstream(
+    [queue_up_for_matching, split_trunk, split_addon]
 )
-
-# shutdown
-delete_emr_cluster.set_upstream(normalize)

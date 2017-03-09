@@ -37,7 +37,7 @@ RS_USER='hvuser'
 RS_DATABASE='dev'
 RS_PORT='5439'
 RS_NUM_NODES=10
-EMR_CLUSTER_NAME="parqueting-cluster"
+EMR_CLUSTER_NAME="normalization-cluster"
 EMR_NUM_NODES='5'
 EMR_NODE_TYPE="c4.xlarge"
 EMR_APPLICATIONS="Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
@@ -70,7 +70,7 @@ def do_run_pyspark_normalization_routine(ds, **kwargs):
         kwargs['pyspark_normalization_script_name'],
         kwargs['pyspark_normalization_args_func'](ds, kwargs),
         kwargs['text_warehouse'], kwargs['parquet_warehouse'],
-        kwargs['part_file_prefix'], kwargs['model']
+        kwargs['part_file_prefix_func'](ds, kwargs), kwargs['model']
     )
 
 def do_run_redshift_normalization_routine(ds, **kwargs):
