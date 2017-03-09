@@ -30,18 +30,19 @@ def explode_dates(
         table=table,
         date_start=date_start_column,
         date_end=date_end_column
-    ), True).rdd.flatMap(explode).union((
-        "SELECT * "
-        + "FROM {table} "
-        + "WHERE datediff("
-        + "date_format({date_start}, 'YYYY-mm-dd'), "
-        + "date_format({date_end}, 'YYYY-mm-dd')"
-        + ") NOT BETWEEN 0 AND 365"
-    ).format(
-        table=table,
-        date_start=date_start_column,
-        date_end=date_end_column
-    )).toDF.registerTempTable('{table}_temp'.format(table=table))
+    ), True).rdd.flatMap(explode).union(
+        runner.run_spark_query((
+            "SELECT * "
+            + "FROM {table} "
+            + "WHERE datediff("
+            + "date_format({date_start}, 'YYYY-mm-dd'), "
+            + "date_format({date_end}, 'YYYY-mm-dd')"
+            + ") NOT BETWEEN 0 AND 365"
+        ).format(
+            table=table,
+            date_start=date_start_column,
+            date_end=date_end_column
+        ), True)).toDF.registerTempTable('{table}_temp'.format(table=table))
 
     runner.run_spark_query("DROP TABLE {table}".format(table=table))
     runner.run_spark_query(
