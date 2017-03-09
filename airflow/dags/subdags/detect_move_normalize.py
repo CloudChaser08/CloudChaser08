@@ -61,8 +61,8 @@ def do_move_matching_payload(ds, **kwargs):
     for deid_file in deid_files:
         s3_prefix = S3_PREFIX + vendor_uuid + '/' + deid_file
         for payload_file in hook.list_keys('salusv', s3_prefix):
-            date = kwargs['file_date_func'](ds, kwargs)
-            s3_utils.copy_file('s3://salusv/' + payload_file, kwargs['s3_payload_loc_url'] + date + '/' + payload_file.split('/')[-1])
+            date = kwargs['file_date_func'](ds, kwargs).replace('-', '/')
+            copy_file('s3://salusv/' + payload_file, kwargs['s3_payload_loc_url'] + date + '/' + payload_file.split('/')[-1])
 
 def do_run_pyspark_normalization_routine(ds, **kwargs):
     emr_utils.normalize(
