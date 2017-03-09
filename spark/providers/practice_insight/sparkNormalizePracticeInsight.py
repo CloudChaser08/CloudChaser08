@@ -7,7 +7,7 @@ from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.constants as constants
-import spark.helper.explode as explode
+import spark.helpers.explode as explode
 
 
 def get_rel_path(relative_filename):

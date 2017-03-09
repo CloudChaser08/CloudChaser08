@@ -30,7 +30,7 @@ def explode_dates(
         table=table,
         date_start=date_start_column,
         date_end=date_end_column
-    ), True).flatMap(explode).union((
+    ), True).rdd.flatMap(explode).union((
         "SELECT * "
         + "FROM {table} "
         + "WHERE datediff("
@@ -41,7 +41,7 @@ def explode_dates(
         table=table,
         date_start=date_start_column,
         date_end=date_end_column
-    )).registerTempTable('{table}_temp'.format(table=table))
+    )).toDF.registerTempTable('{table}_temp'.format(table=table))
 
     runner.run_spark_query("DROP TABLE {table}".format(table=table))
     runner.run_spark_query(
