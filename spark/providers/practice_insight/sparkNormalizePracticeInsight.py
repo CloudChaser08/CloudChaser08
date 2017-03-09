@@ -7,6 +7,7 @@ from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.constants as constants
+import spark.helper.explode as explode
 
 
 def get_rel_path(relative_filename):
@@ -72,6 +73,10 @@ runner.run_spark_script(get_rel_path('normalize.sql'), [
     ['vendor', '3']
 ])
 
+explode.explode_dates(
+    runner, 'medicalclaims_common_model', 'date_service', 'date_service_end'
+)
+
 runner.run_spark_script(get_rel_path(
     '../../common/medicalclaims_common_model.sql'
 ), [
@@ -88,7 +93,7 @@ runner.run_spark_script(
         [
             'select_statement',
             "SELECT *, 'NULL' as best_date "
-            + "FROM final_unload "
+            + "FROM medicalclaims_common_model "
             + "WHERE date_service is NULL",
             False
         ]
@@ -98,8 +103,10 @@ runner.run_spark_script(
     get_rel_path('../../common/unload_common_model.sql'), [
         [
             'select_statement',
-            "SELECT *, regexp_replace(cast(date_service as string), '-..$', '') as best_date "
-            + "FROM final_unload "
+            "SELECT *, regexp_replace("
+            + "cast(date_service as string), "
+            + "'-..$', '') as best_date "
+            + "FROM medicalclaims_common_model "
             + "WHERE date_service IS NOT NULL",
             False
         ]
