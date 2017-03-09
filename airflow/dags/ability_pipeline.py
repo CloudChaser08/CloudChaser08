@@ -17,14 +17,20 @@ import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
+import subdags.detect_move_normalize as detect_move_normalize
 
 for m in [s3_validate_file, s3_fetch_file, s3_push_files, decrypt_files,
-        split_push_files, queue_up_for_matching, clean_up_tmp_dir]:
+        split_push_files, queue_up_for_matching, clean_up_tmp_dir,
+        detect_move_normalize]:
     reload(m)
 
 # Applies to all files
 TMP_PATH_TEMPLATE='/tmp/ability/medicalclaims/{}/'
 DAG_NAME='ability_pipeline'
+
+S3_TEXT_ABILITY_PREFIX = 'warehouse/text/medicalclaims/ability/'
+S3_PARQUET_ABILITY_PREFIX = 'warehouse/parquet/medicalclaims/abillity/'
+S3_PAYLOAD_LOC_ABILITY_URL = 's3://salusv/matching/payload/medicalclaims/ability/'
 
 # Ability S3 bucket access
 ABILITY_S3_BUCKET=Variable.get('Ability_S3_Bucket')
@@ -33,7 +39,8 @@ ABILITY_S3_CONNECTION='ability_s3_conn'
 HV_S3_RAW_PREFIX='incoming/ability/'
 HV_S3_RAW_BUCKET='healthverity'
 
-HV_S3_TRANSACTION_PREFIX_TEMPLATE='incoming/medicalclaims/ability/{}/'
+HV_S3_TRANSACTION_PREFIX='incoming/medicalclaims/ability/'
+HV_S3_TRANSACTION_PREFIX_TEMPLATE=HV_S3_TRANSACTION_PREFIX+'{}/'
 HV_S3_TRANSACTION_BUCKET='salusv'
 
 # Ability AP file
@@ -178,6 +185,26 @@ def do_rename_files(ds, **kwargs):
     for f in files:
         if os.path.isfile(file_dir + f):
             check_call(['mv', file_dir + f, file_dir + ds.replace("-","_") + "_" + kwargs['prefix'] + "_" + f])
+
+def get_expected_matching_files(ds, kwargs):
+    payloads_per_product = [
+        'deid.vwheader.txt', 
+        'deid.vwpatient.txt',
+        'deid.vwpayer.txt',
+        'deid.vwsubscriber.txt'
+    ]
+    res = []
+    for product in ['ap', 'ses', 'ease']:
+        for payload in payloads_per_product:
+            res.append(ds.replace('-', '_') + '_' + product + '_' + payload)
+
+    return res
+    
+def get_file_date(ds, kwargs):
+    return ds.replace('-', '/')
+
+def get_parquet_dates(ds, kwargs):
+    return [ds[:7]]
 
 default_args = {
     'owner': 'airflow',
@@ -418,6 +445,30 @@ split_push_ease_transaction_files_dag = split_push_transaction_files_subdag('eas
         get_ease_transaction_files_paths)
 
 queue_up_ease_for_matching_dag = queue_up_for_matching_subdag('ease', get_ease_deid_file_paths)
+
+detect_move_normalize_dag = SubDagOperator(
+    subdag=detect_move_normalize.detect_move_normalize(
+        DAG_NAME,
+        'detect_move_normalize',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_matching_files_func'   : get_expected_matching_files,
+            'file_date_func'                 : get_file_date,
+            'incoming_path'                  : HV_S3_TRANSACTION_PREFIX,
+            'normalization_routine_directory': '/home/airflow/airflow/dags/providers/ability/',
+            'normalization_routine_script'   : '/home/airflow/airflow/dags/providers/ability/rsNormalizeAbilityDaily.py',
+            'parquet_dates_func'             : get_parquet_dates,
+            's3_text_path_prefix'            : S3_TEXT_ABILITY_PREFIX,
+            's3_parquet_path_prefix'         : S3_PARQUET_ABILITY_PREFIX,
+            's3_payload_loc_url'             : S3_PAYLOAD_LOC_ABILITY_URL,
+            'vendor_description'             : 'Ability DX',
+            'vendor_uuid'                    : '10d4caa3-056e-42c7-aab9-401ca375fee1'
+        }
+    ),
+    task_id='detect_move_normalize',
+    dag=mdag
+)
 
 clean_up_tmp_dir_dag = SubDagOperator(
     subdag=clean_up_tmp_dir.clean_up_tmp_dir(
