@@ -164,7 +164,7 @@ decrypt_transaction_file_dag = SubDagOperator(
     dag=mdag
 )
 
-decompress_split_push_transaction_file_dag = SubDagOperator(
+split_push_transaction_file_dag = SubDagOperator(
     subdag=split_push_file.split_push_file(
         DAG_NAME,
         'decompress_split_push_transaction_file',
@@ -172,11 +172,14 @@ decompress_split_push_transaction_file_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'          : TMP_PATH_TEMPLATE,
-            'decrypted_file_name_func'   : get_expected_transaction_file_name_gz,
-            'decompressed_file_name_func': get_expected_transaction_file_name,
+            'source_file_name_func'      : get_expected_transaction_file_name,
             'num_splits'                 : 100,
-            's3_destination_prefix'      : S3_TRANSACTION_SPLIT_PATH
-        
+            's3_dest_path_func': lambda ds, k:
+            S3_TRANSACTION_SPLIT_PATH + '{}/{}/{}/'.format(
+                k['ds_nodash'][0:4],
+                k['ds_nodash'][4:6],
+                k['ds_nodash'][6:8]
+            )
         }
     ),
     task_id='decompress_split_push_transaction_file',
@@ -238,7 +241,7 @@ clean_up_tmp_dir_dag = SubDagOperator(
 
 fetch_transaction_file_dag.set_upstream(validate_transaction_file_dag)
 decrypt_transaction_file_dag.set_upstream(fetch_transaction_file_dag)
-decompress_split_push_transaction_file_dag.set_upstream(decrypt_transaction_file_dag)
+split_push_transaction_file_dag.set_upstream(decrypt_transaction_file_dag)
 queue_up_for_matching_dag.set_upstream(validate_deid_file_dag)
-detect_move_normalize_dag.set_upstream([queue_up_for_matching_dag, decompress_split_push_transaction_file_dag])
-clean_up_tmp_dir_dag.set_upstream(decompress_split_push_transaction_file_dag)
+detect_move_normalize_dag.set_upstream([queue_up_for_matching_dag, split_push_transaction_file_dag])
+clean_up_tmp_dir_dag.set_upstream(split_push_transaction_file_dag)

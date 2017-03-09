@@ -41,6 +41,7 @@ def s3_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval
     )
 
     dag_config['new_file_name_func'] = dag_config.get('new_file_name_func', dag_config['expected_file_name_func'])
+
     fetch_file = PythonOperator(
         task_id='fetch_file',
         provide_context=True,

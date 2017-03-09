@@ -2,9 +2,7 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
-import sys
 from subprocess import check_call
-import time
 
 # hv-specific modules
 import subdags.s3_validate_file as s3_validate_file
@@ -12,19 +10,23 @@ import subdags.s3_fetch_file as s3_fetch_file
 import subdags.decrypt_file as decrypt_file
 import subdags.split_push_file as split_push_file
 import subdags.queue_up_for_matching as queue_up_for_matching
+import subdags.detect_move_normalize as detect_move_normalize
 
 import util.s3_utils as s3_utils
 import util.emr_utils as emr_utils
 import util.redshift_utils as redshift_utils
+import util.decompression as decompression
 
 reload(s3_validate_file)
 reload(s3_fetch_file)
 reload(decrypt_file)
 reload(split_push_file)
 reload(queue_up_for_matching)
+reload(detect_move_normalize)
 reload(s3_utils)
 reload(emr_utils)
 reload(redshift_utils)
+reload(decompression)
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
@@ -39,6 +41,7 @@ TRANSACTION_ADDON_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/addon/'
 TRANSACTION_ADDON_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'addon/'
 TRANSACTION_ADDON_FILE_DESCRIPTION = 'Quest transaction addon file'
 TRANSACTION_ADDON_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt.zip'
+TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt'
 TRANSACTION_ADDON_DAG_NAME = 'validate_fetch_transaction_addon_file'
 MINIMUM_TRANSACTION_FILE_SIZE = 500
 
@@ -59,7 +62,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 01, 25, 12),
+    'start_date': datetime(2017, 1, 25, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -83,6 +86,7 @@ def insert_formatted_date_function(template):
         return template.format(get_formatted_date(ds, kwargs))
     return out
 
+
 def insert_todays_date_function(template):
     def out(ds, kwargs):
         return template.format(kwargs['ds_nodash'])
@@ -91,7 +95,17 @@ def insert_todays_date_function(template):
 
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format('\d{10}')
+        return template.format('\d{12}')
+    return out
+
+
+def insert_current_date_function(template):
+    def out(ds, kwargs):
+        return template.format(
+            kwargs['yesterday_ds_nodash'][0:4],
+            kwargs['yesterday_ds_nodash'][4:6],
+            kwargs['yesterday_ds_nodash'][6:8]
+        )
     return out
 
 
@@ -167,27 +181,27 @@ def generate_fetch_dag(
 
 fetch_addon = generate_fetch_dag(
     "addon",
-    S3_TRANSACTION_RAW_PATH,
+    '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
     TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
     TRANSACTION_ADDON_FILE_NAME_TEMPLATE
 )
 fetch_trunk = generate_fetch_dag(
     "trunk",
-    S3_TRANSACTION_RAW_PATH,
+    '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
     TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
 )
 
 
-def unzip_step(task_id, tmp_path_template):
+def unzip_step(task_id, tmp_path_template, filename_template):
     def execute(ds, **kwargs):
-        check_call([
-            'unzip', insert_todays_date_function(
-                tmp_path_template
-            )
-        ])
+        decompression.decompress_zip_file(
+            insert_todays_date_function(tmp_path_template)(ds, kwargs)
+            + filename_template.format(get_formatted_date(ds, kwargs)),
+            insert_todays_date_function(tmp_path_template)(ds, kwargs)
+        )
     return PythonOperator(
-        task_id='unzip_file_' + task_id,
+        task_id='unzip_' + task_id + '_file',
         provide_context=True,
         python_callable=execute,
         dag=mdag
@@ -195,10 +209,12 @@ def unzip_step(task_id, tmp_path_template):
 
 
 unzip_addon = unzip_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
+    TRANSACTION_ADDON_FILE_NAME_TEMPLATE
 )
 unzip_trunk = unzip_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
+    TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
 )
 
 
@@ -209,12 +225,12 @@ decrypt_addon = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template': TMP_PATH_TEMPLATE,
+            'tmp_path_template': TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
             'encrypted_file_name_func': insert_formatted_date_function(
-                TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
             ),
             'decrypted_file_name_func': insert_formatted_date_function(
-                TRANSACTION_ADDON_TMP_PATH_TEMPLATE + '.gz'
+                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE + '.gz'
             )
         }
     ),
@@ -223,16 +239,14 @@ decrypt_addon = SubDagOperator(
 )
 
 
-def gunzip_step(task_id, tmp_path_template):
+def gunzip_step(task_id, tmp_path_template, tmp_file_template):
     def execute(ds, **kwargs):
-        check_call([
-            'gzip', '-d', insert_todays_date_function(
-                tmp_path_template
-            )
-        ])
-
+        decompression.decompress_gzip_file(
+            tmp_path_template.format(kwargs['ds_nodash'])
+            + tmp_file_template.format(get_formatted_date(ds, kwargs))
+        )
     return PythonOperator(
-        task_id='gunzip_file_' + task_id,
+        task_id='gunzip_' + task_id + '_file',
         provide_context=True,
         python_callable=execute,
         dag=mdag
@@ -240,11 +254,12 @@ def gunzip_step(task_id, tmp_path_template):
 
 
 gunzip_trunk = gunzip_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
+    TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE
 )
 
 
-def split_step(task_id, tmp_name_template, s3_destination, num_splits):
+def split_step(task_id, tmp_path_template, tmp_name_template, s3_destination, num_splits):
     return SubDagOperator(
         subdag=split_push_file.split_push_file(
             DAG_NAME,
@@ -252,11 +267,13 @@ def split_step(task_id, tmp_name_template, s3_destination, num_splits):
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_path_template': TMP_PATH_TEMPLATE,
+                'tmp_path_template': tmp_path_template,
                 'source_file_name_func': insert_formatted_date_function(
                     tmp_name_template
                 ),
-                's3_destination_prefix': s3_destination,
+                's3_dest_path_func': insert_current_date_function(
+                    s3_destination
+                ),
                 'num_splits': num_splits
             }
         ),
@@ -266,11 +283,13 @@ def split_step(task_id, tmp_name_template, s3_destination, num_splits):
 
 
 split_addon = split_step(
-    "addon", TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
+    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
+    TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE,
     TRANSACTION_ADDON_S3_SPLIT_PATH, 20
 )
 split_trunk = split_step(
-    "trunk", TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
+    TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE,
     TRANSACTION_TRUNK_S3_SPLIT_PATH, 20
 )
 
@@ -278,7 +297,7 @@ split_trunk = split_step(
 def clean_up_workspace_step(task_id, template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', insert_todays_date_function(template)
+            'rm', '-rf', template.format(kwargs['ds_nodash'])
         ])
     return PythonOperator(
         task_id='clean_up_workspace_' + task_id,
@@ -311,189 +330,39 @@ queue_up_for_matching = SubDagOperator(
 #
 # Post-Matching
 #
-S3_PAYLOAD_LOCATION_BUCKET = 'salusv'
-S3_PAYLOAD_LOCATION_KEY = 'matching/prod/payload/1b3f553d-7db8-43f3-8bb0-6e0b327320d9/'
-S3_PAYLOAD_LOCATION = 's3://' + S3_PAYLOAD_LOCATION_BUCKET + '/' + S3_PAYLOAD_LOCATION_KEY
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
+TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/part_provider=quest/"
+PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/"
 
-
-def detect_matching_done_step():
-    def execute(ds, **kwargs):
-        while not filter(
-                lambda k: get_formatted_date(kwargs) in k and 'DONE' in k,
-                s3_utils.list_s3_bucket(S3_PAYLOAD_LOCATION)
-        ):
-            time.sleep(60)
-    return PythonOperator(
-        task_id='detect_matching_done',
-        provide_context=True,
-        python_callable=execute,
-        execution_timeout=timedelta(hours=6),
-        dag=mdag
-    )
-
-
-detect_matching_done = detect_matching_done_step()
-
-
-def move_matching_payload_step():
-    def execute(ds, **kwargs):
-        for payload_file in s3_utils.list_s3_bucket(
-                S3_PAYLOAD_LOCATION +
-                DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(
-                    get_formatted_date(kwargs)
-                )
-        ):
-            s3_utils.copy_file(
-                payload_file,
-                insert_current_date(
-                    S3_PAYLOAD_DEST + '{}/{}/{}/' + payload_file.split('/')[-1],
-                    kwargs
-                )
-            )
-    return PythonOperator(
-        task_id='move_matching_payload',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-move_matching_payload = move_matching_payload_step()
-
-#
-# Normalization
-#
-RS_CLUSTER_ID_TEMPLATE = 'quest-norm-{}'
-RS_NUM_NODES = '5'
-
-
-def create_redshift_cluster_step():
-    def execute(ds, **kwargs):
-        redshift_utils.create_redshift_cluster(
-            RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            RS_NUM_NODES
-        )
-    return PythonOperator(
-        task_id='create_redshift_cluster',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-create_redshift_cluster = create_redshift_cluster_step()
-
-
-def normalize_step():
-    def execute(ds, **kwargs):
-        path = insert_current_date(
-            S3_TRANSACTION_PROCESSED_PATH_TEMPLATE, kwargs
-        )
-        curdate = insert_current_date(
-            '{}/{}/{}', kwargs
-        )
-        period = 'hist' if curdate < '2016/09/01' else 'current'
-        setid = s3_utils.list_s3_bucket(path)[0]  \
-                        .split('/')[-1]          \
-                        .replace('.bz2', '')[0:-3]
-        command = [
-            '/home/airflow/airflow/dags/providers/quest/norm/rsNormalizeQuest.py',
-            '--date', curdate, '--setid', setid, '--period', period,
-            '--s3_credentials', redshift_utils.get_rs_s3_credentials_str()
-        ]
-        cwd = '/home/airflow/airflow/dags/providers/quest/'
-        redshift_utils.run_rs_query_file(
-            RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            command, cwd
-        )
-    return PythonOperator(
-        task_id='normalize',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-normalize = normalize_step()
-
-
-def delete_redshift_cluster_step():
-    def execute(ds, **kwargs):
-        redshift_utils.delete_redshift_cluster(
-            RS_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
-        )
-    return PythonOperator(
-        task_id='delete_redshift_cluster',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-delete_redshift_cluster = delete_redshift_cluster_step()
-
-#
-# Parquet
-#
-EMR_CLUSTER_ID_TEMPLATE = 'quest-parquet-{}'
-EMR_NUM_NODES = "5"
-EMR_NODE_TYPE = 'c4.xlarge'
-EMR_EBS_VOLUME_SIZE = 0
-PARQUET_SOURCE_TEMPLATE = "s3a://salusv/warehouse/text/labtests/quest/{}/{}/{}/"
-PARQUET_DESTINATION_TEMPLATE = "s3://salusv/warehouse/parquet/labtests/quest/{}/{}/{}/"
-
-
-def create_emr_cluster_step():
-    def execute(ds, **kwargs):
-        emr_utils.create_emr_cluster(
-            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
-        )
-    return PythonOperator(
-        task_id='create_emr_cluster',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-create_emr_cluster = create_emr_cluster_step()
-
-
-def transform_to_parquet_step():
-    def execute(ds, **kwargs):
-        emr_utils.transform_to_parquet(
-            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs)),
-            insert_current_date(PARQUET_SOURCE_TEMPLATE, kwargs),
-            insert_current_date(PARQUET_DESTINATION_TEMPLATE, kwargs),
-            "lab"
-        )
-    return PythonOperator(
-        task_id='parquet',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-transform_to_parquet = transform_to_parquet_step()
-
-
-def delete_emr_cluster_step():
-    def execute(ds, **kwargs):
-        emr_utils.delete_emr_cluster(
-            EMR_CLUSTER_ID_TEMPLATE.format(get_formatted_date(kwargs))
-        )
-    return PythonOperator(
-        task_id='delete_emr_cluster',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-delete_emr_cluster = delete_emr_cluster_step()
+detect_move_normalize_dag = SubDagOperator(
+    subdag=detect_move_normalize.detect_move_normalize(
+        DAG_NAME,
+        'detect_move_normalize',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_deid_file_name_func': insert_formatted_date_function(
+                DEID_UNZIPPED_FILE_NAME_TEMPLATE
+            ),
+            'file_date_func': insert_current_date_function(
+                '{}/{}/{}'
+            ),
+            's3_payload_loc': S3_PAYLOAD_DEST,
+            'vendor_uuid': '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
+            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
+            'pyspark_normalization_args_func': lambda ds, k: [
+                '--date', insert_current_date('{}-{}-{}', k)
+            ],
+            'text_warehouse': TEXT_WAREHOUSE,
+            'parquet_warehouse': PARQUET_WAREHOUSE,
+            'part_file_prefix_func': insert_current_date_function('{}-{}-{}'),
+            'model': 'lab',
+            'pyspark': True
+        }
+    ),
+    task_id='detect_move_normalize',
+    dag=mdag
+)
 
 # addon
 fetch_addon.set_upstream(validate_addon)
@@ -516,20 +385,6 @@ clean_up_workspace.set_upstream(
 queue_up_for_matching.set_upstream(validate_deid)
 
 # post-matching
-detect_matching_done.set_upstream(queue_up_for_matching)
-move_matching_payload.set_upstream(detect_matching_done)
-
-# normalization
-create_redshift_cluster.set_upstream(detect_matching_done)
-normalize.set_upstream(
-    [
-        create_redshift_cluster, move_matching_payload,
-        split_addon, split_trunk
-    ]
+detect_move_normalize_dag.set_upstream(
+    [queue_up_for_matching, split_trunk, split_addon]
 )
-delete_redshift_cluster.set_upstream(normalize)
-
-# parquet
-create_emr_cluster.set_upstream(normalize)
-transform_to_parquet.set_upstream(create_emr_cluster)
-delete_emr_cluster.set_upstream(transform_to_parquet)

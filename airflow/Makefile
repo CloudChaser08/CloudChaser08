@@ -29,6 +29,7 @@ run:
 	-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 	-e DOCKER_IP=${DOCKER_IP} \
 	-v ${PWD}/dags:/usr/local/airflow/dags \
+	-v ${PWD}/../spark:/usr/local/airflow/spark \
 	-p 8080:8080 \
 	--name airflow \
 	${REPO}:latest

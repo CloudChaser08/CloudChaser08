@@ -1,11 +1,15 @@
+import os
 from airflow import DAG
 from airflow.operators import BashOperator, PythonOperator
 from subprocess import check_call
 
+import util.s3_utils as s3_utils
+reload(s3_utils)
+
 
 def do_split_file(ds, **kwargs):
     tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    expected_file_name = kwargs['params']['source_file_name_func'](kwargs)
+    expected_file_name = kwargs['params']['source_file_name_func'](ds, kwargs)
     source_file = tmp_dir + expected_file_name
 
     check_call([
@@ -16,7 +20,7 @@ def do_split_file(ds, **kwargs):
 
 def do_clean_up(ds, **kwargs):
     tmp_dir = kwargs['params']['tmp_path_template'].format(kwargs['ds_nodash'])
-    source_file = tmp_dir + kwargs['params']['source_file_name_func'](kwargs)
+    source_file = tmp_dir + kwargs['params']['source_file_name_func'](ds, kwargs)
     check_call(['rm', source_file])
     check_call(['rm', '-r', tmp_dir + 'parts'])
 
@@ -57,21 +61,36 @@ def split_push_file(parent_dag_name, child_dag_name, start_date, schedule_interv
         dag=dag
     )
 
+
+    # push files up to s3 in 4 separate tasks, each given 5 files each
+    # the assumption here is that there will be 20 files
     file_push_tasks = []
-    for i in xrange(5):
-        file_push_tasks.append(BashOperator(
+
+    def push_task_group(i):
+        def execute(ds, **kwargs):
+            split_files = os.listdir(
+                    dag_config['tmp_path_template'].format(kwargs['ds_nodash'])
+                    + 'parts/'
+            )
+
+            # iterate over chunk number i of split_files
+            for split_file in [split_files[j:min(j+5, len(split_files))]
+                               for j in xrange(0, len(split_files), 5)][i]:
+                s3_utils.copy_file(
+                    dag_config['tmp_path_template'].format(kwargs['ds_nodash'])
+                    + 'parts/' + split_file,
+                    dag_config['s3_dest_path_func'](ds, kwargs)
+                )
+        return PythonOperator(
             task_id='push_part_files_' + str(i),
-            bash_command=(
-               "for f in $(ls " + tmp_path_jinja + "parts/ "
-               "| awk 'NR % {{ 5 }} == {{ params.task_idx }}' | awk -F' ' '{print $NF}');"
-               "do aws s3 cp " + tmp_path_jinja +"parts/$f {{ params.s3_destination_prefix }}{{ ds|replace('-', '/') }}/; done"
-            ),
-            params={
-                'task_idx': i, 
-                's3_destination_prefix': dag_config['s3_destination_prefix']
-            },
+            provide_context=True,
+            python_callable=execute,
+            params=dag_config,
             dag=dag
-        ))
+        )
+
+    for i in xrange(4):
+        file_push_tasks.append(push_task_group(i))
 
     clean_up = PythonOperator(
         task_id='clean_up',

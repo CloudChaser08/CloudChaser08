@@ -4,8 +4,10 @@ from airflow.operators import PythonOperator
 from subprocess import check_call
 
 import util.s3_utils as s3_utils
+import util.decompression as decompression
 
 reload(s3_utils)
+reload(decompression)
 
 DECRYPTOR_JAR='HVDecryptor.jar'
 DECRYPTION_KEY='hv_record_private.base64.reformat'
@@ -15,13 +17,13 @@ def do_fetch_decryption_files(ds, **kwargs):
     # jar
     s3_utils.fetch_file_from_s3(
         Variable.get('DECRYPTOR_JAR_REMOTE_LOCATION'),
-        kwargs['tmp_path_template'].format('{{ ds_nodash }}')
+        kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + DECRYPTOR_JAR
     )
 
     # key
     s3_utils.fetch_file_from_s3(
         Variable.get('DECRYPTION_KEY_REMOTE_LOCATION'),
-        kwargs['tmp_path_template'].format('{{ ds_nodash }}')
+        kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + DECRYPTION_KEY
     )
 
 
@@ -42,16 +44,17 @@ def do_decompress_file(ds, **kwargs):
     tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
     decrypted_file = tmp_dir + kwargs['decrypted_file_name_func'](ds, kwargs)
 
-    check_call(['gzip', '-d', '-k', decrypted_file])
+    decompression.decompress_gzip_file(
+        decrypted_file
+    )
 
 
 def do_clean_up(ds, **kwargs):
     tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
-    encrypted_file_name = tmp_dir + kwargs['encrypted_file_name_func'](ds, kwargs)
     decryptor_jar = tmp_dir + DECRYPTOR_JAR
     decryption_key = tmp_dir + DECRYPTION_KEY
 
-    for f in [encrypted_file_name, decryptor_jar, decryption_key]:
+    for f in [decryptor_jar, decryption_key]:
         check_call(['rm', f])
 
 
