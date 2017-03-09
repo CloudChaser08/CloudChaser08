@@ -111,7 +111,11 @@ get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
 get_addon_tmp_dir = insert_todays_date_function(TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
 get_trunk_tmp_dir = insert_todays_date_function(TRANSACTION_TRUNK_TMP_PATH_TEMPLATE)
 
-get_
+
+def get_deid_file_urls(ds, kwargs):
+    return ['s3://healthverity/' + S3_TRANSACTION_RAW_PATH + insert_formatted_date_function(
+                DEID_FILE_NAME_TEMPLATE
+            )]
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_addon_tmp_dir(ds, kwargs)
@@ -291,11 +295,11 @@ def split_step(task_id, tmp_dir_func, tmp_name_template, s3_destination, num_spl
 
 
 split_addon = split_step(
-    "addon", get_addon_tmp_dir, get_addon_unzipped_file_path,
+    "addon", get_addon_tmp_dir, get_addon_unzipped_file_paths,
     TRANSACTION_ADDON_S3_SPLIT_PATH, 20
 )
 split_trunk = split_step(
-    "trunk", get_trunk_tmp_dir, get_trunk_unzipped_file_path,
+    "trunk", get_trunk_tmp_dir, get_trunk_unzipped_file_paths,
     TRANSACTION_TRUNK_S3_SPLIT_PATH, 20
 )
 
@@ -323,10 +327,8 @@ queue_up_for_matching = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_file_name_func': insert_formatted_date_function(
-                DEID_FILE_NAME_TEMPLATE
-            ),
-            's3_prefix': S3_TRANSACTION_RAW_PATH
+
+            'source_files_func' : get_deid__file_urls
         }
     ),
     task_id='queue_up_for_matching',
@@ -347,23 +349,23 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_deid_file_name_func': insert_formatted_date_function(
+            'expected_deid_file_name_func'      : insert_formatted_date_function(
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE
             ),
-            'file_date_func': insert_current_date_function(
+            'file_date_func'                    : insert_current_date_function(
                 '{}/{}/{}'
             ),
-            's3_payload_loc': S3_PAYLOAD_DEST,
-            'vendor_uuid': '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
-            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
-            'pyspark_normalization_args_func': lambda ds, k: [
+            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
+            'vendor_uuid'                       : '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
+            'pyspark_normalization_args_func'   : lambda ds, k: [
                 '--date', insert_current_date('{}-{}-{}', k)
             ],
-            'text_warehouse': TEXT_WAREHOUSE,
-            'parquet_warehouse': PARQUET_WAREHOUSE,
-            'part_file_prefix_func': insert_current_date_function('{}-{}-{}'),
-            'model': 'lab',
-            'pyspark': True
+            'text_warehouse'                    : TEXT_WAREHOUSE,
+            'parquet_warehouse'                 : PARQUET_WAREHOUSE,
+            'part_file_prefix_func'             : insert_current_date_function('{}-{}-{}'),
+            'data_feed_type'                    : 'lab',
+            'pyspark'                           : True
         }
     ),
     task_id='detect_move_normalize',

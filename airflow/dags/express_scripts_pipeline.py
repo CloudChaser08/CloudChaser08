@@ -87,7 +87,7 @@ def get_parquet_dates(ds, kwargs):
     file_dates = sorted(list(set(file_dates)))
     return filter(lambda d: d < date_path, file_dates)[-2:] + [date_path]
 
-def get_deid_file_paths(ds, kwargs):
+def get_deid_file_urls(ds, kwargs):
     return ['s3://healthverity/' + S3_DEID_RAW_PATH + get_expected_deid_file_name(ds, kwargs)]
 
 def get_expected_matching_files(ds, kwargs):
@@ -201,7 +201,7 @@ queue_up_for_matching_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'source_files_func' : get_deid_file_paths
+            'source_files_func' : get_deid_file_urls
         }
     ),
     task_id='queue_up_for_matching',
