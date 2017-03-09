@@ -19,7 +19,6 @@ REDSHIFT_DELETE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redsh
 --identifier {{ params.cluster_id }}"""
 S3_PREFIX='matching/prod/payload/'
 S3_PATH_PREFIX='s3://salusv/' + S3_PREFIX
-S3_PAYLOAD_LOC='s3://salusv/matching/payload/pharmacyclaims/emdeon/'
 EMR_COPY_MELLON_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[aws,s3,cp,s3://healthverityreleases/mellon/mellon-assembly-latest.jar,'
     '/tmp/mellon-assembly-latest.jar]')
@@ -45,24 +44,25 @@ EMR_USE_EBS="false"
 EMR_EBS_VOLUME_SIZE="0"
 
 def do_detect_matching_done(ds, **kwargs):
-    deid_filename = kwargs['expected_deid_file_name_func'](ds, kwargs)
+    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
+    deid_files = kwargs['expected_matching_files_func'](ds, kwargs)
     s3_path_prefix = S3_PATH_PREFIX + kwargs['vendor_uuid'] + '/'
     template = '{}{}*DONE*'
-    s3_key = template.format(s3_path_prefix, deid_filename)
-    logging.info('Poking for key : {}'.format(s3_key))
-    while not s3_utils.s3_key_exists(s3_key):
-        time.sleep(60)
+    for deid_file in deid_files:
+        s3_key = template.format(s3_path_prefix, deid_file)
+        logging.info('Poking for key : {}'.format(s3_key))
+        while not s3_utils.s3_key_exists(s3_key):
+            time.sleep(60)
 
 def do_move_matching_payload(ds, **kwargs):
-    deid_filename = kwargs['expected_deid_file_name_func'](ds, kwargs)
+    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
+    deid_files = kwargs['expected_matching_files_func'](ds, kwargs)
     vendor_uuid = kwargs['vendor_uuid']
-    s3_path = S3_PATH_PREFIX + vendor_uuid + '/' + deid_filename
-    for payload_file in s3_utils.list_s3_bucket(s3_path):
-        date = kwargs['file_date_func'](ds, kwargs)
-        s3_utils.copy_file(
-            payload_file,
-            kwargs['s3_payload_loc'] + date + '/' + payload_file.split('/')[-1]
-        )
+    for deid_file in deid_files:
+        s3_prefix = S3_PREFIX + vendor_uuid + '/' + deid_file
+        for payload_file in hook.list_keys('salusv', s3_prefix):
+            date = kwargs['file_date_func'](ds, kwargs)
+            s3_utils.copy_file('s3://salusv/' + payload_file, kwargs['s3_payload_loc_url'] + date + '/' + payload_file.split('/')[-1])
 
 def do_run_pyspark_normalization_routine(ds, **kwargs):
     emr_utils.normalize(
