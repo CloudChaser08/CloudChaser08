@@ -46,7 +46,7 @@ for product in ['ap', 'ses', 'ease']:
     subprocess.call(' '.join(
         psql
         + ['-v', 'header_path="\'' + input_prefix + 'record.vwheader' + '\'"']
-        + ['-v', 'serviceline_path="\'' + input_prefix + 'vwserviceline' + '\'"']
+        + ['-v', 'serviceline_path="\'' + input_prefix + 'vwserviceline.' + '\'"']
         + ['-v', 'servicelineaffiliation_path="\'' + input_prefix + 'vwservicelineaffiliation' + '\'"']
         + ['-v', 'claimaffiliation_path="\'' + input_prefix + 'vwclaimaffiliation' + '\'"']
         + ['-v', 'diagnosis_path="\'' + input_prefix + 'vwdiagnosis' + '\'"']
