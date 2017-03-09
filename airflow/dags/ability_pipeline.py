@@ -526,3 +526,12 @@ clean_up_tmp_dir_dag.set_upstream([
     queue_up_ses_for_matching_dag,
     queue_up_ease_for_matching_dag
 ])
+
+detect_move_normalize_dag.set_upstream([
+    split_push_ap_transaction_files_dag,
+    split_push_ses_transaction_files_dag,
+    split_push_ease_transaction_files_dag,
+    queue_up_ap_for_matching_dag,
+    queue_up_ses_for_matching_dag,
+    queue_up_ease_for_matching_dag
+])
