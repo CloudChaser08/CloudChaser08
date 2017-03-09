@@ -26,7 +26,7 @@ SELECT DISTINCT
     AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
         transactional.diag_cd_3, transactional.diag_cd_4)
     THEN yyyyMMdd_to_date(transactional.svc_from_dt)
-    WHEN transactional.stmnt_from_dt IS NOT NULL 
+    WHEN yyyyMMdd_to_date(transactional.stmnt_from_dt) IS NOT NULL 
     THEN yyyyMMdd_to_date(transactional.stmnt_from_dt)
     ELSE (
     SELECT MIN(yyyyMMdd_to_date(t2.svc_from_dt))
@@ -97,14 +97,14 @@ SELECT DISTINCT
     THEN  transactional.line_nbr
     END,                                                          -- service_line_number
     clean_up_diagnosis_code(
-        diags.diag_code, NULL, 
-                                                                  -- exact definition of service date above
+        diags.diag_code, NULL,
+        -- exact definition of service date above
         CASE 
         WHEN yyyyMMdd_to_date(transactional.svc_from_dt) IS NOT NULL 
         AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
             transactional.diag_cd_3, transactional.diag_cd_4)
         THEN yyyyMMdd_to_date(transactional.svc_from_dt)
-        WHEN transactional.stmnt_from_dt IS NOT NULL 
+        WHEN yyyyMMdd_to_date(transactional.stmnt_from_dt) IS NOT NULL 
         THEN yyyyMMdd_to_date(transactional.stmnt_from_dt)
         ELSE (
         SELECT MIN(yyyyMMdd_to_date(t2.svc_from_dt))
