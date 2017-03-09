@@ -10,13 +10,11 @@ import json
 
 import util.s3_utils as s3_utils
 import util.emr_utils as emr_utils
-reload(s3_utils)
-reload(emr_utils)
+import util.redshift_utils as redshift_utils
 
-REDSHIFT_CREATE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py create \\
---identifier {{ params.cluster_id }} --num_nodes {{ params.num_nodes }}"""
-REDSHIFT_DELETE_COMMAND_TEMPLATE = """/home/airflow/airflow/dags/resources/redshift.py delete \\
---identifier {{ params.cluster_id }}"""
+for m in [s3_utils, emr_utils, redshift_utls]:
+    reload(m)
+
 S3_PREFIX='matching/prod/payload/'
 S3_PATH_PREFIX='s3://salusv/' + S3_PREFIX
 EMR_COPY_MELLON_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar",'
@@ -31,16 +29,10 @@ EMR_DELETE_OLD_PARQUET = ('Type=CUSTOM_JAR,Name="Delete old data from S3",Jar="c
 EMR_DISTCP_TO_S3 = ('Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",' 
     'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src=hdfs:///parquet",'
     '"--dest=s3a://salusv/{}"]')
-RS_HOST_TLD = '.cz8slgfda3sg.us-east-1.redshift.amazonaws.com'
-RS_USER='hvuser'
-RS_DATABASE='dev'
-RS_PORT='5439'
 RS_NUM_NODES=10
 EMR_CLUSTER_NAME="normalization-cluster"
 EMR_NUM_NODES='5'
 EMR_NODE_TYPE="c4.xlarge"
-EMR_APPLICATIONS="Name=Hadoop Name=Hive Name=Presto Name=Ganglia Name=Spark"
-EMR_USE_EBS="false"
 EMR_EBS_VOLUME_SIZE="0"
 
 def do_detect_matching_done(ds, **kwargs):
@@ -73,6 +65,12 @@ def do_run_pyspark_normalization_routine(ds, **kwargs):
         kwargs['part_file_prefix_func'](ds, kwargs), kwargs['model']
     )
 
+def do_create_redshift_cluster(ds, **kwargs):
+    redshift_utils.create_redshift_cluster('norm-' + dag_config['vendor_uuid'], RS_NUM_NODES)
+
+def do_delete_redshift_cluster(ds, **kwargs):
+    redshift_utils.delete_redshift_cluster('norm-' + dag_config['vendor_uuid'])
+
 def do_run_redshift_normalization_routine(ds, **kwargs):
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
     file_date = kwargs['file_date_func'](ds, kwargs)
@@ -84,12 +82,7 @@ def do_run_redshift_normalization_routine(ds, **kwargs):
     command = [kwargs['normalization_routine_script'], '--date', file_date, '--setid', setid,
             '--s3_credentials', s3_credentials, '--first_run']
 
-    env = dict(os.environ)
-    env['PGHOST'] = 'norm-' + kwargs['vendor_uuid'] + RS_HOST_TLD
-    env['PGUSER'] = RS_USER
-    env['PGDATABASE'] = RS_DATABASE
-    env['PGPORT'] = RS_PORT
-    env['PGPASSWORD'] = Variable.get('rs_norm_password')
+    env = redshift_utils.get_rs_env('norm-' + kwargs['vendor_uuid'])
     cwd = kwargs['normalization_routine_directory']
     p = Popen(command, env=env, cwd=cwd)
     p.wait()
@@ -118,19 +111,7 @@ def do_transform_to_parquet(ds, **kwargs):
     logging.info(command)
     check_call(command)
                 
-    incomplete_steps=1
-    failed_steps=0
-    while incomplete_steps > 0:
-        incomplete_steps=0
-        time.sleep(60)
-        cluster_steps = json.loads(check_output(['aws', 'emr', 'list-steps', '--cluster-id', cluster_id]))
-        for step in cluster_steps['Steps']:
-            if step['Status']['State'] == "PENDING" or step['Status']['State'] == "RUNNING":
-                incomplete_steps += 1
-            elif step['Status']['State'] == "FAILED":
-                failed_steps += 1
-    if failed_steps > 0:
-        logging.info("ITS ALL BROKEN")
+    emr_utils._wait_for_steps(cluster_id)
 
 def do_create_emr_cluster(ds, **kwargs):
     emr_utils.create_emr_cluster(
@@ -139,8 +120,7 @@ def do_create_emr_cluster(ds, **kwargs):
     )
 
 def do_delete_emr_cluster(ds, **kwargs):
-    cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'])
-    check_call(['aws', 'emr', 'terminate-clusters', '--cluster-ids', cluster_id])
+    emr_utls.delete_emr_cluster(EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'])
 
 def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
@@ -207,10 +187,11 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         run_normalization_routine.set_upstream([create_emr_cluster, move_matching_payload])
         delete_emr_cluster.set_upstream(run_normalization_routine)
     else:
-        create_redshift_cluster = BashOperator(
+        create_redshift_cluster = PythonOperator(
             task_id='create_redshift_cluster',
-            bash_command=REDSHIFT_CREATE_COMMAND_TEMPLATE,
-            params={"cluster_id" : 'norm-' + dag_config['vendor_uuid'], "num_nodes" : RS_NUM_NODES},
+            provide_context=True,
+            python_callable=do_create_redshift_cluster,
+            op_kwargs=dag_config,
             dag=dag
         )
 

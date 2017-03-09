@@ -57,7 +57,7 @@ def get_expected_transaction_file_name(ds, kwargs):
 def get_expected_transaction_file_name_gz(ds, kwargs):
     return TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash']) + '.gz'
 
-def get_encrypted_decrypted_file_names(ds, kwargs):
+def get_encrypted_decrypted_file_paths(ds, kwargs):
     return [get_expected_transaction_file_name(ds, kwargs), get_expected_transaction_file_name_gz(ds, kwargs)]
 
 def get_expected_transaction_file_regex(ds, kwargs):
@@ -170,7 +170,7 @@ decrypt_transaction_file_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_dir_func'                        : get_tmp_dir,
-            'encrypted_decrypted_file_names_func' : get_encrypted_decrypted_file_names
+            'encrypted_decrypted_file_paths_func' : get_encrypted_decrypted_file_paths
         }
     ),
     task_id='decrypt_transaction_file',

@@ -117,7 +117,7 @@ def get_ease_transaction_tmp_dir(ds, kwargs):
 
 get_ease_transaction_files_paths = get_transaction_files_paths_func(get_ease_transaction_tmp_dir)
 
-def get_s3_transaction_prefix(ds, kwargs):
+def get_s3_transaction_path(ds, kwargs):
     return 's3://' + HV_S3_TRANSACTION_BUCKET + '/' + HV_S3_TRANSACTION_PREFIX_TEMPLATE.format(ds.replace('-', '/'))
 
 def get_s3_raw_prefix(ds, kwargs):
@@ -138,7 +138,7 @@ def get_ease_deid_file_paths(ds, kwargs):
     files = os.listdir(file_dir)
     return map(lambda f: file_dir + f, files)
 
-def get_ap_encrypted_decrypted_file_names(ds, kwargs):
+def get_ap_encrypted_decrypted_file_paths(ds, kwargs):
     file_dir = get_ap_transaction_tmp_dir(ds, kwargs)
     files = os.listdir(file_dir)
     fs = []
@@ -147,7 +147,7 @@ def get_ap_encrypted_decrypted_file_names(ds, kwargs):
             fs.append([file_dir + f, file_dir + f + '.decrypted.gz'])
     return fs
 
-def get_ses_encrypted_decrypted_file_names(ds, kwargs):
+def get_ses_encrypted_decrypted_file_paths(ds, kwargs):
     file_dir = get_ses_transaction_tmp_dir(ds, kwargs)
     files = os.listdir(file_dir)
     fs = []
@@ -156,7 +156,7 @@ def get_ses_encrypted_decrypted_file_names(ds, kwargs):
             fs.append([file_dir + f, file_dir + f + '.decrypted.gz'])
     return fs
 
-def get_ease_encrypted_decrypted_file_names(ds, kwargs):
+def get_ease_encrypted_decrypted_file_paths(ds, kwargs):
     file_dir = get_ease_transaction_tmp_dir(ds, kwargs)
     files = os.listdir(file_dir)
     fs = []
@@ -321,7 +321,7 @@ def rename_files_operator(product, files_type, file_dir, prefix):
         dag=mdag
     )
 
-def decrypt_transaction_files_subdag(product, tmp_dir_func, encrypted_decrypted_file_names_func):
+def decrypt_transaction_files_subdag(product, tmp_dir_func, encrypted_decrypted_file_paths_func):
     return SubDagOperator(
         subdag=decrypt_files.decrypt_files(
             DAG_NAME,
@@ -330,7 +330,7 @@ def decrypt_transaction_files_subdag(product, tmp_dir_func, encrypted_decrypted_
             mdag.schedule_interval,
             {
                 'tmp_dir_func'                        : tmp_dir_func,
-                'encrypted_decrypted_file_names_func' : encrypted_decrypted_file_names_func
+                'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_func
             }
         ),
         task_id='decrypt_{}_transaction_files'.format(product),
@@ -347,7 +347,7 @@ def split_push_transaction_files_subdag(product, tmp_dir_func, file_paths_to_spl
             {
                 'tmp_dir_func'             : tmp_dir_func,
                 'file_paths_to_split_func' : file_paths_to_split_func,
-                's3_prefix_func'           : get_s3_transaction_prefix,
+                's3_dest_path_func'        : get_s3_transaction_path,
                 'num_splits'               : 1
             }
         ),
@@ -389,7 +389,7 @@ rename_ap_deid_files = rename_files_operator('ap', 'deid', 'ap/deid/', 'ap')
 rename_ap_transaction_files = rename_files_operator('ap', 'transaction', 'ap/transaction/', 'ap')
 
 decrypt_ap_transaction_files_dag = decrypt_transaction_files_subdag('ap', get_ap_transaction_tmp_dir,
-        get_ap_encrypted_decrypted_file_names)
+        get_ap_encrypted_decrypted_file_paths)
 
 split_push_ap_transaction_files_dag = split_push_transaction_files_subdag('ap', get_ap_transaction_tmp_dir,
         get_ap_transaction_files_paths)
@@ -414,7 +414,7 @@ rename_ses_deid_files = rename_files_operator('ses', 'deid', 'ses/deid/', 'ses')
 rename_ses_transaction_files = rename_files_operator('ses', 'transaction', 'ses/transaction/', 'ses')
 
 decrypt_ses_transaction_files_dag = decrypt_transaction_files_subdag('ses', get_ses_transaction_tmp_dir,
-        get_ses_encrypted_decrypted_file_names)
+        get_ses_encrypted_decrypted_file_paths)
 
 split_push_ses_transaction_files_dag = split_push_transaction_files_subdag('ses', get_ses_transaction_tmp_dir,
         get_ses_transaction_files_paths)
@@ -439,7 +439,7 @@ rename_ease_deid_files = rename_files_operator('ease', 'deid', 'ease/deid/', 'ea
 rename_ease_transaction_files = rename_files_operator('ease', 'transaction', 'ease/transaction/', 'ease')
 
 decrypt_ease_transaction_files_dag = decrypt_transaction_files_subdag('ease', get_ease_transaction_tmp_dir,
-        get_ease_encrypted_decrypted_file_names)
+        get_ease_encrypted_decrypted_file_paths)
 
 split_push_ease_transaction_files_dag = split_push_transaction_files_subdag('ease', get_ease_transaction_tmp_dir,
         get_ease_transaction_files_paths)

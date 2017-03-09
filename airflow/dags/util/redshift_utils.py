@@ -8,7 +8,7 @@ from airflow.models import Variable
 
 def get_aws_env(suffix=""):
     """Get an environ instance with aws perms attached"""
-    aws_env = os.environ
+    aws_env = dict(os.environ)
     aws_env['AWS_ACCESS_KEY_ID'] = Variable.get(
         'AWS_ACCESS_KEY_ID' + suffix
     )

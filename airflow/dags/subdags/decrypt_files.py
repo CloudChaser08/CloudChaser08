@@ -27,12 +27,12 @@ def do_fetch_decryption_files(ds, **kwargs):
 
 
 def do_run_decryption(ds, **kwargs):
-    encrypted_decrypted_file_names = kwargs['encrypted_decrypted_file_names_func'](ds,kwargs)
+    encrypted_decrypted_file_paths = kwargs['encrypted_decrypted_file_paths_func'](ds,kwargs)
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
     decryptor_jar = tmp_dir + DECRYPTOR_JAR
     decryption_key = tmp_dir + DECRYPTION_KEY
 
-    for f in encrypted_decrypted_file_names:
+    for f in encrypted_decrypted_file_paths:
         check_call([
             'java', '-jar', decryptor_jar, '-i', f[0], '-o',
             f[1], '-k', decryption_key
@@ -40,19 +40,19 @@ def do_run_decryption(ds, **kwargs):
 
 
 def do_decompress_files(ds, **kwargs):
-    encrypted_decrypted_file_names = kwargs['encrypted_decrypted_file_names_func'](ds,kwargs)
+    encrypted_decrypted_file_paths = kwargs['encrypted_decrypted_file_paths_func'](ds,kwargs)
 
-    for f in encrypted_decrypted_file_names:
+    for f in encrypted_decrypted_file_paths:
         check_call(['gzip', '-d', '-k', f[1]])
 
 
 def do_clean_up(ds, **kwargs):
-    encrypted_decrypted_file_names = kwargs['encrypted_decrypted_file_names_func'](ds,kwargs)
+    encrypted_decrypted_file_paths = kwargs['encrypted_decrypted_file_paths_func'](ds,kwargs)
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
     decryptor_jar = tmp_dir + DECRYPTOR_JAR
     decryption_key = tmp_dir + DECRYPTION_KEY
 
-    for f in encrypted_decrypted_file_names + [[decryptor_jar], [decryption_key]]:
+    for f in encrypted_decrypted_file_paths + [[decryptor_jar], [decryption_key]]:
         check_call(['rm', f[0]])
 
 

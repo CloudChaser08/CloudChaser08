@@ -7,26 +7,17 @@ from subprocess import check_call
 # hv-specific modules
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
-import subdags.decrypt_file as decrypt_file
-import subdags.split_push_file as split_push_file
+import subdags.decrypt_files as decrypt_files
+import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 
-import util.s3_utils as s3_utils
-import util.emr_utils as emr_utils
-import util.redshift_utils as redshift_utils
 import util.decompression as decompression
 
-reload(s3_validate_file)
-reload(s3_fetch_file)
-reload(decrypt_file)
-reload(split_push_file)
-reload(queue_up_for_matching)
-reload(detect_move_normalize)
-reload(s3_utils)
-reload(emr_utils)
-reload(redshift_utils)
-reload(decompression)
+for m in [s3_validate_file, s3_fetch_file, decrypt_files,
+        split_push_files, queue_up_for_matching,
+        detect_move_normalize, decompression]:
+    reload(m)
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
@@ -116,6 +107,30 @@ def insert_current_date(template, kwargs):
         kwargs['yesterday_ds_nodash'][6:8]
     )
 
+get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
+get_addon_tmp_dir = insert_todays_date_function(TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
+get_trunk_tmp_dir = insert_todays_date_function(TRANSACTION_TRUNK_TMP_PATH_TEMPLATE)
+
+get_
+
+def encrypted_decrypted_file_paths_function(ds, kwargs):
+    file_dir = get_addon_tmp_dir(ds, kwargs)
+    encrypted_file_path = file_dir + insert_formatted_date_function(
+                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
+                )(ds, kwargs)
+    return [encrypted_file_path, encrypted_file_path + '.gz']
+
+def get_addon_unzipped_file_paths(ds, kwargs):
+    file_dir = get_addon_tmp_dir(ds, kwargs)
+    return [file_dir + insert_formatted_date_function(
+                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
+                )(ds, kwargs)]
+
+def get_trunk_unzipped_file_paths(ds, kwargs):
+    file_dir = get_trunk_tmp_dir(ds, kwargs)
+    return [file_dir + insert_formatted_date_function(
+                TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE
+                )(ds, kwargs)]
 
 def generate_transaction_file_validation_dag(
         task_id, path_template, minimum_file_size
@@ -196,9 +211,9 @@ fetch_trunk = generate_fetch_dag(
 def unzip_step(task_id, tmp_path_template, filename_template):
     def execute(ds, **kwargs):
         decompression.decompress_zip_file(
-            insert_todays_date_function(tmp_path_template)(ds, kwargs)
+            get_tmp_dir(ds, kwargs)
             + filename_template.format(get_formatted_date(ds, kwargs)),
-            insert_todays_date_function(tmp_path_template)(ds, kwargs)
+            get_tmp_dir(ds, kwargs)
         )
     return PythonOperator(
         task_id='unzip_' + task_id + '_file',
@@ -219,19 +234,14 @@ unzip_trunk = unzip_step(
 
 
 decrypt_addon = SubDagOperator(
-    subdag=decrypt_file.decrypt_file(
+    subdag=decrypt_files.decrypt_files(
         DAG_NAME,
         'decrypt_addon_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template': TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
-            'encrypted_file_name_func': insert_formatted_date_function(
-                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
-            ),
-            'decrypted_file_name_func': insert_formatted_date_function(
-                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE + '.gz'
-            )
+            'tmp_dir_func'                        : get_addon_tmp_dir,
+            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
         }
     ),
     task_id='decrypt_addon_file',
@@ -259,22 +269,20 @@ gunzip_trunk = gunzip_step(
 )
 
 
-def split_step(task_id, tmp_path_template, tmp_name_template, s3_destination, num_splits):
+def split_step(task_id, tmp_dir_func, tmp_name_template, s3_destination, num_splits):
     return SubDagOperator(
-        subdag=split_push_file.split_push_file(
+        subdag=split_push_files.split_push_files(
             DAG_NAME,
             'split_' + task_id + '_file',
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_path_template': tmp_path_template,
-                'source_file_name_func': insert_formatted_date_function(
-                    tmp_name_template
-                ),
-                's3_dest_path_func': insert_current_date_function(
+                'tmp_dir_func'             : tmp_dir_func,
+                'file_paths_to_split_func' : file_paths_to_split_func,
+                's3_dest_path_func'        : insert_current_date_function(
                     s3_destination
                 ),
-                'num_splits': num_splits
+                'num_splits'               : num_splits
             }
         ),
         task_id='split_' + task_id + '_file',
@@ -283,13 +291,11 @@ def split_step(task_id, tmp_path_template, tmp_name_template, s3_destination, nu
 
 
 split_addon = split_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
-    TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE,
+    "addon", get_addon_tmp_dir, get_addon_unzipped_file_path,
     TRANSACTION_ADDON_S3_SPLIT_PATH, 20
 )
 split_trunk = split_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
-    TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE,
+    "trunk", get_trunk_tmp_dir, get_trunk_unzipped_file_path,
     TRANSACTION_TRUNK_S3_SPLIT_PATH, 20
 )
 
