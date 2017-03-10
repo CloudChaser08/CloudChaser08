@@ -20,12 +20,6 @@ def do_is_valid_new_file(ds, **kwargs):
     minimum_file_size  = kwargs['minimum_file_size']
     s3_connection_id   = kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
 
-    # this is necessary because kwargs['s3_connection'] may literally
-    # be set to None
-    s3_connection = s3_utils.DEFAULT_CONNECTION_ID    \
-        if kwargs.get('s3_connection', None) is None  \
-        else kwargs['s3_connection']
-
     s3_keys = s3_utils.list_s3_bucket_files(
         's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/', s3_connection_id
     )
