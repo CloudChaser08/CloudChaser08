@@ -14,51 +14,49 @@ DECRYPTION_KEY='hv_record_private.base64.reformat'
 
 
 def do_fetch_decryption_files(ds, **kwargs):
+    tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
     # jar
     s3_utils.fetch_file_from_s3(
         Variable.get('DECRYPTOR_JAR_REMOTE_LOCATION'),
-        kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + DECRYPTOR_JAR
+        tmp_dir + DECRYPTOR_JAR
     )
 
     # key
     s3_utils.fetch_file_from_s3(
         Variable.get('DECRYPTION_KEY_REMOTE_LOCATION'),
-        kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + DECRYPTION_KEY
+        tmp_dir + DECRYPTION_KEY
     )
 
 
 def do_run_decryption(ds, **kwargs):
-    tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
-    encrypted_file_name = tmp_dir + kwargs['encrypted_file_name_func'](ds, kwargs)
-    decrypted_file_name = tmp_dir + kwargs['decrypted_file_name_func'](ds, kwargs)
+    encrypted_decrypted_file_paths = kwargs['encrypted_decrypted_file_paths_func'](ds,kwargs)
+    tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
     decryptor_jar = tmp_dir + DECRYPTOR_JAR
     decryption_key = tmp_dir + DECRYPTION_KEY
 
-    check_call([
-        'java', '-jar', decryptor_jar, '-i', encrypted_file_name, '-o',
-        decrypted_file_name, '-k', decryption_key
-    ])
+    for f in encrypted_decrypted_file_paths:
+        check_call([
+            'java', '-jar', decryptor_jar, '-i', f[0], '-o',
+            f[1], '-k', decryption_key
+        ])
 
 
-def do_decompress_file(ds, **kwargs):
-    tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
-    decrypted_file = tmp_dir + kwargs['decrypted_file_name_func'](ds, kwargs)
+def do_decompress_files(ds, **kwargs):
+    encrypted_decrypted_file_paths = kwargs['encrypted_decrypted_file_paths_func'](ds,kwargs)
 
-    decompression.decompress_gzip_file(
-        decrypted_file
-    )
-
+    for f in encrypted_decrypted_file_paths:
+        decompression.decompress_gzip_file(f[1])
 
 def do_clean_up(ds, **kwargs):
-    tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
+    tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
     decryptor_jar = tmp_dir + DECRYPTOR_JAR
     decryption_key = tmp_dir + DECRYPTION_KEY
 
-    for f in [decryptor_jar, decryption_key]:
-        check_call(['rm', f])
+    check_call(['rm', decryptor_jar])
+    check_call(['rm', decryption_key])
 
 
-def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
+def decrypt_files(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
         'owner': 'airflow',
         'depends_on_past': False,
@@ -88,9 +86,9 @@ def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval,
         dag=dag
     )
 
-    decompress_file = PythonOperator(
+    decompress_files = PythonOperator(
         task_id='decompress_file',
-        python_callable=do_decompress_file,
+        python_callable=do_decompress_files,
         provide_context=True,
         op_kwargs=dag_config,
         dag=dag
@@ -105,7 +103,7 @@ def decrypt_file(parent_dag_name, child_dag_name, start_date, schedule_interval,
     )
 
     run_decryption.set_upstream(fetch_decryption_files)
-    decompress_file.set_upstream(run_decryption)
-    clean_up.set_upstream(decompress_file)
+    decompress_files.set_upstream(run_decryption)
+    clean_up.set_upstream(decompress_files)
 
     return dag

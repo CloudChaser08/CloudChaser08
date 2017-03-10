@@ -18,15 +18,10 @@ def do_is_valid_new_file(ds, **kwargs):
     file_name_pattern  = kwargs['file_name_pattern_func'](ds, kwargs)
     expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
     minimum_file_size  = kwargs['minimum_file_size']
-
-    # this is necessary because kwargs['s3_connection'] may literally
-    # be set to None
-    s3_connection = s3_utils.DEFAULT_CONNECTION_ID    \
-        if kwargs.get('s3_connection', None) is None  \
-        else kwargs['s3_connection']
+    s3_connection_id   = kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
 
     s3_keys = s3_utils.list_s3_bucket_files(
-        's3://healthverity/' + s3_prefix + '/', s3_connection
+        's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/', s3_connection_id
     )
 
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
@@ -38,7 +33,7 @@ def do_is_valid_new_file(ds, **kwargs):
     s3_key = filter(lambda k: k.split('/')[-1] == expected_file_name, s3_keys)[0]
 
     if s3_utils.get_file_size(
-            's3://healthverity/' + s3_prefix + '/' + s3_key
+            's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/' + s3_key, s3_connection_id
     ) < minimum_file_size:
         return kwargs['is_not_valid']
 
@@ -59,21 +54,17 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         default_args=default_args
     )
 
+    is_valid_params = dict(dag_config)
+    is_valid_params['is_new_valid'] = 'create_tmp_dir'
+    is_valid_params['is_not_valid'] = 'alert_file_size_problem'
+    is_valid_params['is_not_new'] = 'alert_no_new_file'
+    is_valid_params['is_bad_name'] = 'alert_is_bad_name'
+
     is_valid_new_file = BranchPythonOperator(
         task_id='is_new_file',
         provide_context=True,
         python_callable=do_is_valid_new_file,
-        op_kwargs={
-            'expected_file_name_func' : dag_config['expected_file_name_func'],
-            'file_name_pattern_func'  : dag_config['file_name_pattern_func'],
-            'minimum_file_size'       : dag_config['minimum_file_size'],
-            's3_prefix'    : dag_config['s3_prefix'],
-            's3_connection': dag_config.get('s3_connection'),
-            'is_new_valid' : 'create_tmp_dir',
-            'is_not_valid' : 'alert_file_size_problem',
-            'is_not_new'   : 'alert_no_new_file',
-            'is_bad_name'  : 'alert_is_bad_name'
-        },
+        op_kwargs=is_valid_params,
         dag=dag
     )
     

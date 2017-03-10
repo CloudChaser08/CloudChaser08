@@ -14,7 +14,7 @@ def do_fetch_file(ds, **kwargs):
     tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
 
     s3_utils.fetch_file_from_s3(
-        's3://healthverity/' + s3_prefix + expected_file_name,
+        's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + expected_file_name,
         tmp_path + new_file_name,
         kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
     )

@@ -33,7 +33,7 @@ CREATE TABLE transactional_header_dupes (
         hvjoinkey                  text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_header_dupes FROM :header_path CREDENTIALS :credentials NULL AS 'NULL' ACCEPTINVCHARS DELIMITER '|';
+COPY transactional_header_dupes FROM :header_path CREDENTIALS :credentials NULL AS 'NULL' ACCEPTINVCHARS DELIMITER '|' BZIP2;
 ALTER TABLE transactional_header_dupes DROP COLUMN hvjoinkey;
 ALTER TABLE transactional_header_dupes DROP COLUMN claimid2;
 
@@ -112,7 +112,7 @@ CREATE TABLE transactional_serviceline_dupes (
         processdate               text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_serviceline_dupes FROM :serviceline_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 500 DELIMITER '|';
+COPY transactional_serviceline_dupes FROM :serviceline_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 500 DELIMITER '|' BZIP2;
 
 DROP TABLE IF EXISTS transactional_serviceline CASCADE;
 CREATE TABLE transactional_serviceline (
@@ -177,7 +177,7 @@ CREATE TABLE transactional_servicelineaffiliation_dupes (
         claimid        text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_servicelineaffiliation_dupes FROM :servicelineaffiliation_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 100 DELIMITER '|';
+COPY transactional_servicelineaffiliation_dupes FROM :servicelineaffiliation_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 100 DELIMITER '|' BZIP2;
 
 DROP TABLE IF EXISTS transactional_servicelineaffiliation CASCADE;
 CREATE TABLE transactional_servicelineaffiliation (
@@ -223,7 +223,7 @@ CREATE TABLE transactional_claimaffiliation_dupes (
         processdate  text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_claimaffiliation_dupes FROM :claimaffiliation_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 100 DELIMITER '|';
+COPY transactional_claimaffiliation_dupes FROM :claimaffiliation_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 100 DELIMITER '|' BZIP2;
 
 DROP TABLE IF EXISTS transactional_claimaffiliation CASCADE;
 CREATE TABLE transactional_claimaffiliation (
@@ -258,7 +258,7 @@ CREATE TABLE transactional_diagnosis_dupes (
         processdate         text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_diagnosis_dupes FROM :diagnosis_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 500 DELIMITER '|';
+COPY transactional_diagnosis_dupes FROM :diagnosis_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 MAXERROR 500 DELIMITER '|' BZIP2;
 
 DROP TABLE IF EXISTS transactional_diagnosis CASCADE;
 CREATE TABLE transactional_diagnosis (
@@ -283,7 +283,7 @@ CREATE TABLE transactional_procedure_dupes (
         processdate         text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_procedure_dupes FROM :procedure_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 DELIMITER '|';
+COPY transactional_procedure_dupes FROM :procedure_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 DELIMITER '|' BZIP2;
 
 DROP TABLE IF EXISTS transactional_procedure CASCADE;
 CREATE TABLE transactional_procedure (
@@ -320,7 +320,7 @@ CREATE TABLE transactional_billing_dupes (
         processdate  text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_billing_dupes FROM :billing_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 DELIMITER '|';
+COPY transactional_billing_dupes FROM :billing_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS IGNOREHEADER 1 DELIMITER '|' BZIP2;
 
 DROP TABLE IF EXISTS transactional_billing CASCADE;
 CREATE TABLE transactional_billing (
@@ -367,7 +367,7 @@ CREATE TABLE transactional_payer_dupes (
         hvjoinkey              text ENCODE lzo
         ) DISTKEY(claimid) SORTKEY(claimid);
 
-COPY transactional_payer_dupes FROM :payer_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS DELIMITER '|';
+COPY transactional_payer_dupes FROM :payer_path CREDENTIALS :credentials EMPTYASNULL NULL AS 'NULL' ACCEPTINVCHARS DELIMITER '|' BZIP2;
 ALTER TABLE transactional_payer_dupes DROP COLUMN hvjoinkey;
 
 DROP TABLE IF EXISTS transactional_payer CASCADE;

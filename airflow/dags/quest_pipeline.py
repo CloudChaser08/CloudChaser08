@@ -7,38 +7,29 @@ from subprocess import check_call
 # hv-specific modules
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
-import subdags.decrypt_file as decrypt_file
-import subdags.split_push_file as split_push_file
+import subdags.decrypt_files as decrypt_files
+import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 
-import util.s3_utils as s3_utils
-import util.emr_utils as emr_utils
-import util.redshift_utils as redshift_utils
 import util.decompression as decompression
 
-reload(s3_validate_file)
-reload(s3_fetch_file)
-reload(decrypt_file)
-reload(split_push_file)
-reload(queue_up_for_matching)
-reload(detect_move_normalize)
-reload(s3_utils)
-reload(emr_utils)
-reload(redshift_utils)
-reload(decompression)
+for m in [s3_validate_file, s3_fetch_file, decrypt_files,
+        split_push_files, queue_up_for_matching,
+        detect_move_normalize, decompression]:
+    reload(m)
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
 DAG_NAME = 'quest_pipeline'
 
 # Applies to all transaction files
-S3_TRANSACTION_RAW_PATH = 's3://healthverity/incoming/quest/'
-S3_TRANSACTION_PROCESSED_PATH_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
+S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/quest/'
+S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
 
 # Transaction Addon file
 TRANSACTION_ADDON_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/addon/'
-TRANSACTION_ADDON_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'addon/'
+TRANSACTION_ADDON_S3_SPLIT_URL = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'addon/'
 TRANSACTION_ADDON_FILE_DESCRIPTION = 'Quest transaction addon file'
 TRANSACTION_ADDON_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt.zip'
 TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt'
@@ -47,7 +38,7 @@ MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Transaction Trunk file
 TRANSACTION_TRUNK_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/trunk/'
-TRANSACTION_TRUNK_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'trunk/'
+TRANSACTION_TRUNK_S3_SPLIT_URL = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'trunk/'
 TRANSACTION_TRUNK_FILE_DESCRIPTION = 'Quest transaction trunk file'
 TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2'
 TRANSACTION_TRUNK_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2.gz.zip'
@@ -116,6 +107,36 @@ def insert_current_date(template, kwargs):
         kwargs['yesterday_ds_nodash'][6:8]
     )
 
+get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
+get_addon_tmp_dir = insert_todays_date_function(TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
+get_trunk_tmp_dir = insert_todays_date_function(TRANSACTION_TRUNK_TMP_PATH_TEMPLATE)
+
+
+def get_deid_file_urls(ds, kwargs):
+    return [S3_TRANSACTION_RAW_URL + insert_formatted_date_function(
+                DEID_FILE_NAME_TEMPLATE
+            )]
+
+def encrypted_decrypted_file_paths_function(ds, kwargs):
+    file_dir = get_addon_tmp_dir(ds, kwargs)
+    encrypted_file_path = file_dir + insert_formatted_date_function(
+                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
+                )(ds, kwargs)
+    return [
+        [encrypted_file_path, encrypted_file_path + '.gz']
+    ]
+
+def get_addon_unzipped_file_paths(ds, kwargs):
+    file_dir = get_addon_tmp_dir(ds, kwargs)
+    return [file_dir + insert_formatted_date_function(
+                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
+                )(ds, kwargs)]
+
+def get_trunk_unzipped_file_paths(ds, kwargs):
+    file_dir = get_trunk_tmp_dir(ds, kwargs)
+    return [file_dir + insert_formatted_date_function(
+                TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE
+                )(ds, kwargs)]
 
 def generate_transaction_file_validation_dag(
         task_id, path_template, minimum_file_size
@@ -127,15 +148,16 @@ def generate_transaction_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': insert_formatted_date_function(
+                'expected_file_name_func' : insert_formatted_date_function(
                     path_template
                 ),
-                'file_name_pattern_func': insert_formatted_regex_function(
+                'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
                 ),
-                'minimum_file_size': minimum_file_size,
-                's3_prefix': '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
-                'file_description': 'Quest ' + task_id + 'file'
+                'minimum_file_size'       : minimum_file_size,
+                's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+                's3_bucket'               : 'healthverity',
+                'file_description'        : 'Quest ' + task_id + 'file'
             }
         ),
         task_id='validate_' + task_id + '_file',
@@ -167,11 +189,12 @@ def generate_fetch_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_path_template': local_path_template,
+                'tmp_path_template'      : local_path_template,
                 'expected_file_name_func': insert_formatted_date_function(
                     file_name_template
                 ),
-                's3_prefix': s3_path_template
+                's3_prefix'              : s3_path_template,
+                's3_bucket'              : 'healthverity'
             }
         ),
         task_id='fetch_' + task_id + '_file',
@@ -181,13 +204,13 @@ def generate_fetch_dag(
 
 fetch_addon = generate_fetch_dag(
     "addon",
-    '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
+    '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
     TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
     TRANSACTION_ADDON_FILE_NAME_TEMPLATE
 )
 fetch_trunk = generate_fetch_dag(
     "trunk",
-    '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
+    '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
     TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
 )
@@ -196,9 +219,9 @@ fetch_trunk = generate_fetch_dag(
 def unzip_step(task_id, tmp_path_template, filename_template):
     def execute(ds, **kwargs):
         decompression.decompress_zip_file(
-            insert_todays_date_function(tmp_path_template)(ds, kwargs)
+            get_tmp_dir(ds, kwargs)
             + filename_template.format(get_formatted_date(ds, kwargs)),
-            insert_todays_date_function(tmp_path_template)(ds, kwargs)
+            get_tmp_dir(ds, kwargs)
         )
     return PythonOperator(
         task_id='unzip_' + task_id + '_file',
@@ -219,19 +242,14 @@ unzip_trunk = unzip_step(
 
 
 decrypt_addon = SubDagOperator(
-    subdag=decrypt_file.decrypt_file(
+    subdag=decrypt_files.decrypt_files(
         DAG_NAME,
         'decrypt_addon_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template': TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
-            'encrypted_file_name_func': insert_formatted_date_function(
-                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
-            ),
-            'decrypted_file_name_func': insert_formatted_date_function(
-                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE + '.gz'
-            )
+            'tmp_dir_func'                        : get_addon_tmp_dir,
+            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
         }
     ),
     task_id='decrypt_addon_file',
@@ -259,22 +277,20 @@ gunzip_trunk = gunzip_step(
 )
 
 
-def split_step(task_id, tmp_path_template, tmp_name_template, s3_destination, num_splits):
+def split_step(task_id, tmp_dir_func, tmp_name_template, s3_destination, num_splits):
     return SubDagOperator(
-        subdag=split_push_file.split_push_file(
+        subdag=split_push_files.split_push_files(
             DAG_NAME,
             'split_' + task_id + '_file',
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_path_template': tmp_path_template,
-                'source_file_name_func': insert_formatted_date_function(
-                    tmp_name_template
-                ),
-                's3_dest_path_func': insert_current_date_function(
+                'tmp_dir_func'             : tmp_dir_func,
+                'file_paths_to_split_func' : file_paths_to_split_func,
+                's3_dest_path_func'        : insert_current_date_function(
                     s3_destination
                 ),
-                'num_splits': num_splits
+                'num_splits'               : num_splits
             }
         ),
         task_id='split_' + task_id + '_file',
@@ -283,14 +299,12 @@ def split_step(task_id, tmp_path_template, tmp_name_template, s3_destination, nu
 
 
 split_addon = split_step(
-    "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
-    TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE,
-    TRANSACTION_ADDON_S3_SPLIT_PATH, 20
+    "addon", get_addon_tmp_dir, get_addon_unzipped_file_paths,
+    TRANSACTION_ADDON_S3_SPLIT_URL, 20
 )
 split_trunk = split_step(
-    "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
-    TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE,
-    TRANSACTION_TRUNK_S3_SPLIT_PATH, 20
+    "trunk", get_trunk_tmp_dir, get_trunk_unzipped_file_paths,
+    TRANSACTION_TRUNK_S3_SPLIT_URL, 20
 )
 
 
@@ -317,10 +331,8 @@ queue_up_for_matching = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_file_name_func': insert_formatted_date_function(
-                DEID_FILE_NAME_TEMPLATE
-            ),
-            's3_prefix': S3_TRANSACTION_RAW_PATH
+
+            'source_files_func' : get_deid__file_urls
         }
     ),
     task_id='queue_up_for_matching',
@@ -341,23 +353,23 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_deid_file_name_func': insert_formatted_date_function(
+            'expected_deid_file_name_func'      : insert_formatted_date_function(
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE
             ),
-            'file_date_func': insert_current_date_function(
+            'file_date_func'                    : insert_current_date_function(
                 '{}/{}/{}'
             ),
-            's3_payload_loc': S3_PAYLOAD_DEST,
-            'vendor_uuid': '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
-            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
-            'pyspark_normalization_args_func': lambda ds, k: [
+            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
+            'vendor_uuid'                       : '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
+            'pyspark_normalization_args_func'   : lambda ds, k: [
                 '--date', insert_current_date('{}-{}-{}', k)
             ],
-            'text_warehouse': TEXT_WAREHOUSE,
-            'parquet_warehouse': PARQUET_WAREHOUSE,
-            'part_file_prefix_func': insert_current_date_function('{}-{}-{}'),
-            'model': 'lab',
-            'pyspark': True
+            'text_warehouse'                    : TEXT_WAREHOUSE,
+            'parquet_warehouse'                 : PARQUET_WAREHOUSE,
+            'part_file_prefix_func'             : insert_current_date_function('{}-{}-{}'),
+            'data_feed_type'                    : 'lab',
+            'pyspark'                           : True
         }
     ),
     task_id='detect_move_normalize',
