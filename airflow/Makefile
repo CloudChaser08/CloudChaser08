@@ -4,7 +4,9 @@ REPO=${DOCKER_REG}/hvairflow
 
 DOCKER_IP=$(shell docker-machine ip hv)
 
-RSYNC_CMD="rsync -rav --delete -e \'ssh -o StrictHostKeyChecking=no\'"
+define RSYNC_CMD
+rsync -rav --delete -e 'ssh -o StrictHostKeyChecking=no'
+endef
 
 build:
 	docker build -t ${REPO}:${USER} .
@@ -62,9 +64,9 @@ jenkins-test:
 	docker rm -f airflow-test
 
 jenkins-deploy-dev: jenkins-test
-	eval "${RSYNC_CMD} airflow/dags/ airflow@airflow-dev.awsdev.healthverity.com:airflow/dags"
-	eval "${RSYNC_CMD} spark/        airflow@airflow-dev.awsdev.healthverity.com:spark"
+	${RSYNC_CMD} airflow/dags/ airflow@airflow-dev.awsdev.healthverity.com:airflow/dags
+	${RSYNC_CMD} spark/        airflow@airflow-dev.awsdev.healthverity.com:spark
 
 jenkins-deploy: jenkins-test
-	eval "${RSYNC_CMD} airflow/dags/ airflow@airflow-prod.awsdev.healthverity.com:airflow/dags"
-	eval "${RSYNC_CMD} spark/        airflow@airflow-prod.awsdev.healthverity.com:spark"
+	${RSYNC_CMD} airflow/dags/ airflow@airflow-prod.awsdev.healthverity.com:airflow/dags
+	${RSYNC_CMD} spark/        airflow@airflow-prod.awsdev.healthverity.com:spark
