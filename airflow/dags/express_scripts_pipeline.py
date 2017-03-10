@@ -12,13 +12,13 @@ import sys
 
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
-import subdags.decrypt_file as decrypt_file
-import subdags.split_push_file as split_push_file
+import subdags.decrypt_files as decrypt_files
+import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
-for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_file,
+for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
         queue_up_for_matching, detect_move_normalize, clean_up_tmp_dir]:
     reload(m)
 
@@ -58,7 +58,12 @@ def get_expected_transaction_file_name_gz(ds, kwargs):
     return TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash']) + '.gz'
 
 def get_encrypted_decrypted_file_paths(ds, kwargs):
-    return [get_expected_transaction_file_name(ds, kwargs), get_expected_transaction_file_name_gz(ds, kwargs)]
+    tmp_dir = get_tmp_dir(ds, kwargs)
+    expected_input = get_expected_transaction_file_name(ds, kwargs)
+    expected_output = get_expected_transaction_file_name_gz(ds, kwargs)
+    return [
+        [tmp_dir + expected_input, tmp_dir + expected_output]
+    ]
 
 def get_expected_transaction_file_regex(ds, kwargs):
     return TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')

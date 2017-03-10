@@ -4,8 +4,10 @@ from airflow.operators import PythonOperator
 from subprocess import check_call
 
 import util.s3_utils as s3_utils
+import util.decompression as decompression
 
 reload(s3_utils)
+reload(decompression)
 
 DECRYPTOR_JAR='HVDecryptor.jar'
 DECRYPTION_KEY='hv_record_private.base64.reformat'
@@ -43,17 +45,15 @@ def do_decompress_files(ds, **kwargs):
     encrypted_decrypted_file_paths = kwargs['encrypted_decrypted_file_paths_func'](ds,kwargs)
 
     for f in encrypted_decrypted_file_paths:
-        check_call(['gzip', '-d', '-k', f[1]])
-
+        decompression.decompress_gzip_file(f[1])
 
 def do_clean_up(ds, **kwargs):
-    encrypted_decrypted_file_paths = kwargs['encrypted_decrypted_file_paths_func'](ds,kwargs)
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
     decryptor_jar = tmp_dir + DECRYPTOR_JAR
     decryption_key = tmp_dir + DECRYPTION_KEY
 
-    for f in encrypted_decrypted_file_paths + [[decryptor_jar], [decryption_key]]:
-        check_call(['rm', f[0]])
+    check_call(['rm', decryptor_jar])
+    check_call(['rm', decryption_key])
 
 
 def decrypt_files(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):

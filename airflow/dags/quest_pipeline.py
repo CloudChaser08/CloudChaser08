@@ -122,7 +122,9 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     encrypted_file_path = file_dir + insert_formatted_date_function(
                 TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
                 )(ds, kwargs)
-    return [encrypted_file_path, encrypted_file_path + '.gz']
+    return [
+        [encrypted_file_path, encrypted_file_path + '.gz']
+    ]
 
 def get_addon_unzipped_file_paths(ds, kwargs):
     file_dir = get_addon_tmp_dir(ds, kwargs)

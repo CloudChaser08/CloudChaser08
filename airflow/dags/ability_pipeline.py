@@ -143,8 +143,8 @@ def get_ap_encrypted_decrypted_file_paths(ds, kwargs):
     files = os.listdir(file_dir)
     fs = []
     for f in files:
-        if f.find("record") == 14 and (f[-4:] == ".txt" or f[-10:] == ".decrypted.gz"):
-            fs.append([file_dir + f, file_dir + f + '.decrypted.gz'])
+        if f.find("record") == 14 and f[-4:] == ".txt":
+            fs.append([file_dir + f, file_dir + f + '.gz'])
     return fs
 
 def get_ses_encrypted_decrypted_file_paths(ds, kwargs):
@@ -152,8 +152,8 @@ def get_ses_encrypted_decrypted_file_paths(ds, kwargs):
     files = os.listdir(file_dir)
     fs = []
     for f in files:
-        if f.find("record") == 15 and (f[-4:] == ".txt" or f[-10:] == ".decrypted.gz"):
-            fs.append([file_dir + f, file_dir + f + '.decrypted.gz'])
+        if f.find("record") == 15 and f[-4:] == ".txt":
+            fs.append([file_dir + f, file_dir + f + '.gz'])
     return fs
 
 def get_ease_encrypted_decrypted_file_paths(ds, kwargs):
@@ -161,8 +161,8 @@ def get_ease_encrypted_decrypted_file_paths(ds, kwargs):
     files = os.listdir(file_dir)
     fs = []
     for f in files:
-        if f.find("record") == 16 and (f[-4:] == ".txt" or f[-10:] == ".decrypted.gz"):
-            fs.append([file_dir + f, file_dir + f + '.decrypted.gz'])
+        if f.find("record") == 16 and f[-4:] == ".txt":
+            fs.append([file_dir + f, file_dir + f + '.gz'])
     return fs
 
 def do_unzip_files(ds, **kwargs):
