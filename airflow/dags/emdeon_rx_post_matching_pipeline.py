@@ -73,13 +73,12 @@ def do_run_normalization_routine(ds, **kwargs):
     file_date = kwargs['dag_run'].conf['ds_yesterday']
     s3_key = hook.list_keys('salusv', 'incoming/pharmacyclaims/emdeon/{}'.format(file_date.replace('-', '/')))[0]
     setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
-
-    env = dict(os.environ)
     s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
-                         env['AWS_ACCESS_KEY_ID'], env['AWS_SECRET_ACCESS_KEY']
+                         Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY')
                      )
     command = ['/home/airflow/airflow/dags/providers/emdeon/pharmacyclaims/rsNormalizeEmdeonRX.py',
         '--date', file_date, '--setid', setid, '--s3_credentials', s3_credentials, '--first_run']
+    env = dict(os.environ)
     env['PGHOST'] = RS_HOST
     env['PGUSER'] = RS_USER
     env['PGDATABASE'] = RS_DATABASE
@@ -100,11 +99,10 @@ def do_transform_to_parquet(ds, **kwargs):
     cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME)
     transform_steps = []
     delete_steps = []
-    env = dict(os.environ)
     for i in xrange(0, 15):
         d = (datetime.strptime(file_date, '%Y-%m-%d') - timedelta(days=i)).strftime('%Y/%m/%d')
         transform_steps.append(EMR_TRANSFORM_TO_PARQUET_STEP.format(
-            env['AWS_ACCESS_KEY_ID'], env['AWS_SECRET_ACCESS_KEY'],d,d))
+            Variable.get('AWS_ACCESS_KEY_ID'),Variable.get('AWS_SECRET_ACCESS_KEY'),d,d))
         delete_steps.append(EMR_DELETE_OLD_PARQUET.format(d))
     check_call(['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
                 '--steps', EMR_COPY_MELLON_STEP] + transform_steps + delete_steps +
