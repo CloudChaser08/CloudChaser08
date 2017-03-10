@@ -73,6 +73,9 @@ def do_run_redshift_normalization_routine(ds, **kwargs):
     file_date = kwargs['file_date_func'](ds, kwargs)
 
     s3_key = s3_utils.list_s3_bucket_files('s3://salusv' + kwargs['incoming_path'] + file_date.replace('-', '/') + '/')[0]
+    # The set it will be the name of the file in the incoming bucket with
+    # the last 3 characters (which are the result of using the 'split'
+    # command) and the .bz2 extension removed
     setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
     s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
                          Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY')
