@@ -13,7 +13,8 @@ class TestDecryptFileSubDag(unittest.TestCase):
         self.ds = {}
         self.kwargs = {
             # test input args
-            'tmp_path_template': 'base/'
+            'tmp_path_template': 'base/{}/',
+            'ds_nodash': '20160101'
         }
         # save the state of s3_utils before mocking to prevent mocks
         # bleeding into other tests
@@ -35,9 +36,18 @@ class TestDecryptFileSubDag(unittest.TestCase):
 
         decrypt_file.do_fetch_decryption_files(self.ds, **self.kwargs)
 
-        s3_utils.fetch_file_from_s3.assert_called_with(
-            'location', 'base/'
-        )
+        s3_utils.fetch_file_from_s3.assert_has_calls([
+            mock.call(
+                'location',
+                'base/' + self.kwargs['ds_nodash']
+                + '/' + decrypt_file.DECRYPTION_KEY
+            ),
+            mock.call(
+                'location',
+                'base/' + self.kwargs['ds_nodash']
+                + '/' + decrypt_file.DECRYPTOR_JAR
+            )
+        ], any_order=True)
 
 
 if __name__ == '__main__':
