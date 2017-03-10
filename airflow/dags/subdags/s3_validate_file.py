@@ -19,9 +19,14 @@ def do_is_valid_new_file(ds, **kwargs):
     expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
     minimum_file_size  = kwargs['minimum_file_size']
 
+    # this is necessary because kwargs['s3_connection'] may literally
+    # be set to None
+    s3_connection = s3_utils.DEFAULT_CONNECTION_ID    \
+        if kwargs.get('s3_connection', None) is None  \
+        else kwargs['s3_connection']
+
     s3_keys = s3_utils.list_s3_bucket_files(
-        's3://healthverity/' + s3_prefix + '/',
-        kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
+        's3://healthverity/' + s3_prefix + '/', s3_connection
     )
 
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
