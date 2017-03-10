@@ -5,7 +5,6 @@ import shutil
 import airflow
 import boto
 import mock
-import datetime
 import util.s3_utils as s3_utils
 
 
