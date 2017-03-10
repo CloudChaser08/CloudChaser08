@@ -219,12 +219,13 @@ fetch_trunk = generate_fetch_dag(
 )
 
 
-def unzip_step(task_id, tmp_path_template, filename_template):
+def unzip_step(task_id, tmp_path_template, filename_template, tmp_dir_func):
     def execute(ds, **kwargs):
+        tmp_dir = tmp_dir_func(ds, kwargs)
         decompression.decompress_zip_file(
-            get_tmp_dir(ds, kwargs)
-            + filename_template.format(get_formatted_date(ds, kwargs)),
-            get_tmp_dir(ds, kwargs)
+            tmp_dir + filename_template.format(
+                get_formatted_date(ds, kwargs)
+            ), tmp_dir
         )
     return PythonOperator(
         task_id='unzip_' + task_id + '_file',
@@ -236,11 +237,13 @@ def unzip_step(task_id, tmp_path_template, filename_template):
 
 unzip_addon = unzip_step(
     "addon", TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
-    TRANSACTION_ADDON_FILE_NAME_TEMPLATE
+    TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
+    get_addon_tmp_dir
 )
 unzip_trunk = unzip_step(
     "trunk", TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
-    TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
+    TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+    get_trunk_tmp_dir
 )
 
 
@@ -290,7 +293,7 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
             {
                 'tmp_dir_func'             : tmp_dir_func,
                 'file_paths_to_split_func' : file_paths_to_split_func,
-                's3_dest_path_func'        : insert_current_date_function(
+                's3_prefix_func'           : insert_current_date_function(
                     s3_destination
                 ),
                 'num_splits'               : num_splits
