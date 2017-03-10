@@ -359,9 +359,11 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_deid_file_name_func'      : insert_formatted_date_function(
-                DEID_UNZIPPED_FILE_NAME_TEMPLATE
-            ),
+            'expected_matching_files_func'      : lambda ds,k: [
+                insert_formatted_date_function(
+                    DEID_UNZIPPED_FILE_NAME_TEMPLATE
+                )(ds, k)
+            ],
             'file_date_func'                    : insert_current_date_function(
                 '{}/{}/{}'
             ),
