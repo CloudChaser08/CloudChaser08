@@ -72,7 +72,7 @@ def get_transaction_files_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + get_expected_transaction_file_name(ds, kwargs)]
 
 def get_s3_transaction_prefix(ds, kwargs):
-    return S3_TRANSACTION_SPLIT_PATH + get_fild_date(ds, kwargs) + '/'
+    return S3_TRANSACTION_SPLIT_PATH + get_file_date(ds, kwargs).replace('-', '/') + '/'
 
 def get_expected_deid_file_name(ds, kwargs):
     return DEID_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash'])

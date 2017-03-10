@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
+import airflow.hooks.S3_hook
 from datetime import timedelta
 from subprocess import check_output, check_call, Popen
 import logging
@@ -12,7 +13,7 @@ import util.s3_utils as s3_utils
 import util.emr_utils as emr_utils
 import util.redshift_utils as redshift_utils
 
-for m in [s3_utils, emr_utils, redshift_utls]:
+for m in [s3_utils, emr_utils, redshift_utils]:
     reload(m)
 
 S3_PREFIX='matching/prod/payload/'
@@ -66,14 +67,16 @@ def do_run_pyspark_normalization_routine(ds, **kwargs):
     )
 
 def do_create_redshift_cluster(ds, **kwargs):
-    redshift_utils.create_redshift_cluster('norm-' + dag_config['vendor_uuid'], RS_NUM_NODES)
+    redshift_utils.create_redshift_cluster('norm-' + kwargs['vendor_uuid'], RS_NUM_NODES)
 
 def do_delete_redshift_cluster(ds, **kwargs):
-    redshift_utils.delete_redshift_cluster('norm-' + dag_config['vendor_uuid'])
+    redshift_utils.delete_redshift_cluster('norm-' + kwargs['vendor_uuid'])
 
 def do_run_redshift_normalization_routine(ds, **kwargs):
     hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
     file_date = kwargs['file_date_func'](ds, kwargs)
+    logging.info("DEBUG {}".format(kwargs['incoming_path'] + file_date.replace('-', '/') + '/'))
+
     s3_key = hook.list_keys('salusv', kwargs['incoming_path'] + file_date.replace('-', '/') + '/')[0]
     setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
     s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
@@ -203,10 +206,11 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
             dag=dag
         )
 
-        delete_redshift_cluster = BashOperator(
+        delete_redshift_cluster = PythonOperator(
             task_id='delete_redshift_cluster',
-            bash_command=REDSHIFT_DELETE_COMMAND_TEMPLATE,
-            params={"cluster_id" : 'norm-' + dag_config['vendor_uuid']},
+            provide_context=True,
+            python_callable=do_delete_redshift_cluster,
+            params=dag_config,
             dag=dag
         )
 
