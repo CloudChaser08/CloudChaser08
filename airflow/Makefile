@@ -42,3 +42,13 @@ shell:
 
 HUP:
 	docker exec -t airflow kill -HUP 1
+
+deploy-dev:
+	make test &&										 \
+		cd dags && scp -r . airflow@airflow-dev.awsdev.healthverity.com:airflow/dags &&	 \
+		cd ../../spark && scp -r . airflow@airflow-dev.awsdev.healthverity.com:spark/
+
+deploy:
+	make test &&										 \
+		cd dags && scp -r . airflow@airflow-prod.aws.healthverity.com:airflow/dags &&	 \
+		cd ../../spark && scp -r . airflow@airflow-prod.aws.healthverity.com:spark/
