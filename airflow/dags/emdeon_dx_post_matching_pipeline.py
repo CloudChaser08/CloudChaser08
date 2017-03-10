@@ -25,7 +25,7 @@ EMR_COPY_MELLON_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.
 EMR_TRANSFORM_TO_PARQUET_STEP = ('Type=Spark,Name="Transform Emdeon DX to Parquet",ActionOnFailure=CONTINUE, '
     'Args=[--class,com.healthverity.parquet.Main,--conf,spark.sql.parquet.compression.codec=gzip,'
     '/tmp/mellon-assembly-latest.jar,{},{},medical,hdfs:///parquet/medicalclaims/emdeon/{},'
-    's3a://salusv/warehouse/text/medicalclaims/emdeon/{},20,"|"]')
+    's3a://salusv/warehouse/text/medicalclaims/emdeon/{},20,"|","false"]')
 EMR_DELETE_OLD_PARQUET = ('Type=CUSTOM_JAR,Name="Delete old data from S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[aws,s3,rm,--recursive,s3://salusv/warehouse/parquet/medicalclaims/emdeon/{}]')
 EMR_DISTCP_TO_S3 = ('Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",' 
@@ -73,12 +73,12 @@ def do_run_normalization_routine(ds, **kwargs):
     file_date = kwargs['dag_run'].conf['ds_yesterday']
     s3_key = hook.list_keys('salusv', 'incoming/medicalclaims/emdeon/{}'.format(file_date.replace('-', '/')))[0]
     setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
-    env = dict(os.environ)
     s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
-                         env['AWS_ACCESS_KEY_ID'], env['AWS_SECRET_ACCESS_KEY']
+                         Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY')
                      )
     command = ['/home/airflow/airflow/dags/providers/emdeon/medicalclaims/rsNormalizeEmdeonDX.py',
         '--date', file_date, '--setid', setid, '--s3_credentials', s3_credentials, '--first_run']
+    env = dict(os.environ)
     env['PGHOST'] = RS_HOST
     env['PGUSER'] = RS_USER
     env['PGDATABASE'] = RS_DATABASE
@@ -97,9 +97,8 @@ def get_emr_cluster_id(cluster_name):
 def do_transform_to_parquet(ds, **kwargs):
     file_date = kwargs['dag_run'].conf['ds_yesterday'].replace('-','/')
     cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME)
-    env = dict(os.environ)
     transform_step = EMR_TRANSFORM_TO_PARQUET_STEP.format(
-        env['AWS_ACCESS_KEY_ID'], env['AWS_SECRET_ACCESS_KEY'], file_date, file_date)
+        Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY'), file_date, file_date)
     check_call(['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
                 '--steps', EMR_COPY_MELLON_STEP, transform_step, EMR_DISTCP_TO_S3])
     incomplete_steps=1
