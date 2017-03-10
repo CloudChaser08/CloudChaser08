@@ -24,12 +24,12 @@ TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
 DAG_NAME = 'quest_pipeline'
 
 # Applies to all transaction files
-S3_TRANSACTION_RAW_PATH = 's3://healthverity/incoming/quest/'
-S3_TRANSACTION_PROCESSED_PATH_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
+S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/quest/'
+S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
 
 # Transaction Addon file
 TRANSACTION_ADDON_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/addon/'
-TRANSACTION_ADDON_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'addon/'
+TRANSACTION_ADDON_S3_SPLIT_URL = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'addon/'
 TRANSACTION_ADDON_FILE_DESCRIPTION = 'Quest transaction addon file'
 TRANSACTION_ADDON_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt.zip'
 TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_PlainTxt.txt'
@@ -38,7 +38,7 @@ MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Transaction Trunk file
 TRANSACTION_TRUNK_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/trunk/'
-TRANSACTION_TRUNK_S3_SPLIT_PATH = S3_TRANSACTION_PROCESSED_PATH_TEMPLATE + 'trunk/'
+TRANSACTION_TRUNK_S3_SPLIT_URL = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'trunk/'
 TRANSACTION_TRUNK_FILE_DESCRIPTION = 'Quest transaction trunk file'
 TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2'
 TRANSACTION_TRUNK_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2.gz.zip'
@@ -113,7 +113,7 @@ get_trunk_tmp_dir = insert_todays_date_function(TRANSACTION_TRUNK_TMP_PATH_TEMPL
 
 
 def get_deid_file_urls(ds, kwargs):
-    return ['s3://healthverity/' + S3_TRANSACTION_RAW_PATH + insert_formatted_date_function(
+    return [S3_TRANSACTION_RAW_URL + insert_formatted_date_function(
                 DEID_FILE_NAME_TEMPLATE
             )]
 
@@ -148,15 +148,16 @@ def generate_transaction_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': insert_formatted_date_function(
+                'expected_file_name_func' : insert_formatted_date_function(
                     path_template
                 ),
-                'file_name_pattern_func': insert_formatted_regex_function(
+                'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
                 ),
-                'minimum_file_size': minimum_file_size,
-                's3_prefix': '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
-                'file_description': 'Quest ' + task_id + 'file'
+                'minimum_file_size'       : minimum_file_size,
+                's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+                's3_bucket'               : 'healthverity',
+                'file_description'        : 'Quest ' + task_id + 'file'
             }
         ),
         task_id='validate_' + task_id + '_file',
@@ -188,11 +189,12 @@ def generate_fetch_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_path_template': local_path_template,
+                'tmp_path_template'      : local_path_template,
                 'expected_file_name_func': insert_formatted_date_function(
                     file_name_template
                 ),
-                's3_prefix': s3_path_template
+                's3_prefix'              : s3_path_template,
+                's3_bucket'              : 'healthverity'
             }
         ),
         task_id='fetch_' + task_id + '_file',
@@ -202,13 +204,13 @@ def generate_fetch_dag(
 
 fetch_addon = generate_fetch_dag(
     "addon",
-    '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
+    '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
     TRANSACTION_ADDON_TMP_PATH_TEMPLATE,
     TRANSACTION_ADDON_FILE_NAME_TEMPLATE
 )
 fetch_trunk = generate_fetch_dag(
     "trunk",
-    '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
+    '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE,
     TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
 )
@@ -298,11 +300,11 @@ def split_step(task_id, tmp_dir_func, tmp_name_template, s3_destination, num_spl
 
 split_addon = split_step(
     "addon", get_addon_tmp_dir, get_addon_unzipped_file_paths,
-    TRANSACTION_ADDON_S3_SPLIT_PATH, 20
+    TRANSACTION_ADDON_S3_SPLIT_URL, 20
 )
 split_trunk = split_step(
     "trunk", get_trunk_tmp_dir, get_trunk_unzipped_file_paths,
-    TRANSACTION_TRUNK_S3_SPLIT_PATH, 20
+    TRANSACTION_TRUNK_S3_SPLIT_URL, 20
 )
 
 

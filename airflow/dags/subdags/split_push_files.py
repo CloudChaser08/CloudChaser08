@@ -1,9 +1,11 @@
 from airflow import DAG
 from airflow.operators import BashOperator, PythonOperator
 from subprocess import check_call
-from util.s3_utils import copy_file_async
+import util.s3_utils as s3_utils
 import os
 import logging
+
+reload(s3_utils)
 
 def do_create_parts_dir(ds, **kwargs):
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs) + 'parts/'
@@ -34,7 +36,7 @@ def do_push_part_files(ds, **kwargs):
     for i in xrange(0, len(files), 5):
         processes = []
         for j in xrange(i, min(i + 5, len(files))):
-            processes.append(copy_file_async(tmp_dir + files[j], s3_prefix))
+            processes.append(s3_utils.copy_file_async(tmp_dir + files[j], s3_prefix))
         for p in processes:
             p.wait()
 

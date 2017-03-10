@@ -1,7 +1,6 @@
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
-import airflow.hooks.S3_hook
 from datetime import timedelta
 from subprocess import check_output, check_call, Popen
 import logging
@@ -37,7 +36,6 @@ EMR_NODE_TYPE="c4.xlarge"
 EMR_EBS_VOLUME_SIZE="0"
 
 def do_detect_matching_done(ds, **kwargs):
-    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
     deid_files = kwargs['expected_matching_files_func'](ds, kwargs)
     s3_path_prefix = S3_PATH_PREFIX + kwargs['vendor_uuid'] + '/'
     template = '{}{}*DONE*'
@@ -48,14 +46,13 @@ def do_detect_matching_done(ds, **kwargs):
             time.sleep(60)
 
 def do_move_matching_payload(ds, **kwargs):
-    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
     deid_files = kwargs['expected_matching_files_func'](ds, kwargs)
     vendor_uuid = kwargs['vendor_uuid']
     for deid_file in deid_files:
         s3_prefix = S3_PREFIX + vendor_uuid + '/' + deid_file
-        for payload_file in hook.list_keys('salusv', s3_prefix):
+        for payload_file in s3_utils.list_s3_bucket('s3://salusv/' + s3_prefix):
             date = kwargs['file_date_func'](ds, kwargs).replace('-', '/')
-            copy_file('s3://salusv/' + payload_file, kwargs['s3_payload_loc_url'] + date + '/' + payload_file.split('/')[-1])
+            s3_utils.copy_file(payload_file, kwargs['s3_payload_loc_url'] + date + '/' + payload_file.split('/')[-1])
 
 def do_run_pyspark_normalization_routine(ds, **kwargs):
     emr_utils.normalize(
@@ -73,11 +70,9 @@ def do_delete_redshift_cluster(ds, **kwargs):
     redshift_utils.delete_redshift_cluster('norm-' + kwargs['vendor_uuid'])
 
 def do_run_redshift_normalization_routine(ds, **kwargs):
-    hook = airflow.hooks.S3_hook.S3Hook(s3_conn_id='my_conn_s3')
     file_date = kwargs['file_date_func'](ds, kwargs)
-    logging.info("DEBUG {}".format(kwargs['incoming_path'] + file_date.replace('-', '/') + '/'))
 
-    s3_key = hook.list_keys('salusv', kwargs['incoming_path'] + file_date.replace('-', '/') + '/')[0]
+    s3_key = s3_utils.list_s3_bucket_files('s3://salusv' + kwargs['incoming_path'] + file_date.replace('-', '/') + '/')[0]
     setid = s3_key.split('/')[-1].replace('.bz2','')[0:-3]
     s3_credentials = 'aws_access_key_id={};aws_secret_access_key={}'.format(
                          Variable.get('AWS_ACCESS_KEY_ID'), Variable.get('AWS_SECRET_ACCESS_KEY')
@@ -111,7 +106,6 @@ def do_transform_to_parquet(ds, **kwargs):
               transform_steps + \
               delete_steps + \
               [EMR_DISTCP_TO_S3.format(kwargs['s3_parquet_path_prefix'])]
-    logging.info(command)
     check_call(command)
                 
     emr_utils._wait_for_steps(cluster_id)
