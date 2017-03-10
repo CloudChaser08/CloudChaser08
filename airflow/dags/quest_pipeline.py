@@ -53,7 +53,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 1, 25, 12),
+    'start_date': datetime(2017, 3, 9, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -113,30 +113,33 @@ get_trunk_tmp_dir = insert_todays_date_function(TRANSACTION_TRUNK_TMP_PATH_TEMPL
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + insert_formatted_date_function(
-                DEID_FILE_NAME_TEMPLATE
-            )]
+    return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
+        get_formatted_date(ds, kwargs)
+    )]
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_addon_tmp_dir(ds, kwargs)
-    encrypted_file_path = file_dir + insert_formatted_date_function(
-                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
-                )(ds, kwargs)
+    encrypted_file_path = file_dir \
+        + TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE.format(
+            get_formatted_date(ds, kwargs)
+        )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
 
 def get_addon_unzipped_file_paths(ds, kwargs):
     file_dir = get_addon_tmp_dir(ds, kwargs)
-    return [file_dir + insert_formatted_date_function(
-                TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE
-                )(ds, kwargs)]
+    return [file_dir
+            + TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE.format(
+                get_formatted_date(ds, kwargs)
+            )]
 
 def get_trunk_unzipped_file_paths(ds, kwargs):
     file_dir = get_trunk_tmp_dir(ds, kwargs)
-    return [file_dir + insert_formatted_date_function(
-                TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE
-                )(ds, kwargs)]
+    return [file_dir
+            + TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE.format(
+                get_formatted_date(ds, kwargs)
+            )]
 
 def generate_transaction_file_validation_dag(
         task_id, path_template, minimum_file_size
@@ -277,7 +280,7 @@ gunzip_trunk = gunzip_step(
 )
 
 
-def split_step(task_id, tmp_dir_func, tmp_name_template, s3_destination, num_splits):
+def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, num_splits):
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
@@ -332,7 +335,7 @@ queue_up_for_matching = SubDagOperator(
         mdag.schedule_interval,
         {
 
-            'source_files_func' : get_deid__file_urls
+            'source_files_func' : get_deid_file_urls
         }
     ),
     task_id='queue_up_for_matching',
