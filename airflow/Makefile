@@ -4,6 +4,8 @@ REPO=${DOCKER_REG}/hvairflow
 
 DOCKER_IP=$(shell docker-machine ip hv)
 
+RSYNC_CMD="rsync -rav --delete -e 'ssh -o StrictHostKeyChecking=no'"
+
 build:
 	docker build -t ${REPO}:${USER} .
 	docker tag ${REPO}:${USER} ${REPO}:latest
@@ -43,12 +45,26 @@ shell:
 HUP:
 	docker exec -t airflow kill -HUP 1
 
-deploy-dev:
-	make test &&										 \
-		cd dags && scp -r . airflow@airflow-dev.awsdev.healthverity.com:airflow/dags &&	 \
-		cd ../../spark && scp -r . airflow@airflow-dev.awsdev.healthverity.com:spark/
+# JENKINS RELATED
 
-deploy:
-	make test &&										 \
-		cd dags && scp -r . airflow@airflow-prod.aws.healthverity.com:airflow/dags &&	 \
-		cd ../../spark && scp -r . airflow@airflow-prod.aws.healthverity.com:spark/
+jenkins-test:
+	docker pull ${REPO}:latest
+	
+	docker run -d \
+	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
+	-v ${PWD}/dags:/usr/local/airflow/dags \
+	-v ${PWD}/../spark:/usr/local/airflow/spark \
+	--name airflow-test \
+	${REPO}:latest
+	
+	docker exec -it airflow-test /bin/bash -c 'cd $$AIRFLOW_HOME && cd dags && nosetests -w test/ -v'
+	
+	docker rm -f airflow-test
+
+jenkins-deploy-dev: jenkins-test
+	${RSYNC_CMD} airflow/dags airflow@airflow-dev.awsdev.healthverity.com:airflow/dags
+	${RSYNC_CMD} spark        airflow@airflow-dev.awsdev.healthverity.com:spark
+
+jenkins-deploy: jenkins-test
+	${RSYNC_CMD} airflow/dags airflow@airflow-prod.awsdev.healthverity.com:airflow/dags
+	${RSYNC_CMD} spark        airflow@airflow-prod.awsdev.healthverity.com:spark
