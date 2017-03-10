@@ -49,16 +49,16 @@ HUP:
 
 jenkins-test:
 	docker pull ${REPO}:latest
-	
+
 	docker run -d \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
 	-v ${PWD}/dags:/usr/local/airflow/dags \
 	-v ${PWD}/../spark:/usr/local/airflow/spark \
 	--name airflow-test \
 	${REPO}:latest
-	
+
 	docker exec -it airflow-test /bin/bash -c 'cd $$AIRFLOW_HOME && cd dags && nosetests -w test/ -v'
-	
+
 	docker rm -f airflow-test
 
 jenkins-deploy-dev: jenkins-test
