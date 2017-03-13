@@ -160,7 +160,8 @@ fetch_transaction_file_dag = SubDagOperator(
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
             'expected_file_name_func': get_expected_transaction_file_name,
-            's3_prefix'              : S3_DEID_RAW_PATH
+            's3_prefix'              : S3_DEID_RAW_PATH,
+            's3_bucket'              : S3_ORIGIN_BUCKET
         }
     ),
     task_id='fetch_transaction_file',
