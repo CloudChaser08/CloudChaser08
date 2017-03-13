@@ -193,6 +193,9 @@ def _transform_to_parquet(cluster_name, src_file, dest_file, model):
         'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
         'Args=[--class,com.healthverity.parquet.Main,'
         '--conf,spark.sql.parquet.compression.codec=gzip,'
+        '--conf,spark.executor.memory=4G,'
+        '--conf,spark.executor.cores=4,'
+        '--conf,spark.executor.instances=5,'
         '/tmp/mellon-assembly-latest.jar,{},{},{},{},'
         '{},20,"|","true","true"]'
     ).format(
