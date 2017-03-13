@@ -1,4 +1,5 @@
-CREATE TABLE Address (
+DROP TABLE IF EXISTS Address;
+CREATE EXTERNAL TABLE Address (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -9,8 +10,13 @@ CREATE TABLE Address (
         InactivateDate                  string,
         AssociationIDNumber             string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.Address.csv
+;
 
-CREATE TABLE ClinicPreference (
+DROP TABLE IF EXISTS ClinicPreference;
+CREATE EXTERNAL TABLE ClinicPreference (
         AnalyticRowIDNumber         string,
         ClinicOrganizationIDNumber  string,
         AssociationIDNumber         string,
@@ -23,8 +29,13 @@ CREATE TABLE ClinicPreference (
         CreatineClearanceMethod     string,
         InactivateDate              string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.ClinicPreference.csv
+;
 
-CREATE TABLE DialysisTraining (
+DROP TABLE IF EXISTS DialysisTraining;
+CREATE EXTERNAL TABLE DialysisTraining (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -41,8 +52,13 @@ CREATE TABLE DialysisTraining (
         DialysisTrainingEnd             string,
         InactivateDate                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.DialysisTraining.csv
+;
 
-CREATE TABLE DialysisTreatment (
+DROP TABLE IF EXISTS DialysisTreatment;
+CREATE EXTERNAL TABLE DialysisTreatment (
         AnalyticRowIDNumber                     string,
         ClinicOrganizationIDNumber              string,
         PatientDataAnalyticRowIDNumber          string,
@@ -118,8 +134,13 @@ CREATE TABLE DialysisTreatment (
         TreatmentTypeSubType                    string,
         IsPrimary                               string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.DialysisTreatment.csv
+;
 
-CREATE TABLE FacilityAdmitDischarge (
+DROP TABLE IF EXISTS FacilityAdmitDischarge;
+CREATE EXTERNAL TABLE FacilityAdmitDischarge (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -141,8 +162,13 @@ CREATE TABLE FacilityAdmitDischarge (
         InactivateDate                  string,
         AnalyticDOS                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.FacilityAdmitDischarge.csv
+;
 
-CREATE TABLE Hospitalization (
+DROP TABLE IF EXISTS Hospitalization;
+CREATE EXTERNAL TABLE Hospitalization (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -165,8 +191,13 @@ CREATE TABLE Hospitalization (
         ICD10                           string,
         AnalyticDOS                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.Hospitalization.csv
+;
 
-CREATE TABLE Immunization (
+DROP TABLE IF EXISTS Immunization;
+CREATE EXTERNAL TABLE Immunization (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -197,8 +228,13 @@ CREATE TABLE Immunization (
         TreatmentIDNumber               string,
         ICD10                           string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.Immunization.csv
+;
 
-CREATE TABLE Insurance (
+DROP TABLE IF EXISTS Insurance;
+CREATE EXTERNAL TABLE Insurance (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -225,8 +261,13 @@ CREATE TABLE Insurance (
         CompanyPlanType                 string,
         InactivateDate                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.Insurance.csv
+;
 
-CREATE TABLE LabPanelsDrawn (
+DROP TABLE IF EXISTS LabPanelsDrawn;
+CREATE EXTERNAL TABLE LabPanelsDrawn (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -250,8 +291,13 @@ CREATE TABLE LabPanelsDrawn (
         InactivateDate                  string,
         TreatmentIDNumber               string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.LabPanelsDrawn.csv
+;
 
-CREATE TABLE LabResult (
+DROP TABLE IF EXISTS LabResult;
+CREATE EXTERNAL TABLE LabResult (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -283,8 +329,13 @@ CREATE TABLE LabResult (
         InactivateDate                  string,
         ICD10                           string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.LabResult.csv
+;
 
-CREATE TABLE ModalityChangeHistory (
+DROP TABLE IF EXISTS ModalityChangeHistory;
+CREATE EXTERNAL TABLE ModalityChangeHistory (
         AnalyticRowIDNumber                             string,
         PatientDataAnalyticRowIDNumber                  string,
         DefaultClinicOrganizationIDNumber               string,
@@ -305,8 +356,13 @@ CREATE TABLE ModalityChangeHistory (
         PatientStatusHistoryAnalyticRowIDNumber         string,
         CaptureDate                                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.ModalityChangeHistory.csv
+;
 
-CREATE TABLE ModalityChangeHistoryCrownWeb (
+DROP TABLE IF EXISTS ModalityChangeHistoryCrownWeb;
+CREATE EXTERNAL TABLE ModalityChangeHistoryCrownWeb (
         AnalyticRowIDNumber                             string,
         ModalityChangeHistoryAnalyticRowIDNumber        string,
         PatientDialysisPrescriptionAnalyticRowIDNumber  string,
@@ -321,8 +377,13 @@ CREATE TABLE ModalityChangeHistoryCrownWeb (
         SessionsPerWeek                                 string,
         CrownDialysisSetting                            string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.ModalityChangeHistoryCrownWeb.csv
+;
 
-CREATE TABLE NursingHomeHistory (
+DROP TABLE IF EXISTS NursingHomeHistory;
+CREATE EXTERNAL TABLE NursingHomeHistory (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -336,8 +397,13 @@ CREATE TABLE NursingHomeHistory (
         InactivateDate                  string,
         AnalyticDOS                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.NursingHomeHistory.csv
+;
 
-CREATE TABLE PatientAccess (
+DROP TABLE IF EXISTS PatientAccess;
+CREATE EXTERNAL TABLE PatientAccess (
         AnalyticRowIDNumber             string,
         PatientDataAnalyticRowIDNumber  string,
         ClinicOrganizationIDNumber      string,
@@ -357,8 +423,13 @@ CREATE TABLE PatientAccess (
         IsStateActive                   string,
         InactivateDate                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientAccess.csv
+;
 
-CREATE TABLE PatientAccess_ExamProc (
+DROP TABLE IF EXISTS PatientAccess;
+CREATE EXTERNAL TABLE PatientAccess_ExamProc (
         AnalyticRowIDNumber                  string,
         ClinicOrganizationIDNumber           string,
         PatientDataAnalyticRowIDNumber       string,
@@ -385,8 +456,13 @@ CREATE TABLE PatientAccess_ExamProc (
         InactivateDate                       string,
         ICD10                                string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientAccess.csv
+;
 
-CREATE TABLE PatientAccess_OtherAccessEvent (
+DROP TABLE IF EXISTS PatientAccess;
+CREATE EXTERNAL TABLE PatientAccess_OtherAccessEvent (
         AnalyticRowIDNumber               string,
         ClinicOrganizationIDNumber        string,
         PatientDataAnalyticRowIDNumber    string,
@@ -403,8 +479,13 @@ CREATE TABLE PatientAccess_OtherAccessEvent (
         ReasonForChange                   string,
         InactivateDate                    string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientAccess.csv
+;
 
-CREATE TABLE PatientAccess_PlacedRecorded (
+DROP TABLE IF EXISTS PatientAccess;
+CREATE EXTERNAL TABLE PatientAccess_PlacedRecorded (
         AnalyticRowIDNumber               string,
         ClinicOrganizationIDNumber        string,
         PatientDataAnalyticRowIDNumber    string,
@@ -430,8 +511,13 @@ CREATE TABLE PatientAccess_PlacedRecorded (
         PlacedRecordedIsPrimaryAccess     string,
         InactivateDate                    string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientAccess.csv
+;
 
-CREATE TABLE PatientAccess_Removed (
+DROP TABLE IF EXISTS PatientAccess;
+CREATE EXTERNAL TABLE PatientAccess_Removed (
         AnalyticRowIDNumber                string,
         ClinicOrganizationIDNumber         string,
         PatientDataAnalyticRowIDNumber     string,
@@ -450,8 +536,13 @@ CREATE TABLE PatientAccess_Removed (
         RemovedReasonType                  string,
         InactivateDate                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientAccess.csv
+;
 
-CREATE TABLE PatientAllergy (
+DROP TABLE IF EXISTS PatientAllergy;
+CREATE EXTERNAL TABLE PatientAllergy (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -469,8 +560,13 @@ CREATE TABLE PatientAllergy (
         EditDate                        string,
         InactivateDate                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientAllergy.csv
+;
 
-CREATE TABLE PatientCMS2728 (
+DROP TABLE IF EXISTS PatientCMS2728;
+CREATE EXTERNAL TABLE PatientCMS2728 (
         AnalyticRowIDNumber                string,
         ClinicOrganizationIDNumber         string,
         PatientDataAnalyticRowIDNumber     string,
@@ -539,8 +635,13 @@ CREATE TABLE PatientCMS2728 (
         EditDate                           string,
         InactivateDate                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientCMS2728.csv
+;
 
-CREATE TABLE PatientComorbidityAndTransplantState (
+DROP TABLE IF EXISTS PatientComorbidityAndTransplantState;
+CREATE EXTERNAL TABLE PatientComorbidityAndTransplantState (
         AnalyticRowIDNumber                          string,
         ClinicOrganizationIDNumber                   string,
         PatientDataAnalyticRowIDNumber               string,
@@ -573,8 +674,13 @@ CREATE TABLE PatientComorbidityAndTransplantState (
         editdatetransplant                           string,
         InactivateDate                               string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientComorbidityAndTransplantState.csv
+;
 
-CREATE TABLE PatientData (
+DROP TABLE IF EXISTS PatientData;
+CREATE EXTERNAL TABLE PatientData (
         AnalyticRowIDNumber                   string,
         ClinicOrganizationIDNumber            string,
         DefaultClinicIDNumber                 string,
@@ -609,8 +715,13 @@ CREATE TABLE PatientData (
         MasterPatientIDNumber                 string,
         DateFirstDialysisCurrentUnit          string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientData.csv
+;
 
-CREATE TABLE PatientDiagCodes (
+DROP TABLE IF EXISTS PatientDiagCodes;
+CREATE EXTERNAL TABLE PatientDiagCodes (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -630,8 +741,13 @@ CREATE TABLE PatientDiagCodes (
         ICD10                           string,
         AnalyticDOS                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientDiagCodes.csv
+;
 
-CREATE TABLE PatientDialysisPrescription (
+DROP TABLE IF EXISTS PatientDialysisPrescription;
+CREATE EXTERNAL TABLE PatientDialysisPrescription (
         AnalyticRowIDNumber               string,
         ClinicOrganizationIDNumber        string,
         PatientDataAnalyticRowIDNumber    string,
@@ -662,8 +778,13 @@ CREATE TABLE PatientDialysisPrescription (
         InactivateDate                    string,
         AnalyticDOS                       string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientDialysisPrescription.csv
+;
 
-CREATE TABLE PatientDialysisRxHemo (
+DROP TABLE IF EXISTS PatientDialysisRxHemo;
+CREATE EXTERNAL TABLE PatientDialysisRxHemo (
         AnalyticRowIDNumber                             string,
         ClinicOrganizationIDNumber                      string,
         PatientDataAnalyticRowIDNumber                  string,
@@ -711,8 +832,13 @@ CREATE TABLE PatientDialysisRxHemo (
         DialysisFrequencyValue                          string,
         InactivateDate                                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientDialysisRxHemo.csv
+;
 
-CREATE TABLE PatientDialysisRxPD (
+DROP TABLE IF EXISTS PatientDialysisRxPD;
+CREATE EXTERNAL TABLE PatientDialysisRxPD (
         AnalyticRowIDNumber                             string,
         ClinicOrganizationIDNumber                      string,
         PatientDataAnalyticRowIDNumber                  string,
@@ -733,8 +859,13 @@ CREATE TABLE PatientDialysisRxPD (
         FinalFillExchangeIDNumber                       string,
         InactivateDate                                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientDialysisRxPD.csv
+;
 
-CREATE TABLE PatientDialysisRxPDExchanges (
+DROP TABLE IF EXISTS PatientDialysisRxPDExchanges;
+CREATE EXTERNAL TABLE PatientDialysisRxPDExchanges (
         AnalyticRowIDNumber                             string,
         ClinicOrganizationIDNumber                      string,
         PatientDataAnalyticRowIDNumber                  string,
@@ -756,8 +887,13 @@ CREATE TABLE PatientDialysisRxPDExchanges (
         SolutionType                                    string,
         InactivateDate                                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientDialysisRxPDExchanges.csv
+;
 
-CREATE TABLE PatientEvent (
+DROP TABLE IF EXISTS PatientEvent;
+CREATE EXTERNAL TABLE PatientEvent (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -774,8 +910,13 @@ CREATE TABLE PatientEvent (
         InactivateDate                  string,
         AnalyticDOS                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientEvent.csv
+;
 
-CREATE TABLE PatientFluidWeightManagement (
+DROP TABLE IF EXISTS PatientFluidWeightManagement;
+CREATE EXTERNAL TABLE PatientFluidWeightManagement (
         AnalyticRowIDNumber                string,
         ClinicOrganizationIDNumber         string,
         PatientDataAnalyticRowIDNumber     string,
@@ -801,8 +942,13 @@ CREATE TABLE PatientFluidWeightManagement (
         LeftVentricularHypertrophyChanged  string,
         InactivateDate                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientFluidWeightManagement.csv
+;
 
-CREATE TABLE PatientHeightHistory (
+DROP TABLE IF EXISTS PatientHeightHistory;
+CREATE EXTERNAL TABLE PatientHeightHistory (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -820,8 +966,13 @@ CREATE TABLE PatientHeightHistory (
         Unstable                        string,
         InactivateDate                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientHeightHistory.csv
+;
 
-CREATE TABLE PatientInfection (
+DROP TABLE IF EXISTS PatientInfection;
+CREATE EXTERNAL TABLE PatientInfection (
         AnalyticRowIDNumber                string,
         ClinicOrganizationIDNumber         string,
         PatientDataAnalyticRowIDNumber     string,
@@ -858,8 +1009,13 @@ CREATE TABLE PatientInfection (
         AccessSiteNHSN_NonTunnCentralLine  string,
         AccessSiteNHSN_OtherAccessDevice   string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientInfection.csv
+;
 
-CREATE TABLE PatientInfection_LabOrganism (
+DROP TABLE IF EXISTS PatientInfection;
+CREATE EXTERNAL TABLE PatientInfection_LabOrganism (
         AnalyticRowIDNumber                        string,
         ClinicOrganizationIDNumber                 string,
         PatientDataAnalyticRowIDNumber             string,
@@ -873,8 +1029,13 @@ CREATE TABLE PatientInfection_LabOrganism (
         EditDate                                   string,
         InactivateDate                             string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientInfection.csv
+;
 
-CREATE TABLE PatientInfection_LabOrganismDrug (
+DROP TABLE IF EXISTS PatientInfection;
+CREATE EXTERNAL TABLE PatientInfection_LabOrganismDrug (
         AnalyticRowIDNumber                       string,
         ClinicOrganizationIDNumber                string,
         PatientDataAnalyticRowIDNumber            string,
@@ -888,8 +1049,13 @@ CREATE TABLE PatientInfection_LabOrganismDrug (
         EditDate                                  string,
         InactivateDate                            string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientInfection.csv
+;
 
-CREATE TABLE PatientInfection_LabResultCulture (
+DROP TABLE IF EXISTS PatientInfection;
+CREATE EXTERNAL TABLE PatientInfection_LabResultCulture (
         AnalyticRowIDNumber                        string,
         ClinicOrganizationIDNumber                 string,
         PatientDataAnalyticRowIDNumber             string,
@@ -907,8 +1073,13 @@ CREATE TABLE PatientInfection_LabResultCulture (
         InactivateDate                             string,
         AnalyticDOS                                string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientInfection.csv
+;
 
-CREATE TABLE PatientInfection_Medication (
+DROP TABLE IF EXISTS PatientInfection;
+CREATE EXTERNAL TABLE PatientInfection_Medication (
         AnalyticRowIDNumber                  string,
         ClinicOrganizationIDNumber           string,
         PatientDataAnalyticRowIDNumber       string,
@@ -920,8 +1091,13 @@ CREATE TABLE PatientInfection_Medication (
         EditDate                             string,
         InactivateDate                       string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientInfection.csv
+;
 
-CREATE TABLE PatientInstabilityHistory (
+DROP TABLE IF EXISTS PatientInstabilityHistory;
+CREATE EXTERNAL TABLE PatientInstabilityHistory (
         AnalyticRowIDNumber                string,
         ClinicOrganizationIDNumber         string,
         PatientDataAnalyticRowIDNumber     string,
@@ -940,8 +1116,13 @@ CREATE TABLE PatientInstabilityHistory (
         DeletedDate                        string,
         InactivateDate                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientInstabilityHistory.csv
+;
 
-CREATE TABLE PatientMasterScheduleHeader (
+DROP TABLE IF EXISTS PatientMasterScheduleHeader;
+CREATE EXTERNAL TABLE PatientMasterScheduleHeader (
         AnalyticRowIDNumber             string,
         PatientDataAnalyticRowIDNumber  string,
         ClinicOrganizationIDNumber      string,
@@ -980,8 +1161,13 @@ CREATE TABLE PatientMasterScheduleHeader (
         InactivateDate                  string,
         SessionsPerWeek                 string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientMasterScheduleHeader.csv
+;
 
-CREATE TABLE PatientMedAdministered (
+DROP TABLE IF EXISTS PatientMedAdministered;
+CREATE EXTERNAL TABLE PatientMedAdministered (
         AnalyticRowIDNumber              string,
         PatientDataAnalyticRowIDNumber   string,
         ClinicOrganizationIDNumber       string,
@@ -1041,8 +1227,13 @@ CREATE TABLE PatientMedAdministered (
         GENPRODUCT_ID                    string,
         DRUG_ID                          string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientMedAdministered.csv
+;
 
-CREATE TABLE PatientMedNotGiven (
+DROP TABLE IF EXISTS PatientMedNotGiven;
+CREATE EXTERNAL TABLE PatientMedNotGiven (
         AnalyticRowIDNumber                      string,
         PatientDataAnalyticRowIDNumber           string,
         ClinicOrganizationIDNumber               string,
@@ -1104,8 +1295,13 @@ CREATE TABLE PatientMedNotGiven (
         GENPRODUCT_ID                            string,
         DRUG_ID                                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientMedNotGiven.csv
+;
 
-CREATE TABLE PatientMedPrescription (
+DROP TABLE IF EXISTS PatientMedPrescription;
+CREATE EXTERNAL TABLE PatientMedPrescription (
         AnalyticRowIDNumber              string,
         PatientDataAnalyticRowIDNumber   string,
         ClinicOrganizationIDNumber       string,
@@ -1168,8 +1364,13 @@ CREATE TABLE PatientMedPrescription (
         EPrescribedRefill                string,
         EPrescribedDate                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientMedPrescription.csv
+;
 
-CREATE TABLE PatientStatusHistory (
+DROP TABLE IF EXISTS PatientStatusHistory;
+CREATE EXTERNAL TABLE PatientStatusHistory (
         AnalyticRowIDNumber             string,
         ClinicOrganizationIDNumber      string,
         PatientDataAnalyticRowIDNumber  string,
@@ -1185,8 +1386,13 @@ CREATE TABLE PatientStatusHistory (
         InactivateDate                  string,
         AnalyticDOS                     string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.PatientStatusHistory.csv
+;
 
-CREATE TABLE ProblemList (
+DROP TABLE IF EXISTS ProblemList;
+CREATE EXTERNAL TABLE ProblemList (
         AnalyticRowIDNumber             string,
         PatientDataAnalyticRowIDNumber  string,
         ClinicOrganizationIDNumber      string,
@@ -1208,8 +1414,13 @@ CREATE TABLE ProblemList (
         EditDate                        string,
         InactivateDate                  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.ProblemList.csv
+;
 
-CREATE TABLE SodiumUFProfile (
+DROP TABLE IF EXISTS SodiumUFProfile;
+CREATE EXTERNAL TABLE SodiumUFProfile (
         AnalyticRowIDNumber  string,
         ProfileIDNumber      string,
         ProfileNumber        string,
@@ -1220,8 +1431,13 @@ CREATE TABLE SodiumUFProfile (
         EditDate             string,
         InactivateDate       string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.SodiumUFProfile.csv
+;
 
-CREATE TABLE LabIDList (
+DROP TABLE IF EXISTS LabIDList;
+CREATE EXTERNAL TABLE LabIDList (
         AnalyticRowIDNumber    string,
         UniversalServiceID     string,
         ObservationIdentifier  string,
@@ -1234,15 +1450,25 @@ CREATE TABLE LabIDList (
         Differencees           string,
         InactivateDate         string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.LabIDList.csv
+;
 
-CREATE TABLE Medication (
+DROP TABLE IF EXISTS Medication;
+CREATE EXTERNAL TABLE Medication (
         MedIDNumber     string,
         AddedDate       string,
         LastEditDate    string,
         InactivateDate  string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.Medication.csv
+;
 
-CREATE TABLE MedicationGroup (
+DROP TABLE IF EXISTS MedicationGroup;
+CREATE EXTERNAL TABLE MedicationGroup (
         MedicationGroupIDNumber        string,
         MedicationGroupName            string,
         MedicationName                 string,
@@ -1254,8 +1480,13 @@ CREATE TABLE MedicationGroup (
         LastEditDate                   string,
         InactivateDate                 string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.MedicationGroup.csv
+;
 
-CREATE TABLE StateGeo (
+DROP TABLE IF EXISTS StateGeo;
+CREATE EXTERNAL TABLE StateGeo (
         StateAbbreviation           string,
         StateName                   string,
         StateFIPScode               string,
@@ -1264,8 +1495,13 @@ CREATE TABLE StateGeo (
         RegionName                  string,
         CensusBureauRegionNumber    string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.StateGeo.csv
+;
 
-CREATE TABLE ZipGeo (
+DROP TABLE IF EXISTS ZipGeo;
+CREATE EXTERNAL TABLE ZipGeo (
         GEO_ID              string,
         ZipCode             string,
         SUMLEVEL            string,
@@ -1278,3 +1514,7 @@ CREATE TABLE ZipGeo (
         NA                  string,
         RuralVsUrban        string
         )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {input_path}.ZipGeo.csv
+;
