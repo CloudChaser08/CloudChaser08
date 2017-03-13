@@ -59,10 +59,11 @@ def delete_path(target_path):
     """
     This function will only remove files (not directories) one level deep
     """
-    for f in list_s3_bucket(target_path):
-        check_call([
-            'aws', 's3', 'rm', f
-        ], env=get_aws_env())
+    if s3_key_exists(target_path):
+        for f in list_s3_bucket(target_path):
+            check_call([
+                'aws', 's3', 'rm', f
+            ], env=get_aws_env())
 
 
 def list_s3_bucket(path, s3_connection_id=DEFAULT_CONNECTION_ID):
