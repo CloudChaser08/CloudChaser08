@@ -6,6 +6,9 @@ import time
 import os
 from subprocess import check_call, check_output
 from airflow.models import Variable
+import util.s3_utils as s3_utils
+
+reload(s3_utils)
 
 
 #
@@ -182,6 +185,10 @@ EMR_COPY_MELLON_STEP = (
 
 def _transform_to_parquet(cluster_name, src_file, dest_file, model):
     env = dict(os.environ)
+
+    # remove target directory
+    s3_utils.delete_path(dest_file)
+
     parquet_step = (
         'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
         'Args=[--class,com.healthverity.parquet.Main,'
