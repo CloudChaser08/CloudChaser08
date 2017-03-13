@@ -98,8 +98,8 @@ def _build_dewey(cluster_id):
                 '../spark/'
             )
         ), '&&', 'make', 'build', '&&', 'scp', '-i', '~/.ssh/emr_deployer',
-        '-r', '.', 'hadoop@' + _get_emr_cluster_ip_address(cluster_id)
-        + ':spark/'
+        '-o', '"StrictHostKeyChecking no"', '-r', '.',
+        'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':spark/'
     ]), shell=True)
 
 
