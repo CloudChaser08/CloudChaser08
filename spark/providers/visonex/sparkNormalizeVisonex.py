@@ -2,11 +2,10 @@
 import os
 import argparse
 import time
-from datetime import timedelta, datetime, date
+from datetime import datetime
 from spark.runner import Runner
 from spark.spark import init
-import spark.helpers.create_date_validation_table \
-    as date_validator
+import spark.helpers.payload_loader as payload_loader
 
 
 def get_rel_path(relative_filename):
@@ -26,19 +25,25 @@ runner = Runner(sqlContext)
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--date', type=str)
-parser.add_argument('--output_path', type=str)
-parser.add_argument('--debug', default=False, action='store_true')
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--date', type=str)
+# parser.add_argument('--output_path', type=str)
+# parser.add_argument('--debug', default=False, action='store_true')
+# args = parser.parse_args()
+argdate = '2017-02-01'
 
-date_obj = datetime.strptime(args.date, '%Y-%m-%d')
+date_obj = datetime.strptime(argdate, '%Y-%m-%d')
 
-input_prefix = 's3://salusv/incoming/emr/visonex/{}/{}/{}/'.format(
-    str(date_obj.year),
-    str(date_obj.month).zfill(2),
-    str(date_obj.day).zfill(2)
-)
+
+def insert_date(template):
+    return template.format(
+        str(date_obj.year),
+        str(date_obj.month).zfill(2),
+        str(date_obj.day).zfill(2)
+    )
+
+
+input_prefix = insert_date('s3://salusv/incoming/emr/visonex/{}/{}/{}/')
 hospitalization_input = input_prefix + 'hospitalization/'
 immunization_input = input_prefix + 'immunization/'
 labpanelsdrawn_input = input_prefix + 'labpanelsdrawn/'
@@ -46,7 +51,18 @@ labresult_input = input_prefix + 'labresult/'
 patientaccess_examproc_input = input_prefix + 'patientaccess_examproc/'
 patientdiagcodes_input = input_prefix + 'patientdiagcodes/'
 patientmedadministered_input = input_prefix + 'patientmedadministered/'
+patientmedprescription_input = input_prefix + 'patientmedprescription/'
 labidlist_input = input_prefix + 'labidlist/'
+problemlist_input = input_prefix + 'problemlist/'
+
+matching_path = insert_date('s3://salusv/matching/payload/emr/visonex/{}/{}/{}/')
+
+runner.run_spark_script(get_rel_path(
+    '../../common/emr_common_model.sql'
+), [
+    ['table_name', 'emr_common_model', False],
+    ['properties', '', False]
+])
 
 runner.run_spark_script(
     get_rel_path('load_transactions.sql'), [
@@ -57,7 +73,20 @@ runner.run_spark_script(
         ['patientaccess_examproc_input', patientaccess_examproc_input],
         ['patientdiagcodes_input', patientdiagcodes_input],
         ['patientmedadministered_input', patientmedadministered_input],
-        ['labidlist_input', labidlist_input]
+        ['patientmedprescription_input', patientmedprescription_input],
+        ['labidlist_input', labidlist_input],
+        ['problemlist_input', problemlist_input]
+    ]
+)
+
+payload_loader.load(runner, matching_path, ['claimId'])
+
+runner.run_spark_script(
+    get_rel_path('normalize.sql'), [
+        ['today', TODAY],
+        ['filename', 'HealthVerity-20170201'],
+        ['feedname', '23'],
+        ['vendor', '33']
     ]
 )
 

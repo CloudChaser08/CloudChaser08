@@ -25,7 +25,7 @@ CREATE EXTERNAL TABLE Hospitalization (
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {hospitalization_input}
-;
+    ;
 
 DROP TABLE IF EXISTS Immunization;
 CREATE EXTERNAL TABLE Immunization (
@@ -62,7 +62,7 @@ CREATE EXTERNAL TABLE Immunization (
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {immunization_input}
-;
+    ;
 
 DROP TABLE IF EXISTS LabPanelsDrawn;
 CREATE EXTERNAL TABLE LabPanelsDrawn (
@@ -92,7 +92,7 @@ CREATE EXTERNAL TABLE LabPanelsDrawn (
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {labpanelsdrawn_input}
-;
+    ;
 
 DROP TABLE IF EXISTS LabResult;
 CREATE EXTERNAL TABLE LabResult (
@@ -130,7 +130,7 @@ CREATE EXTERNAL TABLE LabResult (
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {labresult_input}
-;
+    ;
 
 DROP TABLE IF EXISTS PatientAccess_ExamProc;
 CREATE EXTERNAL TABLE PatientAccess_ExamProc (
@@ -162,8 +162,8 @@ CREATE EXTERNAL TABLE PatientAccess_ExamProc (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientaccess_input}
-;
+    LOCATION {patientaccess_examproc_input}
+    ;
 
 DROP TABLE IF EXISTS PatientDiagCodes;
 CREATE EXTERNAL TABLE PatientDiagCodes (
@@ -189,7 +189,7 @@ CREATE EXTERNAL TABLE PatientDiagCodes (
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {patientdiagcodes_input}
-;
+    ;
 
 DROP TABLE IF EXISTS PatientMedAdministered;
 CREATE EXTERNAL TABLE PatientMedAdministered (
@@ -255,7 +255,76 @@ CREATE EXTERNAL TABLE PatientMedAdministered (
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {patientmedadministered_input}
-;
+    ;
+
+DROP TABLE IF EXISTS PatientMedPrescription;
+CREATE EXTERNAL TABLE PatientMedPrescription (
+        AnalyticRowIDNumber              string,
+        PatientDataAnalyticRowIDNumber   string,
+        ClinicOrganizationIDNumber       string,
+        PatientAdministeredMedsIDNumber  string,
+        PatientIDNumber                  string,
+        MedIDNumber                      string,
+        Medication                       string,
+        Prescription                     string,
+        Hold                             string,
+        HoldUntil                        string,
+        StartDate                        string,
+        EndDate                          string,
+        PRN                              string,
+        AdminDuringRun                   string,
+        AddedDate                        string,
+        EditDate                         string,
+        LastDoseOn                       string,
+        PatientNotTaking                 string,
+        RunJustification                 string,
+        PhysicianIDNumber                string,
+        TotalDoses                       string,
+        DosesGiven                       string,
+        UseDoses                         string,
+        DoseQty                          string,
+        DoseUnit                         string,
+        DoseRoute                        string,
+        DoseFreq                         string,
+        DoseFreqMonday                   string,
+        DoseFreqTuesday                  string,
+        DoseFreqWednesday                string,
+        DoseFreqThursday                 string,
+        DoseFreqFriday                   string,
+        DoseFreqSaturday                 string,
+        DoseFreqSunday                   string,
+        FixedWeekInterval                string,
+        DateNextDose                     string,
+        DateDoseLastGiven                string,
+        AdministrationCode               string,
+        PatientProvided                  string,
+        PatientPrescriptionMedsParentID  string,
+        ProtocolMed                      string,
+        PatientMasterScheduleHeaderID    string,
+        UpdateReason                     string,
+        ESRDRelated                      string,
+        AnalyticDOS                      string,
+        InactivateDate                   string,
+        MonthlyDose                      string,
+        SelfAdmin                        string,
+        AdminDuringFacility              string,
+        BulkSupply                       string,
+        ICD10                            string,
+        GENPRODUCT_ID                    string,
+        DRUG_ID                          string,
+        DoNOTSubstitute                  string,
+        StartingDosesGiven               string,
+        DoseStrength                     string,
+        DoseForm                         string,
+        EPrescribed                      string,
+        EPrescribedQuantity              string,
+        EPrescribedRefill                string,
+        EPrescribedDate                  string	
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE	
+    LOCATION {patientmedprescription_input}
+    ;
 
 DROP TABLE IF EXISTS ProblemList;
 CREATE EXTERNAL TABLE ProblemList (
@@ -283,7 +352,7 @@ CREATE EXTERNAL TABLE ProblemList (
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {problemlist_input}
-;
+    ;
 
 DROP TABLE IF EXISTS LabIDList;
 CREATE EXTERNAL TABLE LabIDList (
@@ -295,11 +364,11 @@ CREATE EXTERNAL TABLE LabIDList (
         ICD9DiagnosisCode      string,
         CPTInfo                string,
         ICD9Info               string,
-        Revised Info           string,
+        Revised_Info           string,
         Differencees           string,
         InactivateDate         string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {labidlist_input}
-;
+    ;
