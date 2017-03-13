@@ -34,15 +34,30 @@ args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 
-input_path = 's3://salusv/incoming/emr/visonex/{}/{}/{}/'.format(
+input_prefix = 's3://salusv/incoming/emr/visonex/{}/{}/{}/'.format(
     str(date_obj.year),
     str(date_obj.month).zfill(2),
     str(date_obj.day).zfill(2)
 )
+hospitalization_input = input_prefix + 'hospitalization/'
+immunization_input = input_prefix + 'immunization/'
+labpanelsdrawn_input = input_prefix + 'labpanelsdrawn/'
+labresult_input = input_prefix + 'labresult/'
+patientaccess_examproc_input = input_prefix + 'patientaccess_examproc/'
+patientdiagcodes_input = input_prefix + 'patientdiagcodes/'
+patientmedadministered_input = input_prefix + 'patientmedadministered/'
+labidlist_input = input_prefix + 'labidlist/'
 
 runner.run_spark_script(
     get_rel_path('load_transactions.sql'), [
-        ['input_path', input_path]
+        ['hospitalization_input', hospitalization_input],
+        ['immunization_input', immunization_input],
+        ['labpanelsdrawn_input', labpanelsdrawn_input],
+        ['labresult_input', labresult_input],
+        ['patientaccess_examproc_input', patientaccess_examproc_input],
+        ['patientdiagcodes_input', patientdiagcodes_input],
+        ['patientmedadministered_input', patientmedadministered_input],
+        ['labidlist_input', labidlist_input]
     ]
 )
 
