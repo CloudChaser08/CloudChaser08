@@ -6,6 +6,7 @@ from datetime import datetime
 from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.constants as constants
 
 
 def get_rel_path(relative_filename):
@@ -57,6 +58,8 @@ problemlist_input = input_prefix + 'problemlist/'
 
 matching_path = insert_date('s3://salusv/matching/payload/emr/visonex/{}/{}/{}/')
 
+output_path = 's3://salusv/warehouse/text/emr/2017-03-14/part_provider=visonex/'
+
 runner.run_spark_script(get_rel_path(
     '../../common/emr_common_model.sql'
 ), [
@@ -90,4 +93,40 @@ runner.run_spark_script(
     ]
 )
 
-spark.sparkContext.stop()
+
+runner.run_spark_script(get_rel_path(
+    '../../common/emr_common_model.sql'
+), [
+    ['table_name', 'final_unload', False],
+    [
+        'properties',
+        constants.unload_properties_template.format(output_path),
+        False
+    ]
+])
+
+runner.run_spark_script(
+    get_rel_path('../../common/unload_common_model.sql'), [
+        [
+            'select_statement',
+            "SELECT *, 'NULL' as best_date "
+            + "FROM emr_common_model "
+            + "WHERE date_start IS NULL",
+            False
+        ]
+    ]
+)
+
+runner.run_spark_script(
+    get_rel_path('../../common/unload_common_model.sql'), [
+        [
+            'select_statement',
+            "SELECT *, regexp_replace(cast(date_start as string), '-..$', '') as best_date "
+            + "FROM emr_common_model "
+            + "WHERE date_start IS NOT NULL",
+            False
+        ]
+    ]
+)
+
+spark.stop()
