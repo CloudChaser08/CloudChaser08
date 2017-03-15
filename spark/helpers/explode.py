@@ -1,4 +1,3 @@
-# create date table
 from datetime import timedelta
 
 
@@ -30,7 +29,7 @@ def explode_dates(
         table=table,
         date_start=date_start_column,
         date_end=date_end_column
-    ), True).rdd.flatMap(explode).toDF.union(
+    ), True).rdd.flatMap(explode).toDF().union(
         runner.run_spark_query((
             "SELECT * "
             + "FROM {table} "
