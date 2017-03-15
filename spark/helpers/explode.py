@@ -1,13 +1,20 @@
 from datetime import timedelta
+from pyspark.sql import Row
 
 
 def explode_dates(
         runner, table, date_start_column, date_end_column,
 ):
     def replace_dates_in_row(row, date):
-        setattr(row, date_start_column, date)
-        setattr(row, date_end_column, date)
-        return row
+        DateRow = Row(*row.asDict().keys())
+        return DateRow(
+            *map(
+                lambda key: date if key in [
+                    date_start_column, date_end_column
+                ] else row[key],
+                row
+            )
+        )
 
     def explode(row):
         map(lambda i: replace_dates_in_row(
