@@ -65,7 +65,7 @@ def delete_path(target_path):
         # filter out keys that are more than one level deeper than
         # input path
         for f in filter(
-                lambda key: not key.replace(path, '').contains('/'),
+                lambda key: '/' not in key.replace(path, ''),
                 list_s3_bucket(path)
         ):
             check_call([
