@@ -32,8 +32,8 @@ EMR_DISTCP_TO_S3 = ('Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar
 RS_NUM_NODES=10
 EMR_CLUSTER_NAME="normalization-cluster"
 EMR_NUM_NODES='5'
-EMR_NODE_TYPE="c4.xlarge"
-EMR_EBS_VOLUME_SIZE="0"
+EMR_NODE_TYPE="m4.xlarge"
+EMR_EBS_VOLUME_SIZE="100"
 
 def do_detect_matching_done(ds, **kwargs):
     deid_files = kwargs['expected_matching_files_func'](ds, kwargs)
