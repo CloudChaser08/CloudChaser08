@@ -138,8 +138,10 @@ def validate_date(date_input, date_format):
     represent a date after today, return parsed date
     """
     try:
-        parsed_date = datetime.datetime.strptime(date_input, date_format)
+        parsed_date = datetime.datetime.strptime(str(date_input), date_format)
         if parsed_date <= datetime.datetime.today():
-            return parsed_date
-    finally:
+            return parsed_date.strftime('%Y-%m-%d')
+        else:
+            None
+    except:
         return None

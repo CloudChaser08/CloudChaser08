@@ -58,7 +58,7 @@ problemlist_input = input_prefix + 'problemlist/'
 
 matching_path = insert_date('s3://salusv/matching/payload/emr/visonex/{}/{}/{}/')
 
-output_path = 's3://salusv/warehouse/text/emr/2017-03-14/part_provider=visonex/'
+output_path = 's3://salusv/warehouse/text/emr/2017-03-14/'
 
 runner.run_spark_script(get_rel_path(
     '../../common/emr_common_model.sql'
@@ -109,7 +109,7 @@ runner.run_spark_script(
     get_rel_path('../../common/unload_common_model.sql'), [
         [
             'select_statement',
-            "SELECT *, 'NULL' as best_date "
+            "SELECT *, 'visonex' as provider, 'NULL' as best_date "
             + "FROM emr_common_model "
             + "WHERE date_start IS NULL",
             False
@@ -121,7 +121,7 @@ runner.run_spark_script(
     get_rel_path('../../common/unload_common_model.sql'), [
         [
             'select_statement',
-            "SELECT *, regexp_replace(cast(date_start as string), '-..$', '') as best_date "
+            "SELECT *, 'visonex' as provider, regexp_replace(cast(date_start as string), '-..$', '') as best_date "
             + "FROM emr_common_model "
             + "WHERE date_start IS NOT NULL",
             False

@@ -20,7 +20,7 @@ SELECT
             mp.yearOfBirth
             ),                          -- patient_year_of_birth
         mp.threeDigitZip,               -- patient_zip
-        mp.state,                       -- patient_state
+        UPPER(mp.state),                -- patient_state
         NULL,                           -- patient_deceased_flag
         mp.gender,                      -- patient_gender
         NULL,                           -- patient_race
@@ -54,7 +54,8 @@ SELECT
         NULL,                           -- description
         NULL,                           -- description_qual
         validate_date(
-            big_union.date_service
+            substring(big_union.date_service, 0, 10),
+            '%Y-%m-%d'
             ),                          -- date_start
         NULL,                           -- date_end
         NULL,                           -- date_qual
