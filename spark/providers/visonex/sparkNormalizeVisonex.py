@@ -26,14 +26,13 @@ runner = Runner(sqlContext)
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--date', type=str)
-# parser.add_argument('--output_path', type=str)
-# parser.add_argument('--debug', default=False, action='store_true')
-# args = parser.parse_args()
-argdate = '2017-02-01'
+parser = argparse.ArgumentParser()
+parser.add_argument('--date', type=str)
+parser.add_argument('--output_path', type=str)
+parser.add_argument('--debug', default=False, action='store_true')
+args = parser.parse_args()
 
-date_obj = datetime.strptime(argdate, '%Y-%m-%d')
+date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 
 
 def insert_date(template):
@@ -57,8 +56,6 @@ labidlist_input = input_prefix + 'labidlist/'
 problemlist_input = input_prefix + 'problemlist/'
 
 matching_path = insert_date('s3://salusv/matching/payload/emr/visonex/{}/{}/{}/')
-
-output_path = 's3://salusv/warehouse/text/emr/2017-03-14/'
 
 runner.run_spark_script(get_rel_path(
     '../../common/emr_common_model.sql'
@@ -100,7 +97,7 @@ runner.run_spark_script(get_rel_path(
     ['table_name', 'final_unload', False],
     [
         'properties',
-        constants.unload_properties_template.format(output_path),
+        constants.unload_properties_template.format(args.output_path),
         False
     ]
 ])
