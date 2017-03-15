@@ -49,8 +49,8 @@ if args.first_run:
 
 subprocess.call(' '.join(psql + ['-v', 'filename="\'' + args.setid + '\'"'] + 
     ['-v', 'today="\'' + TODAY + '\'"'] +
-    ['-v', 'feedname="\'navicure medical claims\'"'] +
-    ['-v', 'vendor="\'navicure\'"'] +
+    ['-v', 'feedname="\'24\'"'] +
+    ['-v', 'vendor="\'34\'"'] +
     [db, '<', '../../redshift_norm_common/medicalclaims_common_model.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'input_path="\'' + args.input_path + '\'"'] +
     ['-v', 'credentials="\'' + args.s3_credentials + '\'"'] +
