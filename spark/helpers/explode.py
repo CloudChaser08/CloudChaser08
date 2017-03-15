@@ -17,7 +17,7 @@ def explode_dates(
         )
 
     def explode(row):
-        map(lambda i: replace_dates_in_row(
+        return map(lambda i: replace_dates_in_row(
             row,
             getattr(row, date_start_column) + timedelta(i)
         ), range(int((
