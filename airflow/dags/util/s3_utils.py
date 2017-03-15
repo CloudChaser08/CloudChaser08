@@ -59,8 +59,15 @@ def delete_path(target_path):
     """
     This function will only remove files (not directories) one level deep
     """
-    if s3_key_exists(target_path):
-        for f in list_s3_bucket(target_path):
+    path = target_path if target_path.endswith('/') \
+        else target_path + '/'
+    if s3_key_exists(path + '*'):
+        # filter out keys that are more than one level deeper than
+        # input path
+        for f in filter(
+                lambda key: not key.replace(path, '').contains('/'),
+                list_s3_bucket(path)
+        ):
             check_call([
                 'aws', 's3', 'rm', f
             ], env=get_aws_env())

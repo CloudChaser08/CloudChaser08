@@ -149,12 +149,15 @@ def normalize(cluster_name, script_name, args,
 
     # get directories that will need to be transformed to parquet
     # by listing the directories created in hdfs by normalization
-    modified_dirs = check_output(' '.join([
-        'ssh', '-i', '~/.ssh/emr_deployer',
-        'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
-        'hdfs', 'dfs', '-ls', text_staging_dir, '|', 'rev', '|',
-        'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
-    ]), shell=True).split('\n')
+    modified_dirs = filter(
+        lambda path: path != '',
+        check_output(' '.join([
+            'ssh', '-i', '~/.ssh/emr_deployer',
+            'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
+            'hdfs', 'dfs', '-ls', text_staging_dir, '|', 'rev', '|',
+            'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
+        ]), shell=True).split('\n')
+    )
 
     check_call([
         'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
