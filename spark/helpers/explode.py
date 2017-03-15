@@ -12,7 +12,7 @@ def explode_dates(
                 lambda key: date if key in [
                     date_start_column, date_end_column
                 ] else row[key],
-                row
+                row.asDict().keys()
             )
         )
 
