@@ -66,11 +66,17 @@ SELECT
             ),                          -- diagnosis_code
         big_union.diagnosis_code_qual,  -- diagnosis_code_qual
         NULL,                           -- diagnosis_code_priority
-        big_union.procedure_code,       -- procedure_code
+        REGEXP_REPLACE(
+            big_union.procedure_code,
+            '[^A-Za-z0-9]', ''
+            ),                          -- procedure_code
         NULL,                           -- procedure_code_qual
         NULL,                           -- procedure_code_modifier
         NULL,                           -- procedure_code_priority
-        big_union.ndc_code,             -- ndc_code
+        REGEXP_REPLACE(
+            big_union.ndc_code,
+            '[^0-9]', ''
+            ),                          -- ndc_code
         NULL,                           -- ndc_code_qual
         NULL,                           -- loinc_code
         NULL,                           -- other_code
