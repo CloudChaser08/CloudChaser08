@@ -22,8 +22,8 @@ def explode_dates(
         "SELECT * "
         + "FROM {table} "
         + "WHERE datediff("
-        + "date_format({date_start}, 'YYYY-mm-dd'), "
-        + "date_format({date_end}, 'YYYY-mm-dd')"
+        + "date_format({date_end}, 'YYYY-MM-dd'), "
+        + "date_format({date_start}, 'YYYY-MM-dd')"
         + ") BETWEEN 0 AND 365"
     ).format(
         table=table,
@@ -34,8 +34,8 @@ def explode_dates(
             "SELECT * "
             + "FROM {table} "
             + "WHERE datediff("
-            + "date_format({date_start}, 'YYYY-mm-dd'), "
-            + "date_format({date_end}, 'YYYY-mm-dd')"
+            + "date_format({date_end}, 'YYYY-MM-dd'), "
+            + "date_format({date_start}, 'YYYY-MM-dd')"
             + ") NOT BETWEEN 0 AND 365"
         ).format(
             table=table,
