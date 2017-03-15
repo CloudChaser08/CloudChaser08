@@ -120,7 +120,7 @@ def do_create_emr_cluster(ds, **kwargs):
     )
 
 def do_delete_emr_cluster(ds, **kwargs):
-    emr_utls.delete_emr_cluster(EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'])
+    emr_utils.delete_emr_cluster(EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'])
 
 def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
