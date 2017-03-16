@@ -3,12 +3,19 @@ import datetime
 import re
 
 
+def uppercase_code(code):
+    try:
+        return code.upper()
+    except:
+        return None
+
+
 def clean_up_alphanumeric_code(code):
     """
     Remove non-alphanumeric characters from code
     """
     try:
-        return re.sub(r'[^A-Za-z0-9]', '', code.upper())
+        return re.sub(r'[^A-Za-z0-9]', '', code)
     except:
         return None
 
@@ -60,7 +67,7 @@ def clean_up_numeric_code(code):
 def clean_up_diagnosis_code(
         diagnosis_code, diagnosis_code_qual, date_service
 ):
-    diagnosis_code = clean_up_alphanumeric_code(diagnosis_code)
+    diagnosis_code = uppercase_code(clean_up_alphanumeric_code(diagnosis_code))
     if diagnosis_code_qual == '01' or (
             diagnosis_code_qual is None
             and isinstance(date_service, datetime.date)
@@ -89,7 +96,7 @@ def clean_up_diagnosis_code(
 
 
 def clean_up_procedure_code(procedure_code):
-    return clean_up_alphanumeric_code(procedure_code)
+    return uppercase_code(clean_up_alphanumeric_code(procedure_code))
 
 
 def clean_up_ndc_code(ndc_code):

@@ -1,7 +1,8 @@
 from pyspark.sql import HiveContext, SparkSession
 from helpers.udf.post_normalization_cleanup \
-  import clean_up_diagnosis_code, obscure_place_of_service, \
-  filter_due_to_place_of_service, cap_age, cap_year_of_birth
+  import clean_up_diagnosis_code, clean_up_procedure_code, clean_up_ndc_code, \
+  obscure_place_of_service, filter_due_to_place_of_service, cap_age, \
+  cap_year_of_birth
 from helpers.udf.general_helpers \
   import extract_number, extract_date
 
