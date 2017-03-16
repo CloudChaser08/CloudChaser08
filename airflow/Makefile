@@ -24,9 +24,10 @@ jenkins-push:
 	docker push ${REPO}:${TAG_TO_DEPLOY}
 	docker push ${REPO}:latest
 
-run:
+pull:
 	docker pull ${REPO}:latest
 
+run: pull
 	docker run -d \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
 	-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
@@ -39,7 +40,16 @@ run:
 	${REPO}:latest
 
 test:
-	docker exec -it airflow /bin/bash -c 'cd $$AIRFLOW_HOME && cd dags && nosetests -w test/ -v'
+	docker run --rm \
+	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
+	-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+	-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+	-e DOCKER_IP=${DOCKER_IP} \
+	-v ${PWD}/dags:/usr/local/airflow/dags \
+	-v ${PWD}/../spark:/usr/local/airflow/spark \
+	-p 8080:8080 \
+	--name airflow-test \
+	${REPO}:latest runtests
 
 shell:
 	docker exec -it airflow /bin/bash
@@ -53,19 +63,13 @@ deploy-dev: test
 
 # JENKINS RELATED
 
-jenkins-test:
-	docker pull ${REPO}:latest
-
-	docker run -d \
+jenkins-test: pull
+	docker run --rm \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
 	-v "${PWD}/dags":/usr/local/airflow/dags \
 	-v "${PWD}/../spark":/usr/local/airflow/spark \
 	--name airflow-test \
-	${REPO}:latest
-
-	docker exec -it airflow-test /bin/bash -c 'cd $$AIRFLOW_HOME && cd dags && nosetests -w test/ -v'
-
-	docker rm -f airflow-test
+	${REPO}:latest runtests
 
 jenkins-deploy-dev: jenkins-test
 	${RSYNC_CMD} dags/     airflow@airflow-dev.awsdev.healthverity.com:airflow/dags
