@@ -5,14 +5,24 @@ from pyspark.sql import Row
 def explode_dates(
         runner, table, date_start_column, date_end_column,
 ):
-    DateRow = Row()
+
+    to_explode = runner.run_spark_query((
+        "SELECT * "
+        + "FROM {table} "
+        + "WHERE datediff("
+        + "date_format({date_end}, 'YYYY-MM-dd'), "
+        + "date_format({date_start}, 'YYYY-MM-dd')"
+        + ") BETWEEN 0 AND 365"
+    ).format(
+        table=table,
+        date_start=date_start_column,
+        date_end=date_end_column
+    ), True)
+
+    Record = Row(*map(lambda s: s.name, to_explode.schema))
 
     def replace_dates_in_row(row, date):
-        global DateRow
-        if DateRow == Row():
-            DateRow = Row(*row.asDict().keys())
-
-        return DateRow(
+        return Record(
             *map(
                 lambda key: date if key in [
                     date_start_column, date_end_column
@@ -30,18 +40,7 @@ def explode_dates(
             getattr(row, date_start_column)
         ).days)))
 
-    runner.run_spark_query((
-        "SELECT * "
-        + "FROM {table} "
-        + "WHERE datediff("
-        + "date_format({date_end}, 'YYYY-MM-dd'), "
-        + "date_format({date_start}, 'YYYY-MM-dd')"
-        + ") BETWEEN 0 AND 365"
-    ).format(
-        table=table,
-        date_start=date_start_column,
-        date_end=date_end_column
-    ), True).rdd.flatMap(explode).toDF(DateRow.asDict().keys()).union(
+    to_explode.rdd.flatMap(explode).toDF(to_explode.schema).union(
         runner.run_spark_query((
             "SELECT * "
             + "FROM {table} "
