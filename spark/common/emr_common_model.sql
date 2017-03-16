@@ -28,7 +28,7 @@ CREATE TABLE {table_name} (
         provider_referring_id_qual   string,
         provider_referring_id        string,
         provider_billing_id_qual     string,
-        provider_biling_id           string,
+        provider_billing_id          string,
         provider_facility_id_qual    string,
         provider_facility_id         string,
         provider_ordering_id_qual    string,
