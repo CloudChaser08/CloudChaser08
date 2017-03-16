@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+ENTRY_OPTION=$1
+
 AIRFLOW_HOME="/usr/local/airflow"
 CMD="airflow"
 
@@ -37,8 +39,19 @@ sqlite3 $AIRFLOW_HOME/airflow.db \
 
 $CMD initdb
 
-echo "Starting Webserver..."
-$CMD webserver -D # --stderr /dev/stdout
+case $ENTRY_OPTION in
 
-echo "Starting Scheduler..."
-exec $CMD scheduler
+  runtests)
+    cd $AIRFLOW_HOME/dags
+    exec nosetests -w test/ -v
+    ;;
+
+  *)
+    echo "Starting Webserver..."
+    $CMD webserver -D # --stderr /dev/stdout
+
+    echo "Starting Scheduler..."
+    exec $CMD scheduler
+    ;;
+
+esac
