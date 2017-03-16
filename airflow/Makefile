@@ -58,8 +58,8 @@ jenkins-test:
 
 	docker run -d \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
-	-v ${PWD}/dags:/usr/local/airflow/dags \
-	-v ${PWD}/../spark:/usr/local/airflow/spark \
+	-v "${PWD}/dags":/usr/local/airflow/dags \
+	-v "${PWD}/../spark":/usr/local/airflow/spark \
 	--name airflow-test \
 	${REPO}:latest
 
