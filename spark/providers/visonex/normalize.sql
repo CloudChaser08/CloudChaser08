@@ -362,5 +362,13 @@ FROM (
         ) big_union
     LEFT JOIN matching_payload mp ON big_union.visonex_patient_id = mp.claimid
 WHERE LENGTH(big_union.ndc_code) = 11
-    OR LENGTH(big_union.procedure_code) <= 7
-    OR LENGTH(big_union.diagnosis_code) <= 7
+    OR (
+        big_union.procedure_code IS NOT NULL
+        AND big_union.procedure_code != ''
+        AND bLENGTH(big_union.procedure_code) <= 7
+        )
+    OR (
+        big_union.diagnosis_code IS NOT NULL
+        AND big_union.diagnosis_code != ''
+        AND LENGTH(big_union.diagnosis_code) <= 7
+        )
