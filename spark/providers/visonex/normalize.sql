@@ -365,7 +365,7 @@ WHERE LENGTH(big_union.ndc_code) = 11
     OR (
         big_union.procedure_code IS NOT NULL
         AND big_union.procedure_code != ''
-        AND bLENGTH(big_union.procedure_code) <= 7
+        AND LENGTH(big_union.procedure_code) <= 7
         )
     OR (
         big_union.diagnosis_code IS NOT NULL
