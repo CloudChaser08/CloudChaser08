@@ -51,7 +51,7 @@ CREATE TABLE {table_name} (
         description_qual             string,
         date_start                   date,
         date_end                     date,
-        date_qual                    date,
+        date_qual                    string,
         diagnosis_code               string,
         diagnosis_code_qual          string,
         diagnosis_code_priority      string,
