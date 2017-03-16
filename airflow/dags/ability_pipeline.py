@@ -125,17 +125,17 @@ def get_s3_raw_prefix(ds, kwargs):
 
 def get_ap_deid_file_paths(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs) + 'ap/deid/'
-    files = os.listdir(file_dir)
+    files = filter(lambda f: f.find("vwpatient") > -1, os.listdir(file_dir))
     return map(lambda f: file_dir + f, files)
 
 def get_ses_deid_file_paths(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs) + 'ses/deid/'
-    files = os.listdir(file_dir)
+    files = filter(lambda f: f.find("vwpatient") > -1, os.listdir(file_dir))
     return map(lambda f: file_dir + f, files)
 
 def get_ease_deid_file_paths(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs) + 'ease/deid/'
-    files = os.listdir(file_dir)
+    files = filter(lambda f: f.find("vwpatient") > -1, os.listdir(file_dir))
     return map(lambda f: file_dir + f, files)
 
 def get_ap_encrypted_decrypted_file_paths(ds, kwargs):
