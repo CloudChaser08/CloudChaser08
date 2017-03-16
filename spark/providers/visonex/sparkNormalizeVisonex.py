@@ -86,7 +86,9 @@ runner.run_spark_script(
         ['today', TODAY],
         ['filename', 'HealthVerity-20170201'],
         ['feedname', '23'],
-        ['vendor', '33']
+        ['vendor', '33'],
+        ['min_date', '2013-01-01'],
+        ['max_date', '2017-02-01']
     ]
 )
 

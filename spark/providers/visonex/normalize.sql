@@ -56,8 +56,8 @@ SELECT
         extract_date(
             substring(big_union.date_service, 0, 10),
             '%Y-%m-%d',
-            cast('2013-01-01' as date),
-            current_date()
+            cast({min_date} as date),
+            cast({max_date} as date)
             ),                          -- date_start
         NULL,                           -- date_end
         NULL,                           -- date_qual
