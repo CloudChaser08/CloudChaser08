@@ -7,7 +7,7 @@ SELECT
         {filename},                     -- data_set
         {feedname},                     -- data_feed
         {vendor},                       -- data_vendor
-        '1',                            -- source_version
+        NULL,                           -- source_version
         big_union.claim_type,           -- claim_type
         NULL,                           -- claim_id
         NULL,                           -- claim_qual
@@ -66,16 +66,14 @@ SELECT
             ),                          -- diagnosis_code
         big_union.diagnosis_code_qual,  -- diagnosis_code_qual
         NULL,                           -- diagnosis_code_priority
-        REGEXP_REPLACE(
-            big_union.procedure_code,
-            '[^A-Za-z0-9]', ''
+        clean_up_procedure_code(
+            big_union.procedure_code
             ),                          -- procedure_code
         NULL,                           -- procedure_code_qual
         NULL,                           -- procedure_code_modifier
         NULL,                           -- procedure_code_priority
-        REGEXP_REPLACE(
-            big_union.ndc_code,
-            '[^0-9]', ''
+        clean_up_ndc_code(
+            big_union.ndc_code
             ),                          -- ndc_code
         NULL,                           -- ndc_code_qual
         NULL,                           -- loinc_code

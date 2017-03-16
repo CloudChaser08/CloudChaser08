@@ -3,6 +3,26 @@ import datetime
 import re
 
 
+def clean_up_alphanumeric_code(code):
+    """
+    Remove non-alphanumeric characters from code
+    """
+    try:
+        return re.sub(r'[^A-Za-z0-9]', '', code.upper())
+    except:
+        return None
+
+
+def clean_up_numeric_code(code):
+    """
+    Remove non-numeric characters from code
+    """
+    try:
+        return re.sub(r'[^0-9]', '', code)
+    except:
+        return None
+
+
 # These codes are specific enough that along with other public fields they pose a
 # re-identification risk, nullify them
 # ICD9
@@ -40,6 +60,7 @@ import re
 def clean_up_diagnosis_code(
         diagnosis_code, diagnosis_code_qual, date_service
 ):
+    diagnosis_code = clean_up_alphanumeric_code(diagnosis_code)
     if diagnosis_code_qual == '01' or (
             diagnosis_code_qual is None
             and isinstance(date_service, datetime.date)
@@ -65,6 +86,18 @@ def clean_up_diagnosis_code(
         if re.search('^Z684[1-5]$', diagnosis_code):
             return 'Z684'
     return diagnosis_code
+
+
+def clean_up_procedure_code(procedure_code):
+    return clean_up_alphanumeric_code(procedure_code)
+
+
+def clean_up_ndc_code(ndc_code):
+    if isinstance(ndc_code, str) and len(ndc_code) == 11:
+        return clean_up_numeric_code(ndc_code)
+    else:
+        return None
+
 
 # These places of service pose a risk of revealing the patient's
 # residence, set them to unkown, and remove data about them

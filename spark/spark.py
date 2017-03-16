@@ -26,6 +26,12 @@ def init(provider, local=False):
         'clean_up_diagnosis_code', clean_up_diagnosis_code
     )
     sqlContext.registerFunction(
+        'clean_up_procedure_code', clean_up_procedure_code
+    )
+    sqlContext.registerFunction(
+        'clean_up_ndc_code', clean_up_ndc_code
+    )
+    sqlContext.registerFunction(
         'cap_age', cap_age
     )
     sqlContext.registerFunction(
