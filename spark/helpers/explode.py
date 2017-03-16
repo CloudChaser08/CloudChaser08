@@ -19,17 +19,11 @@ def explode_dates(
         date_end=date_end_column
     ), True)
 
-    Record = Row(*map(lambda s: s.name, to_explode.schema))
-
     def replace_dates_in_row(row, date):
-        return Record(
-            *map(
-                lambda key: date if key in [
-                    date_start_column, date_end_column
-                ] else row[key],
-                row.asDict().keys()
-            )
-        )
+        d = row.asDict()
+        d[date_start_column] = date
+        d[date_end_column] = date
+        return Row(**d)
 
     def explode(row):
         return map(lambda i: replace_dates_in_row(
@@ -38,7 +32,7 @@ def explode_dates(
         ), range(int((
             getattr(row, date_end_column) -
             getattr(row, date_start_column)
-        ).days)))
+        ).days + 1)))
 
     to_explode.rdd.flatMap(explode).toDF(to_explode.schema).union(
         runner.run_spark_query((
