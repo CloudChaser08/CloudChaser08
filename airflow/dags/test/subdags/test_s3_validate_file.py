@@ -13,6 +13,7 @@ class TestFileValidatorSubDag(unittest.TestCase):
         self.ds = {}
         self.kwargs = {
             # test input args
+            's3_bucket': 'healthverity',
             's3_prefix': 'dummyprefix/',
             'file_name_pattern_func':
             lambda ds, k: self.filename_template.format(

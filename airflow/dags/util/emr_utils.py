@@ -6,6 +6,9 @@ import time
 import os
 from subprocess import check_call, check_output
 from airflow.models import Variable
+import util.s3_utils as s3_utils
+
+reload(s3_utils)
 
 
 #
@@ -98,8 +101,8 @@ def _build_dewey(cluster_id):
                 '../spark/'
             )
         ), '&&', 'make', 'build', '&&', 'scp', '-i', '~/.ssh/emr_deployer',
-        '-r', '.', 'hadoop@' + _get_emr_cluster_ip_address(cluster_id)
-        + ':spark/'
+        '-o', '"StrictHostKeyChecking no"', '-r', '.',
+        'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':spark/'
     ]), shell=True)
 
 
@@ -146,12 +149,15 @@ def normalize(cluster_name, script_name, args,
 
     # get directories that will need to be transformed to parquet
     # by listing the directories created in hdfs by normalization
-    modified_dirs = check_output(' '.join([
-        'ssh', '-i', '~/.ssh/emr_deployer',
-        'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
-        'hdfs', 'dfs', '-ls', text_staging_dir, '|', 'rev', '|',
-        'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
-    ]), shell=True).split('\n')
+    modified_dirs = filter(
+        lambda path: path != '',
+        check_output(' '.join([
+            'ssh', '-i', '~/.ssh/emr_deployer',
+            'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
+            'hdfs', 'dfs', '-ls', text_staging_dir, '|', 'rev', '|',
+            'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
+        ]), shell=True).split('\n')
+    )
 
     check_call([
         'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
@@ -182,10 +188,17 @@ EMR_COPY_MELLON_STEP = (
 
 def _transform_to_parquet(cluster_name, src_file, dest_file, model):
     env = dict(os.environ)
+
+    # remove target directory
+    s3_utils.delete_path(dest_file)
+
     parquet_step = (
         'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
         'Args=[--class,com.healthverity.parquet.Main,'
         '--conf,spark.sql.parquet.compression.codec=gzip,'
+        '--conf,spark.executor.memory=10G,'
+        '--conf,spark.executor.cores=4,'
+        '--conf,spark.executor.instances=5,'
         '/tmp/mellon-assembly-latest.jar,{},{},{},{},'
         '{},20,"|","true","true"]'
     ).format(

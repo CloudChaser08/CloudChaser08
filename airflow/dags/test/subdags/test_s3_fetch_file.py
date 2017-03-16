@@ -13,6 +13,7 @@ class TestS3FetchFileSubDag(unittest.TestCase):
         self.ds = {}
         self.kwargs = {
             # test input args
+            's3_bucket': 'healthverity',
             's3_prefix': 'samplefeeds/',
             'tmp_path_template': 'dummypath/',
             'expected_file_name_func':

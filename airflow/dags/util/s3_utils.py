@@ -48,10 +48,30 @@ def copy_file(src_path, dest_path):
         'aws', 's3', 'cp', '--sse', 'AES256', src_path, dest_path
     ], env=get_aws_env())
 
+
 def copy_file_async(src_path, dest_path):
     return Popen([
         'aws', 's3', 'cp', '--sse', 'AES256', src_path, dest_path
     ], env=get_aws_env())
+
+
+def delete_path(target_path):
+    """
+    This function will only remove files (not directories) one level deep
+    """
+    path = target_path if target_path.endswith('/') \
+        else target_path + '/'
+    if s3_key_exists(path + '*'):
+        # filter out keys that are more than one level deeper than
+        # input path
+        for f in filter(
+                lambda key: '/' not in key.replace(path, ''),
+                list_s3_bucket(path)
+        ):
+            check_call([
+                'aws', 's3', 'rm', f
+            ], env=get_aws_env())
+
 
 def list_s3_bucket(path, s3_connection_id=DEFAULT_CONNECTION_ID):
     """
