@@ -68,9 +68,9 @@ jenkins-test:
 	docker rm -f airflow-test
 
 jenkins-deploy-dev: jenkins-test
-	${RSYNC_CMD} airflow/dags/ airflow@airflow-dev.awsdev.healthverity.com:airflow/dags
-	${RSYNC_CMD} spark/        airflow@airflow-dev.awsdev.healthverity.com:spark
+	${RSYNC_CMD} dags/     airflow@airflow-dev.awsdev.healthverity.com:airflow/dags
+	${RSYNC_CMD} ../spark/ airflow@airflow-dev.awsdev.healthverity.com:spark
 
 jenkins-deploy: jenkins-test
-	${RSYNC_CMD} airflow/dags/ airflow@airflow-prod.awsdev.healthverity.com:airflow/dags
-	${RSYNC_CMD} spark/        airflow@airflow-prod.awsdev.healthverity.com:spark
+	${RSYNC_CMD} dags/     airflow@airflow-prod.awsdev.healthverity.com:airflow/dags
+	${RSYNC_CMD} ../spark/ airflow@airflow-prod.awsdev.healthverity.com:spark
