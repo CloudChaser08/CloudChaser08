@@ -170,18 +170,3 @@ def cap_year_of_birth(age, date_service, year_of_birth):
 
     finally:
         return year_of_birth
-
-
-def validate_date(date_input, date_format):
-    """
-    Ensure that input string is in the correct format and does not
-    represent a date after today, return parsed date
-    """
-    try:
-        parsed_date = datetime.datetime.strptime(str(date_input), date_format)
-        if parsed_date <= datetime.datetime.today():
-            return parsed_date.strftime('%Y-%m-%d')
-        else:
-            None
-    except:
-        return None

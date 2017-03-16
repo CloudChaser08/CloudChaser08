@@ -53,9 +53,11 @@ SELECT
         NULL,                           -- encounter_id_qual
         NULL,                           -- description
         NULL,                           -- description_qual
-        validate_date(
+        extract_date(
             substring(big_union.date_service, 0, 10),
-            '%Y-%m-%d'
+            '%Y-%m-%d',
+            cast('2013-01-01' as date),
+            current_date()
             ),                          -- date_start
         NULL,                           -- date_end
         NULL,                           -- date_qual
