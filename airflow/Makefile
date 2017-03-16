@@ -55,10 +55,6 @@ shell:
 HUP:
 	docker exec -t airflow kill -HUP 1
 
-deploy-dev: test
-	${RSYNC_CMD} dags/ airflow@airflow-dev.awsdev.healthverity.com:airflow/dags
-	${RSYNC_CMD} ../spark/        airflow@airflow-dev.awsdev.healthverity.com:spark
-
 # JENKINS RELATED
 
 jenkins-test: pull
