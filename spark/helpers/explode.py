@@ -5,8 +5,13 @@ from pyspark.sql import Row
 def explode_dates(
         runner, table, date_start_column, date_end_column,
 ):
+    DateRow = Row()
+
     def replace_dates_in_row(row, date):
-        DateRow = Row(*row.asDict().keys())
+        global DateRow
+        if DateRow == Row():
+            DateRow = Row(*row.asDict().keys())
+
         return DateRow(
             *map(
                 lambda key: date if key in [
@@ -36,7 +41,7 @@ def explode_dates(
         table=table,
         date_start=date_start_column,
         date_end=date_end_column
-    ), True).rdd.flatMap(explode).toDF().union(
+    ), True).rdd.flatMap(explode).toDF(DateRow.columns).union(
         runner.run_spark_query((
             "SELECT * "
             + "FROM {table} "
