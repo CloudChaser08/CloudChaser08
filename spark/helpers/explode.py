@@ -41,7 +41,7 @@ def explode_dates(
         table=table,
         date_start=date_start_column,
         date_end=date_end_column
-    ), True).rdd.flatMap(explode).toDF(DateRow.columns).union(
+    ), True).rdd.flatMap(explode).toDF(DateRow.asDict().keys()).union(
         runner.run_spark_query((
             "SELECT * "
             + "FROM {table} "
