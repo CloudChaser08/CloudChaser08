@@ -2,6 +2,8 @@ from pyspark.sql import HiveContext, SparkSession
 from helpers.udf.post_normalization_cleanup \
   import clean_up_diagnosis_code, obscure_place_of_service, \
   filter_due_to_place_of_service, cap_age, cap_year_of_birth
+from helpers.udf.general_helpers \
+  import extract_number, extract_date
 
 
 def init(provider, local=False):
@@ -28,6 +30,14 @@ def init(provider, local=False):
     )
     sqlContext.registerFunction(
         'cap_year_of_birth', cap_year_of_birth
+    )
+
+    # helper functions for cleaning up data
+    sqlContext.registerFunction(
+        'extract_number', extract_number
+    )
+    sqlContext.registerFunction(
+        'extract_date', extract_date
     )
 
     return spark, sqlContext
