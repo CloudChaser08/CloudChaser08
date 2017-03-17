@@ -3,6 +3,7 @@ from helpers.udf.general_helpers \
   import extract_number, extract_date
 from helpers.udf.post_normalization_cleanup import *
 from helpers.udf.date_functions import *
+from helpers.udf.general_helpers import *
 
 
 def init(provider, local=False):
@@ -45,6 +46,9 @@ def init(provider, local=False):
     )
     sqlContext.registerFunction(
         'yyyyMMdd_to_date', yyyyMMdd_to_date
+    )
+    sqlContext.registerFunction(
+        'create_range', create_range
     )
 
     # helper functions for cleaning up data
