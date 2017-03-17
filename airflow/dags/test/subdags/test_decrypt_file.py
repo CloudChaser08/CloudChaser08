@@ -5,8 +5,6 @@ import airflow.models
 import util.s3_utils as s3_utils
 import subdags.decrypt_files as decrypt_files
 
-reload(decrypt_files)
-
 
 class TestDecryptFileSubDag(unittest.TestCase):
 
