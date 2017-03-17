@@ -1,5 +1,34 @@
 #! /usr/bin/python
 import datetime
+import re
+
+
+def uppercase_code(code):
+    try:
+        return code.upper()
+    except:
+        return None
+
+
+def clean_up_alphanumeric_code(code):
+    """
+    Remove non-alphanumeric characters from code
+    """
+    try:
+        return re.sub(r'[^A-Za-z0-9]', '', code)
+    except:
+        return None
+
+
+def clean_up_numeric_code(code):
+    """
+    Remove non-numeric characters from code
+    """
+    try:
+        return re.sub(r'[^0-9]', '', code)
+    except:
+        return None
+
 
 # These codes are specific enough that along with other public fields they pose a
 # re-identification risk, nullify them
@@ -38,9 +67,12 @@ import datetime
 def clean_up_diagnosis_code(
         diagnosis_code, diagnosis_code_qual, date_service
 ):
-    import re
-    if diagnosis_code_qual == '01' or (diagnosis_code_qual is None
-                                       and date_service < datetime.date(2015, 10, 1)):
+    diagnosis_code = uppercase_code(clean_up_alphanumeric_code(diagnosis_code))
+    if diagnosis_code_qual == '01' or (
+            diagnosis_code_qual is None
+            and isinstance(date_service, datetime.date)
+            and date_service < datetime.date(2015, 10, 1)
+    ):
         if re.search(
                 '^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$',
                 diagnosis_code
@@ -48,8 +80,11 @@ def clean_up_diagnosis_code(
             return None
         if re.search('^V854[1-5]$', diagnosis_code):
             return 'V854'
-    if diagnosis_code_qual == '02' or (diagnosis_code_qual is None
-                                       and date_service >= datetime.date(2015, 10, 1)):
+    if diagnosis_code_qual == '02' or (
+            diagnosis_code_qual is None
+            and isinstance(date_service, datetime.date)
+            and date_service >= datetime.date(2015, 10, 1)
+    ):
         if re.search(
                 '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$',
                 diagnosis_code
@@ -58,6 +93,18 @@ def clean_up_diagnosis_code(
         if re.search('^Z684[1-5]$', diagnosis_code):
             return 'Z684'
     return diagnosis_code
+
+
+def clean_up_procedure_code(procedure_code):
+    return uppercase_code(clean_up_alphanumeric_code(procedure_code))
+
+
+def clean_up_ndc_code(ndc_code):
+    if isinstance(ndc_code, str) and len(ndc_code) == 11:
+        return clean_up_numeric_code(ndc_code)
+    else:
+        return None
+
 
 # These places of service pose a risk of revealing the patient's
 # residence, set them to unkown, and remove data about them
@@ -90,11 +137,26 @@ def filter_due_to_place_of_service(prov_detail, place_of_service_std_id):
         return prov_detail
 
 
+def scrub_discharge_status(discharge_status):
+    if discharge_status in ['69', '87']:
+        return '0'
+    else:
+        return discharge_status
+
+
+def nullify_drg_blacklist(drg_code):
+    if drg_code in ['283', '284', '285', '789']:
+        return None
+    else:
+        return drg_code
+
+
 # Age caps
 def cap_age(age):
-    return '90' if (
-        age is not None and int(age) > 85
-    ) else age
+    try:
+        return '90' if int(age) > 85 else age
+    except:
+        return None
 
 
 def cap_year_of_birth(age, date_service, year_of_birth):
