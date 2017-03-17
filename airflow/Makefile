@@ -8,6 +8,9 @@ define RSYNC_CMD
 rsync -rav --delete -e 'ssh -o StrictHostKeyChecking=no'
 endef
 
+clean:
+	find . -name "*.pyc" -delete
+
 build:
 	docker build -t ${REPO}:${USER} .
 	docker tag ${REPO}:${USER} ${REPO}:latest
@@ -39,7 +42,7 @@ run: pull
 	--name airflow \
 	${REPO}:latest
 
-test:
+test: pull clean
 	docker run --rm \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
 	-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
@@ -57,7 +60,7 @@ HUP:
 
 # JENKINS RELATED
 
-jenkins-test: pull
+jenkins-test: pull clean
 	docker run --rm \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
 	-v "${PWD}/dags":/usr/local/airflow/dags \
