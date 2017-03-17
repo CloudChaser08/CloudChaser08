@@ -49,7 +49,7 @@ def explode_dates(
         ), True)).registerTempTable('{table}_temp'.format(table=table))
 
     runner.run_spark_query(
-        "CREATE TABLE {table}_exploded AS SELECT * FROM {table}_temp}".format(
+        "CREATE TABLE {table}_exploded AS SELECT * FROM {table}_temp".format(
             table=table
         )
     )
