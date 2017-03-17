@@ -122,4 +122,4 @@ hvJoinKey text encode lzo)
 DISTKEY(hvJoinKey) SORTKEY(hvJoinKey);
 
 -- Load transaction data into table
-copy navicure_raw from :input_path credentials :credentials EMPTYASNULL FILLRECORD BZIP2;
+copy navicure_raw from :input_path credentials :credentials EMPTYASNULL FILLRECORD BZIP2 MAXERROR 20;
