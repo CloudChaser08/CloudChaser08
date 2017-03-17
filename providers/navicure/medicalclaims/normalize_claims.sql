@@ -12,6 +12,33 @@ CREATE TABLE tmp2 AS
 SELECT *, get_diagnosis_with_priority(diag_concat, priority_concat) as diag_with_priority
 FROM tmp1;
 
+UPDATE tmp2
+SET claim_submit_date = dates.formatted
+FROM dates
+WHERE claim_submit_date = dates.date;
+
+UPDATE tmp2 SET
+claim_submit_date = NULL
+WHERE length(claim_submit_date) <> 10;
+
+UPDATE tmp2
+SET service_from_date = dates.formatted
+FROM dates
+WHERE service_from_date = dates.date;
+
+UPDATE tmp2 SET
+service_from_date = NULL
+WHERE length(service_from_date) <> 10;
+
+UPDATE tmp2
+SET service_to_date = dates.formatted
+FROM dates
+WHERE service_to_date = dates.date;
+
+UPDATE tmp2 SET
+service_to_date = NULL
+WHERE length(service_to_date) <> 10;
+
 INSERT INTO medicalclaims_common_model (
     claim_id,
     hvid,
@@ -310,7 +337,8 @@ SET prov_referring_name_2 =
     CASE WHEN prov_referring_name_2 = ', , ' THEN NULL
     WHEN prov_referring_name_2 LIKE '%, , ' THEN regexp_replace(prov_referring_name_2, ', , $', '')
     WHEN prov_referring_name_2 LIKE '%, ' THEN regexp_replace(prov_referring_name_2, ', $', '')
-    ELSE prov_referring_name_2 END;
+    ELSE prov_referring_name_2 END
+WHERE prov_referring_name_2 = ', , ' OR prov_referring_name_2 LIKE '%, , ' OR prov_referring_name_2 LIKE '%, ';
 
 -- Fix blank first/middle names
 UPDATE medicalclaims_common_model
@@ -318,7 +346,8 @@ SET prov_rendering_name_2 =
     CASE WHEN prov_rendering_name_2 = ', , ' THEN NULL
     WHEN prov_rendering_name_2 LIKE '%, , ' THEN regexp_replace(prov_rendering_name_2, ', , $', '')
     WHEN prov_rendering_name_2 LIKE '%, ' THEN regexp_replace(prov_rendering_name_2, ', $', '')
-    ELSE prov_rendering_name_2 END;
+    ELSE prov_rendering_name_2 END
+WHERE prov_rendering_name_2 = ', , ' OR prov_rendering_name_2 LIKE '%, , ' OR prov_rendering_name_2 LIKE '%, ';
 
 -- Fix blank first/middle names
 UPDATE medicalclaims_common_model
@@ -326,31 +355,8 @@ SET prov_billing_name_2 =
     CASE WHEN prov_billing_name_2 = ', , ' THEN NULL
     WHEN prov_billing_name_2 LIKE '%, , ' THEN regexp_replace(prov_billing_name_2, ', , $', '')
     WHEN prov_billing_name_2 LIKE '%, ' THEN regexp_replace(prov_billing_name_2, ', $', '')
-    ELSE prov_billing_name_2 END;
-
-UPDATE medicalclaims_common_model
-SET date_received = dates.formatted
-FROM dates
-WHERE date_received = dates.date;
-
-UPDATE medicalclaims_common_model SET
-date_received = CASE WHEN length(date_received) <> 10 THEN NULL ELSE date_received END;
-
-UPDATE medicalclaims_common_model
-SET date_service = dates.formatted
-FROM dates
-WHERE date_service = dates.date;
-
-UPDATE medicalclaims_common_model SET
-date_service = CASE WHEN length(date_service) <> 10 THEN NULL ELSE date_service END;
-
-UPDATE medicalclaims_common_model
-SET date_service_end = dates.formatted
-FROM dates
-WHERE date_service_end = dates.date;
-
-UPDATE medicalclaims_common_model SET
-date_service_end = CASE WHEN length(date_service_end) <> 10 THEN NULL ELSE date_service_end END;
+    ELSE prov_billing_name_2 END
+WHERE prov_billing_name_2 = ', , ' OR prov_billing_name_2 LIKE '%, , ' OR prov_billing_name_2 LIKE '%, ';
 
 UPDATE medicalclaims_common_model SET patient_year_of_birth=NULL
 WHERE
