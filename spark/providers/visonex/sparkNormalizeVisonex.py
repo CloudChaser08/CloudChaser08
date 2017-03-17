@@ -34,6 +34,9 @@ args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 
+min_date = '2013-01-01'
+max_date = args.date
+
 
 def insert_date(template):
     return template.format(
@@ -87,8 +90,8 @@ runner.run_spark_script(
         ['filename', 'HealthVerity-20170201'],
         ['feedname', '23'],
         ['vendor', '33'],
-        ['min_date', '2013-01-01'],
-        ['max_date', '2017-02-01']
+        ['min_date', min_date],
+        ['max_date', max_date]
     ]
 )
 
