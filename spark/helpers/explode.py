@@ -48,7 +48,13 @@ def explode_dates(
             date_end=date_end_column
         ), True)).registerTempTable('{table}_temp'.format(table=table))
 
+    runner.run_spark_query(
+        "CREATE TABLE {table}_exploded AS SELECT * FROM {table}_temp}".format(
+            table=table
+        )
+    )
+
     runner.run_spark_query("DROP TABLE {table}".format(table=table))
     runner.run_spark_query(
-        "ALTER TABLE {table}_temp RENAME TO {table}".format(table=table)
+        "ALTER TABLE {table}_exploded RENAME TO {table}".format(table=table)
     )
