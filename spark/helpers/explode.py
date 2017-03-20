@@ -6,7 +6,7 @@ def explode_dates(
 ):
 
     # explode date start/end ranges that are less than 1 year apart
-    # register as a temporary table in order to use date_add function
+    # register as a temporary table in order to use date_add SQL function
     runner.run_spark_query((
         "SELECT *, "
         + "  create_range(datediff("
@@ -14,9 +14,8 @@ def explode_dates(
         + "  ) + 1) as raw_range "
         + "FROM {table} "
         + "WHERE datediff("
-        + "date_format({date_end_column}, 'YYYY-MM-dd'), "
-        + "date_format({date_start_column}, 'YYYY-MM-dd')"
-        + ") BETWEEN 0 AND 365"
+        + "{date_end_column}, {date_start_column}"
+        + ") BETWEEN 1 AND 365"
     ).format(
         table=table,
         date_start_column=date_start_column,
@@ -51,9 +50,8 @@ def explode_dates(
             "SELECT * "
             + "FROM {table} "
             + "WHERE datediff("
-            + "date_format({date_end_column}, 'YYYY-MM-dd'), "
-            + "date_format({date_start_column}, 'YYYY-MM-dd')"
-            + ") NOT BETWEEN 0 AND 365"
+            + "{date_end_column}, {date_start_column}"
+            + ") NOT BETWEEN 1 AND 365"
         ).format(
             table=table,
             date_start_column=date_start_column,
