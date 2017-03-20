@@ -464,7 +464,7 @@ detect_move_normalize_dag = SubDagOperator(
             's3_payload_loc_url'             : S3_PAYLOAD_LOC_ABILITY_URL,
             'vendor_description'             : 'Ability DX',
             'vendor_uuid'                    : '10d4caa3-056e-42c7-aab9-401ca375fee1',
-            'feed_data_type'                 : 'medical'
+            'feed_data_type'                 : 'medical-old'
         }
     ),
     task_id='detect_move_normalize',
