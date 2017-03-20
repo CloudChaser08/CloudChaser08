@@ -131,7 +131,7 @@ FROM (
     -- diagnosis
     -- cleaning: only contain alpha-numeric characters, no longer than 7 characters
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'HOSPITALIZATION' AS claim_type,
         icd10 AS diagnosis_code,
         '02' AS diagnosis_code_qual,
@@ -141,7 +141,7 @@ FROM (
     FROM hospitalization
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'HOSPITALIZATION' AS claim_type,
         ICD9 AS diagnosis_code,
         '01' AS diagnosis_code_qual,
@@ -151,7 +151,7 @@ FROM (
     FROM hospitalization
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'IMMUNIZATION' AS claim_type,
         icd10 AS diagnosis_code,
         '02' AS diagnosis_code_qual,
@@ -161,7 +161,7 @@ FROM (
     FROM immunization
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTACCESS_EXAMPROC' AS claim_type,
         icd10 AS diagnosis_code,
         '02' AS diagnosis_code_qual,
@@ -171,7 +171,7 @@ FROM (
     FROM patientaccess_examproc
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTACCESS_EXAMPROC' AS claim_type,
         DIAGNOSTICCODE AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -181,7 +181,7 @@ FROM (
     FROM patientaccess_examproc
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'LABPANELSDRAWN' AS claim_type,
         JUSTIFICATION AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -191,7 +191,7 @@ FROM (
     FROM labpanelsdrawn
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'LABRESULT' as claim_type,
         diagnosiscode as diagnosis_code,
         NULL as diagnosis_code_qual,
@@ -201,7 +201,7 @@ FROM (
     FROM labresult
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'LABRESULT' as claim_type,
         icd10 as diagnosis_code,
         '02' as diagnosis_code_qual,
@@ -211,7 +211,7 @@ FROM (
     FROM labresult
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTDIAGCODES' as claim_type,
         diagnosiscode as diagnosis_code,
         NULL as diagnosis_code_qual,
@@ -221,7 +221,7 @@ FROM (
     FROM patientdiagcodes
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTDIAGCODES' as claim_type,
         icd10 as diagnosis_code,
         '02' as diagnosis_code_qual,
@@ -231,7 +231,7 @@ FROM (
     FROM patientdiagcodes
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         icd10 as diagnosis_code,
         '02' as diagnosis_code_qual,
@@ -241,7 +241,7 @@ FROM (
     FROM patientmedadministered
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTMEDPRESCRIPTION' as claim_type,
         runjustification as diagnosis_code,
         NULL as diagnosis_code_qual,
@@ -251,7 +251,7 @@ FROM (
     FROM patientmedprescription
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PROBLEMLIST' as claim_type,
         icd9 as diagnosis_code,
         '01' as diagnosis_code_qual,
@@ -261,7 +261,7 @@ FROM (
     FROM problemlist
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PROBLEMLIST' as claim_type,
         icd10 as diagnosis_code,
         '02' as diagnosis_code_qual,
@@ -271,7 +271,7 @@ FROM (
     FROM problemlist
     UNION 
     SELECT
-        b.patientidnumber as visonex_patient_id,
+        b.patientdataanalyticrowidnumber as visonex_patient_id,
         'LABIDLIST' as claim_type,
         a.icd9diagnosiscode as diagnosis_code,
         '01' as diagnosis_code_qual,
@@ -287,7 +287,7 @@ FROM (
     -- procedure
     -- cleaning: only contain alpha-numeric characters, no longer than 7 characters
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTACCESS_EXAMPROC' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -297,7 +297,7 @@ FROM (
     FROM PatientAccess_ExamProc
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'LABRESULT' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -307,7 +307,7 @@ FROM (
     FROM labresult
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'LABPANELSDRAWN' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -317,7 +317,7 @@ FROM (
     FROM labpanelsdrawn
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -327,7 +327,7 @@ FROM (
     FROM patientmedadministered
     UNION
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -337,7 +337,7 @@ FROM (
     FROM patientmedadministered
     UNION
     SELECT
-        b.patientidnumber as visonex_patient_id,
+        b.patientdataanalyticrowidnumber as visonex_patient_id,
         'LABIDLIST' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -353,7 +353,7 @@ FROM (
     -- ndc
     -- cleaning: only contain numeric characters, must be 11-digits long
     SELECT
-        patientidnumber as visonex_patient_id,
+        patientdataanalyticrowidnumber as visonex_patient_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
