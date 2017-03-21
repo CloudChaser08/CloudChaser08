@@ -87,3 +87,4 @@ spark.sparkContext.parallelize(part_files).foreach(move_file)
 spark.sparkContext.stop()
 
 subprocess.check_call(['s3-dist-cp', '--src', '/text/medicalclaims/emdeon/', '--dest', S3_EMDEON_OUT])
+subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '/text/medicalclaims/emdeon/'])
