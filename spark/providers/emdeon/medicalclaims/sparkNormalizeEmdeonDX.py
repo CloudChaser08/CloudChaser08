@@ -77,13 +77,13 @@ runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'),
     ['select_statement', "SELECT *, regexp_replace(date_service, '-..$', '') as part_best_date FROM medicalclaims_common_model WHERE date_service IS NOT NULL", False]
 ])
 
+part_files = subprocess.check_output(['hadoop', 'fs', '-ls', '-R', '/text/medicalclaims/emdeon/']).strip().split("\n")
+def move_file(part_file):
+    if part_file[-3:] == ".gz":
+        old_pf = part_file.split(' ')[-1].strip()
+        new_pf = '/'.join(old_pf.split('/')[:-1] + [args.date + '_' + old_pf.split('/')[-1]])
+        subprocess.check_call(['hadoop', 'fs', '-mv', old_pf, new_pf])
+spark.sparkContext.parallelize(part_files).foreach(move_file)
 spark.sparkContext.stop()
-subprocess.check_call(['hadoop', 'fs', '-get', '/text/medicalclaims/emdeon', './'])
-dirs = subprocess.check_output(['ls', 'emdeon']).strip().split("\n")
-for d in dirs:
-    files = subprocess.check_output(['ls', 'emdeon/{}'.format(d)]).strip().split("\n")
-    for f in files:
-        subprocess.check_call(['mv', 'emdeon/{}/{}'.format(d,f), 'emdeon/{}/{}_{}'.format(d, args.date, f)])
-subprocess.check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', 'emdeon', S3_EMDEON_OUT])
-subprocess.check_call(['rm', '-r', 'emdeon'])
-subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '/text'])
+
+subprocess.check_call(['s3-dist-cp', '--src', '/text/medicalclaims/emdeon/', '--dest', S3_EMDEON_OUT])
