@@ -298,7 +298,8 @@ date_service_end string,
 unrelated string
 );
 
-INSERT INTO emdeon_professional_claims_base
+DROP TABLE IF EXISTS emdeon_professional_claims_base;
+CREATE TEMPORARY VIEW emdeon_professional_claims_base AS
 SELECT emdeon_dx_raw_claims.claim_id AS claim_id,
 accident_related,
 adjudicated_proc_modifier_1,
@@ -569,6 +570,25 @@ FROM emdeon_dx_raw_claims
     INNER JOIN emdeon_dx_raw_service USING (claim_id)
 WHERE claim_type='P'
 CLUSTER BY claim_id;
+CACHE TABLE emdeon_professional_claims_base;
+
+CREATE TEMPORARY VIEW emdeon_professional_claims_base2 AS
+SELECT * FROM emdeon_professional_claims_base
+WHERE ((datediff(date_service_end, date_service) IS NOT NULL
+            AND datediff(date_service_end, date_service) > 0
+            AND date_add(date_service, 366) > date_service_end)
+        OR (datediff(statement_to, statement_from) IS NOT NULL
+            AND datediff(statement_to, statement_from) > 0
+            AND date_add(statement_from, 366) > statement_to));
+
+CREATE TEMPORARY VIEW emdeon_professional_claims_base3 AS
+SELECT * FROM emdeon_professional_claims_base
+WHERE NOT ((datediff(date_service_end, date_service) IS NOT NULL
+            AND datediff(date_service_end, date_service) > 0
+            AND date_add(date_service, 366) > date_service_end)
+        OR (datediff(statement_to, statement_from) IS NOT NULL
+            AND datediff(statement_to, statement_from) > 0
+            AND date_add(statement_from, 366) > statement_to));
 
 INSERT INTO medicalclaims_common_model
 SELECT
@@ -588,8 +608,8 @@ threedigitzip as patient_zip3,
 state as patient_state,
 claim_type,
 date_received,
-CASE WHEN date_service IS NOT NULL THEN date_service ELSE statement_from END,
-CASE WHEN date_service_end IS NOT NULL THEN date_service ELSE statement_to END,
+CASE WHEN date_service IS NOT NULL AND date_service_end IS NOT NULL THEN date_add(date_service, date_explode_indices.d) ELSE date_add(statement_from, date_explode_indices.d) END,
+CASE WHEN date_service IS NOT NULL AND date_service_end IS NOT NULL THEN date_add(date_service, date_explode_indices.d) ELSE date_add(statement_from, date_explode_indices.d) END,
 inst_date_admitted,
 NULL,
 inst_admit_type_std_id,
@@ -715,12 +735,169 @@ cob_payer_seq_code_2,
 cob_payer_hpid_2,
 cob_payer_claim_filing_ind_code_2,
 cob_ins_type_code_2
-FROM emdeon_professional_claims_base b
+FROM emdeon_professional_claims_base2 b
+    CROSS JOIN split_indices
+    CROSS JOIN date_explode_indices
+    LEFT JOIN matching_payload ON b.claim_id = claimid
+    LEFT JOIN zip3_to_state ON threeDigitZip = zip3
+    LEFT JOIN payer_mapping ON payer_vendor_id = payer_id
+WHERE split(related,':')[n-1] IS NOT NULL
+    AND split(related,':')[n-1] <> ''
+    AND (date_add(date_service, date_explode_indices.d) <= date_service_end
+        OR (date_add(statement_from, date_explode_indices.d) <= statement_to));
+
+INSERT INTO medicalclaims_common_model
+SELECT
+NULL,
+b.claim_id,
+hvid,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+patient_gender,
+patient_age,
+patient_dob,
+threedigitzip as patient_zip3,
+state as patient_state,
+claim_type,
+date_received,
+CASE WHEN date_service IS NOT NULL THEN date_service ELSE statement_from END,
+CASE WHEN date_service_end IS NOT NULL THEN date_service_end ELSE statement_to END,
+inst_date_admitted,
+NULL,
+inst_admit_type_std_id,
+NULL,
+NULL,
+inst_admit_source_std_id,
+NULL,
+NULL,
+inst_discharge_status_std_id,
+NULL,
+NULL,
+inst_type_of_bill_std_id,
+NULL,
+NULL,
+inst_drg_std_id,
+NULL,
+NULL,
+place_of_service_std_id,
+NULL,
+NULL,
+service_line_number,
+upper(regexp_replace(regexp_replace(regexp_replace(split(split(related,':')[n-1],'_')[0], ' ', ''), ',', ''), '\\.', '')) as diagnosis_code,
+CASE WHEN diagnosis_code_qual = '9' THEN '01' WHEN diagnosis_code_qual = 'X' THEN '02' END,
+split(split(related,':')[n-1],'_')[1] as diagnosis_priority,
+NULL,
+upper(regexp_replace(regexp_replace(procedure_code, ' ', ''), ',', '')) as procedure_code,
+procedure_code_qual,
+NULL,
+procedure_units,
+procedure_modifier_1,
+procedure_modifier_2,
+procedure_modifier_3,
+procedure_modifier_4,
+revenue_code,
+ndc_code,
+medical_coverage_type,
+line_charge,
+line_allowed,
+total_charge,
+total_allowed,
+prov_rendering_npi,
+prov_billing_npi,
+prov_referring_npi,
+prov_facility_npi,
+payer_mapping.payer_id,
+payer_mapping.payer_name,
+payer_mapping.payer_parent_name,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+prov_rendering_tax_id,
+NULL,
+NULL,
+NULL,
+prov_rendering_upin,
+NULL,
+prov_rendering_name_1,
+prov_rendering_name_2,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+prov_rendering_std_taxonomy,
+prov_specialty as prov_rendering_vendor_specialty,
+NULL,
+prov_billing_tax_id,
+NULL,
+prov_billing_ssn,
+prov_billing_state_license,
+prov_billing_upin,
+NULL,
+prov_billing_name_1,
+prov_billing_name_2,
+prov_billing_address_1,
+prov_billing_address_2,
+prov_billing_city,
+prov_billing_state,
+prov_billing_zip,
+prov_billing_std_taxonomy,
+NULL,
+NULL,
+prov_referring_tax_id,
+NULL,
+NULL,
+prov_referring_state_license,
+prov_referring_upin,
+prov_referring_commercial_id,
+prov_referring_name_1,
+prov_referring_name_2,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+prov_facility_tax_id,
+NULL,
+NULL,
+prov_facility_state_license,
+NULL,
+NULL,
+prov_facility_name_1,
+prov_facility_name_2,
+prov_facility_address_1,
+prov_facility_address_2,
+prov_facility_city,
+prov_facility_state,
+prov_facility_zip,
+NULL,
+NULL,
+cob_payer_id_1 as cob_payer_vendor_id_1,
+cob_payer_seq_code_1,
+cob_payer_hpid_1,
+cob_payer_claim_filing_ind_code_1,
+cob_ins_type_code_1,
+cob_payer_id_2 as cob_payer_vendor_id_2,
+cob_payer_seq_code_2,
+cob_payer_hpid_2,
+cob_payer_claim_filing_ind_code_2,
+cob_ins_type_code_2
+FROM emdeon_professional_claims_base3 b
     CROSS JOIN split_indices
     LEFT JOIN matching_payload ON b.claim_id = claimid
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
     LEFT JOIN payer_mapping ON payer_vendor_id = payer_id
-WHERE split(related,':')[n-1] IS NOT NULL AND split(related,':')[n-1] <> '';
+WHERE split(related,':')[n-1] IS NOT NULL
+    AND split(related,':')[n-1] <> '';
 
 -- There can be a lot of raws with the same diagnosis. Only extract unique ones
 INSERT INTO related_diags_tmp
@@ -831,6 +1008,182 @@ FROM emdeon_professional_claims_base e
     INNER JOIN related_diags rd USING (claim_id) 
 WHERE service_line_number = '1'
 CLUSTER BY claim_id;
+
+CACHE TABLE emdeon_professional_claims_unrelated;
+
+CREATE TEMPORARY VIEW emdeon_professional_claims_unrelated2 AS
+SELECT * FROM emdeon_professional_claims_unrelated
+WHERE ((datediff(date_service_end, date_service) IS NOT NULL
+            AND datediff(date_service_end, date_service) > 0
+            AND date_add(date_service, 366) > date_service_end)
+        OR (datediff(statement_to, statement_from) IS NOT NULL
+            AND datediff(statement_to, statement_from) > 0
+            AND date_add(statement_from, 366) > statement_to));
+
+CREATE TEMPORARY VIEW emdeon_professional_claims_unrelated3 AS
+SELECT * FROM emdeon_professional_claims_unrelated
+WHERE NOT ((datediff(date_service_end, date_service) IS NOT NULL
+            AND datediff(date_service_end, date_service) > 0
+            AND date_add(date_service, 366) > date_service_end)
+        OR (datediff(statement_to, statement_from) IS NOT NULL
+            AND datediff(statement_to, statement_from) > 0
+            AND date_add(statement_from, 366) > statement_to));
+
+INSERT INTO medicalclaims_common_model
+SELECT
+NULL,
+b.claim_id,
+hvid,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+patient_gender,
+patient_age,
+patient_dob,
+threeDigitZip as patient_zip3,
+state as patient_state,
+claim_type,
+date_received,
+CASE WHEN date_service IS NOT NULL AND date_service_end IS NOT NULL THEN date_add(date_service, date_explode_indices.d) ELSE date_add(statement_from, date_explode_indices.d) END,
+CASE WHEN date_service IS NOT NULL AND date_service_end IS NOT NULL THEN date_add(date_service, date_explode_indices.d) ELSE date_add(statement_from, date_explode_indices.d) END,
+inst_date_admitted,
+NULL,
+inst_admit_type_std_id,
+NULL,
+NULL,
+inst_admit_source_std_id,
+NULL,
+NULL,
+inst_discharge_status_std_id,
+NULL,
+NULL,
+inst_type_of_bill_std_id,
+NULL,
+NULL,
+inst_drg_std_id,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+upper(regexp_replace(regexp_replace(regexp_replace(split(unrelated,':')[n-1], ' ', ''), ',', ''), '\\.', '')) as diagnosis_code,
+CASE WHEN diagnosis_code_qual = '9' THEN '01' WHEN diagnosis_code_qual = 'X' THEN '02' END,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+medical_coverage_type,
+NULL,
+NULL,
+total_charge,
+total_allowed,
+prov_rendering_npi,
+prov_billing_npi,
+prov_referring_npi,
+prov_facility_npi,
+payer_mapping.payer_id,
+payer_mapping.payer_name,
+payer_mapping.payer_parent_name,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+prov_rendering_tax_id,
+NULL,
+NULL,
+NULL,
+prov_rendering_upin,
+NULL,
+prov_rendering_name_1,
+prov_rendering_name_2,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+prov_rendering_std_taxonomy,
+prov_specialty AS prov_rendering_vendor_specialty,
+NULL,
+prov_billing_tax_id,
+NULL,
+prov_billing_ssn,
+prov_billing_state_license,
+prov_billing_upin,
+NULL,
+prov_billing_name_1,
+prov_billing_name_2,
+prov_billing_address_1,
+prov_billing_address_2,
+prov_billing_city,
+prov_billing_state,
+prov_billing_zip,
+prov_billing_std_taxonomy,
+NULL,
+NULL,
+prov_referring_tax_id,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+prov_referring_name_1,
+prov_referring_name_2,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+prov_facility_tax_id,
+NULL,
+NULL,
+prov_facility_state_license,
+NULL,
+NULL,
+prov_facility_name_1,
+prov_facility_name_2,
+prov_facility_address_1,
+prov_facility_address_2,
+prov_facility_city,
+prov_facility_state,
+prov_facility_zip,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL,
+NULL
+FROM emdeon_professional_claims_unrelated2 b
+    CROSS JOIN split_indices
+    CROSS JOIN date_explode_indices
+    LEFT JOIN matching_payload ON b.claim_id = claimid
+    LEFT JOIN zip3_to_state ON threeDigitZip = zip3
+    LEFT JOIN payer_mapping ON payer_vendor_id = payer_id
+WHERE split(unrelated,':')[n-1] IS NOT NULL
+    AND split(unrelated,':')[n-1] <> ''
+    AND (date_add(date_service, date_explode_indices.d) <= date_service_end
+        OR (date_add(statement_from, date_explode_indices.d) <= statement_to));
 
 INSERT INTO medicalclaims_common_model
 SELECT
@@ -977,10 +1330,11 @@ NULL,
 NULL,
 NULL,
 NULL
-FROM emdeon_professional_claims_unrelated b
+FROM emdeon_professional_claims_unrelated3 b
     CROSS JOIN split_indices
     LEFT JOIN matching_payload ON b.claim_id = claimid
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3
     LEFT JOIN payer_mapping ON payer_vendor_id = payer_id
-WHERE split(unrelated,':')[n-1] IS NOT NULL AND split(unrelated,':')[n-1] <> '';
+WHERE split(unrelated,':')[n-1] IS NOT NULL
+    AND split(unrelated,':')[n-1] <> '';
 
