@@ -24,7 +24,7 @@ sed -i "s|\$FERNET_KEY|$FERNET_KEY|" $AIRFLOW_HOME/airflow.cfg
 
 # No good defaults
 sed -i "s|\$BASE_URL|$BASE_URL|" $AIRFLOW_HOME/airflow.cfg
-cat $AIRFLOW_HOME/airflow.cfg
+
 touch $AIRFLOW_HOME/airflow.db
 
 CMD="airflow"
