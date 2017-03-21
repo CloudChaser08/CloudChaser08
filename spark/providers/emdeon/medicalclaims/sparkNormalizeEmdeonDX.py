@@ -20,7 +20,7 @@ def get_rel_path(relative_filename):
     )
 
 # init
-spark, sqlContext = init("Quest")
+spark, sqlContext = init("Emdeon DX")
 
 # initialize runner
 runner = Runner(sqlContext)
