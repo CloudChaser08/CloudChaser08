@@ -92,7 +92,7 @@ runner.run_spark_script(
     get_rel_path('../../common/unload_common_model.sql'), [
         [
             'select_statement',
-            "SELECT *, 'NULL' as best_date "
+            "SELECT *, 'practice_insight' as provider, 'NULL' as best_date "
             + "FROM medicalclaims_common_model "
             + "WHERE date_service is NULL",
             False
@@ -103,7 +103,7 @@ runner.run_spark_script(
     get_rel_path('../../common/unload_common_model.sql'), [
         [
             'select_statement',
-            "SELECT *, regexp_replace("
+            "SELECT *, 'practice_insight' as provider, regexp_replace("
             + "cast(date_service as string), "
             + "'-..$', '') as best_date "
             + "FROM medicalclaims_common_model "

@@ -57,7 +57,7 @@ def explode_dates(
             date_start_column=date_start_column,
             date_end_column=date_end_column
         ), True)
-    ).registerTempTable('{table}_temp')
+    ).registerTempTable('{table}_temp'.format(table=table))
 
     # create a non-temp table based on the temp table that will
     # replace our main table

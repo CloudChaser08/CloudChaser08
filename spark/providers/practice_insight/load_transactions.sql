@@ -235,3 +235,5 @@ CREATE EXTERNAL TABLE transactional_raw (
     STORED AS TEXTFILE
     LOCATION {input_path}
 ;
+
+CACHE TABLE transactional_raw;
