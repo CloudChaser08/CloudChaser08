@@ -37,6 +37,7 @@ runprod:
 	-e SQL_CONN='postgresql+psycopg2:///airflow?host=/var/run/postgresql/' \
 	-e EXECUTOR=LocalExecutor                                  \
 	-v /home/airflow/airflow/dags:/usr/local/airflow/dags      \
+	-v /home/airflow/spark:/usr/local/airflow/spark            \
 	-v /var/run/postgresql:/var/run/postgresql                 \
 	-p 8080:8080                                               \
 	--name airflow                                             \
