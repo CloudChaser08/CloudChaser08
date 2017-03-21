@@ -27,7 +27,7 @@ runner = Runner(sqlContext)
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 S3_EMDEON_IN = 's3a://salusv/incoming/medicalclaims/emdeon/'
-S3_EMDEON_OUT = 's3://salusv/warehouse/text/medicalclaims/emdeon/'
+S3_EMDEON_OUT = 's3://salusv/warehouse/text/medicalclaims/part_provider=emdeon/2017-02-24/'
 S3_EMDEON_MATCHING = 's3a://salusv/matching/payload/medicalclaims/emdeon/'
 
 parser = argparse.ArgumentParser()
@@ -46,9 +46,14 @@ if args.first_run:
 date_path = args.date.replace('-', '/')
 
 runner.run_spark_script(get_rel_path('../../../common/medicalclaims_common_model.sql'))
-runner.run_spark_script(get_rel_path('load_transactions.sql'), [
-    ['input_path', S3_EMDEON_IN + date_path + '/']
-])
+if args.date < '2015-08-01':
+    runner.run_spark_script(get_rel_path('load_transactions.sql'), [
+        ['input_path', S3_EMDEON_IN + date_path + '/payload/']
+    ])
+else:
+    runner.run_spark_script(get_rel_path('load_transactions.sql'), [
+        ['input_path', S3_EMDEON_IN + date_path + '/']
+    ])
 runner.run_spark_script(get_rel_path('load_matching_payload.sql'), [
     ['matching_path', S3_EMDEON_MATCHING + date_path + '/']
 ])
