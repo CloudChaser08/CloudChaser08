@@ -31,7 +31,7 @@ CMD="airflow"
 
 $CMD initdb
 
-if [ -n $RESET_DB ]; then
+if [ -n "$RESET_DB" ]; then
   echo "Reset database..."
   $CMD resetdb -y
 
