@@ -22,6 +22,12 @@ def get_rel_path(relative_filename):
 # init
 spark, sqlContext = init("Practice Insight")
 
+# Set shuffle partitions to stabilize job
+#
+# This number is currently based on an assumption that this script
+# will run on 5 m4.2xlarge nodes
+sqlContext.setConf("spark.sql.shuffle.partitions", "800")
+
 # initialize runner
 runner = Runner(sqlContext)
 
