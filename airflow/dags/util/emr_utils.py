@@ -4,7 +4,7 @@
 import json
 import time
 import os
-from subprocess import check_call, check_output
+from subprocess import check_call, check_output, Popen
 from airflow.models import Variable
 import util.s3_utils as s3_utils
 
@@ -90,20 +90,22 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
         '--cluster-id', cluster_details['ClusterId']
     ])
 
+
 #
 # Normalize
 #
 def _build_dewey(cluster_id):
-    check_call(' '.join([
-        'cd', os.path.abspath(
-            os.path.join(
-                '${AIRFLOW_HOME}',
-                '../spark/'
-            )
-        ), '&&', 'make', 'build', '&&', 'scp', '-i', '~/.ssh/emr_deployer',
+    spark_dir = os.path.abspath(
+        os.path.join(
+            os.getenv('AIRFLOW_HOME'),
+            '../spark/'
+        )
+    )
+    Popen([
+        'make', 'build', '&&', 'scp', '-i', '~/.ssh/emr_deployer',
         '-o', '"StrictHostKeyChecking no"', '-r', '.',
         'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':spark/'
-    ]), shell=True)
+    ], cwd=spark_dir)
 
 
 def normalize(cluster_name, script_name, args,
