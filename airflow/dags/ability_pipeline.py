@@ -188,10 +188,7 @@ def do_rename_files(ds, **kwargs):
 
 def get_expected_matching_files(ds, kwargs):
     payloads_per_product = [
-        'deid.vwheader.txt', 
-        'deid.vwpatient.txt',
-        'deid.vwpayer.txt',
-        'deid.vwsubscriber.txt'
+        'deid.vwpatient.txt'
     ]
     res = []
     for product in ['ap', 'ses', 'ease']:
