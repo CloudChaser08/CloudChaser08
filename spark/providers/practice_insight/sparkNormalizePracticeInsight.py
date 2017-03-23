@@ -36,7 +36,6 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--output_path', type=str)
-parser.add_argument('--part', type=str)
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
 
@@ -55,6 +54,7 @@ matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}
 
 # create helper tables
 runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
+
 
 def run(part):
     runner.run_spark_script(get_rel_path(
