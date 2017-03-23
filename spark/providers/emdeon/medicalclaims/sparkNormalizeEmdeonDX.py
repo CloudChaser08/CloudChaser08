@@ -27,7 +27,7 @@ runner = Runner(sqlContext)
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 S3_EMDEON_IN = 's3a://salusv/incoming/medicalclaims/emdeon/'
-S3_EMDEON_OUT = 's3://salusv/warehouse/text/medicalclaims/part_provider=emdeon/2017-02-24/'
+S3_EMDEON_OUT = 's3://salusv/warehouse/text/medicalclaims/2017-02-24/part_provider=emdeon/'
 S3_EMDEON_MATCHING = 's3a://salusv/matching/payload/medicalclaims/emdeon/'
 
 parser = argparse.ArgumentParser()
