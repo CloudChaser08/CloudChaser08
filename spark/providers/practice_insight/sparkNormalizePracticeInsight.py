@@ -79,10 +79,13 @@ runner.run_spark_script(get_rel_path('normalize.sql'), [
     ['vendor', '3']
 ])
 
+# explode date ranges
 explode.explode_dates(
-    runner, 'medicalclaims_common_model', 'date_service', 'date_service_end'
+    runner, 'medicalclaims_common_model', 'date_service',
+    'date_service_end', 'record_id'
 )
 
+# unload
 runner.run_spark_script(get_rel_path(
     '../../common/medicalclaims_common_model.sql'
 ), [
