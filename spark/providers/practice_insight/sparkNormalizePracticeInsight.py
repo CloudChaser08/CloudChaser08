@@ -128,8 +128,7 @@ def run(part):
     spark.catalog.clearCache()
 
 
-# for part in ['1', '2']:
-for part in ['1']:
+for part in ['1', '2']:
     run(part)
 
 spark.sparkContext.stop()
