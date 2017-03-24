@@ -26,7 +26,7 @@ spark, sqlContext = init("Practice Insight")
 #
 # This number is currently based on an assumption that this script
 # will run on 5 m4.2xlarge nodes
-sqlContext.setConf("spark.sql.shuffle.partitions", "800")
+sqlContext.setConf("spark.sql.shuffle.partitions", "1200")
 
 # initialize runner
 runner = Runner(sqlContext)
@@ -52,11 +52,11 @@ matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}
     str(date_obj.year)
 )
 
-# create helper tables
-runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
-
 
 def run(part):
+    # create helper tables
+    runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
+
     runner.run_spark_script(get_rel_path(
         '../../common/medicalclaims_common_model.sql'
     ), [
@@ -125,8 +125,11 @@ def run(part):
         ]
     )
 
+    spark.catalog.clearCache()
 
-for part in ['1', '2']:
+
+# for part in ['1', '2']:
+for part in ['1']:
     run(part)
 
 spark.sparkContext.stop()

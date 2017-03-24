@@ -75,8 +75,16 @@ def explode_dates(
             primary_key, monotonically_increasing_id()
         )
 
+    full_exploded_table.createTempView(
+        '{table}_replacement'.format(table=table)
+    )
+
     # replace old table with new
     runner.run_spark_query("DROP TABLE {table}".format(
         table=table
     ))
-    full_exploded_table.createTempView('{table}'.format(table=table))
+    runner.run_spark_query(
+        "CREATE TABLE {table} AS SELECT * FROM {table}_replacement".format(
+            table=table
+        )
+    )
