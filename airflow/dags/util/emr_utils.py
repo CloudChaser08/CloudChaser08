@@ -102,8 +102,11 @@ def _build_dewey(cluster_id):
         )
     )
     Popen([
-        'make', 'build', '&&', 'scp', '-i', '~/.ssh/emr_deployer',
-        '-o', '"StrictHostKeyChecking no"', '-r', '.',
+        'make', 'build'
+    ], cwd=spark_dir)
+    Popen([
+        'scp', '-i', os.getenv('HOME') + '/.ssh/emr_deployer',
+        '-o', 'StrictHostKeyChecking no', '-r', '.',
         'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':spark/'
     ], cwd=spark_dir)
 
