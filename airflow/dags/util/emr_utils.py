@@ -4,7 +4,7 @@
 import json
 import time
 import os
-from subprocess import check_call, check_output, Popen
+from subprocess import check_call, check_output
 from airflow.models import Variable
 import util.s3_utils as s3_utils
 
@@ -101,10 +101,10 @@ def _build_dewey(cluster_id):
             '../spark/'
         )
     )
-    Popen([
+    check_call([
         'make', 'build'
     ], cwd=spark_dir)
-    Popen([
+    check_call([
         'scp', '-i', os.getenv('HOME') + '/.ssh/emr_deployer',
         '-o', 'StrictHostKeyChecking no', '-r', '.',
         'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':spark/'
