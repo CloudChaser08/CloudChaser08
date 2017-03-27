@@ -20,40 +20,42 @@ SELECT DISTINCT
     mp.threeDigitZip,                                             -- patient_zip3
     UPPER(mp.state),                                              -- patient_state
     transactional.claim_type_cd,                                  -- claim_type
-    yyyyMMdd_to_date(transactional.edi_interchange_creation_dt),  -- date_received
+    extract_date(
+        transactional.edi_interchange_creation_dt, '%Y-%m-%d'
+        ),                                                        -- date_received
     CASE 
-    WHEN yyyyMMdd_to_date(transactional.svc_from_dt) IS NOT NULL 
+    WHEN extract_date(transactional.svc_from_dt, '%Y%m%d') IS NOT NULL 
     AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
         transactional.diag_cd_3, transactional.diag_cd_4)
-    THEN yyyyMMdd_to_date(transactional.svc_from_dt)
-    WHEN yyyyMMdd_to_date(transactional.stmnt_from_dt) IS NOT NULL 
-    THEN yyyyMMdd_to_date(transactional.stmnt_from_dt)
+    THEN extract_date(transactional.svc_from_dt, '%Y%m%d')
+    WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d') IS NOT NULL 
+    THEN extract_date(transactional.stmnt_from_dt, '%Y%m%d')
     ELSE (
-    SELECT MIN(yyyyMMdd_to_date(t2.svc_from_dt))
+    SELECT MIN(extract_date(t2.svc_from_dt, '%Y%m%d'))
     FROM transactional_raw t2 
     WHERE t2.src_claim_id = transactional.src_claim_id
         )
     END,                                                          -- date_service
     CASE 
-    WHEN yyyyMMdd_to_date(transactional.svc_from_dt) IS NOT NULL 
+    WHEN extract_date(transactional.svc_from_dt, '%Y%m%d') IS NOT NULL 
     AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
         transactional.diag_cd_3, transactional.diag_cd_4)
-    THEN yyyyMMdd_to_date(transactional.svc_to_dt)
-    WHEN yyyyMMdd_to_date(transactional.stmnt_from_dt) IS NOT NULL
-    THEN yyyyMMdd_to_date(transactional.stmnt_to_dt)
+    THEN extract_date(transactional.svc_to_dt, '%Y%m%d')
+    WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d') IS NOT NULL
+    THEN extract_date(transactional.stmnt_to_dt, '%Y%m%d')
     ELSE (
-    SELECT MAX(yyyyMMdd_to_date(t2.svc_to_dt))
+    SELECT MAX(extract_date(t2.svc_to_dt, '%Y%m%d'))
     FROM transactional_raw t2
     WHERE t2.src_claim_id = transactional.src_claim_id
         ) 
     END,                                                          -- date_service_end
     CASE 
     WHEN transactional.claim_type_cd = 'I'
-    THEN yyyyMMdd_to_date(transactional.admsn_dt)
+    THEN extract_date(transactional.admsn_dt, '%Y%m%d')
     END,                                                          -- inst_date_admitted
     CASE
     WHEN transactional.claim_type_cd = 'I'
-    THEN yyyyMMdd_to_date(transactional.dischg_dt)
+    THEN extract_date(transactional.dischg_dt, '%Y%m%d')
     END,                                                          -- inst_date_discharged
     CASE 
     WHEN transactional.claim_type_cd = 'I'
@@ -87,7 +89,14 @@ SELECT DISTINCT
     NULL,                                                         -- inst_drg_vendor_desc
     CASE 
     WHEN transactional.claim_type_cd = 'P'
-    THEN COALESCE(transactional.pos_cd, transactional.fclty_type_pos_cd)
+    THEN (
+        CASE
+        WHEN transactional.pos_cd IS NOT NULL
+        AND transactional.pos_cd <> '' THEN transactional.pos_cd
+        WHEN transactional.fclty_type_pos_cd IS NOT NULL
+        AND transactional.fclty_type_pos_cd <> '' THEN transactional.fclty_type_pos_cd
+        END
+        )
     END,                                                          -- place_of_service_std_id
     NULL,                                                         -- place_of_service_vendor_id
     NULL,                                                         -- place_of_service_vendor_desc
@@ -100,14 +109,14 @@ SELECT DISTINCT
         diags.diag_code, NULL,
         -- exact definition of service date above
         CASE 
-        WHEN yyyyMMdd_to_date(transactional.svc_from_dt) IS NOT NULL 
+        WHEN extract_date(transactional.svc_from_dt, '%Y%m%d') IS NOT NULL 
         AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
             transactional.diag_cd_3, transactional.diag_cd_4)
-        THEN yyyyMMdd_to_date(transactional.svc_from_dt)
-        WHEN yyyyMMdd_to_date(transactional.stmnt_from_dt) IS NOT NULL 
-        THEN yyyyMMdd_to_date(transactional.stmnt_from_dt)
+        THEN extract_date(transactional.svc_from_dt, '%Y%m%d')
+        WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d') IS NOT NULL 
+        THEN extract_date(transactional.stmnt_from_dt, '%Y%m%d')
         ELSE (
-        SELECT MIN(yyyyMMdd_to_date(t2.svc_from_dt))
+        SELECT MIN(extract_date(t2.svc_from_dt, '%Y%m%d'))
         FROM transactional_raw t2 
         WHERE t2.src_claim_id = transactional.src_claim_id
             )
@@ -129,7 +138,7 @@ SELECT DISTINCT
     CASE
     WHEN diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
         transactional.diag_cd_3, transactional.diag_cd_4)
-    THEN REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(procs.proc_code, '.', ''), ',', ''), ' ', '')
+    THEN clean_up_procedure_code(procs.proc_code)
     END,                                                          -- procedure_code
     CASE 
     WHEN diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
@@ -183,16 +192,17 @@ SELECT DISTINCT
     CASE 
     WHEN diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
         transactional.diag_cd_3, transactional.diag_cd_4)
-    THEN CAST(transactional.line_charg as DOUBLE)
+    THEN extract_currency(transactional.line_charg)
     END,                                                          -- line_charge
     NULL,                                                         -- line_allowed
-    CAST(transactional.tot_claim_charg_amt AS DOUBLE),            -- total_charge
+    extract_currency(transactional.tot_claim_charg_amt),            -- total_charge
     NULL,                                                         -- total_allowed
     CASE
     WHEN transactional.claim_type_cd != 'I' 
     AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
         transactional.diag_cd_3, transactional.diag_cd_4)
     AND transactional.rendr_provdr_npi_svc IS NOT NULL
+    AND transactional.rendr_provdr_npi_svc <> ''
     THEN transactional.rendr_provdr_npi_svc
     ELSE transactional.rendr_provdr_npi
     END,                                                          -- prov_rendering_npi
@@ -453,31 +463,33 @@ SELECT DISTINCT
     mp.threeDigitZip,                                             -- patient_zip3
     UPPER(mp.state),                                              -- patient_state
     transactional.claim_type_cd,                                  -- claim_type
-    yyyyMMdd_to_date(transactional.edi_interchange_creation_dt),  -- date_received
+    extract_date(
+        transactional.edi_interchange_creation_dt, '%Y-%m-%d'
+        ),                                                        -- date_received
     CASE 
-    WHEN yyyyMMdd_to_date(transactional.svc_from_dt) IS NOT NULL 
-    THEN yyyyMMdd_to_date(transactional.svc_from_dt)
-    WHEN yyyyMMdd_to_date(transactional.stmnt_from_dt) IS NOT NULL 
-    THEN yyyyMMdd_to_date(transactional.stmnt_from_dt)
+    WHEN extract_date(transactional.svc_from_dt, '%Y%m%d') IS NOT NULL 
+    THEN extract_date(transactional.svc_from_dt, '%Y%m%d')
+    WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d') IS NOT NULL 
+    THEN extract_date(transactional.stmnt_from_dt, '%Y%m%d')
     ELSE (
-    SELECT MIN(yyyyMMdd_to_date(t2.svc_from_dt)) 
+    SELECT MIN(extract_date(t2.svc_from_dt, '%Y%m%d')) 
     FROM transactional_raw t2 
     WHERE t2.src_claim_id = transactional.src_claim_id
         )
     END,                                                          -- date_service
     CASE 
-    WHEN yyyyMMdd_to_date(transactional.svc_from_dt) IS NOT NULL 
-    THEN yyyyMMdd_to_date(transactional.svc_to_dt)
-    WHEN yyyyMMdd_to_date(transactional.stmnt_from_dt) IS NOT NULL
-    THEN yyyyMMdd_to_date(transactional.stmnt_to_dt)
+    WHEN extract_date(transactional.svc_from_dt, '%Y%m%d') IS NOT NULL 
+    THEN extract_date(transactional.svc_to_dt, '%Y%m%d')
+    WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d') IS NOT NULL
+    THEN extract_date(transactional.stmnt_to_dt, '%Y%m%d')
     ELSE (
-    SELECT MAX(yyyyMMdd_to_date(t2.svc_to_dt))
+    SELECT MAX(extract_date(t2.svc_to_dt, '%Y%m%d'))
     FROM transactional_raw t2
     WHERE t2.src_claim_id = transactional.src_claim_id
         ) 
     END,                                                          -- date_service_end
-    yyyyMMdd_to_date(transactional.admsn_dt),                     -- inst_date_admitted
-    yyyyMMdd_to_date(transactional.dischg_dt),                    -- inst_date_discharged
+    extract_date(transactional.admsn_dt, '%Y%m%d'),                     -- inst_date_admitted
+    extract_date(transactional.dischg_dt, '%Y%m%d'),                    -- inst_date_discharged
     transactional.admsn_type_cd,                                  -- inst_admit_type_std_id
     NULL,                                                         -- inst_admit_type_vendor_id
     NULL,                                                         -- inst_admit_type_vendor_desc
@@ -504,13 +516,7 @@ SELECT DISTINCT
     NULL,                                                         -- diagnosis_code_qual
     NULL,                                                         -- diagnosis_priority
     NULL,                                                         -- admit_diagnosis_ind
-    REGEXP_REPLACE(
-        REGEXP_REPLACE(
-            REGEXP_REPLACE(
-                procs.proc_code, '.', ''
-                ), ',', ''
-            ), ' ', ''
-        ),                                                        -- procedure_code
+    clean_up_procedure_code(procs.proc_code),                                                        -- procedure_code
     transactional.proc_cd_qual,                                   -- procedure_code_qual
     NULL,                                                         -- principal_proc_ind
     transactional.units,                                          -- procedure_units
@@ -521,12 +527,13 @@ SELECT DISTINCT
     transactional.revnu_cd,                                       -- revenue_code
     transactional.ndc,                                            -- ndc_code
     transactional.dest_payer_claim_flng_ind_cd,                   -- medical_coverage_type
-    CAST(transactional.line_charg AS DOUBLE),                     -- line_charge
+    extract_currency(transactional.line_charg),                     -- line_charge
     NULL,                                                         -- line_allowed
-    CAST(transactional.tot_claim_charg_amt AS DOUBLE),            -- total_charge
+    extract_currency(transactional.tot_claim_charg_amt),            -- total_charge
     NULL,                                                         -- total_allowed
-    COALESCE(
-        transactional.rendr_provdr_npi_svc,
+    CASE WHEN transactional.rendr_provdr_npi_svc IS NOT NULL
+    AND transactional.rendr_provdr_npi_svc <> ''
+    THEN transactional.rendr_provdr_npi_svc    ,
         transactional.rendr_provdr_npi
         ),                                                        -- prov_rendering_npi
     transactional.billg_provdr_npi,                               -- prov_billing_npi

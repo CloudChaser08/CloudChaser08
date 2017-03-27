@@ -2,7 +2,6 @@ from pyspark.sql import HiveContext, SparkSession
 from helpers.udf.general_helpers \
   import extract_number, extract_date
 from helpers.udf.post_normalization_cleanup import *
-from helpers.udf.date_functions import *
 from helpers.udf.general_helpers import *
 
 
@@ -45,9 +44,6 @@ def init(provider, local=False):
         'cap_year_of_birth', cap_year_of_birth
     )
     sqlContext.registerFunction(
-        'yyyyMMdd_to_date', yyyyMMdd_to_date
-    )
-    sqlContext.registerFunction(
         'create_range', create_range
     )
 
@@ -57,6 +53,9 @@ def init(provider, local=False):
     )
     sqlContext.registerFunction(
         'extract_date', extract_date
+    )
+    sqlContext.registerFunction(
+        'extract_currency', extract_date
     )
 
     return spark, sqlContext

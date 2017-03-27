@@ -35,5 +35,16 @@ def extract_date(text, pattern, min_date=None, max_date=None):
     return datetime.strftime(d, '%Y-%m-%d')
 
 
+def extract_currency(text):
+    try:
+        # remove non-numeric characters
+        text = text.replace('[^0-9.]', '')
+
+        return float(text)
+    except:
+        return None
+
+    
+
 def create_range(max):
     return ','.join(map(lambda i: str(i), range(max)))
