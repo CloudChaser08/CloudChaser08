@@ -2,9 +2,9 @@ import logging
 from pyspark.sql.functions import coalesce, lit, col
 
 HVID = [
-    'hvid',
     'parentId',
-    'parentid'
+    'parentid',
+    'hvid'
 ]
 DEFAULT_ATTRS = [
     'isInvalid',
