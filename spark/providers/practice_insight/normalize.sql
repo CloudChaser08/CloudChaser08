@@ -212,6 +212,7 @@ SELECT DISTINCT
     AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
         transactional.diag_cd_3, transactional.diag_cd_4)
     AND transactional.refrn_provdr_npi_svc IS NOT NULL
+    AND transactional.refrn_provdr_npi_svc <> ''
     THEN transactional.refrn_provdr_npi_svc
     ELSE transactional.refrn_provdr_npi
     END,                                                          -- prov_referring_npi
@@ -220,6 +221,7 @@ SELECT DISTINCT
     AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
         transactional.diag_cd_3, transactional.diag_cd_4)
     AND transactional.fclty_npi_svc IS NOT NULL
+    AND transactional.fclty_npi_svc <> ''
     THEN transactional.fclty_npi_svc
     ELSE transactional.fclty_npi
     END,                                                          -- prov_facility_npi
@@ -239,6 +241,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_stlc_nbr
     ELSE NULL
     END,                                                          -- prov_rendering_state_license
@@ -247,6 +250,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_upin
     ELSE NULL
     END,                                                          -- prov_rendering_upin
@@ -255,6 +259,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_comm_nbr
     ELSE NULL
     END,                                                          -- prov_rendering_commercial_id
@@ -263,6 +268,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_last_nm
     ELSE NULL
     END,                                                          -- prov_rendering_name_1
@@ -271,6 +277,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_first_nm
     ELSE NULL
     END,                                                          -- prov_rendering_name_2
@@ -284,6 +291,7 @@ SELECT DISTINCT
     AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2, 
         transactional.diag_cd_3, transactional.diag_cd_4)
     AND transactional.rendr_provdr_npi_svc IS NOT NULL
+    AND transactional.rendr_provdr_npi_svc <> ''
     THEN transactional.rendr_provdr_txnmy_svc
     ELSE transactional.rendr_provdr_txnmy
     END,                                                          -- prov_rendering_std_taxonomy
@@ -313,6 +321,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_stlc_nbr
     ELSE NULL
     END,                                                          -- prov_referring_state_license
@@ -321,6 +330,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_upin
     ELSE NULL
     END,                                                          -- prov_referring_upin
@@ -329,6 +339,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_comm_nbr
     ELSE NULL
     END,                                                          -- prov_referring_commercial_id
@@ -337,6 +348,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_last_nm
     ELSE NULL
     END,                                                          -- prov_referring_name_1
@@ -345,6 +357,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_first_nm
     ELSE NULL
     END,                                                          -- prov_referring_name_2
@@ -364,6 +377,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN transactional.fclty_stlc_nbr
     ELSE NULL
     END,                                                          -- prov_facility_state_license
@@ -373,6 +387,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN transactional.fclty_comm_nbr
     ELSE NULL
     END,                                                          -- prov_facility_commercial_id
@@ -381,6 +396,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN transactional.fclty_nm
     ELSE NULL
     END,                                                          -- prov_facility_name_1
@@ -390,6 +406,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN REGEXP_REPLACE(transactional.fclty_addr_1, '"', '')
     ELSE NULL
     END,                                                          -- prov_facility_address_1
@@ -398,6 +415,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN REGEXP_REPLACE(transactional.fclty_addr_2, '"', '')
     ELSE NULL
     END,                                                          -- prov_facility_address_2
@@ -406,6 +424,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN REGEXP_REPLACE(transactional.fclty_addr_city, '"', '')
     ELSE NULL
     END,                                                          -- prov_facility_city
@@ -414,6 +433,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     OR transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN transactional.fclty_addr_state
     ELSE NULL
     END,                                                          -- prov_facility_state
@@ -422,6 +442,7 @@ SELECT DISTINCT
     OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     AND transactional.fclty_npi_svc IS NOT NULL
+    AND transactional.fclty_npi_svc <> ''
     THEN transactional.fclty_addr_zip
     ELSE NULL
     END,                                                          -- prov_facility_zip
@@ -531,20 +552,25 @@ SELECT DISTINCT
     NULL,                                                         -- line_allowed
     extract_currency(transactional.tot_claim_charg_amt),            -- total_charge
     NULL,                                                         -- total_allowed
-    CASE WHEN transactional.rendr_provdr_npi_svc IS NOT NULL
+    CASE
+    WHEN transactional.rendr_provdr_npi_svc IS NOT NULL
     AND transactional.rendr_provdr_npi_svc <> ''
-    THEN transactional.rendr_provdr_npi_svc    ,
-        transactional.rendr_provdr_npi
-        ),                                                        -- prov_rendering_npi
+    THEN transactional.rendr_provdr_npi_svc
+    ELSE transactional.rendr_provdr_npi
+    END,                                                        -- prov_rendering_npi
     transactional.billg_provdr_npi,                               -- prov_billing_npi
-    COALESCE(
-        transactional.refrn_provdr_npi_svc,
-        transactional.refrn_provdr_npi
-        ),                                                        -- prov_referring_npi
-    COALESCE(
-        transactional.fclty_npi_svc,
-        transactional.fclty_npi
-        ),                                                        -- prov_facility_npi
+    CASE
+    WHEN transactional.refrn_provdr_npi_svc IS NOT NULL
+    AND transactional.refrn_provdr_npi_svc <> ''
+    THEN transactional.refrn_provdr_npi_svc
+    ELSE transactional.refrn_provdr_npi
+    END,                                                        -- prov_referring_npi
+    CASE
+    WHEN transactional.fclty_npi_svc IS NOT NULL
+    AND transactional.fclty_npi_svc <> ''
+    THEN transactional.fclty_npi_svc
+    ELSE transactional.fclty_npi
+    END,                                                        -- prov_facility_npi
     NULL,                                                         -- payer_vendor_id
     REGEXP_REPLACE(transactional.dest_payer_nm, '"', ''),         -- payer_name
     NULL,                                                         -- payer_parent_name
@@ -558,26 +584,31 @@ SELECT DISTINCT
     NULL,                                                         -- prov_rendering_ssn
     CASE 
     WHEN transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_stlc_nbr
     ELSE NULL
     END,                                                          -- prov_rendering_state_license
     CASE
     WHEN transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_upin
     ELSE NULL
     END,                                                          -- prov_rendering_upin
     CASE
     WHEN transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_comm_nbr
     ELSE NULL
     END,                                                          -- prov_rendering_commercial_id
     CASE
     WHEN transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_last_nm
     ELSE NULL
     END,                                                          -- prov_rendering_name_1
     CASE
     WHEN transactional.rendr_provdr_npi_svc IS NULL
+    OR transactional.rendr_provdr_npi_svc = ''
     THEN transactional.rendr_provdr_first_nm
     ELSE NULL
     END,                                                          -- prov_rendering_name_2
@@ -586,10 +617,12 @@ SELECT DISTINCT
     NULL,                                                         -- prov_rendering_city
     NULL,                                                         -- prov_rendering_state
     NULL,                                                         -- prov_rendering_zip
-    COALESCE(
-        transactional.rendr_provdr_txnmy_svc,
-        transactional.rendr_provdr_txnmy
-        ),                                                        -- prov_rendering_std_taxonomy
+    CASE
+    WHEN transactional.rendr_provdr_txnmy_svc IS NOT NULL
+    AND transactional.rendr_provdr_txnmy_svc <> ''
+    THEN transactional.rendr_provdr_txnmy_svc
+    ELSE transactional.rendr_provdr_txnmy
+    END,                                                        -- prov_rendering_std_taxonomy
     NULL,                                                         -- prov_rendering_vendor_specialty
     NULL,                                                         -- prov_billing_vendor_id
     transactional.billg_provdr_tax_id,                            -- prov_billing_tax_id
@@ -613,26 +646,31 @@ SELECT DISTINCT
     NULL,                                                         -- prov_referring_ssn
     CASE
     WHEN transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_stlc_nbr
     ELSE NULL
     END,                                                          -- prov_referring_state_license
     CASE
     WHEN transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_upin
     ELSE NULL
     END,                                                          -- prov_referring_upin
     CASE
     WHEN transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_comm_nbr
     ELSE NULL
     END,                                                          -- prov_referring_commercial_id
     CASE
     WHEN transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_last_nm
     ELSE NULL
     END,                                                          -- prov_referring_name_1
     CASE
     WHEN transactional.refrn_provdr_npi_svc IS NULL
+    OR transactional.refrn_provdr_npi_svc = ''
     THEN transactional.refrn_provdr_first_nm
     ELSE NULL
     END,                                                          -- prov_referring_name_2
@@ -649,43 +687,51 @@ SELECT DISTINCT
     NULL,                                                         -- prov_facility_ssn
     CASE
     WHEN transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN transactional.fclty_stlc_nbr
     ELSE NULL
     END,                                                          -- prov_facility_state_license
     NULL,                                                         -- prov_facility_upin
     CASE
     WHEN transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN transactional.fclty_comm_nbr
     ELSE NULL
     END,                                                          -- prov_facility_commercial_id
     CASE
     WHEN transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN transactional.fclty_nm
     ELSE NULL
     END,                                                          -- prov_facility_name_1
     NULL,                                                         -- prov_facility_name_2
     CASE
     WHEN transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN REGEXP_REPLACE(transactional.fclty_addr_1, '"', '')
     ELSE NULL
     END,                                                          -- prov_facility_address_1
     CASE
     WHEN transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN REGEXP_REPLACE(transactional.fclty_addr_2, '"', '')
     ELSE NULL
     END,                                                          -- prov_facility_address_2
     CASE
     WHEN transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN REGEXP_REPLACE(transactional.fclty_addr_city, '"', '')
     ELSE NULL
     END,                                                          -- prov_facility_city
     CASE
     WHEN transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN transactional.fclty_addr_state
     ELSE NULL
     END,                                                          -- prov_facility_state
     CASE
     WHEN transactional.fclty_npi_svc IS NULL
+    OR transactional.fclty_npi_svc = ''
     THEN transactional.fclty_addr_zip
     ELSE NULL
     END,                                                          -- prov_facility_zip
