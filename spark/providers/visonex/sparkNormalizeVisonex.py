@@ -57,6 +57,7 @@ patientmedadministered_input = input_prefix + 'patientmedadministered/'
 patientmedprescription_input = input_prefix + 'patientmedprescription/'
 labidlist_input = input_prefix + 'labidlist/'
 problemlist_input = input_prefix + 'problemlist/'
+dialysistreatment_input = input_prefix + 'dialysistreatment/'
 
 matching_path = insert_date('s3://salusv/matching/payload/emr/visonex/{}/{}/{}/')
 
@@ -78,7 +79,8 @@ runner.run_spark_script(
         ['patientmedadministered_input', patientmedadministered_input],
         ['patientmedprescription_input', patientmedprescription_input],
         ['labidlist_input', labidlist_input],
-        ['problemlist_input', problemlist_input]
+        ['problemlist_input', problemlist_input],
+        ['dialysistreatment_input', dialysistreatment_input]
     ]
 )
 
