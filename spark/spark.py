@@ -1,6 +1,4 @@
 from pyspark.sql import HiveContext, SparkSession
-from helpers.udf.general_helpers \
-  import extract_number, extract_date
 from helpers.udf.post_normalization_cleanup import *
 from helpers.udf.general_helpers import *
 
@@ -55,7 +53,7 @@ def init(provider, local=False):
         'extract_date', extract_date
     )
     sqlContext.registerFunction(
-        'extract_currency', extract_date
+        'extract_currency', extract_currency
     )
 
     return spark, sqlContext
