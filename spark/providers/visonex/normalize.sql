@@ -9,7 +9,11 @@ SELECT DISTINCT
         {vendor},                       -- data_vendor
         NULL,                           -- source_version
         big_union.claim_type,           -- claim_type
-        NULL,                           -- claim_id
+        CONCAT(
+            base.clinicorganizationidnumber,
+            '-', base.analyticrowidnumber,
+            '-', base.runidnumber
+            ),                          -- claim_id
         NULL,                           -- claim_qual
         NULL,                           -- claim_date
         NULL,                           -- claim_error_ind
@@ -53,11 +57,19 @@ SELECT DISTINCT
         NULL,                           -- encounter_id_qual
         NULL,                           -- description
         NULL,                           -- description_qual
-        extract_date(
-            substring(big_union.date_service, 0, 10),
-            '%Y-%m-%d',
-            cast({min_date} as date),
-            cast({max_date} as date)
+        COALESCE(
+            extract_date(
+                substring(big_union.date_service, 0, 10),
+                '%Y-%m-%d',
+                cast({min_date} as date),
+                cast({max_date} as date)
+                ),
+            extract_date(
+                substring(base.analyticdos, 0, 10),
+                '%Y-%m-%d',
+                cast({min_date} as date),
+                cast({max_date} as date)
+                )
             ),                          -- date_start
         NULL,                           -- date_end
         NULL,                           -- date_qual
