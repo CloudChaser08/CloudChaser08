@@ -89,6 +89,19 @@ def explode_dates(
             date_start_column=date_start_column,
             date_end_column=date_end_column,
             max_days=max_days
+        ), True)
+    ).union(
+        runner.run_spark_query((
+            "SELECT * "
+            + "FROM {table} "
+            + "WHERE datediff("
+            + "{date_end_column}, {date_start_column}"
+            + ") BETWEEN 1 AND {max_days}"
+        ).format(
+            table=table,
+            date_start_column=date_start_column,
+            date_end_column=date_end_column,
+            max_days=max_days
         ), True).filter(~explosion_filter_condition)
     )
 
