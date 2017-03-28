@@ -2,17 +2,38 @@ from pyspark.sql.functions import explode, col, split, \
     monotonically_increasing_id
 
 
+def explode_medicalclaims_dates(runner):
+    date_start_column = 'date_service'
+    date_end_column = 'date_service_end'
+    table = 'medicalclaims_common_model'
+    primary_key = 'record_id'
+
+    explosion_filter_condition = col('claim_type') == 'P'
+
+    explode_dates(
+        runner, table, date_start_column, date_end_column,
+        primary_key, '365', explosion_filter_condition
+    )
+
+
 def explode_dates(
-        runner, table, date_start_column, date_end_column, primary_key=None
+        runner, table, date_start_column, date_end_column,
+        primary_key=None, max_days='365',
+        explosion_filter_condition=None
 ):
     """
     This function will explode days into rows for all days between
     date_start_column and date_end_column on the given table
 
-    If the optional `primary_key` param is provided, this function
-    will also reset the primary_key to a new
+    This function will also reset the primary_key to a new
     monotonically_increasing_id
+
     """
+    if not explosion_filter_condition:
+        explosion_filter_condition = (
+            col(date_start_column) == col(date_start_column)
+        )
+
     # explode date start/end ranges that are less than 1 year apart
     # register as a temporary table in order to use date_add SQL function
     runner.run_spark_query((
@@ -23,12 +44,13 @@ def explode_dates(
         + "FROM {table} "
         + "WHERE datediff("
         + "{date_end_column}, {date_start_column}"
-        + ") BETWEEN 1 AND 365"
+        + ") BETWEEN 1 AND {max_days}"
     ).format(
         table=table,
         date_start_column=date_start_column,
-        date_end_column=date_end_column
-    ), True).withColumn(
+        date_end_column=date_end_column,
+        max_days=max_days
+    ), True).filter(explosion_filter_condition).withColumn(
         'days_to_add',
         explode(split(col('raw_range'), ','))
     ).registerTempTable(table + '_exploded')
@@ -59,17 +81,18 @@ def explode_dates(
             + "FROM {table} "
             + "WHERE datediff("
             + "{date_end_column}, {date_start_column}"
-            + ") NOT BETWEEN 1 AND 365 "
+            + ") NOT BETWEEN 1 AND {max_days} "
             + "OR {date_start_column} IS NULL "
             + "OR {date_end_column} IS NULL"
         ).format(
             table=table,
             date_start_column=date_start_column,
-            date_end_column=date_end_column
-        ), True)
+            date_end_column=date_end_column,
+            max_days=max_days
+        ), True).filter(not explosion_filter_condition)
     )
 
-    # replace old pk with monotonically_increasing_id if necessary
+    # replace old pk with monotonically_increasing_id
     if primary_key:
         full_exploded_table = full_exploded_table.withColumn(
             primary_key, monotonically_increasing_id()

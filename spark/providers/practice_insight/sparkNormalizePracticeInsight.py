@@ -83,10 +83,7 @@ def run(part):
     ])
 
     # explode date ranges
-    explode.explode_dates(
-        runner, 'medicalclaims_common_model', 'date_service',
-        'date_service_end', 'record_id'
-    )
+    explode.explode_medicalclaims_dates(runner)
 
     # unload
     runner.run_spark_script(get_rel_path(
