@@ -29,7 +29,7 @@ def explode_dates(
     monotonically_increasing_id
 
     """
-    if not explosion_filter_condition:
+    if explosion_filter_condition is None:
         explosion_filter_condition = (
             col(date_start_column) == col(date_start_column)
         )
