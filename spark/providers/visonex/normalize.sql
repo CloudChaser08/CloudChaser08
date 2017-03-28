@@ -1,5 +1,5 @@
 INSERT INTO emr_common_model
-SELECT 
+SELECT DISTINCT
         monotonically_increasing_id(),  -- record_id
         mp.hvid,                        -- hvid
         {today},                        -- created
@@ -9,7 +9,11 @@ SELECT
         {vendor},                       -- data_vendor
         NULL,                           -- source_version
         big_union.claim_type,           -- claim_type
-        NULL,                           -- claim_id
+        CONCAT(
+            base.clinicorganizationidnumber,
+            '-', base.analyticrowidnumber,
+            '-', base.runidnumber
+            ),                          -- claim_id
         NULL,                           -- claim_qual
         NULL,                           -- claim_date
         NULL,                           -- claim_error_ind
@@ -53,11 +57,19 @@ SELECT
         NULL,                           -- encounter_id_qual
         NULL,                           -- description
         NULL,                           -- description_qual
-        extract_date(
-            substring(big_union.date_service, 0, 10),
-            '%Y-%m-%d',
-            cast({min_date} as date),
-            cast({max_date} as date)
+        COALESCE(
+            extract_date(
+                substring(big_union.date_service, 0, 10),
+                '%Y-%m-%d',
+                cast({min_date} as date),
+                cast({max_date} as date)
+                ),
+            extract_date(
+                substring(base.analyticdos, 0, 10),
+                '%Y-%m-%d',
+                cast({min_date} as date),
+                cast({max_date} as date)
+                )
             ),                          -- date_start
         NULL,                           -- date_end
         NULL,                           -- date_qual
@@ -127,11 +139,17 @@ SELECT
         NULL,                           -- sample
         NULL,                           -- unverified
         NULL                            -- electronicrx
-FROM (
+FROM dialysistreatment base
+    FULL OUTER JOIN (
     -- diagnosis
     -- cleaning: only contain alpha-numeric characters, no longer than 7 characters
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-' -- no runidnumber in this table
+            ) as claim_id,
         'HOSPITALIZATION' AS claim_type,
         icd10 AS diagnosis_code,
         '02' AS diagnosis_code_qual,
@@ -142,6 +160,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-'
+            ) as claim_id,
         'HOSPITALIZATION' AS claim_type,
         ICD9 AS diagnosis_code,
         '01' AS diagnosis_code_qual,
@@ -152,6 +175,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'IMMUNIZATION' AS claim_type,
         icd10 AS diagnosis_code,
         '02' AS diagnosis_code_qual,
@@ -162,6 +190,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-'
+            ) as claim_id,
         'PATIENTACCESS_EXAMPROC' AS claim_type,
         icd10 AS diagnosis_code,
         '02' AS diagnosis_code_qual,
@@ -172,6 +205,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-'
+            ) as claim_id,
         'PATIENTACCESS_EXAMPROC' AS claim_type,
         DIAGNOSTICCODE AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -182,6 +220,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'LABPANELSDRAWN' AS claim_type,
         JUSTIFICATION AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -192,6 +235,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'LABRESULT' as claim_type,
         diagnosiscode as diagnosis_code,
         NULL as diagnosis_code_qual,
@@ -202,6 +250,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'LABRESULT' as claim_type,
         icd10 as diagnosis_code,
         '02' as diagnosis_code_qual,
@@ -212,6 +265,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-'
+            ) as claim_id,
         'PATIENTDIAGCODES' as claim_type,
         diagnosiscode as diagnosis_code,
         NULL as diagnosis_code_qual,
@@ -222,6 +280,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-'
+            ) as claim_id,
         'PATIENTDIAGCODES' as claim_type,
         icd10 as diagnosis_code,
         '02' as diagnosis_code_qual,
@@ -232,6 +295,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         icd10 as diagnosis_code,
         '02' as diagnosis_code_qual,
@@ -242,6 +310,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-'
+            ) as claim_id,
         'PATIENTMEDPRESCRIPTION' as claim_type,
         runjustification as diagnosis_code,
         NULL as diagnosis_code_qual,
@@ -252,6 +325,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-'
+            ) as claim_id,
         'PROBLEMLIST' as claim_type,
         icd9 as diagnosis_code,
         '01' as diagnosis_code_qual,
@@ -262,6 +340,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-'
+            ) as claim_id,
         'PROBLEMLIST' as claim_type,
         icd10 as diagnosis_code,
         '02' as diagnosis_code_qual,
@@ -272,6 +355,10 @@ FROM (
     UNION 
     SELECT
         b.patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            b.clinicorganizationidnumber, '-', a.analyticrowidnumber,
+            '-', b.runidnumber
+            ) as claim_id,
         'LABIDLIST' as claim_type,
         a.icd9diagnosiscode as diagnosis_code,
         '01' as diagnosis_code_qual,
@@ -288,6 +375,11 @@ FROM (
     -- cleaning: only contain alpha-numeric characters, no longer than 7 characters
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-'
+            ) as claim_id,
         'PATIENTACCESS_EXAMPROC' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -298,6 +390,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'LABRESULT' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -308,6 +405,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'LABPANELSDRAWN' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -318,6 +420,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -328,6 +435,11 @@ FROM (
     UNION
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -338,6 +450,11 @@ FROM (
     UNION
     SELECT
         b.patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            b.clinicorganizationidnumber,
+            '-', a.analyticrowidnumber,
+            '-', b.runidnumber
+            ) as claim_id,
         'LABIDLIST' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -354,6 +471,11 @@ FROM (
     -- cleaning: only contain numeric characters, must be 11-digits long
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            clinicorganizationidnumber,
+            '-', analyticrowidnumber,
+            '-', runidnumber
+            ) as claim_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         NULL AS diagnosis_code,
         NULL AS diagnosis_code_qual,
@@ -361,8 +483,9 @@ FROM (
         procedurecode as ndc_code,
         startdate as date_service
     FROM patientmedadministered
-        ) big_union
+        ) big_union ON CONCAT(base.clinicorganizationidnumber, '-', base.analyticrowidnumber, '-', base.runidnumber) = big_union.claim_id
     LEFT JOIN matching_payload mp ON big_union.visonex_patient_id = mp.claimid
+    OR base.patientdataanalyticrowidnumber = mp.claimid
 WHERE LENGTH(big_union.ndc_code) = 11
     OR (
         big_union.procedure_code IS NOT NULL
