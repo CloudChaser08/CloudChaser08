@@ -34,7 +34,7 @@ def load(runner, location, extra_cols=None):
     for k in total_cols:
         if k not in raw_payload.columns:
             logging.warning("Column does not exist in payload: " + k)
-            raw_payload = raw_payload.withColumn(k, lit(""))
+            raw_payload = raw_payload.withColumn(k, lit(None))
 
     final_payload = raw_payload.select(
         [coalesce(*HVID).alias('hvid')] + map(lambda x: col(x), total_attrs)
