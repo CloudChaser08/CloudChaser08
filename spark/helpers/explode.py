@@ -89,7 +89,7 @@ def explode_dates(
             date_start_column=date_start_column,
             date_end_column=date_end_column,
             max_days=max_days
-        ), True).filter(not explosion_filter_condition)
+        ), True).filter(~explosion_filter_condition)
     )
 
     # replace old pk with monotonically_increasing_id
