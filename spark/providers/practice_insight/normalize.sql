@@ -777,3 +777,11 @@ WHERE base.service_line_number IS NULL
     WHERE sub.claim_id = base.claim_id
         AND sub.service_line_number IS NOT NULL
         )
+;
+
+INSERT INTO medicalclaims_common_model
+SELECT * 
+FROM tmp base 
+WHERE base.service_line_number IS NULL
+    AND base.diagnosis_code IS NULL
+;
