@@ -6,6 +6,7 @@ from datetime import datetime
 from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.file_prefix as file_prefix
 import spark.helpers.constants as constants
 import spark.helpers.explode as explode
 
@@ -79,7 +80,8 @@ def run(part):
         ['setid', setid],
         ['today', TODAY],
         ['feedname', '22'],
-        ['vendor', '3']
+        ['vendor', '3'],
+        ['max_date', args.date]
     ])
 
     # explode date ranges
@@ -92,7 +94,7 @@ def run(part):
         ['table_name', 'final_unload', False],
         [
             'properties',
-            constants.unload_properties_template.format(args.output_path + part),
+            constants.unload_properties_template.format(args.output_path),
             False
         ]
     ])
@@ -121,6 +123,8 @@ def run(part):
             ]
         ]
     )
+
+    file_prefix.prefix_part_files(spark, args.output_path, part)
 
     spark.catalog.clearCache()
 
