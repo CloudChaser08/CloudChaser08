@@ -25,7 +25,7 @@ SELECT DISTINCT
         ),                                                 -- date_received
     CASE
     WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', NULL, CAST({max_date} as date)) IS NOT NULL
-    AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2
+    AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     THEN extract_date(transactional.svc_from_dt, '%Y%m%d', NULL, CAST({max_date} as date))
     WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', NULL, CAST({max_date} as date)) IS NOT NULL
