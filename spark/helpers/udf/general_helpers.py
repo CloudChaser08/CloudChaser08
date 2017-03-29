@@ -27,12 +27,14 @@ def extract_date(text, pattern, min_date=None, max_date=None):
     except Exception:
         return None
 
-    if min_date is None and max_date is None:
-        return datetime.strftime(d, '%Y-%m-%d')
-
-    if d < min_date or d > max_date:
+    if (
+        min_date is not None and d < min_date
+    ) or (
+        max_date is not None and d > max_date
+    ):
         return None
-    return datetime.strftime(d, '%Y-%m-%d')
+    else:
+        return datetime.strftime(d, '%Y-%m-%d')
 
 
 def extract_currency(text):
