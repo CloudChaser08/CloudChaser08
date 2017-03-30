@@ -9,6 +9,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_prefix as file_prefix
 import spark.helpers.constants as constants
 import spark.helpers.explode as explode
+import spark.providers.practice_insight.udf as pi_udf
 
 
 def get_rel_path(relative_filename):
@@ -28,6 +29,11 @@ spark, sqlContext = init("Practice Insight")
 # This number is currently based on an assumption that this script
 # will run on 5 m4.2xlarge nodes
 sqlContext.setConf("spark.sql.shuffle.partitions", "1200")
+
+# register practice insight udfs:
+sqlContext.registerFunction(
+    'generate_place_of_service_std_id', pi_udf.generate_place_of_service_std_id
+)
 
 # initialize runner
 runner = Runner(sqlContext)
