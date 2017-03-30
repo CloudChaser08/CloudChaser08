@@ -3,7 +3,7 @@ SELECT * FROM (
     SELECT 
         NULL,                                -- record_id
         t.customer__patient_id,              -- claim_id
-        mp.hvid,      -- hvid
+        mp.hvid,                             -- hvid
         NULL,                                -- created
         NULL,                                -- model_version
         NULL,                                -- data_set
@@ -11,12 +11,12 @@ SELECT * FROM (
         NULL,                                -- data_vendor
         NULL,                                -- source_version
         mp.gender,                           -- patient_gender
-        CASE
-        WHEN (EXTRACT('year' FROM CURRENT_DATE) - mp.yearOfBirth) > 90 
-        THEN '90'
-        ELSE (EXTRACT('year' FROM CURRENT_DATE) - mp.yearOfBirth)
-        END,                                 -- patient_age
-        mp.yearOfBirth,                      -- patient_year_of_birth
+        NULL,                                -- patient_age
+        cap_year_of_birth(
+            NULL,
+            CAST({date_service} AS DATE),
+            mp.yearOfBirth
+            ),                               -- patient_year_of_birth
         mp.threeDigitZip,                    -- patient_zip3
         zip3.state,                          -- patient_state
         NULL,                                -- date_service
