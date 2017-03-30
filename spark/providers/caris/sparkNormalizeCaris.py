@@ -31,8 +31,7 @@ matching_path = 's3a://salusv/matching/payload/labtests/caris/{year}/{month}/'.f
     year=str(date_obj.year),
     month=str(date_obj.month).zfill(2)
 )
-# script_path = __file__
-script_path = '/home/hadoop/spark/providers/caris/sparkNormalizeCaris.py'
+script_path = __file__
 
 setid = 'DATA_' + str(date_obj.year) \
         + str(date_obj.month).zfill(2) + '01'
