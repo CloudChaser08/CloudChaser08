@@ -32,7 +32,7 @@ SELECT * FROM (
         NULL,                                -- test_battery_name
         NULL,                                -- test_ordered_local_id
         NULL,                                -- test_ordered_std_id
-        CASE t.i
+        CASE cross_join.i
         WHEN 0   THEN CASE WHEN fish_cmet = 'X' THEN 'FISH_cMET' ELSE NULL END
         WHEN 1   THEN CASE WHEN fish_cmyc = 'X' THEN 'FISH_cMYC' ELSE NULL END
         WHEN 2   THEN CASE WHEN fish_egfr = 'X' THEN 'FISH_EGFR' ELSE NULL END
