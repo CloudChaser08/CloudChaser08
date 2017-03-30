@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS lab_common_model;
-CREATE TABLE lab_common_model (
+DROP TABLE IF EXISTS {table_name};
+CREATE TABLE {table_name} (
         record_id               int,
         claim_id                string,
         hvid                    string,
@@ -60,4 +60,6 @@ CREATE TABLE lab_common_model (
         ordering_other_qual     string,
         ordering_market_type    string,
         ordering_specialty      string
-        );
+        )
+    {properties}
+;

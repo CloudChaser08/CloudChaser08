@@ -1,20 +1,20 @@
-INSERT INTO lab_common_model (
+INSERT INTO lab_common_model
 SELECT * FROM (
     SELECT 
-        NULL,                                -- record_id
+        monotonically_increasing_id(),       -- record_id
         t.customer__patient_id,              -- claim_id
         mp.hvid,                             -- hvid
-        NULL,                                -- created
-        NULL,                                -- model_version
-        NULL,                                -- data_set
-        NULL,                                -- data_feed
-        NULL,                                -- data_vendor
+        {today},                             -- created
+        '1',                                 -- model_version
+        {filename},                          -- data_set
+        {feedname},                          -- data_feed
+        {vendor},                            -- data_vendor
         NULL,                                -- source_version
         mp.gender,                           -- patient_gender
         NULL,                                -- patient_age
         cap_year_of_birth(
             NULL,
-            CAST({date_service} AS DATE),
+            CAST({date_received} AS DATE),
             mp.yearOfBirth
             ),                               -- patient_year_of_birth
         mp.threeDigitZip,                    -- patient_zip3
