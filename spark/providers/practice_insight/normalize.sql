@@ -1003,7 +1003,7 @@ SELECT DISTINCT
             transactional.fclty_type_pos_cd
             )
         ),                                                 -- prov_billing_zip
-    transactional.claim_type_cd,                           -- prov_billing_std_taxonomy
+    transactional.billg_provdr_txnmy,                      -- prov_billing_std_taxonomy
     NULL,                                                  -- prov_billing_vendor_specialty
     NULL,                                                  -- prov_referring_vendor_id
     NULL,                                                  -- prov_referring_tax_id
