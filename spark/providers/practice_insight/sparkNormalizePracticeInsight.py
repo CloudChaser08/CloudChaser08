@@ -87,6 +87,7 @@ def run(part):
         ['today', TODAY],
         ['feedname', '22'],
         ['vendor', '3'],
+        ['min_date', '2010-01-01'],
         ['max_date', args.date]
     ])
 
