@@ -50,7 +50,7 @@ date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 
 setid = 'HV.data.837.' + str(date_obj.year) + '.csv.gz'
 
-input_path = 's3a://salusv/incoming/medicalclaims/practice_insight_split_month/{}/{}/'.format(
+input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.format(
     str(date_obj.year),
     str(date_obj.month).zfill(2)
 )
