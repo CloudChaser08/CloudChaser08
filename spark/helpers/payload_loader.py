@@ -26,18 +26,22 @@ def load(runner, location, extra_cols=None):
 
     # all keys needed from the payload
     total_attrs = set(DEFAULT_ATTRS + extra_cols)
-    total_cols = set(list(total_attrs) + HVID)
 
     raw_payload = runner.sqlContext.read.json(location)
 
-    # fail if any requested column is missing from the payload
-    for k in total_cols:
+    # log any requested column that is missing from the payload
+    for k in total_attrs:
         if k not in raw_payload.columns:
             logging.warning("Column does not exist in payload: " + k)
             raw_payload = raw_payload.withColumn(k, lit(None))
 
+    # remove hvid columns missing from the payload
+    global HVID
+    HVID = filter(lambda c: c in raw_payload.columns, HVID)
+
     final_payload = raw_payload.select(
-        [coalesce(*HVID).alias('hvid')] + map(lambda x: col(x), total_attrs)
+        [coalesce(*map(lambda x: col(x), HVID)).alias('hvid')]
+        + map(lambda x: col(x), total_attrs)
     ).filter(~col('isinvalid'))
 
     runner.sqlContext.sql('DROP TABLE IF EXISTS matching_payload')

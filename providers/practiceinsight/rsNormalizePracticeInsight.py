@@ -35,7 +35,7 @@ subprocess.call(' '.join(
 ), shell=True)
 
 # create date table
-date_validator.generate(psql, db, args.s3_credentials)
+date_validator.generate(args.s3_credentials)
 
 # create table for medical claims common model
 prov_id_hash = hashlib.md5()
@@ -74,7 +74,7 @@ subprocess.call(' '.join(
 ), shell=True)
 
 # normalize
-subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True) 
+subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
 
 # privacy filtering
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +

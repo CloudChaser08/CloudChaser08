@@ -19,7 +19,7 @@ def generate(creds):
         for single_date in date_range:
             output.write(single_date.strftime("%Y%m%d") + ',' + single_date.strftime("%Y-%m-%d") + '\n')
 
-    subprocess.call('aws s3 cp temp.csv s3://healthveritydev/musifer/tmp/', shell=True)
+    subprocess.call('aws s3 cp --sse AES256 temp.csv s3://healthveritydev/musifer/tmp/', shell=True)
 
     subprocess.call(
         'psql dev -c "COPY dates FROM \'s3://healthveritydev/musifer/tmp/temp.csv\' CREDENTIALS \''

@@ -1,6 +1,8 @@
 #! /usr/bin/python
 from datetime import datetime
 import re
+
+
 def extract_number(text):
     if text is None or text == '':
         return None
@@ -16,6 +18,7 @@ def extract_number(text):
         except Exception:
             return None
 
+
 def extract_date(text, pattern, min_date=None, max_date=None):
     if text is None or text == '':
         return None
@@ -24,9 +27,26 @@ def extract_date(text, pattern, min_date=None, max_date=None):
     except Exception:
         return None
 
-    if min_date is None and max_date is None:
+    if (
+        min_date is not None and d < min_date
+    ) or (
+        max_date is not None and d > max_date
+    ):
+        return None
+    else:
         return datetime.strftime(d, '%Y-%m-%d')
 
-    if d < min_date or d > max_date:
+
+def extract_currency(text):
+    try:
+        # remove non-numeric characters
+        text = re.sub('[^0-9.]', '', text)
+
+        return float(text)
+    except:
         return None
-    return datetime.strftime(d, '%Y-%m-%d')
+
+    
+
+def create_range(max):
+    return ','.join(map(lambda i: str(i), range(max)))
