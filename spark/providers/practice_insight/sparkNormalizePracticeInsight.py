@@ -59,11 +59,12 @@ matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}
     str(date_obj.year)
 )
 
+# create helper tables
+runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
+payload_loader.load(runner, matching_path, ['claimId'])
+
 
 def run(part):
-    # create helper tables
-    runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
-
     runner.run_spark_script(get_rel_path(
         '../../common/medicalclaims_common_model.sql'
     ), [
@@ -75,7 +76,6 @@ def run(part):
     runner.run_spark_script(get_rel_path('load_transactions.sql'), [
         ['input_path', input_path + part + '/']
     ])
-    payload_loader.load(runner, matching_path, ['claimId'])
 
     # create explosion maps
     runner.run_spark_script(get_rel_path('create_exploded_diagnosis_map.sql'))
