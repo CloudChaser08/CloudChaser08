@@ -697,8 +697,8 @@ FROM transactional_raw transactional
     LEFT JOIN matching_payload mp ON transactional.src_claim_id = mp.claimid
 
     -- these inner joins will each perform a cartesian product on this table, exploding the table for each diag/proc
-    INNER JOIN exploded_diag_codes diags ON CONCAT(transactional.src_claim_id, transactional.src_svc_id) = diags.claim_svc_num
-    INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, transactional.src_svc_id) = procs.claim_svc_num
+    INNER JOIN exploded_diag_codes diags ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = diags.claim_svc_num
+    INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = procs.claim_svc_num
     ;
 
 -- Insert service lines for institutional claims with diagnoses (NULLed out above)
@@ -1207,7 +1207,7 @@ FROM transactional_raw transactional
     LEFT JOIN matching_payload mp ON transactional.src_claim_id = mp.claimid
 
     -- these inner joins will each perform a cartesian product on this table, exploding the table for each proc
-    INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, transactional.src_svc_id) = procs.claim_svc_num
+    INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = procs.claim_svc_num
 WHERE transactional.src_claim_id IN (
     SELECT DISTINCT claim_id
     FROM tmp
@@ -1224,13 +1224,17 @@ WHERE base.service_line_number IS NOT NULL
 ;
 
 INSERT INTO medicalclaims_common_model
-SELECT *
+SELECT base.*
 FROM tmp base
+INNER JOIN (
+SELECT split(claim_svc_num, '__')[0] as claim_id,
+    collect_set(COALESCE(diag_code, '<NULL>')) as codes
+FROM exploded_diag_codes
+GROUP BY split(claim_svc_num, '__')[0]
+    ) claim_code ON base.claim_id = claim_code.claim_id
 WHERE base.service_line_number IS NULL
-    AND COALESCE(base.diagnosis_code, 'DUMMY_DIAGNOSIS') NOT IN (
-    SELECT COALESCE(sub.diagnosis_code, 'DUMMY_DIAGNOSIS')
-    FROM tmp sub
-    WHERE sub.claim_id = base.claim_id
-        AND sub.service_line_number IS NOT NULL
+    AND NOT ARRAY_CONTAINS(
+        claim_code.codes,
+        COALESCE(base.diagnosis_code, '<NULL>')
         )
 ;

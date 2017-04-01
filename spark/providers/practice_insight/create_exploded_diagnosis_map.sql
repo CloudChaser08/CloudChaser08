@@ -7,7 +7,7 @@ CREATE TABLE exploded_diag_codes_nulls (
 -- insert ecodes
 INSERT INTO exploded_diag_codes_nulls (
     SELECT CONCAT(
-            COALESCE(transactional.src_claim_id,''),
+            COALESCE(transactional.src_claim_id,''), '__',
             COALESCE(transactional.src_svc_id,'')
             ), -- pk
         TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(ecodes, ',')[ecodes_exploder.n], 0, 
@@ -21,7 +21,7 @@ INSERT INTO exploded_diag_codes_nulls (
 -- insert dx
 INSERT INTO exploded_diag_codes_nulls (
     SELECT CONCAT(
-            COALESCE(transactional.src_claim_id,''),
+            COALESCE(transactional.src_claim_id,''), '__',
             COALESCE(transactional.src_svc_id,'')
             ), -- pk
         TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(dx, ',')[dx_exploder.n], 0, 
@@ -35,7 +35,7 @@ INSERT INTO exploded_diag_codes_nulls (
 -- insert other
 INSERT INTO exploded_diag_codes_nulls (
     SELECT CONCAT(
-            COALESCE(transactional.src_claim_id,''),
+            COALESCE(transactional.src_claim_id,''), '__',
             COALESCE(transactional.src_svc_id,'')
             ), -- pk
         TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(other_diag_codes, ',')[other_diag_codes_exploder.n], 0, 
@@ -49,7 +49,7 @@ INSERT INTO exploded_diag_codes_nulls (
 -- insert rest_of
 INSERT INTO exploded_diag_codes_nulls (
     SELECT CONCAT(
-            COALESCE(all_codes.src_claim_id,''),
+            COALESCE(all_codes.src_claim_id,''), '__',
             COALESCE(all_codes.src_svc_id,'')
             ), 
         TRIM(SPLIT(all_codes.rest_of_codes, ',')[rest_of_codes_exploder.n])

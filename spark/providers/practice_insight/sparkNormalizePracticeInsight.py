@@ -75,7 +75,7 @@ def run(part):
     runner.run_spark_script(get_rel_path('load_transactions.sql'), [
         ['input_path', input_path + part + '/']
     ])
-    payload_loader.load(runner, matching_path, ['claimid'])
+    payload_loader.load(runner, matching_path, ['claimId'])
 
     # create explosion maps
     runner.run_spark_script(get_rel_path('create_exploded_diagnosis_map.sql'))
@@ -131,12 +131,12 @@ def run(part):
         ]
     )
 
-    file_prefix.prefix_part_files(spark, args.output_path, part)
+    file_prefix.prefix_part_files(spark, args.output_path, args.date + '_' + part)
 
-    spark.catalog.clearCache()
+    spark.catalog.dropTempView('medicalclaims_common_model')
 
 
-for part in ['1', '2']:
+for part in ['1', '2', '3', '4']:
     run(part)
 
 spark.sparkContext.stop()
