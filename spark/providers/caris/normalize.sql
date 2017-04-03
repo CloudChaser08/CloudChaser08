@@ -200,6 +200,9 @@ SELECT * FROM (
         NULL                                 -- ordering_specialty
     FROM raw_transactional t
         CROSS JOIN (
+        -- Using 'row_number' here only as a quick-and-dirty method
+        -- for getting an increasing list of integers - it doesn't
+        -- matter which row each number corresponds to in this case
         SELECT row_number() over (ORDER BY true) i 
         FROM raw_transactional
             ) cross_join
