@@ -38,6 +38,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--output_path', type=str)
 parser.add_argument('--period', type=str, default='current')
+parser.add_argument('--shuffle_partitions', type=str, default="1200")
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
 
@@ -67,10 +68,7 @@ payload_loader.load(runner, matching_path, ['claimId'])
 
 def run(part):
     # Set shuffle partitions to stabilize job
-    #
-    # This number is currently based on an assumption that this script
-    # will run on 5 m4.2xlarge nodes
-    sqlContext.setConf("spark.sql.shuffle.partitions", "1200")
+    sqlContext.setConf("spark.sql.shuffle.partitions", args.shuffle_partitions)
 
     runner.run_spark_script(get_rel_path(
         '../../common/medicalclaims_common_model.sql'
