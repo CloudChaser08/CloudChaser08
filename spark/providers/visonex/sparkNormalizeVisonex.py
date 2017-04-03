@@ -117,7 +117,8 @@ runner.run_spark_script(
             + "FROM emr_common_model "
             + "WHERE date_start IS NULL",
             False
-        ]
+        ],
+        ['partitions', '20', False]
     ]
 )
 
@@ -129,7 +130,8 @@ runner.run_spark_script(
             + "FROM emr_common_model "
             + "WHERE date_start IS NOT NULL",
             False
-        ]
+        ],
+        ['partitions', '20', False]
     ]
 )
 

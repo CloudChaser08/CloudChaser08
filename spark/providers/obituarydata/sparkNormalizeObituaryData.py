@@ -87,7 +87,8 @@ runner.run_spark_script(
             + "FROM event_common_model "
             + "WHERE event_date IS NULL",
             False
-        ]
+        ],
+        ['partitions', '20', False]
     ]
 )
 
@@ -99,7 +100,8 @@ runner.run_spark_script(
             + "FROM event_common_model "
             + "WHERE event_date IS NOT NULL",
             False
-        ]
+        ],
+        ['partitions', '20', False]
     ]
 )
 

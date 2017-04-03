@@ -4,7 +4,7 @@ CREATE TABLE exploded_proc_codes_nulls (claim_svc_num string,proc_code string);
 -- insert other proc codes
 INSERT INTO exploded_proc_codes_nulls (
     SELECT CONCAT(
-            COALESCE(transactional.src_claim_id,''),
+            COALESCE(transactional.src_claim_id,''), '__',
             COALESCE(transactional.src_svc_id,'')
             ), -- pk
         TRIM(REGEXP_REPLACE(SUBSTRING(SPLIT(other_proc_codes, ',')[other_proc_codes_exploder.n], 
@@ -19,7 +19,7 @@ INSERT INTO exploded_proc_codes_nulls (
 -- insert rest of codes
 INSERT INTO exploded_proc_codes_nulls (
     SELECT CONCAT(
-            COALESCE(all_codes.src_claim_id,''),
+            COALESCE(all_codes.src_claim_id,''), '__',
             COALESCE(all_codes.src_svc_id,'')
             ), 
         TRIM(SPLIT(all_codes.rest_of_codes, ',')[rest_of_codes_exploder.n])

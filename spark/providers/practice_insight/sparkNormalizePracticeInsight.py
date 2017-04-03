@@ -24,12 +24,6 @@ def get_rel_path(relative_filename):
 # init
 spark, sqlContext = init("Practice Insight")
 
-# Set shuffle partitions to stabilize job
-#
-# This number is currently based on an assumption that this script
-# will run on 5 m4.2xlarge nodes
-sqlContext.setConf("spark.sql.shuffle.partitions", "1200")
-
 # register practice insight udfs:
 sqlContext.registerFunction(
     'generate_place_of_service_std_id', pi_udf.generate_place_of_service_std_id
@@ -43,6 +37,8 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--output_path', type=str)
+parser.add_argument('--period', type=str, default='current')
+parser.add_argument('--shuffle_partitions', type=str, default="1200")
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
 
@@ -55,14 +51,24 @@ input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.forma
     str(date_obj.month).zfill(2)
 )
 
-matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/'.format(
-    str(date_obj.year)
-)
+if args.period == 'hist':
+    matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/'.format(
+        str(date_obj.year)
+    )
+else:
+    matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/{}/'.format(
+        str(date_obj.year),
+        str(date_obj.month).zfill(2)
+    )
+
+# create helper tables
+runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
+payload_loader.load(runner, matching_path, ['claimId'])
 
 
 def run(part):
-    # create helper tables
-    runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
+    # Set shuffle partitions to stabilize job
+    sqlContext.setConf("spark.sql.shuffle.partitions", args.shuffle_partitions)
 
     runner.run_spark_script(get_rel_path(
         '../../common/medicalclaims_common_model.sql'
@@ -75,7 +81,6 @@ def run(part):
     runner.run_spark_script(get_rel_path('load_transactions.sql'), [
         ['input_path', input_path + part + '/']
     ])
-    payload_loader.load(runner, matching_path, ['claimid'])
 
     # create explosion maps
     runner.run_spark_script(get_rel_path('create_exploded_diagnosis_map.sql'))
@@ -114,7 +119,8 @@ def run(part):
                 + "FROM medicalclaims_common_model "
                 + "WHERE date_service is NULL",
                 False
-            ]
+            ],
+            ['partitions', '20', False]
         ]
     )
     runner.run_spark_script(
@@ -127,16 +133,18 @@ def run(part):
                 + "FROM medicalclaims_common_model "
                 + "WHERE date_service IS NOT NULL",
                 False
-            ]
+            ],
+            ['partitions', '50', False]
+
         ]
     )
 
-    file_prefix.prefix_part_files(spark, args.output_path, part)
+    file_prefix.prefix_part_files(spark, args.output_path, args.date + '_' + part)
 
-    spark.catalog.clearCache()
+    spark.catalog.dropTempView('medicalclaims_common_model')
 
 
-for part in ['1', '2']:
+for part in ['1', '2', '3', '4']:
     run(part)
 
 spark.sparkContext.stop()
