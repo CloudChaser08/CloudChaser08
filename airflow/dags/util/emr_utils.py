@@ -90,20 +90,25 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
         '--cluster-id', cluster_details['ClusterId']
     ])
 
+
 #
 # Normalize
 #
 def _build_dewey(cluster_id):
-    check_call(' '.join([
-        'cd', os.path.abspath(
-            os.path.join(
-                '${AIRFLOW_HOME}',
-                '../spark/'
-            )
-        ), '&&', 'make', 'build', '&&', 'scp', '-i', '~/.ssh/emr_deployer',
-        '-o', '"StrictHostKeyChecking no"', '-r', '.',
+    spark_dir = os.path.abspath(
+        os.path.join(
+            os.getenv('AIRFLOW_HOME'),
+            '../spark/'
+        )
+    )
+    check_call([
+        'make', 'build'
+    ], cwd=spark_dir)
+    check_call([
+        'scp', '-i', os.getenv('HOME') + '/.ssh/emr_deployer',
+        '-o', 'StrictHostKeyChecking no', '-r', '.',
         'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':spark/'
-    ]), shell=True)
+    ], cwd=spark_dir)
 
 
 def normalize(cluster_name, script_name, args,
