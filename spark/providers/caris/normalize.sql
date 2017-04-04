@@ -218,7 +218,7 @@ SELECT DISTINCT * FROM (
         -- Using 'row_number' here only as a quick-and-dirty method
         -- for getting an increasing list of integers - it doesn't
         -- matter which row each number corresponds to in this case
-        SELECT row_number() over (ORDER BY true) i 
+        SELECT row_number() over (ORDER BY true) i
         FROM raw_transactional
             LIMIT 200
             ) cross_join
