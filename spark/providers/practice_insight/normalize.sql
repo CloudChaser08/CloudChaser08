@@ -1227,10 +1227,11 @@ INSERT INTO medicalclaims_common_model
 SELECT base.*
 FROM tmp base
 INNER JOIN (
-SELECT split(claim_svc_num, '__')[0] as claim_id,
-    collect_set(COALESCE(diag_code, '<NULL>')) as codes
-FROM exploded_diag_codes
-GROUP BY split(claim_svc_num, '__')[0]
+SELECT claim_id,
+    collect_set(COALESCE(diagnosis_code, '<NULL>')) as codes
+FROM tmp
+GROUP BY claim_id
+WHERE service_line_number IS NOT NULL
     ) claim_code ON base.claim_id = claim_code.claim_id
 WHERE base.service_line_number IS NULL
     AND NOT ARRAY_CONTAINS(
