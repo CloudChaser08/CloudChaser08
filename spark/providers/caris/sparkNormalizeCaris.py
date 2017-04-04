@@ -114,7 +114,8 @@ runner.run_spark_script(file_utils.get_rel_path(
         'properties',
         constants.unload_properties_template.format(args.output_path),
         False
-    ]
+    ],
+    ['partitions', '20', False]
 ])
 
 runner.run_spark_script(
