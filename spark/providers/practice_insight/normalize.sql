@@ -1226,7 +1226,7 @@ WHERE base.service_line_number IS NOT NULL
 INSERT INTO medicalclaims_common_model
 SELECT base.*
 FROM tmp base
-INNER JOIN (
+LEFT JOIN (
 SELECT claim_id,
     collect_set(COALESCE(diagnosis_code, '<NULL>')) as codes
 FROM tmp
@@ -1235,7 +1235,7 @@ GROUP BY claim_id
     ) claim_code ON base.claim_id = claim_code.claim_id
 WHERE base.service_line_number IS NULL
     AND NOT ARRAY_CONTAINS(
-        claim_code.codes,
+        COALESCE(claim_code.codes, ARRAY()),
         COALESCE(base.diagnosis_code, '<NULL>')
         )
 ;
