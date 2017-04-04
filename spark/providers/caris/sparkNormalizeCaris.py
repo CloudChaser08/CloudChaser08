@@ -6,6 +6,7 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 from spark.spark import init
 import spark.helpers.constants as constants
+import spark.helpers.file_prefix as file_prefix
 from spark.runner import Runner
 
 # init
@@ -90,5 +91,7 @@ runner.run_spark_script(
         ]
     ]
 )
+
+file_prefix.prefix_part_files(spark, args.output_path, args.date + '_')
 
 spark.stop()
