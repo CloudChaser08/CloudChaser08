@@ -22,11 +22,11 @@ SELECT DISTINCT
         WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
         AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
             transactional.diag_cd_3, transactional.diag_cd_4)
-        THEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
+        THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
         WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-        THEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
+        THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
         ELSE (
-        SELECT MIN(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
+        SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE))
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             )
@@ -118,16 +118,16 @@ SELECT DISTINCT
     END,                                                   -- service_line_number
     clean_up_diagnosis_code(
         diags.diag_code, NULL,
-                                                           -- exact definition of service date above
+    -- exact definition of service date above
         CASE
         WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
         AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
             transactional.diag_cd_3, transactional.diag_cd_4)
-        THEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
+        THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
         WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-        THEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
+        THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
         ELSE (
-        SELECT MIN(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
+        SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE))
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             )
@@ -715,7 +715,21 @@ SELECT DISTINCT
     '1',                                                   -- source_version
     mp.gender,                                             -- patient_gender
     NULL,                                                  -- patient_age
-    mp.yearOfBirth,                                        -- patient_year_of_birth
+    cap_year_of_birth(
+        NULL,
+        CASE
+        WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
+        THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
+        WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
+        THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
+        ELSE (
+        SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE))
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            )
+        END,
+        mp.yearOfBirth
+        ),                                                 -- patient_year_of_birth
     mp.threeDigitZip,                                      -- patient_zip3
     UPPER(mp.state),                                       -- patient_state
     transactional.claim_type_cd,                           -- claim_type
