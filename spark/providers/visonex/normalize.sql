@@ -490,7 +490,6 @@ FROM dialysistreatment base
         '-', base.clinicorganizationidnumber
         ) = big_union.claim_id
     LEFT JOIN matching_payload mp ON big_union.visonex_patient_id = mp.claimid
-    OR base.patientdataanalyticrowidnumber = mp.claimid
 WHERE LENGTH(big_union.ndc_code) = 11
     OR (
         big_union.procedure_code IS NOT NULL
