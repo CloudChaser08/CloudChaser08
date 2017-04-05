@@ -1,6 +1,6 @@
 INSERT INTO emr_common_model
 SELECT DISTINCT
-        monotonically_increasing_id(),  -- record_id
+        NULL,                           -- record_id
         mp.hvid,                        -- hvid
         {today},                        -- created
         '1',                            -- model_version
