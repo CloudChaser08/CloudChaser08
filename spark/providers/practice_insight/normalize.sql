@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS tmp;
 CREATE TABLE tmp AS
 SELECT * FROM medicalclaims_common_model
-;
+    ;
 
 INSERT INTO tmp
 SELECT DISTINCT
@@ -17,22 +17,22 @@ SELECT DISTINCT
     mp.gender,                                             -- patient_gender
     NULL,                                                  -- patient_age
     cap_year_of_birth(
-            NULL,
-            CASE
-            WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-            AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
-                transactional.diag_cd_3, transactional.diag_cd_4)
-            THEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
-            WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-            THEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
-            ELSE (
-            SELECT MIN(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
-            FROM transactional_raw t2
-            WHERE t2.src_claim_id = transactional.src_claim_id
-                )
-            END,
-            mp.yearOfBirth
-            ),                                             -- patient_year_of_birth
+        NULL,
+        CASE
+        WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
+        AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
+            transactional.diag_cd_3, transactional.diag_cd_4)
+        THEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
+        WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
+        THEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
+        ELSE (
+        SELECT MIN(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            )
+        END,
+        mp.yearOfBirth
+        ),                                                 -- patient_year_of_birth
     mp.threeDigitZip,                                      -- patient_zip3
     UPPER(mp.state),                                       -- patient_state
     transactional.claim_type_cd,                           -- claim_type
@@ -118,7 +118,7 @@ SELECT DISTINCT
     END,                                                   -- service_line_number
     clean_up_diagnosis_code(
         diags.diag_code, NULL,
-        -- exact definition of service date above
+                                                           -- exact definition of service date above
         CASE
         WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
         AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
@@ -696,7 +696,7 @@ SELECT DISTINCT
 FROM transactional_raw transactional
     LEFT JOIN matching_payload mp ON transactional.src_claim_id = mp.claimid
 
-    -- these inner joins will each perform a cartesian product on this table, exploding the table for each diag/proc
+-- these inner joins will each perform a cartesian product on this table, exploding the table for each diag/proc
     INNER JOIN exploded_diag_codes diags ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = diags.claim_svc_num
     INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = procs.claim_svc_num
     ;
@@ -1206,7 +1206,7 @@ SELECT DISTINCT
 FROM transactional_raw transactional
     LEFT JOIN matching_payload mp ON transactional.src_claim_id = mp.claimid
 
-    -- these inner joins will each perform a cartesian product on this table, exploding the table for each proc
+-- these inner joins will each perform a cartesian product on this table, exploding the table for each proc
     INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = procs.claim_svc_num
 WHERE transactional.src_claim_id IN (
     SELECT DISTINCT claim_id
@@ -1216,30 +1216,57 @@ WHERE transactional.src_claim_id IN (
         )
     ;
 
--- delete diagnosis codes that should not have been added
+--
+-- exclude redundant rows from the table!
+--
+-- we want to exclude rows where the diagnosis_code on that row exists
+-- elsewhere on the claim where the service_line_number is not null.
+--
+-- i.e. we don't want to keep duplicate diagnosis_code values that are
+-- associated with null service lines on a claim if those values
+-- already exist on the same claim associated with a non-null service
+-- line
+--
+
+-- rows with a non-null service_line_number are OK
 INSERT INTO medicalclaims_common_model
 SELECT *
 FROM tmp base
 WHERE base.service_line_number IS NOT NULL
-;
+    ;
 
+
+-- if the service_line_number is null, only keep rows that contain
+-- diagnoses that don't exist elsewhere on one of the claim's service
+-- lines
 INSERT INTO medicalclaims_common_model
 SELECT base.*
 FROM tmp base
-INNER JOIN (
-SELECT claim_id,
-    collect_set(COALESCE(diagnosis_code, '<NULL>')) as codes
-FROM tmp
-WHERE service_line_number IS NOT NULL
-GROUP BY claim_id
-    ) claim_code ON base.claim_id = claim_code.claim_id
+    INNER JOIN (
+    SELECT claim_id,
+        COLLECT_SET(COALESCE(diagnosis_code, '<NULL>')) as codes
+    FROM tmp
+    WHERE service_line_number IS NOT NULL
+    GROUP BY claim_id
+        ) claim_code ON base.claim_id = claim_code.claim_id
 WHERE base.service_line_number IS NULL
-    AND (
-        NOT ARRAY_CONTAINS(
-            claim_code.codes,
-            COALESCE(base.diagnosis_code, '<NULL>')
-            )
-        OR
-        claim_code.codes IS NULL -- empty arrays are NULL
+    AND NOT ARRAY_CONTAINS(
+        claim_code.codes,
+        COALESCE(base.diagnosis_code, '<NULL>')
         )
-;
+    ;
+
+-- we will still need to add in rows where there are no diagnosis
+-- codes or service lines
+INSERT INTO medicalclaims_common_model
+SELECT base.*
+FROM tmp base
+    INNER JOIN (
+    SELECT claim_id,
+        COLLECT_SET(COALESCE(diagnosis_code, '<NULL>')) as codes
+    FROM tmp
+    WHERE service_line_number IS NULL
+    GROUP BY claim_id
+        ) claim_code ON base.claim_id = claim_code.claim_id
+WHERE base.service_line_number IS NULL
+    AND claim_code.codes = ARRAY('<NULL>')
