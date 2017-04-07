@@ -283,9 +283,9 @@ detect_move_normalize_dag = SubDagOperator(
             ],
             'text_warehouse': TEXT_WAREHOUSE,
             'parquet_warehouse': PARQUET_WAREHOUSE,
-            'part_file_prefix_func': insert_current_plaintext_date_function(
-                '{}.{}'
-            ),
+
+            # prefixing is handled in the routine
+            'part_file_prefix_func': lambda ds, k: '',
             'data_feed_type': 'lab',
             'pyspark': True
         }
