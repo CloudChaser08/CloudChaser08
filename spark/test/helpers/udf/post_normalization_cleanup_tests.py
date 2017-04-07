@@ -18,3 +18,8 @@ class TestPostNormalizationCleanup(unittest.TestCase):
         self.assertEqual(cleanup.cap_year_of_birth(
             17, datetime.date(2017, 12, 1), 2000
         ), 2000)
+
+        # error
+        self.assertEqual(cleanup.cap_year_of_birth(
+            None, None, 'INVALID YEAR'
+        ), None)
