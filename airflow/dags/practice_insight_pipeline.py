@@ -3,6 +3,7 @@ from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
+import os
 
 # hv-specific modules
 import subdags.s3_validate_file as s3_validate_file
@@ -193,6 +194,21 @@ gunzip_transactional = gunzip_step(
     TRANSACTION_FILE_NAME_TEMPLATE,
     get_tmp_dir
 )
+
+def split_transactional_into_parts_step():
+    def execute(ds, **kwargs):
+        check_call([
+            'split', '-n', 'l/4', get_tmp_dir(ds, kwargs)
+            + insert_current_plaintext_date(TRANSACTION_FILE_NAME_TEMPLATE),
+            get_tmp_dir(ds, kwargs) + 'parts/'
+        ])
+        for i in range(1, 5):
+            os.mkdir(get_tmp_dir(ds, kwargs) + 'parts/' + str(i))
+            check_call([
+                'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'parts/' + str(i)
+            ])
+            os.listdir(get_tmp_dir(ds, kwargs) + 'parts/')
+    PythonOperator()
 
 
 def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, num_splits):
