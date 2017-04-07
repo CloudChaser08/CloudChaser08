@@ -172,6 +172,6 @@ def cap_year_of_birth(age, date_service, year_of_birth):
         and int(age) > 85
         and isinstance(date_service, datetime.date)
     ):
-        return date_service.year - 90
+        return 1927
 
     return year_of_birth
