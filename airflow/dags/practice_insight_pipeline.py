@@ -195,23 +195,45 @@ gunzip_transactional = gunzip_step(
     get_tmp_dir
 )
 
+
 def split_transactional_into_parts_step():
     def execute(ds, **kwargs):
         check_call([
             'split', '-n', 'l/4', get_tmp_dir(ds, kwargs)
             + insert_current_plaintext_date(TRANSACTION_FILE_NAME_TEMPLATE),
-            get_tmp_dir(ds, kwargs) + 'parts/'
+            get_tmp_dir(ds, kwargs) + 'presplit/'
         ])
         for i in range(1, 5):
-            os.mkdir(get_tmp_dir(ds, kwargs) + 'parts/' + str(i))
+            os.mkdir(get_tmp_dir(ds, kwargs) + 'presplit/' + str(i))
             check_call([
-                'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'parts/' + str(i)
+                'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/' + str(i)
             ])
-            os.listdir(get_tmp_dir(ds, kwargs) + 'parts/')
-    PythonOperator()
+            os.rename(
+                filter(
+                    lambda f: f.startswith(
+                        insert_current_plaintext_date(
+                            TRANSACTION_FILE_NAME_TEMPLATE
+                        )
+                    ),
+                    os.listdir(get_tmp_dir(ds, kwargs) + 'presplit/')
+                )[0],
+                get_tmp_dir(ds, kwargs) + 'presplit/' + str(i)
+                + insert_current_plaintext_date(
+                    TRANSACTION_FILE_NAME_TEMPLATE
+                )
+            )
+    PythonOperator(
+        task_id='split_transactional_into_parts',
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
 
 
-def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, num_splits):
+def split_step(
+        task_id, tmp_dir_func, file_paths_to_split_func,
+        s3_destination, num_splits
+):
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
@@ -232,9 +254,13 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
     )
 
 
-split_transactional = split_step(
-    "transactional", get_tmp_dir, get_unzipped_file_paths,
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 20
+split_transactional_steps = map(
+    lambda i: split_step(
+        "transactional", get_tmp_dir + 'presplit/' + str(i) + '/',
+        get_unzipped_file_paths,
+        S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 20
+    ),
+    range(1, 5)
 )
 
 
@@ -313,15 +339,17 @@ detect_move_normalize_dag = SubDagOperator(
 # addon
 fetch_transactional.set_upstream(validate_transactional)
 gunzip_transactional.set_upstream(fetch_transactional)
-split_transactional.set_upstream(gunzip_transactional)
+
+for step in split_transactional_steps:
+    step.set_upstream(gunzip_transactional)
 
 # cleanup
-clean_up_workspace.set_upstream(split_transactional)
+clean_up_workspace.set_upstream(split_transactional_steps)
 
 # matching
 queue_up_for_matching.set_upstream(validate_deid)
 
 # post-matching
 detect_move_normalize_dag.set_upstream(
-    [queue_up_for_matching, split_transactional]
+    [queue_up_for_matching] + split_transactional_steps
 )
