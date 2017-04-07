@@ -276,14 +276,16 @@ detect_move_normalize_dag = SubDagOperator(
                 '{}/{}/{}'
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
-            'vendor_uuid': '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
+            'vendor_uuid': 'b29eb316-a398-4fdc-b8da-2cff26f86bad',
             'pyspark_normalization_script_name': '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
             'pyspark_normalization_args_func': lambda ds, k: [
-                '--date', insert_current_date('{}-{}-{}', k)
+                '--date', insert_current_date('{}-{}-01', k)
             ],
             'text_warehouse': TEXT_WAREHOUSE,
             'parquet_warehouse': PARQUET_WAREHOUSE,
-            'part_file_prefix_func': insert_current_date_function('{}-{}-{}'),
+            'part_file_prefix_func': insert_current_plaintext_date_function(
+                '{}.{}'
+            ),
             'data_feed_type': 'lab',
             'pyspark': True
         }
