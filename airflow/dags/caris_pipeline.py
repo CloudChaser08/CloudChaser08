@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
+from subprocess import check_call
 
 # hv-specific modules
 import subdags.s3_validate_file as s3_validate_file
@@ -76,15 +77,16 @@ def insert_current_date(template, kwargs):
 
 # get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
 
-# def get_deid_file_urls(ds, kwargs):
-#     return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
-#         get_formatted_date(ds, kwargs)
-#     )]
+def get_deid_file_urls(ds, kwargs):
+    return [S3_TRANSACTION_RAW_URL + insert_current_date(
+        DEID_FILE_NAME_TEMPLATE, kwargs
+    )]
+
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)(ds, kwargs)
     encrypted_file_path = file_dir \
-        + insert_current_date_function(TRANSACTION_FILE_NAME_TEMPLATE)
+        + insert_current_date(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
@@ -133,6 +135,10 @@ def generate_transaction_file_validation_dag(
 
 validate_transactional = generate_transaction_file_validation_dag(
     'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
+    1000000
+)
+validate_deid = generate_transaction_file_validation_dag(
+    'deid', DEID_FILE_NAME_TEMPLATE,
     1000000
 )
 
@@ -206,9 +212,8 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
 
 split_transactional = split_step(
     "transactional", insert_todays_date_function(TMP_PATH_TEMPLATE),
-    get_unzipped_file_paths, TRANSACTION_S3_SPLIT_URL, 20
+    get_unzipped_file_paths, S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 20
 )
-
 
 
 def clean_up_workspace_step(task_id, template):
@@ -234,8 +239,7 @@ queue_up_for_matching = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-
-            'source_files_func' : get_deid_file_urls
+            'source_files_func': get_deid_file_urls
         }
     ),
     task_id='queue_up_for_matching',
