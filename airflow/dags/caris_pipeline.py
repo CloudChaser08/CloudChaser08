@@ -249,9 +249,9 @@ queue_up_for_matching = SubDagOperator(
 #
 # Post-Matching
 #
-S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
-TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/part_provider=quest/"
-PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/"
+S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/caris/'
+TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/part_provider=caris/"
+PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=caris/"
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
@@ -260,25 +260,25 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds,k: [
-                insert_formatted_date_function(
-                    DEID_UNZIPPED_FILE_NAME_TEMPLATE
+            'expected_matching_files_func': lambda ds, k: [
+                insert_current_date_function(
+                    DEID_FILE_NAME_TEMPLATE
                 )(ds, k)
             ],
-            'file_date_func'                    : insert_current_date_function(
+            'file_date_func': insert_current_date_function(
                 '{}/{}/{}'
             ),
-            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
-            'vendor_uuid'                       : '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
-            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
-            'pyspark_normalization_args_func'   : lambda ds, k: [
+            's3_payload_loc_url': S3_PAYLOAD_DEST,
+            'vendor_uuid': 'd701240c-35be-4e71-94fc-9460b85b1515',
+            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/caris/sparkNormalizeCaris.py',
+            'pyspark_normalization_args_func': lambda ds, k: [
                 '--date', insert_current_date('{}-{}-{}', k)
             ],
-            'text_warehouse'                    : TEXT_WAREHOUSE,
-            'parquet_warehouse'                 : PARQUET_WAREHOUSE,
-            'part_file_prefix_func'             : insert_current_date_function('{}-{}-{}'),
-            'data_feed_type'                    : 'lab',
-            'pyspark'                           : True
+            'text_warehouse': TEXT_WAREHOUSE,
+            'parquet_warehouse': PARQUET_WAREHOUSE,
+            'part_file_prefix_func': insert_current_date_function('{}-{}-{}'),
+            'data_feed_type': 'lab',
+            'pyspark': True
         }
     ),
     task_id='detect_move_normalize',
@@ -286,20 +286,13 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 # addon
-fetch_addon.set_upstream(validate_addon)
-unzip_addon.set_upstream(fetch_addon)
-decrypt_addon.set_upstream(unzip_addon)
-split_addon.set_upstream(decrypt_addon)
-
-# trunk
-fetch_trunk.set_upstream(validate_trunk)
-unzip_trunk.set_upstream(fetch_trunk)
-gunzip_trunk.set_upstream(unzip_trunk)
-split_trunk.set_upstream(gunzip_trunk)
+fetch_transactional.set_upstream(validate_transactional)
+decrypt_transactional.set_upstream(fetch_transactional)
+split_transactional.set_upstream(decrypt_transactional)
 
 # cleanup
 clean_up_workspace.set_upstream(
-    [split_trunk, split_addon]
+    split_transactional
 )
 
 # matching
@@ -307,5 +300,5 @@ queue_up_for_matching.set_upstream(validate_deid)
 
 # post-matching
 detect_move_normalize_dag.set_upstream(
-    [queue_up_for_matching, split_trunk, split_addon]
+    [queue_up_for_matching, split_transactional]
 )
