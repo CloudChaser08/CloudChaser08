@@ -983,13 +983,13 @@ SELECT DISTINCT
                 fclty_type_pos_cd, claim_freq_cd
                 ))
         ),                                                 -- prov_rendering_npi
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_npi,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_billing_npi
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NOT NULL
         AND transactional.refrn_provdr_npi_svc <> ''
@@ -1000,7 +1000,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_referring_npi
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NOT NULL
         AND transactional.fclty_npi_svc <> ''
@@ -1022,7 +1022,7 @@ SELECT DISTINCT
     NULL,                                                  -- prov_rendering_tax_id
     NULL,                                                  -- prov_rendering_dea_id
     NULL,                                                  -- prov_rendering_ssn
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
@@ -1033,7 +1033,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_rendering_state_license
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
@@ -1044,7 +1044,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_rendering_upin
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
@@ -1055,7 +1055,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_rendering_commercial_id
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
@@ -1066,7 +1066,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_rendering_name_1
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
@@ -1090,7 +1090,7 @@ SELECT DISTINCT
     END,                                                   -- prov_rendering_std_taxonomy
     NULL,                                                  -- prov_rendering_vendor_specialty
     NULL,                                                  -- prov_billing_vendor_id
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_tax_id,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
@@ -1098,56 +1098,56 @@ SELECT DISTINCT
                 ))),                                       -- prov_billing_tax_id
     NULL,                                                  -- prov_billing_dea_id
     NULL,                                                  -- prov_billing_ssn
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_stlc_nbr,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_billing_state_license
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_upin,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_billing_upin
     NULL,                                                  -- prov_billing_commercial_id
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_last_or_orgal_nm,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_billing_name_1
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_first_nm,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_billing_name_2
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_addr_1,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_billing_address_1
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_addr_2,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_billing_address_2
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_addr_city,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_billing_city
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_addr_state,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_billing_state
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         transactional.billg_provdr_addr_zip,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
@@ -1159,7 +1159,7 @@ SELECT DISTINCT
     NULL,                                                  -- prov_referring_tax_id
     NULL,                                                  -- prov_referring_dea_id
     NULL,                                                  -- prov_referring_ssn
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
@@ -1170,7 +1170,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_referring_state_license
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
@@ -1181,7 +1181,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_referring_upin
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
@@ -1192,7 +1192,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_referring_commercial_id
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
@@ -1203,7 +1203,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_referring_name_1
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
@@ -1225,7 +1225,7 @@ SELECT DISTINCT
     NULL,                                                  -- prov_facility_tax_id
     NULL,                                                  -- prov_facility_dea_id
     NULL,                                                  -- prov_facility_ssn
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
@@ -1237,7 +1237,7 @@ SELECT DISTINCT
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_facility_state_license
     NULL,                                                  -- prov_facility_upin
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
@@ -1248,7 +1248,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_facility_commercial_id
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
@@ -1260,7 +1260,7 @@ SELECT DISTINCT
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_facility_name_1
     NULL,                                                  -- prov_facility_name_2
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
@@ -1271,7 +1271,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_facility_address_1
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
@@ -1282,7 +1282,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_facility_address_2
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
@@ -1293,7 +1293,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_facility_city
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
@@ -1304,7 +1304,7 @@ SELECT DISTINCT
             generate_inst_type_of_bill_std_id(
                 fclty_type_pos_cd, claim_freq_cd
                 ))),                                       -- prov_facility_state
-    filter_due_to_place_of_service(
+    filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
