@@ -52,10 +52,12 @@ def get_tmp_dir(ds, kwargs):
     return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
 
 def get_expected_transaction_file_name(ds, kwargs):
-    return TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash'])
+    file_date = get_file_date(ds, kwargs).replace('-', '')
+    return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date)
 
 def get_expected_transaction_file_name_gz(ds, kwargs):
-    return TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash']) + '.gz'
+    file_date = get_file_date(ds, kwargs).replace('-', '')
+    return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date) + '.gz'
 
 def get_encrypted_decrypted_file_paths(ds, kwargs):
     tmp_dir = get_tmp_dir(ds, kwargs)
@@ -75,16 +77,18 @@ def get_s3_transaction_prefix(ds, kwargs):
     return S3_TRANSACTION_SPLIT_PATH + get_file_date(ds, kwargs).replace('-', '/') + '/'
 
 def get_expected_deid_file_name(ds, kwargs):
-    return DEID_FILE_NAME_TEMPLATE.format(kwargs['ds_nodash'])
+    file_date = get_file_date(ds, kwargs).replace('-', '')
+    return DEID_FILE_NAME_TEMPLATE.format(file_date)
 
 def get_expected_deid_file_regex(ds, kwargs):
     return DEID_FILE_NAME_TEMPLATE.format('\d{8}')
 
 def get_file_date(ds, kwargs):
-    return ds
+    return (kwargs['execution_date'] + timedelta(days=6)).strftime('%Y-%m-%d')
 
 def get_parquet_dates(ds, kwargs):
     date_path = ds.replace('-', '/')
+    date_path = get_file_date(ds, kwargs).replace('-', '/')
 
     warehouse_files = check_output(['aws', 's3', 'ls', '--recursive', S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE]).split("\n")
     file_dates = map(lambda f: '/'.join(f.split(' ')[-1].replace(S3_TEXT_EXPRESS_SCRIPTS_PREFIX, '').split('/')[:-1]), warehouse_files)
@@ -100,7 +104,7 @@ def get_expected_matching_files(ds, kwargs):
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2016, 12, 1, 12),
+    'start_date': datetime(2017, 4, 2),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2),
@@ -109,7 +113,7 @@ default_args = {
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval=None if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
+    schedule_interval='0 0 * * 0' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
     default_args=default_args
 )
 
