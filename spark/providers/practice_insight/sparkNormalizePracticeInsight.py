@@ -28,6 +28,10 @@ spark, sqlContext = init("Practice Insight")
 sqlContext.registerFunction(
     'generate_place_of_service_std_id', pi_udf.generate_place_of_service_std_id
 )
+sqlContext.registerFunction(
+    'generate_inst_type_of_bill_std_id',
+    pi_udf.generate_inst_type_of_bill_std_id
+)
 
 # initialize runner
 runner = Runner(sqlContext)

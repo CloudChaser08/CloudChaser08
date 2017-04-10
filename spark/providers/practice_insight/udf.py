@@ -17,3 +17,9 @@ def generate_place_of_service_std_id(
         elif fclty_type_pos_cd is not None and fclty_type_pos_cd != '':
             return fclty_type_pos_cd
     return None
+
+
+def generate_inst_type_of_bill_std_id(
+        fclty_type_pos_cd, claim_freq_cd
+):
+    return str(fclty_type_pos_cd) + str(claim_freq_cd)
