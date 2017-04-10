@@ -142,7 +142,7 @@ def normalize(cluster_name, script_name, args,
     check_call([
         'scp', '-i', '{}/.ssh/emr_deployer'.format(
             os.getenv('HOME')
-        ),
+        ), '-o', 'StrictHostKeyChecking no',
         '{}/dags/resources/prefix_part_files.sh'.format(
             os.getenv('AIRFLOW_HOME')
         ), 'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':'
@@ -158,6 +158,7 @@ def normalize(cluster_name, script_name, args,
         lambda path: path != '',
         check_output(' '.join([
             'ssh', '-i', '~/.ssh/emr_deployer',
+            '-o', 'StrictHostKeyChecking no',
             'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
             'hdfs', 'dfs', '-ls', text_staging_dir, '|', 'rev', '|',
             'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
