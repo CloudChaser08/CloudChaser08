@@ -1332,12 +1332,7 @@ FROM transactional_raw transactional
 
 -- these inner joins will each perform a cartesian product on this table, exploding the table for each proc
     INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = procs.claim_svc_num
-WHERE transactional.src_claim_id IN (
-    SELECT DISTINCT claim_id
-    FROM tmp
-    WHERE claim_type = 'I'
-        AND diagnosis_code IS NOT NULL
-        )
+WHERE transactional.claim_type_cd = 'I'
     ;
 
 --
