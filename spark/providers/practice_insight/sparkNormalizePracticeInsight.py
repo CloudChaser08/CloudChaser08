@@ -65,6 +65,8 @@ else:
         str(date_obj.month).zfill(2)
     )
 
+min_date = '2010-01-01'
+
 # create helper tables
 runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
 payload_loader.load(runner, matching_path, ['claimId'])
@@ -92,6 +94,57 @@ def run(part):
 
     # normalize
     runner.run_spark_script(get_rel_path('normalize.sql'), [
+        [
+            'date_service_sl',
+            """
+            CASE
+            WHEN extract_date(transactional.svc_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
+            AND diags.diag_code IN (transactional.diag_cd_1,
+                transactional.diag_cd_2, transactional.diag_cd_3,
+                transactional.diag_cd_4)
+            THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
+            WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
+            THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
+            ELSE (
+            SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE))
+            FROM transactional_raw t2
+            WHERE t2.src_claim_id = transactional.src_claim_id
+                )
+            END
+            """.format(
+                min_date=min_date,
+                max_date=args.date
+            ), False
+        ],
+        [
+            'date_service_inst',
+            """
+            CASE
+            WHEN extract_date(transactional.svc_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
+            THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
+            WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
+            THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
+            ELSE (
+            SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d',
+                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE))
+            FROM transactional_raw t2
+            WHERE t2.src_claim_id = transactional.src_claim_id
+                )
+            END
+            """.format(
+                min_date=min_date,
+                max_date=args.date
+            ), False
+        ],
         ['setid', setid],
         ['today', TODAY],
         ['feedname', '22'],

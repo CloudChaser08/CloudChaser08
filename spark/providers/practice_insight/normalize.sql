@@ -31,19 +31,7 @@ SELECT DISTINCT
     NULL,                                                  -- patient_age
     cap_year_of_birth(
         NULL,
-        CASE
-        WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-        AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
-            transactional.diag_cd_3, transactional.diag_cd_4)
-        THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
-        WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-        THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
-        ELSE (
-        SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE))
-        FROM transactional_raw t2
-        WHERE t2.src_claim_id = transactional.src_claim_id
-            )
-        END,
+        {date_service_sl},
         mp.yearOfBirth
         ),                                                 -- patient_year_of_birth
     mp.threeDigitZip,                                      -- patient_zip3
@@ -52,19 +40,7 @@ SELECT DISTINCT
     extract_date(
         transactional.edi_interchange_creation_dt, '%Y-%m-%d', CAST({min_date} as date), CAST({max_date} as date)
         ),                                                 -- date_received
-    CASE
-    WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-    AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
-        transactional.diag_cd_3, transactional.diag_cd_4)
-    THEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
-    WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-    THEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
-    ELSE (
-    SELECT MIN(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
-    FROM transactional_raw t2
-    WHERE t2.src_claim_id = transactional.src_claim_id
-        )
-    END,                                                   -- date_service
+    {date_service_sl},                                     -- date_service
     CASE
     WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
     AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
@@ -136,20 +112,7 @@ SELECT DISTINCT
     END,                                                   -- service_line_number
     clean_up_diagnosis_code(
         diags.diag_code, NULL,
-    -- exact definition of service date above
-        CASE
-        WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-        AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
-            transactional.diag_cd_3, transactional.diag_cd_4)
-        THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
-        WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-        THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
-        ELSE (
-        SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE))
-        FROM transactional_raw t2
-        WHERE t2.src_claim_id = transactional.src_claim_id
-            )
-        END
+        {date_service_sl}
         ),                                                 -- diagnosis_code
     NULL,                                                  -- diagnosis_code_qual
     CASE
@@ -1027,17 +990,7 @@ SELECT DISTINCT
     NULL,                                                  -- patient_age
     cap_year_of_birth(
         NULL,
-        CASE
-        WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-        THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
-        WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-        THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE)
-        ELSE (
-        SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) AS DATE))
-        FROM transactional_raw t2
-        WHERE t2.src_claim_id = transactional.src_claim_id
-            )
-        END,
+        {date_service_inst},
         mp.yearOfBirth
         ),                                                 -- patient_year_of_birth
     mp.threeDigitZip,                                      -- patient_zip3
@@ -1046,17 +999,7 @@ SELECT DISTINCT
     extract_date(
         transactional.edi_interchange_creation_dt, '%Y-%m-%d', CAST({min_date} as date), CAST({max_date} as date)
         ),                                                 -- date_received
-    CASE
-    WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-    THEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
-    WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
-    THEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
-    ELSE (
-    SELECT MIN(extract_date(t2.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
-    FROM transactional_raw t2
-    WHERE t2.src_claim_id = transactional.src_claim_id
-        )
-    END,                                                   -- date_service
+    {date_service_inst},                                                   -- date_service
     CASE
     WHEN extract_date(transactional.svc_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
     THEN extract_date(transactional.svc_to_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
@@ -1090,7 +1033,7 @@ SELECT DISTINCT
             )),                                            -- inst_type_of_bill_std_id
     NULL,                                                  -- inst_type_of_bill_vendor_id
     NULL,                                                  -- inst_type_of_bill_vendor_desc
-    NULLify_drg_blacklist(transactional.drg_cd),           -- inst_drg_std_id
+    nullify_drg_blacklist(transactional.drg_cd),           -- inst_drg_std_id
     NULL,                                                  -- inst_drg_vendor_id
     NULL,                                                  -- inst_drg_vendor_desc
     NULL,                                                  -- place_of_service_std_id
