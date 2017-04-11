@@ -13,7 +13,7 @@ clean:
 
 build:
 	docker build -t ${REPO}:${USER} .
-	docker tag -f ${REPO}:${USER} ${REPO}:latest
+	docker tag ${REPO}:${USER} ${REPO}:latest
 
 push:
 	docker push ${REPO}:${USER}
@@ -21,7 +21,7 @@ push:
 
 jenkins-build:
 	docker build -f Dockerfile --no-cache=true -t ${REPO}:${TAG_TO_DEPLOY} .
-	docker tag -f ${REPO}:${TAG_TO_DEPLOY} ${REPO}:latest
+	docker tag ${REPO}:${TAG_TO_DEPLOY} ${REPO}:latest
 
 jenkins-push:
 	docker push ${REPO}:${TAG_TO_DEPLOY}
