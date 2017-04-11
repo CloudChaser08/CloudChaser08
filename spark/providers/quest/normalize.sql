@@ -67,6 +67,10 @@ FROM transactional_raw q
     LEFT JOIN dates service ON q.date_of_service = service.date
     LEFT JOIN dates collected ON q.date_collected = collected.date
     CROSS JOIN diagnosis_exploder n
-WHERE SPLIT(TRIM(q.diagnosis_code),'\\^')[n.n] IS NOT NULL
-    AND SPLIT(TRIM(q.diagnosis_code),'\\^')[n.n] != '' 
+WHERE (
+        SPLIT(TRIM(q.diagnosis_code),'\\^')[n.n] IS NOT NULL
+        AND SPLIT(TRIM(q.diagnosis_code),'\\^')[n.n] != ''
+        )
+    OR q.diagnosis_code IS NULL
+    OR q.diagnosis_code = ''
     ;
