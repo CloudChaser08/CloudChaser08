@@ -221,7 +221,13 @@ SELECT DISTINCT
         AND transactional.rendr_provdr_npi_svc IS NOT NULL
         AND transactional.rendr_provdr_npi_svc <> ''
         THEN transactional.rendr_provdr_npi_svc
-        ELSE transactional.rendr_provdr_npi
+        ELSE (
+        SELECT min(t2.rendr_provdr_npi)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         END,
         generate_place_of_service_std_id(
             transactional.claim_type_cd,
@@ -255,7 +261,13 @@ SELECT DISTINCT
         AND transactional.refrn_provdr_npi_svc IS NOT NULL
         AND transactional.refrn_provdr_npi_svc <> ''
         THEN transactional.refrn_provdr_npi_svc
-        ELSE transactional.refrn_provdr_npi
+        ELSE (
+        SELECT min(t2.refrn_provdr_npi)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         END,
         generate_place_of_service_std_id(
             transactional.claim_type_cd,
@@ -276,7 +288,13 @@ SELECT DISTINCT
         AND transactional.fclty_npi_svc IS NOT NULL
         AND transactional.fclty_npi_svc <> ''
         THEN transactional.fclty_npi_svc
-        ELSE transactional.fclty_npi
+        ELSE (
+        SELECT min(t2.fclty_npi)
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         END,
         generate_place_of_service_std_id(
             transactional.claim_type_cd,
@@ -307,7 +325,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_stlc_nbr
+        THEN (
+        SELECT min(t2.rendr_provdr_stlc_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -328,7 +352,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_upin
+        THEN (
+        SELECT min(t2.rendr_provdr_upin)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -349,7 +379,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_comm_nbr
+        THEN (
+        SELECT min(t2.rendr_provdr_comm_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -370,7 +406,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_last_nm
+        THEN (
+        SELECT min(t2.rendr_provdr_last_nm)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -391,7 +433,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_first_nm
+        THEN (
+        SELECT min(t2.rendr_provdr_first_nm)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -417,7 +465,13 @@ SELECT DISTINCT
     AND transactional.rendr_provdr_npi_svc IS NOT NULL
     AND transactional.rendr_provdr_npi_svc <> ''
     THEN transactional.rendr_provdr_txnmy_svc
-    ELSE transactional.rendr_provdr_txnmy
+    ELSE (
+    SELECT min(t2.rendr_provdr_txnmy)
+    FROM transactional_raw t2
+    WHERE transactional.src_claim_id = t2.src_claim_id
+        AND t2.rendr_provdr_npi IS NOT NULL
+        AND t2.rendr_provdr_npi <> ''
+        )
     END,                                                   -- prov_rendering_std_taxonomy
     NULL,                                                  -- prov_rendering_vendor_specialty
     NULL,                                                  -- prov_billing_vendor_id
@@ -567,7 +621,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_stlc_nbr
+        THEN (
+        SELECT min(t2.refrn_provdr_stlc_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -588,7 +648,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_upin
+        THEN (
+        SELECT min(t2.refrn_provdr_upin)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -609,7 +675,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_comm_nbr
+        THEN (
+        SELECT min(t2.refrn_provdr_comm_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -630,7 +702,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_last_nm
+        THEN (
+        SELECT min(t2.refrn_provdr_last_nm)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -651,7 +729,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_first_nm
+        THEN (
+        SELECT min(t2.refrn_provdr_first_nm)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -683,7 +767,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_stlc_nbr
+        THEN (
+        SELECT min(t2.fclty_stlc_nbr)
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -705,7 +795,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_comm_nbr
+        THEN (
+        SELECT min(t2.fclty_comm_nbr)
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -726,7 +822,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_nm
+        THEN (
+        SELECT min(t2.fclty_nm)
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -748,7 +850,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN REGEXP_REPLACE(transactional.fclty_addr_1, '"', '')
+        THEN (
+        SELECT min(REGEXP_REPLACE(t2.fclty_addr_1, '"', ''))
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -769,7 +877,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN REGEXP_REPLACE(transactional.fclty_addr_2, '"', '')
+        THEN (
+        SELECT min(REGEXP_REPLACE(t2.fclty_addr_2, '"', ''))
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -790,7 +904,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN REGEXP_REPLACE(transactional.fclty_addr_city, '"', '')
+        THEN (
+        SELECT min(REGEXP_REPLACE(t2.fclty_addr_city, '"', ''))
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -811,7 +931,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_state
+        THEN (
+        SELECT min(t2.fclty_addr_state)
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -832,7 +958,13 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         AND transactional.fclty_npi_svc IS NOT NULL
         AND transactional.fclty_npi_svc <> ''
-        THEN transactional.fclty_addr_zip
+        THEN (
+        SELECT min(t2.fclty_addr_zip)
+        FROM transactional_raw t2
+        WHERE t2.src_claim_id = transactional.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         generate_place_of_service_std_id(
@@ -994,7 +1126,13 @@ SELECT DISTINCT
         WHEN transactional.refrn_provdr_npi_svc IS NOT NULL
         AND transactional.refrn_provdr_npi_svc <> ''
         THEN transactional.refrn_provdr_npi_svc
-        ELSE transactional.refrn_provdr_npi
+        ELSE (
+        SELECT min(t2.refrn_provdr_npi)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         END,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
@@ -1005,7 +1143,13 @@ SELECT DISTINCT
         WHEN transactional.fclty_npi_svc IS NOT NULL
         AND transactional.fclty_npi_svc <> ''
         THEN transactional.fclty_npi_svc
-        ELSE transactional.fclty_npi
+        ELSE (
+        SELECT min(t2.fclty_npi)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         END,
         obscure_inst_type_of_bill(
             generate_inst_type_of_bill_std_id(
@@ -1026,7 +1170,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_stlc_nbr
+        THEN (
+        SELECT min(t2.rendr_provdr_stlc_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1037,7 +1187,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_upin
+        THEN (
+        SELECT min(t2.rendr_provdr_upin)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1048,7 +1204,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_comm_nbr
+        THEN (
+        SELECT min(t2.rendr_provdr_comm_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1059,7 +1221,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_last_nm
+        THEN (
+        SELECT min(t2.rendr_provdr_last_nm)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1070,7 +1238,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_first_nm
+        THEN (
+        SELECT min(t2.rendr_provdr_first_nm)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.rendr_provdr_npi IS NOT NULL
+            AND t2.rendr_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1163,7 +1337,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_stlc_nbr
+        THEN (
+        SELECT min(t2.refrn_provdr_stlc_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1174,7 +1354,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_upin
+        THEN (
+        SELECT min(t2.refrn_provdr_upin)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1185,7 +1371,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_comm_nbr
+        THEN (
+        SELECT min(t2.refrn_provdr_comm_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1196,7 +1388,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_last_nm
+        THEN (
+        SELECT min(t2.refrn_provdr_last_nm)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1207,7 +1405,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_first_nm
+        THEN (
+        SELECT min(t2.refrn_provdr_first_nm)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.refrn_provdr_npi IS NOT NULL
+            AND t2.refrn_provdr_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1229,7 +1433,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_stlc_nbr
+        THEN (
+        SELECT min(t2.fclty_stlc_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1241,7 +1451,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_comm_nbr
+        THEN (
+        SELECT min(t2.fclty_comm_nbr)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1252,7 +1468,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_nm
+        THEN (
+        SELECT min(t2.fclty_nm)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1264,7 +1486,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN REGEXP_REPLACE(transactional.fclty_addr_1, '"', '')
+        THEN (
+        SELECT min(REGEXP_REPLACE(t2.fclty_addr_1, '"', ''))
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1275,7 +1503,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN REGEXP_REPLACE(transactional.fclty_addr_2, '"', '')
+        THEN (
+        SELECT min(REGEXP_REPLACE(t2.fclty_addr_2, '"', ''))
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1286,7 +1520,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN REGEXP_REPLACE(transactional.fclty_addr_city, '"', '')
+        THEN (
+        SELECT min(REGEXP_REPLACE(t2.fclty_addr_city, '"', ''))
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1297,7 +1537,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_state
+        THEN (
+        SELECT min(t2.fclty_addr_state)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
@@ -1308,7 +1554,13 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_zip
+        THEN (
+        SELECT min(t2.fclty_addr_zip)
+        FROM transactional_raw t2
+        WHERE transactional.src_claim_id = t2.src_claim_id
+            AND t2.fclty_npi IS NOT NULL
+            AND t2.fclty_npi <> ''
+            )
         ELSE NULL
         END,
         obscure_inst_type_of_bill(
