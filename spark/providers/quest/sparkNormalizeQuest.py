@@ -5,9 +5,8 @@ from datetime import timedelta, datetime, date
 from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.file_utils as file_utils
+import spark.helpers.payload_loader as payload_loader
 import spark.helpers.constants as constants
-import spark.helpers.create_date_validation_table \
-    as date_validator
 
 # init
 spark, sqlContext = init("Quest")
@@ -43,15 +42,11 @@ matching_path = 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
 
-
 # create helper tables
 runner.run_spark_script(file_utils.get_rel_path(
     script_path,
     'create_helper_tables.sql'
 ))
-
-# create date table
-date_validator.generate(runner, date(2013, 9, 1), date_obj.date())
 
 runner.run_spark_script(file_utils.get_rel_path(
     script_path,
@@ -60,11 +55,8 @@ runner.run_spark_script(file_utils.get_rel_path(
     ['table_name', 'lab_common_model', False],
     ['properties', '', False]
 ])
-runner.run_spark_script(file_utils.get_rel_path(
-    script_path, 'load_matching_payload.sql'
-), [
-    ['matching_path', matching_path]
-])
+
+payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
 if period == 'current':
     runner.run_spark_script(
@@ -97,13 +89,6 @@ runner.run_spark_script(file_utils.get_rel_path(
     ), False]
 ])
 
-# Privacy filtering
-runner.run_spark_script(
-    file_utils.get_rel_path(
-        script_path, '../../common/lab_post_normalization_cleanup.sql'
-    )
-)
-
 runner.run_spark_script(file_utils.get_rel_path(
     script_path,
     '../../common/lab_common_model.sql'
@@ -122,7 +107,7 @@ runner.run_spark_script(
     ), [
         [
             'select_statement',
-            "SELECT *, 'NULL' as magic_date "
+            "SELECT *, 'quest' as provider, 'NULL' as best_date "
             + "FROM lab_common_model "
             + "WHERE date_service is NULL",
             False
@@ -136,7 +121,8 @@ runner.run_spark_script(
     ), [
         [
             'select_statement',
-            "SELECT *, regexp_replace(cast(date_service as string), '-..$', '') as magic_date "
+            "SELECT *, 'quest' as provider, "
+            + "regexp_replace(cast(date_service as string), '-..$', '') as best_date "
             + "FROM lab_common_model "
             + "WHERE date_service IS NOT NULL",
             False

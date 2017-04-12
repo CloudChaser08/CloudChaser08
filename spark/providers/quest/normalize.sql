@@ -1,6 +1,6 @@
 INSERT INTO lab_common_model
 SELECT
-    NULL,                                   -- record_id
+    monotonically_increasing_id(),          -- record_id
     CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
     COALESCE(mp.parentId,mp.hvid),          -- hvid
     {today},                                -- created
