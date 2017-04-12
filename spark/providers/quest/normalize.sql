@@ -76,6 +76,8 @@ SELECT
 FROM transactional_raw q
     LEFT JOIN matching_payload mp ON {join}
     CROSS JOIN diagnosis_exploder n
+
+-- implicit here is that q.diagnosis_code itself is not null or blank
 WHERE SPLIT(TRIM(q.diagnosis_code),'\\^')[n.n] IS NOT NULL
     AND SPLIT(TRIM(q.diagnosis_code),'\\^')[n.n] != ''
     ;
