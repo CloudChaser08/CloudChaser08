@@ -88,6 +88,9 @@ def run(part):
         ['input_path', input_path + part + '/']
     ])
 
+    # create claim min npi map
+    runner.run_spark_script(get_rel_path('create_min_claim_npi_table.sql'))
+
     # create explosion maps
     runner.run_spark_script(get_rel_path('create_exploded_diagnosis_map.sql'))
     runner.run_spark_script(get_rel_path('create_exploded_procedure_map.sql'))
