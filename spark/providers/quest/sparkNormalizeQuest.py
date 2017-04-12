@@ -1,7 +1,9 @@
 #! /usr/bin/python
 import argparse
 import time
-from datetime import timedelta, datetime, date
+import logging
+from datetime import timedelta, datetime
+from pyspark.sql.functions import monotonically_increasing_id
 from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.file_utils as file_utils
@@ -75,6 +77,9 @@ elif period == 'hist':
             ['input_path', input_path]
         ]
     )
+else:
+    logging.error('Invalid period')
+    exit(1)
 
 runner.run_spark_script(file_utils.get_rel_path(
     script_path, 'normalize.sql'
@@ -88,6 +93,13 @@ runner.run_spark_script(file_utils.get_rel_path(
         if period == 'current' else 'q.accn_id = mp.claimid'
     ), False]
 ])
+
+# add in primary key
+sqlContext.sql('select * from lab_common_model').withColumn(
+    'record_id', monotonically_increasing_id()
+).createTempView(
+    'lab_common_model'
+)
 
 runner.run_spark_script(file_utils.get_rel_path(
     script_path,
