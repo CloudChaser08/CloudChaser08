@@ -168,16 +168,25 @@ def cap_year_of_birth(age, date_service, year_of_birth):
             isinstance(date_service, datetime.date)
             and year_of_birth is not None
             and year_of_birth != ''
-            and (date_service.year - int(year_of_birth)) >= 85
-        ) or (
+        ):
+            if (date_service.year - int(year_of_birth)) >= 85:
+                return 1927
+            return year_of_birth
+
+        elif (
             age is not None
             and age != ''
-            and int(age) >= 85
-        ) or (
+        ):
+            if int(age) >= 85:
+                return 1927
+            return year_of_birth
+
+        elif (
             year_of_birth is not None
             and datetime.datetime.today().year - int(year_of_birth) >= 85
         ):
             return 1927
+
         else:
             return year_of_birth
 
