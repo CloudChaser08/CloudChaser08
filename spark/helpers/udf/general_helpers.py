@@ -50,3 +50,24 @@ def extract_currency(text):
 
 def create_range(max):
     return ','.join(map(lambda i: str(i), range(max)))
+
+# Takes 2 sets as colon-separated strings, and the returns the difference between
+# them as a colon-separated string
+def string_set_diff(s1,s2):
+    if s1 is None:
+        return None
+    if s2 is None:
+        s2 = ''
+
+    s1s = map(lambda x : x.split('_')[0], filter(lambda x: x is not None and len(x) > 0, s1.split(':')))
+    s2s = map(lambda x : x.split('_')[0], filter(lambda x: x is not None and len(x) > 0, s2.split(':')))
+
+    return ':'.join(set(s1s).difference(set(s2s)))
+
+# Takes a list as a colon-sparated string, and returns a unique list of values as
+# a colon-separated string
+def uniquify(with_dupes):
+    if with_dupes is None:
+        return None;
+    return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
+
