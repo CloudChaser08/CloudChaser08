@@ -185,14 +185,14 @@ SELECT DISTINCT
         AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
             transactional.diag_cd_3, transactional.diag_cd_4)
         AND transactional.rendr_provdr_npi_svc IS NOT NULL
-        AND transactional.rendr_provdr_npi_svc <> ''
+        AND TRIM(transactional.rendr_provdr_npi_svc) <> ''
         THEN transactional.rendr_provdr_npi_svc
         ELSE (
         SELECT min(t2.rendr_provdr_npi)
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         END,
         {place_of_service_std_id}
@@ -207,14 +207,14 @@ SELECT DISTINCT
         AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
             transactional.diag_cd_3, transactional.diag_cd_4)
         AND transactional.refrn_provdr_npi_svc IS NOT NULL
-        AND transactional.refrn_provdr_npi_svc <> ''
+        AND TRIM(transactional.refrn_provdr_npi_svc) <> ''
         THEN transactional.refrn_provdr_npi_svc
         ELSE (
         SELECT min(t2.refrn_provdr_npi)
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         END,
         {place_of_service_std_id}
@@ -225,14 +225,14 @@ SELECT DISTINCT
         AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
             transactional.diag_cd_3, transactional.diag_cd_4)
         AND transactional.fclty_npi_svc IS NOT NULL
-        AND transactional.fclty_npi_svc <> ''
+        AND TRIM(transactional.fclty_npi_svc) <> ''
         THEN transactional.fclty_npi_svc
         ELSE (
         SELECT min(t2.fclty_npi)
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         END,
         {place_of_service_std_id}
@@ -260,7 +260,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -278,7 +278,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -296,7 +296,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -314,7 +314,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -332,7 +332,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -348,14 +348,14 @@ SELECT DISTINCT
     AND diags.diag_code IN (transactional.diag_cd_1, transactional.diag_cd_2,
         transactional.diag_cd_3, transactional.diag_cd_4)
     AND transactional.rendr_provdr_npi_svc IS NOT NULL
-    AND transactional.rendr_provdr_npi_svc <> ''
+    AND TRIM(transactional.rendr_provdr_npi_svc) <> ''
     THEN transactional.rendr_provdr_txnmy_svc
     ELSE (
     SELECT min(t2.rendr_provdr_txnmy)
     FROM transactional_raw t2
     WHERE transactional.src_claim_id = t2.src_claim_id
         AND t2.rendr_provdr_npi IS NOT NULL
-        AND t2.rendr_provdr_npi <> ''
+        AND TRIM(t2.rendr_provdr_npi) <> ''
         )
     END,                                                   -- prov_rendering_std_taxonomy
     NULL,                                                  -- prov_rendering_vendor_specialty
@@ -421,7 +421,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -439,7 +439,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -457,7 +457,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -475,7 +475,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -493,7 +493,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -522,7 +522,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -541,7 +541,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -559,7 +559,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -578,7 +578,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -596,7 +596,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -614,7 +614,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -632,7 +632,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -644,13 +644,13 @@ SELECT DISTINCT
         OR diags.diag_code NOT IN (transactional.diag_cd_1, transactional.diag_cd_2,
             transactional.diag_cd_3, transactional.diag_cd_4)
         AND transactional.fclty_npi_svc IS NOT NULL
-        AND transactional.fclty_npi_svc <> ''
+        AND TRIM(transactional.fclty_npi_svc) <> ''
         THEN (
         SELECT min(t2.fclty_addr_zip)
         FROM transactional_raw t2
         WHERE t2.src_claim_id = transactional.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -764,14 +764,14 @@ SELECT DISTINCT
     filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NOT NULL
-        AND transactional.rendr_provdr_npi_svc <> ''
+        AND TRIM(transactional.rendr_provdr_npi_svc) <> ''
         THEN transactional.rendr_provdr_npi_svc
         ELSE (
             SELECT min(t2.rendr_provdr_npi)
             FROM transactional_raw t2
             WHERE transactional.src_claim_id = t2.src_claim_id
                 AND t2.rendr_provdr_npi IS NOT NULL
-                AND t2.rendr_provdr_npi <> ''
+                AND TRIM(t2.rendr_provdr_npi) <> ''
                 )
         END,
         generate_inst_type_of_bill_std_id(
@@ -786,14 +786,14 @@ SELECT DISTINCT
     filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NOT NULL
-        AND transactional.refrn_provdr_npi_svc <> ''
+        AND TRIM(transactional.refrn_provdr_npi_svc) <> ''
         THEN transactional.refrn_provdr_npi_svc
         ELSE (
         SELECT min(t2.refrn_provdr_npi)
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         END,
         generate_inst_type_of_bill_std_id(
@@ -802,14 +802,14 @@ SELECT DISTINCT
     filter_due_to_inst_type_of_bill(
         CASE
         WHEN transactional.fclty_npi_svc IS NOT NULL
-        AND transactional.fclty_npi_svc <> ''
+        AND TRIM(transactional.fclty_npi_svc) <> ''
         THEN transactional.fclty_npi_svc
         ELSE (
         SELECT min(t2.fclty_npi)
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         END,
         generate_inst_type_of_bill_std_id(
@@ -835,7 +835,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -851,7 +851,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -867,7 +867,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -883,7 +883,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -899,7 +899,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.rendr_provdr_npi IS NOT NULL
-            AND t2.rendr_provdr_npi <> ''
+            AND TRIM(t2.rendr_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -913,7 +913,7 @@ SELECT DISTINCT
     NULL,                                                  -- prov_rendering_zip
     CASE
     WHEN transactional.rendr_provdr_txnmy_svc IS NOT NULL
-    AND transactional.rendr_provdr_txnmy_svc <> ''
+    AND TRIM(transactional.rendr_provdr_txnmy_svc) <> ''
     THEN transactional.rendr_provdr_txnmy_svc
     ELSE transactional.rendr_provdr_txnmy
     END,                                                   -- prov_rendering_std_taxonomy
@@ -987,7 +987,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1003,7 +1003,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1019,7 +1019,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1035,7 +1035,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1051,7 +1051,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.refrn_provdr_npi IS NOT NULL
-            AND t2.refrn_provdr_npi <> ''
+            AND TRIM(t2.refrn_provdr_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1078,7 +1078,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1095,7 +1095,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1111,7 +1111,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1128,7 +1128,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1144,7 +1144,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1160,7 +1160,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1176,7 +1176,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
@@ -1192,7 +1192,7 @@ SELECT DISTINCT
         FROM transactional_raw t2
         WHERE transactional.src_claim_id = t2.src_claim_id
             AND t2.fclty_npi IS NOT NULL
-            AND t2.fclty_npi <> ''
+            AND TRIM(t2.fclty_npi) <> ''
             )
         ELSE NULL
         END,
