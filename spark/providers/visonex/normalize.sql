@@ -1,6 +1,6 @@
 INSERT INTO emr_common_model
 SELECT DISTINCT
-        monotonically_increasing_id(),  -- record_id
+        NULL,                           -- record_id
         mp.hvid,                        -- hvid
         {today},                        -- created
         '1',                            -- model_version
@@ -10,9 +10,9 @@ SELECT DISTINCT
         NULL,                           -- source_version
         big_union.claim_type,           -- claim_type
         CONCAT(
-            base.clinicorganizationidnumber,
-            '-', base.analyticrowidnumber,
-            '-', base.runidnumber
+             base.patientidnumber,
+             '-', base.analyticdos,
+             '-', base.clinicorganizationidnumber
             ),                          -- claim_id
         NULL,                           -- claim_qual
         NULL,                           -- claim_date
@@ -146,9 +146,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-' -- no runidnumber in this table
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'HOSPITALIZATION' AS claim_type,
         icd10 AS diagnosis_code,
@@ -161,9 +161,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-'
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'HOSPITALIZATION' AS claim_type,
         ICD9 AS diagnosis_code,
@@ -176,9 +176,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'IMMUNIZATION' AS claim_type,
         icd10 AS diagnosis_code,
@@ -191,9 +191,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-'
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTACCESS_EXAMPROC' AS claim_type,
         icd10 AS diagnosis_code,
@@ -206,9 +206,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-'
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTACCESS_EXAMPROC' AS claim_type,
         DIAGNOSTICCODE AS diagnosis_code,
@@ -221,9 +221,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'LABPANELSDRAWN' AS claim_type,
         JUSTIFICATION AS diagnosis_code,
@@ -236,9 +236,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'LABRESULT' as claim_type,
         diagnosiscode as diagnosis_code,
@@ -251,9 +251,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'LABRESULT' as claim_type,
         icd10 as diagnosis_code,
@@ -266,9 +266,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-'
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTDIAGCODES' as claim_type,
         diagnosiscode as diagnosis_code,
@@ -281,9 +281,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-'
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTDIAGCODES' as claim_type,
         icd10 as diagnosis_code,
@@ -296,9 +296,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         icd10 as diagnosis_code,
@@ -311,9 +311,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-'
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTMEDPRESCRIPTION' as claim_type,
         runjustification as diagnosis_code,
@@ -326,9 +326,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-'
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PROBLEMLIST' as claim_type,
         icd9 as diagnosis_code,
@@ -341,9 +341,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-'
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PROBLEMLIST' as claim_type,
         icd10 as diagnosis_code,
@@ -356,8 +356,9 @@ FROM dialysistreatment base
     SELECT
         b.patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            b.clinicorganizationidnumber, '-', a.analyticrowidnumber,
-            '-', b.runidnumber
+            b.patientidnumber,
+             '-', b.analyticdos,
+             '-', b.clinicorganizationidnumber
             ) as claim_id,
         'LABIDLIST' as claim_type,
         a.icd9diagnosiscode as diagnosis_code,
@@ -376,9 +377,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-'
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTACCESS_EXAMPROC' as claim_type,
         NULL AS diagnosis_code,
@@ -391,9 +392,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'LABRESULT' as claim_type,
         NULL AS diagnosis_code,
@@ -406,9 +407,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'LABPANELSDRAWN' as claim_type,
         NULL AS diagnosis_code,
@@ -421,9 +422,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         NULL AS diagnosis_code,
@@ -436,9 +437,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         NULL AS diagnosis_code,
@@ -451,9 +452,9 @@ FROM dialysistreatment base
     SELECT
         b.patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            b.clinicorganizationidnumber,
-            '-', a.analyticrowidnumber,
-            '-', b.runidnumber
+            b.patientidnumber,
+             '-', b.analyticdos,
+             '-', b.clinicorganizationidnumber
             ) as claim_id,
         'LABIDLIST' as claim_type,
         NULL AS diagnosis_code,
@@ -472,9 +473,9 @@ FROM dialysistreatment base
     SELECT
         patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            clinicorganizationidnumber,
-            '-', analyticrowidnumber,
-            '-', runidnumber
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTMEDADMINISTERED' as claim_type,
         NULL AS diagnosis_code,
@@ -483,9 +484,12 @@ FROM dialysistreatment base
         procedurecode as ndc_code,
         startdate as date_service
     FROM patientmedadministered
-        ) big_union ON CONCAT(base.clinicorganizationidnumber, '-', base.analyticrowidnumber, '-', base.runidnumber) = big_union.claim_id
+        ) big_union ON CONCAT(
+        base.patientidnumber,
+        '-', base.analyticdos,
+        '-', base.clinicorganizationidnumber
+        ) = big_union.claim_id
     LEFT JOIN matching_payload mp ON big_union.visonex_patient_id = mp.claimid
-    OR base.patientdataanalyticrowidnumber = mp.claimid
 WHERE LENGTH(big_union.ndc_code) = 11
     OR (
         big_union.procedure_code IS NOT NULL

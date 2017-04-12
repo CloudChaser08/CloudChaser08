@@ -3,6 +3,7 @@ import os
 import argparse
 import time
 from datetime import datetime
+from pyspark.sql.functions import monotonically_increasing_id
 from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.payload_loader as payload_loader
@@ -97,6 +98,10 @@ runner.run_spark_script(
     ]
 )
 
+# correct record id
+sqlContext.sql('select * from emr_common_model').withColumn(
+    'record_id', monotonically_increasing_id()
+).createTempView('emr_common_model')
 
 runner.run_spark_script(get_rel_path(
     '../../common/emr_common_model.sql'
