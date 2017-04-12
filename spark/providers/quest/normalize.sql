@@ -14,13 +14,19 @@ SELECT
     cap_age(mp.age),                        -- patient_age
     cap_year_of_birth(
         mp.age,
-        CAST(q.date_of_service AS DATE),
+        CAST(extract_date(
+            q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+            ) AS DATE),
         mp.yearOfBirth
         ),                                  -- patient_year_of_birth
     mp.threeDigitZip,                       -- patient_zip3
     UPPER(mp.state),                        -- patient_state
-    CAST(q.date_of_service AS DATE),        -- date_service
-    CAST(q.date_collected AS DATE),         -- date_specimen
+    extract_date(
+        q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        ),                                  -- date_service
+    extract_date(
+        q.date_collected, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        ),                                  -- date_specimen
     NULL,                                   -- date_report
     NULL,                                   -- time_report
     q.loinc_code,                           -- loinc_code
@@ -49,7 +55,9 @@ SELECT
         CASE q.icd_codeset_ind
         WHEN '9' THEN '01' WHEN '0' THEN '02'
         END,
-        CAST(q.date_of_service AS DATE)
+        CAST(extract_date(
+            q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+            ) as DATE)
         ),                                  -- diagnosis_code
     CASE q.icd_codeset_ind
     WHEN '9' THEN '01' WHEN '0' THEN '02'
@@ -98,13 +106,19 @@ SELECT
     cap_age(mp.age),                        -- patient_age
     cap_year_of_birth(
         mp.age,
-        CAST(q.date_of_service AS DATE),
+        CAST(extract_date(
+                q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+                ) AS DATE),
         mp.yearOfBirth
         ),                                  -- patient_year_of_birth
     mp.threeDigitZip,                       -- patient_zip3
     UPPER(mp.state),                        -- patient_state
-    CAST(q.date_of_service AS DATE),        -- date_service
-    CAST(q.date_collected AS DATE),         -- date_specimen
+    extract_date(
+        q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        ),                                  -- date_service
+    extract_date(
+        q.date_collected, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        ),                                  -- date_specimen
     NULL,                                   -- date_report
     NULL,                                   -- time_report
     q.loinc_code,                           -- loinc_code

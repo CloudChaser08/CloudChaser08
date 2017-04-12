@@ -44,6 +44,9 @@ matching_path = 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
 
+min_date = '2013-01-01'
+max_date = args.date
+
 # create helper tables
 runner.run_spark_script(file_utils.get_rel_path(
     script_path,
@@ -91,7 +94,9 @@ runner.run_spark_script(file_utils.get_rel_path(
     ['join', (
         'q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key'
         if period == 'current' else 'q.accn_id = mp.claimid'
-    ), False]
+    ), False],
+    ['min_date', min_date],
+    ['max_date', max_date]
 ])
 
 # add in primary key
