@@ -145,6 +145,22 @@ def run(part):
                 max_date=args.date
             ), False
         ],
+        [
+            'place_of_service_std_id',
+            """
+            generate_place_of_service_std_id(
+                transactional.claim_type_cd,
+                transactional.pos_cd,
+                transactional.fclty_type_pos_cd,
+                transactional.diag_cd_1,
+                transactional.diag_cd_2,
+                transactional.diag_cd_3,
+                transactional.diag_cd_4,
+                diags.diag_code
+            )
+            """,
+            False
+        ],
         ['setid', setid],
         ['today', TODAY],
         ['feedname', '22'],

@@ -92,17 +92,7 @@ SELECT DISTINCT
     END,                                                   -- inst_drg_std_id
     NULL,                                                  -- inst_drg_vendor_id
     NULL,                                                  -- inst_drg_vendor_desc
-    obscure_place_of_service(
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )),                                            -- place_of_service_std_id
+    obscure_place_of_service({place_of_service_std_id}),   -- place_of_service_std_id
     NULL,                                                  -- place_of_service_vendor_id
     NULL,                                                  -- place_of_service_vendor_desc
     CASE
@@ -205,29 +195,11 @@ SELECT DISTINCT
             AND t2.rendr_provdr_npi <> ''
             )
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_rendering_npi
     filter_due_to_place_of_service(
         transactional.billg_provdr_npi,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_npi
     filter_due_to_place_of_service(
         CASE
@@ -245,16 +217,7 @@ SELECT DISTINCT
             AND t2.refrn_provdr_npi <> ''
             )
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_referring_npi
     filter_due_to_place_of_service(
         CASE
@@ -272,16 +235,7 @@ SELECT DISTINCT
             AND t2.fclty_npi <> ''
             )
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_facility_npi
     NULL,                                                  -- payer_vendor_id
     REGEXP_REPLACE(transactional.dest_payer_nm, '"', ''),  -- payer_name
@@ -310,16 +264,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_rendering_state_license
     filter_due_to_place_of_service(
         CASE
@@ -337,16 +282,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_rendering_upin
     filter_due_to_place_of_service(
         CASE
@@ -364,16 +300,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_rendering_commercial_id
     filter_due_to_place_of_service(
         CASE
@@ -391,16 +318,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_rendering_name_1
     filter_due_to_place_of_service(
         CASE
@@ -418,16 +336,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_rendering_name_2
     NULL,                                                  -- prov_rendering_address_1
     NULL,                                                  -- prov_rendering_address_2
@@ -453,136 +362,46 @@ SELECT DISTINCT
     NULL,                                                  -- prov_billing_vendor_id
     filter_due_to_place_of_service(
         transactional.billg_provdr_tax_id,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_tax_id
     NULL,                                                  -- prov_billing_dea_id
     NULL,                                                  -- prov_billing_ssn
     filter_due_to_place_of_service(
         transactional.billg_provdr_stlc_nbr,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_state_license
     filter_due_to_place_of_service(
         transactional.billg_provdr_upin,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_upin
     NULL,                                                  -- prov_billing_commercial_id
     filter_due_to_place_of_service(
         transactional.billg_provdr_last_or_orgal_nm,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_name_1
     filter_due_to_place_of_service(
         transactional.billg_provdr_first_nm,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_name_2
     filter_due_to_place_of_service(
         transactional.billg_provdr_addr_1,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_address_1
     filter_due_to_place_of_service(
         transactional.billg_provdr_addr_2,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_address_2
     filter_due_to_place_of_service(
         transactional.billg_provdr_addr_city,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_city
     filter_due_to_place_of_service(
         transactional.billg_provdr_addr_state,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_state
     filter_due_to_place_of_service(
         transactional.billg_provdr_addr_zip,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_billing_zip
     transactional.billg_provdr_txnmy,                      -- prov_billing_std_taxonomy
     NULL,                                                  -- prov_billing_vendor_specialty
@@ -606,16 +425,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_referring_state_license
     filter_due_to_place_of_service(
         CASE
@@ -633,16 +443,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_referring_upin
     filter_due_to_place_of_service(
         CASE
@@ -660,16 +461,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_referring_commercial_id
     filter_due_to_place_of_service(
         CASE
@@ -687,16 +479,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_referring_name_1
     filter_due_to_place_of_service(
         CASE
@@ -714,16 +497,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_referring_name_2
     NULL,                                                  -- prov_referring_address_1
     NULL,                                                  -- prov_referring_address_2
@@ -752,16 +526,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_facility_state_license
     NULL,                                                  -- prov_facility_upin
     filter_due_to_place_of_service(
@@ -780,16 +545,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_facility_commercial_id
     filter_due_to_place_of_service(
         CASE
@@ -807,16 +563,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_facility_name_1
     NULL,                                                  -- prov_facility_name_2
     filter_due_to_place_of_service(
@@ -835,16 +582,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_facility_address_1
     filter_due_to_place_of_service(
         CASE
@@ -862,16 +600,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_facility_address_2
     filter_due_to_place_of_service(
         CASE
@@ -889,16 +618,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_facility_city
     filter_due_to_place_of_service(
         CASE
@@ -916,16 +636,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_facility_state
     filter_due_to_place_of_service(
         CASE
@@ -943,16 +654,7 @@ SELECT DISTINCT
             )
         ELSE NULL
         END,
-        generate_place_of_service_std_id(
-            transactional.claim_type_cd,
-            transactional.pos_cd,
-            transactional.fclty_type_pos_cd,
-            transactional.diag_cd_1,
-            transactional.diag_cd_2,
-            transactional.diag_cd_3,
-            transactional.diag_cd_4,
-            diags.diag_code
-            )
+        {place_of_service_std_id}
         ),                                                 -- prov_facility_zip
     NULL,                                                  -- prov_facility_std_taxonomy
     NULL,                                                  -- prov_facility_vendor_specialty
