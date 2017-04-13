@@ -37,5 +37,5 @@ def unload(spark, runner, data_type, date_column, file_date, S3_output_location)
 
     spark.sparkContext.parallelize(part_files).foreach(mk_move_file(file_date))
 
-    subprocess.check_call(['s3-dist-cp', '--src', table_loc, '--dest', S3_output_location])
+    subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption', '--src', table_loc, '--dest', S3_output_location])
     subprocess.check_call(['hadoop', 'fs', '-rm', '-r', table_loc])
