@@ -1,11 +1,9 @@
 import os
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators import BashOperator, PythonOperator
-from datetime import datetime, timedelta
-from airflow.hooks.S3_hook import S3Hook
+from airflow.operators import PythonOperator
 from subprocess import check_call
-import logging
+
 
 def do_queue_up_for_matching(ds, **kwargs):
     source_files = kwargs['source_files_func'](ds, kwargs)
@@ -21,7 +19,11 @@ def do_queue_up_for_matching(ds, **kwargs):
             f, '0', 'prod-matching-engine', 'priority3'
         ], env=environ)
 
-def queue_up_for_matching(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
+
+def queue_up_for_matching(
+        parent_dag_name, child_dag_name, start_date,
+        schedule_interval, dag_config
+):
     default_args = {
         'owner': 'airflow',
         'depends_on_past': False,
