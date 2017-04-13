@@ -149,7 +149,6 @@ runner.run_spark_script(
     ]
 )
 
-
 file_prefix.prefix_part_files(spark, args.output_path, args.date + '_')
 
 spark.stop()

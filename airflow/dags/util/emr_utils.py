@@ -111,8 +111,7 @@ def _build_dewey(cluster_id):
 
 
 def normalize(cluster_name, script_name, args,
-              s3_text_warehouse, s3_parquet_warehouse,
-              prefix, model):
+              s3_text_warehouse, s3_parquet_warehouse, model):
     """Run normalization and parquet processes in EMR"""
     text_staging_dir = 'hdfs:///text-out/'
 
@@ -132,24 +131,6 @@ def normalize(cluster_name, script_name, args,
         '--steps', normalize_step
     ])
     _wait_for_steps(cluster_id)
-
-    # prefix part files with current timestamp to avoid future collisions
-    prefix_step = (
-        'Type=CUSTOM_JAR,Name="Prefix Part Files",Jar="command-runner.jar",'
-        'ActionOnFailure=CONTINUE,Args=[/home/hadoop/prefix_part_files.sh,{},{}]'
-    ).format(text_staging_dir, prefix)
-    check_call([
-        'scp', '-i', '{}/.ssh/emr_deployer'.format(
-            os.getenv('HOME')
-        ), '-o', 'StrictHostKeyChecking no',
-        '{}/dags/resources/prefix_part_files.sh'.format(
-            os.getenv('AIRFLOW_HOME')
-        ), 'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':'
-    ])
-    check_call([
-        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
-        '--steps', prefix_step
-    ])
 
     # get directories that will need to be transformed to parquet
     # by listing the directories created in hdfs by normalization
