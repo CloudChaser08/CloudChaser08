@@ -11,8 +11,6 @@ hvid,
 {vendor},
 source_version,
 patient_gender,
--- The number of people over 85 years old is small enough that along with other public fields,
--- age poses re-identification risk, top cap it to 90
 cap_age(patient_age) as patient_age,
 cap_year_of_birth(patient_age, date_service, patient_year_of_birth) as patient_year_of_birth,
 patient_zip3,
@@ -29,21 +27,13 @@ inst_admit_type_vendor_desc,
 inst_admit_source_std_id,
 inst_admit_source_vendor_id,
 inst_admit_source_vendor_desc,
--- These statuses are specific enough that along with other public fields they pose a
--- re-identification risk, set them to 0 (unkown value)
-CASE WHEN inst_discharge_status_std_id IN ('69', '87') THEN 0 ELSE inst_discharge_status_std_id END as inst_discharge_status_std_id,
+scrub_discharge_status(inst_discharge_status_std_id),
 inst_discharge_status_vendor_id,
 inst_discharge_status_vendor_desc,
 inst_type_of_bill_std_id,
 inst_type_of_bill_vendor_id,
 inst_type_of_bill_vendor_desc,
--- These codes are specific enough that along with other public fields they pose a
--- re-identification risk, nullify them
--- 283 Acute myocardial infarction, expired w/ MCC
--- 284 Acute myocardial infarction, expired w/ CC
--- 285 Acute myocardial infarction, expired w/o CC/MCC 
--- 789 Neonates, died or transferred to another acute care facility
-CASE WHEN inst_drg_std_id IN ('283', '284', '285', '789') THEN NULL ELSE inst_drg_std_id END as inst_drg_std_id,
+nullify_drg_blacklist(inst_drg_std_id),
 inst_drg_vendor_id,
 inst_drg_vendor_desc,
 obscure_place_of_service(place_of_service_std_id) as place_of_service_std_id,
@@ -54,7 +44,7 @@ clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service) as di
 diagnosis_code_qual,
 diagnosis_priority,
 admit_diagnosis_ind,
-procedure_code,
+clean_up_procedure_code(procedure_code),
 procedure_code_qual,
 principal_proc_ind,
 procedure_units,
