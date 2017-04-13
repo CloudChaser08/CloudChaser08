@@ -5,6 +5,7 @@ import time
 from datetime import timedelta, datetime, date
 from spark.runner import Runner
 from spark.spark import init
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import subprocess
 import spark.helpers.create_date_validation_table \
     as date_validator
@@ -83,24 +84,5 @@ runner.run_spark_script(get_rel_path('../../../common/medicalclaims_post_normali
     ['vendor', '11']
 ])
 
-runner.run_spark_script(get_rel_path('../../../common/medicalclaims_unload_table.sql'), [
-    ['table_location', '/text/medicalclaims/emdeon/']
-])
-runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'), [
-    ['select_statement', "SELECT *, 'NULL' as part_best_date FROM medicalclaims_common_model WHERE date_service is NULL", False]
-])
-runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'), [
-    ['select_statement', "SELECT *, regexp_replace(date_service, '-..$', '') as part_best_date FROM medicalclaims_common_model WHERE date_service IS NOT NULL", False]
-])
-
-part_files = subprocess.check_output(['hadoop', 'fs', '-ls', '-R', '/text/medicalclaims/emdeon/']).strip().split("\n")
-def move_file(part_file):
-    if part_file[-3:] == ".gz":
-        old_pf = part_file.split(' ')[-1].strip()
-        new_pf = '/'.join(old_pf.split('/')[:-1] + [args.date + '_' + old_pf.split('/')[-1]])
-        subprocess.check_call(['hadoop', 'fs', '-mv', old_pf, new_pf])
-spark.sparkContext.parallelize(part_files).foreach(move_file)
+normalized_records_unloader.unload(spark, runner, 'medicalclaims', 'date_service', args.date, S3_EMDEON_OUT)
 spark.sparkContext.stop()
-
-subprocess.check_call(['s3-dist-cp', '--src', '/text/medicalclaims/emdeon/', '--dest', S3_EMDEON_OUT])
-subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '/text/medicalclaims/emdeon/'])
