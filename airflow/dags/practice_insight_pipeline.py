@@ -16,8 +16,8 @@ import subdags.detect_move_normalize as detect_move_normalize
 import util.decompression as decompression
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
-        split_push_files, queue_up_for_matching,
-        detect_move_normalize, decompression]:
+          split_push_files, queue_up_for_matching,
+          detect_move_normalize, decompression]:
     reload(m)
 
 # Applies to all files
@@ -58,21 +58,23 @@ def insert_todays_date_function(template):
 
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format('\d{2}', '[a-z]{3}')
+        return template.format('\d{4}', '[a-z]{3}')
     return out
 
 
 def insert_current_plaintext_date_function(template):
     def out(ds, kwargs):
         return template.format(
-            kwargs['ds'][0:4],
-            datetime.strptime(kwargs['ds'], '%Y-%m-%d').strftime('%b').lower()
+            kwargs['ds_nodash'][0:4],
+            datetime.strptime(
+                kwargs['ds_nodash'], '%Y%m%d'
+            ).strftime('%b').lower()
         )
     return out
 
 
 def insert_current_plaintext_date(template, kwargs):
-    insert_current_plaintext_date_function(template)(None, kwargs)
+    return insert_current_plaintext_date_function(template)(None, kwargs)
 
 
 def insert_current_date_function(template):
@@ -104,7 +106,9 @@ def get_unzipped_file_paths(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     return [
         file_dir
-        + insert_current_plaintext_date(TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE)
+        + insert_current_plaintext_date(
+            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE
+        )
     ]
 
 
@@ -118,7 +122,8 @@ def generate_transaction_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': insert_current_plaintext_date_function(
+                'expected_file_name_func':
+                insert_current_plaintext_date_function(
                     path_template
                 ),
                 'file_name_pattern_func': insert_formatted_regex_function(
@@ -169,7 +174,7 @@ def generate_fetch_dag(
 
 
 fetch_transactional = generate_fetch_dag(
-    "transactional",
+    "transaction",
     '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
     TMP_PATH_TEMPLATE, TRANSACTION_FILE_NAME_TEMPLATE
 )
@@ -179,7 +184,7 @@ def gunzip_step(task_id, tmp_path_template, filename_template, tmp_dir_func):
     def execute(ds, **kwargs):
         tmp_dir = tmp_dir_func(ds, kwargs)
         decompression.decompress_gzip_file(
-            tmp_dir + insert_current_plaintext_date(filename_template), tmp_dir
+            tmp_dir + insert_current_plaintext_date(filename_template, kwargs),
         )
     return PythonOperator(
         task_id='gunzip_' + task_id + '_file',
@@ -190,18 +195,26 @@ def gunzip_step(task_id, tmp_path_template, filename_template, tmp_dir_func):
 
 
 gunzip_transactional = gunzip_step(
-    "transactional", TMP_PATH_TEMPLATE,
+    "transaction", TMP_PATH_TEMPLATE,
     TRANSACTION_FILE_NAME_TEMPLATE,
     get_tmp_dir
 )
 
 
-def split_transactional_into_parts_step():
+def generate_split_transaction_into_parts():
     def execute(ds, **kwargs):
         check_call([
+            'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/'
+        ])
+        check_call([
             'split', '-n', 'l/4', get_tmp_dir(ds, kwargs)
-            + insert_current_plaintext_date(TRANSACTION_FILE_NAME_TEMPLATE),
+            + insert_current_plaintext_date(
+                TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+            ),
             get_tmp_dir(ds, kwargs) + 'presplit/'
+            + insert_current_plaintext_date(
+                TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+            ) + '.'
         ])
         for i in range(1, 5):
             os.mkdir(get_tmp_dir(ds, kwargs) + 'presplit/' + str(i))
@@ -209,25 +222,29 @@ def split_transactional_into_parts_step():
                 'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/' + str(i)
             ])
             os.rename(
-                filter(
+                get_tmp_dir(ds, kwargs) + 'presplit/'
+                + filter(
                     lambda f: f.startswith(
                         insert_current_plaintext_date(
-                            TRANSACTION_FILE_NAME_TEMPLATE
+                            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
                         )
                     ),
                     os.listdir(get_tmp_dir(ds, kwargs) + 'presplit/')
                 )[0],
-                get_tmp_dir(ds, kwargs) + 'presplit/' + str(i)
+                get_tmp_dir(ds, kwargs) + 'presplit/' + str(i) + '/'
                 + insert_current_plaintext_date(
-                    TRANSACTION_FILE_NAME_TEMPLATE
+                    TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
                 )
             )
-    PythonOperator(
-        task_id='split_transactional_into_parts',
+    return PythonOperator(
+        task_id='split_transaction_into_parts',
         provide_context=True,
         python_callable=execute,
         dag=mdag
     )
+
+
+split_transaction_into_parts = generate_split_transaction_into_parts()
 
 
 def split_step(
@@ -256,7 +273,8 @@ def split_step(
 
 split_transactional_steps = map(
     lambda i: split_step(
-        "transactional", get_tmp_dir + 'presplit/' + str(i) + '/',
+        "transactional",
+        lambda ds, k: get_tmp_dir(ds, k) + 'presplit/' + str(i) + '/',
         get_unzipped_file_paths,
         S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 20
     ),
@@ -340,8 +358,10 @@ detect_move_normalize_dag = SubDagOperator(
 fetch_transactional.set_upstream(validate_transactional)
 gunzip_transactional.set_upstream(fetch_transactional)
 
+split_transaction_into_parts.set_upstream(gunzip_transactional)
+
 for step in split_transactional_steps:
-    step.set_upstream(gunzip_transactional)
+    step.set_upstream(split_transaction_into_parts)
 
 # cleanup
 clean_up_workspace.set_upstream(split_transactional_steps)
