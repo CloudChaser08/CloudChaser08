@@ -28,13 +28,13 @@ DAG_NAME = 'caris_pipeline'
 S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/caris/'
 S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/caris/{}/{}/'
 
-# Transaction Addon file
+# Transaction file without the trailing timestamp
 TRANSACTION_FILE_NAME_STUB_TEMPLATE = 'DATA_{}{}01'
 
-# Deid file
+# Deid file without the trailing timestamp
 DEID_FILE_NAME_STUB_TEMPLATE = 'DEID_{}{}01'
 
-# Global Date Timestamp
+# Global to hold the timestamp for this extract
 TIMESTAMP = ''
 
 default_args = {
