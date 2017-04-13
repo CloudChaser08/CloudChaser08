@@ -44,5 +44,5 @@ def queue_up_for_matching(
         op_kwargs=dag_config,
         dag=dag
     )
-    
+
     return dag
