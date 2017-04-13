@@ -90,6 +90,7 @@ def insert_current_date_function(template):
         return template.format(
             kwargs['ds_nodash'][0:4],
             kwargs['ds_nodash'][4:6],
+            kwargs['ds_nodash'][6:8]
         )
     return out
 

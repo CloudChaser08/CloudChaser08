@@ -97,8 +97,7 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
 def _build_dewey(cluster_id):
     spark_dir = os.path.abspath(
         os.path.join(
-            os.getenv('AIRFLOW_HOME'),
-            '../spark/'
+            os.getenv('HOME'), 'spark/'
         )
     )
     check_call([
