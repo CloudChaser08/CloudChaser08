@@ -2,8 +2,8 @@ import subprocess
 import re
 
 
-def prefix_part_files(spark, base_dir, prefix):
-    if base_dir.startswith('hdfs'):
+def prefix_part_files(spark, staging_dir, dest_dir, prefix):
+    if staging_dir.startswith('hdfs'):
         # filter out directories in ls -R output with re.match
         dirs = map(
             lambda out_str: out_str.split()[-1],
@@ -12,7 +12,7 @@ def prefix_part_files(spark, base_dir, prefix):
                     '^part-[0-9]{5}\.(gz|bz2)$', filename.split('/')[-1]
                 ),
                 subprocess.check_output([
-                    'hdfs', 'dfs', '-ls', '-R', base_dir
+                    'hdfs', 'dfs', '-ls', '-R', staging_dir
                 ]).split('\n')
             )
         )
@@ -27,6 +27,15 @@ def prefix_part_files(spark, base_dir, prefix):
 
         spark.sparkContext.parallelize(dirs).foreach(prefixer)
 
+        if not staging_dir.endswith('/'):
+            staging_dir = staging_dir + '/'
+
+        if not dest_dir.endswith('/'):
+            dest_dir = dest_dir + '/'
+
+        subprocess.check_call([
+            'hadoop', 'distcp', '-update', staging_dir, dest_dir
+        ])
+
     else:
-        # TODO: Add support for S3
-        raise Exception('Invalid filesystem')
+        raise Exception('Invalid filesystem, staging_dir should be in hdfs')

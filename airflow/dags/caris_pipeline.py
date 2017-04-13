@@ -282,8 +282,8 @@ queue_up_for_matching = SubDagOperator(
 # Post-Matching
 #
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/caris/'
-TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/part_provider=caris/"
-PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=caris/"
+TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/"
+PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/"
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(

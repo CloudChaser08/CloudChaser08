@@ -47,6 +47,8 @@ min_date = '2005-01-01'
 max_date = date_obj.strftime('%Y-%m-') \
            + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
 
+staging_dir = 'hdfs:///text-out/'
+
 runner.run_spark_script(file_utils.get_rel_path(
     script_path, '../../common/zip3_to_state.sql'
 ))
@@ -112,7 +114,7 @@ runner.run_spark_script(file_utils.get_rel_path(
     ['table_name', 'final_unload', False],
     [
         'properties',
-        constants.unload_properties_template.format(args.output_path),
+        constants.unload_properties_template.format(staging_dir),
         False
     ],
     ['partitions', '20', False]
@@ -149,6 +151,8 @@ runner.run_spark_script(
     ]
 )
 
-file_prefix.prefix_part_files(spark, args.output_path, args.date + '_')
+file_prefix.prefix_part_files(
+    spark, staging_dir, args.output_path, args.date + '_'
+)
 
 spark.stop()

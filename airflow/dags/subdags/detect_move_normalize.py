@@ -60,7 +60,7 @@ def do_run_pyspark_normalization_routine(ds, **kwargs):
         kwargs['pyspark_normalization_script_name'],
         kwargs['pyspark_normalization_args_func'](ds, kwargs),
         kwargs['text_warehouse'], kwargs['parquet_warehouse'],
-        kwargs['part_file_prefix_func'](ds, kwargs), kwargs['data_feed_type']
+        kwargs['data_feed_type']
     )
 
 def do_create_redshift_cluster(ds, **kwargs):

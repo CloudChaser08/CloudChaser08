@@ -120,7 +120,7 @@ def normalize(cluster_name, script_name, args,
         'Args=[--jars,'
         '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
         '--py-files, /home/hadoop/spark/target/dewey.zip, {}, --output_path,'
-        + text_staging_dir + ']'
+        + s3_text_warehouse + ']'
     ).format(
         script_name + ',' + ','.join(args)
     )
@@ -134,29 +134,28 @@ def normalize(cluster_name, script_name, args,
 
     # get directories that will need to be transformed to parquet
     # by listing the directories created in hdfs by normalization
-    modified_dirs = filter(
-        lambda path: path != '',
-        check_output(' '.join([
-            'ssh', '-i', '~/.ssh/emr_deployer',
-            '-o', '"StrictHostKeyChecking no"',
-            'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
-            'hdfs', 'dfs', '-ls', text_staging_dir, '|', 'rev', '|',
-            'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
-        ]), shell=True).split('\n')
+    all_directories = check_output(' '.join([
+        'ssh', '-i', '~/.ssh/emr_deployer',
+        '-o', '"StrictHostKeyChecking no"',
+        'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
+        'hdfs', 'dfs', '-ls', '-R', text_staging_dir, '|', 'rev', '|',
+        'cut', '-d/', '-f1', '|', 'rev'
+    ]), shell=True).split('\n')
+
+    modified_dates = filter(
+        lambda path: 'part_best_date' in path,
+        all_directories
     )
+    provider = filter(
+        lambda path: 'part_provider' in path,
+        all_directories
+    )[0]
 
-    check_call([
-        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
-        '--steps', EMR_DISTCP_TO_S3.format(
-            text_staging_dir, s3_text_warehouse
-        )
-    ])
-    _wait_for_steps(cluster_id)
-
-    for directory in modified_dirs:
+    for directory in modified_dates:
         _transform_to_parquet(
-            cluster_name, s3_text_warehouse + directory,
-            s3_parquet_warehouse + directory, model
+            cluster_name, s3_text_warehouse + provider + '/' + directory,
+            s3_parquet_warehouse + provider + '/' + directory,
+            model
         )
 
 
