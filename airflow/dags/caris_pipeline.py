@@ -11,12 +11,13 @@ import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
+import util.s3_utils as s3_utils
 
 # import util.decompression as decompression
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching,
-          detect_move_normalize]:
+          detect_move_normalize, s3_utils]:
     reload(m)
 
 # Applies to all files
@@ -28,10 +29,13 @@ S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/caris/'
 S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/caris/{}/{}/'
 
 # Transaction Addon file
-TRANSACTION_FILE_NAME_TEMPLATE = 'DATA_{}{}01*'
+TRANSACTION_FILE_NAME_STUB_TEMPLATE = 'DATA_{}{}01'
 
 # Deid file
-DEID_FILE_NAME_TEMPLATE = 'DEID_{}{}01*'
+DEID_FILE_NAME_STUB_TEMPLATE = 'DEID_{}{}01'
+
+# Global Date Timestamp
+TIMESTAMP = ''
 
 default_args = {
     'owner': 'airflow',
@@ -43,11 +47,30 @@ default_args = {
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * *" if Variable.get(
+    schedule_interval="0 12 1 * *" if Variable.get(
         "AIRFLOW_ENV", default_var=''
     ).find('prod') != -1 else None,
     default_args=default_args
 )
+
+
+def get_date_timestamp(kwargs):
+    """
+    Get the timestamp for this extract
+    """
+    global TIMESTAMP
+    try:
+        if TIMESTAMP == '':
+            TIMESTAMP = filter(
+                lambda p: insert_current_date(
+                    TRANSACTION_FILE_NAME_STUB_TEMPLATE, kwargs
+                ) in p,
+                s3_utils.list_s3_bucket(
+                    S3_TRANSACTION_RAW_URL
+                )
+            )[0][-6:]
+    finally:
+        return TIMESTAMP
 
 
 def insert_todays_date_function(template):
@@ -58,7 +81,7 @@ def insert_todays_date_function(template):
 
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format('\d{2}', '\d{2}')
+        return template.format('\d{4}', '\d{2}')
     return out
 
 
@@ -72,21 +95,23 @@ def insert_current_date_function(template):
 
 
 def insert_current_date(template, kwargs):
-    insert_current_date_function(template)(None, kwargs)
+    return insert_current_date_function(template)(None, kwargs)
 
-
-# get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
 
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL + insert_current_date(
-        DEID_FILE_NAME_TEMPLATE, kwargs
+        DEID_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(kwargs),
+        kwargs
     )]
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)(ds, kwargs)
     encrypted_file_path = file_dir \
-        + insert_current_date(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
+        + insert_current_date(
+            TRANSACTION_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(kwargs),
+            kwargs
+        )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
@@ -94,16 +119,13 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
 
 def get_unzipped_file_paths(ds, kwargs):
     file_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)(ds, kwargs)
-    return [file_dir
-            + insert_current_date_function(TRANSACTION_FILE_NAME_TEMPLATE)
+    return [
+        file_dir
+        + insert_current_date(
+            TRANSACTION_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(kwargs),
+            kwargs
+        )
     ]
-
-# def get_trunk_unzipped_file_paths(ds, kwargs):
-#     file_dir = get_trunk_tmp_dir(ds, kwargs)
-#     return [file_dir
-#             + TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE.format(
-#                 get_formatted_date(ds, kwargs)
-#             )]
 
 
 def generate_transaction_file_validation_dag(
@@ -116,11 +138,15 @@ def generate_transaction_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': insert_current_date_function(
-                    path_template
+                'expected_file_name_func': lambda ds, k: (
+                    insert_current_date_function(
+                        path_template
+                    )(ds, k) + get_date_timestamp(k)
                 ),
-                'file_name_pattern_func': insert_formatted_regex_function(
-                    path_template
+                'file_name_pattern_func': lambda ds, k: (
+                    insert_formatted_regex_function(
+                        path_template
+                    )(ds, k) + get_date_timestamp(k)
                 ),
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -134,11 +160,11 @@ def generate_transaction_file_validation_dag(
 
 
 validate_transactional = generate_transaction_file_validation_dag(
-    'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
+    'transaction', TRANSACTION_FILE_NAME_STUB_TEMPLATE,
     1000000
 )
 validate_deid = generate_transaction_file_validation_dag(
-    'deid', DEID_FILE_NAME_TEMPLATE,
+    'deid', DEID_FILE_NAME_STUB_TEMPLATE,
     1000000
 )
 
@@ -154,8 +180,10 @@ def generate_fetch_dag(
             mdag.schedule_interval,
             {
                 'tmp_path_template': local_path_template,
-                'expected_file_name_func': insert_current_date_function(
-                    file_name_template
+                'expected_file_name_func': lambda ds, k: (
+                    insert_current_date_function(
+                        file_name_template
+                    )(ds, k) + get_date_timestamp(k)
                 ),
                 's3_prefix': s3_path_template,
                 's3_bucket': 'healthverity'
@@ -169,13 +197,13 @@ def generate_fetch_dag(
 fetch_transactional = generate_fetch_dag(
     "transaction",
     '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-    TMP_PATH_TEMPLATE, TRANSACTION_FILE_NAME_TEMPLATE
+    TMP_PATH_TEMPLATE, TRANSACTION_FILE_NAME_STUB_TEMPLATE
 )
 
 decrypt_transactional = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
         DAG_NAME,
-        'decrypt_transactional_file',
+        'decrypt_transaction_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
@@ -184,12 +212,15 @@ decrypt_transactional = SubDagOperator(
             encrypted_decrypted_file_paths_function
         }
     ),
-    task_id='decrypt_transactional_file',
+    task_id='decrypt_transaction_file',
     dag=mdag
 )
 
 
-def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, num_splits):
+def split_step(
+        task_id, tmp_dir_func, file_paths_to_split_func,
+        s3_destination, num_splits
+):
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
@@ -211,7 +242,7 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
 
 
 split_transactional = split_step(
-    "transactional", insert_todays_date_function(TMP_PATH_TEMPLATE),
+    "transaction", insert_todays_date_function(TMP_PATH_TEMPLATE),
     get_unzipped_file_paths, S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 20
 )
 
@@ -262,7 +293,7 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func': lambda ds, k: [
                 insert_current_date_function(
-                    DEID_FILE_NAME_TEMPLATE
+                    DEID_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(k)
                 )(ds, k)
             ],
             'file_date_func': insert_current_date_function(
@@ -285,7 +316,7 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-# addon
+# preprocessing
 fetch_transactional.set_upstream(validate_transactional)
 decrypt_transactional.set_upstream(fetch_transactional)
 split_transactional.set_upstream(decrypt_transactional)

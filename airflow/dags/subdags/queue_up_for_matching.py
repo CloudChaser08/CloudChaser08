@@ -1,3 +1,4 @@
+import os
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import BashOperator, PythonOperator
@@ -15,7 +16,8 @@ def do_queue_up_for_matching(ds, **kwargs):
 
     for f in source_files:
         check_call([
-            '/home/airflow/airflow/dags/resources/push_file_to_s3_batchless_v5.sh',
+            os.getenv('AIRFLOW_HOME')
+            + '/dags/resources/push_file_to_s3_batchless_v5.sh',
             f, '0', 'prod-matching-engine', 'priority3'
         ], env=environ)
 
