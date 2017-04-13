@@ -15,7 +15,7 @@ def init(provider, local=False):
 
     # register privacy filters
     sqlContext.registerFunction(
-        'filter_due_to_place_of_service', filter_due_to_place_of_service,
+        'filter_due_to_place_of_service', filter_due_to_place_of_service
     )
     sqlContext.registerFunction(
         'obscure_place_of_service', obscure_place_of_service
