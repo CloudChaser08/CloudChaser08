@@ -41,7 +41,8 @@ if args.first_run:
     runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
     runner.run_spark_script(get_rel_path('../../../common/zip3_to_state.sql'))
     runner.run_spark_script(get_rel_path('load_payer_mapping.sql'))
-    runner.run_spark_script(get_rel_path('../../../common/load_hvid_parent_child_map.sql'))
+    if args.date < '2015-10-01':
+        runner.run_spark_script(get_rel_path('../../../common/load_hvid_parent_child_map.sql'))
 
 date_path = args.date.replace('-', '/')
 
@@ -54,9 +55,19 @@ else:
     runner.run_spark_script(get_rel_path('load_transactions.sql'), [
         ['input_path', S3_EMDEON_IN + date_path + '/']
     ])
-runner.run_spark_script(get_rel_path('load_matching_payload.sql'), [
-    ['matching_path', S3_EMDEON_MATCHING + date_path + '/']
-])
+
+# before 2015-10-01 we did not include the parentId in the matching
+# payload for exact matches, so there is a separate table to
+# reconcile that
+if args.date < '2015-10-01':
+    runner.run_spark_script(get_rel_path('load_matching_payload_v1.sql'), [
+        ['matching_path', S3_EMDEON_MATCHING + date_path + '/']
+    ])
+else:
+    runner.run_spark_script(get_rel_path('load_matching_payload_v2.sql'), [
+        ['matching_path', S3_EMDEON_MATCHING + date_path + '/']
+    ])
+
 runner.run_spark_script(get_rel_path('split_raw_transactions.sql'), [
     ['min_date', '2012-01-01'],
     ['max_date', args.date]
