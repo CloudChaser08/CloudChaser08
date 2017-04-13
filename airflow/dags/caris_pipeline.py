@@ -308,7 +308,7 @@ detect_move_normalize_dag = SubDagOperator(
             ],
             'text_warehouse': TEXT_WAREHOUSE,
             'parquet_warehouse': PARQUET_WAREHOUSE,
-            'part_file_prefix_func': insert_current_date_function('{}-{}-{}'),
+            'part_file_prefix_func': '',  # already prefixed
             'data_feed_type': 'lab',
             'pyspark': True
         }
