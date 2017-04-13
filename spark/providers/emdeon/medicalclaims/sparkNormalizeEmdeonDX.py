@@ -47,7 +47,9 @@ if args.first_run:
 
 date_path = args.date.replace('-', '/')
 
-runner.run_spark_script(get_rel_path('../../../common/medicalclaims_common_model.sql'))
+runner.run_spark_script(get_rel_path('../../../common/medicalclaims_common_model.sql')
+        ['table_name', 'medicalclaims_common_model', False]
+    ])
 if args.date < '2015-08-01':
     runner.run_spark_script(get_rel_path('load_transactions.sql'), [
         ['input_path', S3_EMDEON_IN + date_path + '/payload/']
