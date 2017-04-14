@@ -97,17 +97,15 @@ def get_deid_file_urls(ds, kwargs):
     return [
         S3_TRANSACTION_RAW_URL
         + insert_current_plaintext_date(
-            DEID_FILE_NAME_TEMPLATE
+            DEID_FILE_NAME_TEMPLATE, kwargs
         )
     ]
 
 
 def get_unzipped_file_paths(ds, kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
     return [
-        file_dir
-        + insert_current_plaintext_date(
-            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE
+        insert_current_plaintext_date(
+            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
         )
     ]
 
@@ -248,32 +246,35 @@ split_transaction_into_parts = generate_split_transaction_into_parts()
 
 
 def split_step(
-        task_id, tmp_dir_func, file_paths_to_split_func,
+        task_id, part_number, tmp_dir_func, file_paths_to_split_func,
         s3_destination, num_splits
 ):
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
-            'split_' + task_id + '_file',
+            'split_' + task_id + '_' + str(part_number) + '_file',
             default_args['start_date'],
             mdag.schedule_interval,
             {
                 'tmp_dir_func': tmp_dir_func,
-                'file_paths_to_split_func': file_paths_to_split_func,
-                's3_prefix_func': insert_current_plaintext_date_function(
-                    s3_destination
+                'file_paths_to_split_func': lambda ds, k: map(
+                    lambda f: tmp_dir_func(ds, k) + f,
+                    file_paths_to_split_func(ds, k)
                 ),
+                's3_prefix_func': lambda ds, k: insert_current_date_function(
+                    s3_destination
+                )(ds, k) + part_number + '/',
                 'num_splits': num_splits
             }
         ),
-        task_id='split_' + task_id + '_file',
+        task_id='split_' + task_id + '_' + part_number + '_file',
         dag=mdag
     )
 
 
 split_transactional_steps = map(
     lambda i: split_step(
-        "transactional",
+        "transaction", str(i),
         lambda ds, k: get_tmp_dir(ds, k) + 'presplit/' + str(i) + '/',
         get_unzipped_file_paths,
         S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 20
@@ -317,8 +318,8 @@ queue_up_for_matching = SubDagOperator(
 # Post-Matching
 #
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/medicalclaims/practice_insight/'
-TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/medicalclaims/2017-02-24/part_provider=practice_insight/"
-PARQUET_WAREHOUSE = "s3a://salusv/warehouse/parquet/medicalclaims/2017-02-24/part_provider=practice_insight/"
+TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/medicalclaims/2017-02-24/"
+PARQUET_WAREHOUSE = "s3a://salusv/warehouse/parquet/medicalclaims/2017-02-24/"
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
@@ -337,7 +338,8 @@ detect_move_normalize_dag = SubDagOperator(
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
             'vendor_uuid': 'b29eb316-a398-4fdc-b8da-2cff26f86bad',
-            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
+            'pyspark_normalization_script_name':
+            '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
             'pyspark_normalization_args_func': lambda ds, k: [
                 '--date', insert_current_date('{}-{}-01', k)
             ],
