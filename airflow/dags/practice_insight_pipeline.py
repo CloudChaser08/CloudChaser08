@@ -87,7 +87,7 @@ def insert_current_date_function(template):
 
 
 def insert_current_date(template, kwargs):
-    insert_current_date_function(template)(None, kwargs)
+    return insert_current_date_function(template)(None, kwargs)
 
 
 get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
@@ -334,7 +334,7 @@ detect_move_normalize_dag = SubDagOperator(
                 )(ds, k)
             ],
             'file_date_func': insert_current_date_function(
-                '{}/{}/{}'
+                '{}/{}'
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
             'vendor_uuid': 'b29eb316-a398-4fdc-b8da-2cff26f86bad',
@@ -345,9 +345,6 @@ detect_move_normalize_dag = SubDagOperator(
             ],
             'text_warehouse': TEXT_WAREHOUSE,
             'parquet_warehouse': PARQUET_WAREHOUSE,
-
-            # prefixing is handled in the routine
-            'part_file_prefix_func': lambda ds, k: '',
             'data_feed_type': 'lab',
             'pyspark': True
         }

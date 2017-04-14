@@ -118,7 +118,12 @@ def run_script(cluster_name, script_name, args):
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
         'Args=[--jars,'
         '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
-        '--py-files, /home/hadoop/spark/target/dewey.zip, {}]'
+        '--py-files, /home/hadoop/spark/target/dewey.zip,'
+        '--conf, spark.executor.memory=10G, --conf, spark.driver.memory=5G,'
+        '--conf, spark.executor.cores=4, --conf, spark.executor.instances=5,'
+        '--conf, spark.yarn.executor.memoryOverhead=1024, --conf,'
+        'spark.scheduler.minRegisteredResourcesRatio=1, --conf,'
+        'spark.scheduler.maxRegisteredResourcesWaitingTime=60s,{}]'
     ).format(
         script_name + ',' + ','.join(args)
     )

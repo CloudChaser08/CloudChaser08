@@ -1032,7 +1032,9 @@ SELECT base.*
 FROM tmp base
     INNER JOIN (
     SELECT claim_id,
-        COLLECT_SET(COALESCE(diagnosis_code, '<NULL>')) as codes
+        COLLECT_SET(
+            CAST(COALESCE(diagnosis_code, '<NULL>') AS STRING)
+            ) as codes
     FROM tmp
     WHERE service_line_number IS NULL
     GROUP BY claim_id
