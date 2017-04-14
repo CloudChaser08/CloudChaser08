@@ -47,6 +47,7 @@ matching_path = 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
 
 min_date = '2013-01-01'
 max_date = args.date
+staging_dir = 'hdfs:///text-out/'
 
 # create helper tables
 runner.run_spark_script(file_utils.get_rel_path(
@@ -114,7 +115,7 @@ runner.run_spark_script(file_utils.get_rel_path(
     ['table_name', 'final_unload', False],
     [
         'properties',
-        constants.unload_properties_template.format(args.output_path),
+        constants.unload_properties_template.format(staging_dir),
         False
     ]
 ])
@@ -149,6 +150,8 @@ runner.run_spark_script(
     ]
 )
 
-file_prefix.prefix_part_files(spark, args.output_path, args.date)
+file_prefix.prefix_part_files(
+    spark, staging_dir, args.output_path, args.date + '_'
+)
 
 spark.sparkContext.stop()
