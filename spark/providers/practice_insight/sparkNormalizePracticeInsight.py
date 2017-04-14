@@ -41,7 +41,6 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--output_path', type=str)
-parser.add_argument('--period', type=str, default='current')
 parser.add_argument('--shuffle_partitions', type=str, default="1200")
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
@@ -55,7 +54,7 @@ input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.forma
     str(date_obj.month).zfill(2)
 )
 
-if args.period == 'hist':
+if date_obj.year <= 2016:
     matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/'.format(
         str(date_obj.year)
     )
