@@ -328,11 +328,10 @@ SELECT DISTINCT
     AND TRIM(transactional.rendr_provdr_npi_svc) <> ''
     THEN transactional.rendr_provdr_txnmy_svc
     ELSE (
-    SELECT min(t2.rendr_provdr_txnmy)
+    SELECT MAX(t2.rendr_provdr_txnmy)
     FROM transactional_raw t2
-    WHERE transactional.src_claim_id = t2.src_claim_id
-        AND t2.rendr_provdr_npi IS NOT NULL
-        AND TRIM(t2.rendr_provdr_npi) <> ''
+    WHERE min_npi_map.src_claim_id = t2.src_claim_id
+        AND t2.rendr_provdr_npi = min_npi_map.rendr_provdr_npi
         )
     END,                                                   -- prov_rendering_std_taxonomy
     NULL,                                                  -- prov_rendering_vendor_specialty
@@ -1206,4 +1205,6 @@ FROM tmp base
     GROUP BY claim_id
         ) claim_code ON base.claim_id = claim_code.claim_id
 WHERE base.service_line_number IS NULL
-    AND claim_code.codes = ARRAY('<NULL>')
+    AND SIZE(claim_code.codes) = 1
+    AND claim_code.codes[0] = '<NULL>'
+;
