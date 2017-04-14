@@ -8,6 +8,7 @@ from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.file_prefix as file_prefix
 import spark.helpers.constants as constants
 
 # init
@@ -147,5 +148,7 @@ runner.run_spark_script(
         ['partitions', '20', False]
     ]
 )
+
+file_prefix.prefix_part_files(spark, args.output_path, args.date)
 
 spark.sparkContext.stop()
