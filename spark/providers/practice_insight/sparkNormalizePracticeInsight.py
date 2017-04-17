@@ -3,8 +3,6 @@ import os
 import argparse
 import time
 from datetime import datetime
-from pyspark.sql.functions import min, trim, when, col
-from pyspark.sql.window import Window
 
 from spark.runner import Runner
 from spark.spark import init
