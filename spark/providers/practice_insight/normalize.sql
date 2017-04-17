@@ -302,12 +302,7 @@ SELECT DISTINCT
     AND transactional.rendr_provdr_npi_svc IS NOT NULL
     AND TRIM(transactional.rendr_provdr_npi_svc) <> ''
     THEN transactional.rendr_provdr_txnmy_svc
-    ELSE (
-    SELECT MAX(t2.rendr_provdr_txnmy)
-    FROM transactional_raw t2
-    WHERE transactional.src_claim_id = t2.src_claim_id
-        AND t2.rendr_provdr_npi = transactional.rendr_provdr_npi
-        )
+    ELSE transactional.rendr_provdr_txnmy
     END,                                                   -- prov_rendering_std_taxonomy
     NULL,                                                  -- prov_rendering_vendor_specialty
     NULL,                                                  -- prov_billing_vendor_id
