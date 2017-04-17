@@ -1,16 +1,3 @@
--- NOTES: Potentially confusing patterns implemented below are
--- explained here
---
--- The min(<provider information column>) over a given claim is
--- selected when the <provider>_npi_svc (service line provider npi)
--- for that row is not available for whatever reason. We select the
--- min() here with the assumption that there should only be one
--- non-service-line value populated on the entire claim. The reason we
--- can't, then, just select the provider column (without the min()),
--- is because sometimes the value is blank or NULL. We perform a min()
--- in order to get the non-null and non-blank version of that value
--- for the claim.
-
 DROP TABLE IF EXISTS tmp;
 CREATE TABLE tmp AS
 SELECT * FROM medicalclaims_common_model
