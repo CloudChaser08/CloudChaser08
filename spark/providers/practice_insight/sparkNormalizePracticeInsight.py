@@ -74,47 +74,6 @@ runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
 payload_loader.load(runner, matching_path, ['claimId'])
 
 
-def uniquify_prov_info(transactions_df):
-    prov_cols = [
-        'refrn_provdr_npi',
-        'refrn_provdr_id',
-        'refrn_provdr_upin',
-        'refrn_provdr_comm_nbr',
-        'refrn_provdr_stlc_nbr',
-        'refrn_provdr_last_nm',
-        'refrn_provdr_first_nm',
-        'rendr_provdr_npi',
-        'rendr_provdr_id',
-        'rendr_provdr_upin',
-        'rendr_provdr_comm_nbr',
-        'rendr_provdr_loc_nbr',
-        'rendr_provdr_stlc_nbr',
-        'rendr_provdr_last_nm',
-        'rendr_provdr_first_nm',
-        'rendr_provdr_txnmy',
-        'fclty_npi',
-        'fclty_id',
-        'fclty_comm_nbr',
-        'fclty_loc_nbr',
-        'fclty_stlc_nbr',
-        'fclty_nm',
-        'fclty_addr_1',
-        'fclty_addr_2',
-        'fclty_addr_city',
-        'fclty_addr_state',
-        'fclty_addr_zip'
-    ]
-    claims = Window.partitionBy('src_claim_id')
-
-    for column in prov_cols:
-        transactions_df = transactions_df.withColumn(
-            column, min(when(
-                trim(col(column)) == '', None
-            ).otherwise(col(column))).over(claims)
-        )
-    transactions_df.createTempView('transactional_raw')
-
-
 def run(part):
     # Set shuffle partitions to stabilize job
     sqlContext.setConf("spark.sql.shuffle.partitions", args.shuffle_partitions)
@@ -130,9 +89,6 @@ def run(part):
     runner.run_spark_script(get_rel_path('load_transactions.sql'), [
         ['input_path', input_path + part + '/']
     ])
-
-    # ensure only one claim-level provider field value per claim
-    uniquify_prov_info(sqlContext.sql('select * from transactional_raw'))
 
     # create explosion maps
     runner.run_spark_script(get_rel_path('create_exploded_diagnosis_map.sql'))

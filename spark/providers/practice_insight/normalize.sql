@@ -187,7 +187,8 @@ SELECT DISTINCT
         AND transactional.rendr_provdr_npi_svc IS NOT NULL
         AND TRIM(transactional.rendr_provdr_npi_svc) <> ''
         THEN transactional.rendr_provdr_npi_svc
-        ELSE transactional.rendr_provdr_npi
+        ELSE MIN(CASE WHEN TRIM(transactional.rendr_provdr_npi) = '' THEN NULL ELSE transactional.rendr_provdr_npi END)
+        OVER(PARTITION BY transactional.src_claim_id)
         END,
         {place_of_service_std_id}
         ),                                                 -- prov_rendering_npi
@@ -203,7 +204,8 @@ SELECT DISTINCT
         AND transactional.refrn_provdr_npi_svc IS NOT NULL
         AND TRIM(transactional.refrn_provdr_npi_svc) <> ''
         THEN transactional.refrn_provdr_npi_svc
-        ELSE transactional.refrn_provdr_npi
+        ELSE MIN(CASE WHEN TRIM(transactional.refrn_provdr_npi) = '' THEN NULL ELSE transactional.refrn_provdr_npi END)
+        OVER(PARTITION BY transactional.src_claim_id)
         END,
         {place_of_service_std_id}
         ),                                                 -- prov_referring_npi
@@ -215,7 +217,8 @@ SELECT DISTINCT
         AND transactional.fclty_npi_svc IS NOT NULL
         AND TRIM(transactional.fclty_npi_svc) <> ''
         THEN transactional.fclty_npi_svc
-        ELSE transactional.fclty_npi
+        ELSE MIN(CASE WHEN TRIM(transactional.fclty_npi) = '' THEN NULL ELSE transactional.fclty_npi END)
+        OVER(PARTITION BY transactional.src_claim_id)
         END,
         {place_of_service_std_id}
         ),                                                 -- prov_facility_npi
@@ -237,7 +240,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_stlc_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_stlc_nbr) = '' THEN NULL ELSE transactional.rendr_provdr_stlc_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -249,7 +253,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_upin
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_upin) = '' THEN NULL ELSE transactional.rendr_provdr_upin END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -261,7 +266,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_comm_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_comm_nbr) = '' THEN NULL ELSE transactional.rendr_provdr_comm_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -273,7 +279,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_last_nm
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_last_nm) = '' THEN NULL ELSE transactional.rendr_provdr_last_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -285,7 +292,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_first_nm
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_first_nm) = '' THEN NULL ELSE transactional.rendr_provdr_first_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -362,7 +370,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_stlc_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_stlc_nbr) = '' THEN NULL ELSE transactional.refrn_provdr_stlc_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -374,7 +383,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_upin
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_upin) = '' THEN NULL ELSE transactional.refrn_provdr_upin END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -386,7 +396,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_comm_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_comm_nbr) = '' THEN NULL ELSE transactional.refrn_provdr_comm_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -398,7 +409,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_last_nm
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_last_nm) = '' THEN NULL ELSE transactional.refrn_provdr_last_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -410,7 +422,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_first_nm
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_first_nm) = '' THEN NULL ELSE transactional.refrn_provdr_first_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -433,7 +446,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_stlc_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_stlc_nbr) = '' THEN NULL ELSE transactional.fclty_stlc_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -446,7 +460,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_comm_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_comm_nbr) = '' THEN NULL ELSE transactional.fclty_comm_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -458,7 +473,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_nm
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_nm) = '' THEN NULL ELSE transactional.fclty_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -471,7 +487,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_1
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_1) = '' THEN NULL ELSE REGEXP_REPLACE(transactional.fclty_addr_1, '"', '') END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -483,7 +500,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_2
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_2) = '' THEN NULL ELSE REGEXP_REPLACE(transactional.fclty_addr_2, '"', '') END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -495,7 +513,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_city
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_city) = '' THEN NULL ELSE REGEXP_REPLACE(transactional.fclty_addr_city, '"', '') END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -507,7 +526,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         OR transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_state
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_state) = '' THEN NULL ELSE transactional.fclty_addr_state END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -519,7 +539,8 @@ SELECT DISTINCT
             transactional.diag_cd_3, transactional.diag_cd_4)
         AND transactional.fclty_npi_svc IS NOT NULL
         AND TRIM(transactional.fclty_npi_svc) <> ''
-        THEN transactional.fclty_addr_zip
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_zip) = '' THEN NULL ELSE transactional.fclty_addr_zip END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         {place_of_service_std_id}
@@ -634,7 +655,8 @@ SELECT DISTINCT
         WHEN transactional.rendr_provdr_npi_svc IS NOT NULL
         AND TRIM(transactional.rendr_provdr_npi_svc) <> ''
         THEN transactional.rendr_provdr_npi_svc
-        ELSE transactional.rendr_provdr_npi
+        ELSE MIN(CASE WHEN TRIM(transactional.rendr_provdr_npi) = '' THEN NULL ELSE transactional.rendr_provdr_npi END)
+        OVER(PARTITION BY transactional.src_claim_id)
         END,
         generate_inst_type_of_bill_std_id(
             fclty_type_pos_cd, claim_freq_cd
@@ -650,7 +672,8 @@ SELECT DISTINCT
         WHEN transactional.refrn_provdr_npi_svc IS NOT NULL
         AND TRIM(transactional.refrn_provdr_npi_svc) <> ''
         THEN transactional.refrn_provdr_npi_svc
-        ELSE transactional.refrn_provdr_npi
+        ELSE MIN(CASE WHEN TRIM(transactional.refrn_provdr_npi) = '' THEN NULL ELSE transactional.refrn_provdr_npi END)
+        OVER(PARTITION BY transactional.src_claim_id)
         END,
         generate_inst_type_of_bill_std_id(
             fclty_type_pos_cd, claim_freq_cd
@@ -660,7 +683,8 @@ SELECT DISTINCT
         WHEN transactional.fclty_npi_svc IS NOT NULL
         AND TRIM(transactional.fclty_npi_svc) <> ''
         THEN transactional.fclty_npi_svc
-        ELSE transactional.fclty_npi
+        ELSE MIN(CASE WHEN TRIM(transactional.fclty_npi) = '' THEN NULL ELSE transactional.fclty_npi END)
+        OVER(PARTITION BY transactional.src_claim_id)
         END,
         generate_inst_type_of_bill_std_id(
             fclty_type_pos_cd, claim_freq_cd
@@ -680,7 +704,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_stlc_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_stlc_nbr) = '' THEN NULL ELSE transactional.rendr_provdr_stlc_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -690,7 +715,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_upin
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_upin) = '' THEN NULL ELSE transactional.rendr_provdr_upin END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -700,7 +726,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_comm_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_comm_nbr) = '' THEN NULL ELSE transactional.rendr_provdr_comm_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -710,7 +737,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_last_nm
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_last_nm) = '' THEN NULL ELSE transactional.rendr_provdr_last_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -720,7 +748,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.rendr_provdr_npi_svc IS NULL
         OR transactional.rendr_provdr_npi_svc = ''
-        THEN transactional.rendr_provdr_first_nm
+        THEN MIN(CASE WHEN TRIM(transactional.rendr_provdr_first_nm) = '' THEN NULL ELSE transactional.rendr_provdr_first_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -802,7 +831,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_stlc_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_stlc_nbr) = '' THEN NULL ELSE transactional.refrn_provdr_stlc_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -812,7 +842,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_upin
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_upin) = '' THEN NULL ELSE transactional.refrn_provdr_upin END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -822,7 +853,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_comm_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_comm_nbr) = '' THEN NULL ELSE transactional.refrn_provdr_comm_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -832,7 +864,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_last_nm
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_last_nm) = '' THEN NULL ELSE transactional.refrn_provdr_last_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -842,7 +875,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.refrn_provdr_npi_svc IS NULL
         OR transactional.refrn_provdr_npi_svc = ''
-        THEN transactional.refrn_provdr_first_nm
+        THEN MIN(CASE WHEN TRIM(transactional.refrn_provdr_first_nm) = '' THEN NULL ELSE transactional.refrn_provdr_first_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -863,7 +897,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_stlc_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_stlc_nbr) = '' THEN NULL ELSE transactional.fclty_stlc_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -874,7 +909,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_comm_nbr
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_comm_nbr) = '' THEN NULL ELSE transactional.fclty_comm_nbr END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -884,7 +920,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_nm
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_nm) = '' THEN NULL ELSE transactional.fclty_nm END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -895,7 +932,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_1
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_1) = '' THEN NULL ELSE REGEXP_REPLACE(transactional.fclty_addr_1, '"', '') END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -905,7 +943,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_2
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_2) = '' THEN NULL ELSE REGEXP_REPLACE(transactional.fclty_addr_2, '"', '') END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -915,7 +954,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_city
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_city) = '' THEN NULL ELSE REGEXP_REPLACE(transactional.fclty_addr_city, '"', '') END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -925,7 +965,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_state
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_state) = '' THEN NULL ELSE transactional.fclty_addr_state END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
@@ -935,7 +976,8 @@ SELECT DISTINCT
         CASE
         WHEN transactional.fclty_npi_svc IS NULL
         OR transactional.fclty_npi_svc = ''
-        THEN transactional.fclty_addr_zip
+        THEN MIN(CASE WHEN TRIM(transactional.fclty_addr_zip) = '' THEN NULL ELSE transactional.fclty_addr_zip END)
+        OVER(PARTITION BY transactional.src_claim_id)
         ELSE NULL
         END,
         generate_inst_type_of_bill_std_id(
