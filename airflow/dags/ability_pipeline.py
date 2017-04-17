@@ -46,7 +46,7 @@ HV_S3_TRANSACTION_BUCKET='salusv'
 # Ability AP file
 AP_FILE_DESCRIPTION='Ability AP file'
 ABILITY_S3_AP_PREFIX='ap-daily/'
-AP_FILE_NAME_TEMPLATE='ap.from_{0}.to_{0}.zip'
+AP_FILE_NAME_TEMPLATE='ap.from_{0}.to_{1}.zip'
 MINIMUM_AP_FILE_SIZE=15000
 
 # Ability SES file
@@ -58,14 +58,14 @@ MINIMUM_SES_FILE_SIZE=15000
 # Ability EASE file
 EASE_FILE_DESCRIPTION='Ability EASE file'
 ABILITY_S3_EASE_PREFIX='ease-daily/'
-EASE_FILE_NAME_TEMPLATE='ease.from_{0}.to_{0}.zip'
+EASE_FILE_NAME_TEMPLATE='ease.from_{0}.to_{1}.zip'
 MINIMUM_EASE_FILE_SIZE=15000
 
 def get_tmp_dir(ds, kwargs):
     return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
 
 def get_expected_ap_file_name(ds, kwargs):
-    return AP_FILE_NAME_TEMPLATE.format(ds)
+    return AP_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds'], ds)
 
 def get_ap_transaction_tmp_dir(ds, kwargs):
     return get_tmp_dir(ds, kwargs) + 'ap/transaction/'
@@ -74,7 +74,7 @@ def get_ap_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + get_expected_ap_file_name(ds, kwargs)]
 
 def get_expected_ap_file_regex(ds, kwargs):
-    return AP_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}')
+    return AP_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', '\d{4}-\d{2}-\d{2}')
 
 def get_transaction_files_paths_func(tmp_dir_func):
     def get_transaction_files_paths(ds, kwargs):
@@ -104,13 +104,13 @@ def get_expected_ses_file_regex(ds, kwargs):
 get_ses_transaction_files_paths = get_transaction_files_paths_func(get_ses_transaction_tmp_dir)
 
 def get_expected_ease_file_name(ds, kwargs):
-    return EASE_FILE_NAME_TEMPLATE.format(ds)
+    return EASE_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds'], ds)
 
 def get_ease_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + get_expected_ease_file_name(ds, kwargs)]
 
 def get_expected_ease_file_regex(ds, kwargs):
-    return EASE_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}')
+    return EASE_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', '\d{4}-\d{2}-\d{2}')
 
 def get_ease_transaction_tmp_dir(ds, kwargs):
     return get_tmp_dir(ds, kwargs) + 'ease/transaction/'
@@ -125,17 +125,17 @@ def get_s3_raw_prefix(ds, kwargs):
 
 def get_ap_deid_file_paths(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs) + 'ap/deid/'
-    files = os.listdir(file_dir)
+    files = filter(lambda f: f.find("vwpatient") > -1, os.listdir(file_dir))
     return map(lambda f: file_dir + f, files)
 
 def get_ses_deid_file_paths(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs) + 'ses/deid/'
-    files = os.listdir(file_dir)
+    files = filter(lambda f: f.find("vwpatient") > -1, os.listdir(file_dir))
     return map(lambda f: file_dir + f, files)
 
 def get_ease_deid_file_paths(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs) + 'ease/deid/'
-    files = os.listdir(file_dir)
+    files = filter(lambda f: f.find("vwpatient") > -1, os.listdir(file_dir))
     return map(lambda f: file_dir + f, files)
 
 def get_ap_encrypted_decrypted_file_paths(ds, kwargs):
@@ -188,10 +188,7 @@ def do_rename_files(ds, **kwargs):
 
 def get_expected_matching_files(ds, kwargs):
     payloads_per_product = [
-        'deid.vwheader.txt', 
-        'deid.vwpatient.txt',
-        'deid.vwpayer.txt',
-        'deid.vwsubscriber.txt'
+        'deid.vwpatient.txt'
     ]
     res = []
     for product in ['ap', 'ses', 'ease']:
