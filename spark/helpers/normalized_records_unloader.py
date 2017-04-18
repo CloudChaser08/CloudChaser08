@@ -2,6 +2,15 @@ import logging
 import time
 import subprocess
 import spark.helpers.constants as constants
+import os
+
+def get_rel_path(relative_filename):
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            relative_filename
+        )
+    )
 
 def mk_move_file(file_date):
     def move_file(part_file):
@@ -12,7 +21,7 @@ def mk_move_file(file_date):
 
     return move_file
 
-def unload(spark, runner, data_type, date_column, file_date, S3_output_location):
+def unload(spark, runner, data_type, provider, date_column, file_date, S3_output_location):
     """
     Unload normalized data into partitions based on
     a date column
@@ -20,17 +29,17 @@ def unload(spark, runner, data_type, date_column, file_date, S3_output_location)
 
     NOW = time.strftime('%Y-%m-%dT%H%M%S', time.localtime())
     table_loc = '/text/{}/{}'.format(data_type, NOW)
-    runner.run_spark_script(get_rel_path('../../../common/{}_common_model.sql'.format(data_type), [
-        ['table_name', 'final_unload'],
-        ['properties', constants.unload_properties_template.format(table_loc)]
+    runner.run_spark_script(get_rel_path('../../../../common/{}_common_model.sql'.format(data_type)), [
+        ['table_name', 'final_unload', False],
+        ['properties', constants.unload_properties_template.format(table_loc), False]
     ])
-    runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'), [
-        ['select_statement', "SELECT *, 'NULL' as part_best_date FROM {}_common_model WHERE {} is NULL".format(data_type, date_column), False],
-        ['parititions', '20', False]
+    runner.run_spark_script(get_rel_path('../../../../common/unload_common_model.sql'), [
+        ['select_statement', "SELECT *, '{}' as part_provider, 'NULL' as part_best_date FROM {}_common_model WHERE {} is NULL".format(provider, data_type, date_column), False],
+        ['partitions', '20', False]
     ])
-    runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'), [
-        ['select_statement', "SELECT *, regexp_replace({1}, '-..$', '') as part_best_date FROM {0}_common_model WHERE {1} IS NOT NULL".format(data_type, date_column), False],
-        ['parititions', '20', False]
+    runner.run_spark_script(get_rel_path('../../../../common/unload_common_model.sql'), [
+        ['select_statement', "SELECT *, '{0}' as part_provider, regexp_replace({2}, '-..$', '') as part_best_date FROM {1}_common_model WHERE {2} IS NOT NULL".format(provider, data_type, date_column), False],
+        ['partitions', '20', False]
     ])
 
     part_files = subprocess.check_output(['hadoop', 'fs', '-ls', '-R', table_loc]).strip().split("\n")

@@ -47,8 +47,9 @@ if args.first_run:
 
 date_path = args.date.replace('-', '/')
 
-runner.run_spark_script(get_rel_path('../../../common/medicalclaims_common_model.sql')
-        ['table_name', 'medicalclaims_common_model', False]
+runner.run_spark_script(get_rel_path('../../../common/medicalclaims_common_model.sql'), [
+        ['table_name', 'medicalclaims_common_model', False],
+        ['properties', '', False]
     ])
 if args.date < '2015-08-01':
     runner.run_spark_script(get_rel_path('load_transactions.sql'), [
@@ -86,5 +87,5 @@ runner.run_spark_script(get_rel_path('../../../common/medicalclaims_post_normali
     ['vendor', '11']
 ])
 
-normalized_records_unloader.unload(spark, runner, 'medicalclaims', 'date_service', args.date, S3_EMDEON_OUT)
+normalized_records_unloader.unload(spark, runner, 'medicalclaims', 'emdeon', 'date_service', args.date, S3_EMDEON_OUT)
 spark.sparkContext.stop()

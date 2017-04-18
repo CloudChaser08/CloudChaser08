@@ -1,4 +1,4 @@
-from pyspark.sql import HiveContext, SparkSession
+from pyspark.sql import SQLContext, SparkSession
 from helpers.udf.post_normalization_cleanup import *
 from helpers.udf.general_helpers import *
 from helpers.udf.medicalclaims_helpers import *
