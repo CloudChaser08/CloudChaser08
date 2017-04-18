@@ -190,7 +190,6 @@ fetch_transactional = SubDagOperator(
     dag=mdag
 )
 
-
 decrypt_transactional = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
         DAG_NAME,
