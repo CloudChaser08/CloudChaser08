@@ -67,6 +67,8 @@ def clean_up_numeric_code(code):
 def clean_up_diagnosis_code(
         diagnosis_code, diagnosis_code_qual, date_service
 ):
+    if diagnosis_code == None:
+        return None
     diagnosis_code = uppercase_code(clean_up_alphanumeric_code(diagnosis_code))
     if diagnosis_code_qual == '01' or (
             diagnosis_code_qual is None
@@ -136,7 +138,6 @@ def filter_due_to_place_of_service(prov_detail, place_of_service_std_id):
     else:
         return prov_detail
 
-
 def scrub_discharge_status(discharge_status):
     if discharge_status in ['69', '87']:
         return '0'
@@ -153,29 +154,39 @@ def nullify_drg_blacklist(drg_code):
 
 # Age caps
 def cap_age(age):
+    if age is None or age == '':
+        return
     try:
-        return '90' if int(age) > 85 else age
+        return '90' if int(age) >= 85 else age
     except:
         return None
 
-
 def cap_year_of_birth(age, date_service, year_of_birth):
-    """ Cap year of birth if age or birth year over 85 """
+    """ Cap year of birth if age is 85 and over """
     try:
         if (
             isinstance(date_service, datetime.date)
             and year_of_birth is not None
             and year_of_birth != ''
-            and (date_service.year - int(year_of_birth)) > 85
-        ) or (
+        ):
+            if (date_service.year - int(year_of_birth)) >= 85:
+                return 1927
+            return year_of_birth
+
+        elif (
             age is not None
             and age != ''
-            and int(age) > 85
-        ) or (
+        ):
+            if int(age) >= 85:
+                return 1927
+            return year_of_birth
+
+        elif (
             year_of_birth is not None
-            and datetime.datetime.today().year - int(year_of_birth) > 85
+            and datetime.datetime.today().year - int(year_of_birth) >= 85
         ):
             return 1927
+
         else:
             return year_of_birth
 
