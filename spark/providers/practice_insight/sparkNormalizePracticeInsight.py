@@ -3,6 +3,7 @@ import os
 import argparse
 import time
 from datetime import datetime
+import calendar
 
 from spark.runner import Runner
 from spark.spark import init
@@ -56,10 +57,13 @@ input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.forma
 )
 
 if date_obj.year <= 2016:
+    max_date = str(date_obj.year) + '-12-31'
     matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/'.format(
         str(date_obj.year)
     )
 else:
+    max_date = date_obj.strftime('%Y-%m-') \
+               + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
     matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/{}/'.format(
         str(date_obj.year),
         str(date_obj.month).zfill(2)
@@ -118,7 +122,7 @@ def run(part):
             END
             """.format(
                 min_date=min_date,
-                max_date=args.date
+                max_date=max_date
             ), False
         ],
         [
@@ -142,7 +146,7 @@ def run(part):
             END
             """.format(
                 min_date=min_date,
-                max_date=args.date
+                max_date=max_date
             ), False
         ],
         [
@@ -166,7 +170,7 @@ def run(part):
         ['feedname', '22'],
         ['vendor', '3'],
         ['min_date', '2010-01-01'],
-        ['max_date', args.date]
+        ['max_date', max_date]
     ])
 
     # explode date ranges
