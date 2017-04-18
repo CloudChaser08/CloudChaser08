@@ -37,7 +37,8 @@ addon_path = 's3a://salusv/incoming/labtests/caris/hist_additional_columns/addit
 script_path = __file__
 
 setid = 'DATA_' + str(date_obj.year) \
-        + str(date_obj.month).zfill(2) + '01'
+        + str(date_obj.month).zfill(2) + '01' \
+        if args.date != '2016-08-01' else 'Data_7_29'
 
 runner.run_spark_script(file_utils.get_rel_path(
     script_path, '../../common/zip3_to_state.sql'
