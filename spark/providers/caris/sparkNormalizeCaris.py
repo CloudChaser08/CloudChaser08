@@ -2,6 +2,7 @@
 import argparse
 import time
 from datetime import datetime
+import calendar
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 from spark.spark import init
@@ -32,13 +33,17 @@ matching_path = 's3a://salusv/matching/payload/labtests/caris/{year}/{month}/'.f
     year=str(date_obj.year),
     month=str(date_obj.month).zfill(2)
 )
-addon_path = 's3a://salusv/incoming/labtests/caris/hist_additional_columns/additionalColumns.csv'
+addon_path = 's3a://salusv/incoming/labtests/caris/hist_additional_columns/'
 
 script_path = __file__
 
 setid = 'DATA_' + str(date_obj.year) \
         + str(date_obj.month).zfill(2) + '01' \
         if args.date != '2016-08-01' else 'Data_7_29'
+
+min_date = '2015-01-01'
+max_date = date_obj.strftime('%Y-%m-') \
+           + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
 
 runner.run_spark_script(file_utils.get_rel_path(
     script_path, '../../common/zip3_to_state.sql'
@@ -69,26 +74,28 @@ if args.date <= '2017-03-01':
     sqlContext.sql("""
     SELECT t.*, a.ods_id as ods_id,
     a.accession_date AS accession_date,
-    o.sign_out_date AS sign_out_date
-    FROM transactional_raw t
+    a.sign_out_date AS sign_out_date
+    FROM raw_transactional t
     LEFT JOIN additional_columns a
     ON t.customer__patient_id = a.patient_id
-    """).createTempView('transactional_raw')
+    """).createTempView('raw_transactional')
 else:
     # TODO: Adjust for new model that already contains these columns
-    sqlContext.sql('select * from transactional_raw')  \
+    sqlContext.sql('select * from raw_transactional')  \
               .withColumn('ods_id', None)              \
               .withColumn('accession_date', None)      \
               .withColumn('sign_out_date', None)       \
-              .createTempView('transactional_raw')
+              .createTempView('raw_transactional')
 
 runner.run_spark_script(
     file_utils.get_rel_path(script_path, 'normalize.sql'), [
         ['filename', setid],
         ['today', TODAY],
         ['feedname', '14'],
-        ['veandor', '13'],
-        ['date_received', args.date]
+        ['vendor', '13'],
+        ['date_received', args.date],
+        ['min_date', min_date],
+        ['max_date', max_date]
     ]
 )
 
