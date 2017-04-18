@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
+from dateutil import relativedelta
 from subprocess import check_call
 
 # hv-specific modules
@@ -87,10 +88,11 @@ def insert_formatted_regex_function(template):
 
 def insert_current_date_function(template):
     def out(ds, kwargs):
+        adjusted_date = kwargs['execution_date'] \
+                        + relativedelta.relativedelta(months=1)
         return template.format(
-            kwargs['ds_nodash'][0:4],
-            kwargs['ds_nodash'][4:6],
-            kwargs['ds_nodash'][6:8]
+            str(adjusted_date.year),
+            str(adjusted_date.month).zfill(2)
         )
     return out
 
