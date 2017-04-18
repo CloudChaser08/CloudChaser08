@@ -1,37 +1,37 @@
 INSERT INTO lab_common_model
 SELECT * FROM (
     SELECT 
-        monotonically_increasing_id(),       -- record_id
-        t.customer__patient_id,              -- claim_id
-        mp.hvid,                             -- hvid
-        {today},                             -- created
-        '1',                                 -- model_version
-        {filename},                          -- data_set
-        {feedname},                          -- data_feed
-        {vendor},                            -- data_vendor
-        NULL,                                -- source_version
-        mp.gender,                           -- patient_gender
-        NULL,                                -- patient_age
+        monotonically_increasing_id(),                -- record_id
+        t.customer__patient_id,                       -- claim_id
+        mp.hvid,                                      -- hvid
+        {today},                                      -- created
+        '1',                                          -- model_version
+        {filename},                                   -- data_set
+        {feedname},                                   -- data_feed
+        {vendor},                                     -- data_vendor
+        NULL,                                         -- source_version
+        mp.gender,                                    -- patient_gender
+        NULL,                                         -- patient_age
         cap_year_of_birth(
             NULL,
             CAST({date_received} AS DATE),
             mp.yearOfBirth
-            ),                               -- patient_year_of_birth
-        mp.threeDigitZip,                    -- patient_zip3
-        zip3.state,                          -- patient_state
-        NULL,                                -- date_service
-        NULL,                                -- date_specimen
-        NULL,                                -- date_report
-        NULL,                                -- time_report
-        NULL,                                -- loinc_code
-        NULL,                                -- lab_id
-        NULL,                                -- test_id
-        NULL,                                -- test_number
-        NULL,                                -- test_battery_local_id
-        NULL,                                -- test_battery_std_id
-        NULL,                                -- test_battery_name
-        NULL,                                -- test_ordered_local_id
-        NULL,                                -- test_ordered_std_id
+            ),                                        -- patient_year_of_birth
+        mp.threeDigitZip,                             -- patient_zip3
+        zip3.state,                                   -- patient_state
+        COALESCE(t.accession_date, t.sign_out_date),  -- date_service
+        NULL,                                         -- date_specimen
+        NULL,                                         -- date_report
+        NULL,                                         -- time_report
+        NULL,                                         -- loinc_code
+        NULL,                                         -- lab_id
+        NULL,                                         -- test_id
+        NULL,                                         -- test_number
+        NULL,                                         -- test_battery_local_id
+        NULL,                                         -- test_battery_std_id
+        NULL,                                         -- test_battery_name
+        NULL,                                         -- test_ordered_local_id
+        NULL,                                         -- test_ordered_std_id
         CASE cross_join.i
         WHEN 0   THEN CASE WHEN fish_cmet = 'X' THEN 'FISH_cMET' ELSE NULL END
         WHEN 1   THEN CASE WHEN fish_cmyc = 'X' THEN 'FISH_cMYC' ELSE NULL END
@@ -165,39 +165,39 @@ SELECT * FROM (
         WHEN 129 THEN CASE WHEN ihc_ia_p53 = 'X' THEN 'IHC-IA_P53' ELSE NULL END
         WHEN 130 THEN CASE WHEN ihc_ia_pr = 'X' THEN 'IHC-IA_PR' ELSE NULL END
         WHEN 131 THEN CASE WHEN ngs_offering = 'X' THEN 'NGS_OFFERING' ELSE NULL END
-        ELSE NULL END as test_ordered_name,  -- test_ordered_name
-        NULL,                                -- result_id
-        NULL,                                -- result
-        NULL,                                -- result_name
-        NULL,                                -- result_unit_of_measure
-        NULL,                                -- result_desc
-        NULL,                                -- result_comments
-        NULL,                                -- ref_range_low
-        NULL,                                -- ref_range_high
-        NULL,                                -- ref_range_alpha
-        NULL,                                -- abnormal_flag
-        NULL,                                -- fasting_status
-        NULL,                                -- diagnosis_code
-        NULL,                                -- diagnosis_code_qual
-        NULL,                                -- diagnosis_code_priorty
-        NULL,                                -- procedure_code
-        NULL,                                -- procedure_code_qual
-        NULL,                                -- lab_npi
-        NULL,                                -- ordering_npi
-        NULL,                                -- payer_id
-        NULL,                                -- payer_id_qual
-        NULL,                                -- payer_name
-        NULL,                                -- payer_parent_name
-        NULL,                                -- payer_org_name
-        NULL,                                -- payer_plan_id
-        NULL,                                -- payer_plan_name
-        NULL,                                -- payer_type
-        NULL,                                -- lab_other_id
-        NULL,                                -- lab_other_qual
-        NULL,                                -- ordering_other_id
-        NULL,                                -- ordering_other_qual
-        NULL,                                -- ordering_market_type
-        NULL                                 -- ordering_specialty
+        ELSE NULL END as test_ordered_name,           -- test_ordered_name
+        NULL,                                         -- result_id
+        NULL,                                         -- result
+        NULL,                                         -- result_name
+        NULL,                                         -- result_unit_of_measure
+        NULL,                                         -- result_desc
+        NULL,                                         -- result_comments
+        NULL,                                         -- ref_range_low
+        NULL,                                         -- ref_range_high
+        NULL,                                         -- ref_range_alpha
+        NULL,                                         -- abnormal_flag
+        NULL,                                         -- fasting_status
+        NULL,                                         -- diagnosis_code
+        NULL,                                         -- diagnosis_code_qual
+        NULL,                                         -- diagnosis_code_priorty
+        NULL,                                         -- procedure_code
+        NULL,                                         -- procedure_code_qual
+        NULL,                                         -- lab_npi
+        NULL,                                         -- ordering_npi
+        NULL,                                         -- payer_id
+        NULL,                                         -- payer_id_qual
+        NULL,                                         -- payer_name
+        NULL,                                         -- payer_parent_name
+        NULL,                                         -- payer_org_name
+        NULL,                                         -- payer_plan_id
+        NULL,                                         -- payer_plan_name
+        NULL,                                         -- payer_type
+        NULL,                                         -- lab_other_id
+        NULL,                                         -- lab_other_qual
+        NULL,                                         -- ordering_other_id
+        NULL,                                         -- ordering_other_qual
+        NULL,                                         -- ordering_market_type
+        NULL                                          -- ordering_specialty
     FROM raw_transactional t
         CROSS JOIN (
         -- Using 'row_number' here only as a quick-and-dirty method
@@ -205,6 +205,7 @@ SELECT * FROM (
         -- matter which row each number corresponds to in this case
         SELECT row_number() over (ORDER BY true) i 
         FROM raw_transactional
+            LIMIT 200
             ) cross_join
         LEFT JOIN matching_payload mp ON t.hv_key = mp.hvJoinKey
         LEFT JOIN zip3_to_state zip3 ON mp.threeDigitZip = zip3.zip3

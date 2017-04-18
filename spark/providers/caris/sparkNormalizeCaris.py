@@ -32,11 +32,12 @@ matching_path = 's3a://salusv/matching/payload/labtests/caris/{year}/{month}/'.f
     year=str(date_obj.year),
     month=str(date_obj.month).zfill(2)
 )
+addon_path = 's3a://salusv/incoming/labtests/caris/hist_additional_columns/additionalColumns.csv'
+
 script_path = __file__
 
 setid = 'DATA_' + str(date_obj.year) \
         + str(date_obj.month).zfill(2) + '01'
-
 
 runner.run_spark_script(file_utils.get_rel_path(
     script_path, '../../common/zip3_to_state.sql'
@@ -58,13 +59,37 @@ runner.run_spark_script(
     ]
 )
 
-runner.run_spark_script(file_utils.get_rel_path(script_path, 'normalize.sql'), [
-    ['filename', setid],
-    ['today', TODAY],
-    ['feedname', '14'],
-    ['vendor', '13'],
-    ['date_received', args.date]
-])
+# append additional columns
+if args.date <= '2017-03-01':
+    runner.run_spark_script(file_utils.get_rel_path(
+        script_path, 'load_additional_columns.sql'
+    ), [['addon_path', addon_path]])
+
+    sqlContext.sql("""
+    SELECT t.*, a.ods_id as ods_id,
+    a.accession_date AS accession_date,
+    o.sign_out_date AS sign_out_date
+    FROM transactional_raw t
+    LEFT JOIN additional_columns a
+    ON t.customer__patient_id = a.patient_id
+    """).createTempView('transactional_raw')
+else:
+    # TODO: Adjust for new model that already contains these columns
+    sqlContext.sql('select * from transactional_raw')  \
+              .withColumn('ods_id', None)              \
+              .withColumn('accession_date', None)      \
+              .withColumn('sign_out_date', None)       \
+              .createTempView('transactional_raw')
+
+runner.run_spark_script(
+    file_utils.get_rel_path(script_path, 'normalize.sql'), [
+        ['filename', setid],
+        ['today', TODAY],
+        ['feedname', '14'],
+        ['veandor', '13'],
+        ['date_received', args.date]
+    ]
+)
 
 runner.run_spark_script(file_utils.get_rel_path(
     script_path,
