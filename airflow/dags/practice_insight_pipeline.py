@@ -147,102 +147,85 @@ validate_deid = generate_transaction_file_validation_dag(
     10000000
 )
 
-
-def generate_fetch_dag(
-        task_id, s3_path_template, local_path_template, file_name_template
-):
-    return SubDagOperator(
-        subdag=s3_fetch_file.s3_fetch_file(
-            DAG_NAME,
-            'fetch_' + task_id + '_file',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'tmp_path_template': local_path_template,
-                'expected_file_name_func': insert_current_plaintext_date_function(
-                    file_name_template
-                ),
-                's3_prefix': s3_path_template,
-                's3_bucket': 'healthverity'
-            }
-        ),
-        task_id='fetch_' + task_id + '_file',
-        dag=mdag
-    )
-
-
-fetch_transactional = generate_fetch_dag(
-    "transaction",
-    '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-    TMP_PATH_TEMPLATE, TRANSACTION_FILE_NAME_TEMPLATE
-)
-
-
-def gunzip_step(task_id, tmp_path_template, filename_template, tmp_dir_func):
-    def execute(ds, **kwargs):
-        tmp_dir = tmp_dir_func(ds, kwargs)
-        decompression.decompress_gzip_file(
-            tmp_dir + insert_current_plaintext_date(filename_template, kwargs),
-        )
-    return PythonOperator(
-        task_id='gunzip_' + task_id + '_file',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
-    )
-
-
-gunzip_transactional = gunzip_step(
-    "transaction", TMP_PATH_TEMPLATE,
-    TRANSACTION_FILE_NAME_TEMPLATE,
-    get_tmp_dir
-)
-
-
-def generate_split_transaction_into_parts():
-    def execute(ds, **kwargs):
-        check_call([
-            'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/'
-        ])
-        check_call([
-            'split', '-n', 'l/4', get_tmp_dir(ds, kwargs)
-            + insert_current_plaintext_date(
-                TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+fetch_transactional = SubDagOperator(
+    subdag=s3_fetch_file.s3_fetch_file(
+        DAG_NAME,
+        'fetch_transaction_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE,
+            'expected_file_name_func': insert_current_plaintext_date_function(
+                TRANSACTION_FILE_NAME_TEMPLATE
             ),
-            get_tmp_dir(ds, kwargs) + 'presplit/'
-            + insert_current_plaintext_date(
-                TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
-            ) + '.'
-        ])
-        for i in range(1, 5):
-            os.mkdir(get_tmp_dir(ds, kwargs) + 'presplit/' + str(i))
-            check_call([
-                'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/' + str(i)
-            ])
-            os.rename(
-                get_tmp_dir(ds, kwargs) + 'presplit/'
-                + filter(
-                    lambda f: f.startswith(
-                        insert_current_plaintext_date(
-                            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
-                        )
-                    ),
-                    os.listdir(get_tmp_dir(ds, kwargs) + 'presplit/')
-                )[0],
-                get_tmp_dir(ds, kwargs) + 'presplit/' + str(i) + '/'
-                + insert_current_plaintext_date(
-                    TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
-                )
-            )
-    return PythonOperator(
-        task_id='split_transaction_into_parts',
-        provide_context=True,
-        python_callable=execute,
-        dag=mdag
+            's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+            's3_bucket': 'healthverity'
+        }
+    ),
+    task_id='fetch_transaction_file',
+    dag=mdag
+)
+
+
+def gunzip_transactional_func(ds, **kwargs):
+    tmp_dir = get_tmp_dir(ds, kwargs)
+    decompression.decompress_gzip_file(
+        tmp_dir + insert_current_plaintext_date(
+            TRANSACTION_FILE_NAME_TEMPLATE, kwargs
+        ),
     )
 
 
-split_transaction_into_parts = generate_split_transaction_into_parts()
+gunzip_transactional = PythonOperator(
+    task_id='gunzip_transaction_file',
+    provide_context=True,
+    python_callable=gunzip_transactional_func,
+    dag=mdag
+)
+
+
+def split_transaction_into_parts_func(ds, **kwargs):
+    check_call([
+        'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/'
+    ])
+    check_call([
+        'split', '-n', 'l/4', get_tmp_dir(ds, kwargs)
+        + insert_current_plaintext_date(
+            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+        ),
+        get_tmp_dir(ds, kwargs) + 'presplit/'
+        + insert_current_plaintext_date(
+            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+        ) + '.'
+    ])
+    for i in range(1, 5):
+        os.mkdir(get_tmp_dir(ds, kwargs) + 'presplit/' + str(i))
+        check_call([
+            'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/' + str(i)
+        ])
+        os.rename(
+            get_tmp_dir(ds, kwargs) + 'presplit/'
+            + filter(
+                lambda f: f.startswith(
+                    insert_current_plaintext_date(
+                        TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+                    )
+                ),
+                os.listdir(get_tmp_dir(ds, kwargs) + 'presplit/')
+            )[0],
+            get_tmp_dir(ds, kwargs) + 'presplit/' + str(i) + '/'
+            + insert_current_plaintext_date(
+                TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+            )
+            )
+
+
+split_transaction_into_parts = PythonOperator(
+    task_id='split_transaction_into_parts',
+    provide_context=True,
+    python_callable=split_transaction_into_parts_func,
+    dag=mdag
+)
 
 
 def split_step(
@@ -283,21 +266,20 @@ split_transactional_steps = map(
 )
 
 
-def clean_up_workspace_step(task_id, template):
-    def execute(ds, **kwargs):
-        check_call([
-            'rm', '-rf', template.format(kwargs['ds_nodash'])
-        ])
-    return PythonOperator(
-        task_id='clean_up_workspace_' + task_id,
-        provide_context=True,
-        python_callable=execute,
-        trigger_rule='all_done',
-        dag=mdag
-    )
+def clean_up_workspace_func(ds, **kwargs):
+    check_call([
+        'rm', '-rf', TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
+    ])
 
 
-clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
+clean_up_workspace = PythonOperator(
+    task_id='clean_up_workspace',
+    provide_context=True,
+    python_callable=clean_up_workspace_func,
+    trigger_rule='all_done',
+    dag=mdag
+)
+
 
 queue_up_for_matching = SubDagOperator(
     subdag=queue_up_for_matching.queue_up_for_matching(
@@ -353,7 +335,7 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-# addon
+# transaction
 fetch_transactional.set_upstream(validate_transactional)
 gunzip_transactional.set_upstream(fetch_transactional)
 
