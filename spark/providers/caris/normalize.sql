@@ -22,7 +22,7 @@ SELECT * FROM (
         extract_date(
             CASE WHEN TRIM(t.accession_date) = ''
             THEN t.sign_out_date
-            ELSE t.sign_out_date END,
+            ELSE t.accession_date END,
             '%d-%b-%Y',
             CAST({min_date} AS DATE),
             CAST({max_date} AS DATE)
