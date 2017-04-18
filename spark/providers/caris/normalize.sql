@@ -2,7 +2,9 @@ INSERT INTO lab_common_model
 SELECT * FROM (
     SELECT 
         monotonically_increasing_id(),       -- record_id
-        t.customer__patient_id,              -- claim_id
+        CONCAT(
+            t.customer__patient_id, '_', t.ods_id
+            ),                               -- claim_id
         mp.hvid,                             -- hvid
         {today},                             -- created
         '1',                                 -- model_version
