@@ -207,7 +207,7 @@ def run(part):
                 + "WHERE date_service IS NOT NULL",
                 False
             ],
-            ['partitions', '50', False]
+            ['partitions', '20', False]
 
         ]
     )
