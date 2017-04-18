@@ -169,37 +169,27 @@ validate_deid = generate_transaction_file_validation_dag(
     1000000
 )
 
-
-def generate_fetch_dag(
-        task_id, s3_path_template, local_path_template, file_name_template
-):
-    return SubDagOperator(
-        subdag=s3_fetch_file.s3_fetch_file(
-            DAG_NAME,
-            'fetch_' + task_id + '_file',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'tmp_path_template': local_path_template,
-                'expected_file_name_func': lambda ds, k: (
-                    insert_current_date_function(
-                        file_name_template
-                    )(ds, k) + get_date_timestamp(k)
-                ),
-                's3_prefix': s3_path_template,
-                's3_bucket': 'healthverity'
-            }
-        ),
-        task_id='fetch_' + task_id + '_file',
-        dag=mdag
-    )
-
-
-fetch_transactional = generate_fetch_dag(
-    "transaction",
-    '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-    TMP_PATH_TEMPLATE, TRANSACTION_FILE_NAME_STUB_TEMPLATE
+fetch_transactional = SubDagOperator(
+    subdag=s3_fetch_file.s3_fetch_file(
+        DAG_NAME,
+        'fetch_transaction_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE,
+            'expected_file_name_func': lambda ds, k: (
+                insert_current_date_function(
+                    TRANSACTION_FILE_NAME_STUB_TEMPLATE
+                )(ds, k) + get_date_timestamp(k)
+            ),
+            's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+            's3_bucket': 'healthverity'
+        }
+    ),
+    task_id='fetch_transaction_file',
+    dag=mdag
 )
+
 
 decrypt_transactional = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
