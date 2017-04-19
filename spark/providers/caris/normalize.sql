@@ -21,14 +21,20 @@ SELECT DISTINCT * FROM (
             ),                               -- patient_year_of_birth
         mp.threeDigitZip,                    -- patient_zip3
         zip3.state,                          -- patient_state
+        COALESCE(
         extract_date(
-            CASE WHEN TRIM(t.accession_date) = ''
-            THEN t.sign_out_date
-            ELSE t.accession_date END,
+            t.accession_date,
+            '%m/%d/%Y',
+            CAST({min_date} AS DATE),
+            CAST({max_date} AS DATE)
+            ),
+        extract_date(
+            t.sign_out_date,
             '%d-%b-%Y',
             CAST({min_date} AS DATE),
             CAST({max_date} AS DATE)
-            ),                               -- date_service
+            )
+        ),                                   -- date_service
         NULL,                                -- date_specimen
         NULL,                                -- date_report
         NULL,                                -- time_report
