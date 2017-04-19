@@ -27,8 +27,7 @@ def unload(spark, runner, data_type, provider, date_column, file_date, S3_output
     a date column
     """
 
-    NOW = time.strftime('%Y-%m-%dT%H%M%S', time.localtime())
-    table_loc = '/text/{}/{}'.format(data_type, NOW)
+    table_loc = '/text-out/'
     runner.run_spark_script(get_rel_path('../../../../common/{}_common_model.sql'.format(data_type)), [
         ['table_name', 'final_unload', False],
         ['properties', constants.unload_properties_template.format(table_loc), False]
@@ -47,4 +46,3 @@ def unload(spark, runner, data_type, provider, date_column, file_date, S3_output
     spark.sparkContext.parallelize(part_files).foreach(mk_move_file(file_date))
 
     subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption', '--src', table_loc, '--dest', S3_output_location])
-    subprocess.check_call(['hadoop', 'fs', '-rm', '-r', table_loc])

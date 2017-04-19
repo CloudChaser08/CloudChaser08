@@ -132,8 +132,9 @@ def normalize(cluster_name, script_name, args,
     ])
     _wait_for_steps(cluster_id)
 
-    # get directories that will need to be transformed to parquet
-    # by listing the directories created in hdfs by normalization
+    # get directories that will need to be transformed to parquet by
+    # listing the directories created in hdfs by
+    # normalized_records_unloader
     all_directories = check_output(' '.join([
         'ssh', '-i', '~/.ssh/emr_deployer',
         '-o', '"StrictHostKeyChecking no"',

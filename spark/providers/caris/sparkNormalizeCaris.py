@@ -7,6 +7,7 @@ from pyspark.sql.functions import monotonically_increasing_id, lit
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from spark.spark import init
 import spark.helpers.constants as constants
 import spark.helpers.file_prefix as file_prefix
@@ -107,52 +108,8 @@ sqlContext.sql('select * from lab_common_model').withColumn(
     'record_id', monotonically_increasing_id()
 ).createTempView('lab_common_model')
 
-runner.run_spark_script(file_utils.get_rel_path(
-    script_path,
-    '../../common/lab_common_model.sql'
-), [
-    ['table_name', 'final_unload', False],
-    [
-        'properties',
-        constants.unload_properties_template.format(staging_dir),
-        False
-    ],
-    ['partitions', '20', False]
-])
-
-runner.run_spark_script(
-    file_utils.get_rel_path(
-        script_path, '../../common/unload_common_model.sql'
-    ), [
-        [
-            'select_statement',
-            "SELECT *, 'caris' as provider, 'NULL' as best_date "
-            + "FROM lab_common_model "
-            + "WHERE date_service IS NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
-)
-
-runner.run_spark_script(
-    file_utils.get_rel_path(
-        script_path, '../../common/unload_common_model.sql'
-    ), [
-        [
-            'select_statement',
-            "SELECT *, 'caris' as provider, "
-            + "regexp_replace(cast(date_service as string), '-..$', '') as best_date "
-            + "FROM lab_common_model "
-            + "WHERE date_service IS NOT NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
-)
-
-file_prefix.prefix_part_files(
-    spark, staging_dir, args.output_path, args.date + '_'
+normalized_records_unloader.unload(
+    spark, runner, 'lab', 'caris', 'date_service', args.date, args.output_path
 )
 
 spark.stop()
