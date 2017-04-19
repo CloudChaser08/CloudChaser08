@@ -43,7 +43,7 @@ setid = 'DATA_' + str(date_obj.year) \
         + str(date_obj.month).zfill(2) + '01' \
         if args.date != '2016-08-01' else 'Data_7_29'
 
-min_date = '2015-01-01'
+min_date = '2005-01-01'
 max_date = date_obj.strftime('%Y-%m-') \
            + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
 
