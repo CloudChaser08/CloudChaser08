@@ -1,5 +1,3 @@
-import logging
-import time
 import subprocess
 import spark.helpers.constants as constants
 import os
