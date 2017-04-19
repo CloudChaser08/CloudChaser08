@@ -68,7 +68,7 @@ runner.run_spark_script(
 )
 
 # append additional columns
-if args.date <= '2017-03-01':
+if args.date <= '2017-04-01':
     runner.run_spark_script(file_utils.get_rel_path(
         script_path, 'load_additional_columns.sql'
     ), [['addon_path', addon_path]])
