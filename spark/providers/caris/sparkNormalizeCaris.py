@@ -125,6 +125,23 @@ runner.run_spark_script(
     ]
 )
 
+runner.run_spark_script(
+    file_utils.get_rel_path(
+        script_path, '../../common/unload_common_model.sql'
+    ), [
+        [
+            'select_statement',
+            "SELECT *, 'caris' as provider, "
+            + "regexp_replace(cast(date_service as string), '-..$', '') as best_date "
+            + "FROM lab_common_model "
+            + "WHERE date_service IS NOT NULL",
+            False
+        ],
+        ['partitions', '20', False]
+    ]
+)
+
+
 file_prefix.prefix_part_files(spark, args.output_path, args.date + '_')
 
 spark.stop()
