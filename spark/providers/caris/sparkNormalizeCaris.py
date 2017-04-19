@@ -121,7 +121,8 @@ runner.run_spark_script(
             + "FROM lab_common_model "
             + "WHERE date_service IS NULL",
             False
-        ]
+        ],
+        ['partitions', '20', False]
     ]
 )
 
