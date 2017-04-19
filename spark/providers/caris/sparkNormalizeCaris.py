@@ -3,6 +3,8 @@ import argparse
 import time
 from datetime import datetime
 import calendar
+from pyspark.sql.functions import monotonically_increasing_id, lit
+
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 from spark.spark import init
@@ -82,9 +84,9 @@ if args.date <= '2017-03-01':
 else:
     # TODO: Adjust for new model that already contains these columns
     sqlContext.sql('select * from raw_transactional')  \
-              .withColumn('ods_id', None)              \
-              .withColumn('accession_date', None)      \
-              .withColumn('sign_out_date', None)       \
+              .withColumn('ods_id', lit(None))              \
+              .withColumn('accession_date', lit(None))      \
+              .withColumn('sign_out_date', lit(None))       \
               .createTempView('raw_transactional')
 
 runner.run_spark_script(
@@ -98,6 +100,10 @@ runner.run_spark_script(
         ['max_date', max_date]
     ]
 )
+
+sqlContext.sql('select * from lab_common_model').withColumn(
+    'record_id', monotonically_increasing_id()
+).createTempView('lab_common_model')
 
 runner.run_spark_script(file_utils.get_rel_path(
     script_path,

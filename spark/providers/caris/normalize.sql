@@ -1,7 +1,7 @@
 INSERT INTO lab_common_model
-SELECT * FROM (
-    SELECT 
-        monotonically_increasing_id(),       -- record_id
+SELECT DISTINCT * FROM (
+    SELECT
+        NULL,                                -- record_id
         CONCAT(
             t.customer__patient_id, '_', t.ods_id
             ),                               -- claim_id
