@@ -49,8 +49,6 @@ args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 
-setid = 'HV.data.837.' + str(date_obj.year) + '.csv.gz'
-
 input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.format(
     str(date_obj.year),
     str(date_obj.month).zfill(2)
@@ -77,6 +75,9 @@ payload_loader.load(runner, matching_path, ['claimId'])
 
 
 def run(part):
+    setid = 'HV.data.837.' + str(date_obj.year) + '.csv.gz_' \
+            + str(date_obj.month) + '_' + part
+
     # Set shuffle partitions to stabilize job
     sqlContext.setConf("spark.sql.shuffle.partitions", args.shuffle_partitions)
 
