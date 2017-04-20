@@ -35,11 +35,8 @@ SELECT DISTINCT
     THEN extract_date(transactional.svc_to_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
     WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
     THEN extract_date(transactional.stmnt_to_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
-    ELSE (
-    SELECT MAX(extract_date(t2.svc_to_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
-    FROM transactional_raw t2
-    WHERE t2.src_claim_id = transactional.src_claim_id
-        )
+    ELSE MAX(extract_date(transactional.svc_to_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
+    OVER(PARTITION BY transactional.src_claim_id ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
     END,                                                   -- date_service_end
     CASE
     WHEN transactional.claim_type_cd = 'I'
@@ -583,11 +580,8 @@ SELECT DISTINCT
     THEN extract_date(transactional.svc_to_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
     WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)) IS NOT NULL
     THEN extract_date(transactional.stmnt_to_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date))
-    ELSE (
-    SELECT MAX(extract_date(t2.svc_to_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
-    FROM transactional_raw t2
-    WHERE t2.src_claim_id = transactional.src_claim_id
-        )
+    ELSE MAX(extract_date(transactional.svc_to_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)))
+    OVER(PARTITION BY transactional.src_claim_id ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
     END,                                                   -- date_service_end
     extract_date(
         transactional.admsn_dt, '%Y%m%d', CAST({min_date} as date), CAST({max_date} as date)

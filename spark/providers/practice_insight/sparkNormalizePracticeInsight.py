@@ -114,12 +114,11 @@ def run(part):
                 CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
             THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d',
                 CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
-            ELSE (
-            SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE))
-            FROM transactional_raw t2
-            WHERE t2.src_claim_id = transactional.src_claim_id
-                )
+            ELSE MIN(
+            CAST(extract_date(transactional.svc_from_dt, '%Y%m%d',
+            CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
+            ) OVER(PARTITION BY transactional.src_claim_id
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             END
             """.format(
                 min_date=min_date,
@@ -138,12 +137,11 @@ def run(part):
                 CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
             THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d',
                 CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
-            ELSE (
-            SELECT MIN(CAST(extract_date(t2.svc_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE))
-            FROM transactional_raw t2
-            WHERE t2.src_claim_id = transactional.src_claim_id
-                )
+            ELSE MIN(
+            CAST(extract_date(transactional.svc_from_dt, '%Y%m%d',
+            CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
+            ) OVER(PARTITION BY transactional.src_claim_id
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             END
             """.format(
                 min_date=min_date,
