@@ -59,6 +59,8 @@ if date_obj.year <= 2016:
     matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/'.format(
         str(date_obj.year)
     )
+    setid = 'HV.data.837.' + str(date_obj.year) + '.csv.gz_' \
+            + str(date_obj.month)
 else:
     max_date = date_obj.strftime('%Y-%m-') \
                + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
@@ -66,6 +68,8 @@ else:
         str(date_obj.year),
         str(date_obj.month).zfill(2)
     )
+    setid = 'HV.data.837.' + str(date_obj.year) + '.' \
+            + date_obj.strftime('%b').lowercase() + '.csv.gz'
 
 min_date = '2010-01-01'
 
@@ -75,9 +79,6 @@ payload_loader.load(runner, matching_path, ['claimId'])
 
 
 def run(part):
-    setid = 'HV.data.837.' + str(date_obj.year) + '.csv.gz_' \
-            + str(date_obj.month) + '_' + part
-
     # Set shuffle partitions to stabilize job
     sqlContext.setConf("spark.sql.shuffle.partitions", args.shuffle_partitions)
 
@@ -164,7 +165,7 @@ def run(part):
             """,
             False
         ],
-        ['setid', setid],
+        ['setid', setid + '_' + part],
         ['today', TODAY],
         ['feedname', '22'],
         ['vendor', '3'],
