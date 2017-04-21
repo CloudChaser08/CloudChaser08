@@ -36,8 +36,8 @@ def test_clean_up_diagnosis_code():
 
     # should clean based on date with no qual
     assert cleanup.clean_up_diagnosis_code(
-        'V8541', None, datetime.date(2016, 1, 1)
-    ) == 'V8541'
+        'Z6842', None, datetime.date(2016, 1, 1)
+    ) == 'Z684'
     assert cleanup.clean_up_diagnosis_code(
-        'V8541', None, datetime.date(2015, 1, 1)
-    ) == 'V854'
+        'Z6842', None, datetime.date(2015, 1, 1)
+    ) == 'Z6842'
