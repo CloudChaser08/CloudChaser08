@@ -2,7 +2,7 @@ import os
 import argparse
 import time
 from datetime import datetime, date
-from spark.spark import init
+from spark.spark_setup import init
 from spark.runner import Runner
 import spark.helpers.create_date_validation_table \
     as date_validator
