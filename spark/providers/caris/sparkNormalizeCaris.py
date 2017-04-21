@@ -21,7 +21,6 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
-parser.add_argument('--output_path', type=str)
 args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
@@ -30,6 +29,8 @@ input_path = 's3a://salusv/incoming/labtests/caris/{year}/{month}/'.format(
     year=str(date_obj.year),
     month=str(date_obj.month).zfill(2)
 )
+output_path = 's3a://salusv/warehouse/text/labtests/2017-02-16/'
+
 matching_path = 's3a://salusv/matching/payload/labtests/caris/{year}/{month}/'.format(
     year=str(date_obj.year),
     month=str(date_obj.month).zfill(2)
@@ -107,7 +108,7 @@ sqlContext.sql('select * from lab_common_model').withColumn(
 ).createTempView('lab_common_model')
 
 normalized_records_unloader.unload(
-    spark, runner, 'lab', 'caris', 'date_service', args.date, args.output_path
+    spark, runner, 'lab', 'caris', 'date_service', args.date, output_path
 )
 
 spark.stop()

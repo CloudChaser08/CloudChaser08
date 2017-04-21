@@ -289,13 +289,13 @@ detect_move_normalize_dag = SubDagOperator(
                 )(ds, k)
             ],
             'file_date_func': insert_current_date_function(
-                '{}/{}/{}'
+                '{}/{}'
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
             'vendor_uuid': 'd701240c-35be-4e71-94fc-9460b85b1515',
             'pyspark_normalization_script_name': '/home/hadoop/spark/providers/caris/sparkNormalizeCaris.py',
             'pyspark_normalization_args_func': lambda ds, k: [
-                '--date', insert_current_date('{}-{}-{}', k)
+                '--date', insert_current_date('{}-{}-01', k)
             ],
             'text_warehouse': TEXT_WAREHOUSE,
             'parquet_warehouse': PARQUET_WAREHOUSE,

@@ -119,8 +119,7 @@ def normalize(cluster_name, script_name, args,
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
         'Args=[--jars,'
         '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
-        '--py-files, /home/hadoop/spark/target/dewey.zip, {}, --output_path,'
-        + s3_text_warehouse + ']'
+        '--py-files, /home/hadoop/spark/target/dewey.zip, {}]'
     ).format(
         script_name + ',' + ','.join(args)
     )
