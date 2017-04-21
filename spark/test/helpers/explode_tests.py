@@ -13,7 +13,7 @@ class TestExplode(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        spark, sqlContext = init("Explode Test", True)
+        self.spark, sqlContext = init("Explode Test", True)
         runner = Runner(sqlContext)
 
         max_days = 10  # won't explode more than this date range
@@ -38,10 +38,10 @@ class TestExplode(unittest.TestCase):
                              StructField('date_end', DateType(), True),
                              StructField('type', StringType(), True)])
 
-        spark.sparkContext.parallelize(data) \
-                          .toDF(schema) \
-                          .write \
-                          .saveAsTable('explosion_test')
+        self.spark.sparkContext.parallelize(data) \
+                               .toDF(schema) \
+                               .write \
+                               .saveAsTable('explosion_test')
 
         explode.explode_dates(
             runner, 'explosion_test', 'date_start', 'date_end',
@@ -49,6 +49,10 @@ class TestExplode(unittest.TestCase):
         )
 
         self.results = sqlContext.sql('select * from explosion_test').collect()
+
+    @classmethod
+    def tearDownClass(self):
+        self.spark.stop()
 
     # explode dates tests
     def test_10row(self):
