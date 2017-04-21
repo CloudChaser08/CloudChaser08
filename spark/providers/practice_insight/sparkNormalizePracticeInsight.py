@@ -8,8 +8,7 @@ import calendar
 from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.payload_loader as payload_loader
-import spark.helpers.file_prefix as file_prefix
-import spark.helpers.constants as constants
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.explode as explode
 import spark.providers.practice_insight.udf as pi_udf
 
@@ -53,6 +52,7 @@ input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.forma
     str(date_obj.year),
     str(date_obj.month).zfill(2)
 )
+output_path = 's3a://salusv/warehouse/text/medicalclaims/2017-02-24/'
 
 if date_obj.year <= 2016:
     max_date = str(date_obj.year) + '-12-31'
@@ -176,47 +176,10 @@ def run(part):
     # explode date ranges
     explode.explode_medicalclaims_dates(runner)
 
-    # unload
-    runner.run_spark_script(get_rel_path(
-        '../../common/medicalclaims_common_model.sql'
-    ), [
-        ['table_name', 'final_unload', False],
-        [
-            'properties',
-            constants.unload_properties_template.format(args.output_path),
-            False
-        ]
-    ])
-
-    runner.run_spark_script(
-        get_rel_path('../../common/unload_common_model.sql'), [
-            [
-                'select_statement',
-                "SELECT *, 'practice_insight' as provider, 'NULL' as best_date "
-                + "FROM medicalclaims_common_model "
-                + "WHERE date_service is NULL",
-                False
-            ],
-            ['partitions', '20', False]
-        ]
+    normalized_records_unloader.unload(
+        spark, runner, 'medicalclaims', 'practice_insight',
+        'date_service', args.date, output_path
     )
-    runner.run_spark_script(
-        get_rel_path('../../common/unload_common_model.sql'), [
-            [
-                'select_statement',
-                "SELECT *, 'practice_insight' as provider, regexp_replace("
-                + "cast(date_service as string), "
-                + "'-..$', '') as best_date "
-                + "FROM medicalclaims_common_model "
-                + "WHERE date_service IS NOT NULL",
-                False
-            ],
-            ['partitions', '20', False]
-
-        ]
-    )
-
-    file_prefix.prefix_part_files(spark, args.output_path, args.date + '_' + part)
 
     spark.catalog.dropTempView('medicalclaims_common_model')
 
