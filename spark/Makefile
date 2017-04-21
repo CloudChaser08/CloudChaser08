@@ -6,5 +6,5 @@ build: test
 	echo "Created target/${APP_NAME}.zip"
 
 spark-test:
-	nosetests -v
+	pytest -v
 
