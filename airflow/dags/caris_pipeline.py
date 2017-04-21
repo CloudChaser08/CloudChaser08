@@ -14,8 +14,6 @@ import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 import util.s3_utils as s3_utils
 
-# import util.decompression as decompression
-
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching,
           detect_move_normalize, s3_utils]:
