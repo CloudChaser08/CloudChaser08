@@ -69,7 +69,7 @@ else:
         str(date_obj.month).zfill(2)
     )
     setid = 'HV.data.837.' + str(date_obj.year) + '.' \
-            + date_obj.strftime('%b').lowercase() + '.csv.gz'
+            + date_obj.strftime('%b').lower() + '.csv.gz'
 
 min_date = '2010-01-01'
 
