@@ -1,8 +1,10 @@
 INSERT INTO lab_common_model
-SELECT * FROM (
-    SELECT 
-        monotonically_increasing_id(),       -- record_id
-        t.customer__patient_id,              -- claim_id
+SELECT DISTINCT * FROM (
+    SELECT
+        NULL,                                -- record_id
+        CONCAT(
+            t.customer__patient_id, '_', t.ods_id
+            ),                               -- claim_id
         mp.hvid,                             -- hvid
         {today},                             -- created
         '1',                                 -- model_version
@@ -19,7 +21,20 @@ SELECT * FROM (
             ),                               -- patient_year_of_birth
         mp.threeDigitZip,                    -- patient_zip3
         zip3.state,                          -- patient_state
-        NULL,                                -- date_service
+        COALESCE(
+        extract_date(
+            t.accession_date,
+            '%m/%d/%Y',
+            CAST({min_date} AS DATE),
+            CAST({max_date} AS DATE)
+            ),
+        extract_date(
+            t.sign_out_date,
+            '%d-%b-%Y',
+            CAST({min_date} AS DATE),
+            CAST({max_date} AS DATE)
+            )
+        ),                                   -- date_service
         NULL,                                -- date_specimen
         NULL,                                -- date_report
         NULL,                                -- time_report
@@ -205,6 +220,7 @@ SELECT * FROM (
         -- matter which row each number corresponds to in this case
         SELECT row_number() over (ORDER BY true) i 
         FROM raw_transactional
+            LIMIT 200
             ) cross_join
         LEFT JOIN matching_payload mp ON t.hv_key = mp.hvJoinKey
         LEFT JOIN zip3_to_state zip3 ON mp.threeDigitZip = zip3.zip3
