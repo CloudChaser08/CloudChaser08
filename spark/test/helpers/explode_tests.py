@@ -17,6 +17,7 @@ class TestExplode(unittest.TestCase):
         runner = Runner(sqlContext)
 
         max_days = 10  # won't explode more than this date range
+        filter_condition = col('type') == 'explode'
 
         sqlContext.sql('DROP TABLE IF EXISTS explosion_test')
 
@@ -44,7 +45,7 @@ class TestExplode(unittest.TestCase):
 
         explode.explode_dates(
             runner, 'explosion_test', 'date_start', 'date_end',
-            'id', max_days, col('type') == 'explode'
+            'id', max_days, filter_condition
         )
 
         self.results = sqlContext.sql('select * from explosion_test').collect()
