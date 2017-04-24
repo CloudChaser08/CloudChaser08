@@ -288,7 +288,6 @@ queue_up_for_matching = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-
             'source_files_func': get_deid_file_urls
         }
     ),
