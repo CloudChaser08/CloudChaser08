@@ -53,8 +53,8 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 3, 16, 12),
-    'depends_on_past': False,
+    'start_date': datetime(2017, 4, 13, 12),
+    'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
@@ -375,7 +375,7 @@ detect_move_normalize_dag = SubDagOperator(
             ],
             'text_warehouse'                    : TEXT_WAREHOUSE,
             'parquet_warehouse'                 : PARQUET_WAREHOUSE,
-            'part_file_prefix_func'             : insert_current_date_function('{}-{}-{}'),
+            'part_file_prefix_func'             : lambda ds, k: "", 
             'data_feed_type'                    : 'lab',
             'pyspark'                           : True
         }
