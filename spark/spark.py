@@ -21,6 +21,12 @@ def init(provider, local=False):
         'obscure_place_of_service', obscure_place_of_service
     )
     sqlContext.registerFunction(
+        'filter_due_to_inst_type_of_bill', filter_due_to_inst_type_of_bill
+    )
+    sqlContext.registerFunction(
+        'obscure_inst_type_of_bill', obscure_inst_type_of_bill
+    )
+    sqlContext.registerFunction(
         'clean_up_diagnosis_code', clean_up_diagnosis_code
     )
     sqlContext.registerFunction(

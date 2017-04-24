@@ -119,21 +119,37 @@ def clean_up_ndc_code(ndc_code):
 # 13 Assissted Living Facility
 # 14 Group Home
 # 33 Custodial Care Facility
+bad_pos_codes = [
+    '5', '05', '6', '06', '7', '07', '8',
+    '08', '9', '09', '12', '13', '14', '33'
+]
+
+
 def obscure_place_of_service(place_of_service_std_id):
-    if place_of_service_std_id in [
-            '5', '05', '6', '06', '7', '07', '8',
-            '08', '9', '09', '12', '13', '14', '33'
-    ]:
+    if place_of_service_std_id in bad_pos_codes:
         return '99'
     else:
         return place_of_service_std_id
 
 
 def filter_due_to_place_of_service(prov_detail, place_of_service_std_id):
-    if place_of_service_std_id in [
-            '5', '05', '6', '06', '7', '07', '8',
-            '08', '9', '09', '12', '13', '14', '33'
-    ]:
+    if place_of_service_std_id in bad_pos_codes:
+        return None
+    else:
+        return prov_detail
+
+
+def obscure_inst_type_of_bill(inst_type_of_bill):
+    if isinstance(inst_type_of_bill, str) \
+       and inst_type_of_bill.startswith('3'):
+        return 'X' + inst_type_of_bill[1:]
+    else:
+        return inst_type_of_bill
+
+
+def filter_due_to_inst_type_of_bill(prov_detail, inst_type_of_bill):
+    if isinstance(inst_type_of_bill, str) \
+       and inst_type_of_bill.startswith('3'):
         return None
     else:
         return prov_detail
