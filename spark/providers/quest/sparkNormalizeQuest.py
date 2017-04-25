@@ -47,7 +47,6 @@ matching_path = 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
 
 min_date = '2013-01-01'
 max_date = args.date
-staging_dir = 'hdfs:///text-out/'
 
 # create helper tables
 runner.run_spark_script(file_utils.get_rel_path(
