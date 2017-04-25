@@ -97,8 +97,7 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
 def _build_dewey(cluster_id):
     spark_dir = os.path.abspath(
         os.path.join(
-            os.getenv('AIRFLOW_HOME'),
-            '../spark/'
+            os.getenv('HOME'), 'spark/'
         )
     )
     check_call([
@@ -112,8 +111,7 @@ def _build_dewey(cluster_id):
 
 
 def normalize(cluster_name, script_name, args,
-              s3_text_warehouse, s3_parquet_warehouse,
-              prefix, model):
+              s3_text_warehouse, s3_parquet_warehouse, model):
     """Run normalization and parquet processes in EMR"""
     text_staging_dir = 'hdfs:///text-out/'
 
@@ -121,8 +119,7 @@ def normalize(cluster_name, script_name, args,
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
         'Args=[--jars,'
         '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
-        '--py-files, /home/hadoop/spark/target/dewey.zip, {}, --output_path,'
-        + text_staging_dir + ']'
+        '--py-files, /home/hadoop/spark/target/dewey.zip, {}]'
     ).format(
         script_name + ',' + ','.join(args)
     )
@@ -134,49 +131,31 @@ def normalize(cluster_name, script_name, args,
     ])
     _wait_for_steps(cluster_id)
 
-    # prefix part files with current timestamp to avoid future collisions
-    prefix_step = (
-        'Type=CUSTOM_JAR,Name="Prefix Part Files",Jar="command-runner.jar",'
-        'ActionOnFailure=CONTINUE,Args=[/home/hadoop/prefix_part_files.sh,{},{}]'
-    ).format(text_staging_dir, prefix)
-    check_call([
-        'scp', '-i', '{}/.ssh/emr_deployer'.format(
-            os.getenv('HOME')
-        ), '-o', 'StrictHostKeyChecking no',
-        '{}/dags/resources/prefix_part_files.sh'.format(
-            os.getenv('AIRFLOW_HOME')
-        ), 'hadoop@' + _get_emr_cluster_ip_address(cluster_id) + ':'
-    ])
-    check_call([
-        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
-        '--steps', prefix_step
-    ])
+    # get directories that will need to be transformed to parquet by
+    # listing the directories created in hdfs by
+    # normalized_records_unloader
+    all_directories = check_output(' '.join([
+        'ssh', '-i', '~/.ssh/emr_deployer',
+        '-o', '"StrictHostKeyChecking no"',
+        'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
+        'hdfs', 'dfs', '-ls', '-R', text_staging_dir, '|', 'rev', '|',
+        'cut', '-d/', '-f1', '|', 'rev'
+    ]), shell=True).split('\n')
 
-    # get directories that will need to be transformed to parquet
-    # by listing the directories created in hdfs by normalization
-    modified_dirs = filter(
-        lambda path: path != '',
-        check_output(' '.join([
-            'ssh', '-i', '~/.ssh/emr_deployer',
-            '-o', '"StrictHostKeyChecking no"',
-            'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
-            'hdfs', 'dfs', '-ls', text_staging_dir, '|', 'rev', '|',
-            'cut', '-d/', '-f1', '|', 'rev', '|', 'grep', 'part'
-        ]), shell=True).split('\n')
+    modified_dates = filter(
+        lambda path: 'part_best_date' in path,
+        all_directories
     )
+    provider = filter(
+        lambda path: 'part_provider' in path,
+        all_directories
+    )[0]
 
-    check_call([
-        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
-        '--steps', EMR_DISTCP_TO_S3.format(
-            text_staging_dir, s3_text_warehouse
-        )
-    ])
-    _wait_for_steps(cluster_id)
-
-    for directory in modified_dirs:
+    for directory in modified_dates:
         _transform_to_parquet(
-            cluster_name, s3_text_warehouse + directory,
-            s3_parquet_warehouse + directory, model
+            cluster_name, s3_text_warehouse + provider + '/' + directory,
+            s3_parquet_warehouse + provider + '/' + directory,
+            model
         )
 
 

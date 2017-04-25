@@ -7,9 +7,8 @@ from pyspark.sql.functions import monotonically_increasing_id, lit
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from spark.spark import init
-import spark.helpers.constants as constants
-import spark.helpers.file_prefix as file_prefix
 from spark.runner import Runner
 
 # init
@@ -22,7 +21,6 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
-parser.add_argument('--output_path', type=str)
 args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
@@ -31,6 +29,8 @@ input_path = 's3a://salusv/incoming/labtests/caris/{year}/{month}/'.format(
     year=str(date_obj.year),
     month=str(date_obj.month).zfill(2)
 )
+output_path = 's3a://salusv/warehouse/text/labtests/2017-02-16/'
+
 matching_path = 's3a://salusv/matching/payload/labtests/caris/{year}/{month}/'.format(
     year=str(date_obj.year),
     month=str(date_obj.month).zfill(2)
@@ -46,6 +46,8 @@ setid = 'DATA_' + str(date_obj.year) \
 min_date = '2005-01-01'
 max_date = date_obj.strftime('%Y-%m-') \
            + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
+
+staging_dir = 'hdfs:///text-out/'
 
 runner.run_spark_script(file_utils.get_rel_path(
     script_path, '../../common/zip3_to_state.sql'
@@ -105,50 +107,8 @@ sqlContext.sql('select * from lab_common_model').withColumn(
     'record_id', monotonically_increasing_id()
 ).createTempView('lab_common_model')
 
-runner.run_spark_script(file_utils.get_rel_path(
-    script_path,
-    '../../common/lab_common_model.sql'
-), [
-    ['table_name', 'final_unload', False],
-    [
-        'properties',
-        constants.unload_properties_template.format(args.output_path),
-        False
-    ]
-])
-
-runner.run_spark_script(
-    file_utils.get_rel_path(
-        script_path, '../../common/unload_common_model.sql'
-    ), [
-        [
-            'select_statement',
-            "SELECT *, 'caris' as provider, 'NULL' as best_date "
-            + "FROM lab_common_model "
-            + "WHERE date_service IS NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
+normalized_records_unloader.unload(
+    spark, runner, 'lab', 'caris', 'date_service', args.date, output_path
 )
-
-runner.run_spark_script(
-    file_utils.get_rel_path(
-        script_path, '../../common/unload_common_model.sql'
-    ), [
-        [
-            'select_statement',
-            "SELECT *, 'caris' as provider, "
-            + "regexp_replace(cast(date_service as string), '-..$', '') as best_date "
-            + "FROM lab_common_model "
-            + "WHERE date_service IS NOT NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
-)
-
-
-file_prefix.prefix_part_files(spark, args.output_path, args.date + '_')
 
 spark.stop()

@@ -8,8 +8,7 @@ from spark.runner import Runner
 from spark.spark import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
-import spark.helpers.file_prefix as file_prefix
-import spark.helpers.constants as constants
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 # init
 spark, sqlContext = init("Quest")
@@ -21,7 +20,6 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
-parser.add_argument('--output_path', type=str)
 args = parser.parse_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
@@ -38,6 +36,8 @@ script_path = __file__
 input_path = 's3a://salusv/incoming/labtests/quest/{}/'.format(
     args.date.replace('-', '/')
 )
+output_path = 's3a://salusv/warehouse/text/labtests/2017-02-16/'
+
 trunk_path = input_path + 'trunk/'
 addon_path = input_path + 'addon/'
 
@@ -47,6 +47,7 @@ matching_path = 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
 
 min_date = '2013-01-01'
 max_date = args.date
+staging_dir = 'hdfs:///text-out/'
 
 # create helper tables
 runner.run_spark_script(file_utils.get_rel_path(
@@ -107,48 +108,8 @@ sqlContext.sql('select * from lab_common_model').withColumn(
     'lab_common_model'
 )
 
-runner.run_spark_script(file_utils.get_rel_path(
-    script_path,
-    '../../common/lab_common_model.sql'
-), [
-    ['table_name', 'final_unload', False],
-    [
-        'properties',
-        constants.unload_properties_template.format(args.output_path),
-        False
-    ]
-])
-
-runner.run_spark_script(
-    file_utils.get_rel_path(
-        script_path, '../../common/unload_common_model.sql'
-    ), [
-        [
-            'select_statement',
-            "SELECT *, 'quest' as provider, 'NULL' as best_date "
-            + "FROM lab_common_model "
-            + "WHERE date_service is NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
+normalized_records_unloader.unload(
+    spark, runner, 'lab', 'quest', 'date_service', args.date, output_path
 )
-runner.run_spark_script(
-    file_utils.get_rel_path(
-        script_path, '../../common/unload_common_model.sql'
-    ), [
-        [
-            'select_statement',
-            "SELECT *, 'quest' as provider, "
-            + "regexp_replace(cast(date_service as string), '-..$', '') as best_date "
-            + "FROM lab_common_model "
-            + "WHERE date_service IS NOT NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
-)
-
-file_prefix.prefix_part_files(spark, args.output_path, args.date)
 
 spark.sparkContext.stop()
