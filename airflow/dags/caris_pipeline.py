@@ -207,34 +207,30 @@ decrypt_transactional = SubDagOperator(
 )
 
 
-def split_step(
-        task_id, tmp_dir_func, file_paths_to_split_func,
-        s3_destination, num_splits
-):
+def split_step():
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
-            'split_' + task_id + '_file',
+            'split_transaction_file',
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_dir_func': insert_execution_date_function(TMP_PATH_TEMPLATE),
-                'file_paths_to_split_func': file_paths_to_split_func,
-                's3_prefix_func': insert_current_date_function(
-                    s3_destination
+                'tmp_dir_func': insert_execution_date_function(
+                    TMP_PATH_TEMPLATE
                 ),
-                'num_splits': num_splits
+                'file_paths_to_split_func': get_unzipped_file_paths,
+                's3_prefix_func': insert_current_date_function(
+                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE
+                ),
+                'num_splits': 20
             }
         ),
-        task_id='split_' + task_id + '_file',
+        task_id='split_transaction_file',
         dag=mdag
     )
 
 
-split_transactional = split_step(
-    "transaction", insert_execution_date_function(TMP_PATH_TEMPLATE),
-    get_unzipped_file_paths, S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 20
-)
+split_transactional = split_step()
 
 
 def clean_up_workspace_step(task_id, template):
