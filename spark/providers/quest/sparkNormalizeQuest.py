@@ -102,24 +102,30 @@ def run(spark, runner, date_input, output_path, test=False):
     )
 
 
-# init
-spark, sqlContext = init("Quest")
 
-# initialize runner
-runner = Runner(sqlContext)
+def main(args):
+    # init
+    spark, sqlContext = init("Quest")
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--date', type=str)
-parser.add_argument('--output_path', type=str)
-args = parser.parse_args()
+    # initialize runner
+    runner = Runner(sqlContext)
 
-run(spark, sqlContext, args.date, args.output_path)
+    run(spark, runner, args.date, args.output_path)
 
-normalized_records_unloader.partition_and_rename(
-    spark, runner, 'lab', 'lab_common_model.sql', 'quest', 'lab_common_model',
-    'date_service', args.date
-)
+    normalized_records_unloader.partition_and_rename(
+        spark, runner, 'lab', 'lab_common_model.sql', 'quest', 'lab_common_model',
+        'date_service', args.date
+    )
 
-spark.stop()
+    spark.stop()
 
-normalized_records_unloader.distcp(args.output_path)
+    normalized_records_unloader.distcp(args.output_path)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--date', type=str)
+    parser.add_argument('--output_path', type=str)
+    args = parser.parse_args()
+    main(args)
+

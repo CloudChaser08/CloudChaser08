@@ -1,6 +1,6 @@
-2073344007	20161201	17897	SYT	20161201											M	diag1^diag4^diag3	9	hv-join-key-1
-2073344008	20161201	17897	SYT	20161201											F	diag1^diag4^diag3	9	hv-join-key-2
-2073344009	20161201	17897	SYT	20161201											M	diag1^diag4^diag3	9	hv-join-key-3
+2073344007	20161201	17897	SYT	20161201											M	diag1^diag4^diag3	0	hv-join-key-1
+2073344008	20161201	17897	SYT	20161201											F		0	hv-join-key-2
+2073344009	20161201	17897	SYT	20161201											M	diag1^diag4^diag3	0	hv-join-key-3
 2073344011	20161201	17897	SYT	20161201											F	diag1^diag4^diag3	9	hv-join-key-4
 2073344012	20161201	17897	SYT	20161201											F	diag1^diag4^diag6	9	hv-join-key-5
 2073344013	20161201	17897	SYT	20161201											F	diag1^diag4^diag6	9	hv-join-key-6
