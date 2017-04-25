@@ -72,7 +72,7 @@ def get_date_timestamp(kwargs):
         return TIMESTAMP
 
 
-def insert_todays_date_function(template):
+def insert_execution_date_function(template):
     def out(ds, kwargs):
         return template.format(kwargs['ds_nodash'])
     return out
@@ -107,7 +107,7 @@ def get_deid_file_urls(ds, kwargs):
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
-    file_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)(ds, kwargs)
+    file_dir = insert_execution_date_function(TMP_PATH_TEMPLATE)(ds, kwargs)
     encrypted_file_path = file_dir \
         + insert_current_date(
             TRANSACTION_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(kwargs),
@@ -119,7 +119,7 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
 
 
 def get_unzipped_file_paths(ds, kwargs):
-    file_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)(ds, kwargs)
+    file_dir = insert_execution_date_function(TMP_PATH_TEMPLATE)(ds, kwargs)
     return [
         file_dir
         + insert_current_date(
@@ -197,7 +197,7 @@ decrypt_transactional = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_dir_func': insert_todays_date_function(TMP_PATH_TEMPLATE),
+            'tmp_dir_func': insert_execution_date_function(TMP_PATH_TEMPLATE),
             'encrypted_decrypted_file_paths_func':
             encrypted_decrypted_file_paths_function
         }
@@ -218,7 +218,7 @@ def split_step(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_dir_func': insert_todays_date_function(TMP_PATH_TEMPLATE),
+                'tmp_dir_func': insert_execution_date_function(TMP_PATH_TEMPLATE),
                 'file_paths_to_split_func': file_paths_to_split_func,
                 's3_prefix_func': insert_current_date_function(
                     s3_destination
@@ -232,7 +232,7 @@ def split_step(
 
 
 split_transactional = split_step(
-    "transaction", insert_todays_date_function(TMP_PATH_TEMPLATE),
+    "transaction", insert_execution_date_function(TMP_PATH_TEMPLATE),
     get_unzipped_file_paths, S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 20
 )
 
