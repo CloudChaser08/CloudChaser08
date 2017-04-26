@@ -192,7 +192,6 @@ FROM transactions_w_diag_concat t
     LEFT JOIN matching_payload mp USING (hvJoinKey)
     LEFT JOIN state_abbr ON UPPER(mp.state) = state_abbr.state
     LEFT JOIN summ ON summ_call = summ.value
-    CROSS JOIN diagnosis_exploder
 WHERE
     patient_country = 'United States'
     AND no_diag;
