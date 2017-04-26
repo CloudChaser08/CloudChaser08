@@ -101,6 +101,11 @@ def run(spark, runner, date_input, output_path, test=False):
         'lab_common_model'
     )
 
+    if not test:
+        normalized_records_unloader.partition_and_rename(
+            spark, runner, 'lab', 'lab_common_model.sql', 'quest',
+            'lab_common_model', 'date_service', date_input
+        )
 
 
 def main(args):
@@ -111,11 +116,6 @@ def main(args):
     runner = Runner(sqlContext)
 
     run(spark, runner, args.date, args.output_path)
-
-    normalized_records_unloader.partition_and_rename(
-        spark, runner, 'lab', 'lab_common_model.sql', 'quest', 'lab_common_model',
-        'date_service', args.date
-    )
 
     spark.stop()
 
@@ -128,4 +128,3 @@ if __name__ == "__main__":
     parser.add_argument('--output_path', type=str)
     args = parser.parse_args()
     main(args)
-
