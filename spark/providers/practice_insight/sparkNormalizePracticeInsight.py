@@ -7,12 +7,14 @@ import calendar
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.payload_loader as payload_loader
-import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.file_utils as file_utils
 import spark.helpers.explode as explode
 import spark.providers.practice_insight.udf as pi_udf
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
+
+date_obj, input_path, min_date, max_date, matching_path, setid = None
 
 
 def run_part(
@@ -25,6 +27,7 @@ def run_part(
 
     # initialize globals on first part
     if part == '1':
+        global date_obj, input_path, min_date, max_date, matching_path, setid
 
         # register practice insight udfs:
         runner.sqlContext.registerFunction(
@@ -41,52 +44,41 @@ def run_part(
             "spark.sql.shuffle.partitions", shuffle_partitions
         )
 
-        date_obj = datetime.strptime(date_input, '%Y-%m-%d')
+        date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 
-        if test:
-            input_path = file_utils.get_rel_path(
-                __file__, '../../test/providers/practice_insight/resources/input/'
-            ) + '/'
-            matching_path = file_utils.get_rel_path(
-                __file__, '../../test/providers/practice_insight/resources/matching/'
+        input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.format(
+            str(date_obj.year),
+            str(date_obj.month).zfill(2)
+        )
+
+        if date_obj.year <= 2016:
+            max_date = str(date_obj.year) + '-12-31'
+            matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/'.format(
+                str(date_obj.year)
             )
-            max_date = '2016-12-31'
-            setid = 'TEST'
+            setid = 'HV.data.837.' + str(date_obj.year) + '.csv.gz_' \
+                    + str(date_obj.month)
         else:
-            input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.format(
+            max_date = date_obj.strftime('%Y-%m-') \
+                       + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
+            matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/{}/'.format(
                 str(date_obj.year),
                 str(date_obj.month).zfill(2)
             )
-
-            if date_obj.year <= 2016:
-                max_date = str(date_obj.year) + '-12-31'
-                matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/'.format(
-                    str(date_obj.year)
-                )
-                setid = 'HV.data.837.' + str(date_obj.year) + '.csv.gz_' \
-                        + str(date_obj.month)
-            else:
-                max_date = date_obj.strftime('%Y-%m-') \
-                           + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
-                matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/{}/'.format(
-                    str(date_obj.year),
-                    str(date_obj.month).zfill(2)
-                )
-                setid = 'HV.data.837.' + str(date_obj.year) + '.' \
-                        + date_obj.strftime('%b').lower() + '.csv.gz'
+            setid = 'HV.data.837.' + str(date_obj.year) + '.' \
+                    + date_obj.strftime('%b').lower() + '.csv.gz'
 
         min_date = '2010-01-01'
 
         # create helper tables
         runner.run_spark_script(
-            file_utils.get_rel_path(__file__, 'create_helper_tables.sql')
+            file_utils.get_rel_path('create_helper_tables.sql')
         )
         payload_loader.load(runner, matching_path, ['claimId'])
 
     # end init #
 
     runner.run_spark_script(file_utils.get_rel_path(
-        __file__,
         '../../common/medicalclaims_common_model.sql'
     ), [
         ['table_name', 'medicalclaims_common_model', False],
@@ -94,22 +86,20 @@ def run_part(
     ])
 
     # load transactions and payload
-    runner.run_spark_script(file_utils.get_rel_path(
-        __file__, 'load_transactions.sql'
-    ), [
+    runner.run_spark_script(file_utils.get_rel_path('load_transactions.sql'), [
         ['input_path', input_path + part + '/']
     ])
 
     # create explosion maps
     runner.run_spark_script(
-        file_utils.get_rel_path(__file__, 'create_exploded_diagnosis_map.sql')
+        file_utils.get_rel_path('create_exploded_diagnosis_map.sql')
     )
     runner.run_spark_script(
-        file_utils.get_rel_path(__file__, 'create_exploded_procedure_map.sql')
+        file_utils.get_rel_path('create_exploded_procedure_map.sql')
     )
 
     # normalize
-    runner.run_spark_script(file_utils.get_rel_path(__file__, 'normalize.sql'), [
+    runner.run_spark_script(file_utils.get_rel_path('normalize.sql'), [
         [
             'date_service_sl',
             """
