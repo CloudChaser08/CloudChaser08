@@ -5,7 +5,7 @@ import os
 
 def mk_move_file(file_date):
     def move_file(part_file):
-        if part_file[-3:] == ".gz":
+        if part_file.find("part-") > -1:
             old_pf = part_file.split(' ')[-1].strip()
             new_pf = '/'.join(old_pf.split('/')[:-1] + [file_date + '_' + old_pf.split('/')[-1]])
             subprocess.check_call(['hadoop', 'fs', '-mv', old_pf, new_pf])

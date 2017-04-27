@@ -20,7 +20,7 @@ runner = Runner(sqlContext)
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 S3_COURTAGEN_IN = 's3a://salusv/incoming/labtests/courtagen/'
-S3_COURTAGEN_OUT = 's3a://salusv/warehouse/text/labtests/2017-04-19/'
+S3_COURTAGEN_OUT = 's3a://salusv/warehouse/parquet/labtests/2017-04-19/'
 S3_COURTAGEN_MATCHING = 's3a://salusv/matching/payload/labtests/courtagen/'
 
 parser = argparse.ArgumentParser()
