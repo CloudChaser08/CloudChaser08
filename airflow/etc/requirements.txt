@@ -79,6 +79,7 @@ PyHive==0.2.1
 pyOpenSSL==16.2.0
 pyparsing==2.1.10
 pysftp==0.2.9
+pytest==3.0.7
 python-daemon==2.1.2
 python-dateutil==2.6.0
 python-editor==1.0.3
