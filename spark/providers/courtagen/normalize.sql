@@ -4,14 +4,14 @@ CONCAT(
     -- ICD9 and ICD10 code fields contain the code followed by a space
     -- and a description of the code. Remove the description before
     -- concatenating them together
-    CONCAT(TRIM(REGEXP_REPLACE(icd9_code_1, ' .*', '')), '_01'), ':',
-    CONCAT(TRIM(REGEXP_REPLACE(icd9_code_2, ' .*', '')), '_01'), ':',
-    CONCAT(TRIM(REGEXP_REPLACE(icd9_code_3, ' .*', '')), '_01'), ':',
-    CONCAT(TRIM(REGEXP_REPLACE(icd9_code_4, ' .*', '')), '_01'), ':',
-    CONCAT(TRIM(REGEXP_REPLACE(icd10_code_1, ' .*', '')), '_02'), ':',
-    CONCAT(TRIM(REGEXP_REPLACE(icd10_code_2, ' .*', '')), '_02'), ':',
-    CONCAT(TRIM(REGEXP_REPLACE(icd10_code_3, ' .*', '')), '_02'), ':',
-    CONCAT(TRIM(REGEXP_REPLACE(icd10_code_4, ' .*', '')), '_02')
+    CONCAT(TRIM(REGEXP_REPLACE(TRIM(icd9_code_1), ' .*', '')), '_01'), ':',
+    CONCAT(TRIM(REGEXP_REPLACE(TRIM(icd9_code_2), ' .*', '')), '_01'), ':',
+    CONCAT(TRIM(REGEXP_REPLACE(TRIM(icd9_code_3), ' .*', '')), '_01'), ':',
+    CONCAT(TRIM(REGEXP_REPLACE(TRIM(icd9_code_4), ' .*', '')), '_01'), ':',
+    CONCAT(TRIM(REGEXP_REPLACE(TRIM(icd10_code_1), ' .*', '')), '_02'), ':',
+    CONCAT(TRIM(REGEXP_REPLACE(TRIM(icd10_code_2), ' .*', '')), '_02'), ':',
+    CONCAT(TRIM(REGEXP_REPLACE(TRIM(icd10_code_3), ' .*', '')), '_02'), ':',
+    CONCAT(TRIM(REGEXP_REPLACE(TRIM(icd10_code_4), ' .*', '')), '_02')
 ) as diag_concat,
 CASE WHEN
     (icd9_code_1 IS NULL OR TRIM(icd9_code_1) == '') AND
@@ -20,8 +20,8 @@ CASE WHEN
     (icd9_code_4 IS NULL OR TRIM(icd9_code_4) == '') AND
     (icd10_code_1 IS NULL OR TRIM(icd10_code_1) == '') AND
     (icd10_code_2 IS NULL OR TRIM(icd10_code_2) == '') AND
-    (icd10_code_4 IS NULL OR TRIM(icd10_code_3) == '') AND
-    (icd10_code_3 IS NULL OR TRIM(icd10_code_4) == '')
+    (icd10_code_3 IS NULL OR TRIM(icd10_code_3) == '') AND
+    (icd10_code_4 IS NULL OR TRIM(icd10_code_4) == '')
     THEN true
     ELSE false
 END AS no_diag
@@ -39,8 +39,10 @@ SELECT
     {feedname},                             -- data_feed
     {vendor},                               -- data_vendor
     NULL,                                   -- source_version
-    mp.gender,                              -- patient_gender
-    regexp_replace(age_at_test, '\..*', ''),
+    CASE WHEN UPPER(t.gender) = 'MALE' THEN 'M'
+        WHEN UPPER(t.gender) = 'FEMALE' THEN 'F'
+        ELSE 'U' END,                       -- patient_gender
+    regexp_replace(age_at_test, '\\..*', ''),
                                             -- patient_age
     mp.yearOfBirth,                         -- patient_year_of_birth
     mp.threeDigitZip,                       -- patient_zip3
@@ -106,7 +108,7 @@ SELECT
     NULL                                    -- ordering_specialty
 FROM transactions_w_diag_concat t
     LEFT JOIN matching_payload mp USING (hvJoinKey)
-    LEFT JOIN state_abbr ON UPPER(mp.state) = state_abbr.state
+    LEFT JOIN state_abbr ON UPPER(t.state) = state_abbr.state
     LEFT JOIN summ ON summ_call = summ.value
     CROSS JOIN diagnosis_exploder
 WHERE
@@ -125,8 +127,10 @@ SELECT
     {feedname},                             -- data_feed
     {vendor},                               -- data_vendor
     NULL,                                   -- source_version
-    mp.gender,                              -- patient_gender
-    regexp_replace(age_at_test, '\..*', ''),
+    CASE WHEN UPPER(t.gender) = 'MALE' THEN 'M'
+        WHEN UPPER(t.gender) = 'FEMALE' THEN 'F'
+        ELSE 'U' END,                       -- patient_gender
+    regexp_replace(age_at_test, '\\..*', ''),
                                             -- patient_age
     mp.yearOfBirth,                         -- patient_year_of_birth
     mp.threeDigitZip,                       -- patient_zip3
@@ -190,7 +194,7 @@ SELECT
     NULL                                    -- ordering_specialty
 FROM transactions_w_diag_concat t
     LEFT JOIN matching_payload mp USING (hvJoinKey)
-    LEFT JOIN state_abbr ON UPPER(mp.state) = state_abbr.state
+    LEFT JOIN state_abbr ON UPPER(t.state) = state_abbr.state
     LEFT JOIN summ ON summ_call = summ.value
 WHERE
     patient_country = 'United States'
