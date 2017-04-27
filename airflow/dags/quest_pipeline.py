@@ -106,22 +106,19 @@ def insert_formatted_regex_function(template):
     return out
 
 
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return template.format(
-            kwargs['yesterday_ds_nodash'][0:4],
-            kwargs['yesterday_ds_nodash'][4:6],
-            kwargs['yesterday_ds_nodash'][6:8]
-        )
-    return out
-
-
 def insert_current_date(template, kwargs):
     return template.format(
         kwargs['yesterday_ds_nodash'][0:4],
         kwargs['yesterday_ds_nodash'][4:6],
         kwargs['yesterday_ds_nodash'][6:8]
     )
+
+
+def insert_current_date_function(template):
+    def out(ds, kwargs):
+        return insert_current_date(template, kwargs)
+    return out
+
 
 get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
 get_addon_tmp_dir = insert_todays_date_function(TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
