@@ -35,7 +35,7 @@ DEID_FILE_NAME_TEMPLATE = 'HV.phi.{}.{}.o'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 3, 16, 12),
+    'start_date': datetime(2017, 3, 2, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -43,7 +43,7 @@ default_args = {
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * *" if Variable.get(
+    schedule_interval="0 12 2 * *" if Variable.get(
         "AIRFLOW_ENV", default_var=''
     ).find('prod') != -1 else None,
     default_args=default_args
@@ -281,19 +281,19 @@ clean_up_workspace = PythonOperator(
 )
 
 
-queue_up_for_matching = SubDagOperator(
-    subdag=queue_up_for_matching.queue_up_for_matching(
-        DAG_NAME,
-        'queue_up_for_matching',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'source_files_func': get_deid_file_urls
-        }
-    ),
-    task_id='queue_up_for_matching',
-    dag=mdag
-)
+# queue_up_for_matching = SubDagOperator(
+#     subdag=queue_up_for_matching.queue_up_for_matching(
+#         DAG_NAME,
+#         'queue_up_for_matching',
+#         default_args['start_date'],
+#         mdag.schedule_interval,
+#         {
+#             'source_files_func': get_deid_file_urls
+#         }
+#     ),
+#     task_id='queue_up_for_matching',
+#     dag=mdag
+# )
 
 #
 # Post-Matching
@@ -322,7 +322,8 @@ detect_move_normalize_dag = SubDagOperator(
             'pyspark_normalization_script_name':
             '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
             'pyspark_normalization_args_func': lambda ds, k: [
-                '--date', insert_current_date('{}-{}-01', k)
+                '--date', insert_current_date('{}-{}-01', k),
+                '--output_path', TEXT_WAREHOUSE
             ],
             'text_warehouse': TEXT_WAREHOUSE,
             'parquet_warehouse': PARQUET_WAREHOUSE,
@@ -347,9 +348,13 @@ for step in split_transactional_steps:
 clean_up_workspace.set_upstream(split_transactional_steps)
 
 # matching
-queue_up_for_matching.set_upstream(validate_deid)
+# queue_up_for_matching.set_upstream(validate_deid)
 
 # post-matching
+# detect_move_normalize_dag.set_upstream(
+#     [queue_up_for_matching] + split_transactional_steps
+# )
+
 detect_move_normalize_dag.set_upstream(
-    [queue_up_for_matching] + split_transactional_steps
+    split_transactional_steps
 )
