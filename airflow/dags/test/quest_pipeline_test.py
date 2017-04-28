@@ -125,8 +125,8 @@ def test_file_fetch_dag():
         )
     )
 
-    quest.generate_transaction_file_validation_dag(
-        'test', 's3{}', 'local{}', 'file{}'
+    quest.generate_fetch_dag(
+        'test', 's3{}', 'local{}', '{}'
     )
 
     quest.s3_fetch_file.s3_fetch_file.assert_called_with(
