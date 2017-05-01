@@ -6,6 +6,7 @@ def test_age_cap():
     assert cleanup.cap_age('100') == '90'
     assert cleanup.cap_age('85') == '90'
     assert cleanup.cap_age('84') == '84'
+    assert cleanup.cap_age('-1') is None
     assert cleanup.cap_age(None) is None
     assert cleanup.cap_age('') is None
 

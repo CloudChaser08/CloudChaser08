@@ -173,7 +173,8 @@ def cap_age(age):
     if age is None or age == '':
         return
     try:
-        return '90' if int(age) >= 85 else age
+        return '90' if int(age) >= 85 else \
+            None if int(age) < 0 else age
     except:
         return None
 
