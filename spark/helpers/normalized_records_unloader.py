@@ -12,17 +12,16 @@ def mk_move_file(file_date):
 
     return move_file
 
-def unload(spark, runner, data_type, common_model_script, provider, table_name, date_column, file_date, S3_output_location):
+
+def partition_and_rename(spark, runner, data_type, common_model_script, provider, table_name, date_column, file_date):
     """
     Unload normalized data into partitions based on
     a date column
     """
 
-    NOW = time.strftime('%Y-%m-%dT%H%M%S', time.localtime())
-    table_loc = '/text/{}/{}'.format(data_type, NOW)
     runner.run_spark_script(file_utils.get_rel_path(__file__, '../../../../common/{}'.format(common_model_script)), [
         ['table_name', 'final_unload', False],
-        ['properties', constants.unload_properties_template.format(table_loc), False]
+        ['properties', constants.unload_properties_template.format(constants.hdfs_staging_dir), False]
     ])
     runner.run_spark_script(file_utils.get_rel_path(__file__, '../../../../common/unload_common_model.sql'), [
         ['select_statement', "SELECT *, '{}' as part_provider, 'NULL' as part_best_date FROM {} WHERE {} is NULL".format(provider, table_name, date_column), False],
@@ -33,8 +32,12 @@ def unload(spark, runner, data_type, common_model_script, provider, table_name, 
         ['partitions', '20', False]
     ])
 
-    part_files = subprocess.check_output(['hadoop', 'fs', '-ls', '-R', table_loc]).strip().split("\n")
+    part_files = subprocess.check_output(['hadoop', 'fs', '-ls', '-R', constants.hdfs_staging_dir]).strip().split("\n")
 
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(mk_move_file(file_date))
 
-    subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption', '--src', table_loc, '--dest', S3_output_location])
+
+def distcp(dest):
+    subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption',
+                           '--src', constants.hdfs_staging_dir,
+                           '--dest', dest])
