@@ -66,7 +66,7 @@ SELECT
     NULL,                                   -- test_ordered_std_id
     NULL,                                   -- test_ordered_name
     NULL,                                   -- result_id
-    summ_call,                              -- result
+    substring(summ_call, 0, 1),             -- result
     summ.name,                              -- result_name
     NULL,                                   -- result_unit_of_measure
     summ.desc,                              -- result_desc
@@ -109,7 +109,7 @@ SELECT
 FROM transactions_w_diag_concat t
     LEFT JOIN matching_payload mp USING (hvJoinKey)
     LEFT JOIN state_abbr ON UPPER(t.state) = state_abbr.state
-    LEFT JOIN summ ON summ_call = summ.value
+    LEFT JOIN summ ON substring(summ_call, 0, 1) = summ.value
     CROSS JOIN diagnosis_exploder
 WHERE
     patient_country = 'United States'
@@ -154,7 +154,7 @@ SELECT
     NULL,                                   -- test_ordered_std_id
     NULL,                                   -- test_ordered_name
     NULL,                                   -- result_id
-    summ_call,                              -- result
+    substring(summ_call, 0, 1),             -- result
     summ.name,                              -- result_name
     NULL,                                   -- result_unit_of_measure
     summ.desc,                              -- result_desc
@@ -195,7 +195,7 @@ SELECT
 FROM transactions_w_diag_concat t
     LEFT JOIN matching_payload mp USING (hvJoinKey)
     LEFT JOIN state_abbr ON UPPER(t.state) = state_abbr.state
-    LEFT JOIN summ ON summ_call = summ.value
+    LEFT JOIN summ ON substring(summ_call, 0, 1) = summ.value
 WHERE
     patient_country = 'United States'
     AND no_diag;
