@@ -4,7 +4,7 @@ import argparse
 import time
 from datetime import timedelta, datetime, date
 from spark.runner import Runner
-from spark.spark import init
+from spark.spark_setup import init
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import subprocess
 import spark.helpers.create_date_validation_table \

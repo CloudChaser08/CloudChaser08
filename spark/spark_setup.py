@@ -1,7 +1,9 @@
 from pyspark.sql import SQLContext, SparkSession
-from helpers.udf.post_normalization_cleanup import *
-from helpers.udf.general_helpers import *
-from helpers.udf.medicalclaims_helpers import *
+from spark.helpers.udf.post_normalization_cleanup import *
+from spark.helpers.udf.general_helpers import *
+from spark.helpers.udf.medicalclaims_helpers import *
+import helpers.file_utils as file_utils
+
 
 def init(provider, local=False):
     spark = SparkSession.builder                                              \
@@ -12,6 +14,10 @@ def init(provider, local=False):
                     .getOrCreate()
 
     sqlContext = SQLContext(spark.sparkContext)
+
+    if local:
+        spark.sparkContext \
+             .addPyFile(file_utils.get_rel_path(__file__, 'target/dewey.zip'))
 
     # register privacy filters
     sqlContext.registerFunction(

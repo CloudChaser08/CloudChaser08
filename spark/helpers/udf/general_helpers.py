@@ -49,7 +49,10 @@ def extract_currency(text):
     
 
 def create_range(max):
-    return ','.join(map(lambda i: str(i), range(max)))
+    try:
+        return ','.join(map(lambda i: str(i), range(max)))
+    except:
+        return None
 
 # Takes 2 sets as colon-separated strings, and the returns the difference between
 # them as a colon-separated string

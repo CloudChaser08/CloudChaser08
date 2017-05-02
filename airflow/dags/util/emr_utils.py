@@ -101,7 +101,7 @@ def _build_dewey(cluster_id):
         )
     )
     check_call([
-        'make', 'build'
+        'make', 'build-notest'
     ], cwd=spark_dir)
     check_call([
         'scp', '-i', os.getenv('HOME') + '/.ssh/emr_deployer',
