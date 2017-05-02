@@ -42,7 +42,7 @@ def load(runner, location, extra_cols=None):
     final_payload = raw_payload.select(
         [coalesce(*map(lambda x: col(x), HVID)).alias('hvid')]
         + map(lambda x: col(x), total_attrs)
-    ).filter(~col('isinvalid'))
+    )
 
     runner.sqlContext.sql('DROP TABLE IF EXISTS matching_payload')
     final_payload.registerTempTable("matching_payload")
