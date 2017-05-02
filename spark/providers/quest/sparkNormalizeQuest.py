@@ -25,19 +25,23 @@ def run(spark, runner, date_input, output_path, test=False):
 
     script_path = __file__
 
-    input_path = file_utils.get_rel_path(
-        script_path, '../../test/providers/quest/resources/input/'
-    ) + '/' if test else 's3a://salusv/incoming/labtests/quest/{}/'.format(
-        date_input.replace('-', '/')
-    )
+    if test:
+        input_path = file_utils.get_rel_path(
+            script_path, '../../test/providers/quest/resources/input/'
+        ) + '/'
+        matching_path = file_utils.get_rel_path(
+            script_path, '../../test/providers/quest/resources/matching/'
+        ) + '/'
+    else:
+        input_path = 's3a://salusv/incoming/labtests/quest/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        matching_path = 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
+            date_input.replace('-', '/')
+        )
+
     trunk_path = input_path + 'trunk/'
     addon_path = input_path + 'addon/'
-
-    matching_path = file_utils.get_rel_path(
-        script_path, '../../test/providers/quest/resources/matching/'
-    ) + '/' if test else 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
-        date_input.replace('-', '/')
-    )
 
     min_date = '2013-01-01'
     max_date = date_input
