@@ -3,6 +3,7 @@ import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 import os
 
+
 def mk_move_file(file_date):
     def move_file(part_file):
         if part_file.find("part-") > -1:
@@ -13,11 +14,19 @@ def mk_move_file(file_date):
     return move_file
 
 
-def partition_and_rename(spark, runner, data_type, common_model_script, provider, table_name, date_column, file_date):
+def partition_and_rename(spark, runner, data_type, common_model_script, provider, table_name, date_column, file_date, test=False):
     """
     Unload normalized data into partitions based on
     a date column
     """
+
+    if test:
+        staging_dir = file_utils.get_rel_path(__file__, '../test/helpers/udf/test-staging/')
+        part_files_cmd = ['ls', '-R', constants.hdfs_staging_dir]
+
+    else:
+        staging_dir = constants.hdfs_staging_dir
+        part_files_cmd = ['hadoop', 'fs', '-ls', '-R', constants.hdfs_staging_dir]
 
     runner.run_spark_script(file_utils.get_rel_path(__file__, '../../../../common/{}'.format(common_model_script)), [
         ['table_name', 'final_unload', False],
@@ -32,7 +41,7 @@ def partition_and_rename(spark, runner, data_type, common_model_script, provider
         ['partitions', '20', False]
     ])
 
-    part_files = subprocess.check_output(['hadoop', 'fs', '-ls', '-R', constants.hdfs_staging_dir]).strip().split("\n")
+    part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
 
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(mk_move_file(file_date))
 
