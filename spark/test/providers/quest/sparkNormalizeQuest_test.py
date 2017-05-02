@@ -3,15 +3,13 @@ import pytest
 import datetime
 
 import spark.providers.quest.sparkNormalizeQuest as quest
-import spark.helpers.file_utils as file_utils
 
 results = []
 
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
-    quest.run(spark['spark'], spark['runner'], '2016-12-31',
-              file_utils.get_rel_path(__file__, 'resources/output/'), True)
+    quest.run(spark['spark'], spark['runner'], '2016-12-31', True)
     global results
     results = spark['sqlContext'].sql('select * from lab_common_model') \
                                  .collect()
