@@ -5,7 +5,7 @@ import logging
 from datetime import timedelta, datetime
 from pyspark.sql.functions import monotonically_increasing_id
 from spark.runner import Runner
-from spark.spark import init
+from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_prefix as file_prefix
