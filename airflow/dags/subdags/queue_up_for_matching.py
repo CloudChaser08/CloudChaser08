@@ -12,12 +12,16 @@ def do_queue_up_for_matching(ds, **kwargs):
         'AWS_SECRET_ACCESS_KEY' : Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')
     }
 
-    for f in source_files:
-        check_call([
+    queue_up_cmd = [
             os.getenv('AIRFLOW_HOME')
             + '/dags/resources/push_file_to_s3_batchless.sh',
             f, '0', 'prod-matching-engine', 'priority3'
-        ], env=environ)
+        ]
+
+    queue_up_cmd.append("true") if kwargs.get('passthrough_only')
+
+    for f in source_files:
+        check_call(queue_up_cmd, env=environ)
 
 
 def queue_up_for_matching(
