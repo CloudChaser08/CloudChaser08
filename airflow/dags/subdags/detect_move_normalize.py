@@ -58,9 +58,7 @@ def do_run_pyspark_normalization_routine(ds, **kwargs):
     emr_utils.normalize(
         EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'],
         kwargs['pyspark_normalization_script_name'],
-        kwargs['pyspark_normalization_args_func'](ds, kwargs),
-        kwargs['text_warehouse'], kwargs['parquet_warehouse'],
-        kwargs['data_feed_type']
+        kwargs['pyspark_normalization_args_func'](ds, kwargs)
     )
 
 def do_create_redshift_cluster(ds, **kwargs):

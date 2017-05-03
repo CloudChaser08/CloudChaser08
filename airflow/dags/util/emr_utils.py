@@ -110,8 +110,7 @@ def _build_dewey(cluster_id):
     ], cwd=spark_dir)
 
 
-def normalize(cluster_name, script_name, args,
-              s3_text_warehouse, s3_parquet_warehouse, model):
+def normalize(cluster_name, script_name, args):
     """Run normalization and parquet processes in EMR"""
     text_staging_dir = '/staging/'  # from spark.helpers.constants
 
@@ -130,74 +129,6 @@ def normalize(cluster_name, script_name, args,
         '--steps', normalize_step
     ])
     _wait_for_steps(cluster_id)
-
-    # get directories that will need to be transformed to parquet by
-    # listing the directories created in hdfs by
-    # normalized_records_unloader
-    all_directories = check_output(' '.join([
-        'ssh', '-i', '~/.ssh/emr_deployer',
-        '-o', '"StrictHostKeyChecking no"',
-        'hadoop@' + _get_emr_cluster_ip_address(cluster_id),
-        'hdfs', 'dfs', '-ls', '-R', text_staging_dir, '|', 'rev', '|',
-        'cut', '-d/', '-f1', '|', 'rev'
-    ]), shell=True).split('\n')
-
-    modified_dates = filter(
-        lambda path: 'part_best_date' in path,
-        all_directories
-    )
-    provider = filter(
-        lambda path: 'part_provider' in path,
-        all_directories
-    )[0]
-
-    for directory in modified_dates:
-        _transform_to_parquet(
-            cluster_name, s3_text_warehouse + provider + '/' + directory,
-            s3_parquet_warehouse + provider + '/' + directory,
-            model
-        )
-
-
-#
-# Parquet
-#
-EMR_COPY_MELLON_STEP = (
-    'Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar",'
-    'ActionOnFailure=CONTINUE,Args=['
-    'aws,s3,cp,s3://healthverityreleases/mellon/mellon-assembly-latest.jar,'
-    '/tmp/mellon-assembly-latest.jar'
-    ']'
-)
-
-
-def _transform_to_parquet(cluster_name, src_file, dest_file, model):
-    env = dict(os.environ)
-
-    # remove target directory
-    s3_utils.delete_path(dest_file)
-
-    parquet_step = (
-        'Type=Spark,Name="Transform to Parquet",ActionOnFailure=CONTINUE, '
-        'Args=[--class,com.healthverity.parquet.Main,'
-        '--conf,spark.sql.parquet.compression.codec=gzip,'
-        '--conf,spark.executor.memory=10G,'
-        '--conf,spark.executor.cores=4,'
-        '--conf,spark.executor.instances=5,'
-        '/tmp/mellon-assembly-latest.jar,{},{},{},{},'
-        '{},20,"|","true","true"]'
-    ).format(
-        env['AWS_ACCESS_KEY_ID'],
-        env['AWS_SECRET_ACCESS_KEY'],
-        model, dest_file, src_file
-    )
-    cluster_id = _get_emr_cluster_id(cluster_name)
-    check_call([
-        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
-        '--steps', EMR_COPY_MELLON_STEP, parquet_step
-    ])
-    _wait_for_steps(cluster_id)
-
 
 def delete_emr_cluster(cluster_name):
     cluster_id = _get_emr_cluster_id(cluster_name)
