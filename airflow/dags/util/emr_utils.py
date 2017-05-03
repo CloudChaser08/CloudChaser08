@@ -111,7 +111,7 @@ def _build_dewey(cluster_id):
 
 
 def normalize(cluster_name, script_name, args):
-    """Run normalization and parquet processes in EMR"""
+    """Run spark normalization script in EMR"""
     text_staging_dir = '/staging/'  # from spark.helpers.constants
 
     normalize_step = (
@@ -129,6 +129,7 @@ def normalize(cluster_name, script_name, args):
         '--steps', normalize_step
     ])
     _wait_for_steps(cluster_id)
+
 
 def delete_emr_cluster(cluster_name):
     cluster_id = _get_emr_cluster_id(cluster_name)
