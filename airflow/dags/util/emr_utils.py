@@ -112,7 +112,6 @@ def _build_dewey(cluster_id):
 
 def normalize(cluster_name, script_name, args):
     """Run spark normalization script in EMR"""
-    text_staging_dir = '/staging/'  # from spark.helpers.constants
 
     normalize_step = (
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
