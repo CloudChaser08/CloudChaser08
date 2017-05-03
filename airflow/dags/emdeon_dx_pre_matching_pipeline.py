@@ -178,7 +178,7 @@ push_splits_to_s3 = PythonOperator(
 
 queue_up_for_matching = BashOperator(
     task_id='queue_up_for_matching',
-    bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3_batchless_v5.sh {}{}'.format(
+    bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3_batchless.sh {}{}'.format(
                  S3_DEID_RAW_PATH, (DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}')) + 
                  ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}'),
     params={'sequence_num' : 0,

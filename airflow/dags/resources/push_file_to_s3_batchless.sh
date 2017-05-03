@@ -8,13 +8,20 @@ S3_DATA_SOURCE_PATH=$1
 SEQ_NUM=$2
 ENVIRONMENT=$3
 PRIORITY=$4
+PASSTHROUGH=$5
 S3_DESTINATION_PATH="s3://hvmatching/inbound/"
 
 UUID=$(cat /proc/sys/kernel/random/uuid)
 UUID_SHORT=${UUID:0:4}
 
+# Create either a process or passthrough task
+if [ -z "$PASSTHROUGH" ]; then
+  TASK_ID="MORGAN.PASSTHROUGH_${UUID}"
+else
+  TASK_ID="MORGAN.PROCESS_${UUID}"
+fi
+
 # Create empty message file and dir if not exisiting
-TASK_ID="MORGAN.PROCESS_${UUID}"
 MESSAGE_DIR=/tmp/messages
 if [ ! -d "$MESSAGE_DIR" ]; then
 mkdir $MESSAGE_DIR
@@ -31,6 +38,12 @@ S3_DATA_REF_PATH="inbound/$ENVIRONMENT/data/$SOURCE_BASE_NAME"
 # Insert filename as arg into task file
 > $MSG_SOURCE_PATH
 echo $S3_DATA_REF_PATH >> $MSG_SOURCE_PATH
+
+# If passthrough args are present, insert them
+for a in "${@:6}"
+do
+    echo $a >> $MSG_SOURCE_PATH
+done
 
 # setup creds
 ROLE_CREDENTIALS=$(/usr/local/bin/aws sts assume-role --role-session-name 'jenkins_push_to_matching' --role-arn 'arn:aws:iam::581191604223:role/hvmatching_writer')
