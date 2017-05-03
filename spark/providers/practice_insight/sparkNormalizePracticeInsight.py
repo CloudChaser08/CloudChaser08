@@ -40,7 +40,11 @@ def run_part(
             pi_udf.generate_inst_type_of_bill_std_id
         )
 
-        # Set shuffle partitions to stabilize job
+        # Increase default partitions to avoid memory errors
+        #
+        # This is necessary due to the relatively large size of each
+        # chunk of Practice Insight data to be normalized, as well as
+        # the relative complexity of the normalization SQL
         runner.sqlContext.setConf(
             "spark.sql.shuffle.partitions", shuffle_partitions
         )
