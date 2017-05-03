@@ -20,8 +20,3 @@ def test_init(spark):
     payload = spark['sqlContext'].sql(
         'select * from matching_payload'
     ).collect()
-
-
-def test_no_invalids():
-    "Invalid records were filtered from the payload"
-    assert filter(lambda r: r.claimId == '999', payload) == []

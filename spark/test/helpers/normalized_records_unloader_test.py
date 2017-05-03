@@ -46,8 +46,9 @@ def test_init(spark):
     )
 
     normalized_records_unloader.partition_and_rename(
-        spark['spark'], spark['runner'], 'lab', 'test', 'date_service',
-        prefix, test_staging_dir
+        spark['spark'], spark['runner'], 'lab', 'lab_common_model.sql',
+        'test_provider', 'lab_common_model', 'date_service', prefix,
+        test_staging_dir
     )
 
 
@@ -57,10 +58,10 @@ def test_correct_partitions():
         lambda f: "hive-staging" not in f,
         os.listdir(test_staging_dir)
     )
-    assert provider_partition == ['part_provider=test']
+    assert provider_partition == ['part_provider=test_provider']
 
     date_partition = os.listdir(
-        test_staging_dir + '/part_provider=test/'
+        test_staging_dir + '/part_provider=test_provider/'
     )
 
     assert date_partition == ['part_best_date=NULL']
@@ -71,7 +72,7 @@ def test_prefix():
     part_files = filter(
         lambda f: not f.endswith('.crc'),
         os.listdir(
-            test_staging_dir + '/part_provider=test/part_best_date=NULL/'
+            test_staging_dir + '/part_provider=test_provider/part_best_date=NULL/'
         )
     )
     for f in part_files:
