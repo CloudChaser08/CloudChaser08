@@ -176,9 +176,10 @@ def run(part):
     # explode date ranges
     explode.explode_medicalclaims_dates(runner)
 
-    normalized_records_unloader.unload(
-        spark, runner, 'medicalclaims', 'practice_insight',
-        'date_service', args.date, output_path
+    normalized_records_unloader.partition_and_rename(
+        spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql',
+        'practice_insight', 'medicalclaims_common_model', 'date_service',
+        args.date
     )
 
     spark.catalog.dropTempView('medicalclaims_common_model')
@@ -187,4 +188,6 @@ def run(part):
 for part in ['1', '2', '3', '4']:
     run(part)
 
-spark.sparkContext.stop()
+spark.stop()
+
+normalized_records_unloader.distcp(output_path)

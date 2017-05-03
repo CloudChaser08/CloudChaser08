@@ -107,8 +107,11 @@ sqlContext.sql('select * from lab_common_model').withColumn(
     'lab_common_model'
 )
 
-normalized_records_unloader.unload(
-    spark, runner, 'lab', 'quest', 'date_service', args.date, output_path
+normalized_records_unloader.partition_and_rename(
+    spark, runner, 'lab', 'lab_common_model.sql', 'quest', 'lab_common_model',
+    'date_service', args.date
 )
 
-spark.sparkContext.stop()
+spark.stop()
+
+normalized_records_unloader.distcp(output_path)
