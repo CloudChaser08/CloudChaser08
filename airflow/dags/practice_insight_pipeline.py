@@ -323,7 +323,6 @@ detect_move_normalize_dag = SubDagOperator(
             '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
             'pyspark_normalization_args_func': lambda ds, k: [
                 '--date', insert_current_date('{}-{}-01', k),
-                '--output_path', TEXT_WAREHOUSE
             ],
             'text_warehouse': TEXT_WAREHOUSE,
             'parquet_warehouse': PARQUET_WAREHOUSE,
