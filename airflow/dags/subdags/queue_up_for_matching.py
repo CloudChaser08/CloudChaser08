@@ -5,7 +5,7 @@ from airflow.operators import PythonOperator
 from subprocess import check_call
 
 
-def do_queue_up_for_matching(ds, **kwargs):
+def do_queue_up_for_matching(ds, passthrough_only=None, **kwargs):
     source_files = kwargs['source_files_func'](ds, kwargs)
     environ = {
         'AWS_ACCESS_KEY_ID' : Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER'),
@@ -18,7 +18,8 @@ def do_queue_up_for_matching(ds, **kwargs):
             f, '0', 'prod-matching-engine', 'priority3'
         ]
 
-    queue_up_cmd.append("true") if kwargs.get('passthrough_only')
+    if passthrough_only:
+        queue_up_cmd.append("true")
 
     for f in source_files:
         check_call(queue_up_cmd, env=environ)
