@@ -113,7 +113,7 @@ def _build_dewey(cluster_id):
 def normalize(cluster_name, script_name, args,
               s3_text_warehouse, s3_parquet_warehouse, model):
     """Run normalization and parquet processes in EMR"""
-    text_staging_dir = 'hdfs:///text-out/'
+    text_staging_dir = '/staging/'  # from spark.helpers.constants
 
     normalize_step = (
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
