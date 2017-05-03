@@ -108,7 +108,8 @@ sqlContext.sql('select * from lab_common_model').withColumn(
 )
 
 normalized_records_unloader.partition_and_rename(
-    spark, runner, 'lab', 'quest', 'date_service', args.date
+    spark, runner, 'lab', 'lab_common_model.sql', 'quest', 'lab_common_model',
+    'date_service', args.date
 )
 
 spark.stop()

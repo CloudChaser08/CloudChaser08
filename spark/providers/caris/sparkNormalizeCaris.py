@@ -107,8 +107,9 @@ sqlContext.sql('select * from lab_common_model').withColumn(
     'record_id', monotonically_increasing_id()
 ).createTempView('lab_common_model')
 
-normalized_records_unloader.prefix_and_rename(
-    spark, runner, 'lab', 'caris', 'date_service', args.date
+normalized_records_unloader.partition_and_rename(
+    spark, runner, 'lab', 'lab_common_model.sql', 'caris', 'lab_common_model',
+    'date_service', args.date
 )
 
 spark.stop()

@@ -177,8 +177,9 @@ def run(part):
     explode.explode_medicalclaims_dates(runner)
 
     normalized_records_unloader.partition_and_rename(
-        spark, runner, 'medicalclaims', 'practice_insight',
-        'date_service', args.date
+        spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql',
+        'practice_insight', 'medicalclaims_common_model', 'date_service',
+        args.date
     )
 
     spark.catalog.dropTempView('medicalclaims_common_model')

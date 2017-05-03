@@ -87,8 +87,9 @@ runner.run_spark_script(get_rel_path('../../../common/medicalclaims_post_normali
     ['vendor', '11']
 ])
 
-normalized_records_unloader.prefix_and_rename(
-    spark, runner, 'medicalclaims', 'emdeon', 'date_service', args.date
+normalized_records_unloader.partition_and_rename(
+    spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'emdeon',
+    'medicalclaims_common_model', 'date_service', args.date
 )
 spark.sparkContext.stop()
 normalized_records_unloader.distcp(S3_EMDEON_OUT)
