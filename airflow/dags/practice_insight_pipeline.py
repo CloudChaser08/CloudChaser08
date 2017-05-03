@@ -299,8 +299,6 @@ clean_up_workspace = PythonOperator(
 # Post-Matching
 #
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/medicalclaims/practice_insight/'
-TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/medicalclaims/2017-02-24/"
-PARQUET_WAREHOUSE = "s3a://salusv/warehouse/parquet/medicalclaims/2017-02-24/"
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
@@ -322,11 +320,8 @@ detect_move_normalize_dag = SubDagOperator(
             'pyspark_normalization_script_name':
             '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
             'pyspark_normalization_args_func': lambda ds, k: [
-                '--date', insert_current_date('{}-{}-01', k),
+                '--date', insert_current_date('{}-{}-01', k)
             ],
-            'text_warehouse': TEXT_WAREHOUSE,
-            'parquet_warehouse': PARQUET_WAREHOUSE,
-            'data_feed_type': 'lab',
             'pyspark': True
         }
     ),
