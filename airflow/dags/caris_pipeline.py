@@ -291,9 +291,6 @@ detect_move_normalize_dag = SubDagOperator(
             'pyspark_normalization_args_func': lambda ds, k: [
                 '--date', insert_current_date('{}-{}-01', k)
             ],
-            'text_warehouse': TEXT_WAREHOUSE,
-            'parquet_warehouse': PARQUET_WAREHOUSE,
-            'data_feed_type': 'lab',
             'pyspark': True
         }
     ),
