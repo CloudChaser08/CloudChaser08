@@ -1,0 +1,10 @@
+2073344007	20161201	17897	SYT	20161201											M	diag1^diag4^diag3	0	hv-join-key-1
+2073344008	20161201	17897	SYT	20161201											F		0	hv-join-key-2
+2073344009	20161201	17897	SYT	20161201											M	diag1^diag4^diag3	0	hv-join-key-3
+2073344011	20161201	17897	SYT	20161201											F	diag1^diag4^diag3	9	hv-join-key-4
+2073344012	20161201	17897	SYT	20161201											F	diag1^diag4^diag6	9	hv-join-key-5
+2073344013	20161201	17897	SYT	20161201											F	diag1^diag4^diag6	9	hv-join-key-6
+2073344014	20161202	17898	LAB	20161202											F	diag1^diag2^diag6	9	hv-join-key-7
+2073344016	20161202	17898	LAB	20161202											M	diag1^diag5^diag6	9	hv-join-key-8
+2073344017	20161202	17898	LAB	20161202											F	diag1^diag5^diag3	9	hv-join-key-9
+2073344018	20161202	17898	LAB	20161202											M	diag1^diag5^diag3	9	hv-join-key-0
