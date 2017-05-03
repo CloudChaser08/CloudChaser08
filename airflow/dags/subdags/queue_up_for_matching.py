@@ -15,13 +15,14 @@ def do_queue_up_for_matching(ds, passthrough_only=None, **kwargs):
     queue_up_cmd = [
             os.getenv('AIRFLOW_HOME')
             + '/dags/resources/push_file_to_s3_batchless.sh',
-            f, '0', 'prod-matching-engine', 'priority3'
+            None, '0', 'prod-matching-engine', 'priority3'
         ]
 
     if passthrough_only:
         queue_up_cmd.append("true")
 
     for f in source_files:
+        queue_up_cmd[1] = f
         check_call(queue_up_cmd, env=environ)
 
 
