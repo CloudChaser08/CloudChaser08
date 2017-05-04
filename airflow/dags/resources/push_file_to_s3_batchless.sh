@@ -16,10 +16,11 @@ UUID_SHORT=${UUID:0:4}
 
 # Create either a process or passthrough task
 if [ -n "$PASSTHROUGH" ]; then
-  TASK_ID="MORGAN.PASSTHROUGH_${UUID}"
+  TASK_TYPE="MORGAN.PASSTHROUGH"
 else
-  TASK_ID="MORGAN.PROCESS_${UUID}"
+  TASK_TYPE="MORGAN.PROCESS"
 fi
+TASK_ID="${TASK_TYPE}_${UUID}"
 
 # Create empty message file and dir if not exisiting
 MESSAGE_DIR=/tmp/messages
@@ -31,7 +32,7 @@ touch $MSG_SOURCE_PATH
 
 # format destination path
 SOURCE_BASE_NAME=$(echo $S3_DATA_SOURCE_PATH | sed -e 's/.*\///')
-S3_MSG_DESTINATION_PATH="s3://hvmatching/inbound/$ENVIRONMENT/tasks/$PRIORITY/$(date +%s)_${SEQ_NUM}_MORGAN.PROCESS_${UUID_SHORT}"
+S3_MSG_DESTINATION_PATH="s3://hvmatching/inbound/$ENVIRONMENT/tasks/$PRIORITY/$(date +%s)_${SEQ_NUM}_${TASK_TYPE}_${UUID_SHORT}"
 S3_DATA_DESTINATION_PATH="s3://hvmatching/inbound/$ENVIRONMENT/data/$SOURCE_BASE_NAME"
 S3_DATA_REF_PATH="inbound/$ENVIRONMENT/data/$SOURCE_BASE_NAME"
 
