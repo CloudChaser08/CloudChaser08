@@ -27,21 +27,23 @@ def partition_and_rename(spark, runner, data_type, common_model_script, provider
     if test_dir:
         staging_dir = test_dir
         part_files_cmd = ['find', staging_dir, '-type', 'f']
+        common_dirpath = '../common/'
 
     else:
         staging_dir = constants.hdfs_staging_dir
         part_files_cmd = ['hadoop', 'fs', '-ls', '-R', staging_dir]
+        common_dirpath = '../../../../common/'
 
 
-    runner.run_spark_script(file_utils.get_rel_path(__file__, '../common/{}'.format(common_model_script)), [
+    runner.run_spark_script(file_utils.get_rel_path(__file__, common_dirpath + '{}'.format(common_model_script)), [
         ['table_name', 'final_unload', False],
         ['properties', constants.unload_properties_template.format(staging_dir), False]
     ])
-    runner.run_spark_script(file_utils.get_rel_path(__file__, '../common/unload_common_model.sql'), [
+    runner.run_spark_script(file_utils.get_rel_path(__file__, common_dirpath + 'unload_common_model.sql'), [
         ['select_statement', "SELECT *, '{}' as part_provider, 'NULL' as part_best_date FROM {} WHERE {} is NULL".format(provider, table_name, date_column), False],
         ['partitions', '20', False]
     ])
-    runner.run_spark_script(file_utils.get_rel_path(__file__, '../common/unload_common_model.sql'), [
+    runner.run_spark_script(file_utils.get_rel_path(__file__, common_dirpath + 'unload_common_model.sql'), [
         ['select_statement', "SELECT *, '{0}' as part_provider, regexp_replace({2}, '-..$', '') as part_best_date FROM {1} WHERE {2} IS NOT NULL".format(provider, table_name, date_column), False],
         ['partitions', '20', False]
     ])
