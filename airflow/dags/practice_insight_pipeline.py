@@ -300,34 +300,39 @@ clean_up_workspace = PythonOperator(
 #
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/medicalclaims/practice_insight/'
 
-detect_move_normalize_dag = SubDagOperator(
-    subdag=detect_move_normalize.detect_move_normalize(
-        DAG_NAME,
-        'detect_move_normalize',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'expected_matching_files_func': lambda ds, k: [
-                insert_current_plaintext_date_function(
-                    DEID_FILE_NAME_TEMPLATE
-                )(ds, k)
-            ],
-            'file_date_func': insert_current_date_function(
-                '{}/{}'
-            ),
-            's3_payload_loc_url': S3_PAYLOAD_DEST,
-            'vendor_uuid': 'b29eb316-a398-4fdc-b8da-2cff26f86bad',
-            'pyspark_normalization_script_name':
-            '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
-            'pyspark_normalization_args_func': lambda ds, k: [
-                '--date', insert_current_date('{}-{}-01', k)
-            ],
-            'pyspark': True
-        }
-    ),
-    task_id='detect_move_normalize',
-    dag=mdag
-)
+
+def generate_detect_move_normalize_dag():
+    return SubDagOperator(
+        subdag=detect_move_normalize.detect_move_normalize(
+            DAG_NAME,
+            'detect_move_normalize',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'expected_matching_files_func': lambda ds, k: [
+                    insert_current_plaintext_date_function(
+                        DEID_FILE_NAME_TEMPLATE
+                    )(ds, k)
+                ],
+                'file_date_func': insert_current_date_function(
+                    '{}/{}'
+                ),
+                's3_payload_loc_url': S3_PAYLOAD_DEST,
+                'vendor_uuid': 'b29eb316-a398-4fdc-b8da-2cff26f86bad',
+                'pyspark_normalization_script_name':
+                '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
+                'pyspark_normalization_args_func': lambda ds, k: [
+                    '--date', insert_current_date('{}-{}-01', k)
+                ],
+                'pyspark': True
+            }
+        ),
+        task_id='detect_move_normalize',
+        dag=mdag
+    )
+
+
+detect_move_normalize_dag = generate_detect_move_normalize_dag()
 
 # transaction
 fetch_transactional.set_upstream(validate_transactional)
