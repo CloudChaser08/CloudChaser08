@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS transactional_tests;
-CREATE EXTERNAL TABLE transactional_tests 
+CREATE EXTERNAL TABLE transactional_tests (
     hdr_rec_typ_cde          string,
     patient_id               string,
     test_order_id            string,
