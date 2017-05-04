@@ -15,7 +15,7 @@ UUID=$(cat /proc/sys/kernel/random/uuid)
 UUID_SHORT=${UUID:0:4}
 
 # Create either a process or passthrough task
-if [ -z "$PASSTHROUGH" ]; then
+if [ -n "$PASSTHROUGH" ]; then
   TASK_ID="MORGAN.PASSTHROUGH_${UUID}"
 else
   TASK_ID="MORGAN.PROCESS_${UUID}"
