@@ -74,3 +74,13 @@ def test_noexplode():
     )
 
     assert len(results_noexplode) == 1
+
+
+def test_exploded_table_drop(spark):
+    "Exploded table can be dropped and recreated"
+    # spark['sqlContext'].dropTempTable("explosion_test")
+    spark['sqlContext'].dropTempTable("explosion_test")
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS explosion_test')
+    spark['sqlContext'].sql('CREATE TABLE explosion_test (id int)')
+    assert spark['sqlContext'].sql('select * from explosion_test') \
+                              .collect() == []

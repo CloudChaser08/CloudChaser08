@@ -190,7 +190,7 @@ def run_part(
             args.date
         )
 
-        spark.catalog.dropTempView('medicalclaims_common_model')
+        runner.sqlContext.dropTempTable('medicalclaims_common_model')
 
 
 def main(args):
