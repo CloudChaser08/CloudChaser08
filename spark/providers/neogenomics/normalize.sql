@@ -93,9 +93,9 @@ FROM transactional_tests t
     LEFT JOIN matching_payload mp ON t.test_order_id = mp.personid
     CROSS JOIN diagnosis_exploder n
 
--- implicit here is that q.diagnosis_code itself is not null or blank
+-- implicit here is that t.icd_code itself is not null or blank
 WHERE SPLIT(TRIM(t.icd_code),',')[n.n] IS NOT NULL
-    AND SPLIT(TRIM(q.icd_code),',')[n.n] != ''
+    AND SPLIT(TRIM(t.icd_code),',')[n.n] != ''
     ;
 
 -- insert all rows with diagnoses
@@ -186,6 +186,6 @@ SELECT
 FROM transactional_tests t
     LEFT JOIN matching_payload mp ON t.test_order_id = mp.personid
 
-WHERE q.diagnosis_code IS NULL
-    OR q.diagnosis_code = ''
+WHERE t.icd_code IS NULL
+    OR t.icd_code = ''
     ;
