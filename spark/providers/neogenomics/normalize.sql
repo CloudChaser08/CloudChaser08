@@ -102,7 +102,7 @@ SELECT
     ELSE NULL
     END                                      -- logical_delete_reason
 FROM transactional_tests t
-    LEFT JOIN matching_payload mp ON t.test_order_id = mp.personid
+    LEFT JOIN matching_payload mp ON UPPER(t.patient_id) = UPPER(mp.personid)
     CROSS JOIN diagnosis_exploder n
 
 -- implicit here is that t.icd_code itself is not null or blank
@@ -208,7 +208,7 @@ SELECT
     ELSE NULL
     END                                      -- logical_delete_reason
 FROM transactional_tests t
-    LEFT JOIN matching_payload mp ON t.test_order_id = mp.personid
+    LEFT JOIN matching_payload mp ON UPPER(t.patient_id) = UPPER(mp.personid)
 
 WHERE t.icd_code IS NULL
     OR t.icd_code = ''
