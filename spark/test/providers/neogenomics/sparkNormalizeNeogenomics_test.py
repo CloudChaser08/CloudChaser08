@@ -32,6 +32,16 @@ def test_diag_explosion():
     assert diags == ['DIAG1', 'DIAG2', 'DIAG3']
 
 
+def test_diag_priority():
+    "Ensure diags are getting the correct priority"
+    diag_priority = map(
+        lambda r: [str(r.diagnosis_code), str(r.diagnosis_code_priority)],
+        filter(lambda r: r.claim_id == 'test2', results)
+    )
+    diag_priority.sort()
+    assert diag_priority == [['DIAG1', '1'], ['DIAG2', '2'], ['DIAG3', '3']]
+
+
 def test_nodiag_inclusion():
     "Ensure that claims with no diagnosis codes were included"
     claim = filter(lambda r: r.claim_id == 'test3', results)

@@ -65,7 +65,7 @@ SELECT
                 ) as DATE)
         ),                                   -- diagnosis_code
     NULL,                                    -- diagnosis_code_qual
-    n.n,                                     -- diagnosis_code_priority
+    n.n + 1,                                 -- diagnosis_code_priority
     NULL,                                    -- procedure_code
     NULL,                                    -- procedure_code_qual
     NULL,                                    -- lab_npi
