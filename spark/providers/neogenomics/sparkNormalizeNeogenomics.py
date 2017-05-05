@@ -81,7 +81,7 @@ def run(spark, runner, date_input, test=False):
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'lab', 'lab_common_model.sql', 'neogenomics',
+            spark, runner, 'lab', 'lab_common_model_v3.sql', 'neogenomics',
             'lab_common_model', 'date_service', date_input
         )
 
