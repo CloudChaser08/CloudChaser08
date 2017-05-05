@@ -19,13 +19,30 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
         detect_move_normalize, decompression, HVDAG]:
     reload(m)
 
+if Variable.get("AIRFLOW_ENV", default_var='').find('prod') != -1:
+    airflow_env = 'prod'
+elif Variable.get("AIRFLOW_ENV", default_var='').find('test') != -1:
+    airflow_env = 'test'
+else:
+    airflow_env = 'dev'
+
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
 DAG_NAME = 'quest_pipeline'
 
 # Applies to all transaction files
-S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/quest/'
-S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
+if airflow_env == 'test':
+    S3_TRANSACTION_RAW_URL = 's3://healthveritydev/musifer/tests/airflow/quest/raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://healthveritydev/musifer/tests/airflow/quest/out/{}/{}/{}/'
+    S3_PAYLOAD_DEST = 's3://healthveritydev/musifer/tests/airflow/quest/payload/'
+    TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/"
+    PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/"
+else:
+    S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/quest/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
+    S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
+    TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/"
+    PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/"
 
 # Transaction Addon file
 TRANSACTION_ADDON_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/addon/'
@@ -61,9 +78,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * *" if Variable.get(
-        "AIRFLOW_ENV", default_var=''
-    ).find('prod') != -1 else None,
+    schedule_interval="0 12 * * *" if airflow_env in ['prod', 'test'] else None,
     default_args=default_args
 )
 
@@ -330,27 +345,33 @@ def clean_up_workspace_step(task_id, template):
 
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
-queue_up_for_matching = SubDagOperator(
-    subdag=queue_up_for_matching.queue_up_for_matching(
-        DAG_NAME,
-        'queue_up_for_matching',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
+if airflow_env == 'prod':
+    queue_up_for_matching = SubDagOperator(
+        subdag=queue_up_for_matching.queue_up_for_matching(
+            DAG_NAME,
+            'queue_up_for_matching',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
 
             'source_files_func' : get_deid_file_urls
-        }
-    ),
-    task_id='queue_up_for_matching',
-    dag=mdag
-)
+            }
+        ),
+        task_id='queue_up_for_matching',
+        dag=mdag
+    )
+
 
 #
 # Post-Matching
 #
-S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
-TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/"
-PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/"
+def norm_args(ds, k):
+    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    if airflow_env == 'test':
+        base += ['--test']
+
+    return base
+
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
@@ -359,21 +380,19 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds,k: [
+            'expected_matching_files_func': lambda ds, k: [
                 insert_formatted_date_function(
                     DEID_UNZIPPED_FILE_NAME_TEMPLATE
                 )(ds, k)
             ],
-            'file_date_func'                    : insert_current_date_function(
+            'file_date_func': insert_current_date_function(
                 '{}/{}/{}'
             ),
-            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
-            'vendor_uuid'                       : '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
-            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
-            'pyspark_normalization_args_func'   : lambda ds, k: [
-                '--date', insert_current_date('{}-{}-{}', k)
-            ],
-            'pyspark'                           : True
+            's3_payload_loc_url': S3_PAYLOAD_DEST,
+            'vendor_uuid': '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
+            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
+            'pyspark_normalization_args_func': norm_args,
+            'pyspark': True
         }
     ),
     task_id='detect_move_normalize',
@@ -397,10 +416,15 @@ clean_up_workspace.set_upstream(
     [split_trunk, split_addon]
 )
 
-# matching
-queue_up_for_matching.set_upstream(validate_deid)
+if airflow_env == 'prod':
+    # matching
+    queue_up_for_matching.set_upstream(validate_deid)
 
-# post-matching
-detect_move_normalize_dag.set_upstream(
-    [queue_up_for_matching, split_trunk, split_addon]
-)
+    # post-matching
+    detect_move_normalize_dag.set_upstream(
+        [queue_up_for_matching, split_trunk, split_addon]
+    )
+else:
+    detect_move_normalize_dag.set_upstream(
+        [validate_deid, split_trunk, split_addon]
+    )
