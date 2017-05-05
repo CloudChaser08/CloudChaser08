@@ -42,13 +42,27 @@ for product in ['ap', 'ses', 'ease']:
     ), shell=True)
 
     input_prefix = input_path + setid + '_'
+
+    if product == 'ap' and args.date <= '2017-02-15' and args.first_run:
+        subprocess.call(' '.join(
+            psql
+            + ['-v', 'claimaffiliation_path="\'' + S3_ABILITY_INPUT
+               + 'vwclaimaffiliation_correction_20170215'
+               + '/ap_vwclaimaffiliation.txt.20140101_20170215' + '\'"']
+        ), shell=True)
+    elif args product != 'ap' or args.date > '2017-02-15':
+        subprocess.call(' '.join(
+            psql
+            + ['-v', 'claimaffiliation_path="\''
+               + input_prefix + 'vwclaimaffiliation' + '\'"']
+        ), shell=True)
+
     # load data
     subprocess.call(' '.join(
         psql
         + ['-v', 'header_path="\'' + input_prefix + 'record.vwheader' + '\'"']
         + ['-v', 'serviceline_path="\'' + input_prefix + 'vwserviceline.' + '\'"']
         + ['-v', 'servicelineaffiliation_path="\'' + input_prefix + 'vwservicelineaffiliation' + '\'"']
-        + ['-v', 'claimaffiliation_path="\'' + input_prefix + 'vwclaimaffiliation' + '\'"']
         + ['-v', 'diagnosis_path="\'' + input_prefix + 'vwdiagnosis' + '\'"']
         + ['-v', 'procedure_path="\'' + input_prefix + 'vwprocedurecode' + '\'"']
         + ['-v', 'billing_path="\'' + input_prefix + 'vwbilling' + '\'"']
