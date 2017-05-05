@@ -9,7 +9,7 @@ results = []
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
-    neogenomics.run(spark['spark'], spark['runner'], '2016-12-31', True)
+    neogenomics.run(spark['spark'], spark['runner'], '2017-05-01', True)
     global results
     results = spark['sqlContext'].sql('select * from lab_common_model') \
                                  .collect()
@@ -37,3 +37,7 @@ def test_nodiag_inclusion(spark):
     claim = filter(lambda r: r.claim_id == 'test3', results)
 
     assert len(claim) == 1
+
+
+def test_cleanup(spark):
+    spark['sqlContext'].dropTempTable('lab_common_model')
