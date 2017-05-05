@@ -82,8 +82,20 @@ SELECT
     NULL,                                    -- lab_other_qual
     NULL,                                    -- ordering_other_id
     NULL,                                    -- ordering_other_qual
+    NULL,                                    -- ordering_name
     NULL,                                    -- ordering_market_type
     NULL,                                    -- ordering_specialty
+    NULL,                                    -- ordering_vendor_id
+    NULL,                                    -- ordering_tax_id
+    NULL,                                    -- ordering_dea_id
+    NULL,                                    -- ordering_ssn
+    NULL,                                    -- ordering_state_license
+    NULL,                                    -- ordering_upin
+    NULL,                                    -- ordering_commercial_id
+    NULL,                                    -- ordering_address_1
+    NULL,                                    -- ordering_address_2
+    NULL,                                    -- ordering_city
+    NULL,                                    -- ordering_state
     t.client_zip,                            -- ordering_zip
     CASE WHEN UPPER(t.status) = 'CANCELLED'
     THEN 'CANCELED'
@@ -176,8 +188,20 @@ SELECT
     NULL,                                    -- lab_other_qual
     NULL,                                    -- ordering_other_id
     NULL,                                    -- ordering_other_qual
+    NULL,                                    -- ordering_name
     NULL,                                    -- ordering_market_type
     NULL,                                    -- ordering_specialty
+    NULL,                                    -- ordering_vendor_id
+    NULL,                                    -- ordering_tax_id
+    NULL,                                    -- ordering_dea_id
+    NULL,                                    -- ordering_ssn
+    NULL,                                    -- ordering_state_license
+    NULL,                                    -- ordering_upin
+    NULL,                                    -- ordering_commercial_id
+    NULL,                                    -- ordering_address_1
+    NULL,                                    -- ordering_address_2
+    NULL,                                    -- ordering_city
+    NULL,                                    -- ordering_state
     t.client_zip,                            -- ordering_zip
     CASE WHEN UPPER(t.status) = 'CANCELLED'
     THEN 'CANCELED'

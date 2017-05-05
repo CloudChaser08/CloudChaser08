@@ -45,7 +45,7 @@ def run(spark, runner, date_input, test=False):
 
     runner.run_spark_script(file_utils.get_rel_path(
         script_path,
-        '../../common/lab_common_model.sql'
+        '../../common/lab_common_model_v3.sql'
     ), [
         ['table_name', 'lab_common_model', False],
         ['properties', '', False]
