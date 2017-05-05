@@ -49,12 +49,16 @@ for product in ['ap', 'ses', 'ease']:
             + ['-v', 'claimaffiliation_path="\'' + S3_ABILITY_INPUT
                + 'vwclaimaffiliation_correction_20170215'
                + '/ap_vwclaimaffiliation.txt.20140101_20170215' + '\'"']
+            + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+            + [db, '<', 'load_vwclaimaffiliation.sql']
         ), shell=True)
-    elif args product != 'ap' or args.date > '2017-02-15':
+    elif product != 'ap' or args.date > '2017-02-15':
         subprocess.call(' '.join(
             psql
             + ['-v', 'claimaffiliation_path="\''
                + input_prefix + 'vwclaimaffiliation' + '\'"']
+            + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+            + [db, '<', 'load_vwclaimaffiliation.sql']
         ), shell=True)
 
     # load data
