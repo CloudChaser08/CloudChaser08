@@ -19,8 +19,7 @@ input_path, min_date, max_date, matching_path, setid = \
 
 
 def run_part(
-        spark, runner, part, date_input,
-        output_path, shuffle_partitions, test=False
+        spark, runner, part, date_input, shuffle_partitions, test=False
 ):
     """
     Normalize one of 4 parts of practice insight
@@ -211,19 +210,18 @@ def main(args):
 
     for part in ['1', '2', '3', '4']:
         run_part(
-            spark, runner, part, args.date,
-            args.output_path, args.shuffle_partitions
+            spark, runner, part, args.date, args.shuffle_partitions
         )
 
     spark.stop()
 
-    normalized_records_unloader.distcp(args.output_path)
+    output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
+    normalized_records_unloader.distcp(output_path)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
-    parser.add_argument('--output_path', type=str)
     parser.add_argument('--shuffle_partitions', type=str, default="1200")
     args = parser.parse_args()
     main(args)

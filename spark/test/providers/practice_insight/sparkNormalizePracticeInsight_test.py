@@ -4,7 +4,6 @@ import datetime
 
 import spark.providers.practice_insight.sparkNormalizePracticeInsight \
     as practice_insight
-import spark.helpers.file_utils as file_utils
 
 results = []
 
@@ -19,8 +18,7 @@ def get_rows_for_test(claim_id):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     practice_insight.run_part(
-        spark['spark'], spark['runner'], '1', '2016-12-31',
-        file_utils.get_rel_path(__file__, 'resources/output/'), 40, True
+        spark['spark'], spark['runner'], '1', '2016-12-31', 40, True
     )
 
     global results
