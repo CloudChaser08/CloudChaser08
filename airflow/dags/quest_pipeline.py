@@ -345,7 +345,7 @@ def clean_up_workspace_step(task_id, template):
 
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
-if airflow_env == 'prod':
+if airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,

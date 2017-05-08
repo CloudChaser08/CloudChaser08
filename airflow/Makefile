@@ -67,6 +67,8 @@ test: pull clean
 	--name airflow-test \
 	${REPO}:latest runtests
 
+test-e2e: jenkins-deploy-dev
+	ssh airflow@airflow-dev.awsdev.healthverity.com 'pytest -v ~/airflow/dags/test-e2e/'
 
 shell:
 	docker exec -it airflow /bin/bash
@@ -85,7 +87,7 @@ jenkins-test: pull clean
 	--name airflow-test \
 	${REPO}:latest runtests
 
-jenkins-deploy-dev: jenkins-test clean
+jenkins-deploy-dev: test-local clean
 	${RSYNC_CMD} dags/     airflow@airflow-dev.awsdev.healthverity.com:airflow/dags
 	${RSYNC_CMD} ../spark/ airflow@airflow-dev.awsdev.healthverity.com:spark
 
