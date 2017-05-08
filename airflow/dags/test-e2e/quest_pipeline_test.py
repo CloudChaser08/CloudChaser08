@@ -31,6 +31,12 @@ def test_matching_payload_moved():
     ])) > 0
 
 
+def test_normalized_data_exists():
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', QUEST_TEST_DIR + '/spark-output/part_provider=quest/'
+    ])) > 0
+
+
 def test_cleanup():
 
     # cleanup
