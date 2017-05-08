@@ -1,3 +1,4 @@
+
 #!/usr/bin/python
 import subprocess
 import argparse
@@ -26,6 +27,7 @@ parser.add_argument('--cluster_endpoint', type=str)
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--rs_user', type=str, nargs='?')
 parser.add_argument('--rs_password', type=str, nargs='?')
+parser.add_argument('--no_load_claimaff', default=False, action='store_true') # should be done on first run
 args = parser.parse_args()
 
 db = args.database if args.database else 'dev'
@@ -54,7 +56,6 @@ subprocess.call(' '.join(
     + ['-v', 'header_path="\'' + args.header_path + '\'"']
     + ['-v', 'serviceline_path="\'' + args.serviceline_path + '\'"']
     + ['-v', 'servicelineaffiliation_path="\'' + args.servicelineaffiliation_path + '\'"']
-    + ['-v', 'claimaffiliation_path="\'' + args.claimaffiliation_path + '\'"']
     + ['-v', 'diagnosis_path="\'' + args.diagnosis_path + '\'"']
     + ['-v', 'procedure_path="\'' + args.procedure_path + '\'"']
     + ['-v', 'billing_path="\'' + args.billing_path + '\'"']
@@ -62,6 +63,16 @@ subprocess.call(' '.join(
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
     + [db, '<', 'load_transactions.sql']
 ), shell=True)
+
+if not args.no_load_claimaff:
+    subprocess.call(' '.join(
+        psql
+        + ['-v', 'claimaffiliation_path="\'' + args.claimaffiliation_path + '\'"']
+        + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
+        + [db, '<', 'load_vwclaimaffiliation.sql']
+    ), shell=True)
+
+
 subprocess.call(' '.join(
     psql
     + ['-v', 'matching_path="\'' + args.matching_path + '\'"']
