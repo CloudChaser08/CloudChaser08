@@ -35,14 +35,10 @@ if airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://healthveritydev/musifer/tests/airflow/quest/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://healthveritydev/musifer/tests/airflow/quest/out/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://healthveritydev/musifer/tests/airflow/quest/payload/'
-    TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/"
-    PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/"
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/quest/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
-    TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/"
-    PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/"
 
 # Transaction Addon file
 TRANSACTION_ADDON_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/addon/'
@@ -78,7 +74,11 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * *" if airflow_env in ['prod', 'test'] else None,
+    schedule_interval=(
+        "0 12 * * *"
+        if airflow_env in ['prod', 'test']
+        else None
+    ),
     default_args=default_args
 )
 
@@ -174,27 +174,27 @@ def generate_transaction_file_validation_dag(
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-                's3_bucket'               : 'healthverity',
-                'file_description'        : 'Quest ' + task_id + 'file'
+                's3_bucket'               : 'healthveritydev' if airflow_env == 'test' else 'healthverity',
+                'file_description'        : 'Quest ' + task_id + ' file'
             }
         ),
         task_id='validate_' + task_id + '_file',
         dag=mdag
     )
 
-
-validate_addon = generate_transaction_file_validation_dag(
-    'addon', TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
-    1000000
-)
-validate_trunk = generate_transaction_file_validation_dag(
-    'trunk', TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
-    10000000
-)
-validate_deid = generate_transaction_file_validation_dag(
-    'deid', DEID_FILE_NAME_TEMPLATE,
-    10000000
-)
+if airflow_env != 'test':
+    validate_addon = generate_transaction_file_validation_dag(
+        'addon', TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
+        1000000
+    )
+    validate_trunk = generate_transaction_file_validation_dag(
+        'trunk', TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+        10000000
+    )
+    validate_deid = generate_transaction_file_validation_dag(
+        'deid', DEID_FILE_NAME_TEMPLATE,
+        10000000
+    )
 
 
 def generate_fetch_dag(
@@ -212,7 +212,7 @@ def generate_fetch_dag(
                     file_name_template
                 ),
                 's3_prefix'              : s3_path_template,
-                's3_bucket'              : 'healthverity'
+                's3_bucket'              : 'healthveritydev' if airflow_env == 'test' else 'healthverity'
             }
         ),
         task_id='fetch_' + task_id + '_file',
@@ -368,7 +368,7 @@ if airflow_env == 'prod':
 def norm_args(ds, k):
     base = ['--date', insert_current_date('{}-{}-{}', k)]
     if airflow_env == 'test':
-        base += ['--test']
+        base += ['--airflow_test']
 
     return base
 
@@ -399,24 +399,11 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-# addon
-fetch_addon.set_upstream(validate_addon)
-unzip_addon.set_upstream(fetch_addon)
-decrypt_addon.set_upstream(unzip_addon)
-split_addon.set_upstream(decrypt_addon)
 
-# trunk
-fetch_trunk.set_upstream(validate_trunk)
-unzip_trunk.set_upstream(fetch_trunk)
-gunzip_trunk.set_upstream(unzip_trunk)
-split_trunk.set_upstream(gunzip_trunk)
+if airflow_env != 'test':
+    fetch_addon.set_upstream(validate_addon)
+    fetch_trunk.set_upstream(validate_trunk)
 
-# cleanup
-clean_up_workspace.set_upstream(
-    [split_trunk, split_addon]
-)
-
-if airflow_env == 'prod':
     # matching
     queue_up_for_matching.set_upstream(validate_deid)
 
@@ -426,5 +413,19 @@ if airflow_env == 'prod':
     )
 else:
     detect_move_normalize_dag.set_upstream(
-        [validate_deid, split_trunk, split_addon]
+        [split_trunk, split_addon]
     )
+
+
+unzip_addon.set_upstream(fetch_addon)
+decrypt_addon.set_upstream(unzip_addon)
+split_addon.set_upstream(decrypt_addon)
+
+unzip_trunk.set_upstream(fetch_trunk)
+gunzip_trunk.set_upstream(unzip_trunk)
+split_trunk.set_upstream(gunzip_trunk)
+
+# cleanup
+clean_up_workspace.set_upstream(
+    [split_trunk, split_addon]
+)
