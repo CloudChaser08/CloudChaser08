@@ -27,7 +27,14 @@ parser.add_argument('--cluster_endpoint', type=str)
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--rs_user', type=str, nargs='?')
 parser.add_argument('--rs_password', type=str, nargs='?')
-parser.add_argument('--load_claimaffiliation', default=False, action='store_true') # should be done on first run
+
+# switch for loading the vwclaimaffiliation table
+#
+# note that the table must be loaded for this routine to run, but it
+# is shared for the AP application up through 2017/02/15, so this
+# switch is useful for loading the table only on the first run.
+parser.add_argument('--load_claimaffiliation', default=False, action='store_true')
+
 args = parser.parse_args()
 
 db = args.database if args.database else 'dev'

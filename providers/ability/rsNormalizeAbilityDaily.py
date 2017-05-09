@@ -16,7 +16,6 @@ S3_ABILITY_MATCHING = 's3://salusv/matching/payload/medicalclaims/ability/'
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--s3_credentials', type=str)
-parser.add_argument('--first_run', default=False, action='store_true')
 args = parser.parse_args()
 
 input_path = S3_ABILITY_INPUT + args.date.replace('-', '/') + '/'
@@ -48,7 +47,7 @@ for product in ['ap', 'ses', 'ease']:
         + [db, '<', '../redshift_norm_common/medicalclaims_common_model.sql']
     ), shell=True)
 
-    if product == 'ap' and args.date <= '2017-02-15' and args.first_run:
+    if product == 'ap' and args.date <= '2017-02-15':
         subprocess.call(' '.join(
             psql
             + ['-v', 'claimaffiliation_path="\'' + S3_ABILITY_INPUT
@@ -57,7 +56,7 @@ for product in ['ap', 'ses', 'ease']:
             + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
             + [db, '<', 'load_vwclaimaffiliation.sql']
         ), shell=True)
-    elif product != 'ap' or args.date > '2017-02-15':
+    else:
         subprocess.call(' '.join(
             psql
             + ['-v', 'claimaffiliation_path="\''
