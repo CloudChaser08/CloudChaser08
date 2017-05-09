@@ -64,7 +64,6 @@ do
 done
 
 # HISTORICAL LOAD for other apps
-load_claimaff="true"
 for f in $(aws s3 ls --recursive $BASE_PATH | awk '{print $4}' | cut -d_ -f1 | sort -u | head -16 | grep -v 'ap$')
 do
   app=$(echo $f | cut -d_ -f1 | rev | cut -d/ -f1 | rev)
