@@ -64,7 +64,7 @@ do
 done
 
 # DAILY LOAD
-for i in $(seq 0 100)
+for i in $(seq 0 65)
 do
   d=$(date -d "2016-12-12 + $i day" '+%Y-%m-%d')
   
