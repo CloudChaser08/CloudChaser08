@@ -27,7 +27,7 @@ parser.add_argument('--cluster_endpoint', type=str)
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--rs_user', type=str, nargs='?')
 parser.add_argument('--rs_password', type=str, nargs='?')
-parser.add_argument('--first_run', default=False, action='store_true') # should be done on first run
+parser.add_argument('--load_claimaffiliation', default=False, action='store_true') # should be done on first run
 args = parser.parse_args()
 
 db = args.database if args.database else 'dev'
@@ -64,7 +64,7 @@ subprocess.call(' '.join(
     + [db, '<', 'load_transactions.sql']
 ), shell=True)
 
-if args.first_run:
+if args.load_claimaffiliation:
     subprocess.call(' '.join(
         psql
         + ['-v', 'claimaffiliation_path="\'' + args.claimaffiliation_path + '\'"']

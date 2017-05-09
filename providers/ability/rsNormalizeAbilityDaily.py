@@ -4,6 +4,7 @@ import argparse
 import time
 import sys
 import os
+import logging
 sys.path.append(os.path.abspath("../redshift_norm_common/"))
 import create_date_validation_table as date_validator
 
@@ -15,7 +16,6 @@ S3_ABILITY_MATCHING = 's3://salusv/matching/payload/medicalclaims/ability/'
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--s3_credentials', type=str)
-parser.add_argument('--setid', type=str)
 parser.add_argument('--first_run', default=False, action='store_true')
 args = parser.parse_args()
 
@@ -30,7 +30,14 @@ psql = ['psql', '-p', '5439']
 date_validator.generate(args.s3_credentials)
 
 for product in ['ap', 'ses', 'ease']:
-    setid = '{}_{}'.format(args.date.replace('-','_'), product)
+
+    setid = '{}_{}'.format(args.date.replace('-', '_'), product)
+    input_prefix = input_path + setid + '_'
+
+    if not subprocess.check_call(['aws', 's3', 'ls', input_prefix]):
+        logging.warn('Prefix does not exist: ' + input_prefix)
+        continue
+
     # create table for medical claims common model
     subprocess.call(' '.join(
         psql
@@ -40,8 +47,6 @@ for product in ['ap', 'ses', 'ease']:
         + ['-v', 'vendor="\'14\'"']
         + [db, '<', '../redshift_norm_common/medicalclaims_common_model.sql']
     ), shell=True)
-
-    input_prefix = input_path + setid + '_'
 
     if product == 'ap' and args.date <= '2017-02-15' and args.first_run:
         subprocess.call(' '.join(
