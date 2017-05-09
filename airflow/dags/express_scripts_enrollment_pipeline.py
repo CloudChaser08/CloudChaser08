@@ -40,10 +40,6 @@ S3_DEID_RAW_PATH='incoming/esi/'
 DEID_FILE_NAME_TEMPLATE='10130X001_HV_RX_ENROLLMENT_D{}_key.txt'
 MINIMUM_DEID_FILE_SIZE=500
 
-S3_TEXT_EXPRESS_SCRIPTS_PREFIX = 'warehouse/text/enrollmentrecords/express_scripts/'
-S3_PARQUET_EXPRESS_SCRIPTS_PREFIX = 'warehouse/parquet/enrollmentrecords/express_scripts/'
-S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_TEXT_EXPRESS_SCRIPTS_PREFIX
-
 S3_PAYLOAD_LOC_URL = 's3://salusv/matching/payload/enrollmentrecords/express_scripts/'
 
 S3_ORIGIN_BUCKET = 'healthverity'
@@ -55,9 +51,9 @@ def get_expected_transaction_file_name(ds, kwargs):
     file_date = get_file_date(ds, kwargs).replace('-', '')
     return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date)
 
-def get_expected_transaction_file_name_gz(ds, kwargs):
+def get_expected_transaction_file_name_decrypted(ds, kwargs):
     file_date = get_file_date(ds, kwargs).replace('-', '')
-    return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date) + '.gz'
+    return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date) + '.decrypted'
 
 def get_encrypted_decrypted_file_paths(ds, kwargs):
     tmp_dir = get_tmp_dir(ds, kwargs)
@@ -70,8 +66,8 @@ def get_encrypted_decrypted_file_paths(ds, kwargs):
 def get_expected_transaction_file_regex(ds, kwargs):
     return TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
 
-def get_transaction_files_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + get_expected_transaction_file_name(ds, kwargs)]
+def get_decrypted_transaction_files_paths(ds, kwargs):
+    return [get_tmp_dir(ds, kwargs) + get_expected_transaction_file_name(ds, kwargs) + '.decrypted']
 
 def get_s3_transaction_prefix(ds, kwargs):
     return S3_TRANSACTION_SPLIT_PATH + get_file_date(ds, kwargs).replace('-', '/') + '/'
@@ -85,16 +81,6 @@ def get_expected_deid_file_regex(ds, kwargs):
 
 def get_file_date(ds, kwargs):
     return (kwargs['execution_date'] + timedelta(days=6)).strftime('%Y-%m-%d')
-
-def get_parquet_dates(ds, kwargs):
-    date_path = ds.replace('-', '/')
-    date_path = get_file_date(ds, kwargs).replace('-', '/')
-
-    warehouse_files = check_output(['aws', 's3', 'ls', '--recursive', S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE]).split("\n")
-    file_dates = map(lambda f: '/'.join(f.split(' ')[-1].replace(S3_TEXT_EXPRESS_SCRIPTS_PREFIX, '').split('/')[:-1]), warehouse_files)
-    file_dates = filter(lambda d: len(d) == 10, file_dates)
-    file_dates = sorted(list(set(file_dates)))
-    return filter(lambda d: d < date_path, file_dates)[-2:] + [date_path]
 
 def get_deid_file_urls(ds, kwargs):
     return ['s3://healthverity/' + S3_DEID_RAW_PATH + get_expected_deid_file_name(ds, kwargs)]
@@ -195,7 +181,7 @@ split_push_transaction_files_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_dir_func'             : get_tmp_dir,
-            'file_paths_to_split_func' : get_transaction_files_paths,
+            'file_paths_to_split_func' : get_decrypted_transaction_files_paths,
             's3_prefix_func'           : get_s3_transaction_prefix,
             'num_splits'               : 100
         }
