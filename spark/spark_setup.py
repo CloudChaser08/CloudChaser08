@@ -11,7 +11,6 @@ def init(provider, local=False):
                     .appName(provider + " Normalization")                     \
                     .config('spark.sql.catalogImplementation', 'hive')        \
                     .config('spark.sql.crossJoin.enabled', 'true')            \
-                    .config('spark.sql.parquet.compression.codec', 'gzip')    \
                     .getOrCreate()
 
     sqlContext = SQLContext(spark.sparkContext)

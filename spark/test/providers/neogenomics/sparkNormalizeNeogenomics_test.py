@@ -21,6 +21,16 @@ def test_date_parsing():
         .date_service == datetime.date(2017, 4, 14)
 
 
+def test_diag_list_cleanup():
+    diags = map(
+        lambda r: (str(r.diagnosis_code), str(r.diagnosis_code_priority)),
+        filter(lambda r: r.claim_id == 'test1', results)
+    )
+    diags.sort()
+
+    assert diags == [('DIAG1', '1'), ('DIAG2', '2')]
+
+
 def test_diag_explosion():
     "Ensure that diagnosis codes were exploded on '^'"
     diags = map(

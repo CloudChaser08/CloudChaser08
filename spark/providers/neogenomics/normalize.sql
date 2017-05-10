@@ -58,15 +58,7 @@ SELECT
     NULL,                                    -- abnormal_flag
     NULL,                                    -- fasting_status
     clean_up_diagnosis_code(
-        SPLIT(
-
-            -- remove leading commas
-            -- replace strings of commas/spaces with a single comma
-            REGEXP_REPLACE(
-                REGEXP_REPLACE(TRIM(t.icd_code), '^,+', ''),
-                '[ ,]*,[ ,]*', ','),
-
-            ',')[n.n],
+        SPLIT(clean_neogenomics_diag_list(t.icd_code), ',')[n.n],
         NULL,
         CAST(extract_date(
                 t.test_ordered_date, '%m/%d/%Y', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
@@ -114,8 +106,8 @@ FROM transactional_tests t
     CROSS JOIN diagnosis_exploder n
 
 -- implicit here is that t.icd_code itself is not null or blank
-WHERE SPLIT(TRIM(t.icd_code),',')[n.n] IS NOT NULL
-    AND SPLIT(TRIM(t.icd_code),',')[n.n] != ''
+WHERE SPLIT(clean_neogenomics_diag_list(t.icd_code), ',')[n.n] IS NOT NULL
+    AND SPLIT(clean_neogenomics_diag_list(t.icd_code), ',')[n.n] != ''
     ;
 
 -- insert all rows with diagnoses
