@@ -45,7 +45,7 @@ if args.rs_user:
     psql.append(args.rs_user)
 
 # generate date validation table
-date_validator.generate(psql, db, args.s3_credentials)
+date_validator.generate(args.s3_credentials)
 
 # create table for medical claims common model
 subprocess.call(' '.join(
@@ -92,21 +92,25 @@ subprocess.call(' '.join(psql + [db, '<', 'normalize.sql']), shell=True)
 
 # privacy filtering
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
-                        ['-v', 'column_name=diagnosis_code'] +
-                        ['-v', 'qual_column_name=diagnosis_code_qual'] +
-                        [db, '<', '../redshift_norm_common/nullify_icd9_blacklist.sql']), shell=True)
+                         ['-v', 'column_name=diagnosis_code'] +
+                         ['-v', 'qual_column_name=diagnosis_code_qual'] +
+                         ['-v', 'service_date_column_name=date_service'] +
+                         [db, '<', '../redshift_norm_common/nullify_icd9_blacklist.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
-                        ['-v', 'column_name=diagnosis_code'] +
-                        ['-v', 'qual_column_name=diagnosis_code_qual'] +
-                        [db, '<', '../redshift_norm_common/nullify_icd10_blacklist.sql']), shell=True)
+                         ['-v', 'column_name=diagnosis_code'] +
+                         ['-v', 'qual_column_name=diagnosis_code_qual'] +
+                         ['-v', 'service_date_column_name=date_service'] +
+                         [db, '<', '../redshift_norm_common/nullify_icd10_blacklist.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
-                        ['-v', 'column_name=diagnosis_code'] +
-                        ['-v', 'qual_column_name=diagnosis_code_qual'] +
-                        [db, '<', '../redshift_norm_common/genericize_icd9.sql']), shell=True)
+                         ['-v', 'column_name=diagnosis_code'] +
+                         ['-v', 'qual_column_name=diagnosis_code_qual'] +
+                         ['-v', 'service_date_column_name=date_service'] +
+                         [db, '<', '../redshift_norm_common/genericize_icd9.sql']), shell=True)
 subprocess.call(' '.join(psql + ['-v', 'table_name=medicalclaims_common_model'] +
-                        ['-v', 'column_name=diagnosis_code'] +
-                        ['-v', 'qual_column_name=diagnosis_code_qual'] +
-                        [db, '<', '../redshift_norm_common/genericize_icd10.sql']), shell=True)
+                         ['-v', 'column_name=diagnosis_code'] +
+                         ['-v', 'qual_column_name=diagnosis_code_qual'] +
+                         ['-v', 'service_date_column_name=date_service'] +
+                         [db, '<', '../redshift_norm_common/genericize_icd10.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/scrub_place_of_service.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/scrub_discharge_status.sql']), shell=True)
 subprocess.call(' '.join(psql + [db, '<', '../redshift_norm_common/nullify_drg_blacklist.sql']), shell=True)
