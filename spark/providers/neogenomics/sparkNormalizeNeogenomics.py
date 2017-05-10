@@ -9,7 +9,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
-output_path = 's3://salusv/warehouse/parquet/labtests/2017-05-02/'
+output_path = 's3://salusv/warehouse/parquet/labtests/2017-05-10/'
 
 
 def run(spark, runner, date_input, test=False):
@@ -34,7 +34,7 @@ def run(spark, runner, date_input, test=False):
             date_input.replace('-', '/')
         )
 
-    min_date = '2013-01-01'
+    min_date = '2010-01-01'
     max_date = date_input
 
     # create helper tables
