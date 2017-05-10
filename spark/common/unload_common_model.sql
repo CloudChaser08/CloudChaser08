@@ -1,4 +1,3 @@
-set parquet.compression=GZIP;
 set hive.exec.compress.output=true;
 set mapreduce.output.fileoutputformat.compress=true;
 set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; 

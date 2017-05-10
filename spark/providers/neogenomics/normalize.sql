@@ -43,7 +43,7 @@ SELECT
     t.panel_code,                            -- test_battery_local_id
     NULL,                                    -- test_battery_std_id
     t.panel_name,                            -- test_battery_name
-    NULL,                                    -- test_ordered_local_id
+    t.test_code,                             -- test_ordered_local_id
     NULL,                                    -- test_ordered_std_id
     CONCAT(t.test_name, ' ', t.technology),  -- test_ordered_name
     NULL,                                    -- result_id
@@ -58,7 +58,15 @@ SELECT
     NULL,                                    -- abnormal_flag
     NULL,                                    -- fasting_status
     clean_up_diagnosis_code(
-        SPLIT(t.icd_code, ',')[n.n],
+        SPLIT(
+
+            -- remove leading commas
+            -- replace strings of commas/spaces with a single comma
+            REGEXP_REPLACE(
+                REGEXP_REPLACE(TRIM(t.icd_code), '^,+', ''),
+                '[ ,]*,[ ,]*', ','),
+
+            ',')[n.n],
         NULL,
         CAST(extract_date(
                 t.test_ordered_date, '%m/%d/%Y', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
@@ -155,7 +163,7 @@ SELECT
     t.panel_code,                            -- test_battery_local_id
     NULL,                                    -- test_battery_std_id
     t.panel_name,                            -- test_battery_name
-    NULL,                                    -- test_ordered_local_id
+    t.test_code,                             -- test_ordered_local_id
     NULL,                                    -- test_ordered_std_id
     CONCAT(t.test_name, ' ', t.technology),  -- test_ordered_name
     NULL,                                    -- result_id
