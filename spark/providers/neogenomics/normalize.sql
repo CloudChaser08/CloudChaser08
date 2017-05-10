@@ -110,7 +110,7 @@ WHERE SPLIT(clean_neogenomics_diag_list(t.icd_code), ',')[n.n] IS NOT NULL
     AND SPLIT(clean_neogenomics_diag_list(t.icd_code), ',')[n.n] != ''
     ;
 
--- insert all rows with diagnoses
+-- insert all rows without diagnoses
 INSERT INTO lab_common_model
 SELECT
     NULL,                                    -- record_id
@@ -211,5 +211,5 @@ FROM transactional_tests t
     LEFT JOIN matching_payload mp ON UPPER(t.patient_id) = UPPER(mp.personid)
 
 WHERE t.icd_code IS NULL
-    OR t.icd_code = ''
+    OR TRIM(t.icd_code) = ''
     ;
