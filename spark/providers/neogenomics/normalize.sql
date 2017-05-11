@@ -211,5 +211,5 @@ FROM transactional_tests t
     LEFT JOIN matching_payload mp ON UPPER(t.patient_id) = UPPER(mp.personid)
 
 WHERE t.icd_code IS NULL
-    OR TRIM(t.icd_code) = ''
+    OR REGEXP_REPLACE(t.icd_code, '[ ,]*', '') = ''
     ;

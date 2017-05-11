@@ -28,10 +28,10 @@ def run(spark, runner, date_input, test=False):
     if test:
         input_path = file_utils.get_rel_path(
             script_path, '../../test/providers/neogenomics/resources/input/'
-        ) + '/'
+        )
         matching_path = file_utils.get_rel_path(
             script_path, '../../test/providers/neogenomics/resources/matching/'
-        ) + '/'
+        )
     else:
         input_path = 's3a://salusv/incoming/labtests/neogenomics/{}/'.format(
             date_input.replace('-', '/')
