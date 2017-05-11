@@ -10,7 +10,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.providers.neogenomics.udf as neo_udf
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
-output_path = 's3://salusv/warehouse/parquet/labtests/2017-05-02/'
+output_path = 's3://salusv/warehouse/parquet/labtests/2017-05-03/'
 
 
 def run(spark, runner, date_input, test=False):
