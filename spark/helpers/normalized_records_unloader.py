@@ -59,3 +59,6 @@ def distcp(dest):
     subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption',
                            '--src', constants.hdfs_staging_dir,
                            '--dest', dest])
+    subprocess.check_call([
+        'hdfs', 'dfs', '-rm', '-r', constants.hdfs_staging_dir
+    ])

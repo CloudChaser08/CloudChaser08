@@ -14,6 +14,7 @@ def init(provider, local=False):
                     .getOrCreate()
 
     sqlContext = SQLContext(spark.sparkContext)
+    sqlContext.setConf("spark.sql.parquet.compression.codec", "gzip")
 
     if local:
         spark.sparkContext \

@@ -1,4 +1,3 @@
-set spark.sql.parquet.compression.codec=gzip;
 set hive.exec.compress.output=true;
 set mapreduce.output.fileoutputformat.compress=true;
 set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; 
