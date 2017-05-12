@@ -12,32 +12,34 @@ import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 from spark.runner import Runner
 
-TODAY = time.strftime('%Y-%m-%d', time.localtime())
-output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
-
-def run(spark, runner, date_input, test=False):
+def run(spark, runner, date_input, test=False, airflow_test=False):
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     script_path = __file__
 
     if test:
-        if date_input <= '2017-04-01':
-            input_path = file_utils.get_abs_path(
-                script_path, '../../test/providers/caris/resources/input-legacy/'
-            ) + '/'
-            addon_path = file_utils.get_abs_path(
-                script_path, '../../test/providers/caris/resources/addon/'
-            ) + '/'
-        else:
-            input_path = file_utils.get_abs_path(
-                script_path, '../../test/providers/caris/resources/input/'
-            ) + '/'
-
+        input_path = file_utils.get_abs_path(
+            script_path, '../../test/providers/caris/resources/input/raw/'
+        ) + '/'
         matching_path = file_utils.get_abs_path(
             script_path, '../../test/providers/caris/resources/matching/'
         ) + '/'
+        addon_path = file_utils.get_abs_path(
+            script_path, '../../test/providers/caris/resources/input/addon/'
+        ) + '/'
+
+    elif airflow_test:
+        input_path = 's3a://healthveritydev/musifer/tests/airflow/caris/out/{year}/{month}/'.format(
+            year=str(date_obj.year),
+            month=str(date_obj.month).zfill(2)
+        )
+        matching_path = 's3a://healthveritydev/musifer/tests/airflow/caris/payload/{year}/{month}/'.format(
+            year=str(date_obj.year),
+            month=str(date_obj.month).zfill(2)
+        )
+        addon_path = 's3a://salusv/incoming/labtests/caris/hist_additional_columns/'
 
     else:
         input_path = 's3a://salusv/incoming/labtests/caris/{}/{:02d}/'.format(date_obj.year, date_obj.month)
@@ -56,12 +58,19 @@ def run(spark, runner, date_input, test=False):
     explode.generate_exploder_table(spark, 200)
     runner.run_spark_script('../../common/zip3_to_state.sql')
 
+    # create helper tables
+    runner.run_spark_script('create_helper_tables.sql')
+
     runner.run_spark_script('../../common/lab_common_model.sql', [
         ['table_name', 'lab_common_model', False],
         ['properties', '', False]
     ])
 
     payload_loader.load(runner, matching_path, ['hvJoinKey'])
+
+    runner.run_spark_script('load_transactions.sql', [
+        ['input_path', input_path]
+    ])
 
     # append additional columns
     if date_input <= '2017-04-01':
@@ -98,9 +107,14 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
+
+    if args.airflow_test:
+        output_path = 's3://healthveritydev/musifer/tests/airflow/caris/spark-output/'
+    else:
+        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
     normalized_records_unloader.distcp(output_path)
 
