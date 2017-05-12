@@ -68,7 +68,7 @@ def test_sign_out_date_added():
 def test_accession_date_added():
     "Ensure that year of birth capping was applied"
     assert filter(lambda r: r.claim_id == '000002_00001', results)[0] \
-        .date_service == datetime.date(2017, 17, 3)
+        .date_service == datetime.date(2017, 3, 17)
 
 
 def test_date_parsing():
