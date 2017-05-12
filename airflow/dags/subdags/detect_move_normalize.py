@@ -70,7 +70,7 @@ def do_delete_redshift_cluster(ds, **kwargs):
 def do_run_redshift_normalization_routine(ds, **kwargs):
     file_date = kwargs['file_date_func'](ds, kwargs)
 
-    s3_key = s3_utils.list_s3_bucket_files('s3://salusv' + kwargs['incoming_path'] + file_date.replace('-', '/') + '/')[0]
+    s3_key = s3_utils.list_s3_bucket_files('s3://salusv/' + kwargs['incoming_path'] + file_date.replace('-', '/') + '/')[0]
     # The set it will be the name of the file in the incoming bucket with
     # the last 3 characters (which are the result of using the 'split'
     # command) and the .bz2 extension removed
@@ -205,7 +205,7 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
             task_id='delete_redshift_cluster',
             provide_context=True,
             python_callable=do_delete_redshift_cluster,
-            params=dag_config,
+            op_kwargs=dag_config,
             dag=dag
         )
 
