@@ -49,8 +49,8 @@ def get_rs_s3_credentials_str():
 def create_redshift_cluster(cluster_name, num_nodes):
     check_call([
         '/home/airflow/airflow/dags/resources/redshift.py', 'create',
-        '--identifier', cluster_name, '--num_nodes', num_nodes
-    ], env=get_rs_env())
+        '--identifier', cluster_name, '--num_nodes', str(num_nodes)
+    ], env=get_rs_env(cluster_name))
 
 
 def run_rs_query_file(cluster_name, command, cwd):
@@ -62,4 +62,4 @@ def delete_redshift_cluster(cluster_name):
     check_call([
         '/home/airflow/airflow/dags/resources/redshift.py', 'delete',
         '--identifier', cluster_name
-    ], env=get_rs_env())
+    ], env=get_rs_env(cluster_name))
