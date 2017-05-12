@@ -28,12 +28,15 @@ psql = ['psql', '-p', '5439']
 # generate date validation table
 date_validator.generate(args.s3_credentials)
 
-for product in ['ap', 'ses', 'ease']:
+for product in [
+        'ap'
+        # 'ses', 'ease'
+]:
 
     setid = '{}_{}'.format(args.date.replace('-', '_'), product)
     input_prefix = input_path + setid + '_'
 
-    if not subprocess.check_call(['aws', 's3', 'ls', input_prefix]):
+    if not subprocess.check_output(['aws', 's3', 'ls', input_prefix]):
         logging.warn('Prefix does not exist: ' + input_prefix)
         continue
 
