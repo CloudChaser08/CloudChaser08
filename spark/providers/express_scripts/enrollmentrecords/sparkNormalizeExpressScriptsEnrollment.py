@@ -19,14 +19,14 @@ S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3a://salusv/matching/payload/pharmacyclaims/e
 
 S3A_REF_PHI = 's3a://salusv/reference/express_scripts_phi/'
 S3_REF_PHI = 's3://salusv/reference/express_scripts_phi/'
-LOCAL_REF_PHI = 'hdfs:///local_phi/'
+LOCAL_REF_PHI = '/local_phi/'
 
 
-def run (spark, runnner, date_input, test=False):
-    setid = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(args.date.replace('-',''))
+def run (spark, runner, date_input, test=False):
+    setid = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(date_input.replace('-',''))
 
     min_date = '2008-01-01'
-    max_date = args.date
+    max_date = date_input
 
     # create helper tables
     runner.run_spark_script(file_utils.get_rel_path(
@@ -42,30 +42,32 @@ def run (spark, runnner, date_input, test=False):
             ['properties', '', False]
     ])
 
-    date_path = args.date.replace('-', '/')
+    date_path = date_input.replace('-', '/')
 
     if test:
         input_path = file_utils.get_rel_path(
             __file__,
-            '../../test/providers/express_scripts/enrollment/resources/input/'
+            '../../../test/providers/express_scripts/enrollmentrecords/resources/input/'
         )
         matching_path = file_utils.get_rel_path(
             __file__,
-            '../../test/providers/express_scripts/enrollment/resources/matching/'
+            '../../../test/providers/express_scripts/enrollmentrecords/resources/matching/'
         )
         new_phi_path = file_utils.get_rel_path(
             __file__,
-            '../../test/providers/express_scripts/enrollment/resources/new_phi/'
+            '../../../test/providers/express_scripts/enrollmentrecords/resources/new_phi/'
         )
         ref_phi_path = file_utils.get_rel_path(
             __file__,
-            '../../test/providers/express_scripts/enrollment/resources/ref_phi/'
+            '../../../test/providers/express_scripts/enrollmentrecords/resources/ref_phi/'
         )
+        local_phi_path = '/tmp' + LOCAL_REF_PHI
     else:
-        input_path    = S3_EXPRESS_SCRIPTS_IN + date_path + '/'
-        matching_path = S3_EXPRESS_SCRIPTS_ENROLLMENT_MATCHING + date_path + '/'
-        new_phi_path  = S3_EXPRESS_SCRIPTS_RX_MATCHING + date_path + '/'
-        ref_phi_path  = S3A_REF_PHI
+        input_path     = S3_EXPRESS_SCRIPTS_IN + date_path + '/'
+        matching_path  = S3_EXPRESS_SCRIPTS_ENROLLMENT_MATCHING + date_path + '/'
+        new_phi_path   = S3_EXPRESS_SCRIPTS_RX_MATCHING + date_path + '/'
+        ref_phi_path   = S3A_REF_PHI
+        local_phi_path = 'hdfs://' + LOCAL_REF_PHI
 
 
     runner.run_spark_script(file_utils.get_rel_path(
@@ -75,7 +77,7 @@ def run (spark, runnner, date_input, test=False):
             ['input_path', input_path]
     ])
 
-    payload_loader.load(runner, matching_path, ['hvJoinKey', 'patientId'])
+    payload_loader.load(runner, new_phi_path, ['hvJoinKey', 'patientId'])
 
     runner.run_spark_query('ALTER TABLE matching_payload RENAME TO new_phi')
 
@@ -86,14 +88,18 @@ def run (spark, runnner, date_input, test=False):
             ['matching_path', matching_path] 
     ])
 
-    subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '-f', LOCAL_REF_PHI])
-    subprocess.check_call(['hadoop', 'fs', '-mkdir', LOCAL_REF_PHI])
+    if test:
+        subprocess.check_call(['rm', '-r', local_phi_path])
+        subprocess.check_call(['mkdir', '-p', local_phi_path])
+    else:
+        subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '-f', local_phi_path])
+        subprocess.check_call(['hadoop', 'fs', '-mkdir', local_phi_path])
 
     runner.run_spark_script(file_utils.get_rel_path(
             __file__,
             'load_and_combine_phi.sql'
         ), [
-            ['local_phi_path', LOCAL_REF_PHI],
+            ['local_phi_path', local_phi_path],
             ['s3_phi_path', ref_phi_path]
     ])
 
@@ -106,8 +112,9 @@ def run (spark, runnner, date_input, test=False):
         ['vendor', '17']
     ])
 
-    normalized_records_unloader.partition_and_rename(spark, runner, 'enrollmentrecords', 'enrollment_common_model.sql',
-        'express_scripts', 'enrollment_common_model', 'date_service', args.date, args.date[:-3])
+    if not test:
+        normalized_records_unloader.partition_and_rename(spark, runner, 'enrollmentrecords', 'enrollment_common_model.sql',
+            'express_scripts', 'enrollment_common_model', 'date_service', date_input, date_input[:-3])
 
 def main(args):
     # init
@@ -124,7 +131,7 @@ def main(args):
 
     # offload reference data
     subprocess.check_call(['aws', 's3', 'rm', '--recursive', S3_REF_PHI])
-    subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption', '--src', LOCAL_REF_PHI, '--dest', S3A_REF_PHI])
+    subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption', '--src', 'hdfs://' + LOCAL_REF_PHI, '--dest', S3A_REF_PHI])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
