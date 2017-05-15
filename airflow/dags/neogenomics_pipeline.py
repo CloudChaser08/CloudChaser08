@@ -45,7 +45,7 @@ default_args = {
 
 mdag = DAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 2 * *" if Variable.get(
+    schedule_interval="0 12 * * 0" if Variable.get(
         "AIRFLOW_ENV", default_var=''
     ).find('prod') != -1 else None,
     default_args=default_args
