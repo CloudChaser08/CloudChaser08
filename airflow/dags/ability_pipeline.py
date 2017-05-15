@@ -344,7 +344,7 @@ def split_push_transaction_files_subdag(product, tmp_dir_func, file_paths_to_spl
             {
                 'tmp_dir_func'             : tmp_dir_func,
                 'file_paths_to_split_func' : file_paths_to_split_func,
-                's3_dest_path_func'        : get_s3_transaction_path,
+                's3_prefix_func'           : get_s3_transaction_path,
                 'num_splits'               : 1
             }
         ),

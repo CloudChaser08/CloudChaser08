@@ -100,22 +100,26 @@ enqueue_psql_script('normalize_institutional_claims.sql')
 enqueue_psql_script('../../redshift_norm_common/nullify_icd9_blacklist.sql', [
     ['table_name', 'medicalclaims_common_model', False],
     ['column_name', 'diagnosis_code', False],
-    ['qual_column_name', 'diagnosis_code_qual', False]
+    ['qual_column_name', 'diagnosis_code_qual', False],
+    ['service_date_column_name', 'date_service', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/nullify_icd10_blacklist.sql', [
     ['table_name', 'medicalclaims_common_model', False],
     ['column_name', 'diagnosis_code', False],
-    ['qual_column_name', 'diagnosis_code_qual', False]
+    ['qual_column_name', 'diagnosis_code_qual', False],
+    ['service_date_column_name', 'date_service', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/genericize_icd9.sql', [
     ['table_name', 'medicalclaims_common_model', False],
     ['column_name', 'diagnosis_code', False],
-    ['qual_column_name', 'diagnosis_code_qual', False]
+    ['qual_column_name', 'diagnosis_code_qual', False],
+    ['service_date_column_name', 'date_service', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/genericize_icd10.sql', [
     ['table_name', 'medicalclaims_common_model', False],
     ['column_name', 'diagnosis_code', False],
-    ['qual_column_name', 'diagnosis_code_qual', False]
+    ['qual_column_name', 'diagnosis_code_qual', False],
+    ['service_date_column_name', 'date_service', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/scrub_place_of_service.sql')
 enqueue_psql_script('../../redshift_norm_common/scrub_discharge_status.sql')

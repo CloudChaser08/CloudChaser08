@@ -113,22 +113,26 @@ enqueue_psql_script('normalize_pharmacy_claims.sql')
 enqueue_psql_script('../../redshift_norm_common/nullify_icd9_blacklist.sql', [
     ['table_name', 'pharmacyclaims_common_model', False],
     ['column_name', 'diagnosis_code', False],
-    ['qual_column_name', 'diagnosis_code_qual', False]
+    ['qual_column_name', 'diagnosis_code_qual', False],
+    ['service_date_column_name', 'date_service', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/nullify_icd10_blacklist.sql', [
     ['table_name', 'pharmacyclaims_common_model', False],
     ['column_name', 'diagnosis_code', False],
-    ['qual_column_name', 'diagnosis_code_qual', False]
+    ['qual_column_name', 'diagnosis_code_qual', False],
+    ['service_date_column_name', 'date_service', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/genericize_icd9.sql', [
     ['table_name', 'pharmacyclaims_common_model', False],
     ['column_name', 'diagnosis_code', False],
-    ['qual_column_name', 'diagnosis_code_qual', False]
+    ['qual_column_name', 'diagnosis_code_qual', False],
+    ['service_date_column_name', 'date_service', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/genericize_icd10.sql', [
     ['table_name', 'pharmacyclaims_common_model', False],
     ['column_name', 'diagnosis_code', False],
-    ['qual_column_name', 'diagnosis_code_qual', False]
+    ['qual_column_name', 'diagnosis_code_qual', False],
+    ['service_date_column_name', 'date_service', False]
 ])
 enqueue_psql_script('../../redshift_norm_common/hash_rx_number.sql')
 enqueue_psql_script('../../redshift_norm_common/nullify_sales_tax.sql')
