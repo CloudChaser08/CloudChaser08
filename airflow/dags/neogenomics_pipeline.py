@@ -20,13 +20,26 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
           decompression, HVDAG]:
     reload(m)
 
+if Variable.get("AIRFLOW_ENV", default_var='').find('prod') != -1:
+    airflow_env = 'prod'
+elif Variable.get("AIRFLOW_ENV", default_var='').find('test') != -1:
+    airflow_env = 'test'
+else:
+    airflow_env = 'dev'
+
+if airflow_env == 'test':
+    S3_TRANSACTION_RAW_URL = 's3://healthveritydev/musifer/tests/airflow/neogenomics/raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://healthveritydev/musifer/tests/airflow/neogenomics/out/%Y/%m/%d/'
+    S3_PAYLOAD_DEST = 's3://healthveritydev/musifer/tests/airflow/neogenomics/payload/'
+else:
+    S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/neogenomics/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/%Y/%m/%d/'
+    S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/neogenomics/'
+
+
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/neogenomics/labtests/{}/'
 DAG_NAME = 'neogenomics_pipeline'
-
-# Applies to all transaction files
-S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/neogenomics/'
-S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/%Y/%m/%d/'
 
 # Transaction file without the trailing timestamp
 TRANSACTION_FILE_NAME_TEMPLATE = 'TestMeta_%Y%m%d.dat.gz'
@@ -34,20 +47,23 @@ TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE = 'TestMeta_%Y%m%d.dat'
 
 # Deid file without the trailing timestamp
 DEID_FILE_NAME_TEMPLATE = 'TestPHI_%Y%m%d.dat.gz'
+DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'TestPHI_%Y%m%d.dat'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 3, 16, 12),
-    'depends_on_past': False,
+    'start_date': datetime(2017, 4, 13, 12),
+    'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * 0" if Variable.get(
-        "AIRFLOW_ENV", default_var=''
-    ).find('prod') != -1 else None,
+    schedule_interval=(
+        "0 12 * * 0"
+        if airflow_env in ['prod', 'test']
+        else None
+    ),
     default_args=default_args
 )
 
@@ -123,14 +139,15 @@ def generate_file_validation_task(
     )
 
 
-validate_transactional = generate_file_validation_task(
-    'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
-    1000000
-)
-validate_deid = generate_file_validation_task(
-    'deid', DEID_FILE_NAME_TEMPLATE,
-    1000000
-)
+if airflow_env != 'test':
+    validate_transactional = generate_file_validation_task(
+        'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
+        1000000
+    )
+    validate_deid = generate_file_validation_task(
+        'deid', DEID_FILE_NAME_TEMPLATE,
+        1000000
+    )
 
 fetch_transactional = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
@@ -146,7 +163,7 @@ fetch_transactional = SubDagOperator(
                 )(ds, k)
             ),
             's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket': 'healthverity'
+            's3_bucket': 'healthveritydev' if airflow_env == 'test' else 'healthverity',
         }
     ),
     task_id='fetch_transaction_file',
@@ -168,7 +185,7 @@ def gunzip_step(tmp_path_template, tmp_file_template):
     )
 
 
-gunzip_trunk = gunzip_step(
+gunzip_transactional = gunzip_step(
     TMP_PATH_TEMPLATE, TRANSACTION_FILE_NAME_TEMPLATE
 )
 
@@ -210,24 +227,31 @@ def clean_up_workspace_step(task_id, template):
 
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
-queue_up_for_matching = SubDagOperator(
-    subdag=queue_up_for_matching.queue_up_for_matching(
-        DAG_NAME,
-        'queue_up_for_matching',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'source_files_func': get_deid_file_urls
-        }
-    ),
-    task_id='queue_up_for_matching',
-    dag=mdag
-)
+if airflow_env != 'test':
+    queue_up_for_matching = SubDagOperator(
+        subdag=queue_up_for_matching.queue_up_for_matching(
+            DAG_NAME,
+            'queue_up_for_matching',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'source_files_func': get_deid_file_urls
+            }
+        ),
+        task_id='queue_up_for_matching',
+        dag=mdag
+    )
+
 
 #
 # Post-Matching
 #
-S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/neogenomics/'
+def norm_args(ds, k):
+    base = ['--date', insert_current_date('%Y-%m-%d', k)]
+    if airflow_env == 'test':
+        base += ['--airflow_test']
+
+    return base
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
@@ -238,18 +262,16 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func': lambda ds, k: [
                 insert_current_date_function(
-                    DEID_FILE_NAME_TEMPLATE
+                    DEID_FILE_NAME_UNZIPPED_TEMPLATE
                 )(ds, k)
             ],
             'file_date_func': insert_current_date_function(
                 '%Y/%m/%d'
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
-            'vendor_uuid': 'd701240c-35be-4e71-94fc-9460b85b1515',
+            'vendor_uuid': 'cc11bfe2-d75a-432f-96b4-71240433d46f',
             'pyspark_normalization_script_name': '/home/hadoop/spark/providers/neogenomics/sparkNormalizeNeogenomics.py',
-            'pyspark_normalization_args_func': lambda ds, k: [
-                '--date', insert_current_date('%Y-%m-%d', k)
-            ],
+            'pyspark_normalization_args_func': norm_args,
             'pyspark': True
         }
     ),
@@ -257,19 +279,20 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-# preprocessing
-fetch_transactional.set_upstream(validate_transactional)
-split_transactional.set_upstream(fetch_transactional)
+if airflow_env != 'test':
+    fetch_transactional.set_upstream(validate_transactional)
+    queue_up_for_matching.set_upstream(validate_deid)
+    detect_move_normalize_dag.set_upstream(
+        [queue_up_for_matching, split_transactional]
+    )
+else:
+    detect_move_normalize_dag.set_upstream(
+        split_transactional
+    )
 
-# cleanup
+gunzip_transactional.set_upstream(fetch_transactional)
+split_transactional.set_upstream(gunzip_transactional)
+
 clean_up_workspace.set_upstream(
     split_transactional
-)
-
-# matching
-queue_up_for_matching.set_upstream(validate_deid)
-
-# post-matching
-detect_move_normalize_dag.set_upstream(
-    [queue_up_for_matching, split_transactional]
 )
