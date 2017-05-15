@@ -120,7 +120,7 @@ def generate_transaction_file_validation_dag(
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket': 'healthverity',
-                'file_description': 'Caris ' + task_id + 'file'
+                'file_description': 'Neogenomics ' + task_id + ' file'
             }
         ),
         task_id='validate_' + task_id + '_file',
