@@ -25,9 +25,6 @@ LOCAL_REF_PHI = '/local_phi/'
 def run (spark, runner, date_input, test=False):
     setid = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(date_input.replace('-',''))
 
-    min_date = '2008-01-01'
-    max_date = date_input
-
     # create helper tables
     runner.run_spark_script(file_utils.get_rel_path(
         __file__,

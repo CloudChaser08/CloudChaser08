@@ -19,7 +19,6 @@ prefix = 'PREFIX'
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     spark['sqlContext'].sql('DROP TABLE IF EXISTS lab_common_model')
-    print __file__
     spark['runner'].run_spark_script(file_utils.get_rel_path(
         __file__,
         '../../common/lab_common_model.sql'
