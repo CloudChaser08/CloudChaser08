@@ -11,6 +11,11 @@ def init(provider, local=False):
                     .appName(provider + " Normalization")                     \
                     .config('spark.sql.catalogImplementation', 'hive')        \
                     .config('spark.sql.crossJoin.enabled', 'true')            \
+                    .config('spark.driver.extraClassPath',                    
+                        file_utils.get_rel_path(
+                            __file__,
+                            'common/json-serde-1.3.7-jar-with-dependencies.jar'
+                    ))                                                        \
                     .getOrCreate()
 
     sqlContext = SQLContext(spark.sparkContext)

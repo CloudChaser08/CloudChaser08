@@ -7,8 +7,11 @@ import shutil
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
-test_staging_dir = file_utils.get_rel_path(
+test_staging_dir  = file_utils.get_rel_path(
     __file__, './test-staging/'
+)
+test_staging_dir2 = file_utils.get_rel_path(
+    __file__, './test-staging2/'
 )
 prefix = 'PREFIX'
 
@@ -48,12 +51,17 @@ def test_init(spark):
     normalized_records_unloader.partition_and_rename(
         spark['spark'], spark['runner'], 'lab', 'lab_common_model.sql',
         'test_provider', 'lab_common_model', 'date_service', prefix,
-        test_staging_dir
+        test_dir=test_staging_dir
+    )
+    normalized_records_unloader.partition_and_rename(
+        spark['spark'], spark['runner'], 'lab', 'lab_common_model.sql',
+        'test_provider', 'lab_common_model', 'date_service', prefix,
+        partition_value='2017-01', test_dir=test_staging_dir2
     )
 
 
-def test_correct_partitions():
-    "Ensure correct partitions were created"
+def test_correct_dynamic_partitions():
+    "Ensure correct dynamic partitions were created"
     provider_partition = filter(
         lambda f: "hive-staging" not in f,
         os.listdir(test_staging_dir)
@@ -79,5 +87,20 @@ def test_prefix():
         assert f.startswith(prefix)
 
 
+def test_fixed_partition():
+    "Ensure that when a fixed partition name is specific, only that partition is created"
+    provider_partition = filter(
+        lambda f: "hive-staging" not in f,
+        os.listdir(test_staging_dir2)
+    )
+    assert provider_partition == ['part_provider=test_provider']
+
+    date_partition = os.listdir(
+        test_staging_dir2 + '/part_provider=test_provider/'
+    )
+
+    assert date_partition == ['part_best_date=2017-01']
+
 def test_cleanup():
     shutil.rmtree(test_staging_dir)
+    shutil.rmtree(test_staging_dir2)
