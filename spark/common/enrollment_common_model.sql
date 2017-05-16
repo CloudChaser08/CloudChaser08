@@ -18,7 +18,7 @@ CREATE TABLE {table_name} (
         source_record_date      date,
         date_start              date,
         date_end                date,
-        benetif_type            string
+        benefit_type            string
         )
     {properties}
 ;
