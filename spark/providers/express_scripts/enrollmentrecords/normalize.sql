@@ -1,4 +1,4 @@
-INSERT INTO enrollment_common_model SELECT DISTINCT
+INSERT INTO enrollment_common_model SELECT
     monotonically_increasing_id(),
     phi.hvid,
     {today},
