@@ -87,7 +87,7 @@ jenkins-test: pull clean
 	--name airflow-test \
 	${REPO}:latest runtests
 
-jenkins-deploy-dev: test-local clean
+jenkins-deploy-dev: jenkins-test clean
 	${RSYNC_CMD} dags/     airflow@airflow-dev.awsdev.healthverity.com:airflow/dags
 	${RSYNC_CMD} ../spark/ airflow@airflow-dev.awsdev.healthverity.com:spark
 
