@@ -3,7 +3,22 @@ import subprocess
 QUEST_TEST_DIR = 's3://salusv/testing/dewey/airflow/dags/quest'
 
 
+def cleanup():
+    subprocess.check_call([
+        'aws', 's3', 'rm', '--recursive', QUEST_TEST_DIR + '/out/'
+    ])
+
+    subprocess.check_call([
+        'aws', 's3', 'rm', '--recursive', QUEST_TEST_DIR + '/payload/'
+    ])
+
+    subprocess.check_call([
+        'aws', 's3', 'rm', '--recursive', QUEST_TEST_DIR + '/spark-output/'
+    ])
+
+
 def test_run():
+    cleanup()
     subprocess.check_call([
         'airflow', 'clear', '-c', 'quest_pipeline'
     ])
@@ -38,16 +53,4 @@ def test_normalized_data_exists():
 
 
 def test_cleanup():
-
-    # cleanup
-    subprocess.check_call([
-        'aws', 's3', 'rm', '--recursive', QUEST_TEST_DIR + '/out/'
-    ])
-
-    subprocess.check_call([
-        'aws', 's3', 'rm', '--recursive', QUEST_TEST_DIR + '/payload/'
-    ])
-
-    subprocess.check_call([
-        'aws', 's3', 'rm', '--recursive', QUEST_TEST_DIR + '/spark-output/'
-    ])
+    cleanup()
