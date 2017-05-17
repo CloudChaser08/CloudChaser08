@@ -22,6 +22,16 @@ real_s3_utils_get_aws_env = s3_utils.get_aws_env
 scratch_directory = os.path.dirname('./scratch/')
 
 
+def clean_up():
+    shutil.rmtree(scratch_directory, ignore_errors=True)
+    os.mkdir(scratch_directory)
+
+    # remove any new files in the s3 scratch directory
+    for k in bucket.list(prefix=test_key):
+        if k.name.split('/')[-1] not in test_bucket_contents:
+            bucket.delete_key(k)
+
+
 @pytest.fixture(autouse=True)
 def setup_teardown():
     # avoid looking for a connection string or variables in
@@ -33,24 +43,11 @@ def setup_teardown():
     s3_utils._get_s3_hook = mock.MagicMock(return_value=hook())
     s3_utils.get_aws_env = mock.MagicMock(return_value=os.environ)
 
-    try:
-        os.stat(scratch_directory)
-    except:
-        os.mkdir(scratch_directory)
+    clean_up()
 
     yield  # run test
 
-    # after:
-    # remove all files created in the scratch directory
-    try:
-        shutil.rmtree(scratch_directory)
-    except Exception as e:
-        print(e)
-
-    # remove any new files in the s3 scratch directory
-    for k in bucket.list(prefix=test_key):
-        if k.name.split('/')[-1] not in test_bucket_contents:
-            bucket.delete_key(k)
+    clean_up()
 
     # reset mocked objects
     s3_utils._get_s3_hook = real_s3_utils__get_s3_hook
