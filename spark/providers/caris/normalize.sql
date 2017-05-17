@@ -3,7 +3,9 @@ SELECT DISTINCT * FROM (
     SELECT
         NULL,                                -- record_id
         CONCAT(
-            t.customer__patient_id, '_', t.ods_id
+            COALESCE(t.customer__patient_id, ''),
+            '_',
+            COALESCE(t.ods_id, '')
             ),                               -- claim_id
         mp.hvid,                             -- hvid
         {today},                             -- created
