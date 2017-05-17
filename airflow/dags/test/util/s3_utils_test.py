@@ -7,8 +7,8 @@ import boto
 import mock
 import util.s3_utils as s3_utils
 
-test_bucket = 'healthveritydev'
-test_key = 'musifer/scratch/dewey-airflow-testing/'
+test_bucket = 'salusv'
+test_key = 'testing/dewey/airflow/dags/dummy_files/'
 test_path = 's3://' + test_bucket + '/' + test_key
 test_bucket_contents = ['test_file1', 'test_file2']
 bucket = boto.s3.connection.S3Connection().get_bucket(
