@@ -2,13 +2,9 @@ INSERT INTO lab_common_model
 SELECT DISTINCT * FROM (
     SELECT
         NULL,                                -- record_id
-        CASE WHEN (
-            t.customer__patient_id IS NULL
-            OR t.customer__patient_id = ''
-            ) AND (
-            t.ods_id IS NULL
-            OR t.ods_id = ''
-            )
+        CASE
+        WHEN COALESCE(t.customer__patient_id, '') = ''
+        AND COALESCE(t.ods_id, '') = ''
         THEN NULL
         ELSE CONCAT(
             COALESCE(t.customer__patient_id, ''),
