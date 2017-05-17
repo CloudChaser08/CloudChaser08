@@ -74,7 +74,7 @@ case $ENTRY_OPTION in
 
   runtests)
     cd $AIRFLOW_HOME/dags
-    exec pytest -v
+    exec pytest -v ./test/
     ;;
 
   *)
