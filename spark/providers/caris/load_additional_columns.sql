@@ -8,5 +8,4 @@ CREATE EXTERNAL TABLE additional_columns (
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {addon_path}
-    tblproperties("skip.header.line.count"="1")
 ;
