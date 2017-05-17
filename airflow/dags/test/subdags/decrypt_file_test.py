@@ -38,8 +38,6 @@ def test_func_call():
 
     decrypt_files.do_fetch_decryption_files(ds, **kwargs)
 
-    print(s3_utils.fetch_file_from_s3.call_args_list)
-
     s3_utils.fetch_file_from_s3.assert_has_calls([
         mock.call(
             'location',

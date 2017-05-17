@@ -23,7 +23,7 @@ scratch_directory = os.path.dirname('./scratch/')
 
 
 @pytest.fixture(autouse=True)
-def clean_up():
+def setup_teardown():
     # avoid looking for a connection string or variables in
     # airflow
     hook = airflow.hooks.S3_hook.S3Hook

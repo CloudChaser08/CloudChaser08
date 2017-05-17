@@ -23,7 +23,7 @@ kwargs = {
 
 
 @pytest.fixture(autouse=True)
-def clean_up():
+def setup_teardown():
     real_s3_utils_fetch_file_from_s3 = s3_utils.fetch_file_from_s3
     s3_utils.fetch_file_from_s3 = mock.MagicMock()
 

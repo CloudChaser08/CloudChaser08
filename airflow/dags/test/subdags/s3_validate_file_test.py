@@ -31,7 +31,7 @@ kwargs = {
 
 
 @pytest.fixture(autouse=True)
-def clean_up():
+def setup_teardown():
 
     real_s3_utils_list_s3_bucket_files = s3_utils.list_s3_bucket_files
     real_s3_utils_get_file_size = s3_utils.get_file_size
