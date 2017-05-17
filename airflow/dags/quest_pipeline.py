@@ -380,19 +380,19 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func': lambda ds, k: [
+            'expected_matching_files_func'      : lambda ds, k: [
                 insert_formatted_date_function(
                     DEID_UNZIPPED_FILE_NAME_TEMPLATE
                 )(ds, k)
             ],
-            'file_date_func': insert_current_date_function(
+            'file_date_func'                    : insert_current_date_function(
                 '{}/{}/{}'
             ),
-            's3_payload_loc_url': S3_PAYLOAD_DEST,
-            'vendor_uuid': '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
-            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
-            'pyspark_normalization_args_func': norm_args,
-            'pyspark': True
+            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
+            'vendor_uuid'                       : '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
+            'pyspark_normalization_args_func'   : norm_args,
+            'pyspark'                           : True
         }
     ),
     task_id='detect_move_normalize',
