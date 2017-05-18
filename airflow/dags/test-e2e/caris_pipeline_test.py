@@ -1,9 +1,25 @@
 import subprocess
 
-CARIS_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests/'
+CARIS_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests'
+
+
+def cleanup():
+    # cleanup
+    subprocess.check_call([
+        'aws', 's3', 'rm', '--recursive', CARIS_TEST_DIR + '/out/'
+    ])
+
+    subprocess.check_call([
+        'aws', 's3', 'rm', '--recursive', CARIS_TEST_DIR + '/payload/'
+    ])
+
+    subprocess.check_call([
+        'aws', 's3', 'rm', '--recursive', CARIS_TEST_DIR + '/spark-output/'
+    ])
 
 
 def test_run():
+    cleanup()
     subprocess.check_call([
         'airflow', 'clear', '-c', 'caris_pipeline'
     ])
@@ -17,17 +33,13 @@ def test_run():
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', CARIS_TEST_DIR + '/out/2017/03/addon/'
-    ])) > 0
-
-    assert len(subprocess.check_output([
-        'aws', 's3', 'ls', CARIS_TEST_DIR + '/out/2017/03/trunk/'
+        'aws', 's3', 'ls', CARIS_TEST_DIR + '/out/2017/04/'
     ])) > 0
 
 
 def test_matching_payload_moved():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', CARIS_TEST_DIR + '/payload/2017/03/'
+        'aws', 's3', 'ls', CARIS_TEST_DIR + '/payload/2017/04/'
     ])) > 0
 
 
@@ -38,16 +50,4 @@ def test_normalized_data_exists():
 
 
 def test_cleanup():
-
-    # cleanup
-    subprocess.check_call([
-        'aws', 's3', 'rm', '--recursive', CARIS_TEST_DIR + '/out/'
-    ])
-
-    subprocess.check_call([
-        'aws', 's3', 'rm', '--recursive', CARIS_TEST_DIR + '/payload/'
-    ])
-
-    subprocess.check_call([
-        'aws', 's3', 'rm', '--recursive', CARIS_TEST_DIR + '/spark-output/'
-    ])
+    cleanup()
