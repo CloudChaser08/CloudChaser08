@@ -1,6 +1,5 @@
 #! /usr/bin/python
 import argparse
-import time
 from datetime import datetime
 import calendar
 
@@ -11,6 +10,8 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 from spark.runner import Runner
+
+AIRFLOW_E2E_BASE = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -31,7 +32,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ) + '/'
 
     elif airflow_test:
-        AIRFLOW_E2E_BASE = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests/'
         input_path = AIRFLOW_E2E_BASE + 'out/{year}/{month}/'.format(
             year=str(date_obj.year),
             month=str(date_obj.month).zfill(2)
@@ -113,7 +113,7 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://healthveritydev/musifer/tests/airflow/caris/spark-output/'
+        output_path = AIRFLOW_E2E_BASE + 'spark-output/'
     else:
         output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
@@ -123,5 +123,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
+    parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
