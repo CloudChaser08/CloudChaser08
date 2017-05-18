@@ -281,12 +281,17 @@ if airflow_env != 'test':
         dag=mdag
     )
 
+
 #
 # Post-Matching
 #
-S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/caris/'
-TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/"
-PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/"
+def norm_args(ds, k):
+    base = ['--date', insert_current_date('{}-{}-01', k)]
+    if airflow_env == 'test':
+        base += ['--airflow_test']
+
+    return base
+
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
@@ -295,21 +300,19 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func': lambda ds, k: [
+            'expected_matching_files_func'      : lambda ds, k: [
                 insert_current_date_function(
                     DEID_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(k)
                 )(ds, k)
             ],
-            'file_date_func': insert_current_date_function(
+            'file_date_func'                    : insert_current_date_function(
                 '{}/{}'
             ),
-            's3_payload_loc_url': S3_PAYLOAD_DEST,
-            'vendor_uuid': 'd701240c-35be-4e71-94fc-9460b85b1515',
-            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/caris/sparkNormalizeCaris.py',
-            'pyspark_normalization_args_func': lambda ds, k: [
-                '--date', insert_current_date('{}-{}-01', k)
-            ],
-            'pyspark': True
+            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
+            'vendor_uuid'                       : 'd701240c-35be-4e71-94fc-9460b85b1515',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/caris/sparkNormalizeCaris.py',
+            'pyspark_normalization_args_func'   : norm_args,
+            'pyspark'                           : True
         }
     ),
     task_id='detect_move_normalize',
