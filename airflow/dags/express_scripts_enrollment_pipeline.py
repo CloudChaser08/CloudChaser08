@@ -58,7 +58,7 @@ def get_expected_transaction_file_name_decrypted(ds, kwargs):
 def get_encrypted_decrypted_file_paths(ds, kwargs):
     tmp_dir = get_tmp_dir(ds, kwargs)
     expected_input = get_expected_transaction_file_name(ds, kwargs)
-    expected_output = get_expected_transaction_file_name_gz(ds, kwargs)
+    expected_output = get_expected_transaction_file_name_decrypted(ds, kwargs)
     return [
         [tmp_dir + expected_input, tmp_dir + expected_output]
     ]
@@ -166,7 +166,8 @@ decrypt_transaction_file_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_dir_func'                        : get_tmp_dir,
-            'encrypted_decrypted_file_paths_func' : get_encrypted_decrypted_file_paths
+            'encrypted_decrypted_file_paths_func' : get_encrypted_decrypted_file_paths,
+            'not_compressed'                      : True
         }
     ),
     task_id='decrypt_transaction_file',
@@ -212,14 +213,16 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'   : get_expected_matching_files,
-            'file_date_func'                 : get_file_date,
-            'incoming_path'                  : S3_TRANSACTION_PREFIX,
-            'normalization_routine_directory': '/home/airflow/airflow/dags/spark/providers/express_scripts/enrollmentrecords/',
-            'normalization_routine_script'   : '/home/airflow/airflow/dags/spark/providers/express_scripts/enrollmentrecords/sparkNormalizeExpressScriptsEnrollment.py',
-            's3_payload_loc_url'             : S3_PAYLOAD_LOC_URL,
-            'vendor_description'             : 'Express Scripts Enrollment',
-            'vendor_uuid'                    : 'f726747e-9dc0-4023-9523-e077949ae865'
+            'expected_matching_files_func'      : get_expected_matching_files,
+            'file_date_func'                    : get_file_date,
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/express_scripts/enrollmentrecords/sparkNormalizeExpressScriptsEnrollment.py',
+            'pyspark_normalization_args_func'   : lambda ds, k: [
+                '--date', get_file_date(ds, k)
+            ],
+            's3_payload_loc_url'                : S3_PAYLOAD_LOC_URL,
+            'vendor_description'                : 'Express Scripts Enrollment',
+            'vendor_uuid'                       : 'f726747e-9dc0-4023-9523-e077949ae865',
+            'pyspark'                           : True
         }
     ),
     task_id='detect_move_normalize',
