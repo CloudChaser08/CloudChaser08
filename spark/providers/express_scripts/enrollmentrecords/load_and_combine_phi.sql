@@ -1,4 +1,4 @@
-SET spark.sql.shuffle.partitions=20;
+SET spark.sql.shuffle.partitions=100;
 SET parquet.compression=GZIP;
 set spark.sql.parquet.compression.codec=gzip;
 SET hive.exec.compress.output=true;
@@ -33,3 +33,4 @@ SELECT DISTINCT * FROM (
     SELECT hvid, threeDigitZip, gender, yearOfBirth, patientId FROM new_phi
 )
 DISTRIBUTE BY patient_id;
+SET spark.sql.shuffle.partitions=200;
