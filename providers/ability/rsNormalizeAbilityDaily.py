@@ -29,8 +29,7 @@ psql = ['psql', '-p', '5439']
 date_validator.generate(args.s3_credentials)
 
 for product in [
-        'ap'
-        # 'ses', 'ease'
+        'ap', 'ses', 'ease'
 ]:
 
     setid = '{}_{}'.format(args.date.replace('-', '_'), product)
