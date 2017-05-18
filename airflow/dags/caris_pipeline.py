@@ -36,7 +36,7 @@ if airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = AIRFLOW_E2E_BASE + 'raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = AIRFLOW_E2E_BASE + 'out/{}/{}/'
     S3_PAYLOAD_DEST = AIRFLOW_E2E_BASE + 'payload/'
-else
+else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/caris/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/caris/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/caris/'
@@ -167,8 +167,8 @@ def generate_transaction_file_validation_dag(
                 ),
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-                's3_bucket': 'healthverity',
-                'file_description': 'Caris ' + task_id + 'file'
+                's3_bucket': S3_TRANSACTION_RAW_URL.split('/')[2:],
+                'file_description': 'Caris ' + task_id + ' file'
             }
         ),
         task_id='validate_' + task_id + '_file',
@@ -200,7 +200,7 @@ fetch_transactional = SubDagOperator(
                 )(ds, k) + get_date_timestamp(k)
             ),
             's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket': 'healthveritydev' if airflow_env == 'test' else 'healthverity'
+            's3_bucket': S3_TRANSACTION_RAW_URL.split('/')[2]
         }
     ),
     task_id='fetch_transaction_file',

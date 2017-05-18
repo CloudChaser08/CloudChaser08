@@ -31,7 +31,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ) + '/'
 
     elif airflow_test:
-        AIRFLOW_E2E_BASE = 's3a://healthveritydev/musifer/tests/airflow/caris/labtests/'
+        AIRFLOW_E2E_BASE = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests/'
         input_path = AIRFLOW_E2E_BASE + 'out/{year}/{month}/'.format(
             year=str(date_obj.year),
             month=str(date_obj.month).zfill(2)
