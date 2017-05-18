@@ -1,4 +1,4 @@
-SET spark.sql.shuffle.partitions=20;
+SET spark.sql.shuffle.partitions=100;
 SET parquet.compression=GZIP;
 set spark.sql.parquet.compression.codec=gzip;
 SET hive.exec.compress.output=true;
