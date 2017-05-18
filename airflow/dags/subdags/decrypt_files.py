@@ -86,13 +86,14 @@ def decrypt_files(parent_dag_name, child_dag_name, start_date, schedule_interval
         dag=dag
     )
 
-    decompress_files = PythonOperator(
-        task_id='decompress_file',
-        python_callable=do_decompress_files,
-        provide_context=True,
-        op_kwargs=dag_config,
-        dag=dag
-    )
+    if not dag_config.get('not_compressed'):
+        decompress_files = PythonOperator(
+            task_id='decompress_file',
+            python_callable=do_decompress_files,
+            provide_context=True,
+            op_kwargs=dag_config,
+            dag=dag
+        )
 
     clean_up = PythonOperator(
         task_id='clean_up',
@@ -103,7 +104,10 @@ def decrypt_files(parent_dag_name, child_dag_name, start_date, schedule_interval
     )
 
     run_decryption.set_upstream(fetch_decryption_files)
-    decompress_files.set_upstream(run_decryption)
-    clean_up.set_upstream(decompress_files)
+    if not dag_config.get('not_compressed'):
+        decompress_files.set_upstream(run_decryption)
+        clean_up.set_upstream(decompress_files)
+    else:
+        clean_up.set_upstream(run_decryption)
 
     return dag
