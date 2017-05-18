@@ -3,13 +3,13 @@ SELECT DISTINCT * FROM (
     SELECT
         NULL,                                -- record_id
         CASE
-        WHEN COALESCE(t.customer__patient_id, '') = ''
-        AND COALESCE(t.ods_id, '') = ''
+        WHEN COALESCE(TRIM(t.customer__patient_id), '') = ''
+        AND COALESCE(TRIM(t.ods_id), '') = ''
         THEN NULL
         ELSE CONCAT(
-            COALESCE(t.customer__patient_id, ''),
+            COALESCE(TRIM(t.customer__patient_id), ''),
             '_',
-            COALESCE(t.ods_id, '')
+            COALESCE(TRIM(t.ods_id), '')
             )
         END,                                 -- claim_id
         mp.hvid,                             -- hvid
