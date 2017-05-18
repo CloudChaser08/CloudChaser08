@@ -32,9 +32,10 @@ DAG_NAME = 'caris_pipeline'
 
 # Applies to all transaction files
 if airflow_env == 'test':
-    S3_TRANSACTION_RAW_URL = 's3://healthveritydev/musifer/tests/airflow/caris/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://healthveritydev/musifer/tests/airflow/caris/out/{}/{}/'
-    S3_PAYLOAD_DEST = 's3://healthveritydev/musifer/tests/airflow/caris/payload/'
+    AIRFLOW_E2E_BASE = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests/'
+    S3_TRANSACTION_RAW_URL = AIRFLOW_E2E_BASE + 'raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = AIRFLOW_E2E_BASE + 'out/{}/{}/'
+    S3_PAYLOAD_DEST = AIRFLOW_E2E_BASE + 'payload/'
 else
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/caris/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/caris/{}/{}/'
