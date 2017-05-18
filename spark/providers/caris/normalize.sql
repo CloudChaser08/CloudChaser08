@@ -2,9 +2,16 @@ INSERT INTO lab_common_model
 SELECT DISTINCT * FROM (
     SELECT
         NULL,                                -- record_id
-        CONCAT(
-            t.customer__patient_id, '_', t.ods_id
-            ),                               -- claim_id
+        CASE
+        WHEN COALESCE(TRIM(t.customer__patient_id), '') = ''
+        AND COALESCE(TRIM(t.ods_id), '') = ''
+        THEN NULL
+        ELSE CONCAT(
+            COALESCE(TRIM(t.customer__patient_id), ''),
+            '_',
+            COALESCE(TRIM(t.ods_id), '')
+            )
+        END,                                 -- claim_id
         mp.hvid,                             -- hvid
         {today},                             -- created
         '1',                                 -- model_version
