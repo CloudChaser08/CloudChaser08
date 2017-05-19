@@ -3,7 +3,7 @@ import argparse
 import time
 from datetime import datetime
 import calendar
-from pyspark.sql.functions import monotonically_increasing_id, lit
+from pyspark.sql.functions import monotonically_increasing_id, lit, col
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
@@ -58,16 +58,17 @@ runner.run_spark_script('../../common/lab_common_model.sql', [
 
 payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
-runner.run_spark_script('load_transactions.sql', [
-    ['input_path', input_path]
-])
-
 # append additional columns
 if args.date <= '2017-04-01':
+    runner.run_spark_script('load_transactions_legacy.sql', [
+        ['input_path', input_path]
+    ])
+
     runner.run_spark_script('load_additional_columns.sql', [
         ['addon_path', addon_path]
     ])
 
+    # merge tables
     sqlContext.sql("""
     SELECT t.*, a.ods_id as ods_id,
     a.accession_date AS accession_date,
@@ -77,11 +78,15 @@ if args.date <= '2017-04-01':
     ON t.customer__patient_id = a.patient_id
     """).createTempView('raw_transactional')
 else:
-    # TODO: Adjust for new model that already contains these columns
-    sqlContext.sql('select * from raw_transactional')  \
-              .withColumn('ods_id', lit(None))              \
-              .withColumn('accession_date', lit(None))      \
-              .withColumn('sign_out_date', lit(None))       \
+    runner.run_spark_script(
+        file_utils.get_rel_path(script_path, 'load_transactions.sql'), [
+            ['input_path', input_path]
+        ]
+    )
+
+    sqlContext.sql('select * from raw_transactional')   \
+              .withColumn('ods_id', col('deid'))        \
+              .withColumn('sign_out_date', lit(None))   \
               .createTempView('raw_transactional')
 
 runner.run_spark_script('normalize.sql', [

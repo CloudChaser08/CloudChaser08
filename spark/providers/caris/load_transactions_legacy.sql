@@ -142,8 +142,6 @@ CREATE EXTERNAL TABLE raw_transactional (
         ihc_ia_ki67                    string,
         ihc_ia_p53                     string,
         ihc_ia_pr                      string,
-        deid                           string,  -- same as ods_id, just with a new name
-        accession_date                 string,
         hv_key                         string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
