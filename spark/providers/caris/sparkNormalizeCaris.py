@@ -57,6 +57,7 @@ def run(spark, runner, date_input, test=False):
     max_date = date_obj.strftime('%Y-%m-') \
         + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
 
+    runner.run_spark_script('create_helper_tables.sql')
     runner.run_spark_script('../../common/zip3_to_state.sql')
 
     runner.run_spark_script('../../common/lab_common_model.sql', [
@@ -80,7 +81,8 @@ def run(spark, runner, date_input, test=False):
         runner.sqlContext.sql("""
         SELECT t.*, a.ods_id as ods_id,
         a.accession_date AS accession_date,
-        a.sign_out_date AS sign_out_date
+        a.sign_out_date AS sign_out_date,
+        NULL as new_accession_date
         FROM raw_transactional t
         LEFT JOIN additional_columns a
         ON t.customer__patient_id = a.patient_id
@@ -90,9 +92,10 @@ def run(spark, runner, date_input, test=False):
             ['input_path', input_path]
         ])
 
-        runner.sqlContext.sql('select * from raw_transactional')   \
-                         .withColumn('ods_id', col('deid'))        \
-                         .withColumn('sign_out_date', lit(None))   \
+        runner.sqlContext.sql('select * from raw_transactional')                   \
+                         .withColumn('ods_id', col('deid'))                        \
+                         .withColumn('sign_out_date', lit(None))                   \
+                         .withColumn('new_accession_date', col('accession_date'))  \
                          .createTempView('raw_transactional')
 
     runner.run_spark_script('normalize.sql', [

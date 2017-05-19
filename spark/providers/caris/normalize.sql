@@ -40,6 +40,12 @@ SELECT DISTINCT * FROM (
             '%d-%b-%Y',
             CAST({min_date} AS DATE),
             CAST({max_date} AS DATE)
+            ),
+        extract_date(
+            t.new_accession_date,
+            '%Y-%m-%d %H:%M:%S.0',
+            CAST({min_date} AS DATE),
+            CAST({max_date} AS DATE)
             )
         ),                                   -- date_service
         NULL,                                -- date_specimen
@@ -54,7 +60,7 @@ SELECT DISTINCT * FROM (
         NULL,                                -- test_battery_name
         NULL,                                -- test_ordered_local_id
         NULL,                                -- test_ordered_std_id
-        CASE cross_join.i
+        CASE cross_join.n
         WHEN 0   THEN CASE WHEN fish_cmet = 'X' THEN 'FISH_cMET' ELSE NULL END
         WHEN 1   THEN CASE WHEN fish_cmyc = 'X' THEN 'FISH_cMYC' ELSE NULL END
         WHEN 2   THEN CASE WHEN fish_egfr = 'X' THEN 'FISH_EGFR' ELSE NULL END
@@ -221,14 +227,7 @@ SELECT DISTINCT * FROM (
         NULL,                                -- ordering_market_type
         NULL                                 -- ordering_specialty
     FROM raw_transactional t
-        CROSS JOIN (
-        -- Using 'row_number' here only as a quick-and-dirty method
-        -- for getting an increasing list of integers - it doesn't
-        -- matter which row each number corresponds to in this case
-        SELECT row_number() over (ORDER BY true) i
-        FROM raw_transactional
-            LIMIT 200
-            ) cross_join
+        CROSS JOIN exploder cross_join
         LEFT JOIN matching_payload mp ON t.hv_key = mp.hvJoinKey
         LEFT JOIN zip3_to_state zip3 ON mp.threeDigitZip = zip3.zip3
         ) main
