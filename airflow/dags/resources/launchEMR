@@ -40,7 +40,7 @@ aws emr create-cluster                     \
  --enable-debugging                        \
  --ec2-attributes "${EC2_ATTR}"            \
  --name "$cluster_name"                    \
- --tags "EMRCluster=${cluster_name}_$(date +%Y%m%d%H%M) Service=${cluster_purpose}"	\
+ --tags "\"EMRCluster=${cluster_name}_$(date +%Y%m%d%H%M)\" \"Service=${cluster_purpose}\""	\
  --log-uri s3://salusvlogs/presto/jenkins/${tstmp}/      \
  --instance-groups                         \
    "${MASTER_IG}"                          \
