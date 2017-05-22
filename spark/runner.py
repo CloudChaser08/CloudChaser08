@@ -1,4 +1,6 @@
 import logging
+import spark.helpers.file_utils as file_utils
+import inspect
 
 
 class Runner:
@@ -13,6 +15,14 @@ class Runner:
         """
         Execute a spark sql script
         """
+
+        # Implicitly get relative path to script
+        script = file_utils.get_rel_path(
+            # the file path to the calling module's file
+            inspect.getmodule(inspect.stack()[1][0]).__file__,
+            script
+        )
+
         content = ''
         with open(script) as inf:
             content = inf.read()
