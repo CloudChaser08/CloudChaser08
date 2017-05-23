@@ -1,6 +1,6 @@
 import subprocess
 
-NEOGENOMICS_TEST_DIR = 's3://healthveritydev/musifer/tests/airflow/neogenomics'
+NEOGENOMICS_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests'
 
 def test_run():
     subprocess.check_call([

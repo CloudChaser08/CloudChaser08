@@ -28,9 +28,9 @@ else:
     airflow_env = 'dev'
 
 if airflow_env == 'test':
-    S3_TRANSACTION_RAW_URL = 's3://healthveritydev/musifer/tests/airflow/neogenomics/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://healthveritydev/musifer/tests/airflow/neogenomics/out/%Y/%m/%d/'
-    S3_PAYLOAD_DEST = 's3://healthveritydev/musifer/tests/airflow/neogenomics/payload/'
+    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/out/%Y/%m/%d/'
+    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/payload/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/neogenomics/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/%Y/%m/%d/'

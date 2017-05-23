@@ -33,10 +33,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../test/providers/neogenomics/resources/matching/'
         )
     elif airflow_test:
-        input_path = 's3://healthveritydev/musifer/tests/airflow/neogenomics/out/{}/'.format(
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/out/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://healthveritydev/musifer/tests/airflow/neogenomics/payload/{}/'.format(
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/payload/{}/'.format(
             date_input.replace('-', '/')
         )
     else:
