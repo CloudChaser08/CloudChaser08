@@ -12,14 +12,6 @@ import spark.helpers.create_date_validation_table \
 import logging
 
 
-def get_rel_path(relative_filename):
-    return os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            relative_filename
-        )
-    )
-
 # init
 spark, sqlContext = init("Emdeon DX")
 
@@ -39,24 +31,24 @@ parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
 
 if args.first_run:
-    runner.run_spark_script(get_rel_path('create_helper_tables.sql'))
-    runner.run_spark_script(get_rel_path('../../../common/zip3_to_state.sql'))
-    runner.run_spark_script(get_rel_path('load_payer_mapping.sql'))
+    runner.run_spark_script('create_helper_tables.sql')
+    runner.run_spark_script('../../../common/zip3_to_state.sql')
+    runner.run_spark_script('load_payer_mapping.sql')
     if args.date < '2015-10-01':
-        runner.run_spark_script(get_rel_path('../../../common/load_hvid_parent_child_map.sql'))
+        runner.run_spark_script('../../../common/load_hvid_parent_child_map.sql')
 
 date_path = args.date.replace('-', '/')
 
-runner.run_spark_script(get_rel_path('../../../common/medicalclaims_common_model.sql'), [
-        ['table_name', 'medicalclaims_common_model', False],
-        ['properties', '', False]
-    ])
+runner.run_spark_script('../../../common/medicalclaims_common_model.sql', [
+    ['table_name', 'medicalclaims_common_model', False],
+    ['properties', '', False]
+])
 if args.date < '2015-08-01':
-    runner.run_spark_script(get_rel_path('load_transactions.sql'), [
+    runner.run_spark_script('load_transactions.sql', [
         ['input_path', S3_EMDEON_IN + date_path + '/payload/']
     ])
 else:
-    runner.run_spark_script(get_rel_path('load_transactions.sql'), [
+    runner.run_spark_script('load_transactions.sql', [
         ['input_path', S3_EMDEON_IN + date_path + '/']
     ])
 
@@ -64,23 +56,23 @@ else:
 # payload for exact matches, so there is a separate table to
 # reconcile that
 if args.date < '2015-10-01':
-    runner.run_spark_script(get_rel_path('load_matching_payload_v1.sql'), [
+    runner.run_spark_script('load_matching_payload_v1.sql', [
         ['matching_path', S3_EMDEON_MATCHING + date_path + '/']
     ])
 else:
-    runner.run_spark_script(get_rel_path('load_matching_payload_v2.sql'), [
+    runner.run_spark_script('load_matching_payload_v2.sql', [
         ['matching_path', S3_EMDEON_MATCHING + date_path + '/']
     ])
 
-runner.run_spark_script(get_rel_path('split_raw_transactions.sql'), [
+runner.run_spark_script('split_raw_transactions.sql', [
     ['min_date', '2012-01-01'],
     ['max_date', args.date]
 ])
-runner.run_spark_script(get_rel_path('normalize_professional_claims.sql'))
-runner.run_spark_script(get_rel_path('normalize_institutional_claims.sql'))
+runner.run_spark_script('normalize_professional_claims.sql')
+runner.run_spark_script('normalize_institutional_claims.sql')
 
 # Privacy filtering
-runner.run_spark_script(get_rel_path('../../../common/medicalclaims_post_normalization_cleanup.sql'), [
+runner.run_spark_script('../../../common/medicalclaims_post_normalization_cleanup.sql', [
     ['filename', args.setid],
     ['today', TODAY],
     ['feedname', '10'],

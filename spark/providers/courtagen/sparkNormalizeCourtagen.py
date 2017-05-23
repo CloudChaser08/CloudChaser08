@@ -33,33 +33,22 @@ min_date = '2011-01-01'
 max_date = args.date
 
 # create helper tables
-runner.run_spark_script(file_utils.get_rel_path(
-    __file__,
-    'create_helper_tables.sql'
-))
+runner.run_spark_script('create_helper_tables.sql')
 
-runner.run_spark_script(file_utils.get_rel_path(
-        __file__,
-        '../../common/lab_common_model_v2.sql'
-    ), [
-        ['table_name', 'lab_common_model', False],
-        ['properties', '', False]
+runner.run_spark_script('../../common/lab_common_model_v2.sql', [
+    ['table_name', 'lab_common_model', False],
+    ['properties', '', False]
 ])
 
 date_path = args.date.replace('-', '/')
 
 payload_loader.load(runner, S3_COURTAGEN_MATCHING + date_path + '/', ['hvJoinKey', 'claimId'])
 
-runner.run_spark_script(
-    file_utils.get_rel_path(
-        __file__, 'load_transactions.sql'
-    ), [
-        ['input_path', S3_COURTAGEN_IN + date_path + '/']
+runner.run_spark_script('load_transactions.sql', [
+    ['input_path', S3_COURTAGEN_IN + date_path + '/']
 ])
 
-runner.run_spark_script(file_utils.get_rel_path(
-    __file__, 'normalize.sql'
-), [
+runner.run_spark_script('normalize.sql', [
     ['filename', setid],
     ['today', TODAY],
     ['feedname', '28'],
@@ -68,9 +57,7 @@ runner.run_spark_script(file_utils.get_rel_path(
     ['max_date', max_date]
 ])
 
-runner.run_spark_script(file_utils.get_rel_path(
-    __file__, '../../common/lab_post_normalization_cleanup_v2.sql'
-))
+runner.run_spark_script('../../common/lab_post_normalization_cleanup_v2.sql')
 
 normalized_records_unloader.unload(spark, runner, 'labtests', 'lab_common_model_v2.sql',
     'courtagen', 'lab_common_model', 'date_service', args.date, S3_COURTAGEN_OUT)

@@ -86,35 +86,27 @@ def run_part(
         min_date = '2010-01-01'
 
         # create helper tables
-        runner.run_spark_script(
-            file_utils.get_rel_path(__file__, 'create_helper_tables.sql')
-        )
+        runner.run_spark_script('create_helper_tables.sql')
         payload_loader.load(runner, matching_path, ['claimId'])
 
     # end init #
 
-    runner.run_spark_script(file_utils.get_rel_path(
-        __file__, '../../common/medicalclaims_common_model.sql'
-    ), [
+    runner.run_spark_script('../../common/medicalclaims_common_model.sql', [
         ['table_name', 'medicalclaims_common_model', False],
         ['properties', '', False]
     ])
 
     # load transactions and payload
-    runner.run_spark_script(file_utils.get_rel_path(__file__, 'load_transactions.sql'), [
+    runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path + part + '/']
     ])
 
     # create explosion maps
-    runner.run_spark_script(
-        file_utils.get_rel_path(__file__, 'create_exploded_diagnosis_map.sql')
-    )
-    runner.run_spark_script(
-        file_utils.get_rel_path(__file__, 'create_exploded_procedure_map.sql')
-    )
+    runner.run_spark_script('create_exploded_diagnosis_map.sql')
+    runner.run_spark_script('create_exploded_procedure_map.sql')
 
     # normalize
-    runner.run_spark_script(file_utils.get_rel_path(__file__, 'normalize.sql'), [
+    runner.run_spark_script('normalize.sql', [
         [
             'date_service_sl',
             """

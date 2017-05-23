@@ -9,16 +9,6 @@ import spark.helpers.create_date_validation_table \
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.constants as constants
 
-
-def get_rel_path(relative_filename):
-    return os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            relative_filename
-        )
-    )
-
-
 # init
 spark, sqlContext = init("ObituaryData")
 
@@ -49,28 +39,24 @@ output_path = 'hdfs:///out/'
 # create date table
 date_validator.generate(runner, date(2013, 9, 1), date_obj.date())
 
-runner.run_spark_script(get_rel_path(
-    '../../common/event_common_model.sql'
-), [
+runner.run_spark_script('../../common/event_common_model.sql', [
     ['table_name', 'event_common_model', False],
     ['properties', '', False]
 ])
 
 payload_loader.load(runner, matching_path, ['hvJoinKey', 'deathMonth'])
 
-runner.run_spark_script(get_rel_path("load_transactions.sql"), [
+runner.run_spark_script("load_transactions.sql", [
     ['input_path', input_path]
 ])
 
-runner.run_spark_script(get_rel_path("normalize.sql"), [
+runner.run_spark_script("normalize.sql", [
     ['set', filename],
     ['feed', '27'],
     ['vendor', '49']
 ])
 
-runner.run_spark_script(get_rel_path(
-    '../../common/event_common_model.sql'
-), [
+runner.run_spark_script('../../common/event_common_model.sql', [
     ['table_name', 'final_unload', False],
     [
         'properties',
@@ -79,30 +65,26 @@ runner.run_spark_script(get_rel_path(
     ]
 ])
 
-runner.run_spark_script(
-    get_rel_path('../../common/unload_common_model.sql'), [
-        [
-            'select_statement',
-            "SELECT *, 'NULL' as best_date "
-            + "FROM event_common_model "
-            + "WHERE event_date IS NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
-)
+runner.run_spark_script('../../common/unload_common_model.sql'), [
+    [
+        'select_statement',
+        "SELECT *, 'NULL' as best_date "
+        + "FROM event_common_model "
+        + "WHERE event_date IS NULL",
+        False
+    ],
+    ['partitions', '20', False]
+])
 
-runner.run_spark_script(
-    get_rel_path('../../common/unload_common_model.sql'), [
-        [
-            'select_statement',
-            "SELECT *, regexp_replace(cast(event_date as string), '-..$', '') as best_date "
-            + "FROM event_common_model "
-            + "WHERE event_date IS NOT NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
-)
+runner.run_spark_script('../../common/unload_common_model.sql'), [
+    [
+        'select_statement',
+        "SELECT *, regexp_replace(cast(event_date as string), '-..$', '') as best_date "
+        + "FROM event_common_model "
+        + "WHERE event_date IS NOT NULL",
+        False
+    ],
+    ['partitions', '20', False]
+])
 
 spark.stop()

@@ -48,15 +48,9 @@ def run(spark, runner, date_input, test=False):
     max_date = date_input
 
     # create helper tables
-    runner.run_spark_script(file_utils.get_rel_path(
-        script_path,
-        'create_helper_tables.sql'
-    ))
+    runner.run_spark_script('create_helper_tables.sql')
 
-    runner.run_spark_script(file_utils.get_rel_path(
-        script_path,
-        '../../common/lab_common_model.sql'
-    ), [
+    runner.run_spark_script('../../common/lab_common_model.sql', [
         ['table_name', 'lab_common_model', False],
         ['properties', '', False]
     ])
@@ -64,29 +58,19 @@ def run(spark, runner, date_input, test=False):
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     if period == 'current':
-        runner.run_spark_script(
-            file_utils.get_rel_path(
-                script_path, 'load_and_merge_transactions.sql'
-            ), [
-                ['trunk_path', trunk_path],
-                ['addon_path', addon_path]
-            ]
-        )
+        runner.run_spark_script('load_and_merge_transactions.sql', [
+            ['trunk_path', trunk_path],
+            ['addon_path', addon_path]
+        ])
     elif period == 'hist':
-        runner.run_spark_script(
-            file_utils.get_rel_path(
-                script_path, 'load_transactions.sql'
-            ), [
-                ['input_path', input_path]
-            ]
-        )
+        runner.run_spark_script('load_transactions.sql', [
+            ['input_path', input_path]
+        ])
     else:
         logging.error('Invalid period')
         exit(1)
 
-    runner.run_spark_script(file_utils.get_rel_path(
-        script_path, 'normalize.sql'
-    ), [
+    runner.run_spark_script('normalize.sql', [
         ['filename', setid],
         ['today', TODAY],
         ['feedname', '18'],

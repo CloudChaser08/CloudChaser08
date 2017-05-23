@@ -44,32 +44,20 @@ def run(spark, runner, date_input, test=False):
     max_date = date_input
 
     # create helper tables
-    runner.run_spark_script(file_utils.get_rel_path(
-        script_path,
-        'create_helper_tables.sql'
-    ))
+    runner.run_spark_script('create_helper_tables.sql')
 
-    runner.run_spark_script(file_utils.get_rel_path(
-        script_path,
-        '../../common/lab_common_model_v3.sql'
-    ), [
+    runner.run_spark_script('../../common/lab_common_model_v3.sql', [
         ['table_name', 'lab_common_model', False],
         ['properties', '', False]
     ])
 
     payload_loader.load(runner, matching_path, ['personId'])
 
-    runner.run_spark_script(
-        file_utils.get_rel_path(
-            script_path, 'load_transactions.sql'
-        ), [
-            ['input_path', input_path]
-        ]
-    )
+    runner.run_spark_script('load_transactions.sql', [
+        ['input_path', input_path]
+    ])
 
-    runner.run_spark_script(file_utils.get_rel_path(
-        script_path, 'normalize.sql'
-    ), [
+    runner.run_spark_script('normalize.sql', [
         ['filename', setid],
         ['today', TODAY],
         ['feedname', '32'],
