@@ -51,10 +51,10 @@ def run_part(
         date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
         if test:
-            input_path = file_utils.get_rel_path(
+            input_path = file_utils.get_abs_path(
                 __file__, '../../test/providers/practice_insight/resources/input/'
             ) + '/'
-            matching_path = file_utils.get_rel_path(
+            matching_path = file_utils.get_abs_path(
                 __file__, '../../test/providers/practice_insight/resources/matching/'
             )
             max_date = '2016-12-31'

@@ -36,19 +36,19 @@ def run (spark, runner, date_input, test=False):
     date_path = date_input.replace('-', '/')
 
     if test:
-        input_path = file_utils.get_rel_path(
+        input_path = file_utils.get_abs_path(
             __file__,
             '../../../test/providers/express_scripts/enrollmentrecords/resources/input/'
         )
-        matching_path = file_utils.get_rel_path(
+        matching_path = file_utils.get_abs_path(
             __file__,
             '../../../test/providers/express_scripts/enrollmentrecords/resources/matching/'
         )
-        new_phi_path = file_utils.get_rel_path(
+        new_phi_path = file_utils.get_abs_path(
             __file__,
             '../../../test/providers/express_scripts/enrollmentrecords/resources/new_phi/'
         )
-        ref_phi_path = file_utils.get_rel_path(
+        ref_phi_path = file_utils.get_abs_path(
             __file__,
             '../../../test/providers/express_scripts/enrollmentrecords/resources/ref_phi/'
         )

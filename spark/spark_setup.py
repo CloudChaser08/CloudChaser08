@@ -12,7 +12,7 @@ def init(provider, local=False):
                     .config('spark.sql.catalogImplementation', 'hive')        \
                     .config('spark.sql.crossJoin.enabled', 'true')            \
                     .config('spark.driver.extraClassPath',                    
-                        file_utils.get_rel_path(
+                        file_utils.get_abs_path(
                             __file__,
                             'common/json-serde-1.3.7-jar-with-dependencies.jar'
                     ))                                                        \
@@ -22,7 +22,7 @@ def init(provider, local=False):
 
     if local:
         spark.sparkContext \
-             .addPyFile(file_utils.get_rel_path(__file__, 'target/dewey.zip'))
+             .addPyFile(file_utils.get_abs_path(__file__, 'target/dewey.zip'))
 
     # register privacy filters
     sqlContext.registerFunction(

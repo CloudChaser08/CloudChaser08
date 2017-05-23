@@ -17,7 +17,7 @@ class Runner:
         """
 
         # Implicitly get relative path to script
-        script = file_utils.get_rel_path(
+        script = file_utils.get_abs_path(
             # the file path to the calling module's file
             inspect.getmodule(inspect.stack()[1][0]).__file__,
             script

@@ -26,10 +26,10 @@ def run(spark, runner, date_input, test=False):
     script_path = __file__
 
     if test:
-        input_path = file_utils.get_rel_path(
+        input_path = file_utils.get_abs_path(
             script_path, '../../test/providers/neogenomics/resources/input/'
         )
-        matching_path = file_utils.get_rel_path(
+        matching_path = file_utils.get_abs_path(
             script_path, '../../test/providers/neogenomics/resources/matching/'
         )
     else:

@@ -7,10 +7,10 @@ import shutil
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
-test_staging_dir  = file_utils.get_rel_path(
+test_staging_dir  = file_utils.get_abs_path(
     __file__, './test-staging/'
 )
-test_staging_dir2 = file_utils.get_rel_path(
+test_staging_dir2 = file_utils.get_abs_path(
     __file__, './test-staging2/'
 )
 prefix = 'PREFIX'
@@ -25,7 +25,7 @@ def test_init(spark):
     ])
 
     column_count = None
-    with open(file_utils.get_rel_path(
+    with open(file_utils.get_abs_path(
             __file__, '../../common/lab_common_model.sql'
     ), 'r') as lab:
         column_count = len(lab.readlines()) - 6
