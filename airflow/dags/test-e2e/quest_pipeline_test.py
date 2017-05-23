@@ -1,6 +1,6 @@
 import subprocess
 
-QUEST_TEST_DIR = 's3://salusv/testing/dewey/airflow/dags/quest'
+QUEST_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests'
 
 
 def cleanup():

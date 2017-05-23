@@ -32,9 +32,9 @@ DAG_NAME = 'quest_pipeline'
 
 # Applies to all transaction files
 if airflow_env == 'test':
-    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/dags/quest/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/dags/quest/out/{}/{}/{}/'
-    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/dags/quest/payload/'
+    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/out/{}/{}/{}/'
+    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/payload/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/quest/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
