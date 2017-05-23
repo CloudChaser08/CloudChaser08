@@ -68,7 +68,7 @@ def run(spark, runner, date_input, test=False):
     payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
     # append additional columns
-    if args.date <= '2017-04-01':
+    if date_input <= '2017-04-01':
         runner.run_spark_script('load_transactions_legacy.sql', [
             ['input_path', input_path]
         ])
