@@ -8,7 +8,7 @@ payload = []
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
-    location = file_utils.get_rel_path(
+    location = file_utils.get_abs_path(
         __file__, '../resources/parentId_test_payload.json'
     )
 

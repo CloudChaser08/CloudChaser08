@@ -10,15 +10,6 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.constants as constants
 
 
-def get_rel_path(relative_filename):
-    return os.path.abspath(
-        os.path.join(
-            '/home/hadoop/spark/providers/visonex/',
-            relative_filename
-        )
-    )
-
-
 # init
 spark, sqlContext = init("Visonex")
 
@@ -62,50 +53,42 @@ dialysistreatment_input = input_prefix + 'dialysistreatment/'
 
 matching_path = insert_date('s3://salusv/matching/payload/emr/visonex/{}/{}/{}/')
 
-runner.run_spark_script(get_rel_path(
-    '../../common/emr_common_model.sql'
-), [
+runner.run_spark_script('../../common/emr_common_model.sql', [
     ['table_name', 'emr_common_model', False],
     ['properties', '', False]
 ])
 
-runner.run_spark_script(
-    get_rel_path('load_transactions.sql'), [
-        ['hospitalization_input', hospitalization_input],
-        ['immunization_input', immunization_input],
-        ['labpanelsdrawn_input', labpanelsdrawn_input],
-        ['labresult_input', labresult_input],
-        ['patientaccess_examproc_input', patientaccess_examproc_input],
-        ['patientdiagcodes_input', patientdiagcodes_input],
-        ['patientmedadministered_input', patientmedadministered_input],
-        ['patientmedprescription_input', patientmedprescription_input],
-        ['labidlist_input', labidlist_input],
-        ['problemlist_input', problemlist_input],
-        ['dialysistreatment_input', dialysistreatment_input]
-    ]
-)
+runner.run_spark_script('load_transactions.sql', [
+    ['hospitalization_input', hospitalization_input],
+    ['immunization_input', immunization_input],
+    ['labpanelsdrawn_input', labpanelsdrawn_input],
+    ['labresult_input', labresult_input],
+    ['patientaccess_examproc_input', patientaccess_examproc_input],
+    ['patientdiagcodes_input', patientdiagcodes_input],
+    ['patientmedadministered_input', patientmedadministered_input],
+    ['patientmedprescription_input', patientmedprescription_input],
+    ['labidlist_input', labidlist_input],
+    ['problemlist_input', problemlist_input],
+    ['dialysistreatment_input', dialysistreatment_input]
+])
 
 payload_loader.load(runner, matching_path, ['claimId'])
 
-runner.run_spark_script(
-    get_rel_path('normalize.sql'), [
-        ['today', TODAY],
-        ['filename', 'HealthVerity-20170201'],
-        ['feedname', '23'],
-        ['vendor', '33'],
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ]
-)
+runner.run_spark_script('normalize.sql', [
+    ['today', TODAY],
+    ['filename', 'HealthVerity-20170201'],
+    ['feedname', '23'],
+    ['vendor', '33'],
+    ['min_date', min_date],
+    ['max_date', max_date]
+])
 
 # correct record id
 sqlContext.sql('select * from emr_common_model').withColumn(
     'record_id', monotonically_increasing_id()
 ).createTempView('emr_common_model')
 
-runner.run_spark_script(get_rel_path(
-    '../../common/emr_common_model.sql'
-), [
+runner.run_spark_script('../../common/emr_common_model.sql', [
     ['table_name', 'final_unload', False],
     [
         'properties',
@@ -114,30 +97,26 @@ runner.run_spark_script(get_rel_path(
     ]
 ])
 
-runner.run_spark_script(
-    get_rel_path('../../common/unload_common_model.sql'), [
-        [
-            'select_statement',
-            "SELECT *, 'visonex' as provider, 'NULL' as best_date "
-            + "FROM emr_common_model "
-            + "WHERE date_start IS NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
-)
+runner.run_spark_script('../../common/unload_common_model.sql', [
+    [
+        'select_statement',
+        "SELECT *, 'visonex' as provider, 'NULL' as best_date "
+        + "FROM emr_common_model "
+        + "WHERE date_start IS NULL",
+        False
+    ],
+    ['partitions', '20', False]
+])
 
-runner.run_spark_script(
-    get_rel_path('../../common/unload_common_model.sql'), [
-        [
-            'select_statement',
-            "SELECT *, 'visonex' as provider, regexp_replace(cast(date_start as string), '-..$', '') as best_date "
-            + "FROM emr_common_model "
-            + "WHERE date_start IS NOT NULL",
-            False
-        ],
-        ['partitions', '20', False]
-    ]
-)
+runner.run_spark_script('../../common/unload_common_model.sql'), [
+    [
+        'select_statement',
+        "SELECT *, 'visonex' as provider, regexp_replace(cast(date_start as string), '-..$', '') as best_date "
+        + "FROM emr_common_model "
+        + "WHERE date_start IS NOT NULL",
+        False
+    ],
+    ['partitions', '20', False]
+])
 
 spark.stop()

@@ -49,31 +49,24 @@ max_date = date_obj.strftime('%Y-%m-') \
 
 staging_dir = 'hdfs:///text-out/'
 
-runner.run_spark_script(file_utils.get_rel_path(
-    script_path, '../../common/zip3_to_state.sql'
-))
+runner.run_spark_script('../../common/zip3_to_state.sql')
 
-runner.run_spark_script(file_utils.get_rel_path(
-    script_path,
-    '../../common/lab_common_model.sql'
-), [
+runner.run_spark_script('../../common/lab_common_model.sql', [
     ['table_name', 'lab_common_model', False],
     ['properties', '', False]
 ])
 
 payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
-runner.run_spark_script(
-    file_utils.get_rel_path(script_path, 'load_transactions.sql'), [
-        ['input_path', input_path]
-    ]
-)
+runner.run_spark_script('load_transactions.sql', [
+    ['input_path', input_path]
+])
 
 # append additional columns
 if args.date <= '2017-04-01':
-    runner.run_spark_script(file_utils.get_rel_path(
-        script_path, 'load_additional_columns.sql'
-    ), [['addon_path', addon_path]])
+    runner.run_spark_script('load_additional_columns.sql', [
+        ['addon_path', addon_path]
+    ])
 
     sqlContext.sql("""
     SELECT t.*, a.ods_id as ods_id,
@@ -91,17 +84,15 @@ else:
               .withColumn('sign_out_date', lit(None))       \
               .createTempView('raw_transactional')
 
-runner.run_spark_script(
-    file_utils.get_rel_path(script_path, 'normalize.sql'), [
-        ['filename', setid],
-        ['today', TODAY],
-        ['feedname', '14'],
-        ['vendor', '13'],
-        ['date_received', args.date],
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ]
-)
+runner.run_spark_script('normalize.sql', [
+    ['filename', setid],
+    ['today', TODAY],
+    ['feedname', '14'],
+    ['vendor', '13'],
+    ['date_received', args.date],
+    ['min_date', min_date],
+    ['max_date', max_date]
+])
 
 sqlContext.sql('select * from lab_common_model').withColumn(
     'record_id', monotonically_increasing_id()

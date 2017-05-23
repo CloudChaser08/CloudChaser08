@@ -26,35 +26,29 @@ def run (spark, runner, date_input, test=False):
     setid = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(date_input.replace('-',''))
 
     # create helper tables
-    runner.run_spark_script(file_utils.get_rel_path(
-        __file__,
-        '../../../common/zip3_to_state.sql'
-    ))
+    runner.run_spark_script('../../../common/zip3_to_state.sql')
 
-    runner.run_spark_script(file_utils.get_rel_path(
-            __file__,
-            '../../../common/enrollment_common_model.sql'
-        ), [
-            ['table_name', 'enrollment_common_model', False],
-            ['properties', '', False]
+    runner.run_spark_script('../../../common/enrollment_common_model.sql', [
+        ['table_name', 'enrollment_common_model', False],
+        ['properties', '', False]
     ])
 
     date_path = date_input.replace('-', '/')
 
     if test:
-        input_path = file_utils.get_rel_path(
+        input_path = file_utils.get_abs_path(
             __file__,
             '../../../test/providers/express_scripts/enrollmentrecords/resources/input/'
         )
-        matching_path = file_utils.get_rel_path(
+        matching_path = file_utils.get_abs_path(
             __file__,
             '../../../test/providers/express_scripts/enrollmentrecords/resources/matching/'
         )
-        new_phi_path = file_utils.get_rel_path(
+        new_phi_path = file_utils.get_abs_path(
             __file__,
             '../../../test/providers/express_scripts/enrollmentrecords/resources/new_phi/'
         )
-        ref_phi_path = file_utils.get_rel_path(
+        ref_phi_path = file_utils.get_abs_path(
             __file__,
             '../../../test/providers/express_scripts/enrollmentrecords/resources/ref_phi/'
         )
@@ -67,22 +61,16 @@ def run (spark, runner, date_input, test=False):
         local_phi_path = 'hdfs://' + LOCAL_REF_PHI
 
 
-    runner.run_spark_script(file_utils.get_rel_path(
-            __file__,
-            'load_enrollment_records.sql'
-        ), [
-            ['input_path', input_path]
+    runner.run_spark_script('load_enrollment_records.sql', [
+        ['input_path', input_path]
     ])
 
     payload_loader.load(runner, new_phi_path, ['hvJoinKey', 'patientId'])
 
     runner.run_spark_query('ALTER TABLE matching_payload RENAME TO new_phi')
 
-    runner.run_spark_script(file_utils.get_rel_path(
-            __file__,
-            'load_matching_payload.sql'
-        ), [
-            ['matching_path', matching_path] 
+    runner.run_spark_script('load_matching_payload.sql', [
+        ['matching_path', matching_path] 
     ])
 
     if test:
@@ -92,17 +80,12 @@ def run (spark, runner, date_input, test=False):
         subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '-f', local_phi_path])
         subprocess.check_call(['hadoop', 'fs', '-mkdir', local_phi_path])
 
-    runner.run_spark_script(file_utils.get_rel_path(
-            __file__,
-            'load_and_combine_phi.sql'
-        ), [
-            ['local_phi_path', local_phi_path],
-            ['s3_phi_path', ref_phi_path]
+    runner.run_spark_script('load_and_combine_phi.sql', [
+        ['local_phi_path', local_phi_path],
+        ['s3_phi_path', ref_phi_path]
     ])
 
-    runner.run_spark_script(file_utils.get_rel_path(
-        __file__, 'normalize.sql'
-    ), [
+    runner.run_spark_script('normalize.sql', [
         ['filename', setid],
         ['today', TODAY],
         ['feedname', '16'],
