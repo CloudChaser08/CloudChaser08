@@ -23,18 +23,18 @@ def run(spark, runner, date_input, test=False):
 
     if test:
         if date_input <= '2017-04-01':
-            input_path = file_utils.get_rel_path(
+            input_path = file_utils.get_abs_path(
                 script_path, '../../test/providers/caris/resources/input-legacy/'
             ) + '/'
-            addon_path = file_utils.get_rel_path(
+            addon_path = file_utils.get_abs_path(
                 script_path, '../../test/providers/caris/resources/addon/'
             ) + '/'
         else:
-            input_path = file_utils.get_rel_path(
+            input_path = file_utils.get_abs_path(
                 script_path, '../../test/providers/caris/resources/input/'
             ) + '/'
 
-        matching_path = file_utils.get_rel_path(
+        matching_path = file_utils.get_abs_path(
             script_path, '../../test/providers/caris/resources/matching/'
         ) + '/'
 
