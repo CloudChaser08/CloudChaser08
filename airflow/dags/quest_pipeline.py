@@ -174,7 +174,7 @@ def generate_transaction_file_validation_dag(
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-                's3_bucket'               : 'healthveritydev' if airflow_env == 'test' else 'healthverity',
+                's3_bucket'               : 'healthverity',
                 'file_description'        : 'Quest ' + task_id + ' file'
             }
         ),
@@ -212,7 +212,7 @@ def generate_fetch_dag(
                     file_name_template
                 ),
                 's3_prefix'              : s3_path_template,
-                's3_bucket'              : 'healthveritydev' if airflow_env == 'test' else 'healthverity'
+                's3_bucket'              : 'salusv' if airflow_env == 'test' else 'healthverity'
             }
         ),
         task_id='fetch_' + task_id + '_file',
