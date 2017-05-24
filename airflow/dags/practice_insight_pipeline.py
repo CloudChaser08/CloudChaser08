@@ -281,19 +281,19 @@ clean_up_workspace = PythonOperator(
 )
 
 
-# queue_up_for_matching = SubDagOperator(
-#     subdag=queue_up_for_matching.queue_up_for_matching(
-#         DAG_NAME,
-#         'queue_up_for_matching',
-#         default_args['start_date'],
-#         mdag.schedule_interval,
-#         {
-#             'source_files_func': get_deid_file_urls
-#         }
-#     ),
-#     task_id='queue_up_for_matching',
-#     dag=mdag
-# )
+queue_up_for_matching = SubDagOperator(
+    subdag=queue_up_for_matching.queue_up_for_matching(
+        DAG_NAME,
+        'queue_up_for_matching',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'source_files_func': get_deid_file_urls
+        }
+    ),
+    task_id='queue_up_for_matching',
+    dag=mdag
+)
 
 #
 # Post-Matching
@@ -347,13 +347,9 @@ for step in split_transactional_steps:
 clean_up_workspace.set_upstream(split_transactional_steps)
 
 # matching
-# queue_up_for_matching.set_upstream(validate_deid)
+queue_up_for_matching.set_upstream(validate_deid)
 
 # post-matching
-# detect_move_normalize_dag.set_upstream(
-#     [queue_up_for_matching] + split_transactional_steps
-# )
-
 detect_move_normalize_dag.set_upstream(
-    split_transactional_steps
+    [queue_up_for_matching, split_transactional_steps]
 )
