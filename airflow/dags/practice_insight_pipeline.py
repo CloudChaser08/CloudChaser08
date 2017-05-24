@@ -59,9 +59,11 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 2 * *" if Variable.get(
-        "AIRFLOW_ENV", default_var=''
-    ).find('prod') != -1 else None,
+    schedule_interval=(
+        "0 12 2 * *"
+        if airflow_env in ['prod', 'test']
+        else None
+    ),
     default_args=default_args
 )
 
@@ -320,6 +322,14 @@ if airflow_env != 'test':
     )
 
 
+def norm_args(ds, k):
+    base = ['--date', insert_current_date('{}-{}-01', k)]
+    if airflow_env == 'test':
+        base += ['--airflow_test']
+
+    return base
+
+
 #
 # Post-Matching
 #
@@ -343,9 +353,7 @@ def generate_detect_move_normalize_dag():
                 'vendor_uuid': 'b29eb316-a398-4fdc-b8da-2cff26f86bad',
                 'pyspark_normalization_script_name':
                 '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
-                'pyspark_normalization_args_func': lambda ds, k: [
-                    '--date', insert_current_date('{}-{}-01', k)
-                ],
+                'pyspark_normalization_args_func': norm_args,
                 'pyspark': True,
                 'emr_node_type': 'm4.2xlarge'
             }
@@ -361,9 +369,10 @@ detect_move_normalize_dag = generate_detect_move_normalize_dag()
 if airflow_env != 'test':
     fetch_transactional.set_upstream(validate_transactional)
     queue_up_for_matching.set_upstream(validate_deid)
-    detect_move_normalize_dag.set_upstream(
-        [queue_up_for_matching, split_transactional_steps]
-    )
+
+    post_norm_steps = split_transactional_steps
+    post_norm_steps.append(queue_up_for_matching)
+    detect_move_normalize_dag.set_upstream(post_norm_steps)
 else:
     detect_move_normalize_dag.set_upstream(
         split_transactional_steps
@@ -375,10 +384,4 @@ split_transaction_into_parts.set_upstream(gunzip_transactional)
 
 split_transaction_into_parts.set_downstream(split_transactional_steps)
 
-# cleanup
 clean_up_workspace.set_upstream(split_transactional_steps)
-
-# post-matching
-post_norm_steps = split_transactional_steps
-post_norm_steps.append(queue_up_for_matching)
-detect_move_normalize_dag.set_upstream(post_norm_steps)

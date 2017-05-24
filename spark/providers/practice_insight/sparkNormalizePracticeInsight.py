@@ -13,13 +13,14 @@ import spark.helpers.explode as explode
 import spark.providers.practice_insight.udf as pi_udf
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
+AIRFLOW_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/'
 
 input_path, min_date, max_date, matching_path, setid = \
     None, None, None, None, None
 
 
 def run_part(
-        spark, runner, part, date_input, shuffle_partitions, test=False
+        spark, runner, part, date_input, shuffle_partitions, test=False, airflow_test=False
 ):
     """
     Normalize one of 4 parts of practice insight
@@ -59,6 +60,21 @@ def run_part(
             )
             max_date = '2016-12-31'
             setid = 'TEST'
+
+        elif airflow_test:
+            input_path = AIRFLOW_TEST_DIR + 'out/{}/{}/'.format(
+                str(date_obj.year),
+                str(date_obj.month).zfill(2)
+            )
+
+            max_date = date_obj.strftime('%Y-%m-') \
+                       + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
+            matching_path = AIRFLOW_TEST_DIR + 'payload/{}/{}/'.format(
+                str(date_obj.year),
+                str(date_obj.month).zfill(2)
+            )
+            setid = 'HV.data.837.' + str(date_obj.year) + '.' \
+                    + date_obj.strftime('%b').lower() + '.csv.gz'
 
         else:
             input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.format(
@@ -202,12 +218,16 @@ def main(args):
 
     for part in ['1', '2', '3', '4']:
         run_part(
-            spark, runner, part, args.date, args.shuffle_partitions
+            spark, runner, part, args.date, args.shuffle_partitions, airflow_test=args.airflow_test
         )
 
     spark.stop()
 
-    output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
+    if args.airflow_test:
+        output_path = AIRFLOW_TEST_DIR + 'spark-output/'
+    else:
+        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
+
     normalized_records_unloader.distcp(output_path)
 
 
@@ -215,5 +235,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--shuffle_partitions', type=str, default="1200")
+    parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
