@@ -163,7 +163,7 @@ fetch_transactional = SubDagOperator(
                 )(ds, k)
             ),
             's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket': 'healthveritydev' if airflow_env == 'test' else 'healthverity',
+            's3_bucket': 'salusv' if airflow_env == 'test' else 'healthverity',
         }
     ),
     task_id='fetch_transaction_file',
