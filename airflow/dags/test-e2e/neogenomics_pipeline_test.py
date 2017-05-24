@@ -33,13 +33,13 @@ def test_run():
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', NEOGENOMICS_TEST_DIR + '/out/2017/04/13/'
+        'aws', 's3', 'ls', NEOGENOMICS_TEST_DIR + '/out/2017/04/20/'
     ])) > 0
 
 
 def test_matching_payload_moved():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', NEOGENOMICS_TEST_DIR + '/payload/2017/04/13/'
+        'aws', 's3', 'ls', NEOGENOMICS_TEST_DIR + '/payload/2017/04/20/'
     ])) > 0
 
 

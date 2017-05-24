@@ -98,9 +98,9 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/warehouse/parquet/labtests/2017-05-03/'
-    else:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
+    else:
+        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
     normalized_records_unloader.distcp(output_path)
 
