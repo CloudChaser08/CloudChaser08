@@ -130,6 +130,9 @@ def normalize(cluster_name, script_name, args):
     ])
     _wait_for_steps(cluster_id)
 
+def export(cluster_name, script_name, args):
+    normalize(cluster_name, script_name, args)
+
 
 def delete_emr_cluster(cluster_name):
     cluster_id = _get_emr_cluster_id(cluster_name)
