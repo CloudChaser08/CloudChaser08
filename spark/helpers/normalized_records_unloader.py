@@ -3,7 +3,7 @@ import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 
 
-def mk_move_file(file_date, test=False):
+def mk_move_file(prefix, test=False):
     if test:
         mv_cmd = ['mv']
     else:
@@ -12,7 +12,7 @@ def mk_move_file(file_date, test=False):
     def move_file(part_file):
         if part_file.find("part-") > -1:
             old_pf = part_file.split(' ')[-1].strip()
-            new_pf = '/'.join(old_pf.split('/')[:-1] + [file_date + '_' + old_pf.split('/')[-1]])
+            new_pf = '/'.join(old_pf.split('/')[:-1] + [prefix + '_' + old_pf.split('/')[-1]])
             subprocess.check_call(mv_cmd + [old_pf, new_pf])
 
     return move_file
