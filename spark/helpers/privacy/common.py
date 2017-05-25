@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, udf
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
 column_transformer = {
@@ -8,7 +8,7 @@ column_transformer = {
     },
     'patient_year_of_birth': {
         'func': post_norm_cleanup.cap_year_of_birth,
-        'args': ['age', 'date_service', 'patient_year_of_birth']
+        'args': ['patient_age', 'date_service', 'patient_year_of_birth']
     },
     'diagnosis_code': {
         'func': post_norm_cleanup.clean_up_diagnosis_code,
@@ -28,13 +28,13 @@ column_transformer = {
 def _transform(column_name):
     if column_name in column_transformer:
         conf = column_transformer[column_name]
-        conf.func(*map(col, conf.args))
+        return udf(conf['func'])(*map(col, conf['args']))
     else:
-        col(column_name)
+        return col(column_name)
 
 
 def filter(df, additional_transforms={}):
     global column_transformer
     column_transformer.update(additional_transforms)
 
-    df.select(*map(_transform, df.columns))
+    return df.select(*map(_transform, df.columns))

@@ -9,11 +9,11 @@ SELECT
     {feedname},                               -- data_feed
     {vendor},                                 -- data_vendor
     NULL,                                     -- source_version
-    mp.patient_gender,                        -- patient_gender
-    mp.patient_age,                           -- patient_age
-    mp.patient_year_of_birth,                 -- patient_year_of_birth
+    mp.gender,                                -- patient_gender
+    mp.age,                                   -- patient_age
+    mp.yearOfBirth,                           -- patient_year_of_birth
     mp.threeDigitZip,                         -- patient_zip3
-    UPPER(mp.patient_state),                  -- patient_state
+    UPPER(mp.state),                          -- patient_state
     extract_date(
         t.datefilled, '%m/%d/%Y', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                    -- date_service
@@ -24,11 +24,17 @@ SELECT
     extract_date(
         t.claimtransactiondate, '%Y/%m/%d', CAST('1999-01-01' AS DATE), CAST({max_date} AS DATE)
         ),                                    -- date_authorized
-    t.fillertransactiontime,                  -- time_authorized
+    CAST(CONCAT(
+            extract_date(
+                t.claimtransactiondate, '%Y/%m/%d', CAST('1999-01-01' AS DATE), CAST({max_date} AS DATE)
+                ), ' ', trim(t.fillertransactiontime))
+        AS TIMESTAMP),                        -- time_authorized
     NULL,                                     -- transaction_code_std
-    CASE t.rebillindicator
-    WHEN 'O' OR 'N' THEN 'Original'
-    WHEN 'R' OR 'Y' THEN 'Rebilled'
+    CASE
+    WHEN t.rebillindicator = 'O' OR t.rebillindicator = 'N'
+    THEN 'Original'
+    WHEN t.rebillindicator = 'R' OR t.rebillindicator = 'Y'
+    THEN 'Rebilled'
     END,                                      -- transaction_code_vendor
     TRIM(t.camstatuscode),                    -- response_code_std
     NULL,                                     -- response_code_vendor
@@ -55,8 +61,8 @@ SELECT
     t.dayssupply,                             -- days_supply
     t.customernpinumber,                      -- pharmacy_npi
     t.pharmacistnpi,                          -- prov_dispensing_npi
-    t.payerid                                 -- payer_id
-    t.payeridqualifier                        -- payer_id_qual
+    t.payerid,                                -- payer_id
+    t.payeridqualifier,                       -- payer_id_qual
     t.payername,                              -- payer_name
     NULL,                                     -- payer_parent_name
     t.payerorgname,                           -- payer_org_name
@@ -134,13 +140,14 @@ SELECT
     t.otherpayerdate,                         -- other_payer_date
     t.otherpayercoveragecode,                 -- other_payer_coverage_code
     CASE
-    WHEN t.rejectcode1 IS NOT NULL
-    OR t.rejectcode2 IS NOT NULL
-    OR t.rejectcode3 IS NOT NULL
-    OR t.rejectcode4 IS NOT NULL
-    OR t.rejectcode5 IS NOT NULL
+    WHEN COALESCE(t.rejectcode1, '') != ''
+    OR COALESCE(t.rejectcode2, '') != ''
+    OR COALESCE(t.rejectcode3, '') != ''
+    OR COALESCE(t.rejectcode4, '') != ''
+    OR COALESCE(t.rejectcode5, '') != ''
     OR t.camstatuscode = 'R'
     THEN 'Claim Rejected'
     END                                       -- logical_delete_reason
 FROM transactions t
-LEFT JOIN matching_payload mp ON t.prescriptionkey = mp.claimid
+    LEFT JOIN matching_payload mp ON t.prescriptionkey = mp.claimid
+;

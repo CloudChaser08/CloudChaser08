@@ -11,7 +11,7 @@ class Runner:
     def __init__(self, sqlContext):
         self.sqlContext = sqlContext
 
-    def run_spark_script(self, script, variables=[]):
+    def run_spark_script(self, script, variables=[], source_file_path=None):
         """
         Execute a spark sql script
         """
@@ -19,7 +19,8 @@ class Runner:
         # Implicitly get relative path to script
         script = file_utils.get_abs_path(
             # the file path to the calling module's file
-            inspect.getmodule(inspect.stack()[1][0]).__file__,
+            source_file_path if source_file_path
+            else inspect.getmodule(inspect.stack()[1][0]).__file__,
             script
         )
 

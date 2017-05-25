@@ -111,13 +111,14 @@ CREATE EXTERNAL TABLE transactions (
         CustomerZipCode                        string,
         ProviderDispensingNPI                  string,
         ProvDispensingQual                     string,
-        PrimaryCareProviderID                  string,
+        PrimaryCareProviderID2_ignore          string,
         PrimaryCareProviderIDQualifier         string,
         OtherPayerCoverageType                 string,
         OtherPayerCoverageID                   string,
         OtherPayerCoverageIDQualifier          string,
         OtherPayerDate                         string,
-        OtherPayerCoverageCode                 string
+        OtherPayerCoverageCode                 string,
+        HvJoinKey                              string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (
@@ -125,4 +126,4 @@ CREATE EXTERNAL TABLE transactions (
         )
     STORED AS TEXTFILE
     LOCATION {input_path}
-;
+    ;

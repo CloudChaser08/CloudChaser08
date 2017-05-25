@@ -1,15 +1,14 @@
 #! /usr/bin/python
 import argparse
 import time
-import logging
-from datetime import timedelta, datetime
-from pyspark.sql.functions import monotonically_increasing_id
+from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.udf
+import spark.helpers.postprocessor as postprocessor
+import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-05-24/'
@@ -24,19 +23,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/mckesson/pharmacyclaims/resources/input/'
+            script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/input/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/mckesson/pharmacyclaims/matching/'
+            script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/matching/'
         ) + '/'
 
     min_date = '1900-01-01'
     max_date = date_input
 
-    # create helper tables
-    runner.run_spark_script('create_helper_tables.sql')
-
-    runner.run_spark_script('../../common/pharmacyclaims_common_model.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims_common_model.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
         ['properties', '', False]
     ])
@@ -56,7 +52,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['max_date', max_date]
     ])
 
-    
+    pharm_priv.filter(
+        postprocessor.nullify(runner.sqlContext.sql('select * from pharmacyclaims_common_model'))
+    ).createTempView('pharmacyclaims_common_model')
 
     if not test:
         normalized_records_unloader.partition_and_rename(
@@ -67,7 +65,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("McKessonRx")
+    spark, sqlContext = init("McKessonRx", True)
 
     # initialize runner
     runner = Runner(sqlContext)
