@@ -1,4 +1,3 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
@@ -6,6 +5,7 @@ from dateutil import relativedelta
 from subprocess import check_call
 
 # hv-specific modules
+import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
 import subdags.decrypt_files as decrypt_files
@@ -16,7 +16,7 @@ import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching,
-          detect_move_normalize, s3_utils]:
+          detect_move_normalize, s3_utils, HVDAG]:
     reload(m)
 
 # Applies to all files
@@ -44,7 +44,7 @@ default_args = {
     'retry_delay': timedelta(minutes=2)
 }
 
-mdag = DAG(
+mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
     schedule_interval="0 12 2 * *" if Variable.get(
         "AIRFLOW_ENV", default_var=''

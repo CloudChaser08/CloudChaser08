@@ -1,13 +1,13 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator
 from subprocess import check_call
 
+import common.HVDAG as HVDAG
 import util.s3_utils as s3_utils
 import util.decompression as decompression
 
-reload(s3_utils)
-reload(decompression)
+for m in [s3_util, decompression, HVDAG]:
+    reload(m)
 
 DECRYPTOR_JAR='HVDecryptor.jar'
 DECRYPTION_KEY='hv_record_private.base64.reformat'
@@ -63,7 +63,7 @@ def decrypt_files(parent_dag_name, child_dag_name, start_date, schedule_interval
         'retries': 0
     }
 
-    dag = DAG(
+    dag = HVDAG.HVDAG(
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,

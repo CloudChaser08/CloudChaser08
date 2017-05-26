@@ -1,4 +1,3 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
 from datetime import timedelta
@@ -8,11 +7,12 @@ import os
 import time
 import json
 
+import common.HVDAG as HVDAG
 import util.s3_utils as s3_utils
 import util.emr_utils as emr_utils
 import util.redshift_utils as redshift_utils
 
-for m in [s3_utils, emr_utils, redshift_utils]:
+for m in [s3_utils, emr_utils, redshift_utils, HVDAG]:
     reload(m)
 
 S3_PREFIX='matching/prod/payload/'
@@ -127,7 +127,7 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         'retries': 0
     }
 
-    dag = DAG(
+    dag = HVDAG.HVDAG(
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,

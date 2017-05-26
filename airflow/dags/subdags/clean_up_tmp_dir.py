@@ -1,7 +1,11 @@
-from airflow import DAG
 from airflow.operators import BashOperator
 from datetime import datetime, timedelta
 import logging
+
+import common.HVDAG as HVDAG
+
+for m in [HVDAG]:
+    reload(m)
 
 def clean_up_tmp_dir(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
@@ -10,7 +14,7 @@ def clean_up_tmp_dir(parent_dag_name, child_dag_name, start_date, schedule_inter
         'retries': 0
     }
 
-    dag = DAG(
+    dag = HVDAG.HVDAG(
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,

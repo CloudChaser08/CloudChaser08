@@ -1,4 +1,3 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import BashOperator, \
     BranchPythonOperator, SlackAPIOperator
@@ -6,10 +5,10 @@ import re
 
 import util.s3_utils as s3_utils
 import config as config
+import common.HVDAG as HVDAG
 
-reload(s3_utils)
-reload(config)
-
+for m in [s3_util, config, HVDAG]:
+    reload(m)
 
 def do_is_valid_new_file(ds, **kwargs):
     # We expect the files that were made available on HealthVerity's S3
@@ -47,7 +46,7 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         'retries': 0
     }
 
-    dag = DAG(
+    dag = HVDAG.HVDAG(
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,

@@ -1,4 +1,3 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import BashOperator, PythonOperator, BranchPythonOperator, SlackAPIOperator, DummyOperator
 from datetime import datetime, timedelta
@@ -8,6 +7,11 @@ import logging
 import os
 import pysftp
 import re
+
+import common.HVDAG as HVDAG
+
+for m in [HVDAG]:
+    reload(m)
 
 SLACK_CHANNEL='#airflow_alerts'
 
@@ -61,7 +65,7 @@ def emdeon_validate_fetch_file(parent_dag_name, child_dag_name, start_date, sche
         'retries': 0
     }
 
-    dag = DAG(
+    dag = HVDAG.HVDAG(
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,

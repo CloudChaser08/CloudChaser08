@@ -1,9 +1,12 @@
 import os
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator
 from subprocess import check_call
 
+import common.HVDAG as HVDAG
+
+for m in [HVDAG]:
+    reload(m)
 
 def do_queue_up_for_matching(ds, passthrough_only=None, **kwargs):
     source_files = kwargs['source_files_func'](ds, kwargs)
@@ -36,7 +39,7 @@ def queue_up_for_matching(
         'retries': 0
     }
 
-    dag = DAG(
+    dag = HVDAG.HVDAG(
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,

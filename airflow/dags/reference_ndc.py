@@ -1,5 +1,5 @@
 #ye The DAG object; we'll need this to instantiate a DAG
-from airflow import DAG
+import common.HVDAG as HVDAG
 
 # Operators; we need this to operate!
 from airflow.operators.bash_operator import BashOperator
@@ -15,12 +15,13 @@ from json import loads
 import struct
 from datetime import timedelta, datetime
 
-if sys.modules.get('util.hv_datadog'):
-    del sys.modules['util.hv_datadog']
-from util.hv_datadog import hv_datadog, start_dag_op, end_dag_op
+import util.hv_datadog
+import util.hive
 
-if sys.modules.get('util.hive'):
-    del sys.modules['util.hive']
+for m in [util.hv_datadog, util.hive, HVDAG]:
+    reload(m)
+
+from util.hv_datadog import hv_datadog, start_dag_op, end_dag_op
 from util.hive import hive_execute
 
 SRC_PATH='http://www.accessdata.fda.gov/cder/'
@@ -53,7 +54,7 @@ default_args = {
     'on_failure_callback': dd.dd_eventer
 }
 
-dag = DAG(
+dag = HVDAG.HVDAG(
     'reference_ndc',
     default_args=default_args,
     start_date=datetime(2017, 2, 6),
