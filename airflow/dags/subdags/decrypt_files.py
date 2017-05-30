@@ -6,7 +6,7 @@ import common.HVDAG as HVDAG
 import util.s3_utils as s3_utils
 import util.decompression as decompression
 
-for m in [s3_util, decompression, HVDAG]:
+for m in [s3_utils, decompression, HVDAG]:
     reload(m)
 
 DECRYPTOR_JAR='HVDecryptor.jar'

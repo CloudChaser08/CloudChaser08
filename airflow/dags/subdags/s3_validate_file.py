@@ -7,7 +7,7 @@ import util.s3_utils as s3_utils
 import config as config
 import common.HVDAG as HVDAG
 
-for m in [s3_util, config, HVDAG]:
+for m in [s3_utils, config, HVDAG]:
     reload(m)
 
 def do_is_valid_new_file(ds, **kwargs):
