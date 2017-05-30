@@ -8,7 +8,7 @@ import os
 import time
 import json
 
-from common.HVDAG import HVDAG
+import common.HVDAG as HVDAG
 
 for m in [HVDAG]:
     reload(m)
