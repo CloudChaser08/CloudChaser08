@@ -1,5 +1,5 @@
 #ye The DAG object; we'll need this to instantiate a DAG
-from airflow import DAG
+import common.HVDAG as HVDAG
 
 # Operators; we need this to operate!
 from airflow.operators.bash_operator import BashOperator
@@ -14,8 +14,11 @@ from json import loads
 import struct
 from datetime import timedelta, datetime
 
-if sys.modules.get('util.hv_datadog'):
-    del sys.modules['util.hv_datadog']
+import util.hv_datadog
+
+for m in [util.hv_datadog, HVDAG]:
+    reload(m)
+
 from util.hv_datadog import hv_datadog, start_dag_op, end_dag_op
 
 TMP_PATH='/tmp/dd_test_'
@@ -41,7 +44,7 @@ default_args = {
     'on_failure_callback': dd.dd_eventer
 }
 
-dag = DAG(
+dag = HVDAG.HVDAG(
     'hourly_dd_event',
     default_args=default_args,
     start_date=datetime(2017, 4, 3),

@@ -1,4 +1,3 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
@@ -10,6 +9,7 @@ import pysftp
 import re
 import sys
 
+import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
 import subdags.decrypt_files as decrypt_files
@@ -19,7 +19,7 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
-        queue_up_for_matching, detect_move_normalize, clean_up_tmp_dir]:
+        queue_up_for_matching, detect_move_normalize, clean_up_tmp_dir, HVDAG]:
     reload(m)
 
 # Applies to all files
@@ -111,7 +111,7 @@ default_args = {
     'priority_weight': 5
 }
 
-mdag = DAG(
+mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
     schedule_interval='0 0 * * 0' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
     default_args=default_args

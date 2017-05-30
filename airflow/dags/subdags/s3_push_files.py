@@ -1,10 +1,14 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import BashOperator, PythonOperator
 from datetime import datetime, timedelta
 import boto3
 import logging
 import os
+
+import common.HVDAG as HVDAG
+
+for m in [HVDAG]:
+    reload(m)
 
 def do_push_files(ds, **kwargs):
     file_paths     = kwargs['file_paths_func'](ds, kwargs)
@@ -27,7 +31,7 @@ def s3_push_files(parent_dag_name, child_dag_name, start_date, schedule_interval
         'retries': 0
     }
 
-    dag = DAG(
+    dag = HVDAG.HVDAG(
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,

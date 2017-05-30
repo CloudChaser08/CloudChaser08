@@ -1,4 +1,3 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
@@ -8,6 +7,11 @@ import logging
 import os
 import time
 import json
+
+import common.HVDAG as HVDAG
+
+for m in [HVDAG]:
+    reload(m)
 
 S3_PATH_PREFIX='s3://salusv/matching/prod/payload/86396771-0345-4d67-83b3-7e22fded9e1d/'
 S3_PREFIX='matching/prod/payload/86396771-0345-4d67-83b3-7e22fded9e1d/'
@@ -145,7 +149,7 @@ default_args = {
     'retry_delay': timedelta(hours=1)
 }
 
-mdag = DAG(
+mdag = HVDAG.HVDAG(
     dag_id='emdeon_rx_post_matching_pipeline',
     schedule_interval=None,
     default_args=default_args

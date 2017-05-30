@@ -1,4 +1,3 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
@@ -10,8 +9,12 @@ import pysftp
 import re
 import sys
 
-if sys.modules.get('subdags.emdeon_validate_fetch_file'):
-    del sys.modules['subdags.emdeon_validate_fetch_file']
+import common.HVDAG as HVDAG
+import subdags.emdeon_validate_fetch_file
+
+for m in [subdags.emdeon_validate_fetch_file, HVDAG]:
+    reload(m)
+
 from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
 
 # Applies to all files
@@ -92,7 +95,7 @@ default_args = {
     'retry_delay': timedelta(minutes=2)
 }
 
-mdag = DAG(
+mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
     schedule_interval="0 12 * * *",
     default_args=default_args

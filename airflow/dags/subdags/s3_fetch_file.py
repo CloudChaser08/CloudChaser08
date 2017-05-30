@@ -1,9 +1,10 @@
-from airflow import DAG
 from airflow.operators import BashOperator, PythonOperator
 
+import common.HVDAG as HVDAG
 import util.s3_utils as s3_utils
-reload(s3_utils)
 
+for m in [s3_utils, HVDAG]:
+    reload(m)
 
 def do_fetch_file(ds, **kwargs):
     # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
@@ -27,7 +28,7 @@ def s3_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval
         'retries': 0
     }
 
-    dag = DAG(
+    dag = HVDAG.HVDAG(
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,

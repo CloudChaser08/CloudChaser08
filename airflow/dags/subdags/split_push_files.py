@@ -1,11 +1,13 @@
-from airflow import DAG
 from airflow.operators import BashOperator, PythonOperator
 from subprocess import check_call
 import util.s3_utils as s3_utils
 import os
 import logging
 
-reload(s3_utils)
+import common.HVDAG as HVDAG
+
+for m in [s3_utils, HVDAG]:
+    reload(m)
 
 def do_create_parts_dir(ds, **kwargs):
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs) + 'parts/'
@@ -55,7 +57,7 @@ def split_push_files(parent_dag_name, child_dag_name, start_date, schedule_inter
         'retries': 0
     }
 
-    dag = DAG(
+    dag = HVDAG.HVDAG(
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,
