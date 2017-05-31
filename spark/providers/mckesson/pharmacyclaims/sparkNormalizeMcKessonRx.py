@@ -45,6 +45,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['input_path', input_path]
     ], source_file_path=script_path)
 
+    postprocessor.trimmify(runner.sqlContext.sql('select * from transactions')).createTempView('transactions')
+
     runner.run_spark_script('normalize.sql', [
         ['filename', setid],
         ['today', TODAY],
@@ -67,7 +69,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("McKessonRx")
+    spark, sqlContext = init("McKessonRx", True)
 
     # initialize runner
     runner = Runner(sqlContext)

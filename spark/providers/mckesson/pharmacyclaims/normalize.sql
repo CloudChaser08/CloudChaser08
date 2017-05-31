@@ -24,11 +24,7 @@ SELECT
     extract_date(
         t.claimtransactiondate, '%Y/%m/%d', CAST('1999-01-01' AS DATE), CAST({max_date} AS DATE)
         ),                                    -- date_authorized
-    CAST(CONCAT(
-            extract_date(
-                t.claimtransactiondate, '%Y/%m/%d', CAST('1999-01-01' AS DATE), CAST({max_date} AS DATE)
-                ), ' ', trim(t.fillertransactiontime))
-        AS TIMESTAMP),                        -- time_authorized
+    t.fillertransactiontime,                  -- time_authorized
     NULL,                                     -- transaction_code_std
     CASE
     WHEN t.rebillindicator = 'O' OR t.rebillindicator = 'N'
@@ -36,7 +32,7 @@ SELECT
     WHEN t.rebillindicator = 'R' OR t.rebillindicator = 'Y'
     THEN 'Rebilled'
     END,                                      -- transaction_code_vendor
-    TRIM(t.camstatuscode),                    -- response_code_std
+    t.camstatuscode,                          -- response_code_std
     NULL,                                     -- response_code_vendor
     t.rejectcode1,                            -- reject_reason_code_1
     t.rejectcode2,                            -- reject_reason_code_2
@@ -145,7 +141,7 @@ SELECT
     OR COALESCE(t.rejectcode3, '') != ''
     OR COALESCE(t.rejectcode4, '') != ''
     OR COALESCE(t.rejectcode5, '') != ''
-    OR t.camstatuscode = 'R'
+    OR COALESCE(t.camstatuscode, 'X') = 'R'
     THEN 'Claim Rejected'
     END                                       -- logical_delete_reason
 FROM transactions t
