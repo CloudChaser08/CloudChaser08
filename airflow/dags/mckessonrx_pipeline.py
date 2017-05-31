@@ -54,7 +54,7 @@ mdag = HVDAG.HVDAG(
 
 
 def get_formatted_date(ds, kwargs):
-    return kwargs['yesterday_ds_nodash']
+    return kwargs['ds_nodash']
 
 
 def insert_formatted_date_function(template):
