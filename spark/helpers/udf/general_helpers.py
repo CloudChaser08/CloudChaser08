@@ -1,7 +1,7 @@
 #! /usr/bin/python
 from datetime import datetime
 import re
-import md5
+import hashlib
 
 
 def extract_number(text):
@@ -74,3 +74,9 @@ def uniquify(with_dupes):
     if with_dupes is None:
         return None;
     return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
+
+def obfuscate_hvid(hvid, salt):
+    if salt is None or len(salt) == 0:
+        raise ValueError("A project-specific salt must be provided to properly obfuscate the HVID")
+    hvid = "" if hvid is None else hvid
+    return hashlib.md5(hvid + salt).hexdigest().upper()
