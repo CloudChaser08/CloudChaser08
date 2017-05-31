@@ -258,7 +258,7 @@ detect_move_normalize_dag = SubDagOperator(
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'f6b4eefd-988a-4ca3-9efd-0140607c8985',
-            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/mckesson/pharmacyclaims/sparkNormalizeMcKessonRX.py',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/mckesson/pharmacyclaims/sparkNormalizeMcKessonRx.py',
             'pyspark_normalization_args_func'   : lambda ds, k: [
                 '--date', insert_current_date('{}-{}-{}', k)
             ],
