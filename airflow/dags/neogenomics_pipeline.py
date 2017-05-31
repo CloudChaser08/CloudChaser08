@@ -2,7 +2,6 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
-from dateutil import relativedelta
 from subprocess import check_call
 
 # hv-specific modules
@@ -66,8 +65,7 @@ def insert_formatted_regex_function(template):
 
 def insert_current_date_function(template):
     def out(ds, kwargs):
-        adjusted_date = kwargs['execution_date'] \
-                        + relativedelta.relativedelta(weeks=1)
+        adjusted_date = kwargs['execution_date'] + timedelta(days=7)
         return template.format(
             str(adjusted_date.year),
             str(adjusted_date.month).zfill(2),
@@ -97,7 +95,7 @@ def get_unzipped_file_paths(ds, kwargs):
     ]
 
 
-def generate_transaction_file_validation_dag(
+def generate_transaction_file_validation_task(
         task_id, path_template, minimum_file_size
 ):
     return SubDagOperator(
@@ -128,11 +126,11 @@ def generate_transaction_file_validation_dag(
     )
 
 
-validate_transactional = generate_transaction_file_validation_dag(
+validate_transactional = generate_transaction_file_validation_task(
     'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
     1000000
 )
-validate_deid = generate_transaction_file_validation_dag(
+validate_deid = generate_transaction_file_validation_task(
     'deid', DEID_FILE_NAME_TEMPLATE,
     1000000
 )
@@ -177,31 +175,26 @@ gunzip_trunk = gunzip_step(
     TMP_PATH_TEMPLATE, TRANSACTION_FILE_NAME_TEMPLATE
 )
 
-
-def split_step():
-    return SubDagOperator(
-        subdag=split_push_files.split_push_files(
-            DAG_NAME,
-            'split_transaction_file',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'tmp_dir_func': insert_execution_date_function(
-                    TMP_PATH_TEMPLATE
-                ),
-                'file_paths_to_split_func': get_unzipped_file_paths,
-                's3_prefix_func': insert_current_date_function(
-                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE
-                ),
-                'num_splits': 20
-            }
-        ),
-        task_id='split_transaction_file',
-        dag=mdag
-    )
-
-
-split_transactional = split_step()
+split_transactional = SubDagOperator(
+    subdag=split_push_files.split_push_files(
+        DAG_NAME,
+        'split_transaction_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_dir_func': insert_execution_date_function(
+                TMP_PATH_TEMPLATE
+            ),
+            'file_paths_to_split_func': get_unzipped_file_paths,
+            's3_prefix_func': insert_current_date_function(
+                S3_TRANSACTION_PROCESSED_URL_TEMPLATE
+            ),
+            'num_splits': 20
+        }
+    ),
+    task_id='split_transaction_file',
+    dag=mdag
+)
 
 
 def clean_up_workspace_step(task_id, template):
@@ -238,8 +231,6 @@ queue_up_for_matching = SubDagOperator(
 # Post-Matching
 #
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/neogenomics/'
-TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/"
-PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/"
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
