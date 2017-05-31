@@ -20,7 +20,7 @@ NODE_TYPE='m4.2xlarge'
 EBS_VOLUME_SIZE='100'
 
 def do_create_cluster(ds, **kwargs):
-    create_emr_cluster(EMR_CLUSTER_NAME, NUM_NODES, NODE_TYPE, EBS_VOLUME_SIZE, connected_to_metastore)
+    emr_utils.create_emr_cluster(EMR_CLUSTER_NAME, NUM_NODES, NODE_TYPE, EBS_VOLUME_SIZE, True)
 
 def do_delete_cluster(ds, **kwargs):
     emr_utils.delete_emr_cluster(EMR_CLUSTER_NAME)
@@ -44,9 +44,8 @@ default_args = {
     'priority_weight': 5
 }
 
-mdag = HVDAG(
+mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval=None,
     schedule_interval='0 0 5 * *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
     default_args=default_args
 )
