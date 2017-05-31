@@ -11,7 +11,6 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
-output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-05-24/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -28,6 +27,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/matching/'
         ) + '/'
+    else:
+        input_path = 's3a://healthveritydev/musifer/norm/mckessonrx/transaction/'
+        matching_path = 's3a://healthveritydev/musifer/norm/mckessonrx/matching/'
 
     min_date = '1900-01-01'
     max_date = date_input
@@ -35,13 +37,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('../../../common/pharmacyclaims_common_model.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
         ['properties', '', False]
-    ])
+    ], source_file_path=script_path)
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path]
-    ])
+    ], source_file_path=script_path)
 
     runner.run_spark_script('normalize.sql', [
         ['filename', setid],
@@ -50,7 +52,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['vendor', '86'],
         ['min_date', min_date],
         ['max_date', max_date]
-    ])
+    ], source_file_path=script_path)
 
     pharm_priv.filter(
         postprocessor.nullify(runner.sqlContext.sql('select * from pharmacyclaims_common_model'))
@@ -58,14 +60,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'lab', 'pharmacyclaims_common_model.sql', 'mckesson',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model.sql', 'mckesson',
             'pharmacyclaims_common_model', 'date_service', date_input
         )
 
 
 def main(args):
     # init
-    spark, sqlContext = init("McKessonRx", True)
+    spark, sqlContext = init("McKessonRx")
 
     # initialize runner
     runner = Runner(sqlContext)
@@ -74,6 +76,7 @@ def main(args):
 
     spark.stop()
 
+    output_path = 's3a://salusv/testing/mckessonrx/sample-out/'
     normalized_records_unloader.distcp(output_path)
 
 
