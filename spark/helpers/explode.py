@@ -1,5 +1,16 @@
+from pyspark.sql.types import *
 from pyspark.sql.functions import explode, col, split, \
     monotonically_increasing_id
+
+
+def generate_exploder_table(spark, length, name='exploder'):
+    """
+    Generate a table with a single column (n) of incrementing integers
+    from 0 to length to be used in cross joins for explosion
+    """
+    spark.sparkContext.parallelize(map(lambda i: [i], range(0, length))).toDF(
+        StructType([StructField('n', LongType(), True)])
+    ).registerTempTable(name)
 
 
 def explode_medicalclaims_dates(runner):
@@ -34,7 +45,7 @@ def explode_dates(
             col(date_start_column) == col(date_start_column)
         )
 
-    # explode date start/end ranges that are less than 1 year apart
+    # explode date start/end ranges that are less than {max_days} days apart
     # register as a temporary table in order to use date_add SQL function
     runner.run_spark_query((
         "SELECT *, "

@@ -7,7 +7,7 @@ from pyspark.sql.functions import col
 
 import spark.helpers.explode as explode
 
-results = []
+date_explode_results = []
 
 
 @pytest.mark.usefixtures("spark")
@@ -44,36 +44,36 @@ def test_init(spark):
         'date_start', 'date_end', 'id', max_days, filter_condition
     )
 
-    global results
-    results = spark['sqlContext'] \
+    global date_explode_results
+    date_explode_results = spark['sqlContext'] \
         .sql('select * from explosion_test').collect()
 
 
 # explode dates tests
 def test_10row():
     "Test ID '10row' exploded into 10 rows"
-    results_10row = filter(lambda r: r.test_id == '10row', results)
+    date_explode_results_10row = filter(lambda r: r.test_id == '10row', date_explode_results)
 
-    assert len(results_10row) == 10
+    assert len(date_explode_results_10row) == 10
 
-    for r in results_10row:
+    for r in date_explode_results_10row:
         assert r.date_start == r.date_end
 
 
 def test_toobig():
     "Test ID 'toobig' did not explode"
-    results_toobig = filter(lambda r: r.test_id == 'toobig', results)
+    date_explode_results_toobig = filter(lambda r: r.test_id == 'toobig', date_explode_results)
 
-    assert len(results_toobig) == 1
+    assert len(date_explode_results_toobig) == 1
 
 
 def test_noexplode():
     "Test ID 'noexplode' did not explode"
-    results_noexplode = filter(
-        lambda r: r.test_id == 'noexplode', results
+    date_explode_results_noexplode = filter(
+        lambda r: r.test_id == 'noexplode', date_explode_results
     )
 
-    assert len(results_noexplode) == 1
+    assert len(date_explode_results_noexplode) == 1
 
 
 def test_exploded_table_drop(spark):
@@ -89,3 +89,17 @@ def test_exploded_table_drop(spark):
     spark['sqlContext'].sql('CREATE TABLE explosion_test (id int)')
     assert spark['sqlContext'].sql('select * from explosion_test') \
                               .collect() == []
+
+
+def test_generate_exploder_table(spark):
+    "Test that exploder table was properly generated"
+    length = 200
+
+    explode.generate_exploder_table(spark['spark'], length, 'test_exploder')
+
+    results = map(
+        lambda r: r.n,
+        spark['sqlContext'].sql('select * from test_exploder').collect()
+    )
+
+    assert sorted(results) == range(0, 200)

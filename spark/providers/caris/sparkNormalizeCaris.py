@@ -8,6 +8,7 @@ from pyspark.sql.functions import monotonically_increasing_id, lit, col
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.explode as explode
 from spark.spark_setup import init
 from spark.runner import Runner
 
@@ -57,7 +58,7 @@ def run(spark, runner, date_input, test=False):
     max_date = date_obj.strftime('%Y-%m-') \
         + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
 
-    runner.run_spark_script('create_helper_tables.sql')
+    explode.generate_exploder_table(spark, 200)
     runner.run_spark_script('../../common/zip3_to_state.sql')
 
     runner.run_spark_script('../../common/lab_common_model.sql', [
