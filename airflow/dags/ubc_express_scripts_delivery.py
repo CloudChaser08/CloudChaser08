@@ -14,8 +14,6 @@ for m in [emr_utils]:
 
 DAG_NAME='ubc_express_scripts_delivery'
 
-DELIVERY_DEST='s3://healthverity/pickup/ubc/'
-
 EMR_CLUSTER_NAME='delivery_cluster-ubc'
 NUM_NODES=5
 NODE_TYPE='m4.2xlarge'
