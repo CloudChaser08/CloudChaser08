@@ -1,4 +1,3 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
@@ -9,7 +8,8 @@ import re
 import sys
 
 import util.emr_utils as emr_utils
-for m in [emr_utils]:
+import common.HVDAG as HVDAG
+for m in [emr_utils, HVDAG]:
     reload(m)
 
 DAG_NAME='ubc_express_scripts_delivery'
@@ -44,7 +44,7 @@ default_args = {
     'priority_weight': 5
 }
 
-mdag = DAG(
+mdag = HVDAG(
     dag_id=DAG_NAME,
     schedule_interval=None,
     schedule_interval='0 0 5 * *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
