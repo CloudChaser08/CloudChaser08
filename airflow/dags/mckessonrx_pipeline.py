@@ -171,22 +171,6 @@ fetch_transaction = SubDagOperator(
 )
 
 
-def do_unzip(ds, **kwargs):
-    tmp_dir = get_tmp_dir(ds, kwargs)
-    decompression.decompress_zip_file(
-        tmp_dir + TRANSACTION_FILE_NAME_TEMPLATE.format(
-            get_formatted_date(ds, kwargs)
-        ), tmp_dir
-    )
-
-
-unzip_transaction = PythonOperator(
-    task_id='unzip_transaction_file',
-    provide_context=True,
-    python_callable=do_unzip,
-    dag=mdag
-)
-
 decrypt_transaction = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
         DAG_NAME,
@@ -287,8 +271,7 @@ detect_move_normalize_dag = SubDagOperator(
 
 # addon
 fetch_transaction.set_upstream(validate_transaction)
-unzip_transaction.set_upstream(fetch_transaction)
-decrypt_transaction.set_upstream(unzip_transaction)
+decrypt_transaction.set_upstream(fetch_transaction)
 split_transaction.set_upstream(decrypt_transaction)
 
 # cleanup
