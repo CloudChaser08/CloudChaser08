@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS raw_transactional;
-CREATE EXTERNAL TABLE raw_transactional (
+DROP TABLE IF EXISTS part_transactional;
+CREATE EXTERNAL TABLE part_transactional (
         first_name                     string,
         last_name                      string,
         date_of_birth                  string,
@@ -151,3 +151,28 @@ CREATE EXTERNAL TABLE raw_transactional (
     STORED AS TEXTFILE
     LOCATION {input_path}
 ;
+
+DROP TABLE IF EXISTS additional_columns;
+CREATE EXTERNAL TABLE additional_columns (
+        patient_id      string,
+        ods_id          string,
+        accession_date  string,
+        sign_out_date   string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {addon_path}
+;
+
+-- merge tables
+DROP TABLE IF EXISTS raw_transactional;
+CREATE TABLE raw_transactional AS (
+    SELECT t.*, a.ods_id as ods_id,
+        a.accession_date AS accession_date,
+        a.sign_out_date AS sign_out_date,
+        CAST(NULL as string) as new_accession_date
+    FROM part_transactional t
+        LEFT JOIN additional_columns a
+        ON t.customer__patient_id = a.patient_id
+        )
+    ;

@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS raw_transactional;
-CREATE EXTERNAL TABLE raw_transactional (
+DROP TABLE IF EXISTS part_transactional;
+CREATE EXTERNAL TABLE part_transactional (
         first_name                     string,
         last_name                      string,
         date_of_birth                  string,
@@ -153,3 +153,13 @@ CREATE EXTERNAL TABLE raw_transactional (
     STORED AS TEXTFILE
     LOCATION {input_path}
 ;
+
+DROP TABLE IF EXISTS raw_transactional;
+CREATE TABLE raw_transactional AS (
+    SELECT t.*,
+        t.deid AS ods_id,
+        CAST(NULL as date) AS sign_out_date,
+        t.accession_date AS new_accession_date
+    FROM part_transactional t
+        )
+    ;

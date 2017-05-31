@@ -71,33 +71,13 @@ def run(spark, runner, date_input, test=False):
     # append additional columns
     if date_input <= '2017-04-01':
         runner.run_spark_script('load_transactions_legacy.sql', [
-            ['input_path', input_path]
-        ])
-
-        runner.run_spark_script('load_additional_columns.sql', [
+            ['input_path', input_path],
             ['addon_path', addon_path]
         ])
-
-        # merge tables
-        runner.sqlContext.sql("""
-        SELECT t.*, a.ods_id as ods_id,
-        a.accession_date AS accession_date,
-        a.sign_out_date AS sign_out_date,
-        NULL as new_accession_date
-        FROM raw_transactional t
-        LEFT JOIN additional_columns a
-        ON t.customer__patient_id = a.patient_id
-        """).createTempView('raw_transactional')
     else:
         runner.run_spark_script('load_transactions.sql', [
             ['input_path', input_path]
         ])
-
-        runner.sqlContext.sql('select * from raw_transactional')                   \
-                         .withColumn('ods_id', col('deid'))                        \
-                         .withColumn('sign_out_date', lit(None))                   \
-                         .withColumn('new_accession_date', col('accession_date'))  \
-                         .createTempView('raw_transactional')
 
     runner.run_spark_script('normalize.sql', [
         ['filename', setid],
