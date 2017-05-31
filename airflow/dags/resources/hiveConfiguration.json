@@ -1,0 +1,60 @@
+[
+    {
+      "Classification": "core-site",
+      "Properties": {
+        "fs.s3a.connection.maximum": "150"
+      }
+    },
+    {
+      "Classification": "hive-site",
+      "Properties": {
+        "javax.jdo.option.ConnectionURL": "jdbc:mysql:\/\/presto-db-a.aws.healthverity.com:3306\/hive?createDatabaseIfNotExist=true",
+        "javax.jdo.option.ConnectionDriverName": "org.mariadb.jdbc.Driver",
+        "javax.jdo.option.ConnectionUserName": "hvpresto",
+        "javax.jdo.option.ConnectionPassword": "hvpresto",
+        "hive.exec.parallel": "true",
+        "hive.tez.auto.reducer.parallelism": "true",
+        "hive.limit.optimize.enable": "true",
+        "hive.fetch.task.conversion": "more",
+        "hive.compute.query.using.stats": "true",
+        "hive.stats.dbclass": "fs",
+        "hive.stats.autogather": "true",
+        "hive.stats.fetch.partition.stats": "true",
+        "hive.stats.fetch.column.stats": "true",
+        "hive.cbo.enable": "true",
+        "hive.optimize.index.filter": "true",
+        "hive.vectorized.execution.enabled": "true",
+        "hive.vectorized.execution.reduce.enabled": "true",
+        "hive.vectorized.execution.mapjoin.native.fast.hashtable.enabled": "true",
+        "hive.vectorized.execution.mapjoin.minmax.enabled": "true",
+        "hive.vectorized.execution.mapjoin.native.enabled": "true"
+        
+      }
+    },
+    {
+      "Classification": "yarn-site",
+      "Properties": {
+        "yarn.timeline-service.enabled": "true",
+        "yarn.resourcemanager.system-metrics-publisher.enabled": "true",
+        "yarn.timeline-service.http-cross-origin.enabled": "true"
+      }
+    },
+    {
+      "Classification": "hadoop-log4j",
+      "Properties": {
+        "hadoop.root.logger":"ERROR,console"
+      }
+    },
+    {
+      "Classification": "spark-log4j",
+      "Properties": {
+        "log4j.rootCategory":"ERROR,console"
+      }
+    },
+    {
+      "Classification": "spark",
+      "Properties": {
+        "maximizeResourceAllocation": "true"
+      }
+    }
+  ]
