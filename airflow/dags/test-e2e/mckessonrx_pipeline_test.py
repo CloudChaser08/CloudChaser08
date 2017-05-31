@@ -32,11 +32,7 @@ def test_run():
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', MCKESSONRX_TEST_DIR + '/out/2017/05/19/addon/'
-    ])) > 0
-
-    assert len(subprocess.check_output([
-        'aws', 's3', 'ls', MCKESSONRX_TEST_DIR + '/out/2017/05/19/trunk/'
+        'aws', 's3', 'ls', MCKESSONRX_TEST_DIR + '/out/2017/05/19/'
     ])) > 0
 
 
