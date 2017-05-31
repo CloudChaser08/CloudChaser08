@@ -26,14 +26,14 @@ EMR_TRANSFORM_TO_PARQUET_STEP = ('Type=Spark,Name="Transform {} to Parquet",Acti
     's3a://salusv/{}{},20,"|","false","false"]')
 EMR_DELETE_OLD_PARQUET = ('Type=CUSTOM_JAR,Name="Delete old data from S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[aws,s3,rm,--recursive,s3://salusv/{}{}]')
-EMR_DISTCP_TO_S3 = ('Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",' 
+EMR_DISTCP_TO_S3 = ('Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,"--src=hdfs:///parquet",'
     '"--dest=s3a://salusv/{}"]')
 RS_NUM_NODES=10
-EMR_CLUSTER_NAME="normalization-cluster"
-EMR_NUM_NODES='5'
-EMR_NODE_TYPE="m4.2xlarge"
-EMR_EBS_VOLUME_SIZE="100"
+EMR_CLUSTER_NAME = "normalization-cluster"
+EMR_NUM_NODES = '5'
+EMR_NODE_TYPE = 'm4.xlarge'
+EMR_EBS_VOLUME_SIZE = '100'
 
 def do_detect_matching_done(ds, **kwargs):
     deid_files = kwargs['expected_matching_files_func'](ds, kwargs)
@@ -113,8 +113,15 @@ def do_transform_to_parquet(ds, cluster_identifier=None, **kwargs):
                 
     emr_utils._wait_for_steps(cluster_id)
 
+
 def do_create_emr_cluster(ds, cluster_identifier=None, **kwargs):
     cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
+
+    global EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
+    EMR_NUM_NODES = kwargs.get('emr_num_nodes', EMR_NUM_NODES)
+    EMR_NODE_TYPE = kwargs.get('emr_node_type', EMR_NODE_TYPE)
+    EMR_EBS_VOLUME_SIZE = kwargs.get('emr_ebs_volume_size', EMR_EBS_VOLUME_SIZE)
+
     emr_utils.create_emr_cluster(
         cluster_name,
         EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE

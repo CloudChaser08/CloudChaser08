@@ -110,7 +110,7 @@ def get_unzipped_file_paths(ds, kwargs):
     ]
 
 
-def generate_transaction_file_validation_dag(
+def generate_transaction_file_validation_task(
         task_id, path_template, minimum_file_size
 ):
     return SubDagOperator(
@@ -138,11 +138,11 @@ def generate_transaction_file_validation_dag(
     )
 
 
-validate_transactional = generate_transaction_file_validation_dag(
+validate_transactional = generate_transaction_file_validation_task(
     'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
     1000000
 )
-validate_deid = generate_transaction_file_validation_dag(
+validate_deid = generate_transaction_file_validation_task(
     'deid', DEID_FILE_NAME_TEMPLATE,
     10000000
 )
@@ -185,6 +185,13 @@ gunzip_transactional = PythonOperator(
 
 
 def split_transaction_into_parts_func(ds, **kwargs):
+    """
+    This function will split the transaction file into 4 parts to make
+    each month more easily manageable by the normalization routine.
+
+    This function also then moves each part (i) into a new directory
+    presplit/i
+    """
     check_call([
         'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/'
     ])
@@ -217,7 +224,7 @@ def split_transaction_into_parts_func(ds, **kwargs):
             + insert_current_plaintext_date(
                 TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
             )
-            )
+        )
 
 
 split_transaction_into_parts = PythonOperator(
@@ -324,7 +331,8 @@ def generate_detect_move_normalize_dag():
                 'pyspark_normalization_args_func': lambda ds, k: [
                     '--date', insert_current_date('{}-{}-01', k)
                 ],
-                'pyspark': True
+                'pyspark': True,
+                'emr_node_type': 'm4.2xlarge'
             }
         ),
         task_id='detect_move_normalize',
@@ -340,8 +348,7 @@ gunzip_transactional.set_upstream(fetch_transactional)
 
 split_transaction_into_parts.set_upstream(gunzip_transactional)
 
-for step in split_transactional_steps:
-    step.set_upstream(split_transaction_into_parts)
+split_transaction_into_parts.set_downstream(split_transactional_steps)
 
 # cleanup
 clean_up_workspace.set_upstream(split_transactional_steps)
