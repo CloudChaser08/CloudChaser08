@@ -20,13 +20,26 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           detect_move_normalize, decompression, HVDAG]:
     reload(m)
 
+if Variable.get("AIRFLOW_ENV", default_var='').find('prod') != -1:
+    airflow_env = 'prod'
+elif Variable.get("AIRFLOW_ENV", default_var='').find('test') != -1:
+    airflow_env = 'test'
+else:
+    airflow_env = 'dev'
+
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/mckesson/pharmacyclaims/{}/'
 DAG_NAME = 'mckessonrx_pipeline'
 
 # Applies to all transaction files
-S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/mckessonrx/'
-S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/mckesson/{}/{}/{}/'
+if airflow_env == 'test':
+    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/out/{}/{}/{}/'
+    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/payload/'
+else:
+    S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/mckessonrx/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/mckesson/{}/{}/{}/'
+    S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/mckesson/'
 
 # Transaction Addon file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
@@ -47,9 +60,11 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * *" if Variable.get(
-        "AIRFLOW_ENV", default_var=''
-    ).find('prod') != -1 else None,
+    schedule_interval=(
+        "0 12 * * *"
+        if airflow_env in ['prod', 'test']
+        else None
+    ),
     default_args=default_args
 )
 
@@ -143,14 +158,15 @@ def generate_file_validation_task(
     )
 
 
-validate_transaction = generate_file_validation_task(
-    'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
-    1000000
-)
-validate_deid = generate_file_validation_task(
-    'deid', DEID_FILE_NAME_TEMPLATE,
-    10000000
-)
+if airflow_env != 'test':
+    validate_transaction = generate_file_validation_task(
+        'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
+        1000000
+    )
+    validate_deid = generate_file_validation_task(
+        'deid', DEID_FILE_NAME_TEMPLATE,
+        10000000
+    )
 
 fetch_transaction = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
@@ -164,7 +180,7 @@ fetch_transaction = SubDagOperator(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'              : 'healthverity'
+            's3_bucket'              : 'salusv' if airflow_env == 'test' else 'healthverity'
         }
     ),
     task_id='fetch_transaction_file',
@@ -221,25 +237,31 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
-queue_up_for_matching = SubDagOperator(
-    subdag=queue_up_for_matching.queue_up_for_matching(
-        DAG_NAME,
-        'queue_up_for_matching',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-
-            'source_files_func' : get_deid_file_urls
-        }
-    ),
-    task_id='queue_up_for_matching',
-    dag=mdag
-)
+if airflow_env != 'test':
+    queue_up_for_matching = SubDagOperator(
+        subdag=queue_up_for_matching.queue_up_for_matching(
+            DAG_NAME,
+            'queue_up_for_matching',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'source_files_func' : get_deid_file_urls
+            }
+        ),
+        task_id='queue_up_for_matching',
+        dag=mdag
+    )
 
 #
 # Post-Matching
 #
-S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/mckesson/'
+def norm_args(ds, k):
+    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    if airflow_env == 'test':
+        base += ['--airflow_test']
+
+    return base
+
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
@@ -259,9 +281,7 @@ detect_move_normalize_dag = SubDagOperator(
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'f6b4eefd-988a-4ca3-9efd-0140607c8985',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/mckesson/pharmacyclaims/sparkNormalizeMcKessonRx.py',
-            'pyspark_normalization_args_func'   : lambda ds, k: [
-                '--date', insert_current_date('{}-{}-{}', k)
-            ],
+            'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True
         }
     ),
@@ -270,17 +290,18 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 # addon
-fetch_transaction.set_upstream(validate_transaction)
+if airflow_env != 'test':
+    fetch_transaction.set_upstream(validate_transaction)
+    queue_up_for_matching.set_upstream(validate_deid)
+
+    detect_move_normalize_dag.set_upstream(
+        [queue_up_for_matching, split_transaction]
+    )
+else:
+    detect_move_normalize_dag.set_upstream(split_transaction)
+
 decrypt_transaction.set_upstream(fetch_transaction)
 split_transaction.set_upstream(decrypt_transaction)
 
 # cleanup
 clean_up_workspace.set_upstream(split_transaction)
-
-# matching
-queue_up_for_matching.set_upstream(validate_deid)
-
-# post-matching
-detect_move_normalize_dag.set_upstream(
-    [queue_up_for_matching, split_transaction]
-)
