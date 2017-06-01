@@ -103,7 +103,7 @@ def clean_up_procedure_code(procedure_code):
 
 def clean_up_ndc_code(ndc_code):
     if len(str(ndc_code)) == 11:
-        return clean_up_numeric_code(str(ndc_code))
+        return clean_up_numeric_code(ndc_code)
     else:
         return None
 
