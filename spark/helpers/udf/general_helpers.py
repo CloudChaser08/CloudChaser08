@@ -1,6 +1,7 @@
 #! /usr/bin/python
 from datetime import datetime
 import re
+import md5
 
 
 def extract_number(text):
@@ -74,3 +75,8 @@ def uniquify(with_dupes):
         return None;
     return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
 
+
+def md5hash(x):
+    m = md5.new()
+    m.update(x)
+    return m.hexdigest()
