@@ -8,5 +8,5 @@ pharmacy_transformer = {
     }
 }
 
-def filter(df, pharmacy_transformer):
-    return priv_common.filter(df)
+def filter(df):
+    return priv_common.filter(df, pharmacy_transformer)
