@@ -69,7 +69,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("McKessonRx", True)
+    spark, sqlContext = init("McKessonRx")
 
     # initialize runner
     runner = Runner(sqlContext)

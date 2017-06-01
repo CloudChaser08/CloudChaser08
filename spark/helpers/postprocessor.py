@@ -25,7 +25,7 @@ def trimmify(df):
 
     def trim_col(column_name):
         if get_type(column_name) == 'StringType':
-            return trim(col(column_name))
+            return trim(col(column_name)).alias(column_name)
         else:
             return col(column_name)
 

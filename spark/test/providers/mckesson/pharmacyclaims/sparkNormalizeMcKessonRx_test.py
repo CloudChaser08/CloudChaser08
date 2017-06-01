@@ -27,7 +27,6 @@ def test_date_parsing():
     assert sample_row.date_service == datetime.date(2011, 1, 30)
     assert sample_row.date_authorized == datetime.date(2011, 1, 30)
     assert sample_row.date_authorized == datetime.date(2011, 1, 30)
-    assert sample_row.time_authorized == datetime.datetime(2011, 1, 30, 15, 34, 52)
 
 
 def test_transaction_code_vendor():
@@ -54,6 +53,11 @@ def test_claim_rejected():
     ]:
         assert filter(lambda r: r.claim_id == k, results)[0] \
             .logical_delete_reason != 'Claim Rejected'
+
+
+def test_ndc_codes_populated():
+    for r in results:
+        assert r.ndc_code is not None
 
 
 def test_cleanup(spark):

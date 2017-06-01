@@ -28,7 +28,7 @@ column_transformer = {
 def _transform(column_name):
     if column_name in column_transformer:
         conf = column_transformer[column_name]
-        return udf(conf['func'])(*map(col, conf['args']))
+        return udf(conf['func'])(*map(col, conf['args'])).alias(column_name)
     else:
         return col(column_name)
 
