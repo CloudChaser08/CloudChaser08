@@ -10,7 +10,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.file_utils as file_utils
 import spark.helpers.explode as explode
-import spark.providers.practice_insight.udf as pi_udf
+import spark.providers.practice_insight.medicalclaims.udf as pi_udf
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 AIRFLOW_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/'
@@ -53,10 +53,10 @@ def run_part(
 
         if test:
             input_path = file_utils.get_abs_path(
-                __file__, '../../test/providers/practice_insight/resources/input/'
+                __file__, '../../test/providers/practice_insight/medicalclaims/resources/input/'
             ) + '/'
             matching_path = file_utils.get_abs_path(
-                __file__, '../../test/providers/practice_insight/resources/matching/'
+                __file__, '../../test/providers/practice_insight/medicalclaims/resources/matching/'
             )
             max_date = '2016-12-31'
             setid = 'TEST'

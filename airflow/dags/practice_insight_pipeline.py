@@ -380,7 +380,7 @@ def generate_detect_move_normalize_dag():
                 's3_payload_loc_url': S3_PAYLOAD_DEST,
                 'vendor_uuid': 'b29eb316-a398-4fdc-b8da-2cff26f86bad',
                 'pyspark_normalization_script_name':
-                '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
+                '/home/hadoop/spark/providers/practice_insight/medicalclaims/sparkNormalizePracticeInsight.py',
                 'pyspark_normalization_args_func': norm_args,
                 'pyspark': True,
                 'emr_node_type': 'm4.2xlarge'
