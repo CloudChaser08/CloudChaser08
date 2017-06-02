@@ -21,10 +21,6 @@ column_transformer = {
     'procedure_code': {
         'func': post_norm_cleanup.clean_up_procedure_code,
         'args': ['procedure_code']
-    },
-    'ndc_code': {
-        'func': post_norm_cleanup.clean_up_ndc_code,
-        'args': ['ndc_code']
     }
 }
 
