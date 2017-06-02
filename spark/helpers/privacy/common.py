@@ -34,7 +34,7 @@ def _transform(column_name):
 
         # we will need to transform this function to a udf if it is a
         # plain python function, otherwise leave it alone
-        spark_function = conf['func'] if conf['built-in'] else udf(conf['func'])
+        spark_function = conf['func'] if conf.get('built-in') else udf(conf['func'])
 
         return spark_function(*map(col, conf['args'])).alias(column_name)
     else:
