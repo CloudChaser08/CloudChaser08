@@ -78,8 +78,14 @@ def test_noexplode():
 
 def test_exploded_table_drop(spark):
     "Exploded table can be dropped and recreated"
+
+    # both of these statements are required to drop a table after it
+    # has been 'exploded' via the explode_dates function. This is
+    # because explosion_test was created both as a concrete table and
+    # as a temp table
     spark['sqlContext'].dropTempTable("explosion_test")
     spark['sqlContext'].sql('DROP TABLE IF EXISTS explosion_test')
+
     spark['sqlContext'].sql('CREATE TABLE explosion_test (id int)')
     assert spark['sqlContext'].sql('select * from explosion_test') \
                               .collect() == []
