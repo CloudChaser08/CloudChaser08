@@ -25,8 +25,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/matching/'
         ) + '/'
     else:
-        input_path = 's3a://healthveritydev/musifer/norm/mckessonrx/transaction/'
-        matching_path = 's3a://healthveritydev/musifer/norm/mckessonrx/matching/'
+        input_path = 's3a://salusv/incoming/pharmacyclaims/mckesson/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        matching_path = 's3a://salusv/matching/payload/pharmacyclaims/mckesson/{}/'.format(
+            date_input.replace('-', '/')
+        )
 
     min_date = '1900-01-01'
     max_date = date_input
@@ -75,7 +79,7 @@ def main(args):
 
     spark.stop()
 
-    output_path = 's3a://salusv/testing/mckessonrx/sample-out/'
+    output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
     normalized_records_unloader.distcp(output_path)
 
 

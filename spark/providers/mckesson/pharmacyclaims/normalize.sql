@@ -82,9 +82,8 @@ SELECT
     t.primarycareproviderid,                  -- prov_primary_care_npi
     t.cobcount,                               -- cob_count
     t.usualandcustomary,                      -- usual_and_customary_charge
-    CASE WHEN t.amountattribtosalestax IS NOT NULL
-    THEN NULL
-    END,                                      -- sales_tax
+-- (would be amountattribtosalestax)
+    NULL,                                     -- sales_tax
     t.productselectionattributed,             -- product_selection_attributed
     t.otherpayeramountpaid,                   -- other_payer_recognized
     t.periodicdeductibleapplied,              -- periodic_deductible_applied
@@ -99,18 +98,14 @@ SELECT
     t.incentiveamountsubmitted,               -- submitted_incentive
     t.grossamountdue,                         -- submitted_gross_due
     t.professionalservicefeesubmitted,        -- submitted_professional_service_fee
-    CASE WHEN t.flatsalestaxamtsubmitted IS NOT NULL
-    THEN NULL
-    END,                                      -- submitted_flat_sales_tax
-    CASE WHEN t.basisofpercentagesalestaxsubmitted IS NOT NULL
-    THEN NULL
-    END,                                      -- submitted_percent_sales_tax_basis
-    CASE WHEN t.percentagesalestaxratesubmitted IS NOT NULL
-    THEN NULL
-    END,                                      -- submitted_percent_sales_tax_rate
-    CASE WHEN t.percentagesalestaxamountsubmitted IS NOT NULL
-    THEN NULL
-    END,                                      -- submitted_percent_sales_tax_amount
+-- (would be flatsalestaxamtsubmitted)
+    NULL,                                     -- submitted_flat_sales_tax
+-- (would be basisofpercentagesalestaxsubmitted)
+    NULL,                                     -- submitted_percent_sales_tax_basis
+-- (would be percentagesalestaxratesubmitted)
+    NULL,                                     -- submitted_percent_sales_tax_rate
+-- (would be percentagesalestaxamountsubmitted)
+    NULL,                                     -- submitted_percent_sales_tax_amount
     t.patientpayamountsubmitted,              -- submitted_patient_pay
     t.otheramountsubmittedqualfier,           -- submitted_other_claimed_qual
     NULL,                                     -- submitted_other_claimed
@@ -120,18 +115,14 @@ SELECT
     t.IncentiveAmountPaid,                    -- paid_incentive
     t.grossamountduepaid,                     -- paid_gross_due
     t.professionalservicefeepaid,             -- paid_professional_service_fee
-    CASE WHEN t.flatsalestaxamountpaid IS NOT NULL
-    THEN NULL
-    END,                                      -- paid_flat_sales_tax
-    CASE WHEN t.basisofpercentagesalestaxpaid IS NOT NULL
-    THEN NULL
-    END,                                      -- paid_percent_sales_tax_basis
-    CASE WHEN t.percentagesalestaxratepaid IS NOT NULL
-    THEN NULL
-    END,                                      -- paid_percent_sales_tax_rate
-    CASE WHEN t.percentagesalestaxamountpaid IS NOT NULL
-    THEN NULL
-    END,                                      -- paid_percent_sales_tax
+-- (would be flatsalestaxamountpaid)
+    NULL,                                     -- paid_flat_sales_tax
+-- (would be basisofpercentagesalestaxpaid)
+    NULL,                                     -- paid_percent_sales_tax_basis
+-- (would be percentagesalestaxratepaid)
+    NULL,                                     -- paid_percent_sales_tax_rate
+-- (would be percentagesalestaxamountpaid)
+    NULL,                                     -- paid_percent_sales_tax
     t.patientpayamountpaid,                   -- paid_patient_pay
     t.otheramountpaidqualifier,               -- paid_other_claimed_qual
     t.paidotherclaimed,                       -- paid_other_claimed
