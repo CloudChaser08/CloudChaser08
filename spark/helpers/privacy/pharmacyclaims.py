@@ -3,7 +3,7 @@ import spark.helpers.udf.general_helpers as gen_helpers
 
 pharmacy_transformer = {
     'rx_number': {
-        'func': lambda x: gen_helpers.md5(x).lower(),
+        'func': lambda x: gen_helpers.md5hash(x).lower() if x else None,
         'args': ['rx_number']
     }
 }

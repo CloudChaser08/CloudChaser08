@@ -77,6 +77,9 @@ def uniquify(with_dupes):
 
 
 def md5hash(x):
-    m = md5.new()
-    m.update(x)
-    return m.hexdigest()
+    if x:
+        m = md5.new()
+        m.update(x)
+        return m.hexdigest()
+    else:
+        return None
