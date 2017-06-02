@@ -74,12 +74,3 @@ def uniquify(with_dupes):
     if with_dupes is None:
         return None;
     return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
-
-
-def md5hash(x):
-    if x:
-        m = md5.new()
-        m.update(x)
-        return m.hexdigest()
-    else:
-        return None

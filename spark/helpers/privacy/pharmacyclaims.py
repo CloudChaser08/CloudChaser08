@@ -1,10 +1,11 @@
 import spark.helpers.privacy.common as priv_common
-import spark.helpers.udf.general_helpers as gen_helpers
+from pyspark.sql.functions import md5
 
 pharmacy_transformer = {
     'rx_number': {
-        'func': lambda x: gen_helpers.md5hash(x).lower() if x else None,
-        'args': ['rx_number']
+        'func': md5,
+        'args': ['rx_number'],
+        'built-in': True
     }
 }
 
