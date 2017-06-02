@@ -1,6 +1,8 @@
-# Functions to be applied to all columns in a dataframe
+# Generic, agnostic functions to be applied on a dataframe
 
-from pyspark.sql.functions import col, lit, when, trim
+from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id
+import functools
+import time
 
 def _apply_to_all_columns(f, df):
     return df.select(*map(f, df.columns))
@@ -30,3 +32,39 @@ def trimmify(df):
             return col(column_name)
 
     return _apply_to_all_columns(trim_col, df)
+
+
+def add_universal_columns(feed_id, vendor_id, filename):
+    """
+    Add columns to a dataframe that are universal across all
+    healthverity datasets.
+
+    The dataframe is assumed to have the following columns:
+    - record_id: Auto-inc PK
+    - created: Current date
+    - data_feed: Marketplace feed ID
+    - data_set: Source filename
+    - data_vendor: Marketplace vendor ID
+
+    """
+    def add(df):
+        return df.withColumn('record_id', monotonically_increasing_id())                   \
+                 .withColumn('created', lit(time.strftime('%Y-%m-%d', time.localtime())))  \
+                 .withColumn('data_set', lit(filename))                                    \
+                 .withColumn('data_feed', lit(feed_id))                                    \
+                 .withColumn('data_vendor', lit(vendor_id))
+    return add
+
+
+def compose(*functions):
+    """
+    Utility method for composing a series of functions.
+
+    Lives here because functions in this module may often be applied
+    in series on a dataframe.
+    """
+    return functools.reduce(
+        lambda f, g: lambda x: f(g(x)),
+        functions,
+        lambda x: x
+    )

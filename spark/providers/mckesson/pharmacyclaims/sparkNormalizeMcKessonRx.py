@@ -1,6 +1,5 @@
 #! /usr/bin/python
 import argparse
-import time
 from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -9,8 +8,6 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
-
-TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -48,16 +45,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     postprocessor.trimmify(runner.sqlContext.sql('select * from transactions')).createTempView('transactions')
 
     runner.run_spark_script('normalize.sql', [
-        ['filename', setid],
-        ['today', TODAY],
-        ['feedname', '33'],
-        ['vendor', '86'],
         ['min_date', min_date],
         ['max_date', max_date]
     ], source_file_path=script_path)
 
-    pharm_priv.filter(
-        postprocessor.nullify(runner.sqlContext.sql('select * from pharmacyclaims_common_model'))
+    postprocessor.compose(
+        postprocessor.nullify,
+        postprocessor.add_universal_columns(feed_id='33', vendor_id='86', filename=setid),
+        pharm_priv.filter
+    )(
+        runner.sqlContext.sql('select * from pharmacyclaims_common_model')
     ).createTempView('pharmacyclaims_common_model')
 
     if not test:

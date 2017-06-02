@@ -1,13 +1,13 @@
 INSERT INTO pharmacyclaims_common_model
 SELECT
-    monotonically_increasing_id(),            -- record_id
+    NULL,                                     -- record_id
     t.prescriptionkey,                        -- claim_id
     mp.hvid,                                  -- hvid
-    {today},                                  -- created
+    NULL,                                     -- created
     1,                                        -- model_version
-    {filename},                               -- data_set
-    {feedname},                               -- data_feed
-    {vendor},                                 -- data_vendor
+    NULL,                                     -- data_set
+    NULL,                                     -- data_feed
+    NULL,                                     -- data_vendor
     NULL,                                     -- source_version
     mp.gender,                                -- patient_gender
     mp.age,                                   -- patient_age
