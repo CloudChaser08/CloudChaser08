@@ -32,7 +32,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    min_date = '1900-01-01'
+    min_date = '2010-03-01'
     max_date = date_input
 
     runner.run_spark_script('../../../common/pharmacyclaims_common_model.sql', [
