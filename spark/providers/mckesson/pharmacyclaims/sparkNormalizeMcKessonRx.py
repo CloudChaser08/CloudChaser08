@@ -38,20 +38,20 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('../../../common/pharmacyclaims_common_model.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
         ['properties', '', False]
-    ], source_file_path=script_path)
+    ])
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path]
-    ], source_file_path=script_path)
+    ])
 
     postprocessor.trimmify(runner.sqlContext.sql('select * from transactions')).createTempView('transactions')
 
     runner.run_spark_script('normalize.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ], source_file_path=script_path)
+    ])
 
     postprocessor.compose(
         postprocessor.nullify,
