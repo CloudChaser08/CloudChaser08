@@ -419,6 +419,6 @@ split_transactional_835.set_upstream(gunzip_transactional_835)
 
 
 # cleanup
-all_steps = split_transactional_837_steps
-all_steps.append(split_transactional_835)
-clean_up_workspace.set_upstream(all_steps)
+pre_processing_steps = split_transactional_837_steps
+pre_processing_steps.append(split_transactional_835)
+clean_up_workspace.set_upstream(pre_processing_steps)
