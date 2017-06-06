@@ -414,9 +414,7 @@ split_transaction_into_parts.set_downstream(split_transactional_837_steps)
 
 # transaction 835
 gunzip_transactional_835.set_upstream(fetch_transactional_835)
-split_transaction_into_parts.set_upstream(gunzip_transactional_835)
 split_transactional_835.set_upstream(gunzip_transactional_835)
-
 
 # cleanup
 pre_processing_steps = split_transactional_837_steps
