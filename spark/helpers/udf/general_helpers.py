@@ -1,6 +1,7 @@
 #! /usr/bin/python
 from datetime import datetime
 import re
+import md5
 
 
 def extract_number(text):
@@ -73,4 +74,3 @@ def uniquify(with_dupes):
     if with_dupes is None:
         return None;
     return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
-
