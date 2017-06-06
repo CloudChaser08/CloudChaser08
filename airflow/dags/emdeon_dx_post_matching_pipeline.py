@@ -240,9 +240,6 @@ expected_matching_files_func_wrapped = provide_session(expected_matching_files_f
 #
 # Post-Matching
 #
-TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/2017-02-24/part_provider=emdeon/"
-PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/2017-02-24/part_provider=emdeon/"
-
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
         DAG_NAME,
@@ -260,10 +257,6 @@ detect_move_normalize_dag = SubDagOperator(
             'pyspark_normalization_args_func'   : lambda ds, k: [
                 '--date', insert_file_date('{}-{}-{}', k)
             ],
-            'text_warehouse'                    : TEXT_WAREHOUSE,
-            'parquet_warehouse'                 : PARQUET_WAREHOUSE,
-            'part_file_prefix_func'             : insert_file_date_function_wrapped('{}-{}-{}'),
-            'data_feed_type'                    : 'medical',
             'pyspark'                           : True
         }
     ),
