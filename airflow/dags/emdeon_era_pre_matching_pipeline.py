@@ -1,13 +1,8 @@
-from airflow.models import Variable
-from airflow.operators import BashOperator, PythonOperator, DummyOperator, BranchPythonOperator, SlackAPIOperator, SubDagOperator
+from airflow.operators import BashOperator, SubDagOperator
 from datetime import datetime, timedelta
-from subprocess import check_output, check_call, STDOUT
-from json import loads as json_loads
-import logging
+from subprocess import check_call
 import os
-import pysftp
 import re
-import sys
 
 import subdags.emdeon_validate_fetch_file
 import common.HVDAG as HVDAG
@@ -36,6 +31,21 @@ S3_TRANSACTION_MFT_RAW_PATH='s3://healthverity/incoming/era/emdeon/transactions/
 TRANSACTION_MFT_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_CS_deid.dat.mft'
 TRANSACTION_MFT_DAG_NAME='validate_fetch_transaction_mft_file'
 MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
+
+# Linking file
+LINK_FILE_DESCRIPTION='WebMD ERA Linking file'
+S3_LINK_RAW_PATH='s3://healthverity/incoming/era/emdeon/link/'
+LINK_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_Link_deid.dat.gz'
+LINK_DAG_NAME='validate_fetch_link_file'
+MINIMUM_LINK_FILE_SIZE=500
+
+# Linking MFT file
+LINK_MFT_FILE_DESCRIPTION='WebMD ERA Linking mft file'
+S3_LINK_MFT_RAW_PATH='s3://healthverity/incoming/era/emdeon/link/'
+LINK_MFT_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_Link_deid.dat.mft'
+LINK_MFT_DAG_NAME='validate_fetch_link_mft_file'
+MINIMUM_LINK_MFT_FILE_SIZE=15
+
 
 def do_unzip_file(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
@@ -112,6 +122,44 @@ validate_fetch_transaction_mft_file_dag = SubDagOperator(
     dag=mdag
 )
 
+validate_fetch_link_config = {
+    'tmp_path_template' : TMP_PATH_TEMPLATE,
+    's3_raw_path' : S3_LINK_RAW_PATH,
+    'file_name_template' : LINK_FILE_NAME_TEMPLATE,
+    'datatype' : DATATYPE,
+    'minimum_file_size' : MINIMUM_LINK_FILE_SIZE,
+    'file_description' : LINK_FILE_DESCRIPTION
+}
+
+validate_fetch_link_file_dag = SubDagOperator(
+    subdag=emdeon_validate_fetch_file(
+        DAG_NAME, LINK_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_link_config
+    ),
+    task_id=LINK_DAG_NAME,
+    trigger_rule='all_done',
+    retries=0,
+    dag=mdag
+)
+
+validate_fetch_link_mft_config = {
+    'tmp_path_template' : TMP_PATH_TEMPLATE,
+    's3_raw_path' : S3_LINK_MFT_RAW_PATH,
+    'file_name_template' : LINK_MFT_FILE_NAME_TEMPLATE,
+    'datatype' : DATATYPE,
+    'minimum_file_size' : MINIMUM_LINK_MFT_FILE_SIZE,
+    'file_description' : LINK_MFT_FILE_DESCRIPTION
+}
+
+validate_fetch_link_mft_file_dag = SubDagOperator(
+    subdag=emdeon_validate_fetch_file(
+        DAG_NAME, LINK_MFT_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_link_mft_config
+    ),
+    task_id=LINK_MFT_DAG_NAME,
+    trigger_rule='all_done',
+    retries=0,
+    dag=mdag
+)
+
 #unzip_file = PythonOperator(
 #    task_id='unzip_file',
 #    provide_context=True,
@@ -156,3 +204,5 @@ clean_up_workspace = BashOperator(
 # Just make sure they are in the right locations
 validate_fetch_transaction_mft_file_dag.set_downstream(clean_up_workspace)
 validate_fetch_transaction_file_dag.set_downstream(clean_up_workspace)
+validate_fetch_link_file_dag.set_downstream(clean_up_workspace)
+validate_fetch_link_mft_file_dag.set_downstream(clean_up_workspace)
