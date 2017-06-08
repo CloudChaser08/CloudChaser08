@@ -30,7 +30,7 @@ EMR_COPY_MELLON_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.
     '/tmp/mellon-assembly-latest.jar]')
 EMR_TRANSFORM_TO_PARQUET_STEP = ('Type=Spark,Name="Transform Emdeon RX to Parquet",ActionOnFailure=CONTINUE, '
     'Args=[--class,com.healthverity.parquet.Main,--conf,spark.sql.parquet.compression.codec=gzip,'
-    '/tmp/mellon-assembly-latest.jar,{},{},pharmacy,hdfs:///parquet/pharmacyclaims/emdeon/{},'
+    '/tmp/mellon-assembly-latest.jar,{},{},pharmacy-old,hdfs:///parquet/pharmacyclaims/emdeon/{},'
     's3a://salusv/warehouse/text/pharmacyclaims/emdeon/{},20,"|","false"]')
 EMR_DELETE_OLD_PARQUET = ('Type=CUSTOM_JAR,Name="Delete old data from S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[aws,s3,rm,--recursive,s3://salusv/warehouse/parquet/pharmacyclaims/emdeon/{}]')

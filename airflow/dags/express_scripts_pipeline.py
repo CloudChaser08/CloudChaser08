@@ -236,7 +236,7 @@ detect_move_normalize_dag = SubDagOperator(
             's3_payload_loc_url'             : S3_PAYLOAD_LOC_URL,
             'vendor_description'             : 'Express Scripts RX',
             'vendor_uuid'                    : 'f726747e-9dc0-4023-9523-e077949ae865',
-            'feed_data_type'                 : 'pharmacy'
+            'feed_data_type'                 : 'pharmacy-old'
         }
     ),
     task_id='detect_move_normalize',
