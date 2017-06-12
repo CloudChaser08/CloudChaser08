@@ -4,8 +4,8 @@ set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compre
 set mapreduce.output.fileoutputformat.compress.type=BLOCK;
 set spark.sql.shuffle.partitions=20;
 
-DROP TABLE IF EXISTS express_script_enrollment_out;
-CREATE TABLE express_script_enrollment_out
+DROP TABLE IF EXISTS express_scripts_enrollment_out;
+CREATE TABLE express_scripts_enrollment_out
     ROW FORMAT DELIMITED
     FIELDS TERMINATED BY '|'
     LINES TERMINATED BY '\n'

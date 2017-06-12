@@ -4,8 +4,8 @@ set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compre
 set mapreduce.output.fileoutputformat.compress.type=BLOCK;
 set spark.sql.shuffle.partitions=20;
 
-DROP TABLE IF EXISTS express_script_rx_norm_out;
-CREATE TABLE express_script_rx_norm_out
+DROP TABLE IF EXISTS {table};
+CREATE TABLE {table}
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '|'
 LINES TERMINATED BY '\n'
@@ -131,6 +131,5 @@ AS SELECT
  other_payer_coverage_code
 FROM pharmacyclaims
 WHERE part_provider='express_scripts'
-    AND part_processdate >= {start_date}
-    AND part_processdate <= {end_date}
+    AND part_processdate LIKE '{month}/%'
 DISTRIBUTE BY hvid;
