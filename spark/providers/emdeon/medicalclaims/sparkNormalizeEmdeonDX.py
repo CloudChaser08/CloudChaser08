@@ -1,16 +1,9 @@
 #! /usr/bin/python
-import os
 import argparse
 import time
-from datetime import timedelta, datetime, date
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import subprocess
-import spark.helpers.create_date_validation_table \
-    as date_validator
-import logging
-
 
 # init
 spark, sqlContext = init("Emdeon DX")
@@ -20,22 +13,21 @@ runner = Runner(sqlContext)
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 S3_EMDEON_IN = 's3a://salusv/incoming/medicalclaims/emdeon/'
-S3_EMDEON_OUT = 's3://salusv/warehouse/text/medicalclaims/2017-02-24/part_provider=emdeon/'
+S3_EMDEON_OUT = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
 S3_EMDEON_MATCHING = 's3a://salusv/matching/payload/medicalclaims/emdeon/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
-parser.add_argument('--setid', type=str)
-parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
 
-if args.first_run:
-    runner.run_spark_script('create_helper_tables.sql')
-    runner.run_spark_script('../../../common/zip3_to_state.sql')
-    runner.run_spark_script('load_payer_mapping.sql')
-    if args.date < '2015-10-01':
-        runner.run_spark_script('../../../common/load_hvid_parent_child_map.sql')
+setid = '{}_Claims_US_CF_D_deid.dat'.format(args.date.replace('-', ''))
+
+runner.run_spark_script('create_helper_tables.sql')
+runner.run_spark_script('../../../common/zip3_to_state.sql')
+runner.run_spark_script('load_payer_mapping.sql')
+if args.date < '2015-10-01':
+    runner.run_spark_script('../../../common/load_hvid_parent_child_map.sql')
 
 date_path = args.date.replace('-', '/')
 
@@ -73,7 +65,7 @@ runner.run_spark_script('normalize_institutional_claims.sql')
 
 # Privacy filtering
 runner.run_spark_script('../../../common/medicalclaims_post_normalization_cleanup.sql', [
-    ['filename', args.setid],
+    ['filename', setid],
     ['today', TODAY],
     ['feedname', '10'],
     ['vendor', '11']

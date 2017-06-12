@@ -1,4 +1,5 @@
-from airflow.models import Variable
+from airflow.models import Variable, DagRun
+from airflow.utils.db import provide_session
 from airflow.operators import *
 from datetime import datetime, timedelta
 from subprocess import check_output, check_call, STDOUT, Popen
@@ -7,12 +8,13 @@ import logging
 import os
 import time
 import json
-
 import common.HVDAG as HVDAG
+import subdags.detect_move_normalize as detect_move_normalize
 
-for m in [HVDAG]:
+for m in [detect_move_normalize, HVDAG]:
     reload(m)
 
+DAG_NAME='emdeon_dx_post_matching_pipeline'
 S3_PATH_PREFIX='s3://salusv/matching/prod/payload/86396771-0345-4d67-83b3-7e22fded9e1d/'
 S3_PREFIX='matching/prod/payload/86396771-0345-4d67-83b3-7e22fded9e1d/'
 S3_PAYLOAD_LOC='s3://salusv/matching/payload/medicalclaims/emdeon/'
@@ -144,7 +146,7 @@ default_args = {
 }
 
 mdag = HVDAG.HVDAG(
-    dag_id='emdeon_dx_post_matching_pipeline',
+    dag_id=DAG_NAME,
     schedule_interval=None,
     default_args=default_args
 )
@@ -206,6 +208,62 @@ delete_emr_cluster = PythonOperator(
     dag=mdag
 )
 
+def insert_file_date_function(template, session=None):
+    def out(ds, kwargs):
+        dag_run = session.query(DagRun) \
+            .filter(
+                DagRun.dag_id == kwargs['dag'].parent_dag.dag_id,
+                DagRun.execution_date == kwargs['execution_date']) \
+            .first()
+        return template.format(
+            dag_run.conf['ds_yesterday'][0:4],
+            dag_run.conf['ds_yesterday'][5:7],
+            dag_run.conf['ds_yesterday'][8:10]
+        )
+    return out
+
+insert_file_date_function_wrapped = provide_session(insert_file_date_function)
+
+def insert_file_date(template, kwargs):
+    return insert_file_date_function_wrapped(template)(None, kwargs)
+
+def expected_matching_files_func(ds, kwargs, session=None):
+    dag_run = session.query(DagRun) \
+        .filter(
+            DagRun.dag_id == kwargs['dag'].parent_dag.dag_id,
+            DagRun.execution_date == kwargs['execution_date']) \
+        .first()
+    return [dag_run.conf['deid_filename']]
+
+expected_matching_files_func_wrapped = provide_session(expected_matching_files_func)
+
+#
+# Post-Matching
+#
+detect_move_normalize_dag = SubDagOperator(
+    subdag=detect_move_normalize.detect_move_normalize(
+        DAG_NAME,
+        'detect_move_normalize',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_matching_files_func'      : expected_matching_files_func_wrapped,
+            'file_date_func'                    : insert_file_date_function_wrapped(
+                '{}/{}/{}'
+            ),
+            's3_payload_loc_url'                : S3_PAYLOAD_LOC,
+            'vendor_uuid'                       : '86396771-0345-4d67-83b3-7e22fded9e1d',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/emdeon/medicalclaims/sparkNormalizeEmdeonDX.py',
+            'pyspark_normalization_args_func'   : lambda ds, k: [
+                '--date', insert_file_date('{}-{}-{}', k)
+            ],
+            'pyspark'                           : True
+        }
+    ),
+    task_id='detect_move_normalize',
+    dag=mdag
+)
+
 move_matching_payload.set_upstream(detect_matching_done)
 create_redshift_cluster.set_upstream(detect_matching_done)
 run_normalization_routine.set_upstream([create_redshift_cluster, move_matching_payload])
@@ -213,3 +271,4 @@ delete_redshift_cluster.set_upstream(run_normalization_routine)
 create_emr_cluster.set_upstream(run_normalization_routine)
 transform_to_parquet.set_upstream(create_emr_cluster)
 delete_emr_cluster.set_upstream(transform_to_parquet)
+detect_move_normalize_dag.set_upstream(delete_emr_cluster)
