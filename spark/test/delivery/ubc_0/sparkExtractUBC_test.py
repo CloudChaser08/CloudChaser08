@@ -48,6 +48,7 @@ def test_num_records_exported():
     of the enrollment records were exported"""
     assert len(pharmacy_prelim_export) == 5
     assert len(pharmacy_prelim_export) != pharmacyclaims_record_count
+    assert len(pharmacy_final_export) == 2
     assert len(enrollment_export) == enrollment_record_count
 
 def test_file_name_prefixes():
