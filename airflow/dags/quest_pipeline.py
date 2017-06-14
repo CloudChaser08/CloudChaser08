@@ -11,12 +11,14 @@ import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.update_analytics_db as update_analytics_db
 
 import util.decompression as decompression
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
         split_push_files, queue_up_for_matching,
-        detect_move_normalize, decompression, HVDAG]:
+        detect_move_normalize, decompression, HVDAG,
+        update_analytics_db]:
     reload(m)
 
 airflow_env = {
@@ -398,6 +400,26 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+sql_new_template = """
+    ALTER TABLE labtests ADD PARTITION (part_provider='quest', part_best_date='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/part_best_data={0}-{1}/'
+"""
+
+if airflow_env != 'test':
+    update_analytics_db = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_analytics_db',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func' : lambda ds, k: insert_current_date(sql_new_template, k) \
+                    if insert_current_date('{}-{}-{}').find('-01') == 7 else ''
+            }
+        ),
+        task_id='update_analytics_db',
+        dag=mdag
+    )
 
 if airflow_env != 'test':
     fetch_addon.set_upstream(validate_addon)
@@ -410,11 +432,11 @@ if airflow_env != 'test':
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_trunk, split_addon]
     )
+    update_analytics_db.set_upstream(detect_move_normalize_dag)
 else:
     detect_move_normalize_dag.set_upstream(
         [split_trunk, split_addon]
     )
-
 
 unzip_addon.set_upstream(fetch_addon)
 decrypt_addon.set_upstream(unzip_addon)

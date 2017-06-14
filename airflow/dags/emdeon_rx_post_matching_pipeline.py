@@ -1,4 +1,5 @@
-from airflow.models import Variable
+from airflow.models import Variable, DagRun
+from airflow.utils.db import provide_session
 from airflow.operators import *
 from datetime import datetime, timedelta
 from subprocess import check_output, check_call, STDOUT, Popen
@@ -7,12 +8,14 @@ import logging
 import os
 import time
 import json
+import subdags.update_analytics_db as update_analytics_db
 
 import common.HVDAG as HVDAG
 
-for m in [HVDAG]:
+for m in [HVDAG, update_analytics_db]:
     reload(m)
 
+DAG_NAME='emdeon_rx_post_matching_pipeline'
 S3_PATH_PREFIX='s3://salusv/matching/prod/payload/86396771-0345-4d67-83b3-7e22fded9e1d/'
 S3_PREFIX='matching/prod/payload/86396771-0345-4d67-83b3-7e22fded9e1d/'
 S3_PAYLOAD_LOC='s3://salusv/matching/payload/pharmacyclaims/emdeon/'
@@ -150,7 +153,7 @@ default_args = {
 }
 
 mdag = HVDAG.HVDAG(
-    dag_id='emdeon_rx_post_matching_pipeline',
+    dag_id=DAG_NAME,
     schedule_interval=None,
     default_args=default_args
 )
@@ -212,6 +215,44 @@ delete_emr_cluster = PythonOperator(
     dag=mdag
 )
 
+def insert_file_date_function(template, session=None):
+    def out(ds, kwargs):
+        dag_run = session.query(DagRun) \
+            .filter(
+                DagRun.dag_id == kwargs['dag'].parent_dag.dag_id,
+                DagRun.execution_date == kwargs['execution_date']) \
+            .first()
+        return template.format(
+            dag_run.conf['ds_yesterday'][0:4],
+            dag_run.conf['ds_yesterday'][5:7],
+            dag_run.conf['ds_yesterday'][8:10]
+        )
+    return out
+
+insert_file_date_function_wrapped = provide_session(insert_file_date_function)
+
+def insert_file_date(template, kwargs):
+    return insert_file_date_function_wrapped(template)(None, kwargs)
+
+sql_old_template = """
+    ALTER TABLE pharmacyclaims ADD PARTITION (part_provider='emdeon', part_processdate='{0}/{1}/{2}')
+    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/emdeon/{0}/{1}/{2}/'
+"""
+
+update_analytics_db_old = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db_old',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k: insert_file_date(sql_old_template, k)
+        }
+    ),
+    task_id='update_analytics_db_old',
+    dag=mdag
+)
+
 move_matching_payload.set_upstream(detect_matching_done)
 create_redshift_cluster.set_upstream(detect_matching_done)
 run_normalization_routine.set_upstream([create_redshift_cluster, move_matching_payload])
@@ -219,3 +260,4 @@ delete_redshift_cluster.set_upstream(run_normalization_routine)
 create_emr_cluster.set_upstream(run_normalization_routine)
 transform_to_parquet.set_upstream(create_emr_cluster)
 delete_emr_cluster.set_upstream(transform_to_parquet)
+update_analytics_db_old.set_upstream(delete_emr_cluster)

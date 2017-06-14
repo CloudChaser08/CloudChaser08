@@ -17,9 +17,11 @@ import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
+import subdags.update_analytics_db as update_analytics_db
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
-        queue_up_for_matching, detect_move_normalize, clean_up_tmp_dir, HVDAG]:
+        queue_up_for_matching, detect_move_normalize, clean_up_tmp_dir, HVDAG,
+        update_analytics_db]:
     reload(m)
 
 # Applies to all files
@@ -48,11 +50,11 @@ def get_tmp_dir(ds, kwargs):
     return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
 
 def get_expected_transaction_file_name(ds, kwargs):
-    file_date = get_file_date(ds, kwargs).replace('-', '')
+    file_date = insert_file_date('{}{}{}', kwargs)
     return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date)
 
 def get_expected_transaction_file_name_decrypted(ds, kwargs):
-    file_date = get_file_date(ds, kwargs).replace('-', '')
+    file_date = insert_file_date('{}{}{}', kwargs)
     return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date) + '.decrypted'
 
 def get_encrypted_decrypted_file_paths(ds, kwargs):
@@ -70,23 +72,28 @@ def get_decrypted_transaction_files_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + get_expected_transaction_file_name(ds, kwargs) + '.decrypted']
 
 def get_s3_transaction_prefix(ds, kwargs):
-    return S3_TRANSACTION_SPLIT_PATH + get_file_date(ds, kwargs).replace('-', '/') + '/'
+    return S3_TRANSACTION_SPLIT_PATH + insert_file_date('{}/{}/{}/', kwargs)
 
 def get_expected_deid_file_name(ds, kwargs):
-    file_date = get_file_date(ds, kwargs).replace('-', '')
+    file_date = insert_file_date('{}{}{}', kwargs)
     return DEID_FILE_NAME_TEMPLATE.format(file_date)
 
 def get_expected_deid_file_regex(ds, kwargs):
     return DEID_FILE_NAME_TEMPLATE.format('\d{8}')
-
-def get_file_date(ds, kwargs):
-    return (kwargs['execution_date'] + timedelta(days=6)).strftime('%Y-%m-%d')
 
 def get_deid_file_urls(ds, kwargs):
     return ['s3://healthverity/' + S3_DEID_RAW_PATH + get_expected_deid_file_name(ds, kwargs)]
 
 def get_expected_matching_files(ds, kwargs):
     return [get_expected_deid_file_name(ds, kwargs)]
+
+def insert_file_date(template, kwargs):
+    date = (kwargs['execution_date'] + timedelta(days=6)).strftime('%Y-%m-%d')
+    return template.format(
+        date[0:4],
+        date[5:7],
+        date[8:10]
+    )
 
 default_args = {
     'owner': 'airflow',
@@ -214,10 +221,10 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : get_expected_matching_files,
-            'file_date_func'                    : get_file_date,
+            'file_date_func'                    : lambda ds, k: insert_file_date('{}-{}-{}', k),
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/express_scripts/enrollmentrecords/sparkNormalizeExpressScriptsEnrollment.py',
             'pyspark_normalization_args_func'   : lambda ds, k: [
-                '--date', get_file_date(ds, k)
+                '--date', insert_file_date('{}-{}-{}', k)
             ],
             's3_payload_loc_url'                : S3_PAYLOAD_LOC_URL,
             'vendor_description'                : 'Express Scripts Enrollment',
@@ -244,9 +251,29 @@ clean_up_tmp_dir_dag = SubDagOperator(
     dag=mdag
 )
 
+sql_new_template = """
+    ALTER TABLE pharmacyclaims ADD PARTITION (part_provider='express_scripts', part_processdate='{0}/{1}/{2}')
+    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/express_scripts/{0}/{1}/{2}/'
+"""
+
+update_analytics_db = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k: insert_file_date(sql_new_template, k)
+        }
+    ),
+    task_id='update_analytics_db',
+    dag=mdag
+)
+
 fetch_transaction_file_dag.set_upstream(validate_transaction_file_dag)
 decrypt_transaction_file_dag.set_upstream(fetch_transaction_file_dag)
 split_push_transaction_files_dag.set_upstream(decrypt_transaction_file_dag)
 queue_up_for_matching_dag.set_upstream(validate_deid_file_dag)
 detect_move_normalize_dag.set_upstream([queue_up_for_matching_dag, split_push_transaction_files_dag])
 clean_up_tmp_dir_dag.set_upstream(split_push_transaction_files_dag)
+update_analytics_db.set_upstream(detect_move_normalize_dag)
