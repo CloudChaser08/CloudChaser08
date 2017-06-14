@@ -11,8 +11,8 @@ import util.s3_utils as s3_utils
 class TestS3Utils(unittest.TestCase):
 
     def setUp(self):
-        self.test_bucket = 'healthveritydev'
-        self.test_key = 'musifer/scratch/dewey-airflow-testing/'
+        self.test_bucket = 'salusv'
+        self.test_key = 'testing/dewey/airflow/dags/util/dummy_files/'
         self.test_path = 's3://' + self.test_bucket + '/' + self.test_key
         self.test_bucket_contents = ['test_file1', 'test_file2']
         self.boto = boto.s3.connection.S3Connection().get_bucket(
