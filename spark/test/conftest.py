@@ -5,7 +5,7 @@ from spark.runner import Runner
 
 
 @pytest.fixture(scope="session")
-def spark(request):
+def spark():
     spark, sqlContext = init("Tests", True)
     runner = Runner(sqlContext)
 

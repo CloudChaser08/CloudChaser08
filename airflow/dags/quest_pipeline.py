@@ -19,13 +19,25 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
         detect_move_normalize, decompression, HVDAG]:
     reload(m)
 
+airflow_env = {
+    'prod' : 'prod',
+    'test' : 'test',
+    'dev'  : 'dev'
+}[Variable.get("AIRFLOW_ENV", default_var='dev')]
+
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
 DAG_NAME = 'quest_pipeline'
 
 # Applies to all transaction files
-S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/quest/'
-S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
+if airflow_env == 'test':
+    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/out/{}/{}/{}/'
+    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/payload/'
+else:
+    S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/quest/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/quest/{}/{}/{}/'
+    S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
 
 # Transaction Addon file
 TRANSACTION_ADDON_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/addon/'
@@ -61,9 +73,11 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * *" if Variable.get(
-        "AIRFLOW_ENV", default_var=''
-    ).find('prod') != -1 else None,
+    schedule_interval=(
+        "0 12 * * *"
+        if airflow_env in ['prod', 'test']
+        else None
+    ),
     default_args=default_args
 )
 
@@ -160,26 +174,26 @@ def generate_transaction_file_validation_dag(
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'               : 'healthverity',
-                'file_description'        : 'Quest ' + task_id + 'file'
+                'file_description'        : 'Quest ' + task_id + ' file'
             }
         ),
         task_id='validate_' + task_id + '_file',
         dag=mdag
     )
 
-
-validate_addon = generate_transaction_file_validation_dag(
-    'addon', TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
-    1000000
-)
-validate_trunk = generate_transaction_file_validation_dag(
-    'trunk', TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
-    10000000
-)
-validate_deid = generate_transaction_file_validation_dag(
-    'deid', DEID_FILE_NAME_TEMPLATE,
-    10000000
-)
+if airflow_env != 'test':
+    validate_addon = generate_transaction_file_validation_dag(
+        'addon', TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
+        1000000
+    )
+    validate_trunk = generate_transaction_file_validation_dag(
+        'trunk', TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
+        10000000
+    )
+    validate_deid = generate_transaction_file_validation_dag(
+        'deid', DEID_FILE_NAME_TEMPLATE,
+        10000000
+    )
 
 
 def generate_fetch_dag(
@@ -197,7 +211,7 @@ def generate_fetch_dag(
                     file_name_template
                 ),
                 's3_prefix'              : s3_path_template,
-                's3_bucket'              : 'healthverity'
+                's3_bucket'              : 'salusv' if airflow_env == 'test' else 'healthverity'
             }
         ),
         task_id='fetch_' + task_id + '_file',
@@ -330,27 +344,33 @@ def clean_up_workspace_step(task_id, template):
 
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
-queue_up_for_matching = SubDagOperator(
-    subdag=queue_up_for_matching.queue_up_for_matching(
-        DAG_NAME,
-        'queue_up_for_matching',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
+if airflow_env != 'test':
+    queue_up_for_matching = SubDagOperator(
+        subdag=queue_up_for_matching.queue_up_for_matching(
+            DAG_NAME,
+            'queue_up_for_matching',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
 
             'source_files_func' : get_deid_file_urls
-        }
-    ),
-    task_id='queue_up_for_matching',
-    dag=mdag
-)
+            }
+        ),
+        task_id='queue_up_for_matching',
+        dag=mdag
+    )
+
 
 #
 # Post-Matching
 #
-S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/quest/'
-TEXT_WAREHOUSE = "s3a://salusv/warehouse/text/labtests/2017-02-16/"
-PARQUET_WAREHOUSE = "s3://salusv/warehouse/parquet/labtests/2017-02-16/"
+def norm_args(ds, k):
+    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    if airflow_env == 'test':
+        base += ['--airflow_test']
+
+    return base
+
 
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
@@ -359,7 +379,7 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds,k: [
+            'expected_matching_files_func'      : lambda ds, k: [
                 insert_formatted_date_function(
                     DEID_UNZIPPED_FILE_NAME_TEMPLATE
                 )(ds, k)
@@ -370,9 +390,7 @@ detect_move_normalize_dag = SubDagOperator(
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
-            'pyspark_normalization_args_func'   : lambda ds, k: [
-                '--date', insert_current_date('{}-{}-{}', k)
-            ],
+            'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True
         }
     ),
@@ -380,14 +398,28 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-# addon
-fetch_addon.set_upstream(validate_addon)
+
+if airflow_env != 'test':
+    fetch_addon.set_upstream(validate_addon)
+    fetch_trunk.set_upstream(validate_trunk)
+
+    # matching
+    queue_up_for_matching.set_upstream(validate_deid)
+
+    # post-matching
+    detect_move_normalize_dag.set_upstream(
+        [queue_up_for_matching, split_trunk, split_addon]
+    )
+else:
+    detect_move_normalize_dag.set_upstream(
+        [split_trunk, split_addon]
+    )
+
+
 unzip_addon.set_upstream(fetch_addon)
 decrypt_addon.set_upstream(unzip_addon)
 split_addon.set_upstream(decrypt_addon)
 
-# trunk
-fetch_trunk.set_upstream(validate_trunk)
 unzip_trunk.set_upstream(fetch_trunk)
 gunzip_trunk.set_upstream(unzip_trunk)
 split_trunk.set_upstream(gunzip_trunk)
@@ -395,12 +427,4 @@ split_trunk.set_upstream(gunzip_trunk)
 # cleanup
 clean_up_workspace.set_upstream(
     [split_trunk, split_addon]
-)
-
-# matching
-queue_up_for_matching.set_upstream(validate_deid)
-
-# post-matching
-detect_move_normalize_dag.set_upstream(
-    [queue_up_for_matching, split_trunk, split_addon]
 )
