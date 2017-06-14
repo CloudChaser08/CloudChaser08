@@ -222,7 +222,8 @@ detect_move_normalize_dag = SubDagOperator(
             's3_payload_loc_url'                : S3_PAYLOAD_LOC_URL,
             'vendor_description'                : 'Express Scripts Enrollment',
             'vendor_uuid'                       : 'f726747e-9dc0-4023-9523-e077949ae865',
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'cluster_identifier'                : 'ESI-enrollmentrecords'
         }
     ),
     task_id='detect_move_normalize',
