@@ -443,6 +443,6 @@ SELECT CAST(record_id AS bigint),
     THEN CONCAT(REGEXP_REPLACE(part_processdate, '-', '/'), '/01')
     ELSE part_processdate
     END AS part_processdate
-FROM default.medicalclaims
+FROM default.medicalclaims_old
 WHERE part_provider IN ('ability', 'emdeon', 'navicure', 'allscripts')
 ;
