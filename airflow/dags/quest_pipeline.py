@@ -19,12 +19,11 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
         detect_move_normalize, decompression, HVDAG]:
     reload(m)
 
-if Variable.get("AIRFLOW_ENV", default_var='').find('prod') != -1:
-    airflow_env = 'prod'
-elif Variable.get("AIRFLOW_ENV", default_var='').find('test') != -1:
-    airflow_env = 'test'
-else:
-    airflow_env = 'dev'
+airflow_env = {
+    'prod' : 'prod',
+    'test' : 'test',
+    'dev'  : 'dev'
+}[Variable.get("AIRFLOW_ENV", default_var='dev')]
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
