@@ -44,7 +44,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     min_date = '2014-01-01'
     max_date = date_input
 
-    runner.run_spark_script('../../common/pharmacyclaims_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
         ['properties', '', False]
     ])
