@@ -6,6 +6,7 @@ from subprocess import check_call
 import os
 
 # hv-specific modules
+import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
 import subdags.decrypt_files as decrypt_files
@@ -41,7 +42,7 @@ default_args = {
     'retry_delay': timedelta(minutes=2)
 }
 
-mdag = DAG(
+mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
     schedule_interval="0 12 2 * *" if Variable.get(
         "AIRFLOW_ENV", default_var=''
