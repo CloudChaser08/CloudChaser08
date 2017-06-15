@@ -1,10 +1,11 @@
-from airflow import DAG
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
+import re
 
 # hv-specific modules
+import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
 import subdags.decrypt_files as decrypt_files
@@ -25,14 +26,14 @@ DAG_NAME = 'neogenomics_pipeline'
 
 # Applies to all transaction files
 S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/neogenomics/'
-S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/{}/{}/{}/'
+S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/%Y/%m/%d/'
 
 # Transaction file without the trailing timestamp
-TRANSACTION_FILE_NAME_TEMPLATE = 'TestMeta_{}{}{}.dat.gz'
-TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE = 'TestMeta_{}{}{}.dat'
+TRANSACTION_FILE_NAME_TEMPLATE = 'TestMeta_%Y%m%d.dat.gz'
+TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE = 'TestMeta_%Y%m%d.dat'
 
 # Deid file without the trailing timestamp
-DEID_FILE_NAME_TEMPLATE = 'TestPHI_{}{}{}.dat.gz'
+DEID_FILE_NAME_TEMPLATE = 'TestPHI_%Y%m%d.dat.gz'
 
 default_args = {
     'owner': 'airflow',
@@ -42,7 +43,7 @@ default_args = {
     'retry_delay': timedelta(minutes=2)
 }
 
-mdag = DAG(
+mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
     schedule_interval="0 12 * * 0" if Variable.get(
         "AIRFLOW_ENV", default_var=''
@@ -59,18 +60,14 @@ def insert_execution_date_function(template):
 
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format('\d{4}', '\d{2}', '\d{2]')
+        return re.sub(r'(%Y|%m|%d)', '{}', template).format('\d{4}', '\d{2}', '\d{2]')
     return out
 
 
-def insert_current_date_function(template):
+def insert_current_date_function(date_template):
     def out(ds, kwargs):
         adjusted_date = kwargs['execution_date'] + timedelta(days=7)
-        return template.format(
-            str(adjusted_date.year),
-            str(adjusted_date.month).zfill(2),
-            str(adjusted_date.day).zfill(2)
-        )
+        return adjusted_date.strftime(date_template)
     return out
 
 
@@ -245,13 +242,13 @@ detect_move_normalize_dag = SubDagOperator(
                 )(ds, k)
             ],
             'file_date_func': insert_current_date_function(
-                '{}/{}/{}'
+                '%Y/%m/%d'
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
             'vendor_uuid': 'd701240c-35be-4e71-94fc-9460b85b1515',
             'pyspark_normalization_script_name': '/home/hadoop/spark/providers/neogenomics/sparkNormalizeNeogenomics.py',
             'pyspark_normalization_args_func': lambda ds, k: [
-                '--date', insert_current_date('{}-{}-{}', k)
+                '--date', insert_current_date('%Y-%m-%d', k)
             ],
             'pyspark': True
         }
