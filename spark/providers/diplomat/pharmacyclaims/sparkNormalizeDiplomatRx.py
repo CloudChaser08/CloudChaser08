@@ -44,7 +44,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     min_date = '2014-01-01'
     max_date = date_input
 
-    runner.run_spark_script('../../common/pharmacyclaims_common_model_v2.sql', [
+    runner.run_spark_script('../../common/pharmacyclaims_common_model_v3.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
         ['properties', '', False]
     ])
@@ -71,7 +71,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v2.sql', 'diplomat',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql', 'diplomat',
             'pharmacyclaims_common_model', 'date_service', date_input
         )
 
