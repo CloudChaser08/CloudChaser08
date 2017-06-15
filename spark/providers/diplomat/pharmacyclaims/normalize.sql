@@ -108,7 +108,7 @@ SELECT
     t.coupon_number,                              -- coupon_number
     t.coupon_value,                               -- coupon_value
     t.ncpdpproviderid,                            -- pharmacy_other_id
-    t.provider_type,                              -- pharmacy_other_qu
+    t.providertype,                               -- pharmacy_other_qu
     t.zipcode,                                    -- pharmacy_postal_code
     t.prov_dispensing_id,                         -- prov_dispensing id,
     t.prov_dispensing_qual,                       -- prov_dispensing_qual
@@ -123,7 +123,7 @@ SELECT
     t.other_payer_coverage_code,                  -- other_payer_coverage_code
     t.logical_delete_reason                       -- logical_delete_reason
 FROM transactions t
-    LEFT JOIN matching_payload mp ON t.hvJoinKey = mp.hvJoinKey
 
--- filter out rows with embedded commas
-WHERE t.hvJoinKey IS NOT NULL
+-- inner join will filter out rows with embedded commas - the
+-- hvJoinKey will not exist in the matching_payload table
+    INNER JOIN matching_payload mp ON t.hvJoinKey = mp.hvJoinKey

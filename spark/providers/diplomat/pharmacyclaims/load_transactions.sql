@@ -123,7 +123,8 @@ CREATE EXTERNAL TABLE transactions (
         other_payer_coverage_qual                  string,
         other_payer_date                           string,
         other_payer_coverage_code                  string,
-        logical_delete_reason                      string
+        logical_delete_reason                      string,
+        hvJoinKey                                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE

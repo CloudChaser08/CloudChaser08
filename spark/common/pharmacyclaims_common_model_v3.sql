@@ -115,9 +115,7 @@ CREATE TABLE {table_name} (
         other_payer_coverage_qual                  string,
         other_payer_date                           date,
         other_payer_coverage_code                  string,
-        logical_delete_reason                      string,
-        part_provider                              string,
-        part_best_date                             string
+        logical_delete_reason                      string
         )
     {properties}
     ;
