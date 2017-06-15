@@ -295,7 +295,7 @@ CREATE VIEW default.medicalclaims (
     ELSE part_best_date
     END AS part_processdate
 FROM default.medicalclaims_new
-WHERE part_provider IN ('practice_insight')
+WHERE part_provider IN ('practice_insight', 'emdeon')
 UNION ALL
 SELECT CAST(record_id AS bigint),
     claim_id,
@@ -447,5 +447,5 @@ SELECT CAST(record_id AS bigint),
     ELSE part_processdate
     END AS part_processdate
 FROM default.medicalclaims_old
-WHERE part_provider IN ('ability', 'emdeon', 'navicure', 'allscripts')
+WHERE part_provider IN ('ability', 'navicure', 'allscripts')
 ;
