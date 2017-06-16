@@ -9,6 +9,8 @@ for m in [ HVDAG]:
 
 def do_update_db(ds, **kwargs):
     sql_command=kwargs['sql_command_func'](ds, kwargs)
+    if len(sql_command) == 0:
+        return
     cursor = hive.connect(Variable.get('analytics_db_host')).cursor()
     cursor.execute(sql_command)
     cursor.close()
