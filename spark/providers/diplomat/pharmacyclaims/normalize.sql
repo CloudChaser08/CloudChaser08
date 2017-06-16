@@ -35,7 +35,12 @@ SELECT
     t.reject_reason_code_4,                       -- reject_reason_code_4
     t.reject_reason_code_5,                       -- reject_reason_code_5
     t.diagnosiscode,                              -- diagnosis_code
-    t.qualifiertypetext,                          -- diagnosis_code_qual
+    CASE
+    WHEN LOWER(t.qualifiertypetext) = 'icd-9'
+    THEN '01'
+    WHEN LOWER(t.qualifiertypetext) = 'icd-10'
+    THEN '02'
+    END,                                          -- diagnosis_code_qual
     t.procedure_code,                             -- procedure_code
     t.procedure_code_qual,                        -- procedure_code_qual
     t.ndccode,                                    -- ndc_code

@@ -42,7 +42,6 @@ CREATE EXTERNAL TABLE transactions (
         dayssupplydispensedcnt                     string,
         npinbr                                     string,
         prov_dispensing_npi                        string,
-        prov_dispensing_npi2                       string,
         payer_id                                   string,
         payer_id_qual                              string,
         billname                                   string,
@@ -125,6 +124,7 @@ CREATE EXTERNAL TABLE transactions (
         other_payer_date                           string,
         other_payer_coverage_code                  string,
         logical_delete_reason                      string,
+        filler                                     string,
         hvJoinKey                                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
