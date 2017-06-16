@@ -127,3 +127,5 @@ FROM transactions t
 -- inner join will filter out rows with embedded commas - the
 -- hvJoinKey will not exist in the matching_payload table
     INNER JOIN matching_payload mp ON t.hvJoinKey = mp.hvJoinKey
+;
+

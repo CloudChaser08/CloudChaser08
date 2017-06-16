@@ -22,3 +22,7 @@ def test_embedded_commas():
     "Ensure that rows with embedded columns were filtered out"
     assert not filter(lambda r: r.claim_id == 'claim-4', results)
     assert len(results) == 9
+
+
+def test_cleanup(spark):
+    cleanup(spark)
