@@ -10,8 +10,9 @@ import time
 import json
 import common.HVDAG as HVDAG
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.update_analytics_db as update_analytics_db
 
-for m in [detect_move_normalize, HVDAG]:
+for m in [detect_move_normalize, HVDAG, update_analytics_db]:
     reload(m)
 
 DAG_NAME='emdeon_dx_post_matching_pipeline'
@@ -264,6 +265,45 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+sql_old_template = """
+    ALTER TABLE medicalclaims ADD PARTITION (part_provider='emdeon', part_processdate='{0}/{1}/{2}')
+    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/emdeon/{0}/{1}/{2}/'
+"""
+
+update_analytics_db_old = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db_old',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k: insert_file_date(sql_old_template, k)
+        }
+    ),
+    task_id='update_analytics_db_old',
+    dag=mdag
+)
+
+sql_new_template = """
+    ALTER TABLE medicalclaims_new ADD PARTITION (part_provider='emdeon', part_best_date='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/2017-02-24/part_provider=emdeon/part_best_date={0}-{1}/'
+"""
+
+update_analytics_db_new = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db_new',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k: insert_file_date(sql_new_template, k) \
+                if insert_file_date('{}-{}-{}').find('-01') == 7 else ''
+        }
+    ),
+    task_id='update_analytics_db_new',
+    dag=mdag
+)
+
 move_matching_payload.set_upstream(detect_matching_done)
 create_redshift_cluster.set_upstream(detect_matching_done)
 run_normalization_routine.set_upstream([create_redshift_cluster, move_matching_payload])
@@ -272,3 +312,5 @@ create_emr_cluster.set_upstream(run_normalization_routine)
 transform_to_parquet.set_upstream(create_emr_cluster)
 delete_emr_cluster.set_upstream(transform_to_parquet)
 detect_move_normalize_dag.set_upstream(delete_emr_cluster)
+update_analytics_db_old.set_upstream(detect_move_normalize_dag)
+update_analytics_db_new.set_upstream(detect_move_normalize_dag)
