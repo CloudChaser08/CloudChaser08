@@ -111,14 +111,16 @@ def do_transform_to_parquet(ds, **kwargs):
                 
     emr_utils._wait_for_steps(cluster_id)
 
-def do_create_emr_cluster(ds, **kwargs):
+def do_create_emr_cluster(ds, cluster_identifier=None, **kwargs):
+    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
     emr_utils.create_emr_cluster(
-        EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'],
+        cluster_name,
         EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
     )
 
-def do_delete_emr_cluster(ds, **kwargs):
-    emr_utils.delete_emr_cluster(EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'])
+def do_delete_emr_cluster(ds, cluster_identifier=None, **kwargs):
+    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
+    emr_utils.delete_emr_cluster(cluster_name)
 
 def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
