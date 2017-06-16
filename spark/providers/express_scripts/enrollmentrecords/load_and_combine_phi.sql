@@ -33,4 +33,4 @@ SELECT DISTINCT * FROM (
     SELECT hvid, threeDigitZip, gender, yearOfBirth, patientId FROM new_phi
 )
 DISTRIBUTE BY patient_id;
-SET spark.sql.shuffle.partitions=200;
+SET spark.sql.shuffle.partitions=1000;
