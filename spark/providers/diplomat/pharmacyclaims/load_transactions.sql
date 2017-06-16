@@ -42,6 +42,7 @@ CREATE EXTERNAL TABLE transactions (
         dayssupplydispensedcnt                     string,
         npinbr                                     string,
         prov_dispensing_npi                        string,
+        prov_dispensing_npi2                       string,
         payer_id                                   string,
         payer_id_qual                              string,
         billname                                   string,
