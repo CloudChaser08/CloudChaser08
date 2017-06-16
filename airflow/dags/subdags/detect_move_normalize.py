@@ -54,9 +54,10 @@ def do_move_matching_payload(ds, **kwargs):
             date = kwargs['file_date_func'](ds, kwargs).replace('-', '/')
             s3_utils.copy_file(payload_file, kwargs['s3_payload_loc_url'] + date + '/' + payload_file.split('/')[-1])
 
-def do_run_pyspark_normalization_routine(ds, **kwargs):
+def do_run_pyspark_normalization_routine(ds, cluster_identifier=None, **kwargs):
+    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
     emr_utils.normalize(
-        EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'],
+        cluster_name,
         kwargs['pyspark_normalization_script_name'],
         kwargs['pyspark_normalization_args_func'](ds, kwargs)
     )
@@ -92,9 +93,10 @@ def get_emr_cluster_id(cluster_name):
         if cluster['Name'] == cluster_name:
             return cluster['Id']
 
-def do_transform_to_parquet(ds, **kwargs):
+def do_transform_to_parquet(ds, cluster_identifier=None, **kwargs):
     file_date = ds
-    cluster_id = get_emr_cluster_id(EMR_CLUSTER_NAME + '-' + kwargs['vendor_uuid'])
+    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
+    cluster_id = get_emr_cluster_id(cluster_name)
     transform_steps = []
     delete_steps = []
     for d in kwargs['parquet_dates_func'](ds, kwargs):
