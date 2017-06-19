@@ -115,7 +115,7 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     ]
 
 
-def generate_transaction_file_validation_task(
+def generate_file_validation_task(
         task_id, path_template, minimum_file_size
 ):
     return SubDagOperator(
@@ -142,11 +142,11 @@ def generate_transaction_file_validation_task(
     )
 
 
-validate_transaction = generate_transaction_file_validation_task(
+validate_transaction = generate_file_validation_task(
     'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
     1000000
 )
-validate_deid = generate_transaction_file_validation_task(
+validate_deid = generate_file_validation_task(
     'deid', DEID_FILE_NAME_TEMPLATE,
     10000000
 )
