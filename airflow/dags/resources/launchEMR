@@ -25,6 +25,8 @@ fi
 if [ "$use_analytics_metastore" == "true" ]
 then
   METASTORE_CONFIG=" --configurations file://$AIRFLOW_HOME/dags/resources/hiveConfiguration.json"
+else
+  METASTORE_CONFIG=" --configurations file://$AIRFLOW_HOME/dags/resources/sparkConfiguration.json"
 fi
 
 EC2_ATTR="KeyName=emr_deployer,SubnetId=subnet-b262ec99,InstanceProfile=EMR_EC2_DefaultRole,ServiceAccessSecurityGroup=sg-39e8c241,EmrManagedMasterSecurityGroup=sg-46e8c23e,EmrManagedSlaveSecurityGroup=sg-47e8c23f"
@@ -42,4 +44,3 @@ aws emr create-cluster                     \
    "${MASTER_IG}"                          \
    "${CORE_IG}"                            \
  $METASTORE_CONFIG
-

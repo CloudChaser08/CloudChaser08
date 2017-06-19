@@ -2,7 +2,7 @@ APP_NAME=dewey
 
 clean:
 	find . -name '*.pyc' -delete
-	rm -f target/dewey.zip
+	rm -f target/${APP_NAME}.zip
 
 build-notest: clean
 	mkdir -p target

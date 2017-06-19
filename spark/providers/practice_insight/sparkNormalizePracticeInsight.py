@@ -187,10 +187,10 @@ def run_part(
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql',
             'practice_insight', 'medicalclaims_common_model', 'date_service',
-            args.date
+            args.date + '_' + part
         )
 
-        spark.catalog.dropTempView('medicalclaims_common_model')
+        runner.sqlContext.dropTempTable('medicalclaims_common_model')
 
 
 def main(args):
