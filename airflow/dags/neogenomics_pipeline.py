@@ -15,9 +15,9 @@ import subdags.detect_move_normalize as detect_move_normalize
 import util.s3_utils as s3_utils
 import util.decompression as decompression
 
-for m in [s3_validate_file, s3_fetch_file, decrypt_files,
-          split_push_files, queue_up_for_matching,
-          detect_move_normalize, s3_utils, decompression]:
+for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
+          queue_up_for_matching, detect_move_normalize, s3_utils,
+          decompression, HVDAG]:
     reload(m)
 
 # Applies to all files
@@ -92,7 +92,7 @@ def get_unzipped_file_paths(ds, kwargs):
     ]
 
 
-def generate_transaction_file_validation_task(
+def generate_file_validation_task(
         task_id, path_template, minimum_file_size
 ):
     return SubDagOperator(
@@ -123,11 +123,11 @@ def generate_transaction_file_validation_task(
     )
 
 
-validate_transactional = generate_transaction_file_validation_task(
+validate_transactional = generate_file_validation_task(
     'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
     1000000
 )
-validate_deid = generate_transaction_file_validation_task(
+validate_deid = generate_file_validation_task(
     'deid', DEID_FILE_NAME_TEMPLATE,
     1000000
 )
