@@ -358,6 +358,6 @@ clean_up_workspace.set_upstream(split_transactional_steps)
 queue_up_for_matching.set_upstream(validate_deid)
 
 # post-matching
-detect_move_normalize_dag.set_upstream(
-    [queue_up_for_matching, split_transactional_steps]
-)
+post_norm_steps = split_transactional_steps
+post_norm_steps.append(queue_up_for_matching)
+detect_move_normalize_dag.set_upstream(post_norm_steps)
