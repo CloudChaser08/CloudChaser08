@@ -45,13 +45,13 @@ def run(spark, runner, month, test=False):
     runner.run_spark_script('extract_pharmacy_records.sql', [
         ['table', 'express_scripts_rx_norm_final_out', False],
         ['month', month_final.replace('-', '/'), False],
-        ['out_path', pharmacy_final],
+        ['out_path', pharmacy_final]
     ])
 
     runner.run_spark_script('extract_pharmacy_records.sql', [
         ['table', 'express_scripts_rx_norm_prelim_out', False],
         ['month', month_prelim.replace('-', '/'), False],
-        ['out_path', pharmacy_prelim
+        ['out_path', pharmacy_prelim]
     ])
 
     if test:
@@ -92,17 +92,17 @@ def main(args):
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        PHARMACY_FINAL_OUT_LOC, '--dest', S3_UBC_OUT + '/pharmacyclaims/' + args.date + '/'
+        PHARMACY_FINAL_OUT_LOC, '--dest', S3_UBC_OUT + 'pharmacyclaims/' + args.date + '/'
     ])
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        PHARMACY_PRELIM_OUT_LOC, '--dest', S3_UBC_OUT + '/pharmacyclaims/' + args.date + '/'
+        PHARMACY_PRELIM_OUT_LOC, '--dest', S3_UBC_OUT + 'pharmacyclaims/' + args.date + '/'
     ])
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        ENROLLMENT_OUT_LOC, '--dest', S3_UBC_OUT + '/enrollment/' + args.date + '/'
+        ENROLLMENT_OUT_LOC, '--dest', S3_UBC_OUT + 'enrollmentrecords/' + args.date + '/'
     ])
 
 if __name__ == "__main__":
