@@ -11,11 +11,12 @@ import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
 import util.decompression as decompression
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
-          split_push_files, queue_up_for_matching,
+          split_push_files, queue_up_for_matching, clean_up_tmp_dir,
           detect_move_normalize, decompression, HVDAG]:
     reload(m)
 
@@ -206,18 +207,17 @@ split_transaction = SubDagOperator(
     dag=mdag
 )
 
-
-def do_cleanup(ds, **kwargs):
-    check_call([
-        'rm', '-rf', TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    ])
-
-
-clean_up_workspace = PythonOperator(
+clean_up_workspace = SubDagOperator(
+    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+        DAG_NAME,
+        'clean_up_workspace',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE
+        }
+    ),
     task_id='clean_up_workspace',
-    provide_context=True,
-    python_callable=do_cleanup,
-    trigger_rule='all_done',
     dag=mdag
 )
 
