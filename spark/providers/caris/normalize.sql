@@ -192,7 +192,7 @@ SELECT DISTINCT * FROM (
         WHEN 128 THEN CASE WHEN ihc_ia_ki67 = 'X' THEN 'IHC-IA_Ki67' ELSE NULL END
         WHEN 129 THEN CASE WHEN ihc_ia_p53 = 'X' THEN 'IHC-IA_P53' ELSE NULL END
         WHEN 130 THEN CASE WHEN ihc_ia_pr = 'X' THEN 'IHC-IA_PR' ELSE NULL END
-        WHEN 131 THEN CASE WHEN ngs_offering = 'X' THEN 'NGS_OFFERING' ELSE NULL END
+        WHEN 131 THEN CASE WHEN TRIM(ngs_offering) != '' THEN CONCAT('NGS_OFFERING_', ngs_offering) ELSE NULL END
         ELSE NULL END as test_ordered_name,  -- test_ordered_name
         NULL,                                -- result_id
         NULL,                                -- result

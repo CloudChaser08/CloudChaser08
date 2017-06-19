@@ -5,7 +5,6 @@ from datetime import datetime
 import calendar
 from pyspark.sql.functions import monotonically_increasing_id, lit, col
 
-import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.explode as explode
