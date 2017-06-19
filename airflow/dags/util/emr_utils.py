@@ -73,16 +73,17 @@ def _wait_for_steps(cluster_id):
         print("Step failed on cluster: " + cluster_id)
 
 
-def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size):
+def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size, connected_to_metastore=False):
     """Create an EMR cluster"""
     cluster_details = json.loads(
         check_output([
             '{}/dags/resources/launchEMR'.format(
                 os.getenv('AIRFLOW_HOME')
             ),
-            cluster_name, num_nodes, node_type, EMR_APPLICATIONS,
+            cluster_name, str(num_nodes), node_type, EMR_APPLICATIONS,
             "true" if (int(ebs_volume_size) > 0) else "false",
-            str(ebs_volume_size)
+            str(ebs_volume_size),
+            "true" if connected_to_metastore else "false"
         ])
     )
     check_call([
@@ -110,7 +111,7 @@ def _build_dewey(cluster_id):
     ], cwd=spark_dir)
 
 
-def normalize(cluster_name, script_name, args):
+def run_script(cluster_name, script_name, args):
     """Run spark normalization script in EMR"""
 
     normalize_step = (
@@ -128,6 +129,12 @@ def normalize(cluster_name, script_name, args):
         '--steps', normalize_step
     ])
     _wait_for_steps(cluster_id)
+
+def normalize(cluster_name, script_name, args):
+    run_script(cluster_name, script_name, args)
+
+def export(cluster_name, script_name, args):
+    run_script(cluster_name, script_name, args)
 
 
 def delete_emr_cluster(cluster_name):

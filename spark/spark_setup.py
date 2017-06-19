@@ -72,6 +72,9 @@ def init(provider, local=False):
     sqlContext.registerFunction(
         'extract_currency', extract_currency
     )
+    sqlContext.registerFunction(
+        'obfuscate_hvid', obfuscate_hvid
+    )
 
     # helper functions for normalizing medical claims
     sqlContext.registerFunction(

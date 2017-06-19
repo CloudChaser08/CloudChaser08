@@ -74,7 +74,7 @@ def run (spark, runner, date_input, test=False):
     ])
 
     if test:
-        subprocess.check_call(['rm', '-r', local_phi_path])
+        subprocess.check_call(['rm', '-rf', local_phi_path])
         subprocess.check_call(['mkdir', '-p', local_phi_path])
     else:
         subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '-f', local_phi_path])

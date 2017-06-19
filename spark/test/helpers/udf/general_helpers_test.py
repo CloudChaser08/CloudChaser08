@@ -1,4 +1,5 @@
 import datetime
+import pytest
 
 import spark.helpers.udf.general_helpers as gh
 
@@ -49,3 +50,9 @@ def test_string_set_diff():
 def test_uniquify():
     assert gh.uniquify('10:10:10') == '10'
     assert gh.uniquify('10:10:20') == '10:20'
+
+def test_obfuscate_hvid():
+    assert gh.obfuscate_hvid('1234567', 'CPQ-013') == 'CEB8F9B33421E4DEB16CE7FE1358D554'
+    with pytest.raises(ValueError) as excinfo:
+        gh.obfuscate_hvid('1234567', None)
+    assert str(excinfo.value) == 'A project-specific salt must be provided to properly obfuscate the HVID'
