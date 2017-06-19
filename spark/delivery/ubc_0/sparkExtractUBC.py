@@ -11,26 +11,32 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 S3_UBC_OUT = 's3://healthverity/pickup/ubc/'
 
+ENROLLMENT_OUT_LOC = 'hdfs:///ubc_enrollment_data/'
+PHARMACY_FINAL_OUT_LOC = 'hdfs:///ubc_pharmacy_final_data/'
+PHARMACY_PRELIM_OUT_LOC = 'hdfs:///ubc_pharmacy_prelim_data/'
 
 # Every month we will send UBC 2 months of pharmacy claims data, a 'final'
 # version of the data from 2 months ago, and a 'preliminary' version of
 # the previous month's data. We will also send them a complete update of
 # the enrollment data
 def run(spark, runner, month, test=False):
-    month_final = datetime.strftime(
+    month_prelim = datetime.strftime(
         datetime.strptime(month, '%Y-%m') - timedelta(days=1),
-        '%Y/%m'
+        '%Y-%m'
     )
-    month_prelim = month.replace('-', '/')
+    month_final = datetime.strftime(
+        datetime.strptime(month_prelim, '%Y-%m') - timedelta(days=1),
+        '%Y-%m'
+    )
 
     if test:
         enrollment_outpath = '/tmp/ubc_enrollment_data'
         pharmacy_final     = '/tmp/ubc_pharmacy_final_data'
         pharmacy_prelim    = '/tmp/ubc_pharmacy_prelim_data'
     else:
-        enrollment_outpath = 'hdfs:///ubc_enrollment_data/'
-        pharmacy_final     = 'hdfs:///ubc_pharmacy_final_data/'
-        pharmacy_prelim    = 'hdfs:///ubc_pharmacy_prelim_data/'
+        enrollment_outpath = ENROLLMENT_OUT_LOC
+        pharmacy_final     = PHARMACY_FINAL_OUT_LOC
+        pharmacy_prelim    = PHARMACY_PRELIM_OUT_LOC
 
     runner.run_spark_script('extract_enrollment_records.sql', [
         ['out_path', enrollment_outpath]
@@ -38,14 +44,14 @@ def run(spark, runner, month, test=False):
 
     runner.run_spark_script('extract_pharmacy_records.sql', [
         ['table', 'express_scripts_rx_norm_final_out', False],
-        ['month', month_final, False],
+        ['month', month_final.replace('-', '/'), False],
         ['out_path', pharmacy_final],
     ])
 
     runner.run_spark_script('extract_pharmacy_records.sql', [
         ['table', 'express_scripts_rx_norm_prelim_out', False],
-        ['month', month_prelim, False],
-        ['out_path', pharmacy_prelim]
+        ['month', month_prelim.replace('-', '/'), False],
+        ['out_path', pharmacy_prelim
     ])
 
     if test:
@@ -58,17 +64,17 @@ def run(spark, runner, month, test=False):
         enrollment_part_files_cmd = ['hadoop', 'fs', '-ls', '-R', enrollment_outpath.replace('hdfs://', '')]
 
     part_files = subprocess.check_output(pharmacy_final_part_files_cmd).strip().split("\n")
-    prefix = 'pharmacyclaims_{}_final'.format(month_final.replace('/', '-'))
+    prefix = 'pharmacyclaims_{}_final'.format(month_final)
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
         normalized_records_unloader.mk_move_file(prefix, test)
     )
     part_files = subprocess.check_output(pharmacy_prelim_part_files_cmd).strip().split("\n")
-    prefix = 'pharmacyclaims_{}_prelim'.format(month)
+    prefix = 'pharmacyclaims_{}_prelim'.format(month_prelim)
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
         normalized_records_unloader.mk_move_file(prefix, test)
     )
     part_files = subprocess.check_output(enrollment_part_files_cmd).strip().split("\n")
-    prefix = 'enrollmentrecords_{}'.format(month)
+    prefix = 'enrollmentrecords_{}'.format(month_prelim)
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
         normalized_records_unloader.mk_move_file(prefix, test)
     )
@@ -86,17 +92,17 @@ def main(args):
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        pharmacy_final, '--dest', S3_UBC_OUT + '/pharmacyclaims/'
+        PHARMACY_FINAL_OUT_LOC, '--dest', S3_UBC_OUT + '/pharmacyclaims/' + args.date + '/'
     ])
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        pharmacy_prelim, '--dest', S3_UBC_OUT + '/pharmacyclaims/'
+        PHARMACY_PRELIM_OUT_LOC, '--dest', S3_UBC_OUT + '/pharmacyclaims/' + args.date + '/'
     ])
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        enrollment_outpath, '--dest', S3_UBC_OUT + '/enrollment/'
+        ENROLLMENT_OUT_LOC, '--dest', S3_UBC_OUT + '/enrollment/' + args.date + '/'
     ])
 
 if __name__ == "__main__":
