@@ -95,6 +95,14 @@ def insert_file_date(template, kwargs):
         date[8:10]
     )
 
+def insert_prev_file_date(template, kwargs):
+    date = (kwargs['execution_date'] - timedelta(days=1)).strftime('%Y-%m-%d')
+    return template.format(
+        date[0:4],
+        date[5:7],
+        date[8:10]
+    )
+
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 3, 26),
@@ -252,22 +260,41 @@ clean_up_tmp_dir_dag = SubDagOperator(
     dag=mdag
 )
 
-sql_new_template = """
-    ALTER TABLE pharmacyclaims ADD PARTITION (part_provider='express_scripts', part_processdate='{0}/{1}/{2}')
-    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/express_scripts/{0}/{1}/{2}/'
+sql_template_drop = """
+    ALTER TABLE pharmacyclaims DROP PARTITION (part_provider='express_scripts', part_best_date='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/enrollmentrecords/2017-03-22/part_provider=express_scripts/part_best_date={0}-{1}/'
 """
 
-update_analytics_db = SubDagOperator(
+sql_template_add = """
+    ALTER TABLE pharmacyclaims ADD PARTITION (part_provider='express_scripts', part_best_date='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/enrollmentrecords/2017-03-22/part_provider=express_scripts/part_best_date={0}-{1}/'
+"""
+
+update_analytics_db_drop = SubDagOperator(
     subdag=update_analytics_db.update_analytics_db(
         DAG_NAME,
-        'update_analytics_db',
+        'update_analytics_db_drop',
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : lambda ds, k: insert_file_date(sql_new_template, k)
+            'sql_command_func' : lambda ds, k: insert_prev_file_date(sql_template_drop, k)
         }
     ),
-    task_id='update_analytics_db',
+    task_id='update_analytics_db_drop',
+    dag=mdag
+)
+
+update_analytics_db_add = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db_add',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k: insert_file_date(sql_template_add, k)
+        }
+    ),
+    task_id='update_analytics_db_add',
     dag=mdag
 )
 
@@ -277,4 +304,5 @@ split_push_transaction_files_dag.set_upstream(decrypt_transaction_file_dag)
 queue_up_for_matching_dag.set_upstream(validate_deid_file_dag)
 detect_move_normalize_dag.set_upstream([queue_up_for_matching_dag, split_push_transaction_files_dag])
 clean_up_tmp_dir_dag.set_upstream(split_push_transaction_files_dag)
-update_analytics_db.set_upstream(detect_move_normalize_dag)
+update_analytics_db_drop.set_upstream(detect_move_normalize_dag)
+update_analytics_db_add.set_upstream(update_analytics_db_drop)
