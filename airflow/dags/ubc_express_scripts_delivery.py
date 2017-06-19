@@ -33,7 +33,8 @@ def do_run_pyspark_export_routine(ds, **kwargs):
     )
 
 def get_export_args(ds, kwargs):
-    return ['--month', ds[:7]]
+    month = (kwargs['execution_date'] + timedelta(days=31)).strftime('%Y-%m')
+    return ['--month', month]
 
 default_args = {
     'owner': 'airflow',

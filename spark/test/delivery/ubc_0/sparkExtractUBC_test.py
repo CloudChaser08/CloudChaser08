@@ -13,7 +13,7 @@ enrollment_record_count     = 0
 def test_init(spark):
     spark['runner'].run_spark_script('resources/pharmacyclaims.sql')
     spark['runner'].run_spark_script('resources/enrollmentrecords.sql')
-    ubc_extract.run(spark['spark'], spark['runner'], '2017-04', True)
+    ubc_extract.run(spark['spark'], spark['runner'], '2017-05', True)
     global pharmacy_prelim_export, pharmacy_final_export, enrollment_export, \
             pharmacyclaims_record_count, enrollment_record_count
     pharmacy_final_export  = filter(lambda x: x.hvid is not None and len(x.hvid) == 32,
