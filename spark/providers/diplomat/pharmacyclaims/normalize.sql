@@ -44,8 +44,14 @@ SELECT
     t.procedure_code,                             -- procedure_code
     t.procedure_code_qual,                        -- procedure_code_qual
     t.ndccode,                                    -- ndc_code
-    t.product_service_id,                         -- product_service_id
-    t.product_service_id_qual,                    -- product_service_id_qual
+    CASE
+    WHEN t.product_service_id_qual <> '03'
+    THEN t.product_service_id
+    END,                                          -- product_service_id
+    CASE
+    WHEN t.product_service_id_qual <> '03'
+    THEN t.product_service_id_qual
+    END,                                          -- product_service_id_qual
     t.prescriptionid,                             -- rx_number
     t.rx_number_qual,                             -- rx_number_qual
     t.binnbr,                                     -- bin_number
