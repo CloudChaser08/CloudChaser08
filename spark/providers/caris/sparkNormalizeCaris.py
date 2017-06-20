@@ -21,14 +21,20 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
 
     if test:
-        input_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/caris/resources/input/raw/'
-        ) + '/'
+        if date_input <= '2017-04-01':
+            input_path = file_utils.get_abs_path(
+                script_path, '../../test/providers/caris/resources/input-legacy/'
+            ) + '/'
+            addon_path = file_utils.get_abs_path(
+                script_path, '../../test/providers/caris/resources/addon/'
+            ) + '/'
+        else:
+            input_path = file_utils.get_abs_path(
+                script_path, '../../test/providers/caris/resources/input/'
+            ) + '/'
+
         matching_path = file_utils.get_abs_path(
             script_path, '../../test/providers/caris/resources/matching/'
-        ) + '/'
-        addon_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/caris/resources/input/addon/'
         ) + '/'
 
     elif airflow_test:
@@ -59,19 +65,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     explode.generate_exploder_table(spark, 200)
     runner.run_spark_script('../../common/zip3_to_state.sql')
 
-    # create helper tables
-    runner.run_spark_script('create_helper_tables.sql')
-
     runner.run_spark_script('../../common/lab_common_model.sql', [
         ['table_name', 'lab_common_model', False],
         ['properties', '', False]
     ])
 
     payload_loader.load(runner, matching_path, ['hvJoinKey'])
-
-    runner.run_spark_script('load_transactions.sql', [
-        ['input_path', input_path]
-    ])
 
     # append additional columns
     if date_input <= '2017-04-01':
