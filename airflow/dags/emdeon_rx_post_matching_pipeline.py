@@ -136,7 +136,9 @@ def do_create_emr_cluster(ds, **kwargs):
         EMR_NODE_TYPE,
         EMR_APPLICATIONS,
         EMR_USE_EBS,
-        EMR_EBS_VOLUME_SIZE
+        EMR_EBS_VOLUME_SIZE,
+        'false',
+        'normalization'
     ]))
     check_call(['aws', 'emr', 'wait', 'cluster-running', '--cluster-id', cluster_details['ClusterId']])
 

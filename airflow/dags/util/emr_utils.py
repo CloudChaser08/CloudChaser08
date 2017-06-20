@@ -73,7 +73,7 @@ def _wait_for_steps(cluster_id):
         print("Step failed on cluster: " + cluster_id)
 
 
-def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size, connected_to_metastore=False):
+def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size, purpose, connected_to_metastore=False):
     """Create an EMR cluster"""
     cluster_details = json.loads(
         check_output([
@@ -83,7 +83,8 @@ def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size, conn
             cluster_name, str(num_nodes), node_type, EMR_APPLICATIONS,
             "true" if (int(ebs_volume_size) > 0) else "false",
             str(ebs_volume_size),
-            "true" if connected_to_metastore else "false"
+            "true" if connected_to_metastore else "false",
+            purpose
         ])
     )
     check_call([

@@ -20,7 +20,8 @@ NODE_TYPE='m4.2xlarge'
 EBS_VOLUME_SIZE='100'
 
 def do_create_cluster(ds, **kwargs):
-    emr_utils.create_emr_cluster(EMR_CLUSTER_NAME, NUM_NODES, NODE_TYPE, EBS_VOLUME_SIZE, True)
+    emr_utils.create_emr_cluster(EMR_CLUSTER_NAME, NUM_NODES, NODE_TYPE,
+            EBS_VOLUME_SIZE, 'delivery', connected_to_metastore=True)
 
 def do_delete_cluster(ds, **kwargs):
     emr_utils.delete_emr_cluster(EMR_CLUSTER_NAME)
