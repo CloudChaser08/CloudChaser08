@@ -13,11 +13,11 @@ SELECT DISTINCT * FROM (
             )
         END,                                 -- claim_id
         mp.hvid,                             -- hvid
-        {today},                             -- created
+        NULL,                                -- created
         '1',                                 -- model_version
-        {filename},                          -- data_set
-        {feedname},                          -- data_feed
-        {vendor},                            -- data_vendor
+        NULL,                                -- data_set
+        NULL,                                -- data_feed
+        NULL,                                -- data_vendor
         NULL,                                -- source_version
         mp.gender,                           -- patient_gender
         NULL,                                -- patient_age

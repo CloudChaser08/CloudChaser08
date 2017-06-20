@@ -3,11 +3,12 @@ import argparse
 import time
 from datetime import datetime
 import calendar
-from pyspark.sql.functions import monotonically_increasing_id, lit, col
 
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.explode as explode
+import spark.helpers.file_utils as file_utils
+import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 from spark.runner import Runner
 
@@ -74,17 +75,13 @@ def run(spark, runner, date_input, test=False):
         ])
 
     runner.run_spark_script('normalize.sql', [
-        ['filename', setid],
-        ['today', TODAY],
-        ['feedname', '14'],
-        ['vendor', '13'],
         ['date_received', date_input],
         ['min_date', min_date],
         ['max_date', max_date]
     ])
 
-    runner.sqlContext.sql('select * from lab_common_model').withColumn(
-        'record_id', monotonically_increasing_id()
+    postprocessor.add_universal_columns('14', '13', setid)(
+        runner.sqlContext.sql('select * from lab_common_model')
     ).createTempView('lab_common_model')
 
     if not test:
