@@ -22,7 +22,7 @@ def clean_up_tmp_dir(parent_dag_name, child_dag_name, start_date, schedule_inter
     )
 
     remove_tmp_dir = BashOperator(
-        task_id='create_tmp_dir',
+        task_id='remove_tmp_dir',
         bash_command='rm -r {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}')),
         dag=dag
     )
