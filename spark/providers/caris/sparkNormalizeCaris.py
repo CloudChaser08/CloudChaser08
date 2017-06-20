@@ -40,21 +40,16 @@ def run(spark, runner, date_input, test=False):
         ) + '/'
 
     else:
-        input_path = 's3a://salusv/incoming/labtests/caris/{year}/{month}/'.format(
-            year=str(date_obj.year),
-            month=str(date_obj.month).zfill(2)
-        )
-        matching_path = 's3a://salusv/matching/payload/labtests/caris/{year}/{month}/'.format(
-            year=str(date_obj.year),
-            month=str(date_obj.month).zfill(2)
-        )
+        input_path = 's3a://salusv/incoming/labtests/caris/{}/{:02d}/'.format(date_obj.year, date_obj.month)
+        matching_path = 's3a://salusv/matching/payload/labtests/caris/{}/{:02d}/'.format(date_obj.year, date_obj.month)
         addon_path = 's3a://salusv/incoming/labtests/caris/hist_additional_columns/'
 
-    setid = 'DATA_' + str(date_obj.year) \
-            + str(date_obj.month).zfill(2) + '01' \
-            if date_input != '2016-08-01' else 'Data_7_29'
+    setid = 'Data_7_29' if date_input == '2016-08-01' \
+            else 'DATA_{}{:02d}01'.format(date_obj.year, date_obj.month)
 
     min_date = '2005-01-01'
+
+    # max cap at the last day of the month
     max_date = date_obj.strftime('%Y-%m-') \
         + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
 

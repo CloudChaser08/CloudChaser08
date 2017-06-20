@@ -60,7 +60,7 @@ SELECT DISTINCT * FROM (
         NULL,                                -- test_battery_name
         NULL,                                -- test_ordered_local_id
         NULL,                                -- test_ordered_std_id
-        CASE cross_join.n
+        CASE exploder.n
         WHEN 0   THEN CASE WHEN fish_cmet = 'X' THEN 'FISH_cMET' ELSE NULL END
         WHEN 1   THEN CASE WHEN fish_cmyc = 'X' THEN 'FISH_cMYC' ELSE NULL END
         WHEN 2   THEN CASE WHEN fish_egfr = 'X' THEN 'FISH_EGFR' ELSE NULL END
@@ -227,7 +227,7 @@ SELECT DISTINCT * FROM (
         NULL,                                -- ordering_market_type
         NULL                                 -- ordering_specialty
     FROM raw_transactional t
-        CROSS JOIN exploder cross_join
+        CROSS JOIN exploder
         LEFT JOIN matching_payload mp ON t.hv_key = mp.hvJoinKey
         LEFT JOIN zip3_to_state zip3 ON mp.threeDigitZip = zip3.zip3
         ) main
