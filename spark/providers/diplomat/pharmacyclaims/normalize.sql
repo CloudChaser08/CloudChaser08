@@ -18,7 +18,7 @@ SELECT
         t.filldate, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                        -- date_service
     extract_date(
-        t.writtendate, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.writtendate, '%Y-%m-%d', CAST({min_date_written} AS DATE), CAST({max_date} AS DATE)
         ),                                        -- date_written
     t.date_injury,                                -- year_of_injury
     extract_date(

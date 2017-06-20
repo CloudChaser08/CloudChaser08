@@ -42,6 +42,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
 
     min_date = '2014-01-01'
+    min_date_written = '2004-01-01'
     max_date = date_input
 
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
@@ -58,6 +59,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     runner.run_spark_script('normalize.sql', [
         ['min_date', min_date],
+        ['min_date_written', min_date_written],
         ['max_date', max_date]
     ])
 
