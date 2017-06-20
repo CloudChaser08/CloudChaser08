@@ -1,47 +1,22 @@
-var AWS = require('aws-sdk');
 var async = require('async');
+var s3 = require('./s3.js');
 
+// HTML to be displayed
 var html = '<html><head><title>Provider Status Dashboard</title></head>' +
     '<body>' +
     '{{CONTENT}}' +
     '</body>' +
     '</html>';
 
-var providers = [
-  {
-    displayName: 'Practice Insight',
-    incomingBucket: 'practiceinsight'
-  }
-];
-
+// handler entry point
 exports.handler = function(event, context) {
-  var s3 = new AWS.S3();
 
-  var calls = [];
+  var s3Calls = s3.getS3Calls();
 
-  providers.map(function(prov) {
-    return prov.incomingBucket;
-  }).forEach(function(provider){
-    calls.push(function(callback) {
-      var params = {
-        Bucket : 'healthverity',
-        Prefix : 'incoming/' + provider
-      };
-
-      s3.listObjects(params, callback);
-    });
-  });
-
-  async.parallel(calls, function(err, result) {
-    if (err) console.log('err');
+  async.parallel(s3Calls, function(err, result) {
+    if (err) context.fail(err);
     else {
-      console.log(result.map(function(awsResponse) {
-        return awsResponse.Contents.map(function(key) {
-          return key.Key;
-        });
-      }));
-      context.succeed(html);
+      context.succeed(result);
     }
   });
-
 };
