@@ -43,7 +43,18 @@ def test_date_parsing():
 
 def test_labtests_translated():
     assert len(filter(
-        lambda r: r.claim_id == 'patient-1_deid-1' and r.test_ordered_name == 'NGS_OFFERING',
+        lambda r: r.claim_id == 'patient-1_deid-1' and r.test_ordered_name == 'IHC_ERCC1',
+        results
+    ))
+
+
+def test_ngs_offering():
+    assert len(filter(
+        lambda r: r.claim_id == 'patient-0_deid-0' and r.test_ordered_name == 'NGS_OFFERING_X',
+        results
+    ))
+    assert len(filter(
+        lambda r: r.claim_id == 'patient-6_deid-6' and r.test_ordered_name == 'NGS_OFFERING_A',
         results
     ))
 
