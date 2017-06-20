@@ -8,6 +8,7 @@ applications=$4
 use_ebs=$5
 ebs_size=$6
 use_analytics_metastore=$7
+cluster_purpose=$8
 
 tstmp=$(date +%Y%m%dT%H%M%S)
 
@@ -39,6 +40,7 @@ aws emr create-cluster                     \
  --enable-debugging                        \
  --ec2-attributes "${EC2_ATTR}"            \
  --name "$cluster_name"                    \
+ --tags "\"EMRCluster=${cluster_name}_$(date +%Y%m%d%H%M)\" \"Service=${cluster_purpose}\""	\
  --log-uri s3://salusvlogs/presto/jenkins/${tstmp}/      \
  --instance-groups                         \
    "${MASTER_IG}"                          \
