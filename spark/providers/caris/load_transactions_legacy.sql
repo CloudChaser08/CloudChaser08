@@ -142,8 +142,6 @@ CREATE EXTERNAL TABLE part_transactional (
         ihc_ia_ki67                    string,
         ihc_ia_p53                     string,
         ihc_ia_pr                      string,
-        deid                           string,  -- same as ods_id, just with a new name
-        accession_date                 string,
         hv_key                         string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
@@ -154,12 +152,27 @@ CREATE EXTERNAL TABLE part_transactional (
     LOCATION {input_path}
 ;
 
+DROP TABLE IF EXISTS additional_columns;
+CREATE EXTERNAL TABLE additional_columns (
+        patient_id      string,
+        ods_id          string,
+        accession_date  string,
+        sign_out_date   string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION {addon_path}
+;
+
+-- merge tables
 DROP TABLE IF EXISTS raw_transactional;
 CREATE TABLE raw_transactional AS (
-    SELECT t.*,
-        t.deid AS ods_id,
-        CAST(NULL as date) AS sign_out_date,
-        t.accession_date AS new_accession_date
+    SELECT t.*, a.ods_id as ods_id,
+        a.accession_date AS accession_date,
+        a.sign_out_date AS sign_out_date,
+        CAST(NULL as string) as new_accession_date
     FROM part_transactional t
+        LEFT JOIN additional_columns a
+        ON t.customer__patient_id = a.patient_id
         )
     ;
