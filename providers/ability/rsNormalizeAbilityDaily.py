@@ -35,7 +35,9 @@ for product in [
     setid = '{}_{}'.format(args.date.replace('-', '_'), product)
     input_prefix = input_path + setid + '_'
 
-    if not subprocess.check_output(['aws', 's3', 'ls', input_prefix]):
+    try:
+        subprocess.check_output(['aws', 's3', 'ls', input_prefix])
+    except Exception as e:
         logging.warn('Prefix does not exist: ' + input_prefix)
         continue
 
