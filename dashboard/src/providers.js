@@ -2,11 +2,13 @@
 exports.config = [
   {
     displayName: 'Practice Insight',
-    incomingBucket: 'practiceinsight'
+    incomingBucket: 'practiceinsight',
+    airflowPipelineName: 'practice_insight_pipeline'
   },
   {
     displayName: 'Caris',
-    incomingBucket: 'caris'
+    incomingBucket: 'caris',
+    airflowPipelineName: 'caris_pipeline'
   }
 ];
 
