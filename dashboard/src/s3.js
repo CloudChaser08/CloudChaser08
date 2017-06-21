@@ -6,8 +6,6 @@ var providers = require('./providers.js');
 var s3 = new AWS.S3();
 
 exports.getS3Calls = function() {
-  var s3Calls = [];
-
   return providers.config.map(function(providerConf) {
     return function(callback) {
       var params = {
