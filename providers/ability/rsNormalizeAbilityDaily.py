@@ -14,9 +14,9 @@ S3_ABILITY_OUTPUT = 's3://salusv/warehouse/text/medicalclaims/ability/'
 S3_ABILITY_MATCHING = 's3://salusv/matching/payload/medicalclaims/ability/'
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--date', type=str)
-parser.add_argument('--s3_credentials', type=str)
-args = parser.parse_args()
+parser.add_argument('--date', type=str, required=True)
+parser.add_argument('--s3_credentials', type=str, required=True)
+args, unknown = parser.parse_known_args()
 
 input_path = S3_ABILITY_INPUT + args.date.replace('-', '/') + '/'
 matching_path = S3_ABILITY_MATCHING + args.date.replace('-', '/') + '/'
