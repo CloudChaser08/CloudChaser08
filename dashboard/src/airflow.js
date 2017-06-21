@@ -2,8 +2,7 @@ var psql = require('pg');
 
 var client = new psql.Client({
   user: 'airflowreader',
-  password: 'airflowreader',
-  host: 'ip-10-24-0-164.ec2.internal',
+  host: 'airflow-dev.awsdev.healthverity.com',
   port: '5432',
   database: 'airflow'
 });
