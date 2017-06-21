@@ -6,7 +6,7 @@ var providers = require('./providers.js');
 
 var client = new psql.Client({
   user: 'airflowreader',
-  host: 'airflow-dev.awsdev.healthverity.com',
+  host: 'airflow-prod.aws.healthverity.com',
   port: '5432',
   database: 'airflow'
 });
@@ -14,12 +14,12 @@ var client = new psql.Client({
 const query = {
   text: fs.readFileSync(path.join(__dirname, './provider-ingestion.sql'), 'utf-8').replace(
     '{{PROVIDERS}}', providers.config.map(function (provider) {
-      return "MAX(CASE " +
-        "WHEN true_dag_id = '" + provider.airflowPipelineName + "' " + 
-        "AND total_success_count > 0 " +
-        "AND total_nonsuccess_count = 0 " +
-        "THEN 1 ELSE 0 END" +
-        ") as " + provider.incomingBucket;
+      return 'MAX(CASE ' +
+        'WHEN true_dag_id = \'' + provider.airflowPipelineName + '\' ' + 
+        'AND total_success_count > 0 ' +
+        'AND total_nonsuccess_count = 0 ' +
+        'THEN 1 ELSE 0 END' +
+        ') as "' + provider.incomingBucket + '"';
     }).reduce(function(k1, k2) {
       return k1 + ', ' + k2;
     })),

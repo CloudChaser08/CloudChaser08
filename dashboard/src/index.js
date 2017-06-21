@@ -11,13 +11,19 @@ var helpers = require('./helpers.js');
 var html = fs.readFileSync(path.join(__dirname, './index.html'), 'utf-8');
 var css = fs.readFileSync(path.join(__dirname, './style.css'), 'utf-8');
 
+function getIncomingBucket(s3Prefix) {
+  return s3Prefix.split('/').slice(1, s3Prefix.split('/').length - 1).reduce(function(b1, b2) {
+    return b1 + '/' + b2;
+  });
+}
+
 function joinAirflowToS3(airflowResults, providerIncomingFiles) {
   var providerColumnIndex = airflowResults.fields.findIndex(function(airflowResultField) {
-    return airflowResultField.name == providerIncomingFiles[0].split('/')[1];
+    return airflowResultField.name == getIncomingBucket(providerIncomingFiles[0]);
   });
 
   var providerConf = providers.config.filter(function(provider) {
-    return provider.incomingBucket == providerIncomingFiles[0].split('/')[1];
+    return provider.incomingBucket == getIncomingBucket(providerIncomingFiles[0]);
   })[0];
 
   return providerIncomingFiles.map(function(filename) {
@@ -26,18 +32,20 @@ function joinAirflowToS3(airflowResults, providerIncomingFiles) {
       var formatted = (
         (1900 + date.getYear()) + '-'
           + helpers.leftZPad((date.getMonth() + 1).toString()) + '-'
-          + helpers.leftZPad((date.getDate() + 1).toString())
+          + helpers.leftZPad(date.getDate().toString())
       );
-      return formatted === providerConf.filenameToDate(filename);
+
+      return formatted === providerConf.filenameToExecutionDate(filename);
     })[0];
 
-    var ingested = typeof airflowData !== 'undefined' && airflowData[providerColumnIndex] === "1";
+    var ingested = typeof airflowData !== 'undefined' && airflowData[providerColumnIndex].toString().trim() === "1";
 
     return {
-      file: filename,
+      executionDate: providerConf.filenameToExecutionDate(filename),
+      filename: filename,
       ingested: ingested
     };
-    
+
   });
 }
 
@@ -53,25 +61,28 @@ exports.handler = function(event, context) {
     else {
       // pop off airflow query result
       var airflowRes = result.pop();
-      console.log(airflowRes.fields);
 
       // each provider gets their own section
       var content = result.map(function (providerS3Res) {
         var providerConf = providers.config.filter(function(provider) {
-          return provider.incomingBucket == providerS3Res[0].split('/')[1];
+          return provider.incomingBucket == getIncomingBucket(providerS3Res[0]);
         })[0];
         var relevantIncomingFiles = providerS3Res.filter(function(filename) {
           return providerConf.expectedFilenameRegex.test(filename);
         });
 
-        var joined = joinAirflowToS3(airflowRes, relevantIncomingFiles);
-
-        console.log(joined);
+        var joined = joinAirflowToS3(airflowRes, relevantIncomingFiles).sort(function(row1, row2) {
+          if (row1.executionDate < row2.executionDate) return 1;
+          else if (row1.executionDate > row2.executionDate) return -1;
+          else return 0;
+        });
 
         return '<tr>' +
           '<td>' + providerConf.displayName + '</td>' +
-          '<td>' + relevantIncomingFiles[relevantIncomingFiles.length-1] + '</td>' +
-          '<td>[LAST INGESTED]</td>' +
+          '<td>' + joined[0].filename + '</td>' +
+          '<td>' + joined.filter(function(row) {
+            return row.ingested;
+          })[0].filename + '</td>' +
           '</tr>';
       }).reduce(function(el1, el2) {
         return el1 + el2;
