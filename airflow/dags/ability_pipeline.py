@@ -1,5 +1,6 @@
-from airflow.models import Variable
+from airflow.models import Variable, TaskInstance
 from airflow.operators import *
+from airflow.utils.state import State
 from datetime import datetime, timedelta
 from subprocess import check_output, check_call, STDOUT
 from json import loads as json_loads
@@ -443,6 +444,30 @@ split_push_ease_transaction_files_dag = split_push_transaction_files_subdag('eas
 
 queue_up_ease_for_matching_dag = queue_up_for_matching_subdag('ease', get_ease_deid_file_paths)
 
+def mk_short_circuit_task():
+    def do_short_circuit(**kwargs):
+        one_success = False
+        for t in kwargs['task'].upstream_list:
+            ti = TaskInstance(
+                t, execution_date=kwargs['ti'].execution_date)
+            if ti.current_state() == State.SUCCESS:
+                one_success = True
+        return one_success
+
+    global mdag
+    return ShortCircuitOperator(
+        task_id='short_circuit_normalization',
+        python_callable=do_short_circuit,
+        provide_context=True,
+        trigger_rule='all_done',
+        dag=mdag
+    )
+
+# This task allows us to create a complex trigger rule. The normalization step
+# will only trigger after all the pre-processing is done AND only run if one or
+# more of the pre-processing complete successfully
+short_circuit_normalization = mk_short_circuit_task()
+
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
         DAG_NAME,
@@ -479,6 +504,7 @@ clean_up_tmp_dir_dag = SubDagOperator(
         }
     ),
     task_id='clean_up_tmp_dir',
+    trigger_rule='all_done',
     dag=mdag
 )
 
@@ -524,7 +550,7 @@ clean_up_tmp_dir_dag.set_upstream([
     queue_up_ease_for_matching_dag
 ])
 
-detect_move_normalize_dag.set_upstream([
+short_circuit_normalization.set_upstream([
     split_push_ap_transaction_files_dag,
     split_push_ses_transaction_files_dag,
     split_push_ease_transaction_files_dag,
@@ -532,3 +558,5 @@ detect_move_normalize_dag.set_upstream([
     queue_up_ses_for_matching_dag,
     queue_up_ease_for_matching_dag
 ])
+
+detect_move_normalize_dag.set_upstream(short_circuit_normalization)
