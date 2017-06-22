@@ -66,13 +66,12 @@ def get_tmp_dir(ds, kwargs):
     return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
 
 def get_expected_ap_file_name(ds, kwargs):
-    return AP_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds'], ds)
+    return AP_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', ds)
 
 def get_ap_transaction_tmp_dir(ds, kwargs):
     return get_tmp_dir(ds, kwargs) + 'ap/transaction/'
 
-def get_ap_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + get_expected_ap_file_name(ds, kwargs)]
+get_ap_transaction_files_paths = get_transaction_files_paths_func(get_ap_transaction_tmp_dir)
 
 def get_expected_ap_file_regex(ds, kwargs):
     return AP_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', '\d{4}-\d{2}-\d{2}')
@@ -88,16 +87,25 @@ def get_transaction_files_paths_func(tmp_dir_func):
         return fs
     return get_transaction_files_paths
 
+def get_file_paths_func(expected_file_name_func):
+    def file_paths_func(ds, kwargs):
+        tmp_dir = get_tmp_dir(ds, kwargs)
+        expected_file = filter(lambda f: \
+            os.path.isfile(old_file_dir + f) and re.search(expected_file_name_func(ds, kwargs), f), \
+            os.listdir(tmp_dir))[0]
+        return [tmp_dir + expected_file]
+
+    return file_paths_func
+
 get_ap_transaction_files_paths = get_transaction_files_paths_func(get_ap_transaction_tmp_dir)
 
 def get_expected_ses_file_name(ds, kwargs):
-    return SES_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds'], ds)
+    return SES_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', ds)
 
 def get_ses_transaction_tmp_dir(ds, kwargs):
     return get_tmp_dir(ds, kwargs) + 'ses/transaction/'
 
-def get_ses_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + get_expected_ses_file_name(ds, kwargs)]
+get_ses_file_paths = get_file_paths_func(get_expected_ses_file_name)
 
 def get_expected_ses_file_regex(ds, kwargs):
     return SES_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', '\d{4}-\d{2}-\d{2}')
@@ -105,10 +113,9 @@ def get_expected_ses_file_regex(ds, kwargs):
 get_ses_transaction_files_paths = get_transaction_files_paths_func(get_ses_transaction_tmp_dir)
 
 def get_expected_ease_file_name(ds, kwargs):
-    return EASE_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds'], ds)
+    return EASE_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', ds)
 
-def get_ease_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + get_expected_ease_file_name(ds, kwargs)]
+get_ease_file_paths = get_file_paths_func(get_expected_ease_file_name)
 
 def get_expected_ease_file_regex(ds, kwargs):
     return EASE_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', '\d{4}-\d{2}-\d{2}')
@@ -167,9 +174,13 @@ def get_ease_encrypted_decrypted_file_paths(ds, kwargs):
     return fs
 
 def do_unzip_files(ds, **kwargs):
+    tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
+    expected_file = filter(lambda f: \
+        os.path.isfile(tmp_dir + f) and re.search(kwargs['expected_file_name_func'](ds, kwargs), f), \
+        os.listdir(tmp_dir))[0]
     check_call([
-        'unzip', kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + kwargs['expected_file_name_func'](ds, kwargs),
-        '-d', kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + kwargs['dest_dir']
+        'unzip', tmp_dir + expected_file,
+        '-d', tmp_dir + kwargs['dest_dir']
     ])
 
 def do_move_files(ds, **kwargs):
@@ -229,6 +240,7 @@ def validate_file_subdag(product, expected_file_name_func, file_name_pattern_fun
             mdag.schedule_interval,
             {
                 'expected_file_name_func': expected_file_name_func,
+                'regex_name_match'       : True,
                 'file_name_pattern_func' : file_name_pattern_func,
                 'minimum_file_size'      : minimum_file_size,
                 's3_prefix'              : s3_prefix,
@@ -253,6 +265,7 @@ def fetch_file_subdag(product, expected_file_name_func, s3_prefix):
             {
                 'tmp_path_template'      : TMP_PATH_TEMPLATE,
                 'expected_file_name_func': expected_file_name_func,
+                'regex_name_match'       : True,
                 's3_prefix'              : s3_prefix,
                 's3_bucket'              : ABILITY_S3_BUCKET,
                 's3_connection'          : ABILITY_S3_CONNECTION

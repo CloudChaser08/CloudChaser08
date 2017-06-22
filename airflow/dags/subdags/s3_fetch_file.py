@@ -1,4 +1,5 @@
 from airflow.operators import BashOperator, PythonOperator
+import re
 
 import common.HVDAG as HVDAG
 import util.s3_utils as s3_utils
@@ -13,6 +14,14 @@ def do_fetch_file(ds, **kwargs):
     s3_prefix          = kwargs['s3_prefix']
 
     tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
+
+    if 'regex_name_match' in kwargs and kwargs['regex_name_match']:
+        s3_keys = s3_utils.list_s3_bucket_files(
+            's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/', s3_connection_id
+        )
+
+        expected_file_name = \
+            filter(lambda k: re.search(xpected_file_name, k.split('/')[-1]), s3_keys)[0]
 
     s3_utils.fetch_file_from_s3(
         's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + expected_file_name,
