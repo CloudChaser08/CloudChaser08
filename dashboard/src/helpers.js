@@ -4,9 +4,22 @@ exports.leftZPad = function(string, length) {
   return baseString.substring(0, length - string.length) + string;
 };
 
-exports.subtractMonths = function(date, months) {
-  date.setMonth(date.getMonth() - months);
-  return date;
+// these functions avoid mutating incoming date objects because an
+// incoming date may be a constant on a provider that should not be
+// modified
+exports.addMonths = function(months) {
+  return function f(date) {
+    var copy = new Date(date.getTime());
+    copy.setMonth(copy.getMonth() + months);
+    return copy;
+  };
+};
+exports.addDays = function(days) {
+  return function f(date) {
+    var copy = new Date(date.getTime());
+    copy.setDate(copy.getDate() + days);
+    return copy;
+  };
 };
 
 // YYYY-mm-dd

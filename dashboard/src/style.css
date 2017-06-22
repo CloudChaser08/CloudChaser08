@@ -1,3 +1,27 @@
-/*
- * Custom CSS goes here
- */
+ul.nav {
+    padding: 10px 0 0 0;
+}
+
+div#data {
+    margin: 10px 0 0 0;
+}
+
+div#time-series ul {
+    display: none;
+}
+
+div#time-series li.not-sent {
+    background: red;
+}
+
+div#time-series li.not-ingested {
+    background: yellow;
+}
+
+div#time-series li.fully-loaded {
+    background: green;
+}
+
+span.pull-right {
+    display: none;
+}
