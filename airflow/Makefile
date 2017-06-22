@@ -56,6 +56,30 @@ run: pull
 	--name airflow \
 	${REPO}:latest
 
+run-local: build
+	docker run -d \
+	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
+	-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+	-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+	-e BASE_URL=http://${DOCKER_IP}:8080 \
+	-e RESET_DB=1 \
+	-v ${PWD}/dags:/usr/local/airflow/dags \
+	-v ${PWD}/../spark:/usr/local/airflow/spark \
+	-p 8080:8080 \
+	--name airflow \
+	${REPO}:${USER}
+
+test-local: clean build
+	docker run --rm \
+	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
+	-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+	-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+	-e PYTHONDONTWRITEBYTECODE=1 \
+	-v ${PWD}/dags:/usr/local/airflow/dags \
+	-v ${PWD}/../spark:/usr/local/airflow/spark \
+	--name airflow-test \
+	${REPO}:${USER} runtests
+
 test: pull clean
 	docker run --rm \
 	-e FERNET_KEY=eUpx4FQTDCp13ZCSk3PGAGZG1R3bzq3sfyesMmzrR40= \
