@@ -8,6 +8,7 @@ div#data {
 
 div#time-series ul {
     display: none;
+    list-style-type: none;
 }
 
 div#time-series li.not-sent {
@@ -23,5 +24,6 @@ div#time-series li.fully-loaded {
 }
 
 span.pull-right {
+    margin-top: -25px;
     display: none;
 }

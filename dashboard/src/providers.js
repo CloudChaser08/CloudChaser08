@@ -51,6 +51,18 @@ exports.config = [
     }
   },
   {
+    displayName: 'EmdeonRX',
+    incomingBucket: 'pharmacyclaims/emdeon/transactions',
+    schedule: this.schedule.DAILY,
+    startDate: new Date('2017-01-01'),
+    airflowPipelineName: 'emdeon_rx_post_matching_pipeline',
+    expectedFilenameRegex: /^.*[0-9]{8}_RX_DEID_CF_ON\.dat\.gz/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('/')[4].split('_')[0];
+      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+    }
+  },
+  {
     displayName: 'Quest',
     incomingBucket: 'quest',
     startDate: new Date('2017-01-01'),
