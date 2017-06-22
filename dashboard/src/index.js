@@ -8,9 +8,9 @@ var providers = require('./providers.js');
 var helpers = require('./helpers.js');
 
 // HTML to be displayed
-var html = fs.readFileSync(path.join(__dirname, './index.html'), 'utf-8')
-    .replace('{{CSS}}', fs.readFileSync(path.join(__dirname, './style.css'), 'utf-8'))
-    .replace('{{JAVASCRIPT}}', fs.readFileSync(path.join(__dirname, './main.js'), 'utf-8'));
+var html = fs.readFileSync(path.join(__dirname, './public/index.html'), 'utf-8')
+    .replace('{{CSS}}', fs.readFileSync(path.join(__dirname, './public/style.css'), 'utf-8'))
+    .replace('{{JAVASCRIPT}}', fs.readFileSync(path.join(__dirname, './public/main.js'), 'utf-8'));
 
 function getIncomingBucket(s3Prefix) {
   return s3Prefix.split('/').slice(1, s3Prefix.split('/').length - 1).reduce(function(b1, b2) {
