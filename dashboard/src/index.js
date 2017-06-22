@@ -33,7 +33,7 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
   function nextDate() {
     return providerConf.schedule(executionDates[executionDates.length-1]);
   }
-  while (nextDate() <= Date.now()) {
+  while (providerConf.schedule(nextDate()) <= Date.now()) {
     executionDates.push(nextDate());
   } 
 

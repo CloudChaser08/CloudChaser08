@@ -9,6 +9,7 @@ div#data {
 div#time-series ul {
     display: none;
     list-style-type: none;
+    padding: 0;
 }
 
 div#time-series li.not-sent {

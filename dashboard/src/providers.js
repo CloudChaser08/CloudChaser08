@@ -89,12 +89,15 @@ exports.config = [
     displayName: 'Express Scripts',
     incomingBucket: 'esi',
     schedule: this.schedule.WEEKLY,
-    startDate: new Date('2017-01-03'),
+    startDate: new Date('2017-01-01'),
     airflowPipelineName: 'express_scripts_pipeline',
-    expectedFilenameRegex: /^.*[0-9X]{9}_HV_RX_Claims_c[0-9]{6}.txt$/,
+    expectedFilenameRegex: /^.*10130X001_HV_RX_Claims_D[0-9]{8}.txt$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('_')[4].split('.')[0].substring(1);
-      return '20' + isolatedDate.substring(0, 2) + '-' + isolatedDate.substring(2, 4) + '-' + isolatedDate.substring(4, 6);
+      var adjusted = helpers.addDays(-6)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
     }
   }
 ];
