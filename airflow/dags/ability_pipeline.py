@@ -71,8 +71,6 @@ def get_expected_ap_file_name(ds, kwargs):
 def get_ap_transaction_tmp_dir(ds, kwargs):
     return get_tmp_dir(ds, kwargs) + 'ap/transaction/'
 
-get_ap_transaction_files_paths = get_transaction_files_paths_func(get_ap_transaction_tmp_dir)
-
 def get_expected_ap_file_regex(ds, kwargs):
     return AP_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}', '\d{4}-\d{2}-\d{2}')
 
@@ -96,6 +94,8 @@ def get_file_paths_func(expected_file_name_func):
         return [tmp_dir + expected_file]
 
     return file_paths_func
+
+get_ap_file_paths = get_file_paths_func(get_expected_ap_file_name)
 
 get_ap_transaction_files_paths = get_transaction_files_paths_func(get_ap_transaction_tmp_dir)
 

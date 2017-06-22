@@ -21,7 +21,7 @@ def do_fetch_file(ds, **kwargs):
         )
 
         expected_file_name = \
-            filter(lambda k: re.search(xpected_file_name, k.split('/')[-1]), s3_keys)[0]
+            filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)[0]
 
     s3_utils.fetch_file_from_s3(
         's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + expected_file_name,
