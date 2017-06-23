@@ -1,3 +1,7 @@
+/*
+ * Functions for retreiving data from the Airflow database
+ */
+
 var psql = require('pg');
 var fs = require('fs');
 var path = require('path');
@@ -11,6 +15,8 @@ var client = new psql.Client({
   database: 'airflow'
 });
 
+// using the query template found in provider-ingestion.sql, insert a
+// statement for each provider
 const query = {
   text: fs.readFileSync(path.join(__dirname, './provider-ingestion.sql'), 'utf-8').replace(
     '{{PROVIDERS}}', providers.config.map(function (provider) {
@@ -26,6 +32,10 @@ const query = {
   rowMode: 'array'
 };
 
+/**
+ * Get a callable asynchronous function that will return the results
+ * from running the query above against the airflow database
+ */
 exports.getAirflowCall = function() {
   return function(callback) {
     // connect to our database
@@ -44,10 +54,4 @@ exports.getAirflowCall = function() {
       });
     });
   };
-}
-
-
-
-
-
-
+};

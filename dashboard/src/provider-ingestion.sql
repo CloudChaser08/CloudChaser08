@@ -1,3 +1,9 @@
+/*
+ * This query will return a row for each date in the airflow database and a column for each
+ * provider in the 'PROVIDERS' list. If the status of all of the airflow tasks for a given
+ * provider's pipeline were either 'success' or 'skipped' on a given date, that date is given
+ * a '1' (success), otherwise it will be given a '0' (failure)
+ */
 SELECT success_date,
     {{PROVIDERS}}
 FROM (

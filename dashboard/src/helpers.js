@@ -1,12 +1,23 @@
+/*
+ * Miscellaneous helper functions
+ */
+
+/**
+ * Left-pad zeros up to <length>
+ */
 exports.leftZPad = function(string, length) {
   length = (typeof length !== 'undefined') ? length : 2;
   var baseString = new Array(length + 1).join( '0' );
   return baseString.substring(0, length - string.length) + string;
 };
 
-// these functions avoid mutating incoming date objects because an
-// incoming date may be a constant on a provider that should not be
-// modified
+/**
+ * Date manipulation functions
+ *
+ * these functions avoid mutating incoming date objects because an
+ * incoming date may be a constant on a provider that should not be
+ * modified
+ */
 exports.addMonths = function(months) {
   return function f(date) {
     var copy = new Date(date.getTime());
@@ -22,7 +33,9 @@ exports.addDays = function(days) {
   };
 };
 
-// YYYY-mm-dd
+/**
+ * Convert a Date() object to a formatted text string 'YYYY-mm-dd'
+ */
 exports.formatDate = function(date) {
   return (1900 + date.getYear()) + '-'
     + this.leftZPad((date.getMonth() + 1).toString()) + '-'

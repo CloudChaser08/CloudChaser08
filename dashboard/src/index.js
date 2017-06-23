@@ -1,3 +1,7 @@
+/*
+ * Main file containing the entry point for the lambda job
+ */
+
 var async = require('async');
 var fs = require('fs');
 var path = require('path');
@@ -12,20 +16,21 @@ var html = fs.readFileSync(path.join(__dirname, './public/index.html'), 'utf-8')
     .replace('{{CSS}}', fs.readFileSync(path.join(__dirname, './public/style.css'), 'utf-8'))
     .replace('{{JAVASCRIPT}}', fs.readFileSync(path.join(__dirname, './public/main.js'), 'utf-8'));
 
-function getIncomingBucket(s3Prefix) {
-  return s3Prefix.split('/').slice(1, s3Prefix.split('/').length - 1).reduce(function(b1, b2) {
-    return b1 + '/' + b2;
-  });
-}
-
-// join airflow data to s3 and add in dates that are missing
+/**
+ * Combines airflow data for a single provider to the list of files in
+ * the s3 incoming bucket for that provider
+ */
 function buildFullDataset(airflowResults, providerIncomingFiles) {
+
+  // the index of the column in the tabular airflow data that
+  // corresponds to this provider
   var providerColumnIndex = airflowResults.fields.findIndex(function(airflowResultField) {
-    return airflowResultField.name == getIncomingBucket(providerIncomingFiles[0]);
+    return airflowResultField.name == s3.getIncomingBucket(providerIncomingFiles[0]);
   });
 
+  // the configuration for this provider
   var providerConf = providers.config.filter(function(provider) {
-    return provider.incomingBucket == getIncomingBucket(providerIncomingFiles[0]);
+    return provider.incomingBucket == s3.getIncomingBucket(providerIncomingFiles[0]);
   })[0];
 
   // enumerate all execution dates for this provider
@@ -37,6 +42,7 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
     executionDates.push(nextDate());
   } 
 
+  // return an array containing one entry for each execution date
   return executionDates.map(function(exDate) {
     var airflowData = airflowResults.rows.filter(function(resultRow) {
       var date = new Date(resultRow[0]);
@@ -49,8 +55,11 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
       return formatted === helpers.formatDate(exDate);
     })[0];
 
+    // this execution date will be considered 'ingested' if the
+    // corresponding value in the airflow data is '1'
     var ingested = typeof airflowData !== 'undefined' && airflowData[providerColumnIndex].toString().trim() === "1";
 
+    // grab list of incoming files for this execution date
     var incomingFiles = providerIncomingFiles.filter(function(file) {
       return providerConf.filenameToExecutionDate(file) == helpers.formatDate(exDate);
     });
@@ -64,13 +73,20 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
   });
 }
 
+/**
+ * Simple function for disploying a 'joined' object (in the form
+ * output from the buildFullDataset function)
+ */
 function displayJoinedObject(obj) {
   return obj.executionDate;
 }
 
-// lambda entry point
+/**
+ * Entry point for lambda job
+ */
 exports.handler = function(event, context) {
 
+  // assembly all asynchronous calls
   var calls = s3.getS3Calls();
   calls.push(airflow.getAirflowCall());
 
@@ -81,25 +97,36 @@ exports.handler = function(event, context) {
       // pop off airflow query result
       var airflowRes = result.pop();
 
-      // each provider gets their own section
+      // assemble a 'content' object for each provider - each provider
+      // will get an html snippet for the 'last ingested date' table,
+      // as well as one for the date series table.
       var content = result.map(function (providerS3Res) {
+
+        // conf for this provider
         var providerConf = providers.config.filter(function(provider) {
-          return provider.incomingBucket == getIncomingBucket(providerS3Res[0]);
+          return provider.incomingBucket == s3.getIncomingBucket(providerS3Res[0]);
         })[0];
+
+        // filter incoming files based on expected filename regex
         var relevantIncomingFiles = providerS3Res.filter(function(filename) {
           return providerConf.expectedFilenameRegex.test(filename);
         });
 
+        // join relevant incoming file list to the airflow data for
+        // this provider
         var allData = buildFullDataset(airflowRes, relevantIncomingFiles).sort(function(row1, row2) {
           if (row1.executionDate < row2.executionDate) return 1;
           else if (row1.executionDate > row2.executionDate) return -1;
           else return 0;
         });
 
+        // filter out days with no incoming files
         var existingFiles = allData.filter(function(d) {
           return d.incomingFiles.length > 0;
         });
 
+        // convert the provider display name to a CSS id (cannot
+        // contain spaces)
         var providerCSSId = providerConf.displayName.toLowerCase().replace(' ', '-');
 
         return {
@@ -116,7 +143,12 @@ exports.handler = function(event, context) {
 
           // time series HTML for this provider
           timeSeriesContent: '<ul id="' + providerCSSId + '">' +
+
+            // each execution date will get an <li> element
             allData.map(function(d) {
+
+              // calculate class based on the status for this
+              // execution date
               var dateClass;
               if (d.incomingFiles.length === 0) dateClass = 'not-sent';
               else if (!d.ingested) dateClass = 'not-ingested';
@@ -129,6 +161,7 @@ exports.handler = function(event, context) {
         };
       });
 
+      // insert provider content into the large HTML output blob
       var output = html.replace('{{DATE_INGESTED_CONTENT}}', content.map(function(c) {
         return c.dateIngestedContent;
       }).reduce(function(el1, el2) {
@@ -139,10 +172,17 @@ exports.handler = function(event, context) {
         return el1 + el2;
       }));
 
+      // upload the HTML blob to s3
       s3.uploadFile(output, 's3://hvstatus.healthverity.com/test/provider-status-dash/index.html', function(err, data) {
         if(err) context.fail(err);
         else context.succeed();
       });
+
+      // output file for testing
+      // fs.writeFile(path.join(__dirname, 'test.html'), output, 'utf-8', function(err, data) {
+        // if(err) context.fail(err);
+        // else context.succeed();
+      // });
     }
   });
 };

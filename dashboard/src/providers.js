@@ -1,5 +1,7 @@
 var helpers = require('./helpers.js');
 
+// for each airflow schedule, this object provides a function that can
+// be used to increment a date by the correct time period
 exports.schedule = {
   DAILY: helpers.addDays(1),
   WEEKLY: helpers.addDays(7),
@@ -7,7 +9,25 @@ exports.schedule = {
   MONTHLY: helpers.addMonths(1)
 };
 
-// global configuration object
+// Each provider gets a configuration object that describes all of the
+// nuances of this provider as they relate to both s3 and airflow.
+//
+// Adding new providers to this dashboard requires only that you add a
+// new configuration for the new provider to this config list - the
+// dashboard is built by iterating over this array.
+//
+// The configuration for a new provider should include the following:
+//   displayName              -> Provider name as it will be displayed on the dashboard
+//   incomingBucket           -> The string between healthverity/incoming/ and all of the incoming files for this provider.
+//                               May contain slashes.
+//                               Ex: s3://healthverity/incoming/<incoming bucket>/incomingFile.gz
+//   schedule                 -> The airflow schedule for this provider's DAG (from the schedule object above)
+//   startDate                -> The date from which to enumerate all of this provider's execution dates for the purposes
+//                               of this dashboard
+//   airflowPipelineName      -> The name of this provider's airflow pipeline
+//   expectedFilenameRegex    -> A regex describing the structure of this provider's incoming file names
+//   filenameToExecutionDate  -> A function to be used to convert an incoming file name to an execution date of the
+//                               form YYYY-mm-dd
 exports.config = [
   {
     displayName: 'Practice Insight',
