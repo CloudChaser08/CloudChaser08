@@ -38,6 +38,11 @@
       </div>
 
       <div id="time-series" class="data-element">
+        <div id="legend">
+          <span class="legend-marker not-sent"></span> => We did not receive a file<br>
+          <span class="legend-marker not-ingested"></span> => We have not ingested the file<br>
+          <span class="legend-marker fully-loaded"></span> => The file has been ingested<br>
+        </div>
         {{TIME_SERIES_CONTENT}}
       </div>
 

@@ -8,6 +8,7 @@ $( document ).ready(function() {
     $('div#time-series > ul').hide();
     $('div#time-series > ul#' + $(this).attr('id')).show();
     $('div.header span.pull-right').show();
+    $('div#time-series').show();
   });
 
   $('div.header span.pull-right').click(function() {
@@ -15,6 +16,7 @@ $( document ).ready(function() {
     $('div#time-series > ul').hide();
     $('div#ingestion tbody tr').show();
     $('div.header span.pull-right').hide();
+    $('div#time-series').hide();
   });
 });
 

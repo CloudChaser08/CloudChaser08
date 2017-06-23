@@ -6,22 +6,38 @@ div#data {
     margin: 10px 0 0 0;
 }
 
+div#time-series {
+    display: none;
+}
+
 div#time-series ul {
     display: none;
     list-style-type: none;
     padding: 0;
 }
 
-div#time-series li.not-sent {
+div#time-series .not-sent {
     background: red;
 }
 
-div#time-series li.not-ingested {
+div#time-series .not-ingested {
     background: yellow;
 }
 
-div#time-series li.fully-loaded {
+div#time-series .fully-loaded {
     background: green;
+}
+
+div#time-series #legend {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    display: block;
+}
+
+div#time-series .legend-marker {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
 }
 
 span.pull-right {
