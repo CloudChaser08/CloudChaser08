@@ -6,16 +6,9 @@ div#data {
     margin: 10px 0 0 0;
 }
 
-div#ingestion tr.healthy {
-    background: lightgreen;
-}
-
-div#ingestion tr.unhealthy {
-    background: orange;
-}
-
 div#time-series {
     display: none;
+    font-size: 1.2em;
 }
 
 div#time-series ul {
@@ -25,26 +18,35 @@ div#time-series ul {
     width: 50%;
 }
 
+div#time-series li {
+    padding: 5px;
+}
+
 div#time-series .not-sent {
-    background: red;
+    background: #f99;
 }
 
 div#time-series .not-ingested {
-    background: yellow;
+    background: #ff9;
 }
 
 div#time-series .fully-loaded {
-    background: green;
+    background: #9f9;
 }
 
 div#time-series #legend {
     display: block;
 }
 
+div#time-series #back {
+    display: block;
+    padding: 0 0 20px 0;
+}
+
 div#time-series .legend-marker {
     display: inline-block;
-    width: 10px;
-    height: 10px;
+    width: 20px;
+    height: 20px;
 }
 
 span.pull-right {

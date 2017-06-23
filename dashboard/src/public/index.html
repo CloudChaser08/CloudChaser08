@@ -17,7 +17,6 @@
     <div class="container">
       <div class="header clearfix">
         <h3 class="text-muted">Provider Status Dashboard</h3>
-        <span class="pull-right"><a href="#">(expand)</a></span>
       </div>
 
       <div id="data">
@@ -28,6 +27,7 @@
                 <th>Provider Name</th>
                 <th>Last File Received</th>
                 <th>Last File Ingested</th>
+                <th>Overall Status</th>
               </tr>
             </thead>
             <tbody>
@@ -38,10 +38,11 @@
       </div>
 
       <div id="time-series" class="data-element">
+        <span id="back"><a href="#">&lt;&lt;back</a></span>
         <div id="legend" class="pull-right">
-          <span class="legend-marker not-sent"></span> => We did not receive a file<br>
-          <span class="legend-marker not-ingested"></span> => We have not ingested the file<br>
-          <span class="legend-marker fully-loaded"></span> => The file has been ingested<br>
+          <span class="legend-marker fully-loaded"></span> &#8594; The file has been ingested<br>
+          <span class="legend-marker not-ingested"></span> &#8594; We have not ingested the file<br>
+          <span class="legend-marker not-sent"></span> &#8594; We did not receive a file<br>
         </div>
         {{TIME_SERIES_CONTENT}}
       </div>

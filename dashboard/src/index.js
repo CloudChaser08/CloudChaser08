@@ -92,7 +92,7 @@ function estimateProviderHealth(providerData, conf) {
     return (!el.ingested || el.incomingFiles.length === 0) ? (acc + 1) : acc;
   }, 0);
 
-  return ((periodsToConsider - negativePeriods)/periodsToConsider) * 100;
+  return (periodsToConsider - negativePeriods)*1.0/periodsToConsider * 100;
 }
 
 /**
@@ -148,18 +148,22 @@ exports.handler = function(event, context) {
 
         var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
 
-        var healthClass;
-        if (providerHealthPercentage >= 75) healthClass = 'healthy';
-        else healthClass = 'unhealthy';
+        var healthLabel;
+        if (providerHealthPercentage >= 75) healthLabel = 'Healthy';
+        else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = 'Moderately Healthy';
+        else healthLabel = 'Unhealthy';
+
+        console.log(providerHealthPercentage);
 
         return {
           // date ingested HTML for this provider
-          dateIngestedContent: '<tr class=' + healthClass + '>' +
+          dateIngestedContent: '<tr>' +
             '<td><a href="#" id="' + providerCSSId + '">' + providerConf.displayName + '</a></td>' +
             '<td>' + existingFiles[0].executionDate+ '</td>' +
             '<td>' + existingFiles.filter(function(row) {
               return row.ingested;
             })[0].executionDate + '</td>' +
+            '<td>' + healthLabel + '</td>' +
             '</tr>',
 
           // time series HTML for this provider
