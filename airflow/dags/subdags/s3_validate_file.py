@@ -26,10 +26,17 @@ def do_is_valid_new_file(ds, **kwargs):
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
         return kwargs['is_bad_name']
 
-    if len(filter(lambda k: k.split('/')[-1] == expected_file_name, s3_keys)) == 0:
+    # Check if there are files matching the name exactly, or, if regex match
+    # was specified, there are files matching the regex pattern
+    if not (len(filter(lambda k: k.split('/')[-1] == expected_file_name, s3_keys)) > 0 \
+            or (regex_name_match in kwargs and kwargs['regex_name_match'] and \
+            len(filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)) > 0)):
+
         return kwargs['is_not_new']
 
-    s3_key = filter(lambda k: k.split('/')[-1] == expected_file_name, s3_keys)[0]
+    # Grab the first key that's either an exact match or a partial match
+    s3_key = (filter(lambda k: k.split('/')[-1] == expected_file_name, s3_keys) + 
+            filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys))[0]
 
     if s3_utils.get_file_size(
             's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/' + s3_key, s3_connection_id
