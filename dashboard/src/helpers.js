@@ -14,9 +14,8 @@ exports.leftZPad = function(string, length) {
 /**
  * Date manipulation functions
  *
- * these functions avoid mutating incoming date objects because an
- * incoming date may be a constant on a provider that should not be
- * modified
+ * These functions avoid mutating incoming date objects to avoid
+ * confusing errors later on
  */
 exports.addMonths = function(months) {
   return function f(date) {

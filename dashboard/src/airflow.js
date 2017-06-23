@@ -38,18 +38,18 @@ const query = {
  */
 exports.getAirflowCall = function() {
   return function(callback) {
-    // connect to our database
+    // connect to the DB
     client.connect(function (err) {
-      if (err) throw err;
+      if (err) callback(err);
 
-      // execute a query on our database
+      // execute the query
       client.query(query, [], function (err, result) {
         if (err) callback(err);
         else callback(null, result);
 
         // disconnect the client
         client.end(function (err) {
-          if (err) throw err;
+          if (err) callback(err);
         });
       });
     });

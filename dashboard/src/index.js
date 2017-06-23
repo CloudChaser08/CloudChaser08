@@ -74,26 +74,21 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
 }
 
 /**
- * Simple function for disploying a 'joined' object (in the form
- * output from the buildFullDataset function)
- */
-function displayJoinedObject(obj) {
-  return obj.executionDate;
-}
-
-/**
- * Entry point for lambda job
+ * Main entry point for this lambda job
  */
 exports.handler = function(event, context) {
 
-  // assembly all asynchronous calls
+  // assemble all asynchronous calls
   var calls = s3.getS3Calls();
   calls.push(airflow.getAirflowCall());
 
-  // execute all calls in parallel
+  // execute calls in parallel
   async.parallel(calls, function(err, result) {
     if (err) context.fail(err);
+
+    // all calls were successful
     else {
+
       // pop off airflow query result
       var airflowRes = result.pop();
 
@@ -133,12 +128,10 @@ exports.handler = function(event, context) {
           // date ingested HTML for this provider
           dateIngestedContent: '<tr>' +
             '<td><a href="#" id="' + providerCSSId + '">' + providerConf.displayName + '</a></td>' +
-            '<td>' + displayJoinedObject(existingFiles[0])+ '</td>' +
-            '<td>' + displayJoinedObject(
-              existingFiles.filter(function(row) {
-                return row.ingested;
-              })[0]
-            ) + '</td>' +
+            '<td>' + existingFiles[0].executionDate+ '</td>' +
+            '<td>' + existingFiles.filter(function(row) {
+              return row.ingested;
+            })[0].executionDate + '</td>' +
             '</tr>',
 
           // time series HTML for this provider
