@@ -73,6 +73,28 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
   });
 }
 
+/*
+ * Estimate the general 'health' of a provider
+ */
+function estimateProviderHealth(providerData, conf) {
+  var periodsToConsider;
+  if (conf.schedule === providers.schedule.DAILY) {
+    periodsToConsider = 60;
+  } else if (conf.schedule === providers.schedule.WEEKLY) {
+    periodsToConsider = 8;
+  } else if (conf.schedule === providers.schedule.BIWEEKLY) {
+    periodsToConsider = 4;
+  } else if (conf.schedule === providers.schedule.MONTHLY) {
+    periodsToConsider = 2;
+  }
+
+  var negativePeriods = providerData.slice(0, periodsToConsider).reduce(function(acc, el) {
+    return (!el.ingested || el.incomingFiles.length === 0) ? (acc + 1) : acc;
+  }, 0);
+
+  return ((periodsToConsider - negativePeriods)/periodsToConsider) * 100;
+}
+
 /**
  * Main entry point for this lambda job
  */
@@ -124,9 +146,15 @@ exports.handler = function(event, context) {
         // contain spaces)
         var providerCSSId = providerConf.displayName.toLowerCase().replace(' ', '-');
 
+        var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
+
+        var healthClass;
+        if (providerHealthPercentage >= 75) healthClass = 'healthy';
+        else healthClass = 'unhealthy';
+
         return {
           // date ingested HTML for this provider
-          dateIngestedContent: '<tr>' +
+          dateIngestedContent: '<tr class=' + healthClass + '>' +
             '<td><a href="#" id="' + providerCSSId + '">' + providerConf.displayName + '</a></td>' +
             '<td>' + existingFiles[0].executionDate+ '</td>' +
             '<td>' + existingFiles.filter(function(row) {

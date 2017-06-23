@@ -63,15 +63,17 @@ exports.getS3Calls = function() {
 };
 
 /**
- * Upload text content to a file in s3. This function is asynchronous,
- * it will call the provided 'callback' function when it is finished.
+ * Upload text content to an HTML file in s3. This function is
+ * asynchronous, it will call the provided 'callback' function when it
+ * is finished.
  */
 exports.uploadFile = function(content, filename, callback) {
   var params = {
     Body: content, 
     Bucket: filename.split('/')[2], 
     Key: filename.split('/').slice(3).reduce(function(x, y) {return x + '/' + y;}), 
-    ServerSideEncryption: "AES256"
+    ServerSideEncryption: "AES256",
+    ContentType: 'text/html'
   };
 
   s3.putObject(params, callback);
