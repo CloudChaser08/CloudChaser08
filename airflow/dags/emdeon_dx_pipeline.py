@@ -75,18 +75,6 @@ def do_push_splits_to_s3(ds, **kwargs):
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
     check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
 
-def do_trigger_post_matching_dag(context, dag_run_obj):
-    file_dir = TMP_PATH_TEMPLATE.format(context['ds_nodash'])
-    transaction_file_name = TRANSACTION_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
-    deid_file_name = DEID_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
-    row_count = check_output(['zgrep', '-c', '^[^|]*|C|', file_dir + transaction_file_name])
-    dag_run_obj.payload = {
-            "deid_filename": deid_file_name.replace('.gz', ''),
-            "row_count": str(row_count),
-            "ds_yesterday": context['yesterday_ds']
-        }
-    return dag_run_obj
-
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2016, 12, 1, 12),
@@ -192,10 +180,64 @@ queue_up_for_matching = BashOperator(
     dag=mdag
 )
 
-trigger_post_matching_dag = TriggerDagRunOperator(
-    task_id='trigger_post_matching_dag',
-    trigger_dag_id='emdeon_dx_post_matching_pipeline',
-    python_callable=do_trigger_post_matching_dag,
+def insert_file_date_func(template):
+    def out(ds, kwargs):
+        return template.format(
+            kwargs['ds_yesterday'][0:4],
+            kwargs['ds_yesterday'][5:7],
+            kwargs['ds_yesterday'][8:10]
+        )
+    return out
+
+def expected_matching_files_func(ds, kwargs):
+    deid_file_name = DEID_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds_nodash'])
+    return [deid_file_name.replace('.gz', '')]
+
+
+#
+# Post-Matching
+#
+detect_move_normalize_dag = SubDagOperator(
+    subdag=detect_move_normalize.detect_move_normalize(
+        DAG_NAME,
+        'detect_move_normalize',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_matching_files_func'      : expected_matching_files_func,
+            'file_date_func'                    : insert_file_date_func(
+                '{}/{}/{}'
+            ),
+            's3_payload_loc_url'                : S3_PAYLOAD_LOC,
+            'vendor_uuid'                       : '86396771-0345-4d67-83b3-7e22fded9e1d',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/emdeon/medicalclaims/sparkNormalizeEmdeonDX.py',
+            'pyspark_normalization_args_func'   : lambda ds, k: [
+                '--date', insert_file_date_func('{}-{}-{}')(ds, k)
+            ],
+            'pyspark'                           : True
+        }
+    ),
+    task_id='detect_move_normalize',
+    dag=mdag
+)
+
+sql_template = """
+    ALTER TABLE medicalclaims_new ADD PARTITION (part_provider='emdeon', part_best_date='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/2017-02-24/part_provider=emdeon/part_best_date={0}-{1}/'
+"""
+
+update_analytics_db = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db_new',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k: insert_file_date(sql_template)(ds, k) \
+                if insert_file_date('{}-{}-{}')(ds, k).find('-01') == 7 else ''
+        }
+    ),
+    task_id='update_analytics_db',
     dag=mdag
 )
 
@@ -214,4 +256,6 @@ push_splits_to_s3.set_downstream(trigger_post_matching_dag)
 validate_fetch_transaction_mft_file_dag.set_downstream(trigger_post_matching_dag)
 queue_up_for_matching.set_upstream(validate_fetch_deid_file_dag)
 queue_up_for_matching.set_downstream(trigger_post_matching_dag)
-clean_up_workspace.set_upstream(trigger_post_matching_dag)
+detect_move_normalize_dag.set_upstream([push_splits_to_s3, validate_fetch_transaction_mft_file_dag, queue_up_for_matching])
+update_analytics_db.set_upstream(detect_move_normalize_dag)
+clean_up_workspace.set_upstream([push_splits_to_s3, validate_fetch_transaction_mft_file_dag, queue_up_for_matching])
