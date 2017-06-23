@@ -139,15 +139,10 @@ exports.handler = function(event, context) {
         return el1 + el2;
       }));
 
-      fs.writeFile(path.join(__dirname, './test.html'), output, function(err) {
-        if(err) {
-          console.log(err);
-        }
-
-        console.log("The file was saved!");
-        // context.succeed(html.replace('{{CONTENT}}', content));
-        context.succeed(output);
-      }); 
+      s3.uploadFile(output, 's3://hvstatus.healthverity.com/test/provider-status-dash/index.html', function(err, data) {
+        if(err) context.fail(err);
+        else context.succeed();
+      });
     }
   });
 };

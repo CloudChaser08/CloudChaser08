@@ -38,3 +38,14 @@ exports.getS3Calls = function() {
     };
   });
 };
+
+exports.uploadFile = function(content, filename, callback) {
+  var params = {
+    Body: content, 
+    Bucket: filename.split('/')[2], 
+    Key: filename.split('/').slice(3).reduce(function(x, y) {return x + '/' + y;}), 
+    ServerSideEncryption: "AES256"
+  };
+
+  s3.putObject(params, callback);
+};
