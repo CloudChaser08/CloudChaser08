@@ -153,8 +153,6 @@ exports.handler = function(event, context) {
         else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = 'Moderately Healthy';
         else healthLabel = 'Unhealthy';
 
-        console.log(providerHealthPercentage);
-
         return {
           // date ingested HTML for this provider
           dateIngestedContent: '<tr>' +
