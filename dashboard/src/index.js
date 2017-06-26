@@ -149,19 +149,19 @@ exports.handler = function(event, context) {
         var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
 
         var healthLabel;
-        if (providerHealthPercentage >= 75) healthLabel = 'Healthy';
-        else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = 'Moderately Healthy';
-        else healthLabel = 'Unhealthy';
+        if (providerHealthPercentage >= 75) healthLabel = [0, 'Healthy'];
+        else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = [1, 'Moderately Healthy'];
+        else healthLabel = [2, 'Unhealthy'];
 
         return {
           // date ingested HTML for this provider
-          dateIngestedContent: '<tr>' +
-            '<td><a href="#" id="' + providerCSSId + '">' + providerConf.displayName + '</a></td>' +
+          dateIngestedContent: '<tr id="' + providerCSSId + '">' +
+            '<td><a href="#">' + providerConf.displayName + '</a></td>' +
             '<td>' + existingFiles[0].executionDate+ '</td>' +
             '<td>' + existingFiles.filter(function(row) {
               return row.ingested;
             })[0].executionDate + '</td>' +
-            '<td>' + healthLabel + '</td>' +
+            '<td data-statusnumber=' + healthLabel[0] + '>' + healthLabel[1] + '</td>' +
             '</tr>',
 
           // time series HTML for this provider
@@ -201,10 +201,10 @@ exports.handler = function(event, context) {
         else context.succeed();
       });
 
-      // output file for testing
+      // // output file for testing
       // fs.writeFile(path.join(__dirname, 'test.html'), output, 'utf-8', function(err, data) {
-        // if(err) context.fail(err);
-        // else context.succeed();
+      //   if(err) context.fail(err);
+      //   else context.succeed();
       // });
     }
   });

@@ -5,8 +5,7 @@
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
 
     <!-- Custom CSS -->
     <style>
@@ -20,14 +19,14 @@
       </div>
 
       <div id="data">
-        <div class="table-responsive data-element" id="ingestion">
-          <table class="table table-striped">
+        <div class="data-element" id="ingestion">
+          <table id="table" data-toggle="table" data-classes="table table-hover table-no-bordered">
             <thead>
               <tr>
-                <th>Provider Name</th>
-                <th>Last File Received</th>
-                <th>Last File Ingested</th>
-                <th>Overall Status</th>
+                <th data-field="name" data-sortable="true">Provider Name</div></th>
+                <th data-field="received" data-sortable="true">Last File Received</div></th>
+                <th data-field="ingested" data-sortable="true">Last File Ingested</div></th>
+                <th data-field="status" data-sortable="true" data-sort-name="_status_data" data-sorter="statusSorter">Overall Status</div></th>
               </tr>
             </thead>
             <tbody>
@@ -55,6 +54,7 @@
     <!-- Bootstrap JS -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
             integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
 
     <!-- Custom Javascript -->
     <script>

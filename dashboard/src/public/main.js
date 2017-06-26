@@ -1,26 +1,52 @@
-$( document ).ready(function() {
+/**
+ * Create and configure the bootstrap table
+ */
+function configureTable() {
+  $('#table').bootstrapTable({
+    onClickRow: function (row, $element, field) {
 
-  // when any provider is clicked
-  $('div#ingestion table a').click(function() {
+      // disable sorting
+      $('#table').bootstrapTable(
+        'refreshOptions' , {sortable: false}
+      );
 
-    // activate the provider row
-    $('div#ingestion tbody tr').removeClass('active');
-    $(this).parent().parent().addClass('active');
-    $('div#ingestion tbody tr').not('.active').hide();
+      // hide all other rows
+      $('div#ingestion tbody tr').not('#' + $element.attr('id')).hide();
 
-    // hide all other providers, show this provider's time series
-    $('div#time-series > ul').hide();
-    $('div#time-series > ul#' + $(this).attr('id')).show();
-    $('div#time-series').show();
+      // show this provider's time series
+      $('div#time-series > ul').hide();
+      $('div#time-series > ul#' + $element.attr('id')).show();
+      $('div#time-series').show();
+
+      // reset the height
+      $('#table').bootstrapTable(
+        'resetView' , {height: 100}
+      );
+    }
   });
+}
 
-  // when the '<<back' link is clicked, revert everything back to the
-  // original state
-  $('div#time-series span#back a').click(function() {
-    $('div#ingestion tbody tr').removeClass('active');
-    $('div#time-series > ul').hide();
-    $('div#ingestion tbody tr').show();
-    $('div#time-series').hide();
-  });
+/**
+ * When the '<<back' link is clicked
+ */
+$('div#time-series span#back a').click(function() {
+
+  // Undo all jquery dom manipulations
+  $('div#time-series > ul').hide();
+  $('div#ingestion tbody tr').show();
+  $('div#time-series').hide();
+
+  // reset the table
+  $('#table').bootstrapTable('destroy');
+  configureTable();
 });
 
+/**
+ * Function for sorting health statuses by their 'true' ordering
+ * instead of the arbitrary lexographical ordering
+ */
+function statusSorter(a, b) {
+  return a.statusnumber - b.statusnumber;
+}
+
+configureTable();
