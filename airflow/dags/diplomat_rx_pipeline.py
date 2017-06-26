@@ -27,7 +27,7 @@ airflow_env = {
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/diplomat/pharmacyclaims/{}/'
-DAG_NAME = 'diplomat_pipeline'
+DAG_NAME = 'diplomat_rx_pipeline'
 
 # Applies to all transaction files
 if airflow_env == 'test':
@@ -225,7 +225,7 @@ decrypt_transaction = SubDagOperator(
             'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
         }
     ),
-    task_id='decrypt_addon_file',
+    task_id='decrypt_transaction_file',
     dag=mdag
 )
 

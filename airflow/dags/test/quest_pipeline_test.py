@@ -20,7 +20,7 @@ real_airflow_models_Variable_get = airflow.models.Variable.get
 @pytest.fixture(autouse=True)
 def setup_teardown():
     airflow.models.Variable.get = mock.MagicMock(
-        return_value='DUMMYVAR'
+        return_value='dev'
     )
 
     # must be imported after Variable is mocked
