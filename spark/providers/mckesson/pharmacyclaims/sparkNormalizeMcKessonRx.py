@@ -26,7 +26,7 @@ def load(input_path, restriction_level):
     ).createTempView('{}_transactions'.format(restriction_level))
 
 
-def postprocess_and_unload(date_input, test, restricted):
+def postprocess_and_unload(date_input, restricted, test_dir):
     """
     Function for unloading normalized data
     """
@@ -45,11 +45,11 @@ def postprocess_and_unload(date_input, test, restricted):
         runner.sqlContext.sql('select * from {}_pharmacyclaims_common_model'.format(restriction_level))
     ).createTempView('{}_pharmacyclaims_common_model'.format(restriction_level))
 
-    if not test:
-        normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model.sql', provider,
-            '{}_pharmacyclaims_common_model'.format(restriction_level), 'date_service', date_input
-        )
+    normalized_records_unloader.partition_and_rename(
+        spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model.sql', provider,
+        '{}_pharmacyclaims_common_model'.format(restriction_level), 'date_service', date_input,
+        test_dir=test_dir
+    )
 
 
 def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
@@ -132,7 +132,11 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
             ]
         ])
 
-        postprocess_and_unload(date_input, test, restricted)
+        test_dir = file_utils.get_abs_path(
+            script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/output/'
+        ) + '/' if test else None
+
+        postprocess_and_unload(date_input, restricted, test_dir)
 
     # in any case, we need to load the unrestricted data
     load(unres_input_path, 'unrestricted')

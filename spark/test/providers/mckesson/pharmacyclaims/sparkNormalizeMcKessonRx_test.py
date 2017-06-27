@@ -1,8 +1,12 @@
 import pytest
 
 import datetime
+import shutil
+import os
+import logging
 
 import spark.providers.mckesson.pharmacyclaims.sparkNormalizeMcKessonRx as mckesson
+import spark.helpers.file_utils as file_utils
 
 unrestricted_results = []
 restricted_results = []
@@ -13,6 +17,11 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('unrestricted_transactions')
     spark['sqlContext'].dropTempTable('restricted_pharmacyclaims_common_model')
     spark['sqlContext'].dropTempTable('restricted_transactions')
+
+    try:
+        shutil.rmtree(file_utils.get_abs_path(__file__, './resources/output/'))
+    except:
+        logging.warn('No output directory.')
 
 
 @pytest.mark.usefixtures("spark")
@@ -79,18 +88,32 @@ def test_unrestricted_removed_from_restricted():
     assert map(lambda r: r.claim_id, restricted_results) == ['res-prescription-key-10', 'res-prescription-key-11']
 
 
+def test_output():
+    # ensure both provider dirs are created (filtering out hive staging dirs)
+    assert filter(lambda x: not x.startswith('.hive-staging'), os.listdir(file_utils.get_abs_path(__file__, './resources/output/'))) \
+        == ['part_provider=mckesson', 'part_provider=mckesson-res']
+
+
+# After this point, the environment created by running the script in
+# 'both' mode will be replaced by the other modes
 def test_unrestricted_mode(spark):
     cleanup(spark)
     mckesson.run(spark['spark'], spark['runner'], '2016-12-31', 'unrestricted', True)
-    assert unrestricted_results == spark['sqlContext'].sql('select * from unrestricted_pharmacyclaims_common_model') \
-                                                      .collect()
+    new_results = spark['sqlContext'].sql('select * from unrestricted_pharmacyclaims_common_model').collect()
+    for field in unrestricted_results[0].asDict().keys():
+        if field != 'record_id':
+            assert map(lambda res: res[field], unrestricted_results) == \
+                map(lambda res: res[field], new_results)
 
 
 def test_restricted_mode(spark):
     cleanup(spark)
     mckesson.run(spark['spark'], spark['runner'], '2016-12-31', 'restricted', True)
-    assert restricted_results == spark['sqlContext'].sql('select * from restricted_pharmacyclaims_common_model') \
-                                                    .collect()
+    new_results = spark['sqlContext'].sql('select * from restricted_pharmacyclaims_common_model').collect()
+    for field in restricted_results[0].asDict().keys():
+        if field != 'record_id':
+            assert map(lambda res: res[field], restricted_results) == \
+                map(lambda res: res[field], new_results)
 
 
 def test_cleanup(spark):
