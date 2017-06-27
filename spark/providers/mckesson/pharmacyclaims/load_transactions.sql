@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS transactions;
-CREATE EXTERNAL TABLE transactions (
+DROP TABLE IF EXISTS {restriction_level}_transactions;
+CREATE EXTERNAL TABLE {restriction_level}_transactions (
         FillerRecordID                         string,
         PrescriptionKey                        string,
         PatientID                              string,
