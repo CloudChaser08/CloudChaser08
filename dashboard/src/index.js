@@ -88,6 +88,8 @@ function estimateProviderHealth(providerData, conf) {
     periodsToConsider = 2;
   }
 
+  periodsToConsider = Math.min(periodsToConsider, providerData.length);
+
   var negativePeriods = providerData.slice(0, periodsToConsider).reduce(function(acc, el) {
     return (!el.ingested || el.incomingFiles.length === 0) ? (acc + 1) : acc;
   }, 0);

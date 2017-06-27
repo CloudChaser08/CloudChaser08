@@ -119,6 +119,18 @@ exports.config = [
       ));
       return helpers.formatDate(adjusted);
     }
+  },
+  {
+    displayName: 'McKesson RX',
+    incomingBucket: 'mckessonrx',
+    schedule: this.schedule.DAILY,
+    startDate: new Date('2017-06-01'),
+    airflowPipelineName: 'mckessonrx_pipeline',
+    expectedFilenameRegex: /^.*HVUnRes.Record.[0-9]{8}$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('.')[2];
+      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+    }
   }
 ];
 
