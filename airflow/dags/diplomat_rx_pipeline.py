@@ -136,7 +136,7 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
 
-def generate_transaction_file_validation_dag(
+def generate_file_validation_dag(
         task_id, path_template, minimum_file_size
 ):
     return SubDagOperator(
@@ -163,36 +163,13 @@ def generate_transaction_file_validation_dag(
     )
 
 if airflow_env != 'test':
-    validate_transaction = generate_transaction_file_validation_dag(
+    validate_transaction = generate_file_validation_dag(
         'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
         MINIMUM_TRANSACTION_FILE_SIZE
     )
-    validate_deid = generate_transaction_file_validation_dag(
+    validate_deid = generate_file_validation_dag(
         'deid', DEID_FILE_NAME_TEMPLATE,
         MINIMUM_DEID_FILE_SIZE
-    )
-
-
-def generate_fetch_dag(
-        task_id, s3_path_template, local_path_template, file_name_template
-):
-    return SubDagOperator(
-        subdag=s3_fetch_file.s3_fetch_file(
-            DAG_NAME,
-            'fetch_' + task_id + '_file',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'tmp_path_template'      : local_path_template,
-                'expected_file_name_func': insert_formatted_date_function(
-                    file_name_template
-                ),
-                's3_prefix'              : s3_path_template,
-                's3_bucket'              : 'salusv' if airflow_env == 'test' else 'healthverity'
-            }
-        ),
-        task_id='fetch_' + task_id + '_file',
-        dag=mdag
     )
 
 fetch_transaction = SubDagOperator(
