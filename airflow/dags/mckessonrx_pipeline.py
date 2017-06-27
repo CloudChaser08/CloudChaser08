@@ -39,7 +39,7 @@ DEID_FILE_NAME_TEMPLATE = 'HVUnRes.DEID.{}'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 5, 19, 12),
+    'start_date': datetime(2017, 6, 5, 12),
     'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -78,9 +78,9 @@ def insert_formatted_regex_function(template):
 
 def insert_current_date(template, kwargs):
     return template.format(
-        kwargs['yesterday_ds_nodash'][0:4],
-        kwargs['yesterday_ds_nodash'][4:6],
-        kwargs['yesterday_ds_nodash'][6:8]
+        kwargs['ds_nodash'][0:4],
+        kwargs['ds_nodash'][4:6],
+        kwargs['ds_nodash'][6:8]
     )
 
 
