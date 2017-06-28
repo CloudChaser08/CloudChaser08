@@ -75,7 +75,7 @@ def test_ndc_codes_populated():
         assert r.ndc_code is not None
 
 
-def test_no_restricted_in_unrestricted():
+def test_unrestricted_count():
     assert len(unrestricted_results) == 10
     assert map(lambda r: r.claim_id, unrestricted_results) == ['prescription-key-0', 'prescription-key-1', 'prescription-key-2',
                                                                'prescription-key-3', 'prescription-key-4', 'prescription-key-5',
@@ -83,9 +83,12 @@ def test_no_restricted_in_unrestricted():
                                                                'prescription-key-9']
 
 
-def test_unrestricted_removed_from_restricted():
-    assert len(restricted_results) == 2
-    assert map(lambda r: r.claim_id, restricted_results) == ['res-prescription-key-10', 'res-prescription-key-11']
+def test_restricted_count():
+    assert len(restricted_results) == 12
+    assert map(lambda r: r.claim_id, restricted_results) == ['prescription-key-0', 'prescription-key-1', 'prescription-key-2',
+                                                             'prescription-key-3', 'prescription-key-4', 'prescription-key-5',
+                                                             'prescription-key-6', 'prescription-key-7', 'prescription-key-8',
+                                                             'prescription-key-9', 'res-prescription-key-10', 'res-prescription-key-11']
 
 
 def test_output():

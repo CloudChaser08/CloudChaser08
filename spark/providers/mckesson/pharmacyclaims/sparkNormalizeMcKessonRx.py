@@ -113,23 +113,14 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
         ])
 
         # unrestricted has already been loaded
-        if restricted:
-            load(input_path, restriction_level)
+        load(input_path, restriction_level)
 
         payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
         runner.run_spark_script('normalize.sql', [
             ['min_date', min_date],
             ['max_date', max_date],
-            ['restriction_level', restriction_level, False],
-            [
-                'filter',
-                'WHERE NOT EXISTS ('
-                + 'SELECT prescriptionkey '
-                + 'FROM unrestricted_transactions ut '
-                + 'WHERE t.prescriptionkey = ut.prescriptionkey'
-                + ')' if restricted else '', False
-            ]
+            ['restriction_level', restriction_level, False]
         ])
 
         test_dir = file_utils.get_abs_path(
@@ -137,9 +128,6 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
         ) + '/' if test else None
 
         postprocess_and_unload(date_input, restricted, test_dir)
-
-    # in any case, we need to load the unrestricted data
-    load(unres_input_path, 'unrestricted')
 
     # run normalization for appropriate mode(s)
     if mode in ['restricted', 'both']:

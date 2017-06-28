@@ -155,5 +155,4 @@ SELECT
     END                                       -- logical_delete_reason
 FROM {restriction_level}_transactions t
     LEFT JOIN matching_payload mp ON t.hvjoinkey = mp.hvjoinkey
-    {filter}
 ;
