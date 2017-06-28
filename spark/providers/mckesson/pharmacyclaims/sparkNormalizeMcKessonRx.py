@@ -112,7 +112,6 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
             ['properties', '', False]
         ])
 
-        # unrestricted has already been loaded
         load(input_path, restriction_level)
 
         payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
