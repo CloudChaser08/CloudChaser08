@@ -1,6 +1,5 @@
 #! /usr/bin/python
 import argparse
-import time
 from datetime import datetime
 import calendar
 
@@ -12,11 +11,10 @@ import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 from spark.runner import Runner
 
-TODAY = time.strftime('%Y-%m-%d', time.localtime())
-output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
+AIRFLOW_E2E_BASE = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests/'
 
 
-def run(spark, runner, date_input, test=False):
+def run(spark, runner, date_input, test=False, airflow_test=False):
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
@@ -38,6 +36,17 @@ def run(spark, runner, date_input, test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../test/providers/caris/resources/matching/'
         ) + '/'
+
+    elif airflow_test:
+        input_path = AIRFLOW_E2E_BASE + 'out/{year}/{month}/'.format(
+            year=str(date_obj.year),
+            month=str(date_obj.month).zfill(2)
+        )
+        matching_path = AIRFLOW_E2E_BASE + 'payload/{year}/{month}/'.format(
+            year=str(date_obj.year),
+            month=str(date_obj.month).zfill(2)
+        )
+        addon_path = 's3a://salusv/incoming/labtests/caris/hist_additional_columns/'
 
     else:
         input_path = 's3a://salusv/incoming/labtests/caris/{}/{:02d}/'.format(date_obj.year, date_obj.month)
@@ -98,9 +107,14 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
+
+    if args.airflow_test:
+        output_path = AIRFLOW_E2E_BASE + 'spark-output/'
+    else:
+        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
     normalized_records_unloader.distcp(output_path)
 
@@ -108,5 +122,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
+    parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
