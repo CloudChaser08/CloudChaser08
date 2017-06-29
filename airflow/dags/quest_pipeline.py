@@ -68,7 +68,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 4, 13, 12),
-    'depends_on_past': True,
+    'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
