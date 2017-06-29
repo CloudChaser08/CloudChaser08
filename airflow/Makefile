@@ -92,7 +92,7 @@ test: pull clean
 	${REPO}:latest runtests
 
 test-e2e: jenkins-deploy-dev
-	ssh airflow@airflow-dev.awsdev.healthverity.com 'pytest -v ~/airflow/dags/test-e2e/'
+	ssh airflow@airflow-dev.awsdev.healthverity.com 'source ~/.bash_profile; pytest -v ~/airflow/dags/test-e2e/'
 
 shell:
 	docker exec -it airflow /bin/bash
