@@ -89,7 +89,7 @@ def get_file_paths_func(expected_file_name_func):
     def file_paths_func(ds, kwargs):
         tmp_dir = get_tmp_dir(ds, kwargs)
         expected_file = filter(lambda f: \
-            os.path.isfile(old_file_dir + f) and re.search(expected_file_name_func(ds, kwargs), f), \
+            os.path.isfile(tmp_dir + f) and re.search(expected_file_name_func(ds, kwargs), f), \
             os.listdir(tmp_dir))[0]
         return [tmp_dir + expected_file]
 
@@ -218,7 +218,7 @@ def get_parquet_dates(ds, kwargs):
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2016, 12, 24, 15),
-    'depends_on_past': False,
+    'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2),
     'priority_weight': 5
