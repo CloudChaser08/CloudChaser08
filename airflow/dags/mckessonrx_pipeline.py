@@ -40,7 +40,7 @@ DEID_FILE_NAME_TEMPLATE = 'HVUnRes.DEID.{}'
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 6, 5, 12),
-    'depends_on_past': True,
+    'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
