@@ -1,5 +1,5 @@
-DROP VIEW IF EXISTS musifer.pharmacyclaims_test_view;
-CREATE VIEW musifer.pharmacyclaims_test_view (
+DROP VIEW IF EXISTS default.pharmacyclaims;
+CREATE VIEW default.pharmacyclaims (
         record_id,
         claim_id,
         hvid,
@@ -365,6 +365,6 @@ SELECT CAST(record_id AS bigint),
     THEN CONCAT(REGEXP_REPLACE(part_processdate, '-', '/'), '/01')
     ELSE part_processdate
     END AS part_processdate
-FROM default.pharmacyclaims
+FROM default.pharmacyclaims_old
 WHERE part_provider IN ('genoa', 'emdeon', 'express_scripts')
 ;
