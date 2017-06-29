@@ -11,8 +11,11 @@ import sys
 
 import common.HVDAG as HVDAG
 import subdags.emdeon_validate_fetch_file
+import subdags.detect_move_normalize as detect_move_normalize
+import subdags.update_analytics_db as update_analytics_db
 
-for m in [subdags.emdeon_validate_fetch_file, HVDAG]:
+for m in [subdags.emdeon_validate_fetch_file, HVDAG,
+        detect_move_normalize, update_analytics_db]:
     reload(m)
 
 from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
@@ -252,10 +255,7 @@ unzip_file.set_upstream(validate_fetch_transaction_file_dag)
 split_file.set_upstream(unzip_file)
 zip_part_files.set_upstream(split_file)
 push_splits_to_s3.set_upstream(zip_part_files)
-push_splits_to_s3.set_downstream(trigger_post_matching_dag)
-validate_fetch_transaction_mft_file_dag.set_downstream(trigger_post_matching_dag)
 queue_up_for_matching.set_upstream(validate_fetch_deid_file_dag)
-queue_up_for_matching.set_downstream(trigger_post_matching_dag)
 detect_move_normalize_dag.set_upstream([push_splits_to_s3, validate_fetch_transaction_mft_file_dag, queue_up_for_matching])
 update_analytics_db.set_upstream(detect_move_normalize_dag)
 clean_up_workspace.set_upstream([push_splits_to_s3, validate_fetch_transaction_mft_file_dag, queue_up_for_matching])
