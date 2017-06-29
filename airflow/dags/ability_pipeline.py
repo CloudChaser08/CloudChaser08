@@ -218,7 +218,7 @@ def get_parquet_dates(ds, kwargs):
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2016, 12, 24, 15),
-    'depends_on_past': True,
+    'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2),
     'priority_weight': 5
