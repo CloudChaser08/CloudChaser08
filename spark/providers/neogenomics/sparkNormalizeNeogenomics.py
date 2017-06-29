@@ -10,10 +10,9 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.providers.neogenomics.udf as neo_udf
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
-output_path = 's3://salusv/warehouse/parquet/labtests/2017-05-03/'
 
 
-def run(spark, runner, date_input, test=False):
+def run(spark, runner, date_input, test=False, airflow_test=False):
 
     runner.sqlContext.registerFunction(
         'clean_neogenomics_diag_list', neo_udf.clean_neogenomics_diag_list
@@ -31,6 +30,13 @@ def run(spark, runner, date_input, test=False):
         )
         matching_path = file_utils.get_abs_path(
             script_path, '../../test/providers/neogenomics/resources/matching/'
+        )
+    elif airflow_test:
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/out/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/payload/{}/'.format(
+            date_input.replace('-', '/')
         )
     else:
         input_path = 's3a://salusv/incoming/labtests/neogenomics/{}/'.format(
@@ -87,9 +93,14 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
+
+    if args.airflow_test:
+        output_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
+    else:
+        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
     normalized_records_unloader.distcp(output_path)
 
@@ -97,5 +108,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
+    parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
