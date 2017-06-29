@@ -259,7 +259,7 @@ SELECT CAST(record_id AS bigint),
     patient_state,
     CAST(date_service AS date),
     CAST(date_written AS date),
-    substring(date_injury, 0, 4),
+    SUBSTRING(date_injury, 0, 4),
     CAST(date_authorized AS date),
     time_authorized,
     transaction_code_std,
@@ -358,9 +358,13 @@ SELECT CAST(record_id AS bigint),
     other_payer_coverage_qual,
     CAST(other_payer_date AS date),
     other_payer_coverage_code,
-    logical_delete_reason
+    logical_delete_reason,
     part_provider,
-    CONCAT(REGEXP_REPLACE(part_processdate, '-', '/'), '/01')
+    CASE WHEN part_processdate != 'NULL'
+    AND part_processdate NOT LIKE '%/%/%'
+    THEN CONCAT(REGEXP_REPLACE(part_processdate, '-', '/'), '/01')
+    ELSE part_processdate
+    END AS part_processdate
 FROM default.pharmacyclaims
 WHERE part_provider IN ('genoa', 'emdeon', 'express_scripts')
 ;
