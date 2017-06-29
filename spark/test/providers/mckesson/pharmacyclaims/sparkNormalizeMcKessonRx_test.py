@@ -94,7 +94,7 @@ def test_restricted_count():
 def test_output():
     # ensure both provider dirs are created (filtering out hive staging dirs)
     assert filter(lambda x: not x.startswith('.hive-staging'), os.listdir(file_utils.get_abs_path(__file__, './resources/output/'))) \
-        == ['part_provider=mckesson', 'part_provider=mckesson-res']
+        == ['part_provider=mckesson', 'part_provider=mckesson_res']
 
 
 # After this point, the environment created by running the script in
