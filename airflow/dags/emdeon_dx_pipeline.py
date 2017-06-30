@@ -48,6 +48,8 @@ DEID_FILE_NAME_TEMPLATE='{}_Claims_US_CF_Hash_File_HV_Encrypt.dat.gz'
 DEID_DAG_NAME='validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE=500
 
+S3_PAYLOAD_LOC='s3://salusv/matching/payload/medicalclaims/emdeon/'
+
 def do_unzip_file(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
     file_path = tmp_path + TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds_nodash'])
@@ -80,7 +82,7 @@ def do_push_splits_to_s3(ds, **kwargs):
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2016, 12, 1, 12),
+    'start_date': datetime(2017, 6, 30, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -232,7 +234,7 @@ sql_template = """
 update_analytics_db = SubDagOperator(
     subdag=update_analytics_db.update_analytics_db(
         DAG_NAME,
-        'update_analytics_db_new',
+        'update_analytics_db',
         default_args['start_date'],
         mdag.schedule_interval,
         {
