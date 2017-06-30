@@ -206,7 +206,7 @@ def get_expected_matching_files(ds, kwargs):
     ]
     res = []
     for product in ['ap', 'ses', 'ease']:
-        transaction_file_path = '{}/{}_{}*'.format(get_s3_transaction_path(ds, kwargs), ds.replace('-', '_'), product)
+        transaction_file_path = '{}{}_{}*'.format(get_s3_transaction_path(ds, kwargs), ds.replace('-', '_'), product)
         if s3_utils.s3_key_exists(transaction_file_path):
             for payload in payloads_per_product:
                 res.append(ds.replace('-', '_') + '_' + product + '_' + payload)
