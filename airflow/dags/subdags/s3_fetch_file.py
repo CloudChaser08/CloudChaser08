@@ -17,11 +17,18 @@ def do_fetch_file(ds, **kwargs):
 
     if 'regex_name_match' in kwargs and kwargs['regex_name_match']:
         s3_keys = s3_utils.list_s3_bucket_files(
-            's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/', s3_connection_id
+            's3://' + kwargs['s3_bucket'] + '/' + s3_prefix,
+            kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
         )
 
         expected_file_name = \
             filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)[0]
+
+    # When a new file name is not specified, use the expected file name
+    # This is useful when the expected file name is determined using a regular expression
+    # since the exact file name is unknown
+    if new_file_name is None:
+        new_file_name = expected_file_name
 
     s3_utils.fetch_file_from_s3(
         's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + expected_file_name,
@@ -50,7 +57,7 @@ def s3_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval
         dag=dag
     )
 
-    dag_config['new_file_name_func'] = dag_config.get('new_file_name_func', dag_config['expected_file_name_func'])
+    dag_config['new_file_name_func'] = dag_config.get('new_file_name_func', lambda ds, k: None)
 
     fetch_file = PythonOperator(
         task_id='fetch_file',
