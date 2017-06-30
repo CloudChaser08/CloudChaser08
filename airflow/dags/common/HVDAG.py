@@ -1,3 +1,4 @@
+from airflow.models import Variable
 from airflow import DAG
 import util.slack as slack
 import config as config
@@ -7,8 +8,14 @@ for m in [config, slack]:
 
 class HVDAG(DAG):
     def __init__(self, dag_id, default_args={}, **kwargs):
+        airflow_env = {
+            'prod' : 'prod',
+            'test' : 'test',
+            'dev'  : 'dev'
+        }[Variable.get("AIRFLOW_ENV", default_var='dev')]
+
         kwargs['dag_id'] = dag_id
-        if 'on_failure_callback' not in default_args:
+        if 'on_failure_callback' not in default_args and airflow_env == 'prod':
             default_args['on_failure_callback'] = self._on_failure
         kwargs['default_args'] = default_args
         return super(HVDAG, self).__init__(**kwargs)
