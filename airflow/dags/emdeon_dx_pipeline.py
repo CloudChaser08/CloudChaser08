@@ -23,7 +23,7 @@ from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
 # Applies to all files
 TMP_PATH_TEMPLATE='/tmp/webmd/medicalclaims/{}/'
 TMP_PATH_PARTS_TEMPLATE='/tmp/webmd/medicalclaims/{}/parts/'
-DAG_NAME='emdeon_dx_pre_matching_pipeline'
+DAG_NAME='emdeon_dx_pipeline'
 DATATYPE='medicalclaims'
 
 # Transaction file
