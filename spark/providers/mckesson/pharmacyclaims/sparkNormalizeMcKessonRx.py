@@ -24,6 +24,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/matching/'
         ) + '/'
+    elif airflow_test:
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/out/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/payload/{}/'.format(
+            date_input.replace('-', '/')
+        )
     else:
         input_path = 's3a://salusv/incoming/pharmacyclaims/mckesson/{}/'.format(
             date_input.replace('-', '/')
@@ -79,7 +86,11 @@ def main(args):
 
     spark.stop()
 
-    output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+    if args.airflow_test:
+        output_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/spark-output/'
+    else:
+        output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+
     normalized_records_unloader.distcp(output_path)
 
 
