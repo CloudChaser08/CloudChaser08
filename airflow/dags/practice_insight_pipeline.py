@@ -1,3 +1,9 @@
+# Note:
+#
+# Practice Insight's monthly files are large and their normalization
+# routine is complex, so we split up their monthly updates into 4
+# equal parts before ingesting them.
+
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
@@ -111,17 +117,28 @@ def get_deid_file_urls(ds, kwargs):
     ]
 
 
-def get_unzipped_837_file_paths(ds, kwargs):
-    return [
-        insert_current_plaintext_date(
-            TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
-        )
-    ]
+def get_837_part_tmp_dir(part):
+    def out(ds, kwargs):
+        return get_tmp_dir(ds, kwargs) + 'presplit/' + str(part) + '/'
+    return out
+
+
+def get_unzipped_837_file_paths(part):
+    """
+    Function for getting the filepath for the given part of an 837 file
+    """
+    def out(ds, kwargs):
+        return [
+            get_837_part_tmp_dir(part)(ds, kwargs) + insert_current_plaintext_date(
+                TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
+            )
+        ]
+    return out
 
 
 def get_unzipped_835_file_paths(ds, kwargs):
     return [
-        insert_current_plaintext_date(
+        get_tmp_dir(ds, kwargs) + insert_current_plaintext_date(
             TRANSACTION_UNZIPPED_835_FILE_NAME_TEMPLATE, kwargs
         )
     ]
@@ -249,9 +266,9 @@ def split_transaction_into_parts_func(ds, **kwargs):
         ) + '.'
     ])
     for i in range(1, 5):
-        os.mkdir(get_tmp_dir(ds, kwargs) + 'presplit/' + str(i))
+        os.mkdir(get_837_part_tmp_dir(i)(ds, kwargs))
         check_call([
-            'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/' + str(i)
+            'mkdir', '-p', get_837_part_tmp_dir(i)(ds, kwargs)
         ])
         os.rename(
             get_tmp_dir(ds, kwargs) + 'presplit/'
@@ -263,7 +280,7 @@ def split_transaction_into_parts_func(ds, **kwargs):
                 ),
                 os.listdir(get_tmp_dir(ds, kwargs) + 'presplit/')
             )[0],
-            get_tmp_dir(ds, kwargs) + 'presplit/' + str(i) + '/'
+            get_837_part_tmp_dir(i)(ds, kwargs)
             + insert_current_plaintext_date(
                 TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
             )
@@ -290,10 +307,7 @@ def split_step(
             mdag.schedule_interval,
             {
                 'tmp_dir_func': tmp_dir_func,
-                'file_paths_to_split_func': lambda ds, k: map(
-                    lambda f: tmp_dir_func(ds, k) + f,
-                    file_paths_to_split_func(ds, k)
-                ),
+                'file_paths_to_split_func': file_paths_to_split_func,
                 's3_prefix_func': lambda ds, k: insert_current_date_function(
                     s3_destination
                 )(ds, k),
@@ -308,8 +322,8 @@ def split_step(
 split_transactional_837_steps = map(
     lambda i: split_step(
         "transaction_837_" + str(i),
-        lambda ds, k: get_tmp_dir(ds, k) + 'presplit/' + str(i) + '/',
-        get_unzipped_837_file_paths,
+        get_837_part_tmp_dir(i),
+        get_unzipped_837_file_paths(i),
         S3_TRANSACTION_PROCESSED_837_URL_TEMPLATE + str(i) + '/', 20
     ),
     range(1, 5)
