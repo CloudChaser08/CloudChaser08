@@ -237,7 +237,7 @@ def insert_file_date(template, kwargs):
     return insert_file_date_function_wrapped(template)(None, kwargs)
 
 sql_old_template = """
-    ALTER TABLE pharmacyclaims ADD PARTITION (part_provider='emdeon', part_processdate='{0}/{1}/{2}')
+    ALTER TABLE pharmacyclaims_old ADD PARTITION (part_provider='emdeon', part_processdate='{0}/{1}/{2}')
     LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/emdeon/{0}/{1}/{2}/'
 """
 
