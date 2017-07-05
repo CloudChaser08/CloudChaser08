@@ -188,9 +188,9 @@ queue_up_for_matching = BashOperator(
 def insert_file_date_func(template):
     def out(ds, kwargs):
         return template.format(
-            kwargs['ds_yesterday'][0:4],
-            kwargs['ds_yesterday'][5:7],
-            kwargs['ds_yesterday'][8:10]
+            kwargs['yesterday_ds'][0:4],
+            kwargs['yesterday_ds'][5:7],
+            kwargs['yesterday_ds'][8:10]
         )
     return out
 
