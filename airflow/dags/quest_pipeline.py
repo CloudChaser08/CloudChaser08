@@ -40,7 +40,7 @@ mdag = HVDAG.HVDAG(
 )
 
 # Applies to all transaction files
-if HVDAG.airflow_env == 'test':
+if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/out/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/payload/'
@@ -170,7 +170,7 @@ def generate_transaction_file_validation_dag(
         dag=mdag
     )
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     validate_addon = generate_transaction_file_validation_dag(
         'addon', TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
         1000000
@@ -200,7 +200,7 @@ def generate_fetch_dag(
                     file_name_template
                 ),
                 's3_prefix'              : s3_path_template,
-                's3_bucket'              : 'salusv' if HVDAG.airflow_env == 'test' else 'healthverity'
+                's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
             }
         ),
         task_id='fetch_' + task_id + '_file',
@@ -333,7 +333,7 @@ def clean_up_workspace_step(task_id, template):
 
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,
@@ -355,7 +355,7 @@ if HVDAG.airflow_env != 'test':
 #
 def norm_args(ds, k):
     base = ['--date', insert_current_date('{}-{}-{}', k)]
-    if HVDAG.airflow_env == 'test':
+    if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
     return base
@@ -392,7 +392,7 @@ sql_new_template = """
     LOCATION 's3a://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/part_best_data={0}-{1}/'
 """
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     update_analytics_db = SubDagOperator(
         subdag=update_analytics_db.update_analytics_db(
             DAG_NAME,
@@ -408,7 +408,7 @@ if HVDAG.airflow_env != 'test':
         dag=mdag
     )
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     fetch_addon.set_upstream(validate_addon)
     fetch_trunk.set_upstream(validate_trunk)
 
