@@ -19,18 +19,26 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
         detect_move_normalize, decompression, HVDAG]:
     reload(m)
 
-airflow_env = {
-    'prod' : 'prod',
-    'test' : 'test',
-    'dev'  : 'dev'
-}[Variable.get("AIRFLOW_ENV", default_var='dev')]
+default_args = {
+    'owner': 'airflow',
+    'start_date': datetime(2017, 4, 13, 12),
+    'depends_on_past': True,
+    'retries': 3,
+    'retry_delay': timedelta(minutes=2)
+}
+
+mdag = HVDAG.HVDAG(
+    dag_id=DAG_NAME,
+    schedule_interval="0 12 * * 0",
+    default_args=default_args
+)
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/diplomat/pharmacyclaims/{}/'
 DAG_NAME = 'diplomat_rx_pipeline'
 
 # Applies to all transaction files
-if airflow_env == 'test':
+if HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/out/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/payload/'
@@ -50,24 +58,6 @@ DEID_FILE_DESCRIPTION = 'Diplomat RX deid file'
 DEID_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt.zip'
 DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerityPHIOut_{}.csv'
 MINIMUM_DEID_FILE_SIZE = 500
-
-default_args = {
-    'owner': 'airflow',
-    'start_date': datetime(2017, 4, 13, 12),
-    'depends_on_past': True,
-    'retries': 3,
-    'retry_delay': timedelta(minutes=2)
-}
-
-mdag = HVDAG.HVDAG(
-    dag_id=DAG_NAME,
-    schedule_interval=(
-        "0 12 * * 0"
-        if airflow_env in ['prod', 'test']
-        else None
-    ),
-    default_args=default_args
-)
 
 
 def get_formatted_date(ds, kwargs):
@@ -162,7 +152,7 @@ def generate_file_validation_dag(
         dag=mdag
     )
 
-if airflow_env != 'test':
+if HVDAG.airflow_env != 'test':
     validate_transaction = generate_file_validation_dag(
         'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
         MINIMUM_TRANSACTION_FILE_SIZE
@@ -184,7 +174,7 @@ fetch_transaction = SubDagOperator(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'              : 'salusv' if airflow_env == 'test' else 'healthverity'
+            's3_bucket'              : 'salusv' if HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
     task_id='fetch_transaction_file',
@@ -242,7 +232,7 @@ def clean_up_workspace_step(template):
 
 clean_up_workspace = clean_up_workspace_step(TMP_PATH_TEMPLATE)
 
-if airflow_env != 'test':
+if HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,
@@ -263,7 +253,7 @@ if airflow_env != 'test':
 #
 def norm_args(ds, k):
     base = ['--date', insert_current_date('{}-{}-{}', k)]
-    if airflow_env == 'test':
+    if HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
     return base
@@ -296,7 +286,7 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 
-if airflow_env != 'test':
+if HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
 
     # matching

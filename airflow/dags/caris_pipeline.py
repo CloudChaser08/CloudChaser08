@@ -19,19 +19,26 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           detect_move_normalize, s3_utils, HVDAG]:
     reload(m)
 
-if Variable.get("AIRFLOW_ENV", default_var='').find('prod') != -1:
-    airflow_env = 'prod'
-elif Variable.get("AIRFLOW_ENV", default_var='').find('test') != -1:
-    airflow_env = 'test'
-else:
-    airflow_env = 'dev'
+default_args = {
+    'owner': 'airflow',
+    'start_date': datetime(2017, 3, 16, 12),
+    'depends_on_past': False,
+    'retries': 3,
+    'retry_delay': timedelta(minutes=2)
+}
+
+mdag = HVDAG.HVDAG(
+    dag_id=DAG_NAME,
+    schedule_interval="0 12 2 * *",
+    default_args=default_args
+)
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/caris/labtests/{}/'
 DAG_NAME = 'caris_pipeline'
 
 # Applies to all transaction files
-if airflow_env == 'test':
+if HVDAG.airflow_env == 'test':
     AIRFLOW_E2E_BASE = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests/'
     S3_TRANSACTION_RAW_URL = AIRFLOW_E2E_BASE + 'raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = AIRFLOW_E2E_BASE + 'out/{}/{}/'
@@ -49,25 +56,6 @@ DEID_FILE_NAME_STUB_TEMPLATE = 'DEID_{}{}01'
 
 # Global to hold the timestamp for this extract
 TIMESTAMP = ''
-
-default_args = {
-    'owner': 'airflow',
-    'start_date': datetime(2017, 3, 16, 12),
-    'depends_on_past': False,
-    'retries': 3,
-    'retry_delay': timedelta(minutes=2)
-}
-
-mdag = HVDAG.HVDAG(
-    dag_id=DAG_NAME,
-    schedule_interval=(
-        "0 12 2 * *"
-        if airflow_env in ['prod', 'test']
-        else None
-    ),
-    default_args=default_args
-)
-
 
 def get_date_timestamp(kwargs):
     """
@@ -176,7 +164,7 @@ def generate_transaction_file_validation_dag(
     )
 
 
-if airflow_env != 'test':
+if HVDAG.airflow_env != 'test':
     validate_transactional = generate_transaction_file_validation_dag(
         'transaction', TRANSACTION_FILE_NAME_STUB_TEMPLATE,
         1000000
@@ -266,7 +254,7 @@ def clean_up_workspace_step(task_id, template):
 
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
-if airflow_env != 'test':
+if HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,
@@ -287,7 +275,7 @@ if airflow_env != 'test':
 #
 def norm_args(ds, k):
     base = ['--date', insert_current_date('{}-{}-01', k)]
-    if airflow_env == 'test':
+    if HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
     return base
@@ -319,7 +307,7 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-if airflow_env != 'test':
+if HVDAG.airflow_env != 'test':
     fetch_transactional.set_upstream(validate_transactional)
     queue_up_for_matching.set_upstream(validate_deid)
 
