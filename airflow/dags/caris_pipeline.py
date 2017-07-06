@@ -38,7 +38,7 @@ mdag = HVDAG.HVDAG(
 )
 
 # Applies to all transaction files
-if HVDAG.airflow_env == 'test':
+if HVDAG.HVDAG.airflow_env == 'test':
     AIRFLOW_E2E_BASE = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests/'
     S3_TRANSACTION_RAW_URL = AIRFLOW_E2E_BASE + 'raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = AIRFLOW_E2E_BASE + 'out/{}/{}/'
@@ -164,7 +164,7 @@ def generate_transaction_file_validation_dag(
     )
 
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     validate_transactional = generate_transaction_file_validation_dag(
         'transaction', TRANSACTION_FILE_NAME_STUB_TEMPLATE,
         1000000
@@ -254,7 +254,7 @@ def clean_up_workspace_step(task_id, template):
 
 clean_up_workspace = clean_up_workspace_step("all", TMP_PATH_TEMPLATE)
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,
@@ -275,7 +275,7 @@ if HVDAG.airflow_env != 'test':
 #
 def norm_args(ds, k):
     base = ['--date', insert_current_date('{}-{}-01', k)]
-    if HVDAG.airflow_env == 'test':
+    if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
     return base
@@ -307,7 +307,7 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transactional.set_upstream(validate_transactional)
     queue_up_for_matching.set_upstream(validate_deid)
 

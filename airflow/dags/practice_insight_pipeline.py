@@ -41,7 +41,7 @@ mdag = HVDAG.HVDAG(
 
 
 # Applies to all transaction files
-if HVDAG.airflow_env == 'test':
+if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/out/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/payload/'
@@ -146,7 +146,7 @@ def generate_transaction_file_validation_task(
     )
 
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     validate_transactional = generate_transaction_file_validation_task(
         'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
         1000000
@@ -168,7 +168,7 @@ fetch_transactional = SubDagOperator(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket': 'salusv' if HVDAG.airflow_env == 'test' else 'healthverity'
+            's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
     task_id='fetch_transaction_file',
@@ -296,7 +296,7 @@ clean_up_workspace = PythonOperator(
     dag=mdag
 )
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,
@@ -314,7 +314,7 @@ if HVDAG.airflow_env != 'test':
 
 def norm_args(ds, k):
     base = ['--date', insert_current_date('{}-{}-01', k)]
-    if HVDAG.airflow_env == 'test':
+    if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
     return base
@@ -356,7 +356,7 @@ def generate_detect_move_normalize_dag():
 detect_move_normalize_dag = generate_detect_move_normalize_dag()
 
 # transaction
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transactional.set_upstream(validate_transactional)
     queue_up_for_matching.set_upstream(validate_deid)
 

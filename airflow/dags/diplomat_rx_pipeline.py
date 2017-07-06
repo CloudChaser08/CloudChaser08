@@ -38,7 +38,7 @@ mdag = HVDAG.HVDAG(
 )
 
 # Applies to all transaction files
-if HVDAG.airflow_env == 'test':
+if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/out/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/payload/'
@@ -152,7 +152,7 @@ def generate_file_validation_dag(
         dag=mdag
     )
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     validate_transaction = generate_file_validation_dag(
         'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
         MINIMUM_TRANSACTION_FILE_SIZE
@@ -174,7 +174,7 @@ fetch_transaction = SubDagOperator(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'              : 'salusv' if HVDAG.airflow_env == 'test' else 'healthverity'
+            's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
     task_id='fetch_transaction_file',
@@ -232,7 +232,7 @@ def clean_up_workspace_step(template):
 
 clean_up_workspace = clean_up_workspace_step(TMP_PATH_TEMPLATE)
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,
@@ -253,7 +253,7 @@ if HVDAG.airflow_env != 'test':
 #
 def norm_args(ds, k):
     base = ['--date', insert_current_date('{}-{}-{}', k)]
-    if HVDAG.airflow_env == 'test':
+    if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
     return base
@@ -286,7 +286,7 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 
-if HVDAG.airflow_env != 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
 
     # matching
