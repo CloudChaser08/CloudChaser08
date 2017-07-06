@@ -263,12 +263,11 @@ clean_up_tmp_dir_dag = SubDagOperator(
 )
 
 sql_template_drop = """
-    ALTER TABLE pharmacyclaims DROP PARTITION (part_provider='express_scripts', part_best_date='{0}-{1}')
-    LOCATION 's3a://salusv/warehouse/parquet/enrollmentrecords/2017-03-22/part_provider=express_scripts/part_best_date={0}-{1}/'
+    ALTER TABLE enrollmentrecords DROP PARTITION (part_provider='express_scripts', part_best_date='{0}-{1}')
 """
 
 sql_template_add = """
-    ALTER TABLE pharmacyclaims ADD PARTITION (part_provider='express_scripts', part_best_date='{0}-{1}')
+    ALTER TABLE enrollmentrecords ADD PARTITION (part_provider='express_scripts', part_best_date='{0}-{1}')
     LOCATION 's3a://salusv/warehouse/parquet/enrollmentrecords/2017-03-22/part_provider=express_scripts/part_best_date={0}-{1}/'
 """
 
