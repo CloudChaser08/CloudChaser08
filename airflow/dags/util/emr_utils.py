@@ -112,7 +112,7 @@ def _build_dewey(cluster_id):
     ], cwd=spark_dir)
 
 
-def run_script(cluster_name, script_name, args):
+def run_script(cluster_name, script_name, args, spark_conf_args):
     """Run spark normalization script in EMR"""
 
     normalize_step = (
@@ -121,7 +121,7 @@ def run_script(cluster_name, script_name, args):
         '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
         '--py-files, /home/hadoop/spark/target/dewey.zip, {}]'
     ).format(
-        script_name + ',' + ','.join(args)
+        ','.join(spark_conf_args + [script_name] + args)
     )
     cluster_id = _get_emr_cluster_id(cluster_name)
     _build_dewey(cluster_id)
@@ -131,11 +131,11 @@ def run_script(cluster_name, script_name, args):
     ])
     _wait_for_steps(cluster_id)
 
-def normalize(cluster_name, script_name, args):
-    run_script(cluster_name, script_name, args)
+def normalize(cluster_name, script_name, args, spark_conf_args=[]):
+    run_script(cluster_name, script_name, args, spark_conf_args)
 
-def export(cluster_name, script_name, args):
-    run_script(cluster_name, script_name, args)
+def export(cluster_name, script_name, args, spark_conf_args=[]):
+    run_script(cluster_name, script_name, args, spark_conf_args)
 
 
 def delete_emr_cluster(cluster_name):
