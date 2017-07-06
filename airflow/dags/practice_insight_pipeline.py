@@ -21,6 +21,10 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           detect_move_normalize, decompression]:
     reload(m)
 
+# Applies to all files
+TMP_PATH_TEMPLATE = '/tmp/practice_insight/medicalclaims/{}/'
+DAG_NAME = 'practice_insight_pipeline'
+
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 3, 2, 12),
@@ -35,10 +39,6 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-
-# Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/practice_insight/medicalclaims/{}/'
-DAG_NAME = 'practice_insight_pipeline'
 
 # Applies to all transaction files
 if HVDAG.airflow_env == 'test':
