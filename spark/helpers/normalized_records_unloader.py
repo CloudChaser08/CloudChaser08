@@ -1,6 +1,7 @@
 import subprocess
 import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
+import time
 
 
 def mk_move_file(prefix, test=False):
@@ -13,7 +14,17 @@ def mk_move_file(prefix, test=False):
         if part_file.find("part-") > -1:
             old_pf = part_file.split(' ')[-1].strip()
             new_pf = '/'.join(old_pf.split('/')[:-1] + [prefix + '_' + old_pf.split('/')[-1]])
-            subprocess.check_call(mv_cmd + [old_pf, new_pf])
+            success = False
+            retries = 5
+            while not success and retries > 0:
+                retries -= 1
+                try:
+                    subprocess.check_call(mv_cmd + [old_pf, new_pf])
+                    success = True
+                except Exception as e:
+                    time.sleep(10)
+                    if retries == 0:
+                        raise e
 
     return move_file
 
