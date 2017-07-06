@@ -32,7 +32,7 @@ TMP_PATH_TEMPLATE='/tmp/ability/medicalclaims/{}/'
 DAG_NAME='ability_pipeline'
 
 S3_TEXT_ABILITY_PREFIX = 'warehouse/text/medicalclaims/ability/'
-S3_PARQUET_ABILITY_PREFIX = 'warehouse/parquet/medicalclaims/abillity/'
+S3_PARQUET_ABILITY_PREFIX = 'warehouse/parquet/medicalclaims/ability/'
 S3_PAYLOAD_LOC_ABILITY_URL = 's3://salusv/matching/payload/medicalclaims/ability/'
 
 # Ability S3 bucket access
