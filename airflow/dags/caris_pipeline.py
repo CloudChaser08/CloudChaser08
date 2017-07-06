@@ -19,6 +19,10 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           detect_move_normalize, s3_utils, HVDAG]:
     reload(m)
 
+# Applies to all files
+TMP_PATH_TEMPLATE = '/tmp/caris/labtests/{}/'
+DAG_NAME = 'caris_pipeline'
+
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 3, 16, 12),
@@ -32,10 +36,6 @@ mdag = HVDAG.HVDAG(
     schedule_interval="0 12 2 * *",
     default_args=default_args
 )
-
-# Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/caris/labtests/{}/'
-DAG_NAME = 'caris_pipeline'
 
 # Applies to all transaction files
 if HVDAG.airflow_env == 'test':

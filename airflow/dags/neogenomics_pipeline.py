@@ -20,6 +20,10 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
           decompression, HVDAG]:
     reload(m)
 
+# Applies to all files
+TMP_PATH_TEMPLATE = '/tmp/neogenomics/labtests/{}/'
+DAG_NAME = 'neogenomics_pipeline'
+
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 4, 13, 12),
@@ -44,10 +48,6 @@ else:
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/%Y/%m/%d/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/neogenomics/'
 
-
-# Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/neogenomics/labtests/{}/'
-DAG_NAME = 'neogenomics_pipeline'
 
 # Transaction file without the trailing timestamp
 TRANSACTION_FILE_NAME_TEMPLATE = 'TestMeta_%Y%m%d.dat.gz'
