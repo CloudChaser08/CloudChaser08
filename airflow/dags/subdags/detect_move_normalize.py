@@ -59,7 +59,8 @@ def do_run_pyspark_normalization_routine(ds, cluster_identifier=None, **kwargs):
     emr_utils.normalize(
         cluster_name,
         kwargs['pyspark_normalization_script_name'],
-        kwargs['pyspark_normalization_args_func'](ds, kwargs)
+        kwargs['pyspark_normalization_args_func'](ds, kwargs),
+        kwargs['spark_conf_args'] if 'spark_conf_args' in kwargs else None
     )
 
 def do_create_redshift_cluster(ds, **kwargs):
