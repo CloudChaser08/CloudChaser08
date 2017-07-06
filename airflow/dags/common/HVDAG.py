@@ -7,17 +7,21 @@ for m in [config, slack]:
     reload(m)
 
 class HVDAG(DAG):
-    def __init__(self, dag_id, default_args={}, **kwargs):
-        airflow_env = {
-            'prod' : 'prod',
-            'test' : 'test',
-            'dev'  : 'dev'
-        }[Variable.get("AIRFLOW_ENV", default_var='dev')]
+    airflow_env = {
+        'prod' : 'prod',
+        'test' : 'test',
+        'dev'  : 'dev'
+    }[Variable.get("AIRFLOW_ENV", default_var='dev')]
 
+    def __init__(self, dag_id, default_args={}, **kwargs):
         kwargs['dag_id'] = dag_id
-        if 'on_failure_callback' not in default_args and airflow_env == 'prod':
+        if 'on_failure_callback' not in default_args and self.airflow_env == 'prod':
             default_args['on_failure_callback'] = self._on_failure
         kwargs['default_args'] = default_args
+
+        if 'schedule_interval' in kwargs and self.airflow_env not in ['prod', 'test']:
+            kwargs['schedule_interval'] = None
+
         return super(HVDAG, self).__init__(**kwargs)
 
     def _on_failure(self, context):

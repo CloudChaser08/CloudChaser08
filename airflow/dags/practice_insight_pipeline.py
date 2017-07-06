@@ -21,19 +21,27 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           detect_move_normalize, decompression]:
     reload(m)
 
-if Variable.get("AIRFLOW_ENV", default_var='').find('prod') != -1:
-    airflow_env = 'prod'
-elif Variable.get("AIRFLOW_ENV", default_var='').find('test') != -1:
-    airflow_env = 'test'
-else:
-    airflow_env = 'dev'
+default_args = {
+    'owner': 'airflow',
+    'start_date': datetime(2017, 3, 2, 12),
+    'depends_on_past': False,
+    'retries': 3,
+    'retry_delay': timedelta(minutes=2)
+}
+
+mdag = HVDAG.HVDAG(
+    dag_id=DAG_NAME,
+    schedule_interval="0 12 2 * *",
+    default_args=default_args
+)
+
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/practice_insight/medicalclaims/{}/'
 DAG_NAME = 'practice_insight_pipeline'
 
 # Applies to all transaction files
-if airflow_env == 'test':
+if HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/out/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/payload/'
@@ -48,24 +56,6 @@ TRANSACTION_FILE_NAME_TEMPLATE = TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE + '.gz'
 
 # Deid file
 DEID_FILE_NAME_TEMPLATE = 'HV.phi.{}.{}.o'
-
-default_args = {
-    'owner': 'airflow',
-    'start_date': datetime(2017, 3, 2, 12),
-    'depends_on_past': False,
-    'retries': 3,
-    'retry_delay': timedelta(minutes=2)
-}
-
-mdag = HVDAG.HVDAG(
-    dag_id=DAG_NAME,
-    schedule_interval=(
-        "0 12 2 * *"
-        if airflow_env in ['prod', 'test']
-        else None
-    ),
-    default_args=default_args
-)
 
 
 def insert_todays_date_function(template):
@@ -156,7 +146,7 @@ def generate_transaction_file_validation_task(
     )
 
 
-if airflow_env != 'test':
+if HVDAG.airflow_env != 'test':
     validate_transactional = generate_transaction_file_validation_task(
         'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
         1000000
@@ -178,7 +168,7 @@ fetch_transactional = SubDagOperator(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket': 'salusv' if airflow_env == 'test' else 'healthverity'
+            's3_bucket': 'salusv' if HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
     task_id='fetch_transaction_file',
@@ -306,7 +296,7 @@ clean_up_workspace = PythonOperator(
     dag=mdag
 )
 
-if airflow_env != 'test':
+if HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,
@@ -324,7 +314,7 @@ if airflow_env != 'test':
 
 def norm_args(ds, k):
     base = ['--date', insert_current_date('{}-{}-01', k)]
-    if airflow_env == 'test':
+    if HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
     return base
@@ -366,7 +356,7 @@ def generate_detect_move_normalize_dag():
 detect_move_normalize_dag = generate_detect_move_normalize_dag()
 
 # transaction
-if airflow_env != 'test':
+if HVDAG.airflow_env != 'test':
     fetch_transactional.set_upstream(validate_transactional)
     queue_up_for_matching.set_upstream(validate_deid)
 
