@@ -114,6 +114,8 @@ def _build_dewey(cluster_id):
 
 def run_script(cluster_name, script_name, args, spark_conf_args):
     """Run spark normalization script in EMR"""
+    if spark_conf_args is None:
+        spark_conf_args = []
 
     normalize_step = (
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
@@ -131,10 +133,10 @@ def run_script(cluster_name, script_name, args, spark_conf_args):
     ])
     _wait_for_steps(cluster_id)
 
-def normalize(cluster_name, script_name, args, spark_conf_args=[]):
+def normalize(cluster_name, script_name, args, spark_conf_args=None):
     run_script(cluster_name, script_name, args, spark_conf_args)
 
-def export(cluster_name, script_name, args, spark_conf_args=[]):
+def export(cluster_name, script_name, args, spark_conf_args=None):
     run_script(cluster_name, script_name, args, spark_conf_args)
 
 
