@@ -35,7 +35,8 @@ def extract_date(text, pattern, min_date=None, max_date=None):
     ):
         return None
     else:
-        return datetime.strftime(d, '%Y-%m-%d')
+        # stftime throws an error if the date is before 1900
+        return d.isoformat().split("T")[0]
 
 
 def extract_currency(text):
