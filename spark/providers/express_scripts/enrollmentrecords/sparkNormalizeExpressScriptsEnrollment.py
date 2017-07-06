@@ -24,7 +24,7 @@ LOCAL_REF_PHI = '/local_phi/'
 
 
 def run (spark, runner, date_input, test=False):
-    org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')]
+    org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
     setid = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(date_input.replace('-',''))
 
     # create helper tables
@@ -120,7 +120,7 @@ def run (spark, runner, date_input, test=False):
     runner.run_spark_script('load_and_combine_phi.sql', [
         ['local_phi_path', local_phi_path],
         ['s3_phi_path', ref_phi_path],
-        ['partitions', org_num_partitions]
+        ['partitions', org_num_partitions, False]
     ])
 
     runner.run_spark_script('normalize.sql', [
