@@ -41,5 +41,5 @@ git clone git@github.com:healthverity/dewey.git
 
 cd dewey/providers/gsdd/
 
-make drop
-make import
+#make drop
+#make import
