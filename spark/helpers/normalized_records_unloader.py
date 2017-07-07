@@ -7,24 +7,25 @@ import time
 def mk_move_file(prefix, test=False):
     if test:
         mv_cmd = ['mv']
+        ls_cmd = ['ls']
     else:
         mv_cmd = ['hadoop', 'fs', '-mv']
+        ls_cmd = ['hadoop', 'fs', '-ls']
 
     def move_file(part_file):
         if part_file.find("part-") > -1:
             old_pf = part_file.split(' ')[-1].strip()
             new_pf = '/'.join(old_pf.split('/')[:-1] + [prefix + '_' + old_pf.split('/')[-1]])
-            success = False
-            retries = 5
-            while not success and retries > 0:
-                retries -= 1
+            try:
+                subprocess.check_call(mv_cmd + [old_pf, new_pf])
+            except Exception as e:
+                # The move command will fail if the final has already
+                # been moved. Check here if the destination file exist
+                # and ignore the error if it does
                 try:
-                    subprocess.check_call(mv_cmd + [old_pf, new_pf])
-                    success = True
-                except Exception as e:
-                    time.sleep(10)
-                    if retries == 0:
-                        raise e
+                    subprocess.check_call(ls_cmd + [new_pf])
+                except:
+                    raise e
 
     return move_file
 
