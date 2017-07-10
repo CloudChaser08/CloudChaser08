@@ -74,16 +74,15 @@ if args.first_run:
 
 date_path = args.date.replace('-', '/')
 
-warehouse_files = subprocess.check_output(['aws', 's3', 'ls', '--recursive', S3_EXPRESS_SCRIPTS_WAREHOUSE]).split("\n")
-file_dates = map(lambda f: '/'.join(f.split(' ')[-1].replace(S3_EXPRESS_SCRIPTS_PREFIX, '').split('/')[:-1]), warehouse_files)
-file_dates = filter(lambda d: len(d) == 10, file_dates)
-file_dates = sorted(list(set(file_dates)))
-file_dates = filter(lambda d: d < date_path, file_dates)[-2:]
-
-run_psql_script('data_to_reverse_table.sql')
+file_date = datetime.strptime(args.date, '%Y-%m-%d')
+run_psql_script('create_normalized_data_table', [
+    ['table', 'normalized_claims', False]
+])
 setid_path_to_unload = {}
-for d_path in file_dates:
+for i in xrange(1, 3):
+    d_path = (file_date - timedelta(days=7*i)).strftime('%Y/%m/%d')
     run_psql_script('load_normalized_data.sql', [
+        ['table', 'normalized_claims', False],
         ['input_path', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'],
         ['credentials', args.s3_credentials]
     ])
@@ -143,6 +142,14 @@ enqueue_psql_script('../../redshift_norm_common/cap_age.sql', [
     ['column_name', 'patient_age', False]
 ])
 
+# If this script is being run to backfill missing data, we have to apply
+# reversals from claims we received in batches after the current one
+for i in xrange(1, 3):
+    d_path = (file_date + timedelta(days=7*i)).strftime('%Y/%m/%d')
+    enqueue_psql_script('load_transactions.sql', [
+        ['input_path', S3_EXPRESS_SCRIPTS_IN + d_path + '/'],
+        ['credentials', args.s3_credentials]
+    ])
 enqueue_psql_script('clean_out_reversed_claims.sql')
 enqueue_psql_script('clean_out_reversals.sql')
 
