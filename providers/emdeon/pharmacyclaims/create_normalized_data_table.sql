@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS normalized_claims;
-CREATE TABLE normalized_claims(
+DROP TABLE IF EXISTS :table;
+CREATE TABLE :table(
 record_id int,
 claim_id text encode lzo,
 hvid text encode lzo,

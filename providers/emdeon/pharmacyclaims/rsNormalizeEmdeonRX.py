@@ -76,11 +76,14 @@ if args.first_run:
     ])
 
 file_date = datetime.strptime(args.date, '%Y-%m-%d')
-run_psql_script('data_to_reverse_table.sql')
+run_psql_script('create_normalized_data_table', [
+    ['table', 'normalized_claims', False]
+])
 setid_path_to_unload = {}
 for i in xrange(1, 15):
     d_path = (file_date - timedelta(days=i)).strftime('%Y/%m/%d')
     run_psql_script('load_normalized_data.sql', [
+        ['table', 'normalized_claims', False],
         ['input_path', S3_EMDEON_WAREHOUSE + d_path + '/'],
         ['credentials', args.s3_credentials]
     ])
@@ -140,6 +143,19 @@ enqueue_psql_script('../../redshift_norm_common/cap_age.sql', [
     ['table_name', 'pharmacyclaims_common_model', False],
     ['column_name', 'patient_age', False]
 ])
+
+# If this script is being run to backfill missing data, we have to apply
+# reversals from claims we received in batches after the current one
+enqueue_psql_script('create_normalized_data_table', [
+    ['table', 'additional_claims', False]
+])
+for i in xrange(1, 15):
+    d_path = (file_date + timedelta(days=i)).strftime('%Y/%m/%d')
+    enqueue_psql_script('load_normalized_data.sql', [
+        ['table', 'additional_claims', False],
+        ['input_path', S3_EMDEON_WAREHOUSE + d_path + '/'],
+        ['credentials', args.s3_credentials]
+    ])
 
 enqueue_psql_script('clean_out_reversed_claims.sql')
 
