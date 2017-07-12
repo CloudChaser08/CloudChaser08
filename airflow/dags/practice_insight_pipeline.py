@@ -1,4 +1,9 @@
-from airflow import DAG
+# Note:
+#
+# Practice Insight's monthly files are large and their normalization
+# routine is complex, so we split up their monthly updates into 4
+# equal parts before ingesting them.
+
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
@@ -43,16 +48,18 @@ mdag = HVDAG.HVDAG(
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/out/{}/{}/'
+    S3_TRANSACTION_PROCESSED_837_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/out/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/payload/'
-    TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE = 'HV.data.837.{}.{}.csv'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/practiceinsight/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/medicalclaims/practice_insight/{}/{}/'
-    TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE = 'HV.data.837.{}.{}.csv'
+    S3_TRANSACTION_PROCESSED_837_URL_TEMPLATE = 's3://salusv/incoming/medicalclaims/practice_insight/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/medicalclaims/practice_insight/'
 
-TRANSACTION_FILE_NAME_TEMPLATE = TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE + '.gz'
+TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE = 'HV.data.837.{}.{}.csv'
+TRANSACTION_837_FILE_NAME_TEMPLATE = TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE + '.gz'
+S3_TRANSACTION_PROCESSED_835_URL_TEMPLATE = 's3://salusv/incoming/era/practice_insight/{}/{}/'
+TRANSACTION_UNZIPPED_835_FILE_NAME_TEMPLATE = 'HV.data.835.{}.{}.csv'
+TRANSACTION_835_FILE_NAME_TEMPLATE = TRANSACTION_UNZIPPED_835_FILE_NAME_TEMPLATE + '.gz'
 
 # Deid file
 DEID_FILE_NAME_TEMPLATE = 'HV.phi.{}.{}.o'
@@ -110,10 +117,29 @@ def get_deid_file_urls(ds, kwargs):
     ]
 
 
-def get_unzipped_file_paths(ds, kwargs):
+def get_837_part_tmp_dir(part):
+    def out(ds, kwargs):
+        return get_tmp_dir(ds, kwargs) + 'presplit/' + str(part) + '/'
+    return out
+
+
+def get_unzipped_837_file_paths(part):
+    """
+    Function for getting the filepath for the given part of an 837 file
+    """
+    def out(ds, kwargs):
+        return [
+            get_837_part_tmp_dir(part)(ds, kwargs) + insert_current_plaintext_date(
+                TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
+            )
+        ]
+    return out
+
+
+def get_unzipped_835_file_paths(ds, kwargs):
     return [
-        insert_current_plaintext_date(
-            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+        get_tmp_dir(ds, kwargs) + insert_current_plaintext_date(
+            TRANSACTION_UNZIPPED_835_FILE_NAME_TEMPLATE, kwargs
         )
     ]
 
@@ -146,50 +172,73 @@ def generate_transaction_file_validation_task(
     )
 
 
+
 if HVDAG.HVDAG.airflow_env != 'test':
-    validate_transactional = generate_transaction_file_validation_task(
-        'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
+    validate_transactional_837 = generate_transaction_file_validation_task(
+        'transaction', TRANSACTION_837_FILE_NAME_TEMPLATE,
         1000000
     )
     validate_deid = generate_transaction_file_validation_task(
         'deid', DEID_FILE_NAME_TEMPLATE,
         10000000
     )
-
-fetch_transactional = SubDagOperator(
-    subdag=s3_fetch_file.s3_fetch_file(
-        DAG_NAME,
-        'fetch_transaction_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_path_template': TMP_PATH_TEMPLATE,
-            'expected_file_name_func': insert_current_plaintext_date_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
-            ),
-            's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
-        }
-    ),
-    task_id='fetch_transaction_file',
-    dag=mdag
-)
-
-
-def gunzip_transactional_func(ds, **kwargs):
-    tmp_dir = get_tmp_dir(ds, kwargs)
-    decompression.decompress_gzip_file(
-        tmp_dir + insert_current_plaintext_date(
-            TRANSACTION_FILE_NAME_TEMPLATE, kwargs
-        ),
+    validate_transactional_835 = generate_transaction_file_validation_task(
+        'transaction_835', TRANSACTION_835_FILE_NAME_TEMPLATE,
+        1000000
     )
 
 
-gunzip_transactional = PythonOperator(
-    task_id='gunzip_transaction_file',
-    provide_context=True,
-    python_callable=gunzip_transactional_func,
-    dag=mdag
+def generate_fetch_transaction_task(task_id, file_name_template):
+    return SubDagOperator(
+        subdag=s3_fetch_file.s3_fetch_file(
+            DAG_NAME,
+            'fetch_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_path_template': TMP_PATH_TEMPLATE,
+                'expected_file_name_func': insert_current_plaintext_date_function(
+                    file_name_template
+                ),
+                's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+                's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
+            }
+        ),
+        task_id='fetch_' + task_id + '_file',
+        dag=mdag
+    )
+
+
+fetch_transactional_837 = generate_fetch_transaction_task(
+    'transaction_837', TRANSACTION_837_FILE_NAME_TEMPLATE
+)
+fetch_transactional_835 = generate_fetch_transaction_task(
+    'transaction_835', TRANSACTION_835_FILE_NAME_TEMPLATE
+)
+
+
+def generate_gunzip_task(task_id, file_name_template):
+    def execute(ds, **kwargs):
+        tmp_dir = get_tmp_dir(ds, kwargs)
+        decompression.decompress_gzip_file(
+            tmp_dir + insert_current_plaintext_date(
+                file_name_template, kwargs
+            ),
+        )
+
+    return PythonOperator(
+        task_id='gunzip_' + task_id + '_file',
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
+
+
+gunzip_transactional_837 = generate_gunzip_task(
+    'transaction_837', TRANSACTION_837_FILE_NAME_TEMPLATE
+)
+gunzip_transactional_835 = generate_gunzip_task(
+    'transaction_835', TRANSACTION_835_FILE_NAME_TEMPLATE
 )
 
 
@@ -200,6 +249,8 @@ def split_transaction_into_parts_func(ds, **kwargs):
 
     This function also then moves each part (i) into a new directory
     presplit/i
+
+    This step only applies to 837 transactions
     """
     check_call([
         'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/'
@@ -207,31 +258,31 @@ def split_transaction_into_parts_func(ds, **kwargs):
     check_call([
         'split', '-n', 'l/4', get_tmp_dir(ds, kwargs)
         + insert_current_plaintext_date(
-            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+            TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
         ),
         get_tmp_dir(ds, kwargs) + 'presplit/'
         + insert_current_plaintext_date(
-            TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+            TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
         ) + '.'
     ])
     for i in range(1, 5):
-        os.mkdir(get_tmp_dir(ds, kwargs) + 'presplit/' + str(i))
+        os.mkdir(get_837_part_tmp_dir(i)(ds, kwargs))
         check_call([
-            'mkdir', '-p', get_tmp_dir(ds, kwargs) + 'presplit/' + str(i)
+            'mkdir', '-p', get_837_part_tmp_dir(i)(ds, kwargs)
         ])
         os.rename(
             get_tmp_dir(ds, kwargs) + 'presplit/'
             + filter(
                 lambda f: f.startswith(
                     insert_current_plaintext_date(
-                        TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+                        TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
                     )
                 ),
                 os.listdir(get_tmp_dir(ds, kwargs) + 'presplit/')
             )[0],
-            get_tmp_dir(ds, kwargs) + 'presplit/' + str(i) + '/'
+            get_837_part_tmp_dir(i)(ds, kwargs)
             + insert_current_plaintext_date(
-                TRANSACTION_UNZIPPED_FILE_NAME_TEMPLATE, kwargs
+                TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
             )
         )
 
@@ -245,40 +296,41 @@ split_transaction_into_parts = PythonOperator(
 
 
 def split_step(
-        task_id, part_number, tmp_dir_func, file_paths_to_split_func,
+        task_id, tmp_dir_func, file_paths_to_split_func,
         s3_destination, num_splits
 ):
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
-            'split_' + task_id + '_' + str(part_number) + '_file',
+            'split_' + task_id + '_file',
             default_args['start_date'],
             mdag.schedule_interval,
             {
                 'tmp_dir_func': tmp_dir_func,
-                'file_paths_to_split_func': lambda ds, k: map(
-                    lambda f: tmp_dir_func(ds, k) + f,
-                    file_paths_to_split_func(ds, k)
-                ),
+                'file_paths_to_split_func': file_paths_to_split_func,
                 's3_prefix_func': lambda ds, k: insert_current_date_function(
                     s3_destination
-                )(ds, k) + part_number + '/',
+                )(ds, k),
                 'num_splits': num_splits
             }
         ),
-        task_id='split_' + task_id + '_' + part_number + '_file',
+        task_id='split_' + task_id + '_file',
         dag=mdag
     )
 
 
-split_transactional_steps = map(
+split_transactional_837_steps = map(
     lambda i: split_step(
-        "transaction", str(i),
-        lambda ds, k: get_tmp_dir(ds, k) + 'presplit/' + str(i) + '/',
-        get_unzipped_file_paths,
-        S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 20
+        "transaction_837_" + str(i),
+        get_837_part_tmp_dir(i),
+        get_unzipped_837_file_paths(i),
+        S3_TRANSACTION_PROCESSED_837_URL_TEMPLATE + str(i) + '/', 20
     ),
     range(1, 5)
+)
+split_transactional_835 = split_step(
+    'transaction_835', get_tmp_dir, get_unzipped_835_file_paths,
+    S3_TRANSACTION_PROCESSED_835_URL_TEMPLATE, 20
 )
 
 
@@ -342,7 +394,7 @@ def generate_detect_move_normalize_dag():
                 's3_payload_loc_url': S3_PAYLOAD_DEST,
                 'vendor_uuid': 'b29eb316-a398-4fdc-b8da-2cff26f86bad',
                 'pyspark_normalization_script_name':
-                '/home/hadoop/spark/providers/practice_insight/sparkNormalizePracticeInsight.py',
+                '/home/hadoop/spark/providers/practice_insight/medicalclaims/sparkNormalizePracticeInsight.py',
                 'pyspark_normalization_args_func': norm_args,
                 'pyspark': True,
                 'emr_node_type': 'm4.2xlarge'
@@ -357,21 +409,28 @@ detect_move_normalize_dag = generate_detect_move_normalize_dag()
 
 # transaction
 if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_transactional.set_upstream(validate_transactional)
+    fetch_transactional_837.set_upstream(validate_transactional_837)
+    fetch_transactional_835.set_upstream(validate_transactional_835)
     queue_up_for_matching.set_upstream(validate_deid)
 
-    post_norm_steps = split_transactional_steps
+    post_norm_steps = split_transactional_837_steps
     post_norm_steps.append(queue_up_for_matching)
     detect_move_normalize_dag.set_upstream(post_norm_steps)
 else:
     detect_move_normalize_dag.set_upstream(
-        split_transactional_steps
+        split_transactional_837_steps
     )
 
-gunzip_transactional.set_upstream(fetch_transactional)
+# transaction 837
+gunzip_transactional_837.set_upstream(fetch_transactional_837)
+split_transaction_into_parts.set_upstream(gunzip_transactional_837)
+split_transaction_into_parts.set_downstream(split_transactional_837_steps)
 
-split_transaction_into_parts.set_upstream(gunzip_transactional)
+# transaction 835
+gunzip_transactional_835.set_upstream(fetch_transactional_835)
+split_transactional_835.set_upstream(gunzip_transactional_835)
 
-split_transaction_into_parts.set_downstream(split_transactional_steps)
-
-clean_up_workspace.set_upstream(split_transactional_steps)
+# cleanup
+pre_processing_steps = split_transactional_837_steps
+pre_processing_steps.append(split_transactional_835)
+clean_up_workspace.set_upstream(pre_processing_steps)

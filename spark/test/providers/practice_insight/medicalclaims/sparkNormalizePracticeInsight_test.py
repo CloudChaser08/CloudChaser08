@@ -2,7 +2,7 @@ import pytest
 
 import datetime
 
-import spark.providers.practice_insight.sparkNormalizePracticeInsight \
+import spark.providers.practice_insight.medicalclaims.sparkNormalizePracticeInsight \
     as practice_insight
 
 results = []
