@@ -76,7 +76,7 @@ if args.first_run:
     ])
 
 file_date = datetime.strptime(args.date, '%Y-%m-%d')
-run_psql_script('create_normalized_data_table', [
+run_psql_script('create_normalized_data_table.sql', [
     ['table', 'normalized_claims', False]
 ])
 setid_path_to_unload = {}
@@ -146,7 +146,7 @@ enqueue_psql_script('../../redshift_norm_common/cap_age.sql', [
 
 # If this script is being run to backfill missing data, we have to apply
 # reversals from claims we received in batches after the current one
-enqueue_psql_script('create_normalized_data_table', [
+enqueue_psql_script('create_normalized_data_table.sql', [
     ['table', 'additional_claims', False]
 ])
 for i in xrange(1, 15):
