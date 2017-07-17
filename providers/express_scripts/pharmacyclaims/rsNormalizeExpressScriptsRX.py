@@ -3,6 +3,7 @@ import subprocess
 import re
 import argparse
 import time
+from datetime import datetime, timedelta
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 S3_EXPRESS_SCRIPTS_IN = 's3://salusv/incoming/pharmacyclaims/esi/'
@@ -75,7 +76,7 @@ if args.first_run:
 date_path = args.date.replace('-', '/')
 
 file_date = datetime.strptime(args.date, '%Y-%m-%d')
-run_psql_script('create_normalized_data_table', [
+run_psql_script('create_normalized_data_table.sql', [
     ['table', 'normalized_claims', False]
 ])
 setid_path_to_unload = {}
