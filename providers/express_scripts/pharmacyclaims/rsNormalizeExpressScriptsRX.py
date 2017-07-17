@@ -80,17 +80,24 @@ run_psql_script('create_normalized_data_table', [
 ])
 setid_path_to_unload = {}
 for i in xrange(1, 3):
-    d_path = (file_date - timedelta(days=7*i)).strftime('%Y/%m/%d')
-    run_psql_script('load_normalized_data.sql', [
-        ['table', 'normalized_claims', False],
-        ['input_path', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'],
-        ['credentials', args.s3_credentials]
-    ])
-    res = run_psql_query('SELECT DISTINCT data_set FROM normalized_claims', True)
-    setids = map(lambda x: x.replace(' ',''), res.split("\n")[2:-3])
-    for setid in setids:
-        if setid not in setid_path_to_unload:
-            setid_path_to_unload[setid] = S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'
+    # Provide some flexibility in case the previous batch came in a day early or late
+    for j in xrange(-1, 2):
+        d_path = (file_date - timedelta(days=7*i + j)).strftime('%Y/%m/%d')
+        try:
+            subprocess.check_call(['aws', 's3', 'ls', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path])
+        except:
+            continue;
+
+        run_psql_script('load_normalized_data.sql', [
+            ['table', 'normalized_claims', False],
+            ['input_path', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'],
+            ['credentials', args.s3_credentials]
+        ])
+        res = run_psql_query('SELECT DISTINCT data_set FROM normalized_claims', True)
+        setids = map(lambda x: x.replace(' ',''), res.split("\n")[2:-3])
+        for setid in setids:
+            if setid not in setid_path_to_unload:
+                setid_path_to_unload[setid] = S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'
 
 setid_path_to_unload[args.setid] = S3_EXPRESS_SCRIPTS_WAREHOUSE + date_path + '/'
 
@@ -145,11 +152,19 @@ enqueue_psql_script('../../redshift_norm_common/cap_age.sql', [
 # If this script is being run to backfill missing data, we have to apply
 # reversals from claims we received in batches after the current one
 for i in xrange(1, 3):
-    d_path = (file_date + timedelta(days=7*i)).strftime('%Y/%m/%d')
-    enqueue_psql_script('load_transactions.sql', [
-        ['input_path', S3_EXPRESS_SCRIPTS_IN + d_path + '/'],
-        ['credentials', args.s3_credentials]
-    ])
+    # Provide some flexibility in case the batch came in a day early or late
+    for j in xrange(-1, 2):
+        d_path = (file_date - timedelta(days=7*i + j)).strftime('%Y/%m/%d')
+        try:
+            subprocess.check_call(['aws', 's3', 'ls', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path])
+        except:
+            continue;
+
+        enqueue_psql_script('load_transactions.sql', [
+            ['input_path', S3_EXPRESS_SCRIPTS_IN + d_path + '/'],
+            ['credentials', args.s3_credentials]
+        ])
+
 enqueue_psql_script('clean_out_reversed_claims.sql')
 enqueue_psql_script('clean_out_reversals.sql')
 
