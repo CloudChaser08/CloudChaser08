@@ -145,5 +145,5 @@ SELECT
         ELSE NULL
     END                                       -- logical_delete_reason
 FROM transactions t
-    LEFT JOIN matching_payload mp ON t.unique_patient_id = md5(concat(coalesce(mp.hvid, ''), 'Cardinal_PDS-0'))
+    LEFT JOIN matching_payload mp ON t.unique_patient_id = mp.personId
 ;
