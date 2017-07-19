@@ -5,7 +5,6 @@ from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
-import spark.helpers.payload_loader as payload_loader
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
@@ -17,6 +16,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../test/providers/mindbody/resources/matching'
         )
+    # NOTE: there is nothing acutally here atm... just following format
+    #       that I found in other normalization scripts.
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/out/{}/'.format(
             date_input.replace('-', '/')
@@ -26,6 +27,27 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     else:
         input_path = 's3://salusv/incoming/mindbody/record_data'
         matching_path = 's3://salusv/matching/payload/mindbody'
+
+    # Create the Event v02 table 
+    # to store the results in
+    runner.run_spark_script('../../common/event_common_model_v2.sql', [
+        ['table_name', 'event_common_model', False]
+    ])
+
+    # Point Hive to the location of the transaction data
+    # and describe its schema
+    runner.run_spark_script('load_transactions.sql', [
+        ['input_path', input_path]
+    ])
+
+    # Normalize the transaction data into the
+    # event common model using transaction
+    # and matching payload data
+    runner.run_spark_script('normalize.sql', [
+        ['set', 'some_set_name', False],
+        ['feed', 'some_feed_name', False],
+        ['vendor', 'some_vendor_name', False]
+    ])
 
 
 def main(args):
