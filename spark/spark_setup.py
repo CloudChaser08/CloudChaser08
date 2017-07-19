@@ -75,6 +75,12 @@ def init(provider, local=False):
     sqlContext.registerFunction(
         'obfuscate_hvid', obfuscate_hvid
     )
+    sqlContext.registerFunction(
+        'slightly_obfuscate_hvid', slightly_obfuscate_hvid
+    )
+    sqlContext.registerFunction(
+        'slightly_deobfuscate_hvid', slightly_deobfuscate_hvid
+    )
 
     # helper functions for normalizing medical claims
     sqlContext.registerFunction(
