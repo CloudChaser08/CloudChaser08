@@ -5,6 +5,7 @@ from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
+import spark.helpers.payload_loader as payload_loader
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
@@ -58,7 +59,7 @@ def main(args):
     runner = Runner(sqlContext)
 
     # Run the normalization routine
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, test=args.local_test, airflow_test=args.airflow_test)
     
     # Tell spark to shutdown
     spark.stop()
@@ -73,5 +74,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--local_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)

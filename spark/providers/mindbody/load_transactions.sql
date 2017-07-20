@@ -22,7 +22,7 @@ CREATE EXTERNAL TABLE transactional_mindbody(
     hv_linking_id           string
 )
 ROW FORMAT SERDE "org.apache.hadoop.hive.serde2.OpenCSVSerde"
-SERDEPROPERTIES (
+WITH SERDEPROPERTIES (
     "separatorChar" = "|"
 )
 STORED AS TEXTFILE
