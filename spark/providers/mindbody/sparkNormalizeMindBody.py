@@ -15,24 +15,26 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../test/providers/mindbody/resources/input/'
         )
         matching_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/mindbody/resources/matching'
+            script_path, '../../test/providers/mindbody/resources/matching/'
         )
     # NOTE: there is nothing acutally here atm... just following format
     #       that I found in other normalization scripts.
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/out/{}/'.format(
-            date_input.replace('-', '/')
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/out/{}/'.format(date_input.replace('-', '/'))
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/payload/{}/'.format(date_input.replace('-', '/'))
     else:
         input_path = 's3://salusv/incoming/mindbody/record_data'
         matching_path = 's3://salusv/matching/payload/mindbody'
 
+
+    # Load the matching payload
+    payload_loader.load(runner, matching_path, ['claim_id', 'hvJoinKey'])
+    
     # Create the Event v02 table 
     # to store the results in
     runner.run_spark_script('../../common/event_common_model_v2.sql', [
-        ['table_name', 'event_common_model', False]
+        ['table_name', 'event_common_model', False],
+        ['properties', '', False]
     ])
 
     # Point Hive to the location of the transaction data
@@ -45,15 +47,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # event common model using transaction
     # and matching payload data
     runner.run_spark_script('normalize.sql', [
-        ['set', 'some_set_name', False],
-        ['feed', 'some_feed_name', False],
-        ['vendor', 'some_vendor_name', False]
+        ['set', '\'some_set_name\'', False],
+        ['feed', '\'some_feed_name\'', False],
+        ['vendor', '\'some_vendor_name\'', False]
     ])
 
 
 def main(args):
+    print args.local_test
     # Initialize Spark
-    spark, sqlContext = init("MindBody")
+    spark, sqlContext = init("MindBody", local=args.local_test)
 
     # Initialize the Spark Runner
     runner = Runner(sqlContext)
@@ -68,7 +71,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/mindbody/{}/'.format(time.strftime('%Y-%m-%d', time.localtime())
+        output_path = 's3://salusv/warehouse/parquet/mindbody/{}/'.format(time.strftime('%Y-%m-%d', time.localtime()))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
