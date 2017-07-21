@@ -18,6 +18,7 @@ CREATE EXTERNAL TABLE transactional_mindbody(
     visitTypeGroupName      string,
     visitTypeName           string,
     visitClassName          string,
+    visitType               string,
     visitRevenue            string,
     hv_linking_id           string
 )

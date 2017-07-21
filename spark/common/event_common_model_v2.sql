@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS {table_name}
+DROP TABLE IF EXISTS {table_name};
 CREATE TABLE {table_name} (
     record_id               bigint,
     hvid                    string,
@@ -37,4 +37,4 @@ CREATE TABLE {table_name} (
     part_provider           string,
     part_processdate        string
 )
-{properties}
+{properties};
