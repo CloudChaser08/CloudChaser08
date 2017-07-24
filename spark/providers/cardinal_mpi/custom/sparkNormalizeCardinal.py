@@ -18,19 +18,22 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/cardinal_mpi/custom/resources/matching/'
         ) + '/'
+        output_dir = '/tmp/staging/'
     elif airflow_test:
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/payload/{}/'.format(
             date_input.replace('-', '/')
         )
+        output_dir = '/tmp/staging/'
     else:
         matching_path = 's3a://salusv/matching/payload/custom/cardinal_mpi/{}/'.format(
             date_input.replace('-', '/')
         )
+        output_dir = constants.hdfs_staging_dir
 
     payload_loader.load(runner, matching_path, ['claimId', 'multiMatchQuality'])
 
     runner.run_spark_script('normalize.sql', [
-        ['location', constants.hdfs_staging_dir]
+        ['location', output_dir]
     ])
 
 
