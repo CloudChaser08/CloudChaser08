@@ -7,24 +7,9 @@ SELECT
     {set},                             -- data_set
     {feed},                            -- data_feed
     {vendor},                          -- data_vendor
-    NULL,                              -- source_version
-    NULL,                              -- patient_id
-    NULL,                              -- patient_member_id
-    NULL,                              -- patient_group_id
-    NULL,                              -- patient_group_name
-    NULL,                              -- patient_control_number 
-    NULL,                              -- patient_email
-    NULL,                              -- patient_phone
-    NULL,                              -- patient_ssn
-    t.first_name,                      -- patient_first_name
-    t.last_name,                       -- patient_last_name
     p.age,                             -- patient_age
-    t.birthdate,                       -- patient_date_of_birth
     p.yearOfBirth,                     -- patient_year_of_birth
-    t.zip,                             -- patient_zip
     p.threeDigitZip,                   -- patient_zip3
-    NULL,                              -- patient_address
-    t.city,                            -- patient_city
     p.state,                           -- patient_state
     p.gender,                          -- patient_gender
     -- TODO: NOT SURE ABOUT THESE vvv
