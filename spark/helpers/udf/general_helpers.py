@@ -87,6 +87,8 @@ def slightly_obfuscate_hvid(hvid, key):
         raise ValueError("A project-specific key must be provided to properly obfuscate the HVID")
     if hvid is None:
         return None
+    if type(hvid) is not int:
+        raise ValueError("Only integer HVIDs are expected")
     res = hvid
     # Pad cyclically so the key length is a multiple of 4
     if len(key) % 4 != 0:
