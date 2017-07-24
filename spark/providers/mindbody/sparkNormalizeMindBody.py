@@ -6,8 +6,14 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.postprocessor as postprocessor
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
+    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
+
+    setid = 'record_data_' + date_obj.strftime('%Y%m%d')
+    
     script_path = __file__
 
     if test:
@@ -32,7 +38,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
     # Load the matching payload
-    payload_loader.load(runner, matching_path, ['claim_id', 'hvJoinKey'])
+    payload_loader.load(runner, matching_path, ['claimid', 'hvJoinKey'])
     
     # Create the Event v02 table 
     # to store the results in
@@ -47,6 +53,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['input_path', input_path]
     ])
 
+    # Remove leading and trailing whitespace from any strings
+    postprocessor.trimmify(runner.sqlContext.sql('select * from transactional_mindbody'))\
+                    .createTempView('transactional_mindbody')
+
     # Normalize the transaction data into the
     # event common model using transaction
     # and matching payload data
@@ -56,9 +66,22 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['vendor', '\'some_vendor_name\'', False]
     ])
 
+    # Postprocessing 
+    postprocessor.compose(
+        postprocessor.nullify,
+        postprocessor.add_universal_columns(feed_id='38', vendor_id='133', filename=setid)
+    )(
+        runner.sqlContext.sql('select * from event_common_model')
+    ).createTempView('event_common_model')
+
+    if not test:
+        normalized_records_unloader.partition_and_rename(
+                spark, runner, 'consumer', 'event_common_model_v2.sql',
+                'mindbody', 'event_common_model', 'event_date', date_input
+            )
+
 
 def main(args):
-    print args.local_test
     # Initialize Spark
     spark, sqlContext = init("MindBody", local=args.local_test)
 
