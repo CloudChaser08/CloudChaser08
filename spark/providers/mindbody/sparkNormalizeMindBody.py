@@ -20,11 +20,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # NOTE: there is nothing acutally here atm... just following format
     #       that I found in other normalization scripts.
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/out/{}/'.format(date_input.replace('-', '/'))
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/payload/{}/'.format(date_input.replace('-', '/'))
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/out/{}/'\
+                        .format(date_input.replace('-', '/'))
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/payload/{}/'\
+                        .format(date_input.replace('-', '/'))
     else:
-        input_path = 's3://salusv/incoming/mindbody/record_data'
-        matching_path = 's3://salusv/matching/payload/mindbody'
+        input_path = 's3://salusv/incoming/consumer/mindbody/{}/'\
+                        .format(date_input.replace('-', '/'))
+        matching_path = 's3://salusv/matching/payload/consumer/mindbody/{}/'\
+                        .format(date_input.replace('-', '/'))
 
 
     # Load the matching payload
