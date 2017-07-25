@@ -47,6 +47,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
+        ['external', '', False],
         ['properties', '', False]
     ])
 

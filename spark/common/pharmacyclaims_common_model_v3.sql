@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS {table_name};
-CREATE TABLE {table_name} (
+CREATE {external} TABLE {table_name} (
         record_id                                  bigint,
         claim_id                                   string,
         hvid                                       string,

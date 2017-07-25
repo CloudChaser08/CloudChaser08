@@ -8,23 +8,26 @@ RUN apt-get update
 RUN apt-get install -y software-properties-common
 
 RUN apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+#RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
-RUN add-apt-repository ppa:webupd8team/java
-RUN apt-get update
-RUN echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections
-RUN apt-get install -q -y oracle-java7-installer
-RUN apt-get install -q -y oracle-java7-set-default
+#RUN add-apt-repository ppa:webupd8team/java
+#RUN apt-get update
+#RUN echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections
+#RUN apt-get install -q -y oracle-java7-installer
+#RUN apt-get install -q -y oracle-java7-set-default
 
+ADD conf/jdk-7u80-linux-x64.tar.gz /usr/
 ENV JAVA_HOME /usr/lib/jvm/java-7-oracle/
 
 ADD bin/UnlimitedJCEPolicyJDK7/local_policy.jar ${JAVA_HOME}/jre/lib/security/
 ADD bin/UnlimitedJCEPolicyJDK7/US_export_policy.jar ${JAVA_HOME}/jre/lib/security/
 
+RUN apt-cache search postgresql
+
 RUN apt-get update -yqq \
     && apt-get install -yqq --no-install-recommends \
-        postgresql-9.5             \
-        postgresql-client-9.5      \
+        postgresql \
+        postgresql-client \ 
         python-dev \
         libkrb5-dev \
         libsasl2-dev \
