@@ -36,10 +36,12 @@ def postprocess_and_unload(date_input, restricted, test_dir):
     setid = setid_template.format('HVRes' if restricted else 'HVUnRes')
     provider = 'mckesson_res' if restricted else 'mckesson'
     restriction_level = 'restricted' if restricted else 'unrestricted'
+    feed_id = '36' if restricted else '33'
+    vendor_id = '119' if restricted else '86'
 
     postprocessor.compose(
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id='33', vendor_id='86', filename=setid),
+        postprocessor.add_universal_columns(feed_id=feed_id, vendor_id=vendor_id, filename=setid),
         pharm_priv.filter
     )(
         runner.sqlContext.sql('select * from {}_pharmacyclaims_common_model'.format(restriction_level))
