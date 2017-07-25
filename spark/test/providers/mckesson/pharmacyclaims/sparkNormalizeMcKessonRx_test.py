@@ -101,6 +101,11 @@ def test_prescription_number_hash():
         assert not r.rx_number
 
 
+def test_no_empty_hvjoinkeys():
+    # prescription-key-12 has a newline in it
+    assert len(filter(lambda r: r.claim_id == 'prescription-key-12' or r.claim_id == 'line', restricted_results)) == 0
+
+
 def test_output():
     # ensure both provider dirs are created (filtering out hive staging dirs)
     assert filter(lambda x: not x.startswith('.hive-staging'), os.listdir(file_utils.get_abs_path(__file__, './resources/output/'))) \
