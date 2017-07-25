@@ -112,10 +112,6 @@ dag = HVDAG.HVDAG(
     schedule_interval='@monthly' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
 )
 
-class FiledownloadItem(scrapy.Item):
-    file_urls = scrapy.Field()
-    files = scrapy.Field()
-
 class loinc_spider(Spider):
     name = "loinc"
 
@@ -151,8 +147,8 @@ class loinc_spider(Spider):
         self.log("Agreeing to Terms")
         if "Please review the following Copyright and Terms of Use" not in response.body:
             self.log("Copyright form not found")
-            return scrapy.Request(url="https://loinc.org/downloads/files/loinc-table-csv-text-format/gotoCopyrightedFile",
-                            callback=self.get_download_link)
+            return scrapy.Request(url="https://loinc.org/download/loinc-table-file-csv",
+                            callback=self.download_file)
         else:
             return scrapy.FormRequest(
                 url='https://loinc.org/download/loinc-table-file-csv/',
@@ -160,7 +156,7 @@ class loinc_spider(Spider):
                 callback=self.download_file
             )
 
-        self.agree()
+        self.download_file()
 
     def download_file(self, response):
         self.log("Terms Agreed To")
