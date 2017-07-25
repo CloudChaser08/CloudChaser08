@@ -91,6 +91,16 @@ def test_restricted_count():
                                                              'prescription-key-9', 'res-prescription-key-10', 'res-prescription-key-11']
 
 
+def test_prescription_number_hash():
+    # assert that prescription-key-5 had the correct rx_number
+    # MD5(PRESCRIPTIONNUMBER) == '2eef6c6aa75adcbd0c2df418c5838d91'
+    assert filter(lambda r: r.claim_id == 'prescription-key-5', restricted_results)[0].rx_number == '2eef6c6aa75adcbd0c2df418c5838d91'
+
+    # assert that all of the other rx_number values are null
+    for r in filter(lambda r: r.claim_id != 'prescription-key-5', restricted_results):
+        assert not r.rx_number
+
+
 def test_output():
     # ensure both provider dirs are created (filtering out hive staging dirs)
     assert filter(lambda x: not x.startswith('.hive-staging'), os.listdir(file_utils.get_abs_path(__file__, './resources/output/'))) \
