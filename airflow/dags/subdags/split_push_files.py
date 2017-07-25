@@ -1,13 +1,27 @@
-from airflow.operators import BashOperator, PythonOperator
+from airflow.operators import PythonOperator
 from subprocess import check_call
 import util.s3_utils as s3_utils
 import os
 import logging
 
 import common.HVDAG as HVDAG
+from util.datadog import Datadog
 
-for m in [s3_utils, HVDAG]:
+for m in [s3_utils, Datadog, HVDAG]:
     reload(m)
+
+def do_log_file_volume(dag_name):
+    def out(ds, **kwargs):
+        dd = Datadog()
+        for filename in kwargs['file_paths_to_split_func'](ds, kwargs):
+            with open(filename) as f:
+                row_count = sum(1 for _ in f)
+                dd.create_metric(
+                    name='airflow.provider.volume',
+                    value=row_count,
+                    tags=['dag:' + dag_name, 'file:' + filename]
+                )
+    return out
 
 def do_create_parts_dir(ds, **kwargs):
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs) + 'parts/'
@@ -49,7 +63,7 @@ def do_clean_up(ds, **kwargs):
     for fp in file_paths_to_split:
         check_call(['rm', fp])
     check_call(['rm', '-r', tmp_dir + 'parts'])
-            
+
 def split_push_files(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
         'owner': 'airflow',
@@ -62,6 +76,14 @@ def split_push_files(parent_dag_name, child_dag_name, start_date, schedule_inter
         schedule_interval='@daily',
         start_date=start_date,
         default_args=default_args
+    )
+
+    log_file_volume = PythonOperator(
+        task_id='log_file_volume',
+        provide_context=True,
+        python_callable=do_log_file_volume(parent_dag_name),
+        op_kwargs=dag_config,
+        dag=dag
     )
 
     create_parts_dir = PythonOperator(
@@ -96,7 +118,6 @@ def split_push_files(parent_dag_name, child_dag_name, start_date, schedule_inter
         dag=dag
     )
 
-
     clean_up = PythonOperator(
         task_id='clean_up',
         provide_context=True,
@@ -105,6 +126,7 @@ def split_push_files(parent_dag_name, child_dag_name, start_date, schedule_inter
         dag=dag
     )
 
+    create_parts_dir.set_upstream(log_file_volume)
     split_files.set_upstream(create_parts_dir)
     bzip_part_files.set_upstream(split_files)
     push_part_files.set_upstream(bzip_part_files)
