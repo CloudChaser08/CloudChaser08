@@ -141,6 +141,7 @@ class loinc_spider(Spider):
             return
         # We've successfully authenticated, let's have some fun!
         else:
+	    self.log("We have successfully logged in, let's have some fun.")
             return scrapy.Request(url="https://loinc.org/download/loinc-table-file-csv",
                             callback=self.agree_terms)
 
@@ -168,7 +169,8 @@ class loinc_spider(Spider):
             return scrapy.Request(url="https://loinc.org/download/loinc-table-file-csv",
                             callback=self.agree_terms)
         else:
-            with open(self.settings.attributes['FILES_STORE'].value + '/loinc.zip', 'wb') as f:
+            self.log("Downloading zip into " + self.settings.attributes['FILES_STORE'].value + '/full/loinc.zip')
+            with open(self.settings.attributes['FILES_STORE'].value + '/full/loinc.zip', 'wb') as f:
                 f.write(response.body)
 
 
@@ -279,7 +281,7 @@ end_run   = end_dag_op(dag, dd)
 create_tmp_dir = BashOperator(
     task_id='create_tmp_dir',
     params={ "TMP_PATH": TMP_PATH},
-    bash_command='mkdir -p {{ params.TMP_PATH }}{{ tomorrow_ds }}',
+    bash_command='mkdir -p {{ params.TMP_PATH }}{{ tomorrow_ds }}/full',
     retries=3,
     dag=dag)
 
