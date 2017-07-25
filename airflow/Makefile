@@ -11,7 +11,12 @@ endef
 clean:
 	find . -name "*.pyc" -delete
 
-build:
+
+fetch_java:
+	mkdir conf
+	/usr/local/bin/aws s3 cp s3://salusv/Software/jdk-7u80-linux-x64.tar.gz conf/
+
+build:  fetch_java
 	docker build -t ${REPO}:${USER} .
 	docker tag ${REPO}:${USER} ${REPO}:latest
 
