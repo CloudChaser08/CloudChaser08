@@ -9,4 +9,7 @@ class Datadog():
         )
 
     def create_metric(self, name, value, tags):
+        """
+        Create a metric in datadog. The host for this metric will be the current airflow server.
+        """
         datadog.api.Metric.send(metric=name, points=value, tags=tags)
