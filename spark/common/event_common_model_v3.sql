@@ -19,8 +19,6 @@ CREATE TABLE {table_name} (
     event                   string,
     event_val               string,
     event_val_uom           string,
-    event_date              string,
-    part_provider           string,
-    part_best_date          string
+    event_date              string
 )
 {properties};
