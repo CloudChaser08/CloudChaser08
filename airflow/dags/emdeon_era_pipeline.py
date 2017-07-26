@@ -75,7 +75,7 @@ MINIMUM_LINK_MFT_FILE_SIZE=15
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2016, 12, 1, 12),
+    'start_date': datetime(2017, 7, 26, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
