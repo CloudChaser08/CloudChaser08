@@ -60,11 +60,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Normalize the transaction data into the
     # event common model using transaction
     # and matching payload data
-    runner.run_spark_script('normalize.sql', [
-        ['set', '\'some_set_name\'', False],
-        ['feed', '\'some_feed_name\'', False],
-        ['vendor', '\'some_vendor_name\'', False]
-    ])
+    runner.run_spark_script('normalize.sql')
 
     # Postprocessing 
     postprocessor.compose(
