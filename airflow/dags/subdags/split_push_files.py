@@ -18,7 +18,7 @@ def do_log_file_volume(dag_name):
             with open(filename) as f:
                 row_count = sum(1 for _ in f)
                 dd.create_metric(
-                    name='airflow.provider.volume',
+                    name='airflow.dag.file_row_count',
                     value=row_count,
                     tags=['dag:' + dag_name, 'file:' + filename]
                 )
