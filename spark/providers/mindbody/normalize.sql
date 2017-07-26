@@ -14,7 +14,7 @@ SELECT
     p.state,                           -- patient_state
     p.gender,                          -- patient_gender
     p.claimid,                         -- source_record_id 
-    'CLAIM',                           -- source_record_qual
+    NULL,                              -- source_record_qual
     NULL,                              -- source_record_date
     t.studioVertical,                  -- event
     t.visitClassName,                  -- event_val
