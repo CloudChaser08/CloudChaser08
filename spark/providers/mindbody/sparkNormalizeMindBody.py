@@ -8,6 +8,7 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.privacy.events as event_priv
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -65,7 +66,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Postprocessing 
     postprocessor.compose(
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id='38', vendor_id='133', filename=setid)
+        postprocessor.add_universal_columns(feed_id='38', vendor_id='133', filename=setid),
+        event_priv.filter
     )(
         runner.sqlContext.sql('select * from event_common_model')
     ).createTempView('event_common_model')
