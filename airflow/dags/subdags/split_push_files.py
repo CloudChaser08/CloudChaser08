@@ -13,7 +13,8 @@ for m in [s3_utils, Datadog, HVDAG]:
 def do_log_file_volume(dag_name):
     def out(ds, **kwargs):
         dd = Datadog()
-        for filename in kwargs['file_paths_to_split_func'](ds, kwargs):
+        for filepath in kwargs['file_paths_to_split_func'](ds, kwargs):
+            filename = filepath.split('/')[-1]
             with open(filename) as f:
                 row_count = sum(1 for _ in f)
                 dd.create_metric(
