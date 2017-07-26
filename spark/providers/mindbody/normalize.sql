@@ -24,7 +24,7 @@ SELECT
     t.visitTypeGroupName,              -- event_val_uom
     t.visitClassDate,                  -- event_date
     'Private Source 133',              -- part_provider
-    current_date()                     -- part_processdate
+    current_date()                     -- part_best_date
     
 FROM transactional_mindbody t
 LEFT JOIN matching_payload p

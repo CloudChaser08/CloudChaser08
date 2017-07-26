@@ -40,9 +40,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Load the matching payload
     payload_loader.load(runner, matching_path, ['claimid', 'hvJoinKey'])
     
-    # Create the Event v02 table 
+    # Create the Event v03 table 
     # to store the results in
-    runner.run_spark_script('../../common/event_common_model_v2.sql', [
+    runner.run_spark_script('../../common/event_common_model_v3.sql', [
         ['table_name', 'event_common_model', False],
         ['properties', '', False]
     ])
