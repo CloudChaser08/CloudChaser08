@@ -44,6 +44,7 @@ else:
     S3_TRANSACTION_CLAIM_DESTINATION ='s3://salusv/incoming/era/emdeon/{}/{}/{}/claims/'
     S3_LINK_RAW_PATH='s3://healthverity/incoming/era/emdeon/link/'
     S3_LINK_MFT_RAW_PATH='s3://healthverity/incoming/era/emdeon/link/'
+    S3_LINK_DESTINATION ='s3://salusv/incoming/era/emdeon/{}/{}/{}/link/'
 
 # Transaction file
 TRANSACTION_FILE_DESCRIPTION='WebMD ERA transaction file'
