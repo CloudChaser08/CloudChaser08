@@ -112,10 +112,6 @@ dag = HVDAG.HVDAG(
     schedule_interval='@monthly' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
 )
 
-class FiledownloadItem(scrapy.Item):
-    file_urls = scrapy.Field()
-    files = scrapy.Field()
-
 class loinc_spider(Spider):
     name = "loinc"
 
@@ -127,8 +123,8 @@ class loinc_spider(Spider):
         self.log("Parsing Login Form")
         return scrapy.FormRequest.from_response(
             response,
-            formname='login_form',
-            formdata={'__ac_name': 'healthverity', '__ac_password': 'XwoBMtT6GUZBmn8XjyV7'},
+            formname='loginform',
+            formdata={'log': 'healthverity', 'pwd': 'XwoBMtT6GUZBmn8XjyV7'},
             callback=self.after_login
         )
 
@@ -141,39 +137,37 @@ class loinc_spider(Spider):
             return
         # We've successfully authenticated, let's have some fun!
         else:
-            return scrapy.Request(url="https://loinc.org/downloads/files/loinc-table-csv-text-format",
+	    self.log("We have successfully logged in, let's have some fun.")
+            return scrapy.Request(url="https://loinc.org/download/loinc-table-file-csv",
                             callback=self.agree_terms)
 
         self.agree_terms()
 
     def agree_terms(self, response):
         self.log("Agreeing to Terms")
-        if "Please Review the Copyright and Terms of Use" not in response.body:
+        if "Please review the following Copyright and Terms of Use" not in response.body:
             self.log("Copyright form not found")
-            return scrapy.Request(url="https://loinc.org/downloads/files/loinc-table-csv-text-format/gotoCopyrightedFile",
-                            callback=self.get_download_link)
+            return scrapy.Request(url="https://loinc.org/download/loinc-table-file-csv",
+                            callback=self.download_file)
         else:
-            return scrapy.FormRequest.from_response(
-                response,
-                formname='edit_form',
-                formdata={"loinc-and-relma-copyright-and-terms-of-use":"I Accept These Terms and Conditions"},
-                callback=self.agree
+            return scrapy.FormRequest(
+                url='https://loinc.org/download/loinc-table-file-csv/',
+                formdata={"tc_accepted":"1", "tc_submit":"download"},
+                callback=self.download_file
             )
 
-        self.agree()
+        self.download_file()
 
-    def agree(self, response):
+    def download_file(self, response):
         self.log("Terms Agreed To")
         if "You have not reviewed and agreed to" in response.body:
             self.log("Terms NOT agreed to apparently")
-            return scrapy.Request(url="https://loinc.org/downloads/files/loinc-table-csv-text-format",
+            return scrapy.Request(url="https://loinc.org/download/loinc-table-file-csv",
                             callback=self.agree_terms)
         else:
-            return FiledownloadItem(
-                        file_urls=[
-                            'http://loinc.org/downloads/files/loinc-table-csv-text-format/loinc-table-file-csv-text-format/download'
-                        ]
-                    )
+            self.log("Downloading zip into " + self.settings.attributes['FILES_STORE'].value + '/full/loinc.zip')
+            with open(self.settings.attributes['FILES_STORE'].value + '/full/loinc.zip', 'wb') as f:
+                f.write(response.body)
 
 
 def scrape_loinc(tomorrow_ds, **kwargs):
@@ -283,7 +277,7 @@ end_run   = end_dag_op(dag, dd)
 create_tmp_dir = BashOperator(
     task_id='create_tmp_dir',
     params={ "TMP_PATH": TMP_PATH},
-    bash_command='mkdir -p {{ params.TMP_PATH }}{{ tomorrow_ds }}',
+    bash_command='mkdir -p {{ params.TMP_PATH }}{{ tomorrow_ds }}/full',
     retries=3,
     dag=dag)
 
