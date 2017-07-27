@@ -366,5 +366,5 @@ SELECT CAST(record_id AS bigint),
     ELSE part_processdate
     END AS part_processdate
 FROM default.pharmacyclaims_old
-WHERE part_provider IN ('genoa', 'emdeon', 'express_scripts')
+WHERE part_provider IN ('genoa', 'emdeon', 'express_scripts', 'accredo')
 ;
