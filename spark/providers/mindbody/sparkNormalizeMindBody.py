@@ -9,6 +9,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.events as event_priv
+import mindbodyPrivacy as mindbody_priv
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -67,10 +68,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='38', vendor_id='133', filename=setid),
+        mindbody_priv.map_whitelist,
         event_priv.filter
     )(
         runner.sqlContext.sql('select * from event_common_model')
     ).createTempView('event_common_model')
+
+    # TODO: Remove when done testing
+    runner.sqlContext.sql('select * from event_common_model').show()
 
     if not test:
         normalized_records_unloader.partition_and_rename(
