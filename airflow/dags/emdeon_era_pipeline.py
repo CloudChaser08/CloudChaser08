@@ -331,9 +331,9 @@ def generate_update_analytics_db_dag(table_name, era_table_type):
         return sql_new_template.format(
             table_name=table_name,
             era_table_type=era_table_type,
-            year=current_date.substring(0, 4),
-            month=current_date.substring(4, 6),
-            day=current_date.substring(6, 8)
+            year=current_date[0:4],
+            month=current_date[4:6],
+            day=current_date[6:8]
         )
 
     return SubDagOperator(
