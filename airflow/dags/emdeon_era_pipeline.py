@@ -215,13 +215,12 @@ def generate_fetch_dag(
     )
 
 
-if airflow_env == 'test':
-    fetch_transaction_file = generate_fetch_dag(
-        'transaction', '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]), TRANSACTION_FILE_NAME_TEMPLATE
-    )
-    fetch_link_file = generate_fetch_dag(
-        'link', '/'.join(S3_LINK_RAW_PATH.split('/')[3:]), LINK_FILE_NAME_TEMPLATE
-    )
+fetch_transaction_file = generate_fetch_dag(
+    'transaction', '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]), TRANSACTION_FILE_NAME_TEMPLATE
+)
+fetch_link_file = generate_fetch_dag(
+    'link', '/'.join(S3_LINK_RAW_PATH.split('/')[3:]), LINK_FILE_NAME_TEMPLATE
+)
 
 
 # process these files
@@ -362,14 +361,13 @@ if airflow_env != 'test':
     validate_fetch_transaction_mft_file_dag.set_downstream(clean_up_workspace)
     validate_fetch_link_mft_file_dag.set_downstream(clean_up_workspace)
 
-    validate_fetch_transaction_file_dag.set_downstream(unzip_transaction_file)
-    validate_fetch_link_file_dag.set_downstream(unzip_link_file)
+    validate_fetch_transaction_file_dag.set_downstream(fetch_transaction_file)
+    validate_fetch_link_file_dag.set_downstream(fetch_link_file)
 
     clean_up_workspace.set_downstream([update_analytics_db_claims, update_analytics_db_serviceline, update_analytics_db_link])
 
-else:
-    fetch_transaction_file.set_downstream(unzip_transaction_file)
-    fetch_link_file.set_downstream(unzip_link_file)
+fetch_transaction_file.set_downstream(unzip_transaction_file)
+fetch_link_file.set_downstream(unzip_link_file)
 
 
 parse_transactions.set_upstream(unzip_transaction_file)
