@@ -149,5 +149,5 @@ SELECT
         ELSE NULL
     END                                       -- logical_delete_reason
 FROM transactions t
-    LEFT JOIN matching_payload mp ON t.unique_patient_id = mp.personId
+    LEFT JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey
 ;
