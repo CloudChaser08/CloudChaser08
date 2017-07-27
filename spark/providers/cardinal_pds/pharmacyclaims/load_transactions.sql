@@ -86,6 +86,9 @@ CREATE EXTERNAL TABLE transactions (
         row_id                                      string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION {input_path}
     ;
