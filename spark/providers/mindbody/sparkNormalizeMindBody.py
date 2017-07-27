@@ -68,14 +68,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='38', vendor_id='133', filename=setid),
+        mindbody_priv.cap_event_date,
         mindbody_priv.map_whitelist,
         event_priv.filter
     )(
         runner.sqlContext.sql('select * from event_common_model')
     ).createTempView('event_common_model')
-
-    # TODO: Remove when done testing
-    runner.sqlContext.sql('select * from event_common_model').show()
 
     if not test:
         normalized_records_unloader.partition_and_rename(
