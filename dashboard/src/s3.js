@@ -36,7 +36,7 @@ exports.getS3Calls = function() {
       function recursiveList(continuationToken) {
         var params = {
           Bucket : 'healthverity',
-          Prefix : 'incoming/' + providerConf.incomingBucket + '/',
+          Prefix : 'incoming/' + providerConf.providerPrefix + '/',
           Delimiter : '/'
         };
         if (continuationToken) {

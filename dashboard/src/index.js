@@ -30,7 +30,7 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
 
   // the configuration for this provider
   var providerConf = providers.config.filter(function(provider) {
-    return provider.incomingBucket == s3.getIncomingBucket(providerIncomingFiles[0]);
+    return provider.providerPrefix == s3.getIncomingBucket(providerIncomingFiles[0]);
   })[0];
 
   // enumerate all execution dates for this provider
@@ -123,7 +123,7 @@ exports.handler = function(event, context) {
 
         // conf for this provider
         var providerConf = providers.config.filter(function(provider) {
-          return provider.incomingBucket == s3.getIncomingBucket(providerS3Res[0]);
+          return provider.providerPrefix == s3.getIncomingBucket(providerS3Res[0]);
         })[0];
 
         // filter incoming files based on expected filename regex

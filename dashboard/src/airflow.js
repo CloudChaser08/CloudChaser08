@@ -25,7 +25,7 @@ const query = {
         'AND total_success_count > 0 ' +
         'AND total_nonsuccess_count = 0 ' +
         'THEN 1 ELSE 0 END' +
-        ') as "' + provider.incomingBucket + '"';
+        ') as "' + provider.providerPrefix + '"';
     }).reduce(function(k1, k2) {
       return k1 + ', ' + k2;
     })),

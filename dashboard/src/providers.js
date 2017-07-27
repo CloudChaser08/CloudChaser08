@@ -18,7 +18,7 @@ exports.schedule = {
 //
 // The configuration for a new provider should include the following:
 //   displayName              -> Provider name as it will be displayed on the dashboard
-//   incomingBucket           -> The string between healthverity/incoming/ and all of the incoming files for this provider.
+//   providerPrefix           -> The string between healthverity/incoming/ and all of the incoming files for this provider.
 //                               May contain slashes.
 //                               Ex: s3://healthverity/incoming/<incoming bucket>/incomingFile.gz
 //   schedule                 -> The airflow schedule for this provider's DAG (from the schedule object above)
@@ -31,7 +31,7 @@ exports.schedule = {
 exports.config = [
   {
     displayName: 'Practice Insight',
-    incomingBucket: 'practiceinsight',
+    providerPrefix: 'practiceinsight',
     schedule: this.schedule.MONTHLY,
     startDate: new Date('2017-01-02'),
     airflowPipelineName: 'practice_insight_pipeline',
@@ -47,7 +47,7 @@ exports.config = [
   },
   {
     displayName: 'Caris',
-    incomingBucket: 'caris',
+    providerPrefix: 'caris',
     schedule: this.schedule.MONTHLY,
     startDate: new Date('2017-01-02'),
     airflowPipelineName: 'caris_pipeline',
@@ -60,7 +60,7 @@ exports.config = [
   },
   {
     displayName: 'EmdeonDX',
-    incomingBucket: 'medicalclaims/emdeon/transactions',
+    providerPrefix: 'medicalclaims/emdeon/transactions',
     schedule: this.schedule.DAILY,
     startDate: new Date('2017-01-01'),
     airflowPipelineName: 'emdeon_dx_post_matching_pipeline',
@@ -72,7 +72,7 @@ exports.config = [
   },
   {
     displayName: 'EmdeonRX',
-    incomingBucket: 'pharmacyclaims/emdeon/transactions',
+    providerPrefix: 'pharmacyclaims/emdeon/transactions',
     schedule: this.schedule.DAILY,
     startDate: new Date('2017-01-01'),
     airflowPipelineName: 'emdeon_rx_post_matching_pipeline',
@@ -84,7 +84,7 @@ exports.config = [
   },
   {
     displayName: 'Quest',
-    incomingBucket: 'quest',
+    providerPrefix: 'quest',
     startDate: new Date('2017-01-01'),
     schedule: this.schedule.DAILY,
     airflowPipelineName: 'quest_pipeline',
@@ -96,7 +96,7 @@ exports.config = [
   },
   {
     displayName: 'Ability',
-    incomingBucket: 'ability',
+    providerPrefix: 'ability',
     startDate: new Date('2017-01-01'),
     schedule: this.schedule.DAILY,
     airflowPipelineName: 'ability_pipeline',
@@ -107,7 +107,7 @@ exports.config = [
   },
   {
     displayName: 'Express Scripts',
-    incomingBucket: 'esi',
+    providerPrefix: 'esi',
     schedule: this.schedule.WEEKLY,
     startDate: new Date('2017-01-01'),
     airflowPipelineName: 'express_scripts_pipeline',
@@ -122,7 +122,7 @@ exports.config = [
   },
   {
     displayName: 'McKesson RX',
-    incomingBucket: 'mckessonrx',
+    providerPrefix: 'mckessonrx',
     schedule: this.schedule.DAILY,
     startDate: new Date('2017-06-01'),
     airflowPipelineName: 'mckessonrx_pipeline',
