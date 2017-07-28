@@ -1,0 +1,64 @@
+<html>
+  <head>
+    <title>Provider Status Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
+
+    <!-- Custom CSS -->
+    <style>
+      {{CSS}}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header clearfix">
+        <h3 class="text-muted">Provider Status Dashboard</h3>
+      </div>
+
+      <div id="data">
+        <div class="data-element" id="ingestion">
+          <table id="table" data-toggle="table" data-classes="table table-hover table-no-bordered">
+            <thead>
+              <tr>
+                <th data-field="name" data-sortable="true">Provider Name</div></th>
+                <th data-field="received" data-sortable="true">Last File Received</div></th>
+                <th data-field="ingested" data-sortable="true">Last File Ingested</div></th>
+                <th data-field="status" data-sortable="true" data-sort-name="_status_data" data-sorter="statusSorter">Overall Status</div></th>
+              </tr>
+            </thead>
+            <tbody>
+              {{DATE_INGESTED_CONTENT}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="time-series" class="data-element">
+        <span id="back"><a href="#">&lt;&lt;back</a></span>
+        <div id="legend" class="pull-right">
+          <span class="legend-marker fully-loaded"></span> &#8594; The file has been ingested<br>
+          <span class="legend-marker not-ingested"></span> &#8594; We have not ingested the file<br>
+          <span class="legend-marker not-sent"></span> &#8594; We did not receive a file<br>
+        </div>
+        {{TIME_SERIES_CONTENT}}
+      </div>
+
+    </div>
+
+    <!-- jQuery (needed for Bootstrap) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
+
+    <!-- Custom Javascript -->
+    <script>
+      {{JAVASCRIPT}}
+    </script>
+  </body>
+</html>
