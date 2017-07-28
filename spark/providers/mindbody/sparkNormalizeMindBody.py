@@ -38,7 +38,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3://salusv/matching/payload/consumer/mindbody/{}/'\
                         .format(date_input.replace('-', '/'))
 
-    min_date = datetime.strptime('2016-01-01', '%Y-%m-%d')
+    min_date = datetime.strptime('2014-01-01', '%Y-%m-%d')
 
     # Load the matching payload
     payload_loader.load(runner, matching_path, ['claimid', 'hvJoinKey'])
@@ -87,13 +87,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # Initialize Spark
-    spark, sqlContext = init("MindBody", local=args.local_test)
+    spark, sqlContext = init("MindBody")
 
     # Initialize the Spark Runner
     runner = Runner(sqlContext)
 
     # Run the normalization routine
-    run(spark, runner, args.date, test=args.local_test, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
     
     # Tell spark to shutdown
     spark.stop()
@@ -103,6 +103,8 @@ def main(args):
         output_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/spark-output/'
     else:
         output_path = 's3://salusv/warehouse/parquet/mindbody/{}/'.format(time.strftime('%Y-%m-%d', time.localtime()))
+
+    normalized_records_unloader.distcp(output_path)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

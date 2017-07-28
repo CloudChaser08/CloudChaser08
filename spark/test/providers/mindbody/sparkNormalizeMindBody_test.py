@@ -18,7 +18,7 @@ def test_init(spark):
 
 
 def test_event_date_capping():
-    min_date = datetime.date(2016, 1, 1)
+    min_date = datetime.date(2014, 1, 1)
     max_date = datetime.date(2017, 7, 27)
     for row in results:
         if row.event_date is not None:
