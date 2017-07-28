@@ -19,7 +19,12 @@ SELECT
     t.studioVertical,                  -- event
     t.visitClassName,                  -- event_val
     t.visitTypeGroupName,              -- event_val_uom
-    t.visitClassDate                   -- event_date
+    extract_date(
+        t.visitClassDate,
+        '%m/%d/%Y',
+        CAST({min_date} AS DATE),
+        CAST({max_date} AS DATE)
+    )                                  -- event_date
     
 FROM transactional_mindbody t
 LEFT JOIN matching_payload p

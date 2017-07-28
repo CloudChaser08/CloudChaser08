@@ -38,6 +38,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3://salusv/matching/payload/consumer/mindbody/{}/'\
                         .format(date_input.replace('-', '/'))
 
+    min_date = datetime.strptime('2016-01-01', '%Y-%m-%d')
 
     # Load the matching payload
     payload_loader.load(runner, matching_path, ['claimid', 'hvJoinKey'])
@@ -62,13 +63,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Normalize the transaction data into the
     # event common model using transaction
     # and matching payload data
-    runner.run_spark_script('normalize.sql')
+    runner.run_spark_script('normalize.sql', [
+        ['min_date', str(min_date)],
+        ['max_date', str(date_obj)]
+    ])
 
     # Postprocessing 
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='38', vendor_id='133', filename=setid),
-        mindbody_priv.cap_event_date,
         mindbody_priv.map_whitelist,
         event_priv.filter
     )(
@@ -105,6 +108,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
-    parser.add_argument('--local_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
