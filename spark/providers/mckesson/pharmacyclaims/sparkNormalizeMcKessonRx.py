@@ -9,80 +9,152 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
+runner = None
+spark = None
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
+
+def load(input_path, restriction_level):
+    """
+    Function for loading transactional data
+    """
+    runner.run_spark_script('load_transactions.sql', [
+        ['input_path', input_path],
+        ['restriction_level', restriction_level, False]
+    ])
+    postprocessor.trimmify(
+        runner.sqlContext.sql('select * from {}_transactions'.format(restriction_level))
+    ).createTempView('{}_transactions'.format(restriction_level))
+
+
+def postprocess_and_unload(date_input, restricted, test_dir):
+    """
+    Function for unloading normalized data
+    """
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
-    setid = 'HVUnRes.Record.' + date_obj.strftime('%Y%m%d')
+    setid_template = '{}.Record.' + date_obj.strftime('%Y%m%d')
+    setid = setid_template.format('HVRes' if restricted else 'HVUnRes')
+    provider = 'mckesson_res' if restricted else 'mckesson'
+    restriction_level = 'restricted' if restricted else 'unrestricted'
+    feed_id = '36' if restricted else '33'
+    vendor_id = '119' if restricted else '86'
 
+    postprocessor.compose(
+        postprocessor.nullify,
+        postprocessor.add_universal_columns(feed_id=feed_id, vendor_id=vendor_id, filename=setid),
+        pharm_priv.filter
+    )(
+        runner.sqlContext.sql('select * from {}_pharmacyclaims_common_model'.format(restriction_level))
+    ).createTempView('{}_pharmacyclaims_common_model'.format(restriction_level))
+
+    normalized_records_unloader.partition_and_rename(
+        spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model.sql', provider,
+        '{}_pharmacyclaims_common_model'.format(restriction_level), 'date_service', date_input,
+        test_dir=test_dir
+    )
+
+
+def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
     script_path = __file__
 
+    global spark, runner
+    spark = spark_in
+    runner = runner_in
+
     if test:
-        input_path = file_utils.get_abs_path(
+        unres_input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/input/'
         ) + '/'
-        matching_path = file_utils.get_abs_path(
+        unres_matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/matching/'
         ) + '/'
+        res_input_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/input-res/'
+        ) + '/'
+        res_matching_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/matching-res/'
+        ) + '/'
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/out/{}/'.format(
+        unres_input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/out/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/payload/{}/'.format(
+        unres_matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/payload/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        unres_input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_res/pharmacyclaims/out/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        unres_matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_res/pharmacyclaims/payload/{}/'.format(
             date_input.replace('-', '/')
         )
     else:
-        input_path = 's3a://salusv/incoming/pharmacyclaims/mckesson/{}/'.format(
+        unres_input_path = 's3a://salusv/incoming/pharmacyclaims/mckesson/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3a://salusv/matching/payload/pharmacyclaims/mckesson/{}/'.format(
+        res_input_path = 's3a://salusv/incoming/pharmacyclaims/mckesson_res/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        unres_matching_path = 's3a://salusv/matching/payload/pharmacyclaims/mckesson/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        res_matching_path = 's3a://salusv/matching/payload/pharmacyclaims/mckesson_res/{}/'.format(
             date_input.replace('-', '/')
         )
 
     min_date = '2010-03-01'
     max_date = date_input
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model.sql', [
-        ['table_name', 'pharmacyclaims_common_model', False],
-        ['properties', '', False]
-    ])
+    def normalize(input_path, matching_path, restricted=False):
+        """
+        Generic function for running normalization in any mode
+        """
+        restriction_level = 'restricted' if restricted else 'unrestricted'
+        runner.run_spark_script('../../../common/pharmacyclaims_common_model.sql', [
+            ['table_name', '{}_pharmacyclaims_common_model'.format(restriction_level), False],
+            ['properties', '', False]
+        ])
 
-    payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
+        load(input_path, restriction_level)
 
-    runner.run_spark_script('load_transactions.sql', [
-        ['input_path', input_path]
-    ])
+        payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
-    postprocessor.trimmify(runner.sqlContext.sql('select * from transactions')).createTempView('transactions')
+        runner.run_spark_script('normalize.sql', [
+            ['min_date', min_date],
+            ['max_date', max_date],
+            ['restriction_level', restriction_level, False]
+        ])
 
-    runner.run_spark_script('normalize.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
+        test_dir = file_utils.get_abs_path(
+            script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/output/'
+        ) + '/' if test else None
 
-    postprocessor.compose(
-        postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id='33', vendor_id='86', filename=setid),
-        pharm_priv.filter
-    )(
-        runner.sqlContext.sql('select * from pharmacyclaims_common_model')
-    ).createTempView('pharmacyclaims_common_model')
+        postprocess_and_unload(date_input, restricted, test_dir)
 
-    if not test:
-        normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model.sql', 'mckesson',
-            'pharmacyclaims_common_model', 'date_service', date_input
-        )
+    # run normalization for appropriate mode(s)
+    if mode in ['restricted', 'both']:
+        normalize(res_input_path, res_matching_path, True)
+
+    if mode in ['unrestricted', 'both']:
+        normalize(unres_input_path, unres_matching_path)
 
 
 def main(args):
-    # init
+
+    # init spark
     spark, sqlContext = init("McKessonRx")
 
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    # figure out what mode we're in
+    if args.restricted == args.unrestricted:
+        mode = 'both'
+    elif args.restricted:
+        mode = 'restricted'
+    elif args.unrestricted:
+        mode = 'unrestricted'
+
+    run(spark, runner, args.date, mode, airflow_test=args.airflow_test)
 
     spark.stop()
 
@@ -98,5 +170,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--restricted', default=False, action='store_true')
+    parser.add_argument('--unrestricted', default=False, action='store_true')
     args = parser.parse_args()
     main(args)

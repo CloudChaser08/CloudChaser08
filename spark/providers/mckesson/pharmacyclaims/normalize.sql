@@ -1,10 +1,10 @@
-INSERT INTO pharmacyclaims_common_model
+INSERT INTO {restriction_level}_pharmacyclaims_common_model
 SELECT
     NULL,                                     -- record_id
     t.prescriptionkey,                        -- claim_id
     mp.hvid,                                  -- hvid
     NULL,                                     -- created
-    1,                                        -- model_version
+    3,                                        -- model_version
     NULL,                                     -- data_set
     NULL,                                     -- data_feed
     NULL,                                     -- data_vendor
@@ -153,6 +153,9 @@ SELECT
     OR COALESCE(t.camstatuscode, 'X') = 'R'
     THEN 'Claim Rejected'
     END                                       -- logical_delete_reason
-FROM transactions t
-    LEFT JOIN matching_payload mp ON t.prescriptionkey = mp.claimid
-;
+FROM {restriction_level}_transactions t
+    LEFT JOIN matching_payload mp ON t.hvjoinkey = mp.hvjoinkey
+
+-- exclude blank hvJoinKey values
+WHERE TRIM(COALESCE(t.hvjoinkey, '')) <> ''
+    ;

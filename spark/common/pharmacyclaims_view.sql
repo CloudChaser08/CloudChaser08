@@ -241,7 +241,7 @@ CREATE VIEW default.pharmacyclaims (
     ELSE part_best_date
     END AS part_processdate
 FROM default.pharmacyclaims_20170602
-WHERE part_provider IN ('mckesson', 'diplomat')
+WHERE part_provider IN ('mckesson', 'mckesson_res', 'diplomat')
 UNION ALL
 SELECT CAST(record_id AS bigint),
     claim_id,

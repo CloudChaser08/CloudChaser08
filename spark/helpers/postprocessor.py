@@ -64,7 +64,7 @@ def compose(*functions):
     in series on a dataframe.
     """
     return functools.reduce(
-        lambda f, g: lambda x: f(g(x)),
+        lambda f, g: lambda x: g(f(x)),
         functions,
         lambda x: x
     )

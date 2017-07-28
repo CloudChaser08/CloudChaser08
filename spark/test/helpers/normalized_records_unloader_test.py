@@ -9,10 +9,10 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 test_staging_dir  = file_utils.get_abs_path(
     __file__, './test-staging/'
-)
+) + '/'
 test_staging_dir2 = file_utils.get_abs_path(
     __file__, './test-staging2/'
-)
+) + '/'
 prefix = 'PREFIX'
 
 
@@ -97,6 +97,67 @@ def test_fixed_partition():
     )
 
     assert date_partition == ['part_best_date=2017-01']
+
+
+def test_unload_separate_provider(spark):
+    """
+    Ensure that when a separate provider is unloaded to the same staging
+    dir, nothing gets double-prefixed
+    """
+    normalized_records_unloader.partition_and_rename(
+        spark['spark'], spark['runner'], 'lab', 'lab_common_model.sql',
+        'test_provider2', 'lab_common_model', 'date_service', prefix,
+        test_dir=test_staging_dir
+    )
+
+    # ensure new data was addeed
+    assert os.listdir(test_staging_dir + 'part_provider=test_provider2/')
+
+    # ensure new data was prefixed
+    part_files = filter(
+        lambda f: not f.endswith('.crc'),
+        os.listdir(
+            test_staging_dir + '/part_provider=test_provider2/part_best_date=NULL/'
+        )
+    )
+    for f in part_files:
+        assert f.startswith(prefix)
+
+    # ensure old data was not re-prefixed
+    part_files = filter(
+        lambda f: not f.endswith('.crc'),
+        os.listdir(
+            test_staging_dir + '/part_provider=test_provider/part_best_date=NULL/'
+        )
+    )
+    for f in part_files:
+        assert f.startswith('{}_part'.format(prefix))
+
+
+def test_unload_new_prefix(spark):
+    "Ensure that a new prefix can be unloaded to an existing partition"
+    normalized_records_unloader.partition_and_rename(
+        spark['spark'], spark['runner'], 'lab', 'lab_common_model.sql',
+        'test_provider', 'lab_common_model', 'date_service', prefix + '_NEW',
+        test_dir=test_staging_dir
+    )
+
+    # assert that new prefixes were added
+    assert filter(
+        lambda f: f.startswith(prefix + '_NEW_part'),
+        os.listdir(
+            test_staging_dir + '/part_provider=test_provider/part_best_date=NULL/'
+        )
+    )
+
+    # assert that old prefixes were unchanged
+    assert filter(
+        lambda f: f.startswith(prefix + '_part'),
+        os.listdir(
+            test_staging_dir + '/part_provider=test_provider/part_best_date=NULL/'
+        )
+    )
+
 
 def test_cleanup():
     shutil.rmtree(test_staging_dir)

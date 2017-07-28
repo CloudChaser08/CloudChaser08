@@ -13,7 +13,7 @@ def mk_move_file(prefix, test=False):
         ls_cmd = ['hadoop', 'fs', '-ls']
 
     def move_file(part_file):
-        if part_file.find("part-") > -1:
+        if part_file.find("/part-") > -1:
             old_pf = part_file.split(' ')[-1].strip()
             new_pf = '/'.join(old_pf.split('/')[:-1] + [prefix + '_' + old_pf.split('/')[-1]])
             try:
@@ -38,12 +38,12 @@ def partition_and_rename(spark, runner, data_type, common_model_script, provider
 
     if test_dir:
         staging_dir = test_dir
-        part_files_cmd = ['find', staging_dir, '-type', 'f']
+        part_files_cmd = ['find', staging_dir + 'part_provider=' + provider + '/', '-type', 'f']
         common_dirpath = '../common/'
 
     else:
         staging_dir = constants.hdfs_staging_dir
-        part_files_cmd = ['hadoop', 'fs', '-ls', '-R', staging_dir]
+        part_files_cmd = ['hadoop', 'fs', '-ls', '-R', staging_dir + 'part_provider=' + provider + '/']
         common_dirpath = '../../../../common/'
 
 
