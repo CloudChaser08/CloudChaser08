@@ -63,7 +63,7 @@ exports.config = [
     providerPrefix: 'medicalclaims/emdeon/transactions',
     schedule: this.schedule.DAILY,
     startDate: new Date('2017-01-01'),
-    airflowPipelineName: 'emdeon_dx_post_matching_pipeline',
+    airflowPipelineName: 'emdeon_dx_pipeline',
     expectedFilenameRegex: /^.*[0-9]{8}_Claims_US_CF_D_deid\.dat\.gz$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('/')[4].split('_')[0];
