@@ -33,8 +33,8 @@ EMR_COPY_MELLON_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.
     '/tmp/mellon-assembly-latest.jar]')
 EMR_TRANSFORM_TO_PARQUET_STEP = ('Type=Spark,Name="Transform Emdeon RX to Parquet",ActionOnFailure=CONTINUE, '
     'Args=[--class,com.healthverity.parquet.Main,--conf,spark.sql.parquet.compression.codec=gzip,'
-    '/tmp/mellon-assembly-latest.jar,{},{},pharmacy-old,hdfs:///parquet/pharmacyclaims/emdeon/{},'
-    's3a://salusv/warehouse/text/pharmacyclaims/emdeon/{},20,"|","false"]')
+    '/tmp/mellon-assembly-latest.jar,--modelName,pharmacy-old,--outpath,hdfs:///parquet/pharmacyclaims/emdeon/{0},'
+    ',--inpath,s3a://salusv/warehouse/text/pharmacyclaims/emdeon/{0},--partitions,20,--delimiter,"|",--quoted,"false"]')
 EMR_DELETE_OLD_PARQUET = ('Type=CUSTOM_JAR,Name="Delete old data from S3",Jar="command-runner.jar",'
     'ActionOnFailure=CONTINUE,Args=[aws,s3,rm,--recursive,s3://salusv/warehouse/parquet/pharmacyclaims/emdeon/{}]')
 EMR_DISTCP_TO_S3 = ('Type=CUSTOM_JAR,Name="Distcp to S3",Jar="command-runner.jar",' 
@@ -108,8 +108,7 @@ def do_transform_to_parquet(ds, **kwargs):
     delete_steps = []
     for i in xrange(0, 15):
         d = (datetime.strptime(file_date, '%Y-%m-%d') - timedelta(days=i)).strftime('%Y/%m/%d')
-        transform_steps.append(EMR_TRANSFORM_TO_PARQUET_STEP.format(
-            Variable.get('AWS_ACCESS_KEY_ID'),Variable.get('AWS_SECRET_ACCESS_KEY'),d,d))
+        transform_steps.append(EMR_TRANSFORM_TO_PARQUET_STEP.format(d))
         delete_steps.append(EMR_DELETE_OLD_PARQUET.format(d))
     check_call(['aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
                 '--steps', EMR_COPY_MELLON_STEP] + transform_steps + delete_steps +
