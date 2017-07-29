@@ -13,7 +13,7 @@ SELECT
     p.threeDigitZip,                   -- patient_zip3
     p.state,                           -- patient_state
     p.gender,                          -- patient_gender
-    p.claimid,                         -- source_record_id 
+    t.claim_id,                        -- source_record_id 
     NULL,                              -- source_record_qual
     NULL,                              -- source_record_date
     t.studioVertical,                  -- event

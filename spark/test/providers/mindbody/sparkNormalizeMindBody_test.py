@@ -38,6 +38,11 @@ def test_event_val_uom_mapping():
         assert row.event_val_uom is None
 
 
+def test_source_record_id_not_null():
+    for row in results:
+        assert row.source_record_id is not None
+
+
 def test_cleanup(spark):
     cleanup(spark)
 

@@ -41,7 +41,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     min_date = datetime.strptime('2014-01-01', '%Y-%m-%d')
 
     # Load the matching payload
-    payload_loader.load(runner, matching_path, ['claimid', 'hvJoinKey'])
+    payload_loader.load(runner, matching_path, ['claimId', 'hvJoinKey'])
     
     # Create the Event v03 table 
     # to store the results in
