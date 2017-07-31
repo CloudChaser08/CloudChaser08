@@ -49,7 +49,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['input_path', input_path]
     ])
 
-    postprocessor.trimmify(runner.sqlContext.sql('select * from transactions')).createTempView('transactions')
+    # trim and remove nulls from raw input
+    postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(
+        runner.sqlContext.sql('select * from transactions')
+    ).createTempView('transactions')
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
@@ -59,11 +62,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
 
     postprocessor.compose(
-        postprocessor.nullify,
         postprocessor.add_universal_columns(
             feed_id='<feedid>',
             vendor_id='<vendorid>',
-            filename='PDS_record_data_{}' + date_obj.strftime('%Y%m%d')
+
+            # TODO: this is incorrect - fix when we find out what
+            # their filenames will be
+            filename='RCM_Claims_{}.open'.format(date_obj.strftime('%Y%m%d'))
         ),
         medical_priv.filter
     )(
