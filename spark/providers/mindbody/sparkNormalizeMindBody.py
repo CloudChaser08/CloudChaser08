@@ -13,7 +13,8 @@ import mindbodyPrivacy as mindbody_priv
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
-
+    date_path = '/'.join(date_input.split('-')[:2]) + '/'
+    
     setid = 'record_data_' + date_obj.strftime('%Y%m%d')
     
     script_path = __file__
@@ -29,17 +30,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     #       that I found in other normalization scripts.
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/out/{}/'\
-                        .format(date_input.replace('-', '/'))
+                        .format(date_path)
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/payload/{}/'\
-                        .format(date_input.replace('-', '/'))
+                        .format(date_path)
     else:
-        # TODO: uncomment and remove paths below when data is actually there.
-       #  input_path = 's3://salusv/incoming/consumer/mindbody/{}/'\
-       #                  .format(date_input.replace('-', '/'))
-       #  matching_path = 's3://salusv/matching/payload/consumer/mindbody/{}/'\
-       #                  .format(date_input.replace('-', '/'))
-       input_path = 's3://healthveritydev/jilluminati/testing/mindbody/transactional/'
-       matching_path = 's3://healthveritydev/jilluminati/testing/mindbody/payload/'
+        input_path = 's2://salusv/incoming/consumer/mindbody/{}/'\
+                        .format(date_path)
+        matching_path = 's3://salusv/matching/payload/consumer/mindbody/{}/'\
+                        .format(date_path)
 
     min_date = datetime.strptime('2014-01-01', '%Y-%m-%d')
 
@@ -105,9 +103,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/spark-output/'
     else:
-        # TODO: uncomment and remove path below when ready to run for real
-       #  output_path = 's3://salusv/warehouse/parquet/mindbody/{}/'.format(time.strftime('%Y-%m-%d', time.localtime()))
-       output_path = 's3://salusv/testing/staging/mindbody/spark-output/'
+       output_path = 's3://salusv/warehouse/parquet/mindbody/{}/'.format(time.strftime('%Y-%m-%d', time.localtime()))
 
     normalized_records_unloader.distcp(output_path)
 
