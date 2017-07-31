@@ -15,7 +15,7 @@ def do_log_file_volume(dag_name):
         dd = datadog.Datadog()
         for filepath in kwargs['file_paths_to_split_func'](ds, kwargs):
             filename = filepath.split('/')[-1]
-            with open(filename) as f:
+            with open(filepath) as f:
                 row_count = sum(1 for line in f)
                 dd.create_metric(
                     name='airflow.dag.file_row_count',
