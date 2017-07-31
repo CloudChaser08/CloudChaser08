@@ -1,0 +1,337 @@
+INSERT INTO medicalclaims_common_model (
+        record_id,
+        claim_id,
+        hvid,
+        created,
+        model_version,
+        data_set,
+        data_feed,
+        data_vendor,
+        source_version,
+        patient_gender,
+        patient_age,
+        patient_year_of_birth,
+        patient_zip3,
+        patient_state,
+        claim_type,
+        date_received,
+        date_service,
+        date_service_end,
+        inst_date_admitted,
+        inst_date_discharged,
+        inst_admit_type_std_id,
+        inst_admit_type_vendor_id,
+        inst_admit_type_vendor_desc,
+        inst_admit_source_std_id,
+        inst_admit_source_vendor_id,
+        inst_admit_source_vendor_desc,
+        inst_discharge_status_std_id,
+        inst_discharge_status_vendor_id,
+        inst_discharge_status_vendor_desc,
+        inst_type_of_bill_std_id,
+        inst_type_of_bill_vendor_id,
+        inst_type_of_bill_vendor_desc,
+        inst_drg_std_id,
+        inst_drg_vendor_id,
+        inst_drg_vendor_desc,
+        place_of_service_std_id,
+        place_of_service_vendor_id,
+        place_of_service_vendor_desc,
+        service_line_number,
+        diagnosis_code,
+        diagnosis_code_qual,
+        diagnosis_priority,
+        admit_diagnosis_ind,
+        procedure_code,
+        procedure_code_qual,
+        principal_proc_ind,
+        procedure_units,
+        procedure_modifier_1,
+        procedure_modifier_2,
+        procedure_modifier_3,
+        procedure_modifier_4,
+        revenue_code,
+        ndc_code,
+        medical_coverage_type,
+        line_charge,
+        line_allowed,
+        total_charge,
+        total_allowed,
+        prov_rendering_npi,
+        prov_billing_npi,
+        prov_referring_npi,
+        prov_facility_npi,
+        payer_vendor_id,
+        payer_name,
+        payer_parent_name,
+        payer_org_name,
+        payer_plan_id,
+        payer_plan_name,
+        payer_type,
+        prov_rendering_vendor_id,
+        prov_rendering_tax_id,
+        prov_rendering_dea_id,
+        prov_rendering_ssn,
+        prov_rendering_state_license,
+        prov_rendering_upin,
+        prov_rendering_commercial_id,
+        prov_rendering_name_1,
+        prov_rendering_name_2,
+        prov_rendering_address_1,
+        prov_rendering_address_2,
+        prov_rendering_city,
+        prov_rendering_state,
+        prov_rendering_zip,
+        prov_rendering_std_taxonomy,
+        prov_rendering_vendor_specialty,
+        prov_billing_vendor_id,
+        prov_billing_tax_id,
+        prov_billing_dea_id,
+        prov_billing_ssn,
+        prov_billing_state_license,
+        prov_billing_upin,
+        prov_billing_commercial_id,
+        prov_billing_name_1,
+        prov_billing_name_2,
+        prov_billing_address_1,
+        prov_billing_address_2,
+        prov_billing_city,
+        prov_billing_state,
+        prov_billing_zip,
+        prov_billing_std_taxonomy,
+        prov_billing_vendor_specialty,
+        prov_referring_vendor_id,
+        prov_referring_tax_id,
+        prov_referring_dea_id,
+        prov_referring_ssn,
+        prov_referring_state_license,
+        prov_referring_upin,
+        prov_referring_commercial_id,
+        prov_referring_name_1,
+        prov_referring_name_2,
+        prov_referring_address_1,
+        prov_referring_address_2,
+        prov_referring_city,
+        prov_referring_state,
+        prov_referring_zip,
+        prov_referring_std_taxonomy,
+        prov_referring_vendor_specialty,
+        prov_facility_vendor_id,
+        prov_facility_tax_id,
+        prov_facility_dea_id,
+        prov_facility_ssn,
+        prov_facility_state_license,
+        prov_facility_upin,
+        prov_facility_commercial_id,
+        prov_facility_name_1,
+        prov_facility_name_2,
+        prov_facility_address_1,
+        prov_facility_address_2,
+        prov_facility_city,
+        prov_facility_state,
+        prov_facility_zip,
+        prov_facility_std_taxonomy,
+        prov_facility_vendor_specialty,
+        cob_payer_vendor_id_1,
+        cob_payer_seq_code_1,
+        cob_payer_hpid_1,
+        cob_payer_claim_filing_ind_code_1,
+        cob_ins_type_code_1,
+        cob_payer_vendor_id_2,
+        cob_payer_seq_code_2,
+        cob_payer_hpid_2,
+        cob_payer_claim_filing_ind_code_2,
+        cob_ins_type_code_2
+        )
+SELECT
+    NULL,                        -- record_id
+    t.claim_id,                  -- claim_id
+    mp.hvid,                     -- hvid
+    NULL,                        -- created
+    2,                           -- model_version
+    NULL,                        -- data_set
+    NULL,                        -- data_feed
+    NULL,                        -- data_vendor
+    NULL,                        -- source_version
+    mp.gender,                   -- patient_gender
+    mp.age,                      -- patient_age
+    mp.yearOfBirth,              -- patient_year_of_birth
+    mp.threeDigitZip,            -- patient_zip3
+    UPPER(mp.state),             -- patient_state
+    NULL,                        -- claim_type
+    NULL,                        -- date_received
+    EXTRACT_DATE(
+        t.date_svc_start, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        ),                       -- date_service
+    EXTRACT_DATE(
+        t.date_svc_end, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        ),                       -- date_service_end
+    NULL,                        -- inst_date_admitted
+    NULL,                        -- inst_date_discharged
+    NULL,                        -- inst_admit_type_std_id
+    NULL,                        -- inst_admit_type_vendor_id
+    NULL,                        -- inst_admit_type_vendor_desc
+    NULL,                        -- inst_admit_source_std_id
+    NULL,                        -- inst_admit_source_vendor_id
+    NULL,                        -- inst_admit_source_vendor_desc
+    NULL,                        -- inst_discharge_status_std_id
+    NULL,                        -- inst_discharge_status_vendor_id
+    NULL,                        -- inst_discharge_status_vendor_desc
+    NULL,                        -- inst_type_of_bill_std_id
+    NULL,                        -- inst_type_of_bill_vendor_id
+    NULL,                        -- inst_type_of_bill_vendor_desc
+    NULL,                        -- inst_drg_std_id
+    NULL,                        -- inst_drg_vendor_id
+    NULL,                        -- inst_drg_vendor_desc
+    t.facility_code,             -- place_of_service_std_id
+    NULL,                        -- place_of_service_vendor_id
+    NULL,                        -- place_of_service_vendor_desc
+    t.line_seq_no,               -- service_line_number
+    CASE WHEN COALESCE(t.diag_principal, t.diag_2, t.diag_3, t.diag_4, t.diag_5, t.diag_6, t.diag_7, t.diag_8) IS NULL
+
+-- create a row for every non-null value in the given columns
+-- will be  'NULL' if all columns are null
+    EXPLODE(REMOVE_NULLS_FROM_ARRAY(ARRAY(
+                t.diag_principal,
+                t.diag_2,
+                t.diag_3,
+                t.diag_4,
+                t.diag_5,
+                t.diag_6,
+                t.diag_7,
+                t.diag_8
+                ))),             -- diagnosis_code
+    NULL,                        -- diagnosis_code_qual
+    NULL,                        -- diagnosis_priority
+    NULL,                        -- admit_diagnosis_ind
+    t.proc_code,                 -- procedure_code
+    t.proc_code_qual,            -- procedure_code_qual
+    NULL,                        -- principal_proc_ind
+    t.submitted_units,           -- procedure_units
+    t.mod_1,                     -- procedure_modifier_1
+    t.mod_2,                     -- procedure_modifier_2
+    t.mod_3,                     -- procedure_modifier_3
+    t.mod_4,                     -- procedure_modifier_4
+    NULL,                        -- revenue_code
+    NULL,                        -- ndc_code
+    NULL,                        -- medical_coverage_type
+    t.submitted_chg,             -- line_charge
+    NULL,                        -- line_allowed
+    t.submitted_chg_total,       -- total_charge
+    NULL,                        -- total_allowed
+    CASE
+    WHEN t.rend_prov_id_qual = 'XX'
+    THEN COALESCE(t.rend_prov_npid, rend_prov_id)
+    ELSE t.rend_prov_npid
+    END,                         -- prov_rendering_npi
+    CASE
+    WHEN t.bill_prov_id_qual = 'XX'
+    THEN COALESCE(t.bill_prov_npid, t.bill_prov_id)
+    ELSE t.bill_prov_npid
+    END,                         -- prov_billing_npi
+    CASE
+    WHEN t.refer_prov_id_qual = 'XX'
+    THEN COALESCE(t.refer_prov_npid, t.refer_prov_id)
+    ELSE t.refer_prov_npid
+    END,                         -- prov_referring_npi
+    CASE
+    WHEN t.serv_facility_id_qual = 'XX'
+    THEN t.serv_facility_id
+    ELSE NULL
+    END,                         -- prov_facility_npi
+    t.payer_id,                  -- payer_vendor_id
+    t.payer_name,                -- payer_name
+    NULL,                        -- payer_parent_name
+    NULL,                        -- payer_org_name
+    NULL,                        -- payer_plan_id
+    NULL,                        -- payer_plan_name
+    NULL,                        -- payer_type
+    CASE
+    WHEN t.rend_prov_id_qual <> 'XX'
+    THEN t.rend_prov_id
+    ELSE NULL
+    END,                         -- prov_rendering_vendor_id
+    NULL,                        -- prov_rendering_tax_id
+    NULL,                        -- prov_rendering_dea_id
+    NULL,                        -- prov_rendering_ssn
+    NULL,                        -- prov_rendering_state_license
+    NULL,                        -- prov_rendering_upin
+    NULL,                        -- prov_rendering_commercial_id
+    t.rend_prov_name,            -- prov_rendering_name_1
+    NULL,                        -- prov_rendering_name_2
+    NULL,                        -- prov_rendering_address_1
+    NULL,                        -- prov_rendering_address_2
+    NULL,                        -- prov_rendering_city
+    NULL,                        -- prov_rendering_state
+    NULL,                        -- prov_rendering_zip
+    t.rend_prov_taxonomy_code,   -- prov_rendering_std_taxonomy
+    NULL,                        -- prov_rendering_vendor_specialty
+    CASE
+    WHEN t.bill_prov_id_qual <> 'XX'
+    THEN t.bill_prov_id
+    ELSE NULL
+    END,                         -- prov_billing_vendor_id
+    NULL,                        -- prov_billing_tax_id
+    NULL,                        -- prov_billing_dea_id
+    NULL,                        -- prov_billing_ssn
+    NULL,                        -- prov_billing_state_license
+    NULL,                        -- prov_billing_upin
+    NULL,                        -- prov_billing_commercial_id
+    t.bill_prov_name,            -- prov_billing_name_1
+    NULL,                        -- prov_billing_name_2
+    NULL,                        -- prov_billing_address_1
+    NULL,                        -- prov_billing_address_2
+    NULL,                        -- prov_billing_city
+    NULL,                        -- prov_billing_state
+    NULL,                        -- prov_billing_zip
+    t.bill_prov_taxonomy_code,   -- prov_billing_std_taxonomy
+    NULL,                        -- prov_billing_vendor_specialty
+    CASE
+    WHEN t.refer_prov_id_qual <> 'XX'
+    THEN t.refer_prov_id
+    ELSE NULL
+    END,                         -- prov_referring_vendor_id
+    NULL,                        -- prov_referring_tax_id
+    NULL,                        -- prov_referring_dea_id
+    NULL,                        -- prov_referring_ssn
+    NULL,                        -- prov_referring_state_license
+    NULL,                        -- prov_referring_upin
+    NULL,                        -- prov_referring_commercial_id
+    t.refer_prov_nmae,           -- prov_referring_name_1
+    NULL,                        -- prov_referring_name_2
+    NULL,                        -- prov_referring_address_1
+    NULL,                        -- prov_referring_address_2
+    NULL,                        -- prov_referring_city
+    NULL,                        -- prov_referring_state
+    NULL,                        -- prov_referring_zip
+    t.refer_prov_taxonomy_code,  -- prov_referring_std_taxonomy
+    NULL,                        -- prov_referring_vendor_specialty
+    t.facility_id,               -- prov_facility_vendor_id
+    NULL,                        -- prov_facility_tax_id
+    NULL,                        -- prov_facility_dea_id
+    NULL,                        -- prov_facility_ssn
+    NULL,                        -- prov_facility_state_license
+    NULL,                        -- prov_facility_upin
+    NULL,                        -- prov_facility_commercial_id
+    t.serv_facility_name,        -- prov_facility_name_1
+    NULL,                        -- prov_facility_name_2
+    t.serv_facility_address,     -- prov_facility_address_1
+    NULL,                        -- prov_facility_address_2
+    t.serv_facility_city,        -- prov_facility_city
+    t.serv_facility_state,       -- prov_facility_state
+    t.serv_facility_zip,         -- prov_facility_zip
+    NULL,                        -- prov_facility_std_taxonomy
+    NULL,                        -- prov_facility_vendor_specialty
+    NULL,                        -- cob_payer_vendor_id_1
+    NULL,                        -- cob_payer_seq_code_1
+    NULL,                        -- cob_payer_hpid_1
+    NULL,                        -- cob_payer_claim_filing_ind_code_1
+    NULL,                        -- cob_ins_type_code_1
+    NULL,                        -- cob_payer_vendor_id_2
+    NULL,                        -- cob_payer_seq_code_2
+    NULL,                        -- cob_payer_hpid_2
+    NULL,                        -- cob_payer_claim_filing_ind_code_2
+    NULL                         -- cob_ins_type_code_2
+FROM transactions t
+    INNER JOIN matching_payload mp ON t.hvjoinkey = mp.hvJoinKey
+    ;

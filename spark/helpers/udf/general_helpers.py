@@ -75,6 +75,19 @@ def create_range(max):
     except:
         return None
 
+
+def remove_nulls_from_array(arr):
+    """
+    Remove null elements from from 'arr'.
+
+    If all elements are null, return null.
+    """
+    if not arr or all(el is None for el in arr):
+        return None
+    else:
+        return [el for el in arr if el is not None]
+
+
 # Takes 2 sets as colon-separated strings, and the returns the difference between
 # them as a colon-separated string
 def string_set_diff(s1,s2):
@@ -95,11 +108,13 @@ def uniquify(with_dupes):
         return None;
     return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
 
+
 def obfuscate_hvid(hvid, salt):
     if salt is None or len(salt) == 0:
         raise ValueError("A project-specific salt must be provided to properly obfuscate the HVID")
     hvid = "" if hvid is None else hvid
     return hashlib.md5(hvid + salt).hexdigest().upper()
+
 
 def slightly_obfuscate_hvid(hvid, key):
     if key is None or len(key) == 0:
@@ -122,6 +137,7 @@ def slightly_obfuscate_hvid(hvid, key):
                 (ord(key_p[3]) ^ (i * 4 + 3)))
         res = res ^ xor
     return res
+
 
 def slightly_deobfuscate_hvid(hvid, key):
     # Obfuscation and de-obfuscation are symmetric
