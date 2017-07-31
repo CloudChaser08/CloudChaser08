@@ -5,17 +5,17 @@ import os
 import logging
 
 import common.HVDAG as HVDAG
-from util.datadog import Datadog
+import util.datadog_utils as datadog
 
-for m in [s3_utils, Datadog, HVDAG]:
+for m in [s3_utils, datadog, HVDAG]:
     reload(m)
 
 def do_log_file_volume(dag_name):
     def out(ds, **kwargs):
-        dd = Datadog()
+        dd = datadog.Datadog()
         for filepath in kwargs['file_paths_to_split_func'](ds, kwargs):
             filename = filepath.split('/')[-1]
-            with open(filename) as f:
+            with open(filepath) as f:
                 row_count = sum(1 for line in f)
                 dd.create_metric(
                     name='airflow.dag.file_row_count',
