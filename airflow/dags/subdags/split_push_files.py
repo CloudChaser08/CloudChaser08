@@ -12,16 +12,17 @@ for m in [s3_utils, datadog, HVDAG]:
 
 def do_log_file_volume(dag_name):
     def out(ds, **kwargs):
-        dd = datadog.Datadog()
-        for filepath in kwargs['file_paths_to_split_func'](ds, kwargs):
-            filename = filepath.split('/')[-1]
-            with open(filepath) as f:
-                row_count = sum(1 for line in f)
-                dd.create_metric(
-                    name='airflow.dag.file_row_count',
-                    value=row_count,
-                    tags=['dag:' + dag_name, 'file:' + filename]
-                )
+        if kwargs.get('file_name_pattern_func'):
+            dd = datadog.Datadog()
+            file_pattern = kwargs['file_name_pattern_func'](ds, kwargs)
+            for i, filepath in enumerate(kwargs['file_paths_to_split_func'](ds, kwargs)):
+                with open(filepath) as f:
+                    row_count = sum(1 for line in f)
+                    dd.create_metric(
+                        name='airflow.dag.file_row_count',
+                        value=row_count,
+                        tags=['dag:' + dag_name, 'file:' + file_pattern]
+                    )
     return out
 
 def do_create_parts_dir(ds, **kwargs):

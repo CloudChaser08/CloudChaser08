@@ -286,7 +286,7 @@ gunzip_trunk = gunzip_step(
 )
 
 
-def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, num_splits):
+def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, num_splits, path_template):
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
@@ -296,6 +296,9 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
             {
                 'tmp_dir_func'             : tmp_dir_func,
                 'file_paths_to_split_func' : file_paths_to_split_func,
+                'file_name_pattern_func'  : insert_formatted_regex_function(
+                    path_template
+                ),
                 's3_prefix_func'           : insert_current_date_function(
                     s3_destination
                 ),
@@ -309,11 +312,11 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
 
 split_addon = split_step(
     "addon", get_addon_tmp_dir, get_addon_unzipped_file_paths,
-    TRANSACTION_ADDON_S3_SPLIT_URL, 20
+    TRANSACTION_ADDON_S3_SPLIT_URL, 20, TRANSACTION_ADDON_FILE_NAME_TEMPLATE
 )
 split_trunk = split_step(
     "trunk", get_trunk_tmp_dir, get_trunk_unzipped_file_paths,
-    TRANSACTION_TRUNK_S3_SPLIT_URL, 20
+    TRANSACTION_TRUNK_S3_SPLIT_URL, 20, TRANSACTION_TRUNK_FILE_NAME_TEMPLATE
 )
 
 

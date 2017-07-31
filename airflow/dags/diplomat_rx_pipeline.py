@@ -205,6 +205,9 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
+            'file_name_pattern_func'   : insert_formatted_regex_function(
+                TRANSACTION_FILE_NAME_TEMPLATE
+            ),
             's3_prefix_func'           : insert_current_date_function(
                 TRANSACTION_S3_SPLIT_URL
             ),

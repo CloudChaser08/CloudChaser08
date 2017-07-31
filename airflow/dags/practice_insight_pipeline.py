@@ -297,7 +297,7 @@ split_transaction_into_parts = PythonOperator(
 
 def split_step(
         task_id, tmp_dir_func, file_paths_to_split_func,
-        s3_destination, num_splits
+        s3_destination, num_splits, filename_template
 ):
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
@@ -308,6 +308,9 @@ def split_step(
             {
                 'tmp_dir_func': tmp_dir_func,
                 'file_paths_to_split_func': file_paths_to_split_func,
+                'file_name_pattern_func': insert_formatted_regex_function(
+                    filename_template
+                ),
                 's3_prefix_func': lambda ds, k: insert_current_date_function(
                     s3_destination
                 )(ds, k),
@@ -324,13 +327,15 @@ split_transactional_837_steps = map(
         "transaction_837_" + str(i),
         get_837_part_tmp_dir(i),
         get_unzipped_837_file_paths(i),
-        S3_TRANSACTION_PROCESSED_837_URL_TEMPLATE + str(i) + '/', 20
+        S3_TRANSACTION_PROCESSED_837_URL_TEMPLATE + str(i) + '/', 20,
+        TRANSACTION_837_FILE_NAME_TEMPLATE
     ),
     range(1, 5)
 )
 split_transactional_835 = split_step(
     'transaction_835', get_tmp_dir, get_unzipped_835_file_paths,
-    S3_TRANSACTION_PROCESSED_835_URL_TEMPLATE, 20
+    S3_TRANSACTION_PROCESSED_835_URL_TEMPLATE, 20,
+    TRANSACTION_835_FILE_NAME_TEMPLATE
 )
 
 
