@@ -56,3 +56,17 @@ def test_obfuscate_hvid():
     with pytest.raises(ValueError) as excinfo:
         gh.obfuscate_hvid('1234567', None)
     assert str(excinfo.value) == 'A project-specific salt must be provided to properly obfuscate the HVID'
+
+def test_slightly_obfuscate_hvid():
+    assert gh.slightly_obfuscate_hvid(1234567, 'CPQ-013') == 2004332781
+    assert gh.slightly_obfuscate_hvid(None, 'CPQ-013') is None
+    with pytest.raises(ValueError) as excinfo:
+        gh.slightly_obfuscate_hvid(1234567, None)
+    assert str(excinfo.value) == 'A project-specific key must be provided to properly obfuscate the HVID'
+    with pytest.raises(ValueError) as excinfo:
+        gh.slightly_obfuscate_hvid('1234567', 'CPQ-013')
+    assert str(excinfo.value) == 'Only integer HVIDs are expected'
+
+def test_slightly_deobfuscate_hvid():
+    assert gh.slightly_deobfuscate_hvid(2004332781, 'CPQ-013') == 1234567
+    assert gh.slightly_deobfuscate_hvid(gh.slightly_obfuscate_hvid(1234567, 'CPQ-013'), 'CPQ-013') == 1234567

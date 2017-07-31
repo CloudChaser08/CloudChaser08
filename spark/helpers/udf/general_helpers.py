@@ -81,3 +81,29 @@ def obfuscate_hvid(hvid, salt):
         raise ValueError("A project-specific salt must be provided to properly obfuscate the HVID")
     hvid = "" if hvid is None else hvid
     return hashlib.md5(hvid + salt).hexdigest().upper()
+
+def slightly_obfuscate_hvid(hvid, key):
+    if key is None or len(key) == 0:
+        raise ValueError("A project-specific key must be provided to properly obfuscate the HVID")
+    if hvid is None:
+        return None
+    if type(hvid) is not int:
+        raise ValueError("Only integer HVIDs are expected")
+    res = hvid
+    # Pad cyclically so the key length is a multiple of 4
+    if len(key) % 4 != 0:
+        key = key + key[:4 - len(key) % 4]
+    # Do multiple rounds of XORing of the id with different
+    # parts of the key
+    for i in xrange(len(key) / 4):
+        key_p = key[i * 4 : (i + 1) * 4]
+        xor = ((ord(key_p[0]) ^ (i * 4)) * (1 << 24) + \
+                (ord(key_p[1]) ^ (i * 4 + 1)) * (1 << 16) + \
+                (ord(key_p[2]) ^ (i * 4 + 2)) * (1 << 8) + \
+                (ord(key_p[3]) ^ (i * 4 + 3)))
+        res = res ^ xor
+    return res
+
+def slightly_deobfuscate_hvid(hvid, key):
+    # Obfuscation and de-obfuscation are symmetric
+    return slightly_obfuscate_hvid(hvid, key)
