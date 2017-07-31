@@ -11,7 +11,7 @@ SELECT
     p.age,                             -- patient_age 
     p.yearOfBirth,                     -- patient_year_of_birth
     p.threeDigitZip,                   -- patient_zip3
-    p.state,                           -- patient_state
+    UPPER(p.state),                    -- patient_state
     p.gender,                          -- patient_gender
     t.claim_id,                        -- source_record_id 
     NULL,                              -- source_record_qual

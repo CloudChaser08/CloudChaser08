@@ -33,10 +33,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/payload/{}/'\
                         .format(date_input.replace('-', '/'))
     else:
-        input_path = 's3://salusv/incoming/consumer/mindbody/{}/'\
-                        .format(date_input.replace('-', '/'))
-        matching_path = 's3://salusv/matching/payload/consumer/mindbody/{}/'\
-                        .format(date_input.replace('-', '/'))
+        # TODO: uncomment and remove paths below when data is actually there.
+       #  input_path = 's3://salusv/incoming/consumer/mindbody/{}/'\
+       #                  .format(date_input.replace('-', '/'))
+       #  matching_path = 's3://salusv/matching/payload/consumer/mindbody/{}/'\
+       #                  .format(date_input.replace('-', '/'))
+       input_path = 's3://healthveritydev/jilluminati/testing/mindbody/transactional/'
+       matching_path = 's3://healthveritydev/jilluminati/testing/mindbody/payload/'
 
     min_date = datetime.strptime('2014-01-01', '%Y-%m-%d')
 
@@ -102,7 +105,9 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/mindbody/{}/'.format(time.strftime('%Y-%m-%d', time.localtime()))
+        # TODO: uncomment and remove path below when ready to run for real
+       #  output_path = 's3://salusv/warehouse/parquet/mindbody/{}/'.format(time.strftime('%Y-%m-%d', time.localtime()))
+       output_path = 's3://salusv/testing/staging/mindbody/spark-output/'
 
     normalized_records_unloader.distcp(output_path)
 

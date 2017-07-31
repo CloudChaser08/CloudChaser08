@@ -43,6 +43,11 @@ def test_source_record_id_not_null():
         assert row.source_record_id is not None
 
 
+def test_state_codes_upper_case():
+    for row in results:
+        assert row.patient_state.isupper()
+
+
 def test_cleanup(spark):
     cleanup(spark)
 
