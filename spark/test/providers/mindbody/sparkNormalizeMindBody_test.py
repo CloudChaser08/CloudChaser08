@@ -22,8 +22,7 @@ def test_event_date_capping():
     max_date = datetime.date(2017, 7, 27)
     for row in results:
         if row.event_date is not None:
-            row_date = datetime.datetime.strptime(row.event_date, '%Y-%m-%d').date()
-            assert row_date >= min_date and row_date <= max_date 
+            assert row.event_date >= min_date and row.event_date <= max_date 
 
 
 def test_event_val_mapping():

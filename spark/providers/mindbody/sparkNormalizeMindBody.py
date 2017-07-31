@@ -48,7 +48,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     
     # Create the Event v03 table 
     # to store the results in
-    runner.run_spark_script('../../common/event_common_model_v3.sql', [
+    runner.run_spark_script('../../common/event_common_model_v4.sql', [
         ['table_name', 'event_common_model', False],
         ['properties', '', False]
     ])
@@ -83,7 +83,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-                spark, runner, 'consumer', 'event_common_model_v3.sql',
+                spark, runner, 'consumer', 'event_common_model_v4.sql',
                 'mindbody', 'event_common_model', 'event_date', date_input
             )
 
