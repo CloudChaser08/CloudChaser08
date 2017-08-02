@@ -15,7 +15,7 @@ CREATE TABLE {table_name} (
     patient_gender          string,
     source_record_id        string,
     source_record_qual      string,
-    source_record_date      string,
+    source_record_date      date, 
     event                   string,
     event_val               string,
     event_val_uom           string,
