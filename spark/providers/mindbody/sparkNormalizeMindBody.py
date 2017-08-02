@@ -103,7 +103,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/spark-output/'
     else:
-       output_path = 's3://salusv/warehouse/parquet/mindbody/{}/'.format(time.strftime('%Y-%m-%d', time.localtime()))
+       output_path = 's3://salusv/warehouse/parquet/consumer/{}/'.format(time.strftime('%Y-%m-%d', time.localtime()))
 
     normalized_records_unloader.distcp(output_path)
 
