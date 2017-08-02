@@ -1,5 +1,5 @@
 INSERT INTO medicalclaims_common_model
-SELECT
+SELECT DISTINCT
     NULL,                        -- record_id
     t.claim_id,                  -- claim_id
     mp.hvid,                     -- hvid
@@ -43,25 +43,10 @@ SELECT
     NULL,                        -- place_of_service_vendor_id
     NULL,                        -- place_of_service_vendor_desc
     t.line_seq_no,               -- service_line_number
-    EXPLODE(
-        CASE
-        WHEN NOT COALESCE(t.diag_principal, t.diag_2, t.diag_3, t.diag_4, t.diag_5, t.diag_6, t.diag_7, t.diag_8) IS NULL
-
-    -- create a row for every non-null value in the given columns
-    -- will be  'NULL' if all columns are null
-        THEN REMOVE_NULLS_FROM_ARRAY(ARRAY(
-                t.diag_principal,
-                t.diag_2,
-                t.diag_3,
-                t.diag_4,
-                t.diag_5,
-                t.diag_6,
-                t.diag_7,
-                t.diag_8
-                ))
-        ELSE ARRAY(NULL)
-        END
-        ),                       -- diagnosis_code
+    ARRAY(
+        t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
+        t.diag_5, t.diag_6, t.diag_7, t.diag_8
+        )[n.n],                  -- diagnosis_code
     NULL,                        -- diagnosis_code_qual
     NULL,                        -- diagnosis_priority
     NULL,                        -- admit_diagnosis_ind
@@ -158,7 +143,7 @@ SELECT
     NULL,                        -- prov_referring_state_license
     NULL,                        -- prov_referring_upin
     NULL,                        -- prov_referring_commercial_id
-    t.refer_prov_nmae,           -- prov_referring_name_1
+    t.refer_prov_name,           -- prov_referring_name_1
     NULL,                        -- prov_referring_name_2
     NULL,                        -- prov_referring_address_1
     NULL,                        -- prov_referring_address_2
@@ -194,5 +179,14 @@ SELECT
     NULL,                        -- cob_payer_claim_filing_ind_code_2
     NULL                         -- cob_ins_type_code_2
 FROM transactions t
-    INNER JOIN matching_payload mp ON t.hvjoinkey = mp.hvJoinKey
+    INNER JOIN matching_payload mp ON t.hvjoinkey = mp.hvjoinkey
+    CROSS JOIN exploder n
+WHERE ARRAY(
+        t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
+        t.diag_5, t.diag_6, t.diag_7, t.diag_8
+        )[n.n] IS NOT NULL
+    OR COALESCE(
+        t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
+        t.diag_5, t.diag_6, t.diag_7, t.diag_8
+        ) IS NULL
     ;

@@ -81,9 +81,6 @@ def init(provider, local=False):
         'create_range', create_range
     )
     sqlContext.registerFunction(
-        'remove_nulls_from_array', remove_nulls_from_array
-    )
-    sqlContext.registerFunction(
         'obfuscate_hvid', obfuscate_hvid
     )
     sqlContext.registerFunction(

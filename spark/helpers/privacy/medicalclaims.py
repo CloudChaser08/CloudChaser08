@@ -14,25 +14,22 @@ def filter_due_to_pos_itb(
 medical_transformer = {
     'inst_discharge_status_std_id': {
         'func': post_norm_cleanup.scrub_discharge_status,
-        'args': ['inst_discharge_status_std_id'],
-        'built-in': True
+        'args': ['inst_discharge_status_std_id']
     },
     'inst_drg_std_id': {
         'func': post_norm_cleanup.nullify_drg_blacklist,
-        'args': ['inst_drg_std_id'],
-        'built-in': True
+        'args': ['inst_drg_std_id']
     },
     'place_of_service_std_id': {
         'func': post_norm_cleanup.obscure_place_of_service,
-        'args': ['place_of_service_std_id'],
-        'built-in': True
+        'args': ['place_of_service_std_id']
     },
     'inst_type_of_bill_std_id': {
         'func': post_norm_cleanup.obscure_inst_type_of_bill,
-        'args': ['inst_type_of_bill_std_id'],
-        'built-in': True
+        'args': ['inst_type_of_bill_std_id']
     }
-}.update(
+}
+medical_transformer.update(
     dict(map(
         lambda c: (c, {'func': filter_due_to_pos_itb,
                        'args': [c, 'place_of_service_std_id', 'inst_type_of_bill_std_id', 'claim_type']}),
@@ -55,4 +52,4 @@ medical_transformer = {
 
 
 def filter(df):
-    return priv_common.filter(df, medical_transformer).select()
+    return priv_common.filter(df, medical_transformer)

@@ -6,6 +6,7 @@ from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.medicalclaims as medical_priv
 
@@ -49,6 +50,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['input_path', input_path]
     ])
 
+    explode.generate_exploder_table(spark, 8)
+
     # trim and remove nulls from raw input
     postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(
         runner.sqlContext.sql('select * from transactions')
@@ -75,10 +78,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         runner.sqlContext.sql('select * from medicalclaims_common_model')
     ).createTempView('medicalclaims_common_model')
 
-    normalized_records_unloader.partition_and_rename(
-        spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'cardinal_rcm',
-        'medicalclaims_common_model', 'date_service', date_input,
-    )
+    if not test:
+        normalized_records_unloader.partition_and_rename(
+            spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'cardinal_rcm',
+            'medicalclaims_common_model', 'date_service', date_input
+        )
 
 
 def main(args):

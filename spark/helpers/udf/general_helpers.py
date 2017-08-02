@@ -76,18 +76,6 @@ def create_range(max):
         return None
 
 
-def remove_nulls_from_array(arr):
-    """
-    Remove null elements from from 'arr'.
-
-    If all elements are null, return null.
-    """
-    if not arr or all(el is None for el in arr):
-        return None
-    else:
-        return [el for el in arr if el is not None]
-
-
 # Takes 2 sets as colon-separated strings, and the returns the difference between
 # them as a colon-separated string
 def string_set_diff(s1,s2):
