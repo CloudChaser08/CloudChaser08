@@ -66,8 +66,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     postprocessor.compose(
         postprocessor.add_universal_columns(
-            feed_id='<feedid>',
-            vendor_id='<vendorid>',
+            feed_id='29',
+            vendor_id='42',
 
             # TODO: this is incorrect - fix when we find out what
             # their filenames will be
