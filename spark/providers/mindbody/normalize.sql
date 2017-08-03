@@ -3,7 +3,7 @@ SELECT
     NULL,                              -- record_id
     p.hvid,                            -- hvid
     NULL,                              -- created
-    '3',                               -- model_version
+    '4',                               -- model_version
     NULL,                              -- data_set
     NULL,                              -- data_feed
     NULL,                              -- data_vendor 

@@ -34,7 +34,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/payload/{}/'\
                         .format(date_path)
     else:
-        input_path = 's2://salusv/incoming/consumer/mindbody/{}/'\
+        input_path = 's3://salusv/incoming/consumer/mindbody/{}/'\
                         .format(date_path)
         matching_path = 's3://salusv/matching/payload/consumer/mindbody/{}/'\
                         .format(date_path)
@@ -103,8 +103,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/spark-output/'
     else:
-       output_path = 's3://salusv/warehouse/parquet/consumer/{}/'.format(time.strftime('%Y-%m-%d', time.localtime()))
-
+       output_path = 's3://salusv/warehouse/parquet/consumer/2017-08-02/'
     normalized_records_unloader.distcp(output_path)
 
 if __name__ == '__main__':
