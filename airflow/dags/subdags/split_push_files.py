@@ -10,12 +10,25 @@ import util.datadog_utils as datadog
 for m in [s3_utils, datadog, HVDAG]:
     reload(m)
 
-def do_log_file_volume(dag_name):
+def do_log_file_volume(dag_name, file_name_pattern_func=None, file_paths_to_split_func=None):
+    """Log file volume to datadog.
+
+    Optional `file_pattern_func` and `file_paths_to_split_func` args
+    can be used by DAGs that are calling this function outside of the
+    split_push_files subdag
+    """
     def out(ds, **kwargs):
-        if kwargs.get('file_name_pattern_func'):
+        if kwargs.get('file_name_pattern_func') or (file_name_pattern_func and file_paths_to_split_func):
             dd = datadog.Datadog()
-            file_pattern = kwargs['file_name_pattern_func'](ds, kwargs)
-            for i, filepath in enumerate(kwargs['file_paths_to_split_func'](ds, kwargs)):
+            file_pattern = (
+                file_name_pattern_func if file_name_pattern_func
+                else kwargs['file_name_pattern_func']
+            )(ds, kwargs)
+            file_paths_to_split = (
+                file_paths_to_split_func if file_paths_to_split_func
+                else kwargs['file_paths_to_split_func']
+            )(ds, kwargs)
+            for i, filepath in enumerate(file_paths_to_split):
                 with open(filepath) as f:
                     row_count = sum(1 for line in f)
                     dd.create_metric(

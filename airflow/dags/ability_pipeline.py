@@ -405,7 +405,7 @@ rename_ap_deid_files = rename_files_operator('ap', 'deid', 'ap/deid/', 'ap')
 rename_ap_transaction_files = rename_files_operator('ap', 'transaction', 'ap/transaction/', 'ap')
 
 decrypt_ap_transaction_files_dag = decrypt_transaction_files_subdag('ap', get_ap_transaction_tmp_dir,
-        get_ap_encrypted_decrypted_file_paths, )
+        get_ap_encrypted_decrypted_file_paths)
 
 split_push_ap_transaction_files_dag = split_push_transaction_files_subdag('ap', get_ap_transaction_tmp_dir,
         get_ap_transaction_files_paths, get_expected_ap_file_name)
