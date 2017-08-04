@@ -81,6 +81,9 @@ def init(provider, local=False):
     sqlContext.registerFunction(
         'slightly_deobfuscate_hvid', slightly_deobfuscate_hvid
     )
+    sqlContext.registerFunction(
+        'to_json', to_json
+    )
 
     # helper functions for normalizing medical claims
     sqlContext.registerFunction(

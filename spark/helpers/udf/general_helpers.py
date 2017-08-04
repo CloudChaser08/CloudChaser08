@@ -1,5 +1,6 @@
 #! /usr/bin/python
 from datetime import datetime
+import json
 import re
 import hashlib
 
@@ -107,3 +108,6 @@ def slightly_obfuscate_hvid(hvid, key):
 def slightly_deobfuscate_hvid(hvid, key):
     # Obfuscation and de-obfuscation are symmetric
     return slightly_obfuscate_hvid(hvid, key)
+
+def to_json(val):
+    return json.dumps(val)
