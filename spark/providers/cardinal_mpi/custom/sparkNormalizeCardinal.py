@@ -30,7 +30,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         output_dir = constants.hdfs_staging_dir + date_input.replace('-', '/') + '/'
 
-    payload_loader.load(runner, matching_path, ['claimId', 'multiMatchQuality'])
+    payload_loader.load(runner, matching_path, ['claimId', 'topCandidates'])
 
     runner.run_spark_script('normalize.sql', [
         ['location', output_dir]
