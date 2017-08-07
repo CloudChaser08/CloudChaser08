@@ -4,12 +4,14 @@ AS SELECT
     row_id,
     hvid,
     claimId,
+    matchStatus,
     explode(topCandidates) as candidate
     FROM (
         SELECT
             monotonically_increasing_id() as row_id,
             hvid,
             claimId,
+            matchStatus,
             topCandidates
         FROM matching_payload
     ) x
@@ -21,12 +23,14 @@ AS SELECT
     row_id,
     hvid,
     claimId,
+    matchStatus,
     to_json(collect_list(candidate)) as candidates
     FROM (
         SELECT
             row_id,
             hvid,
             claimId,
+            matchStatus,
             map("hvid",
                 cast(slightly_obfuscate_hvid(cast(round(candidate[0]) as integer), 'Cardinal_MPI-0') as string),
                 "confidence",
@@ -34,7 +38,7 @@ AS SELECT
             ) as candidate
         FROM matching_payload_exploded
     ) x
-    GROUP BY row_id, hvid, claimId
+    GROUP BY row_id, hvid, claimId, matchStatus
 ;
 
 SET spark.sql.shuffle.partitions=1;
@@ -53,7 +57,7 @@ CREATE TABLE cardinal_mpi_model
 AS SELECT
     slightly_obfuscate_hvid(cast(hvid as integer), 'Cardinal_MPI-0') as hvid,
     claimId,
-    candidates
+    CASE WHEN matchStatus = 'multi_match' THEN candidates ELSE NULL END as candidates
 FROM matching_payload_clean
 DISTRIBUTE BY 1
 ;
