@@ -27,7 +27,7 @@ SELECT
     NULL,                                              -- enc_dt
     EXTRACT_DATE(
         diag.diagnosis_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                             -- clin_obsn_dt
@@ -77,7 +77,7 @@ SELECT
     NULL,                                              -- clin_obsn_onset_dt
     EXTRACT_DATE(
         diag.resolution_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                             -- clin_obsn_resltn_dt

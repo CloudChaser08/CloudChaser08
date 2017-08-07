@@ -30,7 +30,7 @@ SELECT
     NULL,                                              -- medctn_ord_dt
     EXTRACT_DATE(
         disp.admin_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                             -- medctn_admin_dt
@@ -101,7 +101,7 @@ SELECT
     NULL,                                              -- medctn_start_dt
     EXTRACT_DATE(
         disp.discontinue_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                             -- medctn_end_dt

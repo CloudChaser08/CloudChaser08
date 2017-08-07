@@ -27,13 +27,13 @@ SELECT
     NULL,                                            -- ptnt_zip3_cd
     EXTRACT_DATE(
         e.visit_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                           -- enc_start_dt
     EXTRACT_DATE(
         e.visit_end_tstamp,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                           -- enc_end_dt

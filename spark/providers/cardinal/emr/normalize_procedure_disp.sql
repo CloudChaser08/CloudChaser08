@@ -27,7 +27,7 @@ SELECT
     NULL,                                              -- enc_dt
     EXTRACT_DATE(
         disp.admin_date
-        '%Y-%m-%d', 
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE)
         CAST({max_date} AS DATE)
         ),                                             -- proc_dt

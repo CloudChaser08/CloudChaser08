@@ -25,13 +25,13 @@ INSERT INTO procedure_common_model
     CONCAT('31_', e.id),                             -- hv_enc_id
     EXTRACT_DATE(
         e.visit_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                           -- enc_dt
     EXTRACT_DATE(
         e.visit_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                           -- proc_dt

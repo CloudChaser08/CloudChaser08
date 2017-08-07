@@ -32,7 +32,7 @@ SELECT
     NULL,                                            -- lab_test_schedd_dt
     EXTRACT_DATE(
         l.test_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                           -- lab_test_execd_dt

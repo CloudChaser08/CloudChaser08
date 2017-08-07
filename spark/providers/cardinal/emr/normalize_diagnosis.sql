@@ -26,7 +26,7 @@ INSERT INTO diagnosis_common_model
     NULL,                                              -- enc_dt
     EXTRACT_DATE(
         diag.diagnosis_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                             -- diag_dt
@@ -76,7 +76,7 @@ INSERT INTO diagnosis_common_model
     NULL,                                              -- diag_onset_dt
     EXTRACT_DATE(
         diag.resolution_date,
-        '%Y-%m-%d',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                             -- diag_resltn_dt
