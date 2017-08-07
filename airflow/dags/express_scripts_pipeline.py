@@ -196,6 +196,7 @@ split_push_transaction_files_dag = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_files_paths,
+            'file_name_pattern_func'   : get_expected_transaction_file_regex,
             's3_prefix_func'           : get_s3_transaction_prefix,
             'num_splits'               : 100
         }

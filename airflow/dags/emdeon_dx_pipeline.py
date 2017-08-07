@@ -12,10 +12,11 @@ import sys
 import common.HVDAG as HVDAG
 import subdags.emdeon_validate_fetch_file
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.split_push_files as split_push_files
 import subdags.update_analytics_db as update_analytics_db
 
-for m in [subdags.emdeon_validate_fetch_file, HVDAG,
-        detect_move_normalize, update_analytics_db]:
+for m in [subdags.emdeon_validate_fetch_file, HVDAG, detect_move_normalize,
+          split_push_files, update_analytics_db]:
     reload(m)
 
 from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
@@ -49,6 +50,9 @@ DEID_DAG_NAME='validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE=500
 
 S3_PAYLOAD_LOC='s3://salusv/matching/payload/medicalclaims/emdeon/'
+
+def get_file_name_pattern(ds, kwargs):
+    TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
 
 def do_unzip_file(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
@@ -148,6 +152,20 @@ unzip_file = PythonOperator(
     task_id='unzip_file',
     provide_context=True,
     python_callable=do_unzip_file,
+    dag=mdag
+)
+
+log_file_volume = PythonOperator(
+    task_id='log_file_volume',
+    provide_context=True,
+    python_callable=split_push_files.do_log_file_volume(
+        DAG_NAME,
+        get_file_name_pattern,
+        lambda ds, k: [
+            TMP_PATH_TEMPLATE.format(k['ds_nodash'])
+            + TRANSACTION_FILE_NAME_TEMPLATE.format(k['yesterday_ds_nodash'])
+        ]
+    ),
     dag=mdag
 )
 
@@ -254,10 +272,11 @@ clean_up_workspace = BashOperator(
 )
 
 unzip_file.set_upstream(validate_fetch_transaction_file_dag)
+log_file_volume.set_upstream(unzip_file)
 split_file.set_upstream(unzip_file)
 zip_part_files.set_upstream(split_file)
 push_splits_to_s3.set_upstream(zip_part_files)
 queue_up_for_matching.set_upstream(validate_fetch_deid_file_dag)
 detect_move_normalize_dag.set_upstream([push_splits_to_s3, validate_fetch_transaction_mft_file_dag, queue_up_for_matching])
 update_analytics_db.set_upstream(detect_move_normalize_dag)
-clean_up_workspace.set_upstream([push_splits_to_s3, validate_fetch_transaction_mft_file_dag, queue_up_for_matching])
+clean_up_workspace.set_upstream([push_splits_to_s3, validate_fetch_transaction_mft_file_dag, queue_up_for_matching, log_file_volume])

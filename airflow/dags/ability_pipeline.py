@@ -352,7 +352,7 @@ def decrypt_transaction_files_subdag(product, tmp_dir_func, encrypted_decrypted_
         dag=mdag
     )
 
-def split_push_transaction_files_subdag(product, tmp_dir_func, file_paths_to_split_func):
+def split_push_transaction_files_subdag(product, tmp_dir_func, file_paths_to_split_func, file_name_pattern_func):
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
@@ -362,6 +362,7 @@ def split_push_transaction_files_subdag(product, tmp_dir_func, file_paths_to_spl
             {
                 'tmp_dir_func'             : tmp_dir_func,
                 'file_paths_to_split_func' : file_paths_to_split_func,
+                'file_name_pattern_func'   : file_name_pattern_func,
                 's3_prefix_func'           : get_s3_transaction_path,
                 'num_splits'               : 1
             }
@@ -407,7 +408,7 @@ decrypt_ap_transaction_files_dag = decrypt_transaction_files_subdag('ap', get_ap
         get_ap_encrypted_decrypted_file_paths)
 
 split_push_ap_transaction_files_dag = split_push_transaction_files_subdag('ap', get_ap_transaction_tmp_dir,
-        get_ap_transaction_files_paths)
+        get_ap_transaction_files_paths, get_expected_ap_file_name)
 
 queue_up_ap_for_matching_dag = queue_up_for_matching_subdag('ap', get_ap_deid_file_paths)
 
@@ -432,7 +433,7 @@ decrypt_ses_transaction_files_dag = decrypt_transaction_files_subdag('ses', get_
         get_ses_encrypted_decrypted_file_paths)
 
 split_push_ses_transaction_files_dag = split_push_transaction_files_subdag('ses', get_ses_transaction_tmp_dir,
-        get_ses_transaction_files_paths)
+        get_ses_transaction_files_paths, get_expected_ses_file_name)
 
 queue_up_ses_for_matching_dag = queue_up_for_matching_subdag('ses', get_ses_deid_file_paths)
 
@@ -457,7 +458,7 @@ decrypt_ease_transaction_files_dag = decrypt_transaction_files_subdag('ease', ge
         get_ease_encrypted_decrypted_file_paths)
 
 split_push_ease_transaction_files_dag = split_push_transaction_files_subdag('ease', get_ease_transaction_tmp_dir,
-        get_ease_transaction_files_paths)
+        get_ease_transaction_files_paths, get_expected_ease_file_name)
 
 queue_up_ease_for_matching_dag = queue_up_for_matching_subdag('ease', get_ease_deid_file_paths)
 

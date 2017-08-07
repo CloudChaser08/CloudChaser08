@@ -189,6 +189,11 @@ split_transactional = SubDagOperator(
                 TMP_PATH_TEMPLATE
             ),
             'file_paths_to_split_func': get_unzipped_file_paths,
+            'file_name_pattern_func': lambda ds, k: (
+                insert_formatted_regex_function(
+                    TRANSACTION_FILE_NAME_TEMPLATE
+                )(ds, k)
+            ),
             's3_prefix_func': insert_current_date_function(
                 S3_TRANSACTION_PROCESSED_URL_TEMPLATE
             ),

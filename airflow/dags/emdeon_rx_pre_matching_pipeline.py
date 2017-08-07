@@ -10,9 +10,11 @@ import re
 import sys
 
 import subdags.emdeon_validate_fetch_file
+import subdags.split_push_files as split_push_files
+
 import common.HVDAG as HVDAG
 
-for m in [subdags.emdeon_validate_fetch_file, HVDAG]:
+for m in [subdags.emdeon_validate_fetch_file, split_push_files, HVDAG]:
     reload(m)
 
 from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
@@ -44,6 +46,9 @@ S3_DEID_RAW_PATH='s3://healthverity/incoming/pharmacyclaims/emdeon/deid/'
 DEID_FILE_NAME_TEMPLATE='{}_RX_Ident_CF_ON_PHI_Hash_HV_Encrypt.dat.gz'
 DEID_DAG_NAME='validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE=500
+
+def get_file_name_pattern(ds, kwargs):
+    TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
 
 def do_unzip_file(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
@@ -158,6 +163,20 @@ unzip_file = PythonOperator(
     dag=mdag
 )
 
+log_file_volume = PythonOperator(
+    task_id='log_file_volume',
+    provide_context=True,
+    python_callable=split_push_files.do_log_file_volume(
+        DAG_NAME,
+        get_file_name_pattern,
+        lambda ds, k: [
+            TMP_PATH_TEMPLATE.format(k['ds_nodash'])
+            + TRANSACTION_FILE_NAME_TEMPLATE.format(k['yesterday_ds_nodash'])
+        ]
+    ),
+    dag=mdag
+)
+
 split_file = PythonOperator(
     task_id='split_file',
     provide_context=True,
@@ -207,6 +226,7 @@ clean_up_workspace = BashOperator(
 )
 
 unzip_file.set_upstream(validate_fetch_transaction_file_dag)
+log_file_volume.set_upstream(unzip_file)
 split_file.set_upstream(unzip_file)
 zip_part_files.set_upstream(split_file)
 push_splits_to_s3.set_upstream(zip_part_files)
@@ -214,4 +234,4 @@ push_splits_to_s3.set_downstream(trigger_post_matching_dag)
 validate_fetch_transaction_mft_file_dag.set_downstream(trigger_post_matching_dag)
 queue_up_for_matching.set_upstream(validate_fetch_deid_file_dag)
 queue_up_for_matching.set_downstream(trigger_post_matching_dag)
-clean_up_workspace.set_upstream(trigger_post_matching_dag)
+clean_up_workspace.set_upstream([trigger_post_matching_dag, log_file_volume])

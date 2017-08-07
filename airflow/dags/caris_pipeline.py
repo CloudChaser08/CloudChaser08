@@ -103,6 +103,14 @@ def insert_current_date(template, kwargs):
     return insert_current_date_function(template)(None, kwargs)
 
 
+def get_expected_file_name_pattern(file_name_template):
+    def out(ds, kwargs):
+        insert_formatted_regex_function(
+            file_name_template
+        )(ds, kwargs) + get_date_timestamp(kwargs)
+    return out
+
+
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL + insert_current_date(
         DEID_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(kwargs),
@@ -148,11 +156,7 @@ def generate_transaction_file_validation_dag(
                         path_template
                     )(ds, k) + get_date_timestamp(k)
                 ),
-                'file_name_pattern_func': lambda ds, k: (
-                    insert_formatted_regex_function(
-                        path_template
-                    )(ds, k) + get_date_timestamp(k)
-                ),
+                'file_name_pattern_func': get_expected_file_name_pattern(path_template),
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket': S3_TRANSACTION_RAW_URL.split('/')[2],
@@ -224,6 +228,9 @@ def split_step():
                     TMP_PATH_TEMPLATE
                 ),
                 'file_paths_to_split_func': get_unzipped_file_paths,
+                'file_name_pattern_func': get_expected_file_name_pattern(
+                    TRANSACTION_FILE_NAME_STUB_TEMPLATE
+                ),
                 's3_prefix_func': insert_current_date_function(
                     S3_TRANSACTION_PROCESSED_URL_TEMPLATE
                 ),

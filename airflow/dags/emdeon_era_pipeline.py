@@ -173,6 +173,12 @@ def insert_execution_date_function(file_name_template):
     return out
 
 
+def expected_file_name_pattern_func(file_name_template):
+    def out(ds, k):
+        return file_name_template.format('\d{8}')
+    return out
+
+
 def insert_current_date(template, kwargs):
     return template.format(
         kwargs['yesterday_ds_nodash'][0:4],
@@ -290,6 +296,7 @@ def generate_split_dag(task_id, file_name_unzipped_template, s3_destination):
                     get_tmp_dir(ds, k) + task_id + '/' +
                     insert_execution_date_function(file_name_unzipped_template)(ds, k)
                 ],
+                'file_name_pattern_func'   : expected_file_name_pattern_func(file_name_unzipped_template),
                 's3_prefix_func'           : insert_current_date_function(
                     s3_destination
                 ),
