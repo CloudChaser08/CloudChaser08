@@ -1,13 +1,13 @@
 DROP TABLE IF EXISTS {table_name};
 CREATE TABLE {table_name} (
-        rec_id                                    int,
+        rec_id                                    bigint,
         hv_vit_sign_id                            string,
         crt_dt                                    date,
         mdl_vrsn_num                              string,
         data_set_nm                               string,
         src_vrsn_id                               string,
-        vdr_key                                   inr,
-        vdr_feed_key                              inr,
+        hvm_vdr_id                                int,
+        hvm_vdr_feed_id                           int,
         vdr_org_id                                string,
         vdr_vit_sign_id                           string,
         vdr_vit_sign_id_qual                      string,
