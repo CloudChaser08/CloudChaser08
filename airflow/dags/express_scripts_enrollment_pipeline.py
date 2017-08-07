@@ -221,6 +221,16 @@ queue_up_for_matching_dag = SubDagOperator(
     dag=mdag
 )
 
+# The enrollment data normalization is dependent on the pharmacy matching
+# payload
+wait_for_pharmacy_payload = ExternalTaskSensor(
+    task_id='wait_for_pharmacy_payload',
+    external_dag_id='express_scripts_pipeline',
+    external_task_id='detect_move_normalize',
+    execution_timeout=timedelta(hours=6),
+    dag=mdag
+)
+
 detect_move_normalize_dag = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
         DAG_NAME,
@@ -303,7 +313,8 @@ fetch_transaction_file_dag.set_upstream(validate_transaction_file_dag)
 decrypt_transaction_file_dag.set_upstream(fetch_transaction_file_dag)
 split_push_transaction_files_dag.set_upstream(decrypt_transaction_file_dag)
 queue_up_for_matching_dag.set_upstream(validate_deid_file_dag)
-detect_move_normalize_dag.set_upstream([queue_up_for_matching_dag, split_push_transaction_files_dag])
+wait_for_pharmacy_payload.set_upstream([queue_up_for_matching_dag, split_push_transaction_files_dag])
+detect_move_normalize_dag.set_upstream(wait_for_pharmacy_payload)
 clean_up_tmp_dir_dag.set_upstream(split_push_transaction_files_dag)
 update_analytics_db_drop.set_upstream(detect_move_normalize_dag)
 update_analytics_db_add.set_upstream(update_analytics_db_drop)
