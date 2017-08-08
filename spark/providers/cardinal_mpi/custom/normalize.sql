@@ -1,4 +1,17 @@
+DROP TABLE IF EXISTS matching_payload_w_row_id;
+CREATE TABLE matching_payload_w_row_id
+AS SELECT
+    monotonically_increasing_id() as row_id,
+    hvid,
+    claimId,
+    matchStatus,
+    topCandidates
+FROM matching_payload;
+
 DROP TABLE IF EXISTS matching_payload_exploded;
+-- explode() ignores NULL values
+-- Explicitly union rows where topCandidates is NULL with the exploded rows
+-- where topCandidates was not NULL
 CREATE TABLE matching_payload_exploded
 AS SELECT
     row_id,
@@ -6,16 +19,19 @@ AS SELECT
     claimId,
     matchStatus,
     explode(topCandidates) as candidate
-    FROM (
-        SELECT
-            monotonically_increasing_id() as row_id,
-            hvid,
-            claimId,
-            matchStatus,
-            topCandidates
-        FROM matching_payload
-    ) x
-;
+FROM matching_payload_w_row_id
+WHERE topCandidats IS NOT NULL
+
+UNION ALL
+
+SELECT
+    row_id,
+    hvid,
+    claimId,
+    matchStatus,
+    NULL as candidate
+FROM matching_payload_w_row_id
+WHERE topCandidats IS NULL;
 
 DROP TABLE IF EXISTS matching_payload_clean;
 CREATE TABLE matching_payload_clean
