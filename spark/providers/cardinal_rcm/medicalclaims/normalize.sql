@@ -14,7 +14,7 @@ SELECT DISTINCT
     mp.yearOfBirth,              -- patient_year_of_birth
     mp.threeDigitZip,            -- patient_zip3
     UPPER(mp.state),             -- patient_state
-    NULL,                        -- claim_type
+    'P',                         -- claim_type
     NULL,                        -- date_received
     EXTRACT_DATE(
         t.date_svc_start, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
@@ -46,11 +46,13 @@ SELECT DISTINCT
     ARRAY(
         t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
         t.diag_5, t.diag_6, t.diag_7, t.diag_8
-        )[n.n],                  -- diagnosis_code
+        )[diag_explode.n],       -- diagnosis_code
     NULL,                        -- diagnosis_code_qual
     NULL,                        -- diagnosis_priority
     NULL,                        -- admit_diagnosis_ind
-    t.proc_code,                 -- procedure_code
+    ARRAY(t.proc_code, NULL)[
+        proc_explode.n
+        ],                       -- procedure_code
     t.proc_code_qual,            -- procedure_code_qual
     NULL,                        -- principal_proc_ind
     t.submitted_units,           -- procedure_units
@@ -180,11 +182,22 @@ SELECT DISTINCT
     NULL                         -- cob_ins_type_code_2
 FROM transactions t
     INNER JOIN matching_payload mp ON t.hvjoinkey = mp.hvjoinkey
-    CROSS JOIN exploder n
-WHERE ARRAY(
-        t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
-        t.diag_5, t.diag_6, t.diag_7, t.diag_8
-        )[n.n] IS NOT NULL
+    CROSS JOIN diag_exploder diag_explode
+    CROSS JOIN proc_exploder proc_explode
+WHERE (
+        ARRAY(
+            t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
+            t.diag_5, t.diag_6, t.diag_7, t.diag_8
+            )[diag_explode.n] IS NOT NULL
+        AND ARRAY(t.proc_code, NULL)[proc_explode.n] IS NULL
+        )
+    OR (
+        ARRAY(
+            t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
+            t.diag_5, t.diag_6, t.diag_7, t.diag_8
+            )[diag_explode.n] IS NULL
+        AND ARRAY(t.proc_code, NULL)[proc_explode.n] IS NOT NULL
+        )
     OR COALESCE(
         t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
         t.diag_5, t.diag_6, t.diag_7, t.diag_8
