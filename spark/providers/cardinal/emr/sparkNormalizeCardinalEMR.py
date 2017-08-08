@@ -19,11 +19,21 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
 
     if test:
-        demographics_input_path = '../../../test/providers/cardinal/emr/resources/input/demographics/'
-        diagnosis_input_path = '../../../test/providers/cardinal/emr/resources/input/diagnosis/'
-        encounter_input_path = '../../../test/providers/cardinal/emr/resources/input/encounter/'
-        lab_input_path = '../../../test/providers/cardinal/emr/resources/input/lab/'
-        dispense_input_path = '../../../test/providers/cardinal/emr/resources/input/dispense/'
+        demographics_input_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/cardinal/emr/resources/input/demographics/'
+        ) + '/'
+        diagnosis_input_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/cardinal/emr/resources/input/diagnosis/'
+        ) + '/'
+        encounter_input_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/cardinal/emr/resources/input/encounter/'
+        ) + '/'
+        lab_input_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/cardinal/emr/resources/input/lab/'
+        ) + '/'
+        dispense_input_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/cardinal/emr/resources/input/dispense/'
+        ) + '/'
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/cardinal/emr/resources/matching/'
         ) + '/'

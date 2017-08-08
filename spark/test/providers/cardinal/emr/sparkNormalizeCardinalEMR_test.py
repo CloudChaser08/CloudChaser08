@@ -1,6 +1,5 @@
 import pytest
 
-import datetime
 import shutil
 import logging
 
@@ -32,19 +31,10 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
-    cardinal_emr.run(spark['spark'], spark['runner'], '2016-12-31', True)
+    cardinal_emr.run(spark['spark'], spark['runner'], '2017-08-31', True)
     global procedure_results
-    procedure_results = spark['sqlContext'].sql('select * from unrestricted_procedure_common_model') \
+    procedure_results = spark['sqlContext'].sql('select * from procedure_common_model') \
                                            .collect()
-
-
-def test_date_parsing():
-    "Ensure that dates are correctly parsed"
-    sample_row = filter(lambda r: r.claim_id == 'prescription-key-0', procedure_results)[0]
-
-    assert sample_row.date_service == datetime.date(2011, 1, 30)
-    assert sample_row.date_authorized == datetime.date(2011, 1, 30)
-    assert sample_row.date_authorized == datetime.date(2011, 1, 30)
 
 
 def test_cleanup(spark):

@@ -98,11 +98,26 @@ CREATE TABLE demographics_transactions (
         plan_three_card_holder_id        string,
         plan_three_group_number          string,
         plan_three_expiration_date       string,
-        plan_three_group_code            string
+        plan_three_group_code            string,
+        hvJoinKey                        string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
     LOCATION {demographics_input_path}
+    ;
+
+DROP TABLE IF EXISTS demographics_transactions_dedup;
+CREATE TABLE demographics_transactions_dedup AS (
+    SELECT dem.*
+    FROM demographics_transactions dem
+        INNER JOIN (
+        SELECT patient_id, MAX(hvJoinKey) AS hvJoinKey
+        FROM demographics_transactions
+        GROUP BY patient_id
+            ) upi ON dem.patient_id = upi.patient_id
+        AND dem.hvJoinKey = upi.hvJoinKey
+    WHERE dem.import_source_id IS NOT NULL
+        )
     ;
 
 DROP TABLE IF EXISTS diagnosis_transactions;

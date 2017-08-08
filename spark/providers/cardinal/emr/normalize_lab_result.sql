@@ -1,7 +1,7 @@
 INSERT INTO lab_result_common_model
 SELECT
     NULL,                                            -- rec_id
-    CONCAT('31_', lab.id),                           -- hv_lab_result_id
+    CONCAT('31_', l.id),                             -- hv_lab_result_id
     NULL,                                            -- crt_dt
     '01',                                            -- mdl_vrsn_num
     NULL,                                            -- data_set_nm
@@ -9,22 +9,28 @@ SELECT
     NULL,                                            -- hvm_vdr_id
     NULL,                                            -- hvm_vdr_feed_id
     NULL,                                            -- vdr_org_id
-    lab.id,                                          -- vdr_lab_test_id
+    l.id,                                            -- vdr_lab_test_id
     NULL,                                            -- vdr_lab_test_id_qual
     NULL,                                            -- vdr_lab_result_id
     NULL,                                            -- vdr_lab_result_id_qual
-    d.patient_id,                                    -- hvid
-    d.birth_date,                                    -- ptnt_birth_yr
-    d.patient_age,                                   -- ptnt_age_num
+    mp.hvid,                                                  -- hvid
+    COALESCE(
+        mp.yearOfBirth,
+        SUBSTRING(d.birth_date, 0, 4)
+        ),                                                    -- ptnt_birth_yr
+    COALESCE(
+        CASE WHEN mp.age = 0 THEN NULL ELSE mp.age END,
+        CASE WHEN d.patient_age = 0 THEN NULL ELSE d.patient_age END
+        ),                                                    -- ptnt_age_num
     CASE
     WHEN lower(d.patient_alive_indicator) IN ('n', 'no') THEN 'N'
     WHEN lower(d.patient_alive_indicator) IN ('y', 'yes') THEN 'Y'
     ELSE NULL
-    END,                                             -- ptnt_lvg_flg
-    SUBSTRING(CAST(d.date_of_death AS DATE), 0, 7),  -- ptnt_dth_dt
-    d.gender,                                        -- ptnt_gender_cd
-    UPPER(d.state),                                  -- ptnt_state_cd
-    d.zip_code,                                      -- ptnt_zip3_cd
+    END,                                                      -- ptnt_lvg_flg
+    SUBSTRING(CAST(d.date_of_death AS DATE), 0, 7),           -- ptnt_dth_dt
+    UPPER(COALESCE(mp.gender, d.gender)),                     -- ptnt_gender_cd
+    UPPER(COALESCE(mp.state, d.state)),                       -- ptnt_state_cd
+    COALESCE(mp.threeDigitZip, SUBSTRING(d.zip_code, 0, 3)),  -- ptnt_zip3_cd
     NULL,                                            -- hv_enc_id
     NULL,                                            -- enc_dt
     NULL,                                            -- hv_lab_ord_id
@@ -106,4 +112,6 @@ SELECT
     NULL,                                            -- rec_stat_cd
     'lab'                                            -- prmy_src_tbl_nm
 FROM lab_transactions l
-    LEFT JOIN demographics_transactions d ON l.patient_id = d.patient_id
+    LEFT JOIN demographics_transactions_dedup d ON l.patient_id = d.patient_id
+    LEFT JOIN matching_payload mp ON d.hvJoinKey = mp.hvJoinKey
+WHERE l.import_source_id IS NOT NULL
