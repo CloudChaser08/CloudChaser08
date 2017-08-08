@@ -102,6 +102,9 @@ CREATE TABLE demographics_transactions (
         hvJoinKey                        string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
     STORED AS TEXTFILE
     LOCATION {demographics_input_path}
     ;
@@ -153,6 +156,9 @@ CREATE TABLE diagnosis_transactions (
         cancer_stage_m       string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
     STORED AS TEXTFILE
     LOCATION {diagnosis_input_path}
     ;
@@ -193,6 +199,9 @@ CREATE TABLE encounter_transactions (
         provider_npi                string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
     STORED AS TEXTFILE
     LOCATION {encounter_input_path}
     ;
@@ -231,6 +240,9 @@ CREATE TABLE lab_transactions (
         record_source                     string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
     STORED AS TEXTFILE
     LOCATION {lab_input_path}
     ;
@@ -339,6 +351,9 @@ CREATE TABLE dispense_transactions (
         uom_description               string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
     STORED AS TEXTFILE
     LOCATION {dispense_input_path}
     ;

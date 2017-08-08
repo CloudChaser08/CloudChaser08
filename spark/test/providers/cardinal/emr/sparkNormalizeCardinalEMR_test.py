@@ -33,7 +33,7 @@ def test_init(spark):
     cleanup(spark)
     cardinal_emr.run(spark['spark'], spark['runner'], '2017-08-31', True)
     global procedure_results
-    procedure_results = spark['sqlContext'].sql('select * from procedure_common_model') \
+    encounter_results = spark['sqlContext'].sql('select * from encounter_common_model') \
                                            .collect()
 
 
