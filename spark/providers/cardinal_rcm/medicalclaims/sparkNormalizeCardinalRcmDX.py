@@ -50,7 +50,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['input_path', input_path]
     ])
 
-    explode.generate_exploder_table(spark, 8, 'diag_exploder')
+    explode.generate_exploder_table(spark, 9, 'diag_exploder')
     explode.generate_exploder_table(spark, 2, 'proc_exploder')
 
     # trim and remove nulls from raw input

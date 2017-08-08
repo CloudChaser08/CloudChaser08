@@ -45,7 +45,7 @@ SELECT DISTINCT
     t.line_seq_no,               -- service_line_number
     ARRAY(
         t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
-        t.diag_5, t.diag_6, t.diag_7, t.diag_8
+        t.diag_5, t.diag_6, t.diag_7, t.diag_8, NULL
         )[diag_explode.n],       -- diagnosis_code
     NULL,                        -- diagnosis_code_qual
     NULL,                        -- diagnosis_priority
@@ -184,22 +184,32 @@ FROM transactions t
     INNER JOIN matching_payload mp ON t.hvjoinkey = mp.hvjoinkey
     CROSS JOIN diag_exploder diag_explode
     CROSS JOIN proc_exploder proc_explode
-WHERE (
+WHERE
+
+-- add rows for non-null diagnoses with a null procedure
+    (
         ARRAY(
             t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
-            t.diag_5, t.diag_6, t.diag_7, t.diag_8
+            t.diag_5, t.diag_6, t.diag_7, t.diag_8, NULL
             )[diag_explode.n] IS NOT NULL
         AND ARRAY(t.proc_code, NULL)[proc_explode.n] IS NULL
         )
+
+-- add rows for non-null procedure code and a null diagnosis
     OR (
         ARRAY(
             t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
-            t.diag_5, t.diag_6, t.diag_7, t.diag_8
+            t.diag_5, t.diag_6, t.diag_7, t.diag_8, NULL
             )[diag_explode.n] IS NULL
         AND ARRAY(t.proc_code, NULL)[proc_explode.n] IS NOT NULL
         )
-    OR COALESCE(
+
+-- add rows that had all null diagnoses and procedure
+    OR (
+        COALESCE(
         t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
         t.diag_5, t.diag_6, t.diag_7, t.diag_8
         ) IS NULL
+    AND t.proc_code IS NULL
+    )
     ;
