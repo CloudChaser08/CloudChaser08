@@ -243,7 +243,7 @@ detect_move_normalize_dag = SubDagOperator(
             'file_date_func'                    : lambda ds, k: insert_file_date('{}-{}-{}', k),
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/express_scripts/enrollmentrecords/sparkNormalizeExpressScriptsEnrollment.py',
             'pyspark_normalization_args_func'   : lambda ds, k: [
-                '--date', insert_file_date('{}-{}-{}', k
+                '--date', insert_file_date('{}-{}-{}', k)
             ],
             'spark_conf_args'                   : ['--conf',
                 'spark.sql.shuffle.partitions=1000'
