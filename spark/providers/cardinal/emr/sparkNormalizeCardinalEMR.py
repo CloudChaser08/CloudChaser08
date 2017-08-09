@@ -230,7 +230,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             normalized_records_unloader.partition_and_rename(
                 spark, runner, 'emr', table['script_name'], 'cardinal',
                 table['table_name'], table['date_column'], date_input,
-                staging_subdir='{}/'.format(table['data_type'])
+                staging_subdir='{}/'.format(table['data_type']),
+                distribution_key='rec_id'
             )
 
 
@@ -248,7 +249,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-07/'
+        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-09/'
 
     normalized_records_unloader.distcp(output_path)
 
