@@ -52,7 +52,7 @@ MINIMUM_DEID_FILE_SIZE=500
 S3_PAYLOAD_LOC='s3://salusv/matching/payload/medicalclaims/emdeon/'
 
 def get_file_name_pattern(ds, kwargs):
-    TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
+    return TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
 
 def do_unzip_file(ds, **kwargs):
     tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
