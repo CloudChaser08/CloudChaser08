@@ -53,13 +53,25 @@ SELECT DISTINCT
     ARRAY(t.proc_code, NULL)[
         proc_explode.n
         ],                       -- procedure_code
-    t.proc_code_qual,            -- procedure_code_qual
+    ARRAY(t.proc_code_qual, NULL)[
+        proc_explode.n
+        ],                       -- procedure_code_qual
     NULL,                        -- principal_proc_ind
-    t.submitted_units,           -- procedure_units
-    t.mod_1,                     -- procedure_modifier_1
-    t.mod_2,                     -- procedure_modifier_2
-    t.mod_3,                     -- procedure_modifier_3
-    t.mod_4,                     -- procedure_modifier_4
+    ARRAY(t.submitted_units, NULL)[
+        proc_explode.n
+        ],                       -- procedure_units
+    ARRAY(t.mod_1, NULL)[
+        proc_explode.n
+        ],                       -- procedure_modifier_1
+    ARRAY(t.mod_2, NULL)[
+        proc_explode.n
+        ],                       -- procedure_modifier_2
+    ARRAY(t.mod_3, NULL)[
+        proc_explode.n
+        ],                       -- procedure_modifier_3
+    ARRAY(t.mod_4, NULL)[
+        proc_explode.n
+        ],                       -- procedure_modifier_4
     NULL,                        -- revenue_code
     NULL,                        -- ndc_code
     NULL,                        -- medical_coverage_type
@@ -192,7 +204,7 @@ WHERE
             t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
             t.diag_5, t.diag_6, t.diag_7, t.diag_8, NULL
             )[diag_explode.n] IS NOT NULL
-        AND ARRAY(t.proc_code, NULL)[proc_explode.n] IS NULL
+        AND proc_explode.n = 1 /* n=1 will always choose 'NULL' */
         )
 
 -- add rows for non-null procedure code and a null diagnosis
@@ -201,7 +213,7 @@ WHERE
             t.diag_principal, t.diag_2, t.diag_3, t.diag_4,
             t.diag_5, t.diag_6, t.diag_7, t.diag_8, NULL
             )[diag_explode.n] IS NULL
-        AND ARRAY(t.proc_code, NULL)[proc_explode.n] IS NOT NULL
+        AND proc_explode.n = 0 AND t.proc_code IS NOT NULL
         )
 
 -- add rows that had all null diagnoses and procedure
