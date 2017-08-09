@@ -6,7 +6,15 @@ from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+from spark.helpers.privacy.emr import                   \
+    encounter as priv_encounter,                        \
+    clinical_observation as priv_clinical_observation,  \
+    procedure as priv_procedure,                        \
+    lab_result as priv_lab_result,                      \
+    diagnosis as priv_diagnosis,                        \
+    medication as priv_medication
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
@@ -63,18 +71,19 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal/{}/diagnosis/'.format(
             date_input.replace('-', '/')
         )
-        encounter_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/encounter/'.format(
+        encounter_input_path = 's3a://salusv/incoming/emr/cardinal/{}/encounter/'.format(
             date_input.replace('-', '/')
         )
-        lab_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/lab/'.format(
+        lab_input_path = 's3a://salusv/incoming/emr/cardinal/{}/lab/'.format(
             date_input.replace('-', '/')
         )
-        dispense_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/dispense/'.format(
+        dispense_input_path = 's3a://salusv/incoming/emr/cardinal/{}/dispense/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3a://salusv/matching/payload/emr/cardinal/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        # matching_path = 's3a://salusv/matching/payload/emr/cardinal/{}/'.format(
+        #     date_input.replace('-', '/')
+        # )
+        matching_path = 's3a://salusv/sample/cardinal/emr/payload/'
 
     min_date = '1900-01-02'
     max_date = date_input
@@ -103,6 +112,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['table_name', 'procedure_common_model', False],
         ['properties', '', False]
     ])
+
+    explode.generate_exploder_table(spark, 6, 'clin_obs_exploder')
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
@@ -157,28 +168,45 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized_tables = [
         {
             'table_name': 'clinical_observation_common_model',
-            'script_name': 'clinical_observation_common_model.sql',
-            'data_type': 'clinical_observation'
+            'script_name': 'emr/clinical_observation_common_model.sql',
+            'data_type': 'clinical_observation',
+            'date_column': 'enc_dt',
+            'privacy_filter': priv_clinical_observation
         },
         {
             'table_name': 'diagnosis_common_model',
-            'script_name': 'diagnosis_common_model.sql',
-            'data_type': 'diagnosis'
+            'script_name': 'emr/diagnosis_common_model.sql',
+            'data_type': 'diagnosis',
+            'date_column': 'enc_dt',
+            'privacy_filter': priv_diagnosis
         },
         {
             'table_name': 'encounter_common_model',
-            'script_name': 'encounter_common_model.sql',
-            'data_type': 'encounter'
+            'script_name': 'emr/encounter_common_model.sql',
+            'data_type': 'encounter',
+            'date_column': 'enc_start_dt',
+            'privacy_filter': priv_encounter
         },
         {
             'table_name': 'medication_common_model',
-            'script_name': 'medication_common_model.sql',
-            'data_type': 'medication'
+            'script_name': 'emr/medication_common_model.sql',
+            'data_type': 'medication',
+            'date_column': 'enc_dt',
+            'privacy_filter': priv_medication
         },
         {
             'table_name': 'procedure_common_model',
-            'script_name': 'procedure_common_model.sql',
-            'data_type': 'procedure'
+            'script_name': 'emr/procedure_common_model.sql',
+            'data_type': 'procedure',
+            'date_column': 'enc_dt',
+            'privacy_filter': priv_procedure
+        },
+        {
+            'table_name': 'lab_result_common_model',
+            'script_name': 'emr/lab_result_common_model.sql',
+            'data_type': 'lab_result',
+            'date_column': 'enc_dt',
+            'privacy_filter': priv_lab_result
         }
     ]
 
@@ -191,9 +219,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 # rename defaults
                 record_id='rec_id', created='crt_dt', data_set='data_set_nm',
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
-            )
+            ),
 
-            # TODO: privacy filtering
+            table['privacy_filter'].filter
         )(
             runner.sqlContext.sql('select * from {}'.format(table['table_name']))
         ).createTempView(table['table_name'])
@@ -201,7 +229,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         if not test:
             normalized_records_unloader.partition_and_rename(
                 spark, runner, 'emr', table['script_name'], 'cardinal',
-                table, 'date_service', date_input, staging_subdir='{}/'.format(table['data_type'])
+                table['table_name'], table['date_column'], date_input,
+                staging_subdir='{}/'.format(table['data_type'])
             )
 
 

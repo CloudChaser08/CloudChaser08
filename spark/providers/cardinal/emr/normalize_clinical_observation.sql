@@ -138,7 +138,7 @@ SELECT
 FROM diagnosis_transactions diag
     LEFT JOIN demographics_transactions_dedup dem ON diag.patient_id = dem.patient_id
     LEFT JOIN matching_payload mp ON dem.hvJoinKey = mp.hvJoinKey
-    CROSS JOIN exploder n
+    CROSS JOIN clin_obs_exploder n
 
 -- filter out rows where all of these are null
 WHERE ARRAY(
