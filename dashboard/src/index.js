@@ -179,7 +179,7 @@ exports.handler = function(event, context) {
               else if (!d.ingested) dateClass = 'not-ingested';
               else dateClass = 'fully-loaded';
               return '<li class=' + dateClass + '>' +
-                d.executionDate + '</li>';
+                d.executionDate + '\t\t\t' + d.incomingFiles + '</li>';
             }).reduce(function (el1, el2) {
               return el1 + el2;
             }) + '</ul>'
@@ -197,17 +197,17 @@ exports.handler = function(event, context) {
         return el1 + el2;
       }));
 
-      // upload the HTML blob to s3
-      s3.uploadFile(output, 's3://hvstatus.healthverity.com/provider-status-dash/index.html', function(err, data) {
+     //  // upload the HTML blob to s3
+     //  s3.uploadFile(output, 's3://hvstatus.healthverity.com/provider-status-dash/index.html', function(err, data) {
+     //    if(err) context.fail(err);
+     //    else context.succeed();
+     //  });
+
+      // output file for testing
+      fs.writeFile(path.join(__dirname, 'test.html'), output, 'utf-8', function(err, data) {
         if(err) context.fail(err);
         else context.succeed();
       });
-
-      // // output file for testing
-      // fs.writeFile(path.join(__dirname, 'test.html'), output, 'utf-8', function(err, data) {
-      //   if(err) context.fail(err);
-      //   else context.succeed();
-      // });
     }
   });
 };
