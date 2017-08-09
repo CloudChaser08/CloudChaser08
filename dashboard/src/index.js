@@ -179,7 +179,7 @@ exports.handler = function(event, context) {
               else if (!d.ingested) dateClass = 'not-ingested';
               else dateClass = 'fully-loaded';
               return '<li class=' + dateClass + '>' +
-                d.executionDate + '\t\t\t' + d.incomingFiles + '</li>';
+                d.executionDate + '<br/>' + d.incomingFiles.join('<br/>') + '</li>';
             }).reduce(function (el1, el2) {
               return el1 + el2;
             }) + '</ul>'
