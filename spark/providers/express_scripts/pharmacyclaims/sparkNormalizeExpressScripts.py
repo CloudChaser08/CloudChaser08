@@ -65,7 +65,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['properties', '', False]
     ])
 
-    payload_loader.load(runner, matching_path, ['personId', 'hvJoinKey'])
+    payload_loader.load(runner, matching_path, ['RXNumber', 'hvJoinKey'])
 
     runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path]
