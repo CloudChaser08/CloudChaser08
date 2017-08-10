@@ -43,6 +43,14 @@ exports.config = [
       ];
       var monthNum = (months.indexOf(filename.split('.')[4]) + 1).toString();
       return filename.split('.')[3] + '-' + helpers.leftZPad(monthNum) + '-02';
+    },
+    executionDateToFilename: function(date) {
+      var months = [
+        'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+        'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+      ];
+      var month = months[date.getMonth()];
+      return 'incoming/practiceinsight/HV.data.837.' + date.getFullYear() + '.' + month + '.csv.gz';
     }
   },
   {
@@ -56,6 +64,10 @@ exports.config = [
       var isolatedDate = filename.split('_')[1];
       var executionDate = helpers.addMonths(-1)(new Date(isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-02'));
       return helpers.formatDate(executionDate);
+    },
+    executionDateToFilename: function(date) {
+      var nextDay = new Date(date.getTime() + (24 * 60 * 60 * 1000));
+      return 'incoming/caris/DATA_' + nextDay.getFullYear() + helpers.leftZPad(nextDay.getDate(), 2) + '<########>';
     }
   },
   {
@@ -68,6 +80,10 @@ exports.config = [
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('/')[4].split('_')[0];
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+    },
+    executionDateToFilename: function(date) {
+      return 'incoming/medicalclaims/emdeon/transactions/' + date.getFullYear() +
+        helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2) + '_Claims_US_CF_D_deid.dat.gz';
     }
   },
   {
@@ -80,6 +96,10 @@ exports.config = [
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('/')[4].split('_')[0];
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+    },
+    executionDateToFilename: function(date) {
+      return 'incoming/pharmacyclaims/emdeon/transactions/' + date.getFullYear() +
+        helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2) + '_RX_DEID_CF_ON.dat.gz';
     }
   },
   {
@@ -92,6 +112,11 @@ exports.config = [
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('_')[1].substring(0, 8);
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+    },
+    executionDateToFilename: function(date) {
+      var nextDay = new Date(date.getTime() + (24 * 60 * 60 * 1000));
+      return 'incoming/quest/HealthVerity_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) +
+        helpers.leftZPad(date.getDate(), 2) + helpers.leftZPad(nextDay.getMonth() + 1, 2) + helpers.leftZPad(nextDay.getDate(), 2) + '_2.gz.zip';
     }
   },
   {
@@ -103,6 +128,11 @@ exports.config = [
     expectedFilenameRegex: /^.*[a-z]+\.from_[0-9]{4}-[0-9]{2}-[0-9]{2}\.to_[0-9]{4}-[0-9]{2}-[0-9]{2}\.zip$/,
     filenameToExecutionDate: function(filename) {
       return filename.split('_')[2].split('.')[0];
+    },
+    executionDateToFilename: function(date) {
+      var previousDay = new Date(date.getTime() - (24 * 60 * 60 * 1000));
+      return 'incoming/ability/[app].from_' + previousDay.getFullYear() + '-' + helpers.leftZPad(previousDay.getMonth() + 1, 2) + '-' +
+        previousDay.getDate() + '.to_' + date.getFullYear() + '-' + helpers.leftZPad(date.getMonth() + 1, 2) + '-' + helpers.leftZPad(date.getDate(), 2) + '.zip';
     }
   },
   {
@@ -118,6 +148,10 @@ exports.config = [
         isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
       ));
       return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      return 'incoming/esi/10130X001_HV_RX_Claims_D' + date.getFullYear() + 
+        helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2) + '.txt';
     }
   },
   {
@@ -130,6 +164,9 @@ exports.config = [
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('.')[2];
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+    },
+    executionDateToFilename: function(date) {
+      return 'incoming/mckessonrx/HVUnRes.Record.' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2);
     }
   }
 ];
