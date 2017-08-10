@@ -88,27 +88,27 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     min_date = '1900-01-02'
     max_date = date_input
 
-    runner.run_spark_script('../../../common/emr/clinical_observation_common_model.sql', [
+    runner.run_spark_script('../../../common/emr/clinical_observation_common_model_v2.sql', [
         ['table_name', 'clinical_observation_common_model', False],
         ['properties', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/diagnosis_common_model.sql', [
+    runner.run_spark_script('../../../common/emr/diagnosis_common_model_v2.sql', [
         ['table_name', 'diagnosis_common_model', False],
         ['properties', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/encounter_common_model.sql', [
+    runner.run_spark_script('../../../common/emr/encounter_common_model_v2.sql', [
         ['table_name', 'encounter_common_model', False],
         ['properties', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/lab_result_common_model.sql', [
+    runner.run_spark_script('../../../common/emr/lab_result_common_model_v2.sql', [
         ['table_name', 'lab_result_common_model', False],
         ['properties', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/medication_common_model.sql', [
+    runner.run_spark_script('../../../common/emr/medication_common_model_v2.sql', [
         ['table_name', 'medication_common_model', False],
         ['properties', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/procedure_common_model.sql', [
+    runner.run_spark_script('../../../common/emr/procedure_common_model_v2.sql', [
         ['table_name', 'procedure_common_model', False],
         ['properties', '', False]
     ])
@@ -168,44 +168,44 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized_tables = [
         {
             'table_name': 'clinical_observation_common_model',
-            'script_name': 'emr/clinical_observation_common_model.sql',
+            'script_name': 'emr/clinical_observation_common_model_v2.sql',
             'data_type': 'clinical_observation',
-            'date_column': 'enc_dt',
+            'date_column': 'clin_obsn_dt',
             'privacy_filter': priv_clinical_observation
         },
         {
             'table_name': 'diagnosis_common_model',
-            'script_name': 'emr/diagnosis_common_model.sql',
+            'script_name': 'emr/diagnosis_common_model_v2.sql',
             'data_type': 'diagnosis',
-            'date_column': 'enc_dt',
+            'date_column': 'diag_dt',
             'privacy_filter': priv_diagnosis
         },
         {
             'table_name': 'encounter_common_model',
-            'script_name': 'emr/encounter_common_model.sql',
+            'script_name': 'emr/encounter_common_model_v2.sql',
             'data_type': 'encounter',
             'date_column': 'enc_start_dt',
             'privacy_filter': priv_encounter
         },
         {
             'table_name': 'medication_common_model',
-            'script_name': 'emr/medication_common_model.sql',
+            'script_name': 'emr/medication_common_model_v2.sql',
             'data_type': 'medication',
-            'date_column': 'enc_dt',
+            'date_column': 'medctn_admin_dt',
             'privacy_filter': priv_medication
         },
         {
             'table_name': 'procedure_common_model',
-            'script_name': 'emr/procedure_common_model.sql',
+            'script_name': 'emr/procedure_common_model_v2.sql',
             'data_type': 'procedure',
-            'date_column': 'enc_dt',
+            'date_column': 'proc_dt',
             'privacy_filter': priv_procedure
         },
         {
             'table_name': 'lab_result_common_model',
-            'script_name': 'emr/lab_result_common_model.sql',
+            'script_name': 'emr/lab_result_common_model_v2.sql',
             'data_type': 'lab_result',
-            'date_column': 'enc_dt',
+            'date_column': 'lab_test_execd_dt',
             'privacy_filter': priv_lab_result
         }
     ]
@@ -217,7 +217,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 feed_id='31', vendor_id='42', filename=setid,
 
                 # rename defaults
-                record_id='rec_id', created='crt_dt', data_set='data_set_nm',
+                record_id='row_id', created='crt_dt', data_set='data_set_nm',
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
             ),
 
@@ -231,7 +231,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 spark, runner, 'emr', table['script_name'], 'cardinal',
                 table['table_name'], table['date_column'], date_input,
                 staging_subdir='{}/'.format(table['data_type']),
-                distribution_key='rec_id'
+                distribution_key='row_id', provider_partition='hvm_vdr_feed_id',
+                date_partition='prt_mnth'
             )
 
 
