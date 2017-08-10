@@ -146,3 +146,4 @@ WHERE ARRAY(
         diag.cancer_stage_t, diag.cancer_stage_n, diag.cancer_stage_m
         )[n.n] IS NOT NULL
     AND diag.import_source_id IS NOT NULL
+;

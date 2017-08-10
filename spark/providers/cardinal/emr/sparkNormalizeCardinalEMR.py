@@ -134,8 +134,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.compose(
             postprocessor.trimmify, lambda df: postprocessor.nullify(
                 df,
-                null_vals=["", "NULL"],
-                preprocess_func=lambda c: c.upper() if c else None
+                null_vals=['','NULL'],
+                preprocess_func=lambda c: c.upper() if c else c
             )
         )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
 
@@ -215,7 +215,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     for table in normalized_tables:
         postprocessor.compose(
-            postprocessor.nullify,
+            # postprocessor.nullify,
             postprocessor.add_universal_columns(
                 feed_id='31', vendor_id='42', filename=setid,
 

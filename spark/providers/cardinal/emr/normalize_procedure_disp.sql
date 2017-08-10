@@ -105,6 +105,7 @@ FROM (
         npi, max(id) as id
     FROM dispense_transactions
     WHERE import_source_id IS NOT NULL
+        AND cpt_code IS NOT NULL
     GROUP BY 1, 2, 3, 4, 5
         ) disp
     LEFT JOIN demographics_transactions_dedup dem ON disp.patient_id = dem.patient_id
