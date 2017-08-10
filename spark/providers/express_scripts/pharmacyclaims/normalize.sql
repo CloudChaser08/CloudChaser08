@@ -15,10 +15,10 @@ SELECT
     mp.threeDigitZip,                         -- patient_zip3
     UPPER(t.patient_state),                   -- patient_state
     extract_date(
-        t.date_of_service, '%Y-%m-%d %H:%M:%S.%f', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                    -- date_service
     extract_date(
-        t.date_prescription_written, '%Y-%m-%d %H:%M:%S.%f', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.date_prescription_written, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                    -- date_written
     NULL,                                     -- year_of_injury
     NULL,                                     -- date_authorized
@@ -69,9 +69,9 @@ SELECT
     t.unit_of_measure,                        -- unit_of_measure
     t.days_supply,                            -- days_supply
     CASE
-        WHEN (t.service_provider_id_qual IN ('1', '01')) OR
-            (t.service_provider_id_qual IN ('5', '05') 
-                AND regexp_replace(t.service_provider_id, '^[0-9]{10}$', '') = '')
+        WHEN (t.service_provider_id_qualifier IN ('1', '01')) OR
+            (t.service_provider_id_qualifier IN ('5', '05') 
+                AND regexp_replace(t.service_provider_id, '^[0-9]{{10}}$', '') = '')
             THEN t.service_provider_id
         ELSE NULL
     END,                                      -- pharmacy_npi
@@ -86,7 +86,7 @@ SELECT
     NULL,                                     -- payer_type
     t.compound_code,                          -- compound_code
     t.unit_dose_indicator,                    -- unit_dose_indicator
-    t.dispense_as_written_code,               -- dispensed_as_written
+    t.dispense_as_written,                    -- dispensed_as_written
     NULL,                                     -- prescription_origin
     NULL,                                     -- submission_clarification
     NULL,                                     -- orig_prescribed_product_service_code
@@ -98,9 +98,9 @@ SELECT
     NULL,                                     -- professional_service_code
     NULL,                                     -- result_of_service_code
     CASE
-        WHEN (t.prescriber_id_qualifier_qual IN ('1', '01')) OR
-            (t.prescriber_id_qualifier_qual IN ('5', '05') 
-                AND regexp_replace(t.prescriber_id_qualifier, '^[0-9]{10}$', '') = '')
+        WHEN (t.prescriber_id_qualifier IN ('1', '01')) OR
+            (t.prescriber_id_qualifier IN ('5', '05') 
+                AND regexp_replace(t.prescriber_id_qualifier, '^[0-9]{{10}}$', '') = '')
             THEN t.prescriber_id
         ELSE NULL
     END,                                      -- prov_prescribing_npi
@@ -138,16 +138,16 @@ SELECT
     NULL,                                     -- coupon_number
     NULL,                                     -- coupon_value
     CASE
-        WHEN (t.service_provider_id_qual NOT IN ('1', '01')) AND
-            (t.service_provider_id_qual NOT IN ('5', '05') 
-                OR regexp_replace(t.service_provider_id, '^[0-9]{10}$', '') != '')
+        WHEN (t.service_provider_id_qualifier NOT IN ('1', '01')) AND
+            (t.service_provider_id_qualifier NOT IN ('5', '05') 
+                OR regexp_replace(t.service_provider_id, '^[0-9]{{10}}$', '') != '')
             THEN t.service_provider_id
         ELSE NULL
     END,                                      -- pharmacy_other_id
     CASE
-        WHEN (t.service_provider_id_qual NOT IN ('1', '01')) AND
-            (t.service_provider_id_qual NOT IN ('5', '05') 
-                OR regexp_replace(t.service_provider_id, '^[0-9]{10}$', '') != '')
+        WHEN (t.service_provider_id_qualifier NOT IN ('1', '01')) AND
+            (t.service_provider_id_qualifier NOT IN ('5', '05') 
+                OR regexp_replace(t.service_provider_id, '^[0-9]{{10}}$', '') != '')
             THEN t.service_provider_id_qualifier
         ELSE NULL
     END,                                      -- pharmacy_other_qual
@@ -155,17 +155,17 @@ SELECT
     NULL,                                     -- prov_dispensing_id
     NULL,                                     -- prov_dispensing_qual
     CASE
-        WHEN (t.prescriber_id_qualifier_qual NOT IN ('1', '01')) AND
-            (t.prescriber_id_qualifier_qual NOT IN ('5', '05') 
-                OR regexp_replace(t.prescriber_id_qualifier, '^[0-9]{10}$', '') != '')
+        WHEN (t.prescriber_id_qualifier NOT IN ('1', '01')) AND
+            (t.prescriber_id_qualifier NOT IN ('5', '05') 
+                OR regexp_replace(t.prescriber_id_qualifier, '^[0-9]{{10}}$', '') != '')
             THEN t.prescriber_id
         ELSE NULL
     END,                                      -- prov_prescribing_id
     CASE
-        WHEN (t.prescriber_id_qualifier_qual NOT IN ('1', '01')) AND
-            (t.prescriber_id_qualifier_qual NOT IN ('5', '05') 
-                OR regexp_replace(t.prescriber_id_qualifier, '^[0-9]{10}$', '') != '')
-            THEN t.prescriber_id_qual
+        WHEN (t.prescriber_id_qualifier NOT IN ('1', '01')) AND
+            (t.prescriber_id_qualifier NOT IN ('5', '05') 
+                OR regexp_replace(t.prescriber_id_qualifier, '^[0-9]{{10}}$', '') != '')
+            THEN t.prescriber_id_qualifier
         ELSE NULL
     END,                                      -- prov_prescribing_qual
     NULL,                                     -- prov_primary_care_id
