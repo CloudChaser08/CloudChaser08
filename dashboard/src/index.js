@@ -209,17 +209,17 @@ exports.handler = function(event, context) {
         return el1 + el2;
       }));
 
-     //  // upload the HTML blob to s3
-     //  s3.uploadFile(output, 's3://hvstatus.healthverity.com/provider-status-dash/index.html', function(err, data) {
-     //    if(err) context.fail(err);
-     //    else context.succeed();
-     //  });
-
-      // output file for testing
-      fs.writeFile(path.join(__dirname, 'test.html'), output, 'utf-8', function(err, data) {
+      // upload the HTML blob to s3
+      s3.uploadFile(output, 's3://hvstatus.healthverity.com/provider-status-dash/index.html', function(err, data) {
         if(err) context.fail(err);
         else context.succeed();
       });
+
+      // // output file for testing
+      // fs.writeFile(path.join(__dirname, 'test.html'), output, 'utf-8', function(err, data) {
+      //   if(err) context.fail(err);
+      //   else context.succeed();
+      // });
     }
   });
 };
