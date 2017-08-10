@@ -105,10 +105,14 @@ LOCATION '{}'
     for mo in [curr_mo, prev_mo]:
         runner.run_spark_query("ALTER TABLE normalized_claims ADD PARTITION (part_best_date='{0}') LOCATION '{1}part_best_date={0}/'".format(mo, normalized_path))
 
-    new_not_reversed = runner.sqlContext.sql("SELECT * FROM pharmacyclaims_common_model WHERE claim_id NOT IN (SELECT pharmacy_claim_ref_id from transactions)")
-    old_not_reversed = runner.sqlContext.sql("SELECT * FROM normalized_claims WHERE claim_id NOT IN (SELECT pharmacy_claim_ref_id from transactions)").drop('part_best_date')
+    new_not_reversed = runner.run_spark_script('select_not_reversed_claims.sql', [
+        ['table_name', 'pharmacyclaims_common_model', False]
+    ], return_output=True)
+    old_not_reversed = runner.run_spark_script('select_not_reversed_claims.sql', [
+        ['table_name', 'normalized_claims', False]
+    ], return_output=True).drop('part_best_date')
 
-    new_reversed.union(old_reversed).union(new_not_reversed).union(old_not_reversed).createTempView('pharmacyclaims_common_model_final')
+    new_not_reversed.union(old_not_reversed).createTempView('pharmacyclaims_common_model_final')
 
     if not test:
         normalized_records_unloader.partition_and_rename(
@@ -133,6 +137,9 @@ def main(args):
     else:
         output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
 
+    # We can't selectively delete only the claims that were reversed
+    # Instead, delete all the old normalized data and replace it with all the claims that were
+    # reversed in the same time period
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     curr_mo = date_obj.strftime('%Y-%m')
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
