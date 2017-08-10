@@ -126,7 +126,7 @@ SELECT
     NULL,                                                       -- medctn_rxnorm_cd
     NULL,                                                       -- medctn_snomed_cd
     NULL,                                                       -- medctn_genc_ok_flg
-    disp.product_brand_name,                                    -- medctn_brd_nm
+    disp.brand_name,                                            -- medctn_brd_nm
     disp.generic_name,                                          -- medctn_genc_nm
     NULL,                                                       -- medctn_rx_flg
     NULL,                                                       -- medctn_rx_qty

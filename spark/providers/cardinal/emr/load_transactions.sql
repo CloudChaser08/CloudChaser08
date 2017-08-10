@@ -251,6 +251,7 @@ DROP TABLE IF EXISTS dispense_transactions;
 CREATE TABLE dispense_transactions (
         id                            string,
         import_source_id              string,
+        rto_written_prescription_id   string,
         practice_id                   string,
         system_id                     string,
         patient_id                    string,
@@ -262,7 +263,7 @@ CREATE TABLE dispense_transactions (
         ordersall_medications_flag    string,
         edw_evaluated_ind             string,
         npi                           string,
-        product_brand_name            string,
+        brand_name                    string,
         generic_name                  string,
         duration                      string,
         admin_date                    string,

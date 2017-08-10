@@ -80,10 +80,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         dispense_input_path = 's3a://salusv/incoming/emr/cardinal/{}/dispense/'.format(
             date_input.replace('-', '/')
         )
-        # matching_path = 's3a://salusv/matching/payload/emr/cardinal/{}/'.format(
-        #     date_input.replace('-', '/')
-        # )
-        matching_path = 's3a://salusv/sample/cardinal/emr/payload/'
+        matching_path = 's3a://salusv/matching/payload/emr/cardinal/{}/'.format(
+            date_input.replace('-', '/')
+        )
 
     min_date = '1900-01-02'
     max_date = date_input
@@ -133,7 +132,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # trim and nullify all incoming transactions tables
     for table in transaction_tables:
         postprocessor.compose(
-            postprocessor.trimmify, postprocessor.nullify
+            postprocessor.trimmify, lambda df: postprocessor.nullify(
+                df,
+                null_vals=["", "NULL"],
+                preprocess_func=lambda c: c.upper()
+            )
         )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
 
     runner.run_spark_script('normalize_encounter.sql', [
