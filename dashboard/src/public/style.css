@@ -21,6 +21,7 @@ div#time-series ul {
 div#time-series li {
     padding: 5px;
     border: 1px solid black;
+    word-break: break-all;
 }
 
 div#time-series .not-sent {

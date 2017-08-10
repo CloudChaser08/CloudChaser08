@@ -42,6 +42,9 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
     executionDates.push(nextDate());
   } 
 
+  function getExpectedFilename(date) {
+    return providerConf.executionDateToFilename(date);
+  }
   // return an array containing one entry for each execution date
   return executionDates.map(function(exDate) {
     var airflowData = airflowResults.rows.filter(function(resultRow) {
@@ -67,6 +70,7 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
     return {
       executionDate: helpers.formatDate(exDate),
       incomingFiles: incomingFiles,
+      expectedFile: getExpectedFilename(exDate),
       ingested: ingested
     };
 
@@ -178,8 +182,16 @@ exports.handler = function(event, context) {
               if (d.incomingFiles.length === 0) dateClass = 'not-sent';
               else if (!d.ingested) dateClass = 'not-ingested';
               else dateClass = 'fully-loaded';
-              return '<li class=' + dateClass + '>' +
-                d.executionDate + '<br/>' + d.incomingFiles.join('<br/>') + '</li>';
+              if (dateClass === 'not-sent') {
+                return '<li class=' + dateClass + '>' +
+                  '<b>' + d.executionDate + '</b><br/>' + 
+                  d.expectedFile + '</li>';
+              }
+              else {
+                return '<li class=' + dateClass + '>' +
+                  '<b>' + d.executionDate + '</b><br/>' + 
+                  d.incomingFiles.join('<br/>') + '</li>';
+              }
             }).reduce(function (el1, el2) {
               return el1 + el2;
             }) + '</ul>'
