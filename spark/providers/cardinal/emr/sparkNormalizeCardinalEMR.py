@@ -135,7 +135,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             postprocessor.trimmify, lambda df: postprocessor.nullify(
                 df,
                 null_vals=["", "NULL"],
-                preprocess_func=lambda c: c.upper()
+                preprocess_func=lambda c: c.upper() if c else None
             )
         )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
 
