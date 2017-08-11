@@ -74,8 +74,20 @@ DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt'
 MINIMUM_DEID_FILE_SIZE = 500
 
 
+def get_quest_current_date(ds, kwargs):
+    return (
+        datetime.strptime(kwargs['yesterday_ds_nodash'], '%Y%m%d') - timedelta(days=2)
+    ).strftime('%Y%m%d')
+
+
+def inc_ds_nodash(ds_nodash):
+    return (
+        datetime.strptime(ds_nodash, '%Y%m%d') + timedelta(days=1)
+    ).strftime('%Y%m%d')
+
+
 def get_formatted_date(ds, kwargs):
-    return kwargs['yesterday_ds_nodash'] + kwargs['ds_nodash'][4:8]
+    return get_quest_current_date(ds, kwargs) + inc_ds_nodash(get_quest_current_date(ds, kwargs))[4:8]
 
 
 def insert_formatted_date_function(template):
@@ -98,9 +110,9 @@ def insert_formatted_regex_function(template):
 
 def insert_current_date(template, kwargs):
     return template.format(
-        kwargs['yesterday_ds_nodash'][0:4],
-        kwargs['yesterday_ds_nodash'][4:6],
-        kwargs['yesterday_ds_nodash'][6:8]
+        get_quest_current_date(kwargs=kwargs)[0:4],
+        get_quest_current_date(kwargs=kwargs)[4:6],
+        get_quest_current_date(kwargs=kwargs)[6:8]
     )
 
 
