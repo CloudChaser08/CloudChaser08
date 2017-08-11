@@ -110,9 +110,9 @@ def insert_formatted_regex_function(template):
 
 def insert_current_date(template, kwargs):
     return template.format(
-        get_quest_current_date(kwargs=kwargs)[0:4],
-        get_quest_current_date(kwargs=kwargs)[4:6],
-        get_quest_current_date(kwargs=kwargs)[6:8]
+        get_quest_current_date(None, kwargs)[0:4],
+        get_quest_current_date(None, kwargs)[4:6],
+        get_quest_current_date(None, kwargs)[6:8]
     )
 
 
