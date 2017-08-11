@@ -114,8 +114,7 @@ exports.config = [
       var adjustedDate = helpers.addDays(2)(
         new Date(isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8))
       );
-      return helpers.leftZPad(adjustedDate.getDate(), 2) + '-' + helpers.leftZPad(adjustedDate.getMonth() + 1, 2)
-        + '-' + helpers.leftZPad(adjustedDate.getDate(), 2);
+      return helpers.formatDate(adjustedDate);
     },
     executionDateToFilename: function(date) {
       var twoDaysPrior = new Date(date.getTime() - (2 * 24 * 60 * 60 * 1000));
