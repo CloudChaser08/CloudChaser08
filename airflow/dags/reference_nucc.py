@@ -1,13 +1,34 @@
-# import common.HVDAG as HVDAG
-# 
-# from airflow.operators.bash_operator import BashOperator
-# from airflow.operators.python_operator import PythonOperator
+import common.HVDAG as HVDAG
+
+from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python_operator import PythonOperator
 
 import scrapy
-from scrapy.item import Item
 from scrapy.spiders import Spider
 
-import csv
+from datetime import datetime
+
+for m in [HVDAG]:
+    reload(m)
+
+TMP_DIR = '/tmp/nucc_'
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5)
+}
+
+dag = HVDAG.HVDAG(
+    'reference_nucc',
+    default_args = default_args,
+    start_date = datetime(2009, 1, 8)
+    schedule_interval = '0 12 * * *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
+)
+
 
 '''
 Our little crawler that will go out
@@ -68,5 +89,19 @@ def scrape_nucc(ds, **kwargs):
     crawler.start()
 
 
-if __name__ == '__main__':
-    scrape_nucc('7/1/17')
+create_tmp_dir = BashOperator(
+    task_id = 'create_tmp_dir',
+    params = { 'TMP_DIR': TMP_DIR },
+    bash_command = 'mkdir -p {{ params.TMP_DIR }}{{ ds }}'
+    retries = 3,
+    dag = dag
+)
+
+fetch_csv = PythonOperator(
+    task_id = 'fetch_csv',
+    python_callable=scrape_nucc,
+    provide_context=True,
+    dag=dag
+)
+
+fetch_csv.set_upstream(create_tmp_dir)
