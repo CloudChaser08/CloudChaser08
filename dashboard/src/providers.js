@@ -111,12 +111,17 @@ exports.config = [
     expectedFilenameRegex: /^.*HealthVerity_[0-9]{12}_2\.gz.zip$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('_')[1].substring(0, 8);
-      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+      var adjustedDate = helpers.addDays(2)(
+        new Date(isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8))
+      );
+      return helpers.leftZPad(adjustedDate.getDate(), 2) + '-' + helpers.leftZPad(adjustedDate.getMonth() + 1, 2)
+        + '-' + helpers.leftZPad(adjustedDate.getDate(), 2);
     },
     executionDateToFilename: function(date) {
-      var nextDay = new Date(date.getTime() + (24 * 60 * 60 * 1000));
-      return 'incoming/quest/HealthVerity_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) +
-        helpers.leftZPad(date.getDate(), 2) + helpers.leftZPad(nextDay.getMonth() + 1, 2) + helpers.leftZPad(nextDay.getDate(), 2) + '_2.gz.zip';
+      var twoDaysPrior = new Date(date.getTime() - (2 * 24 * 60 * 60 * 1000));
+      var nextDay = new Date(twoDaysPrior.getTime() + (24 * 60 * 60 * 1000));
+      return 'incoming/quest/HealthVerity_' + twoDaysPrior.getFullYear() + helpers.leftZPad(twoDaysPrior.getMonth() + 1, 2) +
+        helpers.leftZPad(twoDaysPrior.getDate(), 2) + helpers.leftZPad(nextDay.getMonth() + 1, 2) + helpers.leftZPad(nextDay.getDate(), 2) + '_2.gz.zip';
     }
   },
   {
