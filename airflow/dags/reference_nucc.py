@@ -3,15 +3,40 @@ import common.HVDAG as HVDAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 
+from airflow.models import Variable
+
 import scrapy
 from scrapy.spiders import Spider
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 for m in [HVDAG]:
     reload(m)
 
 TMP_DIR = '/tmp/nucc_'
+
+if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
+    SCHEMA = 'default'
+    S3_TEXT = 'salusv/reference/nucc/'
+    S3_PARQUET = 'salusv/reference/parquet/nucc/'
+    S3_PARQUET_MAP = 'salusv/reference/parquet/nucc_map'
+    AIRFLOW_ENV = 'prod'
+else:
+    SCHEMA = 'dev'
+    S3_TEXT = 'salusv/...'
+    S3_PARQUET = 'salusv/...'
+    S3_PARQUET_MAP = 'salusv/...'
+    AIRFLOW_ENV = '...'
+
+REF_NUCC_SCHEMA = '''
+                code              string,
+                taxonomy_type     string,
+                classification    string,
+                specialization    string,
+                definition        string,
+                notes             string,
+                version           string
+'''
 
 default_args = {
     'owner': 'airflow',
@@ -25,7 +50,7 @@ default_args = {
 dag = HVDAG.HVDAG(
     'reference_nucc',
     default_args = default_args,
-    start_date = datetime(2009, 1, 8)
+    start_date = datetime(2009, 1, 8),
     schedule_interval = '0 12 * * *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
 )
 
@@ -82,8 +107,12 @@ def scrape_nucc(ds, **kwargs):
 
     crawler = CrawlerProcess()
     crawler.settings.set('LOG_ENABLED', True)
-    crawler.settings.set('EXPECTED_DATE', ds)
-    crawler.settings.set('TMP_DIR', '/tmp/joe/nucc')
+    
+    date_parts = ds.split('-')
+    expected_date_nucc_format = date_parts[1].lstrip('0') + '/1/' + date_parts[0].lstrip('20')
+    crawler.settings.set('EXPECTED_DATE', expected_date_nucc_format)
+
+    crawler.settings.set('TMP_DIR', TMP_DIR + ds)
     crawler.crawl(nucc_spider())
 
     crawler.start()
@@ -92,7 +121,7 @@ def scrape_nucc(ds, **kwargs):
 create_tmp_dir = BashOperator(
     task_id = 'create_tmp_dir',
     params = { 'TMP_DIR': TMP_DIR },
-    bash_command = 'mkdir -p {{ params.TMP_DIR }}{{ ds }}'
+    bash_command = 'mkdir -p {{ params.TMP_DIR }}{{ ds }}',
     retries = 3,
     dag = dag
 )
@@ -103,5 +132,15 @@ fetch_csv = PythonOperator(
     provide_context=True,
     dag=dag
 )
+
+#TODO: place correct paths for S3 dev env and test.
+push_csv_to_s3 = BashOperator(
+    task_id = 'push_csv_to_s3',
+    params = { 'TMP_DIR': TMP_DIR },
+    bash_command = '/usr/local/bin/aws s3 cp --sse --recursive AES256 {{ params.TMP_DIR }}{{ ds }} s3://{{ params.S3_TEXT }}{{ ds }}',
+    retries = 3,
+    dag = dag
+)
+
 
 fetch_csv.set_upstream(create_tmp_dir)
