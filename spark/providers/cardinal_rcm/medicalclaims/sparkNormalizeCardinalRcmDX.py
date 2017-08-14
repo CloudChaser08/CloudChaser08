@@ -79,6 +79,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         runner.sqlContext.sql('select * from medicalclaims_common_model')
     ).createTempView('medicalclaims_common_model')
 
+    explode.explode_medicalclaims_dates(runner)
+
     if not test:
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'cardinal_rcm',

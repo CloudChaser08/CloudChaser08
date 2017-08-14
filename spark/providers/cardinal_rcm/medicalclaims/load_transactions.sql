@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS transactions;
-CREATE TABLE transactions (
+CREATE EXTERNAL TABLE transactions (
         claim_line_id             string,
         claim_id                  string,
         line_seq_no               string,

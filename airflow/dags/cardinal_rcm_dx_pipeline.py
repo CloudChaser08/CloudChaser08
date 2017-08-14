@@ -32,7 +32,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * *",
+    schedule_interval="0 14 * * *",
     default_args=default_args
 )
 
