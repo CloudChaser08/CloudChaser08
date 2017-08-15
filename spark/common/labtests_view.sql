@@ -153,8 +153,8 @@ CREATE VIEW default.labtests (
     logical_delete_reason,
     part_provider,
     CASE
-    WHEN part_best_date IN ('NULL', '0_PREDATES_FULL_HISTORICAL')
-    THEN '0_PREDATES_FULL_HISTORICAL'
+    WHEN part_best_date IN ('NULL', '0_PREDATES_HVM_HISTORY')
+    THEN '0_PREDATES_HVM_HISTORY'
     ELSE part_best_date
     END as part_best_date
 FROM labtests_20170216

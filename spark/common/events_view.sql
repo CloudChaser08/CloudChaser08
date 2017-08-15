@@ -44,8 +44,8 @@ CREATE VIEW default.events (
     event_val_uom,
     event_date,
     part_provider,
-    CASE WHEN part_best_date IN ('NULL', '0_PREDATES_FULL_HISTORICAL')
-    THEN '0_PREDATES_FULL_HISTORICAL'
+    CASE WHEN part_best_date IN ('NULL', '0_PREDATES_HVM_HISTORY')
+    THEN '0_PREDATES_HVM_HISTORY'
     ELSE part_best_date
     END as part_best_date
 FROM events_v4
@@ -72,8 +72,8 @@ SELECT
     NULL as event_val_uom,
     event_date,
     part_provider,
-    CASE WHEN part_best_date IN ('NULL', '0_PREDATES_FULL_HISTORICAL')
-    THEN '0_PREDATES_FULL_HISTORICAL'
+    CASE WHEN part_best_date IN ('NULL', '0_PREDATES_HVM_HISTORY')
+    THEN '0_PREDATES_HVM_HISTORY'
     ELSE part_best_date
     END as part_best_date
 FROM events_old;
