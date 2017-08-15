@@ -360,7 +360,7 @@ SELECT CAST(record_id AS bigint),
     other_payer_coverage_code,
     logical_delete_reason,
     part_provider,
-    CASE WHEN part_best_date IN ('NULL', '0_PREDATES_HVM_HISTORY')
+    CASE WHEN part_processdate IN ('NULL', '0_PREDATES_HVM_HISTORY')
     THEN '0_PREDATES_HVM_HISTORY'
     WHEN part_processdate NOT LIKE '%/%/%'
     THEN CONCAT(REGEXP_REPLACE(part_processdate, '-', '/'), '/01')
