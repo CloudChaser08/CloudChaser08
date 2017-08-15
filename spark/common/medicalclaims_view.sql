@@ -290,9 +290,9 @@ CREATE VIEW default.medicalclaims (
     cob_payer_claim_filing_ind_code_2,
     cob_ins_type_code_2,
     part_provider,
-    CASE WHEN part_best_date != 'NULL'
+    CASE WHEN part_best_date NOT IN ('NULL', '0_PREDATES_FULL_HISTORICAL')
     THEN CONCAT(REGEXP_REPLACE(part_best_date, '-', '/'), '/01')
-    ELSE part_best_date
+    ELSE '0_PREDATES_FULL_HISTORICAL'
     END AS part_processdate
 FROM default.medicalclaims_new
 WHERE part_provider IN ('practice_insight', 'emdeon')
@@ -442,7 +442,8 @@ SELECT CAST(record_id AS bigint),
     cob_ins_type_code_2,
     part_provider,
     CASE
-    WHEN part_provider IN ('ability', 'allscripts') AND part_processdate != 'NULL'
+    WHEN part_processdate IN ('NULL', '0_PREDATES_FULL_HISTORICAL') THEN '0_PREDATES_FULL_HISTORICAL'
+    WHEN part_provider IN ('ability', 'allscripts')
     THEN CONCAT(REGEXP_REPLACE(part_processdate, '-', '/'), '/01')
     ELSE part_processdate
     END AS part_processdate
