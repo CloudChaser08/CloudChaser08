@@ -1,17 +1,24 @@
+import airflow.macros as macros
+
 import common.HVDAG as HVDAG
 
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator
+import util.hive
 
 from airflow.models import Variable
+
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python_operator import PythonOperator
 
 import scrapy
 from scrapy.spiders import Spider
 
 from datetime import datetime, timedelta
 
-for m in [HVDAG]:
+for m in [HVDAG, util.hive]:
     reload(m)
+
+from util.hive import hive_execute
 
 TMP_DIR = '/tmp/nucc_'
 
@@ -19,14 +26,21 @@ if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
     SCHEMA = 'default'
     S3_TEXT = 'salusv/reference/nucc/'
     S3_PARQUET = 'salusv/reference/parquet/nucc/'
-    S3_PARQUET_MAP = 'salusv/reference/parquet/nucc_map'
     AIRFLOW_ENV = 'prod'
 else:
     SCHEMA = 'dev'
-    S3_TEXT = 'salusv/...'
-    S3_PARQUET = 'salusv/...'
-    S3_PARQUET_MAP = 'salusv/...'
-    AIRFLOW_ENV = '...'
+    S3_TEXT = 'salusv/testing/dewey/airflow/e2e/reference/nucc/'
+    S3_PARQUET = 'salusv/testing/dewey/airflow/e2e/reference/parquet/nucc/'
+    AIRFLOW_ENV = 'dev'
+
+REF_NUCC_SCHEMA_NO_VERSION = '''
+                code              string,
+                taxonomy_type     string,
+                classification    string,
+                specialization    string,
+                definition        string,
+                notes             string
+'''
 
 REF_NUCC_SCHEMA = '''
                 code              string,
@@ -51,61 +65,70 @@ dag = HVDAG.HVDAG(
     'reference_nucc',
     default_args = default_args,
     start_date = datetime(2009, 1, 8),
-    schedule_interval = '0 12 * * *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
+    # Run on the 8th day of the month every six months
+    schedule_interval = '0 0 8 */6 *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
 )
 
 
-'''
-Our little crawler that will go out
-and download the file that we need.
-'''
-class nucc_spider(Spider):
-    name = 'nucc'
-
-    def start_requests(self):
-        self.log("Scrapy spider is launching.")
-        url = 'http://www.nucc.org/index.php/code-sets-mainmenu-41/provider-taxonomy-mainmenu-40/csv-mainmenu-57'
-        yield scrapy.Request(url=url, callback=self.parse)
-
-
-    def parse(self, response):
-        self.log("Began parsing a page")
-
-        # Parse out the relevant info using XPath Queries
-        # Info: https://www.w3.org/TR/xpath/
-        file_locs = response.xpath('//div[@class="content-wrapper"]/ul/li/a/@href').extract()
-        file_desc = response.xpath('//div[@class="content-wrapper"]/ul/li/a/text()').extract()
-        files = zip(file_locs, file_desc)
-
-        # Filter out for the date that we want
-        relevant_file_list = filter(lambda x: self.settings['EXPECTED_DATE'] in x[1], files)
-
-        # Sanity checking
-        if len(relevant_file_list) is 0:
-            self.logger.error('No relevant file found.')
-        elif len(relevant_file_list) is not 1:
-            self.logger.error('Found more than one relevant file.')
-        else:
-            # Create a Scrapy Item (downloadable_csv) to be processed
-            # by our defined Scrapy Item Pipeline
-            relevant_file = relevant_file_list[0]
-            return scrapy.Request(url=response.urljoin(relevant_file[0]),
-                                callback=self.download_file)
-
-
-    def download_file(self, response):
-        self.log('Downloading csv file')
-        with open(self.settings['TMP_DIR'] + \
-                '/nucc_' + \
-                self.settings['EXPECTED_DATE'].replace('/','-') + \
-                '.csv', 'wb') as f:
-            f.write(response.body)
-
-
 def scrape_nucc(ds, **kwargs):
+    '''
+    Our little crawler that will go out
+    and download the file that we need.
+    '''
+    class nucc_spider(Spider):
+        name = 'nucc'
+    
+        def start_requests(self):
+            self.log("Scrapy spider is launching.")
+            url = 'http://www.nucc.org/index.php/code-sets-mainmenu-41/provider-taxonomy-mainmenu-40/csv-mainmenu-57'
+            yield scrapy.Request(url=url, callback=self.parse)
+    
+    
+        def parse(self, response):
+            self.log("Began parsing a page")
+    
+            # Parse out the relevant info using XPath Queries
+            # Info: https://www.w3.org/TR/xpath/
+            file_locs = response.xpath('//div[@class="content-wrapper"]/ul/li/a/@href').extract()
+            file_desc = response.xpath('//div[@class="content-wrapper"]/ul/li/a/text()').extract()
+            files = zip(file_locs, file_desc)
+    
+            # Filter out for the date that we want
+            relevant_file_list = filter(lambda x: self.settings['EXPECTED_DATE'] in x[1], files)
+    
+            # Sanity checking
+            if len(relevant_file_list) is 0:
+                self.logger.error('No relevant file found.')
+            elif len(relevant_file_list) is not 1:
+                self.logger.error('Found more than one relevant file.')
+            else:
+                relevant_file, desc = relevant_file_list[0]
+
+                # XCom the version for later tasks
+                version = desc.replace(',','').split(' ')[1]
+                kwargs['ti'].xcom_push(key = 'version', value = version)
+
+                # Go download the file
+                return scrapy.Request(url=response.urljoin(relevant_file),
+                                    callback=self.download_file)
+    
+
+        def download_file(self, response):
+            self.log('Downloading csv file')
+            file_loc = self.settings['TMP_DIR'] + \
+                    '/nucc-' + self.settings['EXPECTED_DATE'].replace('/','-') + '.csv'
+            # XCom the file_loc for later tasks
+            kwargs['ti'].xcom_push(key = 'file_loc', value = file_loc)
+
+            # Write out the contents of the HTTP response to a CSV file
+            with open(file_loc, 'wb') as f:
+                f.write(response.body)
+
+
     from scrapy.crawler import CrawlerProcess
 
     crawler = CrawlerProcess()
+    #TODO: Set to false when done testing
     crawler.settings.set('LOG_ENABLED', True)
     
     date_parts = ds.split('-')
@@ -117,6 +140,26 @@ def scrape_nucc(ds, **kwargs):
 
     crawler.start()
 
+
+def extract_csv_file(ds, schema, s3, ref_nucc_schema, **kwargs):
+    file_date = macros.ds_add(ds, -7)
+
+    sqls = [
+        '''DROP TABLE IF EXISTS {}.temp_ref_nucc'''.format(schema),
+        '''
+        CREATE EXTERNAL TABLE {}.temp_ref_nucc (
+            {}
+        )
+        ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+        STORED AS TEXTFILE
+        LOCATION 's3a://{}'
+        '''.format(schema, ref_nucc_schema, s3)
+    ]
+
+    hive_execute(sqls)
+
+
+### Operators ###
 
 create_tmp_dir = BashOperator(
     task_id = 'create_tmp_dir',
@@ -133,14 +176,65 @@ fetch_csv = PythonOperator(
     dag=dag
 )
 
-#TODO: place correct paths for S3 dev env and test.
-push_csv_to_s3 = BashOperator(
-    task_id = 'push_csv_to_s3',
-    params = { 'TMP_DIR': TMP_DIR },
-    bash_command = '/usr/local/bin/aws s3 cp --sse --recursive AES256 {{ params.TMP_DIR }}{{ ds }} s3://{{ params.S3_TEXT }}{{ ds }}',
+remove_csv_header = BashOperator(
+    task_id = 'remove_csv_header',
+    bash_command = '''
+        sed -i '1d' {{ ti.xcom_pull(task_ids = 'fetch_csv', key = 'file_loc') }}
+    ''',
     retries = 3,
     dag = dag
 )
 
+push_csv_to_s3 = BashOperator(
+    task_id = 'push_csv_to_s3',
+    params = { 'TMP_DIR': TMP_DIR, 'S3_TEXT': S3_TEXT },
+    bash_command = '/usr/local/bin/aws s3 cp --sse AES256 --recursive {{ params.TMP_DIR }}{{ ds }} s3://{{ params.S3_TEXT }}',
+    retries = 3,
+    dag = dag
+)
+
+delete_tmp_dir = BashOperator(
+    task_id = 'delete_tmp_dir',
+    params = { 'TMP_DIR': TMP_DIR },
+    bash_command = 'rm -r {{ params.TMP_DIR }}{{ ds }}',
+    retries = 3,
+    dag = dag
+)
+
+extract_csv = PythonOperator(
+    task_id = 'extract_csv',
+    op_kwargs = { 'schema' : SCHEMA, 's3': S3_TEXT, 'ref_nucc_schema': REF_NUCC_SCHEMA },
+    python_callable = extract_csv_file,
+    provide_context = True,
+    dag = dag
+)
+
+transform_csv = DummyOperator(
+    task_id = 'transform_csv',
+    dag = dag
+)
+
+load_csv = DummyOperator(
+    task_id = 'load_csv',
+    dag = dag
+)
+
+clean_up = BashOperator(
+    task_id = 'clean_up',
+    bash_command = '/usr/local/bin/aws s3 rm --recursive s3://salusv/testing/dewey/airflow/e2e/reference/nucc/',
+    dag = dag
+)
+
+### DAG structure ###
 
 fetch_csv.set_upstream(create_tmp_dir)
+remove_csv_header.set_upstream(fetch_csv)
+push_csv_to_s3.set_upstream(remove_csv_header)
+
+delete_tmp_dir.set_upstream(push_csv_to_s3)
+
+extract_csv.set_upstream(push_csv_to_s3)
+transform_csv.set_upstream(extract_csv)
+load_csv.set_upstream(transform_csv)
+clean_up.set_upstream(load_csv)
+
