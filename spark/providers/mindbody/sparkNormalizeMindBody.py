@@ -13,7 +13,7 @@ import mindbodyPrivacy as mindbody_priv
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
-    date_path = '/'.join(date_input.split('-')[:2]) + '/'
+    date_path = '/'.join(date_input.split('-')[:2])
     
     setid = 'record_data_' + date_obj.strftime('%Y%m%d')
     
