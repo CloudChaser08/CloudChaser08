@@ -111,7 +111,7 @@ exports.config = [
     expectedFilenameRegex: /^.*HealthVerity_[0-9]{12}_2\.gz.zip$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('_')[1].substring(0, 8);
-      var adjustedDate = helpers.addDays(2)(
+      var adjustedDate = helpers.addDays(3)(
         new Date(isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8))
       );
       return helpers.formatDate(adjustedDate);
