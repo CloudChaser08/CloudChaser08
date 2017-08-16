@@ -33,15 +33,6 @@ else:
     S3_PARQUET = 'salusv/testing/dewey/airflow/e2e/reference/parquet/nucc/'
     AIRFLOW_ENV = 'dev'
 
-REF_NUCC_SCHEMA_NO_VERSION = '''
-                code              string,
-                taxonomy_type     string,
-                classification    string,
-                specialization    string,
-                definition        string,
-                notes             string
-'''
-
 REF_NUCC_SCHEMA = '''
                 code              string,
                 taxonomy_type     string,
@@ -128,8 +119,8 @@ def scrape_nucc(ds, **kwargs):
     from scrapy.crawler import CrawlerProcess
 
     crawler = CrawlerProcess()
-    #TODO: Set to false when done testing
-    crawler.settings.set('LOG_ENABLED', True)
+
+    crawler.settings.set('LOG_ENABLED', False)
     
     date_parts = ds.split('-')
     expected_date_nucc_format = date_parts[1].lstrip('0') + '/1/' + date_parts[0].lstrip('20')
@@ -141,19 +132,45 @@ def scrape_nucc(ds, **kwargs):
     crawler.start()
 
 
-def extract_csv_file(ds, schema, s3, ref_nucc_schema, **kwargs):
-    file_date = macros.ds_add(ds, -7)
-
+def extract_csv_file(ds, schema, s3_text, ref_nucc_schema, **kwargs):
     sqls = [
         '''DROP TABLE IF EXISTS {}.temp_ref_nucc'''.format(schema),
         '''
-        CREATE EXTERNAL TABLE {}.temp_ref_nucc (
+        CREATE TABLE {}.temp_ref_nucc (
             {}
         )
         ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
         STORED AS TEXTFILE
         LOCATION 's3a://{}'
-        '''.format(schema, ref_nucc_schema, s3)
+        '''.format(schema, ref_nucc_schema, s3_text)
+    ]
+
+    hive_execute(sqls)
+
+
+def load_csv_file(ds, schema, s3_parquet, ref_nucc_schema, **kwargs):
+    sqls = [
+        ''' CREATE TABLE IF NOT EXISTS {}.ref_nucc (
+                {}
+            )
+            STORED AS PARQUET
+            LOCATION 's3a://{}'
+        '''.format(schema, ref_nucc_schema, s3_parquet),
+        ''' INSERT INTO {0}.ref_nucc
+            SELECT * FROM (
+                SELECT * FROM {0}.temp_ref_nucc
+                UNION
+                SELECT * FROM {0}.ref_nucc
+            ) a
+        '''.format(schema)
+    ]
+
+    hive_execute(sqls)
+
+
+def clean_up_task(ds, schema, **kwargs):
+    sqls = [
+        ''' DROP TABLE {}.temp_ref_nucc '''.format(schema)
     ]
 
     hive_execute(sqls)
@@ -185,8 +202,7 @@ remove_csv_header = BashOperator(
     dag = dag
 )
 
-append_version_to_csv = BashOperator(
-    task_id = 'append_version_to_csv',
+append_version_to_csv = BashOperator( task_id = 'append_version_to_csv',
     bash_command = '''
     perl -pi -e 's/\\r\\n/,{{ ti.xcom_pull(task_ids = 'fetch_csv', key = 'version') }}\\n/g' {{ ti.xcom_pull(task_ids = 'fetch_csv', key = 'file_loc') }}
     ''',
@@ -212,25 +228,25 @@ delete_tmp_dir = BashOperator(
 
 extract_csv = PythonOperator(
     task_id = 'extract_csv',
-    op_kwargs = { 'schema' : SCHEMA, 's3': S3_TEXT, 'ref_nucc_schema': REF_NUCC_SCHEMA },
+    op_kwargs = { 'schema' : SCHEMA, 's3_text': S3_TEXT, 'ref_nucc_schema': REF_NUCC_SCHEMA },
     python_callable = extract_csv_file,
     provide_context = True,
     dag = dag
 )
 
-transform_csv = DummyOperator(
-    task_id = 'transform_csv',
-    dag = dag
-)
-
-load_csv = DummyOperator(
+load_csv = PythonOperator(
     task_id = 'load_csv',
+    op_kwargs = { 'schema': SCHEMA, 's3_parquet': S3_PARQUET, 'ref_nucc_schema': REF_NUCC_SCHEMA },
+    python_callable = load_csv_file,
+    provide_context = True,
     dag = dag
 )
 
-clean_up = BashOperator(
+clean_up = PythonOperator(
     task_id = 'clean_up',
-    bash_command = '/usr/local/bin/aws s3 rm --recursive s3://salusv/testing/dewey/airflow/e2e/reference/nucc/',
+    op_kwargs = { 'schema': SCHEMA },
+    python_callable = clean_up_task,
+    provide_context = True,
     dag = dag
 )
 
@@ -244,7 +260,6 @@ push_csv_to_s3.set_upstream(append_version_to_csv)
 delete_tmp_dir.set_upstream(push_csv_to_s3)
 
 extract_csv.set_upstream(push_csv_to_s3)
-transform_csv.set_upstream(extract_csv)
-load_csv.set_upstream(transform_csv)
+load_csv.set_upstream(extract_csv)
 clean_up.set_upstream(load_csv)
 
