@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS demographics_transactions;
-CREATE TABLE demographics_transactions (
+CREATE EXTERNAL TABLE demographics_transactions (
         id                               string,
         import_source_id                 string,
         practice_id                      string,
@@ -124,7 +124,7 @@ CREATE TABLE demographics_transactions_dedup AS (
     ;
 
 DROP TABLE IF EXISTS diagnosis_transactions;
-CREATE TABLE diagnosis_transactions (
+CREATE EXTERNAL TABLE diagnosis_transactions (
         id                   string,
         import_source_id     string,
         practice_id          string,
@@ -164,7 +164,7 @@ CREATE TABLE diagnosis_transactions (
     ;
 
 DROP TABLE IF EXISTS encounter_transactions;
-CREATE TABLE encounter_transactions (
+CREATE EXTERNAL TABLE encounter_transactions (
         id                          string,
         import_source_id            string,
         practice_id                 string,
@@ -207,7 +207,7 @@ CREATE TABLE encounter_transactions (
     ;
 
 DROP TABLE IF EXISTS lab_transactions;
-CREATE TABLE lab_transactions (
+CREATE EXTERNAL TABLE lab_transactions (
         id                                string,
         import_source_id                  string,
         practice_id                       string,
@@ -248,7 +248,7 @@ CREATE TABLE lab_transactions (
     ;
 
 DROP TABLE IF EXISTS dispense_transactions;
-CREATE TABLE dispense_transactions (
+CREATE EXTERNAL TABLE dispense_transactions (
         id                            string,
         import_source_id              string,
         rto_written_prescription_id   string,
