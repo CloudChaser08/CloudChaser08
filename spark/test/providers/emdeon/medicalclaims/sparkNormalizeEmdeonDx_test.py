@@ -27,5 +27,34 @@ def test_init(spark):
                                  .collect()
 
 
+def test_unrelated_professional_explosions():
+    """Ensure the explosion created the correct number of rows on a
+    professional claim for unrelated diagnoses
+
+    These diagnoses should be exploded by date based on the full claim
+    (2017-01-01 - 2017-01-03)
+    """
+    for unrelated_diag in ['DIAG5', 'DIAGADMIT']:
+        assert sorted([(res.date_service, res.date_service_end)
+                       for res in results if res.claim_id == 'claim-0' and res.diagnosis_code == 'DIAG5']) \
+                           == [('2017-01-01', '2017-01-01'), ('2017-01-02', '2017-01-02'), ('2017-01-03', '2017-01-03')]
+
+
+def test_related_professional_explosions():
+    """Ensure the explosion created the correct number of rows on a
+    professional claim for related diagnoses
+
+    These diagnoses are related to service line 1 and so they should
+     be exploded by date based on the dates on that service line
+     (2017-01-01 - 2017-01-04)
+    """
+
+    for related_diag in ['DIAGPRIMARY', 'DIAG2', 'DIAG3']:
+        assert sorted([(res.date_service, res.date_service_end)
+                       for res in results if res.claim_id == 'claim-0' and res.diagnosis_code == 'DIAG5']) \
+                           == [('2017-01-01', '2017-01-01'), ('2017-01-02', '2017-01-02'),
+                               ('2017-01-03', '2017-01-03'), ('2017-01-04', '2017-01-04')]
+
+
 def test_cleanup(spark):
     cleanup(spark)
