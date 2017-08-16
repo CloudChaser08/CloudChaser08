@@ -185,6 +185,15 @@ remove_csv_header = BashOperator(
     dag = dag
 )
 
+append_version_to_csv = BashOperator(
+    task_id = 'append_version_to_csv',
+    bash_command = '''
+    perl -pi -e 's/\\r\\n/,{{ ti.xcom_pull(task_ids = 'fetch_csv', key = 'version') }}\\n/g' {{ ti.xcom_pull(task_ids = 'fetch_csv', key = 'file_loc') }}
+    ''',
+    retires = 3,
+    dag = dag
+)
+
 push_csv_to_s3 = BashOperator(
     task_id = 'push_csv_to_s3',
     params = { 'TMP_DIR': TMP_DIR, 'S3_TEXT': S3_TEXT },
@@ -229,7 +238,8 @@ clean_up = BashOperator(
 
 fetch_csv.set_upstream(create_tmp_dir)
 remove_csv_header.set_upstream(fetch_csv)
-push_csv_to_s3.set_upstream(remove_csv_header)
+append_version_to_csv.set_upstream(remove_csv_header)
+push_csv_to_s3.set_upstream(append_version_to_csv)
 
 delete_tmp_dir.set_upstream(push_csv_to_s3)
 
