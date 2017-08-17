@@ -58,5 +58,24 @@ def test_related_professional_explosions():
                                ('2017-01-05', '2017-01-05')]
 
 
+def test_unrelated_institutional_claims():
+    """Ensure that there are the correct number of rows on an
+    institutional claim for unrelated procedures
+
+    """
+    for unrelated_procedure in ['OTHERPROC2', 'OTHERPROC7', 'PRINCIPALPROC']:
+        assert not [r for r in results if r.claim_id == 'claim-1' and r.procedure_code == unrelated_procedure and r.service_line_number]
+
+
+def test_related_institutional_claims():
+    """Ensure that there are the correct number of rows on an
+    institutional claim for related procedures
+
+    """
+
+    for related_procedure in ['PROCCODESVC']:
+        assert not [r for r in results if r.claim_id == 'claim-1' and r.procedure_code == related_procedure and not r.service_line_number]
+
+
 def test_cleanup(spark):
     cleanup(spark)
