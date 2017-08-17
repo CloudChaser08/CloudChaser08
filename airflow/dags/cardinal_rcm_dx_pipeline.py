@@ -24,7 +24,7 @@ DAG_NAME = 'cardinal_rcm_dx_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 6, 5, 12),
+    'start_date': datetime(2017, 6, 5, 14),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
