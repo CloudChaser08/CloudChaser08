@@ -27,6 +27,18 @@ def test_init(spark):
                                  .collect()
 
 
+def test_row_count():
+    """Ensure that the correct number of rows were generated
+    """
+    assert len(results) == sum([
+        6,   # related professional
+        15,  # unrelated professional
+        2,   # institutional service lines
+        5,   # institutional rows with diagnosis codes
+        3    # unrelated institutional procedures
+    ])
+
+
 def test_unrelated_professional_explosions():
     """Ensure the explosion created the correct number of rows on a
     professional claim for unrelated diagnoses
