@@ -20,7 +20,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ) + '/'
         output_dir = '/tmp/staging/' + date_input.replace('-', '/') + '/'
     elif airflow_test:
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/payload/{}/'.format(
+        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/payload/{}/'.format(
             date_input.replace('-', '/')
         )
         output_dir = '/tmp/staging/' + date_input.replace('-', '/') + '/'
