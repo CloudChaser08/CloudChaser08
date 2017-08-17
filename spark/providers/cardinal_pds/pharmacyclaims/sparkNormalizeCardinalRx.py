@@ -65,15 +65,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['properties', '', False]
     ])
 
-    payload_loader.load(runner, matching_path, ['personId'])
+    payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
     runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path]
     ])
 
-    postprocessor.trimmify(
-        postprocessor.nullify(runner.sqlContext.sql('select * from transactions'), 'NULL')
-    ).createTempView('transactions')
+    df = runner.sqlContext.sql('select * from transactions')
+    for null_val in ['NULL', 'Unknown', '-1', '-2']:
+        df = postprocessor.nullify(df, null_val)
+    postprocessor.trimmify(df).createTempView('transactions')
 
     runner.run_spark_script('normalize.sql', [
         ['min_date', min_date],

@@ -1,24 +1,28 @@
 INSERT INTO pharmacyclaims_common_model
 SELECT
     NULL,                                     -- record_id
-    NULL,                                     -- claim_id
-    mp.hvid,                                  -- hvid
+    regexp_replace(t.row_id, '[{}]', ''),     -- claim_id
+    slightly_deobfuscate_hvid(
+        t.unique_patient_id
+    ),                                        -- hvid
     NULL,                                     -- created
     3,                                        -- model_version
     NULL,                                     -- data_set
     NULL,                                     -- data_feed
     NULL,                                     -- data_vendor
     t.version_release_number,                 -- source_version
-    mp.gender,                                -- patient_gender
+    COALESCE(t.patient_gender, mp.gender),    -- patient_gender
     NULL,                                     -- patient_age
     mp.yearOfBirth,                           -- patient_year_of_birth
     mp.threeDigitZip,                         -- patient_zip3
-    UPPER(mp.state),                          -- patient_state
+    UPPER(
+        COALESCE(t.patient_state_address, mp.state)
+    ),                                        -- patient_state
     extract_date(
-        t.date_of_service, '%Y-%m-%d %H:%M:%S.%f', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.date_of_service, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                    -- date_service
     extract_date(
-        t.date_prescription_written, '%Y-%m-%d %H:%M:%S.%f', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.date_prescription_written, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                    -- date_written
     NULL,                                     -- year_of_injury
     NULL,                                     -- date_authorized
@@ -145,5 +149,5 @@ SELECT
         ELSE NULL
     END                                       -- logical_delete_reason
 FROM transactions t
-    LEFT JOIN matching_payload mp ON t.unique_patient_id = mp.personId
+    LEFT JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey
 ;
