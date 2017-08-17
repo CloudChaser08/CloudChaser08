@@ -215,7 +215,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     for table in normalized_tables:
         postprocessor.compose(
-            # postprocessor.nullify,
             postprocessor.add_universal_columns(
                 feed_id='31', vendor_id='42', filename=setid,
 
