@@ -90,8 +90,12 @@ def scrape_nucc(ds, **kwargs):
             # Sanity checking
             if len(relevant_file_list) is 0:
                 self.logger.error('No relevant file found.')
+                self.log('Expected date: ' + self.settings['EXPECTED_DATE'])
+                self.log('Files: ' + str(files))
+                raise Exception('No relevant file found.')
             elif len(relevant_file_list) is not 1:
                 self.logger.error('Found more than one relevant file.')
+                raise Exception('Found more than one relevant file.')
             else:
                 relevant_file, desc = relevant_file_list[0]
 
@@ -123,7 +127,7 @@ def scrape_nucc(ds, **kwargs):
     crawler.settings.set('LOG_ENABLED', False)
     
     date_parts = ds.split('-')
-    expected_date_nucc_format = date_parts[1].lstrip('0') + '/1/' + date_parts[0].lstrip('20')
+    expected_date_nucc_format = date_parts[1].lstrip('0') + '/1/' + date_parts[0][2:]
     crawler.settings.set('EXPECTED_DATE', expected_date_nucc_format)
 
     crawler.settings.set('TMP_DIR', TMP_DIR + ds)
