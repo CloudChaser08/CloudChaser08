@@ -57,7 +57,8 @@ dag = HVDAG.HVDAG(
     default_args = default_args,
     start_date = datetime(2009, 1, 8),
     # Run on the 8th day of the month every six months
-    schedule_interval = '0 0 8 */6 *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
+#     schedule_interval = '0 0 8 */6 *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
+    schedule_interval = '0 0 8 */6 *'
 )
 
 
@@ -136,45 +137,52 @@ def scrape_nucc(ds, **kwargs):
     crawler.start()
 
 
-def extract_csv_file(ds, schema, s3_text, ref_nucc_schema, **kwargs):
+def extract_csv_file(ds, ds_nodash, schema, s3_text, ref_nucc_schema, **kwargs):
     sqls = [
-        '''DROP TABLE IF EXISTS {}.temp_ref_nucc'''.format(schema),
+        '''DROP TABLE IF EXISTS {}.temp_ref_nucc_{}'''.format(schema, ds_nodash),
         '''
-        CREATE TABLE {}.temp_ref_nucc (
+        CREATE EXTERNAL TABLE {}.temp_ref_nucc_{} (
             {}
         )
         ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
         STORED AS TEXTFILE
-        LOCATION 's3a://{}'
-        '''.format(schema, ref_nucc_schema, s3_text)
+        LOCATION 's3a://{}{}/'
+        '''.format(schema, ds_nodash, ref_nucc_schema, s3_text, ds)
     ]
 
     hive_execute(sqls)
 
 
-def load_csv_file(ds, schema, s3_parquet, ref_nucc_schema, **kwargs):
+def load_csv_file(ds, ds_nodash, schema, s3_parquet, ref_nucc_schema, **kwargs):
     sqls = [
         ''' CREATE TABLE IF NOT EXISTS {}.ref_nucc (
                 {}
             )
             STORED AS PARQUET
-            LOCATION 's3a://{}'
-        '''.format(schema, ref_nucc_schema, s3_parquet),
-        ''' INSERT INTO {0}.ref_nucc
+        '''.format(schema, ref_nucc_schema),
+        ''' CREATE EXTERNAL TABLE {}.ref_nucc_new (
+                {}
+            )
+            STORED AS PARQUET
+            LOCATION 's3a://{}{}/'
+        '''.format(schema, ref_nucc_schema, s3_parquet, ds),
+        ''' INSERT INTO {0}.ref_nucc_new
             SELECT * FROM (
-                SELECT * FROM {0}.temp_ref_nucc
+                SELECT * FROM {0}.temp_ref_nucc_{1}
                 UNION
                 SELECT * FROM {0}.ref_nucc
             ) a
-        '''.format(schema)
+        '''.format(schema, ds_nodash),
+        ''' DROP TABLE {}.ref_nucc_new '''.format(schema),
+        ''' ALTER TABLE {}.ref_nucc SET LOCATION 's3a://{}{}/' '''.format(schema, s3_parquet, ds)
     ]
 
     hive_execute(sqls)
 
 
-def clean_up_task(ds, schema, **kwargs):
+def clean_up_task(ds_nodash, schema, **kwargs):
     sqls = [
-        ''' DROP TABLE {}.temp_ref_nucc '''.format(schema)
+        ''' DROP TABLE {}.temp_ref_nucc_{} '''.format(schema, ds_nodash)
     ]
 
     hive_execute(sqls)
@@ -217,7 +225,7 @@ append_version_to_csv = BashOperator( task_id = 'append_version_to_csv',
 push_csv_to_s3 = BashOperator(
     task_id = 'push_csv_to_s3',
     params = { 'TMP_DIR': TMP_DIR, 'S3_TEXT': S3_TEXT },
-    bash_command = '/usr/local/bin/aws s3 cp --sse AES256 --recursive {{ params.TMP_DIR }}{{ ds }} s3://{{ params.S3_TEXT }}',
+    bash_command = '''/usr/local/bin/aws s3 cp --sse AES256 {{ ti.xcom_pull(task_ids = 'fetch_csv', key = 'file_loc') }} s3://{{ params.S3_TEXT }}{{ ds }}/nucc.csv''',
     retries = 3,
     dag = dag
 )
