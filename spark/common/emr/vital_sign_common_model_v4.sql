@@ -38,7 +38,7 @@ CREATE TABLE {table_name} (
         vit_sign_rndrg_fclty_mdcr_speclty_cd      string,
         vit_sign_rndrg_fclty_alt_speclty_id       string,
         vit_sign_rndrg_fclty_alt_speclty_id_qual  string,
-        vit_sign_rndrg_fclty_fclty_nm             string,
+        vit_sign_rndrg_fclty_nm                   string,
         vit_sign_rndrg_fclty_addr_1_txt           string,
         vit_sign_rndrg_fclty_addr_2_txt           string,
         vit_sign_rndrg_fclty_state_cd             string,
