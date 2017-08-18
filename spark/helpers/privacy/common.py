@@ -25,27 +25,30 @@ column_transformer = {
 }
 
 
-def _transform(column_name):
-    if column_name in column_transformer:
-        # configuration object for this column - contains the function
-        # to be applied on this column as well as required arguments
-        # to that function
-        conf = column_transformer[column_name]
+def _transform(transformer):
+    def col_func(column_name):
+        if column_name in transformer:
+            # configuration object for this column - contains the function
+            # to be applied on this column as well as required arguments
+            # to that function
+            conf = transformer[column_name]
 
-        # we will need to transform this function to a udf if it is a
-        # plain python function, otherwise leave it alone
-        spark_function = conf['func'] if conf.get('built-in') else udf(conf['func'])
+            # we will need to transform this function to a udf if it is a
+            # plain python function, otherwise leave it alone
+            spark_function = conf['func'] if conf.get('built-in') else udf(conf['func'])
 
-        return spark_function(*map(col, conf['args'])).alias(column_name)
-    else:
-        # Do nothing to columns not found in the transformer dict
-        return col(column_name)
+            return spark_function(*map(col, conf['args'])).alias(column_name)
+        else:
+            # Do nothing to columns not found in the transformer dict
+            return col(column_name)
+
+    return col_func
 
 
 def filter(df, additional_transforms={}):
     # add in additional transformations to columns not found in the
     # generic column_transformer dict above
-    global column_transformer
-    column_transformer.update(additional_transforms)
+    modified_column_transformer = dict(column_transformer)
+    modified_column_transformer.update(additional_transforms)
 
-    return df.select(*map(_transform, df.columns))
+    return df.select(*map(_transform(modified_column_transformer), df.columns))
