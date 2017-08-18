@@ -92,17 +92,17 @@ def main(args):
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        PHARMACY_FINAL_OUT_LOC, '--dest', S3_UBC_OUT + 'pharmacyclaims/' + args.date + '/'
+        PHARMACY_FINAL_OUT_LOC, '--dest', S3_UBC_OUT + 'pharmacyclaims/' + args.month + '/'
     ])
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        PHARMACY_PRELIM_OUT_LOC, '--dest', S3_UBC_OUT + 'pharmacyclaims/' + args.date + '/'
+        PHARMACY_PRELIM_OUT_LOC, '--dest', S3_UBC_OUT + 'pharmacyclaims/' + args.month + '/'
     ])
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        ENROLLMENT_OUT_LOC, '--dest', S3_UBC_OUT + 'enrollmentrecords/' + args.date + '/'
+        ENROLLMENT_OUT_LOC, '--dest', S3_UBC_OUT + 'enrollmentrecords/' + args.month + '/'
     ])
 
 if __name__ == "__main__":
