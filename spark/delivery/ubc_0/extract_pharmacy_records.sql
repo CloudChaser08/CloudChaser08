@@ -129,7 +129,7 @@ AS SELECT
  other_payer_coverage_qual,
  other_payer_date,
  other_payer_coverage_code
-FROM pharmacyclaims
+FROM pharmacyclaims_old
 WHERE part_provider='express_scripts'
     AND part_processdate LIKE '{month}/%'
 DISTRIBUTE BY hvid;
