@@ -178,7 +178,7 @@ CREATE VIEW default.medicalclaims (
     CASE
         WHEN claim_type = "P" THEN NULL
         ELSE inst_type_of_bill_std_id
-    END,
+    END AS inst_type_of_bill_std_id,
     inst_type_of_bill_vendor_id,
     inst_type_of_bill_vendor_desc,
     inst_drg_std_id,
@@ -188,7 +188,7 @@ CREATE VIEW default.medicalclaims (
         WHEN claim_type = "I" THEN NULL
         WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL THEN SUBSTRING(inst_type_of_bill_std_id, 1, 2)
         ELSE place_of_service_std_id
-    END,
+    END AS place_of_service_std_id,
     place_of_service_vendor_id,
     place_of_service_vendor_desc,
     service_line_number,
@@ -336,7 +336,7 @@ SELECT CAST(record_id AS bigint),
     CASE
         WHEN claim_type = "P" THEN NULL
         ELSE inst_type_of_bill_std_id
-    END,
+    END AS inst_type_of_bill_std_id,
     inst_type_of_bill_vendor_id,
     inst_type_of_bill_vendor_desc,
     inst_drg_std_id,
@@ -346,7 +346,7 @@ SELECT CAST(record_id AS bigint),
         WHEN claim_type = "I" THEN NULL
         WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL THEN SUBSTRING(inst_type_of_bill_std_id, 1, 2)
         ELSE place_of_service_std_id
-    END,
+    END AS place_of_service_std_id,
     place_of_service_vendor_id,
     place_of_service_vendor_desc,
     service_line_number,
