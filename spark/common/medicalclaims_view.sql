@@ -186,7 +186,7 @@ CREATE VIEW default.medicalclaims (
     inst_drg_vendor_desc,
     CASE
         WHEN claim_type = "I" THEN NULL
-        WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL THEN SUBSTRING(inst_type_of_bill_std_id, 1, 2)
+        WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL AND part_provider = "emdeon" THEN SUBSTRING(inst_type_of_bill_std_id, 1, 2)
         ELSE place_of_service_std_id
     END AS place_of_service_std_id,
     place_of_service_vendor_id,
@@ -344,7 +344,6 @@ SELECT CAST(record_id AS bigint),
     inst_drg_vendor_desc,
     CASE
         WHEN claim_type = "I" THEN NULL
-        WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL THEN SUBSTRING(inst_type_of_bill_std_id, 1, 2)
         ELSE place_of_service_std_id
     END AS place_of_service_std_id,
     place_of_service_vendor_id,
