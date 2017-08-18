@@ -65,7 +65,7 @@ runner.run_spark_script('../../common/event_common_model.sql', [
     ]
 ])
 
-runner.run_spark_script('../../common/unload_common_model.sql'), [
+runner.run_spark_script('../../common/unload_common_model.sql', [
     [
         'select_statement',
         "SELECT *, 'NULL' as best_date "
@@ -73,10 +73,11 @@ runner.run_spark_script('../../common/unload_common_model.sql'), [
         + "WHERE event_date IS NULL",
         False
     ],
-    ['partitions', '20', False]
+    ['partitions', '20', False],
+    ['distribution_key', 'record_id', False]
 ])
 
-runner.run_spark_script('../../common/unload_common_model.sql'), [
+runner.run_spark_script('../../common/unload_common_model.sql', [
     [
         'select_statement',
         "SELECT *, regexp_replace(cast(event_date as string), '-..$', '') as best_date "
@@ -84,7 +85,8 @@ runner.run_spark_script('../../common/unload_common_model.sql'), [
         + "WHERE event_date IS NOT NULL",
         False
     ],
-    ['partitions', '20', False]
+    ['partitions', '20', False],
+    ['distribution_key', 'record_id', False]
 ])
 
 spark.stop()

@@ -105,10 +105,11 @@ runner.run_spark_script('../../common/unload_common_model.sql', [
         + "WHERE date_start IS NULL",
         False
     ],
-    ['partitions', '20', False]
+    ['partitions', '20', False],
+    ['distribution_key', 'record_id', False]
 ])
 
-runner.run_spark_script('../../common/unload_common_model.sql'), [
+runner.run_spark_script('../../common/unload_common_model.sql', [
     [
         'select_statement',
         "SELECT *, 'visonex' as provider, regexp_replace(cast(date_start as string), '-..$', '') as best_date "
@@ -116,7 +117,8 @@ runner.run_spark_script('../../common/unload_common_model.sql'), [
         + "WHERE date_start IS NOT NULL",
         False
     ],
-    ['partitions', '20', False]
+    ['partitions', '20', False],
+    ['distribution_key', 'record_id', False]
 ])
 
 spark.stop()
