@@ -6,4 +6,5 @@ set spark.sql.shuffle.partitions={partitions};
 set hive.exec.dynamic.partition.mode=nonstrict;
 INSERT INTO final_unload
 {select_statement}
-DISTRIBUTE BY record_id;
+DISTRIBUTE BY {distribution_key}
+;

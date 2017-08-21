@@ -11,7 +11,7 @@ kwargs = {
     'ds_nodash': '20170425'
 }
 
-expected_formatted_date = '201704240425'
+expected_formatted_date = '201704220423'
 execution_date = kwargs['ds_nodash']
 
 real_airflow_models_Variable_get = airflow.models.Variable.get
@@ -67,13 +67,13 @@ def test_insert_formatted_regex_function():
 def test_insert_current_date():
     template = '_{}_{}_{}_'
     assert quest.insert_current_date(template, kwargs) \
-        == '_2017_04_24_'
+        == '_2017_04_22_'
 
 
 def test_insert_current_date_function():
     template = '_{}_{}_{}_'
     assert quest.insert_current_date_function(template)(ds, kwargs) \
-        == '_2017_04_24_'
+        == '_2017_04_22_'
 
 
 def test_encrypted_decrypted_file_paths_function():

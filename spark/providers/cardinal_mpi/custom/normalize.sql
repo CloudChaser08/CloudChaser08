@@ -20,7 +20,7 @@ AS SELECT
     matchStatus,
     explode(topCandidates) as candidate
 FROM matching_payload_w_row_id
-WHERE topCandidats IS NOT NULL
+WHERE topCandidates IS NOT NULL
 
 UNION ALL
 
@@ -31,7 +31,7 @@ SELECT
     matchStatus,
     NULL as candidate
 FROM matching_payload_w_row_id
-WHERE topCandidats IS NULL;
+WHERE topCandidates IS NULL;
 
 DROP TABLE IF EXISTS matching_payload_clean;
 CREATE TABLE matching_payload_clean
