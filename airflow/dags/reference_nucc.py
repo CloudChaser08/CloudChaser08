@@ -155,25 +155,24 @@ def extract_csv_file(ds, ds_nodash, schema, s3_text, ref_nucc_schema, **kwargs):
 
 def load_csv_file(ds, ds_nodash, schema, s3_parquet, ref_nucc_schema, **kwargs):
     sqls = [
-        ''' CREATE TABLE IF NOT EXISTS {}.ref_nucc (
+        ''' CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_nucc (
                 {}
             )
             STORED AS PARQUET
         '''.format(schema, ref_nucc_schema),
-        ''' CREATE EXTERNAL TABLE {}.ref_nucc_new (
+        ''' CREATE EXTERNAL TABLE {}.ref_nucc_new_{} (
                 {}
             )
             STORED AS PARQUET
-            LOCATION 's3a://{}{}/'
-        '''.format(schema, ref_nucc_schema, s3_parquet, ds),
+            LOCATION 's3n://{}{}/'
+        '''.format(schema, ds_nodash, ref_nucc_schema, s3_parquet, ds),
         ''' INSERT INTO {0}.ref_nucc_new
             SELECT * FROM (
                 SELECT * FROM {0}.temp_ref_nucc_{1}
                 UNION
-                SELECT * FROM {0}.ref_nucc
+                SELECT * FROM {0}.ref_nucc_{1}
             ) a
         '''.format(schema, ds_nodash),
-        ''' DROP TABLE {}.ref_nucc_new '''.format(schema),
         ''' ALTER TABLE {}.ref_nucc SET LOCATION 's3a://{}{}/' '''.format(schema, s3_parquet, ds)
     ]
 
@@ -182,7 +181,8 @@ def load_csv_file(ds, ds_nodash, schema, s3_parquet, ref_nucc_schema, **kwargs):
 
 def clean_up_task(ds_nodash, schema, **kwargs):
     sqls = [
-        ''' DROP TABLE {}.temp_ref_nucc_{} '''.format(schema, ds_nodash)
+        ''' DROP TABLE {}.temp_ref_nucc_{} '''.format(schema, ds_nodash),
+        ''' DROP TABLE {}.ref_nucc_new_{} '''.format(schema)
     ]
 
     hive_execute(sqls)
