@@ -7,4 +7,4 @@ payer_parent_name string
 )
 ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 STORED AS TEXTFILE
-LOCATION 's3://salusv/reference/emdeon/'
+LOCATION {payer_mapping}

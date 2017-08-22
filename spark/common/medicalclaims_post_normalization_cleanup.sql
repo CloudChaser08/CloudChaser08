@@ -44,7 +44,7 @@ clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service) as di
 diagnosis_code_qual,
 diagnosis_priority,
 admit_diagnosis_ind,
-clean_up_procedure_code(procedure_code),
+clean_up_procedure_code(procedure_code) as procedure_code,
 procedure_code_qual,
 principal_proc_ind,
 procedure_units,
