@@ -112,12 +112,14 @@ def _build_dewey(cluster_id):
     ], cwd=spark_dir)
 
 
-def run_hive_query(cluster_name, query):
+def run_hive_queries(cluster_name, queries):
+    query = '; '.join(queries)
+
     query_step = (
-        'Type=HIVE,Name="Hive Query",ActionOnFailure=CONTINUE, '
-        'Args=["-e", {}]'
+        'Type=Hive,Name="Hive Query",ActionOnFailure=CONTINUE,'
+        'Args=[-e,"{}"]'
     ).format(query)
-    
+
     cluster_id = _get_emr_cluster_id(cluster_name)
     check_call([
         'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
@@ -147,8 +149,10 @@ def run_script(cluster_name, script_name, args, spark_conf_args):
     ])
     _wait_for_steps(cluster_id)
 
+
 def normalize(cluster_name, script_name, args, spark_conf_args=None):
     run_script(cluster_name, script_name, args, spark_conf_args)
+
 
 def export(cluster_name, script_name, args, spark_conf_args=None):
     run_script(cluster_name, script_name, args, spark_conf_args)
