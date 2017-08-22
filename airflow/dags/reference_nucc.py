@@ -2,7 +2,7 @@ import airflow.macros as macros
 
 import common.HVDAG as HVDAG
 
-import util.hive
+import util.emr_utils as emr_utils
 
 from airflow.models import Variable
 
@@ -15,12 +15,18 @@ from scrapy.spiders import Spider
 
 from datetime import datetime, timedelta
 
-for m in [HVDAG, util.hive]:
+for m in [HVDAG, emr_utils]:
     reload(m)
 
 from util.hive import hive_execute
 
 TMP_DIR = '/tmp/nucc_'
+
+# EMR Cluster related fields
+EMR_CLUSTER_NAME = 'nucc_taxonomy_{}'
+EMR_NUM_NODES = '2'
+EMR_NODE_TYPE = 'm4.xlarge'
+EMR_EBS_VOLUME_SIZE = '10'
 
 if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
     SCHEMA = 'default'
@@ -137,7 +143,23 @@ def scrape_nucc(ds, **kwargs):
     crawler.start()
 
 
-def extract_csv_file(ds, ds_nodash, schema, s3_text, ref_nucc_schema, **kwargs):
+def do_create_emr_cluster(ds, **kwargs):
+    cluster_name = EMR_CLUSTER_NAME.format(ds)
+
+    global EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
+    EMR_NUM_NODES = kwargs.get('emr_num_nodes', EMR_NUM_NODES)
+    EMR_NODE_TYPE = kwargs.get('emr_node_type', EMR_NODE_TYPE)
+    EMR_EBS_VOLUME_SIZE = kwargs.get('emr_ebs_volume_size', EMR_EBS_VOLUME_SIZE)
+
+    #TODO: Remove when done testing.
+    print (cluster_name, EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE)
+
+    emr_utils.create_emr_cluster(
+        cluster_name, EMR_NUM_NODES, EMR_NODE_TYPE,
+        EMR_EBS_VOLUME_SIZE, 'reference load', True)
+
+
+def do_execute_queries(ds, ds_nodash, schema, s3_text, s3_parquet, ref_nucc_schema, **kwargs):
     sqls = [
         '''DROP TABLE IF EXISTS {}.temp_ref_nucc_{}'''.format(schema, ds_nodash),
         '''
@@ -147,14 +169,7 @@ def extract_csv_file(ds, ds_nodash, schema, s3_text, ref_nucc_schema, **kwargs):
         ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
         STORED AS TEXTFILE
         LOCATION 's3a://{}{}/'
-        '''.format(schema, ds_nodash, ref_nucc_schema, s3_text, ds)
-    ]
-
-    hive_execute(sqls)
-
-
-def load_csv_file(ds, ds_nodash, schema, s3_parquet, ref_nucc_schema, **kwargs):
-    sqls = [
+        '''.format(schema, ds_nodash, ref_nucc_schema, s3_text, ds),
         ''' CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_nucc (
                 {}
             )
@@ -166,26 +181,26 @@ def load_csv_file(ds, ds_nodash, schema, s3_parquet, ref_nucc_schema, **kwargs):
             STORED AS PARQUET
             LOCATION 's3n://{}{}/'
         '''.format(schema, ds_nodash, ref_nucc_schema, s3_parquet, ds),
-        ''' INSERT INTO {0}.ref_nucc_new
+        ''' INSERT INTO {0}.ref_nucc_new_{1}
             SELECT * FROM (
                 SELECT * FROM {0}.temp_ref_nucc_{1}
                 UNION
-                SELECT * FROM {0}.ref_nucc_{1}
+                SELECT * FROM {0}.ref_nucc
             ) a
         '''.format(schema, ds_nodash),
-        ''' ALTER TABLE {}.ref_nucc SET LOCATION 's3a://{}{}/' '''.format(schema, s3_parquet, ds)
-    ]
-
-    hive_execute(sqls)
-
-
-def clean_up_task(ds_nodash, schema, **kwargs):
-    sqls = [
+        ''' ALTER TABLE {}.ref_nucc SET LOCATION 's3a://{}{}/' '''.format(schema, s3_parquet, ds),
         ''' DROP TABLE {}.temp_ref_nucc_{} '''.format(schema, ds_nodash),
-        ''' DROP TABLE {}.ref_nucc_new_{} '''.format(schema)
+        ''' DROP TABLE {}.ref_nucc_new_{} '''.format(schema, ds_nodash)
     ]
 
-    hive_execute(sqls)
+    cluster_name = EMR_CLUSTER_NAME.format(ds)
+    emr_utils.run_hive_queries(cluster_name, sqls)
+
+
+def do_delete_cluster(ds, **kwargs):
+    cluster_name = EMR_CLUSTER_NAME.format(ds)
+
+    emr_utils.delete_emr_cluster(cluster_name)
 
 
 ### Operators ###
@@ -238,26 +253,29 @@ delete_tmp_dir = BashOperator(
     dag = dag
 )
 
-extract_csv = PythonOperator(
-    task_id = 'extract_csv',
-    op_kwargs = { 'schema' : SCHEMA, 's3_text': S3_TEXT, 'ref_nucc_schema': REF_NUCC_SCHEMA },
-    python_callable = extract_csv_file,
+create_emr_cluster = PythonOperator(
+    task_id = 'create_emr_cluster',
+    python_callable = do_create_emr_cluster,
     provide_context = True,
     dag = dag
 )
 
-load_csv = PythonOperator(
-    task_id = 'load_csv',
-    op_kwargs = { 'schema': SCHEMA, 's3_parquet': S3_PARQUET, 'ref_nucc_schema': REF_NUCC_SCHEMA },
-    python_callable = load_csv_file,
+execute_queries = PythonOperator(
+    task_id = 'execute_queries',
+    op_kwargs = { 
+        'schema': SCHEMA,
+        's3_text': S3_TEXT,
+        's3_parquet': S3_PARQUET,
+        'ref_nucc_schema': REF_NUCC_SCHEMA
+    },
+    python_callable = do_execute_queries,
     provide_context = True,
     dag = dag
 )
 
-clean_up = PythonOperator(
-    task_id = 'clean_up',
-    op_kwargs = { 'schema': SCHEMA },
-    python_callable = clean_up_task,
+delete_cluster = PythonOperator(
+    task_id = 'delete_cluster',
+    python_callable = do_delete_cluster,
     provide_context = True,
     dag = dag
 )
@@ -271,7 +289,7 @@ push_csv_to_s3.set_upstream(append_version_to_csv)
 
 delete_tmp_dir.set_upstream(push_csv_to_s3)
 
-extract_csv.set_upstream(push_csv_to_s3)
-load_csv.set_upstream(extract_csv)
-clean_up.set_upstream(load_csv)
+create_emr_cluster.set_upstream(push_csv_to_s3)
+execute_queries.set_upstream(create_emr_cluster)
+delete_cluster.set_upstream(execute_queries)
 
