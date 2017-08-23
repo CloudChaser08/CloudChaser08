@@ -63,7 +63,7 @@ dag = HVDAG.HVDAG(
     default_args = default_args,
     start_date = datetime(2009, 1, 8),
     # Run on the 8th day of the month every six months
-    schedule_interval = '0 0 8 */6 *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
+    schedule_interval = '0 0 8 */6 *',
 )
 
 
