@@ -63,8 +63,7 @@ dag = HVDAG.HVDAG(
     default_args = default_args,
     start_date = datetime(2009, 1, 8),
     # Run on the 8th day of the month every six months
-#     schedule_interval = '0 0 8 */6 *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
-    schedule_interval = '0 0 8 */6 *'
+    schedule_interval = '0 0 8 */6 *' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
 )
 
 
@@ -143,20 +142,12 @@ def scrape_nucc(ds, **kwargs):
     crawler.start()
 
 
-def do_create_emr_cluster(ds, **kwargs):
+def do_create_emr_cluster(ds, emr_num_nodes, emr_node_type, emr_ebs_volume_size, **kwargs):
     cluster_name = EMR_CLUSTER_NAME.format(ds)
 
-    global EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
-    EMR_NUM_NODES = kwargs.get('emr_num_nodes', EMR_NUM_NODES)
-    EMR_NODE_TYPE = kwargs.get('emr_node_type', EMR_NODE_TYPE)
-    EMR_EBS_VOLUME_SIZE = kwargs.get('emr_ebs_volume_size', EMR_EBS_VOLUME_SIZE)
-
-    #TODO: Remove when done testing.
-    print (cluster_name, EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE)
-
     emr_utils.create_emr_cluster(
-        cluster_name, EMR_NUM_NODES, EMR_NODE_TYPE,
-        EMR_EBS_VOLUME_SIZE, 'reference load', True)
+        cluster_name, emr_num_nodes, emr_node_type,
+        emr_ebs_volume_size, 'reference load', True)
 
 
 def do_execute_queries(ds, ds_nodash, schema, s3_text, s3_parquet, ref_nucc_schema, **kwargs):
@@ -179,7 +170,7 @@ def do_execute_queries(ds, ds_nodash, schema, s3_text, s3_parquet, ref_nucc_sche
                 {}
             )
             STORED AS PARQUET
-            LOCATION 's3n://{}{}/'
+            LOCATION 's3a://{}{}/'
         '''.format(schema, ds_nodash, ref_nucc_schema, s3_parquet, ds),
         ''' INSERT INTO {0}.ref_nucc_new_{1}
             SELECT * FROM (
@@ -255,6 +246,11 @@ delete_tmp_dir = BashOperator(
 
 create_emr_cluster = PythonOperator(
     task_id = 'create_emr_cluster',
+    op_kwargs = {
+        'emr_num_nodes': EMR_NUM_NODES,
+        'emr_node_type': EMR_NODE_TYPE,
+        'emr_ebs_volume_size': EMR_EBS_VOLUME_SIZE
+    },
     python_callable = do_create_emr_cluster,
     provide_context = True,
     dag = dag
