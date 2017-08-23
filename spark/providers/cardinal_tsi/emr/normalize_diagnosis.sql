@@ -25,7 +25,7 @@ SELECT
     NULL,                                     -- hv_enc_id
     EXTRACT_DATE(
         d.enc_timestamp,
-        '%Y-%m-%d %H:%M:%S',
+        '%Y-%m-%d %H:%M:%S.%f',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
         ),                                    -- enc_dt

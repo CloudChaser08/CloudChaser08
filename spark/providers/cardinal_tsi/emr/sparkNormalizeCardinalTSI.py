@@ -23,32 +23,32 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         diagnosis_input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal/emr/resources/input/diagnosis/'
+            script_path, '../../../test/providers/cardinal_tsi/emr/resources/input/diagnosis/'
         ) + '/'
         medication_input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal/emr/resources/input/medication/'
+            script_path, '../../../test/providers/cardinal_tsi/emr/resources/input/medication/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal/emr/resources/matching/'
+            script_path, '../../../test/providers/cardinal_tsi/emr/resources/matching/'
         ) + '/'
     elif airflow_test:
-        diagnosis_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/diagnosis/'.format(
+        diagnosis_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/out/{}/diagnosis/'.format(
             date_input.replace('-', '/')
         )
-        medication_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/medication/'.format(
+        medication_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/out/{}/medication/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/payload/{}/'.format(
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/payload/{}/'.format(
             date_input.replace('-', '/')
         )
     else:
-        diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal/{}/diagnosis/'.format(
+        diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/diagnosis/'.format(
             date_input.replace('-', '/')
         )
-        medication_input_path = 's3a://salusv/incoming/emr/cardinal/{}/medication/'.format(
+        medication_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/medication/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3a://salusv/matching/payload/emr/cardinal/{}/'.format(
+        matching_path = 's3a://salusv/matching/payload/emr/cardinal_tsi/{}/'.format(
             date_input.replace('-', '/')
         )
 
@@ -72,7 +72,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
 
     transaction_tables = [
-        'diagnosis_transactions', 'medication_transactions'
+        'transactions_diagnosis', 'transactions_medication'
     ]
 
     # trim and nullify all incoming transactions tables
