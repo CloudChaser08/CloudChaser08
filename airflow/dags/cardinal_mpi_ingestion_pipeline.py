@@ -204,15 +204,16 @@ if HVDAG.HVDAG.airflow_env != 'test':
     def do_deliver_data(ds, **kwargs):
         source_file_url = insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs)
         destination_file_url = insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs)
+        destination_file_name = destination_file_url.split('/')[-1]
+        file_dir = get_tmp_dir(ds, kwargs)
 
-# TODO: Revise once the s3 utilities PR is approved and merged
-#        env = s3_utils.get_aws_env(prefix="CardinalRaintree")
-#        s3_utils.copy_file(source_file_url, destination_file_url, encrypt=False, env=env)
-
+        check_call(['aws', 's3', 'cp', source_file_url, file_dir + destination_file_name])
         env = dict(os.environ)
         env['AWS_ACCESS_KEY_ID'] = Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID')
         env['AWS_SECRET_ACCESS_KEY'] = Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
-        check_call(['aws', 's3', 'cp', source_file_url, destination_file_url], env=env)
+        check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--acl', \
+            'bucket-owner-full-control', file_dir + destination_file_name, \
+            destination_file_url], env=env)
 
 
     deliver_normalized_data = PythonOperator(
