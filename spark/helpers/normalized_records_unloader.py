@@ -63,7 +63,7 @@ def partition_and_rename(
         ['properties', constants.unload_properties_template.format(staging_dir), False]
     ])
 
-    if partition_value is None:
+    if partition_value is None and hvm_historical_date is None:
         runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
             ['select_statement', "SELECT *, '{}' as {}, 'NULL' as {} FROM {} WHERE {} is NULL".format(
                 provider, provider_partition, date_partition, table_name, date_column
@@ -71,54 +71,36 @@ def partition_and_rename(
             ['partitions', '20', False],
             ['distribution_key', distribution_key, False]
         ])
-        if hvm_historical_date is None:
-            runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{0}' as {3}, regexp_replace({2}, '-..$', '') as {4} FROM {1} WHERE {2} IS NOT NULL".format(
-                    provider, table_name, date_column, provider_partition, date_partition
-                ), False],
-                ['partitions', '20', False],
-                ['distribution_key', distribution_key, False]
-            ])
-        else:
-            runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{0}' as {3}, regexp_replace({2}, '-..$', '') as {4} FROM {1} WHERE {2} IS NOT NULL AND {2} >= CAST('{5}' AS DATE)".format(
-                    provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
-                ), False],
-                ['partitions', '20', False],
-                ['distribution_key', distribution_key, False]
-            ])
-            runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{0}' as {3}, '0_PREDATES_HVM_HISTORY' as {4} FROM {1} WHERE {2} IS NOT NULL AND {2} < CAST('{5}' AS DATE)".format(
-                    provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
-                ), False],
-                ['partitions', '20', False],
-                ['distribution_key', distribution_key, False]
-            ])
-        
+        runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
+            ['select_statement', "SELECT *, '{0}' as {3}, regexp_replace({2}, '-..$', '') as {4} FROM {1} WHERE {2} IS NOT NULL".format(
+                provider, table_name, date_column, provider_partition, date_partition
+            ), False],
+            ['partitions', '20', False],
+            ['distribution_key', distribution_key, False]
+        ])
+    elif partition_value is None and hvm_historical_date is not None:
+        runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
+            ['select_statement', "SELECT *, '{0}' as {3}, regexp_replace({2}, '-..$', '') as {4} FROM {1} WHERE {2} IS NOT NULL AND {2} >= CAST('{5}' AS DATE)".format(
+                provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
+            ), False],
+            ['partitions', '20', False],
+            ['distribution_key', distribution_key, False]
+        ])
+        runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
+            ['select_statement', "SELECT *, '{0}' as {3}, '0_PREDATES_HVM_HISTORY' as {4} FROM {1} WHERE {2} IS NULL OR {2} < CAST('{5}' AS DATE)".format(
+                provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
+            ), False],
+            ['partitions', '20', False],
+            ['distribution_key', distribution_key, False]
+        ])
     else:
-        if hvm_historical_date is None:
-            runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{}' as {}, '{}' as {} FROM {}".format(
-                    provider, provider_partition, partition_value, date_partition, table_name
-                ), False],
-                ['partitions', '20', False],
-                ['distribution_key', distribution_key, False]
-            ])
-        else:
-            runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{}' as {}, '{}' as {} FROM {} WHERE {} >= CAST('{}' AS DATE)".format(
-                    provider, provider_partition, partition_value, date_partition, table_name, date_column, hvm_historical_date_string
-                ), False],
-                ['partitions', '20', False],
-                ['distribution_key', distribution_key, False]
-            ])
-            runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{}' as {}, '0_PREDATES_HVM_HISTORY' as {} FROM {} WHERE {} < CAST('{}' AS DATE)".format(
-                    provider, provider_partition, date_partition, table_name, date_column, hvm_historical_date_string
-                ), False],
-                ['partitions', '20', False],
-                ['distribution_key', distribution_key, False]
-            ])
+        runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
+            ['select_statement', "SELECT *, '{}' as {}, '{}' as {} FROM {}".format(
+                provider, provider_partition, partition_value, date_partition, table_name
+            ), False],
+            ['partitions', '20', False],
+            ['distribution_key', distribution_key, False]
+        ])
 
     part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
 
