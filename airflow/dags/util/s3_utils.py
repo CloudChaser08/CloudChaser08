@@ -9,14 +9,14 @@ import airflow.hooks.S3_hook
 DEFAULT_CONNECTION_ID = 'my_conn_s3'
 
 
-def get_aws_env(suffix=""):
+def get_aws_env(suffix="", prefix=""):
     """Get an environ instance with aws perms attached"""
-    aws_env = os.environ
+    aws_env = dict(os.environ)
     aws_env['AWS_ACCESS_KEY_ID'] = Variable.get(
-        'AWS_ACCESS_KEY_ID' + suffix
+        prefix + 'AWS_ACCESS_KEY_ID' + suffix
     )
     aws_env['AWS_SECRET_ACCESS_KEY'] = Variable.get(
-        'AWS_SECRET_ACCESS_KEY' + suffix
+        prefix + 'AWS_SECRET_ACCESS_KEY' + suffix
     )
     return aws_env
 
@@ -43,19 +43,23 @@ def fetch_file_from_s3(
     key.get_contents_to_filename(local_path)
 
 
-def copy_file(src_path, dest_path):
-    check_call([
-        'aws', 's3', 'cp', '--sse', 'AES256', src_path, dest_path
-    ], env=get_aws_env())
+def copy_file(src_path, dest_path, encrypt=True, env=get_aws_env()):
+    cmd = ['aws', 's3', 'cp'] + \
+        (['--sse', 'AES256'] if encrypt else []) + \
+        [src_path, dest_path]
+
+    check_call(cmd, env=env)
 
 
-def copy_file_async(src_path, dest_path):
-    return Popen([
-        'aws', 's3', 'cp', '--sse', 'AES256', src_path, dest_path
-    ], env=get_aws_env())
+def copy_file_async(src_path, dest_path, encrypt=True, env=get_aws_env()):
+    cmd = ['aws', 's3', 'cp'] + \
+        (['--sse', 'AES256'] if encrypt else []) + \
+        [src_path, dest_path]
+
+    return Popen(cmd, env=env)
 
 
-def delete_path(target_path):
+def delete_path(target_path, env=get_aws_env()):
     """
     This function will only remove files (not directories) one level deep
     """
@@ -70,7 +74,7 @@ def delete_path(target_path):
         ):
             check_call([
                 'aws', 's3', 'rm', f
-            ], env=get_aws_env())
+            ], env=env)
 
 
 def list_s3_bucket(path, s3_connection_id=DEFAULT_CONNECTION_ID):
