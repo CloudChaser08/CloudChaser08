@@ -76,7 +76,7 @@ def clean_up_diagnosis_code(
             diagnosis_code_qual is None
             and not (
                 isinstance(date_service, datetime.date)
-                and date_service < datetime.date(2015, 10, 1)
+                and date_service >= datetime.date(2015, 10, 1)
             )
     ):
         if re.search(
