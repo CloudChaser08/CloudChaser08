@@ -48,9 +48,8 @@ DEID_FILE_NAME_TEMPLATE = 'mpi.%Y%m%dT\d{2}\d{2}\d{2}.zip'
 DEID_FILE_NAME_REGEX = 'mpi.\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}.zip'
 DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'mpi-deid.%Y%m%dT\d{2}\d{2}\d{2}.dat'
 
-S3_NORMALIZED_FILE_URL='s3://salusv/warehouse/text/custom/cardinal_mpi/%Y/%m/%d/part-00000.gz'
-S3_DESTINATION_URL='s3://fuse-file-drop/healthverity/mpi/'
-DESTINATION_FILE_NAME_TEMPLATE='cardinal_mpi_matched%Y%m%d.gz'
+S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/warehouse/text/custom/cardinal_mpi/%Y/%m/%d/part-00000.gz'
+S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/mpi/cardinal_mpi_matched_%Y%m%d.psv.gz'
 
 def insert_execution_date_function(template):
     def out(ds, kwargs):
@@ -203,19 +202,17 @@ detect_move_normalize_dag = SubDagOperator(
 
 if HVDAG.HVDAG.airflow_env != 'test':
     def do_deliver_data(ds, **kwargs):
-        S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/warehouse/text/custom/cardinal_mpi/%Y/%m/%d/part-00000.gz'
-        S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/mpi/cardinal_mpi_matched%Y%m%d.gz'
         source_file_url = insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs)
         destination_file_url = insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs)
 
 # TODO: Revise once the s3 utilities PR is approved and merged
 #        env = s3_utils.get_aws_env(prefix="CardinalRaintree")
-#        s3_utils.copy_file(source_file_url, destination_file_url, encrypte=False, env=env)
+#        s3_utils.copy_file(source_file_url, destination_file_url, encrypt=False, env=env)
 
         env = dict(os.environ)
         env['AWS_ACCESS_KEY_ID'] = Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID')
         env['AWS_SECRET_ACCESS_KEY'] = Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
-        check_call(['echo', 'aws', 's3', 'cp', source_file_url, destination_file_url], env=env)
+        check_call(['aws', 's3', 'cp', source_file_url, destination_file_url], env=env)
 
 
     deliver_normalized_data = PythonOperator(
@@ -223,12 +220,13 @@ if HVDAG.HVDAG.airflow_env != 'test':
         provide_context=True,
         python_callable=do_deliver_data,
         dag=mdag
+    )
 
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_deid_file_dag.set_upstream(validate_deid)
     queue_up_for_matching.set_upstream(unzip_deid_file)
     detect_move_normalize_dag.set_upstream(queue_up_for_matching)
-    deliver_normalized_data.set_upstream(detect_move_normalize)
+    deliver_normalized_data.set_upstream(detect_move_normalize_dag)
 
 unzip_deid_file.set_upstream(fetch_deid_file_dag)
 
