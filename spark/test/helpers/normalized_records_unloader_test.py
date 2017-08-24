@@ -218,6 +218,7 @@ def test_hvm_historical_date(spark):
     assert set(date_partition) == set(['part_best_date=2015-11', 'part_best_date=0_PREDATES_HVM_HISTORY', 'part_best_date=NULL'])
 
 
-# def test_cleanup():
-#     shutil.rmtree(test_staging_dir)
-#     shutil.rmtree(test_staging_dir2)
+def test_cleanup():
+    shutil.rmtree(test_staging_dir)
+    shutil.rmtree(test_staging_dir2)
+    shutil.rmtree(test_staging_dir3)
