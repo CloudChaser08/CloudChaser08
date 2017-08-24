@@ -44,6 +44,12 @@ def test_clean_up_diagnosis_code():
     assert cleanup.clean_up_diagnosis_code(
         'Z6842', None, datetime.date(2015, 1, 1)
     ) == 'Z6842'
+    assert cleanup.clean_up_diagnosis_code(
+        '7999', None, datetime.date(2016, 1, 1)
+    ) == '7999'
+    assert cleanup.clean_up_diagnosis_code(
+        '7999', None, datetime.date(2015, 1, 1)
+    ) is None
 
     # no qualifier and no date
     # both filters are applied
@@ -59,7 +65,7 @@ def test_clean_up_diagnosis_code():
         '767.4', None, None
     ) is None
 
-    # good code, do nothing
+    # good ICD-10 code, do nothing
     assert cleanup.clean_up_diagnosis_code(
         'I25.10', None, None
     ) == 'I2510'
@@ -69,3 +75,20 @@ def test_clean_up_diagnosis_code():
     assert cleanup.clean_up_diagnosis_code(
         'I25.10', None, datetime.date(2016, 1, 1)
     ) == 'I2510'
+    assert cleanup.clean_up_diagnosis_code(
+        'I25.10', '02', datetime.date(2016, 1, 1)
+    ) == 'I2510'
+
+    # good ICD-9 code, do nothing
+    assert cleanup.clean_up_diagnosis_code(
+        '414.00', None, None
+    ) == '41400'
+    assert cleanup.clean_up_diagnosis_code(
+        '414.00', '01', None
+    ) == '41400'
+    assert cleanup.clean_up_diagnosis_code(
+        '414.00', None, datetime.date(2015, 1, 1)
+    ) == '41400'
+    assert cleanup.clean_up_diagnosis_code(
+        '414.00', '01', datetime.date(2015, 1, 1)
+    ) == '41400'
