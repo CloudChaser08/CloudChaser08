@@ -64,7 +64,7 @@ def partition_and_rename(
             ['partitions', '20', False],
             ['distribution_key', distribution_key, False]
         ])
-        if hvm_historical_date is not None:
+        if hvm_historical_date is None:
             runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
                 ['select_statement', "SELECT *, '{0}' as {3}, regexp_replace({2}, '-..$', '') as {4} FROM {1} WHERE {2} IS NOT NULL".format(
                     provider, table_name, date_column, provider_partition, date_partition
@@ -89,7 +89,7 @@ def partition_and_rename(
             ])
         
     else:
-        if hvm_historical_date is not None:
+        if hvm_historical_date is None:
             runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
                 ['select_statement', "SELECT *, '{}' as {}, '{}' as {} FROM {}".format(
                     provider, provider_partition, partition_value, date_partition, table_name
