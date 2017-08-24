@@ -3,15 +3,18 @@ from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
 import re
+import os
 
 # hv-specific modules
 import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
+import subdags.s3_fetch_file as s3_fetch_file
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
+import util.decompression as decompression
 
-for m in [s3_validate_file, queue_up_for_matching,
-          detect_move_normalize, HVDAG]:
+for m in [s3_validate_file, queue_up_for_matching, s3_fetch_file,
+          detect_move_normalize, HVDAG, decompression]:
     reload(m)
 
 # Applies to all files
@@ -19,7 +22,7 @@ DAG_NAME = 'cardinal_mpi_ingestion_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 8, 25, 14), # Unclear when this is going to start
+    'start_date': datetime(2017, 8, 22, 21),
     'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -27,7 +30,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval=None, # No information about schedule yet
+    schedule_interval="0 21 * * *",
     default_args=default_args
 )
 
@@ -37,11 +40,11 @@ if HVDAG.HVDAG.airflow_env == 'test':
 else:
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/custom/cardinal_mpi/'
 
-
-# Deid file without the trailing timestamp
-# NOTE: File name format is not yet 
-DEID_FILE_NAME_TEMPLATE = 'MPI.%Y%m%d.dat.gz'
-DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'MPI.%Y%m%d.dat'
+TMP_PATH_TEMPLATE='/tmp/cardinal_mpi/custom/{}/'
+S3_DEID_RAW_URL='s3://hvincoming/cardinal_raintree/mpi/'
+DEID_FILE_NAME_TEMPLATE = 'mpi.%Y%m%dT\d{2}\d{2}\d{2}.zip'
+DEID_FILE_NAME_REGEX = 'mpi.\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}.zip'
+DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'mpi-deid.%Y%m%dT\d{2}\d{2}\d{2}.dat'
 
 def insert_execution_date_function(template):
     def out(ds, kwargs):
@@ -49,28 +52,24 @@ def insert_execution_date_function(template):
     return out
 
 
-def insert_formatted_regex_function(template):
-    def out(ds, kwargs):
-        return re.sub(r'(%Y|%m|%d)', '{}', template).format('\d{4}', '\d{2}', '\d{2]')
-    return out
-
-
 def insert_current_date_function(date_template):
     def out(ds, kwargs):
-        adjusted_date = kwargs['execution_date'] + timedelta(days=7)
-        return adjusted_date.strftime(date_template)
+        date = kwargs['execution_date'] + timedelta(days=1)
+        return date.strftime(date_template)
     return out
 
 
 def insert_current_date(template, kwargs):
     return insert_current_date_function(template)(None, kwargs)
 
+def get_tmp_dir(ds, kwargs):
+    return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + insert_current_date(
-        DEID_FILE_NAME_TEMPLATE,
-        kwargs
-    )]
+    file_dir = get_tmp_dir(ds, kwargs)
+    todays_file_regex = insert_current_date(DEID_FILE_NAME_UNZIPPED_TEMPLATE, kwargs)
+    files = filter(lambda f: re.search(todays_file_regex, f), os.listdir(file_dir))
+    return map(lambda f: file_dir + f, files)
 
 
 def generate_file_validation_task(
@@ -83,23 +82,24 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': lambda ds, k: (
+                'expected_file_name_func'   : lambda ds, k: (
                     insert_current_date_function(
                         path_template
                     )(ds, k)
                 ),
-                'file_name_pattern_func': lambda ds, k: (
-                    insert_formatted_regex_function(
-                        path_template
-                    )(ds, k)
+                'file_name_pattern_func'    : lambda ds, k: (
+                    DEID_FILE_NAME_REGEX
                 ),
-                'minimum_file_size': minimum_file_size,
-                's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-                's3_bucket': 'healthverity',
-                'file_description': 'Neogenomics ' + task_id + ' file'
+                'minimum_file_size'         : minimum_file_size,
+                's3_prefix'                 : '/'.join(S3_DEID_RAW_URL.split('/')[3:]),
+                's3_bucket'                 : 'hvincoming',
+                'file_description'          : 'Cardinal MPI ' + task_id + ' file',
+                'regex_name_match'          : True
             }
         ),
         task_id='validate_' + task_id + '_file',
+        retries=10,
+        retry_delay=timedelta(minutes=15),
         dag=mdag
     )
 
@@ -109,6 +109,41 @@ if HVDAG.HVDAG.airflow_env != 'test':
         'deid', DEID_FILE_NAME_TEMPLATE,
         1000000
     )
+
+fetch_deid_file_dag = SubDagOperator(
+    subdag=s3_fetch_file.s3_fetch_file(
+        DAG_NAME,
+        'fetch_deid_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template'      : TMP_PATH_TEMPLATE,
+            'expected_file_name_func': lambda ds, k: (
+                insert_current_date_function(
+                    DEID_FILE_NAME_TEMPLATE
+                )(ds, k)
+            ),
+            's3_prefix'              : '/'.join(S3_DEID_RAW_URL.split('/')[3:]),
+            's3_bucket'              : 'hvincoming',
+            'regex_name_match'       : True
+        }
+    ),
+    task_id='fetch_deid_file',
+    dag=mdag
+)
+
+def do_unzip_file(ds, **kwargs):
+    file_dir = get_tmp_dir(ds, kwargs)
+    todays_file_regex = insert_current_date(DEID_FILE_NAME_TEMPLATE, kwargs)
+    files = filter(lambda f: re.search(todays_file_regex, f), os.listdir(file_dir))
+    decompression.decompress_zip_file(file_dir + files[0], file_dir)
+
+unzip_deid_file = PythonOperator(
+    task_id='unzip_deid_file',
+    provide_context=True,
+    python_callable=do_unzip_file,
+    dag=mdag
+)
 
 if HVDAG.HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
@@ -143,11 +178,9 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func': lambda ds, k: [
-                insert_current_date_function(
-                    DEID_FILE_NAME_UNZIPPED_TEMPLATE
-                )(ds, k)
-            ],
+            'expected_matching_files_func': lambda ds, k: (
+                map(lambda f: f.split('/')[-1], get_deid_file_urls(ds, k))
+            ),
             'file_date_func': insert_current_date_function(
                 '%Y/%m/%d'
             ),
@@ -163,8 +196,11 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    queue_up_for_matching.set_upstream(validate_deid)
+    fetch_deid_file_dag.set_upstream(validate_deid)
+    queue_up_for_matching.set_upstream(unzip_deid_file)
     detect_move_normalize_dag.set_upstream(queue_up_for_matching)
+
+unzip_deid_file.set_upstream(fetch_deid_file_dag)
 
 # implicit else, run detect_move_normalize_dag without waiting for the
 # matching payload (test mode)
