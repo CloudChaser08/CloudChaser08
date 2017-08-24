@@ -71,10 +71,13 @@ def clean_up_diagnosis_code(
         return None
 
     diagnosis_code = uppercase_code(clean_up_alphanumeric_code(diagnosis_code))
+    # Is this an ICD-9 code based on qualifier, or not an ICD-10 code based on date
     if diagnosis_code_qual == '01' or (
             diagnosis_code_qual is None
-            and isinstance(date_service, datetime.date)
-            and date_service < datetime.date(2015, 10, 1)
+            and not (
+                isinstance(date_service, datetime.date)
+                and date_service >= datetime.date(2015, 10, 1)
+            )
     ):
         if re.search(
                 '^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$',
@@ -83,10 +86,13 @@ def clean_up_diagnosis_code(
             return None
         if re.search('^V854[1-5]$', diagnosis_code):
             return 'V854'
+    # Is this an ICD-10 code based on qualifier, or not an ICD-9 code based on date
     if diagnosis_code_qual == '02' or (
             diagnosis_code_qual is None
-            and isinstance(date_service, datetime.date)
-            and date_service >= datetime.date(2015, 10, 1)
+            and not (
+                isinstance(date_service, datetime.date)
+                and date_service < datetime.date(2015, 10, 1)
+            )
     ):
         if re.search(
                 '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$',
@@ -95,6 +101,7 @@ def clean_up_diagnosis_code(
             return None
         if re.search('^Z684[1-5]$', diagnosis_code):
             return 'Z684'
+
     return diagnosis_code
 
 
