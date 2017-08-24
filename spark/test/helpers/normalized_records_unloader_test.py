@@ -7,13 +7,20 @@ import shutil
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+from datetime import datetime
+
 test_staging_dir  = file_utils.get_abs_path(
     __file__, './test-staging/'
 ) + '/'
 test_staging_dir2 = file_utils.get_abs_path(
     __file__, './test-staging2/'
 ) + '/'
+test_staging_dir3 = file_utils.get_abs_path(
+    __file__, './test-staging3/'
+) + '/'
 prefix = 'PREFIX'
+
+HVM_HISTORICAL_DATE = datetime(2015, 01, 01)
 
 
 @pytest.mark.usefixtures("spark")
@@ -30,7 +37,39 @@ def test_init(spark):
     ), 'r') as lab:
         column_count = len(lab.readlines()) - 6
 
-    # insert 100 values into the table
+    # insert 50 values after HVM_HISTORICAL_DATE
+    # Note: 13 is the column number of 'date_service'
+    spark['sqlContext'].sql(
+        'INSERT INTO lab_common_model VALUES {}'
+        .format(reduce(
+            lambda x1, x2: x1 + ', ' + x2,
+            map(
+                lambda l: l + reduce(
+                    lambda str1, str2: str1 + str2,
+                    [',NULL' if i != 13 else ',CAST("2015-11-07" AS DATE)' for i in range(column_count)]
+                ) + ')',
+                ['({}'.format(x) for x in range(50)]
+            )
+        ))
+    )
+
+    # insert 50 values before HVM_HISTORICAL_DATE
+    # Note: 13 is the column number of 'date_service'
+    spark['sqlContext'].sql(
+        'INSERT INTO lab_common_model VALUES {}'
+        .format(reduce(
+            lambda x1, x2: x1 + ', ' + x2,
+            map(
+                lambda l: l + reduce(
+                    lambda str1, str2: str1 + str2,
+                    [',NULL' if i != 13 else ',CAST("1992-11-07" AS DATE)' for i in range(column_count)]
+                ) + ')',
+                ['({}'.format(x) for x in range(50)]
+            )
+        ))
+    )
+
+    # insert 100 values with NULL date_service into the table
     spark['sqlContext'].sql(
         'INSERT INTO lab_common_model VALUES {}'
         .format(reduce(
@@ -55,6 +94,11 @@ def test_init(spark):
         'test_provider', 'lab_common_model', 'date_service', prefix,
         partition_value='2017-01', test_dir=test_staging_dir2
     )
+    normalized_records_unloader.partition_and_rename(
+        spark['spark'], spark['runner'], 'lab', 'lab_common_model.sql',
+        'test_provider', 'lab_common_model', 'date_service', prefix,
+        hvm_historical_date=HVM_HISTORICAL_DATE, test_dir=test_staging_dir3
+    )
 
 
 def test_correct_dynamic_partitions():
@@ -69,7 +113,7 @@ def test_correct_dynamic_partitions():
         test_staging_dir + '/part_provider=test_provider/'
     )
 
-    assert date_partition == ['part_best_date=NULL']
+    assert set(date_partition) == set(['part_best_date=2015-11', 'part_best_date=1992-11', 'part_best_date=NULL'])
 
 
 def test_prefix():
@@ -159,6 +203,21 @@ def test_unload_new_prefix(spark):
     )
 
 
-def test_cleanup():
-    shutil.rmtree(test_staging_dir)
-    shutil.rmtree(test_staging_dir2)
+def test_hvm_historical_date(spark):
+    "Ensure correct dynamic partitions were created"
+    provider_partition = filter(
+        lambda f: "hive-staging" not in f,
+        os.listdir(test_staging_dir3)
+    )
+    assert provider_partition == ['part_provider=test_provider']
+
+    date_partition = os.listdir(
+        test_staging_dir3 + '/part_provider=test_provider/'
+    )
+
+    assert set(date_partition) == set(['part_best_date=2015-11', 'part_best_date=0_PREDATES_HVM_HISTORY', 'part_best_date=NULL'])
+
+
+# def test_cleanup():
+#     shutil.rmtree(test_staging_dir)
+#     shutil.rmtree(test_staging_dir2)

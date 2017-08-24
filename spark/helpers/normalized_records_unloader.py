@@ -3,6 +3,8 @@ import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 import time
 
+from datetime import datetime
+
 
 def mk_move_file(prefix, test=False):
     if test:
@@ -39,6 +41,11 @@ def partition_and_rename(
     Unload normalized data into partitions based on
     a date column
     """
+    if hvm_historical_date is not None:
+        if type(hvm_historical_date) is not datetime:
+            raise Exception("hvm_historical_date should be of type datetime.datetime")
+
+        hvm_historical_date_string = hvm_historical_date.strftime('%Y-%m-%d')
 
     if test_dir:
         staging_dir = test_dir + staging_subdir
@@ -74,15 +81,15 @@ def partition_and_rename(
             ])
         else:
             runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{0}' as {3}, regexp_replace({2}, '-..$', '') as {4} FROM {1} WHERE {2} IS NOT NULL AND {2} >= {5}".format(
-                    provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date
+                ['select_statement', "SELECT *, '{0}' as {3}, regexp_replace({2}, '-..$', '') as {4} FROM {1} WHERE {2} IS NOT NULL AND {2} >= CAST('{5}' AS DATE)".format(
+                    provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
                 ), False],
                 ['partitions', '20', False],
                 ['distribution_key', distribution_key, False]
             ])
             runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{0}' as {3}, '0_PREDATES_HVM_HISTORY' as {4} FROM {1} WHERE {2} IS NOT NULL AND {2} < {5}".format(
-                    provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date
+                ['select_statement', "SELECT *, '{0}' as {3}, '0_PREDATES_HVM_HISTORY' as {4} FROM {1} WHERE {2} IS NOT NULL AND {2} < CAST('{5}' AS DATE)".format(
+                    provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
                 ), False],
                 ['partitions', '20', False],
                 ['distribution_key', distribution_key, False]
@@ -99,15 +106,15 @@ def partition_and_rename(
             ])
         else:
             runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{}' as {}, '{}' as {} FROM {} WHERE {} >= {}".format(
-                    provider, provider_partition, partition_value, date_partition, table_name, date_column, hvm_historical_date
+                ['select_statement', "SELECT *, '{}' as {}, '{}' as {} FROM {} WHERE {} >= CAST('{}' AS DATE)".format(
+                    provider, provider_partition, partition_value, date_partition, table_name, date_column, hvm_historical_date_string
                 ), False],
                 ['partitions', '20', False],
                 ['distribution_key', distribution_key, False]
             ])
             runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-                ['select_statement', "SELECT *, '{}' as {}, '0_PREDATES_HVM_HISTORY' as {} FROM {} WHERE {} >= {}".format(
-                    provider, provider_partition, date_partition, table_name, date_column, hvm_historical_date
+                ['select_statement', "SELECT *, '{}' as {}, '0_PREDATES_HVM_HISTORY' as {} FROM {} WHERE {} < CAST('{}' AS DATE)".format(
+                    provider, provider_partition, date_partition, table_name, date_column, hvm_historical_date_string
                 ), False],
                 ['partitions', '20', False],
                 ['distribution_key', distribution_key, False]
