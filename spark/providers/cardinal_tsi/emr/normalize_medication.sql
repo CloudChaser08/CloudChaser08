@@ -95,14 +95,14 @@ SELECT
     EXTRACT_DATE(
         med.start_date,
         '%Y%m%d',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        NULL,
+        NULL
         ),                                        -- medctn_start_dt
     EXTRACT_DATE(
         med.date_stopped,
         '%Y%m%d',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        NULL,
+        NULL
         ),                                        -- medctn_end_dt
     NULL,                                         -- medctn_diag_cd
     NULL,                                         -- medctn_diag_cd_qual
@@ -142,8 +142,8 @@ SELECT
     EXTRACT_DATE(
         med.date_last_refilled,
         '%Y%m%d',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        NULL,
+        NULL
         ),                                        -- medctn_last_rfll_dt
     NULL,                                         -- medctn_smpl_flg
     NULL,                                         -- medctn_elect_rx_flg

@@ -15,7 +15,7 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
 
-    # TODO: this isn't the way their files will be named...
+    # TODO: this isn't the way their files will be named (hopefully...)
     diag_setid = 'TSI_Diag_Sample_Raw.json'
     med_setid = 'TSI_Med_Sample_Raw.json'
 
@@ -42,18 +42,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
     else:
-        diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/diagnosis/'.format(
-            date_input.replace('-', '/')
-        )
-        medication_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/medication/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3a://salusv/matching/payload/emr/cardinal_tsi/{}/'.format(
-            date_input.replace('-', '/')
-        )
-
-    min_date = '1900-01-02'
-    max_date = date_input
+        # diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/diagnosis/'.format(
+        #     date_input.replace('-', '/')
+        # )
+        # medication_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/medication/'.format(
+        #     date_input.replace('-', '/')
+        # )
+        # matching_path = 's3a://salusv/matching/payload/emr/cardinal_tsi/{}/'.format(
+        #     date_input.replace('-', '/')
+        # )
+        diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/sample/diagnosis/'
+        medication_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/sample/medication/'
+        matching_path = 's3a://salusv/matching/payload/emr/cardinal_tsi/sample/'
 
     runner.run_spark_script('../../../common/emr/diagnosis_common_model_v3.sql', [
         ['table_name', 'diagnosis_common_model', False],
@@ -85,21 +85,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             )
         )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
 
-    runner.run_spark_script('normalize_diagnosis.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
-    runner.run_spark_script('normalize_medication.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
+    # TODO: Date capping - need to wait for gen_ref table to contain dates
+    runner.run_spark_script('normalize_diagnosis.sql')
+    runner.run_spark_script('normalize_medication.sql')
 
     normalized_tables = [
         {
             'table_name': 'diagnosis_common_model',
             'script_name': 'emr/diagnosis_common_model_v3.sql',
             'data_type': 'diagnosis',
-            'date_column': 'diag_dt',
+            'date_column': 'enc_dt',
             'setid': diag_setid,
             'privacy_filter': priv_diagnosis
         },
@@ -107,7 +102,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'table_name': 'medication_common_model',
             'script_name': 'emr/medication_common_model_v2.sql',
             'data_type': 'medication',
-            'date_column': 'medctn_admin_dt',
+            'date_column': 'medctn_start_dt',
             'setid': med_setid,
             'privacy_filter': priv_medication
         }
@@ -123,6 +118,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
             ),
 
+            # TODO: Improved EMR Privacy filtering once the cert is finalized
             table['privacy_filter'].filter
         )(
             runner.sqlContext.sql('select * from {}'.format(table['table_name']))
@@ -130,10 +126,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         if not test:
             normalized_records_unloader.partition_and_rename(
-                spark, runner, 'emr', table['script_name'], 'cardinal_tsi',
+                spark, runner, 'emr', table['script_name'], '31',
                 table['table_name'], table['date_column'], date_input,
                 staging_subdir='{}/'.format(table['data_type']),
-                distribution_key='row_id', provider_partition='hvm_vdr_feed_id',
+                distribution_key='row_id', provider_partition='prt_hvm_vdr_feed_id',
                 date_partition='prt_mnth'
             )
 
@@ -152,7 +148,8 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-09/'
+        # output_path = 's3://salusv/warehouse/parquet/emr/2017-08-09/'
+        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 
     normalized_records_unloader.distcp(output_path)
 

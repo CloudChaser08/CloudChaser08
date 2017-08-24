@@ -26,8 +26,8 @@ SELECT
     EXTRACT_DATE(
         d.enc_timestamp,
         '%Y-%m-%d %H:%M:%S.%f',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        NULL,
+        NULL
         ),                                    -- enc_dt
     NULL,                                     -- diag_dt
     NULL,                                     -- diag_rndrg_fclty_npi
