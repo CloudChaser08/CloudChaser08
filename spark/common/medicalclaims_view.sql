@@ -212,7 +212,23 @@ CREATE VIEW default.medicalclaims (
     line_allowed,
     total_charge,
     total_allowed,
-    prov_rendering_npi,
+    CASE
+        WHEN prov_rendering_npi = '5' THEN NULL
+        WHEN prov_rendering_npi = '05' THEN NULL
+        WHEN prov_rendering_npi = '6' THEN NULL
+        WHEN prov_rendering_npi = '06' THEN NULL
+        WHEN prov_rendering_npi = '7' THEN NULL
+        WHEN prov_rendering_npi = '07' THEN NULL
+        WHEN prov_rendering_npi = '8' THEN NULL
+        WHEN prov_rendering_npi = '08' THEN NULL
+        WHEN prov_rendering_npi = '9' THEN NULL
+        WHEN prov_rendering_npi = '09' THEN NULL
+        WHEN prov_rendering_npi = '12' THEN NULL
+        WHEN prov_rendering_npi = '13' THEN NULL
+        WHEN prov_rendering_npi = '14' THEN NULL
+        WHEN prov_rendering_npi = '33' THEN NULL
+        ELSE prov_rendering_npi
+    END as prov_rendering_npi,
     prov_billing_npi,
     prov_referring_npi,
     prov_facility_npi,
