@@ -20,7 +20,7 @@ for m in [s3_validate_file, queue_up_for_matching, s3_fetch_file,
     reload(m)
 
 # Applies to all files
-DAG_NAME = 'cardinal_mpi_ingestion_pipeline'
+DAG_NAME = 'cardinal_mpi_pipeline'
 
 default_args = {
     'owner': 'airflow',
