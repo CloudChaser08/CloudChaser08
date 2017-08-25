@@ -1330,10 +1330,74 @@ SELECT CAST(record_id AS bigint),
     CAST(line_allowed AS float),
     CAST(total_charge AS float),
     CAST(total_allowed AS float),
-    prov_rendering_npi,
-    prov_billing_npi,
-    prov_referring_npi,
-    prov_facility_npi,
+    CASE
+        WHEN prov_rendering_npi = '5' THEN NULL
+        WHEN prov_rendering_npi = '05' THEN NULL
+        WHEN prov_rendering_npi = '6' THEN NULL
+        WHEN prov_rendering_npi = '06' THEN NULL
+        WHEN prov_rendering_npi = '7' THEN NULL
+        WHEN prov_rendering_npi = '07' THEN NULL
+        WHEN prov_rendering_npi = '8' THEN NULL
+        WHEN prov_rendering_npi = '08' THEN NULL
+        WHEN prov_rendering_npi = '9' THEN NULL
+        WHEN prov_rendering_npi = '09' THEN NULL
+        WHEN prov_rendering_npi = '12' THEN NULL
+        WHEN prov_rendering_npi = '13' THEN NULL
+        WHEN prov_rendering_npi = '14' THEN NULL
+        WHEN prov_rendering_npi = '33' THEN NULL
+        ELSE prov_rendering_npi
+    END as prov_rendering_npi,
+    CASE
+        WHEN prov_billing_npi = '5' THEN NULL
+        WHEN prov_billing_npi = '05' THEN NULL
+        WHEN prov_billing_npi = '6' THEN NULL
+        WHEN prov_billing_npi = '06' THEN NULL
+        WHEN prov_billing_npi = '7' THEN NULL
+        WHEN prov_billing_npi = '07' THEN NULL
+        WHEN prov_billing_npi = '8' THEN NULL
+        WHEN prov_billing_npi = '08' THEN NULL
+        WHEN prov_billing_npi = '9' THEN NULL
+        WHEN prov_billing_npi = '09' THEN NULL
+        WHEN prov_billing_npi = '12' THEN NULL
+        WHEN prov_billing_npi = '13' THEN NULL
+        WHEN prov_billing_npi = '14' THEN NULL
+        WHEN prov_billing_npi = '33' THEN NULL
+        ELSE prov_billing_npi
+    END as prov_billing_npi,
+    CASE
+        WHEN prov_referring_npi = '5' THEN NULL
+        WHEN prov_referring_npi = '05' THEN NULL
+        WHEN prov_referring_npi = '6' THEN NULL
+        WHEN prov_referring_npi = '06' THEN NULL
+        WHEN prov_referring_npi = '7' THEN NULL
+        WHEN prov_referring_npi = '07' THEN NULL
+        WHEN prov_referring_npi = '8' THEN NULL
+        WHEN prov_referring_npi = '08' THEN NULL
+        WHEN prov_referring_npi = '9' THEN NULL
+        WHEN prov_referring_npi = '09' THEN NULL
+        WHEN prov_referring_npi = '12' THEN NULL
+        WHEN prov_referring_npi = '13' THEN NULL
+        WHEN prov_referring_npi = '14' THEN NULL
+        WHEN prov_referring_npi = '33' THEN NULL
+        ELSE prov_referring_npi
+    END as prov_referring_npi,
+    CASE
+        WHEN prov_facility_npi = '5' THEN NULL
+        WHEN prov_facility_npi = '05' THEN NULL
+        WHEN prov_facility_npi = '6' THEN NULL
+        WHEN prov_facility_npi = '06' THEN NULL
+        WHEN prov_facility_npi = '7' THEN NULL
+        WHEN prov_facility_npi = '07' THEN NULL
+        WHEN prov_facility_npi = '8' THEN NULL
+        WHEN prov_facility_npi = '08' THEN NULL
+        WHEN prov_facility_npi = '9' THEN NULL
+        WHEN prov_facility_npi = '09' THEN NULL
+        WHEN prov_facility_npi = '12' THEN NULL
+        WHEN prov_facility_npi = '13' THEN NULL
+        WHEN prov_facility_npi = '14' THEN NULL
+        WHEN prov_facility_npi = '33' THEN NULL
+        ELSE prov_facility_npi
+    END as prov_facility_npi,
     payer_vendor_id,
     payer_name,
     payer_parent_name,
