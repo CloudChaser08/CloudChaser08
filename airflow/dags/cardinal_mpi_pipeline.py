@@ -158,7 +158,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func': get_deid_file_urls
+                'source_files_func' : get_deid_file_urls,
+                'priority'          : 'priority1',
             }
         ),
         task_id='queue_up_for_matching',
