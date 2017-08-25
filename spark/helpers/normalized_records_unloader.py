@@ -65,7 +65,7 @@ def partition_and_rename(
 
     if partition_value is None and hvm_historical_date is None:
         runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-            ['select_statement', "SELECT *, '{}' as {}, 'NULL' as {} FROM {} WHERE {} is NULL".format(
+            ['select_statement', "SELECT *, '{}' as {}, '0_PREDATES_HVM_HISTORY' as {} FROM {} WHERE {} is NULL".format(
                 provider, provider_partition, date_partition, table_name, date_column
             ), False],
             ['partitions', '20', False],
