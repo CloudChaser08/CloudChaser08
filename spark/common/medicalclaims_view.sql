@@ -177,6 +177,7 @@ CREATE VIEW default.medicalclaims (
     inst_discharge_status_vendor_desc,
     CASE
         WHEN claim_type = "P" THEN NULL
+        WHEN SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN ***REPLACE 3 WITH X***
         ELSE inst_type_of_bill_std_id
     END AS inst_type_of_bill_std_id,
     inst_type_of_bill_vendor_id,
