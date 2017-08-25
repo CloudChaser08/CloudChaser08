@@ -8,7 +8,7 @@ import common.HVDAG as HVDAG
 for m in [HVDAG]:
     reload(m)
 
-def do_queue_up_for_matching(ds, passthrough_only=None, **kwargs):
+def do_queue_up_for_matching(ds, **kwargs):
     source_files = kwargs['source_files_func'](ds, kwargs)
     environ = {
         'AWS_ACCESS_KEY_ID' : Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER'),
@@ -21,8 +21,11 @@ def do_queue_up_for_matching(ds, passthrough_only=None, **kwargs):
             None, '0', 'prod-matching-engine', 'priority3'
         ]
 
-    if passthrough_only:
+    if 'passthrough_only' in kwargs and kwargs['passthrough_only']:
         queue_up_cmd.append("true")
+
+    if 'priority' in kwargs:
+        queue_up_cmd[4] = kwargs['priority']
 
     for f in source_files:
         queue_up_cmd[1] = f
