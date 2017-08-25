@@ -20,7 +20,7 @@ test_staging_dir3 = file_utils.get_abs_path(
 ) + '/'
 prefix = 'PREFIX'
 
-HVM_HISTORICAL_DATE = datetime(2015, 01, 01)
+HVM_HISTORICAL_DATE = datetime(2015, 1, 1)
 
 
 @pytest.mark.usefixtures("spark")
@@ -113,7 +113,7 @@ def test_correct_dynamic_partitions():
         test_staging_dir + '/part_provider=test_provider/'
     )
 
-    assert set(date_partition) == set(['part_best_date=2015-11', 'part_best_date=1992-11', 'part_best_date=NULL'])
+    assert set(date_partition) == set(['part_best_date=2015-11', 'part_best_date=1992-11', 'part_best_date=0_PREDATES_HVM_HISTORY'])
 
 
 def test_prefix():
@@ -121,7 +121,7 @@ def test_prefix():
     part_files = filter(
         lambda f: not f.endswith('.crc'),
         os.listdir(
-            test_staging_dir + '/part_provider=test_provider/part_best_date=NULL/'
+            test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
         )
     )
     for f in part_files:
@@ -161,7 +161,7 @@ def test_unload_separate_provider(spark):
     part_files = filter(
         lambda f: not f.endswith('.crc'),
         os.listdir(
-            test_staging_dir + '/part_provider=test_provider2/part_best_date=NULL/'
+            test_staging_dir + '/part_provider=test_provider2/part_best_date=0_PREDATES_HVM_HISTORY/'
         )
     )
     for f in part_files:
@@ -171,7 +171,7 @@ def test_unload_separate_provider(spark):
     part_files = filter(
         lambda f: not f.endswith('.crc'),
         os.listdir(
-            test_staging_dir + '/part_provider=test_provider/part_best_date=NULL/'
+            test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
         )
     )
     for f in part_files:
@@ -190,7 +190,7 @@ def test_unload_new_prefix(spark):
     assert filter(
         lambda f: f.startswith(prefix + '_NEW_part'),
         os.listdir(
-            test_staging_dir + '/part_provider=test_provider/part_best_date=NULL/'
+            test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
         )
     )
 
@@ -198,7 +198,7 @@ def test_unload_new_prefix(spark):
     assert filter(
         lambda f: f.startswith(prefix + '_part'),
         os.listdir(
-            test_staging_dir + '/part_provider=test_provider/part_best_date=NULL/'
+            test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
         )
     )
 
