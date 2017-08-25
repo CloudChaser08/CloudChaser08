@@ -24,7 +24,7 @@ DAG_NAME = 'cardinal_mpi_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 8, 22, 21),
+    'start_date': datetime(2017, 8, 24, 15),
     'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -32,7 +32,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 21 * * *",
+    schedule_interval="0 15 * * *",
     default_args=default_args
 )
 
