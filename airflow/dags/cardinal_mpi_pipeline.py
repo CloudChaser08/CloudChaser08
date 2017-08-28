@@ -25,7 +25,6 @@ DAG_NAME = 'cardinal_mpi_pipeline'
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 8, 24, 15),
-    'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
