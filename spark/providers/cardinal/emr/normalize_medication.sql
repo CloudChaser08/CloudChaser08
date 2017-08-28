@@ -22,13 +22,23 @@ SELECT
         CASE WHEN mp.age = 0 THEN NULL ELSE mp.age END,
         CASE WHEN dem.patient_age = 0 THEN NULL ELSE dem.patient_age END
         ),                                                      -- ptnt_age_num
+    /* Do not load for now, uncertified
     CASE
     WHEN lower(dem.patient_alive_indicator) IN ('n', 'no') THEN 'N'
     WHEN lower(dem.patient_alive_indicator) IN ('y', 'yes') THEN 'Y'
     ELSE NULL
     END,                                                        -- ptnt_lvg_flg
+    */
+    NULL,                                                       -- patnt_lvg_flg
+    /* Do not load for now, uncertified
     SUBSTRING(CAST(dem.date_of_death AS DATE), 0, 7),           -- ptnt_dth_dt
-    UPPER(COALESCE(mp.gender, dem.gender)),                     -- ptnt_gender_cd
+    */
+    NULL,                                                       -- ptnt_dth_dt
+    CASE
+    WHEN UPPER(COALESCE(mp.gender, dem.gender)) NOT IN ('M', 'F')
+    THEN 'U'
+    ELSE UPPER(COALESCE(mp.gender, dem.gender))
+    END,                                                        -- ptnt_gender_cd
     UPPER(COALESCE(mp.state, dem.state)),                       -- ptnt_state_cd
     COALESCE(mp.threeDigitZip, SUBSTRING(dem.zip_code, 0, 3)),  -- ptnt_zip3_cd
     NULL,                                                       -- hv_enc_id
@@ -36,9 +46,7 @@ SELECT
     NULL,                                                       -- medctn_ord_dt
     EXTRACT_DATE(
         disp.admin_date,
-        '%Y-%m-%d %H:%M:%S.%f',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        '%Y-%m-%d %H:%M:%S.%f'
         ),                                                      -- medctn_admin_dt
     NULL,                                                       -- medctn_rndrg_fclty_npi
     disp.practice_id,                                           -- medctn_rndrg_fclty_vdr_id
@@ -107,9 +115,7 @@ SELECT
     NULL,                                                       -- medctn_start_dt
     EXTRACT_DATE(
         disp.discontinue_date,
-        '%Y-%m-%d %H:%M:%S.%f',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        '%Y-%m-%d %H:%M:%S.%f'
         ),                                                      -- medctn_end_dt
     COALESCE(disp.icd_ten, disp.icd_nine),                      -- medctn_diag_cd
     CASE
@@ -144,14 +150,14 @@ SELECT
     NULL,                                                       -- medctn_admin_sched_cd
     NULL,                                                       -- medctn_admin_sched_qty
     NULL,                                                       -- medctn_admin_sig_cd
-    disp.instructions,                                          -- medctn_admin_sig_txt
-    disp.dosage_form,                                           -- medctn_admin_form_nm
+    UPPER(disp.instructions),                                   -- medctn_admin_sig_txt
+    UPPER(disp.dosage_form),                                    -- medctn_admin_form_nm
     NULL,                                                       -- medctn_specl_pkgg_cd
-    disp.strength,                                              -- medctn_strth_txt
-    disp.strength_unit,                                         -- medctn_strth_txt_qual
+    UPPER(disp.strength),                                       -- medctn_strth_txt
+    UPPER(disp.strength_unit),                                  -- medctn_strth_txt_qual
     NULL,                                                       -- medctn_dose_txt
     NULL,                                                       -- medctn_dose_txt_qual
-    disp.admn_route,                                            -- medctn_admin_rte_txt
+    UPPER(disp.admn_route),                                     -- medctn_admin_rte_txt
     NULL,                                                       -- medctn_orig_rfll_qty
     NULL,                                                       -- medctn_fll_num
     disp.refills,                                               -- medctn_remng_rfll_qty

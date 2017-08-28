@@ -22,13 +22,23 @@ SELECT
         CASE WHEN mp.age = 0 THEN NULL ELSE mp.age END,
         CASE WHEN d.patient_age = 0 THEN NULL ELSE d.patient_age END
         ),                                                    -- ptnt_age_num
+    /* Do not load for now, uncertified
     CASE
     WHEN lower(d.patient_alive_indicator) IN ('n', 'no') THEN 'N'
     WHEN lower(d.patient_alive_indicator) IN ('y', 'yes') THEN 'Y'
     ELSE NULL
     END,                                                      -- ptnt_lvg_flg
+    */
+    NULL,                                                     -- patnt_lvg_flg
+    /* Do not load for now, uncertified
     SUBSTRING(CAST(d.date_of_death AS DATE), 0, 7),           -- ptnt_dth_dt
-    UPPER(COALESCE(mp.gender, d.gender)),                     -- ptnt_gender_cd
+    */
+    NULL,                                                     -- ptnt_dth_dt
+    CASE
+    WHEN UPPER(COALESCE(mp.gender, d.gender)) NOT IN ('M', 'F')
+    THEN 'U'
+    ELSE UPPER(COALESCE(mp.gender, d.gender))
+    END,                                                      -- ptnt_gender_cd
     UPPER(COALESCE(mp.state, d.state)),                       -- ptnt_state_cd
     COALESCE(mp.threeDigitZip, SUBSTRING(d.zip_code, 0, 3)),  -- ptnt_zip3_cd
     NULL,                                                     -- hv_enc_id
@@ -90,7 +100,7 @@ SELECT
     NULL,                                                     -- lab_test_specmn_typ_cd
     NULL,                                                     -- lab_test_fstg_stat_flg
     NULL,                                                     -- lab_test_panel_nm
-    l.test_name_specific,                                     -- lab_test_nm
+    UPPER(l.test_name_specific),                              -- lab_test_nm
     NULL,                                                     -- lab_test_desc
     NULL,                                                     -- lab_test_loinc_cd
     NULL,                                                     -- lab_test_snomed_cd
@@ -98,7 +108,7 @@ SELECT
     NULL,                                                     -- lab_test_vdr_cd_qual
     NULL,                                                     -- lab_test_alt_cd
     NULL,                                                     -- lab_test_alt_cd_qual
-    l.test_value_string,                                      -- lab_result_nm
+    CAST(CAST(l.test_value_string AS DECIMAL) AS STRING),     -- lab_result_nm
     NULL,                                                     -- lab_result_desc
     NULL,                                                     -- lab_result_msrmt
     NULL,                                                     -- lab_result_uom

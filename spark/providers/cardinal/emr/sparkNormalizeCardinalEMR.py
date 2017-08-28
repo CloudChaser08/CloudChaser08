@@ -5,6 +5,7 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -91,7 +92,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['table_name', 'clinical_observation_common_model', False],
         ['properties', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/diagnosis_common_model_v2.sql', [
+    runner.run_spark_script('../../../common/emr/diagnosis_common_model_v3.sql', [
         ['table_name', 'diagnosis_common_model', False],
         ['properties', '', False]
     ])
@@ -113,6 +114,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
 
     explode.generate_exploder_table(spark, 6, 'clin_obs_exploder')
+
+    if not test:
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
@@ -174,56 +178,82 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'script_name': 'emr/clinical_observation_common_model_v2.sql',
             'data_type': 'clinical_observation',
             'date_column': 'clin_obsn_dt',
-            'privacy_filter': priv_clinical_observation
+            'privacy_filter': priv_clinical_observation,
+            'date_caps': [
+                ('clin_obsn_dt', 'EARLIEST_VALID_SERVICE_DATE'),
+                ('clin_obsn_resltn_dt', 'EARLIEST_VALID_SERVICE_DATE')
+            ]
         },
         {
             'table_name': 'diagnosis_common_model',
             'script_name': 'emr/diagnosis_common_model_v2.sql',
             'data_type': 'diagnosis',
             'date_column': 'diag_dt',
-            'privacy_filter': priv_diagnosis
+            'privacy_filter': priv_diagnosis,
+            'date_caps': [
+                ('diag_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE'),
+                ('diag_resltn_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE')
+            ]
         },
         {
             'table_name': 'encounter_common_model',
             'script_name': 'emr/encounter_common_model_v2.sql',
             'data_type': 'encounter',
             'date_column': 'enc_start_dt',
-            'privacy_filter': priv_encounter
+            'privacy_filter': priv_encounter,
+            'date_caps': [
+                ('enc_start_dt', 'EARLIEST_VALID_SERVICE_DATE'),
+                ('enc_end_dt', 'EARLIEST_VALID_SERVICE_DATE')
+            ]
         },
         {
             'table_name': 'medication_common_model',
             'script_name': 'emr/medication_common_model_v2.sql',
             'data_type': 'medication',
             'date_column': 'medctn_admin_dt',
-            'privacy_filter': priv_medication
+            'privacy_filter': priv_medication,
+            'date_caps': [
+                ('medctn_admin_dt', 'EARLIEST_VALID_SERVICE_DATE'),
+                ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE')
+            ]
         },
         {
             'table_name': 'procedure_common_model',
             'script_name': 'emr/procedure_common_model_v2.sql',
             'data_type': 'procedure',
             'date_column': 'proc_dt',
-            'privacy_filter': priv_procedure
+            'privacy_filter': priv_procedure,
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
+                ('proc_dt', 'EARLIEST_VALID_SERVICE_DATE')
+            ]
         },
         {
             'table_name': 'lab_result_common_model',
             'script_name': 'emr/lab_result_common_model_v2.sql',
             'data_type': 'lab_result',
             'date_column': 'lab_test_execd_dt',
-            'privacy_filter': priv_lab_result
+            'privacy_filter': priv_lab_result,
+            'date_caps': [
+                ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE')
+            ]
         }
     ]
 
     for table in normalized_tables:
         postprocessor.compose(
             postprocessor.add_universal_columns(
-                feed_id='31', vendor_id='42', filename=setid,
+                feed_id='40', vendor_id='42', filename=setid,
 
                 # rename defaults
                 record_id='row_id', created='crt_dt', data_set='data_set_nm',
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
             ),
-
-            table['privacy_filter'].filter
+            table['privacy_filter'].filter(runner.sqlContext),
+            *[
+                postprocessor.apply_date_cap(runner.sqlContext, date_col, max_date, '40', domain_name)
+                for (date_col, domain_name) in table['date_caps']
+            ]
         )(
             runner.sqlContext.sql('select * from {}'.format(table['table_name']))
         ).createTempView(table['table_name'])

@@ -22,26 +22,32 @@ SELECT
         CASE WHEN mp.age = 0 THEN NULL ELSE mp.age END,
         CASE WHEN d.patient_age = 0 THEN NULL ELSE d.patient_age END
         ),                                                    -- ptnt_age_num
+    /* Do not load for now, uncertified
     CASE
     WHEN lower(d.patient_alive_indicator) IN ('n', 'no') THEN 'N'
     WHEN lower(d.patient_alive_indicator) IN ('y', 'yes') THEN 'Y'
     ELSE NULL
     END,                                                      -- ptnt_lvg_flg
+    */
+    NULL,                                                     -- ptnt_lvg_flg
+    /* Do not load for now, uncertified
     SUBSTRING(CAST(d.date_of_death AS DATE), 0, 7),           -- ptnt_dth_dt
-    UPPER(COALESCE(mp.gender, d.gender)),                     -- ptnt_gender_cd
+    */
+    NULL,                                                     -- ptnt_dth_dt
+    CASE
+    WHEN UPPER(COALESCE(mp.gender, d.gender)) NOT IN ('M', 'F')
+    THEN 'U'
+    ELSE UPPER(COALESCE(mp.gender, d.gender))
+    END,                                                      -- ptnt_gender_cd
     UPPER(COALESCE(mp.state, d.state)),                       -- ptnt_state_cd
     COALESCE(mp.threeDigitZip, SUBSTRING(d.zip_code, 0, 3)),  -- ptnt_zip3_cd
     EXTRACT_DATE(
         e.visit_date,
-        '%Y-%m-%d',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        '%Y-%m-%d'
         ),                                                    -- enc_start_dt
     EXTRACT_DATE(
         e.visit_end_tstamp,
-        '%Y-%m-%d',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        '%Y-%m-%d'
         ),                                                    -- enc_end_dt
     NULL,                                                     -- enc_vst_typ_cd
     NULL,                                                     -- enc_rndrg_fclty_npi
