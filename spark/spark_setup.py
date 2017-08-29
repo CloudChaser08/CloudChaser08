@@ -11,10 +11,15 @@ def init(provider, local=False):
                     .appName(provider + " Normalization")                     \
                     .config('spark.sql.catalogImplementation', 'hive')        \
                     .config('spark.sql.crossJoin.enabled', 'true')            \
-                    .config('spark.driver.extraClassPath',                    
+                    .config('spark.driver.extraClassPath', '{}:{}'.format(
                         file_utils.get_abs_path(
                             __file__,
                             'common/json-serde-1.3.7-jar-with-dependencies.jar'
+                        ),
+                        file_utils.get_abs_path(
+                            __file__,
+                            'common/HiveJDBC41.jar'
+                        )
                     ))                                                        \
                     .getOrCreate()
 
@@ -65,6 +70,9 @@ def init(provider, local=False):
     # helper functions for cleaning up data
     sqlContext.registerFunction(
         'extract_number', extract_number
+    )
+    sqlContext.registerFunction(
+        'cap_date', cap_date
     )
     sqlContext.registerFunction(
         'extract_date', extract_date

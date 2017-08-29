@@ -1,4 +1,5 @@
 import spark.helpers.privacy.emr.common as emr_priv_common
+import spark.helpers.postprocessor as postprocessor
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
 clinical_observation_transformer = {
@@ -8,5 +9,25 @@ clinical_observation_transformer = {
     }
 }
 
-def filter(df):
-    return emr_priv_common.filter(df, clinical_observation_transformer)
+whitelists = [
+    {
+        'column_name': 'clin_obsn_diag_nm',
+        'domain_name': 'emr_medctn.clin_obsn_diag_nm'
+    },
+    {
+        'column_name': 'clin_obsn_diag_desc',
+        'domain_name': 'emr_medctn.clin_obsn_diag_desc'
+    }
+]
+
+def filter(sqlc):
+    def out(df):
+        return postprocessor.compose(
+            *[
+                postprocessor.apply_whitelist(sqlc, whitelist['column_name'], whitelist['domain_name'])
+                for whitelist in whitelists
+            ]
+        )(
+            emr_priv_common.filter(df, clinical_observation_transformer)
+        )
+    return out

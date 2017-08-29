@@ -5,6 +5,20 @@ import re
 import hashlib
 
 
+def clean_up_freetext(val, remove_periods=False):
+    """
+    Remove all characters that are not numbers, letters, spaces, periods, or ampersands
+    Convert multiple consequtive spaces into a single space
+    """
+    try:
+        new_val = re.sub(r'  *', ' ', re.sub(r'[^A-Za-z0-9 .&]', ' ', val))
+        if remove_periods:
+            new_val = new_val.replace('.', '')
+        return new_val
+    except:
+        return None
+
+
 def extract_number(text):
     if text is None or text == '':
         return None
@@ -21,6 +35,19 @@ def extract_number(text):
             return None
 
 
+def cap_date(d, min_date, max_date):
+    if not d:
+        return None
+    elif (
+        min_date is not None and d < min_date
+    ) or (
+        max_date is not None and d > max_date
+    ):
+        return None
+    else:
+        return d.isoformat().split("T")[0]
+
+
 def extract_date(text, pattern, min_date=None, max_date=None):
     if text is None or text == '':
         return None
@@ -29,15 +56,7 @@ def extract_date(text, pattern, min_date=None, max_date=None):
     except Exception:
         return None
 
-    if (
-        min_date is not None and d < min_date
-    ) or (
-        max_date is not None and d > max_date
-    ):
-        return None
-    else:
-        # stftime throws an error if the date is before 1900
-        return d.isoformat().split("T")[0]
+    return cap_date(d, min_date, max_date)
 
 
 def extract_currency(text):
@@ -49,7 +68,6 @@ def extract_currency(text):
     except:
         return None
 
-    
 
 def create_range(max):
     try:
