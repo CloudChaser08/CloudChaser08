@@ -186,7 +186,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         },
         {
             'table_name': 'diagnosis_common_model',
-            'script_name': 'emr/diagnosis_common_model_v2.sql',
+            'script_name': 'emr/diagnosis_common_model_v3.sql',
             'data_type': 'diagnosis',
             'date_column': 'diag_dt',
             'privacy_filter': priv_diagnosis,
