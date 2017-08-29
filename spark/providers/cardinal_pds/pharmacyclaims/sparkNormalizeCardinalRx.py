@@ -72,8 +72,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
 
     df = runner.sqlContext.sql('select * from transactions')
-    for null_val in ['NULL', 'Unknown', '-1', '-2']:
-        df = postprocessor.nullify(df, null_val)
+    df = postprocessor.nullify(df, ['NULL', 'Unknown', '-1', '-2'])
     postprocessor.trimmify(df).createTempView('transactions')
 
     runner.run_spark_script('normalize.sql', [
