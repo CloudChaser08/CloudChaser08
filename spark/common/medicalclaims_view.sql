@@ -213,71 +213,71 @@ CREATE VIEW default.medicalclaims (
     total_charge,
     total_allowed,
     CASE
-        WHEN prov_rendering_npi = '5' THEN NULL
-        WHEN prov_rendering_npi = '05' THEN NULL
-        WHEN prov_rendering_npi = '6' THEN NULL
-        WHEN prov_rendering_npi = '06' THEN NULL
-        WHEN prov_rendering_npi = '7' THEN NULL
-        WHEN prov_rendering_npi = '07' THEN NULL
-        WHEN prov_rendering_npi = '8' THEN NULL
-        WHEN prov_rendering_npi = '08' THEN NULL
-        WHEN prov_rendering_npi = '9' THEN NULL
-        WHEN prov_rendering_npi = '09' THEN NULL
-        WHEN prov_rendering_npi = '12' THEN NULL
-        WHEN prov_rendering_npi = '13' THEN NULL
-        WHEN prov_rendering_npi = '14' THEN NULL
-        WHEN prov_rendering_npi = '33' THEN NULL
+        WHEN place_of_service_std_id = '5' THEN NULL
+        WHEN place_of_service_std_id = '05' THEN NULL
+        WHEN place_of_service_std_id = '6' THEN NULL
+        WHEN place_of_service_std_id = '06' THEN NULL
+        WHEN place_of_service_std_id = '7' THEN NULL
+        WHEN place_of_service_std_id = '07' THEN NULL
+        WHEN place_of_service_std_id = '8' THEN NULL
+        WHEN place_of_service_std_id = '08' THEN NULL
+        WHEN place_of_service_std_id = '9' THEN NULL
+        WHEN place_of_service_std_id = '09' THEN NULL
+        WHEN place_of_service_std_id = '12' THEN NULL
+        WHEN place_of_service_std_id = '13' THEN NULL
+        WHEN place_of_service_std_id = '14' THEN NULL
+        WHEN place_of_service_std_id = '33' THEN NULL
         ELSE prov_rendering_npi
     END as prov_rendering_npi,
     CASE
-        WHEN prov_billing_npi = '5' THEN NULL
-        WHEN prov_billing_npi = '05' THEN NULL
-        WHEN prov_billing_npi = '6' THEN NULL
-        WHEN prov_billing_npi = '06' THEN NULL
-        WHEN prov_billing_npi = '7' THEN NULL
-        WHEN prov_billing_npi = '07' THEN NULL
-        WHEN prov_billing_npi = '8' THEN NULL
-        WHEN prov_billing_npi = '08' THEN NULL
-        WHEN prov_billing_npi = '9' THEN NULL
-        WHEN prov_billing_npi = '09' THEN NULL
-        WHEN prov_billing_npi = '12' THEN NULL
-        WHEN prov_billing_npi = '13' THEN NULL
-        WHEN prov_billing_npi = '14' THEN NULL
-        WHEN prov_billing_npi = '33' THEN NULL
+        WHEN place_of_service_std_id = '5' THEN NULL
+        WHEN place_of_service_std_id = '05' THEN NULL
+        WHEN place_of_service_std_id = '6' THEN NULL
+        WHEN place_of_service_std_id = '06' THEN NULL
+        WHEN place_of_service_std_id = '7' THEN NULL
+        WHEN place_of_service_std_id = '07' THEN NULL
+        WHEN place_of_service_std_id = '8' THEN NULL
+        WHEN place_of_service_std_id = '08' THEN NULL
+        WHEN place_of_service_std_id = '9' THEN NULL
+        WHEN place_of_service_std_id = '09' THEN NULL
+        WHEN place_of_service_std_id = '12' THEN NULL
+        WHEN place_of_service_std_id = '13' THEN NULL
+        WHEN place_of_service_std_id = '14' THEN NULL
+        WHEN place_of_service_std_id = '33' THEN NULL
         ELSE prov_billing_npi
     END as prov_billing_npi,
     CASE
-        WHEN prov_referring_npi = '5' THEN NULL
-        WHEN prov_referring_npi = '05' THEN NULL
-        WHEN prov_referring_npi = '6' THEN NULL
-        WHEN prov_referring_npi = '06' THEN NULL
-        WHEN prov_referring_npi = '7' THEN NULL
-        WHEN prov_referring_npi = '07' THEN NULL
-        WHEN prov_referring_npi = '8' THEN NULL
-        WHEN prov_referring_npi = '08' THEN NULL
-        WHEN prov_referring_npi = '9' THEN NULL
-        WHEN prov_referring_npi = '09' THEN NULL
-        WHEN prov_referring_npi = '12' THEN NULL
-        WHEN prov_referring_npi = '13' THEN NULL
-        WHEN prov_referring_npi = '14' THEN NULL
-        WHEN prov_referring_npi = '33' THEN NULL
+        WHEN place_of_service_std_id = '5' THEN NULL
+        WHEN place_of_service_std_id = '05' THEN NULL
+        WHEN place_of_service_std_id = '6' THEN NULL
+        WHEN place_of_service_std_id = '06' THEN NULL
+        WHEN place_of_service_std_id = '7' THEN NULL
+        WHEN place_of_service_std_id = '07' THEN NULL
+        WHEN place_of_service_std_id = '8' THEN NULL
+        WHEN place_of_service_std_id = '08' THEN NULL
+        WHEN place_of_service_std_id = '9' THEN NULL
+        WHEN place_of_service_std_id = '09' THEN NULL
+        WHEN place_of_service_std_id = '12' THEN NULL
+        WHEN place_of_service_std_id = '13' THEN NULL
+        WHEN place_of_service_std_id = '14' THEN NULL
+        WHEN place_of_service_std_id = '33' THEN NULL
         ELSE prov_referring_npi
     END as prov_referring_npi,
     CASE
-        WHEN prov_facility_npi = '5' THEN NULL
-        WHEN prov_facility_npi = '05' THEN NULL
-        WHEN prov_facility_npi = '6' THEN NULL
-        WHEN prov_facility_npi = '06' THEN NULL
-        WHEN prov_facility_npi = '7' THEN NULL
-        WHEN prov_facility_npi = '07' THEN NULL
-        WHEN prov_facility_npi = '8' THEN NULL
-        WHEN prov_facility_npi = '08' THEN NULL
-        WHEN prov_facility_npi = '9' THEN NULL
-        WHEN prov_facility_npi = '09' THEN NULL
-        WHEN prov_facility_npi = '12' THEN NULL
-        WHEN prov_facility_npi = '13' THEN NULL
-        WHEN prov_facility_npi = '14' THEN NULL
-        WHEN prov_facility_npi = '33' THEN NULL
+        WHEN place_of_service_std_id = '5' THEN NULL
+        WHEN place_of_service_std_id = '05' THEN NULL
+        WHEN place_of_service_std_id = '6' THEN NULL
+        WHEN place_of_service_std_id = '06' THEN NULL
+        WHEN place_of_service_std_id = '7' THEN NULL
+        WHEN place_of_service_std_id = '07' THEN NULL
+        WHEN place_of_service_std_id = '8' THEN NULL
+        WHEN place_of_service_std_id = '08' THEN NULL
+        WHEN place_of_service_std_id = '9' THEN NULL
+        WHEN place_of_service_std_id = '09' THEN NULL
+        WHEN place_of_service_std_id = '12' THEN NULL
+        WHEN place_of_service_std_id = '13' THEN NULL
+        WHEN place_of_service_std_id = '14' THEN NULL
+        WHEN place_of_service_std_id = '33' THEN NULL
         ELSE prov_facility_npi
     END as prov_facility_npi,
     payer_vendor_id,
@@ -288,961 +288,961 @@ CREATE VIEW default.medicalclaims (
     payer_plan_name,
     payer_type,
     CASE
-        WHEN prov_rendering_vendor_id = '5' THEN NULL
-        WHEN prov_rendering_vendor_id = '05' THEN NULL
-        WHEN prov_rendering_vendor_id = '6' THEN NULL
-        WHEN prov_rendering_vendor_id = '06' THEN NULL
-        WHEN prov_rendering_vendor_id = '7' THEN NULL
-        WHEN prov_rendering_vendor_id = '07' THEN NULL
-        WHEN prov_rendering_vendor_id = '8' THEN NULL
-        WHEN prov_rendering_vendor_id = '08' THEN NULL
-        WHEN prov_rendering_vendor_id = '9' THEN NULL
-        WHEN prov_rendering_vendor_id = '09' THEN NULL
-        WHEN prov_rendering_vendor_id = '12' THEN NULL
-        WHEN prov_rendering_vendor_id = '13' THEN NULL
-        WHEN prov_rendering_vendor_id = '14' THEN NULL
-        WHEN prov_rendering_vendor_id = '33' THEN NULL
+        WHEN place_of_service_std_id = '5' THEN NULL
+        WHEN place_of_service_std_id = '05' THEN NULL
+        WHEN place_of_service_std_id = '6' THEN NULL
+        WHEN place_of_service_std_id = '06' THEN NULL
+        WHEN place_of_service_std_id = '7' THEN NULL
+        WHEN place_of_service_std_id = '07' THEN NULL
+        WHEN place_of_service_std_id = '8' THEN NULL
+        WHEN place_of_service_std_id = '08' THEN NULL
+        WHEN place_of_service_std_id = '9' THEN NULL
+        WHEN place_of_service_std_id = '09' THEN NULL
+        WHEN place_of_service_std_id = '12' THEN NULL
+        WHEN place_of_service_std_id = '13' THEN NULL
+        WHEN place_of_service_std_id = '14' THEN NULL
+        WHEN place_of_service_std_id = '33' THEN NULL
         ELSE prov_rendering_vendor_id
     END as prov_rendering_vendor_id,
     CASE
-        WHEN prov_rendering_tax_id = '5' THEN NULL
-        WHEN prov_rendering_tax_id = '05' THEN NULL
-        WHEN prov_rendering_tax_id = '6' THEN NULL
-        WHEN prov_rendering_tax_id = '06' THEN NULL
-        WHEN prov_rendering_tax_id = '7' THEN NULL
-        WHEN prov_rendering_tax_id = '07' THEN NULL
-        WHEN prov_rendering_tax_id = '8' THEN NULL
-        WHEN prov_rendering_tax_id = '08' THEN NULL
-        WHEN prov_rendering_tax_id = '9' THEN NULL
-        WHEN prov_rendering_tax_id = '09' THEN NULL
-        WHEN prov_rendering_tax_id = '12' THEN NULL
-        WHEN prov_rendering_tax_id = '13' THEN NULL
-        WHEN prov_rendering_tax_id = '14' THEN NULL
-        WHEN prov_rendering_tax_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_tax_id
     END as prov_rendering_tax_id,
     CASE
-        WHEN prov_rendering_dea_id = '5' THEN NULL
-        WHEN prov_rendering_dea_id = '05' THEN NULL
-        WHEN prov_rendering_dea_id = '6' THEN NULL
-        WHEN prov_rendering_dea_id = '06' THEN NULL
-        WHEN prov_rendering_dea_id = '7' THEN NULL
-        WHEN prov_rendering_dea_id = '07' THEN NULL
-        WHEN prov_rendering_dea_id = '8' THEN NULL
-        WHEN prov_rendering_dea_id = '08' THEN NULL
-        WHEN prov_rendering_dea_id = '9' THEN NULL
-        WHEN prov_rendering_dea_id = '09' THEN NULL
-        WHEN prov_rendering_dea_id = '12' THEN NULL
-        WHEN prov_rendering_dea_id = '13' THEN NULL
-        WHEN prov_rendering_dea_id = '14' THEN NULL
-        WHEN prov_rendering_dea_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_dea_id
     END as prov_rendering_dea_id,
     CASE
-        WHEN prov_rendering_ssn = '5' THEN NULL
-        WHEN prov_rendering_ssn = '05' THEN NULL
-        WHEN prov_rendering_ssn = '6' THEN NULL
-        WHEN prov_rendering_ssn = '06' THEN NULL
-        WHEN prov_rendering_ssn = '7' THEN NULL
-        WHEN prov_rendering_ssn = '07' THEN NULL
-        WHEN prov_rendering_ssn = '8' THEN NULL
-        WHEN prov_rendering_ssn = '08' THEN NULL
-        WHEN prov_rendering_ssn = '9' THEN NULL
-        WHEN prov_rendering_ssn = '09' THEN NULL
-        WHEN prov_rendering_ssn = '12' THEN NULL
-        WHEN prov_rendering_ssn = '13' THEN NULL
-        WHEN prov_rendering_ssn = '14' THEN NULL
-        WHEN prov_rendering_ssn = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id = '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_ssn
     END as prov_rendering_ssn,
     CASE
-        WHEN prov_rendering_state_license = '5' THEN NULL
-        WHEN prov_rendering_state_license = '05' THEN NULL
-        WHEN prov_rendering_state_license = '6' THEN NULL
-        WHEN prov_rendering_state_license = '06' THEN NULL
-        WHEN prov_rendering_state_license = '7' THEN NULL
-        WHEN prov_rendering_state_license = '07' THEN NULL
-        WHEN prov_rendering_state_license = '8' THEN NULL
-        WHEN prov_rendering_state_license = '08' THEN NULL
-        WHEN prov_rendering_state_license = '9' THEN NULL
-        WHEN prov_rendering_state_license = '09' THEN NULL
-        WHEN prov_rendering_state_license = '12' THEN NULL
-        WHEN prov_rendering_state_license = '13' THEN NULL
-        WHEN prov_rendering_state_license = '14' THEN NULL
-        WHEN prov_rendering_state_license = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id = '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_state_license
     END as prov_rendering_state_license,
     CASE
-        WHEN prov_rendering_upin = '5' THEN NULL
-        WHEN prov_rendering_upin = '05' THEN NULL
-        WHEN prov_rendering_upin = '6' THEN NULL
-        WHEN prov_rendering_upin = '06' THEN NULL
-        WHEN prov_rendering_upin = '7' THEN NULL
-        WHEN prov_rendering_upin = '07' THEN NULL
-        WHEN prov_rendering_upin = '8' THEN NULL
-        WHEN prov_rendering_upin = '08' THEN NULL
-        WHEN prov_rendering_upin = '9' THEN NULL
-        WHEN prov_rendering_upin = '09' THEN NULL
-        WHEN prov_rendering_upin = '12' THEN NULL
-        WHEN prov_rendering_upin = '13' THEN NULL
-        WHEN prov_rendering_upin = '14' THEN NULL
-        WHEN prov_rendering_upin = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_upin
     END as prov_rendering_upin,
     CASE
-        WHEN prov_rendering_commercial_id = '5' THEN NULL
-        WHEN prov_rendering_commercial_id = '05' THEN NULL
-        WHEN prov_rendering_commercial_id = '6' THEN NULL
-        WHEN prov_rendering_commercial_id = '06' THEN NULL
-        WHEN prov_rendering_commercial_id = '7' THEN NULL
-        WHEN prov_rendering_commercial_id = '07' THEN NULL
-        WHEN prov_rendering_commercial_id = '8' THEN NULL
-        WHEN prov_rendering_commercial_id = '08' THEN NULL
-        WHEN prov_rendering_commercial_id = '9' THEN NULL
-        WHEN prov_rendering_commercial_id = '09' THEN NULL
-        WHEN prov_rendering_commercial_id = '12' THEN NULL
-        WHEN prov_rendering_commercial_id = '13' THEN NULL
-        WHEN prov_rendering_commercial_id = '14' THEN NULL
-        WHEN prov_rendering_commercial_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_commercial_id
     END as prov_rendering_commercial_id,
     CASE
-        WHEN prov_rendering_name_1 = '5' THEN NULL
-        WHEN prov_rendering_name_1 = '05' THEN NULL
-        WHEN prov_rendering_name_1 = '6' THEN NULL
-        WHEN prov_rendering_name_1 = '06' THEN NULL
-        WHEN prov_rendering_name_1 = '7' THEN NULL
-        WHEN prov_rendering_name_1 = '07' THEN NULL
-        WHEN prov_rendering_name_1 = '8' THEN NULL
-        WHEN prov_rendering_name_1 = '08' THEN NULL
-        WHEN prov_rendering_name_1 = '9' THEN NULL
-        WHEN prov_rendering_name_1 = '09' THEN NULL
-        WHEN prov_rendering_name_1 = '12' THEN NULL
-        WHEN prov_rendering_name_1 = '13' THEN NULL
-        WHEN prov_rendering_name_1 = '14' THEN NULL
-        WHEN prov_rendering_name_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_rendering_name_1
     END as prov_rendering_name_1,
     CASE
-        WHEN prov_rendering_name_2 = '5' THEN NULL
-        WHEN prov_rendering_name_2 = '05' THEN NULL
-        WHEN prov_rendering_name_2 = '6' THEN NULL
-        WHEN prov_rendering_name_2 = '06' THEN NULL
-        WHEN prov_rendering_name_2 = '7' THEN NULL
-        WHEN prov_rendering_name_2 = '07' THEN NULL
-        WHEN prov_rendering_name_2 = '8' THEN NULL
-        WHEN prov_rendering_name_2 = '08' THEN NULL
-        WHEN prov_rendering_name_2 = '9' THEN NULL
-        WHEN prov_rendering_name_2 = '09' THEN NULL
-        WHEN prov_rendering_name_2 = '12' THEN NULL
-        WHEN prov_rendering_name_2 = '13' THEN NULL
-        WHEN prov_rendering_name_2 = '14' THEN NULL
-        WHEN prov_rendering_name_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_rendering_name_2
     END as prov_rendering_name_2,
     CASE
-        WHEN prov_rendering_address_1 = '5' THEN NULL
-        WHEN prov_rendering_address_1 = '05' THEN NULL
-        WHEN prov_rendering_address_1 = '6' THEN NULL
-        WHEN prov_rendering_address_1 = '06' THEN NULL
-        WHEN prov_rendering_address_1 = '7' THEN NULL
-        WHEN prov_rendering_address_1 = '07' THEN NULL
-        WHEN prov_rendering_address_1 = '8' THEN NULL
-        WHEN prov_rendering_address_1 = '08' THEN NULL
-        WHEN prov_rendering_address_1 = '9' THEN NULL
-        WHEN prov_rendering_address_1 = '09' THEN NULL
-        WHEN prov_rendering_address_1 = '12' THEN NULL
-        WHEN prov_rendering_address_1 = '13' THEN NULL
-        WHEN prov_rendering_address_1 = '14' THEN NULL
-        WHEN prov_rendering_address_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_rendering_address_1
     END as prov_rendering_address_1,
     CASE
-        WHEN prov_rendering_address_2 = '5' THEN NULL
-        WHEN prov_rendering_address_2 = '05' THEN NULL
-        WHEN prov_rendering_address_2 = '6' THEN NULL
-        WHEN prov_rendering_address_2 = '06' THEN NULL
-        WHEN prov_rendering_address_2 = '7' THEN NULL
-        WHEN prov_rendering_address_2 = '07' THEN NULL
-        WHEN prov_rendering_address_2 = '8' THEN NULL
-        WHEN prov_rendering_address_2 = '08' THEN NULL
-        WHEN prov_rendering_address_2 = '9' THEN NULL
-        WHEN prov_rendering_address_2 = '09' THEN NULL
-        WHEN prov_rendering_address_2 = '12' THEN NULL
-        WHEN prov_rendering_address_2 = '13' THEN NULL
-        WHEN prov_rendering_address_2 = '14' THEN NULL
-        WHEN prov_rendering_address_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_rendering_address_2
     END as prov_rendering_address_2,
     CASE
-        WHEN prov_rendering_city = '5' THEN NULL
-        WHEN prov_rendering_city = '05' THEN NULL
-        WHEN prov_rendering_city = '6' THEN NULL
-        WHEN prov_rendering_city = '06' THEN NULL
-        WHEN prov_rendering_city = '7' THEN NULL
-        WHEN prov_rendering_city = '07' THEN NULL
-        WHEN prov_rendering_city = '8' THEN NULL
-        WHEN prov_rendering_city = '08' THEN NULL
-        WHEN prov_rendering_city = '9' THEN NULL
-        WHEN prov_rendering_city = '09' THEN NULL
-        WHEN prov_rendering_city = '12' THEN NULL
-        WHEN prov_rendering_city = '13' THEN NULL
-        WHEN prov_rendering_city = '14' THEN NULL
-        WHEN prov_rendering_city = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_city
     END as prov_rendering_city,
     CASE
-        WHEN prov_rendering_state = '5' THEN NULL
-        WHEN prov_rendering_state = '05' THEN NULL
-        WHEN prov_rendering_state = '6' THEN NULL
-        WHEN prov_rendering_state = '06' THEN NULL
-        WHEN prov_rendering_state = '7' THEN NULL
-        WHEN prov_rendering_state = '07' THEN NULL
-        WHEN prov_rendering_state = '8' THEN NULL
-        WHEN prov_rendering_state = '08' THEN NULL
-        WHEN prov_rendering_state = '9' THEN NULL
-        WHEN prov_rendering_state = '09' THEN NULL
-        WHEN prov_rendering_state = '12' THEN NULL
-        WHEN prov_rendering_state = '13' THEN NULL
-        WHEN prov_rendering_state = '14' THEN NULL
-        WHEN prov_rendering_state = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_state
     END as prov_rendering_state,
     CASE
-        WHEN prov_rendering_zip = '5' THEN NULL
-        WHEN prov_rendering_zip = '05' THEN NULL
-        WHEN prov_rendering_zip = '6' THEN NULL
-        WHEN prov_rendering_zip = '06' THEN NULL
-        WHEN prov_rendering_zip = '7' THEN NULL
-        WHEN prov_rendering_zip = '07' THEN NULL
-        WHEN prov_rendering_zip = '8' THEN NULL
-        WHEN prov_rendering_zip = '08' THEN NULL
-        WHEN prov_rendering_zip = '9' THEN NULL
-        WHEN prov_rendering_zip = '09' THEN NULL
-        WHEN prov_rendering_zip = '12' THEN NULL
-        WHEN prov_rendering_zip = '13' THEN NULL
-        WHEN prov_rendering_zip = '14' THEN NULL
-        WHEN prov_rendering_zip = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_zip
     END as prov_rendering_zip,
     prov_rendering_std_taxonomy,
     prov_rendering_vendor_specialty,
     CASE
-        WHEN prov_billing_vendor_id = '5' THEN NULL
-        WHEN prov_billing_vendor_id = '05' THEN NULL
-        WHEN prov_billing_vendor_id = '6' THEN NULL
-        WHEN prov_billing_vendor_id = '06' THEN NULL
-        WHEN prov_billing_vendor_id = '7' THEN NULL
-        WHEN prov_billing_vendor_id = '07' THEN NULL
-        WHEN prov_billing_vendor_id = '8' THEN NULL
-        WHEN prov_billing_vendor_id = '08' THEN NULL
-        WHEN prov_billing_vendor_id = '9' THEN NULL
-        WHEN prov_billing_vendor_id = '09' THEN NULL
-        WHEN prov_billing_vendor_id = '12' THEN NULL
-        WHEN prov_billing_vendor_id = '13' THEN NULL
-        WHEN prov_billing_vendor_id = '14' THEN NULL
-        WHEN prov_billing_vendor_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_vendor_id
     END as prov_billing_vendor_id,
     CASE
-        WHEN prov_billing_tax_id = '5' THEN NULL
-        WHEN prov_billing_tax_id = '05' THEN NULL
-        WHEN prov_billing_tax_id = '6' THEN NULL
-        WHEN prov_billing_tax_id = '06' THEN NULL
-        WHEN prov_billing_tax_id = '7' THEN NULL
-        WHEN prov_billing_tax_id = '07' THEN NULL
-        WHEN prov_billing_tax_id = '8' THEN NULL
-        WHEN prov_billing_tax_id = '08' THEN NULL
-        WHEN prov_billing_tax_id = '9' THEN NULL
-        WHEN prov_billing_tax_id = '09' THEN NULL
-        WHEN prov_billing_tax_id = '12' THEN NULL
-        WHEN prov_billing_tax_id = '13' THEN NULL
-        WHEN prov_billing_tax_id = '14' THEN NULL
-        WHEN prov_billing_tax_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_tax_id
     END as prov_billing_tax_id,
     CASE
-        WHEN prov_billing_dea_id = '5' THEN NULL
-        WHEN prov_billing_dea_id = '05' THEN NULL
-        WHEN prov_billing_dea_id = '6' THEN NULL
-        WHEN prov_billing_dea_id = '06' THEN NULL
-        WHEN prov_billing_dea_id = '7' THEN NULL
-        WHEN prov_billing_dea_id = '07' THEN NULL
-        WHEN prov_billing_dea_id = '8' THEN NULL
-        WHEN prov_billing_dea_id = '08' THEN NULL
-        WHEN prov_billing_dea_id = '9' THEN NULL
-        WHEN prov_billing_dea_id = '09' THEN NULL
-        WHEN prov_billing_dea_id = '12' THEN NULL
-        WHEN prov_billing_dea_id = '13' THEN NULL
-        WHEN prov_billing_dea_id = '14' THEN NULL
-        WHEN prov_billing_dea_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_dea_id
     END as prov_billing_dea_id,
     CASE
-        WHEN prov_billing_ssn = '5' THEN NULL
-        WHEN prov_billing_ssn = '05' THEN NULL
-        WHEN prov_billing_ssn = '6' THEN NULL
-        WHEN prov_billing_ssn = '06' THEN NULL
-        WHEN prov_billing_ssn = '7' THEN NULL
-        WHEN prov_billing_ssn = '07' THEN NULL
-        WHEN prov_billing_ssn = '8' THEN NULL
-        WHEN prov_billing_ssn = '08' THEN NULL
-        WHEN prov_billing_ssn = '9' THEN NULL
-        WHEN prov_billing_ssn = '09' THEN NULL
-        WHEN prov_billing_ssn = '12' THEN NULL
-        WHEN prov_billing_ssn = '13' THEN NULL
-        WHEN prov_billing_ssn = '14' THEN NULL
-        WHEN prov_billing_ssn = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_ssn
     END as prov_billing_ssn,
     CASE
-        WHEN prov_billing_state_license = '5' THEN NULL
-        WHEN prov_billing_state_license = '05' THEN NULL
-        WHEN prov_billing_state_license = '6' THEN NULL
-        WHEN prov_billing_state_license = '06' THEN NULL
-        WHEN prov_billing_state_license = '7' THEN NULL
-        WHEN prov_billing_state_license = '07' THEN NULL
-        WHEN prov_billing_state_license = '8' THEN NULL
-        WHEN prov_billing_state_license = '08' THEN NULL
-        WHEN prov_billing_state_license = '9' THEN NULL
-        WHEN prov_billing_state_license = '09' THEN NULL
-        WHEN prov_billing_state_license = '12' THEN NULL
-        WHEN prov_billing_state_license = '13' THEN NULL
-        WHEN prov_billing_state_license = '14' THEN NULL
-        WHEN prov_billing_state_license = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_state_license
     END as prov_billing_state_license,
     CASE
-        WHEN prov_billing_upin = '5' THEN NULL
-        WHEN prov_billing_upin = '05' THEN NULL
-        WHEN prov_billing_upin = '6' THEN NULL
-        WHEN prov_billing_upin = '06' THEN NULL
-        WHEN prov_billing_upin = '7' THEN NULL
-        WHEN prov_billing_upin = '07' THEN NULL
-        WHEN prov_billing_upin = '8' THEN NULL
-        WHEN prov_billing_upin = '08' THEN NULL
-        WHEN prov_billing_upin = '9' THEN NULL
-        WHEN prov_billing_upin = '09' THEN NULL
-        WHEN prov_billing_upin = '12' THEN NULL
-        WHEN prov_billing_upin = '13' THEN NULL
-        WHEN prov_billing_upin = '14' THEN NULL
-        WHEN prov_billing_upin = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_upin
     END as prov_billing_upin,
     CASE
-        WHEN prov_billing_commercial_id = '5' THEN NULL
-        WHEN prov_billing_commercial_id = '05' THEN NULL
-        WHEN prov_billing_commercial_id = '6' THEN NULL
-        WHEN prov_billing_commercial_id = '06' THEN NULL
-        WHEN prov_billing_commercial_id = '7' THEN NULL
-        WHEN prov_billing_commercial_id = '07' THEN NULL
-        WHEN prov_billing_commercial_id = '8' THEN NULL
-        WHEN prov_billing_commercial_id = '08' THEN NULL
-        WHEN prov_billing_commercial_id = '9' THEN NULL
-        WHEN prov_billing_commercial_id = '09' THEN NULL
-        WHEN prov_billing_commercial_id = '12' THEN NULL
-        WHEN prov_billing_commercial_id = '13' THEN NULL
-        WHEN prov_billing_commercial_id = '14' THEN NULL
-        WHEN prov_billing_commercial_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_commercial_id
     END as prov_billing_commercial_id,
     CASE
-        WHEN prov_billing_name_1 = '5' THEN NULL
-        WHEN prov_billing_name_1 = '05' THEN NULL
-        WHEN prov_billing_name_1 = '6' THEN NULL
-        WHEN prov_billing_name_1 = '06' THEN NULL
-        WHEN prov_billing_name_1 = '7' THEN NULL
-        WHEN prov_billing_name_1 = '07' THEN NULL
-        WHEN prov_billing_name_1 = '8' THEN NULL
-        WHEN prov_billing_name_1 = '08' THEN NULL
-        WHEN prov_billing_name_1 = '9' THEN NULL
-        WHEN prov_billing_name_1 = '09' THEN NULL
-        WHEN prov_billing_name_1 = '12' THEN NULL
-        WHEN prov_billing_name_1 = '13' THEN NULL
-        WHEN prov_billing_name_1 = '14' THEN NULL
-        WHEN prov_billing_name_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_billing_name_1
     END as prov_billing_name_1,
     CASE
-        WHEN prov_billing_name_2 = '5' THEN NULL
-        WHEN prov_billing_name_2 = '05' THEN NULL
-        WHEN prov_billing_name_2 = '6' THEN NULL
-        WHEN prov_billing_name_2 = '06' THEN NULL
-        WHEN prov_billing_name_2 = '7' THEN NULL
-        WHEN prov_billing_name_2 = '07' THEN NULL
-        WHEN prov_billing_name_2 = '8' THEN NULL
-        WHEN prov_billing_name_2 = '08' THEN NULL
-        WHEN prov_billing_name_2 = '9' THEN NULL
-        WHEN prov_billing_name_2 = '09' THEN NULL
-        WHEN prov_billing_name_2 = '12' THEN NULL
-        WHEN prov_billing_name_2 = '13' THEN NULL
-        WHEN prov_billing_name_2 = '14' THEN NULL
-        WHEN prov_billing_name_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_billing_name_2
     END as prov_billing_name_2,
     CASE
-        WHEN prov_billing_address_1 = '5' THEN NULL
-        WHEN prov_billing_address_1 = '05' THEN NULL
-        WHEN prov_billing_address_1 = '6' THEN NULL
-        WHEN prov_billing_address_1 = '06' THEN NULL
-        WHEN prov_billing_address_1 = '7' THEN NULL
-        WHEN prov_billing_address_1 = '07' THEN NULL
-        WHEN prov_billing_address_1 = '8' THEN NULL
-        WHEN prov_billing_address_1 = '08' THEN NULL
-        WHEN prov_billing_address_1 = '9' THEN NULL
-        WHEN prov_billing_address_1 = '09' THEN NULL
-        WHEN prov_billing_address_1 = '12' THEN NULL
-        WHEN prov_billing_address_1 = '13' THEN NULL
-        WHEN prov_billing_address_1 = '14' THEN NULL
-        WHEN prov_billing_address_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_billing_address_1
     END as prov_billing_address_1,
     CASE
-        WHEN prov_billing_address_2 = '5' THEN NULL
-        WHEN prov_billing_address_2 = '05' THEN NULL
-        WHEN prov_billing_address_2 = '6' THEN NULL
-        WHEN prov_billing_address_2 = '06' THEN NULL
-        WHEN prov_billing_address_2 = '7' THEN NULL
-        WHEN prov_billing_address_2 = '07' THEN NULL
-        WHEN prov_billing_address_2 = '8' THEN NULL
-        WHEN prov_billing_address_2 = '08' THEN NULL
-        WHEN prov_billing_address_2 = '9' THEN NULL
-        WHEN prov_billing_address_2 = '09' THEN NULL
-        WHEN prov_billing_address_2 = '12' THEN NULL
-        WHEN prov_billing_address_2 = '13' THEN NULL
-        WHEN prov_billing_address_2 = '14' THEN NULL
-        WHEN prov_billing_address_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_billing_address_2
     END as prov_billing_address_2,
     CASE
-        WHEN prov_billing_city = '5' THEN NULL
-        WHEN prov_billing_city = '05' THEN NULL
-        WHEN prov_billing_city = '6' THEN NULL
-        WHEN prov_billing_city = '06' THEN NULL
-        WHEN prov_billing_city = '7' THEN NULL
-        WHEN prov_billing_city = '07' THEN NULL
-        WHEN prov_billing_city = '8' THEN NULL
-        WHEN prov_billing_city = '08' THEN NULL
-        WHEN prov_billing_city = '9' THEN NULL
-        WHEN prov_billing_city = '09' THEN NULL
-        WHEN prov_billing_city = '12' THEN NULL
-        WHEN prov_billing_city = '13' THEN NULL
-        WHEN prov_billing_city = '14' THEN NULL
-        WHEN prov_billing_city = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_city
     END as prov_billing_city,
     CASE
-        WHEN prov_billing_state = '5' THEN NULL
-        WHEN prov_billing_state = '05' THEN NULL
-        WHEN prov_billing_state = '6' THEN NULL
-        WHEN prov_billing_state = '06' THEN NULL
-        WHEN prov_billing_state = '7' THEN NULL
-        WHEN prov_billing_state = '07' THEN NULL
-        WHEN prov_billing_state = '8' THEN NULL
-        WHEN prov_billing_state = '08' THEN NULL
-        WHEN prov_billing_state = '9' THEN NULL
-        WHEN prov_billing_state = '09' THEN NULL
-        WHEN prov_billing_state = '12' THEN NULL
-        WHEN prov_billing_state = '13' THEN NULL
-        WHEN prov_billing_state = '14' THEN NULL
-        WHEN prov_billing_state = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_state
     END as prov_billing_state,
     CASE
-        WHEN prov_billing_zip = '5' THEN NULL
-        WHEN prov_billing_zip = '05' THEN NULL
-        WHEN prov_billing_zip = '6' THEN NULL
-        WHEN prov_billing_zip = '06' THEN NULL
-        WHEN prov_billing_zip = '7' THEN NULL
-        WHEN prov_billing_zip = '07' THEN NULL
-        WHEN prov_billing_zip = '8' THEN NULL
-        WHEN prov_billing_zip = '08' THEN NULL
-        WHEN prov_billing_zip = '9' THEN NULL
-        WHEN prov_billing_zip = '09' THEN NULL
-        WHEN prov_billing_zip = '12' THEN NULL
-        WHEN prov_billing_zip = '13' THEN NULL
-        WHEN prov_billing_zip = '14' THEN NULL
-        WHEN prov_billing_zip = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_zip
     END as prov_billing_zip,
     prov_billing_std_taxonomy,
     prov_billing_vendor_specialty,
     CASE
-        WHEN prov_referring_vendor_id = '5' THEN NULL
-        WHEN prov_referring_vendor_id = '05' THEN NULL
-        WHEN prov_referring_vendor_id = '6' THEN NULL
-        WHEN prov_referring_vendor_id = '06' THEN NULL
-        WHEN prov_referring_vendor_id = '7' THEN NULL
-        WHEN prov_referring_vendor_id = '07' THEN NULL
-        WHEN prov_referring_vendor_id = '8' THEN NULL
-        WHEN prov_referring_vendor_id = '08' THEN NULL
-        WHEN prov_referring_vendor_id = '9' THEN NULL
-        WHEN prov_referring_vendor_id = '09' THEN NULL
-        WHEN prov_referring_vendor_id = '12' THEN NULL
-        WHEN prov_referring_vendor_id = '13' THEN NULL
-        WHEN prov_referring_vendor_id = '14' THEN NULL
-        WHEN prov_referring_vendor_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_vendor_id
     END as prov_referring_vendor_id,
     CASE
-        WHEN prov_referring_tax_id = '5' THEN NULL
-        WHEN prov_referring_tax_id = '05' THEN NULL
-        WHEN prov_referring_tax_id = '6' THEN NULL
-        WHEN prov_referring_tax_id = '06' THEN NULL
-        WHEN prov_referring_tax_id = '7' THEN NULL
-        WHEN prov_referring_tax_id = '07' THEN NULL
-        WHEN prov_referring_tax_id = '8' THEN NULL
-        WHEN prov_referring_tax_id = '08' THEN NULL
-        WHEN prov_referring_tax_id = '9' THEN NULL
-        WHEN prov_referring_tax_id = '09' THEN NULL
-        WHEN prov_referring_tax_id = '12' THEN NULL
-        WHEN prov_referring_tax_id = '13' THEN NULL
-        WHEN prov_referring_tax_id = '14' THEN NULL
-        WHEN prov_referring_tax_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_tax_id
     END as prov_referring_tax_id,
     CASE
-        WHEN prov_referring_dea_id = '5' THEN NULL
-        WHEN prov_referring_dea_id = '05' THEN NULL
-        WHEN prov_referring_dea_id = '6' THEN NULL
-        WHEN prov_referring_dea_id = '06' THEN NULL
-        WHEN prov_referring_dea_id = '7' THEN NULL
-        WHEN prov_referring_dea_id = '07' THEN NULL
-        WHEN prov_referring_dea_id = '8' THEN NULL
-        WHEN prov_referring_dea_id = '08' THEN NULL
-        WHEN prov_referring_dea_id = '9' THEN NULL
-        WHEN prov_referring_dea_id = '09' THEN NULL
-        WHEN prov_referring_dea_id = '12' THEN NULL
-        WHEN prov_referring_dea_id = '13' THEN NULL
-        WHEN prov_referring_dea_id = '14' THEN NULL
-        WHEN prov_referring_dea_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_dea_id
     END as prov_referring_dea_id,
     CASE
-        WHEN prov_referring_ssn = '5' THEN NULL
-        WHEN prov_referring_ssn = '05' THEN NULL
-        WHEN prov_referring_ssn = '6' THEN NULL
-        WHEN prov_referring_ssn = '06' THEN NULL
-        WHEN prov_referring_ssn = '7' THEN NULL
-        WHEN prov_referring_ssn = '07' THEN NULL
-        WHEN prov_referring_ssn = '8' THEN NULL
-        WHEN prov_referring_ssn = '08' THEN NULL
-        WHEN prov_referring_ssn = '9' THEN NULL
-        WHEN prov_referring_ssn = '09' THEN NULL
-        WHEN prov_referring_ssn = '12' THEN NULL
-        WHEN prov_referring_ssn = '13' THEN NULL
-        WHEN prov_referring_ssn = '14' THEN NULL
-        WHEN prov_referring_ssn = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_ssn
     END as prov_referring_ssn,
     CASE
-        WHEN prov_referring_state_license = '5' THEN NULL
-        WHEN prov_referring_state_license = '05' THEN NULL
-        WHEN prov_referring_state_license = '6' THEN NULL
-        WHEN prov_referring_state_license = '06' THEN NULL
-        WHEN prov_referring_state_license = '7' THEN NULL
-        WHEN prov_referring_state_license = '07' THEN NULL
-        WHEN prov_referring_state_license = '8' THEN NULL
-        WHEN prov_referring_state_license = '08' THEN NULL
-        WHEN prov_referring_state_license = '9' THEN NULL
-        WHEN prov_referring_state_license = '09' THEN NULL
-        WHEN prov_referring_state_license = '12' THEN NULL
-        WHEN prov_referring_state_license = '13' THEN NULL
-        WHEN prov_referring_state_license = '14' THEN NULL
-        WHEN prov_referring_state_license = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_state_license
     END as prov_referring_state_license,
     CASE
-        WHEN prov_referring_upin = '5' THEN NULL
-        WHEN prov_referring_upin = '05' THEN NULL
-        WHEN prov_referring_upin = '6' THEN NULL
-        WHEN prov_referring_upin = '06' THEN NULL
-        WHEN prov_referring_upin = '7' THEN NULL
-        WHEN prov_referring_upin = '07' THEN NULL
-        WHEN prov_referring_upin = '8' THEN NULL
-        WHEN prov_referring_upin = '08' THEN NULL
-        WHEN prov_referring_upin = '9' THEN NULL
-        WHEN prov_referring_upin = '09' THEN NULL
-        WHEN prov_referring_upin = '12' THEN NULL
-        WHEN prov_referring_upin = '13' THEN NULL
-        WHEN prov_referring_upin = '14' THEN NULL
-        WHEN prov_referring_upin = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_upin
     END as prov_referring_upin,
     CASE
-        WHEN prov_referring_commercial_id = '5' THEN NULL
-        WHEN prov_referring_commercial_id = '05' THEN NULL
-        WHEN prov_referring_commercial_id = '6' THEN NULL
-        WHEN prov_referring_commercial_id = '06' THEN NULL
-        WHEN prov_referring_commercial_id = '7' THEN NULL
-        WHEN prov_referring_commercial_id = '07' THEN NULL
-        WHEN prov_referring_commercial_id = '8' THEN NULL
-        WHEN prov_referring_commercial_id = '08' THEN NULL
-        WHEN prov_referring_commercial_id = '9' THEN NULL
-        WHEN prov_referring_commercial_id = '09' THEN NULL
-        WHEN prov_referring_commercial_id = '12' THEN NULL
-        WHEN prov_referring_commercial_id = '13' THEN NULL
-        WHEN prov_referring_commercial_id = '14' THEN NULL
-        WHEN prov_referring_commercial_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_commercial_id
     END as prov_referring_commercial_id,
     CASE
-        WHEN prov_referring_name_1 = '5' THEN NULL
-        WHEN prov_referring_name_1 = '05' THEN NULL
-        WHEN prov_referring_name_1 = '6' THEN NULL
-        WHEN prov_referring_name_1 = '06' THEN NULL
-        WHEN prov_referring_name_1 = '7' THEN NULL
-        WHEN prov_referring_name_1 = '07' THEN NULL
-        WHEN prov_referring_name_1 = '8' THEN NULL
-        WHEN prov_referring_name_1 = '08' THEN NULL
-        WHEN prov_referring_name_1 = '9' THEN NULL
-        WHEN prov_referring_name_1 = '09' THEN NULL
-        WHEN prov_referring_name_1 = '12' THEN NULL
-        WHEN prov_referring_name_1 = '13' THEN NULL
-        WHEN prov_referring_name_1 = '14' THEN NULL
-        WHEN prov_referring_name_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_referring_name_1
     END as prov_referring_name_1,
     CASE
-        WHEN prov_referring_name_2 = '5' THEN NULL
-        WHEN prov_referring_name_2 = '05' THEN NULL
-        WHEN prov_referring_name_2 = '6' THEN NULL
-        WHEN prov_referring_name_2 = '06' THEN NULL
-        WHEN prov_referring_name_2 = '7' THEN NULL
-        WHEN prov_referring_name_2 = '07' THEN NULL
-        WHEN prov_referring_name_2 = '8' THEN NULL
-        WHEN prov_referring_name_2 = '08' THEN NULL
-        WHEN prov_referring_name_2 = '9' THEN NULL
-        WHEN prov_referring_name_2 = '09' THEN NULL
-        WHEN prov_referring_name_2 = '12' THEN NULL
-        WHEN prov_referring_name_2 = '13' THEN NULL
-        WHEN prov_referring_name_2 = '14' THEN NULL
-        WHEN prov_referring_name_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_referring_name_2
     END as prov_referring_name_2,
     CASE
-        WHEN prov_referring_address_1 = '5' THEN NULL
-        WHEN prov_referring_address_1 = '05' THEN NULL
-        WHEN prov_referring_address_1 = '6' THEN NULL
-        WHEN prov_referring_address_1 = '06' THEN NULL
-        WHEN prov_referring_address_1 = '7' THEN NULL
-        WHEN prov_referring_address_1 = '07' THEN NULL
-        WHEN prov_referring_address_1 = '8' THEN NULL
-        WHEN prov_referring_address_1 = '08' THEN NULL
-        WHEN prov_referring_address_1 = '9' THEN NULL
-        WHEN prov_referring_address_1 = '09' THEN NULL
-        WHEN prov_referring_address_1 = '12' THEN NULL
-        WHEN prov_referring_address_1 = '13' THEN NULL
-        WHEN prov_referring_address_1 = '14' THEN NULL
-        WHEN prov_referring_address_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_referring_address_1
     END as prov_referring_address_1,
     CASE
-        WHEN prov_referring_address_2 = '5' THEN NULL
-        WHEN prov_referring_address_2 = '05' THEN NULL
-        WHEN prov_referring_address_2 = '6' THEN NULL
-        WHEN prov_referring_address_2 = '06' THEN NULL
-        WHEN prov_referring_address_2 = '7' THEN NULL
-        WHEN prov_referring_address_2 = '07' THEN NULL
-        WHEN prov_referring_address_2 = '8' THEN NULL
-        WHEN prov_referring_address_2 = '08' THEN NULL
-        WHEN prov_referring_address_2 = '9' THEN NULL
-        WHEN prov_referring_address_2 = '09' THEN NULL
-        WHEN prov_referring_address_2 = '12' THEN NULL
-        WHEN prov_referring_address_2 = '13' THEN NULL
-        WHEN prov_referring_address_2 = '14' THEN NULL
-        WHEN prov_referring_address_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_referring_address_2
     END as prov_referring_address_2,
     CASE
-        WHEN prov_referring_city = '5' THEN NULL
-        WHEN prov_referring_city = '05' THEN NULL
-        WHEN prov_referring_city = '6' THEN NULL
-        WHEN prov_referring_city = '06' THEN NULL
-        WHEN prov_referring_city = '7' THEN NULL
-        WHEN prov_referring_city = '07' THEN NULL
-        WHEN prov_referring_city = '8' THEN NULL
-        WHEN prov_referring_city = '08' THEN NULL
-        WHEN prov_referring_city = '9' THEN NULL
-        WHEN prov_referring_city = '09' THEN NULL
-        WHEN prov_referring_city = '12' THEN NULL
-        WHEN prov_referring_city = '13' THEN NULL
-        WHEN prov_referring_city = '14' THEN NULL
-        WHEN prov_referring_city = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_city
     END as prov_referring_city,
     CASE
-        WHEN prov_referring_state = '5' THEN NULL
-        WHEN prov_referring_state = '05' THEN NULL
-        WHEN prov_referring_state = '6' THEN NULL
-        WHEN prov_referring_state = '06' THEN NULL
-        WHEN prov_referring_state = '7' THEN NULL
-        WHEN prov_referring_state = '07' THEN NULL
-        WHEN prov_referring_state = '8' THEN NULL
-        WHEN prov_referring_state = '08' THEN NULL
-        WHEN prov_referring_state = '9' THEN NULL
-        WHEN prov_referring_state = '09' THEN NULL
-        WHEN prov_referring_state = '12' THEN NULL
-        WHEN prov_referring_state = '13' THEN NULL
-        WHEN prov_referring_state = '14' THEN NULL
-        WHEN prov_referring_state = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_state
     END as prov_referring_state,
     CASE
-        WHEN prov_referring_zip = '5' THEN NULL
-        WHEN prov_referring_zip = '05' THEN NULL
-        WHEN prov_referring_zip = '6' THEN NULL
-        WHEN prov_referring_zip = '06' THEN NULL
-        WHEN prov_referring_zip = '7' THEN NULL
-        WHEN prov_referring_zip = '07' THEN NULL
-        WHEN prov_referring_zip = '8' THEN NULL
-        WHEN prov_referring_zip = '08' THEN NULL
-        WHEN prov_referring_zip = '9' THEN NULL
-        WHEN prov_referring_zip = '09' THEN NULL
-        WHEN prov_referring_zip = '12' THEN NULL
-        WHEN prov_referring_zip = '13' THEN NULL
-        WHEN prov_referring_zip = '14' THEN NULL
-        WHEN prov_referring_zip = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_zip
     END as prov_referring_zip,
     prov_referring_std_taxonomy,
     prov_referring_vendor_specialty,
     CASE
-        WHEN prov_facility_vendor_id = '5' THEN NULL
-        WHEN prov_facility_vendor_id = '05' THEN NULL
-        WHEN prov_facility_vendor_id = '6' THEN NULL
-        WHEN prov_facility_vendor_id = '06' THEN NULL
-        WHEN prov_facility_vendor_id = '7' THEN NULL
-        WHEN prov_facility_vendor_id = '07' THEN NULL
-        WHEN prov_facility_vendor_id = '8' THEN NULL
-        WHEN prov_facility_vendor_id = '08' THEN NULL
-        WHEN prov_facility_vendor_id = '9' THEN NULL
-        WHEN prov_facility_vendor_id = '09' THEN NULL
-        WHEN prov_facility_vendor_id = '12' THEN NULL
-        WHEN prov_facility_vendor_id = '13' THEN NULL
-        WHEN prov_facility_vendor_id = '14' THEN NULL
-        WHEN prov_facility_vendor_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_vendor_id
     END as prov_facility_vendor_id,
     CASE
-        WHEN prov_facility_tax_id = '5' THEN NULL
-        WHEN prov_facility_tax_id = '05' THEN NULL
-        WHEN prov_facility_tax_id = '6' THEN NULL
-        WHEN prov_facility_tax_id = '06' THEN NULL
-        WHEN prov_facility_tax_id = '7' THEN NULL
-        WHEN prov_facility_tax_id = '07' THEN NULL
-        WHEN prov_facility_tax_id = '8' THEN NULL
-        WHEN prov_facility_tax_id = '08' THEN NULL
-        WHEN prov_facility_tax_id = '9' THEN NULL
-        WHEN prov_facility_tax_id = '09' THEN NULL
-        WHEN prov_facility_tax_id = '12' THEN NULL
-        WHEN prov_facility_tax_id = '13' THEN NULL
-        WHEN prov_facility_tax_id = '14' THEN NULL
-        WHEN prov_facility_tax_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_tax_id
     END as prov_facility_tax_id,
     CASE
-        WHEN prov_facility_dea_id = '5' THEN NULL
-        WHEN prov_facility_dea_id = '05' THEN NULL
-        WHEN prov_facility_dea_id = '6' THEN NULL
-        WHEN prov_facility_dea_id = '06' THEN NULL
-        WHEN prov_facility_dea_id = '7' THEN NULL
-        WHEN prov_facility_dea_id = '07' THEN NULL
-        WHEN prov_facility_dea_id = '8' THEN NULL
-        WHEN prov_facility_dea_id = '08' THEN NULL
-        WHEN prov_facility_dea_id = '9' THEN NULL
-        WHEN prov_facility_dea_id = '09' THEN NULL
-        WHEN prov_facility_dea_id = '12' THEN NULL
-        WHEN prov_facility_dea_id = '13' THEN NULL
-        WHEN prov_facility_dea_id = '14' THEN NULL
-        WHEN prov_facility_dea_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_dea_id
     END as prov_facility_dea_id,
     CASE
-        WHEN prov_facility_ssn = '5' THEN NULL
-        WHEN prov_facility_ssn = '05' THEN NULL
-        WHEN prov_facility_ssn = '6' THEN NULL
-        WHEN prov_facility_ssn = '06' THEN NULL
-        WHEN prov_facility_ssn = '7' THEN NULL
-        WHEN prov_facility_ssn = '07' THEN NULL
-        WHEN prov_facility_ssn = '8' THEN NULL
-        WHEN prov_facility_ssn = '08' THEN NULL
-        WHEN prov_facility_ssn = '9' THEN NULL
-        WHEN prov_facility_ssn = '09' THEN NULL
-        WHEN prov_facility_ssn = '12' THEN NULL
-        WHEN prov_facility_ssn = '13' THEN NULL
-        WHEN prov_facility_ssn = '14' THEN NULL
-        WHEN prov_facility_ssn = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_ssn
     END as prov_facility_ssn,
     CASE
-        WHEN prov_facility_state_license = '5' THEN NULL
-        WHEN prov_facility_state_license = '05' THEN NULL
-        WHEN prov_facility_state_license = '6' THEN NULL
-        WHEN prov_facility_state_license = '06' THEN NULL
-        WHEN prov_facility_state_license = '7' THEN NULL
-        WHEN prov_facility_state_license = '07' THEN NULL
-        WHEN prov_facility_state_license = '8' THEN NULL
-        WHEN prov_facility_state_license = '08' THEN NULL
-        WHEN prov_facility_state_license = '9' THEN NULL
-        WHEN prov_facility_state_license = '09' THEN NULL
-        WHEN prov_facility_state_license = '12' THEN NULL
-        WHEN prov_facility_state_license = '13' THEN NULL
-        WHEN prov_facility_state_license = '14' THEN NULL
-        WHEN prov_facility_state_license = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_state_license
     END as prov_facility_state_license,
     CASE
-        WHEN prov_facility_upin = '5' THEN NULL
-        WHEN prov_facility_upin = '05' THEN NULL
-        WHEN prov_facility_upin = '6' THEN NULL
-        WHEN prov_facility_upin = '06' THEN NULL
-        WHEN prov_facility_upin = '7' THEN NULL
-        WHEN prov_facility_upin = '07' THEN NULL
-        WHEN prov_facility_upin = '8' THEN NULL
-        WHEN prov_facility_upin = '08' THEN NULL
-        WHEN prov_facility_upin = '9' THEN NULL
-        WHEN prov_facility_upin = '09' THEN NULL
-        WHEN prov_facility_upin = '12' THEN NULL
-        WHEN prov_facility_upin = '13' THEN NULL
-        WHEN prov_facility_upin = '14' THEN NULL
-        WHEN prov_facility_upin = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_upin
     END as prov_facility_upin,
     CASE
-        WHEN prov_facility_commercial_id = '5' THEN NULL
-        WHEN prov_facility_commercial_id = '05' THEN NULL
-        WHEN prov_facility_commercial_id = '6' THEN NULL
-        WHEN prov_facility_commercial_id = '06' THEN NULL
-        WHEN prov_facility_commercial_id = '7' THEN NULL
-        WHEN prov_facility_commercial_id = '07' THEN NULL
-        WHEN prov_facility_commercial_id = '8' THEN NULL
-        WHEN prov_facility_commercial_id = '08' THEN NULL
-        WHEN prov_facility_commercial_id = '9' THEN NULL
-        WHEN prov_facility_commercial_id = '09' THEN NULL
-        WHEN prov_facility_commercial_id = '12' THEN NULL
-        WHEN prov_facility_commercial_id = '13' THEN NULL
-        WHEN prov_facility_commercial_id = '14' THEN NULL
-        WHEN prov_facility_commercial_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_commercial_id
     END as prov_facility_commercial_id,
     CASE
-        WHEN prov_facility_name_1 = '5' THEN NULL
-        WHEN prov_facility_name_1 = '05' THEN NULL
-        WHEN prov_facility_name_1 = '6' THEN NULL
-        WHEN prov_facility_name_1 = '06' THEN NULL
-        WHEN prov_facility_name_1 = '7' THEN NULL
-        WHEN prov_facility_name_1 = '07' THEN NULL
-        WHEN prov_facility_name_1 = '8' THEN NULL
-        WHEN prov_facility_name_1 = '08' THEN NULL
-        WHEN prov_facility_name_1 = '9' THEN NULL
-        WHEN prov_facility_name_1 = '09' THEN NULL
-        WHEN prov_facility_name_1 = '12' THEN NULL
-        WHEN prov_facility_name_1 = '13' THEN NULL
-        WHEN prov_facility_name_1 = '14' THEN NULL
-        WHEN prov_facility_name_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_facility_name_1
     END as prov_facility_name_1,
     CASE
-        WHEN prov_facility_name_2 = '5' THEN NULL
-        WHEN prov_facility_name_2 = '05' THEN NULL
-        WHEN prov_facility_name_2 = '6' THEN NULL
-        WHEN prov_facility_name_2 = '06' THEN NULL
-        WHEN prov_facility_name_2 = '7' THEN NULL
-        WHEN prov_facility_name_2 = '07' THEN NULL
-        WHEN prov_facility_name_2 = '8' THEN NULL
-        WHEN prov_facility_name_2 = '08' THEN NULL
-        WHEN prov_facility_name_2 = '9' THEN NULL
-        WHEN prov_facility_name_2 = '09' THEN NULL
-        WHEN prov_facility_name_2 = '12' THEN NULL
-        WHEN prov_facility_name_2 = '13' THEN NULL
-        WHEN prov_facility_name_2 = '14' THEN NULL
-        WHEN prov_facility_name_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_facility_name_2
     END as prov_facility_name_2,
     CASE
-        WHEN prov_facility_address_1 = '5' THEN NULL
-        WHEN prov_facility_address_1 = '05' THEN NULL
-        WHEN prov_facility_address_1 = '6' THEN NULL
-        WHEN prov_facility_address_1 = '06' THEN NULL
-        WHEN prov_facility_address_1 = '7' THEN NULL
-        WHEN prov_facility_address_1 = '07' THEN NULL
-        WHEN prov_facility_address_1 = '8' THEN NULL
-        WHEN prov_facility_address_1 = '08' THEN NULL
-        WHEN prov_facility_address_1 = '9' THEN NULL
-        WHEN prov_facility_address_1 = '09' THEN NULL
-        WHEN prov_facility_address_1 = '12' THEN NULL
-        WHEN prov_facility_address_1 = '13' THEN NULL
-        WHEN prov_facility_address_1 = '14' THEN NULL
-        WHEN prov_facility_address_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_facility_address_1
     END as prov_facility_address_1,
     CASE
-        WHEN prov_facility_address_2 = '5' THEN NULL
-        WHEN prov_facility_address_2 = '05' THEN NULL
-        WHEN prov_facility_address_2 = '6' THEN NULL
-        WHEN prov_facility_address_2 = '06' THEN NULL
-        WHEN prov_facility_address_2 = '7' THEN NULL
-        WHEN prov_facility_address_2 = '07' THEN NULL
-        WHEN prov_facility_address_2 = '8' THEN NULL
-        WHEN prov_facility_address_2 = '08' THEN NULL
-        WHEN prov_facility_address_2 = '9' THEN NULL
-        WHEN prov_facility_address_2 = '09' THEN NULL
-        WHEN prov_facility_address_2 = '12' THEN NULL
-        WHEN prov_facility_address_2 = '13' THEN NULL
-        WHEN prov_facility_address_2 = '14' THEN NULL
-        WHEN prov_facility_address_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_facility_address_2
     END as prov_facility_address_2,
     CASE
-        WHEN prov_facility_city = '5' THEN NULL
-        WHEN prov_facility_city = '05' THEN NULL
-        WHEN prov_facility_city = '6' THEN NULL
-        WHEN prov_facility_city = '06' THEN NULL
-        WHEN prov_facility_city = '7' THEN NULL
-        WHEN prov_facility_city = '07' THEN NULL
-        WHEN prov_facility_city = '8' THEN NULL
-        WHEN prov_facility_city = '08' THEN NULL
-        WHEN prov_facility_city = '9' THEN NULL
-        WHEN prov_facility_city = '09' THEN NULL
-        WHEN prov_facility_city = '12' THEN NULL
-        WHEN prov_facility_city = '13' THEN NULL
-        WHEN prov_facility_city = '14' THEN NULL
-        WHEN prov_facility_city = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_city
     END as prov_facility_city,
     CASE
-        WHEN prov_facility_state = '5' THEN NULL
-        WHEN prov_facility_state = '05' THEN NULL
-        WHEN prov_facility_state = '6' THEN NULL
-        WHEN prov_facility_state = '06' THEN NULL
-        WHEN prov_facility_state = '7' THEN NULL
-        WHEN prov_facility_state = '07' THEN NULL
-        WHEN prov_facility_state = '8' THEN NULL
-        WHEN prov_facility_state = '08' THEN NULL
-        WHEN prov_facility_state = '9' THEN NULL
-        WHEN prov_facility_state = '09' THEN NULL
-        WHEN prov_facility_state = '12' THEN NULL
-        WHEN prov_facility_state = '13' THEN NULL
-        WHEN prov_facility_state = '14' THEN NULL
-        WHEN prov_facility_state = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_state
     END as prov_facility_state,
     CASE
-        WHEN prov_facility_zip = '5' THEN NULL
-        WHEN prov_facility_zip = '05' THEN NULL
-        WHEN prov_facility_zip = '6' THEN NULL
-        WHEN prov_facility_zip = '06' THEN NULL
-        WHEN prov_facility_zip = '7' THEN NULL
-        WHEN prov_facility_zip = '07' THEN NULL
-        WHEN prov_facility_zip = '8' THEN NULL
-        WHEN prov_facility_zip = '08' THEN NULL
-        WHEN prov_facility_zip = '9' THEN NULL
-        WHEN prov_facility_zip = '09' THEN NULL
-        WHEN prov_facility_zip = '12' THEN NULL
-        WHEN prov_facility_zip = '13' THEN NULL
-        WHEN prov_facility_zip = '14' THEN NULL
-        WHEN prov_facility_zip = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_zip
     END as prov_facility_zip,
     prov_facility_std_taxonomy,
@@ -1331,71 +1331,71 @@ SELECT CAST(record_id AS bigint),
     CAST(total_charge AS float),
     CAST(total_allowed AS float),
     CASE
-        WHEN prov_rendering_npi = '5' THEN NULL
-        WHEN prov_rendering_npi = '05' THEN NULL
-        WHEN prov_rendering_npi = '6' THEN NULL
-        WHEN prov_rendering_npi = '06' THEN NULL
-        WHEN prov_rendering_npi = '7' THEN NULL
-        WHEN prov_rendering_npi = '07' THEN NULL
-        WHEN prov_rendering_npi = '8' THEN NULL
-        WHEN prov_rendering_npi = '08' THEN NULL
-        WHEN prov_rendering_npi = '9' THEN NULL
-        WHEN prov_rendering_npi = '09' THEN NULL
-        WHEN prov_rendering_npi = '12' THEN NULL
-        WHEN prov_rendering_npi = '13' THEN NULL
-        WHEN prov_rendering_npi = '14' THEN NULL
-        WHEN prov_rendering_npi = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_npi
     END as prov_rendering_npi,
     CASE
-        WHEN prov_billing_npi = '5' THEN NULL
-        WHEN prov_billing_npi = '05' THEN NULL
-        WHEN prov_billing_npi = '6' THEN NULL
-        WHEN prov_billing_npi = '06' THEN NULL
-        WHEN prov_billing_npi = '7' THEN NULL
-        WHEN prov_billing_npi = '07' THEN NULL
-        WHEN prov_billing_npi = '8' THEN NULL
-        WHEN prov_billing_npi = '08' THEN NULL
-        WHEN prov_billing_npi = '9' THEN NULL
-        WHEN prov_billing_npi = '09' THEN NULL
-        WHEN prov_billing_npi = '12' THEN NULL
-        WHEN prov_billing_npi = '13' THEN NULL
-        WHEN prov_billing_npi = '14' THEN NULL
-        WHEN prov_billing_npi = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_npi
     END as prov_billing_npi,
     CASE
-        WHEN prov_referring_npi = '5' THEN NULL
-        WHEN prov_referring_npi = '05' THEN NULL
-        WHEN prov_referring_npi = '6' THEN NULL
-        WHEN prov_referring_npi = '06' THEN NULL
-        WHEN prov_referring_npi = '7' THEN NULL
-        WHEN prov_referring_npi = '07' THEN NULL
-        WHEN prov_referring_npi = '8' THEN NULL
-        WHEN prov_referring_npi = '08' THEN NULL
-        WHEN prov_referring_npi = '9' THEN NULL
-        WHEN prov_referring_npi = '09' THEN NULL
-        WHEN prov_referring_npi = '12' THEN NULL
-        WHEN prov_referring_npi = '13' THEN NULL
-        WHEN prov_referring_npi = '14' THEN NULL
-        WHEN prov_referring_npi = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_npi
     END as prov_referring_npi,
     CASE
-        WHEN prov_facility_npi = '5' THEN NULL
-        WHEN prov_facility_npi = '05' THEN NULL
-        WHEN prov_facility_npi = '6' THEN NULL
-        WHEN prov_facility_npi = '06' THEN NULL
-        WHEN prov_facility_npi = '7' THEN NULL
-        WHEN prov_facility_npi = '07' THEN NULL
-        WHEN prov_facility_npi = '8' THEN NULL
-        WHEN prov_facility_npi = '08' THEN NULL
-        WHEN prov_facility_npi = '9' THEN NULL
-        WHEN prov_facility_npi = '09' THEN NULL
-        WHEN prov_facility_npi = '12' THEN NULL
-        WHEN prov_facility_npi = '13' THEN NULL
-        WHEN prov_facility_npi = '14' THEN NULL
-        WHEN prov_facility_npi = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_npi
     END as prov_facility_npi,
     payer_vendor_id,
@@ -1406,961 +1406,961 @@ SELECT CAST(record_id AS bigint),
     payer_plan_name,
     payer_type,
     CASE
-        WHEN prov_rendering_vendor_id = '5' THEN NULL
-        WHEN prov_rendering_vendor_id = '05' THEN NULL
-        WHEN prov_rendering_vendor_id = '6' THEN NULL
-        WHEN prov_rendering_vendor_id = '06' THEN NULL
-        WHEN prov_rendering_vendor_id = '7' THEN NULL
-        WHEN prov_rendering_vendor_id = '07' THEN NULL
-        WHEN prov_rendering_vendor_id = '8' THEN NULL
-        WHEN prov_rendering_vendor_id = '08' THEN NULL
-        WHEN prov_rendering_vendor_id = '9' THEN NULL
-        WHEN prov_rendering_vendor_id = '09' THEN NULL
-        WHEN prov_rendering_vendor_id = '12' THEN NULL
-        WHEN prov_rendering_vendor_id = '13' THEN NULL
-        WHEN prov_rendering_vendor_id = '14' THEN NULL
-        WHEN prov_rendering_vendor_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_vendor_id
     END as prov_rendering_vendor_id,
     CASE
-        WHEN prov_rendering_tax_id = '5' THEN NULL
-        WHEN prov_rendering_tax_id = '05' THEN NULL
-        WHEN prov_rendering_tax_id = '6' THEN NULL
-        WHEN prov_rendering_tax_id = '06' THEN NULL
-        WHEN prov_rendering_tax_id = '7' THEN NULL
-        WHEN prov_rendering_tax_id = '07' THEN NULL
-        WHEN prov_rendering_tax_id = '8' THEN NULL
-        WHEN prov_rendering_tax_id = '08' THEN NULL
-        WHEN prov_rendering_tax_id = '9' THEN NULL
-        WHEN prov_rendering_tax_id = '09' THEN NULL
-        WHEN prov_rendering_tax_id = '12' THEN NULL
-        WHEN prov_rendering_tax_id = '13' THEN NULL
-        WHEN prov_rendering_tax_id = '14' THEN NULL
-        WHEN prov_rendering_tax_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_tax_id
     END as prov_rendering_tax_id,
     CASE
-        WHEN prov_rendering_dea_id = '5' THEN NULL
-        WHEN prov_rendering_dea_id = '05' THEN NULL
-        WHEN prov_rendering_dea_id = '6' THEN NULL
-        WHEN prov_rendering_dea_id = '06' THEN NULL
-        WHEN prov_rendering_dea_id = '7' THEN NULL
-        WHEN prov_rendering_dea_id = '07' THEN NULL
-        WHEN prov_rendering_dea_id = '8' THEN NULL
-        WHEN prov_rendering_dea_id = '08' THEN NULL
-        WHEN prov_rendering_dea_id = '9' THEN NULL
-        WHEN prov_rendering_dea_id = '09' THEN NULL
-        WHEN prov_rendering_dea_id = '12' THEN NULL
-        WHEN prov_rendering_dea_id = '13' THEN NULL
-        WHEN prov_rendering_dea_id = '14' THEN NULL
-        WHEN prov_rendering_dea_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_dea_id
     END as prov_rendering_dea_id,
     CASE
-        WHEN prov_rendering_ssn = '5' THEN NULL
-        WHEN prov_rendering_ssn = '05' THEN NULL
-        WHEN prov_rendering_ssn = '6' THEN NULL
-        WHEN prov_rendering_ssn = '06' THEN NULL
-        WHEN prov_rendering_ssn = '7' THEN NULL
-        WHEN prov_rendering_ssn = '07' THEN NULL
-        WHEN prov_rendering_ssn = '8' THEN NULL
-        WHEN prov_rendering_ssn = '08' THEN NULL
-        WHEN prov_rendering_ssn = '9' THEN NULL
-        WHEN prov_rendering_ssn = '09' THEN NULL
-        WHEN prov_rendering_ssn = '12' THEN NULL
-        WHEN prov_rendering_ssn = '13' THEN NULL
-        WHEN prov_rendering_ssn = '14' THEN NULL
-        WHEN prov_rendering_ssn = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_ssn
     END as prov_rendering_ssn,
     CASE
-        WHEN prov_rendering_state_license = '5' THEN NULL
-        WHEN prov_rendering_state_license = '05' THEN NULL
-        WHEN prov_rendering_state_license = '6' THEN NULL
-        WHEN prov_rendering_state_license = '06' THEN NULL
-        WHEN prov_rendering_state_license = '7' THEN NULL
-        WHEN prov_rendering_state_license = '07' THEN NULL
-        WHEN prov_rendering_state_license = '8' THEN NULL
-        WHEN prov_rendering_state_license = '08' THEN NULL
-        WHEN prov_rendering_state_license = '9' THEN NULL
-        WHEN prov_rendering_state_license = '09' THEN NULL
-        WHEN prov_rendering_state_license = '12' THEN NULL
-        WHEN prov_rendering_state_license = '13' THEN NULL
-        WHEN prov_rendering_state_license = '14' THEN NULL
-        WHEN prov_rendering_state_license = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_state_license
     END as prov_rendering_state_license,
     CASE
-        WHEN prov_rendering_upin = '5' THEN NULL
-        WHEN prov_rendering_upin = '05' THEN NULL
-        WHEN prov_rendering_upin = '6' THEN NULL
-        WHEN prov_rendering_upin = '06' THEN NULL
-        WHEN prov_rendering_upin = '7' THEN NULL
-        WHEN prov_rendering_upin = '07' THEN NULL
-        WHEN prov_rendering_upin = '8' THEN NULL
-        WHEN prov_rendering_upin = '08' THEN NULL
-        WHEN prov_rendering_upin = '9' THEN NULL
-        WHEN prov_rendering_upin = '09' THEN NULL
-        WHEN prov_rendering_upin = '12' THEN NULL
-        WHEN prov_rendering_upin = '13' THEN NULL
-        WHEN prov_rendering_upin = '14' THEN NULL
-        WHEN prov_rendering_upin = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_upin
     END as prov_rendering_upin,
     CASE
-        WHEN prov_rendering_commercial_id = '5' THEN NULL
-        WHEN prov_rendering_commercial_id = '05' THEN NULL
-        WHEN prov_rendering_commercial_id = '6' THEN NULL
-        WHEN prov_rendering_commercial_id = '06' THEN NULL
-        WHEN prov_rendering_commercial_id = '7' THEN NULL
-        WHEN prov_rendering_commercial_id = '07' THEN NULL
-        WHEN prov_rendering_commercial_id = '8' THEN NULL
-        WHEN prov_rendering_commercial_id = '08' THEN NULL
-        WHEN prov_rendering_commercial_id = '9' THEN NULL
-        WHEN prov_rendering_commercial_id = '09' THEN NULL
-        WHEN prov_rendering_commercial_id = '12' THEN NULL
-        WHEN prov_rendering_commercial_id = '13' THEN NULL
-        WHEN prov_rendering_commercial_id = '14' THEN NULL
-        WHEN prov_rendering_commercial_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_commercial_id
     END as prov_rendering_commercial_id,
     CASE
-        WHEN prov_rendering_name_1 = '5' THEN NULL
-        WHEN prov_rendering_name_1 = '05' THEN NULL
-        WHEN prov_rendering_name_1 = '6' THEN NULL
-        WHEN prov_rendering_name_1 = '06' THEN NULL
-        WHEN prov_rendering_name_1 = '7' THEN NULL
-        WHEN prov_rendering_name_1 = '07' THEN NULL
-        WHEN prov_rendering_name_1 = '8' THEN NULL
-        WHEN prov_rendering_name_1 = '08' THEN NULL
-        WHEN prov_rendering_name_1 = '9' THEN NULL
-        WHEN prov_rendering_name_1 = '09' THEN NULL
-        WHEN prov_rendering_name_1 = '12' THEN NULL
-        WHEN prov_rendering_name_1 = '13' THEN NULL
-        WHEN prov_rendering_name_1 = '14' THEN NULL
-        WHEN prov_rendering_name_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_rendering_name_1
     END as prov_rendering_name_1,
     CASE
-        WHEN prov_rendering_name_2 = '5' THEN NULL
-        WHEN prov_rendering_name_2 = '05' THEN NULL
-        WHEN prov_rendering_name_2 = '6' THEN NULL
-        WHEN prov_rendering_name_2 = '06' THEN NULL
-        WHEN prov_rendering_name_2 = '7' THEN NULL
-        WHEN prov_rendering_name_2 = '07' THEN NULL
-        WHEN prov_rendering_name_2 = '8' THEN NULL
-        WHEN prov_rendering_name_2 = '08' THEN NULL
-        WHEN prov_rendering_name_2 = '9' THEN NULL
-        WHEN prov_rendering_name_2 = '09' THEN NULL
-        WHEN prov_rendering_name_2 = '12' THEN NULL
-        WHEN prov_rendering_name_2 = '13' THEN NULL
-        WHEN prov_rendering_name_2 = '14' THEN NULL
-        WHEN prov_rendering_name_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_rendering_name_2
     END as prov_rendering_name_2,
     CASE
-        WHEN prov_rendering_address_1 = '5' THEN NULL
-        WHEN prov_rendering_address_1 = '05' THEN NULL
-        WHEN prov_rendering_address_1 = '6' THEN NULL
-        WHEN prov_rendering_address_1 = '06' THEN NULL
-        WHEN prov_rendering_address_1 = '7' THEN NULL
-        WHEN prov_rendering_address_1 = '07' THEN NULL
-        WHEN prov_rendering_address_1 = '8' THEN NULL
-        WHEN prov_rendering_address_1 = '08' THEN NULL
-        WHEN prov_rendering_address_1 = '9' THEN NULL
-        WHEN prov_rendering_address_1 = '09' THEN NULL
-        WHEN prov_rendering_address_1 = '12' THEN NULL
-        WHEN prov_rendering_address_1 = '13' THEN NULL
-        WHEN prov_rendering_address_1 = '14' THEN NULL
-        WHEN prov_rendering_address_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_rendering_address_1
     END as prov_rendering_address_1,
     CASE
-        WHEN prov_rendering_address_2 = '5' THEN NULL
-        WHEN prov_rendering_address_2 = '05' THEN NULL
-        WHEN prov_rendering_address_2 = '6' THEN NULL
-        WHEN prov_rendering_address_2 = '06' THEN NULL
-        WHEN prov_rendering_address_2 = '7' THEN NULL
-        WHEN prov_rendering_address_2 = '07' THEN NULL
-        WHEN prov_rendering_address_2 = '8' THEN NULL
-        WHEN prov_rendering_address_2 = '08' THEN NULL
-        WHEN prov_rendering_address_2 = '9' THEN NULL
-        WHEN prov_rendering_address_2 = '09' THEN NULL
-        WHEN prov_rendering_address_2 = '12' THEN NULL
-        WHEN prov_rendering_address_2 = '13' THEN NULL
-        WHEN prov_rendering_address_2 = '14' THEN NULL
-        WHEN prov_rendering_address_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_rendering_address_2
     END as prov_rendering_address_2,
     CASE
-        WHEN prov_rendering_city = '5' THEN NULL
-        WHEN prov_rendering_city = '05' THEN NULL
-        WHEN prov_rendering_city = '6' THEN NULL
-        WHEN prov_rendering_city = '06' THEN NULL
-        WHEN prov_rendering_city = '7' THEN NULL
-        WHEN prov_rendering_city = '07' THEN NULL
-        WHEN prov_rendering_city = '8' THEN NULL
-        WHEN prov_rendering_city = '08' THEN NULL
-        WHEN prov_rendering_city = '9' THEN NULL
-        WHEN prov_rendering_city = '09' THEN NULL
-        WHEN prov_rendering_city = '12' THEN NULL
-        WHEN prov_rendering_city = '13' THEN NULL
-        WHEN prov_rendering_city = '14' THEN NULL
-        WHEN prov_rendering_city = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_city
     END as prov_rendering_city,
     CASE
-        WHEN prov_rendering_state = '5' THEN NULL
-        WHEN prov_rendering_state = '05' THEN NULL
-        WHEN prov_rendering_state = '6' THEN NULL
-        WHEN prov_rendering_state = '06' THEN NULL
-        WHEN prov_rendering_state = '7' THEN NULL
-        WHEN prov_rendering_state = '07' THEN NULL
-        WHEN prov_rendering_state = '8' THEN NULL
-        WHEN prov_rendering_state = '08' THEN NULL
-        WHEN prov_rendering_state = '9' THEN NULL
-        WHEN prov_rendering_state = '09' THEN NULL
-        WHEN prov_rendering_state = '12' THEN NULL
-        WHEN prov_rendering_state = '13' THEN NULL
-        WHEN prov_rendering_state = '14' THEN NULL
-        WHEN prov_rendering_state = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_state
     END as prov_rendering_state,
     CASE
-        WHEN prov_rendering_zip = '5' THEN NULL
-        WHEN prov_rendering_zip = '05' THEN NULL
-        WHEN prov_rendering_zip = '6' THEN NULL
-        WHEN prov_rendering_zip = '06' THEN NULL
-        WHEN prov_rendering_zip = '7' THEN NULL
-        WHEN prov_rendering_zip = '07' THEN NULL
-        WHEN prov_rendering_zip = '8' THEN NULL
-        WHEN prov_rendering_zip = '08' THEN NULL
-        WHEN prov_rendering_zip = '9' THEN NULL
-        WHEN prov_rendering_zip = '09' THEN NULL
-        WHEN prov_rendering_zip = '12' THEN NULL
-        WHEN prov_rendering_zip = '13' THEN NULL
-        WHEN prov_rendering_zip = '14' THEN NULL
-        WHEN prov_rendering_zip = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_rendering_zip
     END as prov_rendering_zip,
     prov_rendering_std_taxonomy,
     prov_rendering_vendor_specialty,
     CASE
-        WHEN prov_billing_vendor_id = '5' THEN NULL
-        WHEN prov_billing_vendor_id = '05' THEN NULL
-        WHEN prov_billing_vendor_id = '6' THEN NULL
-        WHEN prov_billing_vendor_id = '06' THEN NULL
-        WHEN prov_billing_vendor_id = '7' THEN NULL
-        WHEN prov_billing_vendor_id = '07' THEN NULL
-        WHEN prov_billing_vendor_id = '8' THEN NULL
-        WHEN prov_billing_vendor_id = '08' THEN NULL
-        WHEN prov_billing_vendor_id = '9' THEN NULL
-        WHEN prov_billing_vendor_id = '09' THEN NULL
-        WHEN prov_billing_vendor_id = '12' THEN NULL
-        WHEN prov_billing_vendor_id = '13' THEN NULL
-        WHEN prov_billing_vendor_id = '14' THEN NULL
-        WHEN prov_billing_vendor_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_vendor_id
     END as prov_billing_vendor_id,
     CASE
-        WHEN prov_billing_tax_id = '5' THEN NULL
-        WHEN prov_billing_tax_id = '05' THEN NULL
-        WHEN prov_billing_tax_id = '6' THEN NULL
-        WHEN prov_billing_tax_id = '06' THEN NULL
-        WHEN prov_billing_tax_id = '7' THEN NULL
-        WHEN prov_billing_tax_id = '07' THEN NULL
-        WHEN prov_billing_tax_id = '8' THEN NULL
-        WHEN prov_billing_tax_id = '08' THEN NULL
-        WHEN prov_billing_tax_id = '9' THEN NULL
-        WHEN prov_billing_tax_id = '09' THEN NULL
-        WHEN prov_billing_tax_id = '12' THEN NULL
-        WHEN prov_billing_tax_id = '13' THEN NULL
-        WHEN prov_billing_tax_id = '14' THEN NULL
-        WHEN prov_billing_tax_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_tax_id
     END as prov_billing_tax_id,
     CASE
-        WHEN prov_billing_dea_id = '5' THEN NULL
-        WHEN prov_billing_dea_id = '05' THEN NULL
-        WHEN prov_billing_dea_id = '6' THEN NULL
-        WHEN prov_billing_dea_id = '06' THEN NULL
-        WHEN prov_billing_dea_id = '7' THEN NULL
-        WHEN prov_billing_dea_id = '07' THEN NULL
-        WHEN prov_billing_dea_id = '8' THEN NULL
-        WHEN prov_billing_dea_id = '08' THEN NULL
-        WHEN prov_billing_dea_id = '9' THEN NULL
-        WHEN prov_billing_dea_id = '09' THEN NULL
-        WHEN prov_billing_dea_id = '12' THEN NULL
-        WHEN prov_billing_dea_id = '13' THEN NULL
-        WHEN prov_billing_dea_id = '14' THEN NULL
-        WHEN prov_billing_dea_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_dea_id
     END as prov_billing_dea_id,
     CASE
-        WHEN prov_billing_ssn = '5' THEN NULL
-        WHEN prov_billing_ssn = '05' THEN NULL
-        WHEN prov_billing_ssn = '6' THEN NULL
-        WHEN prov_billing_ssn = '06' THEN NULL
-        WHEN prov_billing_ssn = '7' THEN NULL
-        WHEN prov_billing_ssn = '07' THEN NULL
-        WHEN prov_billing_ssn = '8' THEN NULL
-        WHEN prov_billing_ssn = '08' THEN NULL
-        WHEN prov_billing_ssn = '9' THEN NULL
-        WHEN prov_billing_ssn = '09' THEN NULL
-        WHEN prov_billing_ssn = '12' THEN NULL
-        WHEN prov_billing_ssn = '13' THEN NULL
-        WHEN prov_billing_ssn = '14' THEN NULL
-        WHEN prov_billing_ssn = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_ssn
     END as prov_billing_ssn,
     CASE
-        WHEN prov_billing_state_license = '5' THEN NULL
-        WHEN prov_billing_state_license = '05' THEN NULL
-        WHEN prov_billing_state_license = '6' THEN NULL
-        WHEN prov_billing_state_license = '06' THEN NULL
-        WHEN prov_billing_state_license = '7' THEN NULL
-        WHEN prov_billing_state_license = '07' THEN NULL
-        WHEN prov_billing_state_license = '8' THEN NULL
-        WHEN prov_billing_state_license = '08' THEN NULL
-        WHEN prov_billing_state_license = '9' THEN NULL
-        WHEN prov_billing_state_license = '09' THEN NULL
-        WHEN prov_billing_state_license = '12' THEN NULL
-        WHEN prov_billing_state_license = '13' THEN NULL
-        WHEN prov_billing_state_license = '14' THEN NULL
-        WHEN prov_billing_state_license = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_state_license
     END as prov_billing_state_license,
     CASE
-        WHEN prov_billing_upin = '5' THEN NULL
-        WHEN prov_billing_upin = '05' THEN NULL
-        WHEN prov_billing_upin = '6' THEN NULL
-        WHEN prov_billing_upin = '06' THEN NULL
-        WHEN prov_billing_upin = '7' THEN NULL
-        WHEN prov_billing_upin = '07' THEN NULL
-        WHEN prov_billing_upin = '8' THEN NULL
-        WHEN prov_billing_upin = '08' THEN NULL
-        WHEN prov_billing_upin = '9' THEN NULL
-        WHEN prov_billing_upin = '09' THEN NULL
-        WHEN prov_billing_upin = '12' THEN NULL
-        WHEN prov_billing_upin = '13' THEN NULL
-        WHEN prov_billing_upin = '14' THEN NULL
-        WHEN prov_billing_upin = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_upin
     END as prov_billing_upin,
     CASE
-        WHEN prov_billing_commercial_id = '5' THEN NULL
-        WHEN prov_billing_commercial_id = '05' THEN NULL
-        WHEN prov_billing_commercial_id = '6' THEN NULL
-        WHEN prov_billing_commercial_id = '06' THEN NULL
-        WHEN prov_billing_commercial_id = '7' THEN NULL
-        WHEN prov_billing_commercial_id = '07' THEN NULL
-        WHEN prov_billing_commercial_id = '8' THEN NULL
-        WHEN prov_billing_commercial_id = '08' THEN NULL
-        WHEN prov_billing_commercial_id = '9' THEN NULL
-        WHEN prov_billing_commercial_id = '09' THEN NULL
-        WHEN prov_billing_commercial_id = '12' THEN NULL
-        WHEN prov_billing_commercial_id = '13' THEN NULL
-        WHEN prov_billing_commercial_id = '14' THEN NULL
-        WHEN prov_billing_commercial_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_commercial_id
     END as prov_billing_commercial_id,
     CASE
-        WHEN prov_billing_name_1 = '5' THEN NULL
-        WHEN prov_billing_name_1 = '05' THEN NULL
-        WHEN prov_billing_name_1 = '6' THEN NULL
-        WHEN prov_billing_name_1 = '06' THEN NULL
-        WHEN prov_billing_name_1 = '7' THEN NULL
-        WHEN prov_billing_name_1 = '07' THEN NULL
-        WHEN prov_billing_name_1 = '8' THEN NULL
-        WHEN prov_billing_name_1 = '08' THEN NULL
-        WHEN prov_billing_name_1 = '9' THEN NULL
-        WHEN prov_billing_name_1 = '09' THEN NULL
-        WHEN prov_billing_name_1 = '12' THEN NULL
-        WHEN prov_billing_name_1 = '13' THEN NULL
-        WHEN prov_billing_name_1 = '14' THEN NULL
-        WHEN prov_billing_name_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_billing_name_1
     END as prov_billing_name_1,
     CASE
-        WHEN prov_billing_name_2 = '5' THEN NULL
-        WHEN prov_billing_name_2 = '05' THEN NULL
-        WHEN prov_billing_name_2 = '6' THEN NULL
-        WHEN prov_billing_name_2 = '06' THEN NULL
-        WHEN prov_billing_name_2 = '7' THEN NULL
-        WHEN prov_billing_name_2 = '07' THEN NULL
-        WHEN prov_billing_name_2 = '8' THEN NULL
-        WHEN prov_billing_name_2 = '08' THEN NULL
-        WHEN prov_billing_name_2 = '9' THEN NULL
-        WHEN prov_billing_name_2 = '09' THEN NULL
-        WHEN prov_billing_name_2 = '12' THEN NULL
-        WHEN prov_billing_name_2 = '13' THEN NULL
-        WHEN prov_billing_name_2 = '14' THEN NULL
-        WHEN prov_billing_name_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_billing_name_2
     END as prov_billing_name_2,
     CASE
-        WHEN prov_billing_address_1 = '5' THEN NULL
-        WHEN prov_billing_address_1 = '05' THEN NULL
-        WHEN prov_billing_address_1 = '6' THEN NULL
-        WHEN prov_billing_address_1 = '06' THEN NULL
-        WHEN prov_billing_address_1 = '7' THEN NULL
-        WHEN prov_billing_address_1 = '07' THEN NULL
-        WHEN prov_billing_address_1 = '8' THEN NULL
-        WHEN prov_billing_address_1 = '08' THEN NULL
-        WHEN prov_billing_address_1 = '9' THEN NULL
-        WHEN prov_billing_address_1 = '09' THEN NULL
-        WHEN prov_billing_address_1 = '12' THEN NULL
-        WHEN prov_billing_address_1 = '13' THEN NULL
-        WHEN prov_billing_address_1 = '14' THEN NULL
-        WHEN prov_billing_address_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_billing_address_1
     END as prov_billing_address_1,
     CASE
-        WHEN prov_billing_address_2 = '5' THEN NULL
-        WHEN prov_billing_address_2 = '05' THEN NULL
-        WHEN prov_billing_address_2 = '6' THEN NULL
-        WHEN prov_billing_address_2 = '06' THEN NULL
-        WHEN prov_billing_address_2 = '7' THEN NULL
-        WHEN prov_billing_address_2 = '07' THEN NULL
-        WHEN prov_billing_address_2 = '8' THEN NULL
-        WHEN prov_billing_address_2 = '08' THEN NULL
-        WHEN prov_billing_address_2 = '9' THEN NULL
-        WHEN prov_billing_address_2 = '09' THEN NULL
-        WHEN prov_billing_address_2 = '12' THEN NULL
-        WHEN prov_billing_address_2 = '13' THEN NULL
-        WHEN prov_billing_address_2 = '14' THEN NULL
-        WHEN prov_billing_address_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_billing_address_2
     END as prov_billing_address_2,
     CASE
-        WHEN prov_billing_city = '5' THEN NULL
-        WHEN prov_billing_city = '05' THEN NULL
-        WHEN prov_billing_city = '6' THEN NULL
-        WHEN prov_billing_city = '06' THEN NULL
-        WHEN prov_billing_city = '7' THEN NULL
-        WHEN prov_billing_city = '07' THEN NULL
-        WHEN prov_billing_city = '8' THEN NULL
-        WHEN prov_billing_city = '08' THEN NULL
-        WHEN prov_billing_city = '9' THEN NULL
-        WHEN prov_billing_city = '09' THEN NULL
-        WHEN prov_billing_city = '12' THEN NULL
-        WHEN prov_billing_city = '13' THEN NULL
-        WHEN prov_billing_city = '14' THEN NULL
-        WHEN prov_billing_city = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_city
     END as prov_billing_city,
     CASE
-        WHEN prov_billing_state = '5' THEN NULL
-        WHEN prov_billing_state = '05' THEN NULL
-        WHEN prov_billing_state = '6' THEN NULL
-        WHEN prov_billing_state = '06' THEN NULL
-        WHEN prov_billing_state = '7' THEN NULL
-        WHEN prov_billing_state = '07' THEN NULL
-        WHEN prov_billing_state = '8' THEN NULL
-        WHEN prov_billing_state = '08' THEN NULL
-        WHEN prov_billing_state = '9' THEN NULL
-        WHEN prov_billing_state = '09' THEN NULL
-        WHEN prov_billing_state = '12' THEN NULL
-        WHEN prov_billing_state = '13' THEN NULL
-        WHEN prov_billing_state = '14' THEN NULL
-        WHEN prov_billing_state = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_state
     END as prov_billing_state,
     CASE
-        WHEN prov_billing_zip = '5' THEN NULL
-        WHEN prov_billing_zip = '05' THEN NULL
-        WHEN prov_billing_zip = '6' THEN NULL
-        WHEN prov_billing_zip = '06' THEN NULL
-        WHEN prov_billing_zip = '7' THEN NULL
-        WHEN prov_billing_zip = '07' THEN NULL
-        WHEN prov_billing_zip = '8' THEN NULL
-        WHEN prov_billing_zip = '08' THEN NULL
-        WHEN prov_billing_zip = '9' THEN NULL
-        WHEN prov_billing_zip = '09' THEN NULL
-        WHEN prov_billing_zip = '12' THEN NULL
-        WHEN prov_billing_zip = '13' THEN NULL
-        WHEN prov_billing_zip = '14' THEN NULL
-        WHEN prov_billing_zip = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_billing_zip
     END as prov_billing_zip,
     prov_billing_std_taxonomy,
     prov_billing_vendor_specialty,
     CASE
-        WHEN prov_referring_vendor_id = '5' THEN NULL
-        WHEN prov_referring_vendor_id = '05' THEN NULL
-        WHEN prov_referring_vendor_id = '6' THEN NULL
-        WHEN prov_referring_vendor_id = '06' THEN NULL
-        WHEN prov_referring_vendor_id = '7' THEN NULL
-        WHEN prov_referring_vendor_id = '07' THEN NULL
-        WHEN prov_referring_vendor_id = '8' THEN NULL
-        WHEN prov_referring_vendor_id = '08' THEN NULL
-        WHEN prov_referring_vendor_id = '9' THEN NULL
-        WHEN prov_referring_vendor_id = '09' THEN NULL
-        WHEN prov_referring_vendor_id = '12' THEN NULL
-        WHEN prov_referring_vendor_id = '13' THEN NULL
-        WHEN prov_referring_vendor_id = '14' THEN NULL
-        WHEN prov_referring_vendor_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_vendor_id
     END as prov_referring_vendor_id,
     CASE
-        WHEN prov_referring_tax_id = '5' THEN NULL
-        WHEN prov_referring_tax_id = '05' THEN NULL
-        WHEN prov_referring_tax_id = '6' THEN NULL
-        WHEN prov_referring_tax_id = '06' THEN NULL
-        WHEN prov_referring_tax_id = '7' THEN NULL
-        WHEN prov_referring_tax_id = '07' THEN NULL
-        WHEN prov_referring_tax_id = '8' THEN NULL
-        WHEN prov_referring_tax_id = '08' THEN NULL
-        WHEN prov_referring_tax_id = '9' THEN NULL
-        WHEN prov_referring_tax_id = '09' THEN NULL
-        WHEN prov_referring_tax_id = '12' THEN NULL
-        WHEN prov_referring_tax_id = '13' THEN NULL
-        WHEN prov_referring_tax_id = '14' THEN NULL
-        WHEN prov_referring_tax_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_tax_id
     END as prov_referring_tax_id,
     CASE
-        WHEN prov_referring_dea_id = '5' THEN NULL
-        WHEN prov_referring_dea_id = '05' THEN NULL
-        WHEN prov_referring_dea_id = '6' THEN NULL
-        WHEN prov_referring_dea_id = '06' THEN NULL
-        WHEN prov_referring_dea_id = '7' THEN NULL
-        WHEN prov_referring_dea_id = '07' THEN NULL
-        WHEN prov_referring_dea_id = '8' THEN NULL
-        WHEN prov_referring_dea_id = '08' THEN NULL
-        WHEN prov_referring_dea_id = '9' THEN NULL
-        WHEN prov_referring_dea_id = '09' THEN NULL
-        WHEN prov_referring_dea_id = '12' THEN NULL
-        WHEN prov_referring_dea_id = '13' THEN NULL
-        WHEN prov_referring_dea_id = '14' THEN NULL
-        WHEN prov_referring_dea_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_dea_id
     END as prov_referring_dea_id,
     CASE
-        WHEN prov_referring_ssn = '5' THEN NULL
-        WHEN prov_referring_ssn = '05' THEN NULL
-        WHEN prov_referring_ssn = '6' THEN NULL
-        WHEN prov_referring_ssn = '06' THEN NULL
-        WHEN prov_referring_ssn = '7' THEN NULL
-        WHEN prov_referring_ssn = '07' THEN NULL
-        WHEN prov_referring_ssn = '8' THEN NULL
-        WHEN prov_referring_ssn = '08' THEN NULL
-        WHEN prov_referring_ssn = '9' THEN NULL
-        WHEN prov_referring_ssn = '09' THEN NULL
-        WHEN prov_referring_ssn = '12' THEN NULL
-        WHEN prov_referring_ssn = '13' THEN NULL
-        WHEN prov_referring_ssn = '14' THEN NULL
-        WHEN prov_referring_ssn = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_ssn
     END as prov_referring_ssn,
     CASE
-        WHEN prov_referring_state_license = '5' THEN NULL
-        WHEN prov_referring_state_license = '05' THEN NULL
-        WHEN prov_referring_state_license = '6' THEN NULL
-        WHEN prov_referring_state_license = '06' THEN NULL
-        WHEN prov_referring_state_license = '7' THEN NULL
-        WHEN prov_referring_state_license = '07' THEN NULL
-        WHEN prov_referring_state_license = '8' THEN NULL
-        WHEN prov_referring_state_license = '08' THEN NULL
-        WHEN prov_referring_state_license = '9' THEN NULL
-        WHEN prov_referring_state_license = '09' THEN NULL
-        WHEN prov_referring_state_license = '12' THEN NULL
-        WHEN prov_referring_state_license = '13' THEN NULL
-        WHEN prov_referring_state_license = '14' THEN NULL
-        WHEN prov_referring_state_license = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_state_license
     END as prov_referring_state_license,
     CASE
-        WHEN prov_referring_upin = '5' THEN NULL
-        WHEN prov_referring_upin = '05' THEN NULL
-        WHEN prov_referring_upin = '6' THEN NULL
-        WHEN prov_referring_upin = '06' THEN NULL
-        WHEN prov_referring_upin = '7' THEN NULL
-        WHEN prov_referring_upin = '07' THEN NULL
-        WHEN prov_referring_upin = '8' THEN NULL
-        WHEN prov_referring_upin = '08' THEN NULL
-        WHEN prov_referring_upin = '9' THEN NULL
-        WHEN prov_referring_upin = '09' THEN NULL
-        WHEN prov_referring_upin = '12' THEN NULL
-        WHEN prov_referring_upin = '13' THEN NULL
-        WHEN prov_referring_upin = '14' THEN NULL
-        WHEN prov_referring_upin = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_upin
     END as prov_referring_upin,
     CASE
-        WHEN prov_referring_commercial_id = '5' THEN NULL
-        WHEN prov_referring_commercial_id = '05' THEN NULL
-        WHEN prov_referring_commercial_id = '6' THEN NULL
-        WHEN prov_referring_commercial_id = '06' THEN NULL
-        WHEN prov_referring_commercial_id = '7' THEN NULL
-        WHEN prov_referring_commercial_id = '07' THEN NULL
-        WHEN prov_referring_commercial_id = '8' THEN NULL
-        WHEN prov_referring_commercial_id = '08' THEN NULL
-        WHEN prov_referring_commercial_id = '9' THEN NULL
-        WHEN prov_referring_commercial_id = '09' THEN NULL
-        WHEN prov_referring_commercial_id = '12' THEN NULL
-        WHEN prov_referring_commercial_id = '13' THEN NULL
-        WHEN prov_referring_commercial_id = '14' THEN NULL
-        WHEN prov_referring_commercial_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_commercial_id
     END as prov_referring_commercial_id,
     CASE
-        WHEN prov_referring_name_1 = '5' THEN NULL
-        WHEN prov_referring_name_1 = '05' THEN NULL
-        WHEN prov_referring_name_1 = '6' THEN NULL
-        WHEN prov_referring_name_1 = '06' THEN NULL
-        WHEN prov_referring_name_1 = '7' THEN NULL
-        WHEN prov_referring_name_1 = '07' THEN NULL
-        WHEN prov_referring_name_1 = '8' THEN NULL
-        WHEN prov_referring_name_1 = '08' THEN NULL
-        WHEN prov_referring_name_1 = '9' THEN NULL
-        WHEN prov_referring_name_1 = '09' THEN NULL
-        WHEN prov_referring_name_1 = '12' THEN NULL
-        WHEN prov_referring_name_1 = '13' THEN NULL
-        WHEN prov_referring_name_1 = '14' THEN NULL
-        WHEN prov_referring_name_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_referring_name_1
     END as prov_referring_name_1,
     CASE
-        WHEN prov_referring_name_2 = '5' THEN NULL
-        WHEN prov_referring_name_2 = '05' THEN NULL
-        WHEN prov_referring_name_2 = '6' THEN NULL
-        WHEN prov_referring_name_2 = '06' THEN NULL
-        WHEN prov_referring_name_2 = '7' THEN NULL
-        WHEN prov_referring_name_2 = '07' THEN NULL
-        WHEN prov_referring_name_2 = '8' THEN NULL
-        WHEN prov_referring_name_2 = '08' THEN NULL
-        WHEN prov_referring_name_2 = '9' THEN NULL
-        WHEN prov_referring_name_2 = '09' THEN NULL
-        WHEN prov_referring_name_2 = '12' THEN NULL
-        WHEN prov_referring_name_2 = '13' THEN NULL
-        WHEN prov_referring_name_2 = '14' THEN NULL
-        WHEN prov_referring_name_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_referring_name_2
     END as prov_referring_name_2,
     CASE
-        WHEN prov_referring_address_1 = '5' THEN NULL
-        WHEN prov_referring_address_1 = '05' THEN NULL
-        WHEN prov_referring_address_1 = '6' THEN NULL
-        WHEN prov_referring_address_1 = '06' THEN NULL
-        WHEN prov_referring_address_1 = '7' THEN NULL
-        WHEN prov_referring_address_1 = '07' THEN NULL
-        WHEN prov_referring_address_1 = '8' THEN NULL
-        WHEN prov_referring_address_1 = '08' THEN NULL
-        WHEN prov_referring_address_1 = '9' THEN NULL
-        WHEN prov_referring_address_1 = '09' THEN NULL
-        WHEN prov_referring_address_1 = '12' THEN NULL
-        WHEN prov_referring_address_1 = '13' THEN NULL
-        WHEN prov_referring_address_1 = '14' THEN NULL
-        WHEN prov_referring_address_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_referring_address_1
     END as prov_referring_address_1,
     CASE
-        WHEN prov_referring_address_2 = '5' THEN NULL
-        WHEN prov_referring_address_2 = '05' THEN NULL
-        WHEN prov_referring_address_2 = '6' THEN NULL
-        WHEN prov_referring_address_2 = '06' THEN NULL
-        WHEN prov_referring_address_2 = '7' THEN NULL
-        WHEN prov_referring_address_2 = '07' THEN NULL
-        WHEN prov_referring_address_2 = '8' THEN NULL
-        WHEN prov_referring_address_2 = '08' THEN NULL
-        WHEN prov_referring_address_2 = '9' THEN NULL
-        WHEN prov_referring_address_2 = '09' THEN NULL
-        WHEN prov_referring_address_2 = '12' THEN NULL
-        WHEN prov_referring_address_2 = '13' THEN NULL
-        WHEN prov_referring_address_2 = '14' THEN NULL
-        WHEN prov_referring_address_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_referring_address_2
     END as prov_referring_address_2,
     CASE
-        WHEN prov_referring_city = '5' THEN NULL
-        WHEN prov_referring_city = '05' THEN NULL
-        WHEN prov_referring_city = '6' THEN NULL
-        WHEN prov_referring_city = '06' THEN NULL
-        WHEN prov_referring_city = '7' THEN NULL
-        WHEN prov_referring_city = '07' THEN NULL
-        WHEN prov_referring_city = '8' THEN NULL
-        WHEN prov_referring_city = '08' THEN NULL
-        WHEN prov_referring_city = '9' THEN NULL
-        WHEN prov_referring_city = '09' THEN NULL
-        WHEN prov_referring_city = '12' THEN NULL
-        WHEN prov_referring_city = '13' THEN NULL
-        WHEN prov_referring_city = '14' THEN NULL
-        WHEN prov_referring_city = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_city
     END as prov_referring_city,
     CASE
-        WHEN prov_referring_state = '5' THEN NULL
-        WHEN prov_referring_state = '05' THEN NULL
-        WHEN prov_referring_state = '6' THEN NULL
-        WHEN prov_referring_state = '06' THEN NULL
-        WHEN prov_referring_state = '7' THEN NULL
-        WHEN prov_referring_state = '07' THEN NULL
-        WHEN prov_referring_state = '8' THEN NULL
-        WHEN prov_referring_state = '08' THEN NULL
-        WHEN prov_referring_state = '9' THEN NULL
-        WHEN prov_referring_state = '09' THEN NULL
-        WHEN prov_referring_state = '12' THEN NULL
-        WHEN prov_referring_state = '13' THEN NULL
-        WHEN prov_referring_state = '14' THEN NULL
-        WHEN prov_referring_state = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_state
     END as prov_referring_state,
     CASE
-        WHEN prov_referring_zip = '5' THEN NULL
-        WHEN prov_referring_zip = '05' THEN NULL
-        WHEN prov_referring_zip = '6' THEN NULL
-        WHEN prov_referring_zip = '06' THEN NULL
-        WHEN prov_referring_zip = '7' THEN NULL
-        WHEN prov_referring_zip = '07' THEN NULL
-        WHEN prov_referring_zip = '8' THEN NULL
-        WHEN prov_referring_zip = '08' THEN NULL
-        WHEN prov_referring_zip = '9' THEN NULL
-        WHEN prov_referring_zip = '09' THEN NULL
-        WHEN prov_referring_zip = '12' THEN NULL
-        WHEN prov_referring_zip = '13' THEN NULL
-        WHEN prov_referring_zip = '14' THEN NULL
-        WHEN prov_referring_zip = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_referring_zip
     END as prov_referring_zip,
     prov_referring_std_taxonomy,
     prov_referring_vendor_specialty,
     CASE
-        WHEN prov_facility_vendor_id = '5' THEN NULL
-        WHEN prov_facility_vendor_id = '05' THEN NULL
-        WHEN prov_facility_vendor_id = '6' THEN NULL
-        WHEN prov_facility_vendor_id = '06' THEN NULL
-        WHEN prov_facility_vendor_id = '7' THEN NULL
-        WHEN prov_facility_vendor_id = '07' THEN NULL
-        WHEN prov_facility_vendor_id = '8' THEN NULL
-        WHEN prov_facility_vendor_id = '08' THEN NULL
-        WHEN prov_facility_vendor_id = '9' THEN NULL
-        WHEN prov_facility_vendor_id = '09' THEN NULL
-        WHEN prov_facility_vendor_id = '12' THEN NULL
-        WHEN prov_facility_vendor_id = '13' THEN NULL
-        WHEN prov_facility_vendor_id = '14' THEN NULL
-        WHEN prov_facility_vendor_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_vendor_id
     END as prov_facility_vendor_id,
     CASE
-        WHEN prov_facility_tax_id = '5' THEN NULL
-        WHEN prov_facility_tax_id = '05' THEN NULL
-        WHEN prov_facility_tax_id = '6' THEN NULL
-        WHEN prov_facility_tax_id = '06' THEN NULL
-        WHEN prov_facility_tax_id = '7' THEN NULL
-        WHEN prov_facility_tax_id = '07' THEN NULL
-        WHEN prov_facility_tax_id = '8' THEN NULL
-        WHEN prov_facility_tax_id = '08' THEN NULL
-        WHEN prov_facility_tax_id = '9' THEN NULL
-        WHEN prov_facility_tax_id = '09' THEN NULL
-        WHEN prov_facility_tax_id = '12' THEN NULL
-        WHEN prov_facility_tax_id = '13' THEN NULL
-        WHEN prov_facility_tax_id = '14' THEN NULL
-        WHEN prov_facility_tax_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_tax_id
     END as prov_facility_tax_id,
     CASE
-        WHEN prov_facility_dea_id = '5' THEN NULL
-        WHEN prov_facility_dea_id = '05' THEN NULL
-        WHEN prov_facility_dea_id = '6' THEN NULL
-        WHEN prov_facility_dea_id = '06' THEN NULL
-        WHEN prov_facility_dea_id = '7' THEN NULL
-        WHEN prov_facility_dea_id = '07' THEN NULL
-        WHEN prov_facility_dea_id = '8' THEN NULL
-        WHEN prov_facility_dea_id = '08' THEN NULL
-        WHEN prov_facility_dea_id = '9' THEN NULL
-        WHEN prov_facility_dea_id = '09' THEN NULL
-        WHEN prov_facility_dea_id = '12' THEN NULL
-        WHEN prov_facility_dea_id = '13' THEN NULL
-        WHEN prov_facility_dea_id = '14' THEN NULL
-        WHEN prov_facility_dea_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_dea_id
     END as prov_facility_dea_id,
     CASE
-        WHEN prov_facility_ssn = '5' THEN NULL
-        WHEN prov_facility_ssn = '05' THEN NULL
-        WHEN prov_facility_ssn = '6' THEN NULL
-        WHEN prov_facility_ssn = '06' THEN NULL
-        WHEN prov_facility_ssn = '7' THEN NULL
-        WHEN prov_facility_ssn = '07' THEN NULL
-        WHEN prov_facility_ssn = '8' THEN NULL
-        WHEN prov_facility_ssn = '08' THEN NULL
-        WHEN prov_facility_ssn = '9' THEN NULL
-        WHEN prov_facility_ssn = '09' THEN NULL
-        WHEN prov_facility_ssn = '12' THEN NULL
-        WHEN prov_facility_ssn = '13' THEN NULL
-        WHEN prov_facility_ssn = '14' THEN NULL
-        WHEN prov_facility_ssn = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_ssn
     END as prov_facility_ssn,
     CASE
-        WHEN prov_facility_state_license = '5' THEN NULL
-        WHEN prov_facility_state_license = '05' THEN NULL
-        WHEN prov_facility_state_license = '6' THEN NULL
-        WHEN prov_facility_state_license = '06' THEN NULL
-        WHEN prov_facility_state_license = '7' THEN NULL
-        WHEN prov_facility_state_license = '07' THEN NULL
-        WHEN prov_facility_state_license = '8' THEN NULL
-        WHEN prov_facility_state_license = '08' THEN NULL
-        WHEN prov_facility_state_license = '9' THEN NULL
-        WHEN prov_facility_state_license = '09' THEN NULL
-        WHEN prov_facility_state_license = '12' THEN NULL
-        WHEN prov_facility_state_license = '13' THEN NULL
-        WHEN prov_facility_state_license = '14' THEN NULL
-        WHEN prov_facility_state_license = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_state_license
     END as prov_facility_state_license,
     CASE
-        WHEN prov_facility_upin = '5' THEN NULL
-        WHEN prov_facility_upin = '05' THEN NULL
-        WHEN prov_facility_upin = '6' THEN NULL
-        WHEN prov_facility_upin = '06' THEN NULL
-        WHEN prov_facility_upin = '7' THEN NULL
-        WHEN prov_facility_upin = '07' THEN NULL
-        WHEN prov_facility_upin = '8' THEN NULL
-        WHEN prov_facility_upin = '08' THEN NULL
-        WHEN prov_facility_upin = '9' THEN NULL
-        WHEN prov_facility_upin = '09' THEN NULL
-        WHEN prov_facility_upin = '12' THEN NULL
-        WHEN prov_facility_upin = '13' THEN NULL
-        WHEN prov_facility_upin = '14' THEN NULL
-        WHEN prov_facility_upin = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_upin
     END as prov_facility_upin,
     CASE
-        WHEN prov_facility_commercial_id = '5' THEN NULL
-        WHEN prov_facility_commercial_id = '05' THEN NULL
-        WHEN prov_facility_commercial_id = '6' THEN NULL
-        WHEN prov_facility_commercial_id = '06' THEN NULL
-        WHEN prov_facility_commercial_id = '7' THEN NULL
-        WHEN prov_facility_commercial_id = '07' THEN NULL
-        WHEN prov_facility_commercial_id = '8' THEN NULL
-        WHEN prov_facility_commercial_id = '08' THEN NULL
-        WHEN prov_facility_commercial_id = '9' THEN NULL
-        WHEN prov_facility_commercial_id = '09' THEN NULL
-        WHEN prov_facility_commercial_id = '12' THEN NULL
-        WHEN prov_facility_commercial_id = '13' THEN NULL
-        WHEN prov_facility_commercial_id = '14' THEN NULL
-        WHEN prov_facility_commercial_id = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_commercial_id
     END as prov_facility_commercial_id,
     CASE
-        WHEN prov_facility_name_1 = '5' THEN NULL
-        WHEN prov_facility_name_1 = '05' THEN NULL
-        WHEN prov_facility_name_1 = '6' THEN NULL
-        WHEN prov_facility_name_1 = '06' THEN NULL
-        WHEN prov_facility_name_1 = '7' THEN NULL
-        WHEN prov_facility_name_1 = '07' THEN NULL
-        WHEN prov_facility_name_1 = '8' THEN NULL
-        WHEN prov_facility_name_1 = '08' THEN NULL
-        WHEN prov_facility_name_1 = '9' THEN NULL
-        WHEN prov_facility_name_1 = '09' THEN NULL
-        WHEN prov_facility_name_1 = '12' THEN NULL
-        WHEN prov_facility_name_1 = '13' THEN NULL
-        WHEN prov_facility_name_1 = '14' THEN NULL
-        WHEN prov_facility_name_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_facility_name_1
     END as prov_facility_name_1,
     CASE
-        WHEN prov_facility_name_2 = '5' THEN NULL
-        WHEN prov_facility_name_2 = '05' THEN NULL
-        WHEN prov_facility_name_2 = '6' THEN NULL
-        WHEN prov_facility_name_2 = '06' THEN NULL
-        WHEN prov_facility_name_2 = '7' THEN NULL
-        WHEN prov_facility_name_2 = '07' THEN NULL
-        WHEN prov_facility_name_2 = '8' THEN NULL
-        WHEN prov_facility_name_2 = '08' THEN NULL
-        WHEN prov_facility_name_2 = '9' THEN NULL
-        WHEN prov_facility_name_2 = '09' THEN NULL
-        WHEN prov_facility_name_2 = '12' THEN NULL
-        WHEN prov_facility_name_2 = '13' THEN NULL
-        WHEN prov_facility_name_2 = '14' THEN NULL
-        WHEN prov_facility_name_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_facility_name_2
     END as prov_facility_name_2,
     CASE
-        WHEN prov_facility_address_1 = '5' THEN NULL
-        WHEN prov_facility_address_1 = '05' THEN NULL
-        WHEN prov_facility_address_1 = '6' THEN NULL
-        WHEN prov_facility_address_1 = '06' THEN NULL
-        WHEN prov_facility_address_1 = '7' THEN NULL
-        WHEN prov_facility_address_1 = '07' THEN NULL
-        WHEN prov_facility_address_1 = '8' THEN NULL
-        WHEN prov_facility_address_1 = '08' THEN NULL
-        WHEN prov_facility_address_1 = '9' THEN NULL
-        WHEN prov_facility_address_1 = '09' THEN NULL
-        WHEN prov_facility_address_1 = '12' THEN NULL
-        WHEN prov_facility_address_1 = '13' THEN NULL
-        WHEN prov_facility_address_1 = '14' THEN NULL
-        WHEN prov_facility_address_1 = '33' THEN NULL
+        WHEN place_of_service_std_id1 = '5' THEN NULL
+        WHEN place_of_service_std_id1 = '05' THEN NULL
+        WHEN place_of_service_std_id1 = '6' THEN NULL
+        WHEN place_of_service_std_id1 = '06' THEN NULL
+        WHEN place_of_service_std_id1 = '7' THEN NULL
+        WHEN place_of_service_std_id1 = '07' THEN NULL
+        WHEN place_of_service_std_id1 = '8' THEN NULL
+        WHEN place_of_service_std_id1 = '08' THEN NULL
+        WHEN place_of_service_std_id1 = '9' THEN NULL
+        WHEN place_of_service_std_id1 = '09' THEN NULL
+        WHEN place_of_service_std_id1 = '12' THEN NULL
+        WHEN place_of_service_std_id1 = '13' THEN NULL
+        WHEN place_of_service_std_id1 = '14' THEN NULL
+        WHEN place_of_service_std_id1 = '33' THEN NULL
         ELSE prov_facility_address_1
     END as prov_facility_address_1,
     CASE
-        WHEN prov_facility_address_2 = '5' THEN NULL
-        WHEN prov_facility_address_2 = '05' THEN NULL
-        WHEN prov_facility_address_2 = '6' THEN NULL
-        WHEN prov_facility_address_2 = '06' THEN NULL
-        WHEN prov_facility_address_2 = '7' THEN NULL
-        WHEN prov_facility_address_2 = '07' THEN NULL
-        WHEN prov_facility_address_2 = '8' THEN NULL
-        WHEN prov_facility_address_2 = '08' THEN NULL
-        WHEN prov_facility_address_2 = '9' THEN NULL
-        WHEN prov_facility_address_2 = '09' THEN NULL
-        WHEN prov_facility_address_2 = '12' THEN NULL
-        WHEN prov_facility_address_2 = '13' THEN NULL
-        WHEN prov_facility_address_2 = '14' THEN NULL
-        WHEN prov_facility_address_2 = '33' THEN NULL
+        WHEN place_of_service_std_id2 = '5' THEN NULL
+        WHEN place_of_service_std_id2 = '05' THEN NULL
+        WHEN place_of_service_std_id2 = '6' THEN NULL
+        WHEN place_of_service_std_id2 = '06' THEN NULL
+        WHEN place_of_service_std_id2 = '7' THEN NULL
+        WHEN place_of_service_std_id2 = '07' THEN NULL
+        WHEN place_of_service_std_id2 = '8' THEN NULL
+        WHEN place_of_service_std_id2 = '08' THEN NULL
+        WHEN place_of_service_std_id2 = '9' THEN NULL
+        WHEN place_of_service_std_id2 = '09' THEN NULL
+        WHEN place_of_service_std_id2 = '12' THEN NULL
+        WHEN place_of_service_std_id2 = '13' THEN NULL
+        WHEN place_of_service_std_id2 = '14' THEN NULL
+        WHEN place_of_service_std_id2 = '33' THEN NULL
         ELSE prov_facility_address_2
     END as prov_facility_address_2,
     CASE
-        WHEN prov_facility_city = '5' THEN NULL
-        WHEN prov_facility_city = '05' THEN NULL
-        WHEN prov_facility_city = '6' THEN NULL
-        WHEN prov_facility_city = '06' THEN NULL
-        WHEN prov_facility_city = '7' THEN NULL
-        WHEN prov_facility_city = '07' THEN NULL
-        WHEN prov_facility_city = '8' THEN NULL
-        WHEN prov_facility_city = '08' THEN NULL
-        WHEN prov_facility_city = '9' THEN NULL
-        WHEN prov_facility_city = '09' THEN NULL
-        WHEN prov_facility_city = '12' THEN NULL
-        WHEN prov_facility_city = '13' THEN NULL
-        WHEN prov_facility_city = '14' THEN NULL
-        WHEN prov_facility_city = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_city
     END as prov_facility_city,
     CASE
-        WHEN prov_facility_state = '5' THEN NULL
-        WHEN prov_facility_state = '05' THEN NULL
-        WHEN prov_facility_state = '6' THEN NULL
-        WHEN prov_facility_state = '06' THEN NULL
-        WHEN prov_facility_state = '7' THEN NULL
-        WHEN prov_facility_state = '07' THEN NULL
-        WHEN prov_facility_state = '8' THEN NULL
-        WHEN prov_facility_state = '08' THEN NULL
-        WHEN prov_facility_state = '9' THEN NULL
-        WHEN prov_facility_state = '09' THEN NULL
-        WHEN prov_facility_state = '12' THEN NULL
-        WHEN prov_facility_state = '13' THEN NULL
-        WHEN prov_facility_state = '14' THEN NULL
-        WHEN prov_facility_state = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_state
     END as prov_facility_state,
     CASE
-        WHEN prov_facility_zip = '5' THEN NULL
-        WHEN prov_facility_zip = '05' THEN NULL
-        WHEN prov_facility_zip = '6' THEN NULL
-        WHEN prov_facility_zip = '06' THEN NULL
-        WHEN prov_facility_zip = '7' THEN NULL
-        WHEN prov_facility_zip = '07' THEN NULL
-        WHEN prov_facility_zip = '8' THEN NULL
-        WHEN prov_facility_zip = '08' THEN NULL
-        WHEN prov_facility_zip = '9' THEN NULL
-        WHEN prov_facility_zip = '09' THEN NULL
-        WHEN prov_facility_zip = '12' THEN NULL
-        WHEN prov_facility_zip = '13' THEN NULL
-        WHEN prov_facility_zip = '14' THEN NULL
-        WHEN prov_facility_zip = '33' THEN NULL
+        WHEN place_of_service_std_id= '5' THEN NULL
+        WHEN place_of_service_std_id= '05' THEN NULL
+        WHEN place_of_service_std_id= '6' THEN NULL
+        WHEN place_of_service_std_id= '06' THEN NULL
+        WHEN place_of_service_std_id= '7' THEN NULL
+        WHEN place_of_service_std_id= '07' THEN NULL
+        WHEN place_of_service_std_id= '8' THEN NULL
+        WHEN place_of_service_std_id= '08' THEN NULL
+        WHEN place_of_service_std_id= '9' THEN NULL
+        WHEN place_of_service_std_id= '09' THEN NULL
+        WHEN place_of_service_std_id= '12' THEN NULL
+        WHEN place_of_service_std_id= '13' THEN NULL
+        WHEN place_of_service_std_id= '14' THEN NULL
+        WHEN place_of_service_std_id= '33' THEN NULL
         ELSE prov_facility_zip
     END as prov_facility_zip,
     prov_facility_std_taxonomy,
