@@ -166,13 +166,13 @@ SELECT
     NULL,                                   -- prov_facility_state_license
     NULL,                                   -- prov_facility_upin
     NULL,                                   -- prov_facility_commercial_id
-    NULL,                                   -- prov_facility_name_1
+    claim_lines.servicefacilityname,        -- prov_facility_name_1
     NULL,                                   -- prov_facility_name_2
-    NULL,                                   -- prov_facility_address_1
+    claim_lines.servicefacilityaddress,     -- prov_facility_address_1
     NULL,                                   -- prov_facility_address_2
-    NULL,                                   -- prov_facility_city
-    NULL,                                   -- prov_facility_state
-    NULL,                                   -- prov_facility_zip
+    claim_lines.servicefacilitycity,        -- prov_facility_city
+    claim_lines.servicefacilitystate,       -- prov_facility_state
+    claim_lines.servicefacilityzip,         -- prov_facility_zip
     NULL,                                   -- prov_facility_std_taxonomy
     NULL,                                   -- prov_facility_vendor_specialty
     NULL,                                   -- cob_payer_vendor_id_1
