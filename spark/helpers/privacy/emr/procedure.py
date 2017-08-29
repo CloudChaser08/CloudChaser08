@@ -8,5 +8,7 @@ procedure_transformer = {
     }
 }
 
-def filter(df):
-    return emr_priv_common.filter(df, procedure_transformer)
+def filter(sqlc):
+    def out(df):
+        return emr_priv_common.filter(df, procedure_transformer)
+    return out
