@@ -260,10 +260,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         if not test:
             normalized_records_unloader.partition_and_rename(
-                spark, runner, 'emr', table['script_name'], 'cardinal',
+                spark, runner, 'emr', table['script_name'], '40',
                 table['table_name'], table['date_column'], date_input,
                 staging_subdir='{}/'.format(table['data_type']),
-                distribution_key='row_id', provider_partition='hvm_vdr_feed_id',
+                distribution_key='row_id', provider_partition='prt_hvm_vdr_feed_id',
                 date_partition='prt_mnth'
             )
 

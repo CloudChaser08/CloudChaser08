@@ -53,7 +53,7 @@ def partition_and_rename(
 
     if test_dir:
         staging_dir = test_dir + staging_subdir
-        part_files_cmd = ['find', staging_dir + 'part_provider=' + provider + '/', '-type', 'f']
+        part_files_cmd = ['find', staging_dir + provider_partition + '=' + provider + '/', '-type', 'f']
         common_dirpath = '../common/'
 
     else:
