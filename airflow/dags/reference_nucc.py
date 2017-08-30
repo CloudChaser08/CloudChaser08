@@ -1,12 +1,9 @@
-import airflow.macros as macros
-
 import common.HVDAG as HVDAG
 
 import util.emr_utils as emr_utils
 
 from airflow.models import Variable
 
-from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 
@@ -28,7 +25,7 @@ EMR_NUM_NODES = '2'
 EMR_NODE_TYPE = 'm4.xlarge'
 EMR_EBS_VOLUME_SIZE = '10'
 
-if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
+if HVDAG.HVDAG.airflow_env == 'prod':
     SCHEMA = 'default'
     S3_TEXT = 'salusv/reference/nucc/'
     S3_PARQUET = 'salusv/reference/parquet/nucc/'
@@ -51,7 +48,7 @@ REF_NUCC_SCHEMA = '''
 
 default_args = {
     'owner': 'airflow',
-    'depends_on_past': False,
+    'depends_on_past': True,
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
@@ -142,8 +139,8 @@ def scrape_nucc(ds, **kwargs):
     crawler.start()
 
 
-def do_create_emr_cluster(ds, emr_num_nodes, emr_node_type, emr_ebs_volume_size, **kwargs):
-    cluster_name = EMR_CLUSTER_NAME.format(ds)
+def do_create_emr_cluster(ds, emr_cluster_name, emr_num_nodes, emr_node_type, emr_ebs_volume_size, **kwargs):
+    cluster_name = emr_cluster_name.format(ds)
 
     emr_utils.create_emr_cluster(
         cluster_name, emr_num_nodes, emr_node_type,
@@ -247,6 +244,7 @@ delete_tmp_dir = BashOperator(
 create_emr_cluster = PythonOperator(
     task_id = 'create_emr_cluster',
     op_kwargs = {
+        'emr_cluster_name': EMR_CLUSTER_NAME,
         'emr_num_nodes': EMR_NUM_NODES,
         'emr_node_type': EMR_NODE_TYPE,
         'emr_ebs_volume_size': EMR_EBS_VOLUME_SIZE
