@@ -143,34 +143,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             )
         )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
 
-    runner.run_spark_script('normalize_encounter.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
-    runner.run_spark_script('normalize_diagnosis.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
-    runner.run_spark_script('normalize_procedure_enc.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
-    runner.run_spark_script('normalize_procedure_disp.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
-    runner.run_spark_script('normalize_lab_result.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
-    runner.run_spark_script('normalize_medication.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
-    runner.run_spark_script('normalize_clinical_observation.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
+    runner.run_spark_script('normalize_encounter.sql')
+    runner.run_spark_script('normalize_diagnosis.sql')
+    runner.run_spark_script('normalize_procedure_enc.sql')
+    runner.run_spark_script('normalize_procedure_disp.sql')
+    runner.run_spark_script('normalize_lab_result.sql')
+    runner.run_spark_script('normalize_medication.sql')
+    runner.run_spark_script('normalize_clinical_observation.sql')
 
     normalized_tables = [
         {
