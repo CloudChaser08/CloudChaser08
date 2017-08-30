@@ -6,6 +6,7 @@ from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from spark.helpers.privacy.emr import                   \
@@ -68,6 +69,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['personId'])
 
+    if not test:
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
+
     runner.run_spark_script('load_transactions.sql', [
         ['diagnosis_input_path', diagnosis_input_path],
         ['medication_input_path', medication_input_path]
@@ -105,7 +109,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 }
             },
             'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', None)
             ]
         },
         {

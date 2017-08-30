@@ -2,6 +2,8 @@ import pytest
 
 import shutil
 import logging
+import datetime
+from pyspark.sql import Row
 
 import spark.providers.cardinal_tsi.emr.sparkNormalizeCardinalTSI as cardinal
 import spark.helpers.file_utils as file_utils
@@ -25,6 +27,17 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
+
+    spark['spark'].sparkContext.parallelize([
+        Row(
+            hvm_vdr_feed_id=None,
+            gen_ref_domn_nm=None,
+            gen_ref_itm_nm=None,
+            gen_ref_1_dt=None,
+            whtlst_flg=None
+        )
+    ]).toDF().createTempView('ref_gen_ref')
+
     cardinal.run(spark['spark'], spark['runner'], '2017-08-31', True)
     global medication_results, diagnosis_results
     medication_results = spark['sqlContext'].sql('select * from medication_common_model') \
