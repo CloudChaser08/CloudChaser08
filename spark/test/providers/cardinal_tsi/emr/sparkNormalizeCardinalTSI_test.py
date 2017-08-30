@@ -2,7 +2,6 @@ import pytest
 
 import shutil
 import logging
-import datetime
 from pyspark.sql import Row
 
 import spark.providers.cardinal_tsi.emr.sparkNormalizeCardinalTSI as cardinal
