@@ -40,7 +40,7 @@ def trimmify(df):
     return _apply_to_all_columns(trim_col, df)
 
 
-def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min_cap=None):
+def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min_cap=None, date_function=None):
     """
     Apply date cap defined for this provider in the ref_gen_ref table
     """
@@ -71,6 +71,9 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
 
     else:
         min_cap = datetime.datetime.strptime(custom_min_cap, '%Y-%m-%d').date()
+
+    if date_function:
+        min_cap = date_function(min_cap)
 
     max_cap = datetime.datetime.strptime(max_cap, '%Y-%m-%d').date()
 

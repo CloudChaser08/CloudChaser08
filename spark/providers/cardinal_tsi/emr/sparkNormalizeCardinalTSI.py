@@ -1,10 +1,12 @@
 import argparse
 import time
+import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from spark.helpers.privacy.emr import                   \
     diagnosis as priv_diagnosis,                        \
@@ -15,7 +17,7 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
 
-    # TODO: this isn't the way their files will be named (hopefully...)
+    # TODO: this isn't the way their files will be named
     diag_setid = 'TSI_Diag_Sample_Raw.json'
     med_setid = 'TSI_Med_Sample_Raw.json'
 
@@ -96,6 +98,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'date_column': 'enc_dt',
             'setid': diag_setid,
             'privacy_filter': priv_diagnosis,
+            'custom_transformer': {
+                'diag_cd': {
+                    'func': post_norm_cleanup.clean_up_diagnosis_code,
+                    'args': ['diag_cd', 'diag_cd_qual', 'enc_dt']
+                }
+            },
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE')
             ]
@@ -106,7 +114,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'data_type': 'medication',
             'date_column': 'medctn_start_dt',
             'setid': med_setid,
-            'privacy_filter': priv_medication
+            'privacy_filter': priv_medication,
+            'custom_transformer': None,
+            'date_caps': [
+                ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE', None),
+                ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', None),
+                ('medctn_last_rfll_dt', 'EARLIEST_VALID_SERVICE_DATE', lambda d: d - datetime.timedelta(year=1))
+            ]
         }
     ]
 
@@ -120,10 +134,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
             ),
 
-            table['privacy_filter'].filter(runner.sqlContext),
+            table['privacy_filter'].filter(runner.sqlContext, table['custom_transformer']),
             *[
-                postprocessor.apply_date_cap(runner.sqlContext, date_col, date_input, '31', domain_name)
-                for (date_col, domain_name) in table['date_caps']
+                postprocessor.apply_date_cap(runner.sqlContext, date_col, date_input, '31', domain_name, date_function=date_fn)
+                for (date_col, domain_name, date_fn) in table['date_caps']
             ]
         )(
             runner.sqlContext.sql('select * from {}'.format(table['table_name']))
