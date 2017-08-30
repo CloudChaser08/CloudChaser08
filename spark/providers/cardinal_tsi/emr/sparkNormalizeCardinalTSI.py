@@ -85,7 +85,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             )
         )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
 
-    # TODO: Date capping - need to wait for gen_ref table to contain dates
     runner.run_spark_script('normalize_diagnosis.sql')
     runner.run_spark_script('normalize_medication.sql')
 
@@ -96,7 +95,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'data_type': 'diagnosis',
             'date_column': 'enc_dt',
             'setid': diag_setid,
-            'privacy_filter': priv_diagnosis
+            'privacy_filter': priv_diagnosis,
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE')
+            ]
         },
         {
             'table_name': 'medication_common_model',
@@ -118,8 +120,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
             ),
 
-            # TODO: Improved EMR Privacy filtering once the cert is finalized
-            table['privacy_filter'].filter
+            table['privacy_filter'].filter(runner.sqlContext),
+            *[
+                postprocessor.apply_date_cap(runner.sqlContext, date_col, date_input, '31', domain_name)
+                for (date_col, domain_name) in table['date_caps']
+            ]
         )(
             runner.sqlContext.sql('select * from {}'.format(table['table_name']))
         ).createTempView(table['table_name'])

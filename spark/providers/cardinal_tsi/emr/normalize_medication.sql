@@ -94,15 +94,11 @@ SELECT
     NULL,                                         -- rx_num
     EXTRACT_DATE(
         med.start_date,
-        '%Y%m%d',
-        NULL,
-        NULL
+        '%Y%m%d'
         ),                                        -- medctn_start_dt
     EXTRACT_DATE(
         med.date_stopped,
-        '%Y%m%d',
-        NULL,
-        NULL
+        '%Y%m%d'
         ),                                        -- medctn_end_dt
     NULL,                                         -- medctn_diag_cd
     NULL,                                         -- medctn_diag_cd_qual
@@ -141,9 +137,7 @@ SELECT
     NULL,                                         -- medctn_remng_rfll_qty
     EXTRACT_DATE(
         med.date_last_refilled,
-        '%Y%m%d',
-        NULL,
-        NULL
+        '%Y%m%d'
         ),                                        -- medctn_last_rfll_dt
     NULL,                                         -- medctn_smpl_flg
     NULL,                                         -- medctn_elect_rx_flg

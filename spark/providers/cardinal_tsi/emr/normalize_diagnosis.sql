@@ -25,9 +25,7 @@ SELECT
     NULL,                                     -- hv_enc_id
     EXTRACT_DATE(
         d.enc_timestamp,
-        '%Y-%m-%d %H:%M:%S.%f',
-        NULL,
-        NULL
+        '%Y-%m-%d %H:%M:%S.%f'
         ),                                    -- enc_dt
     NULL,                                     -- diag_dt
     NULL,                                     -- diag_rndrg_fclty_npi
