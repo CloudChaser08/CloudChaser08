@@ -3,7 +3,7 @@ SELECT
     NULL,                                   -- record_id
     claim_lines.ediclaim_id,                -- claim_id
     'TBD',                                  -- hvid
-    NULL,                                   -- created
+    'pop as usual?',                        -- created
     '2',                                    -- model_version
     'pop as usual?',                        -- data_set
     '41',                                   -- data_feed
@@ -39,7 +39,7 @@ SELECT
     NULL,                                   -- place_of_service_vendor_id
     NULL,                                   -- place_of_service_vendor_desc
     claim_lines.linesequencenumber,         -- service_line_number
-    NULL,                                   -- diagnosis_code **TODO:**
+    'pivot the 4?',                         -- diagnosis_code
     NULL,                                   -- diagnosis_code_qual
     NULL,                                   -- diagnosis_priority
     NULL,                                   -- admit_diagnosis_ind
@@ -67,11 +67,11 @@ SELECT
         ELSE NULL
     END,                                    -- prov_rendering_npi
     CASE
-        WHEN claim_lines.billprovideridqualifier = 'XX' AND
-             11 = LENGTH(TRIM(COALESCE(claim_lines.billprovidernpid, '')))
-             THEN COALESCE(claim_lines.billproviderid, claim_lines.billprovidernpid)
-        WHEN claim_lines.billprovideridqualifier = 'XX'
-             THEN claim_lines.billproviderid
+        WHEN claim.billprovideridqualifier = 'XX' AND
+             11 = LENGTH(TRIM(COALESCE(claim.billprovidernpid, '')))
+             THEN COALESCE(claim.billproviderid, claim.billprovidernpid)
+        WHEN claim.billprovideridqualifier = 'XX'
+             THEN claim.billproviderid
         ELSE NULL
     END,                                    -- prov_billing_npi
     CASE
@@ -82,7 +82,7 @@ SELECT
     CASE
         WHEN claim_lines.servicefacilityidqualifier = 'XX'
              THEN claim_lines.servicefacilityid
-             ELSE NULL
+        ELSE NULL
     END,                                    -- prov_facility_npi
     claim.payerid,                          -- payer_vendor_id
     claim.payername,                        -- payer_name
