@@ -106,13 +106,13 @@ SELECT
     NULL,                                                     -- lab_test_vdr_cd_qual
     NULL,                                                     -- lab_test_alt_cd
     NULL,                                                     -- lab_test_alt_cd_qual
+    NULL,                                                     -- lab_result_nm
+    NULL,                                                     -- lab_result_desc
     CASE
     WHEN CAST(l.test_value_string AS DECIMAL) IS NOT NULL
     THEN l.test_value_string
-    END,                                                      -- lab_result_nm
-    NULL,                                                     -- lab_result_desc
-    NULL,                                                     -- lab_result_msrmt
-    NULL,                                                     -- lab_result_uom
+    END,                                                      -- lab_result_msrmt
+    l.unit_desc,                                              -- lab_result_uom
     NULL,                                                     -- lab_result_qual
     NULL,                                                     -- lab_result_abnorm_flg
     l.min_norm,                                               -- lab_result_norm_min_msrmt

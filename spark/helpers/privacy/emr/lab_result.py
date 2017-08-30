@@ -29,6 +29,10 @@ whitelists = [
     {
         'column_name': 'rec_stat_cd',
         'domain_name': 'emr_lab_result.rec_stat_cd'
+    },
+    {
+        'column_name': 'lab_result_uom',
+        'domain_name': 'emr_lab_result.lab_test_uom'
     }
 ]
 
