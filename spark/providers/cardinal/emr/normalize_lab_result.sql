@@ -48,9 +48,7 @@ SELECT
     NULL,                                                     -- lab_test_schedd_dt
     EXTRACT_DATE(
         l.test_date,
-        '%Y-%m-%d %H:%M:%S.%f',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        '%Y-%m-%d %H:%M:%S.%f'
         ),                                                    -- lab_test_execd_dt
     NULL,                                                     -- lab_result_dt
     NULL,                                                     -- lab_test_ordg_prov_npi
@@ -108,7 +106,10 @@ SELECT
     NULL,                                                     -- lab_test_vdr_cd_qual
     NULL,                                                     -- lab_test_alt_cd
     NULL,                                                     -- lab_test_alt_cd_qual
-    CAST(CAST(l.test_value_string AS DECIMAL) AS STRING),     -- lab_result_nm
+    CASE
+    WHEN CAST(l.test_value_string AS DECIMAL) IS NOT NULL
+    THEN l.test_value_string
+    END,                                                      -- lab_result_nm
     NULL,                                                     -- lab_result_desc
     NULL,                                                     -- lab_result_msrmt
     NULL,                                                     -- lab_result_uom
