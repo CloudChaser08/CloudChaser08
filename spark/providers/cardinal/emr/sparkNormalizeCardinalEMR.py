@@ -85,7 +85,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    min_date = '1900-01-02'
     max_date = date_input
 
     runner.run_spark_script('../../../common/emr/clinical_observation_common_model_v2.sql', [
