@@ -3,11 +3,11 @@ SELECT
     NULL,                                       -- record_id
     claim_lines.ediclaim_id,                    -- claim_id
     'TBD',                                      -- hvid
-    'pop as usual?',                            -- created
+    NULL,                                       -- created
     '2',                                        -- model_version
-    'pop as usual?',                            -- data_set
-    '41',                                       -- data_feed
-    '188',                                      -- data_vendor
+    NULL,                                       -- data_set
+    NULL,                                       -- data_feed
+    NULL,                                       -- data_vendor
     NULL,                                       -- source_version
     NULL,                                       -- patient_gender
     NULL,                                       -- patient_age
@@ -35,7 +35,7 @@ SELECT
     NULL,                                       -- inst_drg_std_id
     NULL,                                       -- inst_drg_vendor_id
     NULL,                                       -- inst_drg_vendor_desc
-    'mask as usual?',                           -- place_of_service_std_id
+    claim.facilitycode,                         -- place_of_service_std_id **TODO: mask as usual? **
     NULL,                                       -- place_of_service_vendor_id
     NULL,                                       -- place_of_service_vendor_desc
     claim_lines.linesequencenumber,             -- service_line_number
@@ -185,18 +185,17 @@ SELECT
     NULL,                                       -- cob_payer_hpid_2
     NULL,                                       -- cob_payer_claim_filing_ind_code_2
     NULL                                        -- cob_ins_type_code_2
-FROM
-    something INNER JOIN something else
+FROM transactional_cardinal_pms
 UNION
 SELECT
     NULL,                                       -- record_id
     claim_lines.ediclaim_id,                    -- claim_id
     NULL,                                       -- hvid
-    'pop as usual?',                            -- created
+    NULL,                                       -- created
     '2' ,                                       -- model_version
-    'pop as usual',                             -- data_set
-    '41',                                       -- data_feed
-    '188',                                      -- data_vendor
+    NULL,                                       -- data_set
+    NULL,                                       -- data_feed
+    NULL,                                       -- data_vendor
     NULL,                                       -- source_version
     NULL,                                       -- patient_gender
     NULL,                                       -- patient_age
@@ -344,6 +343,5 @@ SELECT
     NULL,                                       -- cob_payer_hpid_2
     NULL,                                       -- cob_payer_claim_filing_ind_code_2
     NULL                                        -- cob_ins_type_code_2
-FROM
-    something INNER JOIN something else
+FROM transactional_cardinal_pms
 ;
