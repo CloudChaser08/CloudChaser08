@@ -242,8 +242,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 spark, runner, 'emr', table['script_name'], '40',
                 table['table_name'], table['date_column'], date_input,
                 staging_subdir='{}/'.format(table['data_type']),
-                distribution_key='row_id', provider_partition='prt_hvm_vdr_feed_id',
-                date_partition='prt_mnth'
+                distribution_key='row_id', provider_partition='part_hvm_vdr_feed_id',
+                date_partition='part_mth'
             )
 
 
