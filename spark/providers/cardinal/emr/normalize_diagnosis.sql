@@ -1,9 +1,9 @@
 INSERT INTO diagnosis_common_model
 SELECT
     NULL,                                                       -- rec_id
-    CONCAT('31_', diag.id),                                     -- hv_diag_id
+    CONCAT('40_', diag.id),                                     -- hv_diag_id
     NULL,                                                       -- crt_dt
-    '03',                                                       -- mdl_vrsn_num
+    '04',                                                       -- mdl_vrsn_num
     NULL,                                                       -- data_set_nm
     NULL,                                                       -- src_vrsn_id
     NULL,                                                       -- hvm_vdr_id

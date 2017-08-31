@@ -1,9 +1,9 @@
 INSERT INTO procedure_common_model
 SELECT
     NULL,                                                       -- rec_id
-    CONCAT('31_disp_', disp.id),                                -- hv_proc_id
+    CONCAT('normalize_disp_', disp.id),                                -- hv_proc_id
     NULL,                                                       -- crt_dt
-    '02',                                                       -- mdl_vrsn_num
+    '03',                                                       -- mdl_vrsn_num
     NULL,                                                       -- data_set_nm
     NULL,                                                       -- src_vrsn_id
     NULL,                                                       -- hvm_vdr_id

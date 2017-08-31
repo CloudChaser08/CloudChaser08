@@ -1,9 +1,9 @@
 INSERT INTO encounter_common_model
 SELECT
     NULL,                                                     -- rec_id
-    CONCAT('31_', e.id),                                      -- hv_enc_id
+    CONCAT('40_', e.id),                                      -- hv_enc_id
     NULL,                                                     -- crt_dt
-    '02',                                                     -- mdl_vrsn_num
+    '03',                                                     -- mdl_vrsn_num
     NULL,                                                     -- data_set_nm
     NULL,                                                     -- src_vrsn_id
     NULL,                                                     -- hvm_vdr_id

@@ -1,9 +1,9 @@
 INSERT INTO clinical_observation_common_model
 SELECT
     NULL,                                                       -- rec_id
-    CONCAT('31_', diag.id),                                     -- hv_clin_obsn_id
+    CONCAT('40_', diag.id),                                     -- hv_clin_obsn_id
     NULL,                                                       -- crt_dt
-    '02',                                                       -- mdl_vrsn_num
+    '03',                                                       -- mdl_vrsn_num
     NULL,                                                       -- data_set_nm
     NULL,                                                       -- src_vrsn_id
     NULL,                                                       -- hvm_vdr_id
