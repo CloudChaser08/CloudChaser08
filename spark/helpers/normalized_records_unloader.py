@@ -57,7 +57,6 @@ def partition_and_rename(
         part_files_cmd = ['hadoop', 'fs', '-ls', '-R', staging_dir + 'part_provider=' + provider + '/']
         common_dirpath = '../../../../common/'
 
-
     runner.run_spark_script(common_dirpath + common_model_script, [
         ['table_name', 'final_unload', False],
         ['properties', constants.unload_properties_template.format(staging_dir), False]

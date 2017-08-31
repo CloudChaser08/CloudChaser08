@@ -63,9 +63,6 @@ def init(provider, local=False):
     sqlContext.registerFunction(
         'cap_year_of_birth', cap_year_of_birth
     )
-    sqlContext.registerFunction(
-        'create_range', create_range
-    )
 
     # helper functions for cleaning up data
     sqlContext.registerFunction(
@@ -79,6 +76,9 @@ def init(provider, local=False):
     )
     sqlContext.registerFunction(
         'extract_currency', extract_currency
+    )
+    sqlContext.registerFunction(
+        'create_range', create_range
     )
     sqlContext.registerFunction(
         'obfuscate_hvid', obfuscate_hvid
