@@ -1,5 +1,6 @@
-DROP TABLE IF EXISTS transactional_claim;
-CREATE EXTERNAL TABLE transactional_claim (
+DROP TABLE IF EXISTS transactional_cardinal_pms;
+
+CREATE EXTERNAL TABLE transactional_cardinal_pms (
     billproviderid                  string,
     billprovideridqualifier         string,
     billprovidername                string,
@@ -16,7 +17,7 @@ CREATE EXTERNAL TABLE transactional_claim (
     facilitycode                    string,
     groupname                       string,
     groupnumber                     string,
-    id                              string,
+    claim_id                        string,
     insurancetype                   string,
     patientaccountnumber            string,
     patientdob                      string,
@@ -39,22 +40,11 @@ CREATE EXTERNAL TABLE transactional_claim (
     subscriberidqualifier           string,
     subscriberlastname              string,
     subscriberpolicynumber          string,
-)
-ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-WITH SERDEPROPERTIES (
-    "separatorChar" = "|"
-)
-STORED AS TEXTFILE
-LOCATION {input_path_claim}
-;
-
-DROP TABLE IF EXISTS transactional_claim_file;
-CREATE EXTERNAL TABLE transactional_claim_file (
     bhtcontrolnumber                string,
     bhtdatetime                     string,
     gscontrolnumber                 string,
     gsdatetime                      string,
-    id                              string,
+    claim_file_id                   string,
     importsourceid                  string,
     isacontrolnumber                string,
     isadatetime                     string,
@@ -62,20 +52,9 @@ CREATE EXTERNAL TABLE transactional_claim_file (
     submitterentitytypequalifier    string,
     submitteridentificationcode     string,
     submitteridcodequalifier        string
-)
-ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-WITH SERDEPROPERTIES (
-    "separatorChar" = "|"
-)
-STORED AS TEXTFILE
-LOCATION {input_path_claim_file}
-;
-
-DROP TABLE IF EXISTS transactional_claim_lines;
-CREATE EXTERNAL TABLE transactional_claim_lines (
     dateservicestart                string,
     ediclaim_id                     string,
-    id                              string,
+    claim_lines_id                  string,
     linesequencenumber              string,
     linkeddiagnosisfour             string,
     linkeddiagnosisone              string,
@@ -115,5 +94,5 @@ WITH SERDEPROPERTIES (
     "separatorChar" = "|"
 )
 STORED AS TEXTFILE
-LOCATION {input_file_claim_lines}
+LOCATION {input_path}
 ;
