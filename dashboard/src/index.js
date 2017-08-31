@@ -155,13 +155,21 @@ exports.handler = function(event, context) {
         });
         var latestIngestionDate = ingestedFiles.length ? ingestedFiles[0].executionDate : "Never";
 
+        function dateSortNum(d) {
+          if (d === "Never") {
+            return 0;
+          } else {
+            return parseInt(d.split("-").join(""));
+          }
+        }
+
         return {
           // date ingested HTML for this provider
           dateIngestedContent: '<tr id="' + providerConf.id + '">' +
             '<td><a href="#">' + providerConf.displayName + '</a></td>' +
-            '<td>' + existingFiles[0].executionDate + '</td>' +
-            '<td>' + latestIngestionDate + '</td>' +
-            '<td data-statusnumber=' + healthLabel[0] + '>' + healthLabel[1] + '</td>' +
+            '<td data-sortnumber=' + dateSortNum(existingFiles[0].executionDate) + '>' + existingFiles[0].executionDate + '</td>' +
+            '<td data-sortnumber=' + dateSortNum(latestIngestionDate) + '>' + latestIngestionDate + '</td>' +
+            '<td data-sortnumber=' + healthLabel[0] + '>' + healthLabel[1] + '</td>' +
             '</tr>',
 
           // time series HTML for this provider

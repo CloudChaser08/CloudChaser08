@@ -42,11 +42,11 @@ $('div#time-series span#back a').click(function() {
 });
 
 /**
- * Function for sorting health statuses by their 'true' ordering
+ * Function for sorting values by their 'true' ordering
  * instead of the arbitrary lexographical ordering
  */
-function statusSorter(a, b) {
-  return a.statusnumber - b.statusnumber;
+function sortNumSorter(a, b) {
+  return a.sortnumber - b.sortnumber;
 }
 
 configureTable();
