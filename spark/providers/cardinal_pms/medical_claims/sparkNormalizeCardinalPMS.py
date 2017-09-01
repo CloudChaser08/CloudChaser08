@@ -1,5 +1,6 @@
 #! /usr/bin/python
 import argparse
+from datetime import datetime
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -15,49 +16,59 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path = '../../test/providers/cardinal_pms/medicalclaims/resources/input/'
-        )
+            script_path,  '../../../test/providers/cardinal_pms/medicalclaims/resources/input/'
+        ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}'\
-                        .format(date_input.replace('-', '/')
+                        .format(date_input.replace('-', '/'))
     else:
         input_path = 's3://salusv/incoming/medicalclaims/cardinal_pms/{}/'\
-                        .format(date_input.replace('-', '/')
+                        .format(date_input.replace('-', '/'))
+
+    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     # Note: This routine does not contain any matching payloads
 
     # Create the medical claims table to store the results in
-    runner.run_spark_script('../../common/medicalclaims_common_model.sql', [
+    runner.run_spark_script('../../../common/medicalclaims_common_model.sql', [
         ['table_name', 'medicalclaims_common_model', False],
         ['properties', '', False]
-    )
+    ])
+    print 'Created medicalclaims_common_model_table'
 
     # Load the transactions into raw, un-normalized tables
     runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path]
     ])
+    print 'Loaded the transaction'
 
     # Remove leading and trailing whitespace from any strings
+    # Nullify rows that require it
     postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(
         runner.sqlContext.sql('select * from transactional_cardinal_pms')
     ).createTempView('transactional_cardinal_pms')
+    print 'Trimmed and nullified data'
 
     # Create exploder table for service-line
     explode.generate_exploder_table(spark, 5, 'service_line_exploder')
+    print 'Created exploder table for service-line'
 
     # Normalize service-line
     runner.run_spark_script('normalize_service_line.sql', [])
+    print 'Finished normalizing for service-line'
 
     # Create exploder table for claim
     explode.generate_exploder_table(spark, 8, 'claim_exploder')
+    print 'Created exploder for claim'
 
     # Normalize claim
     runner.run_spark_script('normalize_claim.sql', [])
+    print 'Finished normalizing for claim'
 
     # Postprocessing
     postprocessor.compose(
         postprocessor.nullify,
-        postprocessor.add_universal_column(
+        postprocessor.add_universal_columns(
             feed_id='41',
             vendor_id='188',
             # TODO: this is not right, fix when we know what the name format is.
@@ -67,6 +78,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )(
         runner.sqlContext.sql('select * from medicalclaims_common_model')
     ).createTempView('medicalclaims_common_model')
+    print 'Finished post-processing'
     
     if not test:
         normalized_records_unloader.partition_and_rename(

@@ -1,7 +1,7 @@
 INSERT INTO medicalclaims_common_model
 SELECT
     NULL,                                       -- record_id
-    t.ediclaim_id,                                  -- claim_id
+    t.ediclaim_id,                              -- claim_id
     NULL,                                       -- hvid
     NULL,                                       -- created
     '2' ,                                       -- model_version
@@ -40,14 +40,14 @@ SELECT
     NULL,                                       -- place_of_service_vendor_desc
     NULL,                                       -- service_line_number
     ARRAY(t.principaldiagnosis, t.diagnosistwo,
-        t.diagnosisthree, t.diagnosisfour, t.diagnnosisfive,
-        t.diagnosissix, t.diagnosisseven, t.diagnosiseight,
+        t.diagnosisthree, t.diagnosisfour, t.diagnosisfive,
+        t.diagnosissix, t.diagnosisseven, t.diagnosiseight
         )[c_explode.n],                         -- diagnosis_code
     NULL,                                       -- diagnosis_code_qual
     CASE
         WHEN ARRAY(t.principaldiagnosis, t.diagnosistwo,
-            t.diagnosisthree, t.diagnosisfour, t.diagnnosisfive,
-            t.diagnosissix, t.diagnosisseven, t.diagnosiseight,
+            t.diagnosisthree, t.diagnosisfour, t.diagnosisfive,
+            t.diagnosissix, t.diagnosisseven, t.diagnosiseight
             )[c_explode.n] IS NOT NULL
             THEN c_explode.n
         ELSE NULL
@@ -171,14 +171,14 @@ FROM transactional_cardinal_pms t
     ON
     t.ediclaim_id = mcm.claim_id
     AND 
-    ARRAY(t.principaldiagnosis, t.diagnsosistwo, t.diagnosisthree, t.diagnosisfour,
+    ARRAY(t.principaldiagnosis, t.diagnosistwo, t.diagnosisthree, t.diagnosisfour,
         t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
         )[c_explode.n] <> mcm.diagnosis_code
 WHERE
     -- Filter out cases from explosion where diagnosis_code would be null
     (
-        ARRAY(t.principaldiagnosis, t.diagnsosistwo, t.diagnosisthree, t.diagnosisfour,
-            t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight,
+        ARRAY(t.principaldiagnosis, t.diagnosistwo, t.diagnosisthree, t.diagnosisfour,
+            t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
             )[c_explode.n] IS NOT NULL
     )
 DISTRIBUTE BY t.ediclaim_id

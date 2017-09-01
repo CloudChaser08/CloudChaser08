@@ -51,7 +51,7 @@ CREATE EXTERNAL TABLE transactional_cardinal_pms (
     purposecode                     string,
     submitterentitytypequalifier    string,
     submitteridentificationcode     string,
-    submitteridcodequalifier        string
+    submitteridcodequalifier        string,
     dateservicestart                string,
     ediclaim_id                     string,
     claim_lines_id                  string,

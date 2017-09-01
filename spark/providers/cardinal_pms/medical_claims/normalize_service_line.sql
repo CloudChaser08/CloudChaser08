@@ -35,13 +35,13 @@ SELECT DISTINCT
     NULL,                                       -- inst_drg_std_id
     NULL,                                       -- inst_drg_vendor_id
     NULL,                                       -- inst_drg_vendor_desc
-    claim.facilitycode,                         -- place_of_service_std_id **TODO: mask as usual? **
+    t.facilitycode,                             -- place_of_service_std_id **TODO: mask as usual? **
     NULL,                                       -- place_of_service_vendor_id
     NULL,                                       -- place_of_service_vendor_desc
     t.linesequencenumber,                       -- service_line_number
     ARRAY(
         t.linkeddiagnosisone, t.linkeddiagnosistwo,
-        t.linkediagnosisthree, t.linkeddiagnosisfour,
+        t.linkeddiagnosisthree, t.linkeddiagnosisfour,
         NULL)[sl_explode.n],                    -- diagnosis_code
     NULL,                                       -- diagnosis_code_qual
     CASE
@@ -59,13 +59,13 @@ SELECT DISTINCT
     t.proceduremodifierone,                     -- procedure_modifier_1
     t.proceduremodifiertwo,                     -- procedure_modifier_2
     t.proceduremodifierthree,                   -- procedure_modifier_3
-    t.procuremodifierfour,                      -- procedure_modifier_4
+    t.proceduremodifierfour,                    -- procedure_modifier_4
     NULL,                                       -- revenue_code
     NULL,                                       -- ndc_code
     NULL,                                       -- medical_coverage_type
-    t.submittedlinecharge,                      -- line_charge
+    t.submittedcharge,                          -- line_charge
     NULL,                                       -- line_allowed
-    claim.submittedchargetotal,                 -- total_charge
+    t.submittedchargetotal,                     -- total_charge
     NULL,                                       -- total_allowed
     CASE
         WHEN t.renderingprovideridqualifier = 'XX' AND
@@ -76,11 +76,11 @@ SELECT DISTINCT
         ELSE NULL
     END,                                        -- prov_rendering_npi
     CASE
-        WHEN claim.billprovideridqualifier = 'XX' AND
-             11 = LENGTH(TRIM(COALESCE(claim.billprovidernpid, '')))
-             THEN COALESCE(claim.billproviderid, claim.billprovidernpid)
-        WHEN claim.billprovideridqualifier = 'XX'
-             THEN claim.billproviderid
+        WHEN t.billprovideridqualifier = 'XX' AND
+             11 = LENGTH(TRIM(COALESCE(t.billprovidernpid, '')))
+             THEN COALESCE(t.billproviderid, t.billprovidernpid)
+        WHEN t.billprovideridqualifier = 'XX'
+             THEN t.billproviderid
         ELSE NULL
     END,                                        -- prov_billing_npi
     CASE
@@ -93,8 +93,8 @@ SELECT DISTINCT
              THEN t.servicefacilityid
         ELSE NULL
     END,                                        -- prov_facility_npi
-    claim.payerid,                              -- payer_vendor_id
-    claim.payername,                            -- payer_name
+    t.payerid,                                  -- payer_vendor_id
+    t.payername,                                -- payer_name
     NULL,                                       -- payer_parent_name
     NULL,                                       -- payer_org_name
     NULL,                                       -- payer_plan_id
@@ -122,9 +122,9 @@ SELECT DISTINCT
     t.renderingprovidertaxonomycode,            -- prov_rendering_std_taxonomy
     NULL,                                       -- prov_rendering_vendor_specialty
     CASE
-        WHEN claim.billprovideridqualifier <> 'XX'
-             AND 0 <> LENGTH(TRIM(COALESCE(claim.billproviderid, '')))
-             THEN claim.billproviderid
+        WHEN t.billprovideridqualifier <> 'XX'
+             AND 0 <> LENGTH(TRIM(COALESCE(t.billproviderid, '')))
+             THEN t.billproviderid
         ELSE NULL
     END,                                        -- prov_billing_vendor_id
     NULL,                                       -- prov_billing_tax_id
@@ -133,14 +133,14 @@ SELECT DISTINCT
     NULL,                                       -- prov_billing_state_license
     NULL,                                       -- prov_billing_upin
     NULL,                                       -- prov_billing_commercial_id
-    claim.billprovidername,                     -- prov_billing_name_1
+    t.billprovidername,                         -- prov_billing_name_1
     NULL,                                       -- prov_billing_name_2
     NULL,                                       -- prov_billing_address_1
     NULL,                                       -- prov_billing_address_2
     NULL,                                       -- prov_billing_city
     NULL,                                       -- prov_billing_state
     NULL,                                       -- prov_billing_zip
-    claim.billprovidertaxonomycode,             -- prov_billing_std_taxonomy
+    t.billprovidertaxonomycode,                 -- prov_billing_std_taxonomy
     NULL,                                       -- prov_billing_vendor_specialty
     CASE
         WHEN t.referringprovideridqualifier <> 'XX'
