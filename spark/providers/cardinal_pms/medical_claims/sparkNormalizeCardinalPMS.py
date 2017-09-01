@@ -49,7 +49,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('normalize_service_line.sql', [])
 
     # Create exploder table for claim
-    explode.generate_exploder_table(spark, 9, 'claim_exploder')
+    explode.generate_exploder_table(spark, 8, 'claim_exploder')
 
     # Normalize claim
     runner.run_spark_script('normalize_claim.sql', [])

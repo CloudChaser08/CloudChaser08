@@ -40,7 +40,7 @@ SELECT DISTINCT
     NULL,                                       -- place_of_service_vendor_desc
     t.linesequencenumber,                       -- service_line_number
     ARRAY(
-        t.linkeddiagnosisone, t.linkeddiagnostwo,
+        t.linkeddiagnosisone, t.linkeddiagnosistwo,
         t.linkediagnosisthree, t.linkeddiagnosisfour,
         NULL)[sl_explode.n],                    -- diagnosis_code
     NULL,                                       -- diagnosis_code_qual

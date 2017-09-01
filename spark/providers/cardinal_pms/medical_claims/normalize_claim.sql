@@ -1,7 +1,7 @@
 INSERT INTO medicalclaims_common_model
 SELECT
     NULL,                                       -- record_id
-    claim_lines.ediclaim_id,                    -- claim_id
+    t.ediclaim_id,                                  -- claim_id
     NULL,                                       -- hvid
     NULL,                                       -- created
     '2' ,                                       -- model_version
@@ -16,8 +16,8 @@ SELECT
     NULL,                                       -- patient_state
     'P',                                        -- claim_type
     NULL,                                       -- date_received
-    claim_lines.dateservicestart,               -- date_service **TODO: cap **
-    claim_lines.dateservicestart,               -- date_service_end **TODO: cap **
+    t.dateservicestart,                         -- date_service **TODO: cap **
+    t.dateservicestart,                         -- date_service_end **TODO: cap **
     NULL,                                       -- inst_date_admitted
     NULL,                                       -- inst_date_discharged
     NULL,                                       -- inst_admit_type_std_id
@@ -35,13 +35,23 @@ SELECT
     NULL,                                       -- inst_drg_std_id
     NULL,                                       -- inst_drg_vendor_id
     NULL,                                       -- inst_drg_vendor_desc
-    claim.facilitycode,   -- Mask as usual?     -- place_of_service_std_id
+    t.facilitycode,                             -- place_of_service_std_id
     NULL,                                       -- place_of_service_vendor_id
     NULL,                                       -- place_of_service_vendor_desc
     NULL,                                       -- service_line_number
-    'not really sure',                          -- diagnosis_code
+    ARRAY(t.principaldiagnosis, t.diagnosistwo,
+        t.diagnosisthree, t.diagnosisfour, t.diagnnosisfive,
+        t.diagnosissix, t.diagnosisseven, t.diagnosiseight,
+        )[c_explode.n],                         -- diagnosis_code
     NULL,                                       -- diagnosis_code_qual
-    'depends on code number',                   -- diagnosis_priority
+    CASE
+        WHEN ARRAY(t.principaldiagnosis, t.diagnosistwo,
+            t.diagnosisthree, t.diagnosisfour, t.diagnnosisfive,
+            t.diagnosissix, t.diagnosisseven, t.diagnosiseight,
+            )[c_explode.n] IS NOT NULL
+            THEN c_explode.n
+        ELSE NULL
+    END,                                        -- diagnosis_priority
     NULL,                                       -- admit_diagnosis_ind
     NULL,                                       -- procedure_code
     NULL,                                       -- procedure_code_qual
@@ -56,21 +66,21 @@ SELECT
     NULL,                                       -- medical_coverage_type
     NULL,                                       -- line_charge
     NULL,                                       -- line_allowed
-    claim.submittedchargetotal,                 -- total_charge
+    t.submittedchargetotal,                     -- total_charge
     NULL,                                       -- total_allowed
     NULL,                                       -- prov_rendering_npi
     CASE
-        WHEN claim.billprovideridqualifier = 'XX'
-             AND 11 = LENGTH(TRIM(COALESCE(claim.billprovidernpid, '')))
-             THEN COALESCE(claim.billproviderid, claim.billprovidernpid)
-        WHEN claim.billprovideridqualifier = 'XX'
-             THEN claim.billproviderid
+        WHEN t.billprovideridqualifier = 'XX'
+             AND 11 = LENGTH(TRIM(COALESCE(t.billprovidernpid, '')))
+             THEN COALESCE(t.billproviderid, t.billprovidernpid)
+        WHEN t.billprovideridqualifier = 'XX'
+             THEN t.billproviderid
         ELSE NULL
     END,                                        -- prov_billing_npi
     NULL,                                       -- prov_referring_npi
     NULL,                                       -- prov_facility_npi
-    claim.payerid,                              -- payer_vendor_id
-    claim.payername,                            -- payer_name
+    t.payerid,                                  -- payer_vendor_id
+    t.payername,                                -- payer_name
     NULL,                                       -- payer_parent_name
     NULL,                                       -- payer_org_name
     NULL,                                       -- payer_plan_id
@@ -93,9 +103,9 @@ SELECT
     NULL,                                       -- prov_rendering_std_taxonomy
     NULL,                                       -- prov_rendering_vendor_specialty
     CASE
-        WHEN claim.billprovideridqualifier <> 'XX'
-             AND 0 <> LENGTH(TRIM(COALESCE(claim.billproviderid, '')))
-             THEN claim.billproviderid
+        WHEN t.billprovideridqualifier <> 'XX'
+             AND 0 <> LENGTH(TRIM(COALESCE(t.billproviderid, '')))
+             THEN t.billproviderid
         ELSE NULL
     END,                                        -- prov_billing_vendor_id
     NULL,                                       -- prov_billing_tax_id
@@ -104,14 +114,14 @@ SELECT
     NULL,                                       -- prov_billing_state_license
     NULL,                                       -- prov_billing_upin
     NULL,                                       -- prov_billing_commercial_id
-    claim.billprovidername,                     -- prov_billing_name_1
+    t.billprovidername,                         -- prov_billing_name_1
     NULL,                                       -- prov_billing_name_2
     NULL,                                       -- prov_billing_address_1
     NULL,                                       -- prov_billing_address_2
     NULL,                                       -- prov_billing_city
     NULL,                                       -- prov_billing_state
     NULL,                                       -- prov_billing_zip
-    claim.billprovidertaxonomycode,             -- prov_billing_std_taxonomy
+    t.billprovidertaxonomycode,                 -- prov_billing_std_taxonomy
     NULL,                                       -- prov_billing_vendor_specialty
     NULL,                                       -- prov_referring_vendor_id
     NULL,                                       -- prov_referring_tax_id
@@ -155,5 +165,21 @@ SELECT
     NULL,                                       -- cob_payer_hpid_2
     NULL,                                       -- cob_payer_claim_filing_ind_code_2
     NULL                                        -- cob_ins_type_code_2
-FROM transactional_cardinal_pms
+FROM transactional_cardinal_pms t
+    CROSS JOIN claim_exploder c_explode
+    LEFT JOIN medicalclaims_common_model mcm
+    ON
+    t.ediclaim_id = mcm.claim_id
+    AND 
+    ARRAY(t.principaldiagnosis, t.diagnsosistwo, t.diagnosisthree, t.diagnosisfour,
+        t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
+        )[c_explode.n] <> mcm.diagnosis_code
+WHERE
+    -- Filter out cases from explosion where diagnosis_code would be null
+    (
+        ARRAY(t.principaldiagnosis, t.diagnsosistwo, t.diagnosisthree, t.diagnosisfour,
+            t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight,
+            )[c_explode.n] IS NOT NULL
+    )
+DISTRIBUTE BY t.ediclaim_id
 ;
