@@ -85,8 +85,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    max_date = date_input
-
     runner.run_spark_script('../../../common/emr/clinical_observation_common_model_v2.sql', [
         ['table_name', 'clinical_observation_common_model', False],
         ['properties', '', False]
@@ -116,6 +114,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
+
+    hvm_available_history_date = postprocessor.get_gen_ref_date("40", "HVM_AVAILABLE_HISTORY_DATE")
+    earliest_valid_service_date = postprocessor.get_gen_ref_date("40", "EARLIEST_VALID_SERVICE_DATE")
+    max_date = date_input
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
@@ -242,7 +244,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 table['table_name'], table['date_column'], date_input,
                 staging_subdir='{}/'.format(table['data_type']),
                 distribution_key='row_id', provider_partition='part_hvm_vdr_feed_id',
-                date_partition='part_mth'
+                date_partition='part_mth', hvm_historical_date=(
+                    hvm_available_history_date if hvm_available_history_date else earliest_valid_service_date
+                )
             )
 
 

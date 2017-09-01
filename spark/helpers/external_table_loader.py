@@ -1,4 +1,3 @@
-from pyspark.sql import SQLContext
 import spark.helpers.udf.post_normalization_cleanup as post_normalization_cleanup
 from pyspark.sql.functions import col, lit, udf
 
