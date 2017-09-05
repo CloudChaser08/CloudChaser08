@@ -182,19 +182,24 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         dag=dag
     )
 
-    if dag_config.get('pyspark', False):
-        run_normalization_routine = PythonOperator(
-            task_id='run_normalization_routine',
-            provide_context=True,
-            python_callable=do_run_pyspark_normalization_routine,
-            op_kwargs=dag_config,
-            dag=dag
-        )
+    run_normalization_routine = PythonOperator(
+        task_id='run_normalization_routine',
+        provide_context=True,
+        python_callable=do_run_pyspark_normalization_routine,
+        op_kwargs=dag_config,
+        dag=dag
+    )
 
+    if dag_config.get('pyspark', False) and dag_config.get('no_matching_payload', False):
+        run_normalization_routine.set_upstream(create_emr_cluster)
+        delete_emr_cluster.set_upstream(run_normalization_routine
+
+    elif dag_config.get('pyspark', False):
         move_matching_payload.set_upstream(detect_matching_done)
         create_emr_cluster.set_upstream(detect_matching_done)
         run_normalization_routine.set_upstream([create_emr_cluster, move_matching_payload])
         delete_emr_cluster.set_upstream(run_normalization_routine)
+
     else:
         create_redshift_cluster = PythonOperator(
             task_id='create_redshift_cluster',

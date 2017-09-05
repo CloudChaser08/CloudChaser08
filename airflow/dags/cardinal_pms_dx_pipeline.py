@@ -238,7 +238,8 @@ detect_move_normalize_dag = SubDagOperator(
             'vendor_uuid'                       : 'c0110047-c269-49e7-b7f3-a2109179d4e4',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/cardinal_pms/medicalclaims/sparkNormalizeCardinalPMS.py',
             'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'no_matching_payload'               : True
         }
     ),
     task_id='detect_move_normalize',
