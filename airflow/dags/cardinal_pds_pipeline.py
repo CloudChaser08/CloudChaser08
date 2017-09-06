@@ -207,6 +207,35 @@ split_transaction = SubDagOperator(
     dag=mdag
 )
 
+clean_up_workspace = SubDagOperator(
+    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+        DAG_NAME,
+        'clean_up_workspace',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE
+        }
+    ),
+    task_id='clean_up_workspace',
+    dag=mdag
+)
+
+if HVDAG.HVDAG.airflow_env != 'test':
+    queue_up_for_matching = SubDagOperator(
+        subdag=queue_up_for_matching.queue_up_for_matching(
+            DAG_NAME,
+            'queue_up_for_matching',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'source_files_func' : get_deid_file_urls
+            }
+        ),
+        task_id='queue_up_for_matching',
+        dag=mdag
+    )
+
 ### Dag Structure ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
