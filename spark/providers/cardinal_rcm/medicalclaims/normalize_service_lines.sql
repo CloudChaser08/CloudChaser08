@@ -50,28 +50,32 @@ SELECT DISTINCT
     NULL,                        -- diagnosis_code_qual
     NULL,                        -- diagnosis_priority
     NULL,                        -- admit_diagnosis_ind
-    ARRAY(t.proc_code, NULL)[
-        proc_explode.n
-        ],                       -- procedure_code
-    ARRAY(t.proc_code_qual, NULL)[
-        proc_explode.n
-        ],                       -- procedure_code_qual
+    t.proc_code,                 -- procedure_code
+    CASE
+    WHEN t.proc_code IS NOT NULl
+    THEN t.proc_code_qual
+    END,                         -- procedure_code_qual
     NULL,                        -- principal_proc_ind
-    ARRAY(t.submitted_units, NULL)[
-        proc_explode.n
-        ],                       -- procedure_units
-    ARRAY(t.mod_1, NULL)[
-        proc_explode.n
-        ],                       -- procedure_modifier_1
-    ARRAY(t.mod_2, NULL)[
-        proc_explode.n
-        ],                       -- procedure_modifier_2
-    ARRAY(t.mod_3, NULL)[
-        proc_explode.n
-        ],                       -- procedure_modifier_3
-    ARRAY(t.mod_4, NULL)[
-        proc_explode.n
-        ],                       -- procedure_modifier_4
+    CASE
+    WHEN t.proc_code IS NOT NULL
+    THEN t.submitted_units
+    END,                         -- procedure_units
+    CASE
+    WHEN t.proc_code IS NOT NULL
+    THEN t.mod_1
+    END,                         -- procedure_modifier_1
+    CASE
+    WHEN t.proc_code IS NOT NULL
+    THEN t.mod_2
+    END,                         -- procedure_modifier_2
+    CASE
+    WHEN t.proc_code IS NOT NULL
+    THEN t.mod_3
+    END,                         -- procedure_modifier_3
+    CASE
+    WHEN t.proc_code IS NOT NULL
+    THEN t.mod_4
+    END,                         -- procedure_modifier_4
     NULL,                        -- revenue_code
     NULL,                        -- ndc_code
     NULL,                        -- medical_coverage_type

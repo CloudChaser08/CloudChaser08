@@ -60,21 +60,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
-    runner.run_spark_script('normalize.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
+    runner.run_spark_script('normalize_service_lines.sql')
+
+    vendor_feed_id = '29'
+    vendor_id = '42'
 
     postprocessor.compose(
         postprocessor.add_universal_columns(
-            feed_id='29',
-            vendor_id='42',
+            feed_id=vendor_feed_id,
+            vendor_id=vendor_id,
 
             # TODO: this is incorrect - fix when we find out what
-            # their filenames will be
+            # their filenames will be named
             filename='RCM_Claims_{}.open'.format(date_obj.strftime('%Y%m%d'))
         ),
-        medical_priv.filter
+        medical_priv.filter,
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', date_input, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service_end', date_input, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE')
     )(
         runner.sqlContext.sql('select * from medicalclaims_common_model')
     ).createTempView('medicalclaims_common_model')
