@@ -94,7 +94,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'cardinal_rcm',
             'medicalclaims_common_model', 'date_service', date_input,
-            hvm_historical_date=datetime.datetime(
+            hvm_historical_date=datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             )
         )
