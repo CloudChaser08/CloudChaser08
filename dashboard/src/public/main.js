@@ -15,7 +15,7 @@ function configureTable() {
 
       // show this provider's time series
       $('div#time-series > ul').hide();
-      $('div#time-series > ul#' + $element.attr('id')).show();
+      $('div#time-series > ul#' + $element.attr('id') + '-timeseries').show();
       $('div#time-series').show();
 
       // reset the height

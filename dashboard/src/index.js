@@ -173,7 +173,7 @@ exports.handler = function(event, context) {
             '</tr>',
 
           // time series HTML for this provider
-          timeSeriesContent: '<ul id="' + providerConf.id + '">' +
+          timeSeriesContent: '<ul id="' + providerConf.id + '-timeseries">' +
 
             // each execution date will get an <li> element
             allData.map(function(d) {
