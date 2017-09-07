@@ -95,6 +95,16 @@ get_tmp_dir = insert_todays_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
 
 def get_transaction_file_paths(ds, kwargs):
+    if 'regex_name_match' in kwargs and kwargs['regex_name_match']:
+        file_dir = get_tmp_dir(ds, kwargs)
+        matching_regex = insert_formatted_regex_function(TRANSACTION_FILE_NAME_TEMPLATE)(ds, kwargs) + '$'
+        print 'Matching regex: ' + matching_regex
+        files = os.listdir(file_dir)
+        print files
+
+        transaction_file = file_dir + filter(lambda x: re.search(matching_regex, x), files)[0]
+        return [transaction_file]
+
     return [get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(
         get_formatted_date(ds, kwargs)
     )]
@@ -209,6 +219,7 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
+            'regex_name_match'         : True,
             's3_prefix_func'           : insert_current_date_function(
                 S3_TRANSACTION_PROCESSED_URL_TEMPLATE
             ),
