@@ -17,10 +17,10 @@ SELECT DISTINCT
     'P',                         -- claim_type
     NULL,                        -- date_received
     EXTRACT_DATE(
-        t.date_svc_start, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.date_svc_start, '%Y-%m-%d'
         ),                       -- date_service
     EXTRACT_DATE(
-        t.date_svc_end, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.date_svc_end, '%Y-%m-%d'
         ),                       -- date_service_end
     NULL,                        -- inst_date_admitted
     NULL,                        -- inst_date_discharged
@@ -84,9 +84,24 @@ SELECT DISTINCT
     t.submitted_chg_total,       -- total_charge
     NULL,                        -- total_allowed
     CASE
-    WHEN t.rend_prov_id_qual = 'XX'
-    THEN COALESCE(t.rend_prov_npid, rend_prov_id)
-    ELSE t.rend_prov_npid
+    WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
+    OR  (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
+    THEN (
+        CASE
+        WHEN t.rend_prov_id_qual = 'XX'
+        THEN COALESCE(t.rend_prov_npid, t.rend_prov_id)
+        ELSE t.rend_prov_npid
+        END
+        )
+    WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
+    OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
+    THEN (
+        CASE
+        WHEN t.ord_prov_id_qual = 'XX'
+        THEN COALESCE(t.ord_prov_npid, t.ord_prov_id)
+        ELSE t.ord_prov_npid
+        END
+        )
     END,                         -- prov_rendering_npi
     CASE
     WHEN t.bill_prov_id_qual = 'XX'
@@ -101,7 +116,6 @@ SELECT DISTINCT
     CASE
     WHEN t.serv_facility_id_qual = 'XX'
     THEN t.serv_facility_id
-    ELSE NULL
     END,                         -- prov_facility_npi
     t.payer_id,                  -- payer_vendor_id
     t.payer_name,                -- payer_name
@@ -111,9 +125,38 @@ SELECT DISTINCT
     NULL,                        -- payer_plan_name
     NULL,                        -- payer_type
     CASE
-    WHEN t.rend_prov_id_qual <> 'XX'
-    THEN t.rend_prov_id
-    ELSE NULL
+    WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
+    OR (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
+    THEN (
+        CASE
+        WHEN t.rend_prov_id_qual <> 'XX'
+        THEN t.rend_prov_id
+        END
+        )
+    WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
+    OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
+    THEN (
+        CASE
+        WHEN t.ord_prov_id_qual <> 'XX'
+        THEN t.ord_prov_id
+        END
+        )
+    WHEN 0 <> LENGTH(COALESCE(t.rend_prov_npid, ''))
+    OR 0 <> LENGTH(COALESCE(t.rend_prov_id, ''))
+    OR 0 <> LENGTH(COALESCE(t.rend_prov_name, ''))
+    OR 0 <> LENGTH(COALESCE(t.rend_prov_taxonomy_code, ''))
+    THEN (
+        CASE
+        WHEN t.rend_prov_id_qual <> 'XX'
+        THEN t.rend_prov_id
+        END
+        )
+    ELSE (
+        CASE
+        WHEN t.ord_prov_id_qual <> 'XX'
+        THEN t.ord_prov_id
+        END
+        )
     END,                         -- prov_rendering_vendor_id
     NULL,                        -- prov_rendering_tax_id
     NULL,                        -- prov_rendering_dea_id
@@ -121,19 +164,43 @@ SELECT DISTINCT
     NULL,                        -- prov_rendering_state_license
     NULL,                        -- prov_rendering_upin
     NULL,                        -- prov_rendering_commercial_id
-    t.rend_prov_name,            -- prov_rendering_name_1
+    CASE
+    WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
+    OR (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
+    THEN t.rend_prov_name
+    WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
+    OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
+    THEN t.ord_prov_name
+    WHEN 0 <> LENGTH(COALESCE(t.rend_prov_npid, ''))
+    OR 0 <> LENGTH(COALESCE(t.rend_prov_id, ''))
+    OR 0 <> LENGTH(COALESCE(t.rend_prov_name, ''))
+    OR 0 <> LENGTH(COALESCE(t.rend_prov_taxonomy_code, ''))
+    THEN t.rend_prov_name
+    ELSE t.ord_prov_name
+    END,                         -- prov_rendering_name_1
     NULL,                        -- prov_rendering_name_2
     NULL,                        -- prov_rendering_address_1
     NULL,                        -- prov_rendering_address_2
     NULL,                        -- prov_rendering_city
     NULL,                        -- prov_rendering_state
     NULL,                        -- prov_rendering_zip
-    t.rend_prov_taxonomy_code,   -- prov_rendering_std_taxonomy
+    CASE
+    WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
+    OR (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
+    THEN t.rend_prov_taxonomy_code
+    WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
+    OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
+    THEN NULL
+    WHEN 0 <> LENGTH(COALESCE(t.rend_prov_npid, ''))
+    OR 0 <> LENGTH(COALESCE(t.rend_prov_id, ''))
+    OR 0 <> LENGTH(COALESCE(t.rend_prov_name, ''))
+    OR 0 <> LENGTH(COALESCE(t.rend_prov_taxonomy_code, ''))
+    THEN t.rend_prov_taxonomy_code
+    END,                         -- prov_rendering_std_taxonomy
     NULL,                        -- prov_rendering_vendor_specialty
     CASE
     WHEN t.bill_prov_id_qual <> 'XX'
     THEN t.bill_prov_id
-    ELSE NULL
     END,                         -- prov_billing_vendor_id
     NULL,                        -- prov_billing_tax_id
     NULL,                        -- prov_billing_dea_id
@@ -153,7 +220,6 @@ SELECT DISTINCT
     CASE
     WHEN t.refer_prov_id_qual <> 'XX'
     THEN t.refer_prov_id
-    ELSE NULL
     END,                         -- prov_referring_vendor_id
     NULL,                        -- prov_referring_tax_id
     NULL,                        -- prov_referring_dea_id
@@ -198,34 +264,22 @@ SELECT DISTINCT
     NULL                         -- cob_ins_type_code_2
 FROM transactions t
     INNER JOIN matching_payload mp ON t.hvjoinkey = mp.hvjoinkey
-    CROSS JOIN diag_exploder diag_explode
-    CROSS JOIN proc_exploder proc_explode
+    CROSS JOIN svc_diag_exploder diag_explode
 WHERE
 
--- add rows for non-null diagnoses with a null procedure
+-- include rows for non-null diagnoses
     (
         ARRAY(
             t.linked_diag_1, t.linked_diag_2, t.linked_diag_3,
             t.linked_diag_4, NULL
             )[diag_explode.n] IS NOT NULL
-        AND proc_explode.n = 1 /* n=1 will always choose 'NULL' */
         )
 
--- add rows for non-null procedure code and a null diagnosis
-    OR (
-        ARRAY(
-            t.linked_diag_1, t.linked_diag_2, t.linked_diag_3,
-            t.linked_diag_4, NULL
-            )[diag_explode.n] IS NULL
-        AND proc_explode.n = 0 AND t.proc_code IS NOT NULL
-        )
-
--- add rows that had all null diagnoses and procedure
+-- include rows with all null diagnoses
     OR (
         COALESCE(
             t.linked_diag_1, t.linked_diag_2, t.linked_diag_3,
             t.linked_diag_4
             ) IS NULL
-        AND t.proc_code IS NULL
     )
     ;
