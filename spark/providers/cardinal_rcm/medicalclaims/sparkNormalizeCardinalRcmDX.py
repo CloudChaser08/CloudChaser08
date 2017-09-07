@@ -61,6 +61,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     runner.run_spark_script('normalize_service_lines.sql')
+    runner.run_spark_script('normalize_claims.sql')
 
     vendor_feed_id = '29'
     vendor_id = '42'
