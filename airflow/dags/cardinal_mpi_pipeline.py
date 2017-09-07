@@ -50,12 +50,6 @@ DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'mpi-deid.%Y%m%dT\d{2}\d{2}\d{2}.dat'
 S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/warehouse/text/custom/cardinal_mpi/%Y/%m/%d/part-00000.gz'
 S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/mpi/cardinal_mpi_matched_%Y%m%d.psv.gz'
 
-def insert_execution_date_function(template):
-    def out(ds, kwargs):
-        return template.format(kwargs['ds_nodash'])
-    return out
-
-
 def insert_current_date_function(date_template):
     def out(ds, kwargs):
         date = kwargs['execution_date'] + timedelta(days=1)
