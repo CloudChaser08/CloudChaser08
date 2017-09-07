@@ -107,7 +107,7 @@ def insert_current_date(template, kwargs):
 
 def get_expected_file_name_pattern(file_name_template):
     def out(ds, kwargs):
-        insert_formatted_regex_function(
+        return insert_formatted_regex_function(
             file_name_template
         )(ds, kwargs) + get_date_timestamp(kwargs)
     return out
