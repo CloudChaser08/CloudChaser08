@@ -265,3 +265,4 @@ if HVDAG.HVDAG.airflow_env != 'test':
     
 decrypt_transaction.set_upstream(fetch_transaction)
 split_transaction.set_upstream(decrypt_transaction)
+clean_up_workspace.set_upstream(split_transaction)
