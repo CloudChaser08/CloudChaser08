@@ -164,6 +164,7 @@ fetch_transaction = SubDagOperator(
             'expected_file_name_func'   : insert_formatted_regex_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
+            'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
