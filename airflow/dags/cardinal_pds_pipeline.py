@@ -3,6 +3,7 @@ from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
 import re
+import os
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -111,6 +112,15 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
         + TRANSACTION_FILE_NAME_TEMPLATE.format(
             get_formatted_date(ds, kwargs)
         )
+    if 'regex_name_match' in kwargs and kwargs['regex_name_match']:
+        matching_regex = insert_formatted_regex_function(TRANSACTION_FILE_NAME_TEMPLATE)(ds, kwargs) + '$'
+        print 'Matching regex: ' + matching_regex
+        files = os.listdir(file_dir)
+        print files
+
+        encrypted_file_path = file_dir + filter(lambda x: re.search(matching_regex, x), files)[0]
+        print encrypted_file_path
+
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
@@ -182,7 +192,8 @@ decrypt_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_dir_func'                        : get_tmp_dir,
-            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
+            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function,
+            'regex_name_match'                    : True
         }
     ),
     task_id = 'decrypt_transaction_file',
