@@ -5,6 +5,7 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
@@ -36,9 +37,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    min_date = '2010-03-01'
-    max_date = date_input
-
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     runner.run_spark_script('../../../common/medicalclaims_common_model.sql', [
@@ -49,6 +47,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path]
     ])
+
+    external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     explode.generate_exploder_table(spark, 5, 'svc_diag_exploder')
     explode.generate_exploder_table(spark, 8, 'claim_diag_exploder')
