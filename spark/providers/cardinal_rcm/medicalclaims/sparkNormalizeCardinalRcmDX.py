@@ -39,8 +39,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
-    hvm_available_history_date = postprocessor.get_gen_ref_date("29", "HVM_AVAILABLE_HISTORY_START_DATE")
-    earliest_valid_service_date = postprocessor.get_gen_ref_date("29", "EARLIEST_VALID_SERVICE_DATE")
+    external_table_loader.load_ref_gen_ref(runner.sqlContext)
+
+    hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, "29", "HVM_AVAILABLE_HISTORY_START_DATE")
+    earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, "29", "EARLIEST_VALID_SERVICE_DATE")
     hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
         earliest_valid_service_date if earliest_valid_service_date else '1901-01-01'
     max_date = date_input
@@ -53,8 +55,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path]
     ])
-
-    external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     explode.generate_exploder_table(spark, 5, 'svc_diag_exploder')
     explode.generate_exploder_table(spark, 8, 'claim_diag_exploder')
@@ -94,7 +94,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'cardinal_rcm',
             'medicalclaims_common_model', 'date_service', date_input,
-            hvm_historical_date=hvm_historical_date
+            hvm_historical_date=datetime.strptime(hvm_historical_date, '%Y-%m-%d')
         )
 
 
