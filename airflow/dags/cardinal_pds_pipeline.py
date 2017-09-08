@@ -65,6 +65,15 @@ def insert_formatted_date_function(template):
         return template.format(get_formatted_date(ds, kwargs))
     return out
 
+def get_formatted_datetime(ds, kwargs):
+    return kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
+
+
+def insert_formatted_datetime_function(template):
+    def out(ds, kwargs):
+        return template.format(get_formatted_datetime(ds, kwargs))
+    return out
+
 
 def insert_todays_date_function(template):
     def out(ds, kwargs):
@@ -95,24 +104,14 @@ get_tmp_dir = insert_todays_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
 
 def get_transaction_file_paths(ds, kwargs):
-    if 'regex_name_match' in kwargs and kwargs['regex_name_match']:
-        file_dir = get_tmp_dir(ds, kwargs)
-        matching_regex = insert_formatted_regex_function(TRANSACTION_FILE_NAME_TEMPLATE)(ds, kwargs) + '$'
-        print 'Matching regex: ' + matching_regex
-        files = os.listdir(file_dir)
-        print files
-
-        transaction_file = file_dir + filter(lambda x: re.search(matching_regex, x), files)[0]
-        return [transaction_file]
-
     return [get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(
-        get_formatted_date(ds, kwargs)
+        get_formatted_datetime(ds, kwargs)
     )]
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
-        get_formated_date(ds, kwargs)
+    return [S3_PAYLOAD_DEST + DEID_FILE_NAME_TEMPLATE.format(
+        get_formated_datetime(ds, kwargs)
     )]
 
 
@@ -120,17 +119,8 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
         + TRANSACTION_FILE_NAME_TEMPLATE.format(
-            get_formatted_date(ds, kwargs)
+            get_formatted_datetime(ds, kwargs)
         )
-    if 'regex_name_match' in kwargs and kwargs['regex_name_match']:
-        matching_regex = insert_formatted_regex_function(TRANSACTION_FILE_NAME_TEMPLATE)(ds, kwargs) + '$'
-        print 'Matching regex: ' + matching_regex
-        files = os.listdir(file_dir)
-        print files
-
-        encrypted_file_path = file_dir + filter(lambda x: re.search(matching_regex, x), files)[0]
-        print encrypted_file_path
-
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
@@ -193,6 +183,27 @@ fetch_transaction = SubDagOperator(
     dag = mdag
 )
 
+def do_get_datetime(ds, **kwargs):
+    expected_filename = kwargs['expected_file_name_func'](ds, kwargs)
+    files = os.listdir(TRANSACTION_TMP_PATH_TEMPLATE.format(kwargs['ds_nodash']))
+
+    expected_filename = filter(lambda k: re.search(expected_filename, k), files)[0]
+    file_datetime = expected_filename[-14:]
+    print 'file datetime: ' + file_datetime
+    kwargs['ti'].xcom_push(key = 'file_datetime', value = file_datetime)
+
+
+get_datetime = PythonOperator(
+    task_id = 'get_datetime',
+    python_callable = do_get_datetime,
+    op_kwargs = {
+        'expected_file_name_func' : insert_formatted_regex_function(
+            TRANSACTION_FILE_NAME_TEMPLATE
+        )
+    },
+    provide_context = True,
+    dag = mdag
+)
 
 decrypt_transaction = SubDagOperator(
     subdag = decrypt_files.decrypt_files(
@@ -202,8 +213,7 @@ decrypt_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_dir_func'                        : get_tmp_dir,
-            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function,
-            'regex_name_match'                    : True
+            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
         }
     ),
     task_id = 'decrypt_transaction_file',
@@ -219,7 +229,6 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'regex_name_match'         : True,
             's3_prefix_func'           : insert_current_date_function(
                 S3_TRANSACTION_PROCESSED_URL_TEMPLATE
             ),
@@ -259,10 +268,51 @@ if HVDAG.HVDAG.airflow_env != 'test':
         dag=mdag
     )
 
+#
+# Post-Matching
+#
+def norm_args(ds, k):
+    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    if HVDAG.HVDAG.airflow_env == 'test':
+        base += ['--airflow_test']
+
+    return base
+
+
+detect_move_normalize_dag = SubDagOperator(
+    subdag=detect_move_normalize.detect_move_normalize(
+        DAG_NAME,
+        'detect_move_normalize',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_matching_files_func'      : get_deid_file_urls,
+            'file_date_func'                    : insert_current_date_function(
+                '{}/{}/{}'
+            ),
+            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
+            'vendor_uuid'                       : 'cddbdc93-c3cf-42a0-915b-605333639602',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/cardinal_rcm/medicalclaims/sparkNormalizeCardinalRx.py',
+            'pyspark_normalization_args_func'   : norm_args,
+            'pyspark'                           : True
+        }
+    ),
+    task_id='detect_move_normalize',
+    dag=mdag
+)
+
 ### Dag Structure ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
+    queue_up_for_matching.set_upstream(validate_deid)
+
+    detect_move_normalize_dag.set_upstream(
+        [queue_up_for_matching, split_transaction]
+    )
+else:
+    detect_move_normalize_dag.set_upstream(split_transaction)
     
-decrypt_transaction.set_upstream(fetch_transaction)
+get_datetime.set_upstream(fetch_transaction)
+decrypt_transaction.set_upstream(get_datetime)
 split_transaction.set_upstream(decrypt_transaction)
 clean_up_workspace.set_upstream(split_transaction)
