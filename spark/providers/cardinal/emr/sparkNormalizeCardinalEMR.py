@@ -124,7 +124,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, "40", "HVM_AVAILABLE_HISTORY_DATE")
     earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, "40", "EARLIEST_VALID_SERVICE_DATE")
     hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
-        earliest_valid_service_date if earliest_valid_service_date else '1901-01-01'
+        earliest_valid_service_date if earliest_valid_service_date else datetime.date(1901, 1, 1)
     max_date = date_input
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
@@ -252,7 +252,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 table['table_name'], table['date_column'], date_input,
                 staging_subdir='{}/'.format(table['data_type']),
                 distribution_key='row_id', provider_partition='part_hvm_vdr_feed_id',
-                date_partition='part_mth', hvm_historical_date=hvm_historical_date
+                date_partition='part_mth', hvm_historical_date=datetime.datetime(
+                    hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
+                )
             )
 
 
