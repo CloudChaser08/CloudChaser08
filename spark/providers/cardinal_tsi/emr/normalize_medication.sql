@@ -3,7 +3,7 @@ SELECT
     NULL,                                         -- row_id
     CONCAT('31_', med.source, '_', med.uniq_id),  -- hv_medctn_id
     NULL,                                         -- crt_dt
-    '03',                                         -- mdl_vrsn_num
+    '04',                                         -- mdl_vrsn_num
     NULL,                                         -- data_set_nm
     NULL,                                         -- src_vrsn_id
     NULL,                                         -- hvm_vdr_id

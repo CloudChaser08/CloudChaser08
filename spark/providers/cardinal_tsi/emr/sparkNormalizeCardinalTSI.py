@@ -58,11 +58,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         medication_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/sample/medication/'
         matching_path = 's3a://salusv/matching/payload/emr/cardinal_tsi/sample/'
 
-    runner.run_spark_script('../../../common/emr/diagnosis_common_model_v4.sql', [
+    runner.run_spark_script('../../../common/emr/diagnosis_common_model_v5.sql', [
         ['table_name', 'diagnosis_common_model', False],
         ['properties', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/medication_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/emr/medication_common_model_v4.sql', [
         ['table_name', 'medication_common_model', False],
         ['properties', '', False]
     ])
@@ -97,7 +97,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized_tables = [
         {
             'table_name': 'diagnosis_common_model',
-            'script_name': 'emr/diagnosis_common_model_v4.sql',
+            'script_name': 'emr/diagnosis_common_model_v5.sql',
             'data_type': 'diagnosis',
             'date_column': 'enc_dt',
             'setid': diag_setid,
@@ -114,7 +114,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         },
         {
             'table_name': 'medication_common_model',
-            'script_name': 'emr/medication_common_model_v3.sql',
+            'script_name': 'emr/medication_common_model_v4.sql',
             'data_type': 'medication',
             'date_column': 'medctn_start_dt',
             'setid': med_setid,
