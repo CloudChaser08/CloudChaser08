@@ -121,8 +121,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    hvm_available_history_date = postprocessor.get_gen_ref_date("40", "HVM_AVAILABLE_HISTORY_DATE")
-    earliest_valid_service_date = postprocessor.get_gen_ref_date("40", "EARLIEST_VALID_SERVICE_DATE")
+    hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, "40", "HVM_AVAILABLE_HISTORY_DATE")
+    earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, "40", "EARLIEST_VALID_SERVICE_DATE")
     hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
         earliest_valid_service_date if earliest_valid_service_date else '1901-01-01'
     max_date = date_input

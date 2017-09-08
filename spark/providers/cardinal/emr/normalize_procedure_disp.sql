@@ -115,11 +115,11 @@ SELECT
     'dispense'                                                  -- prmy_src_tbl_nm
 FROM (
     SELECT patient_id, SUBSTRING(admin_date, 0, 10) as admin_date, practice_id, cpt_code,
-        npi, max(id) as id
+        npi, icd_nine, icd_ten, max(id) as id
     FROM dispense_transactions
     WHERE import_source_id IS NOT NULL
         AND cpt_code IS NOT NULL
-    GROUP BY 1, 2, 3, 4, 5
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
         ) disp
     LEFT JOIN demographics_transactions_dedup dem ON disp.patient_id = dem.patient_id
     LEFT JOIN matching_payload mp ON dem.hvJoinKey = mp.hvJoinKey
