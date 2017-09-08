@@ -85,29 +85,35 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    runner.run_spark_script('../../../common/emr/clinical_observation_common_model_v2.sql', [
+    runner.run_spark_script('../../../common/emr/clinical_observation_common_model_v4.sql', [
         ['table_name', 'clinical_observation_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/diagnosis_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/emr/diagnosis_common_model_v5.sql', [
         ['table_name', 'diagnosis_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/encounter_common_model_v2.sql', [
+    runner.run_spark_script('../../../common/emr/encounter_common_model_v4.sql', [
         ['table_name', 'encounter_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/lab_result_common_model_v2.sql', [
+    runner.run_spark_script('../../../common/emr/lab_result_common_model_v4.sql', [
         ['table_name', 'lab_result_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/medication_common_model_v2.sql', [
+    runner.run_spark_script('../../../common/emr/medication_common_model_v4.sql', [
         ['table_name', 'medication_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
-    runner.run_spark_script('../../../common/emr/procedure_common_model_v2.sql', [
+    runner.run_spark_script('../../../common/emr/procedure_common_model_v4.sql', [
         ['table_name', 'procedure_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
 
     explode.generate_exploder_table(spark, 6, 'clin_obs_exploder')

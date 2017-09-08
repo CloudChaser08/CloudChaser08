@@ -3,7 +3,7 @@ SELECT
     NULL,                                                       -- rec_id
     CONCAT('40_', diag.id),                                     -- hv_clin_obsn_id
     NULL,                                                       -- crt_dt
-    '03',                                                       -- mdl_vrsn_num
+    '04',                                                       -- mdl_vrsn_num
     NULL,                                                       -- data_set_nm
     NULL,                                                       -- src_vrsn_id
     NULL,                                                       -- hvm_vdr_id
@@ -47,7 +47,7 @@ SELECT
         ),                                                      -- clin_obsn_dt
     NULL,                                                       -- clin_obsn_rndrg_fclty_npi
     diag.practice_id,                                           -- clin_obsn_rndrg_fclty_vdr_id
-    NULL,                                                       -- clin_obsn_rndrg_fclty_vdr_id_qual
+    'VENDOR',                                                   -- clin_obsn_rndrg_fclty_vdr_id_qual
     NULL,                                                       -- clin_obsn_rndrg_fclty_alt_id
     NULL,                                                       -- clin_obsn_rndrg_fclty_alt_id_qual
     NULL,                                                       -- clin_obsn_rndrg_fclty_tax_id

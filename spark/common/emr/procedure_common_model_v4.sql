@@ -89,4 +89,3 @@ CREATE TABLE {table_name} (
         )
     {properties}
     ;
-

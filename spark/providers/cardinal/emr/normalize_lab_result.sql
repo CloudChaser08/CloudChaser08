@@ -3,7 +3,7 @@ SELECT
     NULL,                                                     -- rec_id
     CONCAT('40_', l.id),                                      -- hv_lab_result_id
     NULL,                                                     -- crt_dt
-    '03',                                                     -- mdl_vrsn_num
+    '04',                                                     -- mdl_vrsn_num
     NULL,                                                     -- data_set_nm
     NULL,                                                     -- src_vrsn_id
     NULL,                                                     -- hvm_vdr_id
@@ -76,8 +76,8 @@ SELECT
     NULL,                                                     -- lab_test_ordg_prov_state_cd
     NULL,                                                     -- lab_test_ordg_prov_zip_cd
     NULL,                                                     -- lab_test_exectg_fclty_npi
-    NULL,                                                     -- lab_test_exectg_fclty_vdr_id
-    NULL,                                                     -- lab_test_exectg_fclty_vdr_id_qual
+    l.practice_id,                                            -- lab_test_exectg_fclty_vdr_id
+    'VENDOR',                                                 -- lab_test_exectg_fclty_vdr_id_qual
     NULL,                                                     -- lab_test_exectg_fclty_alt_id
     NULL,                                                     -- lab_test_exectg_fclty_alt_id_qual
     NULL,                                                     -- lab_test_exectg_fclty_tax_id
