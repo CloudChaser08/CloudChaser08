@@ -59,7 +59,8 @@ def partition_and_rename(
 
     runner.run_spark_script(common_dirpath + common_model_script, [
         ['table_name', 'final_unload', False],
-        ['properties', constants.unload_properties_template.format(staging_dir), False]
+        ['properties', constants.unload_properties_template.format(staging_dir), False],
+        ['external', '', False]
     ])
 
     if partition_value is None and hvm_historical_date is None:
