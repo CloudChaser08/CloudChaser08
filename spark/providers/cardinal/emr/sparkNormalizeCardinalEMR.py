@@ -252,7 +252,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 table['table_name'], table['date_column'], date_input,
                 staging_subdir='{}/'.format(table['data_type']),
                 distribution_key='row_id', provider_partition='part_hvm_vdr_feed_id',
-                date_partition='part_mth', hvm_historical_date=datetime.datetime(
+                date_partition='part_mth', hvm_historical_date=datetime(
                     hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
                 )
             )

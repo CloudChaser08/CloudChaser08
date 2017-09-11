@@ -51,10 +51,10 @@ SELECT
         ),                                                    -- enc_end_dt
     NULL,                                                     -- enc_vst_typ_cd
     NULL,                                                     -- enc_rndrg_fclty_npi
-    NULL,                                                     -- enc_rndrg_fclty_vdr_id
-    NULL,                                                     -- enc_rndrg_fclty_vdr_id_qual
-    e.practice_id,                                            -- enc_rndrg_fclty_alt_id
-    'VENDOR',                                                 -- enc_rndrg_fclty_alt_id_qual
+    e.practice_id,                                            -- enc_rndrg_fclty_vdr_id
+    'VENDOR',                                                 -- enc_rndrg_fclty_vdr_id_qual
+    NULL,                                                     -- enc_rndrg_fclty_alt_id
+    NULL,                                                     -- enc_rndrg_fclty_alt_id_qual
     NULL,                                                     -- enc_rndrg_fclty_tax_id
     NULL,                                                     -- enc_rndrg_fclty_dea_id
     NULL,                                                     -- enc_rndrg_fclty_state_lic_id
