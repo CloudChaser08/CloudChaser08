@@ -39,9 +39,14 @@ def load(runner, location, extra_cols=None):
     global HVID
     HVID = filter(lambda c: c in raw_payload.columns, HVID)
 
+    if not HVID:
+        logging.warning("No HVID columns found in this payload.")
+
     final_payload = raw_payload.select(
-        [coalesce(*map(lambda x: col(x), HVID)).alias('hvid')]
-        + map(lambda x: col(x), total_attrs)
+        (
+            [coalesce(*map(lambda x: col(x), HVID)).alias('hvid')]
+            if HVID else [lit(None).alias('hvid')]
+        ) + map(lambda x: col(x), total_attrs)
     )
 
     runner.sqlContext.sql('DROP TABLE IF EXISTS matching_payload')
