@@ -1,6 +1,6 @@
 import argparse
 import time
-from datetime import datetime
+from datetime import datetime, date
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -124,7 +124,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, "40", "HVM_AVAILABLE_HISTORY_DATE")
     earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, "40", "EARLIEST_VALID_SERVICE_DATE")
     hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
-        earliest_valid_service_date if earliest_valid_service_date else datetime.date(1901, 1, 1)
+        earliest_valid_service_date if earliest_valid_service_date else date(1901, 1, 1)
     max_date = date_input
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])

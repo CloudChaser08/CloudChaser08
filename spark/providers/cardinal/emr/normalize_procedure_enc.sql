@@ -42,11 +42,11 @@ SELECT
     CONCAT('31_', e.id),                                      -- hv_enc_id
     EXTRACT_DATE(
         e.visit_date,
-        '%Y-%m-%d'
+        '%Y-%m-%d %H:%M:%S'
         ),                                                    -- enc_dt
     EXTRACT_DATE(
         e.visit_date,
-        '%Y-%m-%d'
+        '%Y-%m-%d %H:%M:%S'
         ),                                                    -- proc_dt
     NULL,                                                     -- proc_rndrg_fclty_npi
     e.practice_id,                                            -- proc_rndrg_fclty_vdr_id

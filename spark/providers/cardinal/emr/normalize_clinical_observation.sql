@@ -43,7 +43,7 @@ SELECT
     NULL,                                                       -- enc_dt
     EXTRACT_DATE(
         diag.diagnosis_date,
-        '%Y-%m-%d %H:%M:%S.%f'
+        '%Y-%m-%d %H:%M:%S'
         ),                                                      -- clin_obsn_dt
     NULL,                                                       -- clin_obsn_rndrg_fclty_npi
     diag.practice_id,                                           -- clin_obsn_rndrg_fclty_vdr_id
@@ -93,7 +93,7 @@ SELECT
     NULL,                                                       -- clin_obsn_onset_dt
     EXTRACT_DATE(
         diag.resolution_date,
-        '%Y-%m-%d %H:%M:%S.%f'
+        '%Y-%m-%d %H:%M:%S'
         ),                                                      -- clin_obsn_resltn_dt
     NULL,                                                       -- clin_obsn_data_src_cd
     NULL,                                                       -- clin_obsn_data_src_cd_qual

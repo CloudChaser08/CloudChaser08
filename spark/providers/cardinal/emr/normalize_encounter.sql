@@ -43,11 +43,11 @@ SELECT
     COALESCE(mp.threeDigitZip, SUBSTRING(d.zip_code, 0, 3)),  -- ptnt_zip3_cd
     EXTRACT_DATE(
         e.visit_date,
-        '%Y-%m-%d'
+        '%Y-%m-%d %H:%M:%S'
         ),                                                    -- enc_start_dt
     EXTRACT_DATE(
         e.visit_end_tstamp,
-        '%Y-%m-%d'
+        '%Y-%m-%d %H:%M:%S'
         ),                                                    -- enc_end_dt
     NULL,                                                     -- enc_vst_typ_cd
     NULL,                                                     -- enc_rndrg_fclty_npi
