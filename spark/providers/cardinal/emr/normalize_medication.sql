@@ -50,7 +50,9 @@ SELECT
         ),                                                      -- medctn_admin_dt
     NULL,                                                       -- medctn_rndrg_fclty_npi
     disp.practice_id,                                           -- medctn_rndrg_fclty_vdr_id
-    'VENDOR',                                                   -- medctn_rndrg_fclty_vdr_id_qual
+    CASE WHEN disp.practice_id IS NOT NULL
+    THEN 'VENDOR'
+    END,                                                        -- medctn_rndrg_fclty_vdr_id_qual
     NULL,                                                       -- medctn_rndrg_fclty_alt_id
     NULL,                                                       -- medctn_rndrg_fclty_alt_id_qual
     NULL,                                                       -- medctn_rndrg_fclty_tax_id

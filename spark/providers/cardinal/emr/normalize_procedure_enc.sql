@@ -50,7 +50,9 @@ SELECT
         ),                                                    -- proc_dt
     NULL,                                                     -- proc_rndrg_fclty_npi
     e.practice_id,                                            -- proc_rndrg_fclty_vdr_id
-    'VENDOR',                                                 -- proc_rndrg_fclty_vdr_id_qual
+    CASE WHEN e.practice_id IS NOT NULL
+    THEN 'VENDOR'
+    END,                                                      -- proc_rndrg_fclty_vdr_id_qual
     NULL,                                                     -- proc_rndrg_fclty_alt_id
     NULL,                                                     -- proc_rndrg_fclty_alt_id_qual
     NULL,                                                     -- proc_rndrg_fclty_tax_id

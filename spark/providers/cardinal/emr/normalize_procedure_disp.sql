@@ -1,7 +1,7 @@
 INSERT INTO procedure_common_model
 SELECT
     NULL,                                                       -- rec_id
-    CONCAT('normalize_disp_', disp.id),                                -- hv_proc_id
+    CONCAT('normalize_disp_', disp.id),                         -- hv_proc_id
     NULL,                                                       -- crt_dt
     '04',                                                       -- mdl_vrsn_num
     NULL,                                                       -- data_set_nm
@@ -47,7 +47,9 @@ SELECT
         ),                                                      -- proc_dt
     NULL,                                                       -- proc_rndrg_fclty_npi
     disp.practice_id,                                           -- proc_rndrg_fclty_vdr_id
-    'VENDOR',                                                   -- proc_rndrg_fclty_vdr_id_qual
+    CASE WHEN disp.practice_id IS NOT NULL
+    THEN 'VENDOR'
+    END,                                                        -- proc_rndrg_fclty_vdr_id_qual
     NULL,                                                       -- proc_rndrg_fclty_alt_id
     NULL,                                                       -- proc_rndrg_fclty_alt_id_qual
     NULL,                                                       -- proc_rndrg_fclty_tax_id

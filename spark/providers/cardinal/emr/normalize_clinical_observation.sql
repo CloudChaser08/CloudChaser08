@@ -47,7 +47,9 @@ SELECT
         ),                                                      -- clin_obsn_dt
     NULL,                                                       -- clin_obsn_rndrg_fclty_npi
     diag.practice_id,                                           -- clin_obsn_rndrg_fclty_vdr_id
-    'VENDOR',                                                   -- clin_obsn_rndrg_fclty_vdr_id_qual
+    CASE WHEN diag.practice_id IS NOT NULL
+    THEN 'VENDOR'
+    END,                                                        -- clin_obsn_rndrg_fclty_vdr_id_qual
     NULL,                                                       -- clin_obsn_rndrg_fclty_alt_id
     NULL,                                                       -- clin_obsn_rndrg_fclty_alt_id_qual
     NULL,                                                       -- clin_obsn_rndrg_fclty_tax_id

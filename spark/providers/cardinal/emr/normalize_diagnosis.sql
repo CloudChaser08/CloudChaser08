@@ -47,7 +47,9 @@ SELECT
         ),                                                      -- diag_dt
     NULL,                                                       -- diag_rndrg_fclty_npi
     diag.practice_id,                                           -- diag_rndrg_fclty_vdr_id
-    'VENDOR',                                                   -- diag_rndrg_fclty_vdr_id_qual
+    CASE WHEN diag.practice_id IS NOT NULL
+    THEN 'VENDOR'
+    END,                                                        -- diag_rndrg_fclty_vdr_id_qual
     NULL,                                                       -- diag_rndrg_fclty_alt_id
     NULL,                                                       -- diag_rndrg_fclty_alt_id_qual
     NULL,                                                       -- diag_rndrg_fclty_tax_id

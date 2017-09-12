@@ -77,7 +77,9 @@ SELECT
     NULL,                                                     -- lab_test_ordg_prov_zip_cd
     NULL,                                                     -- lab_test_exectg_fclty_npi
     l.practice_id,                                            -- lab_test_exectg_fclty_vdr_id
-    'VENDOR',                                                 -- lab_test_exectg_fclty_vdr_id_qual
+    CASE WHEN l.practice_id IS NOT NULL
+    THEN 'VENDOR'
+    END,                                                      -- lab_test_exectg_fclty_vdr_id_qual
     NULL,                                                     -- lab_test_exectg_fclty_alt_id
     NULL,                                                     -- lab_test_exectg_fclty_alt_id_qual
     NULL,                                                     -- lab_test_exectg_fclty_tax_id

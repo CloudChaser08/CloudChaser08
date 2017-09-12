@@ -52,7 +52,9 @@ SELECT
     NULL,                                                     -- enc_vst_typ_cd
     NULL,                                                     -- enc_rndrg_fclty_npi
     e.practice_id,                                            -- enc_rndrg_fclty_vdr_id
-    'VENDOR',                                                 -- enc_rndrg_fclty_vdr_id_qual
+    CASE WHEN e.practice_id IS NOT NULL
+    THEN 'VENDOR'
+    END,                                                      -- enc_rndrg_fclty_vdr_id_qual
     NULL,                                                     -- enc_rndrg_fclty_alt_id
     NULL,                                                     -- enc_rndrg_fclty_alt_id_qual
     NULL,                                                     -- enc_rndrg_fclty_tax_id
