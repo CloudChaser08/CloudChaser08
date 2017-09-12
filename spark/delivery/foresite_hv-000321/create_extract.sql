@@ -6,10 +6,6 @@ set spark.sql.shuffle.partitions=20;
 
 DROP TABLE IF EXISTS {analyticsdb_schema}.pharmacy_claims_t2d;
 CREATE TABLE {analyticsdb_schema}.pharmacy_claims_t2d
-    ROW FORMAT DELIMITED
-    FIELDS TERMINATED BY '|'
-    LINES TERMINATED BY '\n'
-    LOCATION {out_path}
     AS SELECT record_id, claim_id,
     
     /* ENCRYPT HVID */

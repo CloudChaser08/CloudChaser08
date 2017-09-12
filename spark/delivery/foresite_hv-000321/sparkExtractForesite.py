@@ -1,18 +1,16 @@
 #! /usr/bin/python
 import argparse
 import time
-import subprocess
 from spark.runner import Runner
+import spark.helpers.extractor as extractor
 from spark.spark_setup import init
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 ANALYTICSDB_SCHEMA = 'for321'
 
-# TODO: Change?
-S3_FORESITE_OUT = 's3://healthverity/pickup/foresite/'
-
-FINAL_OUT_LOC = 'hdfs:///final_data/'
+S3_FORESITE_OUT = 's3://salusv/projects/foresite_capital/hv000321/delivery/'
+S3_FORESITE_PHARMACY_OUT_TEMPLATE = S3_FORESITE_OUT + '{}/pharmacy_claims_t2d'
 
 
 def run(spark, runner, date, test=False):
@@ -26,6 +24,11 @@ def run(spark, runner, date, test=False):
         ['delivery_date', date]
     ])
 
+    extractor.export_table(
+        runner.sqlContext, 'pharmacy_claims_t2d', ANALYTICSDB_SCHEMA,
+        S3_FORESITE_PHARMACY_OUT_TEMPLATE.format(date.replace('-', ''))
+    )
+
 
 def main(args):
     # init
@@ -37,11 +40,6 @@ def main(args):
     run(spark, runner, args.date)
 
     spark.stop()
-
-    subprocess.check_call([
-        's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        FINAL_OUT_LOC, '--dest', S3_FORESITE_OUT + args.month + '/'
-    ])
 
 
 if __name__ == "__main__":
