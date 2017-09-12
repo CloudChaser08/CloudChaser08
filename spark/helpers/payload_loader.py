@@ -1,5 +1,6 @@
 import logging
-from pyspark.sql.functions import coalesce, lit, col
+from pyspark.sql.functions import coalesce, lit, col, udf
+from pyspark.sql.types import StringType
 
 HVID = [
     'parentId',
@@ -29,11 +30,13 @@ def load(runner, location, extra_cols=None):
 
     raw_payload = runner.sqlContext.read.json(location)
 
+    null_column = udf(lambda x: None, StringType())(lit(None))
+
     # log any requested column that is missing from the payload
     for k in total_attrs:
         if k not in raw_payload.columns:
             logging.warning("Column does not exist in payload: " + k)
-            raw_payload = raw_payload.withColumn(k, lit(None))
+            raw_payload = raw_payload.withColumn(k, null_column)
 
     # remove hvid columns missing from the payload
     global HVID
@@ -45,7 +48,7 @@ def load(runner, location, extra_cols=None):
     final_payload = raw_payload.select(
         (
             [coalesce(*map(lambda x: col(x), HVID)).alias('hvid')]
-            if HVID else [lit(None).alias('hvid')]
+            if HVID else [null_column.alias('hvid')]
         ) + map(lambda x: col(x), total_attrs)
     )
 
