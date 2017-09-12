@@ -292,7 +292,7 @@ detect_move_normalize_dag = SubDagOperator(
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'cddbdc93-c3cf-42a0-915b-605333639602',
-            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/cardinal_rcm/medicalclaims/sparkNormalizeCardinalRx.py',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/cardinal_pds/pharmacyclaims/sparkNormalizeCardinalRx.py',
             'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True
         }
