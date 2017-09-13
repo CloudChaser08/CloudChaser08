@@ -28,7 +28,7 @@ def test_init(spark):
                                  spark['sqlContext'].sql('select * from express_scripts_enrollment_out') \
                                       .collect()
                              )
-    pharmacyclaims_record_count = spark['sqlContext'].sql('SELECT COUNT(*) FROM pharmacyclaims').collect()[0][0]
+    pharmacyclaims_record_count = spark['sqlContext'].sql('SELECT COUNT(*) FROM pharmacyclaims_old').collect()[0][0]
     enrollment_record_count     = spark['sqlContext'].sql('SELECT COUNT(*) FROM enrollmentrecords').collect()[0][0]
 
 def test_hvid_obfuscation():
@@ -56,7 +56,7 @@ def test_file_name_prefixes():
     name"""
     pharmacy_prefix = 'pharmacyclaims_2017-03_final_'
     part_files = filter(
-        lambda f: not f.endswith('.crc'),
+        lambda f: not f.endswith('.crc') and not f.startswith(".hive-staging"),
         os.listdir(
             '/tmp/ubc_pharmacy_final_data/'
         )
@@ -66,7 +66,7 @@ def test_file_name_prefixes():
 
     pharmacy_prefix = 'pharmacyclaims_2017-04_prelim_'
     part_files = filter(
-        lambda f: not f.endswith('.crc'),
+        lambda f: not f.endswith('.crc') and not f.startswith(".hive-staging"),
         os.listdir(
             '/tmp/ubc_pharmacy_prelim_data/'
         )
@@ -76,7 +76,7 @@ def test_file_name_prefixes():
 
     enrollment_prefix = 'enrollmentrecords_2017-04_'
     part_files = filter(
-        lambda f: not f.endswith('.crc'),
+        lambda f: not f.endswith('.crc') and not f.startswith(".hive-staging"),
         os.listdir(
             '/tmp/ubc_enrollment_data/'
         )

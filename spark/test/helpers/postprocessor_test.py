@@ -77,6 +77,8 @@ def test_apply_date_cap(spark):
         spark['sqlContext'].sql = old_sql_func
         raise
 
+    spark['sqlContext'].sql = old_sql_func
+
 
 def test_apply_whitelist(spark):
     "Ensure specified whitelisting is applied"
@@ -92,7 +94,7 @@ def test_apply_whitelist(spark):
     sample_whitelist = spark['spark'].sparkContext.parallelize([
         Row(gen_ref_itm_nm='THIS VALUE IS OK'),
         Row(gen_ref_itm_nm='THIS VALUE IS A OK')
-    ])
+    ]).toDF()
 
     old_sql_func = spark['sqlContext'].sql
     spark['sqlContext'].sql = mock.MagicMock(return_value=sample_whitelist)
@@ -111,3 +113,5 @@ def test_apply_whitelist(spark):
     except:
         spark['sqlContext'].sql = old_sql_func
         raise
+
+    spark['sqlContext'].sql = old_sql_func

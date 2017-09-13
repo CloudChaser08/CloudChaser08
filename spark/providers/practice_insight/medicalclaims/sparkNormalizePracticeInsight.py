@@ -53,10 +53,10 @@ def run_part(
 
         if test:
             input_path = file_utils.get_abs_path(
-                __file__, '../../test/providers/practice_insight/medicalclaims/resources/input/'
+                __file__, '../../../test/providers/practice_insight/medicalclaims/resources/input/'
             ) + '/'
             matching_path = file_utils.get_abs_path(
-                __file__, '../../test/providers/practice_insight/medicalclaims/resources/matching/'
+                __file__, '../../../test/providers/practice_insight/medicalclaims/resources/matching/'
             )
             max_date = '2016-12-31'
             setid = 'TEST'
@@ -107,7 +107,7 @@ def run_part(
 
     # end init #
 
-    runner.run_spark_script('../../common/medicalclaims_common_model.sql', [
+    runner.run_spark_script('../../../common/medicalclaims_common_model.sql', [
         ['table_name', 'medicalclaims_common_model', False],
         ['properties', '', False]
     ])

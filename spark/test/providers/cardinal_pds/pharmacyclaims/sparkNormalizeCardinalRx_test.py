@@ -6,7 +6,6 @@ import spark.providers.cardinal_pds.pharmacyclaims.sparkNormalizeCardinalRx as c
 
 results = []
 
-
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
 
@@ -14,18 +13,17 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
-    cardinal_pds.run(spark['spark'], spark['runner'], '2017-05-24', True)
+    cardinal_pds.run(spark['spark'], spark['runner'], '2017-08-29', True)
     global results
     results = spark['sqlContext'].sql('select * from pharmacyclaims_common_model_final') \
                                  .collect()
-
 
 def test_date_parsing():
     "Ensure that dates are correctly parsed"
     sample_row = filter(lambda r: r.rx_number == '0817b8e97a88844fa6fa894450923ca7', results)[0]
 
-    assert sample_row.date_service == datetime.date(2017, 4, 12)
-    assert sample_row.date_written == datetime.date(2016, 11, 7)
+    assert sample_row.date_service == datetime.date(2017, 8, 22)
+    assert sample_row.date_written == datetime.date(2016, 8, 17)
 
 
 def test_product_code():
