@@ -34,7 +34,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '@weekly',
+    schedule_interval = '0 13 * * 5',   # Every Friday at 9:00AM EST
     default_args = default_args
 )
 
