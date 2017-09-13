@@ -136,7 +136,8 @@ def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names
                  .withColumn(created, lit(time.strftime('%Y-%m-%d', time.localtime())))  \
                  .withColumn(data_set, lit(filename))                                    \
                  .withColumn(data_feed, lit(feed_id))                                    \
-                 .withColumn(data_vendor, lit(vendor_id))
+                 .withColumn(data_vendor, lit(vendor_id))                                \
+                 .cache()
     return add
 
 
