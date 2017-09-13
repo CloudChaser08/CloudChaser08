@@ -51,10 +51,12 @@ else:
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 TRANSACTION_FILE_DESCRIPTION = 'Cardinal PDS RX transaction file'
 TRANSACTION_FILE_NAME_TEMPLATE = 'PDS_record_data_{}'
+TRANSACTION_FILE_PREFIX = 'PDS_record_data_'
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Cardinal PDS RX deid file'
 DEID_FILE_NAME_TEMPLATE = 'PDS_deid_data_{}'
+DEID_FILE_NAME_PREFIX = 'PDS_deid_data_'
 
 def get_file_date_nodash(kwargs):
     return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%M%d')
@@ -95,6 +97,7 @@ def insert_current_date_function(template):
     def out(ds, kwargs):
         return insert_current_date(template, kwargs)
     return out
+
 
 get_tmp_dir = insert_formatted_file_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
@@ -209,6 +212,21 @@ get_datetime = PythonOperator(
     dag = mdag
 )
 
+if HVDAG.HVDAG.airflow_env != 'test':
+    push_s3 = BashOperator(
+        task_id = 'push_s3',
+        params = {
+            's3_key': S3_TRANSACTION_RAW_URL,
+            'record_file_format': TRANSACTION_FILE_PREFIX,
+            'deid_file_format': DEID_FILE_PREFIX,
+            'hv_slash_inc': 's3://healthverity/incoming/cardinal/pds/'
+        },
+        bash_command = '''
+            aws s3 cp {{ s3_key }}{{ record_file_format }}{{ ti.xcom_pull(task_ids = 'get_datetime', value = 'file_datetime' }} {{ hv_slash_incoming }}
+            aws s3 cp {{ s3_key }}{{ deid_file_format }}{{ ti.xcom_pull(task_ids = 'get_datetime', value = 'file_datetime' }} {{ hv_slash_incoming }}
+        '''
+    )
+
 decrypt_transaction = SubDagOperator(
     subdag = decrypt_files.decrypt_files(
         DAG_NAME,
@@ -309,6 +327,8 @@ detect_move_normalize_dag = SubDagOperator(
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
     queue_up_for_matching.set_upstream(validate_deid)
+
+    push_s3.set_upstream(get_datetime)
 
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
