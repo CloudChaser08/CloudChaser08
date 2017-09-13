@@ -27,7 +27,7 @@ TMP_PATH_TEMPLATE = '/tmp/cardinal_pds/pharmacyclaims/{}/'
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 8, 25), # Unclear when this is going to start
-    'depends_on_past': True,
+    'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
@@ -43,7 +43,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/out/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/payload/'
 else:
-    S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/cardinal/'
+    S3_TRANSACTION_RAW_URL = 's3://hvincoming/cardinal_raintree/pds/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/cardinal_pds/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/cardinal_pds/'
 
@@ -110,7 +110,7 @@ def get_transaction_file_paths(ds, kwargs):
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_PAYLOAD_DEST + DEID_FILE_NAME_TEMPLATE.format(
+    return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
         get_formated_datetime(ds, kwargs)
     )]
 
@@ -144,7 +144,7 @@ def generate_file_validation_task(
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-                's3_bucket'               : 'healthverity',
+                's3_bucket'               : 'hvincoming',
                 'file_description'        : 'Cardinal PDS RX ' + task_id + ' file'
             }
         ),
@@ -176,7 +176,7 @@ fetch_transaction = SubDagOperator(
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
+            's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
         }
     ),
     task_id = 'fetch_transaction_file',
