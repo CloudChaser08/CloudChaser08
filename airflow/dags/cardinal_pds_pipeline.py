@@ -34,7 +34,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 13 * * 5',   # Every Friday at 9:00AM EST
+    schedule_interval = '0 12 * * 5',   # Every Friday at 8:00AM EST
     default_args = default_args
 )
 
@@ -151,6 +151,8 @@ def generate_file_validation_task(
             }
         ),
         task_id = 'validate_' + task_id + '_file',
+        retries = 10,
+        retry_delay = timedelta(minutes = 15),
         dag = mdag
     )
 
