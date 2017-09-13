@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS {analyticsdb_schema}.pharmacy_claims_t2d;
 CREATE TABLE {analyticsdb_schema}.pharmacy_claims_t2d
     AS SELECT record_id, claim_id,
     
-    /* ENCRYPT HVID */
+    /* hash hvid */
     MD5(CONCAT(a.hvid, 'hvid321')) AS hvid, 
      
     created, model_version, data_set, marketplace_feed_id AS data_feed, marketplace_feed_name AS data_vendor,
