@@ -115,7 +115,8 @@ def apply_whitelist(sqlc, col_name, domain_name):
 def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names):
     """
     Add columns to a dataframe that are universal across all
-    healthverity datasets.
+    healthverity datasets. Cache the dataframe so the
+    monotonically_increasing_id is not recalculated on every query
 
     The dataframe is assumed to have the following columns:
     - record_id: Auto-inc PK
