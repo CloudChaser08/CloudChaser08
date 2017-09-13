@@ -56,14 +56,15 @@ TRANSACTION_FILE_NAME_TEMPLATE = 'PDS_record_data_{}'
 DEID_FILE_DESCRIPTION = 'Cardinal PDS RX deid file'
 DEID_FILE_NAME_TEMPLATE = 'PDS_deid_data_{}'
 
-def get_formatted_date(ds, kwargs):
-    return kwargs['ds_nodash']
+def get_file_date_nodash(kwargs):
+    return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%M%d')
 
 
-def insert_formatted_date_function(template):
+def insert_formatted_file_date_function(template):
     def out(ds, kwargs):
-        return template.format(get_formatted_date(ds, kwargs))
+        template.format(get_file_date_nodash(kwargs))
     return out
+
 
 def get_formatted_datetime(ds, kwargs):
     return kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
@@ -75,23 +76,18 @@ def insert_formatted_datetime_function(template):
     return out
 
 
-def insert_todays_date_function(template):
-    def out(ds, kwargs):
-        return template.format(kwargs['ds_nodash'])
-    return out
-
-
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format(kwargs['ds_nodash'] + '\d{6}')
+        return template.format(get_file_date_nodash(kwargs) + '\d{6}')
     return out
 
 
 def insert_current_date(template, kwargs):
+    ds_nodash = get_file_date_nodash(kwargs)
     return template.format(
-        kwargs['ds_nodash'][0:4],
-        kwargs['ds_nodash'][4:6],
-        kwargs['ds_nodash'][6:8]
+        ds_nodash[0:4],
+        ds_nodash[4:6],
+        ds_nodash[6:8]
     )
 
 
@@ -100,7 +96,7 @@ def insert_current_date_function(template):
         return insert_current_date(template, kwargs)
     return out
 
-get_tmp_dir = insert_todays_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_tmp_dir = insert_formatted_file_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
 
 def get_transaction_file_paths(ds, kwargs):
@@ -142,7 +138,7 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : insert_formatted_date_function(
+                'expected_file_name_func' : insert_formatted_file_date_function(
                     path_template
                 ),
                 'file_name_pattern_func'  : insert_formatted_regex_function(
