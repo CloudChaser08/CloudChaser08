@@ -111,7 +111,13 @@ def get_transaction_file_paths(ds, kwargs):
 
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
-        get_formated_datetime(ds, kwargs)
+        get_formatted_datetime(ds, kwargs)
+    )]
+
+
+def get_deid_file_names(ds, kwargs):
+    return [DEID_FILE_NAME_TEMPLATE.format(
+        get_formatted_datetime(ds, kwargs)
     )]
 
 
@@ -286,7 +292,7 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : get_deid_file_urls,
+            'expected_matching_files_func'      : get_deid_file_names,
             'file_date_func'                    : insert_current_date_function(
                 '{}/{}/{}'
             ),
