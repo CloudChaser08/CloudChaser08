@@ -11,15 +11,29 @@ ANALYTICSDB_SCHEMA = 'for321'
 
 S3_FORESITE_OUT = 's3://salusv/projects/foresite_capital/hv000321/delivery/'
 S3_FORESITE_PHARMACY_OUT_TEMPLATE = S3_FORESITE_OUT + '{}/pharmacy_claims_t2d'
+S3_FORESITE_ENROLLMENT_OUT_TEMPLATE = S3_FORESITE_OUT + '{}/enrollment_t2d'
 
 
 def run(spark, runner, date, test=False):
+
+    if test:
+        S3_FORESITE_OUT = '../../test/delivery/foresite_hv-000321/resources/output/'
+    else:
+        S3_FORESITE_OUT = 's3://salusv/projects/foresite_capital/hv000321/delivery/'
+
+    S3_FORESITE_PHARMACY_OUT_TEMPLATE = S3_FORESITE_OUT + '{}/pharmacy_claims_t2d'
+    S3_FORESITE_ENROLLMENT_OUT_TEMPLATE = S3_FORESITE_OUT + '{}/enrollment_t2d'
 
     runner.run_spark_script('reload_codes.sql', [
         ['analyticsdb_schema', ANALYTICSDB_SCHEMA, False]
     ])
 
-    runner.run_spark_script('create_extract.sql', [
+    runner.run_spark_script('create_pharmacy_extract.sql', [
+        ['analyticsdb_schema', ANALYTICSDB_SCHEMA, False],
+        ['delivery_date', date]
+    ])
+
+    runner.run_spark_script('create_enrollment_extract.sql', [
         ['analyticsdb_schema', ANALYTICSDB_SCHEMA, False],
         ['delivery_date', date]
     ])
@@ -27,6 +41,11 @@ def run(spark, runner, date, test=False):
     extractor.export_table(
         runner.sqlContext, 'pharmacy_claims_t2d', ANALYTICSDB_SCHEMA,
         S3_FORESITE_PHARMACY_OUT_TEMPLATE.format(date.replace('-', ''))
+    )
+
+    extractor.export_table(
+        runner.sqlContext, 'enrollment_t2d', ANALYTICSDB_SCHEMA,
+        S3_FORESITE_ENROLLMENT_OUT_TEMPLATE.format(date.replace('-', ''))
     )
 
 
