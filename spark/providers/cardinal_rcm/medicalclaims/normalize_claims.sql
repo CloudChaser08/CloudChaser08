@@ -73,9 +73,9 @@ SELECT DISTINCT
     NULL,                       -- total_allowed
     NULL,                       -- prov_rendering_npi
     CASE
-    WHEN t.bill_prov_id_qual = 'XX'
-    THEN COALESCE(t.bill_prov_npid, t.bill_prov_id)
-    ELSE t.bill_prov_npid
+        WHEN t.bill_prov_id_qual = 'XX'
+        THEN COALESCE(t.bill_prov_npid, t.bill_prov_id)
+        ELSE t.bill_prov_npid
     END,                        -- prov_billing_npi
     NULL,                       -- prov_referring_npi
     NULL,                       -- prov_facility_npi
@@ -103,8 +103,8 @@ SELECT DISTINCT
     NULL,                       -- prov_rendering_std_taxonomy
     NULL,                       -- prov_rendering_vendor_specialty
     CASE
-    WHEN t.bill_prov_id_qual <> 'XX'
-    THEN t.bill_prov_id
+        WHEN t.bill_prov_id_qual <> 'XX'
+        THEN t.bill_prov_id
     END,                        -- prov_billing_vendor_id
     NULL,                       -- prov_billing_tax_id
     NULL,                       -- prov_billing_dea_id

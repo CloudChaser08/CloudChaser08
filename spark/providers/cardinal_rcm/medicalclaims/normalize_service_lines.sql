@@ -45,36 +45,36 @@ SELECT DISTINCT
     t.line_seq_no,               -- service_line_number
     ARRAY(
         t.linked_diag_1, t.linked_diag_2, t.linked_diag_3,
-        t.linked_diag_4, NULL
+        t.linked_diag_4
         )[diag_explode.n],       -- diagnosis_code
     NULL,                        -- diagnosis_code_qual
     NULL,                        -- diagnosis_priority
     NULL,                        -- admit_diagnosis_ind
     t.proc_code,                 -- procedure_code
     CASE
-    WHEN t.proc_code IS NOT NULl
-    THEN t.proc_code_qual
+        WHEN t.proc_code IS NOT NULl
+        THEN t.proc_code_qual
     END,                         -- procedure_code_qual
     NULL,                        -- principal_proc_ind
     CASE
-    WHEN t.proc_code IS NOT NULL
-    THEN t.submitted_units
+        WHEN t.proc_code IS NOT NULL
+        THEN t.submitted_units
     END,                         -- procedure_units
     CASE
-    WHEN t.proc_code IS NOT NULL
-    THEN t.mod_1
+        WHEN t.proc_code IS NOT NULL
+        THEN t.mod_1
     END,                         -- procedure_modifier_1
     CASE
-    WHEN t.proc_code IS NOT NULL
-    THEN t.mod_2
+        WHEN t.proc_code IS NOT NULL
+        THEN t.mod_2
     END,                         -- procedure_modifier_2
     CASE
-    WHEN t.proc_code IS NOT NULL
-    THEN t.mod_3
+        WHEN t.proc_code IS NOT NULL
+        THEN t.mod_3
     END,                         -- procedure_modifier_3
     CASE
-    WHEN t.proc_code IS NOT NULL
-    THEN t.mod_4
+        WHEN t.proc_code IS NOT NULL
+        THEN t.mod_4
     END,                         -- procedure_modifier_4
     NULL,                        -- revenue_code
     NULL,                        -- ndc_code
@@ -84,38 +84,38 @@ SELECT DISTINCT
     t.submitted_chg_total,       -- total_charge
     NULL,                        -- total_allowed
     CASE
-    WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
-    OR  (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
-    THEN (
-        CASE
-        WHEN t.rend_prov_id_qual = 'XX'
-        THEN COALESCE(t.rend_prov_npid, t.rend_prov_id)
-        ELSE t.rend_prov_npid
-        END
-        )
-    WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
-    OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
-    THEN (
-        CASE
-        WHEN t.ord_prov_id_qual = 'XX'
-        THEN COALESCE(t.ord_prov_npid, t.ord_prov_id)
-        ELSE t.ord_prov_npid
-        END
-        )
+        WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
+        OR  (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
+        THEN (
+            CASE
+                WHEN t.rend_prov_id_qual = 'XX'
+                THEN COALESCE(t.rend_prov_npid, t.rend_prov_id)
+                ELSE t.rend_prov_npid
+            END
+            )
+        WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
+        OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
+        THEN (
+            CASE
+                WHEN t.ord_prov_id_qual = 'XX'
+                THEN COALESCE(t.ord_prov_npid, t.ord_prov_id)
+                ELSE t.ord_prov_npid
+            END
+            )
     END,                         -- prov_rendering_npi
     CASE
-    WHEN t.bill_prov_id_qual = 'XX'
-    THEN COALESCE(t.bill_prov_npid, t.bill_prov_id)
-    ELSE t.bill_prov_npid
+        WHEN t.bill_prov_id_qual = 'XX'
+        THEN COALESCE(t.bill_prov_npid, t.bill_prov_id)
+        ELSE t.bill_prov_npid
     END,                         -- prov_billing_npi
     CASE
-    WHEN t.refer_prov_id_qual = 'XX'
-    THEN COALESCE(t.refer_prov_npid, t.refer_prov_id)
-    ELSE t.refer_prov_npid
+        WHEN t.refer_prov_id_qual = 'XX'
+        THEN COALESCE(t.refer_prov_npid, t.refer_prov_id)
+        ELSE t.refer_prov_npid
     END,                         -- prov_referring_npi
     CASE
-    WHEN t.serv_facility_id_qual = 'XX'
-    THEN t.serv_facility_id
+        WHEN t.serv_facility_id_qual = 'XX'
+        THEN t.serv_facility_id
     END,                         -- prov_facility_npi
     t.payer_id,                  -- payer_vendor_id
     t.payer_name,                -- payer_name
@@ -125,38 +125,38 @@ SELECT DISTINCT
     NULL,                        -- payer_plan_name
     NULL,                        -- payer_type
     CASE
-    WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
-    OR (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
-    THEN (
-        CASE
-        WHEN t.rend_prov_id_qual <> 'XX'
-        THEN t.rend_prov_id
-        END
-        )
-    WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
-    OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
-    THEN (
-        CASE
-        WHEN t.ord_prov_id_qual <> 'XX'
-        THEN t.ord_prov_id
-        END
-        )
-    WHEN 0 <> LENGTH(COALESCE(t.rend_prov_npid, ''))
-    OR 0 <> LENGTH(COALESCE(t.rend_prov_id, ''))
-    OR 0 <> LENGTH(COALESCE(t.rend_prov_name, ''))
-    OR 0 <> LENGTH(COALESCE(t.rend_prov_taxonomy_code, ''))
-    THEN (
-        CASE
-        WHEN t.rend_prov_id_qual <> 'XX'
-        THEN t.rend_prov_id
-        END
-        )
-    ELSE (
-        CASE
-        WHEN t.ord_prov_id_qual <> 'XX'
-        THEN t.ord_prov_id
-        END
-        )
+        WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
+        OR (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
+        THEN (
+            CASE
+                WHEN t.rend_prov_id_qual <> 'XX'
+                THEN t.rend_prov_id
+            END
+            )
+        WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
+        OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
+        THEN (
+            CASE
+                WHEN t.ord_prov_id_qual <> 'XX'
+                THEN t.ord_prov_id
+            END
+            )
+        WHEN 0 <> LENGTH(COALESCE(t.rend_prov_npid, ''))
+        OR 0 <> LENGTH(COALESCE(t.rend_prov_id, ''))
+        OR 0 <> LENGTH(COALESCE(t.rend_prov_name, ''))
+        OR 0 <> LENGTH(COALESCE(t.rend_prov_taxonomy_code, ''))
+        THEN (
+            CASE
+                WHEN t.rend_prov_id_qual <> 'XX'
+                THEN t.rend_prov_id
+            END
+            )
+        ELSE (
+            CASE
+                WHEN t.ord_prov_id_qual <> 'XX'
+                THEN t.ord_prov_id
+            END
+            )
     END,                         -- prov_rendering_vendor_id
     NULL,                        -- prov_rendering_tax_id
     NULL,                        -- prov_rendering_dea_id
@@ -165,18 +165,18 @@ SELECT DISTINCT
     NULL,                        -- prov_rendering_upin
     NULL,                        -- prov_rendering_commercial_id
     CASE
-    WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
-    OR (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
-    THEN t.rend_prov_name
-    WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
-    OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
-    THEN t.ord_prov_name
-    WHEN 0 <> LENGTH(COALESCE(t.rend_prov_npid, ''))
-    OR 0 <> LENGTH(COALESCE(t.rend_prov_id, ''))
-    OR 0 <> LENGTH(COALESCE(t.rend_prov_name, ''))
-    OR 0 <> LENGTH(COALESCE(t.rend_prov_taxonomy_code, ''))
-    THEN t.rend_prov_name
-    ELSE t.ord_prov_name
+        WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
+        OR (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
+        THEN t.rend_prov_name
+        WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
+        OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
+        THEN t.ord_prov_name
+        WHEN 0 <> LENGTH(COALESCE(t.rend_prov_npid, ''))
+        OR 0 <> LENGTH(COALESCE(t.rend_prov_id, ''))
+        OR 0 <> LENGTH(COALESCE(t.rend_prov_name, ''))
+        OR 0 <> LENGTH(COALESCE(t.rend_prov_taxonomy_code, ''))
+        THEN t.rend_prov_name
+        ELSE t.ord_prov_name
     END,                         -- prov_rendering_name_1
     NULL,                        -- prov_rendering_name_2
     NULL,                        -- prov_rendering_address_1
@@ -185,22 +185,22 @@ SELECT DISTINCT
     NULL,                        -- prov_rendering_state
     NULL,                        -- prov_rendering_zip
     CASE
-    WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
-    OR (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
-    THEN t.rend_prov_taxonomy_code
-    WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
-    OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
-    THEN NULL
-    WHEN 0 <> LENGTH(COALESCE(t.rend_prov_npid, ''))
-    OR 0 <> LENGTH(COALESCE(t.rend_prov_id, ''))
-    OR 0 <> LENGTH(COALESCE(t.rend_prov_name, ''))
-    OR 0 <> LENGTH(COALESCE(t.rend_prov_taxonomy_code, ''))
-    THEN t.rend_prov_taxonomy_code
+        WHEN (0 <> LENGTH(COALESCE(t.rend_prov_npid, '')))
+        OR (t.rend_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.rend_prov_id, '')))
+        THEN t.rend_prov_taxonomy_code
+        WHEN (0 <> LENGTH(COALESCE(t.ord_prov_npid, '')))
+        OR (t.ord_prov_id_qual = 'XX' AND 0 <> LENGTH(COALESCE(t.ord_prov_id, '')))
+        THEN NULL
+        WHEN 0 <> LENGTH(COALESCE(t.rend_prov_npid, ''))
+        OR 0 <> LENGTH(COALESCE(t.rend_prov_id, ''))
+        OR 0 <> LENGTH(COALESCE(t.rend_prov_name, ''))
+        OR 0 <> LENGTH(COALESCE(t.rend_prov_taxonomy_code, ''))
+        THEN t.rend_prov_taxonomy_code
     END,                         -- prov_rendering_std_taxonomy
     NULL,                        -- prov_rendering_vendor_specialty
     CASE
-    WHEN t.bill_prov_id_qual <> 'XX'
-    THEN t.bill_prov_id
+        WHEN t.bill_prov_id_qual <> 'XX'
+        THEN t.bill_prov_id
     END,                         -- prov_billing_vendor_id
     NULL,                        -- prov_billing_tax_id
     NULL,                        -- prov_billing_dea_id
@@ -218,8 +218,8 @@ SELECT DISTINCT
     t.bill_prov_taxonomy_code,   -- prov_billing_std_taxonomy
     NULL,                        -- prov_billing_vendor_specialty
     CASE
-    WHEN t.refer_prov_id_qual <> 'XX'
-    THEN t.refer_prov_id
+        WHEN t.refer_prov_id_qual <> 'XX'
+        THEN t.refer_prov_id
     END,                         -- prov_referring_vendor_id
     NULL,                        -- prov_referring_tax_id
     NULL,                        -- prov_referring_dea_id
@@ -271,7 +271,7 @@ WHERE
     (
         ARRAY(
             t.linked_diag_1, t.linked_diag_2, t.linked_diag_3,
-            t.linked_diag_4, NULL
+            t.linked_diag_4
             )[diag_explode.n] IS NOT NULL
         )
 
