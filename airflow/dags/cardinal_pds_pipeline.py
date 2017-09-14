@@ -59,12 +59,22 @@ DEID_FILE_NAME_TEMPLATE = 'PDS_deid_data_{}'
 DEID_FILE_NAME_PREFIX = 'PDS_deid_data_'
 
 def get_file_date_nodash(kwargs):
-    return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%M%d')
+    print (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
+    return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
 
 
 def insert_formatted_file_date_function(template):
     def out(ds, kwargs):
-        template.format(get_file_date_nodash(kwargs))
+        return template.format(get_file_date_nodash(kwargs))
+    return out
+
+def get_date(kwargs):
+    return kwargs['ds_nodash']
+
+
+def insert_formatted_date_function(template):
+    def out(ds, kwargs):
+        return template.format(get_date(kwargs))
     return out
 
 
@@ -99,7 +109,7 @@ def insert_current_date_function(template):
     return out
 
 
-get_tmp_dir = insert_formatted_file_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_tmp_dir = insert_formatted_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
 
 def get_transaction_file_paths(ds, kwargs):
