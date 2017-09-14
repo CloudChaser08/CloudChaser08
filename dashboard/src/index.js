@@ -20,17 +20,17 @@ var html = fs.readFileSync(path.join(__dirname, './public/index.html'), 'utf-8')
  * Combines airflow data for a single provider to the list of files in
  * the s3 incoming bucket for that provider
  */
-function buildFullDataset(airflowResults, providerIncomingFiles) {
+function buildFullDataset(airflowResults, providerIncoming) {
 
   // the index of the column in the tabular airflow data that
   // corresponds to this provider
   var providerColumnIndex = airflowResults.fields.findIndex(function(airflowResultField) {
-    return airflowResultField.name == providerIncomingFiles.providerId;
+    return airflowResultField.name == providerIncoming.providerId;
   });
 
   // the configuration for this provider
   var providerConf = providers.config.filter(function(provider) {
-    return provider.id == providerIncomingFiles.providerId;
+    return provider.id == providerIncoming.providerId;
   })[0];
 
   // enumerate all execution dates for this provider
@@ -63,7 +63,7 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
     var ingested = typeof airflowData !== 'undefined' && airflowData[providerColumnIndex].toString().trim() === "1";
 
     // grab list of incoming files for this execution date
-    var incomingFiles = providerIncomingFiles.files.filter(function(file) {
+    var incomingFiles = providerIncoming.files.filter(function(file) {
       return providerConf.filenameToExecutionDate(file) == helpers.formatDate(exDate);
     });
 
@@ -133,9 +133,7 @@ exports.handler = function(event, context) {
         // join relevant incoming file list to the airflow data for
         // this provider
         var allData = buildFullDataset(airflowRes, providerS3Res).sort(function(row1, row2) {
-          if (row1.executionDate < row2.executionDate) return 1;
-          else if (row1.executionDate > row2.executionDate) return -1;
-          else return 0;
+          return row1.executionDate.localeCompare(row2.executionDate);
         });
 
         // filter out days with no incoming files
@@ -150,8 +148,8 @@ exports.handler = function(event, context) {
         else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = [1, 'Moderately Healthy'];
         else healthLabel = [2, 'Unhealthy'];
 
-        var ingestedFiles = existingFiles.filter(function(row) {
-          return row.ingested;
+        var ingestedFiles = existingFiles.filter(function(file) {
+          return file.ingested;
         });
         var latestIngestionDate = ingestedFiles.length ? ingestedFiles[0].executionDate : "Never";
 
