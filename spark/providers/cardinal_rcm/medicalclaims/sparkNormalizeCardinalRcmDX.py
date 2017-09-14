@@ -5,6 +5,7 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
@@ -36,10 +37,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    min_date = '2010-03-01'
-    max_date = date_input
-
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
+
+    external_table_loader.load_ref_gen_ref(runner.sqlContext)
+
+    hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, "29", "HVM_AVAILABLE_HISTORY_START_DATE")
+    earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, "29", "EARLIEST_VALID_SERVICE_DATE")
+    hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
+        earliest_valid_service_date if earliest_valid_service_date else datetime.date(1901, 1, 1)
+    max_date = date_input
 
     runner.run_spark_script('../../../common/medicalclaims_common_model.sql', [
         ['table_name', 'medicalclaims_common_model', False],
@@ -50,8 +56,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['input_path', input_path]
     ])
 
-    explode.generate_exploder_table(spark, 9, 'diag_exploder')
-    explode.generate_exploder_table(spark, 2, 'proc_exploder')
+    explode.generate_exploder_table(spark, 4, 'svc_diag_exploder')
+    explode.generate_exploder_table(spark, 8, 'claim_diag_exploder')
 
     # trim and remove nulls from raw input
     postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(
@@ -60,21 +66,24 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
-    runner.run_spark_script('normalize.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
+    runner.run_spark_script('normalize_service_lines.sql')
+    runner.run_spark_script('normalize_claims.sql')
+
+    vendor_feed_id = '29'
+    vendor_id = '42'
 
     postprocessor.compose(
         postprocessor.add_universal_columns(
-            feed_id='29',
-            vendor_id='42',
+            feed_id=vendor_feed_id,
+            vendor_id=vendor_id,
 
             # TODO: this is incorrect - fix when we find out what
-            # their filenames will be
+            # their filenames will be named
             filename='RCM_Claims_{}.open'.format(date_obj.strftime('%Y%m%d'))
         ),
-        medical_priv.filter
+        medical_priv.filter,
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service_end', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE')
     )(
         runner.sqlContext.sql('select * from medicalclaims_common_model')
     ).createTempView('medicalclaims_common_model')
@@ -84,7 +93,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if not test:
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'cardinal_rcm',
-            'medicalclaims_common_model', 'date_service', date_input
+            'medicalclaims_common_model', 'date_service', date_input,
+            hvm_historical_date=datetime(
+                hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
+            )
         )
 
 

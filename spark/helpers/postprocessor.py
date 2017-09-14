@@ -142,6 +142,19 @@ def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names
     return add
 
 
+def get_gen_ref_date(sqlc, feed_id, domain_name):
+    res = sqlc.sql(
+        "SELECT gen_ref_1_dt FROM ref_gen_ref WHERE hvm_vdr_feed_id = {} AND gen_ref_domn_nm = '{}'".format(
+            feed_id, domain_name
+        )
+    ).collect()
+
+    if res:
+        return res[0].gen_ref_1_dt
+    else:
+        return None
+
+
 def compose(*functions):
     """
     Utility method for composing a series of functions.
