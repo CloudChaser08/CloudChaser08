@@ -187,7 +187,13 @@ CREATE VIEW default.medicalclaims (
     inst_drg_vendor_desc,
     CASE
         WHEN claim_type = "I" THEN NULL
-        WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL AND part_provider = "emdeon" THEN SUBSTRING(inst_type_of_bill_std_id, 1, 2)
+        WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL AND part_provider = "emdeon"
+            AND SUBSTRING(inst_type_of_bill_std_id, 1, 2) IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') 
+            THEN '99'
+        WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL AND part_provider = "emdeon"
+            AND SUBSTRING(inst_type_of_bill_std_id, 1, 2) NOT IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33')
+            THEN SUBSTRING(inst_type_of_bill_std_id, 1, 2)
+        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') THEN '99'
         ELSE place_of_service_std_id
     END AS place_of_service_std_id,
     place_of_service_vendor_id,
@@ -586,6 +592,7 @@ SELECT CAST(record_id AS bigint),
     inst_drg_vendor_desc,
     CASE
         WHEN claim_type = "I" THEN NULL
+        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') THEN '99'
         ELSE place_of_service_std_id
     END AS place_of_service_std_id,
     place_of_service_vendor_id,
