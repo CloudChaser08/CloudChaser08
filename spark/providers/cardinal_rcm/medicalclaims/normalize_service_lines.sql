@@ -281,5 +281,6 @@ WHERE
             t.linked_diag_1, t.linked_diag_2, t.linked_diag_3,
             t.linked_diag_4
             ) IS NULL
+         AND diag_explode.n = 0
     )
     ;
