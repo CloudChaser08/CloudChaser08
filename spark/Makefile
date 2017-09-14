@@ -16,6 +16,6 @@ build-notest: clean-build
 
 spark-test: build-notest clean-test
 	pytest -v
-	clean-test
+	@$(MAKE) clean-test
 
 build: spark-test
