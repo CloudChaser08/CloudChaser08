@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS transactions_diagnosis;
-CREATE TABLE transactions_diagnosis (
+CREATE EXTERNAL TABLE transactions_diagnosis (
         source             string,
         uniq_id            string,
         person_id          string,
@@ -21,7 +21,7 @@ CREATE TABLE transactions_diagnosis (
     ;
 
 DROP TABLE IF EXISTS transactions_medication;
-CREATE TABLE transactions_medication (
+CREATE EXTERNAL TABLE transactions_medication (
         source              string,
         uniq_id             string,
         person_id           string,

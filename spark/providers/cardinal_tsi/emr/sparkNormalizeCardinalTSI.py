@@ -45,18 +45,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
     else:
-        # diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/diagnosis/'.format(
-        #     date_input.replace('-', '/')
-        # )
-        # medication_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/medication/'.format(
-        #     date_input.replace('-', '/')
-        # )
-        # matching_path = 's3a://salusv/matching/payload/emr/cardinal_tsi/{}/'.format(
-        #     date_input.replace('-', '/')
-        # )
-        diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/sample/diagnosis/'
-        medication_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/sample/medication/'
-        matching_path = 's3a://salusv/matching/payload/emr/cardinal_tsi/sample/'
+        diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/diagnosis/'.format(
+            date_input.replace('-', '/')
+        )
+        medication_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/medication/'.format(
+            date_input.replace('-', '/')
+        )
+        matching_path = 's3a://salusv/matching/payload/emr/cardinal_tsi/{}/'.format(
+            date_input.replace('-', '/')
+        )
 
     runner.run_spark_script('../../../common/emr/diagnosis_common_model_v5.sql', [
         ['table_name', 'diagnosis_common_model', False],
