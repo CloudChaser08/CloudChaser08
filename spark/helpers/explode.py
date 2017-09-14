@@ -123,4 +123,4 @@ def explode_dates(
         )
 
     # replace old table with new
-    full_exploded_table.createTempView(table)
+    full_exploded_table.createOrReplaceTempView(table)

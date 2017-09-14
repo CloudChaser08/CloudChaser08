@@ -1,13 +1,13 @@
 APP_NAME=dewey
 
 clean-build:
-	find . -name '*.pyc' -delete
 	rm -f target/${APP_NAME}.zip
 
 clean-test:
-	rm -rf spark/spark-warehouse
-	rm -rf spark/derby.log
-	rm -rf spark/metastore_db
+	rm -rf spark-warehouse
+	rm -f derby.log
+	rm -rf metastore_db
+	find . -name '*.pyc' -delete
 
 build-notest: clean-build
 	mkdir -p target
