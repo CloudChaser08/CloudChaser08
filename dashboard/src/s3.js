@@ -10,21 +10,10 @@ var providers = require('./providers.js');
 var s3 = new AWS.S3();
 
 /**
- * Get the 'incoming bucket' for this path, defined here as the chunk
- * of the path between incoming and the actual filename. 
- *
- * Ex: incoming/<incoming-bucket>/filename.gz => <incoming-bucket>
- */
-exports.getIncomingBucket = function(s3Prefix) {
-  return s3Prefix.split('/').slice(1, s3Prefix.split('/').length - 1).reduce(function(b1, b2) {
-    return b1 + '/' + b2;
-  });
-};
-
-/**
  * Get a list of calls that will be made out to s3 - one for each
  * provider in the providers.config map. Each call will return a list
- * of files in that provider's incoming bucket.
+ * of files in that provider's incoming bucket that apply to this
+ * provider.
  */
 exports.getS3Calls = function() {
   return providers.config.map(function(providerConf) {
@@ -49,7 +38,15 @@ exports.getS3Calls = function() {
               return key.Key;
             }));
             if (!data.IsTruncated) {
-              callback(null, results);
+              // attach provider id to a list of relevant files found
+              // in this provider's incoming bucket
+              var output = {
+                providerId: providerConf.id,
+                files: results.filter(function(filename) {
+                  return providerConf.expectedFilenameRegex.test(filename);
+                })
+              };
+              callback(null, output);
             } else {
               recursiveList(data.NextContinuationToken);
             }

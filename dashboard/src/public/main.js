@@ -15,7 +15,7 @@ function configureTable() {
 
       // show this provider's time series
       $('div#time-series > ul').hide();
-      $('div#time-series > ul#' + $element.attr('id')).show();
+      $('div#time-series > ul#' + $element.attr('id') + '-timeseries').show();
       $('div#time-series').show();
 
       // reset the height
@@ -42,11 +42,11 @@ $('div#time-series span#back a').click(function() {
 });
 
 /**
- * Function for sorting health statuses by their 'true' ordering
+ * Function for sorting values by their 'true' ordering
  * instead of the arbitrary lexographical ordering
  */
-function statusSorter(a, b) {
-  return a.statusnumber - b.statusnumber;
+function sortNumSorter(a, b) {
+  return a.sortnumber - b.sortnumber;
 }
 
 configureTable();

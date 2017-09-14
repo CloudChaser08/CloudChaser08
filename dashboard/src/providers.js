@@ -17,6 +17,7 @@ exports.schedule = {
 // dashboard is built by iterating over this array.
 //
 // The configuration for a new provider should include the following:
+//   id                       -> A unique identifier for this provider
 //   displayName              -> Provider name as it will be displayed on the dashboard
 //   providerPrefix           -> The string between healthverity/incoming/ and all of the incoming files for this provider.
 //                               May contain slashes.
@@ -30,6 +31,7 @@ exports.schedule = {
 //                               form YYYY-mm-dd
 exports.config = [
   {
+    id: 'practice_insight_dx',
     displayName: 'Practice Insight',
     providerPrefix: 'practiceinsight',
     schedule: this.schedule.MONTHLY,
@@ -54,6 +56,7 @@ exports.config = [
     }
   },
   {
+    id: 'caris_labtests',
     displayName: 'Caris',
     providerPrefix: 'caris',
     schedule: this.schedule.MONTHLY,
@@ -71,6 +74,7 @@ exports.config = [
     }
   },
   {
+    id: 'emdeon_dx',
     displayName: 'EmdeonDX',
     providerPrefix: 'medicalclaims/emdeon/transactions',
     schedule: this.schedule.DAILY,
@@ -87,6 +91,7 @@ exports.config = [
     }
   },
   {
+    id: 'emdeon_rx',
     displayName: 'EmdeonRX',
     providerPrefix: 'pharmacyclaims/emdeon/transactions',
     schedule: this.schedule.DAILY,
@@ -103,6 +108,7 @@ exports.config = [
     }
   },
   {
+    id: 'quest_labtests',
     displayName: 'Quest',
     providerPrefix: 'quest',
     startDate: new Date('2017-01-01'),
@@ -124,6 +130,7 @@ exports.config = [
     }
   },
   {
+    id: 'ability_dx',
     displayName: 'Ability',
     providerPrefix: 'ability',
     startDate: new Date('2017-01-01'),
@@ -140,6 +147,7 @@ exports.config = [
     }
   },
   {
+    id: 'esi_rx',
     displayName: 'Express Scripts',
     providerPrefix: 'esi',
     schedule: this.schedule.WEEKLY,
@@ -159,6 +167,7 @@ exports.config = [
     }
   },
   {
+    id: 'mckesson_unres_rx',
     displayName: 'McKesson RX',
     providerPrefix: 'mckessonrx',
     schedule: this.schedule.DAILY,
@@ -171,6 +180,22 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       return 'incoming/mckessonrx/HVUnRes.Record.' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2);
+    }
+  },
+  {
+    id: 'mckesson_res_rx',
+    displayName: 'McKesson RX Restricted',
+    providerPrefix: 'mckessonrx',
+    schedule: this.schedule.DAILY,
+    startDate: new Date('2017-06-01'),
+    airflowPipelineName: 'mckesson_res_pipeline',
+    expectedFilenameRegex: /^.*HVRes.Record.[0-9]{8}$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('.')[2];
+      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+    },
+    executionDateToFilename: function(date) {
+      return 'incoming/mckessonrx/HVRes.Record.' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2);
     }
   }
 ];

@@ -20,17 +20,17 @@ var html = fs.readFileSync(path.join(__dirname, './public/index.html'), 'utf-8')
  * Combines airflow data for a single provider to the list of files in
  * the s3 incoming bucket for that provider
  */
-function buildFullDataset(airflowResults, providerIncomingFiles) {
+function buildFullDataset(airflowResults, providerIncoming) {
 
   // the index of the column in the tabular airflow data that
   // corresponds to this provider
   var providerColumnIndex = airflowResults.fields.findIndex(function(airflowResultField) {
-    return airflowResultField.name == s3.getIncomingBucket(providerIncomingFiles[0]);
+    return airflowResultField.name == providerIncoming.providerId;
   });
 
   // the configuration for this provider
   var providerConf = providers.config.filter(function(provider) {
-    return provider.providerPrefix == s3.getIncomingBucket(providerIncomingFiles[0]);
+    return provider.id == providerIncoming.providerId;
   })[0];
 
   // enumerate all execution dates for this provider
@@ -63,7 +63,7 @@ function buildFullDataset(airflowResults, providerIncomingFiles) {
     var ingested = typeof airflowData !== 'undefined' && airflowData[providerColumnIndex].toString().trim() === "1";
 
     // grab list of incoming files for this execution date
-    var incomingFiles = providerIncomingFiles.filter(function(file) {
+    var incomingFiles = providerIncoming.files.filter(function(file) {
       return providerConf.filenameToExecutionDate(file) == helpers.formatDate(exDate);
     });
 
@@ -127,30 +127,19 @@ exports.handler = function(event, context) {
 
         // conf for this provider
         var providerConf = providers.config.filter(function(provider) {
-          return provider.providerPrefix == s3.getIncomingBucket(providerS3Res[0]);
+          return provider.id == providerS3Res.providerId;
         })[0];
-
-        // filter incoming files based on expected filename regex
-        var relevantIncomingFiles = providerS3Res.filter(function(filename) {
-          return providerConf.expectedFilenameRegex.test(filename);
-        });
 
         // join relevant incoming file list to the airflow data for
         // this provider
-        var allData = buildFullDataset(airflowRes, relevantIncomingFiles).sort(function(row1, row2) {
-          if (row1.executionDate < row2.executionDate) return 1;
-          else if (row1.executionDate > row2.executionDate) return -1;
-          else return 0;
+        var allData = buildFullDataset(airflowRes, providerS3Res).sort(function(row1, row2) {
+          return row1.executionDate.localeCompare(row2.executionDate);
         });
 
         // filter out days with no incoming files
         var existingFiles = allData.filter(function(d) {
           return d.incomingFiles.length > 0;
         });
-
-        // convert the provider display name to a CSS id (cannot
-        // contain spaces)
-        var providerCSSId = providerConf.displayName.toLowerCase().replace(' ', '-');
 
         var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
 
@@ -159,19 +148,30 @@ exports.handler = function(event, context) {
         else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = [1, 'Moderately Healthy'];
         else healthLabel = [2, 'Unhealthy'];
 
+        var ingestedFiles = existingFiles.filter(function(file) {
+          return file.ingested;
+        });
+        var latestIngestionDate = ingestedFiles.length ? ingestedFiles[0].executionDate : "Never";
+
+        function dateSortNum(d) {
+          if (d === "Never") {
+            return 0;
+          } else {
+            return parseInt(d.split("-").join(""));
+          }
+        }
+
         return {
           // date ingested HTML for this provider
-          dateIngestedContent: '<tr id="' + providerCSSId + '">' +
+          dateIngestedContent: '<tr id="' + providerConf.id + '">' +
             '<td><a href="#">' + providerConf.displayName + '</a></td>' +
-            '<td>' + existingFiles[0].executionDate+ '</td>' +
-            '<td>' + existingFiles.filter(function(row) {
-              return row.ingested;
-            })[0].executionDate + '</td>' +
-            '<td data-statusnumber=' + healthLabel[0] + '>' + healthLabel[1] + '</td>' +
+            '<td data-sortnumber=' + dateSortNum(existingFiles[0].executionDate) + '>' + existingFiles[0].executionDate + '</td>' +
+            '<td data-sortnumber=' + dateSortNum(latestIngestionDate) + '>' + latestIngestionDate + '</td>' +
+            '<td data-sortnumber=' + healthLabel[0] + '>' + healthLabel[1] + '</td>' +
             '</tr>',
 
           // time series HTML for this provider
-          timeSeriesContent: '<ul id="' + providerCSSId + '">' +
+          timeSeriesContent: '<ul id="' + providerConf.id + '-timeseries">' +
 
             // each execution date will get an <li> element
             allData.map(function(d) {
