@@ -39,16 +39,15 @@ def load(runner, location, extra_cols=None):
             raw_payload = raw_payload.withColumn(k, null_column)
 
     # remove hvid columns missing from the payload
-    global HVID
-    HVID = filter(lambda c: c in raw_payload.columns, HVID)
+    relevant_hvid_columns = filter(lambda c: c in raw_payload.columns, HVID)
 
-    if not HVID:
+    if not relevant_hvid_columns:
         logging.warning("No HVID columns found in this payload.")
 
     final_payload = raw_payload.select(
         (
-            [coalesce(*map(lambda x: col(x), HVID)).alias('hvid')]
-            if HVID else [null_column.alias('hvid')]
+            [coalesce(*map(lambda x: col(x), relevant_hvid_columns)).alias('hvid')]
+            if relevant_hvid_columns else [null_column.alias('hvid')]
         ) + map(lambda x: col(x), total_attrs)
     )
 
