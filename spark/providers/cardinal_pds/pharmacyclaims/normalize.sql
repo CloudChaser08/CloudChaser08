@@ -2,9 +2,7 @@ INSERT INTO pharmacyclaims_common_model
 SELECT
     NULL,                                     -- record_id
     regexp_replace(t.row_id, '[{{}}]', ''),   -- claim_id
-    slightly_deobfuscate_hvid(
-        t.unique_patient_id, 'Cardinal_MPI-0'
-    ),                                        -- hvid
+    t.unique_patient_id,                      -- hvid
     NULL,                                     -- created
     3,                                        -- model_version
     NULL,                                     -- data_set
