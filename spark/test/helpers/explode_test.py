@@ -1,8 +1,5 @@
 import pytest
 
-import datetime
-
-from pyspark.sql.types import StructType, StructField, StringType, DateType
 from pyspark.sql.functions import col
 
 import spark.helpers.explode as explode
@@ -17,27 +14,11 @@ def test_init(spark):
 
     spark['sqlContext'].sql('DROP TABLE IF EXISTS explosion_test')
 
-    data = [
-        # test row '10row' should be exploded into ten rows
-        ['1', '10row', datetime.date(2016, 1, 1), datetime.date(2016, 1, 10), 'explode'],
+    spark['sqlContext'].sql('CREATE TABLE explosion_test (id string, test_id string, date_start date, date_end date, type string)')
 
-        # test row 'toobig' should not be exploded because the daterange is too big
-        ['2', 'toobig', datetime.date(2016, 1, 1), datetime.date(2016, 1, 12), 'explode'],
-
-        # id 3 should not be exploded due to the filter condition
-        ['3', 'noexplode', datetime.date(2016, 1, 1), datetime.date(2016, 1, 3), 'dont-explode']
-    ]
-
-    schema = StructType([StructField('id', StringType(), True),
-                         StructField('test_id', StringType(), True),
-                         StructField('date_start', DateType(), True),
-                         StructField('date_end', DateType(), True),
-                         StructField('type', StringType(), True)])
-
-    spark['spark'].sparkContext.parallelize(data) \
-                               .toDF(schema) \
-                               .write \
-                               .saveAsTable('explosion_test')
+    spark['sqlContext'].sql("INSERT INTO explosion_test VALUES ('1', '10row', '2016-01-01', '2016-01-10', 'explode'), "
+                            + "('2', 'toobig', '2016-01-01', '2016-01-12', 'explode'), "
+                            + "('3', 'noexplode', '2016-01-01', '2016-01-03', 'dont-explode')")
 
     explode.explode_dates(
         spark['runner'], 'explosion_test',

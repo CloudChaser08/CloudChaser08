@@ -123,8 +123,8 @@ def explode_dates(
         )
 
     # replace old table with new
-    runner.sqlContext.sql('ALTER TABLE {table} RENAME TO {table}_noexplode'.format(table=table))
-    full_exploded_table.createTempView(
-        '{table}'.format(table=table)
+    full_exploded_table.write.saveAsTable(
+        '{table}_full_explode'.format(table=table)
     )
-    runner.sqlContext.sql('DROP TABLE {table}_noexplode'.format(table=table))
+    runner.sqlContext.sql('DROP TABLE {table}'.format(table=table))
+    runner.sqlContext.sql('ALTER TABLE {table}_full_explode RENAME TO {table}'.format(table=table))
