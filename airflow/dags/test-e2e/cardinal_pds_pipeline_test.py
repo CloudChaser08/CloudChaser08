@@ -38,3 +38,8 @@ def test_normalized_data_exists():
         'aws', 's3', 'ls', CARDINAL_PDS_TEST_DIR + '/normalized/'
     ])) > 0
 
+
+def test_incoming_files_moved():
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', CARDINAL_PDS_TEST_DIR + '/moved_raw/'
+    ])) > 0
