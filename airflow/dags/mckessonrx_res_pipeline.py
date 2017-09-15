@@ -20,7 +20,7 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/mckesson_res/pharmacyclaims/{}/'
-DAG_NAME = 'mckesson_res_pipeline'
+DAG_NAME = 'mckessonrx_res_pipeline'
 
 default_args = {
     'owner': 'airflow',
