@@ -64,7 +64,6 @@ HV_SLASH_INCOMING = 'testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/moved
                     if HVDAG.HVDAG.airflow_env == 'test' else 'incoming/cardinal/pds/'
 
 def get_file_date_nodash(kwargs):
-    print (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
     return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
 
 
@@ -231,7 +230,6 @@ def do_get_datetime(ds, **kwargs):
 
     expected_filename = filter(lambda k: re.search(expected_filename, k), files)[0]
     file_datetime = expected_filename[-14:]
-    print 'file datetime: ' + file_datetime
     kwargs['ti'].xcom_push(key = 'file_datetime', value = file_datetime)
 
 
