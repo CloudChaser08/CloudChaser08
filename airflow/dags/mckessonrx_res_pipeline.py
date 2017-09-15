@@ -1,7 +1,5 @@
-from airflow.models import Variable
-from airflow.operators import PythonOperator, SubDagOperator
+from airflow.operators import SubDagOperator
 from datetime import datetime, timedelta
-from subprocess import check_call
 
 # hv-specific modules
 import common.HVDAG as HVDAG
