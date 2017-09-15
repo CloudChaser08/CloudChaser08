@@ -188,7 +188,7 @@ exports.config = [
     providerPrefix: 'mckessonrx',
     schedule: this.schedule.DAILY,
     startDate: new Date('2017-06-01'),
-    airflowPipelineName: 'mckesson_res_pipeline',
+    airflowPipelineName: 'mckessonrx_res_pipeline',
     expectedFilenameRegex: /^.*HVRes.Record.[0-9]{8}$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('.')[2];
