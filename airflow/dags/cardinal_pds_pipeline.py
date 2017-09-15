@@ -9,6 +9,7 @@ import os
 import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
+import subdags.s3_push_files as s3_push_files
 import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
@@ -56,7 +57,11 @@ TRANSACTION_FILE_PREFIX = 'PDS_record_data_'
 # Deid file
 DEID_FILE_DESCRIPTION = 'Cardinal PDS RX deid file'
 DEID_FILE_NAME_TEMPLATE = 'PDS_deid_data_{}'
-DEID_FILE_NAME_PREFIX = 'PDS_deid_data_'
+DEID_FILE_PREFIX = 'PDS_deid_data_'
+
+# Where raw transactions should go
+HV_SLASH_INCOMING = 'testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/moved_raw/' \
+                    if HVDAG.HVDAG.airflow_env == 'test' else 'incoming/cardinal/pds/'
 
 def get_file_date_nodash(kwargs):
     print (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
@@ -200,6 +205,26 @@ fetch_transaction = SubDagOperator(
     dag = mdag
 )
 
+fetch_deid = SubDagOperator(
+    subdag = s3_fetch_file.s3_fetch_file(
+        DAG_NAME,
+        'fetch_deid_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
+            'expected_file_name_func'   : insert_formatted_regex_function(
+                DEID_FILE_NAME_TEMPLATE
+            ),
+            'regex_name_match'          : True,
+            's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+            's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
+        }
+    ),
+    task_id = 'fetch_deid_file',
+    dag = mdag
+)
+
 def do_get_datetime(ds, **kwargs):
     expected_filename = kwargs['expected_file_name_func'](ds, kwargs)
     files = os.listdir(TRANSACTION_TMP_PATH_TEMPLATE.format(kwargs['ds_nodash']))
@@ -222,20 +247,32 @@ get_datetime = PythonOperator(
     dag = mdag
 )
 
-if HVDAG.HVDAG.airflow_env != 'test':
-    push_s3 = BashOperator(
-        task_id = 'push_s3',
-        params = {
-            's3_key': S3_TRANSACTION_RAW_URL,
+def do_get_incoming_file_paths(ds, kwargs):
+    file_datetime = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
+    tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
+    return [tmp_dir + kwargs['record_file_format'] + file_datetime,
+            tmp_dir + kwargs['deid_file_format'] + file_datetime
+           ]
+
+
+push_s3 = SubDagOperator(
+    subdag = s3_push_files.s3_push_files(
+        DAG_NAME,
+        'push_s3',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'file_paths_func': do_get_incoming_file_paths,
+            'tmp_dir_func': get_tmp_dir,
+            's3_prefix_func': lambda ds, kwargs: HV_SLASH_INCOMING,
             'record_file_format': TRANSACTION_FILE_PREFIX,
             'deid_file_format': DEID_FILE_PREFIX,
-            'hv_slash_inc': 's3://healthverity/incoming/cardinal/pds/'
-        },
-        bash_command = '''
-            aws s3 cp {{ s3_key }}{{ record_file_format }}{{ ti.xcom_pull(task_ids = 'get_datetime', value = 'file_datetime' }} {{ hv_slash_incoming }}
-            aws s3 cp {{ s3_key }}{{ deid_file_format }}{{ ti.xcom_pull(task_ids = 'get_datetime', value = 'file_datetime' }} {{ hv_slash_incoming }}
-        '''
-    )
+            's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
+        }
+    ),
+    task_id = 'push_s3',
+    dag = mdag
+)
 
 decrypt_transaction = SubDagOperator(
     subdag = decrypt_files.decrypt_files(
@@ -337,9 +374,6 @@ detect_move_normalize_dag = SubDagOperator(
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
     queue_up_for_matching.set_upstream(validate_deid)
-
-    push_s3.set_upstream(get_datetime)
-
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
@@ -348,5 +382,6 @@ else:
     
 get_datetime.set_upstream(fetch_transaction)
 decrypt_transaction.set_upstream(get_datetime)
+push_s3.set_upstream([get_datetime, fetch_deid])
 split_transaction.set_upstream(decrypt_transaction)
-clean_up_workspace.set_upstream(split_transaction)
+clean_up_workspace.set_upstream([push_s3, split_transaction])
