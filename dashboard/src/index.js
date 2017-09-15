@@ -133,7 +133,7 @@ exports.handler = function(event, context) {
         // join relevant incoming file list to the airflow data for
         // this provider
         var allData = buildFullDataset(airflowRes, providerS3Res).sort(function(row1, row2) {
-          return row1.executionDate.localeCompare(row2.executionDate);
+          return -row1.executionDate.localeCompare(row2.executionDate);
         });
 
         // filter out days with no incoming files
