@@ -92,12 +92,13 @@ def generate_file_validation_task(
                 's3_prefix'                 : '/'.join(S3_DEID_RAW_URL.split('/')[3:]),
                 's3_bucket'                 : 'hvincoming',
                 'file_description'          : 'Cardinal MPI ' + task_id + ' file',
-                'regex_name_match'          : True
+                'regex_name_match'          : True,
+                'quiet_retries'             : 24
             }
         ),
         task_id='validate_' + task_id + '_file',
-        retries=10,
-        retry_delay=timedelta(minutes=15),
+        retries=6,
+        retry_delay=timedelta(minutes=2),
         dag=mdag
     )
 
