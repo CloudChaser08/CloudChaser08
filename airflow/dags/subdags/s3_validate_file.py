@@ -71,6 +71,8 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         provide_context=True,
         python_callable=do_is_valid_new_file,
         op_kwargs=is_valid_params,
+        retries=dag_config.get('quiet_retries', 0),
+        retry_interval=timedelta(minutes=10),
         dag=dag
     )
     

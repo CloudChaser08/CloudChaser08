@@ -42,8 +42,8 @@ def do_detect_matching_done(ds, **kwargs):
     for deid_file in deid_files:
         s3_key = template.format(s3_path_prefix, deid_file)
         logging.info('Poking for key : {}'.format(s3_key))
-        while not s3_utils.s3_key_exists(s3_key):
-            time.sleep(60)
+        if not s3_utils.s3_key_exists(s3_key):
+            raise ValueError('S3 key not found')
 
 def do_move_matching_payload(ds, **kwargs):
     deid_files = kwargs['expected_matching_files_func'](ds, kwargs)
@@ -157,7 +157,8 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         task_id='detect_matching_done',
         provide_context=True,
         python_callable=do_detect_matching_done,
-        execution_timeout=timedelta(hours=6),
+        retry_delay=timedelta(minutes=2),
+        retries=180, #6 hours of retrying
         op_kwargs=dag_config,
         dag=dag
     )
