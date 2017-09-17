@@ -1,6 +1,7 @@
 from airflow.models import Variable
 from airflow.operators import BashOperator, \
     BranchPythonOperator, SlackAPIOperator
+from datetime import timedelta
 import re
 
 import util.s3_utils as s3_utils
