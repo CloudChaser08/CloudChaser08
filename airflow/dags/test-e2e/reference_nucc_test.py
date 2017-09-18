@@ -21,8 +21,8 @@ def test_run():
 
     subprocess.check_call([
         'airflow', 'backfill', 'reference_nucc',
-        '-s', '2009-01-08',
-        '-e', '2009-02-08',
+        '-s', '2008-12-08',
+        '-e', '2008-12-08',
         '-I'
     ])
 
@@ -44,4 +44,9 @@ def test_cleanup():
 
 
 if __name__ == '__main__':
+    # Run the DAG
     test_run()
+    # Run tests
+    test_csv_file_pushed()
+    test_parquet_file_created()
+

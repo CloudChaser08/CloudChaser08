@@ -129,18 +129,18 @@ def scrape_nucc(ds, **kwargs):
 
     crawler.settings.set('LOG_ENABLED', False)
     
-    date_parts = ds.split('-')
+    date_parts = kwargs['get_date_func'](kwargs['execution_date']).split('-')
     expected_date_nucc_format = date_parts[1].lstrip('0') + '/1/' + date_parts[0][2:]
     crawler.settings.set('EXPECTED_DATE', expected_date_nucc_format)
 
-    crawler.settings.set('TMP_DIR', TMP_DIR + ds)
+    crawler.settings.set('TMP_DIR', TMP_DIR + kwargs['get_date_func'](kwargs['execution_date']))
     crawler.crawl(nucc_spider())
 
     crawler.start()
 
 
 def do_create_emr_cluster(ds, emr_cluster_name, emr_num_nodes, emr_node_type, emr_ebs_volume_size, **kwargs):
-    cluster_name = emr_cluster_name.format(ds)
+    cluster_name = emr_cluster_name.format(kwargs['get_date_func'](kwargs['execution_date']))
 
     emr_utils.create_emr_cluster(
         cluster_name, emr_num_nodes, emr_node_type,
@@ -149,7 +149,7 @@ def do_create_emr_cluster(ds, emr_cluster_name, emr_num_nodes, emr_node_type, em
 
 def do_execute_queries(ds, ds_nodash, schema, s3_text, s3_parquet, ref_nucc_schema, **kwargs):
     sqls = [
-        '''DROP TABLE IF EXISTS {}.temp_ref_nucc_{}'''.format(schema, ds_nodash),
+        '''DROP TABLE IF EXISTS {}.temp_ref_nucc_{}'''.format(schema, kwargs['get_date_nodash_func'](kwargs['execution_date'])),
         '''
         CREATE EXTERNAL TABLE {}.temp_ref_nucc_{} (
             {}
@@ -157,7 +157,7 @@ def do_execute_queries(ds, ds_nodash, schema, s3_text, s3_parquet, ref_nucc_sche
         ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
         STORED AS TEXTFILE
         LOCATION 's3a://{}{}/'
-        '''.format(schema, ds_nodash, ref_nucc_schema, s3_text, ds),
+        '''.format(schema, kwargs['get_date_nodash_func'](kwargs['execution_date']), ref_nucc_schema, s3_text, kwargs['get_date_func'](kwargs['execution_date'])),
         ''' CREATE EXTERNAL TABLE IF NOT EXISTS {}.ref_nucc (
                 {}
             )
@@ -168,35 +168,54 @@ def do_execute_queries(ds, ds_nodash, schema, s3_text, s3_parquet, ref_nucc_sche
             )
             STORED AS PARQUET
             LOCATION 's3a://{}{}/'
-        '''.format(schema, ds_nodash, ref_nucc_schema, s3_parquet, ds),
+        '''.format(schema, kwargs['get_date_nodash_func'](kwargs['execution_date']), ref_nucc_schema, s3_parquet, kwargs['get_date_func'](kwargs['execution_date'])),
         ''' INSERT INTO {0}.ref_nucc_new_{1}
             SELECT * FROM (
                 SELECT * FROM {0}.temp_ref_nucc_{1}
                 UNION
                 SELECT * FROM {0}.ref_nucc
             ) a
-        '''.format(schema, ds_nodash),
-        ''' ALTER TABLE {}.ref_nucc SET LOCATION 's3a://{}{}/' '''.format(schema, s3_parquet, ds),
-        ''' DROP TABLE {}.temp_ref_nucc_{} '''.format(schema, ds_nodash),
-        ''' DROP TABLE {}.ref_nucc_new_{} '''.format(schema, ds_nodash)
+        '''.format(schema, kwargs['get_date_nodash_func'](kwargs['execution_date'])),
+        ''' ALTER TABLE {}.ref_nucc SET LOCATION 's3a://{}{}/' '''.format(schema, s3_parquet, kwargs['get_date_func'](kwargs['execution_date'])),
+        ''' DROP TABLE {}.temp_ref_nucc_{} '''.format(schema, kwargs['get_date_nodash_func'](kwargs['execution_date'])),
+        ''' DROP TABLE {}.ref_nucc_new_{} '''.format(schema, kwargs['get_date_nodash_func'](kwargs['execution_date']))
     ]
 
-    cluster_name = EMR_CLUSTER_NAME.format(ds)
+    cluster_name = EMR_CLUSTER_NAME.format(kwargs['get_date_func'](kwargs['execution_date']))
     emr_utils.run_hive_queries(cluster_name, sqls)
 
 
 def do_delete_cluster(ds, **kwargs):
-    cluster_name = EMR_CLUSTER_NAME.format(ds)
+    cluster_name = EMR_CLUSTER_NAME.format(kwargs['get_date_func'](kwargs['execution_date']))
 
     emr_utils.delete_emr_cluster(cluster_name)
+
+
+def get_correct_date(execution_date):
+    day = execution_date.day
+    month = (execution_date.month + 1) % 12
+    year = execution_date.year if month > execution_date.month else execution_date.year + 1
+    correct_date = datetime(year, month, day)
+    return correct_date.strftime('%Y-%m-%d')
+
+
+def get_correct_date_nodash(execution_date):
+    day = execution_date.day
+    month = (execution_date.month + 1) % 12
+    year = execution_date.year if month > execution_date.month else execution_date.year + 1
+    correct_date = datetime(year, month, day)
+    return correct_date.strftime('%Y%m%d')
 
 
 ### Operators ###
 
 create_tmp_dir = BashOperator(
     task_id = 'create_tmp_dir',
-    params = { 'TMP_DIR': TMP_DIR },
-    bash_command = 'mkdir -p {{ params.TMP_DIR }}{{ ds }}',
+    params = { 
+        'TMP_DIR': TMP_DIR,
+        'get_date_func': get_correct_date
+    },
+    bash_command = 'mkdir -p {{ params.TMP_DIR }}{{ params.get_date_func(execution_date) }}',
     retries = 3,
     dag = dag
 )
@@ -204,6 +223,9 @@ create_tmp_dir = BashOperator(
 fetch_csv = PythonOperator(
     task_id = 'fetch_csv',
     python_callable=scrape_nucc,
+    op_kwargs = {
+        'get_date_func': get_correct_date
+    },
     provide_context=True,
     dag=dag
 )
@@ -227,16 +249,23 @@ append_version_to_csv = BashOperator( task_id = 'append_version_to_csv',
 
 push_csv_to_s3 = BashOperator(
     task_id = 'push_csv_to_s3',
-    params = { 'TMP_DIR': TMP_DIR, 'S3_TEXT': S3_TEXT },
-    bash_command = '''/usr/local/bin/aws s3 cp --sse AES256 {{ ti.xcom_pull(task_ids = 'fetch_csv', key = 'file_loc') }} s3://{{ params.S3_TEXT }}{{ ds }}/nucc.csv''',
+    params = { 
+        'TMP_DIR': TMP_DIR,
+        'S3_TEXT': S3_TEXT,
+        'get_date_func': get_correct_date
+    },
+    bash_command = '''/usr/local/bin/aws s3 cp --sse AES256 {{ ti.xcom_pull(task_ids = 'fetch_csv', key = 'file_loc') }} s3://{{ params.S3_TEXT }}{{ params.get_date_func(execution_date) }}/nucc.csv''',
     retries = 3,
     dag = dag
 )
 
 delete_tmp_dir = BashOperator(
     task_id = 'delete_tmp_dir',
-    params = { 'TMP_DIR': TMP_DIR },
-    bash_command = 'rm -r {{ params.TMP_DIR }}{{ ds }}',
+    params = {
+        'TMP_DIR': TMP_DIR,
+        'get_date_func': get_correct_date
+    },
+    bash_command = 'rm -r {{ params.TMP_DIR }}{{ params.get_date_func(execution_date) }}',
     retries = 3,
     dag = dag
 )
@@ -247,7 +276,8 @@ create_emr_cluster = PythonOperator(
         'emr_cluster_name': EMR_CLUSTER_NAME,
         'emr_num_nodes': EMR_NUM_NODES,
         'emr_node_type': EMR_NODE_TYPE,
-        'emr_ebs_volume_size': EMR_EBS_VOLUME_SIZE
+        'emr_ebs_volume_size': EMR_EBS_VOLUME_SIZE,
+        'get_date_func': get_correct_date
     },
     python_callable = do_create_emr_cluster,
     provide_context = True,
@@ -260,7 +290,9 @@ execute_queries = PythonOperator(
         'schema': SCHEMA,
         's3_text': S3_TEXT,
         's3_parquet': S3_PARQUET,
-        'ref_nucc_schema': REF_NUCC_SCHEMA
+        'ref_nucc_schema': REF_NUCC_SCHEMA,
+        'get_date_func': get_correct_date,
+        'get_date_nodash_func': get_correct_date_nodash
     },
     python_callable = do_execute_queries,
     provide_context = True,
@@ -269,6 +301,9 @@ execute_queries = PythonOperator(
 
 delete_cluster = PythonOperator(
     task_id = 'delete_cluster',
+    op_kwargs = {
+        'get_date_func': get_correct_date
+    },
     python_callable = do_delete_cluster,
     provide_context = True,
     dag = dag
