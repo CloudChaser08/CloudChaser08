@@ -21,8 +21,8 @@ def test_run():
 
     subprocess.check_call([
         'airflow', 'backfill', 'reference_nucc',
-        '-s', '2008-12-08',
-        '-e', '2008-12-08',
+        '-s', '2008-07-08',
+        '-e', '2008-07-08',
         '-I'
     ])
 

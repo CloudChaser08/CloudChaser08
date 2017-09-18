@@ -193,7 +193,7 @@ def do_delete_cluster(ds, **kwargs):
 
 def get_correct_date(execution_date):
     day = execution_date.day
-    month = (execution_date.month + 1) % 12
+    month = (execution_date.month + 6) % 12
     year = execution_date.year if month > execution_date.month else execution_date.year + 1
     correct_date = datetime(year, month, day)
     return correct_date.strftime('%Y-%m-%d')
@@ -201,7 +201,7 @@ def get_correct_date(execution_date):
 
 def get_correct_date_nodash(execution_date):
     day = execution_date.day
-    month = (execution_date.month + 1) % 12
+    month = (execution_date.month + 6) % 12
     year = execution_date.year if month > execution_date.month else execution_date.year + 1
     correct_date = datetime(year, month, day)
     return correct_date.strftime('%Y%m%d')
