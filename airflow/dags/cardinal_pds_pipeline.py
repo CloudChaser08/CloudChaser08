@@ -217,7 +217,7 @@ fetch_deid = SubDagOperator(
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
+            's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
     task_id = 'fetch_deid_file',
@@ -265,7 +265,7 @@ push_s3 = SubDagOperator(
             's3_prefix_func': lambda ds, kwargs: HV_SLASH_INCOMING,
             'record_file_format': TRANSACTION_FILE_PREFIX,
             'deid_file_format': DEID_FILE_PREFIX,
-            's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
+            's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
     task_id = 'push_s3',
