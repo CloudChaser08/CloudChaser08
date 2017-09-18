@@ -58,7 +58,7 @@ default_args = {
 dag = HVDAG.HVDAG(
     'reference_nucc',
     default_args = default_args,
-    start_date = datetime(2009, 1, 8),
+    start_date = datetime(2008, 12, 8),
     # Run on the 8th day of the month every six months
     schedule_interval = '0 0 8 */6 *',
 )
