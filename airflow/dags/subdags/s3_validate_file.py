@@ -25,6 +25,8 @@ def do_is_valid_new_file(ds, **kwargs):
     )
 
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
+        if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > 0:
+            raise ValueError('No files of the expected pattern')
         return kwargs['is_bad_name']
 
     # Check if there are files matching the name exactly, or, if regex match
@@ -33,6 +35,8 @@ def do_is_valid_new_file(ds, **kwargs):
             or ('regex_name_match' in kwargs and kwargs['regex_name_match'] and \
             len(filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)) > 0)):
 
+        if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > 0:
+            raise ValueError('No new file found')
         return kwargs['is_not_new']
 
     # Grab the first key that's either an exact match or a partial match
@@ -42,6 +46,8 @@ def do_is_valid_new_file(ds, **kwargs):
     if s3_utils.get_file_size(
             's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/' + s3_key, s3_connection_id
     ) < minimum_file_size:
+        if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > 0:
+            raise ValueError('File is of an unexpected size')
         return kwargs['is_not_valid']
 
     return kwargs['is_new_valid']
@@ -66,6 +72,7 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
     is_valid_params['is_not_valid'] = 'alert_file_size_problem'
     is_valid_params['is_not_new'] = 'alert_no_new_file'
     is_valid_params['is_bad_name'] = 'alert_is_bad_name'
+    is_valid_params['quiet_retries'] = dag_config.get('quiet_retries', 0)
 
     is_valid_new_file = BranchPythonOperator(
         task_id='is_new_file',
