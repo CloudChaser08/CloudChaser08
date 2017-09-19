@@ -27,7 +27,7 @@ TMP_PATH_TEMPLATE = '/tmp/cardinal_pds/pharmacyclaims/{}/'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 8, 25), # Unclear when this is going to start
+    'start_date': datetime(2017, 9, 15, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -47,6 +47,9 @@ else:
     S3_TRANSACTION_RAW_URL = 's3://hvincoming/cardinal_raintree/pds/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/cardinal_pds/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/cardinal_pds/'
+
+S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/deliverable/cardinal_pds-0/%Y/%m/%d/part-00000.gz'
+S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/pds/cardinal_pds_normalized_%Y%m%d.psv.gz'
 
 # Transaction Addon file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
@@ -164,12 +167,13 @@ def generate_file_validation_task(
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'               : 'hvincoming',
-                'file_description'        : 'Cardinal PDS RX ' + task_id + ' file'
+                'file_description'        : 'Cardinal PDS RX ' + task_id + ' file',
+                'quiet_retries'           : 24,
             }
         ),
         task_id = 'validate_' + task_id + '_file',
-        retries = 10,
-        retry_delay = timedelta(minutes = 15),
+        retries = 6,
+        retry_delay = timedelta(minutes = 2),
         dag = mdag
     )
 
@@ -328,7 +332,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : get_deid_file_urls
+                'source_files_func' : get_deid_file_urls,
+                'priority'          : 'priority1'
             }
         ),
         task_id='queue_up_for_matching',
@@ -368,6 +373,29 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+if HVDAG.HVDAG.airflow_env != 'test':
+    def do_deliver_data(ds, **kwargs):
+        source_file_url = insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs)
+        destination_file_url = insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs)
+        destination_file_name = destination_file_url.split('/')[-1]
+        file_dir = get_tmp_dir(ds, kwargs)
+
+        check_call(['aws', 's3', 'cp', source_file_url, file_dir + destination_file_name])
+        env = dict(os.environ)
+        env['AWS_ACCESS_KEY_ID'] = Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID')
+        env['AWS_SECRET_ACCESS_KEY'] = Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
+        check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--acl', \
+            'bucket-owner-full-control', file_dir + destination_file_name, \
+            destination_file_url], env=env)
+
+
+    deliver_normalized_data = PythonOperator(
+        task_id='deliver_normalized_data',
+        provide_context=True,
+        python_callable=do_deliver_data,
+        dag=mdag
+    )
+
 ### Dag Structure ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
@@ -375,6 +403,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
+    deliver_normalized_data.set_upstream(detect_move_normalize_dag)
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
     
