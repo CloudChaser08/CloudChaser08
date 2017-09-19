@@ -15,8 +15,8 @@ def _col_fill_rate(c):
     '''
 
     row_count = count(col(c))
-    is_null = col(c).isNotNull() & ~isnan(c) & ~col(c).isin(['', ' '])
-    fr = (sum(is_null.cast("integer")) / row_count).alias(c)
+    is_not_null = col(c).isNotNull() & ~isnan(c) & ~col(c).isin(['', ' '])
+    fr = (sum(is_not_null.cast("integer")) / row_count).alias(c)
     return fr
 
 
