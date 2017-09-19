@@ -7,7 +7,7 @@ from spark.spark_setup import init
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
-ANALYTICSDB_SCHEMA = 'for321'
+FORESITE_SCHEMA = 'for321'
 
 S3_FORESITE_OUT = 's3://salusv/projects/foresite_capital/hv000321/delivery/'
 S3_FORESITE_PHARMACY_OUT_TEMPLATE = S3_FORESITE_OUT + '{}/pharmacy_claims_t2d'
