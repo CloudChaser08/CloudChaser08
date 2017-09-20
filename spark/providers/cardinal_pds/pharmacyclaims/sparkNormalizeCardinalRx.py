@@ -113,7 +113,7 @@ LOCATION '{}'
 
     runner.run_spark_script('create_cardinal_deliverable.sql', [
         ['location', deliverable_path],
-        ['partition', org_num_partitions, False]
+        ['partitions', org_num_partitions, False]
     ])
 
     # Remove the ids Cardinal created for their own purposes and de-obfuscate the HVIDs
