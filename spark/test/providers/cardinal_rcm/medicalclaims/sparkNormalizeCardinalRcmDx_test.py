@@ -2,6 +2,8 @@ import pytest
 
 import shutil
 import logging
+import datetime
+from pyspark.sql import Row
 
 import spark.providers.cardinal_rcm.medicalclaims.sparkNormalizeCardinalRcmDX as cardinal_rcm
 import spark.helpers.file_utils as file_utils
@@ -22,6 +24,17 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
+
+    spark['spark'].sparkContext.parallelize([
+        Row(
+            hvm_vdr_feed_id='29',
+            gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
+        )
+    ]).toDF().createTempView('ref_gen_ref')
+
     cardinal_rcm.run(spark['spark'], spark['runner'], '2017-12-31', True)
     global results
     results = spark['sqlContext'].sql('select * from medicalclaims_common_model') \
