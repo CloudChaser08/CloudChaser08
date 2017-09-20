@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col, sum, isnan, count
+from pyspark.sql.functions import col, sum, isnan, count, trim
 
 def _col_fill_rate(c):
     '''
@@ -15,7 +15,7 @@ def _col_fill_rate(c):
     '''
 
     row_count = count(col(c))
-    is_not_null = col(c).isNotNull() & ~isnan(c) & ~col(c).isin(['', ' '])
+    is_not_null = col(c).isNotNull() & ~isnan(c) & (trim(col(c)) != '')
     fr = (sum(is_not_null.cast("integer")) / row_count).alias(c)
     return fr
 
