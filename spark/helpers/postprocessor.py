@@ -1,7 +1,7 @@
 # Generic, agnostic functions to be applied on a dataframe
 
 import spark.helpers.udf.general_helpers as gen_helpers
-from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, upper
+from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, upper, coalesce
 import functools
 import logging
 import time
@@ -115,7 +115,8 @@ def apply_whitelist(sqlc, col_name, domain_name):
 def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names):
     """
     Add columns to a dataframe that are universal across all
-    healthverity datasets. Cache the dataframe so the
+    healthverity datasets. If filename is None, the input_file_name
+    will be derived via the built in function. Cache the dataframe so the
     monotonically_increasing_id is not recalculated on every query
 
     The dataframe is assumed to have the following columns:
@@ -135,7 +136,7 @@ def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names
     def add(df):
         return df.withColumn(record_id, monotonically_increasing_id())                   \
                  .withColumn(created, lit(time.strftime('%Y-%m-%d', time.localtime())))  \
-                 .withColumn(data_set, lit(filename))                                    \
+                 .withColumn(data_set, coalesce(lit(filename), col(data_set)))           \
                  .withColumn(data_feed, lit(feed_id))                                    \
                  .withColumn(data_vendor, lit(vendor_id))                                \
                  .cache()
