@@ -412,7 +412,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
-    fetch_normalized_date.set_upstream(detect_move_normalize_dag)
+    fetch_normalized_data.set_upstream(detect_move_normalize_dag)
     deliver_normalized_data.set_upstream(fetch_normalized_data)
     clean_up_workspace.set_upstream([push_s3, deliver_normalized_data])
 else:
