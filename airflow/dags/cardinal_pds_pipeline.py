@@ -374,26 +374,37 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    def do_deliver_data(ds, **kwargs):
-        source_file_url = insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs)
-        destination_file_url = insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs)
-        destination_file_name = destination_file_url.split('/')[-1]
-        file_dir = get_tmp_dir(ds, kwargs)
-
-        check_call(['aws', 's3', 'cp', source_file_url, file_dir + destination_file_name])
-        env = dict(os.environ)
-        env['AWS_ACCESS_KEY_ID'] = Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID')
-        env['AWS_SECRET_ACCESS_KEY'] = Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
-        check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--acl', \
-            'bucket-owner-full-control', file_dir + destination_file_name, \
-            destination_file_url], env=env)
-
-
-    deliver_normalized_data = PythonOperator(
-        task_id='deliver_normalized_data',
+    fetch_normalized_data = PythonOperator(
+        task_id='fetch_normalized_data',
         provide_context=True,
-        python_callable=do_deliver_data,
+        python_callable=lambda ds, kwargs: \
+            s3_utils.fetch_file_from_s3(
+                insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs),
+                get_tmp_dir(ds, kwargs)
+        ),
         dag=mdag
+    )
+
+    deliver_normalized_data = SubDagOperator(
+        subdag = s3_push_files.s3_push_files(
+            DAG_NAME,
+            'deliver_normalized_data',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'file_paths_func'       : lambda ds, kwargs: (
+                    get_tmp_dir(ds, kwargs) + \
+                        insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
+                ),
+                's3_prefix_func'        : lambda ds, kwargs: \
+                    '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
+                's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
+                'aws_secret_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
+                'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
+            }
+        ),
+        task_id = 'deliver_normalized_data',
+        dag = mdag
     )
 
 ### Dag Structure ###
@@ -403,12 +414,14 @@ if HVDAG.HVDAG.airflow_env != 'test':
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
-    deliver_normalized_data.set_upstream(detect_move_normalize_dag)
+    fetch_normalized_date.set_upstream(detect_move_normalize_dag)
+    deliver_normalized_data.set_upstream(fetch_normalized_data)
+    clean_up_workspace.set_upstream([push_s3, deliver_normalized_data])
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
+    clean_up_workspace.set_upstream([push_s3, split_transaction])
     
 get_datetime.set_upstream(fetch_transaction)
 decrypt_transaction.set_upstream(get_datetime)
 push_s3.set_upstream([get_datetime, fetch_deid])
 split_transaction.set_upstream(decrypt_transaction)
-clean_up_workspace.set_upstream([push_s3, split_transaction])
