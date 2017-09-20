@@ -1,14 +1,12 @@
 import spark.helpers.privacy.emr.common as emr_priv_common
+import spark.helpers.postprocessor as postprocessor
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
-procedure_transformer = {
-    'proc_cd': {
-        'func': post_norm_cleanup.clean_up_procedure_code,
-        'args': ['proc_cd']
-    },
-    'proc_diag_cd': {
-        'func': post_norm_cleanup.clean_up_diagnosis_code,
-        'args': ['proc_diag_cd', 'proc_diag_cd_qual', 'proc_dt']
+vital_sign_transformer = {
+    'vit_sign_msrmt': {
+        'func': post_norm_cleanup.clean_up_vital_sign,
+        'args': ['vit_sign_typ_cd', 'vit_sign_msrmt', 'vit_sign_uom', 'ptnt_gender_cd', \
+                'ptnt_age_num', 'ptnt_birth_yr', 'data_captr_dt', 'enc_dt']
     }
 }
 
@@ -23,6 +21,6 @@ def filter(sqlc, update_whitelists=lambda x: x):
                 for whitelist in whtlsts
             ]
         )(
-            emr_priv_common.filter(df, procedure_transformer)
+            emr_priv_common.filter(df, vital_sign_transformer)
         )
     return out

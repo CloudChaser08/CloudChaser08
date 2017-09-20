@@ -13,15 +13,20 @@ whitelists = [
     {
         'column_name': 'enc_typ_nm',
         'domain_name': 'emr_enc.enc_typ_nm'
+    },
+    {
+        'column_name': 'enc_desc',
+        'domain_name': 'emr_enc.enc_desc'
     }
 ]
 
-def filter(sqlc):
+def filter(sqlc, update_whitelists=lambda x: x):
     def out(df):
+        whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
             *[
                 postprocessor.apply_whitelist(sqlc, whitelist['column_name'], whitelist['domain_name'])
-                for whitelist in whitelists
+                for whitelist in whtlsts
             ]
         )(
             emr_priv_common.filter(df, encounter_transformer)
