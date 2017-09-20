@@ -1,5 +1,6 @@
 import datetime
 import spark.helpers.udf.post_normalization_cleanup as cleanup
+import pytest
 
 
 def test_age_cap():
@@ -92,3 +93,113 @@ def test_clean_up_diagnosis_code():
     assert cleanup.clean_up_diagnosis_code(
         '414.00', '01', datetime.date(2015, 1, 1)
     ) == '41400'
+
+def test_zip_code_masking():
+    # no zip code
+    assert cleanup.mask_zip_code(None) is None
+
+    # low population zip code
+    assert cleanup.mask_zip_code("823") == "000"
+
+    # valid zip code
+    assert cleanup.mask_zip_code("190") == "190"
+
+def test_vital_sign_clean_up():
+    # Bad units
+    with pytest.raises(NotImplementedError):
+        cleanup.clean_up_vital_sign('HEIGHT', '53', 'CENTIMETERS', 'M', '48', None, None, None)
+
+    # vital sign that we don't clean up
+    assert cleanup.clean_up_vital_sign('O2_SATURATION', '85', 'PERCENT', 'M', '48', None, None, None) == '85'
+
+    # Peter Dinklage 
+    # Age, no YOB
+    assert cleanup.clean_up_vital_sign('HEIGHT', '53', 'INCHES', 'M', '48', None, None, None) \
+        is None
+
+    # No age, YOB and measurement date
+    assert cleanup.clean_up_vital_sign('HEIGHT', '53', 'INCHES', 'M', None, '1969', datetime.datetime(2017, 8, 31), None) \
+        is None
+
+    # No age, YOB and encounter date
+    assert cleanup.clean_up_vital_sign('HEIGHT', '53', 'INCHES', 'M', None, '1969', None, datetime.datetime(2017, 8, 31)) \
+        is None
+
+    # No age, no YOB, yes encounter date
+    assert cleanup.clean_up_vital_sign('HEIGHT', '53', 'INCHES', 'M', None, None, None, datetime.datetime(2017, 8, 31)) \
+        is None
+
+    # No age, no gender
+    assert cleanup.clean_up_vital_sign('HEIGHT', '53', 'INCHES', None, None, None, None, datetime.datetime(2017, 8, 31)) \
+        is None
+
+    # George Clooney
+    # Age, no YOB
+    assert cleanup.clean_up_vital_sign('HEIGHT', '73', 'INCHES', 'M', '56', None, None, None) \
+        == '73'
+
+    # No age, YOB and measurement date
+    assert cleanup.clean_up_vital_sign('HEIGHT', '73', 'INCHES', 'M', None, '1961', datetime.datetime(2017, 8, 31), None) \
+        == '73'
+
+    # No age, YOB and encounter date
+    assert cleanup.clean_up_vital_sign('HEIGHT', '73', 'INCHES', 'M', None, '1961', None, datetime.datetime(2017, 8, 31)) \
+        == '73'
+
+    # No age, no YOB, yes encounter date
+    assert cleanup.clean_up_vital_sign('HEIGHT', '73', 'INCHES', 'M', None, None, None, datetime.datetime(2017, 8, 31)) \
+        is None
+
+    # No age, no gender
+    assert cleanup.clean_up_vital_sign('HEIGHT', '73', 'INCHES', None, None, None, None, datetime.datetime(2017, 8, 31)) \
+        is None
+
+    # Shaquille O'Neal
+    # Age, no YOB
+    assert cleanup.clean_up_vital_sign('HEIGHT', '85', 'INCHES', 'M', '45', None, None, None) \
+        is None
+
+
+    # Nicole Kidman
+    assert cleanup.clean_up_vital_sign('HEIGHT', '71', 'INCHES', 'F', '50', None, None, None) \
+        is None
+
+    # Halle Berry
+    assert cleanup.clean_up_vital_sign('HEIGHT', '65', 'INCHES', 'F', '51', None, None, None) \
+        == '65'
+
+    # High weight
+    assert cleanup.clean_up_vital_sign('WEIGHT', '260', 'POUNDS', 'F', '51', None, None, None) \
+        is None
+
+    # Low weight
+    assert cleanup.clean_up_vital_sign('WEIGHT', '90', 'POUNDS', 'F', '51', None, None, None) \
+        is None
+
+    # Normal weight
+    assert cleanup.clean_up_vital_sign('WEIGHT', '140', 'POUNDS', 'F', '51', None, None, None) \
+        == '140'
+
+    # High BMI index
+    assert cleanup.clean_up_vital_sign('BMI', '45.6', 'INDEX', 'F', '51', None, None, None) \
+        is None
+
+    # Low BMI index
+    assert cleanup.clean_up_vital_sign('BMI', '17.1', 'INDEX', 'F', '51', None, None, None) \
+        is None
+
+    # Normal BMI index
+    assert cleanup.clean_up_vital_sign('BMI', '22.5', 'INDEX', 'F', '51', None, None, None) \
+        == '22.5'
+
+    # High BMI percentile
+    assert cleanup.clean_up_vital_sign('BMI', '99.5', 'PERCENT', 'F', '51', None, None, None) \
+        is None
+
+    # Low BMI percentile
+    assert cleanup.clean_up_vital_sign('BMI', '0.5', 'PERCENT', 'F', '51', None, None, None) \
+        is None
+
+    # Normal BMI percentile
+    assert cleanup.clean_up_vital_sign('BMI', '85', 'PERCENT', 'F', '51', None, None, None) \
+        == '85'
