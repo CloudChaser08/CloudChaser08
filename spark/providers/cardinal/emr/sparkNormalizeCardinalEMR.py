@@ -150,7 +150,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 null_vals=['','NULL'],
                 preprocess_func=lambda c: c.upper() if c else c
             )
-        )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
+        )(runner.sqlContext.sql('select * from {}'.format(table))).createOrReplaceTempView(table)
 
     runner.run_spark_script('normalize_encounter.sql')
     runner.run_spark_script('normalize_diagnosis.sql')
