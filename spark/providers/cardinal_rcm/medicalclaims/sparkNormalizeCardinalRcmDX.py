@@ -39,7 +39,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
-    external_table_loader.load_ref_gen_ref(runner.sqlContext)
+    if not test:
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, "29", "HVM_AVAILABLE_HISTORY_START_DATE")
     earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, "29", "EARLIEST_VALID_SERVICE_DATE")
