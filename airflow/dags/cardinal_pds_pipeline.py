@@ -264,12 +264,10 @@ push_s3 = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'file_paths_func': do_get_incoming_file_paths,
-            'tmp_dir_func': get_tmp_dir,
-            's3_prefix_func': lambda ds, kwargs: HV_SLASH_INCOMING,
-            'record_file_format': TRANSACTION_FILE_PREFIX,
-            'deid_file_format': DEID_FILE_PREFIX,
-            's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
+            'file_paths_func'   : do_get_incoming_file_paths,
+            'tmp_dir_func'      : get_tmp_dir,
+            's3_prefix_func'    : lambda ds, kwargs: HV_SLASH_INCOMING,
+            's3_bucket'         : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
     task_id = 'push_s3',
