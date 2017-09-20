@@ -27,7 +27,7 @@ TMP_PATH_TEMPLATE = '/tmp/cardinal_pds/pharmacyclaims/{}/'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 8, 25), # Unclear when this is going to start
+    'start_date': datetime(2017, 9, 15, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -47,6 +47,9 @@ else:
     S3_TRANSACTION_RAW_URL = 's3://hvincoming/cardinal_raintree/pds/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/cardinal_pds/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/cardinal_pds/'
+
+S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/deliverable/cardinal_pds-0/%Y/%m/%d/part-00000.gz'
+S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/pds/cardinal_pds_normalized_%Y%m%d.psv.gz'
 
 # Transaction Addon file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
@@ -164,12 +167,13 @@ def generate_file_validation_task(
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'               : 'hvincoming',
-                'file_description'        : 'Cardinal PDS RX ' + task_id + ' file'
+                'file_description'        : 'Cardinal PDS RX ' + task_id + ' file',
+                'quiet_retries'           : 24,
             }
         ),
         task_id = 'validate_' + task_id + '_file',
-        retries = 10,
-        retry_delay = timedelta(minutes = 15),
+        retries = 6,
+        retry_delay = timedelta(minutes = 2),
         dag = mdag
     )
 
@@ -260,12 +264,10 @@ push_s3 = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'file_paths_func': do_get_incoming_file_paths,
-            'tmp_dir_func': get_tmp_dir,
-            's3_prefix_func': lambda ds, kwargs: HV_SLASH_INCOMING,
-            'record_file_format': TRANSACTION_FILE_PREFIX,
-            'deid_file_format': DEID_FILE_PREFIX,
-            's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
+            'file_paths_func'   : do_get_incoming_file_paths,
+            'tmp_dir_func'      : get_tmp_dir,
+            's3_prefix_func'    : lambda ds, kwargs: HV_SLASH_INCOMING,
+            's3_bucket'         : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
     task_id = 'push_s3',
@@ -328,7 +330,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : get_deid_file_urls
+                'source_files_func' : get_deid_file_urls,
+                'priority'          : 'priority1'
             }
         ),
         task_id='queue_up_for_matching',
@@ -368,6 +371,40 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+if HVDAG.HVDAG.airflow_env != 'test':
+    fetch_normalized_data = PythonOperator(
+        task_id='fetch_normalized_data',
+        provide_context=True,
+        python_callable=lambda ds, kwargs: \
+            s3_utils.fetch_file_from_s3(
+                insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs),
+                get_tmp_dir(ds, kwargs)
+        ),
+        dag=mdag
+    )
+
+    deliver_normalized_data = SubDagOperator(
+        subdag = s3_push_files.s3_push_files(
+            DAG_NAME,
+            'deliver_normalized_data',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'file_paths_func'       : lambda ds, kwargs: (
+                    get_tmp_dir(ds, kwargs) + \
+                        insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
+                ),
+                's3_prefix_func'        : lambda ds, kwargs: \
+                    '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
+                's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
+                'aws_secret_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
+                'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
+            }
+        ),
+        task_id = 'deliver_normalized_data',
+        dag = mdag
+    )
+
 ### Dag Structure ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
@@ -375,11 +412,14 @@ if HVDAG.HVDAG.airflow_env != 'test':
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
+    fetch_normalized_date.set_upstream(detect_move_normalize_dag)
+    deliver_normalized_data.set_upstream(fetch_normalized_data)
+    clean_up_workspace.set_upstream([push_s3, deliver_normalized_data])
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
+    clean_up_workspace.set_upstream([push_s3, split_transaction])
     
 get_datetime.set_upstream(fetch_transaction)
 decrypt_transaction.set_upstream(get_datetime)
 push_s3.set_upstream([get_datetime, fetch_deid])
 split_transaction.set_upstream(decrypt_transaction)
-clean_up_workspace.set_upstream([push_s3, split_transaction])

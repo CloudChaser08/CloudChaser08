@@ -8,6 +8,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
+import subprocess
 from pyspark.sql.functions import lit
 
 TEXT_FORMAT = """
@@ -17,9 +18,11 @@ LINES TERMINATED BY '\\n'
 STORED AS TEXTFILE
 """
 PARQUET_FORMAT = "STORED AS PARQUET"
+DELIVERABLE_LOC = 'hdfs:///cardinal_pds_deliverable/'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
+    org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
 
     # NOTE: VERIFY THAT THIS IS TRUE BEFORE MERGING
     setid = 'PDS.' + date_obj.strftime('%Y%m%d')
@@ -37,6 +40,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/cardinal_pds/pharmacyclaims/resources/normalized/'
         ) + '/'
         table_format = TEXT_FORMAT
+        deliverable_path = '/tmp/cardinal_pds_deliverable/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/out/{}/'.format(
             date_input.replace('-', '/')
@@ -46,6 +50,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         normalized_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/normalized/'
         table_format = TEXT_FORMAT
+        deliverable_path = DELIVERABLE_LOC
     else:
         input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_pds/{}/'.format(
             date_input.replace('-', '/')
@@ -55,8 +60,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         normalized_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=cardinal_pds/'
         table_format = PARQUET_FORMAT
+        deliverable_path = DELIVERABLE_LOC
 
-    min_date = '2011-02-01'
+    min_date = '2011-01-01'
     max_date = date_input
 
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
@@ -100,6 +106,24 @@ LOCATION '{}'
         ['properties', properties, False]
     ])
 
+    if test:
+        subprocess.check_call(['rm', '-rf', deliverable_path])
+    else:
+        subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', deliverable_path])
+
+    runner.run_spark_script('create_cardinal_deliverable.sql', [
+        ['location', deliverable_path],
+        ['partition', org_num_partitions, False]
+    ])
+
+    # Remove the ids Cardinal created for their own purposes and de-obfuscate the HVIDs
+    clean_hvid_sql = """SELECT *,
+            slightly_deobfuscate_hvid(cast(hvid as integer), 'Cardinal_MPI-0') as clear_hvid
+        FROM pharmacyclaims_common_model"""
+    df = runner.sqlContext.sql(clean_hvid_sql)
+    df.withColumn('hvid', df.clear_hvid).drop('clear_hvid') \
+            .createOrReplaceTempView('pharmacyclaims_common_model')
+
     curr_mo = date_obj.strftime('%Y-%m')
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:
@@ -133,11 +157,23 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-output/'
+        output_path      = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-output/'
+        deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-deliverable-output/'
     else:
-        output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+        output_path      = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+        deliverable_path = 's3://salusv/deliverable/cardinal_pds-0/'
 
+    normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=cardinal_pds/'
+    curr_mo = args.date[:7]
+    prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
+    for mo in [curr_mo, prev_mo]:
+        subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
     normalized_records_unloader.distcp(output_path)
+
+    subprocess.check_call([
+        's3-dist-cp', '--s3ServerSideEncryption', '--src',
+        DELIVERABLE_LOC, '--dest', deliverable_path + args.date.replace('-', '/') + '/'
+    ])
 
 
 if __name__ == "__main__":
