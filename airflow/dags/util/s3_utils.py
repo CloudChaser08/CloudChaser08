@@ -106,9 +106,9 @@ def get_file_size(path, s3_connection_id=DEFAULT_CONNECTION_ID):
     Get the size of a file on s3
     """
     bucket_key = _transform_path_to_bucket_key(path)
-    return _get_s3_hook(s3_connection_id).get_key(
+    return int(_get_s3_hook(s3_connection_id).get_key(
         bucket_key['key'], bucket_key['bucket']
-    ).content_length
+    ).content_length)
 
 
 def s3_key_exists(path, s3_connection_id=DEFAULT_CONNECTION_ID):
