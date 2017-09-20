@@ -2,18 +2,54 @@ INSERT INTO medicalclaims_common_model
 SELECT DISTINCT
     NULL,                   -- record_id
     t.claim_id,             -- claim_id
-    mp.hvid,                -- hvid
+    (
+    SELECT MIN(mp2.hvid)
+    FROM transactions t2
+        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+    WHERE t2.line_seq_no = '1'
+        AND t2.claim_id = t.claim_id
+        ),                  -- hvid
     NULL,                   -- created
     2,                      -- model_version
     NULL,                   -- data_set
     NULL,                   -- data_feed
     NULL,                   -- data_vendor
     NULL,                   -- source_version
-    mp.gender,              -- patient_gender
-    mp.age,                 -- patient_age
-    mp.yearOfBirth,         -- patient_year_of_birth
-    mp.threeDigitZip,       -- patient_zip3
-    UPPER(mp.state),        -- patient_state
+    (
+    SELECT MIN(mp2.gender)
+    FROM transactions t2
+        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+    WHERE t2.line_seq_no = '1'
+        AND t2.claim_id = t.claim_id
+        ),                  -- patient_gender
+    (
+    SELECT MIN(mp2.age)
+    FROM transactions t2
+        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+    WHERE t2.line_seq_no = '1'
+        AND t2.claim_id = t.claim_id
+        ),                  -- patient_age
+    (
+    SELECT MIN(mp2.yearOfBirth)
+    FROM transactions t2
+        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+    WHERE t2.line_seq_no = '1'
+        AND t2.claim_id = t.claim_id
+        ),                  -- patient_year_of_birth
+    (
+    SELECT MIN(mp2.threeDigitZip)
+    FROM transactions t2
+        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+    WHERE t2.line_seq_no = '1'
+        AND t2.claim_id = t.claim_id
+        ),                  -- patient_zip3
+    (
+    SELECT MIN(UPPER(mp2.state))
+    FROM transactions t2
+        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+    WHERE t2.line_seq_no = '1'
+        AND t2.claim_id = t.claim_id
+        ),                  -- patient_state
     'P',                    -- claim_type
     NULL,                   -- date_received
     (SELECT MIN(EXTRACT_DATE(
