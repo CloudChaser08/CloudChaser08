@@ -28,14 +28,24 @@ def test_init(spark):
         data_row('2828', None, None, 'oh no'),
         data_row('0', float('Nan'), None, 'c')
     ]).toDF()
+    results = select_distinct_column.select_distinct_column(distinct_column_name)(df)
+    expected_df = spark['spark'].sparkContext.parallelize([
+        data_row('0', 1, 1, 1),
+        data_row('2929', None, None, None),
+        data_row('2828', None, 1, 2)
+    ]).toDF()
 
 
-def test_something():
-    df.show()
-    test = lambda x: col(x).isNotNull() & ~isnan(x) & (trim(col(x)) != '')
-    test_df = df.select(col(distinct_column_name),
-        *[ test(c).cast('integer').alias(c) for c in df.columns if c != distinct_column_name]) \
-                .groupBy(distinct_column_name).sum().toDF(*df.columns).na.replace(0, '', list(filter(lambda x: x != distinct_column_name, df.columns)))
-    test_df.show()
+def test_expected_values():
+    assert expected_df.subtract(results).count() == 0
+
+
+def test_distinct_row_count_equal():
+    distinct_df = df.select(distinct_column_name).distinct()
+    assert distinct_df.count() == results.count()
+
+
+def test_no_nulls_distinct_column():
+    assert df.filter(col(distinct_column_name).isNull()).count() == 0
 
 
