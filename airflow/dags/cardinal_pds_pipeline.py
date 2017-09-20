@@ -15,11 +15,12 @@ import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
+import subdags.update_analytics_db as update_analytics_db
 import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching, clean_up_tmp_dir,
-          detect_move_normalize, HVDAG, s3_utils]:
+          detect_move_normalize, HVDAG, s3_utils, update_analytics_db]:
     reload(m)
 
 # Applies to all files
@@ -407,6 +408,26 @@ if HVDAG.HVDAG.airflow_env != 'test':
         dag = mdag
     )
 
+    sql_template = """
+        ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='cardinal_pds', part_best_date='{0}-{1}')
+        LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=cardinal_pds/part_best_date={0}-{1}/'
+    """
+
+    update_analytics_db = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_analytics_db',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func' : lambda ds, k: insert_current_date_function(sql_template)(ds, k)
+                if insert_current_date_function('{2}')(ds, k) < '08' else ''
+            }
+        ),
+        task_id='update_analytics_db',
+        dag=mdag
+    )
+
 ### Dag Structure ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_deid.set_upstream(validate_deid)
@@ -417,7 +438,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
     )
     fetch_normalized_data.set_upstream(detect_move_normalize_dag)
     deliver_normalized_data.set_upstream(fetch_normalized_data)
-    clean_up_workspace.set_upstream(deliver_normalized_data)
+    clean_up_workspace.set_upstream([push_s3, deliver_normalized_data])
+    update_analytics_db.set_upstream(detect_move_normalize_dag)
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
     clean_up_workspace.set_upstream(split_transaction)
