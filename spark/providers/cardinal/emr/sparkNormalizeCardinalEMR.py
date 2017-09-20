@@ -139,7 +139,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     transaction_tables = [
         'demographics_transactions', 'diagnosis_transactions', 'encounter_transactions',
-        'lab_transactions', 'dispense_transactions'
+        'lab_transactions', 'dispense_transactions', 'matching_payload'
     ]
 
     # trim and nullify all incoming transactions tables
