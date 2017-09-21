@@ -1,19 +1,4 @@
 from pyspark.sql.functions import col, isnan, trim, udf, collect_list, when
-from pyspark.sql.types import ArrayType, StringType
-
-def _convert_values(c):
-    '''
-    Map values in a column to 1 if not a null value, 0 if a null value
-    Input:
-        - col: dataframe column of type pyspark.sql.Column
-    Output:
-        - mapped: column of type pyspark.sql.Column
-    '''
-
-    is_not_null = col(c).isNotNull() & ~isnan(c) & (trim(col(c)) != '')
-    mapped = is_not_null.cast("integer").alias(c)
-    return mapped
-
 
 def select_distinct_column(distinct_column_name):
     '''
