@@ -1,0 +1,12 @@
+{
+    "providers" : 
+    [
+        {
+            "name"          : "test_provider",
+            "datafeed_id"   : "27",
+            "datatype"      : "medicalclaims",
+            "date_field"    : "date_service",
+            "record_field"  : "claim_id"
+        }
+    ]
+}
