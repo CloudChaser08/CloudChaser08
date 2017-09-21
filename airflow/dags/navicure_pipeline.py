@@ -93,7 +93,7 @@ def insert_formatted_date_function(template):
     return get_formatted_date
 
 def get_parquet_dates(ds, kwargs):
-    return [insert_formatted_date_function('{}-{}-{}')(ds, kwargs)]
+    return [insert_formatted_date_function('{}/{}/{}')(ds, kwargs)]
 
 def get_deid_file_urls(ds, kwargs):
     return ['s3://healthverity/' + S3_DEID_RAW_PATH + get_expected_deid_file_name(ds, kwargs)]
