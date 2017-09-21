@@ -93,47 +93,59 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     runner.run_spark_script('../../../common/emr/clinical_observation_common_model_v4.sql', [
         ['table_name', 'clinical_observation_common_model', False],
-        ['additional_columns', ',part_mth string', False],
+        ['additional_columns', [
+            ['part_mth', 'string']
+        ],
         ['properties', '', False]
     ])
     runner.run_spark_script('../../../common/emr/diagnosis_common_model_v5.sql', [
         ['table_name', 'diagnosis_common_model', False],
-        ['additional_columns', '', False],
+        ['additional_columns', []],
         ['properties', '', False]
     ])
     runner.run_spark_script('../../../common/emr/encounter_common_model_v4.sql', [
         ['table_name', 'encounter_common_model', False],
-        ['additional_columns', '', False],
+        ['additional_columns', []],
         ['properties', '', False]
     ])
     runner.run_spark_script('../../../common/emr/lab_order_common_model_v3.sql', [
         ['table_name', 'lab_order_common_model', False],
-        ['additional_columns', ',part_mth string', False],
+        ['additional_columns', [
+            ['part_mth', 'string']
+        ],
         ['properties', '', False]
     ])
     runner.run_spark_script('../../../common/emr/lab_result_common_model_v4.sql', [
         ['table_name', 'lab_result_common_model', False],
-        ['additional_columns', ',part_mth string', False],
+        ['additional_columns', [
+            ['part_mth', 'string']
+        ],
         ['properties', '', False]
     ])
     runner.run_spark_script('../../../common/emr/medication_common_model_v4.sql', [
         ['table_name', 'medication_common_model', False],
-        ['additional_columns', ',part_mth string', False],
+        ['additional_columns', [
+            ['part_mth', 'string']
+        ],
         ['properties', '', False]
     ])
     runner.run_spark_script('../../../common/emr/procedure_common_model_v4.sql', [
         ['table_name', 'procedure_common_model', False],
-        ['additional_columns', '', False],
+        ['additional_columns', []],
         ['properties', '', False]
     ])
     runner.run_spark_script('../../../common/emr/provider_order_common_model_v4.sql', [
         ['table_name', 'provider_order_common_model', False],
-        ['additional_columns', ',part_mth string', False],
+        ['additional_columns', [
+            ['part_mth', 'string']
+        ],
         ['properties', '', False]
     ])
     runner.run_spark_script('../../../common/emr/vital_sign_common_model_v4.sql', [
         ['table_name', 'vital_sign_common_model', False],
-        ['additional_columns', ',part_mth string', False],
+        ['additional_columns', [
+            ['part_mth', 'string']
+        ],
         ['properties', '', False]
     ])
     logging.debug("Created common model tables")
