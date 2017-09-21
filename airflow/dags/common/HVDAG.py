@@ -19,6 +19,9 @@ class HVDAG(DAG):
             default_args['on_failure_callback'] = self._on_failure
         if 'on_retry_callback' not in default_args and self.airflow_env == 'prod':
             default_args['on_retry_callback'] = self._on_retry
+        if 'clear_all_tasks_on_retry' in kwargs:
+            self.clear_all_tasks_on_retry = kwargs['clear_all_tasks_on_retry']
+            del kwargs['clear_all_tasks_on_retry']
         kwargs['default_args'] = default_args
 
         if 'schedule_interval' in kwargs and self.airflow_env not in ['prod', 'test']:
@@ -43,18 +46,19 @@ class HVDAG(DAG):
         slack.send_message(config.SLACK_CHANNEL, attachment=attachment)
 
     def _on_retry(self, context):
-        """Clears a subdag's tasks on retry.
-            based on https://gist.github.com/nathairtras/6ce0b0294be8c27d672e2ad52e8f2117"""
-        dag_id = "{}.{}".format(
-            context['dag'].dag_id,
-            context['ti'].task_id,
-        )
-        execution_date = context['execution_date']
-        sdag = DagBag().get_dag(dag_id)
-        sdag.clear(
-            start_date=execution_date,
-            end_date=execution_date,
-            only_failed=False,
-            only_running=False,
-            confirm_prompt=False,
-            include_subdags=False)
+        if self.clear_all_tasks_on_retry:
+            """Clears a subdag's tasks on retry.
+                based on https://gist.github.com/nathairtras/6ce0b0294be8c27d672e2ad52e8f2117"""
+            dag_id = "{}.{}".format(
+                context['dag'].dag_id,
+                context['ti'].task_id,
+            )
+            execution_date = context['execution_date']
+            sdag = DagBag().get_dag(dag_id)
+            sdag.clear(
+                start_date=execution_date,
+                end_date=execution_date,
+                only_failed=False,
+                only_running=False,
+                confirm_prompt=False,
+                include_subdags=False)
