@@ -177,7 +177,7 @@ CREATE VIEW default.medicalclaims (
     inst_discharge_status_vendor_desc,
     CASE
         WHEN claim_type = "P" THEN NULL
-        WHEN SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN CONCAT('X', SUBSTRING(inst_type_of_bill_std_id, 2, LEN(inst_type_of_bill_std_id)-1))
+        WHEN SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN CONCAT('X', SUBSTRING(inst_type_of_bill_std_id, 2, LENGTH(inst_type_of_bill_std_id)-1))
         ELSE inst_type_of_bill_std_id
     END AS inst_type_of_bill_std_id,
     inst_type_of_bill_vendor_id,
@@ -188,12 +188,18 @@ CREATE VIEW default.medicalclaims (
     CASE
         WHEN claim_type = "I" THEN NULL
         WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL AND part_provider = "emdeon"
-            AND SUBSTRING(inst_type_of_bill_std_id, 1, 2) IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') 
+            AND ARRAY_CONTAINS(
+                ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'),
+                SUBSTRING(inst_type_of_bill_std_id, 1, 2)
+                )
             THEN '99'
         WHEN claim_type = "P" AND inst_type_of_bill_std_id IS NOT NULL AND place_of_service_std_id IS NULL AND part_provider = "emdeon"
-            AND SUBSTRING(inst_type_of_bill_std_id, 1, 2) NOT IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33')
+            AND NOT ARRAY_CONTAINS(
+                ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'),
+                SUBSTRING(inst_type_of_bill_std_id, 1, 2)
+                )
             THEN SUBSTRING(inst_type_of_bill_std_id, 1, 2)
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') THEN '99'
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) THEN '99'
         ELSE place_of_service_std_id
     END AS place_of_service_std_id,
     place_of_service_vendor_id,
@@ -219,22 +225,22 @@ CREATE VIEW default.medicalclaims (
     total_charge,
     total_allowed,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_npi
     END as prov_rendering_npi,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_npi
     END as prov_billing_npi,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_npi
     END as prov_referring_npi,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_npi
     END as prov_facility_npi,
@@ -246,288 +252,288 @@ CREATE VIEW default.medicalclaims (
     payer_plan_name,
     payer_type,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_vendor_id
     END as prov_rendering_vendor_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_tax_id
     END as prov_rendering_tax_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_dea_id
     END as prov_rendering_dea_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_ssn
     END as prov_rendering_ssn,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_state_license
     END as prov_rendering_state_license,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_upin
     END as prov_rendering_upin,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_commercial_id
     END as prov_rendering_commercial_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_name_1
     END as prov_rendering_name_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_name_2
     END as prov_rendering_name_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_address_1
     END as prov_rendering_address_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_address_2
     END as prov_rendering_address_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_city
     END as prov_rendering_city,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_state
     END as prov_rendering_state,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_zip
     END as prov_rendering_zip,
     prov_rendering_std_taxonomy,
     prov_rendering_vendor_specialty,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_vendor_id
     END as prov_billing_vendor_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_tax_id
     END as prov_billing_tax_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_dea_id
     END as prov_billing_dea_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_ssn
     END as prov_billing_ssn,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_state_license
     END as prov_billing_state_license,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_upin
     END as prov_billing_upin,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_commercial_id
     END as prov_billing_commercial_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_name_1
     END as prov_billing_name_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_name_2
     END as prov_billing_name_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_address_1
     END as prov_billing_address_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_address_2
     END as prov_billing_address_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_city
     END as prov_billing_city,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_state
     END as prov_billing_state,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_zip
     END as prov_billing_zip,
     prov_billing_std_taxonomy,
     prov_billing_vendor_specialty,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_vendor_id
     END as prov_referring_vendor_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_tax_id
     END as prov_referring_tax_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_dea_id
     END as prov_referring_dea_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_ssn
     END as prov_referring_ssn,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_state_license
     END as prov_referring_state_license,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_upin
     END as prov_referring_upin,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_commercial_id
     END as prov_referring_commercial_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_name_1
     END as prov_referring_name_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_name_2
     END as prov_referring_name_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_address_1
     END as prov_referring_address_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_address_2
     END as prov_referring_address_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_city
     END as prov_referring_city,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_state
     END as prov_referring_state,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_zip
     END as prov_referring_zip,
     prov_referring_std_taxonomy,
     prov_referring_vendor_specialty,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_vendor_id
     END as prov_facility_vendor_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_tax_id
     END as prov_facility_tax_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_dea_id
     END as prov_facility_dea_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_ssn
     END as prov_facility_ssn,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_state_license
     END as prov_facility_state_license,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_upin
     END as prov_facility_upin,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_commercial_id
     END as prov_facility_commercial_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_name_1
     END as prov_facility_name_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_name_2
     END as prov_facility_name_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_address_1
     END as prov_facility_address_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_address_2
     END as prov_facility_address_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_city
     END as prov_facility_city,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_state
     END as prov_facility_state,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_zip
     END as prov_facility_zip,
@@ -582,7 +588,7 @@ SELECT CAST(record_id AS bigint),
     inst_discharge_status_vendor_desc,
     CASE
         WHEN claim_type = "P" THEN NULL
-        WHEN SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN CONCAT('X', SUBSTRING(inst_type_of_bill_std_id, 2, LEN(inst_type_of_bill_std_id)-1))
+        WHEN SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN CONCAT('X', SUBSTRING(inst_type_of_bill_std_id, 2, LENGTH(inst_type_of_bill_std_id)-1))
         ELSE inst_type_of_bill_std_id
     END AS inst_type_of_bill_std_id,
     inst_type_of_bill_vendor_id,
@@ -592,7 +598,7 @@ SELECT CAST(record_id AS bigint),
     inst_drg_vendor_desc,
     CASE
         WHEN claim_type = "I" THEN NULL
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') THEN '99'
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) THEN '99'
         ELSE place_of_service_std_id
     END AS place_of_service_std_id,
     place_of_service_vendor_id,
@@ -618,22 +624,22 @@ SELECT CAST(record_id AS bigint),
     CAST(total_charge AS float),
     CAST(total_allowed AS float),
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_npi
     END as prov_rendering_npi,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_npi
     END as prov_billing_npi,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_npi
     END as prov_referring_npi,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_npi
     END as prov_facility_npi,
@@ -645,288 +651,288 @@ SELECT CAST(record_id AS bigint),
     payer_plan_name,
     payer_type,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_vendor_id
     END as prov_rendering_vendor_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_tax_id
     END as prov_rendering_tax_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_dea_id
     END as prov_rendering_dea_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_ssn
     END as prov_rendering_ssn,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_state_license
     END as prov_rendering_state_license,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_upin
     END as prov_rendering_upin,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_commercial_id
     END as prov_rendering_commercial_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_name_1
     END as prov_rendering_name_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_name_2
     END as prov_rendering_name_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_address_1
     END as prov_rendering_address_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_address_2
     END as prov_rendering_address_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_city
     END as prov_rendering_city,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_state
     END as prov_rendering_state,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_zip
     END as prov_rendering_zip,
     prov_rendering_std_taxonomy,
     prov_rendering_vendor_specialty,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_vendor_id
     END as prov_billing_vendor_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_tax_id
     END as prov_billing_tax_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_dea_id
     END as prov_billing_dea_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_ssn
     END as prov_billing_ssn,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_state_license
     END as prov_billing_state_license,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_upin
     END as prov_billing_upin,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_commercial_id
     END as prov_billing_commercial_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_name_1
     END as prov_billing_name_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_name_2
     END as prov_billing_name_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_address_1
     END as prov_billing_address_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_address_2
     END as prov_billing_address_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_city
     END as prov_billing_city,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_state
     END as prov_billing_state,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_zip
     END as prov_billing_zip,
     prov_billing_std_taxonomy,
     prov_billing_vendor_specialty,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_vendor_id
     END as prov_referring_vendor_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_tax_id
     END as prov_referring_tax_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_dea_id
     END as prov_referring_dea_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_ssn
     END as prov_referring_ssn,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_state_license
     END as prov_referring_state_license,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_upin
     END as prov_referring_upin,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_commercial_id
     END as prov_referring_commercial_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_name_1
     END as prov_referring_name_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_name_2
     END as prov_referring_name_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_address_1
     END as prov_referring_address_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_address_2
     END as prov_referring_address_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_city
     END as prov_referring_city,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_state
     END as prov_referring_state,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_zip
     END as prov_referring_zip,
     prov_referring_std_taxonomy,
     prov_referring_vendor_specialty,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_vendor_id
     END as prov_facility_vendor_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_tax_id
     END as prov_facility_tax_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_dea_id
     END as prov_facility_dea_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_ssn
     END as prov_facility_ssn,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_state_license
     END as prov_facility_state_license,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_upin
     END as prov_facility_upin,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_commercial_id
     END as prov_facility_commercial_id,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_name_1
     END as prov_facility_name_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_name_2
     END as prov_facility_name_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_address_1
     END as prov_facility_address_1,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_address_2
     END as prov_facility_address_2,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_city
     END as prov_facility_city,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_state
     END as prov_facility_state,
     CASE
-        WHEN place_of_service_std_id IN ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33') OR
+        WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_zip
     END as prov_facility_zip,
