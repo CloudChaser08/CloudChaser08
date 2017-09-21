@@ -78,8 +78,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
         - all_dfs: a dict of dataframes for each marketplace stat calculated
     '''
 
-    # Get data and provider config
-    all_data_df = get_data_func(sqlContext, datatype, provider_name)
+    # Get provider config
     provider_conf = get_provider_conf_func(provider_name)
 
     # pull out some variables from provider_conf
@@ -87,17 +86,23 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     date_column_field = provider_conf['date_field']
     distinct_column_name = provider_conf['record_field']
 
+    # Get data
+    all_data_df = get_data_func(sqlContext, datatype, provider_name)
+
     # provider, start_date, end_date df cache
     # used for fill rate, top values, and key stats
     if distinct_column_name:
         reduced_df_1 = postprocessor.compose(
-            select_distinct_column.select_distinct_column(distinct_column_field),
-            limit_date_range.limit_date_range(start_date, end_date, date_column_field)
+            limit_date_range.limit_date_range(start_date, end_date, date_column_field),
+            select_distinct_column.select_distinct_column(distinct_column_name)
         )(all_data_df).cache()
     else:
         reduced_df_1 = postprocessor.compose(
             limit_date_range.limit_date_range(start_date, end_date, date_column_field)
         )(all_data_df).cache()
+
+    print 'reduced_df_1'
+    reduced_df_1.show()
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year
