@@ -1,7 +1,7 @@
 import pytest
 
 from pyspark.sql import Row
-from pyspark.sql.functions import col, isnan, trim
+from pyspark.sql.functions import col, isnan, trim, udf
 
 import spark.helpers.stats.select_distinct_column as select_distinct_column
 
@@ -37,7 +37,12 @@ def test_init(spark):
 
 
 def test_expected_values():
-    assert expected_df.subtract(results).count() == 0
+    list_length_udf = udf(lambda x: None if x == None else len(x))
+    non_distinct_columns = list(filter(lambda x: x != distinct_column_name, results.columns))
+    results_length_df = results.withColumn(distinct_column_name, col(distinct_column_name))
+    for c in non_distinct_columns:
+        results_length_df = results_length_df.withColumn(c, list_length_udf(col(c)))
+    assert expected_df.subtract(results_length_df).count() == 0
 
 
 def test_distinct_row_count_equal():
