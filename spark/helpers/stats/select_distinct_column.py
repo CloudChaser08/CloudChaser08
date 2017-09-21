@@ -12,13 +12,6 @@ def select_distinct_column(distinct_column_name):
         out: function that inputs a dataframe and returns the distinct rows
              for each distinct value in the distinct_column_name column
     '''
-#    def out(df):
-#        mapped_df = df.select(col(distinct_column_name),
-#        *[ _convert_values(c) for c in df.columns if c != distinct_column_name]) \
-#                .groupBy(distinct_column_name).sum() \
-#                .toDF(*df.columns).na.replace(0, '', 
-#                    list(filter(lambda x: x != distinct_column_name, df.columns)))
-#        return mapped_df
     def out(df):
         is_not_null = lambda c: col(c).isNotNull() & ~isnan(c) & (trim(col(c)) != '')
         non_distinct_columns = list(filter(lambda x: x != distinct_column_name, df.columns))
