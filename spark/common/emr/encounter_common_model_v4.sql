@@ -39,7 +39,7 @@ CREATE TABLE {table_name} (
         enc_rndrg_fclty_mdcr_speclty_cd      string,
         enc_rndrg_fclty_alt_speclty_id       string,
         enc_rndrg_fclty_alt_speclty_id_qual  string,
-        enc_rndrg_fclty_fclty_nm             string,
+        enc_rndrg_fclty_nm                   string,
         enc_rndrg_fclty_addr_1_txt           string,
         enc_rndrg_fclty_addr_2_txt           string,
         enc_rndrg_fclty_state_cd             string,

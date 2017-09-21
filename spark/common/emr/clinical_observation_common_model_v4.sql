@@ -37,7 +37,7 @@ CREATE TABLE {table_name} (
         clin_obsn_rndrg_fclty_mdcr_speclty_cd      string,
         clin_obsn_rndrg_fclty_alt_speclty_id       string,
         clin_obsn_rndrg_fclty_alt_speclty_id_qual  string,
-        clin_obsn_rndrg_fclty_fclty_nm             string,
+        clin_obsn_rndrg_fclty_nm                   string,
         clin_obsn_rndrg_fclty_addr_1_txt           string,
         clin_obsn_rndrg_fclty_addr_2_txt           string,
         clin_obsn_rndrg_fclty_state_cd             string,

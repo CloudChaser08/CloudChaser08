@@ -93,6 +93,7 @@ CREATE TABLE {table_name} (
         data_captr_dt                         date,
         rec_stat_cd                           string,
         prmy_src_tbl_nm                       string
+        {additional_columns}
         )
     {properties}
     ;

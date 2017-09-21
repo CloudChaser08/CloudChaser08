@@ -67,7 +67,7 @@ CREATE TABLE {table_name} (
         lab_test_exectg_fclty_mdcr_speclty_cd      string,
         lab_test_exectg_fclty_alt_speclty_id       string,
         lab_test_exectg_fclty_alt_speclty_id_qual  string,
-        lab_test_exectg_fclty_fclty_nm             string,
+        lab_test_exectg_fclty_nm                   string,
         lab_test_exectg_fclty_addr_1_txt           string,
         lab_test_exectg_fclty_addr_2_txt           string,
         lab_test_exectg_fclty_state_cd             string,
