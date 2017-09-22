@@ -47,21 +47,37 @@ def test_init(spark):
         return df
 
 
+    fill_rate_conf = { 'columns': ['claim_id', 'service_date', 'col_3'] }
+
     def _inject_get_provider_conf(*params):
         return {
-            'datafeed_id'   : '27',
-            'datatype'      : 'medicalclaims',
-            'date_field'    : 'service_date',
-            'record_field'  : 'claim_id'
+            'name'              : 'test'
+            'datafeed_id'       : '27',
+            'datatype'          : 'medicalclaims',
+            'date_field'        : 'service_date',
+            'record_field'      : 'claim_id',
+            'fill_rate'         : fill_rate_conf,
+            'key_stats'         : None,
+            'top_values'        : None,
+            'longitudinality'   : None,
+            'year_over_year'    : None,
+            'epi_calcs'         : None
         }
 
 
     def _inject_get_provider_conf_no_unique_column(*params):
         return {
-            'datafeed_id'   : '27',
-            'datatype'      : 'medicalclaims',
-            'date_field'    : 'service_date',
-            'record_field'  : None
+            'name'              : 'test'
+            'datafeed_id'       : '27',
+            'datatype'          : 'medicalclaims',
+            'date_field'        : 'service_date',
+            'record_field'      : None,
+            'fill_rate'         : fill_rate_conf,
+            'key_stats'         : None,
+            'top_values'        : None,
+            'longitudinality'   : None,
+            'year_over_year'    : None,
+            'epi_calcs'         : None
         }
 
 
