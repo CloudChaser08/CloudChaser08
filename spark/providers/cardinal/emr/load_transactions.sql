@@ -251,7 +251,6 @@ DROP TABLE IF EXISTS dispense_transactions;
 CREATE EXTERNAL TABLE dispense_transactions (
         id                            string,
         import_source_id              string,
-        rto_written_prescription_id   string,
         practice_id                   string,
         system_id                     string,
         patient_id                    string,
