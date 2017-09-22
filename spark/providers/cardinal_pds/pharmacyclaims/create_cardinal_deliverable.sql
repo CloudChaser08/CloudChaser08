@@ -9,6 +9,7 @@ CREATE TABLE cardinal_deliverable
         "separatorChar" = "|"
     )  
     STORED AS TEXTFILE
+    LOCATION {location}
 AS SELECT * FROM pharmacyclaims_common_model
 DISTRIBUTE BY hvid;
 SET spark.sql.shuffle.partitions={partitions};

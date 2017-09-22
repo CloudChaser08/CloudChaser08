@@ -15,10 +15,11 @@ import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
+import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching, clean_up_tmp_dir,
-          detect_move_normalize, HVDAG]:
+          detect_move_normalize, HVDAG, s3_utils]:
     reload(m)
 
 # Applies to all files
@@ -48,8 +49,8 @@ else:
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/cardinal_pds/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/cardinal_pds/'
 
-S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/deliverable/cardinal_pds-0/%Y/%m/%d/part-00000.gz'
-S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/pds/cardinal_pds_normalized_%Y%m%d.psv.gz'
+S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/deliverable/cardinal_pds-0/{}/{}/{}/part-00000.gz'
+S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/pds/cardinal_pds_normalized_{}{}{}.psv.gz'
 
 # Transaction Addon file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
@@ -158,17 +159,18 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : insert_formatted_file_date_function(
+                'expected_file_name_func' : insert_formatted_regex_function(
                     path_template
                 ),
                 'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
                 ),
+                'regex_name_match'        : True,
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'               : 'hvincoming',
                 'file_description'        : 'Cardinal PDS RX ' + task_id + ' file',
-                'quiet_retries'           : 24,
+                'quiet_retries'           : 24
             }
         ),
         task_id = 'validate_' + task_id + '_file',
@@ -221,7 +223,7 @@ fetch_deid = SubDagOperator(
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
+            's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
         }
     ),
     task_id = 'fetch_deid_file',
@@ -252,8 +254,8 @@ get_datetime = PythonOperator(
 def do_get_incoming_file_paths(ds, kwargs):
     file_datetime = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
-    return [tmp_dir + kwargs['record_file_format'] + file_datetime,
-            tmp_dir + kwargs['deid_file_format'] + file_datetime
+    return [tmp_dir + TRANSACTION_FILE_PREFIX + file_datetime,
+            tmp_dir + DEID_FILE_PREFIX + file_datetime
            ]
 
 
@@ -375,10 +377,10 @@ if HVDAG.HVDAG.airflow_env != 'test':
     fetch_normalized_data = PythonOperator(
         task_id='fetch_normalized_data',
         provide_context=True,
-        python_callable=lambda ds, kwargs: \
+        python_callable=lambda ds, **kwargs: \
             s3_utils.fetch_file_from_s3(
                 insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs),
-                get_tmp_dir(ds, kwargs)
+                get_tmp_dir(ds, kwargs) + insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
         ),
         dag=mdag
     )
@@ -390,14 +392,14 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'file_paths_func'       : lambda ds, kwargs: (
+                'file_paths_func'       : lambda ds, kwargs: [
                     get_tmp_dir(ds, kwargs) + \
                         insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
-                ),
+                ],
                 's3_prefix_func'        : lambda ds, kwargs: \
-                    '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
+                    '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:-1]) + '/',
                 's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
-                'aws_secret_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
+                'aws_access_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
                 'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
             }
         ),
@@ -407,6 +409,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 ### Dag Structure ###
 if HVDAG.HVDAG.airflow_env != 'test':
+    fetch_deid.set_upstream(validate_deid)
     fetch_transaction.set_upstream(validate_transaction)
     queue_up_for_matching.set_upstream(validate_deid)
     detect_move_normalize_dag.set_upstream(
@@ -414,12 +417,12 @@ if HVDAG.HVDAG.airflow_env != 'test':
     )
     fetch_normalized_data.set_upstream(detect_move_normalize_dag)
     deliver_normalized_data.set_upstream(fetch_normalized_data)
-    clean_up_workspace.set_upstream([push_s3, deliver_normalized_data])
+    clean_up_workspace.set_upstream(deliver_normalized_data)
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
-    clean_up_workspace.set_upstream([push_s3, split_transaction])
+    clean_up_workspace.set_upstream(split_transaction)
     
 get_datetime.set_upstream(fetch_transaction)
-decrypt_transaction.set_upstream(get_datetime)
+decrypt_transaction.set_upstream(push_s3)
 push_s3.set_upstream([get_datetime, fetch_deid])
 split_transaction.set_upstream(decrypt_transaction)
