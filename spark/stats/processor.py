@@ -3,24 +3,26 @@ import spark.helpers.stats.limit_date_range as limit_date_range
 import spark.helpers.stats.select_distinct_column as select_distinct_column
 import spark.helpers.postprocessor as postprocessor
 
-def _get_all_data(sqlContext, datatype, provider_name):
+from pyspark.sql.functions import col
+
+def _run_fill_rates(df, provider_conf):
     '''
-    Retrieves all the data for a provider from our metastore
+    A wrapper around fill_rates calculate fill rate method
     Input:
-        - sqlContext: a pyspark.sql.SQLContext object for querying the metastore
-        - datatype: a string describing the datatype for the provider (i.e. medicalclaims, events, etc...)
-        - provider_name: a string that is the name of the provider in the part_provider field
+        -df: a dataframe
+        -provider_conf: a dictionary w/ the providers configuration data
     Output:
-        - all_data_df: a dataframe of all the data for the given provider
+        - _: a dataframe with the result of fill_rate.calculate_fill_rate
+             or None if provider_conf specifies not to calculate
     '''
-    all_data_df = sqlContext.sql(
-            'SELECT * FROM {datatype} WHERE {partition_column} = {provider_name}'.format(
-                datatype = datatype,
-                partition_column = 'part_provider' if datatype != 'emr' else None,       # Can change once known
-                provider_name = provider_name
-            )
-    )
-    return all_data_df
+    if provider_conf['fill_rates']:
+        # Get only the columns needed to calculate fill rates on
+        fill_rate_cols_df = df.select( \
+                *[col(c) for c in provider_conf['fill_rates']['columns']])
+        fill_rates_df = fill_rate.calculate_fill_rate(fill_rate_cols_df)
+        return fill_rates_df
+
+    return None
 
 
 def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
