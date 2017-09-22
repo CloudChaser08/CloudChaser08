@@ -49,4 +49,3 @@ def get_provider_config(provider_name, providers_conf_file):
     return provider_conf
 
 
-
