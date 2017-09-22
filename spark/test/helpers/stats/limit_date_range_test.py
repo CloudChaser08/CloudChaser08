@@ -34,8 +34,7 @@ def test_init(spark):
     results = limit_date_range.limit_date_range(start_date, end_date, date_column_name)(df)
     expected_df = spark['spark'].sparkContext.parallelize([
         data_row('2011-01-01', 'hey'),
-        data_row('1999-07-11', 'cool'),
-        data_row('2013-03-15', 'beware')
+        data_row('1999-07-11', 'cool')
     ]).toDF()
 
 
