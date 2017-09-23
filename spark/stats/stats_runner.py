@@ -7,8 +7,12 @@ import spark.stats.config.reader.config_reader as config_reader
 def main(args):
     provider_name = args.provider_name
 
+    config_dir = '/'.join(__file__.split('/')[:-1]) + '/config/'
+    print config_dir
+
     # Get the config for the provider
-    provider_conf = config_reader.get_provider_config(provider_name, 'config/providers.json')
+    provider_conf = config_reader.get_provider_config(provider_name, \
+                        config_dir, 'providers.json')
 
     print provider_conf
 
