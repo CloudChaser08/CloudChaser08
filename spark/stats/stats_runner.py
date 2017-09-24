@@ -6,7 +6,8 @@ import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.processor.processor as processor
 
 def run(spark, sqlContext, provider_name, quarter, start_date, \
-        end_date, earliest_date, get_data_func, get_provider_conf_func):
+        end_date, earliest_date, get_data_func, get_provider_conf_func, \
+        output_dir):
 
     all_stats_df = processor.run_marketplace_stats(spark, sqlContext, \
                 provider_name, quarter, start_date, end_date, earliest_date, \
@@ -22,6 +23,7 @@ def main(args):
     start_date = args.start_date
     end_date = args.end_date
     earliest_date = args.earliest_date
+    output_dir = args.output_dir
 
     # Get the directory of provider configs
     config_dir = '/'.join(__file__.split('/')[:-1]) + '/config/'
@@ -47,6 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)
     parser.add_argument('--earliest_date', type = str)
+    parser.add_argument('--output_dir', type = str)
     args = parser.parse_args()
     main(args)
 
