@@ -131,15 +131,20 @@ def do_copy_to_internal_s3(ds, kwargs):
     regex_pattern = insert_formatted_regex_function(TRANSACTION_FILE_NAME_TEMPLATE)
     new_files = [f for f in all_files if re.search(regex_pattern, f)]
     internal_s3_dest = insert_current_date(S3_TRANSACTION_PROCESSED_URL_TEMPLATE, kwargs)
+
+    # Nextgen sends us 1 file per "enterprise", resulting in hundreds of files
+    # every time they send us an update. This code will copy the files in
+    # in batches to make things go faster (instead of 1 at a time)
+    CHUNK_SIZE=10
     i = 0
     copy_ops = []
     while i < len(new_files):
-        for j in xrange(i, min(i+10, len(new_files))):
+        for j in xrange(i, min(i+CHUNK_SIZE, len(new_files))):
             copy_ops.append(copy_file_async(
                 S3_TRANSACTION_RAW_URL + new_files[i],
                 internal_s3_dest + new_files[i]
             ))
-        i = min(i+10, len(new_files))
+        i = min(i+CHUNK_SIZE, len(new_files))
         for o in copy_ops:
             o.wait()
 
