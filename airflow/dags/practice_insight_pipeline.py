@@ -18,12 +18,14 @@ import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.update_analytics_db as update_analytics_db
 
 import util.decompression as decompression
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching,
-          detect_move_normalize, decompression]:
+          detect_move_normalize, decompression,
+          update_analytics_db]:
     reload(m)
 
 # Applies to all files
@@ -412,6 +414,27 @@ def generate_detect_move_normalize_dag():
 
 detect_move_normalize_dag = generate_detect_move_normalize_dag()
 
+sql_template = """
+    ALTER TABLE medicalclaims_new ADD PARTITION (part_provider='practice_insight', part_best_date='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/2017-02-24/part_provider=practice_insight/part_best_date={0}-{1}/'
+"""
+
+if HVDAG.HVDAG.airflow_env != 'test':
+    update_analytics_db = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_analytics_db',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func' : lambda ds, k: insert_current_date(sql_template)(ds, k)
+            }
+        ),
+        task_id='update_analytics_db',
+        dag=mdag
+    )
+
+
 # transaction
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transactional_837.set_upstream(validate_transactional_837)
@@ -421,6 +444,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     post_norm_steps = split_transactional_837_steps
     post_norm_steps.append(queue_up_for_matching)
     detect_move_normalize_dag.set_upstream(post_norm_steps)
+    update_analytics_db.set_upstream(detect_move_normalize)
 else:
     detect_move_normalize_dag.set_upstream(
         split_transactional_837_steps
