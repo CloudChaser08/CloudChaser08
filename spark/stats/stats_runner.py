@@ -13,6 +13,10 @@ def run(spark, sqlContext, provider_name, quarter, start_date, \
                 provider_name, quarter, start_date, end_date, earliest_date, \
                 get_data_func, get_provider_conf_func)
 
+    for key, df in all_stats_df.items():
+        if df:
+            df.coalesce(1).write.option('header', 'true').csv(output_dir + provider_name + '_' + quarter + '_' + key + '.csv')
+
     return all_stats_df
 
 

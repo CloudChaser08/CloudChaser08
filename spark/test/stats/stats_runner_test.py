@@ -5,12 +5,14 @@ import spark.stats.stats_runner as stats_runner
 from pyspark.sql import Row
 
 results = None
-
+output_dir = None
 data_row = None
 
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
-    global results, data_row
+    global results, output_dir, data_row
+
+    output_dir = '/'.join(__file__.split('/')[:-1]) + '/output/'
 
     data_row = Row('claim_id', 'service_date', 'col_1', 'col_2', 'col_3')
     
@@ -48,11 +50,24 @@ def test_init(spark):
     
     results = stats_runner.run(spark['spark'], spark['sqlContext'], \
             'test_provider', 'Q12017', '2015-04-01', '2017-04-01', \
-            '1990-01-01', _inject_get_data, _inject_get_provider_conf)
+            '1990-01-01', _inject_get_data, _inject_get_provider_conf, \
+            output_dir)
 
 
 def test_something():
     print results
     results['fill_rates'].show()
+
+
+def test_output_directory_created():
+    pass
+
+
+def test_directories_made_for_each_stat_calc():
+    pass
+
+
+def test_csv_for_each_stat_calc():
+    pass
 
 
