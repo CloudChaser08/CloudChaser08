@@ -37,7 +37,7 @@ CREATE TABLE {table_name} (
         proc_rndrg_fclty_mdcr_speclty_cd      string,
         proc_rndrg_fclty_alt_speclty_id       string,
         proc_rndrg_fclty_alt_speclty_id_qual  string,
-        proc_rndrg_fclty_fclty_nm             string,
+        proc_rndrg_fclty_nm                   string,
         proc_rndrg_fclty_addr_1_txt           string,
         proc_rndrg_fclty_addr_2_txt           string,
         proc_rndrg_fclty_state_cd             string,
