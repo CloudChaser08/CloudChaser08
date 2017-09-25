@@ -140,7 +140,7 @@ def do_copy_to_internal_s3(ds, kwargs):
     copy_ops = []
     while i < len(new_files):
         for j in xrange(i, min(i+CHUNK_SIZE, len(new_files))):
-            copy_ops.append(copy_file_async(
+            copy_ops.append(s3_utils.copy_file_async(
                 S3_TRANSACTION_RAW_URL + new_files[i],
                 internal_s3_dest + new_files[i]
             ))
@@ -191,4 +191,4 @@ detect_move_normalize_dag = SubDagOperator(
 
 ### Dag Structure ###
 if HVDAG.HVDAG.airflow_env != 'test':
-    deliver_normalized_data.set_upstream(copy_to_internal_s3)
+    detect_move_normalize_dag.set_upstream(copy_to_internal_s3)
