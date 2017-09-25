@@ -127,6 +127,14 @@ def run_hive_queries(cluster_name, queries):
     ])
     _wait_for_steps(cluster_id)
 
+def run_steps(cluster_name, steps):
+    cluster_id = _get_emr_cluster_id(cluster_name)
+    for step in steps:
+        check_call([
+            'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
+            '--steps', step
+        ])
+    _wait_for_steps(cluster_id)
 
 def run_script(cluster_name, script_name, args, spark_conf_args):
     """Run spark normalization script in EMR"""
@@ -141,13 +149,8 @@ def run_script(cluster_name, script_name, args, spark_conf_args):
     ).format(
         ','.join(spark_conf_args + [script_name] + args)
     )
-    cluster_id = _get_emr_cluster_id(cluster_name)
     _build_dewey(cluster_id)
-    check_call([
-        'aws', 'emr', 'add-steps', '--cluster-id', cluster_id,
-        '--steps', normalize_step
-    ])
-    _wait_for_steps(cluster_id)
+    run_steps(cluster_name, [normalize_step])
 
 
 def normalize(cluster_name, script_name, args, spark_conf_args=None):
