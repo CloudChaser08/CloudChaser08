@@ -70,12 +70,6 @@ def get_formatted_datetime(ds, kwargs):
     return kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
 
 
-def insert_formatted_datetime_function(template):
-    def out(ds, kwargs):
-        return template.format(get_formatted_datetime(ds, kwargs))
-    return out
-
-
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
         return template.format('\d{5}', get_file_date_nodash(kwargs))
@@ -96,36 +90,6 @@ def insert_current_date_function(template):
         return insert_current_date(template, kwargs)
     return out
 
-
-get_tmp_dir = insert_formatted_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
-
-def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(
-        get_formatted_datetime(ds, kwargs)
-    )]
-
-
-def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
-        get_formatted_datetime(ds, kwargs)
-    )]
-
-
-def get_deid_file_names(ds, kwargs):
-    return [DEID_FILE_NAME_TEMPLATE.format(
-        get_formatted_datetime(ds, kwargs)
-    )]
-
-
-def encrypted_decrypted_file_paths_function(ds, kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
-    encrypted_file_path = file_dir \
-        + TRANSACTION_FILE_NAME_TEMPLATE.format(
-            get_formatted_datetime(ds, kwargs)
-        )
-    return [
-        [encrypted_file_path, encrypted_file_path + '.gz']
-    ]
 
 # There are going to be hundreds of files, check that at
 # least the first one is like this
