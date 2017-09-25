@@ -107,15 +107,11 @@ def partition_and_rename(
             ['distribution_key', distribution_key, False]
         ])
 
-    # On retry, some of these files may already be renamed causing more tasks to fail
-    try:
-        part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
+    part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
 
-        spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
-            mk_move_file(file_date, test_dir is not None)
-        )
-    except:
-        pass
+    spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
+        mk_move_file(file_date, test_dir is not None)
+    )
 
 
 def distcp(dest):
