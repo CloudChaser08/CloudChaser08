@@ -27,8 +27,8 @@ def do_generate_combination_hlls(ds, **kwargs):
             '/tmp/mellon-assembly-latest.jar]'),
         ('Type=Spark,Name="Generate Combinations",ActionOnFailure=CONTINUE, '
             'Args=[--class, com.healthverity.combine.Main, --conf, spark.executor.memory=12G,'
-            '--conf, spark.driver.memory=10G, --conf, spark.executor.cores=5, --conf,'
-            'spark.executor.instances=40, --conf, spark.yarn.executor.memoryOverhead=1024,'
+            '--conf, spark.driver.memory=10G, --conf, spark.executor.cores=4, --conf,'
+            'spark.executor.instances=80, --conf, spark.yarn.executor.memoryOverhead=1024,'
             '--conf, spark.scheduler.minRegisteredResourcesRatio=1, --conf,'
             'spark.scheduler.maxRegisteredResourcesWaitingTime=60s,'
             '~/mellon-assembly-latest.jar, --patientDir,'
