@@ -64,7 +64,8 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,
-        default_args=default_args
+        default_args=default_args,
+        clear_all_tasks_on_retry=True
     )
 
     is_valid_params = dict(dag_config)
