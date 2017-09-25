@@ -1,6 +1,7 @@
 #! /usr/bin/python
 import datetime
 import re
+import logging
 
 
 def uppercase_code(code):
@@ -308,7 +309,8 @@ def clean_up_vital_sign(sign_type, sign_measurement, sign_units, gender, age, ye
         return sign_measurement
 
     if sign_units not in vital_sign_units.get(sign_type, []):
-        raise NotImplementedError("Unknown unit of measure, {}".format(sign_units))
+        logging.warn("Unknown unit of measure, {}".format(sign_units))
+        return None
 
     if gender not in ['M', 'F']:
         return None
