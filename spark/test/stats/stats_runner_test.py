@@ -3,14 +3,22 @@ import pytest
 import spark.stats.stats_runner as stats_runner
 
 from pyspark.sql import Row
+from subprocess import check_call, check_output
 
 results = None
 output_dir = None
 data_row = None
 
+provider = None
+quarter = None
+start_date = None
+end_date = None
+earliest_date = None
+
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
-    global results, output_dir, data_row
+    global results, output_dir, data_row, provider, quarter, \
+            start_date, end_date, earliest_date
 
     output_dir = '/'.join(__file__.split('/')[:-1]) + '/output/'
 
@@ -48,9 +56,15 @@ def test_init(spark):
             'epi_calcs'         : None
         }
     
+
+    provider = 'test_provider'
+    quarter = 'Q12017'
+    start_date = '2015-04-01'
+    end_date = '2017-04-01'
+    earliest_date = '1990-01-01'
     results = stats_runner.run(spark['spark'], spark['sqlContext'], \
-            'test_provider', 'Q12017', '2015-04-01', '2017-04-01', \
-            '1990-01-01', _inject_get_data, _inject_get_provider_conf, \
+            provider, quarter, start_date, end_date, \
+            earliest_date, _inject_get_data, _inject_get_provider_conf, \
             output_dir)
 
 
@@ -60,14 +74,33 @@ def test_something():
 
 
 def test_output_directory_created():
-    pass
+    test_dir = '/'.join(__file__.split('/')[:-1]) + '/'
+    assert 'output' in check_output(['ls', test_dir]).split('\n')
 
 
 def test_directories_made_for_each_stat_calc():
-    pass
+    output_dir_contents = check_output(['ls', output_dir]).split('\n')
+    filename_format = provider + '_' + quarter + '_{}.csv'
+    for key, df in results.items():
+        if df:
+            assert filename_format.format(key) in output_dir_contents
+        else:
+            assert filename_format.format(key) not in output_dir_contents
 
 
-def test_csv_for_each_stat_calc():
-    pass
+def test_writes_success_for_each_stat_calc():
+    output_dir_format = output_dir + provider + '_' + quarter + '_{}.csv/'
+    for key, df in results.items():
+        if df:
+            assert '_SUCCESS' in check_output(['ls', output_dir_format.format(key)]).split('\n')
 
 
+def test_one_csv_for_each_stat_calc():
+    output_dir_format = output_dir + provider + '_' + quarter + '_{}.csv/'
+    for key, df in results.items():
+        if df:
+            stat_output_dir = check_output(['ls', output_dir_format.format(key)]).split('\n')
+            assert len(filter(lambda x: x.startswith('part'), stat_output_dir)) == 1
+
+def test_cleanup():
+    check_call(['rm', '-r', output_dir])
