@@ -313,7 +313,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
-    update_analytics_db.set_upstream(detect_move_normalize)
+    update_analytics_db.set_upstream(detect_move_normalize_dag)
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
 
