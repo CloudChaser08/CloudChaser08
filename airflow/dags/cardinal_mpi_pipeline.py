@@ -216,7 +216,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             {
                 'file_paths_func'       : lambda ds, kwargs: (
                     get_tmp_dir(ds, kwargs) + \
-                        insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
+                        insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
                 ),
                 's3_prefix_func'        : lambda ds, kwargs: \
                     '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
