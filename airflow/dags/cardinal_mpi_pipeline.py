@@ -106,7 +106,7 @@ def generate_file_validation_task(
 if HVDAG.HVDAG.airflow_env != 'test':
     validate_deid = generate_file_validation_task(
         'deid', DEID_FILE_NAME_TEMPLATE,
-        1000000
+        10000
     )
 
 fetch_deid_file_dag = SubDagOperator(
