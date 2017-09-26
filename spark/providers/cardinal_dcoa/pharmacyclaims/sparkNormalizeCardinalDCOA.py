@@ -8,15 +8,14 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.privacy.events as event_priv
+import spark.helpers.privacy.pharmacyclaims as pharmacy_priv
 import mindbodyPrivacy as mindbody_priv
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     date_path = '/'.join(date_input.split('-')[:2])
     
-    #TODO: change to whatever their actual format will be
-    setid = 'out-record'
+    setid = 'dcoa_data_{}HHMMSS'.format(date_obj.strftime('%Y%m%d'))
     
     script_path = __file__
 
@@ -42,40 +41,33 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['input_path', input_path]
     ])
 
-    ### TODO: CONTINUE FROM HERE
-
     # Remove leading and trailing whitespace from any strings
-    postprocessor.trimmify(runner.sqlContext.sql('select * from transactional_mindbody'))\
-                    .createTempView('transactional_mindbody')
+    postprocessor.trimmify(runner.sqlContext.sql('select * from cardinal_dcoa_transactions'))\
+                    .createTempView('cardinal_dcoa_transactions').cache()
 
     # Normalize the transaction data into the
-    # event common model using transaction
-    # and matching payload data
-    runner.run_spark_script('normalize.sql', [
-        ['min_date', str(min_date)],
-        ['max_date', str(date_obj)]
-    ])
+    # pharmacyclaims common model using transaction data
+    runner.run_spark_script('normalize.sql', [ ])
 
     # Postprocessing 
     postprocessor.compose(
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id='38', vendor_id='133', filename=setid),
-        mindbody_priv.map_whitelist,
-        event_priv.filter
+        postprocessor.add_universal_columns(feed_id='44', vendor_id='42', filename=setid),
+        pharmacy_priv.filter
     )(
-        runner.sqlContext.sql('select * from event_common_model')
-    ).createTempView('event_common_model')
+        runner.sqlContext.sql('select * from pharmacyclaims_common_model')
+    ).createTempView('pharmacyclaims_common_model')
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-                spark, runner, 'consumer', 'event_common_model_v4.sql',
-                'mindbody', 'event_common_model', 'event_date', date_input
+                spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql',
+                'cardinal_dcoa', 'pharmacyclaims_common_model', 'date_service', date_input
             )
 
 
 def main(args):
     # Initialize Spark
-    spark, sqlContext = init("MindBody")
+    spark, sqlContext = init("Cardinal DCOA")
 
     # Initialize the Spark Runner
     runner = Runner(sqlContext)
@@ -88,10 +80,12 @@ def main(args):
 
     # Determine where to put the output
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/spark-output/'
+        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/spark-output/'
     else:
-       output_path = 's3://salusv/warehouse/parquet/consumer/2017-08-02/'
+        #TODO: Find out date for data
+        output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-08-02/'
     normalized_records_unloader.distcp(output_path)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
