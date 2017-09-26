@@ -18,7 +18,7 @@ SELECT
         t.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                    -- date_service
     extract_date(
-        t.date_prescription_written, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.date_prescription_written, '%Y%m%d'
         ),                                    -- date_written
     NULL,                                     -- year_of_injury
     NULL,                                     -- date_authorized
