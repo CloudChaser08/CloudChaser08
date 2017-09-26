@@ -1,6 +1,8 @@
 #! /usr/bin/python
 import argparse
 from spark.runner import Runner
+import spark.helpers.constants as constants
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.file_utils as file_utils
 import spark.helpers.extractor as extractor
 from spark.spark_setup import init
@@ -9,20 +11,18 @@ script_path = __file__
 
 FORESITE_SCHEMA = 'for321'
 
-S3_FORESITE_OUT = 's3://salusv/projects/foresite_capital/hv000321/delivery/'
-S3_FORESITE_PHARMACY_OUT_TEMPLATE = S3_FORESITE_OUT + '{}/pharmacy_claims_t2d'
-S3_FORESITE_ENROLLMENT_OUT_TEMPLATE = S3_FORESITE_OUT + '{}/enrollment_t2d'
+S3_FORESITE_DEST_TEMPLATE = 's3://salusv/projects/foresite_capital/hv000321/delivery/{}'
 
 
 def run(spark, runner, date, test=False):
 
     if test:
-        S3_FORESITE_OUT = '../../test/delivery/foresite_hv000321/resources/output/{}'
+        STAGING_DIR = '../../test/delivery/foresite_hv000321/resources/tmp/{}'
     else:
-        S3_FORESITE_OUT = 's3://salusv/projects/foresite_capital/hv000321/delivery/{}'
+        STAGING_DIR = constants.hdfs_staging_dir
 
-    S3_FORESITE_PHARMACY_OUT_TEMPLATE = S3_FORESITE_OUT + '/pharmacy_claims_t2d'
-    S3_FORESITE_ENROLLMENT_OUT_TEMPLATE = S3_FORESITE_OUT + '/enrollment_t2d'
+    PHARMACY_OUT_TEMPLATE = STAGING_DIR + '/pharmacy_claims_t2d'
+    ENROLLMENT_OUT_TEMPLATE = STAGING_DIR + '/enrollment_t2d'
 
     runner.run_spark_script('reload_codes.sql', [
         ['analyticsdb_schema', FORESITE_SCHEMA, False]
@@ -41,14 +41,14 @@ def run(spark, runner, date, test=False):
     extractor.export_table(
         runner.sqlContext, 'pharmacy_claims_t2d', FORESITE_SCHEMA,
         file_utils.get_abs_path(
-            script_path, S3_FORESITE_PHARMACY_OUT_TEMPLATE.format(date.replace('-', ''))
+            script_path, PHARMACY_OUT_TEMPLATE.format(date.replace('-', ''))
         )
     )
 
     extractor.export_table(
         runner.sqlContext, 'enrollment_t2d', FORESITE_SCHEMA,
         file_utils.get_abs_path(
-            script_path, S3_FORESITE_ENROLLMENT_OUT_TEMPLATE.format(date.replace('-', ''))
+            script_path, ENROLLMENT_OUT_TEMPLATE.format(date.replace('-', ''))
         )
     )
 
@@ -64,6 +64,7 @@ def main(args):
 
     spark.stop()
 
+    normalized_records_unloader.distcp(S3_FORESITE_DEST_TEMPLATE.format(args.date.replace('-', '')))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
