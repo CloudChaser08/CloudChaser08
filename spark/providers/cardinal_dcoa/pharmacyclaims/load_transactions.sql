@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS cardinal_dcoa_transactions;
-CREATE TABLE cardinal_dcoa_transactions (
+CREATE EXTERNAL TABLE cardinal_dcoa_transactions (
     SKUtilizationKey                string,
     SKClientTypeKey                 string,
     AcqCost                         string,

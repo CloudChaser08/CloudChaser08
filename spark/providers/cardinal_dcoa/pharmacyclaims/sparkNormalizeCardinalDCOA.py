@@ -81,7 +81,7 @@ def main(args):
         output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/spark-output/'
     else:
         #TODO: Find out date for data
-        output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-08-02/'
+        output_path = 's3://salusv/deliverable/cardinal_dcoa/'
     normalized_records_unloader.distcp(output_path)
 
 
