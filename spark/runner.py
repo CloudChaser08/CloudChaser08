@@ -11,7 +11,7 @@ class Runner:
     def __init__(self, sqlContext):
         self.sqlContext = sqlContext
 
-    def run_spark_script(self, script, variables=[], source_file_path=None):
+    def run_spark_script(self, script, variables=[], source_file_path=None, return_output=False):
         """
         Execute a spark sql script
         """
@@ -47,6 +47,8 @@ class Runner:
             if len(statement.strip()) == 0:
                 continue
             logging.info("STATEMENT: " + statement)
+            if return_output and len(content.split(';')) == 1:
+                return self.run_spark_query(statement, return_output=True)
             self.run_spark_query(statement)
 
     def run_spark_query(self, query, return_output=False):
