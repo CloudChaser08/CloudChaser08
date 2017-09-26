@@ -151,7 +151,11 @@ FROM transactions t
 
 -- make sure that all of these attributes are unique per claim using
 -- MIN and limiting to where the service line num is '1'
-    INNER JOIN (
+--
+-- using LEFT join so that any claims without a service line '1' will
+-- get null for these attrs, but will still get rows for any unrelated
+-- diagnoses
+    LEFT JOIN (
     SELECT t2.claim_id, MIN(mp.hvid) as min_hvid, MIN(mp.gender) as min_gender,
         MIN(mp.age) as min_age, MIN(mp.yearOfBirth) as min_yearofbirth,
         MIN(mp.threeDigitZip) as min_threedigitzip, MIN(UPPER(mp.state)) as min_state, 
