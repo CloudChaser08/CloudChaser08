@@ -17,7 +17,7 @@ def test_init(spark):
 
 
 def test_num_rows_is_same_as_transaction():
-    assert len(results) == 100
+    assert len(results) == 20
 
 
 def test_source_record_id_not_null():
