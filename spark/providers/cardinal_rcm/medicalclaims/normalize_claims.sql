@@ -3,9 +3,9 @@ SELECT DISTINCT
     NULL,                   -- record_id
     t.claim_id,             -- claim_id
     (
-    SELECT MIN(mp2.hvid)
+    SELECT MIN(mp.hvid)
     FROM transactions t2
-        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+        INNER JOIN matching_payload mp ON t2.hvjoinkey = mp.hvjoinkey
     WHERE t2.line_seq_no = '1'
         AND t2.claim_id = t.claim_id
         ),                  -- hvid
@@ -16,37 +16,37 @@ SELECT DISTINCT
     NULL,                   -- data_vendor
     NULL,                   -- source_version
     (
-    SELECT MIN(mp2.gender)
+    SELECT MIN(mp.gender)
     FROM transactions t2
-        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+        INNER JOIN matching_payload mp ON t2.hvjoinkey = mp.hvjoinkey
     WHERE t2.line_seq_no = '1'
         AND t2.claim_id = t.claim_id
         ),                  -- patient_gender
     (
-    SELECT MIN(mp2.age)
+    SELECT MIN(mp.age)
     FROM transactions t2
-        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+        INNER JOIN matching_payload mp ON t2.hvjoinkey = mp.hvjoinkey
     WHERE t2.line_seq_no = '1'
         AND t2.claim_id = t.claim_id
         ),                  -- patient_age
     (
-    SELECT MIN(mp2.yearOfBirth)
+    SELECT MIN(mp.yearOfBirth)
     FROM transactions t2
-        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+        INNER JOIN matching_payload mp ON t2.hvjoinkey = mp.hvjoinkey
     WHERE t2.line_seq_no = '1'
         AND t2.claim_id = t.claim_id
         ),                  -- patient_year_of_birth
     (
-    SELECT MIN(mp2.threeDigitZip)
+    SELECT MIN(mp.threeDigitZip)
     FROM transactions t2
-        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+        INNER JOIN matching_payload mp ON t2.hvjoinkey = mp.hvjoinkey
     WHERE t2.line_seq_no = '1'
         AND t2.claim_id = t.claim_id
         ),                  -- patient_zip3
     (
-    SELECT MIN(UPPER(mp2.state))
+    SELECT MIN(UPPER(mp.state))
     FROM transactions t2
-        INNER JOIN matching_payload mp2 ON t2.hvjoinkey = mp2.hvjoinkey
+        INNER JOIN matching_payload mp ON t2.hvjoinkey = mp.hvjoinkey
     WHERE t2.line_seq_no = '1'
         AND t2.claim_id = t.claim_id
         ),                  -- patient_state
@@ -244,7 +244,6 @@ SELECT DISTINCT
     NULL,                   -- cob_payer_claim_filing_ind_code_2
     NULL                    -- cob_ins_type_code_2
 FROM transactions t
-    INNER JOIN matching_payload mp ON t.hvjoinkey = mp.hvjoinkey
     CROSS JOIN claim_diag_exploder diag_explode
 WHERE
 
