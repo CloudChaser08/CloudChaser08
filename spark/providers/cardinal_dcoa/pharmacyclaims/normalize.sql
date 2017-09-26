@@ -4,7 +4,7 @@ SELECT
     SKUtilizationKey,           --claim_id
     NULL,                       --hvid
     NULL,                       --created
-    NULL,                       --model_version
+    '3',                        --model_version
     NULL,                       --data_set
     NULL,                       --data_feed
     NULL,                       --data_vendor
@@ -16,7 +16,6 @@ SELECT
     NULL,                       --patient_state
     DispenseDttm,               --date_service
     EffectiveStartDate,         --date_written
-    NULL,                       --date_of_injury
     NULL,                       --year_of_injury
     NULL,                       --date_authorized
     NULL,                       --time_authorized

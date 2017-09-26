@@ -1,15 +1,12 @@
 #! /usr/bin/python
 import argparse
-import time
 from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
-import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharmacy_priv
-import mindbodyPrivacy as mindbody_priv
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -21,7 +18,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/cardinal_dcoa/resources/input/'
+            script_path, '../../../test/providers/cardinal_dcoa/pharmacyclaims/resources/input/'
         )
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/out/{}/'\
@@ -30,9 +27,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = 's3://salusv/incoming/cardinal/dcoa/{}/'\
                         .format(date_path)
 
-    runner.run_spark_script('../../common/pharmacyclaims_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['external', '', False]
     ])
 
     # Point Hive to the location of the transaction data
@@ -43,7 +41,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Remove leading and trailing whitespace from any strings
     postprocessor.trimmify(runner.sqlContext.sql('select * from cardinal_dcoa_transactions'))\
-                    .createTempView('cardinal_dcoa_transactions').cache()
+                    .createTempView('cardinal_dcoa_transactions')
 
     # Normalize the transaction data into the
     # pharmacyclaims common model using transaction data
