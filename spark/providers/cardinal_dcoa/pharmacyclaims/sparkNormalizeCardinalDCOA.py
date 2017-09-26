@@ -12,7 +12,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     date_path = date_input.replace('-', '/')
     
-    setid = 'dcoa_data_{}HHMMSS'.format(date_obj.strftime('%Y%m%d'))
+    setid = 'dcoa_data_{}'.format(date_obj.strftime('%Y%m%d'))
     
     script_path = __file__
 
