@@ -427,7 +427,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: insert_current_date(sql_template)(ds, k)
+                'sql_command_func' : insert_current_date_function(sql_template)
             }
         ),
         task_id='update_analytics_db',
