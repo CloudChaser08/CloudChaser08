@@ -200,10 +200,10 @@ if HVDAG.HVDAG.airflow_env != 'test':
     fetch_normalized_data = PythonOperator(
         task_id='fetch_normalized_data',
         provide_context=True,
-        python_callable=lambda ds, kwargs: \
+        python_callable=lambda ds, **kwargs: \
             s3_utils.fetch_file_from_s3(
                 insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs),
-                get_tmp_dir(ds, kwargs)
+                get_tmp_dir(ds, kwargs) + insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs).split("/")[-1]
         ),
         dag=mdag
     )
@@ -215,14 +215,14 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'file_paths_func'       : lambda ds, kwargs: (
+                'file_paths_func'       : lambda ds, kwargs: [
                     get_tmp_dir(ds, kwargs) + \
                         insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
-                ),
+                ],
                 's3_prefix_func'        : lambda ds, kwargs: \
                     '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
                 's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
-                'aws_secret_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
+                'aws_access_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
                 'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
             }
         ),
