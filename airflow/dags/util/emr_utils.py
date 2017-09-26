@@ -149,7 +149,7 @@ def run_script(cluster_name, script_name, args, spark_conf_args):
     ).format(
         ','.join(spark_conf_args + [script_name] + args)
     )
-    _build_dewey(cluster_id)
+    _build_dewey(_get_emr_cluster_id(cluster_name))
     run_steps(cluster_name, [normalize_step])
 
 
