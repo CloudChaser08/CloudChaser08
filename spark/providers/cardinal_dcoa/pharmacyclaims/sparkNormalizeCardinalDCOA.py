@@ -10,7 +10,7 @@ import spark.helpers.privacy.pharmacyclaims as pharmacy_priv
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
-    date_path = '/'.join(date_input.split('-')[:2])
+    date_path = date_input.replace('-', '/')
     
     setid = 'dcoa_data_{}HHMMSS'.format(date_obj.strftime('%Y%m%d'))
     
