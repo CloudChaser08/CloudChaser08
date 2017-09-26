@@ -133,8 +133,11 @@ def test_pharmacyclaims_extract(spark):
         foresite.FORESITE_SCHEMA
     )).collect()
 
+    assert len(pharmacyclaims_results) == 2
 
 def test_enrollment_extract(spark):
     enrollment_results = spark['sqlContext'].sql('select * from {}.enrollment_t2d'.format(
         foresite.FORESITE_SCHEMA
     )).collect()
+
+    assert len(enrollment_results) == 5
