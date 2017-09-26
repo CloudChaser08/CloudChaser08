@@ -17,7 +17,7 @@ S3_FORESITE_ENROLLMENT_OUT_TEMPLATE = S3_FORESITE_OUT + '{}/enrollment_t2d'
 def run(spark, runner, date, test=False):
 
     if test:
-        S3_FORESITE_OUT = '../../test/delivery/foresite_hv-000321/resources/output/{}'
+        S3_FORESITE_OUT = '../../test/delivery/foresite_hv000321/resources/output/{}'
     else:
         S3_FORESITE_OUT = 's3://salusv/projects/foresite_capital/hv000321/delivery/{}'
 
