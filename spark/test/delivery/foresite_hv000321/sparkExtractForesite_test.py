@@ -1,4 +1,6 @@
 import pytest
+import shutil
+import logging
 
 from pyspark.sql.types import *
 
@@ -6,6 +8,7 @@ import spark.helpers.file_utils as file_utils
 import spark.delivery.foresite_hv000321.sparkExtractForesite as foresite
 
 script_path = __file__
+
 
 def cleanup(spark):
     spark['sqlContext'].sql('DROP TABLE IF EXISTS default.ref_icd10_diagnosis')
@@ -15,6 +18,12 @@ def cleanup(spark):
     spark['sqlContext'].sql('DROP TABLE IF EXISTS enrollmentrecords')
     spark['sqlContext'].sql('DROP TABLE IF EXISTS ref_calendar')
     spark['sqlContext'].sql('DROP DATABASE IF EXISTS {} CASCADE'.format(foresite.FORESITE_SCHEMA))
+
+    try:
+        shutil.rmtree(file_utils.get_abs_path(script_path, './resources/output'))
+    except:
+        logging.warn("No output dir found, nothing removed.")
+
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
@@ -98,8 +107,10 @@ def test_init(spark):
          + "STORED AS TEXTFILE "
          + "LOCATION '{}' ".format(file_utils.get_abs_path(script_path, './resources/pharmacyclaims/')),
          False],
-        ['external', '', False]
+        ['external', 'EXTERNAL', False]
     ], script_path)
+
+    spark['sqlContext'].sql('msck repair table pharmacyclaims')
 
     # load enrollmentrecords table
     spark['runner'].run_spark_script('../../../common/enrollment_common_model.sql', [
@@ -109,7 +120,21 @@ def test_init(spark):
          + "STORED AS TEXTFILE "
          + "LOCATION '{}' ".format(file_utils.get_abs_path(script_path, './resources/enrollmentrecords/')),
          False],
-        ['external', '', False]
+        ['external', 'EXTERNAL', False]
     ], script_path)
 
-    foresite.run(spark['spark'], spark['runner'], '2017-05-01', True)
+    spark['sqlContext'].sql('msck repair table enrollmentrecords')
+
+    foresite.run(spark['spark'], spark['runner'], '2017-09-08', True)
+
+
+def test_pharmacyclaims_extract(spark):
+    pharmacyclaims_results = spark['sqlContext'].sql('select * from {}.pharmacy_claims_t2d'.format(
+        foresite.FORESITE_SCHEMA
+    )).collect()
+
+
+def test_enrollment_extract(spark):
+    enrollment_results = spark['sqlContext'].sql('select * from {}.enrollment_t2d'.format(
+        foresite.FORESITE_SCHEMA
+    )).collect()
