@@ -11,10 +11,6 @@ expected_df = None
 
 distinct_column_name = None
 
-def cleanup(spark):
-    pass
-
-
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
     global df, results, expected_df, distinct_column_name

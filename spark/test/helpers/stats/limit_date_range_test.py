@@ -13,10 +13,6 @@ start_date = None
 end_date = None
 date_column_name = None
 
-def cleanup(spark):
-    pass
-
-
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
     global df, results, expected_df, start_date, end_date, date_column_name
