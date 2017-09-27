@@ -8,7 +8,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharmacy_priv
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
+def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     date_path = date_input.replace('-', '/')
     
@@ -57,10 +57,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ).createTempView('pharmacyclaims_common_model')
 
     if not test:
-        normalized_records_unloader.partition_and_rename(
-                spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql',
-                'cardinal_dcoa', 'pharmacyclaims_common_model', 'date_service', date_input
-            )
+        # Create the delivery
+        if airflow_test:
+            output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/spark-output/'
+        else:
+            output_path = 's3://salusv/deliverable/cardinal_dcoa/{}/'.format(date_path)
+            
+        delivery_df = runner.sqlContext.sql('select * from pharmacyclaims_common_model')
+        delivery_df.repartition(num_output_files).write.csv(path=output_path, compression="gzip", sep="|", quoteAll=True, header=True)
 
 
 def main(args):
@@ -71,7 +75,8 @@ def main(args):
     runner = Runner(sqlContext)
 
     # Run the normalization routine
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, airflow_test=args.airflow_test, \
+            num_output_files=args.num_output_files)
     
     # Tell spark to shutdown
     spark.stop()
@@ -88,5 +93,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--num_output_files', default=20, type=int)
     args = parser.parse_args()
     main(args)
