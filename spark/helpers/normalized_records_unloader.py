@@ -77,7 +77,7 @@ def partition_and_rename(
                 ','.join(columns), provider, provider_partition, date_partition, table_name, date_column
             ), False],
             ['unload_partition_count', str(unload_partition_count), False],
-            ['original_partition_count', old_partition_count, False], 
+            ['original_partition_count', old_partition_count, False],
             ['distribution_key', distribution_key, False]
         ])
         runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
@@ -85,7 +85,7 @@ def partition_and_rename(
                 ','.join(columns), provider, table_name, date_column, provider_partition, date_partition
             ), False],
             ['unload_partition_count', str(unload_partition_count), False],
-            ['original_partition_count', old_partition_count, False], 
+            ['original_partition_count', old_partition_count, False],
             ['distribution_key', distribution_key, False]
         ])
     elif partition_value is None and hvm_historical_date is not None:
@@ -94,7 +94,7 @@ def partition_and_rename(
                 ','.join(columns), provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
             ), False],
             ['unload_partition_count', str(unload_partition_count), False],
-            ['original_partition_count', old_partition_count, False], 
+            ['original_partition_count', old_partition_count, False],
             ['distribution_key', distribution_key, False]
         ])
         runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
@@ -102,7 +102,7 @@ def partition_and_rename(
                 ','.join(columns), provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
             ), False],
             ['unload_partition_count', str(unload_partition_count), False],
-            ['original_partition_count', old_partition_count, False], 
+            ['original_partition_count', old_partition_count, False],
             ['distribution_key', distribution_key, False]
         ])
     else:
@@ -111,7 +111,7 @@ def partition_and_rename(
                 ','.join(columns), provider, provider_partition, partition_value, date_partition, table_name
             ), False],
             ['unload_partition_count', str(unload_partition_count), False],
-            ['original_partition_count', old_partition_count, False], 
+            ['original_partition_count', old_partition_count, False],
             ['distribution_key', distribution_key, False]
         ])
 
