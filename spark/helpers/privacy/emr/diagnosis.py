@@ -32,15 +32,22 @@ whitelists = [
     }
 ]
 
-def filter(sqlc, update_whitelists=lambda x: x):
+
+def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
+    if not additional_transforms:
+        additional_transforms = {}
+
+    modified_transformer = dict(diagnosis_transformer)
+    modified_transformer.update(additional_transforms)
+
     def out(df):
-        whtlsts = update_whitelists(whtlsts)
+        whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
             *[
                 postprocessor.apply_whitelist(sqlc, whitelist['column_name'], whitelist['domain_name'])
                 for whitelist in whtlsts
             ]
         )(
-            emr_priv_common.filter(df, diagnosis_transformer)
+            emr_priv_common.filter(df, modified_transformer)
         )
     return out
