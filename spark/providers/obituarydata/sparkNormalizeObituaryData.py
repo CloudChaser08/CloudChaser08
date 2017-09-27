@@ -65,6 +65,8 @@ runner.run_spark_script('../../common/event_common_model.sql', [
     ]
 ])
 
+old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
+
 runner.run_spark_script('../../common/unload_common_model.sql', [
     [
         'select_statement',
@@ -73,7 +75,8 @@ runner.run_spark_script('../../common/unload_common_model.sql', [
         + "WHERE event_date IS NULL",
         False
     ],
-    ['partitions', '20', False],
+    ['unload_partition_count', '20', False],
+    ['original_partition_count', old_partition_count, False],
     ['distribution_key', 'record_id', False]
 ])
 
@@ -85,7 +88,8 @@ runner.run_spark_script('../../common/unload_common_model.sql', [
         + "WHERE event_date IS NOT NULL",
         False
     ],
-    ['partitions', '20', False],
+    ['unload_partition_count', '20', False],
+    ['original_partition_count', old_partition_count, False],
     ['distribution_key', 'record_id', False]
 ])
 
