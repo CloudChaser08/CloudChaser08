@@ -11,7 +11,7 @@ def clean_up_freetext(val, remove_periods=False):
     Convert multiple consequtive spaces into a single space
     """
     try:
-        new_val = re.sub(r'  *', ' ', re.sub(r'[^A-Za-z0-9 .&]', ' ', val))
+        new_val = re.sub(r'  *', ' ', re.sub(r'[^A-Za-z0-9 .&#%]', ' ', val))
         if remove_periods:
             new_val = new_val.replace('.', '')
         return new_val
@@ -133,3 +133,4 @@ def slightly_deobfuscate_hvid(hvid, key):
 
 def to_json(val):
     return json.dumps(val)
+

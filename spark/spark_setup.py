@@ -63,6 +63,9 @@ def init(provider, local=False):
     sqlContext.registerFunction(
         'cap_year_of_birth', cap_year_of_birth
     )
+    sqlContext.registerFunction(
+        'clean_up_numeric_code', clean_up_numeric_code
+    )
 
     # helper functions for cleaning up data
     sqlContext.registerFunction(
@@ -91,6 +94,9 @@ def init(provider, local=False):
     )
     sqlContext.registerFunction(
         'to_json', to_json
+    )
+    sqlContext.registerFunction(
+        'clean_up_freetext', clean_up_freetext
     )
 
     # helper functions for normalizing medical claims
