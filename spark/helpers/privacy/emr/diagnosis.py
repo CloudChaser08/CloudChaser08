@@ -6,26 +6,6 @@ diagnosis_transformer = {
     'diag_cd': {
         'func': post_norm_cleanup.clean_up_diagnosis_code,
         'args': ['diag_cd', 'diag_cd_qual', 'diag_dt']
-    },
-    'diag_alt_cd': {
-        'func': post_norm_cleanup.clean_up_diagnosis_code,
-        'args': ['diag_alt_cd', 'diag_alt_cd_qual', 'diag_dt']
-    },
-    'diag_prty_cd': {
-        'func': post_norm_cleanup.clean_up_diagnosis_code,
-        'args': ['diag_prty_cd', 'diag_prty_cd_qual', 'diag_dt']
-    },
-    'diag_svty_cd': {
-        'func': post_norm_cleanup.clean_up_diagnosis_code,
-        'args': ['diag_svty_cd', 'diag_svty_cd_qual', 'diag_dt']
-    },
-    'diag_stat_cd': {
-        'func': post_norm_cleanup.clean_up_diagnosis_code,
-        'args': ['diag_stat_cd', 'diag_stat_cd_qual', 'diag_dt']
-    },
-    'diag_meth_cd': {
-        'func': post_norm_cleanup.clean_up_diagnosis_code,
-        'args': ['diag_meth_cd', 'diag_meth_cd_qual', 'diag_dt']
     }
 }
 
@@ -43,17 +23,22 @@ whitelists = [
         'domain_name': 'emr_diag.diag_resltn_desc'
     },
     {
+        'column_name': 'diag_stat_desc',
+        'domain_name': 'emr_diag.diag_stat_desc'
+    },
+    {
         'column_name': 'diag_meth_nm',
         'domain_name': 'emr_diag.diag_meth_nm'
     }
 ]
 
-def filter(sqlc):
+def filter(sqlc, update_whitelists=lambda x: x):
     def out(df):
+        whtlsts = update_whitelists(whtlsts)
         return postprocessor.compose(
             *[
                 postprocessor.apply_whitelist(sqlc, whitelist['column_name'], whitelist['domain_name'])
-                for whitelist in whitelists
+                for whitelist in whtlsts
             ]
         )(
             emr_priv_common.filter(df, diagnosis_transformer)

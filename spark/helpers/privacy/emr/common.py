@@ -9,6 +9,10 @@ emr_transformer = {
     'ptnt_birth_yr': {
         'func': post_norm_cleanup.cap_year_of_birth,
         'args': ['ptnt_age_num', 'enc_dt', 'ptnt_birth_yr']
+    },
+    'ptnt_zip3_cd': {
+        'func': post_norm_cleanup.mask_zip_code,
+        'args': ['ptnt_zip3_cd']
     }
 }
 

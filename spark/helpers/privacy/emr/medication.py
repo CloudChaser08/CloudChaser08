@@ -6,7 +6,11 @@ from pyspark.sql.functions import md5
 medication_transformer = {
     'medctn_diag_cd': {
         'func': post_norm_cleanup.clean_up_diagnosis_code,
-        'args': ['medctn_diag_cd', 'medctn_diag_cd_qual', 'medctn_admin_dt']
+        'args': ['medctn_diag_cd', 'medctn_diag_cd_qual', 'enc_dt']
+    },
+    'medctn_ndc': {
+        'func': post_norm_cleanup.clean_up_ndc_code,
+        'args': ['medctn_ndc']
     },
     'rx_num': {
         'func': md5,
@@ -16,6 +20,10 @@ medication_transformer = {
 }
 
 whitelists = [
+    {
+        'column_name': 'medctn_admin_sig_cd',
+        'domain_name': 'emr_medctn.medctn_admin_sig_cd'
+    },
     {
         'column_name': 'medctn_admin_sig_txt',
         'domain_name': 'emr_medctn.medctn_admin_sig_txt'
@@ -38,12 +46,13 @@ whitelists = [
     }
 ]
 
-def filter(sqlc):
+def filter(sqlc, update_whitelists=lambda x: x):
     def out(df):
+        whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
             *[
                 postprocessor.apply_whitelist(sqlc, whitelist['column_name'], whitelist['domain_name'])
-                for whitelist in whitelists
+                for whitelist in whtlsts
             ]
         )(
             emr_priv_common.filter(df, medication_transformer)
