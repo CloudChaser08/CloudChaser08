@@ -3,7 +3,7 @@ import pytest
 from pyspark.sql import Row
 from pyspark.sql.functions import col
 
-import spark.helpers.stats.limit_date_range as limit_date_range
+from spark.helpers.stats.utils import select_data_in_date_range
 
 df = None
 results = None
@@ -27,7 +27,7 @@ def test_init(spark):
     start_date = '1999-07-11'
     end_date = '2013-03-15'
     date_column_name = 'date'
-    results = limit_date_range.limit_date_range(start_date, end_date, date_column_name)(df)
+    results = select_data_in_date_range(start_date, end_date, date_column_name)(df)
     expected_df = spark['spark'].sparkContext.parallelize([
         data_row('2011-01-01', 'hey'),
         data_row('1999-07-11', 'cool')
