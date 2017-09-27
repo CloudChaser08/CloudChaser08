@@ -47,8 +47,8 @@ SELECT
     NULL,                                                     -- lab_test_smpl_collctn_dt
     NULL,                                                     -- lab_test_schedd_dt
     EXTRACT_DATE(
-        l.test_date,
-        '%Y-%m-%d %H:%M:%S.%f'
+        SUBSTRING(l.test_date, 0, 10),
+        '%Y-%m-%d'
         ),                                                    -- lab_test_execd_dt
     NULL,                                                     -- lab_result_dt
     NULL,                                                     -- lab_test_ordg_prov_npi

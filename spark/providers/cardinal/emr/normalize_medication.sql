@@ -45,8 +45,8 @@ SELECT
     NULL,                                                       -- enc_dt
     NULL,                                                       -- medctn_ord_dt
     EXTRACT_DATE(
-        disp.admin_date,
-        '%Y-%m-%d %H:%M:%S.%f'
+        SUBSTRING(disp.admin_date, 0, 10),
+        '%Y-%m-%d'
         ),                                                      -- medctn_admin_dt
     NULL,                                                       -- medctn_rndrg_fclty_npi
     disp.practice_id,                                           -- medctn_rndrg_fclty_vdr_id
@@ -116,8 +116,8 @@ SELECT
     disp.prescription_number,                                   -- rx_num
     NULL,                                                       -- medctn_start_dt
     EXTRACT_DATE(
-        disp.discontinue_date,
-        '%Y-%m-%d %H:%M:%S.%f'
+        SUBSTRING(disp.discontinue_date, 0, 10),
+        '%Y-%m-%d'
         ),                                                      -- medctn_end_dt
     COALESCE(disp.icd_ten, disp.icd_nine),                      -- medctn_diag_cd
     CASE

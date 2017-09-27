@@ -42,8 +42,8 @@ SELECT
     NULL,                                                       -- hv_enc_id
     NULL,                                                       -- enc_dt
     EXTRACT_DATE(
-        diag.diagnosis_date,
-        '%Y-%m-%d %H:%M:%S'
+        SUBSTRING(diag.diagnosis_date, 0, 10),
+        '%Y-%m-%d'
         ),                                                      -- diag_dt
     NULL,                                                       -- diag_rndrg_fclty_npi
     diag.practice_id,                                           -- diag_rndrg_fclty_vdr_id
@@ -92,8 +92,8 @@ SELECT
     NULL,                                                       -- diag_rndrg_prov_zip_cd
     NULL,                                                       -- diag_onset_dt
     EXTRACT_DATE(
-        diag.resolution_date,
-        '%Y-%m-%d %H:%M:%S'
+        SUBSTRING(diag.resolution_date, 0, 10),
+        '%Y-%m-%d'
         ),                                                      -- diag_resltn_dt
     diag.icd_cd,                                                -- diag_cd
     NULL,                                                       -- diag_cd_qual

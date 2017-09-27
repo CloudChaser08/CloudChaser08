@@ -42,12 +42,12 @@ SELECT
     UPPER(COALESCE(mp.state, d.state)),                       -- ptnt_state_cd
     COALESCE(mp.threeDigitZip, SUBSTRING(d.zip_code, 0, 3)),  -- ptnt_zip3_cd
     EXTRACT_DATE(
-        e.visit_date,
-        '%Y-%m-%d %H:%M:%S'
+        SUBSTRING(e.visit_date, 0, 10),
+        '%Y-%m-%d'
         ),                                                    -- enc_start_dt
     EXTRACT_DATE(
-        e.visit_end_tstamp,
-        '%Y-%m-%d %H:%M:%S'
+        SUBSTRING(e.visit_end_tstamp, 0, 10),
+        '%Y-%m-%d'
         ),                                                    -- enc_end_dt
     NULL,                                                     -- enc_vst_typ_cd
     NULL,                                                     -- enc_rndrg_fclty_npi

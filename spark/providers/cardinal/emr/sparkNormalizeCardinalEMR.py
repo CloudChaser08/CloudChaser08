@@ -17,8 +17,6 @@ from spark.helpers.privacy.emr import                   \
     diagnosis as priv_diagnosis,                        \
     medication as priv_medication
 
-TODAY = time.strftime('%Y-%m-%d', time.localtime())
-
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')

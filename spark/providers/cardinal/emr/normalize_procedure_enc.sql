@@ -41,12 +41,12 @@ SELECT
     COALESCE(mp.threeDigitZip, SUBSTRING(d.zip_code, 0, 3)),  -- ptnt_zip3_cd
     CONCAT('31_', e.id),                                      -- hv_enc_id
     EXTRACT_DATE(
-        e.visit_date,
-        '%Y-%m-%d %H:%M:%S'
+        SUBSTRING(e.visit_date, 0, 10),
+        '%Y-%m-%d'
         ),                                                    -- enc_dt
     EXTRACT_DATE(
-        e.visit_date,
-        '%Y-%m-%d %H:%M:%S'
+        SUBSTRING(e.visit_date, 0, 10),
+        '%Y-%m-%d'
         ),                                                    -- proc_dt
     NULL,                                                     -- proc_rndrg_fclty_npi
     e.practice_id,                                            -- proc_rndrg_fclty_vdr_id
