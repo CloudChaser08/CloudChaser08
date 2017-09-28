@@ -26,15 +26,15 @@ DAG_NAME = 'diplomat_rx_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 4, 13, 12),
-    'depends_on_past': True,
+    'start_date': datetime(2017, 10, 2, 12),
+    'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 * * 0",
+    schedule_interval="0 12 * * 2",  # tuesdays
     default_args=default_args
 )
 
