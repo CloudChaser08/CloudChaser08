@@ -69,6 +69,9 @@ def init(provider, local=False):
     sqlContext.registerFunction(
         'clean_up_numeric_code', clean_up_numeric_code
     )
+    sqlContext.registerFunction(
+        'mask_zip_code', mask_zip_code
+    )
 
     # helper functions for cleaning up data
     sqlContext.registerFunction(
