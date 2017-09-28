@@ -40,6 +40,9 @@ class Runner:
             elif variables[i][0] == 'all_columns':
                 variables[i][1] = \
                     ','.join([column[0] + " " + column[1] for column in variables[i][1]])
+            elif variables[i][0] == 'all_columns':
+                variables[i][1] = \
+                    ','.join([column[0] + " " + column[1] for column in variables[i][1]])
 
             elif len(variables[i]) != 3 or variables[i][2]:
                 variables[i][1] = "'" + variables[i][1] + "'"
