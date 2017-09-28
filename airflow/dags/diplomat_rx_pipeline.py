@@ -1,4 +1,3 @@
-from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
@@ -11,12 +10,14 @@ import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.update_analytics_db as update_analytics_db
 
 import util.decompression as decompression
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
-        split_push_files, queue_up_for_matching,
-        detect_move_normalize, decompression, HVDAG]:
+          split_push_files, queue_up_for_matching,
+          detect_move_normalize, decompression, HVDAG,
+          update_analytics_db]:
     reload(m)
 
 # Applies to all files
@@ -288,6 +289,26 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+sql_template = """
+    ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='diplmoat', part_best_date='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=diplmoat/part_best_date={0}-{1}/'
+"""
+
+if HVDAG.HVDAG.airflow_env != 'test':
+    update_analytics_db = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_analytics_db',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func' : lambda ds, k: insert_current_date_function(sql_template)
+            }
+        ),
+        task_id='update_analytics_db',
+        dag=mdag
+    )
+
 
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
@@ -299,6 +320,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
+    update_analytics_db.set_upstream(detect_move_normalize_dag)
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
 
