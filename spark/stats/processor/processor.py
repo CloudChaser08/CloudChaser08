@@ -9,9 +9,9 @@ def _run_fill_rates(df):
     Input:
         -df: a dataframe
     Output:
-        - _: a dataframe with the result of fill_rate.calculate_fill_rate
+        - _: a list with the result of fill_rate.calculate_fill_rate
     '''
-    return fill_rate.calculate_fill_rate(df)
+    return fill_rate.calculate_fill_rate(df).collect()
 
 
 def _get_all_data(sqlContext, datatype, provider_name):
@@ -25,8 +25,9 @@ def _get_all_data(sqlContext, datatype, provider_name):
         - all_data_df: a dataframe of all the data for the given provider
     '''
     all_data_df = sqlContext.sql(
-            'SELECT * FROM {datatype} WHERE part_provider = {provider_name}'.format(
+            'SELECT * FROM {datatype} WHERE {partition_column} = {provider_name}'.format(
                 datatype = datatype,
+                partition_column = 'part_provider' if datatype != 'emr' else None       # Can change once known
                 provider_name = provider_name
             )
     )
