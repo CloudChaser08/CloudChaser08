@@ -122,6 +122,76 @@ def partition_and_rename(
     )
 
 
+def partition_custom(
+        spark, runner, provider, table_name, date_column, file_date,
+        partition_value=None, test_dir=None, staging_subdir='',
+        provider_partition='part_provider', date_partition='part_best_date', columns=None
+):
+    """
+    Unload custom data into partitions based on a date column
+    """
+    if columns is None:
+        columns = ['*']
+
+    if test_dir:
+        staging_dir = "{}{}/{}".format(test_dir, provider, staging_subdir)
+        part_files_cmd = ['find', staging_dir, '-type', 'f']
+        common_dirpath = '../common/'
+
+    else:
+        staging_dir = "{}{}/{}".format(constants.hdfs_staging_dir, provider, staging_subdir)
+        part_files_cmd = ['hadoop', 'fs', '-ls', '-R', staging_dir]
+        common_dirpath = '../../../../common/'
+
+    model_columns = [[f['name'], f['type']] for f in runner.sqlContext.sql('SELECT * FROM {}'.format(table_name)).schema.jsonValue()['fields']]
+
+    runner.run_spark_script(common_dirpath + 'custom_model.sql', [
+        ['table_name', 'final_unload', False],
+        ['properties', constants.custom_unload_properties_template.format(date_partition, staging_dir), False],
+        ['all_columns', model_columns, False]
+    ])
+
+    if partition_value is None and hvm_historical_date is None:
+        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
+            ['select_statement', "SELECT {}, '0_PREDATES_HVM_HISTORY' as {} FROM {} WHERE {} is NULL".format(
+                ','.join(columns), date_partition, table_name, date_column
+            ), False],
+            ['partitions', '20', False]
+        ])
+        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
+            ['select_statement', "SELECT {0}, regexp_replace({2}, '-..$', '') as {3} FROM {1} WHERE {2} IS NOT NULL".format(
+                ','.join(columns), table_name, date_column, date_partition
+            ), False],
+            ['partitions', '20', False]
+        ])
+    elif partition_value is None and hvm_historical_date is not None:
+        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
+            ['select_statement', "SELECT {0}, regexp_replace({2}, '-..$', '') as {3} FROM {1} WHERE {2} IS NOT NULL AND {2} >= CAST('{4}' AS DATE)".format(
+                ','.join(columns), table_name, date_column, date_partition, hvm_historical_date_string
+            ), False],
+            ['partitions', '20', False]
+        ])
+        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
+            ['select_statement', "SELECT {0}, '0_PREDATES_HVM_HISTORY' as {3} FROM {1} WHERE {2} IS NULL OR {2} < CAST('{4}' AS DATE)".format(
+                ','.join(columns), table_name, date_column, date_partition, hvm_historical_date_string
+            ), False],
+            ['partitions', '20', False]
+        ])
+    else:
+        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
+            ['select_statement', "SELECT {}, '{}' as {} FROM {}".format(
+                ','.join(columns), partition_value, date_partition, table_name
+            ), False],
+            ['partitions', '20', False]
+        ])
+
+    part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
+
+    spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
+        mk_move_file(file_date, test_dir is not None)
+    )
+
+
 def distcp(dest, src=constants.hdfs_staging_dir):
     subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption',
                            '--src', src,
