@@ -83,12 +83,7 @@ def test_fill_rate_calculated():
 
 
 def test_fill_rate_dataframe_count():
-    assert results_distinct_column['fill_rates'].count() == 1
-    assert results_no_distinct_column['fill_rates'].count() == 1
-
-
-def test_fill_rate_column_names_are_same():
-    assert results_distinct_column['fill_rates'].columns == \
-            results_no_distinct_column['fill_rates'].columns
+    assert len(results_distinct_column['fill_rates']) == 1
+    assert len(results_no_distinct_column['fill_rates']) == 1
 
 

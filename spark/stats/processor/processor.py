@@ -27,7 +27,7 @@ def _get_all_data(sqlContext, datatype, provider_name):
     all_data_df = sqlContext.sql(
             'SELECT * FROM {datatype} WHERE {partition_column} = {provider_name}'.format(
                 datatype = datatype,
-                partition_column = 'part_provider' if datatype != 'emr' else None       # Can change once known
+                partition_column = 'part_provider' if datatype != 'emr' else None,       # Can change once known
                 provider_name = provider_name
             )
     )
