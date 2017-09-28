@@ -10,6 +10,7 @@ results_no_fill_rate = None
 
 provider_name = None
 
+columns = None
 data_row = None
 
 fill_rate_conf = None
@@ -22,7 +23,7 @@ def cleanup(spark):
 def test_init(spark):
     global df, provider_name, results_distinct_column, \
             results_no_distinct_column, results_no_fill_rate, \
-            data_row, fill_rate_conf
+            columns, data_row, fill_rate_conf
 
     provider_name = 'test'
 
@@ -34,7 +35,8 @@ def test_init(spark):
     end_date = '2017-03-15'
     earliest_date = '1992-11-07'
 
-    data_row = Row('claim_id', 'service_date', 'col_1', 'col_2', 'col_3')
+    columns = ['claim_id', 'service_date', 'col_1', 'col_2', 'col_3']
+    data_row = Row(*columns)
 
     def _inject_get_data(*params):
         df = spark['spark'].sparkContext.parallelize([
@@ -51,7 +53,8 @@ def test_init(spark):
         return df
 
 
-    fill_rate_conf = { 'columns': ['claim_id', 'service_date', 'col_3'] }
+    fill_rate_conf = { 'blacklist_columns': ['claim_id', \
+                                            'service_date', 'col_3'] }
 
     def _inject_get_provider_conf(*params):
         return {
@@ -129,11 +132,11 @@ def test_fill_rate_dataframe_count():
     assert len(results_no_distinct_column['fill_rates']) == 1
 
 
-def test_fill_rate_column_names_are_same():
-    assert results_distinct_column['fill_rates'].columns == \
-            fill_rate_conf['columns']
-    assert results_no_distinct_column['fill_rates'].columns == \
-            fill_rate_conf['columns']
+def test_fill_rate_column_are_blacklisted():
+    assert len(set(results_distinct_column['fill_rates'].columns) \
+                .intersection(set(fill_rate_conf['blacklist_columns']))) == 0
+    assert len(set(results_no_distinct_column['fill_rates'].columns) \
+                .intersection(set(fill_rate_conf['blacklist_columns']))) == 0
 
 
 def test_no_df_if_fill_rates_is_none_in_provider_conf():

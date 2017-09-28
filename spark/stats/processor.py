@@ -17,8 +17,9 @@ def _run_fill_rates(df, provider_conf):
     '''
     if provider_conf['fill_rates']:
         # Get only the columns needed to calculate fill rates on
-        fill_rate_cols_df = df.select( \
-                *[col(c) for c in provider_conf['fill_rates']['columns']])
+        cols = [c for c in df.columns if c not in \
+                provider_conf['fill_rates']['blacklist_columns']]
+        fill_rate_cols_df = df.select(*[col(c) for c in cols])
         fill_rates_df = fill_rate.calculate_fill_rate(fill_rate_cols_df)
         return fill_rates_df
 
