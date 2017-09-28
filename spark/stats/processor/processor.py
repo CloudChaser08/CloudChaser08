@@ -98,9 +98,8 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
             select_distinct_column.select_distinct_column(distinct_column_name)
         )(all_data_df).cache()
     else:
-        reduced_df_1 = postprocessor.compose(
-            limit_date_range.limit_date_range(start_date, end_date, date_column_field)
-        )(all_data_df).cache()
+        reduced_df_1 = limit_date_range.limit_date_range(start_date, \
+                        end_date, date_column_field)(all_data_df).cache()
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year
