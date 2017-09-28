@@ -81,14 +81,6 @@ def main(args):
     # Tell spark to shutdown
     spark.stop()
 
-    # Determine where to put the output
-    if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/spark-output/'
-    else:
-        output_path = 's3://salusv/deliverable/cardinal_dcoa/'
-    normalized_records_unloader.distcp(output_path)
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
