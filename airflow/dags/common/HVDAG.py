@@ -46,15 +46,15 @@ class HVDAG(DAG):
         slack.send_message(config.SLACK_CHANNEL, attachment=attachment)
 
     def _on_retry(self, context):
-        if self.clear_all_tasks_on_retry:
+        dag_id = "{}.{}".format(
+            context['dag'].dag_id,
+            context['ti'].task_id,
+        )
+        sdag = DagBag().get_dag(dag_id)
+        if sdag.clear_all_tasks_on_retry:
             """Clears a subdag's tasks on retry.
                 based on https://gist.github.com/nathairtras/6ce0b0294be8c27d672e2ad52e8f2117"""
-            dag_id = "{}.{}".format(
-                context['dag'].dag_id,
-                context['ti'].task_id,
-            )
             execution_date = context['execution_date']
-            sdag = DagBag().get_dag(dag_id)
             sdag.clear(
                 start_date=execution_date,
                 end_date=execution_date,
