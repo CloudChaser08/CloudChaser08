@@ -38,7 +38,6 @@ def get_prefix_dir_paths(root_path, recurse=2):
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
-    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
 
     runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
@@ -189,10 +188,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # trim and nullify all incoming transactions tables
     for table in transaction_tables:
         postprocessor.compose(
-            postprocessor.trimmify, lambda df: postprocessor.nullify(
-                df,
-                null_vals=['']
-            )
+            postprocessor.trimmify, postprocessor.nullify
         )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
 
     runner.run_spark_script('normalize_encounter.sql', [
@@ -249,7 +245,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized_tables = [
         {
             'table_name'    : 'clinical_observation_common_model',
-            'script_name'   : 'emr/clinical_observation_common_model_v2.sql',
+            'script_name'   : 'emr/clinical_observation_common_model_v4.sql',
             'data_type'     : 'clinical_observation',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_clinical_observation,
@@ -257,56 +253,56 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         },
         {
             'table_name'    : 'diagnosis_common_model',
-            'script_name'   : 'emr/diagnosis_common_model_v3.sql',
+            'script_name'   : 'emr/diagnosis_common_model_v5.sql',
             'data_type'     : 'diagnosis',
             'date_column'   : 'enc_dt',
             'privacy_filter': priv_diagnosis
         },
         {
             'table_name'    : 'encounter_common_model',
-            'script_name'   : 'emr/encounter_common_model_v2.sql',
+            'script_name'   : 'emr/encounter_common_model_v4.sql',
             'data_type'     : 'encounter',
             'date_column'   : 'enc_start_dt',
             'privacy_filter': priv_encounter
         },
         {
             'table_name'    : 'medication_common_model',
-            'script_name'   : 'emr/medication_common_model_v2.sql',
+            'script_name'   : 'emr/medication_common_model_v4.sql',
             'data_type'     : 'medication',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_medication
         },
         {
             'table_name'    : 'procedure_common_model',
-            'script_name'   : 'emr/procedure_common_model_v2.sql',
+            'script_name'   : 'emr/procedure_common_model_v4.sql',
             'data_type'     : 'procedure',
             'date_column'   : 'proc_dt',
             'privacy_filter': priv_procedure
         },
         {
             'table_name'    : 'lab_result_common_model',
-            'script_name'   : 'emr/lab_result_common_model_v2.sql',
+            'script_name'   : 'emr/lab_result_common_model_v4.sql',
             'data_type'     : 'lab_result',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_lab_result
         },
         {
             'table_name'    : 'lab_order_common_model',
-            'script_name'   : 'emr/lab_order_common_model_v2.sql',
+            'script_name'   : 'emr/lab_order_common_model_v3.sql',
             'data_type'     : 'lab_order',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_lab_order
         },
         {
             'table_name'    : 'provider_order_common_model',
-            'script_name'   : 'emr/provider_order_common_model_v2.sql',
+            'script_name'   : 'emr/provider_order_common_model_v4.sql',
             'data_type'     : 'provider_order',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_provider_order
         },
         {
             'table_name'    : 'vital_sign_common_model',
-            'script_name'   : 'emr/vital_sign_common_model_v2.sql',
+            'script_name'   : 'emr/vital_sign_common_model_v4.sql',
             'data_type'     : 'vital_sign',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_vital_sign
