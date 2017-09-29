@@ -1,9 +1,13 @@
 import json
-import os
+from spark.helpers.file_utils import get_abs_path
 
 def _get_config_from_json(filename):
     '''
-    * Put doc here *
+    Reads a config file as json and stores it in a Python dict.
+    Input:
+        - filename: Absolute path of the location for the file
+    Output:
+        - data: the config represented as a Python dict
     '''
 
     with open(filename, 'r') as conf:
@@ -13,7 +17,14 @@ def _get_config_from_json(filename):
 
 def _extract_provider_conf(provider_name, providers_conf):
     '''
-    * Put doc here *
+    Get a specific providers config from the config file with all
+    provider configs.
+    Input:
+        - provider_name: The name of the provider
+        - providers_conf: A Python dict containing configs
+                          for every provider
+    Output:
+        - _ : A Python dict with the config for 'provider_name'
     '''
 
     conf = list(filter(lambda x: x['name'] == provider_name, providers_conf['providers']))
@@ -24,11 +35,17 @@ def _extract_provider_conf(provider_name, providers_conf):
 
 def get_provider_config(provider_name, providers_conf_file):
     '''
-    * Put doc here *
+    Read the providers config files and each associated stat calc config file
+    and combine them into one provider config object.
+    Input:
+        - provider_name: The name of the provider
+        - providers_conf_file: Absolute path of the location of the
+                               config file with all provider configs.
+    Output:
+        - provider_conf: A python dict of the providers config with
+                         each associated stat calcs config embedded
     '''
 
-    config_dir = '/'.join(os.path.abspath(providers_conf_file).split('/')[:-1])
-    
     providers_conf = _get_config_from_json(providers_conf_file)
 
     if 'providers' not in providers_conf:
@@ -43,7 +60,7 @@ def get_provider_config(provider_name, providers_conf_file):
         if calc not in provider_conf:
             raise Exception('No config for {} found in {} config'.format(calc, provider_name))
         if provider_conf[calc]:
-            conf_file_loc = config_dir + '/' + provider_conf[calc]
+            conf_file_loc = get_abs_path(providers_conf_file, provider_conf[calc])
             provider_conf[calc] = _get_config_from_json(conf_file_loc)
     
     return provider_conf
