@@ -53,8 +53,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
+    serde_props = "WITH SERDEPROPERTIES ('separatorChar' = '|')" \
+        if date_input > '2017-07-31' else ''
+
     runner.run_spark_script('load_transactions.sql', [
-        ['input_path', input_path]
+        ['input_path', input_path],
+        ['serde_props', serde_props, False]
     ])
     postprocessor.trimmify(runner.sqlContext.sql('select * from transactions')).createTempView('transactions')
 

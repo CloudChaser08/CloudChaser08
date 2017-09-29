@@ -128,6 +128,7 @@ CREATE EXTERNAL TABLE transactions (
         hvJoinKey                                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    {serde_props}
     STORED AS TEXTFILE
     LOCATION {input_path}
     ;
