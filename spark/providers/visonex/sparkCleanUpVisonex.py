@@ -68,7 +68,7 @@ def run(spark, runner, date_input, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Nextgen EMR")
+    spark, sqlContext = init("Visonex EMR")
 
     # initialize runner
     runner = Runner(sqlContext)
