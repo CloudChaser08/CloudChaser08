@@ -4,7 +4,6 @@
 # routine is complex, so we split up their monthly updates into 4
 # equal parts before ingesting them.
 
-from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
@@ -425,7 +424,7 @@ sql_template_835 = """
 """
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    update_analytics_db = SubDagOperator(
+    update_analytics_db_837 = SubDagOperator(
         subdag=update_analytics_db.update_analytics_db(
             DAG_NAME,
             'update_analytics_db',
@@ -462,7 +461,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     post_norm_steps = split_transactional_837_steps
     post_norm_steps.append(queue_up_for_matching)
     detect_move_normalize_dag.set_upstream(post_norm_steps)
-    update_analytics_db.set_upstream(detect_move_normalize_dag)
+    update_analytics_db_837.set_upstream(detect_move_normalize_dag)
     update_analytics_db_835.set_upstream(split_transactional_835)
 else:
     detect_move_normalize_dag.set_upstream(
