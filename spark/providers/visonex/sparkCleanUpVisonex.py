@@ -7,6 +7,7 @@ from spark.spark_setup import init
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.file_utils as file_utils
 
 import logging
 
@@ -27,10 +28,19 @@ TABLES = ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment'
         'patientstatushistory', 'problemlist', 'sodiumufprofile', 'stategeo',
         'zipgeo']
 
-def run(spark, runner, date_input, airflow_test=False):
+def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
-    if airflow_test:
+    script_path = __file__
+
+    if test:
+        input_path = file_utils.get_abs_path(
+            script_path, '../../test/providers/visonex/custom/resources/input/'
+        ) + '/'
+        matching_path = file_utils.get_abs_path(
+            script_path, '../../test/providers/visonex/custom/resources/matching/'
+        ) + '/'
+    elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/visonex/emr/input/{}/'.format(
             date_input.replace('-', '/')
         )
@@ -60,11 +70,12 @@ def run(spark, runner, date_input, airflow_test=False):
 
     runner.run_spark_script('clean_up_visonex.sql')
 
-    for table in TABLES:
-        normalized_records_unloader.partition_custom(
-            spark, runner, 'visonex', 'clean_' + table, None, date_input,
-            partition_value=date_input[:7], staging_subdir='{}/'.format(table)
-        )
+    if not test:
+        for table in TABLES:
+            normalized_records_unloader.partition_custom(
+                spark, runner, 'visonex', 'clean_' + table, None, date_input,
+                partition_value=date_input[:7], staging_subdir='{}/'.format(table)
+            )
 
 def main(args):
     # init
