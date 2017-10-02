@@ -419,5 +419,5 @@ column414 text ENCODE lzo
 DISTKEY(column1) SORTKEY(column1);
 
 -- Load transaction data into table
-copy allscripts_dx_raw from :header_path credentials :credentials GZIP BLANKSASNULL FILLRECORD MAXERROR 20;
-copy allscripts_dx_raw from :serviceline_path credentials :credentials GZIP BLANKSASNULL FILLRECORD MAXERROR 20;
+copy allscripts_dx_raw from :header_path credentials :credentials GZIP BLANKSASNULL FILLRECORD MAXERROR 1000;
+copy allscripts_dx_raw from :serviceline_path credentials :credentials GZIP BLANKSASNULL FILLRECORD MAXERROR 1000;
