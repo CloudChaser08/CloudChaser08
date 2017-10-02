@@ -9,10 +9,16 @@ for m in [ HVDAG]:
 
 def do_update_db(ds, **kwargs):
     sql_command=kwargs['sql_command_func'](ds, kwargs)
-    if len(sql_command) == 0:
+    sql_commands=[]
+    if len(sql_command) != 0:
+        sql_commands.append(sql_command)
+    if 'sql_commands_func' in kwargs:
+        sql_commands.extend(kwargs['sql_commands_func'](ds, kwargs))
+    if len(sql_commands) == 0:
         return
     cursor = hive.connect(Variable.get('analytics_db_host')).cursor()
-    cursor.execute(sql_command)
+    for sql in sql_commands:
+        cursor.execute(sql)
     cursor.close()
 
 def update_analytics_db(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
