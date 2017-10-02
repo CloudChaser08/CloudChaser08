@@ -29,10 +29,21 @@ whitelists = [
     {
         'column_name': 'rec_stat_cd',
         'domain_name': 'emr_lab_result.rec_stat_cd'
+    },
+    {
+        'column_name': 'lab_result_uom',
+        'domain_name': 'emr_lab_result.lab_test_uom'
     }
 ]
 
-def filter(sqlc, update_whitelists=lambda x: x):
+
+def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
+    if not additional_transforms:
+        additional_transforms = {}
+
+    modified_transformer = dict(lab_result_transformer)
+    modified_transformer.update(additional_transforms)
+
     def out(df):
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
@@ -41,6 +52,6 @@ def filter(sqlc, update_whitelists=lambda x: x):
                 for whitelist in whtlsts
             ]
         )(
-            emr_priv_common.filter(df, lab_result_transformer)
+            emr_priv_common.filter(df, modified_transformer)
         )
     return out

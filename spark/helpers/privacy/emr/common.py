@@ -16,7 +16,10 @@ emr_transformer = {
     }
 }
 
-def filter(df, additional_transforms={}):
+def filter(df, additional_transforms=None):
+    if not additional_transforms:
+        additional_transforms = {}
+
     modified_emr_transformer = dict(emr_transformer)
     modified_emr_transformer.update(additional_transforms)
     return priv_common.filter(df, modified_emr_transformer)

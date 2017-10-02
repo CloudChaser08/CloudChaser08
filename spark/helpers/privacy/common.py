@@ -21,6 +21,10 @@ column_transformer = {
     'procedure_code': {
         'func': post_norm_cleanup.clean_up_procedure_code,
         'args': ['procedure_code']
+    },
+    'patient_zip3': {
+        'func': post_norm_cleanup.mask_zip_code,
+        'args': ['patient_zip3']
     }
 }
 
