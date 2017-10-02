@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS {analyticsdb_schema}.pharmacy_claims_t2d;
-CREATE TABLE {analyticsdb_schema}.pharmacy_claims_t2d
+DROP TABLE IF EXISTS {foresite_schema}.pharmacy_claims_t2d;
+CREATE TABLE {foresite_schema}.pharmacy_claims_t2d
     AS SELECT record_id, claim_id,
     
     /* hash hvid */
@@ -40,16 +40,16 @@ CREATE TABLE {analyticsdb_schema}.pharmacy_claims_t2d
     other_payer_coverage_type, other_payer_coverage_id, other_payer_coverage_qual, other_payer_date, other_payer_coverage_code,
     logical_delete_reason
     
-FROM pharmacyclaims a
+FROM external_pharmacyclaims a
     INNER JOIN (
     SELECT *
-    FROM ref_marketplace_to_warehouse
+    FROM external_ref_marketplace_to_warehouse
     WHERE data_type = 'pharmacy'
         ) b ON a.part_provider = b.warehouse_feed_name
-    INNER JOIN {analyticsdb_schema}.mkt_def_ndc c ON a.ndc_code = c.ndc_code
+    INNER JOIN {foresite_schema}.mkt_def_ndc c ON a.ndc_code = c.ndc_code
     INNER JOIN (
     SELECT * 
-    FROM {analyticsdb_schema}.mkt_def_calendar 
+    FROM external_mkt_def_calendar
     WHERE delivery_date = {delivery_date}
         ) d ON a.date_service BETWEEN d.start_date AND d.end_date
 WHERE a.hvid IS NOT NULL AND a.hvid NOT IN ('',' ') AND 

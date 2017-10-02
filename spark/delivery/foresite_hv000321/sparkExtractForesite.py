@@ -3,6 +3,7 @@ import argparse
 from spark.runner import Runner
 import spark.helpers.constants as constants
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.file_utils as file_utils
 import spark.helpers.extractor as extractor
 from spark.spark_setup import init
@@ -21,20 +22,32 @@ def run(spark, runner, date, test=False):
     else:
         STAGING_DIR = constants.hdfs_staging_dir
 
+        external_table_loader.load_analytics_db_tables(
+            runner.sqlContext, [
+                {'schema': 'default', 'table_name': 'ref_ndc_code', 'local_alias': 'external_ref_ndc_code'},
+                {'schema': 'default', 'table_name': 'ref_icd10_diagnosis', 'local_alias': 'external_ref_icd10_diagnosis'},
+                {'schema': 'default', 'table_name': 'ref_marketplace_to_warehouse', 'local_alias': 'external_ref_marketplace_to_warehouse'},
+                {'schema': 'default', 'table_name': 'ref_calendar', 'local_alias': 'external_ref_calendar'},
+                {'schema': 'default', 'table_name': 'pharmacyclaims', 'local_alias': 'external_pharmacyclaims'},
+                {'schema': 'default', 'table_name': 'enrollmentrecords', 'local_alias': 'external_enrollmentrecords'},
+                {'schema': FORESITE_SCHEMA, 'table_name': 'mkt_def_calendar', 'local_alias': 'external_mkt_def_calendar'},
+            ]
+        )
+
     PHARMACY_OUT_TEMPLATE = STAGING_DIR + '/pharmacy_claims_t2d'
     ENROLLMENT_OUT_TEMPLATE = STAGING_DIR + '/enrollment_t2d'
 
     runner.run_spark_script('reload_codes.sql', [
-        ['analyticsdb_schema', FORESITE_SCHEMA, False]
+        ['foresite_schema', FORESITE_SCHEMA, False]
     ])
 
     runner.run_spark_script('create_pharmacy_extract.sql', [
-        ['analyticsdb_schema', FORESITE_SCHEMA, False],
+        ['foresite_schema', FORESITE_SCHEMA, False],
         ['delivery_date', date]
     ])
 
     runner.run_spark_script('create_enrollment_extract.sql', [
-        ['analyticsdb_schema', FORESITE_SCHEMA, False],
+        ['foresite_schema', FORESITE_SCHEMA, False],
         ['delivery_date', date]
     ])
 

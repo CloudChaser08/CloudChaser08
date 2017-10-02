@@ -11,12 +11,13 @@ script_path = __file__
 
 
 def cleanup(spark):
-    spark['sqlContext'].sql('DROP TABLE IF EXISTS default.ref_icd10_diagnosis')
-    spark['sqlContext'].sql('DROP TABLE IF EXISTS default.ref_ndc_code')
-    spark['sqlContext'].sql('DROP TABLE IF EXISTS default.ref_marketplace_to_warehouse')
-    spark['sqlContext'].sql('DROP TABLE IF EXISTS pharmacyclaims')
-    spark['sqlContext'].sql('DROP TABLE IF EXISTS enrollmentrecords')
-    spark['sqlContext'].sql('DROP TABLE IF EXISTS ref_calendar')
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS external_ref_icd10_diagnosis')
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS external_ref_ndc_code')
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS external_ref_marketplace_to_warehouse')
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS external_pharmacyclaims')
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS external_enrollmentrecords')
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS external_ref_calendar')
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS external_mkt_def_calendar')
     spark['sqlContext'].sql('DROP DATABASE IF EXISTS {} CASCADE'.format(foresite.FORESITE_SCHEMA))
 
     try:
@@ -40,7 +41,7 @@ def test_init(spark):
             StructField('nonproprietary_name', StringType(), True),
             StructField('proprietary_name', StringType(), True)
         ])
-    ).write.saveAsTable("default.ref_ndc_code")
+    ).write.saveAsTable("external_ref_ndc_code")
 
     # load icd10 code ref table
     spark['spark'].sparkContext.parallelize([
@@ -53,7 +54,7 @@ def test_init(spark):
             StructField('header', StringType(), True),
             StructField('long_description', StringType(), True)
         ])
-    ).write.saveAsTable("default.ref_icd10_diagnosis")
+    ).write.saveAsTable("external_ref_icd10_diagnosis")
 
     # load ref_marketplace_to_warehouse
     spark['spark'].sparkContext.parallelize([
@@ -65,7 +66,7 @@ def test_init(spark):
             StructField('marketplace_feed_name', StringType(), True),
             StructField('marketplace_feed_id', StringType(), True)
         ])
-    ).write.saveAsTable("default.ref_marketplace_to_warehouse")
+    ).write.saveAsTable("external_ref_marketplace_to_warehouse")
 
     # load mkt_def_calendar
     spark['spark'].sparkContext.parallelize([
@@ -76,7 +77,7 @@ def test_init(spark):
             StructField('start_date', StringType(), True),
             StructField('end_date', StringType(), True)
         ])
-    ).write.saveAsTable("{}.mkt_def_calendar".format(foresite.FORESITE_SCHEMA))
+    ).write.saveAsTable("external_mkt_def_calendar".format(foresite.FORESITE_SCHEMA))
 
     # load ref_calendar
     spark['spark'].sparkContext.parallelize([
@@ -97,11 +98,11 @@ def test_init(spark):
         StructType([
             StructField('calendar_date', StringType(), True)
         ])
-    ).createTempView("ref_calendar".format(foresite.FORESITE_SCHEMA))
+    ).createTempView("external_ref_calendar".format(foresite.FORESITE_SCHEMA))
 
     # load pharmacyclaims table
     spark['runner'].run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
-        ['table_name', 'pharmacyclaims', False],
+        ['table_name', 'external_pharmacyclaims', False],
         ['properties', "PARTITIONED BY (part_provider string, part_processdate string) "
          + "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' "
          + "STORED AS TEXTFILE "
@@ -110,11 +111,11 @@ def test_init(spark):
         ['external', 'EXTERNAL', False]
     ], script_path)
 
-    spark['sqlContext'].sql('msck repair table pharmacyclaims')
+    spark['sqlContext'].sql('msck repair table external_pharmacyclaims')
 
     # load enrollmentrecords table
     spark['runner'].run_spark_script('../../../common/enrollment_common_model.sql', [
-        ['table_name', 'enrollmentrecords', False],
+        ['table_name', 'external_enrollmentrecords', False],
         ['properties', "PARTITIONED BY (part_provider string, part_processdate string) "
          + "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' "
          + "STORED AS TEXTFILE "
@@ -123,7 +124,7 @@ def test_init(spark):
         ['external', 'EXTERNAL', False]
     ], script_path)
 
-    spark['sqlContext'].sql('msck repair table enrollmentrecords')
+    spark['sqlContext'].sql('msck repair table external_enrollmentrecords')
 
     foresite.run(spark['spark'], spark['runner'], '2017-09-08', True)
 

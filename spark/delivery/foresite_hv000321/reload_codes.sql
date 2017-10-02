@@ -1,7 +1,7 @@
-DROP TABLE IF EXISTS {analyticsdb_schema}.mkt_def_ndc;
-CREATE TABLE {analyticsdb_schema}.mkt_def_ndc AS
+DROP TABLE IF EXISTS {foresite_schema}.mkt_def_ndc;
+CREATE TABLE {foresite_schema}.mkt_def_ndc AS
 SELECT ndc_code, UPPER(nonproprietary_name) AS molecule, UPPER(proprietary_name) AS brand
-FROM default.ref_ndc_code
+FROM external_ref_ndc_code
 WHERE  LOWER(nonproprietary_name) LIKE '%metformin%'
     OR LOWER(nonproprietary_name) LIKE '%colesevelam%' 
     OR LOWER(nonproprietary_name) LIKE '%sitagliptin%'
@@ -27,10 +27,10 @@ WHERE  LOWER(nonproprietary_name) LIKE '%metformin%'
 ORDER BY 1,2
     ;
 
-DROP TABLE IF EXISTS {analyticsdb_schema}.mkt_def_diag;
-CREATE TABLE {analyticsdb_schema}.mkt_def_diag as
+DROP TABLE IF EXISTS {foresite_schema}.mkt_def_diag;
+CREATE TABLE {foresite_schema}.mkt_def_diag as
 SELECT code, header, long_description
-FROM default.ref_icd10_diagnosis
+FROM external_ref_icd10_diagnosis
 WHERE code LIKE 'E11%'
 ORDER BY ordernum
     ;
