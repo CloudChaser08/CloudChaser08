@@ -419,6 +419,11 @@ sql_template = """
     LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/2017-02-24/part_provider=practice_insight/part_best_date={0}-{1}/'
 """
 
+sql_template_835 = """
+    ALTER TABLE era_practiceinsight ADD PARTITION (part_processdate='{0}/{1}')
+    LOCATION 's3a://salusv/incoming/era/practice_insight/{0}/{1}/'
+"""
+
 if HVDAG.HVDAG.airflow_env != 'test':
     update_analytics_db = SubDagOperator(
         subdag=update_analytics_db.update_analytics_db(
@@ -433,6 +438,19 @@ if HVDAG.HVDAG.airflow_env != 'test':
         task_id='update_analytics_db',
         dag=mdag
     )
+    update_analytics_db_835 = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_analytics_db_835',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func' : insert_current_date_function(sql_template_835)
+            }
+        ),
+        task_id='update_analytics_db_835',
+        dag=mdag
+    )
 
 
 # transaction
@@ -445,6 +463,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     post_norm_steps.append(queue_up_for_matching)
     detect_move_normalize_dag.set_upstream(post_norm_steps)
     update_analytics_db.set_upstream(detect_move_normalize_dag)
+    update_analytics_db_835.set_upstream(split_transactional_835)
 else:
     detect_move_normalize_dag.set_upstream(
         split_transactional_837_steps
