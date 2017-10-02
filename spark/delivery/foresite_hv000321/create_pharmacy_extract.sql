@@ -1,9 +1,3 @@
-set hive.exec.compress.output=true;
-set mapreduce.output.fileoutputformat.compress=true;
-set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; 
-set mapreduce.output.fileoutputformat.compress.type=BLOCK;
-set spark.sql.shuffle.partitions=20;
-
 DROP TABLE IF EXISTS {analyticsdb_schema}.pharmacy_claims_t2d;
 CREATE TABLE {analyticsdb_schema}.pharmacy_claims_t2d
     AS SELECT record_id, claim_id,
