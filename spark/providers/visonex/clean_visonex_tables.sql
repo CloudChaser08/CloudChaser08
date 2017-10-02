@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS address;
-CREATE EXTERNAL TABLE address (
+DROP TABLE IF EXISTS clean_address;
+CREATE TABLE clean_address (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
@@ -7,16 +7,13 @@ CREATE EXTERNAL TABLE address (
         zipcode                         string,
         patientaddressidnumber          string,
         patientidnumber                 string,
-        inactivatedate                  string,
+        inactivatedate                  date,
         associationidnumber             string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {address_input}
     ;
 
-DROP TABLE IF EXISTS clinicpreference;
-CREATE EXTERNAL TABLE clinicpreference (
+DROP TABLE IF EXISTS clean_clinicpreference;
+CREATE TABLE clean_clinicpreference (
         analyticrowidnumber         string,
         clinicorganizationidnumber  string,
         associationidnumber         string,
@@ -27,38 +24,32 @@ CREATE EXTERNAL TABLE clinicpreference (
         pnameasure                  string,
         bsamethod                   string,
         creatineclearancemethod     string,
-        inactivatedate              string
+        inactivatedate              date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {clinicpreference_input}
     ;
 
-DROP TABLE IF EXISTS dialysistraining;
-CREATE EXTERNAL TABLE dialysistraining (
+DROP TABLE IF EXISTS clean_dialysistraining;
+CREATE TABLE clean_dialysistraining (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
         cklresultid                     string,
         patientidnumber                 string,
         analyticdos                     string,
-        addeddate                       string,
-        editdate                        string,
+        addeddate                       date,
+        editdate                        date,
         trainingtype                    string,
         othertraining                   string,
         expectedselfcare                string,
         dialysisperiod                  string,
         dialysistrainingstart           string,
         dialysistrainingend             string,
-        inactivatedate                  string
+        inactivatedate                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {dialysistraining_input}
     ;
 
-DROP TABLE IF EXISTS dialysistreatment;
-CREATE EXTERNAL TABLE dialysistreatment (
+DROP TABLE IF EXISTS clean_dialysistreatment;
+CREATE TABLE clean_dialysistreatment (
         analyticrowidnumber                     string,
         clinicorganizationidnumber              string,
         patientdataanalyticrowidnumber          string,
@@ -110,7 +101,7 @@ CREATE EXTERNAL TABLE dialysistreatment (
         patienttemphighuom                      string,
         machineheaderid                         string,
         txsubtype                               string,
-        posteddate                              string,
+        posteddate                              date,
         source                                  string,
         latestart                               string,
         completetx                              string,
@@ -123,9 +114,9 @@ CREATE EXTERNAL TABLE dialysistreatment (
         endlyingpulse                           string,
         shift                                   string,
         infectionpresent                        string,
-        addeddate                               string,
-        editdate                                string,
-        inactivatedate                          string,
+        addeddate                               date,
+        editdate                                date,
+        inactivatedate                          date,
         statusisactive                          string,
         patientvascularaccesssecondaryidnumber  string,
         cfresultidnumber                        string,
@@ -134,51 +125,45 @@ CREATE EXTERNAL TABLE dialysistreatment (
         treatmenttypesubtype                    string,
         isprimary                               string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {dialysistreatment_input}
     ;
 
-DROP TABLE IF EXISTS facilityadmitdischarge;
-CREATE EXTERNAL TABLE facilityadmitdischarge (
+DROP TABLE IF EXISTS clean_facilityadmitdischarge;
+CREATE TABLE clean_facilityadmitdischarge (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
         patientfacilityidnumber         string,
         patientidnumber                 string,
         clinicidnumber                  string,
-        admitdate                       string,
+        admitdate                       date,
         admitreason                     string,
-        dischargedate                   string,
+        dischargedate                   date,
         dischargereason                 string,
-        addeddate                       string,
-        editdate                        string,
+        addeddate                       date,
+        editdate                        date,
         networkevent                    string,
         patientmasterscheduleheaderid   string,
         patientmasterscheduleid         string,
         involuntarydischargereason      string,
         transferdischargereason         string,
         transientreason                 string,
-        inactivatedate                  string,
+        inactivatedate                  date,
         analyticdos                     string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {facilityadmitdischarge_input}
     ;
 
-DROP TABLE IF EXISTS hospitalization;
-CREATE EXTERNAL TABLE hospitalization (
+DROP TABLE IF EXISTS clean_hospitalization;
+CREATE TABLE clean_hospitalization (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
         patienthospitalizationidnumber  string,
         patientidnumber                 string,
         admittingphysicianidnumber      string,
-        admissiondate                   string,
-        dischargedate                   string,
-        addeddate                       string,
-        editdate                        string,
+        admissiondate                   date,
+        dischargedate                   date,
+        addeddate                       date,
+        editdate                        date,
         hospconsult                     string,
         unstable                        string,
         staylength                      string,
@@ -187,17 +172,14 @@ CREATE EXTERNAL TABLE hospitalization (
         typevisit                       string,
         presumptivediagnosis            string,
         transplantreferral              string,
-        inactivatedate                  string,
+        inactivatedate                  date,
         icd10                           string,
         analyticdos                     string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {hospitalization_input}
     ;
 
-DROP TABLE IF EXISTS immunization;
-CREATE EXTERNAL TABLE immunization (
+DROP TABLE IF EXISTS clean_immunization;
+CREATE TABLE clean_immunization (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
@@ -209,9 +191,9 @@ CREATE EXTERNAL TABLE immunization (
         notgiven                        string,
         onoffsite                       string,
         immunization                    string,
-        immunizationdate                string,
-        addeddate                       string,
-        editdate                        string,
+        immunizationdate                date,
+        addeddate                       date,
+        editdate                        date,
         administeredondialysis          string,
         justificationforadministered    string,
         scheduled                       string,
@@ -222,19 +204,16 @@ CREATE EXTERNAL TABLE immunization (
         physicianidnumber               string,
         status                          string,
         lotnumber                       string,
-        expirationdate                  string,
+        expirationdate                  date,
         immunizationroute               string,
-        inactivatedate                  string,
+        inactivatedate                  date,
         treatmentidnumber               string,
         icd10                           string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {immunization_input}
     ;
 
-DROP TABLE IF EXISTS insurance;
-CREATE EXTERNAL TABLE insurance (
+DROP TABLE IF EXISTS clean_insurance;
+CREATE TABLE clean_insurance (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
@@ -250,24 +229,21 @@ CREATE EXTERNAL TABLE insurance (
         insurancecompanyzipcode         string,
         insurancecompanyprimaryphone    string,
         payorid                         string,
-        planeffectivedate               string,
-        planexpirationdate              string,
+        planeffectivedate               date,
+        planexpirationdate              date,
         authorizationnumber             string,
         plantype                        string,
-        addeddate                       string,
-        editdate                        string,
+        addeddate                       date,
+        editdate                        date,
         insurednumberid                 string,
         medicareparta                   string,
         companyplantype                 string,
-        inactivatedate                  string
+        inactivatedate                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {insurance_input}
     ;
 
-DROP TABLE IF EXISTS labidlist;
-CREATE EXTERNAL TABLE labidlist (
+DROP TABLE IF EXISTS clean_labidlist;
+CREATE TABLE clean_labidlist (
         analyticrowidnumber    string,
         universalserviceid     string,
         observationidentifier  string,
@@ -278,15 +254,12 @@ CREATE EXTERNAL TABLE labidlist (
         icd9info               string,
         revised_info           string,
         differencees           string,
-        inactivatedate         string
+        inactivatedate         date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {labidlist_input}
     ;
 
-DROP TABLE IF EXISTS labpanelsdrawn;
-CREATE EXTERNAL TABLE labpanelsdrawn (
+DROP TABLE IF EXISTS clean_labpanelsdrawn;
+CREATE TABLE clean_labpanelsdrawn (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
@@ -297,26 +270,23 @@ CREATE EXTERNAL TABLE labpanelsdrawn (
         status                          string,
         panelname                       string,
         justification                   string,
-        addeddate                       string,
-        editdate                        string,
+        addeddate                       date,
+        editdate                        date,
         runidnumber                     string,
         postponedto                     string,
-        thedate                         string,
+        thedate                         date,
         panelidnumber                   string,
         administrationcode              string,
         procedurecode                   string,
         medicationcode                  string,
         physicianidnumber               string,
-        inactivatedate                  string,
+        inactivatedate                  date,
         treatmentidnumber               string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {labpanelsdrawn_input}
     ;
 
-DROP TABLE IF EXISTS labresult;
-CREATE EXTERNAL TABLE labresult (
+DROP TABLE IF EXISTS clean_labresult;
+CREATE TABLE clean_labresult (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
@@ -324,13 +294,13 @@ CREATE EXTERNAL TABLE labresult (
         labresultidnumber               string,
         patientidnumber                 string,
         orderedby                       string,
-        orderdate                       string,
-        completeddate                   string,
-        receiveddate                    string,
+        orderdate                       date,
+        completeddate                   date,
+        receiveddate                    date,
         testname                        string,
         testresult                      string,
-        addeddate                       string,
-        editdate                        string,
+        addeddate                       date,
+        editdate                        date,
         calculated                      string,
         scaled                          string,
         textresult                      string,
@@ -345,28 +315,22 @@ CREATE EXTERNAL TABLE labresult (
         medicationcode                  string,
         administrationcode              string,
         procedurecode                   string,
-        inactivatedate                  string,
+        inactivatedate                  date,
         icd10                           string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {labresult_input}
     ;
 
-DROP TABLE IF EXISTS medication;
-CREATE EXTERNAL TABLE medication (
+DROP TABLE IF EXISTS clean_medication;
+CREATE TABLE clean_medication (
         medidnumber     string,
-        addeddate       string,
-        lasteditdate    string,
-        inactivatedate  string
+        addeddate       date,
+        lasteditdate    date,
+        inactivatedate  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {medication_input}
     ;
 
-DROP TABLE IF EXISTS medicationgroup;
-CREATE EXTERNAL TABLE medicationgroup (
+DROP TABLE IF EXISTS clean_medicationgroup;
+CREATE TABLE clean_medicationgroup (
         medicationgroupidnumber         string,
         medicationgroupname             string,
         medicationname                  string,
@@ -374,17 +338,14 @@ CREATE EXTERNAL TABLE medicationgroup (
         route                           string,
         original_medgroupiddetailnumb   string,
         original_medgroupidnumber       string,
-        addeddate                       string,
-        lasteditdate                    string,
-        inactivatedate                  string
+        addeddate                       date,
+        lasteditdate                    date,
+        inactivatedate                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {medicationgroup_input}
     ;
 
-DROP TABLE IF EXISTS modalitychangehistorycrownweb;
-CREATE EXTERNAL TABLE modalitychangehistorycrownweb (
+DROP TABLE IF EXISTS clean_modalitychangehistorycrownweb;
+CREATE TABLE clean_modalitychangehistorycrownweb (
         analyticrowidnumber                             string,
         modalitychangehistoryanalyticrowidnumber        string,
         patientdialysisprescriptionanalyticrowidnumber  string,
@@ -392,40 +353,34 @@ CREATE EXTERNAL TABLE modalitychangehistorycrownweb (
         patientdataanalyticrowidnumber                  string,
         defaultclinicorganizationidnumber               string,
         treatmentclinicorganizationidnumber             string,
-        effectivereportingdate                          string,
+        effectivereportingdate                          date,
         physiciananalyticrowidnumber                    string,
         treatmenttype                                   string,
         minutespersession                               string,
         sessionsperweek                                 string,
         crowndialysissetting                            string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {modalitychangehistorycrownweb_input}
     ;
 
-DROP TABLE IF EXISTS nursinghomehistory;
-CREATE EXTERNAL TABLE nursinghomehistory (
+DROP TABLE IF EXISTS clean_nursinghomehistory;
+CREATE TABLE clean_nursinghomehistory (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
         patientnursinghomeidnumber      string,
         patientidnumber                 string,
         nursinghomeid                   string,
-        startdate                       string,
-        enddate                         string,
-        addeddate                       string,
-        editdate                        string,
-        inactivatedate                  string,
+        startdate                       date,
+        enddate                         date,
+        addeddate                       date,
+        editdate                        date,
+        inactivatedate                  date,
         analyticdos                     string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {nursinghomehistory_input}
     ;
 
-DROP TABLE IF EXISTS patientaccess;
-CREATE EXTERNAL TABLE patientaccess (
+DROP TABLE IF EXISTS clean_patientaccess;
+CREATE TABLE clean_patientaccess (
         analyticrowidnumber             string,
         patientdataanalyticrowidnumber  string,
         clinicorganizationidnumber      string,
@@ -436,22 +391,19 @@ CREATE EXTERNAL TABLE patientaccess (
         currentstatus                   string,
         chroniccatheter                 string,
         analyticdos                     string,
-        startdate                       string,
-        enddate                         string,
-        addeddate                       string,
-        editdate                        string,
+        startdate                       date,
+        enddate                         date,
+        addeddate                       date,
+        editdate                        date,
         placedrecorded                  string,
         isprimaryaccess                 string,
         isstateactive                   string,
-        inactivatedate                  string
+        inactivatedate                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientaccess_input}
     ;
 
-DROP TABLE IF EXISTS patientaccess_examproc;
-CREATE EXTERNAL TABLE patientaccess_examproc (
+DROP TABLE IF EXISTS clean_patientaccess_examproc;
+CREATE TABLE clean_patientaccess_examproc (
         analyticrowidnumber                  string,
         clinicorganizationidnumber           string,
         patientdataanalyticrowidnumber       string,
@@ -459,9 +411,9 @@ CREATE EXTERNAL TABLE patientaccess_examproc (
         resultidnumber                       string,
         patientidnumber                      string,
         analyticdos                          string,
-        addeddate                            string,
-        editdate                             string,
-        examproceduredate                    string,
+        addeddate                            date,
+        editdate                             date,
+        examproceduredate                    date,
         examproceduretype                    string,
         examprocedurefrequency               string,
         performedbytype                      string,
@@ -475,16 +427,13 @@ CREATE EXTERNAL TABLE patientaccess_examproc (
         examprocedureisstateactive           string,
         examprocedurestatusafter             string,
         examprocedureisprimaryaccess         string,
-        inactivatedate                       string,
+        inactivatedate                       date,
         icd10                                string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientaccess_examproc_input}
     ;
 
-DROP TABLE IF EXISTS patientaccess_otheraccessevent;
-CREATE EXTERNAL TABLE patientaccess_otheraccessevent (
+DROP TABLE IF EXISTS clean_patientaccess_otheraccessevent;
+CREATE TABLE clean_patientaccess_otheraccessevent (
         analyticrowidnumber                 string,
         clinicorganizationidnumber          string,
         patientdataanalyticrowidnumber      string,
@@ -492,22 +441,19 @@ CREATE EXTERNAL TABLE patientaccess_otheraccessevent (
         resultidnumber                      string,
         patientidnumber                     string,
         analyticdos                         string,
-        addeddate                           string,
-        editdate                            string,
-        otheraccesseventdate                string,
+        addeddate                           date,
+        editdate                            date,
+        otheraccesseventdate                date,
         otheraccesseventisstateactive       string,
         otheraccesseventstatusafter         string,
         otheraccesseventisprimaryaccess     string,
         reasonforchange                     string,
-        inactivatedate                      string
+        inactivatedate                      date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientaccess_otheraccessevent_input}
     ;
 
-DROP TABLE IF EXISTS patientaccess_placedrecorded;
-CREATE EXTERNAL TABLE patientaccess_placedrecorded (
+DROP TABLE IF EXISTS clean_patientaccess_placedrecorded;
+CREATE TABLE clean_patientaccess_placedrecorded (
         analyticrowidnumber                 string,
         clinicorganizationidnumber          string,
         patientdataanalyticrowidnumber      string,
@@ -515,10 +461,10 @@ CREATE EXTERNAL TABLE patientaccess_placedrecorded (
         resultidnumber                      string,
         patientidnumber                     string,
         analyticdos                         string,
-        addeddate                           string,
-        editdate                            string,
+        addeddate                           date,
+        editdate                            date,
         placedrecorded                      string,
-        placedrecordeddate                  string,
+        placedrecordeddate                  date,
         accesstype                          string,
         accesslocation                      string,
         cathname                            string,
@@ -531,15 +477,12 @@ CREATE EXTERNAL TABLE patientaccess_placedrecorded (
         placedrecordedisstateactive         string,
         placedrecordedstatusafter           string,
         placedrecordedisprimaryaccess       string,
-        inactivatedate                      string
+        inactivatedate                      date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientaccess_placedrecorded_input}
     ;
 
-DROP TABLE IF EXISTS patientaccess_removed;
-CREATE EXTERNAL TABLE patientaccess_removed (
+DROP TABLE IF EXISTS clean_patientaccess_removed;
+CREATE TABLE clean_patientaccess_removed (
         analyticrowidnumber                 string,
         clinicorganizationidnumber          string,
         patientdataanalyticrowidnumber      string,
@@ -547,24 +490,21 @@ CREATE EXTERNAL TABLE patientaccess_removed (
         resultidnumber                      string,
         patientidnumber                     string,
         analyticdos                         string,
-        addeddate                           string,
-        editdate                            string,
-        removeddate                         string,
+        addeddate                           date,
+        editdate                            date,
+        removeddate                         date,
         removedbytype                       string,
         removedbyoutsidephysicianidnumber   string,
         removingfacilitytype                string,
         removingfacilityclinicidnumber      string,
         removingfacilitycontactid           string,
         removedreasontype                   string,
-        inactivatedate                      string
+        inactivatedate                      date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientaccess_removed_input}
     ;
 
-DROP TABLE IF EXISTS patientallergy;
-CREATE EXTERNAL TABLE patientallergy (
+DROP TABLE IF EXISTS clean_patientallergy;
+CREATE TABLE clean_patientallergy (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
@@ -573,22 +513,19 @@ CREATE EXTERNAL TABLE patientallergy (
         medidnumber                     string,
         medicationname                  string,
         typeofreaction                  string,
-        startdate                       string,
-        enddate                         string,
+        startdate                       date,
+        enddate                         date,
         drug_id                         string,
         category_concept_id             string,
         categoryname                    string,
-        addeddate                       string,
-        editdate                        string,
-        inactivatedate                  string
+        addeddate                       date,
+        editdate                        date,
+        inactivatedate                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientallergy_input}
     ;
 
-DROP TABLE IF EXISTS patientcms2728;
-CREATE EXTERNAL TABLE patientcms2728 (
+DROP TABLE IF EXISTS clean_patientcms2728;
+CREATE TABLE clean_patientcms2728 (
         analyticrowidnumber                 string,
         clinicorganizationidnumber          string,
         patientdataanalyticrowidnumber      string,
@@ -618,52 +555,49 @@ CREATE EXTERNAL TABLE patientcms2728 (
         esrd_firstopdialysismaturingavf     string,
         esrd_firstopdialysismaturinggraft   string,
         prelab_albumin                      string,
-        prelab_albumindate                  string,
+        prelab_albumindate                  date,
         prelab_albuminll                    string,
-        prelab_albuminlldate                string,
+        prelab_albuminlldate                date,
         prelab_bun                          string,
-        prelab_bundate                      string,
+        prelab_bundate                      date,
         prelab_creatinine                   string,
-        prelab_creatininedate               string,
+        prelab_creatininedate               date,
         prelab_creatinineclearance          string,
-        prelab_creatinineclearancedate      string,
+        prelab_creatinineclearancedate      date,
         prelab_hba1c                        string,
-        prelab_hba1cdate                    string,
+        prelab_hba1cdate                    date,
         prelab_hematocrit                   string,
-        prelab_hematocritdate               string,
+        prelab_hematocritdate               date,
         prelab_hemoglobin                   string,
-        prelab_hemoglobindate               string,
+        prelab_hemoglobindate               date,
         prelab_labmethodused                string,
-        prelab_labmethoduseddate            string,
+        prelab_labmethoduseddate            date,
         prelab_lipidprofilehdl              string,
-        prelab_lipidprofilehdldate          string,
+        prelab_lipidprofilehdldate          date,
         prelab_lipidprofileldl              string,
-        prelab_lipidprofileldldate          string,
+        prelab_lipidprofileldldate          date,
         prelab_lipidprofiletc               string,
-        prelab_lipidprofiletcdate           string,
+        prelab_lipidprofiletcdate           date,
         prelab_lipidprofiletg               string,
-        prelab_lipidprofiletgdate           string,
+        prelab_lipidprofiletgdate           date,
         prelab_ureaclearance                string,
-        prelab_ureaclearancedate            string,
+        prelab_ureaclearancedate            date,
         patientgfrmethod                    string,
-        comorbidreportdate                  string,
+        comorbidreportdate                  date,
         supervisingphysicianidnumber        string,
-        supervisingphysiciansignaturedate   string,
+        supervisingphysiciansignaturedate   date,
         willselfdialyze                     string,
         trainingphysicianidnumber           string,
-        trainingphysiciansignaturedate      string,
-        patientsignaturedate                string,
-        addeddate                           string,
-        editdate                            string,
-        inactivatedate                      string
+        trainingphysiciansignaturedate      date,
+        patientsignaturedate                date,
+        addeddate                           date,
+        editdate                            date,
+        inactivatedate                      date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientcms2728_input}
     ;
 
-DROP TABLE IF EXISTS patientcomorbidityandtransplantstate;
-CREATE EXTERNAL TABLE patientcomorbidityandtransplantstate (
+DROP TABLE IF EXISTS clean_patientcomorbidityandtransplantstate;
+CREATE TABLE clean_patientcomorbidityandtransplantstate (
         analyticrowidnumber                         string,
         clinicorganizationidnumber                  string,
         patientdataanalyticrowidnumber              string,
@@ -671,16 +605,16 @@ CREATE EXTERNAL TABLE patientcomorbidityandtransplantstate (
         causeofrenalfailure                         string,
         transplantfunctioningatdeath                string,
         transplantedkidney                          string,
-        transplantdate                              string,
+        transplantdate                              date,
         transplanthospital                          string,
         medicareprovidernumberoftransplanthospital  string,
         medicareprovidernumberoftransplanthospital2 string,
         medicareprovidernumberoftransplanthospital3 string,
         prephospital                                string,
         prephospitalmedicareprovidernumber          string,
-        prephospitalenterdate                       string,
+        prephospitalenterdate                       date,
         currentstateoftransplant                    string,
-        transplantcandidate                         string,
+        transplantcandidate                         date,
         transopmedicallyunfit                       string,
         transopnotassessed                          string,
         transopother                                string,
@@ -693,21 +627,19 @@ CREATE EXTERNAL TABLE patientcomorbidityandtransplantstate (
         transplanthospital2note                     string,
         transplanthospital3note                     string,
         transplantwaitlist                          string,
-        editdatetransplant                          string,
-        inactivatedate                              string
+        editdatetransplant                          date,
+        inactivatedate                              date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientcomorbidityandtransplantstate_input}
     ;
 
-DROP TABLE IF EXISTS patientdata;
-CREATE EXTERNAL TABLE patientdata (
+DROP TABLE IF EXISTS clean_patientdata;
+CREATE TABLE clean_patientdata (
         analyticrowidnumber                     string,
         clinicorganizationidnumber              string,
         defaultclinicidnumber                   string,
         patientidnumber                         string,
         patientid                               string,
+        hvid                                    string,
         medicalrecordnumber                     string,
         labidnumber                             string,
         state                                   string,
@@ -719,31 +651,28 @@ CREATE EXTERNAL TABLE patientdata (
         primarymodality                         string,
         primarymodality_original                string,
         primarydialysissetting                  string,
-        datefirstdialysis                       string,
-        laststatuschangedate                    string,
+        datefirstdialysis                       date,
+        laststatuschangedate                    date,
         resuscitationcode                       string,
         advdirresuscitationcode                 string,
         advdirpowerofatty                       string,
         advdirlivingwill                        string,
         advdirpatientdeclines                   string,
-        advrevdate                              string,
+        advrevdate                              date,
         tribecode                               string,
-        inactivatedate                          string,
+        inactivatedate                          date,
         age                                     string,
         monthsindialysis                        string,
         transplantwaitlist                      string,
         medicalcoveragemedicare                 string,
-        medicalcoveragemedicareeffectivedate    string,
+        medicalcoveragemedicareeffectivedate    date,
         masterpatientidnumber                   string,
-        datefirstdialysiscurrentunit            string
+        datefirstdialysiscurrentunit            date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientdata_input}
     ;
 
-DROP TABLE IF EXISTS patientdiagcodes;
-CREATE EXTERNAL TABLE patientdiagcodes (
+DROP TABLE IF EXISTS clean_patientdiagcodes;
+CREATE TABLE clean_patientdiagcodes (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
@@ -751,31 +680,28 @@ CREATE EXTERNAL TABLE patientdiagcodes (
         patientidnumber                 string,
         diagnosiscode                   string,
         description                     string,
-        diagnosisdate                   string,
+        diagnosisdate                   date,
         diagnosistype                   string,
         diagnosispriority               string,
         admitting                       string,
-        addeddate                       string,
-        editdate                        string,
-        diagnosisenddate                string,
+        addeddate                       date,
+        editdate                        date,
+        diagnosisenddate                date,
         orderedbyidnumber               string,
-        inactivatedate                  string,
+        inactivatedate                  date,
         icd10                           string,
         analyticdos                     string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientdiagcodes_input}
     ;
 
-DROP TABLE IF EXISTS patientdialysisprescription;
-CREATE EXTERNAL TABLE patientdialysisprescription (
+DROP TABLE IF EXISTS clean_patientdialysisprescription;
+CREATE TABLE clean_patientdialysisprescription (
         analyticrowidnumber                 string,
         clinicorganizationidnumber          string,
         patientdataanalyticrowidnumber      string,
         patientidnumber                     string,
-        startdate                           string,
-        enddate                             string,
+        startdate                           date,
+        enddate                             date,
         modalitytype                        string,
         modality                            string,
         primarydialysissetting              string,
@@ -783,8 +709,8 @@ CREATE EXTERNAL TABLE patientdialysisprescription (
         drygoalweight                       string,
         drygoalweightuom                    string,
         tbd                                 string,
-        addeddate                           string,
-        editdate                            string,
+        addeddate                           date,
+        editdate                            date,
         physicianidnumber                   string,
         patientdialysisheaderidnumber       string,
         patientdialysisrxnumber             string,
@@ -797,16 +723,13 @@ CREATE EXTERNAL TABLE patientdialysisprescription (
         patientrxrxtidalidnumber            string,
         patientrxrxhighdosetidalidnumber    string,
         prescriptiontype                    string,
-        inactivatedate                      string,
+        inactivatedate                      date,
         analyticdos                         string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientdialysisprescription_input}
     ;
 
-DROP TABLE IF EXISTS patientdialysisrxhemo;
-CREATE EXTERNAL TABLE patientdialysisrxhemo (
+DROP TABLE IF EXISTS clean_patientdialysisrxhemo;
+CREATE TABLE clean_patientdialysisrxhemo (
         analyticrowidnumber                             string,
         clinicorganizationidnumber                      string,
         patientdataanalyticrowidnumber                  string,
@@ -852,15 +775,12 @@ CREATE EXTERNAL TABLE patientdialysisrxhemo (
         ufrate                                          string,
         dialysisfrequencydesc                           string,
         dialysisfrequencyvalue                          string,
-        inactivatedate                                  string
+        inactivatedate                                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientdialysisrxhemo_input}
     ;
 
-DROP TABLE IF EXISTS patientdialysisrxpd;
-CREATE EXTERNAL TABLE patientdialysisrxpd (
+DROP TABLE IF EXISTS clean_patientdialysisrxpd;
+CREATE TABLE clean_patientdialysisrxpd (
         analyticrowidnumber                             string,
         clinicorganizationidnumber                      string,
         patientdataanalyticrowidnumber                  string,
@@ -879,15 +799,12 @@ CREATE EXTERNAL TABLE patientdialysisrxpd (
         totalvolumecyclersolution                       string,
         finalfillvolume                                 string,
         finalfillexchangeidnumber                       string,
-        inactivatedate                                  string
+        inactivatedate                                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientdialysisrxpd_input}
     ;
 
-DROP TABLE IF EXISTS patientdialysisrxpdexchanges;
-CREATE EXTERNAL TABLE patientdialysisrxpdexchanges (
+DROP TABLE IF EXISTS clean_patientdialysisrxpdexchanges;
+CREATE TABLE clean_patientdialysisrxpdexchanges (
         analyticrowidnumber                             string,
         clinicorganizationidnumber                      string,
         patientdataanalyticrowidnumber                  string,
@@ -904,73 +821,64 @@ CREATE EXTERNAL TABLE patientdialysisrxpdexchanges (
         fillvolume                                      string,
         dwelltime                                       string,
         draintime                                       string,
-        addeddate                                       string,
-        editdate                                        string,
+        addeddate                                       date,
+        editdate                                        date,
         solutiontype                                    string,
-        inactivatedate                                  string
+        inactivatedate                                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientdialysisrxpdexchanges_input}
     ;
 
-DROP TABLE IF EXISTS patientevent;
-CREATE EXTERNAL TABLE patientevent (
+DROP TABLE IF EXISTS clean_patientevent;
+CREATE TABLE clean_patientevent (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
         patienteventidnumber            string,
         patientidnumber                 string,
-        eventdate                       string,
+        eventdate                       date,
         eventtype                       string,
-        addeddate                       string,
-        editdate                        string,
-        deleteddate                     string,
+        addeddate                       date,
+        editdate                        date,
+        deleteddate                     date,
         resultidnumber                  string,
         patientvascularaccessidnumber   string,
         patientinfectionidnumber        string,
-        inactivatedate                  string,
+        inactivatedate                  date,
         analyticdos                     string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientevent_input}
     ;
 
-DROP TABLE IF EXISTS patientfluidweightmanagement;
-CREATE EXTERNAL TABLE patientfluidweightmanagement (
+DROP TABLE IF EXISTS clean_patientfluidweightmanagement;
+CREATE TABLE clean_patientfluidweightmanagement (
         analyticrowidnumber                 string,
         clinicorganizationidnumber          string,
         patientdataanalyticrowidnumber      string,
         cklresultid                         string,
         patientidnumber                     string,
         analyticdos                         string,
-        sodiumeducationdate                 string,
-        addeddate                           string,
-        editdate                            string,
+        sodiumeducationdate                 date,
+        addeddate                           date,
+        editdate                            date,
         sodiumeducationreceived             string,
         sodiumprofilingrxed                 string,
         constantdialysatesodiumrxed         string,
         dialysatesodiumover138              string,
-        postdialysiswgtassessmentdate       string,
+        postdialysiswgtassessmentdate       date,
         postdialysistargetwgtrxed           string,
         homebpprovided                      string,
         homebpstatus                        string,
         dryweightrxed                       string,
         hasedema                            string,
-        echocardiogramdate                  string,
+        echocardiogramdate                  date,
         hasabnormalbreathsounds             string,
         hasleftventricularhypertrophy       string,
         leftventricularhypertrophychanged   string,
-        inactivatedate                      string
+        inactivatedate                      date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientfluidweightmanagement_input}
     ;
 
-DROP TABLE IF EXISTS patientheighthistory;
-CREATE EXTERNAL TABLE patientheighthistory (
+DROP TABLE IF EXISTS clean_patientheighthistory;
+CREATE TABLE clean_patientheighthistory (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
@@ -982,26 +890,23 @@ CREATE EXTERNAL TABLE patientheighthistory (
         totalheightuom                  string,
         patientidnumber                 string,
         doubleamputee                   string,
-        addeddate                       string,
-        editdate                        string,
-        measuredate                     string,
+        addeddate                       date,
+        editdate                        date,
+        measuredate                     date,
         unstable                        string,
-        inactivatedate                  string
+        inactivatedate                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientheighthistory_input}
     ;
 
-DROP TABLE IF EXISTS patientinfection;
-CREATE EXTERNAL TABLE patientinfection (
+DROP TABLE IF EXISTS clean_patientinfection;
+CREATE TABLE clean_patientinfection (
         analyticrowidnumber                 string,
         clinicorganizationidnumber          string,
         patientdataanalyticrowidnumber      string,
         patientinfectionidnumber            string,
         patientidnumber                     string,
-        suspectedinfectionstartdate         string,
-        confirmationdate                    string,
+        suspectedinfectionstartdate         date,
+        confirmationdate                    date,
         infectionsourcetype                 string,
         patientvascularaccessidnumber       string,
         primarylocationother                string,
@@ -1015,14 +920,14 @@ CREATE EXTERNAL TABLE patientinfection (
         symptom_wound                       string,
         symptom_cellulitis                  string,
         symptom_respiratory                 string,
-        enddate                             string,
+        enddate                             date,
         infectionrequiredhospitalization    string,
-        hospitalizationdate                 string,
+        hospitalizationdate                 date,
         deathrelatedtoinfection             string,
         pdeffluentcellcountsdifferential    string,
-        addeddate                           string,
-        editdate                            string,
-        inactivatedate                      string,
+        addeddate                           date,
+        editdate                            date,
+        inactivatedate                      date,
         analyticdos                         string,
         lossofvascularaccess                string,
         accesssitenhsn_fistula              string,
@@ -1031,13 +936,10 @@ CREATE EXTERNAL TABLE patientinfection (
         accesssitenhsn_nontunncentralline   string,
         accesssitenhsn_otheraccessdevice    string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientinfection_input}
     ;
 
-DROP TABLE IF EXISTS patientinfection_laborganism;
-CREATE EXTERNAL TABLE patientinfection_laborganism (
+DROP TABLE IF EXISTS clean_patientinfection_laborganism;
+CREATE TABLE clean_patientinfection_laborganism (
         analyticrowidnumber                         string,
         clinicorganizationidnumber                  string,
         patientdataanalyticrowidnumber              string,
@@ -1047,17 +949,14 @@ CREATE EXTERNAL TABLE patientinfection_laborganism (
         patientinfection_labresultcultureidnumber   string,
         organismcode                                string,
         organismrank                                string,
-        addeddate                                   string,
-        editdate                                    string,
-        inactivatedate                              string
+        addeddate                                   date,
+        editdate                                    date,
+        inactivatedate                              date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientinfection_laborganism_input}
     ;
 
-DROP TABLE IF EXISTS patientinfection_laborganismdrug;
-CREATE EXTERNAL TABLE patientinfection_laborganismdrug (
+DROP TABLE IF EXISTS clean_patientinfection_laborganismdrug;
+CREATE TABLE clean_patientinfection_laborganismdrug (
         analyticrowidnumber                         string,
         clinicorganizationidnumber                  string,
         patientdataanalyticrowidnumber              string,
@@ -1067,41 +966,35 @@ CREATE EXTERNAL TABLE patientinfection_laborganismdrug (
         patientinfection_laborganismidnumber        string,
         drugcode                                    string,
         susceptibilitycode                          string,
-        addeddate                                   string,
-        editdate                                    string,
-        inactivatedate                              string
+        addeddate                                   date,
+        editdate                                    date,
+        inactivatedate                              date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientinfection_laborganismdrug_input}
     ;
 
-DROP TABLE IF EXISTS patientinfection_labresultculture;
-CREATE EXTERNAL TABLE patientinfection_labresultculture (
+DROP TABLE IF EXISTS clean_patientinfection_labresultculture;
+CREATE TABLE clean_patientinfection_labresultculture (
         analyticrowidnumber                         string,
         clinicorganizationidnumber                  string,
         patientdataanalyticrowidnumber              string,
         patientinfection_labresultcultureidnumber   string,
         patientinfectionidnumber                    string,
         patientidnumber                             string,
-        resulteddate                                string,
+        resulteddate                                date,
         resulttype                                  string,
-        collecteddate                               string,
+        collecteddate                               date,
         culturesource                               string,
         cultureresult                               string,
         organisms                                   string,
-        addeddate                                   string,
-        editdate                                    string,
-        inactivatedate                              string,
+        addeddate                                   date,
+        editdate                                    date,
+        inactivatedate                              date,
         analyticdos                                 string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientinfection_labresultculture_input}
     ;
 
-DROP TABLE IF EXISTS patientinfection_medication;
-CREATE EXTERNAL TABLE patientinfection_medication (
+DROP TABLE IF EXISTS clean_patientinfection_medication;
+CREATE TABLE clean_patientinfection_medication (
         analyticrowidnumber                     string,
         clinicorganizationidnumber              string,
         patientdataanalyticrowidnumber          string,
@@ -1109,42 +1002,36 @@ CREATE EXTERNAL TABLE patientinfection_medication (
         patientinfectionidnumber                string,
         patientprescriptionmedsidnumber         string,
         patientidnumber                         string,
-        addeddate                               string,
-        editdate                                string,
-        inactivatedate                          string
+        addeddate                               date,
+        editdate                                date,
+        inactivatedate                          date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientinfection_medication_input}
     ;
 
-DROP TABLE IF EXISTS patientinstabilityhistory;
-CREATE EXTERNAL TABLE patientinstabilityhistory (
+DROP TABLE IF EXISTS clean_patientinstabilityhistory;
+CREATE TABLE clean_patientinstabilityhistory (
         analyticrowidnumber                 string,
         clinicorganizationidnumber          string,
         patientdataanalyticrowidnumber      string,
         patientinstabilityhistoryidnumber   string,
         patientidnumber                     string,
-        eventdate                           string,
+        eventdate                           date,
         event                               string,
         eventnotes                          string,
-        dateofcia                           string,
+        dateofcia                           date,
         cklresultid                         string,
         relationid                          string,
         relationtype                        string,
-        addeddate                           string,
-        editdate                            string,
+        addeddate                           date,
+        editdate                            date,
         deleted                             string,
-        deleteddate                         string,
-        inactivatedate                      string
+        deleteddate                         date,
+        inactivatedate                      date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientinstabilityhistory_input}
     ;
 
-DROP TABLE IF EXISTS patientmasterscheduleheader;
-CREATE EXTERNAL TABLE patientmasterscheduleheader (
+DROP TABLE IF EXISTS clean_patientmasterscheduleheader;
+CREATE TABLE clean_patientmasterscheduleheader (
         analyticrowidnumber             string,
         patientdataanalyticrowidnumber  string,
         clinicorganizationidnumber      string,
@@ -1153,8 +1040,8 @@ CREATE EXTERNAL TABLE patientmasterscheduleheader (
         patientidnumber2                string,
         clinicid                        string,
         scheduletype                    string,
-        startdate                       string,
-        enddate                         string,
+        startdate                       date,
+        enddate                         date,
         starttime                       string,
         endtime                         string,
         scheduleshift                   string,
@@ -1173,23 +1060,20 @@ CREATE EXTERNAL TABLE patientmasterscheduleheader (
         sat                             string,
         sun                             string,
         disabled                        string,
-        addeddate                       string,
-        editdate                        string,
+        addeddate                       date,
+        editdate                        date,
         clinicscheduleid                string,
-        originaldate                    string,
+        originaldate                    date,
         reasontransferred               string,
         referringphysician              string,
         networkevent                    string,
-        inactivatedate                  string,
+        inactivatedate                  date,
         sessionsperweek                 string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientmasterscheduleheader_input}
     ;
 
-DROP TABLE IF EXISTS patientmedadministered;
-CREATE EXTERNAL TABLE patientmedadministered (
+DROP TABLE IF EXISTS clean_patientmedadministered;
+CREATE TABLE clean_patientmedadministered (
         analyticrowidnumber              string,
         patientdataanalyticrowidnumber   string,
         clinicorganizationidnumber       string,
@@ -1204,12 +1088,12 @@ CREATE EXTERNAL TABLE patientmedadministered (
         frequency                        string,
         duration                         string,
         prescription                     string,
-        startdate                        string,
-        enddate                          string,
+        startdate                        date,
+        enddate                          date,
         prn                              string,
         adminduringrun                   string,
-        addeddate                        string,
-        editdate                         string,
+        addeddate                        date,
+        editdate                         date,
         administrationtime               string,
         runjustification                 string,
         medprescidnumber                 string,
@@ -1233,14 +1117,14 @@ CREATE EXTERNAL TABLE patientmedadministered (
         patientnottaking                 string,
         physicianidnumber                string,
         fixedweekinterval                string,
-        datenextdose                     string,
-        datedoselastgiven                string,
+        datenextdose                     date,
+        datedoselastgiven                date,
         administrationcode               string,
         procedurecode                    string,
         medicationcode                   string,
         patientprovided                  string,
         esrdrelated                      string,
-        inactivatedate                   string,
+        inactivatedate                   date,
         selfadmin                        string,
         adminduringfacility              string,
         bulksupply                       string,
@@ -1249,13 +1133,10 @@ CREATE EXTERNAL TABLE patientmedadministered (
         genproduct_id                    string,
         drug_id                          string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientmedadministered_input}
     ;
 
-DROP TABLE IF EXISTS patientmednotgiven;
-CREATE EXTERNAL TABLE patientmednotgiven (
+DROP TABLE IF EXISTS clean_patientmednotgiven;
+CREATE TABLE clean_patientmednotgiven (
         analyticrowidnumber                     string,
         patientdataanalyticrowidnumber          string,
         clinicorganizationidnumber              string,
@@ -1271,12 +1152,12 @@ CREATE EXTERNAL TABLE patientmednotgiven (
         frequency                               string,
         duration                                string,
         prescription                            string,
-        startdate                               string,
-        enddate                                 string,
+        startdate                               date,
+        enddate                                 date,
         prn                                     string,
         adminduringrun                          string,
-        addeddate                               string,
-        editdate                                string,
+        addeddate                               date,
+        editdate                                date,
         administrationtime                      string,
         runjustification                        string,
         medprescidnumber                        string,
@@ -1300,15 +1181,15 @@ CREATE EXTERNAL TABLE patientmednotgiven (
         patientnottaking                        string,
         physicianidnumber                       string,
         fixedweekinterval                       string,
-        datenextdose                            string,
-        datedoselastgiven                       string,
+        datenextdose                            date,
+        datedoselastgiven                       date,
         administrationcode                      string,
         procedurecode                           string,
         medicationcode                          string,
         patientprovided                         string,
         esrdrelated                             string,
         patientprescriptionmedsparentid         string,
-        inactivatedate                          string,
+        inactivatedate                          date,
         selfadmin                               string,
         adminduringfacility                     string,
         bulksupply                              string,
@@ -1317,13 +1198,10 @@ CREATE EXTERNAL TABLE patientmednotgiven (
         genproduct_id                           string,
         drug_id                                 string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientmednotgiven_input}
     ;
 
-DROP TABLE IF EXISTS patientmedprescription;
-CREATE EXTERNAL TABLE patientmedprescription (
+DROP TABLE IF EXISTS clean_patientmedprescription;
+CREATE TABLE clean_patientmedprescription (
         analyticrowidnumber              string,
         patientdataanalyticrowidnumber   string,
         clinicorganizationidnumber       string,
@@ -1334,12 +1212,12 @@ CREATE EXTERNAL TABLE patientmedprescription (
         prescription                     string,
         hold                             string,
         holduntil                        string,
-        startdate                        string,
-        enddate                          string,
+        startdate                        date,
+        enddate                          date,
         prn                              string,
         adminduringrun                   string,
-        addeddate                        string,
-        editdate                         string,
+        addeddate                        date,
+        editdate                         date,
         lastdoseon                       string,
         patientnottaking                 string,
         runjustification                 string,
@@ -1359,17 +1237,17 @@ CREATE EXTERNAL TABLE patientmedprescription (
         dosefreqsaturday                 string,
         dosefreqsunday                   string,
         fixedweekinterval                string,
-        datenextdose                     string,
-        datedoselastgiven                string,
+        datenextdose                     date,
+        datedoselastgiven                date,
         administrationcode               string,
         patientprovided                  string,
         patientprescriptionmedsparentid  string,
         protocolmed                      string,
         patientmasterscheduleheaderid    string,
-        updatereason                     string,
+        updatereason                     date,
         esrdrelated                      string,
         analyticdos                      string,
-        inactivatedate                   string,
+        inactivatedate                   date,
         monthlydose                      string,
         selfadmin                        string,
         adminduringfacility              string,
@@ -1384,15 +1262,12 @@ CREATE EXTERNAL TABLE patientmedprescription (
         eprescribed                      string,
         eprescribedquantity              string,
         eprescribedrefill                string,
-        eprescribeddate                  string	
+        eprescribeddate                  date	
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE	
-    LOCATION {patientmedprescription_input}
     ;
 
-DROP TABLE IF EXISTS patientstatushistory;
-CREATE EXTERNAL TABLE patientstatushistory (
+DROP TABLE IF EXISTS clean_patientstatushistory;
+CREATE TABLE clean_patientstatushistory (
         analyticrowidnumber             string,
         clinicorganizationidnumber      string,
         patientdataanalyticrowidnumber  string,
@@ -1401,28 +1276,25 @@ CREATE EXTERNAL TABLE patientstatushistory (
         status_original                 string,
         patientstatus                   string,
         statusisactive                  string,
-        datelaststatuschange            string,
-        addeddate                       string,
-        editdate                        string,
-        editdatehistory                 string,
-        inactivatedate                  string,
+        datelaststatuschange            date,
+        addeddate                       date,
+        editdate                        date,
+        editdatehistory                 date,
+        inactivatedate                  date,
         analyticdos                     string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {patientstatushistory_input}
     ;
 
-DROP TABLE IF EXISTS problemlist;
-CREATE EXTERNAL TABLE problemlist (
+DROP TABLE IF EXISTS clean_problemlist;
+CREATE TABLE clean_problemlist (
         analyticrowidnumber             string,
         patientdataanalyticrowidnumber  string,
         clinicorganizationidnumber      string,
         problemlistidnumber             string,
         patientidnumber                 string,
         analyticdos                     string,
-        startdate                       string,
-        enddate                         string,
+        startdate                       date,
+        enddate                         date,
         active                          string,
         category                        string,
         displayonreport                 string,
@@ -1432,34 +1304,28 @@ CREATE EXTERNAL TABLE problemlist (
         icd10text                       string,
         patientcms2728idnumber          string,
         cms2728code                     string,
-        addeddate                       string,
-        editdate                        string,
-        inactivatedate                  string
+        addeddate                       date,
+        editdate                        date,
+        inactivatedate                  date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {problemlist_input}
     ;
 
-DROP TABLE IF EXISTS sodiumufprofile;
-CREATE EXTERNAL TABLE sodiumufprofile (
+DROP TABLE IF EXISTS clean_sodiumufprofile;
+CREATE TABLE clean_sodiumufprofile (
         analyticrowidnumber string,
         profileidnumber     string,
         profilenumber       string,
         profiletype         string,
         begininglevel       string,
         endinglevel         string,
-        addeddate           string,
-        editdate            string,
-        inactivatedate      string
+        addeddate           date,
+        editdate            date,
+        inactivatedate      date
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {sodiumufprofile_input}
     ;
 
-DROP TABLE IF EXISTS stategeo;
-CREATE EXTERNAL TABLE stategeo (
+DROP TABLE IF EXISTS clean_stategeo;
+CREATE TABLE clean_stategeo (
         stateabbreviation           string,
         statename                   string,
         statefipscode               string,
@@ -1468,13 +1334,10 @@ CREATE EXTERNAL TABLE stategeo (
         regionname                  string,
         censusbureauregionnumber    string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {stategeo_input}
     ;
 
-DROP TABLE IF EXISTS zipgeo;
-CREATE EXTERNAL TABLE zipgeo (
+DROP TABLE IF EXISTS clean_zipgeo;
+CREATE TABLE clean_zipgeo (
         geo_id              string,
         zipcode             string,
         sumlevel            string,
@@ -1487,8 +1350,5 @@ CREATE EXTERNAL TABLE zipgeo (
         na                  string,
         ruralvsurban        string
         )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE
-    LOCATION {zipgeo_input}
     ;
 
