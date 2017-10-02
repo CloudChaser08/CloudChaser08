@@ -24,8 +24,8 @@ SELECT
     mp.threeDigitZip,                         -- ptnt_zip3_cd
     NULL,                                     -- hv_enc_id
     EXTRACT_DATE(
-        d.enc_timestamp,
-        '%Y-%m-%d %H:%M:%S.%f'
+        SUBSTRING(d.enc_timestamp, 0, 10),
+        '%Y-%m-%d'
         ),                                    -- enc_dt
     NULL,                                     -- diag_dt
     NULL,                                     -- diag_rndrg_fclty_npi
