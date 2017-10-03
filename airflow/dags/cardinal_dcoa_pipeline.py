@@ -37,6 +37,9 @@ mdag = HVDAG.HVDAG(
 
 TMP_PATH_TEMPLATE='/tmp/cardinal_dcoa/pharmacyclaims/{}/'
 
+TRANSACTION_FILE_NAME_TEMPLATE = 'TBD' #TODO: TBD
+S3_TRANSACTION_RAW_URL = 'TBD'  #TODO: TBD
+S3_NORMALIZED_FILE_URL_TEMPLATE = 'TBD' #TODO: TBD
 S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/mpi/cardinal_mpi_matched_%Y%m%d.psv.gz'      #TODO: Decide where this is dropped
 
 def insert_current_date_function(date_template):
@@ -81,9 +84,9 @@ def generate_file_validation_task(
                     DEID_FILE_NAME_REGEX
                 ),
                 'minimum_file_size'         : minimum_file_size,
-                's3_prefix'                 : '/'.join(S3_DEID_RAW_URL.split('/')[3:]),
+                's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'                 : 'hvincoming',
-                'file_description'          : 'Cardinal MPI ' + task_id + ' file',
+                'file_description'          : 'Cardinal DCOA ' + task_id + ' file',
                 'regex_name_match'          : True,
                 'quiet_retries'             : 24
             }
@@ -100,29 +103,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
         10000
     )
 
-detect_move_normalize_dag = SubDagOperator(
-    subdag=detect_move_normalize.detect_move_normalize(
-        DAG_NAME,
-        'detect_move_normalize',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'expected_matching_files_func': lambda ds, k: (
-                map(lambda f: f.split('/')[-1], get_deid_file_urls(ds, k))
-            ),
-            'file_date_func': insert_current_date_function(
-                '%Y/%m/%d'
-            ),
-            's3_payload_loc_url': S3_PAYLOAD_DEST,          #TODO: there is no matching payload
-            'vendor_uuid': 'eb27309e-adce-4057-b00c-69b8373e6f9c',  #TODO: maybe change?
-            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/cardinal_dcoa/pharmacyclaims/sparkNormalizeCardinal.py',
-            'pyspark_normalization_args_func': norm_args,
-            'pyspark': True
-        }
-    ),
-    task_id='detect_move_normalize',
-    dag=mdag
-)
+#TODO: use subdag for running script here.
+run_normalization = None
 
 fetch_normalized_data = PythonOperator(
     task_id='fetch_normalized_data',
@@ -162,7 +144,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 if HVDAG.HVDAG.airflow_env == 'test':
     fetch_transaction_files.set_upstream(validate_transaction_files)
 
-detect_move_normalize_dag.set_upstream(fetch_transaction_files)
+run_normalization.set_upstream(fetch_transaction_files)
 fetch_normalized_data.set_upstream(detect_move_normalize_dag)
 
 if HVDAG.HVDAG.airflow_env != 'test':
