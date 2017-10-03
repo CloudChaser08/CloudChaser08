@@ -105,37 +105,24 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     ]
 
 
-def generate_file_validation_task(
-        task_id, path_template, minimum_file_size
-):
-    return SubDagOperator(
-        subdag=s3_validate_file.s3_validate_file(
-            DAG_NAME,
-            'validate_' + task_id + '_file',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'expected_file_name_func' : insert_formatted_date_function(
-                    path_template
-                ),
-                'file_name_pattern_func'  : insert_formatted_regex_function(
-                    path_template
-                ),
-                'minimum_file_size'       : minimum_file_size,
-                's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-                's3_bucket'               : 'healthverity',
-                'file_description'        : 'Cardinal RCM DX ' + task_id + ' file'
-            }
-        ),
-        task_id='validate_' + task_id + '_file',
-        dag=mdag
-    )
-
-
 if HVDAG.HVDAG.airflow_env != 'test':
-    validate_transaction = generate_file_validation_task(
-        'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
-        1000000
+    validate_transaction = s3_validate_file.s3_validate_file(
+        DAG_NAME,
+        'validate_transaction_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_file_name_func' : insert_formatted_date_function(
+                TRANSACTION_FILE_NAME_TEMPLATE
+            ),
+            'file_name_pattern_func'  : insert_formatted_regex_function(
+                TRANSACTION_FILE_NAME_TEMPLATE
+            ),
+            'minimum_file_size'       : 1000000,
+            's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+            's3_bucket'               : 'healthverity',
+            'file_description'        : 'Cardinal RCM DX ' + task_id + ' file'
+        }
     )
 
 fetch_transaction = SubDagOperator(
