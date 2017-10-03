@@ -276,7 +276,7 @@ TABLES = ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment'
 def get_visonex_sql_commands(ds, kwargs):
     drop_template = "ALTER TABLE visonex.{} DROP PARTITION (part_best_date > '')"
     add_template = """
-        ALTER TABLE visonex.{{table}} ADD PARTITION (part_provider='cardinal_pds', part_best_date='{0}-{1}')
+        ALTER TABLE visonex.{{table}} ADD PARTITION (part_best_date='{0}-{1}')
         LOCATION 's3a://salusv/warehouse/parquet/custom/2017-09-27/visonex/{{table}}/part_best_date={0}-{1}/'
     """
 
