@@ -8,9 +8,6 @@ for m in [emr_utils, HVDAG]:
 
 
 def do_create_cluster(ds, **kwargs):
-    if 'EMR_CLUSTER_NAME' not in kwargs:
-        raise Exception('EMR cluster name must be specified.')
-
     emr_utils.create_emr_cluster(
         kwargs['EMR_CLUSTER_NAME'],
         kwargs.get('NUM_NODES', 5),
@@ -62,6 +59,19 @@ def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_in
     Output:
         - dag: The subdag created here
     '''
+
+    if dag_config is None:
+        raise Exception('Must past in a dictionary dag_config')
+    
+    if 'EMR_CLUSTER_NAME' not in dag_config:
+        raise Exception('EMR_CLUSTER_NAME must be specified in dag_config')
+
+    if 'PYSPARK_SCRIPT_NAME' not in dag_config:
+        raise Exception('PYSPARK_SCRIPT_NAME must be specified in dag_config')
+
+    if 'PYSPARK_ARGS_FUNC' not in dag_config:
+        raise Exception('PYSPARK_ARGS_FUNC must be specified in dag_config')
+
     default_args = {
         'owner': 'airflow',
         'depends_on_past': False,
