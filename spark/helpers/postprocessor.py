@@ -156,6 +156,15 @@ def get_gen_ref_date(sqlc, feed_id, domain_name):
         return None
 
 
+def deobfuscate_hvid(project_name, hvid_col='hvid'):
+    def out(df):
+        return df.withColumn(
+            hvid_col,
+            udf(gen_helpers.slightly_deobfuscate_hvid)(col(hvid_col), lit(project_name))
+        )
+    return out
+
+
 def compose(*functions):
     """
     Utility method for composing a series of functions.

@@ -122,10 +122,32 @@ def partition_and_rename(
     )
 
 
-def distcp(dest):
+def distcp(dest, src=constants.hdfs_staging_dir):
     subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption',
-                           '--src', constants.hdfs_staging_dir,
+                           '--src', src,
                            '--dest', dest])
     subprocess.check_call([
-        'hdfs', 'dfs', '-rm', '-r', constants.hdfs_staging_dir
+        'hdfs', 'dfs', '-rm', '-r', src
+    ])
+
+
+def unload_delimited_file(spark, runner, output_path, table_name, test=False, num_files=1, delimiter='|'):
+    "Unload a table to a delimited file at the specified location"
+    old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
+
+    if test:
+        cleanup_cmd = ['rm', '-rf', output_path]
+        common_dirpath = '../common/'
+    else:
+        cleanup_cmd = ['hadoop', 'fs', '-rm', '-f', '-R', output_path]
+        common_dirpath = '../../../../common/'
+
+    subprocess.check_call(cleanup_cmd)
+
+    runner.run_spark_script(common_dirpath + 'unload_common_model_dsv.sql', [
+        ['num_files', num_files, False],
+        ['delimiter', delimiter, False]
+        ['location', output_path],
+        ['table_name', table_name],
+        ['partitions', old_partition_count, False]
     ])
