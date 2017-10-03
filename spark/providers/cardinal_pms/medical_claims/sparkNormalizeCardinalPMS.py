@@ -105,6 +105,8 @@ def main(args):
     else:
         output_path = 's3://salusv/warehouse/text/medical_claims/cardinal_pms/'
 
+    normalized_records_unloader.distcp(output_path)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
