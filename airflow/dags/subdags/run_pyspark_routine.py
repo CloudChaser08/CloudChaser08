@@ -19,10 +19,11 @@ def do_create_cluster(ds, **kwargs):
 
 
 def do_run_pyspark_routine(ds, **kwargs):
-    emr_utils.export(
+    emr_utils.run_script(
         kwargs['EMR_CLUSTER_NAME'],
         kwargs['PYSPARK_SCRIPT_NAME'],
-        kwargs['PYSPARK_ARGS_FUNC'](ds, kwargs)
+        kwargs['PYSPARK_ARGS_FUNC'](ds, kwargs),
+        kwargs.get('SPARK_CONF_ARGS', None)
     )
 
 
@@ -56,6 +57,8 @@ def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_in
                 - Purpose of the cluster and routine being ran on it
             o CONNECTED_TO_METASTORE (default: False)
                 - Boolean indicating if we should connect to metastore or not
+            o SPARK_CONF_ARGS (default: None)
+                - List of configurations for running a pyspark job
     Output:
         - dag: The subdag created here
     '''
