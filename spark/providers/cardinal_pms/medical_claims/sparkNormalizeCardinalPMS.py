@@ -11,6 +11,8 @@ import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.medicalclaims as medical_priv
 
+import logging
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
 
@@ -34,36 +36,36 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['table_name', 'medicalclaims_common_model', False],
         ['properties', '', False]
     ])
-    print 'Created medicalclaims_common_model_table'
+    logging.debug('Created medicalclaims_common_model_table')
 
     # Load the transactions into raw, un-normalized tables
     runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path]
     ])
-    print 'Loaded the transaction'
+    logging.debug('Loaded the transaction')
 
     # Remove leading and trailing whitespace from any strings
     # Nullify rows that require it
     postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(
         runner.sqlContext.sql('select * from transactional_cardinal_pms')
     ).createTempView('transactional_cardinal_pms')
-    print 'Trimmed and nullified data'
+    logging.debug('Trimmed and nullified data')
 
     # Create exploder table for service-line
     explode.generate_exploder_table(spark, 5, 'service_line_exploder')
-    print 'Created exploder table for service-line'
+    logging.debug('Created exploder table for service-line')
 
     # Normalize service-line
     runner.run_spark_script('normalize_service_line.sql', [])
-    print 'Finished normalizing for service-line'
+    logging.debug('Finished normalizing for service-line')
 
     # Create exploder table for claim
     explode.generate_exploder_table(spark, 8, 'claim_exploder')
-    print 'Created exploder for claim'
+    logging.debug('Created exploder for claim')
 
     # Normalize claim
     runner.run_spark_script('normalize_claim.sql', [])
-    print 'Finished normalizing for claim'
+    logging.debug('Finished normalizing for claim')
 
     # Postprocessing
     postprocessor.compose(
@@ -78,7 +80,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )(
         runner.sqlContext.sql('select * from medicalclaims_common_model')
     ).createTempView('medicalclaims_common_model')
-    print 'Finished post-processing'
+    logging.debug('Finished post-processing')
     
     if not test:
         normalized_records_unloader.partition_and_rename(
