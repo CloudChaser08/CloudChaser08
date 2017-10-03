@@ -35,7 +35,8 @@ class Runner:
             # [['column1', 'string'], ['column2', 'int'], ...]
             if variables[i][0] == 'additional_columns':
                 variables[i][1] = ',' + \
-                    ','.join([column[0] + " " + column[1] for column in variables[i][1]])
+                    ','.join([column[0] + " " + column[1] for column in variables[i][1]]) \
+                    if len(variables[i][1]) else ''
 
             elif len(variables[i]) != 3 or variables[i][2]:
                 variables[i][1] = "'" + variables[i][1] + "'"

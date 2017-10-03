@@ -94,7 +94,7 @@ SELECT
     NULL,                                                     -- proc_rndrg_prov_state_cd
     NULL,                                                     -- proc_rndrg_prov_zip_cd
     e.cpt,                                                    -- proc_cd
-    'HC',                                                     -- proc_cd_qual
+    CASE WHEN e.cpt IS NOT NULL THEN 'HC' END,                -- proc_cd_qual
     NULL,                                                     -- proc_cd_1_modfr
     NULL,                                                     -- proc_cd_2_modfr
     NULL,                                                     -- proc_cd_3_modfr
