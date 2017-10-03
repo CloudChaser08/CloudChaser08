@@ -61,7 +61,7 @@ def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_in
     '''
 
     if dag_config is None:
-        raise Exception('Must past in a dictionary dag_config')
+        raise Exception('Must pass in a dictionary dag_config')
     
     if 'EMR_CLUSTER_NAME' not in dag_config:
         raise Exception('EMR_CLUSTER_NAME must be specified in dag_config')
