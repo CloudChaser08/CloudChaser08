@@ -4,7 +4,7 @@ SELECT DISTINCT
     t.claim_id,                  -- claim_id
     mp.hvid,                     -- hvid
     NULL,                        -- created
-    2,                           -- model_version
+    '2',                         -- model_version
     NULL,                        -- data_set
     NULL,                        -- data_feed
     NULL,                        -- data_vendor
