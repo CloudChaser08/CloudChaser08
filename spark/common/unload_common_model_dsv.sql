@@ -11,5 +11,5 @@ CREATE TABLE unload_dsv
     STORED AS TEXTFILE
     LOCATION {location}
 AS SELECT * FROM {table_name}
-DISTRIBUTE BY hvid;
+DISTRIBUTE BY rand();
 SET spark.sql.shuffle.partitions={original_partition_count};

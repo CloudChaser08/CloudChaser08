@@ -160,7 +160,7 @@ def deobfuscate_hvid(project_name, hvid_col='hvid'):
     def out(df):
         return df.withColumn(
             hvid_col,
-            udf(gen_helpers.slightly_deobfuscate_hvid)(col(hvid_col), lit(project_name))
+            udf(gen_helpers.slightly_deobfuscate_hvid)(col(hvid_col).cast('int'), lit(project_name))
         )
     return out
 

@@ -9,14 +9,18 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 from datetime import datetime
 
+script_path = __file__
 test_staging_dir  = file_utils.get_abs_path(
-    __file__, './test-staging/'
+    script_path, './test-staging/'
 ) + '/'
 test_staging_dir2 = file_utils.get_abs_path(
-    __file__, './test-staging2/'
+    script_path, './test-staging2/'
 ) + '/'
 test_staging_dir3 = file_utils.get_abs_path(
-    __file__, './test-staging3/'
+    script_path, './test-staging3/'
+) + '/'
+test_staging_dir4 = file_utils.get_abs_path(
+    script_path, './test-staging4/'
 ) + '/'
 prefix = 'PREFIX'
 
@@ -33,7 +37,7 @@ def test_init(spark):
 
     column_count = None
     with open(file_utils.get_abs_path(
-            __file__, '../../common/lab_common_model.sql'
+            script_path, '../../common/lab_common_model.sql'
     ), 'r') as lab:
         column_count = len(lab.readlines()) - 6
 
@@ -218,7 +222,27 @@ def test_hvm_historical_date(spark):
     assert set(date_partition) == set(['part_best_date=2015-11', 'part_best_date=0_PREDATES_HVM_HISTORY'])
 
 
+def test_unload_delimited_file(spark):
+    # create test table
+    spark['spark'].sparkContext.parallelize([
+        ['val1', 'val2'],
+        ['val3', 'val4'],
+    ]).toDF().createOrReplaceTempView('test_table')
+
+    normalized_records_unloader.unload_delimited_file(
+        spark['spark'], spark['runner'], test_staging_dir4, 'test_table', test=True
+    )
+
+    filename = [f for f in os.listdir(test_staging_dir4) if f.endswith('.gz')][0]
+
+    import gzip
+    with gzip.open(test_staging_dir4 + filename) as decompressed:
+        assert [line.split('|') for line in decompressed.read().splitlines()] \
+            == [['"val1"', '"val2"'], ['"val3"', '"val4"']]
+
+
 def test_cleanup():
     shutil.rmtree(test_staging_dir)
     shutil.rmtree(test_staging_dir2)
     shutil.rmtree(test_staging_dir3)
+    shutil.rmtree(test_staging_dir4)

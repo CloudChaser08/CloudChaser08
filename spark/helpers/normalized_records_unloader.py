@@ -145,9 +145,9 @@ def unload_delimited_file(spark, runner, output_path, table_name, test=False, nu
     subprocess.check_call(cleanup_cmd)
 
     runner.run_spark_script(common_dirpath + 'unload_common_model_dsv.sql', [
-        ['num_files', num_files, False],
-        ['delimiter', delimiter, False]
+        ['num_files', str(num_files), False],
+        ['delimiter', delimiter, False],
         ['location', output_path],
-        ['table_name', table_name],
-        ['partitions', old_partition_count, False]
+        ['table_name', table_name, False],
+        ['original_partition_count', old_partition_count, False]
     ])

@@ -266,7 +266,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ).createOrReplaceTempView(table['table_name'])
 
         # unload delivery file for cardinal
-        normalized_records_unloader.unload_delimited_file(spark, runner, DELIVERABLE_LOC, table['table_name'], test=test)
+        normalized_records_unloader.unload_delimited_file(
+            spark, runner, '{}{}/'.format(DELIVERABLE_LOC, table['data_type']), table['table_name'], test=test
+        )
 
         # deobfuscate hvid
         postprocessor.deobfuscate_hvid('Cardinal_MPI-0')(
