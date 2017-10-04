@@ -22,6 +22,8 @@ DELIVERABLE_LOC = 'hdfs:///deliverable/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
+    global DELIVERABLE_LOC
+
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     setid = 'EMR.{}.zip'.format(date_obj.strftime('%m%d%Y'))
@@ -69,7 +71,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/payload/{}/'.format(
             date_input.replace('-', '/')
         )
-        DELIVERABLE_LOC = DELIVERABLE_LOC
     else:
         demographics_input_path = 's3a://salusv/incoming/emr/cardinal/{}/demographics/'.format(
             date_input.replace('-', '/')
@@ -89,7 +90,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3a://salusv/matching/payload/emr/cardinal/{}/'.format(
             date_input.replace('-', '/')
         )
-        DELIVERABLE_LOC = DELIVERABLE_LOC
 
     runner.run_spark_script('../../../common/emr/clinical_observation_common_model_v4.sql', [
         ['table_name', 'clinical_observation_common_model', False],
