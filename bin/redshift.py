@@ -40,11 +40,11 @@ if args.command == 'create' or args.command == 'create-no-wait':
     # Create the cluster
     cmd = ['aws', 'redshift', 'create-cluster', '--cluster-identifier', args.identifier,
             '--node-type', node, '--cluster-type', cluster_type, '--master-username', user,
-            '--master-user-password', password, '--tags', ('Key=temporary,Value=1 '
-                'Key=Service,Value=normalization Key=BillingGroup,'
-                'Value=data-automation Key=Environment,Value=prod'),
-            '--no-publicly-accessible', '--vpc-security-group-ids', 'sg-ca9fabae',
-            '--enhanced-vpc-routing', '--cluster-subnet-group', 'vpcrsgroup']
+            '--master-user-password', password, '--tags', 'Key=temporary,Value=1',
+            'Key=Service,Value=normalization', 'Key=BillingGroup,Value=data-automation',
+            'Key=Environment,Value=prod', '--no-publicly-accessible',
+            '--vpc-security-group-ids', 'sg-ca9fabae', '--enhanced-vpc-routing',
+            '--cluster-subnet-group', 'vpcrsgroup']
     if num_nodes > 1:
         cmd.extend(['--number-of-nodes', str(num_nodes)])
 
