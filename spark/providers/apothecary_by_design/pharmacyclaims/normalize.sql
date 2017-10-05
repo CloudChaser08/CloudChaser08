@@ -39,7 +39,8 @@ SELECT
     NULL,                                       -- diagnosis_code_qual
     NULL,                                       -- procedure_code
     NULL,                                       -- procedure_code_qual
-    add.national_drug_cd,                       -- ndc_code   TODO: register clean_up_numeric_code and call it here
+    clean_up_numeric_code(
+            add.national_drug_cd),              -- ndc_code
     NULL,                                       -- product_service_id
     NULL,                                       -- product_service_id_qual
     add.rx_nbr,                                 -- rx_number
