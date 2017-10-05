@@ -115,7 +115,7 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None):
         )
         for comp_col_name in comp_col_names:
             df = df.withColumn(
-                qual_col_name, when(udf(gen_helpers.clean_up_freetext)(upper(col(col_name))).isin(values),
+                comp_col_name, when(udf(gen_helpers.clean_up_freetext)(upper(col(col_name))).isin(values),
                             col(comp_col_name)).otherwise(lit(None))
             )
         return df

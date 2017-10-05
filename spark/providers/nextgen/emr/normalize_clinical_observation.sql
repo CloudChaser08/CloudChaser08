@@ -92,13 +92,13 @@ SELECT
     NULL,                                   -- clin_obsn_typ_desc
     ref1.gen_ref_cd,                        -- clin_obsn_substc_cd
     CASE WHEN ref1.gen_ref_cd IS NOT NULL THEN 'VENDOR'
-        END ,                               -- clin_obsn_substc_cd_qual
+        END,                                -- clin_obsn_substc_cd_qual
     ref1.gen_ref_itm_nm,                    -- clin_obsn_substc_nm
     NULL,                                   -- clin_obsn_substc_desc
     NULL,                                   -- clin_obsn_cd
     NULL,                                   -- clin_obsn_cd_qual
     CASE WHEN CAST(sub.emrcode AS DOUBLE) IS NOT NULL THEN sub.emrcode
-        ELSE ref4.gen_ref_itm_nm END        -- clin_obsn_nm
+        ELSE ref4.gen_ref_itm_nm END,       -- clin_obsn_nm
     NULL,                                   -- clin_obsn_desc
     NULL,                                   -- clin_obsn_diag_cd
     NULL,                                   -- clin_obsn_diag_cd_qual
@@ -130,11 +130,11 @@ FROM substanceusage sub
         AND ref1.whtlst_flg = 'Y'
     LEFT JOIN ref_gen_ref ref2 ON ref2.hvm_vdr_feed_id = 35
         AND ref2.gen_ref_domn_nm = 'extendeddata.clinicalrecordtypecode'
-        AND clean_up_freetext(ext.clinicalrecordtypecode, false) = ref2.gen_ref_cd
+        AND clean_up_freetext(sub.clinicalrecordtypecode, false) = ref2.gen_ref_cd
         AND ref2.whtlst_flg = 'Y'
     LEFT JOIN ref_gen_ref ref3 ON ref3.hvm_vdr_feed_id = 35
         AND ref3.gen_ref_domn_nm = 'extendeddata.clinicalrecorddescription'
-        AND clean_up_freetext(ext.clinicalrecorddescription, false) = ref3.gen_ref_itm_nm
+        AND clean_up_freetext(sub.clinicalrecorddescription, false) = ref3.gen_ref_itm_nm
         AND ref3.whtlst_flg = 'Y'
     LEFT JOIN ref_gen_ref ref4 ON ref4.gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
         AND TRIM(UPPER(sub.emrcode)) = ref4.gen_ref_itm_nm
@@ -376,7 +376,7 @@ SELECT
     NULL,                                   -- clin_obsn_cd
     NULL,                                   -- clin_obsn_cd_qual
     CASE WHEN CAST(ext.emrcode AS DOUBLE) IS NOT NULL THEN ext.emrcode
-        ELSE ref5.gen_ref_itm_nm END        -- clin_obsn_nm
+        ELSE ref5.gen_ref_itm_nm END,       -- clin_obsn_nm
     NULL,                                   -- clin_obsn_desc
     NULL,                                   -- clin_obsn_diag_cd
     NULL,                                   -- clin_obsn_diag_cd_qual
@@ -387,7 +387,7 @@ SELECT
     NULL,                                   -- clin_obsn_result_cd_qual
     NULL,                                   -- clin_obsn_result_nm
     CASE WHEN CAST(ext.result AS DOUBLE) IS NOT NULL THEN ext.result
-        ELSE ref6.gen_ref_itm_nm END),      -- clin_obsn_result_desc
+        ELSE ref6.gen_ref_itm_nm END,       -- clin_obsn_result_desc
     NULL,                                   -- clin_obsn_msrmt
     NULL,                                   -- clin_obsn_uom
     NULL,                                   -- clin_obsn_qual

@@ -253,7 +253,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'data_type'     : 'clinical_observation',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_clinical_observation,
-            'filter_args'   : update_clinical_observation_whitelists
+            'filter_args'   : [update_clinical_observation_whitelists]
         },
         {
             'table_name'    : 'diagnosis_common_model',
@@ -289,7 +289,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'data_type'     : 'lab_result',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_lab_result,
-            'filter_args'   : update_lab_result_whitelists
+            'filter_args'   : [update_lab_result_whitelists]
         },
         {
             'table_name'    : 'lab_order_common_model',

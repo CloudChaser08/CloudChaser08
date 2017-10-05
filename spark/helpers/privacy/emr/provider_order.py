@@ -34,8 +34,8 @@ whitelists = [
     },
     {
         'column_name'       : 'prov_ord_stat_cd',
-        'domain_name'       : 'emr_prov_ord.prov_ord_stat_cd'
-        'comp_column_names' : ['prov_ord_stat_cd_qual'],
+        'domain_name'       : 'emr_prov_ord.prov_ord_stat_cd',
+        'comp_column_names' : ['prov_ord_stat_cd_qual']
     },
     {
         'column_name': 'prov_ord_complt_rsn_cd',

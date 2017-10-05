@@ -88,7 +88,7 @@ SELECT
     NULL,                                   -- lab_test_specmn_typ_cd
     NULL,                                   -- lab_test_fstg_stat_flg
     NULL,                                   -- lab_test_panel_nm
-    CASE WHEN translate(rslt.emrcode, '-', '') = clean_up_numeric(rslt.emrcode)
+    CASE WHEN translate(rslt.emrcode, '-', '') = clean_up_numeric_code(rslt.emrcode)
             THEN translate(rslt.emrcode, '-', '')
         ELSE ref.gen_ref_itm_nm END,        -- lab_test_nm
     NULL,                                   -- lab_test_desc

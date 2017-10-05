@@ -86,7 +86,7 @@ SELECT
         WHEN hcpcs_codes.hcpc IS NOT NULL THEN hcpcs_codes.hcpc
         WHEN icd_diag_codes.code IS NOT NULL
             THEN clean_up_diagnosis_code(icd_diag_codes.code, NULL,
-                COALESCE(ord.prov_ord_dt, org.enc_dt))
+                COALESCE(ord.prov_ord_dt, ord.enc_dt))
         WHEN icd_proc_codes.code IS NOT NULL THEN icd_proc_codes.code
         WHEN loinc_codes.loinc_num IS NOT NULL THEN loinc_codes.loinc_num
         WHEN regexp_extract(ord.clean_actcode, '(^NG[0-9]+$)') != '' THEN ord.clean_actcode
@@ -111,7 +111,7 @@ SELECT
                                             -- prov_ord_alt_desc
     CASE WHEN diag2.code IS NOT NULL
             THEN clean_up_diagnosis_code(diag2.code, NULL,
-                COALESCE(ord.prov_ord_dt, org.enc_dt))
+                COALESCE(ord.prov_ord_dt, ord.enc_dt))
         ELSE NULL END,                      -- prov_ord_diag_cd
     NULL,                                   -- prov_ord_diag_cd_qual
     clean_up_freetext(ord.actdiagnosis, false),
