@@ -88,10 +88,11 @@ SELECT
     NULL,                                   -- lab_test_specmn_typ_cd
     NULL,                                   -- lab_test_fstg_stat_flg
     NULL,                                   -- lab_test_panel_nm
-    clean_up_freetext(rslt.emrcode, false),
-                                            -- lab_test_nm
+    CASE WHEN translate(rslt.emrcode, '-', '') = clean_up_numeric(rslt.emrcode)
+            THEN translate(rslt.emrcode, '-', '')
+        ELSE ref.gen_ref_itm_nm END,        -- lab_test_nm
     NULL,                                   -- lab_test_desc
-    rslt.loinccode,                         -- lab_test_loinc_cd
+    translate(rslt.loinccode, '-', ''),     -- lab_test_loinc_cd
     clean_up_freetext(rslt.snomedcode, false),
                                             -- lab_test_snomed_cd
     clean_up_freetext(rslt.testcodeid, false),
@@ -99,7 +100,9 @@ SELECT
     NULL,                                   -- lab_test_vdr_cd_qual
     NULL,                                   -- lab_test_alt_cd
     NULL,                                   -- lab_test_alt_cd_qual
-    clean_up_freetext(rslt.result, false),  -- lab_result_nm
+    CASE WHEN CAST(rslt.result as float) IS NOT NULL
+            THEN rslt.result
+        ELSE ref2.gen_ref_itm_nm END,       -- lab_result_nm
     NULL,                                   -- lab_result_desc
     NULL,                                   -- lab_result_msrmt
     NULL,                                   -- lab_result_uom
@@ -120,7 +123,13 @@ SELECT
         )                                   -- part_mth
 FROM labresult rslt
     LEFT JOIN demographics_dedup dem ON rslt.ReportingEnterpriseID = dem.ReportingEnterpriseID
-    AND rslt.NextGenGroupID = dem.NextGenGroupID;
+        AND rslt.NextGenGroupID = dem.NextGenGroupID
+    LEFT JOIN ref_gen_ref ref ON ref.gen_ref_domn_nm = 'emr_lab_result.lab_test_nm'
+        AND TRIM(UPPER(rslt.emrcode)) = ref.gen_ref_itm_nm
+        AND ref.whtlst_flg = 'Y'
+    LEFT JOIN ref_gen_ref ref2 ON ref2.gen_ref_domn_nm = 'emr_lab_result.lab_result_nm'
+        AND TRIM(UPPER(rslt.result)) = ref2.gen_ref_itm_nm
+        AND ref2.whtlst_flg = 'Y';
 
 
 INSERT INTO lab_result_common_model
@@ -214,7 +223,8 @@ SELECT
     'LIPID_PANEL',                          -- lab_test_panel_nm
     NULL,                                   -- lab_test_nm
     NULL,                                   -- lab_test_desc
-    NULL,                                   -- lab_test_loinc_cd
+    ARRAY('134577', '20859', '25718', '20933')[n.n],
+                                            -- lab_test_loinc_cd
     NULL,                                   -- lab_test_snomed_cd
     NULL,                                   -- lab_test_vdr_cd
     NULL,                                   -- lab_test_vdr_cd_qual
@@ -222,17 +232,12 @@ SELECT
     NULL,                                   -- lab_test_alt_cd_qual
     NULL,                                   -- lab_result_nm
     NULL,                                   -- lab_result_desc
-    CASE WHEN n.n = 0 THEN lip.ldl
-        WHEN n.n = 1 THEN lip.hdl
-        WHEN n.n = 2 THEN lip.triglycerides
-        WHEN n.n = 3 THEN lip.totalcholesterol
-        ELSE NULL END,                      -- lab_result_msrmt
-    CASE WHEN split('mg/dl:mg/dl or mg/mL:mg/dl:mg/dl', ':')[n.n] != ''
-            THEN split('mg/dl:mg/dl or mg/mL:mg/dl:mg/dl', ':')[n.n]
-        ELSE NULL END,                      -- lab_result_uom
-    CASE WHEN split('LDL_CHOLESTEROL:HDL_CHOLESTEROL:TRIGLYCERIDES:TOTAL_CHOLESTEROL', ':')[n.n] != ''
-        THEN split('LDL_CHOLESTEROL:HDL_CHOLESTEROL:TRIGLYCERIDES:TOTAL_CHOLESTEROL', ':')[n.n]
-        ELSE NULL END,                      -- lab_result_qual
+    ARRAY(lip.ldl, lip.hdl, lip.triglycerides, lip.totalcholesterol)[n.n],
+                                            -- lab_result_msrmt
+    ARRAY('mg/dl', 'mg/dl or mg/mL', 'mg/dl', 'mg/dl')[n.n],
+                                            -- lab_result_uom
+    ARRAY('LDL_CHOLESTEROL', 'HDL_CHOLESTEROL', 'TRIGLYCERIDES', 'TOTAL_CHOLESTEROL')[n.n],
+                                            -- lab_result_qual
     NULL,                                   -- lab_result_abnorm_flg
     NULL,                                   -- lab_result_norm_min_msrmt
     NULL,                                   -- lab_result_norm_max_msrmt

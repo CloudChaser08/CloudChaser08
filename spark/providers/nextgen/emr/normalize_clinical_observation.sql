@@ -86,11 +86,13 @@ SELECT
     NULL,                                   -- clin_obsn_data_ctgy_nm
     NULL,                                   -- clin_obsn_data_ctgy_desc
     ref2.gen_ref_cd,                        -- clin_obsn_typ_cd
-    'VENDOR',                               -- clin_obsn_typ_cd_qual
+    CASE WHEN ref2.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END,                                -- clin_obsn_typ_cd_qual
     ref3.gen_ref_itm_nm,                    -- clin_obsn_typ_nm
     NULL,                                   -- clin_obsn_typ_desc
     ref1.gen_ref_cd,                        -- clin_obsn_substc_cd
-    NULL,                                   -- clin_obsn_substc_cd_qual
+    CASE WHEN ref1.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END ,                               -- clin_obsn_substc_cd_qual
     ref1.gen_ref_itm_nm,                    -- clin_obsn_substc_nm
     NULL,                                   -- clin_obsn_substc_desc
     NULL,                                   -- clin_obsn_cd
@@ -358,11 +360,13 @@ SELECT
     NULL,                                   -- clin_obsn_data_src_nm
     NULL,                                   -- clin_obsn_data_src_desc
     ref2.gen_ref_cd,                        -- clin_obsn_data_ctgy_cd
-    NULL,                                   -- clin_obsn_data_ctgy_cd_qual
+    CASE WHEN ref2.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END,                                -- clin_obsn_data_ctgy_cd_qual
     ref2.gen_ref_itm_nm,                    -- clin_obsn_data_ctgy_nm
     NULL,                                   -- clin_obsn_data_ctgy_desc
     ref3.gen_ref_cd,                        -- clin_obsn_typ_cd
-    'VENDOR',                               -- clin_obsn_typ_cd_qual
+    CASE WHEN ref3.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END,                                -- clin_obsn_typ_cd_qual
     ref4.gen_ref_itm_nm,                    -- clin_obsn_typ_nm
     NULL,                                   -- clin_obsn_typ_desc
     NULL,                                   -- clin_obsn_substc_cd

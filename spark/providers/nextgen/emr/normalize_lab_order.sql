@@ -61,7 +61,7 @@ SELECT
     NULL,                                   -- lab_ord_ordg_prov_addr_2_txt
     NULL,                                   -- lab_ord_ordg_prov_state_cd
     NULL,                                   -- lab_ord_ordg_prov_zip_cd
-    ord.loinccode,                          -- lab_ord_loinc_cd
+    translate(ord.loinccode, '-', ''),      -- lab_ord_loinc_cd
     clean_up_freetext(ord.snomedcode, false),
                                             -- lab_ord_snomed_cd
     clean_up_freetext(ord.testcodeid, false),

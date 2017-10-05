@@ -76,7 +76,8 @@ SELECT
     NULL,                                   -- proc_rndrg_prov_state_cd
     NULL,                                   -- proc_rndrg_prov_zip_cd
     proc.emrcode,                           -- proc_cd
-    'CPT',                                  -- proc_cd_qual
+    CASE WHEN proc.emrcode IS NOT NULL THEN 'CPT'
+        END,                                -- proc_cd_qual
     NULL,                                   -- proc_cd_1_modfr
     NULL,                                   -- proc_cd_2_modfr
     NULL,                                   -- proc_cd_3_modfr

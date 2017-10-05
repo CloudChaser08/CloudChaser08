@@ -12,7 +12,8 @@ SELECT
     NULL,                                   -- hvm_vdr_feed_id
     enc.reportingenterpriseid,              -- vdr_org_id
     enc.encounterid,                        -- vdr_enc_id
-    'VENDOR',                               -- vdr_enc_id_qual
+    CASE WHEN enc.encounterid IS NOT NULL THEN 'VENDOR'
+        END,                                -- vdr_enc_id_qual
     NULL,                                   -- vdr_alt_enc_id
     NULL,                                   -- vdr_alt_enc_id_qual
     concat_ws('_', 'NG',

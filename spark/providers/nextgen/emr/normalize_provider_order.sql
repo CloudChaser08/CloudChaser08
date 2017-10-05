@@ -2,8 +2,14 @@ DROP TABLE IF EXISTS ord_clean_actcodes;
 CREATE TABLE ord_clean_actcodes AS
 SELECT
     *,
-    clean_up_freetext(ord.actcode, false) as clean_actcode,
-    clean_up_freetext(ord.actdiagnosiscode, false) as clean_actdiagnosiscode
+    UPPER(ord.actcode) as clean_actcode,
+    clean_up_freetext(ord.actdiagnosiscode, false) as clean_actdiagnosiscode,
+    extract_date(
+        substring(ord.encounterdate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        ) as enc_dt,
+    extract_date(
+        substring(ord.orderdate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        ) as prov_ord_dt
 FROM `order` ord;
 
 INSERT INTO provider_order_common_model
@@ -67,29 +73,45 @@ SELECT
     NULL,                                   -- prov_ord_start_dt
     NULL,                                   -- prov_ord_end_dt
     ref1.gen_ref_cd,                        -- prov_ord_ctgy_cd
-    NULL,                                   -- prov_ord_ctgy_cd_qual
+    CASE WHEN ref1.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END,                                -- prov_ord_ctgy_cd_qual
     ref1.gen_ref_itm_nm,                    -- prov_ord_ctgy_nm
     NULL,                                   -- prov_ord_ctgy_desc
     ref2.gen_ref_cd,                        -- prov_ord_typ_cd
-    NULL,                                   -- prov_ord_typ_cd_qual
+    CASE WHEN ref2.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END,                                -- prov_ord_typ_cd_qual
     ref2.gen_ref_itm_nm,                    -- prov_ord_typ_nm
     NULL,                                   -- prov_ord_typ_desc
     CASE WHEN cpt_codes.code IS NOT NULL THEN cpt_codes.code
         WHEN hcpcs_codes.hcpc IS NOT NULL THEN hcpcs_codes.hcpc
-        WHEN icd_diag_codes.code IS NOT NULL THEN icd_diag_codes.code
+        WHEN icd_diag_codes.code IS NOT NULL
+            THEN clean_up_diagnosis_code(icd_diag_codes.code, NULL,
+                COALESCE(ord.prov_ord_dt, org.enc_dt))
         WHEN icd_proc_codes.code IS NOT NULL THEN icd_proc_codes.code
+        WHEN loinc_codes.loinc_num IS NOT NULL THEN loinc_codes.loinc_num
+        WHEN regexp_extract(ord.clean_actcode, '(^NG[0-9]+$)') != '' THEN ord.clean_actcode
         WHEN ref3.gen_ref_cd IS NOT NULL THEN ref3.gen_ref_cd
         ELSE NULL END,                      -- prov_ord_cd
-    NULL,                                   -- prov_ord_cd_qual
+    CASE WHEN cpt_codes.code IS NOT NULL OR
+            hcpcs_codes.hcpc IS NOT NULL OR
+            icd_diag_codes.code IS NOT NULL OR
+            icd_proc_codes.code IS NOT NULL OR
+            loinc_codes.loinc_num IS NOT NULL OR
+            regexp_extract(ord.clean_actcode, '(^NG[0-9]+$)') != '' OR
+            ref3.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        ELSE NULL END,                      -- prov_ord_cd_qual
     NULL,                                   -- prov_ord_nm
     NULL,                                   -- prov_ord_desc
-    clean_up_freetext(ord.acttext, false),  -- prov_ord_alt_cd
-    NULL,                                   -- prov_ord_alt_cd_qual
-    clean_up_freetext(ord.acttextdisplay, false),
+    UPPER(COALESCE(ord.acttext, ord.acttextdisplay, ord.actdescription)),
+                                            -- prov_ord_alt_cd
+    'VENDOR',                               -- prov_ord_alt_cd_qual
+    UPPER(COALESCE(ord.acttext, ord.acttextdisplay, ord.actdescription)),
                                             -- prov_ord_alt_nm
-    clean_up_freetext(ord.actdescription, false),
+    UPPER(COALESCE(ord.acttext, ord.acttextdisplay, ord.actdescription)),
                                             -- prov_ord_alt_desc
-    CASE WHEN diag2.code IS NOT NULL THEN diag2.code
+    CASE WHEN diag2.code IS NOT NULL
+            THEN clean_up_diagnosis_code(diag2.code, NULL,
+                COALESCE(ord.prov_ord_dt, org.enc_dt))
         ELSE NULL END,                      -- prov_ord_diag_cd
     NULL,                                   -- prov_ord_diag_cd_qual
     clean_up_freetext(ord.actdiagnosis, false),
@@ -101,15 +123,13 @@ SELECT
         ELSE NULL END,                      -- prov_ord_vcx_cd_qual
     NULL,                                   -- prov_ord_vcx_nm
     NULL,                                   -- prov_ord_vcx_desc
-    clean_up_freetext(ord.actreasoncode, false),
-                                            -- prov_ord_rsn_cd
-    NULL,                                   -- prov_ord_rsn_cd_qual
+    UPPER(ord.actreasoncode),               -- prov_ord_rsn_cd
+    'VENDOR',                               -- prov_ord_rsn_cd_qual
     clean_up_freetext(ord.orderedreason, false),
                                             -- prov_ord_rsn_nm
     NULL,                                   -- prov_ord_rsn_desc
-    clean_up_freetext(ord.actstatus, false),
-                                            -- prov_ord_stat_cd
-    NULL,                                   -- prov_ord_stat_cd_qual
+    UPPER(ord.actstatus),                   -- prov_ord_stat_cd
+    'VENDOR',                               -- prov_ord_stat_cd_qual
     NULL,                                   -- prov_ord_stat_nm
     NULL,                                   -- prov_ord_stat_desc
     CASE WHEN ord.completed = '0' THEN 'N'
@@ -133,7 +153,7 @@ SELECT
         ),                                  -- prov_ord_cxld_dt
     NULL,                                   -- prov_ord_result_cd
     NULL,                                   -- prov_ord_result_cd_qual
-    clean_up_freetext(ord.obsvalue, false), -- prov_ord_result_nm
+    ord.obsvalue,                           -- prov_ord_result_nm
     clean_up_freetext(ord.obsinterpretation, false),
                                             -- prov_ord_result_desc
     extract_date(
@@ -141,12 +161,11 @@ SELECT
         ),                                  -- prov_ord_result_rcvd_dt
     clean_up_freetext(ord.therapytype, false),
                                             -- prov_ord_trtmt_typ_cd
-    NULL,                                   -- prov_ord_trtmt_typ_cd_qual
+    'VENDOR',                               -- prov_ord_trtmt_typ_cd_qual
     NULL,                                   -- prov_ord_trtmt_typ_nm
     NULL,                                   -- prov_ord_trtmt_typ_desc
-    clean_up_freetext(ord.refertospecialty, false),
-                                            -- prov_ord_rfrd_speclty_cd
-    NULL,                                   -- prov_ord_rfrd_speclty_cd_qual
+    UPPER(ord.refertospecialty),            -- prov_ord_rfrd_speclty_cd
+    'VENDOR',                               -- prov_ord_rfrd_speclty_cd_qual
     NULL,                                   -- prov_ord_rfrd_speclty_nm
     NULL,                                   -- prov_ord_rfrd_speclty_desc
     NULL,                                   -- prov_ord_specl_instrs_cd
@@ -189,10 +208,13 @@ FROM `ord_clean_actcodes` ord
     LEFT JOIN hcpcs_codes ON ord.clean_actcode = hcpc
         AND ord.clean_actcode IS NOT NULL AND ord.clean_actcode != ''
         AND ord.clean_actcode != 'NG'
-    LEFT JOIN icd_diag_codes ON clean_up_freetext(ord.actcode, true) = icd_diag_codes.code
+    LEFT JOIN icd_diag_codes ON ord.clean_actcode = icd_diag_codes.code
         AND ord.clean_actcode IS NOT NULL AND ord.clean_actcode != ''
         AND ord.clean_actcode != 'NG'
-    LEFT JOIN icd_proc_codes ON clean_up_freetext(ord.actcode, true) = icd_proc_codes.code
+    LEFT JOIN icd_proc_codes ON ord.clean_actcode = icd_proc_codes.code
+        AND ord.clean_actcode IS NOT NULL AND ord.clean_actcode != ''
+        AND ord.clean_actcode != 'NG'
+    LEFT JOIN loinc_codes ON translate(ord.clean_actcode, '-', '') = loinc_codes.loinc_num
         AND ord.clean_actcode IS NOT NULL AND ord.clean_actcode != ''
         AND ord.clean_actcode != 'NG'
     LEFT JOIN ref_gen_ref ref3 ON ord.clean_actcode = ref3.gen_ref_cd

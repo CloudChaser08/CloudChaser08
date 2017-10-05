@@ -243,6 +243,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     def update_clinical_observation_whitelists(whitelists):
         return [w for w in whitelists if w['column_name'] not in ['clin_obsn_nm', 'clin_obsn_result_desc']]
 
+    def update_lab_result_whitelists(whitelists):
+        return [w for w in whitelists if w['column_name'] not in ['lab_test_nm']]
+
     normalized_tables = [
         {
             'table_name'    : 'clinical_observation_common_model',
@@ -285,7 +288,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'script_name'   : 'emr/lab_result_common_model_v4.sql',
             'data_type'     : 'lab_result',
             'date_column'   : 'part_mth',
-            'privacy_filter': priv_lab_result
+            'privacy_filter': priv_lab_result,
+            'filter_args'   : update_lab_result_whitelists
         },
         {
             'table_name'    : 'lab_order_common_model',

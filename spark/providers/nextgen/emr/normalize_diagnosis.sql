@@ -96,7 +96,9 @@ SELECT
     NULL,                                   -- diag_resltn_nm
     NULL,                                   -- diag_resltn_desc
     clean_up_numeric_code(diag.statusid),   -- diag_stat_cd
-    NULL,                                   -- diag_stat_cd_qual
+    CASE WHEN clean_up_numeric_code(diag.statusid) IS NOT NULL
+            THEN 'VENDOR'
+        END,                                -- diag_stat_cd_qual
     ref1.gen_ref_itm_nm,                    -- diag_stat_nm
     clean_up_freetext(diag.statusidtext, false),
                                             -- diag_stat_desc
