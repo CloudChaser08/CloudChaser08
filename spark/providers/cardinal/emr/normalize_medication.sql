@@ -98,9 +98,11 @@ SELECT
     END,                                                        -- medctn_ordg_prov_frst_nm
 
 -- everything up to the last comma goes into the last name column
-    TRIM(REVERSE(SUBSTRING(
-            REVERSE(disp.ordered_by_name), INSTR(REVERSE(disp.ordered_by_name), ',') + 1
-            ))),                                                -- medctn_ordg_prov_last_nm
+    CASE
+    WHEN INSTR(disp.ordered_by_name, ',') > 0
+    THEN TRIM(REGEXP_EXTRACT(disp.ordered_by_name, '(.*),', 1))
+    ELSE disp.ordered_by_name
+    END,                                                        -- medctn_ordg_prov_last_nm
     NULL,                                                       -- medctn_ordg_prov_addr_1_txt
     NULL,                                                       -- medctn_ordg_prov_addr_2_txt
     NULL,                                                       -- medctn_ordg_prov_state_cd
