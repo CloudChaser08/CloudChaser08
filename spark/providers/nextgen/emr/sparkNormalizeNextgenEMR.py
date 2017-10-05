@@ -80,6 +80,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     external_table_loader.load_icd_proc_codes(runner.sqlContext)
     external_table_loader.load_hcpcs_codes(runner.sqlContext)
     external_table_loader.load_cpt_codes(runner.sqlContext)
+    external_table_loader.load_loinc_codes(runner.sqlContext)
     external_table_loader.load_ref_gen_ref(runner.sqlContext)
     logging.debug("Loaded external tables")
 
