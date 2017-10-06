@@ -54,7 +54,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
                     '''
                     SELECT gen_ref_1_dt FROM dw.ref_gen_ref 
                     WHERE hvm_vdr_feed_id = '45' 
-                    AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE')
+                    AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
                     '''
                 ).take(1)[0].gen_ref_1_dt.isoformat()
     max_date = date_input
