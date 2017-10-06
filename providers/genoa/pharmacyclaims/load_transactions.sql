@@ -42,6 +42,9 @@ Payer_ID text encode lzo,
 Payer_ID_Qualifier text encode lzo,
 Plan_Identification text encode lzo,
 Plan_Name text encode lzo,
+Transaction_Code text encode lzo,
+Response_Code text encode lzo,
+Sales_key text encode lzo,
 hv_join_key text encode lzo)
 DISTKEY(hv_join_key) SORTKEY(hv_join_key);
 
