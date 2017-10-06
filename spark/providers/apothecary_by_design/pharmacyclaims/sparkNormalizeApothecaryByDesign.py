@@ -2,7 +2,8 @@ import argparse
 from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.helpers.file_utils import file_utils
+import spark.helpers.file_utils as file_utils
+import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
@@ -35,10 +36,10 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
             date_input.replace('-', '/')
         )
     else:
-        txn_input_path = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/transactions/{}/'.format(
+        txn_input_path = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/transactions/'.format(
             date_input.replace('-', '/')
         )
-        add_input_path = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/additionaldata/{}/'.format(
+        add_input_path = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/additionaldata/'.format(
             date_input.replace('-', '/')
         )
         matching_path = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/{}/'.format(
@@ -46,13 +47,16 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         )
 
 
-    min_date = runner.sqlContext.sql(
-                '''
-                SELECT gen_ref_1_dt FROM dw.ref_gen_ref 
-                WHERE hvm_vdr_feed_id = '45' 
-                AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE')
-                '''
-            )[0].gen_ref_1_dt.isoformat()
+    if test:
+        min_date = '1900-01-01'
+    else:
+        min_date = runner.sqlContext.sql(
+                    '''
+                    SELECT gen_ref_1_dt FROM dw.ref_gen_ref 
+                    WHERE hvm_vdr_feed_id = '45' 
+                    AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE')
+                    '''
+                ).take(1)[0].gen_ref_1_dt.isoformat()
     max_date = date_input
 
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
@@ -62,7 +66,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     ])
 
     # Load in the matching payload
-    payload_loader.load(runner, matching_path, ['claimid', 'personId', 'hvJoinKey'])
+    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'hvJoinKey'])
 
     # Point hive to the location of the transaction data
     # and describe its schema
@@ -75,21 +79,21 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     # in the two tables
     postprocessor.trimmify(
         runner.sqlContext.sql('select * from abd_transactions')
-    ).createTempView('abd_transactions')
+    ).createTempView('abd_transactions_with_dupes')
 
     postprocessor.trimmify(
         runner.sqlContext.sql('select * from abd_additional_data')
-    ).createTempView('abd_additional_data')
+    ).createTempView('abd_additional_data_with_dupes')
 
     # De-dupe both of the tables
     # - Transaction: Only difference is hvJoinKey, can just
     #                use dropDuplicates
     # - Additional: Difference is the ticket_dt, we want to keep
     #               the row with the most recent ticket_dt
-    runner.sqlContext.sql('select * from abd_transactions') \
+    runner.sqlContext.sql('select * from abd_transactions_with_dupes') \
             .dropDuplicates(['sales_id']) \
             .createTempView('abd_transactions')
-    runner.sqlContext.sql('select * from abd_additional_data') \
+    runner.sqlContext.sql('select * from abd_additional_data_with_dupes') \
             .rdd \
             .map(lambda row: (row.sales_cd, row)) \
             .reduceByKey(lambda x, y: x if x.ticket_dt > y.ticket_dt else y) \

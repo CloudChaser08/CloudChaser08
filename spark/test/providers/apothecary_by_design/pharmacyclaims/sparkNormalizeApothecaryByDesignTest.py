@@ -1,7 +1,7 @@
 import datetime
 import pytest
 
-import spark.providers.apothecary_by_design.sparkNormalizeApothecaryByDesign as abd
+import spark.providers.apothecary_by_design.pharmacyclaims.sparkNormalizeApothecaryByDesign as abd
 
 results = None
 

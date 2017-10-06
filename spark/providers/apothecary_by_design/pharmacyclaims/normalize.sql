@@ -1,7 +1,7 @@
 INSERT INTO pharmacyclaims_common_model
 SELECT
     NULL,                                       -- record_id
-    add.sales_cd,                               -- claim_id
+    ad.sales_cd,                                -- claim_id
     pay.hvid,                                   -- hvid
     NULL,                                       -- created
     NULL,                                       -- model_version
@@ -17,8 +17,8 @@ SELECT
     COALESCE(pay.state, 
         txn.patient_ship_state_cd),             -- patient_state
     extract_date(
-        COALESCE(add.fill_dt, add.ticket_dt),
-        '%Y-%m-%d',
+        COALESCE(ad.fill_dt, ad.ticket_dt),
+        '%Y%m%d',
         CAST({min_date} AS DATE),
         CAST({max_date} AS DATE)
     ),                                          -- date_service
@@ -40,34 +40,34 @@ SELECT
     NULL,                                       -- procedure_code
     NULL,                                       -- procedure_code_qual
     clean_up_numeric_code(
-            add.national_drug_cd),              -- ndc_code
+            ad.national_drug_cd),               -- ndc_code
     NULL,                                       -- product_service_id
     NULL,                                       -- product_service_id_qual
-    add.rx_nbr,                                 -- rx_number
+    ad.rx_nbr,                                  -- rx_number
     NULL,                                       -- rx_number_qual
-    add.ins_ref_bin_nbr,                        -- bin_number
+    ad.ins_ref_bin_nbr,                         -- bin_number
     CASE
         WHEN UPPER(txn.ins1_proc_cntrl_cd) = 'UNKOWN' THEN NULL
         ELSE txn.ins1_proc_cntrl_cd
     END,                                        -- processor_control_number
-    add.fill_nbr,                               -- fill_number
-    add.refill_remain_qty,                      -- refill_auth_amount
-    add.fill_qty,                               -- dispensed_quantity
+    ad.fill_nbr,                                -- fill_number
+    ad.refill_remain_qty,                       -- refill_auth_amount
+    ad.fill_qty,                                -- dispensed_quantity
     NULL,                                       -- unit_of_measure
-    add.days_supply_qty,                        -- days_supply
+    ad.days_supply_qty,                         -- days_supply
     NULL,                                       -- pharmacy_npi
     NULL,                                       -- prov_dispensing_npi
     NULL,                                       -- payer_id
     NULL,                                       -- payer_id_qual
-    TRIM(UPPER(add.ins_ref_nam)),               -- payer_name
+    TRIM(UPPER(ad.ins_ref_nam)),                -- payer_name
     NULL,                                       -- payer_parent_name
     NULL,                                       -- payer_org_name
     NULL,                                       -- payer_plan_id
     NULL,                                       -- payer_plan_name
-    TRIM(UPPER(add.ins1_plan_type_cd)),         -- payer_type
+    TRIM(UPPER(ad.ins1_plan_type_cd)),          -- payer_type
     CASE
-        WHEN add.is_compound_flg = 'True' THEN '2'
-        WHEN add.is_compound_flg = 'False' THEN '1'
+        WHEN ad.is_compound_flg = 'True' THEN '2'
+        WHEN ad.is_compound_flg = 'False' THEN '1'
         ELSE '0'
     END,                                        -- compound_code
     NULL,                                       -- unit_dose_indicator
@@ -116,9 +116,9 @@ SELECT
     NULL,                                       -- coupon_type
     NULL,                                       -- coupon_number
     NULL,                                       -- coupon_value
-    add.abd_location_id,                        -- pharmacy_other_id
+    ad.abd_location_id,                         -- pharmacy_other_id
     CASE
-        WHEN add.abd_location_id = NULL THEN NULL
+        WHEN ad.abd_location_id = NULL THEN NULL
         ELSE 'VENDOR'
     END,                                        -- pharmacy_other_qual
     NULL,                                       -- pharmacy_postal_code
@@ -133,11 +133,11 @@ SELECT
     NULL,                                       -- other_payer_coverage_qual
     NULL,                                       -- other_payer_date
     NULL,                                       -- other_payer_coverage_code
-    NULL,                                       -- logical_delete_reason
-FROM abd_additional_data add
-    LEFT OUTER JOIN abd_transactions txn ON txn.sales_id = add.sales_id
-    LEFT OUTER JOIN payload pay ON txn.hv_join_key = pay.hvJoinKey
+    NULL                                        -- logical_delete_reason
+FROM abd_additional_data ad
+    LEFT OUTER JOIN abd_transactions txn ON txn.sales_id = ad.sales_cd
+    LEFT OUTER JOIN matching_payload pay ON txn.hvjoinkey = pay.hvJoinKey
 WHERE
     is_active_flg = 'True'
-    AND add.sales_cd <> 'sales_cd'
+    AND ad.sales_cd <> 'sales_cd'
 ;

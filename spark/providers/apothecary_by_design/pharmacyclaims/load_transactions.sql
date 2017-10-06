@@ -37,7 +37,7 @@ CREATE EXTERNAL TABLE abd_additional_data(
     is_active_flg                       string,
     ticket_dt                           string,
     rx_nbr                              string,
-    fill_nbr                            string
+    fill_nbr                            string,
     year_nbr                            string,
     mnth_nbr                            string,
     abd_location_id                     string,
