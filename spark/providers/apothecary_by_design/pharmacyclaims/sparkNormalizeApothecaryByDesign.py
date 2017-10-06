@@ -5,6 +5,7 @@ from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
@@ -47,6 +48,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         )
 
 
+    external_table_loader.load_ref_gen_ref(runner.sqlContext)
     if test:
         min_date = '1900-01-01'
     else:
