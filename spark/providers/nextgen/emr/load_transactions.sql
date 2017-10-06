@@ -46,11 +46,56 @@ CREATE EXTERNAL TABLE new_raw_data (
     LOCATION {input_path}
     ;
 
+set hive.exec.dynamic.partition.mode=nonstrict;
 DROP TABLE IF EXISTS new_raw_data_local;
-CREATE TABLE new_raw_data_local
-STORED AS PARQUET
-AS
-SELECT *, input_file_name() as input_file_name FROM new_raw_data;
+CREATE TABLE new_raw_data_local (
+        column1                    string,
+        column2                    string,
+        column3                    string,
+        column4                    string,
+        column5                    string,
+        column6                    string,
+        column7                    string,
+        column8                    string,
+        column9                    string,
+        column10                   string,
+        column11                   string,
+        column12                   string,
+        column13                   string,
+        column14                   string,
+        column15                   string,
+        column16                   string,
+        column17                   string,
+        column18                   string,
+        column19                   string,
+        column20                   string,
+        column21                   string,
+        column22                   string,
+        column23                   string,
+        column24                   string,
+        column25                   string,
+        column26                   string,
+        column27                   string,
+        column28                   string,
+        column29                   string,
+        column30                   string,
+        column31                   string,
+        column32                   string,
+        column33                   string,
+        column34                   string,
+        column35                   string,
+        column36                   string,
+        column37                   string,
+        input_file_name            string
+    )
+    PARTITIONED BY (tbl_type string)
+    STORED AS PARQUET
+;
+
+INSERT INTO new_raw_data_local
+SELECT *, input_file_name(), column4
+FROM new_raw_data
+DISTRIBUTE BY column2;
 
 DROP TABLE IF EXISTS all_raw_data;
 CREATE EXTERNAL TABLE all_raw_data (
@@ -120,7 +165,7 @@ SELECT
     regexp_extract(input_file_name(), 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name(), '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM all_raw_data
-WHERE column4 = '0005.001';
+WHERE tbl_type = '0005.001';
 
 DROP VIEW IF EXISTS encounter;
 CREATE VIEW encounter AS
@@ -139,7 +184,7 @@ SELECT
     regexp_extract(input_file_name(), 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name(), '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM all_raw_data
-WHERE column4 = '0007.001';
+WHERE tbl_type = '0007.001';
 
 DROP VIEW IF EXISTS vitalsigns;
 CREATE VIEW vitalsigns AS
@@ -174,7 +219,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0010.001';
+WHERE tbl_type = '0010.001';
 
 DROP VIEW IF EXISTS lipidpanel;
 CREATE VIEW lipidpanel AS
@@ -194,7 +239,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0020.001';
+WHERE tbl_type = '0020.001';
 
 DROP VIEW IF EXISTS allergy;
 CREATE VIEW allergy AS
@@ -217,7 +262,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0030.001';
+WHERE tbl_type = '0030.001';
 
 DROP VIEW IF EXISTS substanceusage;
 CREATE VIEW substanceusage AS
@@ -237,7 +282,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0040.001';
+WHERE tbl_type = '0040.001';
 
 DROP VIEW IF EXISTS diagnosis;
 CREATE VIEW diagnosis AS
@@ -260,7 +305,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0050.001';
+WHERE tbl_type = '0050.001';
 
 DROP VIEW IF EXISTS `order`;
 CREATE VIEW `order` AS
@@ -306,7 +351,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0060.001';
+WHERE tbl_type = '0060.001';
 
 DROP VIEW IF EXISTS laborder;
 CREATE VIEW laborder AS
@@ -332,7 +377,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0070.001';
+WHERE tbl_type = '0070.001';
 
 DROP VIEW IF EXISTS labresult;
 CREATE VIEW labresult AS
@@ -357,7 +402,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0080.001';
+WHERE tbl_type = '0080.001';
 
 DROP VIEW IF EXISTS medicationorder;
 CREATE VIEW medicationorder AS
@@ -389,7 +434,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0090.001';
+WHERE tbl_type = '0090.001';
 
 DROP VIEW IF EXISTS `procedure`;
 CREATE VIEW `procedure` AS
@@ -406,7 +451,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0100.001';
+WHERE tbl_type = '0100.001';
 
 DROP VIEW IF EXISTS extendeddata;
 CREATE VIEW extendeddata AS
@@ -428,4 +473,4 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0110.001';
+WHERE tbl_type = '0110.001';
