@@ -15,10 +15,15 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     script_path = __file__
 
     if test:
-        txn_input_path = None
-        add_input_path = None
-        matching_path = None
-        normalized_path = None
+        txn_input_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/txn_input/' 
+        )
+        add_input_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/add_input/'
+        )
+        matching_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/matching/'
+        )
     elif airflow_test:
         txn_input_path = 's3://salusv/testing/dewey/airflow/e2e/abd/pharmacyclaims/out/transaction/{}/'.format(
             date_input.replace('-', '/')
@@ -29,7 +34,6 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/abd/pharmacyclaims/payload/{}/'.format(
             date_input.replace('-', '/')
         )
-        normalized_path = 's3://salusv/testing/dewey/airflow/e2e/abd/pharmacyclaims/normalized/'
     else:
         txn_input_path = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/transactions/{}/'.format(
             date_input.replace('-', '/')
@@ -40,7 +44,6 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         matching_path = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/{}/'.format(
             date_input.replace('-', '/')
         )
-        normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=apothecary_by_design/'
 
 
     min_date = runner.sqlContext.sql(
@@ -68,6 +71,16 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         ['add_input_path', add_input_path]
     ])
 
+    # Remove leading and trailing whitespace from any strings
+    # in the two tables
+    postprocessor.trimmify(
+        runner.sqlContext.sql('select * from abd_transactions')
+    ).createTempView('abd_transactions')
+
+    postprocessor.trimmify(
+        runner.sqlContext.sql('select * from abd_additional_data')
+    ).createTempView('abd_additional_data')
+
     # De-dupe both of the tables
     # - Transaction: Only difference is hvJoinKey, can just
     #                use dropDuplicates
@@ -82,16 +95,6 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
             .reduceByKey(lambda x, y: x if x.ticket_dt > y.ticket_dt else y) \
             .map(lambda kv: kv[1]) \
             .toDF().createTempView('abd_additional_data')
-
-    # Remove leading and trailing whitespace from any strings
-    # in the two tables
-    postprocessor.trimmify(
-        runner.sqlContext.sql('select * from abd_transactions')
-    ).createTempView('abd_transactions')
-
-    postprocessor.trimmify(
-        runner.sqlContext.sql('select * from abd_additional_data')
-    ).createTempView('abd_additional_data')
 
     # Run the normalization script on the transaction data
     # and matching payload
