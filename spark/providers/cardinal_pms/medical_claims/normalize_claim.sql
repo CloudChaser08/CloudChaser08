@@ -16,8 +16,16 @@ SELECT
     NULL,                                       -- patient_state
     'P',                                        -- claim_type
     NULL,                                       -- date_received
-    t.dateservicestart,                         -- date_service **TODO: cap **
-    t.dateservicestart,                         -- date_service_end **TODO: cap **
+    extract_date(
+        t.dateservicestart,
+        {min_date},
+        {max_date}
+    ),                                          -- date_service **TODO: cap **
+    extract_date(
+        t.dateservicestart,
+        {min_date},
+        {max_date}
+    ),                                          -- date_service_end **TODO: cap **
     NULL,                                       -- inst_date_admitted
     NULL,                                       -- inst_date_discharged
     NULL,                                       -- inst_admit_type_std_id

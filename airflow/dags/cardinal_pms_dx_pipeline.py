@@ -233,6 +233,8 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+# TODO: Update analytics database
+
 ### DAG Structure ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)

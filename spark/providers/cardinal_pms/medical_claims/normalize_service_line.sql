@@ -16,7 +16,11 @@ SELECT DISTINCT
     NULL,                                       -- patient_state
     'P',                                        -- claim_type
     NULL,                                       -- date_received
-    t.dateservicestart,                         -- date_service **TODO: apply capping?**
+    extract_date(
+        t.dateservicestart,
+        {min_date},
+        {max_date}
+    ),                                          -- date_service **TODO: apply capping?**
     NULL,                                       -- date_service_end
     NULL,                                       -- inst_date_admitted
     NULL,                                       -- inst_date_discharged
