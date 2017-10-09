@@ -56,8 +56,7 @@ MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Diplomat RX deid file'
-DEID_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt.zip'
-DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerityPHIOut_{}.csv'
+DEID_FILE_NAME_TEMPLATE = 'HealthVerityPHIOut_{}.csv'
 MINIMUM_DEID_FILE_SIZE = 500
 
 
@@ -272,7 +271,7 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func'      : lambda ds, k: [
                 insert_formatted_date_function(
-                    DEID_UNZIPPED_FILE_NAME_TEMPLATE
+                    DEID_FILE_NAME_TEMPLATE
                 )(ds, k)
             ],
             'file_date_func'                    : insert_current_date_function(
