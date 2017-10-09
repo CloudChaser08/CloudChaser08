@@ -54,7 +54,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     else:
         min_date = runner.sqlContext.sql(
                     '''
-                    SELECT gen_ref_1_dt FROM dw.ref_gen_ref 
+                    SELECT gen_ref_1_dt FROM ref_gen_ref 
                     WHERE hvm_vdr_feed_id = '45' 
                     AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
                     '''
