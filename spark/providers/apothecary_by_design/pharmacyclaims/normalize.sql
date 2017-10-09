@@ -44,10 +44,13 @@ SELECT
     NULL,                                       -- product_service_id
     NULL,                                       -- product_service_id_qual
     ad.rx_nbr,                                  -- rx_number
-    NULL,                                       -- rx_number_qual
+    CASE
+        WHEN ad.rx_nbr IS NULL THEN NULL
+        ELSE 'VENDOR'
+    END,                                        -- rx_number_qual
     ad.ins_ref_bin_nbr,                         -- bin_number
     CASE
-        WHEN UPPER(txn.ins1_proc_cntrl_cd) = 'UNKOWN' THEN NULL
+        WHEN UPPER(txn.ins1_proc_cntrl_cd) = 'UNKNOWN' THEN NULL
         ELSE txn.ins1_proc_cntrl_cd
     END,                                        -- processor_control_number
     ad.fill_nbr,                                -- fill_number
@@ -82,7 +85,10 @@ SELECT
     NULL,                                       -- reason_for_service
     NULL,                                       -- professional_service_code
     NULL,                                       -- result_of_service_code
-    txn.doctor_natl_provider_id,                -- prov_prescribing_npi
+    CASE
+        WHEN txn.doctor_natl_provider_id = '0' THEN NULL
+        ELSE txn.doctor_natl_provider_id
+    END,                                        -- prov_prescribing_npi
     NULL,                                       -- prov_primary_care_npi
     NULL,                                       -- cob_count
     NULL,                                       -- usual_and_customary_charge
