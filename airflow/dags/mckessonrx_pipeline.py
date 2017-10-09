@@ -250,7 +250,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    base = ['--date', insert_current_date('{}-{}-{}', k), '--unrestricted']
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
