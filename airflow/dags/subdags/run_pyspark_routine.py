@@ -28,7 +28,7 @@ def do_run_pyspark_routine(ds, **kwargs):
 
 
 def do_delete_cluster(ds, **kwargs):
-    emr_utils.delete_emr_cluster(ds, **kwargs)
+    emr_utils.delete_emr_cluster(ds, kwargs)
 
 
 def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
