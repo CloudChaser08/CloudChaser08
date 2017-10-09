@@ -69,7 +69,7 @@ def test_init(spark):
             gen_ref_1_dt=None,
             whtlst_flg='N',
         )
-    ]).toDF().createTempView('ref_gen_ref')
+    ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
     cardinal_emr.run(spark['spark'], spark['runner'], '2017-08-31', True)
     global clinical_observation_results, lab_result_results, encounter_results, \
@@ -97,21 +97,21 @@ def test_deduplication():
 
 
 def test_clin_obs_priv_filter():
-    assert filter(lambda r: r.hv_clin_obsn_id == '31_id-31', clinical_observation_results)[0].clin_obsn_diag_cd \
+    assert filter(lambda r: r.hv_clin_obsn_id == '40_id-31', clinical_observation_results)[0].clin_obsn_diag_cd \
         == 'TESTDIAG0'
 
 
 def test_clin_obs_result_cd_explosion():
-    assert sorted([r.clin_obsn_result_cd for r in clinical_observation_results if r.hv_clin_obsn_id == '31_id-31']) \
+    assert sorted([r.clin_obsn_result_cd for r in clinical_observation_results if r.hv_clin_obsn_id == '40_id-31']) \
         == ['STAGE_OF_DIS', 'STG_CRIT_DESC']
 
-    filter(lambda r: r.hv_clin_obsn_id == '31_id-31', clinical_observation_results)[0].clin_obsn_diag_cd
+    filter(lambda r: r.hv_clin_obsn_id == '40_id-31', clinical_observation_results)[0].clin_obsn_diag_cd
 
 
 def test_lab_res_nulls():
     assert map(
         lambda r: r.lab_test_nm,
-        filter(lambda r: r.hv_lab_result_id in ['31_id-11', '31_id-12', '31_id-13'], lab_result_results)
+        filter(lambda r: r.hv_lab_result_id in ['40_id-11', '40_id-12', '40_id-13'], lab_result_results)
     ) == [None, None, None]
 
 
@@ -121,7 +121,7 @@ def test_medication_zeros_nullified(spark):
     dispense_transactions = spark['sqlContext'].sql('select * from dispense_transactions') \
                                                .collect()
     assert [(r.qty, r.num_doses) for r in dispense_transactions if r.id == 'id-41'] == [('0', '0')]
-    assert [(r.medctn_dispd_qty, r.medctn_admin_unt_qty) for r in medication_results if r.hv_medctn_id == '31_id-41'] == [(None, None)]
+    assert [(r.medctn_dispd_qty, r.medctn_admin_unt_qty) for r in medication_results if r.hv_medctn_id == '40_id-41'] == [(None, None)]
 
     assert len(encounter_results) == len(set(encounter_results))
 
@@ -152,6 +152,16 @@ def test_whitelisting():
             assert r.clin_obsn_diag_desc == 'WHITELISTED CLIN OBS DIAG DESC VAL 2'
         else:
             assert not r.clin_obsn_diag_desc
+
+
+def test_first_last_name_parsing():
+    assert [(r.medctn_ordg_prov_frst_nm, r.medctn_ordg_prov_last_nm)
+            for r in medication_results if r.hv_medctn_id in ['40_id-41', '40_id-42', '40_id-43']] \
+        == [('wayne', 'gretzky'), ('michael', 'jordan, phd'), (None, 'prince')]
+
+
+def test_diagnosis_priority():
+    assert [r.diag_prty_cd for r in diagnosis_results][:4] == ['1', '10', '2', '1']
 
 
 def test_cleanup(spark):

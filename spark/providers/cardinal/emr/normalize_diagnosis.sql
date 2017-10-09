@@ -101,7 +101,11 @@ SELECT
     NULL,                                                       -- diag_alt_cd_qual
     diag.diagnosis_name,                                        -- diag_nm
     diag.diagnosis_desc,                                        -- diag_desc
-    NULL,                                                       -- diag_prty_cd
+    CASE
+    WHEN diagnosis_typ REGEXP '[0-9]+' THEN diagnosis_typ
+    WHEN UPPER(diagnosis_typ) = 'PRIMARY' THEN 1
+    WHEN UPPER(diagnosis_typ) = 'SECONDARY' THEN 2
+    END,                                                        -- diag_prty_cd
     NULL,                                                       -- diag_prty_cd_qual
     NULL,                                                       -- diag_svty_cd
     NULL,                                                       -- diag_svty_cd_qual

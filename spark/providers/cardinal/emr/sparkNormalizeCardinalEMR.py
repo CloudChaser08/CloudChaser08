@@ -247,7 +247,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 record_id='row_id', created='crt_dt', data_set='data_set_nm',
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
             ),
-            table['privacy_filter'].filter(runner.sqlContext, table.get('custom_privacy_transformer')),
+            table['privacy_filter'].filter(runner.sqlContext, additional_transforms=table.get('custom_privacy_transformer')),
             *[
                 postprocessor.apply_date_cap(runner.sqlContext, date_col, max_date, '40', domain_name)
                 for (date_col, domain_name) in table['date_caps']

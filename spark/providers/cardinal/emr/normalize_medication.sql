@@ -87,8 +87,22 @@ SELECT
     NULL,                                                       -- medctn_ordg_prov_mdcr_speclty_cd
     NULL,                                                       -- medctn_ordg_prov_alt_speclty_id
     NULL,                                                       -- medctn_ordg_prov_alt_speclty_id_qual
-    disp.ordered_by_name,                                       -- medctn_ordg_prov_frst_nm
-    disp.ordered_by_name,                                       -- medctn_ordg_prov_last_nm
+
+-- only populate first name if str contains a comma, in which case the
+-- first name is everything after the last comma
+    CASE
+    WHEN INSTR(disp.ordered_by_name, ',') > 0
+    THEN TRIM(REVERSE(
+            SPLIT(REVERSE(disp.ordered_by_name), ',')[0]
+            ))
+    END,                                                        -- medctn_ordg_prov_frst_nm
+
+-- everything up to the last comma goes into the last name column
+    CASE
+    WHEN INSTR(disp.ordered_by_name, ',') > 0
+    THEN TRIM(REGEXP_EXTRACT(disp.ordered_by_name, '(.*),', 1))
+    ELSE disp.ordered_by_name
+    END,                                                        -- medctn_ordg_prov_last_nm
     NULL,                                                       -- medctn_ordg_prov_addr_1_txt
     NULL,                                                       -- medctn_ordg_prov_addr_2_txt
     NULL,                                                       -- medctn_ordg_prov_state_cd
