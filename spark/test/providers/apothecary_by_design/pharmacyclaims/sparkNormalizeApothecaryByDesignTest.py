@@ -20,7 +20,25 @@ def test_init(spark):
                 .collect()
 
 
-def test_ran():
-    print results
+def test_duplicates_removed():
+    unique_claim_ids = set(filter(lambda row: row.claim_id, results))
+    assert len(unique_claim_ids) == len(results)
 
+
+def test_hardcode_values():
+    for r in results:
+        assert r.model_version == '3'
+        assert r.data_feed == '45'
+        assert r.data_vendor == '204'
+
+
+def test_hypens_removed_from_ndc_codes():
+    for r in results:
+        assert '-' not in r.ndc_code
+
+
+def test_compound_code_is_1_or_2_or_0():
+    for r in results:
+        assert r.compound_code in ['0', '1', '2']
+        
 

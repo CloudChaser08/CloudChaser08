@@ -4,7 +4,7 @@ SELECT
     ad.sales_cd,                                -- claim_id
     pay.hvid,                                   -- hvid
     NULL,                                       -- created
-    NULL,                                       -- model_version
+    '3',                                        -- model_version
     NULL,                                       -- data_set
     NULL,                                       -- data_feed
     NULL,                                       -- data_vendor
