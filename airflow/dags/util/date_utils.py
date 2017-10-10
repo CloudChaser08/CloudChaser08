@@ -35,6 +35,8 @@ def insert_execution_date_function(template):
 def insert_execution_date(template, ds, kwargs):
     return insert_execution_date_function(template)(ds, kwargs)
 
+# some other functions
+
 def get_file_date_nodash(kwargs):
     # TODO: Updat ethis to the correct date
     return (kwargs['execution_date']).strftime('%Y%m01')
