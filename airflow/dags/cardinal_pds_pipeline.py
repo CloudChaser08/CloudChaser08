@@ -432,7 +432,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_deid.set_upstream(validate_deid)
     fetch_transaction.set_upstream(validate_transaction)
-    queue_up_for_matching.set_upstream(validate_deid)
+    queue_up_for_matching.set_upstream([validate_deid, get_datetime])
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
