@@ -8,7 +8,6 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
-import spark.helpers.privacy.common as common_priv
 
 def run(spark, runner, date_input, test = False, airflow_test = False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -114,7 +113,6 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id = '45', vendor_id = '204', filename = setid),
-        common_priv.filter,
         pharm_priv.filter
     )(
         runner.sqlContext.sql('select * from pharmacyclaims_common_model')
