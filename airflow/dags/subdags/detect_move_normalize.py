@@ -54,7 +54,6 @@ def do_move_matching_payload(ds, **kwargs):
             date = kwargs['file_date_func'](ds, kwargs).replace('-', '/')
             s3_utils.copy_file(payload_file, kwargs['s3_payload_loc_url'] + date + '/' + payload_file.split('/')[-1])
 
-# NOTE: remove when redshift is abandoned
 def do_run_pyspark_normalization_routine(ds, cluster_identifier=None, **kwargs):
     cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
     emr_utils.normalize(
@@ -114,7 +113,7 @@ def do_transform_to_parquet(ds, cluster_identifier=None, **kwargs):
                 
     emr_utils._wait_for_steps(cluster_id)
 
-# NOTE: delete when redshift is abandoned
+
 def do_create_emr_cluster(ds, cluster_identifier=None, **kwargs):
     cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
 
@@ -128,7 +127,6 @@ def do_create_emr_cluster(ds, cluster_identifier=None, **kwargs):
         EMR_EBS_VOLUME_SIZE, 'normalization'
     )
 
-# NOTE: delete when redshift is abandoned
 def do_delete_emr_cluster(ds, cluster_identifier=None, **kwargs):
     cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
     emr_utils.delete_emr_cluster(cluster_name)
@@ -140,9 +138,8 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         'retries': 0
     }
 
-    SUBDAG_NAME = '{}.{}'.format(parent_dag_name, child_dag_name)
     dag = HVDAG.HVDAG(
-        SUBDAG_NAME,
+        '{}.{}'.format(parent_dag_name, child_dag_name),
         schedule_interval='@daily',
         start_date=start_date,
         default_args=default_args
@@ -194,26 +191,6 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
             op_kwargs=dag_config,
             dag=dag
         )
-        '''
-        #NOTE: we will use this once we remove redshift from this code
-        run_pyspark_routine = SubDagOperator(
-            SUBDAG_NAME,
-            'run_pyspark_routine',
-            start_date,
-            dag.schedule_interval,
-            {
-                'EMR_CLUSTER_NAME': EMR_CLUSTER_NAME + '-{}-{}'.format(dag_config['vendor_uuid']),
-                'PYSPARK_SCRIPT_NAME': dag_config['pyspark_normalization_script_name'],
-                'PYSPARK_ARGS_FUNC': dag_config['pyspark_normalization_args_func'],
-                'NUM_NODES' : kwargs.get('emr_num_nodes', EMR_NUM_NODES),
-                'NODE_TYPE' : kwargs.get('emr_node_type', EMR_NODE_TYPE),
-                'EBS_VOLUME_SIZE' : kwargs.get('emr_ebs_volume_size', EMR_EBS_VOLUME_SIZE),
-                'PURPOSE' : 'normalization',
-                'CONNECTED_TO_METASTORE' : False,
-                'SPARK_CONF_ARGS' : dag_config.get('spark_conf_args', None)
-            }
-        )
-        '''
 
         move_matching_payload.set_upstream(detect_matching_done)
         create_emr_cluster.set_upstream(detect_matching_done)
