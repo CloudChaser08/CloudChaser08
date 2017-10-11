@@ -37,6 +37,8 @@ def run(spark, runner, date, test=False):
     PHARMACY_OUT_TEMPLATE = STAGING_DIR + '/pharmacy_claims_t2d'
     ENROLLMENT_OUT_TEMPLATE = STAGING_DIR + '/enrollment_t2d'
 
+    runner.sqlContext.sql('CREATE DATABASE IF NOT EXISTS for321')
+
     runner.run_spark_script('reload_codes.sql', [
         ['foresite_schema', FORESITE_SCHEMA, False]
     ])
