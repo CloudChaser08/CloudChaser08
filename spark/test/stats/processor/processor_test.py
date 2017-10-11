@@ -2,7 +2,7 @@ import pytest
 
 from pyspark.sql import Row
 
-import spark.stats.processor.processor as processor
+import spark.stats.processor as processor
 
 results_distinct_column = None
 results_no_distinct_column = None
