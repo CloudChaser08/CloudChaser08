@@ -11,7 +11,7 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('abd_additional_data')
 
 
-@pytest.mark.usefixturesf('spark')
+@pytest.mark.usefixtures('spark')
 def test_init(spark):
     abd.run(spark['spark'], spark['runner'], '2017-10-06', test = True)
     global results
