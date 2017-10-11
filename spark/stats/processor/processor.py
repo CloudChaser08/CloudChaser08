@@ -3,17 +3,6 @@ import spark.helpers.stats.limit_date_range as limit_date_range
 import spark.helpers.stats.select_distinct_column as select_distinct_column
 import spark.helpers.postprocessor as postprocessor
 
-def _run_fill_rates(df):
-    '''
-    A wrapper around fill_rates calculate fill rate method
-    Input:
-        -df: a dataframe
-    Output:
-        - _: a list with the result of fill_rate.calculate_fill_rate
-    '''
-    return fill_rate.calculate_fill_rate(df).collect()
-
-
 def _get_all_data(sqlContext, datatype, provider_name):
     '''
     Retrieves all the data for a provider from our metastore
@@ -78,7 +67,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
 
 
     # Generate fill rates
-    fill_rates = _run_fill_rates(gen_stats_df)
+    fill_rates = fill_rate.calculate_fill_rate(gen_stats_df).collect()
 
     # Generate key stats
     key_stats = None
