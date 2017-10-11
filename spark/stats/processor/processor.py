@@ -40,7 +40,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
         - get_data_func: function that fetches the data that we'll calculate stats on
         - get_provider_conf_func: function that gets the providers config info
     Output:
-        - all_dfs: a dict of dataframes for each marketplace stat calculated
+        - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
 
     # Get provider config
@@ -104,9 +104,5 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
         'epi_calcs': epi_calcs
     }
     return all_stats
-
-
-def run(spark, sqlContext, provider_name, datafeed_id, quarter, start_date, end_date, earliest_date):
-    return run_marketplace_stats(spark, sqlContext, provider_name, datafeed_id, quarter, start_date, end_date, earliest_date, _do_get_all_data)
 
 
