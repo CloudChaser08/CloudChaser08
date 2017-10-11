@@ -60,7 +60,7 @@ runner.run_spark_script('../../common/event_common_model.sql', [
     ['table_name', 'final_unload', False],
     [
         'properties',
-        constants.unload_properties_template.format(output_path),
+        constants.unload_properties_template.format('part_provider', 'part_best_date', output_path),
         False
     ]
 ])
@@ -70,7 +70,7 @@ old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
 runner.run_spark_script('../../common/unload_common_model.sql', [
     [
         'select_statement',
-        "SELECT *, 'NULL' as best_date "
+        "SELECT *, 'obituarydata' as part_provider, 'NULL' as best_date "
         + "FROM event_common_model "
         + "WHERE event_date IS NULL",
         False
@@ -83,7 +83,8 @@ runner.run_spark_script('../../common/unload_common_model.sql', [
 runner.run_spark_script('../../common/unload_common_model.sql', [
     [
         'select_statement',
-        "SELECT *, regexp_replace(cast(event_date as string), '-..$', '') as best_date "
+        "SELECT *, 'obituarydata' as part_provider, "
+        + "regexp_replace(cast(event_date as string), '-..$', '') as best_date "
         + "FROM event_common_model "
         + "WHERE event_date IS NOT NULL",
         False
