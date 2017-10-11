@@ -25,4 +25,4 @@ def insert_date_function(template):
 
 def insert_date(template, kwargs, date_offset):
     """Returns formatted template."""  
-    return insert_date_function(template)(ds, kwargs, date_offset)
+    return insert_date_function(template)(kwargs, date_offset)
