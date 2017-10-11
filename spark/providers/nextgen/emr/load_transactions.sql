@@ -44,7 +44,7 @@ CREATE EXTERNAL TABLE new_raw_data (
         )
     STORED AS TEXTFILE
     LOCATION {input_path}
-    ;
+;
 
 set hive.exec.dynamic.partition.mode=nonstrict;
 DROP TABLE IF EXISTS new_raw_data_local;
@@ -89,13 +89,13 @@ CREATE TABLE new_raw_data_local (
         input_file_name            string
     )
     PARTITIONED BY (tbl_type string)
-    STORED AS PARQUET
-;
+    STORED AS ORC;
 
 INSERT INTO new_raw_data_local
 SELECT *, input_file_name(), column4
 FROM new_raw_data
-DISTRIBUTE BY column2;
+WHERE column1 = '5'
+DISTRIBUTE BY rand();
 
 DROP TABLE IF EXISTS all_raw_data;
 CREATE EXTERNAL TABLE all_raw_data (
@@ -145,27 +145,6 @@ CREATE EXTERNAL TABLE all_raw_data (
     STORED AS TEXTFILE
     LOCATION {input_root_path}
     ;
-
-DROP VIEW IF EXISTS demographics;
-CREATE VIEW demographics AS
-SELECT
-    column1  as preambleformatcode,
-    column2  as nextgengroupid,
-    column3  as referencedatetime,
-    column4  as postamblecategoryformat,
-    column5  as datacapturedate,
-    column6  as birthyear,
-    column7  as birthmonth,
-    column8  as gender,
-    column9  as race,
-    column10 as zip3,
-    column11 as coveredbymedicarepartbflag,
-    column12 as patientpseudonym,
-    regexp_extract(input_file_name(), 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
-    regexp_extract(input_file_name(), 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
-    regexp_extract(input_file_name(), '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
-FROM all_raw_data
-WHERE tbl_type = '0005.001';
 
 DROP VIEW IF EXISTS encounter;
 CREATE VIEW encounter AS
