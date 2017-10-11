@@ -36,13 +36,13 @@ if HVDAG.HVDAG.aiflow_env == 'test':
 else:
     S3_TRANSACTION_RAW_URL = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecary_by_design/{}/{}/{}/'
-    S3_PAYLOAD_DEST = 's3://salusv/matching/payload/custom/apothecarybydesign/'
+    S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/{}/{}/{}/'
 
 TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}/'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 
-TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_data.txt'
-DEID_FILE_NAME_TEMPLATE = 'hv_export_po_deid.txt'
+TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_data.txt'   #TODO: replace when know their format
+DEID_FILE_NAME_TEMPLATE = 'hv_export_po_deid.txt'       #TODO: replace when know their format
 
 def get_formatted_date(ds, kwargs):
     return kwargs['ds_nodash']
@@ -115,7 +115,7 @@ def generate_file_validation_task(
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'               : 'healthverity',
-                'file_description'        : 'McKesson ' + task_id + ' file'
+                'file_description'        : 'Apothecary by Design ' + task_id + ' file'
             }
         ),
         task_id='validate_' + task_id + '_file',
@@ -248,7 +248,7 @@ detect_move_normalize_dag = SubDagOperator(
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '51ca8f88-040a-47f1-b78a-491c8632fedd',
-            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/mckesson/pharmacyclaims/sparkNormalizeApothecaryByDesign.py',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/apothecary_by_design/pharmacyclaims/sparkNormalizeApothecaryByDesign.py',
             'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True
         }
