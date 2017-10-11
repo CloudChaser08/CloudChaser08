@@ -34,7 +34,7 @@ def get_prefix_dir_paths(root_path, recurse=2):
         return reduce(lambda x,y: x + y, \
                 map(lambda d: get_prefix_dir_paths(root_path + d, recurse - 1), dirs), [])
     else:
-        return map(lambda d: root_path + d, dirs)
+        return map(lambda d: root_path + d.replace('/', ''), dirs)
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
