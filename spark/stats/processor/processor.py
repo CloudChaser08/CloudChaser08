@@ -95,7 +95,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     epi_calcs = None
 
     # Return all the dfs
-    all_dfs = {
+    all_stats = {
         'fill_rates': fill_rates,
         'key_stats': key_stats,
         'top_values': top_values,
@@ -103,7 +103,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
         'year_over_year': year_over_year,
         'epi_calcs': epi_calcs
     }
-    return all_dfs
+    return all_stats
 
 
 def run(spark, sqlContext, provider_name, datafeed_id, quarter, start_date, end_date, earliest_date):
