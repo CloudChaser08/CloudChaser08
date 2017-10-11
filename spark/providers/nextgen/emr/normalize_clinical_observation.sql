@@ -122,8 +122,17 @@ SELECT
         substring(sub.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM substanceusage sub
-    LEFT JOIN demographics_dedup dem ON sub.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON sub.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND sub.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(sub.encounterdate, 1, 8),
+                substring(sub.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(sub.encounterdate, 1, 8),
+                substring(sub.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref1 ON ref1.hvm_vdr_feed_id = 35
         AND ref1.gen_ref_domn_nm = 'substanceusage.substancecode'
         AND sub.substancecode = ref1.gen_ref_cd
@@ -139,7 +148,6 @@ FROM substanceusage sub
     LEFT JOIN ref_gen_ref ref4 ON ref4.gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
         AND TRIM(UPPER(sub.emrcode)) = ref4.gen_ref_itm_nm
         AND ref4.whtlst_flg = 'Y';
-
 
 
 -- ALLERGY DATA IS NOT YET CERTIFIED
@@ -275,7 +283,6 @@ FROM substanceusage sub
 --        AND ref2.gen_ref_domn_nm = 'allergy.allergentype'
 --        AND agy.allergentype = ref2.gen_ref_cd
 
-SET spark.sql.shuffle.partitions=2500; 
 INSERT INTO clinical_observation_common_model
 SELECT
     NULL,                                   -- row_id
@@ -401,8 +408,17 @@ SELECT
         substring(ext.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM extendeddata ext
-    LEFT JOIN demographics_dedup dem ON ext.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON ext.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND ext.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(ext.encounterdate, 1, 8),
+                substring(ext.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(ext.encounterdate, 1, 8),
+                substring(ext.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref2 ON ref2.hvm_vdr_feed_id = 35
         AND ref2.gen_ref_domn_nm = 'extendeddata.datacategory'
         AND ext.datacategory = ref2.gen_ref_cd
@@ -421,4 +437,3 @@ FROM extendeddata ext
     LEFT JOIN ref_gen_ref ref6 ON ref6.gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_result_desc'
         AND TRIM(UPPER(ext.result)) = ref6.gen_ref_itm_nm
         AND ref6.whtlst_flg = 'Y';
-SET spark.sql.shuffle.partitions={partitions}; 

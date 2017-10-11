@@ -69,7 +69,8 @@ SELECT
     NULL,                                   -- lab_ord_alt_cd_qual
     clean_up_freetext(ord.emrcode, false),  -- lab_ord_test_nm
     NULL,                                   -- lab_ord_panel_nm
-    trim(split(ord.diagnoses, ',')[n.n]),   -- lab_ord_diag_cd
+    trim(split(ord.diagnoses, ',')[explode_idx]),
+					    -- lab_ord_diag_cd
     NULL,                                   -- lab_ord_diag_cd_qual
     extract_date(
         substring(ord.datadate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
@@ -81,9 +82,18 @@ SELECT
         substring(ord.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM laborder ord
-    LEFT JOIN demographics_dedup dem ON ord.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON ord.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND ord.NextGenGroupID = dem.NextGenGroupID
-    CROSS JOIN lab_order_exploder n
-WHERE (split(ord.diagnoses, ',')[n.n] IS NOT NULL AND trim(split(ord.diagnoses, ',')[n.n]) != '')
-    OR (n.n = 0 AND regexp_extract(ord.diagnoses, '([^,\\s])') IS NULL)
+        AND COALESCE(
+                substring(ord.encounterdate, 1, 8),
+                substring(ord.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(ord.encounterdate, 1, 8),
+                substring(ord.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
+    CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) as explode_idx) x
+WHERE ((trim(split(ord.diagnoses, ',')[explode_idx]) IS NOT NULL AND trim(split(ord.diagnoses, ',')[explode_idx]) != '')
+    	OR (explode_idx = 0 AND regexp_extract(ord.diagnoses, '([^,\\s])') IS NULL))
 DISTRIBUTE BY hvid;

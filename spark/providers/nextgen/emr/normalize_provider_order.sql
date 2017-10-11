@@ -190,8 +190,17 @@ SELECT
         substring(ord.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM `ord_clean_actcodes` ord
-    LEFT JOIN demographics_dedup dem ON ord.reportingenterpriseid = dem.reportingenterpriseid
+    LEFT JOIN demographics_local dem ON ord.reportingenterpriseid = dem.reportingenterpriseid
         AND ord.nextgengroupid = dem.nextgengroupid
+        AND COALESCE(
+                substring(ord.encounterdate, 1, 8),
+                substring(ord.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(ord.encounterdate, 1, 8),
+                substring(ord.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref1 ON ref1.hvm_vdr_feed_id = 35
         AND ref1.gen_ref_domn_nm = 'order.actmood'
         AND ord.actmood = ref1.gen_ref_cd

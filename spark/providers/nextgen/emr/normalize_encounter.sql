@@ -110,8 +110,14 @@ SELECT
     NULL,                                   -- rec_stat_cd
     'encounter'                             -- prmy_src_tbl_nm
 FROM encounter_dedup enc
-    LEFT JOIN demographics_dedup dem ON enc.ReportingEnterpriseID = dem.ReportingEnterpriseID
-        AND enc.NextGenGroupID = dem.NextGenGroupID;
-
-    
-
+    LEFT JOIN demographics_local dem ON enc.ReportingEnterpriseID = dem.ReportingEnterpriseID
+        AND enc.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(enc.encounterdatetime, 1, 8),
+                substring(enc.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(enc.encounterdate, 1, 8),
+                substring(enc.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL);

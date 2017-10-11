@@ -107,8 +107,8 @@ SELECT
     extract_date(
         substring(med.datestopped, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                  -- medctn_end_dt
-    CASE WHEN icd_diag_codes.code IS NOT NULL THEN icd_diag_codes.code
-        ELSE NULL END,                      -- medctn_diag_cd
+    trim(split(med.diagnosis_code_id, ',')[explode_idx]),
+                                            -- medctn_diag_cd
     NULL,                                   -- medctn_diag_cd_qual
     med.emrcode,                            -- medctn_ndc
     NULL,                                   -- medctn_lblr_cd
@@ -160,14 +160,31 @@ SELECT
         substring(med.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM medicationorder med
-    LEFT JOIN demographics_dedup dem ON med.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON med.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND med.NextGenGroupID = dem.NextGenGroupID
-    CROSS JOIN medication_exploder n
-    LEFT JOIN icd_diag_codes ON clean_up_freetext(trim(split(med.diagnosis_code_id, ',')[n.n]), true) = icd_diag_codes.code
-WHERE (split(med.diagnosis_code_id, ',')[n.n] IS NOT NULL
-        AND trim(split(med.diagnosis_code_id, ',')[n.n]) != '')
-    OR (n.n = 0 AND trim(clean_up_freetext(med.diagnosis_code_id, true)) IS NULL)
+        AND COALESCE(
+                substring(med.encounterdate, 1, 8),
+                substring(med.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(med.encounterdate, 1, 8),
+                substring(med.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
+    CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4)) as explode_idx) x
+WHERE ((split(med.diagnosis_code_id, ',')[explode_idx] IS NOT NULL
+            AND trim(split(med.diagnosis_code_id, ',')[explode_idx]) != '')
+        OR (explode_idx = 0 AND trim(clean_up_freetext(med.diagnosis_code_id, true)) IS NULL))
 DISTRIBUTE BY hvid;
+
+ALTER TABLE medication_common_model RENAME TO medication_common_model_bak;
+CREATE TABLE medication_common_model AS
+SELECT DISTINCT medication_common_model_bak.*
+FROM medication_common_model_bak
+LEFT JOIN icd_diag_codes
+    ON medication_common_model_bak.medctn_diag_cd = icd_diag_codes.code
+WHERE icd_diag_codes.code IS NOT NULL;
+DROP TABLE medication_common_model_bak;
 
 ALTER TABLE medication_common_model RENAME TO medication_common_model_bak;
 CREATE TABLE medication_common_model AS SELECT DISTINCT * FROM medication_common_model_bak;

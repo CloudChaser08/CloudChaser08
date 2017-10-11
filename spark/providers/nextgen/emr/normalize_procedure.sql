@@ -97,5 +97,14 @@ SELECT
     NULL,                                   -- rec_stat_cd
     'procedure'                             -- prmy_src_tbl_nm
 FROM `procedure` proc
-    LEFT JOIN demographics_dedup dem ON proc.ReportingEnterpriseID = dem.ReportingEnterpriseID
-        AND proc.NextGenGroupID = dem.NextGenGroupID;
+    LEFT JOIN demographics_local dem ON proc.ReportingEnterpriseID = dem.ReportingEnterpriseID
+        AND proc.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(proc.encounterdate, 1, 8),
+                substring(proc.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(proc.encounterdate, 1, 8),
+                substring(proc.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL);

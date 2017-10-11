@@ -36,30 +36,30 @@ SELECT *,
         'POUNDS'
     ) as vit_sign_uom,
     concat('::::::::::::', COALESCE(vsn.heightdate, ''), ':') as vit_sign_last_msrmt_dt,
-    concat_ws(':',
-        COALESCE(vsn.systolic, ''),
-        COALESCE(vsn.diastolic, ''),
-        COALESCE(vsn.pulserate, ''),
-        COALESCE(vsn.bmi, ''),
-        COALESCE(vsn.bmipercent, ''),
-        COALESCE(vsn.spo2dtl, ''),
-        COALESCE(vsn.spo2timingid, ''),
-        COALESCE(vsn.peakflow, ''),
-        COALESCE(vsn.peakflowtiming, ''),
-        COALESCE(vsn.tempdegf, ''),
-        COALESCE(vsn.respirationrate, ''),
-        COALESCE(vsn.haqscore, ''),
-        COALESCE(vsn.pain, ''),
+    array(
+        vsn.systolic,
+        vsn.diastolic,
+        vsn.pulserate,
+        vsn.bmi,
+        vsn.bmipercent,
+        vsn.spo2dtl,
+        vsn.spo2timingid,
+        vsn.peakflow,
+        vsn.peakflowtiming,
+        vsn.tempdegf,
+        vsn.respirationrate,
+        vsn.haqscore,
+        vsn.pain,
         CASE WHEN vsn.heightft IS NOT NULL
                 THEN extract_number(vsn.heightft) * 12 + extract_number(vsn.heightin)
             WHEN vsn.heightcm IS NOT NULL
                 THEN floor(extract_number(vsn.heightcm) * 2.54)
-            ELSE '' END,
+            END,
         CASE WHEN vsn.weightlb IS NOT NULL
                 THEN extract_number(vsn.weightlb)
             WHEN vsn.weightkg IS NOT NULL
                 THEN floor(extract_number(vsn.weightkg) * 2.2)
-            ELSE '' END
+            END
     ) as vit_sign_msrmt
 FROM vitalsigns vsn;
 
@@ -98,7 +98,7 @@ SELECT
         substring(vsn.datadate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                  -- vit_sign_dt
     extract_date(
-        substring(split(vsn.vit_sign_last_msrmt_dt, ':')[n.n], 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        substring(split(vsn.vit_sign_last_msrmt_dt, ':')[explode_idx], 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                  -- vit_sign_last_msrmt_dt
     NULL,                                   -- vit_sign_rndrg_fclty_npi
     NULL,                                   -- vit_sign_rndrg_fclty_vdr_id
@@ -143,18 +143,18 @@ SELECT
     NULL,                                   -- vit_sign_rndrg_prov_addr_2_txt
     NULL,                                   -- vit_sign_rndrg_prov_state_cd
     NULL,                                   -- vit_sign_rndrg_prov_zip_cd
-    CASE WHEN split(vsn.vit_sign_typ_cd, ':')[n.n] = '' THEN NULL
-        ELSE split(vsn.vit_sign_typ_cd, ':')[n.n]
+    CASE WHEN split(vsn.vit_sign_typ_cd, ':')[explode_idx] = '' THEN NULL
+        ELSE split(vsn.vit_sign_typ_cd, ':')[explode_idx]
         END,                                -- vit_sign_typ_cd
     NULL,                                   -- vit_sign_typ_cd_qual
     NULL,                                   -- vit_sign_typ_nm
     NULL,                                   -- vit_sign_typ_desc
     NULL,                                   -- vit_sign_snomed_cd
-    CASE WHEN split(vsn.vit_sign_msrmt, ':')[n.n] = '' THEN NULL
-        ELSE split(vsn.vit_sign_msrmt, ':')[n.n]
+    CASE WHEN vsn.vit_sign_msrmt[explode_idx] = '' THEN NULL
+        ELSE vsn.vit_sign_msrmt[explode_idx]
         END,                                -- vit_sign_msrmt
-    CASE WHEN split(vsn.vit_sign_uom, ':')[n.n] = '' THEN NULL
-        ELSE split(vsn.vit_sign_uom, ':')[n.n]
+    CASE WHEN split(vsn.vit_sign_uom, ':')[explode_idx] = '' THEN NULL
+        ELSE split(vsn.vit_sign_uom, ':')[explode_idx]
         END,                                -- vit_sign_uom
     NULL,                                   -- vit_sign_qual
     NULL,                                   -- vit_sign_abnorm_flg
@@ -167,8 +167,17 @@ SELECT
         substring(vsn.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM vitalsigns_w_msrmt vsn
-    LEFT JOIN demographics_dedup dem ON vsn.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON vsn.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND vsn.NextGenGroupID = dem.NextGenGroupID
-    CROSS JOIN vital_signs_exploder n
-WHERE (split(vsn.vit_sign_msrmt, ':')[n.n] IS NOT NULL AND split(vsn.vit_sign_msrmt, ':')[n.n] != '')
+        AND COALESCE(
+                substring(vsn.encounterdate, 1, 8),
+                substring(vsn.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(vsn.encounterdate, 1, 8),
+                substring(vsn.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
+    CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)) as explode_idx) x
+WHERE (vsn.vit_sign_msrmt[explode_idx] IS NOT NULL AND vsn.vit_sign_msrmt[explode_idx] != '')
 DISTRIBUTE BY hvid;

@@ -111,8 +111,17 @@ SELECT
     NULL,                                   -- rec_stat_cd
     'diagnosis'                             -- prmy_src_tbl_nm
 FROM diagnosis diag
-    LEFT JOIN demographics_dedup dem ON diag.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON diag.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND diag.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(diag.encounterdate, 1, 8),
+                substring(diag.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(diag.encounterdate, 1, 8),
+                substring(diag.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref1 ON ref1.hvm_vdr_feed_id = 35
         AND ref1.gen_ref_domn_nm = 'diagnosis.statusid'
         AND diag.statusid = ref1.gen_ref_cd
