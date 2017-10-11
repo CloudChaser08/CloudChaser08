@@ -23,7 +23,7 @@ def test_init(spark):
     ]).toDF()
     results = fill_rate.calculate_fill_rate(df)
     expected_df = spark['spark'].sparkContext.parallelize([
-        data_row(0.6666666666666666, 0.0, 0.75, 0.3333333333333333, 0.75)
+        data_row(0.5, 0.0, 0.75, 0.25, 0.75)
     ]).toDF()
 
 
@@ -41,3 +41,5 @@ def test_column_names_equal():
 
 def test_expected_values():
     assert expected_df.subtract(results).count() == 0
+
+
