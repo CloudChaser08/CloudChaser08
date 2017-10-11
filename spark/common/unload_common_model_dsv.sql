@@ -12,4 +12,9 @@ CREATE TABLE unload_dsv
     LOCATION {location}
 AS SELECT * FROM {table_name}
 DISTRIBUTE BY rand();
+
+-- reset LOCATION to avoid complications that could arise when
+-- dropping this table
+ALTER TABLE unload_dsv SET LOCATION '/';
+
 SET spark.sql.shuffle.partitions={original_partition_count};
