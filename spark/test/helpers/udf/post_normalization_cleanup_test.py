@@ -105,10 +105,6 @@ def test_zip_code_masking():
     assert cleanup.mask_zip_code("190") == "190"
 
 def test_vital_sign_clean_up():
-    # Bad units
-    with pytest.raises(NotImplementedError):
-        cleanup.clean_up_vital_sign('HEIGHT', '53', 'CENTIMETERS', 'M', '48', None, None, None)
-
     # vital sign that we don't clean up
     assert cleanup.clean_up_vital_sign('O2_SATURATION', '85', 'PERCENT', 'M', '48', None, None, None) == '85'
 

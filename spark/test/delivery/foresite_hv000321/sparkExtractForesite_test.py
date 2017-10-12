@@ -25,6 +25,11 @@ def cleanup(spark):
     except:
         logging.warn("No output dir found, nothing removed.")
 
+    try:
+        shutil.rmtree(file_utils.get_abs_path(script_path, './resources/tmp'))
+    except:
+        logging.warn("No tmp dir found, nothing removed.")
+
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):

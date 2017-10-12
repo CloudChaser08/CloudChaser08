@@ -1,6 +1,5 @@
 import spark.stats.calc.fill_rate as fill_rate
-import spark.helpers.stats.limit_date_range as limit_date_range
-import spark.helpers.stats.select_distinct_column as select_distinct_column
+import spark.helpers.stats.utils as utils
 import spark.helpers.postprocessor as postprocessor
 
 def _get_all_data(sqlContext, datatype, provider_name):
@@ -58,11 +57,11 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     # used for fill rate, top values, and key stats
     if distinct_column_name:
         gen_stats_df = postprocessor.compose(
-            limit_date_range.limit_date_range(start_date, end_date, date_column_field),
-            select_distinct_column.select_distinct_column(distinct_column_name)
+            utils.select_data_in_date_range(start_date, end_date, date_column_field),
+            utils.select_distinct_values_from_column(distinct_column_name)
         )(all_data_df).cache()
     else:
-        gen_stats_df = limit_date_range.limit_date_range(start_date, \
+        gen_stats_df = utils.select_data_in_date_range(start_date, \
                         end_date, date_column_field)(all_data_df).cache()
 
 

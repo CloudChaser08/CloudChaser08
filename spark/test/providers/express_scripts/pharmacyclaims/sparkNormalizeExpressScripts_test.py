@@ -7,8 +7,14 @@ transactions      = []
 matching          = []
 normalized_claims = []
 table = []
+
+def cleanup(spark):
+    spark['sqlContext'].dropTempTable('pharmacyclaims_common_model_final')
+
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
+    cleanup(spark)
+
     esi.run(spark['spark'], spark['runner'], '2017-05-06', True)
 
     global results, transactions, matching, normalized_claims
@@ -44,5 +50,4 @@ def test_reversed_claims_deleted():
     assert len(filter(lambda r: r.claim_id != '__________________________________________15', results)) == 11
 
 def test_cleanup(spark):
-    spark['sqlContext'].dropTempTable('pharmacyclaims_common_model_final')
-
+    cleanup(spark)

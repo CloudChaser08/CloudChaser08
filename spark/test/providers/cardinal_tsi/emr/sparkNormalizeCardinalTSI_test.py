@@ -29,11 +29,11 @@ def test_init(spark):
 
     spark['spark'].sparkContext.parallelize([
         Row(
-            hvm_vdr_feed_id=None,
-            gen_ref_domn_nm=None,
-            gen_ref_itm_nm=None,
-            gen_ref_1_dt=None,
-            whtlst_flg=None
+            hvm_vdr_feed_id='',
+            gen_ref_domn_nm='',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt='',
+            whtlst_flg=''
         )
     ]).toDF().createTempView('ref_gen_ref')
 
