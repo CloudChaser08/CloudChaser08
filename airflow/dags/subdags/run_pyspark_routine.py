@@ -92,7 +92,7 @@ def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_in
         task_id = 'create_cluster',
         provide_context = True,
         op_kwargs = dag_config,
-        python_callable = do_create_cluster
+        python_callable = do_create_cluster,
         dag = dag
     )
 

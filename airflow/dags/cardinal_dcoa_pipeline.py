@@ -10,7 +10,7 @@ import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
 import subdags.s3_push_files as s3_push_files
-import subdags.detect_move_normalize as detect_move_normalize
+import subdags.run_pyspark_routine as run_pyspark_routine
 import util.decompression as decompression
 import util.s3_utils as s3_utils
 
