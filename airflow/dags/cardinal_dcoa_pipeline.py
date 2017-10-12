@@ -38,6 +38,7 @@ mdag = HVDAG.HVDAG(
 TMP_PATH_TEMPLATE='/tmp/cardinal_dcoa/pharmacyclaims/{}/'
 
 TRANSACTION_FILE_NAME_TEMPLATE = 'dcoa_record_{}'   #TODO: This might change
+EMR_CLUSTER_NAME_TEMPLATE = 'cardinal_dcoa_delivery_{}'
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/raw/'
     S3_DELIVERY_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/out/{}/{}/{}/'
@@ -110,20 +111,20 @@ if HVDAG.HVDAG.airflow_env != 'test':
     )
 
 run_normalization = SubDagOperator(
-    subdag = run_pyspark.routine.run_pyspark_routine(
+    subdag = run_pyspark_routine.run_pyspark_routine(
         DAG_NAME,
         'run_normalization_script',
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'EMR_CLUSTER_NAME': emr_cluster_name_function(CLUSTER_NAME_TEMPLATE),
+            'EMR_CLUSTER_NAME_FUNC': insert_current_date_function(EMR_CLUSTER_NAME_TEMPLATE),
             'PYSPARK_SCRIPT_NAME': 'spark/providers/cardinal_dcoa/pharmacyclaims/sparkNormalizeCardinalDCOA.py',
             'PYSPARK_ARGS_FUNC': norm_args,
             'NUM_NODES': 5,
             'NODE_TYPE': 'm4.xlarge',
             'EBS_VOLUME_SIZE': 50,
             'PURPOSE': 'delivery',
-            'CONNECTED_TO_METASTORE': False,
+            'CONNECT_TO_METASTORE': False,
         }
     ),
     task_id = 'run_normalization_script',
