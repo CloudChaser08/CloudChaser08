@@ -15,7 +15,7 @@ import util.decompression as decompression
 import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file,
-          detect_move_normalize, HVDAG, decompression,
+          run_pyspark_routine, HVDAG, decompression,
           s3_utils]:
     reload(m)
 
