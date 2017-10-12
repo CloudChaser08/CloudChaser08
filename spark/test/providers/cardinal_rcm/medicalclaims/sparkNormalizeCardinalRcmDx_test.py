@@ -54,7 +54,7 @@ def test_diag_explosion():
         == ['DIAG1', 'DIAG4']
 
     # 'PRINC_DIAG' was privacy filtered
-    assert [r.diagnosis_code for r in sample_diag_rows if not r.service_line_number] \
+    assert sorted([r.diagnosis_code for r in sample_diag_rows if not r.service_line_number]) \
         == [None, 'DIAG7']
 
 
