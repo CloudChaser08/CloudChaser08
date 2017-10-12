@@ -97,6 +97,20 @@ def uniquify(with_dupes):
     return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
 
 
+def is_int(val):
+    "Test whether input value can be parsed to an integer"
+    if type(val) is int:
+        return True
+    elif type(val) is float:
+        return val.is_integer()
+    elif type(val) is str:
+        try:
+            int(val)
+            return True
+        except ValueError:
+            return False
+
+
 def obfuscate_hvid(hvid, salt):
     if salt is None or len(salt) == 0:
         raise ValueError("A project-specific salt must be provided to properly obfuscate the HVID")
@@ -131,6 +145,6 @@ def slightly_deobfuscate_hvid(hvid, key):
     # Obfuscation and de-obfuscation are symmetric
     return slightly_obfuscate_hvid(hvid, key)
 
+
 def to_json(val):
     return json.dumps(val)
-
