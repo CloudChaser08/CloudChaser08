@@ -24,15 +24,4 @@ def spark():
         "sqlContext": sqlContext
     }
 
-    # cleanup - drop all tables created by tests
-    for t in [r.tableName for r in sqlContext.sql('show tables').collect()]:
-        try:
-            sqlContext.sql('DROP TABLE {}'.format(t))
-        except:
-            try:
-                sqlContext.sql('DROP VIEW {}'.format(t))
-
-            except:
-                sqlContext.dropTempTable(t)
-
     spark.stop()
