@@ -37,10 +37,15 @@ mdag = HVDAG.HVDAG(
 
 TMP_PATH_TEMPLATE='/tmp/cardinal_dcoa/pharmacyclaims/{}/'
 
-TRANSACTION_FILE_NAME_TEMPLATE = 'TBD' #TODO: TBD
-S3_TRANSACTION_RAW_URL = 'TBD'  #TODO: TBD
-S3_NORMALIZED_FILE_URL_TEMPLATE = 'TBD' #TODO: TBD
-S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/mpi/cardinal_mpi_matched_%Y%m%d.psv.gz'      #TODO: Decide where this is dropped
+TRANSACTION_FILE_NAME_TEMPLATE = 'dcoa_record_{}'   #TODO: This might change
+if HVDAG.HVDAG.airflow_env == 'test':
+    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/raw/'
+    S3_DELIVERY_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/out/{}/{}/{}/'
+    S3_DESTINATION_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/moved_out/'
+else:
+    S3_TRANSACTION_RAW_URL = 's3://salusv/incoming/cardinal/dcoa/'
+    S3_DELIVERY_FILE_URL_TEMPLATE = 's3://salusv/deliverable/cardinal_dcoa/{}/{}/{}/'
+    S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/dcoa/cardinal_dcoa_normalized_{}{}{}.psv.gz'      #TODO: Decide where this is dropped
 
 def insert_current_date_function(date_template):
     def out(ds, kwargs):
@@ -58,7 +63,8 @@ def get_tmp_dir(ds, kwargs):
 
 
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('%Y-%m-%d', k)]
+    base = ['--date', insert_current_date('%Y-%m-%d', k),
+            '--num_output_files', '1']
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -103,18 +109,25 @@ if HVDAG.HVDAG.airflow_env != 'test':
         10000
     )
 
-#TODO: use subdag for running script here.
-run_normalization = None
-
-fetch_normalized_data = PythonOperator(
-    task_id='fetch_normalized_data',
-    provide_context=True,
-    python_callable=lambda ds, kwargs: \
-        s3_utils.fetch_file_from_s3(
-            insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs),
-            get_tmp_dir(ds, kwargs)
+run_normalization = SubDagOperator(
+    subdag = run_pyspark.routine.run_pyspark_routine(
+        DAG_NAME,
+        'run_normalization_script',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'EMR_CLUSTER_NAME': emr_cluster_name_function(CLUSTER_NAME_TEMPLATE),
+            'PYSPARK_SCRIPT_NAME': 'spark/providers/cardinal_dcoa/pharmacyclaims/sparkNormalizeCardinalDCOA.py',
+            'PYSPARK_ARGS_FUNC': norm_args,
+            'NUM_NODES': 5,
+            'NODE_TYPE': 'm4.xlarge',
+            'EBS_VOLUME_SIZE': 50,
+            'PURPOSE': 'delivery',
+            'CONNECTED_TO_METASTORE': False,
+        }
     ),
-    dag=mdag
+    task_id = 'run_normalization_script',
+    dag = mdag
 )
 
 #TODO: Determine what needs to be changed here.
