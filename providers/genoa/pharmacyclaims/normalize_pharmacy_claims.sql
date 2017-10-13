@@ -1,6 +1,78 @@
+--DISTINCT
+CREATE TABLE as genoa_rx_raw_distinct AS
+SELECT
+sales_key,
+gender,
+patient_gender,
+date_of_service,
+transaction_code,
+response_code,
+product_service_id,
+product_service_id_qualifier,
+prescription_service_reference_number,
+prescription_service_reference_number_qualifier,
+bin_number,
+processor_control_number,
+fill_number,
+number_of_refills_authorized,
+quantity_dispensed,
+unit_of_measure,
+days_supply,
+service_provider_id,
+service_provider_id_qualifier,
+payer_id,
+payer_id_qualifier,
+plan_identification,
+plan_name,
+compound_code,
+prescriber_id,
+prescriber_id_qualifier,
+amount_of_copay_coinsurance,
+ingredient_cost_paid,
+dispensing_fee_paid,
+total_amount_paid,
+pharmacy_location__postal_code_
+FIRST(hvjoinkey) as hvjoinkey,
+MAX(setid) as setid
+FROM genoa_rx_raw_distinct_merged
+GROUP BY
+sales_key,
+gender,
+patient_gender,
+date_of_service,
+transaction_code,
+response_code,
+product_service_id,
+product_service_id_qualifier,
+prescription_service_reference_number,
+prescription_service_reference_number_qualifier,
+bin_number,
+processor_control_number,
+fill_number,
+number_of_refills_authorized,
+quantity_dispensed,
+unit_of_measure,
+days_supply,
+service_provider_id,
+service_provider_id_qualifier,
+payer_id,
+payer_id_qualifier,
+plan_identification,
+plan_name,
+compound_code,
+prescriber_id,
+prescriber_id_qualifier,
+amount_of_copay_coinsurance,
+ingredient_cost_paid,
+dispensing_fee_paid,
+total_amount_paid,
+pharmacy_location__postal_code_
+;
+
 INSERT INTO pharmacyclaims_common_model (
 claim_id,
 hvid,
+data_set,
 patient_gender,
 patient_year_of_birth,
 patient_zip3,
@@ -37,17 +109,19 @@ pharmacy_other_id,
 pharmacy_other_qual,
 pharmacy_postal_code,
 prov_prescribing_id,
-prov_prescribing_qual)
+prov_prescribing_qual,
+logical_delete_reason)
 SELECT
-sales_key,
+ltrim(sales_key),
 hvid,
-CASE WHEN UPPER(gender) = 'M' OR UPPER(patient_gender) = 'M' THEN 'M' WHEN UPPER(gender) = 'F' OR UPPER(patient_gender) = 'M' THEN 'F' ELSE 'U' END,
+setid,
+CASE WHEN UPPER(gender) = 'M' OR UPPER(patient_gender) = 'M' THEN 'M' WHEN UPPER(gender) = 'F' OR UPPER(patient_gender) = 'F' THEN 'F' ELSE 'U' END,
 yearofbirth,
 threeDigitZip,
 state,
 date_of_service,
-transaction_code,
-response_code,
+ltrim(transaction_code),
+ltrim(response_code),
 CASE WHEN ltrim(product_service_id_qualifier) in ('7','8','9','07','08','09') then ltrim(product_service_id) else NULL END as procedure_code,
 CASE WHEN ltrim(product_service_id_qualifier) in ('7','8','9','07','08','09') then ltrim(product_service_id_qualifier) else NULL END as procedure_code_qual,
 CASE WHEN ltrim(product_service_id_qualifier) in ('3','03') then ltrim(product_service_id) else NULL END as ndc_code,
@@ -91,8 +165,11 @@ CASE WHEN service_provider_id_qualifier not in ('1', '01') then service_provider
 CASE WHEN service_provider_id_qualifier not in ('1', '01') then service_provider_id_qualifier else null end,
 ltrim(pharmacy_location__postal_code_),
 CASE WHEN (ltrim(prescriber_id_qualifier) not in ('P')) then ltrim(prescriber_id) else NULL end as prov_prescribing_id,
-CASE WHEN (ltrim(prescriber_id_qualifier) not in ('P')) then ltrim(prescriber_id_qualifier) else NULL end as prescriber_id_qualifier
-FROM genoa_rx_raw
+CASE WHEN (ltrim(prescriber_id_qualifier) not in ('P')) then ltrim(prescriber_id_qualifier) else NULL end as prescriber_id_qualifier,
+CASE WHEN ltrim(response_code) = 'R' THEN 'Rejected'
+    WHEN ltrim(transaction_code) = 'B2' THEN 'Reversal'
+    END
+FROM genoa_rx_raw_distinct
     LEFT JOIN matching_payload ON hv_join_key = hvjoinkey
     LEFT JOIN zip3_to_state ON threeDigitZip = zip3;
 

@@ -47,18 +47,35 @@ if args.first_run:
         ['min_valid_date', "'{}'".format(min_date)]
     ])
 
+run_psql_script('create_merged_transaction_table.sql')
+run_psql_script('create_merged_payload_table.sql')
+
+# Genoa sends us current month + a 90 day look back
+# Deduplication logic for removing duplicates from just the current batch
+# would be complicated. Renormalize all of their data instead. It's small
+batches = subprocess.check_output(' '.join(['aws', 's3', 'ls', 's3://salusv/incoming/pharmacyclaims/genoa/', '--recursive', '|', 'grep', '-o', 'incoming.*', '|', 'sed', "'s/\...\.bz2//'", '|', 'uniq']), shell=True).split("\n")
 run_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
-    ['filename', "'{}'".format(args.setid)], ['today', "'{}'".format(TODAY)],
-    ['feedname', "'genoa pharmacy claims'"], ['vendor', "'genoa'"] 
+    ['filename', "'UNKNOWN'".format()], ['today', "'{}'".format(TODAY)],
+    ['feedname', "'21'"], ['vendor', "'20'"] 
 ])
-run_psql_script('load_transactions.sql', [
-    ['input_path', "'{}'".format(args.input_path)],
-    ['credentials', "'{}'".format(args.s3_credentials)]
-])
-run_psql_script('load_matching_payload.sql', [
-    ['matching_path', "'{}'".format(args.matching_path)],
-    ['credentials', "'{}'".format(args.s3_credentials)]
-])
+for batch in batches:
+    if batch.strip() == '':
+        continue
+    input_path    = 's3://salusv/' + batch.rsplit('/', 1)[0]
+    print input_path
+    setid         = batch.rsplit('/', 1)[1].replace('Genoa_', '')
+    matching_path = input_path.replace('incoming', 'matching/payload')
+    output_path   = input_path.replace('incoming', 'warehouse/text')
+    run_psql_script('load_transactions.sql', [
+        ['input_path', "'{}'".format(input_path)],
+        ['credentials', "'{}'".format(args.s3_credentials)],
+        ['setid', "'{}'".format(setid)]
+    ])
+    run_psql_script('load_matching_payload.sql', [
+        ['matching_path', "'{}'".format(matching_path)],
+        ['credentials', "'{}'".format(args.s3_credentials)]
+    ])
+
 run_psql_script('normalize_pharmacy_claims.sql')
 
 # Privacy filtering
