@@ -88,6 +88,8 @@ run_psql_script('../../redshift_norm_common/cap_age.sql', [
 if args.create_reversal_table:
     run_psql_script('data_to_reverse_table.sql')
 
+run_psql_script('clean_out_reversals.sql')
+
 if args.unload_setid:
     run_psql_script('../../redshift_norm_common/unload_common_model.sql', [
         ['output_path', "'{}'".format(args.output_path)],
