@@ -14,8 +14,8 @@ SELECT
     COALESCE(pay.yearOfBirth, txn.patient_dob), -- patient_year_of_birth
     COALESCE(pay.threeDigitZip,
         SUBSTR(txn.patient_ship_zip_cd, 1, 3)), -- patient_zip3
-    COALESCE(pay.state, 
-        txn.patient_ship_state_cd),             -- patient_state
+    UPPER(COALESCE(pay.state, 
+        txn.patient_ship_state_cd)),            -- patient_state
     extract_date(
         COALESCE(ad.fill_dt, ad.ticket_dt),
         '%Y%m%d',
