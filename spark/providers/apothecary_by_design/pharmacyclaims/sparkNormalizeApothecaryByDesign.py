@@ -122,7 +122,8 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql',
             'apothecary_by_design', 'pharmacyclaims_common_model',
-            'date_service', date_input, hvm_historical_date = min_date
+            'date_service', date_input,
+            hvm_historical_date = datetime.strptime(min_date, '%Y-%m-%d')
         )
 
 

@@ -42,3 +42,6 @@ def test_compound_code_is_1_or_2_or_0():
         assert r.compound_code in ['0', '1', '2']
         
 
+def test_states_are_all_upper_case():
+    for r in results:
+        assert r.patient_state.isupper()
