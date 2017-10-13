@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS genoa_rx_raw;
-CREATE TABLE genoa_rx_raw (
+DROP TABLE IF EXISTS genoa_rx_raw_merged;
+CREATE TABLE genoa_rx_raw_merged (
 Patient_last_name text encode lzo,
 Patient_first_name text encode lzo,
 Patient_date_of_birth text encode lzo,
@@ -45,11 +45,7 @@ Plan_Name text encode lzo,
 Transaction_Code text encode lzo,
 Response_Code text encode lzo,
 Sales_key text encode lzo,
-hv_join_key text encode lzo)
+hv_join_key text encode lzo,
+setid text encode lzo)
 DISTKEY(hv_join_key) SORTKEY(hv_join_key);
 
--- Load transaction data into table
-copy genoa_rx_raw from :input_path credentials :credentials BZIP2 EMPTYASNULL BLANKSASNULL TRIMBLANKS DELIMITER '|';
-
-INSERT INTO genoa_rx_raw_merged
-SELECT *, :setid FROM genoa_rx_raw;
