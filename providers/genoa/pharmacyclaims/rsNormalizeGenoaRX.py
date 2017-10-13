@@ -7,27 +7,13 @@ import time
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--input_path', type=str)
-parser.add_argument('--matching_path', type=str)
-parser.add_argument('--output_path', type=str)
-parser.add_argument('--database', type=str, nargs='?')
-parser.add_argument('--setid', type=str) # set id of the data we are normalizing
-parser.add_argument('--unload_setid', type=str, nargs='?') # set id of the data we are unloading to s3
-parser.add_argument('--cluster_endpoint', type=str, nargs='?')
+parser.add_argument('--date', type=str)
 parser.add_argument('--s3_credentials', type=str)
-parser.add_argument('--rs_user', type=str, nargs='?')
-parser.add_argument('--rs_password', type=str, nargs='?')
 parser.add_argument('--create_reversal_table', default=False, action='store_true')
 parser.add_argument('--first_run', default=False, action='store_true')
 args = parser.parse_args()
 
-db = args.database if args.database else 'dev'
-
-psql = ['psql', '-p', '5439']
-if args.cluster_endpoint:
-    psql.extend(['-h', args.cluster_endpoint])
-if args.rs_user:
-    psql.extend(['-U', args.rs_user, '-W'])
+psql = ['psql']
 
 def run_psql_script(script, variables=[]):
     args = psql + ['-f', script]
@@ -36,11 +22,10 @@ def run_psql_script(script, variables=[]):
         args.append('-v')
         args.append("{}={}".format(var[0], var[1]))
 
-    args.append(db)
     return subprocess.check_output(args)
 
 def run_psql_command(command):
-    args = psql + ['-c', command, db]
+    args = psql + ['-c', command]
     return subprocess.check_output(args)
 
 if args.first_run:
