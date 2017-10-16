@@ -8,5 +8,7 @@ INSERT INTO final_unload
 {select_statement}
 DISTRIBUTE BY rand()
 ;
+-- Just in case, change the location of the table before dropping it
+-- This will prevent data in the original location from being deleted
 ALTER TABLE final_unload SET LOCATION '/';
 DROP TABLE final_unload;
