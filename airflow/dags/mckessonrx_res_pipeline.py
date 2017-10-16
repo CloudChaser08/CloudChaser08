@@ -274,7 +274,8 @@ detect_move_normalize_dag = SubDagOperator(
             'vendor_uuid'                       : 'f6b4eefd-988a-4ca3-9efd-0140607c8985',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/mckesson/pharmacyclaims/sparkNormalizeMcKessonRx.py',
             'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'cluster_identifier'                : 'f6b4eefd-988a-4ca3-9efd-0140607c8985_res'
         }
     ),
     task_id='detect_move_normalize',

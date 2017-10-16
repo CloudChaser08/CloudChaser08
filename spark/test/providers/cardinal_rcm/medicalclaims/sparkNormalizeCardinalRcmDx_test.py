@@ -14,6 +14,7 @@ results = []
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('medicalclaims_common_model')
     spark['sqlContext'].dropTempTable('transactions')
+    spark['sqlContext'].dropTempTable('ref_gen_ref')
 
     try:
         shutil.rmtree(file_utils.get_abs_path(__file__, './resources/output/'))
@@ -49,11 +50,11 @@ def test_diag_explosion():
     assert len(sample_diag_rows) == 4
     assert len(sample_nodiag_rows) == 9
 
-    assert [r.diagnosis_code for r in sample_diag_rows if r.service_line_number] \
+    assert sorted([r.diagnosis_code for r in sample_diag_rows if r.service_line_number]) \
         == ['DIAG1', 'DIAG4']
 
     # 'PRINC_DIAG' was privacy filtered
-    assert [r.diagnosis_code for r in sample_diag_rows if not r.service_line_number] \
+    assert sorted([r.diagnosis_code for r in sample_diag_rows if not r.service_line_number]) \
         == [None, 'DIAG7']
 
 

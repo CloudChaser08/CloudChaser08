@@ -55,11 +55,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     runner.run_spark_script('../../../common/emr/diagnosis_common_model_v5.sql', [
         ['table_name', 'diagnosis_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '']
     ])
     runner.run_spark_script('../../../common/emr/medication_common_model_v4.sql', [
         ['table_name', 'medication_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '']
     ])
 
     payload_loader.load(runner, matching_path, ['personId'])
@@ -133,7 +135,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
             ),
 
-            table['privacy_filter'].filter(runner.sqlContext, table['custom_transformer']),
+            table['privacy_filter'].filter(runner.sqlContext, additional_transforms=table['custom_transformer']),
             *[
                 postprocessor.apply_date_cap(runner.sqlContext, date_col, date_input, '31', domain_name, date_function=date_fn)
                 for (date_col, domain_name, date_fn) in table['date_caps']
