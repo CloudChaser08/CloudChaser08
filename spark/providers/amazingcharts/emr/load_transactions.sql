@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS d_costar;
-CREATE EXTERNAL TABLE d_costar {
+CREATE EXTERNAL TABLE d_costar (
         full_code                       string,
         base_code                       string,
         code_to_store                   string,
@@ -10,7 +10,7 @@ CREATE EXTERNAL TABLE d_costar {
         icd_9cm_set                     string,
         representative_icd_10cm_code    string,
         representative_icd_10cm_branch  string
-        }
+        )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (
         'separatorChar' = '|'
@@ -20,7 +20,7 @@ CREATE EXTERNAL TABLE d_costar {
     ;
 
 DROP TABLE IF EXISTS d_cpt;
-CREATE EXTERNAL TABLE d_cpt {
+CREATE EXTERNAL TABLE d_cpt (
         cpt_key                string,
         cpt_id                 string,
         cpt_code               string,
@@ -29,13 +29,17 @@ CREATE EXTERNAL TABLE d_cpt {
         cpt_common             string,
         fee                    string,
         rvu                    string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_cpt'
     ;
 
 DROP TABLE IF EXISTS d_date;
-CREATE EXTERNAL TABLE d_date {
+CREATE EXTERNAL TABLE d_date (
         date_key          string,
         date_time         string,
         date_yyyy         string,
@@ -45,13 +49,17 @@ CREATE EXTERNAL TABLE d_date {
         date_dd           string,
         date_day_of_week  string,
         date_quarter      string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_date'
     ;
 
 DROP TABLE IF EXISTS d_drug;
-CREATE EXTERNAL TABLE d_drug {
+CREATE EXTERNAL TABLE d_drug (
         drug_key                    string,
         drug_id                     string,
         drug_sub_id_1               string,
@@ -69,13 +77,17 @@ CREATE EXTERNAL TABLE d_drug {
         drug_info                   string,
         generic_drug_name_override  string,
         manufacturer                string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_drug'
     ;
 
 DROP TABLE IF EXISTS d_icd10;
-CREATE EXTERNAL TABLE d_icd10 {
+CREATE EXTERNAL TABLE d_icd10 (
         icd10_key          string,
         order_number       string,
         icd_10_code        string,
@@ -83,37 +95,49 @@ CREATE EXTERNAL TABLE d_icd10 {
         short_description  string,
         long_description   string,
         is_active          string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_icd10'
     ;
 
 DROP TABLE IF EXISTS d_icd9;
-CREATE EXTERNAL TABLE d_icd9 {
+CREATE EXTERNAL TABLE d_icd9 (
         icd9_key             string,
         id                   string,
         code                 string,
         short_description    string,
         shorter_description  string,
         description          string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_icd9'
     ;
 
 DROP TABLE IF EXISTS d_lab_directory;
-CREATE EXTERNAL TABLE d_lab_directory {
+CREATE EXTERNAL TABLE d_lab_directory (
         lab_directory_key  string,
         test_code          string,
         lab_company        string,
         test_name          string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_lab_directory'
     ;
 
 DROP TABLE IF EXISTS d_patient;
-CREATE EXTERNAL TABLE d_patient {
+CREATE EXTERNAL TABLE d_patient (
         patient_key            string,
         practice_key           string,
         gender                 string,
@@ -131,13 +155,17 @@ CREATE EXTERNAL TABLE d_patient {
         state_code             string,
         ethnicity_description  string,
         race_description       string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_patient'
     ;
 
 DROP TABLE IF EXISTS d_procedure;
-CREATE EXTERNAL TABLE d_procedure {
+CREATE EXTERNAL TABLE d_procedure (
         procedure_key                    string,
         practice_key                     string,
         procedure_id                     string,
@@ -158,22 +186,30 @@ CREATE EXTERNAL TABLE d_procedure {
         procedure_procedure_category     string,
         procedure_value_code             string,
         procedure_value_code_type        string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_procedure'
     ;
 
 DROP TABLE IF EXISTS d_time;
-CREATE EXTERNAL TABLE d_time {
+CREATE EXTERNAL TABLE d_time (
         time_key  string,
         hh24mi    string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_time'
     ;
 
 DROP TABLE IF EXISTS d_vaccine_cpt;
-CREATE EXTERNAL TABLE d_vaccine_cpt {
+CREATE EXTERNAL TABLE d_vaccine_cpt (
         vaccine_cpt_key                   string,
         vaccine_cpt_id                    string,
         vaccine_name                      string,
@@ -186,13 +222,17 @@ CREATE EXTERNAL TABLE d_vaccine_cpt {
         is_generic                        string,
         cvx_code_unspecified_formulation  string,
         immunity_code                     string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/d_vaccine_cpt'
     ;
 
 DROP TABLE IF EXISTS f_medication;
-CREATE EXTERNAL TABLE f_medication {
+CREATE EXTERNAL TABLE f_medication (
         date_key                     string,
         time_key                     string,
         practice_key                 string,
@@ -221,13 +261,17 @@ CREATE EXTERNAL TABLE f_medication {
         inactivate_reason            string,
         script_printed               string,
         script_faxed                 string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/f_medication'
     ;
 
 DROP TABLE IF EXISTS f_lab;
-CREATE EXTERNAL TABLE f_lab {
+CREATE EXTERNAL TABLE f_lab (
         date_key                  string,
         time_key                  string,
         practice_key              string,
@@ -272,13 +316,17 @@ CREATE EXTERNAL TABLE f_lab {
         abnormal_flag             string,
         normal_abnormal_type      string,
         value_type                string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/f_lab'
     ;
 
 DROP TABLE IF EXISTS f_procedure;
-CREATE EXTERNAL TABLE f_procedure {
+CREATE EXTERNAL TABLE f_procedure (
         date_key         string,
         time_key         string,
         practice_key     string,
@@ -289,13 +337,17 @@ CREATE EXTERNAL TABLE f_procedure {
         units            string,
         price            string,
         date_performed   string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/f_procedure'
     ;
 
 DROP TABLE IF EXISTS f_diagnosis;
-CREATE EXTERNAL TABLE f_diagnosis {
+CREATE EXTERNAL TABLE f_diagnosis (
         date_key             string,
         time_key             string,
         record_type          string,
@@ -311,13 +363,17 @@ CREATE EXTERNAL TABLE f_diagnosis {
         date_resolved        string,
         costar_key           string,
         snomed               string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/f_diagnosis'
     ;
 
 DROP TABLE IF EXISTS f_encounter;
-CREATE EXTERNAL TABLE f_encounter {
+CREATE EXTERNAL TABLE f_encounter (
         date_key                         string,
         time_key                         string,
         practice_key                     string,
@@ -374,13 +430,17 @@ CREATE EXTERNAL TABLE f_encounter {
         systolic                         string,
         diastolic                        string,
         height_in_inches                 string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/f_encounter'
     ;
 
 DROP TABLE IF EXISTS f_injection;
-CREATE EXTERNAL TABLE f_injection {
+CREATE EXTERNAL TABLE f_injection (
         date_key                string,
         time_key                string,
         record_type             string,
@@ -409,7 +469,27 @@ CREATE EXTERNAL TABLE f_injection {
         patient_had_infection   string,
         how_migrated            string,
         reaction_date           string
-        }
-    STORED AS text
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
     LOCATION '{input_path}/f_injection'
+    ;
+
+DROP TABLE IF EXISTS d_multum_to_ndc;
+CREATE EXTERNAL TABLE d_multum_to_ndc (
+        ndc string,
+        drug_name string,
+        multum_id string,
+        active_status string,
+        touch_date string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '|'
+        )
+    STORED AS TEXTFILE
+    LOCATION '{d_multum_to_ndc_path}'
     ;
