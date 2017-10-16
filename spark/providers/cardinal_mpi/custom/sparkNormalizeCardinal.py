@@ -32,6 +32,21 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus'])
 
+    # Bug in Spark that prevents querying the matching_payload table directly
+    # from Spark. Create a copy of the table so we can query it.
+    # https://issues.apache.org/jira/browse/SPARK-18589
+    runner.sqlContext.sql('DROP TABLE IF EXISTS matching_payload_count')
+    runner.sqlContext.sql('CREATE TABLE matching_payload_count AS SELECT * FROM matching_payload')
+
+    # topCandidates is suppose to be a column of array type. If all the values
+    # are NULL it ends up being a string type. Replace it with an array type
+    # column of all nulls so the routine doesn't break
+    if runner.sqlContext.sql('SELECT * FROM matching_payload_count WHERE topCandidates IS NOT NULL').count() == 0:
+        null_array_column = udf(lambda x: None, ArrayType(ArrayType(StringType(), True), True))(lit(None))
+        runner.sqlContext.sql('SELECT * FROM matching_payload')
+            .withColumn('topCandidates', null_array_column)
+            .createOrReplaceTempView("matching_payload")
+
     runner.run_spark_script('normalize.sql', [
         ['location', output_dir]
     ])
