@@ -31,17 +31,17 @@ def date_inserter_function(template,  # string to pass date into
     if year_offset is None:
         year_offset = 0
     elif type(year_offset) is str:
-        raise Exception('Error: year_offset must be an integer')
+        raise Exception('year_offset must be an integer')
         exit(0)
     if month_offset is None:
         month_offset = 0
     elif type(month_offset) is str:
-        raise Exception('Error: month_offset must be an integer')
+        raise Exception('month_offset must be an integer')
         exit(0)
     if day_offset is None:
         day_offset = 0
     elif type(day_offset) is str:
-        raise Exception('Error: day_offset must be an integer')
+        raise Exception('day_offset must be an integer')
         exit(0)
 
     if year is None: 
