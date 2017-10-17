@@ -48,7 +48,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/out/{}/{}/{}/'
     S3_DESTINATION_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/moved_out/cardinal_dcoa_normalized.psv.gz'
 else:
-    S3_TRANSACTION_RAW_URL = 's3://salusv/incoming/cardinal/dcoa/'
+    S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/cardinal/dcoa/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/deliverable/cardinal_dcoa/{}/{}/{}/'
     S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/dcoa/cardinal_dcoa_normalized_{}{}{}.psv.gz'      #TODO: Decide where this is dropped
 
