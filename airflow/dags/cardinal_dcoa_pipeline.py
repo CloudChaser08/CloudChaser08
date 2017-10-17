@@ -46,10 +46,12 @@ EMR_CLUSTER_NAME_TEMPLATE = 'cardinal_dcoa_delivery_{}'
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/out/{}/{}/{}/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/delivery/{}/{}/{}/'
     S3_DESTINATION_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/moved_out/cardinal_dcoa_normalized.psv.gz'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/cardinal/dcoa/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/deliverable/cardinal_dcoa/{}/{}/{}/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/cardinal_dcoa/{}/{}/{}/'
+    S3_DELIVERY_FILE_OUTPUT_LOCATION = 's3://salusv/deliverable/cardinal_dcoa/{}/{}/{}/'
     S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/dcoa/cardinal_dcoa_normalized_{}{}{}.psv.gz'      #TODO: Decide where this is dropped
 
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
