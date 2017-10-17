@@ -24,21 +24,21 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'diplomat_rx_pipeline',
-        '-s', '2017-06-05T12:00:00',
-        '-e', '2017-06-05T12:00:00',
+        '-s', '2017-10-02T12:00:00',
+        '-e', '2017-10-02T12:00:00',
         '-I'
     ])
 
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', DIPLOMAT_TEST_DIR + '/out/2017/06/05/'
+        'aws', 's3', 'ls', DIPLOMAT_TEST_DIR + '/out/2017/10/09/'
     ])) > 0
 
 
 def test_matching_payload_moved():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', DIPLOMAT_TEST_DIR + '/payload/2017/06/05/'
+        'aws', 's3', 'ls', DIPLOMAT_TEST_DIR + '/payload/2017/10/09/'
     ])) > 0
 
 

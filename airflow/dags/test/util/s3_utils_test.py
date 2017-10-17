@@ -129,7 +129,7 @@ def test_get_file_size():
     """
     assert s3_utils.get_file_size(
         test_path + test_bucket_contents[0]
-    ) == '0'
+    ) == 0
 
 
 def test_s3_key_exists():
