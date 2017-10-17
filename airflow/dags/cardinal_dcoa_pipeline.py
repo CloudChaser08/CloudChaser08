@@ -228,9 +228,17 @@ run_normalization = SubDagOperator(
     dag = mdag
 )
 
-#TODO: Pull delivery file from S3 and then push to cardinal
+fetch_normalized_data = PythonOperator(
+    task_id='fetch_normalized_data',
+    provide_context=True,
+    python_callable=lambda ds, **kwargs: \
+        s3_utils.fetch_file_from_s3(
+            insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs),
+            get_tmp_dir(ds, kwargs) + insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split("/")[-1]
+    ),
+    dag=mdag
+)
 
-#TODO: Determine what needs to be changed here.
 deliver_normalized_data = SubDagOperator(
     subdag = s3_push_files.s3_push_files(
         DAG_NAME,
@@ -240,7 +248,7 @@ deliver_normalized_data = SubDagOperator(
         {
             'file_paths_func'       : lambda ds, kwargs: (
                 get_tmp_dir(ds, kwargs) + \
-                    insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
+                    insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split('/')[-1]
             ),
             's3_prefix_func'        : lambda ds, kwargs: \
                 '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
@@ -261,7 +269,8 @@ decrypt_transaction.set_upstream(fetch_transaction)
 split_transaction.set_upstream(decrypt_transaction)
 
 run_normalization.set_upstream(split_transaction)
-clean_up_workspace.set_upstream(split_transaction)
 
-deliver_normalized_data.set_upstream(run_normalization)
+fetch_normalized_data.set_upstream(run_normalization)
+deliver_normalized_data.set_upstream(fetch_normalized_data)
+clean_up_workspace.set_upstream(deliver_normalized_data)
 
