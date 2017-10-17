@@ -2,6 +2,7 @@
     "providers": [
         {
             "name":             "test",
+            "datatype":         "sub_conf",
             "fill_rate":        "sub_conf/sub_config.json",
             "key_stats":        null,
             "top_values":       null,
@@ -12,6 +13,7 @@
         },
         {
             "name":             "other_test",
+            "datatype":         "sub_conf",
             "fill_rate":        null,
             "key_stats":        null,
             "top_values":       null,
@@ -22,8 +24,24 @@
         },
         {
             "name":             "bad_conf",
+            "datatype":         null,
             "fill_rate":        null,
             "uh_oh":            null
+        },
+        {
+            "name":             "bad_conf_2",
+            "fill_rate":        null,
+            "uh_oh":            null
+        },
+        {
+            "name":             "test_missing_key",
+            "datatype":         "sub_conf",
+            "key_stats":        null,
+            "top_values":       null,
+            "longitudinality":  null,
+            "year_over_year":   null,
+            "epi_calcs":        null,
+            "other_field":      "hi"
         }
     ]
 }
