@@ -1,13 +1,7 @@
 import datetime 
 from dateutil.relativedelta import relativedelta #http://dateutil.readthedocs.io/en/stable/relativedelta.html
 
-
-kwargs={'execution_date': datetime.datetime(2017,10,13),'ds_nodash':'20171025'}
-
-TEMPLATE = 'HealthVerity-{}{}{}.zip'
-TEMPLATE2 = 's3://salusv/incoming/emr/visonex/{}/{}/{}/'
-
-def date_validator(year,month,day, year_offset, month_offset, day_offset):
+def date_validator(year, month, day, year_offset, month_offset, day_offset):
     
     """
     Uses a datetime object to validate user input as well as the date itself.
@@ -27,25 +21,35 @@ def date_inserter_function(template,  # string to pass date into
                             ):
     """
     Inserts the ymd formatted date into a string template. Values 
-    of year, month, day can be specified by the user. These default to 
-    those given by the execution_date. The parameter date_offset is in units
-    of days and shifts the output date by the amount. 
+    of year, month, and day can be specified by the user individually. 
+    These default to those given by the execution_date. The parameters
+    year_offset, month_offset, and day_offset are integers to add to the
+    respective values.   
 
     """ 
 
     if year_offset is None:
         year_offset = 0
+    elif type(year_offset) is str:
+        raise Exception('Error: year_offset must be an integer')
+        exit(0)
     if month_offset is None:
         month_offset = 0
+    elif type(month_offset) is str:
+        raise Exception('Error: month_offset must be an integer')
+        exit(0)
     if day_offset is None:
         day_offset = 0
+    elif type(day_offset) is str:
+        raise Exception('Error: day_offset must be an integer')
+        exit(0)
 
     if year is None: 
-        year = int(kwargs['execution_date'].year)
+        year = kwargs['execution_date'].year
     if month is None:
-        month = int(kwargs['execution_date'].month)
+        month = kwargs['execution_date'].month
     if day is None:
-        day = int(kwargs['execution_date'].day)
+        day = kwargs['execution_date'].day
 
     date = date_validator(year, month, day, year_offset, month_offset, day_offset)
 
