@@ -3,9 +3,9 @@ CREATE TABLE matching_payload_w_row_id
 AS SELECT
     monotonically_increasing_id() as row_id,
     hvid,
-    claimId,
-    matchStatus,
-    topCandidates
+    claimid,
+    matchstatus,
+    topcandidates
 FROM matching_payload;
 
 DROP TABLE IF EXISTS matching_payload_exploded;
@@ -16,37 +16,37 @@ CREATE TABLE matching_payload_exploded
 AS SELECT
     row_id,
     hvid,
-    claimId,
-    matchStatus,
-    explode(topCandidates) as candidate
+    claimid,
+    matchstatus,
+    explode(topcandidates) as candidate
 FROM matching_payload_w_row_id
-WHERE topCandidates IS NOT NULL
+WHERE topcandidates IS NOT NULL
 
 UNION ALL
 
 SELECT
     row_id,
     hvid,
-    claimId,
-    matchStatus,
+    claimid,
+    matchstatus,
     NULL as candidate
 FROM matching_payload_w_row_id
-WHERE topCandidates IS NULL;
+WHERE topcandidates IS NULL;
 
 DROP TABLE IF EXISTS matching_payload_clean;
 CREATE TABLE matching_payload_clean
 AS SELECT
     row_id,
     hvid,
-    claimId,
-    matchStatus,
+    claimid,
+    matchstatus,
     to_json(collect_list(candidate)) as candidates
     FROM (
         SELECT
             row_id,
             hvid,
-            claimId,
-            matchStatus,
+            claimid,
+            matchstatus,
             map("hvid",
                 cast(slightly_obfuscate_hvid(cast(round(candidate[0]) as integer), 'Cardinal_MPI-0') as string),
                 "confidence",
@@ -54,7 +54,7 @@ AS SELECT
             ) as candidate
         FROM matching_payload_exploded
     ) x
-    GROUP BY row_id, hvid, claimId, matchStatus
+    GROUP BY row_id, hvid, claimid, matchstatus
 ;
 
 SET spark.sql.shuffle.partitions=1;
@@ -72,8 +72,8 @@ CREATE TABLE cardinal_mpi_model
     LOCATION {location}
 AS SELECT
     slightly_obfuscate_hvid(cast(hvid as integer), 'Cardinal_MPI-0') as hvid,
-    claimId,
-    CASE WHEN matchStatus = 'multi_match' THEN candidates ELSE NULL END as candidates
+    claimid,
+    CASE WHEN matchstatus = 'multi_match' THEN candidates ELSE NULL END as candidates
 FROM matching_payload_clean
 DISTRIBUTE BY 1
 ;
