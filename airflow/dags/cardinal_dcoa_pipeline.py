@@ -35,26 +35,24 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval=None,         #TODO: TBD
+    schedule_interval='0 0 * * *',         #TODO: TBD
     default_args=default_args
 )
 
-TMP_PATH_TEMPLATE='/tmp/cardinal_dcoa/pharmacyclaims/{}/'
-
-TRANSACTION_FILE_NAME_TEMPLATE = 'dcoa_record_{}'   #TODO: This might change
+TRANSACTION_FILE_NAME_TEMPLATE = 'out-record-{}.dat'   #TODO: This might change
 EMR_CLUSTER_NAME_TEMPLATE = 'cardinal_dcoa_delivery_{}'
 if HVDAG.HVDAG.airflow_env == 'test':
-    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/out/{}/{}/{}/'
-    S3_DELIVERY_FILE_OUTPUT_LOCATION = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/delivery/{}/{}/{}/'
-    S3_DESTINATION_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/moved_out/cardinal_dcoa_normalized.psv.gz'
+    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/out/{}/{}/{}/'
+    S3_DELIVERY_FILE_OUTPUT_LOCATION = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/delivery/{}/{}/{}/'
+    S3_DESTINATION_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/moved_out/cardinal_dcoa_normalized.psv.gz'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/cardinal/dcoa/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/cardinal_dcoa/{}/{}/{}/'
     S3_DELIVERY_FILE_OUTPUT_LOCATION = 's3://salusv/deliverable/cardinal_dcoa/{}/{}/{}/'
     S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/dcoa/cardinal_dcoa_normalized_{}{}{}.psv.gz'      #TODO: Decide where this is dropped
 
-TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
+TMP_PATH_TEMPLATE='/tmp/cardinal_dcoa/pharmacyclaims/{}/'
 
 def get_date(kwargs):
     return (kwargs['execution_date'] + timedelta(days=1)).strftime('%Y%m%d')
@@ -74,13 +72,18 @@ def insert_current_date(template, kwargs):
         ds_nodash[6:8]
     )
 
+def insert_current_date_function(template):
+    def out(ds, kwargs):
+        return insert_current_date(template, kwargs)
+    return out
+
 
 def get_tmp_dir(ds, kwargs):
     return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
 
 
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('%Y-%m-%d', k),
+    base = ['--date', insert_current_date('{}-{}-{}', k),
             '--num_output_files', '1']
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
@@ -146,11 +149,10 @@ fetch_transaction = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
+            'tmp_path_template'         : TMP_PATH_TEMPLATE,
             'expected_file_name_func'   : insert_formatted_date_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
-            'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
         }
@@ -183,7 +185,7 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            's3_prefix_func'           : insert_formatted_date_function(
+            's3_prefix_func'           : insert_current_date_function(
                 S3_TRANSACTION_PROCESSED_URL_TEMPLATE
             ),
             'num_splits'               : 20
