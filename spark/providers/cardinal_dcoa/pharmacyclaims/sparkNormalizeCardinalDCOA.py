@@ -24,7 +24,7 @@ def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/dcoa/out/{}/'\
                         .format(date_path)
     else:
-        input_path = 's3://salusv/incoming/cardinal/dcoa/{}/'\
+        input_path = 's3://salusv/incoming/pharmacyclaims/cardinal_dcoa/{}/'\
                         .format(date_path)
 
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
