@@ -32,17 +32,14 @@ def date_inserter_function(template,  # string to pass date into
         year_offset = 0
     elif type(year_offset) is str:
         raise Exception('year_offset must be an integer')
-        exit(0)
     if month_offset is None:
         month_offset = 0
     elif type(month_offset) is str:
         raise Exception('month_offset must be an integer')
-        exit(0)
     if day_offset is None:
         day_offset = 0
     elif type(day_offset) is str:
         raise Exception('day_offset must be an integer')
-        exit(0)
 
     if year is None: 
         year = kwargs['execution_date'].year
