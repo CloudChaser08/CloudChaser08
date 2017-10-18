@@ -45,7 +45,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/out/{}/{}/{}/'
     S3_DELIVERY_FILE_OUTPUT_LOCATION = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/delivery/{}/{}/{}/'
-    S3_DESTINATION_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/moved_out/cardinal_dcoa_normalized.psv.gz'
+    S3_DESTINATION_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/moved_out/cardinal_dcoa_normalized_{}{}{}.psv.gz'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/cardinal/dcoa/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/cardinal_dcoa/{}/{}/{}/'
@@ -217,7 +217,7 @@ run_normalization = SubDagOperator(
         mdag.schedule_interval,
         {
             'EMR_CLUSTER_NAME_FUNC': insert_formatted_date_function(EMR_CLUSTER_NAME_TEMPLATE),
-            'PYSPARK_SCRIPT_NAME': 'spark/providers/cardinal_dcoa/pharmacyclaims/sparkNormalizeCardinalDCOA.py',
+            'PYSPARK_SCRIPT_NAME': '/home/hadoop/spark/providers/cardinal_dcoa/pharmacyclaims/sparkNormalizeCardinalDCOA.py',
             'PYSPARK_ARGS_FUNC': norm_args,
             'NUM_NODES': 5,
             'NODE_TYPE': 'm4.xlarge',
@@ -230,14 +230,25 @@ run_normalization = SubDagOperator(
     dag = mdag
 )
 
+def do_fetch_normalized_data(ds, **kwargs):
+    bucket_files = s3_utils.list_s3_bucket_files(
+                    insert_current_date(
+                        S3_DELIVERY_FILE_OUTPUT_LOCATION,
+                        kwargs
+                    ))
+    part_files = list(filter(lambda x: x != '_SUCCESS', bucket_files))
+
+    for f in part_files:
+        s3_utils.fetch_file_from_s3(
+            insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION + f, kwargs),
+            get_tmp_dir(ds, kwargs) + insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION + f, kwargs).split('/')[-1]
+        )
+
+    
 fetch_normalized_data = PythonOperator(
     task_id='fetch_normalized_data',
     provide_context=True,
-    python_callable=lambda ds, **kwargs: \
-        s3_utils.fetch_file_from_s3(
-            insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs),
-            get_tmp_dir(ds, kwargs) + insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split("/")[-1]
-    ),
+    python_callable=do_fetch_normalized_data,
     dag=mdag
 )
 
@@ -248,10 +259,10 @@ deliver_normalized_data = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'file_paths_func'       : lambda ds, kwargs: (
+            'file_paths_func'       : lambda ds, kwargs: [
                 get_tmp_dir(ds, kwargs) + \
                     insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split('/')[-1]
-            ),
+            ],
             's3_prefix_func'        : lambda ds, kwargs: \
                 '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
             's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
