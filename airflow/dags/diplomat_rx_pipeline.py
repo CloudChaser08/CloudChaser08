@@ -26,7 +26,7 @@ DAG_NAME = 'diplomat_rx_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 10, 2, 12),
+    'start_date': datetime(2017, 9, 25, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -61,7 +61,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 
 def get_formatted_date(ds, kwargs):
-    adjusted_date = kwargs['execution_date'] + timedelta(days=7)
+    adjusted_date = kwargs['execution_date']
     return adjusted_date.strftime('%Y%m%d')
 
 
