@@ -236,13 +236,13 @@ def do_fetch_normalized_data(ds, **kwargs):
                         S3_DELIVERY_FILE_OUTPUT_LOCATION,
                         kwargs
                     ))
-    part_files = list(filter(lambda x: x != '_SUCCESS', bucket_files))
+    part_file = list(filter(lambda x: x != '_SUCCESS', bucket_files))[0]
+    kwargs['ti'].xcom_push(key = 'part_file', value = part_file)
 
-    for f in part_files:
-        s3_utils.fetch_file_from_s3(
-            insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION + f, kwargs),
-            get_tmp_dir(ds, kwargs) + insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION + f, kwargs).split('/')[-1]
-        )
+    s3_utils.fetch_file_from_s3(
+        insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION + part_file, kwargs),
+        get_tmp_dir(ds, kwargs) + insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION + part_file, kwargs).split('/')[-1]
+    )
 
     
 fetch_normalized_data = PythonOperator(
@@ -252,6 +252,17 @@ fetch_normalized_data = PythonOperator(
     dag=mdag
 )
 
+def delivery_file_path_func(ds, kwargs):
+    print get_tmp_dir(ds, kwargs)
+    print insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split('/')[-1]
+    print kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'fetch_normalized_data', key = 'part_file')
+    return [
+        get_tmp_dir(ds, kwargs) + \
+            insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split('/')[-1] + \
+            kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'fetch_normalized_data', key = 'part_file')
+        ]
+
+
 deliver_normalized_data = SubDagOperator(
     subdag = s3_push_files.s3_push_files(
         DAG_NAME,
@@ -259,10 +270,7 @@ deliver_normalized_data = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'file_paths_func'       : lambda ds, kwargs: [
-                get_tmp_dir(ds, kwargs) + \
-                    insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split('/')[-1]
-            ],
+            'file_paths_func'       : delivery_file_path_func,
             's3_prefix_func'        : lambda ds, kwargs: \
                 '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
             's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
