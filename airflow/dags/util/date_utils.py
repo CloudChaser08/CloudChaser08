@@ -1,5 +1,6 @@
 import datetime 
 from dateutil.relativedelta import relativedelta #http://dateutil.readthedocs.io/en/stable/relativedelta.html
+import pytest
 
 def is_date(year, month, day): 
 
@@ -22,7 +23,8 @@ def offset_date(year,
     Adds the integers year_offset, month_offset, day_offset to the year,
     month, day. Values default to zero.
     """
-
+    if year < 1900:
+        raise Exception('Year must be >= 1900') #strftime requires year >= 1900
     if year_offset is None:
         year_offset = 0
     elif type(year_offset) is str:
@@ -45,36 +47,31 @@ def offset_date(year,
     
 
 def date_into_template_generator(template,  # string to pass date into
-                            year = None,  # user inputted year
-                            month = None,  # user inputted month
-                            day = None,  # user inputted day
-                            year_offset = None,  # integer to add to year, defaults to 0
-                            month_offset = None,  # integer to add to month, defaults to 0
-                            day_offset = None,  # integer to add to day, defaults to 0
-                            ):
+                                year = None,  # user inputted year
+                                month = None,  # user inputted month
+                                day = None,  # user inputted day
+                                year_offset = None,  # integer to add to year, defaults to 0
+                                month_offset = None,  # integer to add to month, defaults to 0
+                                day_offset = None,  # integer to add to day, defaults to 0
+                                ):
     """
     Inserts the ymd formatted date into a string template. Values 
     of year, month, and day can be specified by the user individually. 
-    These default to those given by the execution_date. The parameters
-    year_offset, month_offset, and day_offset are integers to add to the
-    respective values.   
+    These default to those given by the execution_date. 
     """
-    if year is None: 
-        year = kwargs['execution_date'].year
-    if month is None:
-        month= kwargs['execution_date'].month
-    if day is None:
-        day = kwargs['execution_date'].day
-
-    if is_date(year, month, day):
-        pass
-    else:
-        raise Exception('Please enter a valid date.')
-    date = [year, month, day] 
-
-    date_string = offset_date(date[0], date[1], date[2], year_offset, month_offset, day_offset)
 
     def out(ds, kwargs):
+        # rename variables because of python's variable scoping 
+        year1 = kwargs['execution_date'].year if year is None else year
+        month1= kwargs['execution_date'].month if month is None else month
+        day1 = kwargs['execution_date'].day if day is None else day
+        
+        if is_date(year1, month1, day1):
+            pass
+        else:
+            raise Exception('Please enter a valid date. You entered: year: %s, month: %s, day: %s' % (year,month,day)) #print inputted date 
+
+        date_string = offset_date(year1, month1, day1, year_offset, month_offset, day_offset)
 
         return template.format(
         date_string[0:4],
@@ -85,14 +82,13 @@ def date_into_template_generator(template,  # string to pass date into
     return out
 
 def date_into_template(template, 
-                    kwargs, 
-                    year = None, 
-                    month = None,  
-                    day = None, 
-                    year_offset = None, 
-                    month_offset = None, 
-                    day_offset = None, 
-                    ):
+                        kwargs, 
+                        year = None, 
+                        month = None,  
+                        day = None, 
+                        year_offset = None, 
+                        month_offset = None, 
+                        day_offset = None, 
+                        ):
 
     return date_into_template_generator(template, year, month, day, year_offset, month_offset, day_offset)(None, kwargs)
-
