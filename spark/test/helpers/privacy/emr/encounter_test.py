@@ -40,8 +40,8 @@ def test_filter(spark):
     old_transformer = dict(encounter_priv.encounter_transformer)
     old_whitelists = list(encounter_priv.whitelists)
 
-    def whitelist_update(whtlist):
-        return whtlist + [{
+    def whitelist_update(whitelist):
+        return whitelist + [{
             'column_name': 'notransform',
             'domain_name': 'emr_enc_test.notransform'
         }]

@@ -44,8 +44,8 @@ def test_filter(spark):
     old_transformer = dict(lab_result_priv.lab_result_transformer)
     old_whitelists = list(lab_result_priv.whitelists)
 
-    def whitelist_update(whtlist):
-        return whtlist + [{
+    def whitelist_update(whitelist):
+        return whitelist + [{
             'column_name': 'notransform',
             'domain_name': 'emr_lab_result_test.notransform'
         }]

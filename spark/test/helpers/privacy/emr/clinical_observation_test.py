@@ -42,8 +42,8 @@ def test_filter(spark):
     old_transformer = dict(clinical_observation_priv.clinical_observation_transformer)
     old_whitelists = list(clinical_observation_priv.whitelists)
 
-    def whitelist_update(whtlist):
-        return whtlist + [{
+    def whitelist_update(whitelist):
+        return whitelist + [{
             'column_name': 'notransform',
             'domain_name': 'emr_clin_obsn_test.notransform'
         }]
