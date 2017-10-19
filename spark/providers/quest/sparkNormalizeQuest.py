@@ -16,9 +16,6 @@ TODAY = time.strftime('%Y-%m-%d', time.localtime())
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
-    period = 'current' if date_obj.strftime('%Y%m%d') >= '20160831' \
-             else 'hist'
-
     setid = 'HealthVerity_' + \
             date_obj.strftime('%Y%m%d') + \
             (date_obj + timedelta(days=1)).strftime('%m%d')
@@ -63,18 +60,20 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
-    if period == 'current':
+    if date_obj.strftime('%Y%m%d') >= '20171016':
+        runner.run_spark_script('load_and_merge_transactions_v2.sql', [
+            ['trunk_path', trunk_path],
+            ['addon_path', addon_path]
+        ])
+    elif date_obj.strftime('%Y%m%d') >= '20160831':
         runner.run_spark_script('load_and_merge_transactions.sql', [
             ['trunk_path', trunk_path],
             ['addon_path', addon_path]
         ])
-    elif period == 'hist':
+    else:
         runner.run_spark_script('load_transactions.sql', [
             ['input_path', input_path]
         ])
-    else:
-        logging.error('Invalid period')
-        exit(1)
 
     runner.run_spark_script('normalize.sql', [
         ['filename', setid],
@@ -83,7 +82,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['vendor', '7'],
         ['join', (
             'q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key'
-            if period == 'current' else 'q.accn_id = mp.claimid'
+            if date_obj.strftime('%Y%m%d') >= '20160831' else 'q.accn_id = mp.claimid'
         ), False],
         ['min_date', min_date],
         ['max_date', max_date]
