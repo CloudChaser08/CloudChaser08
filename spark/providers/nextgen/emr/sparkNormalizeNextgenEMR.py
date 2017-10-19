@@ -24,6 +24,8 @@ from spark.helpers.privacy.emr import                   \
 import logging
 
 LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
+S3_ENCOUNTER_REFERENCE    = 's3a://salusv/reference/nextgen/encounter_dedupe/'
+S3_DEMOGRAPHICS_REFERENCE = 's3a://salusv/reference/nextgen/demographics_orc/'
 
 # TODO: add support for listing local directories for testing purposes
 def get_prefix_dir_paths(root_path, recurse=2):
@@ -161,7 +163,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     runner.run_spark_script('load_transactions.sql', [
         ['input_root_path', input_root_path],
-        ['input_path', input_path]
+        ['input_path', input_path],
+        ['s3_encounter_reference', S3_ENCOUNTER_REFERENCE],
+        ['s3_demographics_reference', S3_DEMOGRAPHICS_REFERENCE],
     ])
     logging.debug("Loaded transactions data")
 
@@ -181,7 +185,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('deduplicate_transactions.sql')
 
     transaction_tables = [
-        'demographics_dedup', 'encounter_dedup', 'vitalsigns', 'lipidpanel',
+        'demographics_local', 'encounter_dedup', 'vitalsigns', 'lipidpanel',
         'allergy', 'substanceusage', 'diagnosis', 'order', 'laborder',
         'labresult', 'medicationorder', 'procedure', 'extendeddata'
     ]
