@@ -270,7 +270,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
 
         # deobfuscate hvid
-        postprocessor.deobfuscate_hvid('Cardinal_MPI-0')(
+        postprocessor.deobfuscate_hvid('Cardinal_MPI-0', check_for_int=True)(
             runner.sqlContext.sql('select * from {}'.format(table['table_name']))
         ).createOrReplaceTempView(table['table_name'])
 

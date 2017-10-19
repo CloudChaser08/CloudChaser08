@@ -156,15 +156,27 @@ def get_gen_ref_date(sqlc, feed_id, domain_name):
         return None
 
 
-def deobfuscate_hvid(project_name, hvid_col='hvid'):
+def deobfuscate_hvid(project_name, hvid_col='hvid', check_for_int=False):
+    """
+    Generate a function that will deobfuscate the hvid column in the
+    given dataframe
+
+    `check_for_int` should be set to True if the hvid column might
+    contain invalid integers
+    """
+    if check_for_int:
+        # only deobfuscate valid integers
+        column = when(
+            udf(gen_helpers.is_int)(col(hvid_col)).cast('boolean'),
+            col(hvid_col).cast('int')
+        ).otherwise(lit(None))
+    else:
+        column = col(hvid_col).cast('int')
+
     def out(df):
         return df.withColumn(
             hvid_col,
-            udf(gen_helpers.slightly_deobfuscate_hvid)(when(
-                # only deobfuscate valid integers
-                udf(gen_helpers.is_int)(col(hvid_col)).cast('boolean'),
-                col(hvid_col).cast('int')
-            ).otherwise(lit(None)), lit(project_name))
+            udf(gen_helpers.slightly_deobfuscate_hvid)(column, lit(project_name))
         )
     return out
 
