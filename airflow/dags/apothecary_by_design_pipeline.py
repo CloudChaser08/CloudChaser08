@@ -29,7 +29,7 @@ mdag = HVDAG.HVDAG(
 )
 
 if HVDAG.HVDAG.airflow_env == 'test':
-    test_loc  = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/pharmacyclaims/'
+    test_loc  = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/'
     S3_TRANSACTION_RAW_TXN_URL = test_loc + 'raw/transactions/'
     S3_TRANSACTION_RAW_ADD_URL = test_loc + 'raw/additionaldata/'
     S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE = test_loc + 'out/{}/{}/{}/transactions/'
@@ -43,7 +43,8 @@ else:
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/'
 
 TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}/'
-TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
+TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/additionaldata/'
+DEID_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/transactions/'
 
 TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'   #TODO: replace when know their format
 DEID_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'       #TODO: replace when know their format
@@ -75,7 +76,7 @@ def insert_current_date_function(template):
 
 
 get_tmp_dir = insert_formatted_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
-
+get_deid_tmp_dir = insert_formatted_date_function(DEID_TMP_PATH_TEMPLATE)
 
 def get_transaction_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(
@@ -137,24 +138,22 @@ if HVDAG.HVDAG.airflow_env != 'test':
         DEID_FILE_NAME_TEMPLATE, 1000000
     )
 
-fetch_additionaldata = SubDagOperator(
+fetch_deid_file = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
         DAG_NAME,
-        'fetch_transaction_file',
+        'fetch_deid_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
+            'tmp_path_template'      : DEID_TMP_PATH_TEMPLATE,
             'expected_file_name_func': insert_formatted_date_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+                DEID_FILE_NAME_TEMPLATE
             ),
-            's3_prefix'              : '/'.join(insert_current_date_function(
-                                            S3_TRANSACTION_RAW_TXN_URL.split('/')[3:]
-                                        )),
+            's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_TXN_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
-    task_id='fetch_transaction_file',
+    task_id='fetch_deid_file',
     dag=mdag
 )
 
@@ -169,9 +168,7 @@ fetch_additionaldata_file = SubDagOperator(
             'expected_file_name_func'   : insert_formatted_date_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
-            's3_prefix'                 : '/'.join(insert_current_date_function(
-                                                S3_TRANSACTION_RAW_ADD_URL.split('/')[3:]
-                                          )),
+            's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_ADD_URL.split('/')[3:]),
             's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
