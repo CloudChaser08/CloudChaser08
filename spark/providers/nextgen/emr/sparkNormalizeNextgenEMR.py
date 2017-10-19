@@ -27,18 +27,6 @@ LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
 S3_ENCOUNTER_REFERENCE    = 's3a://salusv/reference/nextgen/encounter_dedupe/'
 S3_DEMOGRAPHICS_REFERENCE = 's3a://salusv/reference/nextgen/demographics_orc/'
 
-# TODO: add support for listing local directories for testing purposes
-def get_prefix_dir_paths(root_path, recurse=2):
-    root_path = root_path.replace('s3a', 's3')
-    dirs = map(lambda x: x.split('PRE')[-1][1:], \
-            filter(lambda x: 'PRE' in x, check_output(['aws', 's3', 'ls', root_path]).split("\n")))
-    if recurse > 0:
-        return reduce(lambda x,y: x + y, \
-                map(lambda d: get_prefix_dir_paths(root_path + d, recurse - 1), dirs), [])
-    else:
-        return map(lambda d: root_path + d.replace('/', ''), dirs)
-
-
 def run(spark, runner, date_input, test=False, airflow_test=False):
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
 
@@ -168,19 +156,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['s3_demographics_reference', S3_DEMOGRAPHICS_REFERENCE],
     ])
     logging.debug("Loaded transactions data")
-
-    if test:
-        partitions = [input_root_path]
-    else:
-        partitions = map(lambda x: x.replace('s3://', 's3a://'), get_prefix_dir_paths(input_root_path, 2))
-
-    for part in partitions:
-        identifier = '/'.join(part.split('/')[-3:])
-        runner.run_spark_script('../../../common/add_partition.sql', [
-            ['table_name', 'all_raw_data', False],
-            ['partition_identifiers', "part_processdate='{}'".format(identifier), False],
-            ['partition_location', part]
-        ])
 
     runner.run_spark_script('deduplicate_transactions.sql')
 

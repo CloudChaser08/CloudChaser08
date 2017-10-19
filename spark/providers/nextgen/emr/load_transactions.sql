@@ -97,57 +97,8 @@ FROM new_raw_data
 WHERE column1 = '5'
 DISTRIBUTE BY rand();
 
-DROP TABLE IF EXISTS all_raw_data;
-CREATE EXTERNAL TABLE all_raw_data (
-        column1                    string,
-        column2                    string,
-        column3                    string,
-        column4                    string,
-        column5                    string,
-        column6                    string,
-        column7                    string,
-        column8                    string,
-        column9                    string,
-        column10                   string,
-        column11                   string,
-        column12                   string,
-        column13                   string,
-        column14                   string,
-        column15                   string,
-        column16                   string,
-        column17                   string,
-        column18                   string,
-        column19                   string,
-        column20                   string,
-        column21                   string,
-        column22                   string,
-        column23                   string,
-        column24                   string,
-        column25                   string,
-        column26                   string,
-        column27                   string,
-        column28                   string,
-        column29                   string,
-        column30                   string,
-        column31                   string,
-        column32                   string,
-        column33                   string,
-        column34                   string,
-        column35                   string,
-        column36                   string,
-        column37                   string
-    )
-    PARTITIONED BY (part_processdate string)
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    WITH SERDEPROPERTIES (
-        'separatorChar' = '|'
-        )
-    STORED AS TEXTFILE
-    LOCATION {input_root_path}
-    ;
-
-DROP VIEW IF EXISTS encounter;
-CREATE VIEW encounter AS
+DROP VIEW IF EXISTS new_encounter;
+CREATE VIEW new_encounter AS
 SELECT
     column1  as preambleformatcode,
     column2  as nextgengroupid,
@@ -162,8 +113,71 @@ SELECT
     regexp_extract(input_file_name(), 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
     regexp_extract(input_file_name(), 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name(), '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
-FROM all_raw_data
+FROM new_raw_data_local
 WHERE tbl_type = '0007.001';
+
+DROP TABLE IF EXISTS old_encounter;
+CREATE EXTERNAL TABLE old_encounter (
+        preambleformatcode         string,
+        nextgengroupid             string,
+        referencedatetime          string,
+        postamblecategoryformat    string,
+        encounterid                string,
+        encounterdatetime          string,
+        encountertype              string,
+        encounterdescription       string,
+        hcpzipcode                 string,
+        hcpprimarytaxonomy         string,
+        reportingenterpriseid      string,
+        recorddate                 string,
+        dataset                    string,
+        nextrecorddate             string
+    )
+STORED AS ORC
+LOCATION {s3_encounter_reference};
+
+DROP VIEW IF EXISTS new_demographics;
+CREATE VIEW new_demographics AS
+SELECT
+    column1  as preambleformatcode,
+    column2  as nextgengroupid,
+    column3  as referencedatetime,
+    column4  as postamblecategoryformat,
+    column5  as datacapturedate,
+    column6  as birthyear,
+    column7  as birthmonth,
+    column8  as gender,
+    column9  as race,
+    column10 as zip3,
+    column11 as coveredbymedicarepartbflag,
+    column12 as patientpseudonym,
+    regexp_extract(input_file_name(), 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
+    regexp_extract(input_file_name(), 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
+    regexp_extract(input_file_name(), '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
+FROM new_raw_data_local
+WHERE tbl_type = '0005.001';
+
+DROP TABLE IF EXISTS old_demographics;
+CREATE EXTERNAL TABLE old_demographics (
+        preambleformatcode         string,
+        nextgengroupid             string,
+        referencedatetime          string,
+        postamblecategoryformat    string,
+        datacapturedate            string,
+        birthyear                  string,
+        birthmonth                 string,
+        gender                     string,
+        race                       string,
+        zip3                       string,
+        coveredbymedicarepartbflag string,
+        patientpseudonym           string,
+        reportingenterpriseid      string,
+        recorddate                 string,
+        dataset                    string,
+        nextrecorddate             string
+    )
+STORED AS ORC
+LOCATION {s3_demographics_reference};
 
 DROP VIEW IF EXISTS vitalsigns;
 CREATE VIEW vitalsigns AS
