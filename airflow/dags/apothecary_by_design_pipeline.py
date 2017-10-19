@@ -29,20 +29,24 @@ mdag = HVDAG.HVDAG(
 )
 
 if HVDAG.HVDAG.aiflow_env == 'test':
-    test_loc  = 's3://salusv/testing/dewey/airflow/e2e/apothecary_by_design/pharmacyclaims/'
-    S3_TRANSACTION_RAW_URL = test_loc + 'raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = test_loc + 'out/{}/{}/{}/'
+    test_loc  = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/pharmacyclaims/{}/{}/{}/'
+    S3_TRANSACTION_RAW_TXN_URL = test_loc + 'raw/transactions/'
+    S3_TRANSACTION_RAW_ADD_URL = test_loc + 'raw/additionaldata/'
+    S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE = test_loc + 'out/transactions/'
+    S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE = test_loc + 'out/additionaldata/'
     S3_PAYLOAD_DEST = test_loc + 'payload/'
 else:
-    S3_TRANSACTION_RAW_URL = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecary_by_design/{}/{}/{}/'
+    S3_TRANSACTION_RAW_TXN_URL = 's3://healthverity/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/transactions/'
+    S3_TRANSACTION_RAW_ADD_URL = 's3://healthverity/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/additionaldata/'
+    S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/transactions/'
+    S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/additionaldata/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/{}/{}/{}/'
 
 TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}/'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 
-TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_data.txt'   #TODO: replace when know their format
-DEID_FILE_NAME_TEMPLATE = 'hv_export_po_deid.txt'       #TODO: replace when know their format
+TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'   #TODO: replace when know their format
+DEID_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'       #TODO: replace when know their format
 
 def get_formatted_date(ds, kwargs):
     return kwargs['ds_nodash']

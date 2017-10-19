@@ -137,7 +137,9 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/abd/pharmacyclaims/spark-output/'
+        output_path = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/{}/spark-output/'.format(
+            date_path.replace('-', '/')
+        )
     else:
         output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
 
