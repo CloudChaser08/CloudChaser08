@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
+import subdags.decrypt_files as decrypt_files
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.queue_up_for_matching as queue_up_for_matching
 
@@ -101,6 +102,17 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     ]
 
 
+def encrypted_decrypted_deid_file_paths_function(ds, kwargs):
+    file_dir = get_deid_tmp_dir(ds, kwargs)
+    encrypted_file_path = file_dir \
+            + DEID_FILE_NAME_TEMPLATE.format(
+            get_formatted_date(ds, kwargs)
+        )
+    return [
+        [encrypted_file_path, encrypted_file_path + '.gz']
+    ]
+
+
 def generate_file_validation_task(
         task_id, s3_path, path_template, minimum_file_size
 ):
@@ -176,25 +188,45 @@ fetch_additionaldata_file = SubDagOperator(
     dag=mdag
 )
 
+decrypt_deid = SubDagOperator(
+    subdag=decrypt_files.decrypt_files(
+        DAG_NAME,
+        'decrypt_deid_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_dir_func'                        : get_deid_tmp_dir,
+            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_deid_file_paths_function
+        }
+    ),
+    task_id='decrypt_deid_file',
+    dag=mdag
+)
+
+decrypt_additionaldata = SubDagOperator(
+    subdag=decrypt_files.decrypt_files(
+        DAG_NAME,
+        'decrypt_additionaldata_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_dir_func'                        : get_tmp_dir,
+            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
+        }
+    ),
+    task_id='decrypt_additionaldata_file',
+    dag=mdag
+)
+
 ### DAG STRUCTURE ###
 if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_transaction.set_upstream(validate_transaction)
+    fetch_additionaldata_file.set_upstream(validate_transaction)
+    fetch_deid_file.set_upstream(validate_deid)
     queue_up_for_matching.set_upstream(validate_deid)
 
-#decrypt_transaction = SubDagOperator(
-#    subdag=decrypt_files.decrypt_files(
-#        DAG_NAME,
-#        'decrypt_transaction_file',
-#        default_args['start_date'],
-#        mdag.schedule_interval,
-#        {
-#            'tmp_dir_func'                        : get_tmp_dir,
-#            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
-#        }
-#    ),
-#    task_id='decrypt_transaction_file',
-#    dag=mdag
-#)
+decrypt_deid.set_upstream(fetch_deid_file)
+decrypt_additionaldata.set_upstream(fetch_additionaldata_file)
+
 #
 #
 #split_transaction = SubDagOperator(
