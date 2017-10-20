@@ -1,5 +1,5 @@
 import datetime 
-from dateutil.relativedelta import relativedelta #http://dateutil.readthedocs.io/en/stable/relativedelta.html
+from dateutil.relativedelta import relativedelta
 import pytest
 
 def is_date(year, month, day):
@@ -15,49 +15,40 @@ def is_date(year, month, day):
 def offset_date(year, 
                 month, 
                 day, 
-                year_offset = None, 
-                month_offset = None, 
-                day_offset = None):
+                year_offset = 0, 
+                month_offset = 0, 
+                day_offset = 0
+                ):
     """
     Adds the integers year_offset, month_offset, day_offset to the year,
     month, day. Offset values default to zero.
     """
     if year < 1900:
-        raise Exception('Year must be >= 1900') #strftime requires year >= 1900
+        raise ValueError('Year must be >= 1900') #strftime requires year >= 1900
 
-    if year_offset is None:
-        year_offset = 0
-    elif type(year_offset) is str:
-        raise Exception('year_offset must be an integer')
-    if month_offset is None:
-        month_offset = 0
-    elif type(month_offset) is str:
-        raise Exception('month_offset must be an integer')
-    if day_offset is None:
-        day_offset = 0
-    elif type(day_offset) is str:
-        raise Exception('day_offset must be an integer')
+    if type(year_offset) is str:
+        raise TypeError('year_offset must be an integer')
+    if type(month_offset) is str:
+        raise TypeError('month_offset must be an integer')
+    if type(day_offset) is str:
+        raise TypeError('day_offset must be an integer')
 
     if year_offset == 0 and month_offset == 0 and day_offset == 0: 
         return datetime.datetime(year, month, day)                     
     else:
         return (datetime.datetime(year,month,day) + 
-                relativedelta(years = year_offset, months = month_offset, days = day_offset))
-
-def date_to_string(datetime_object):
-    """
-    Takes a datetime object and returns the 'ymd' formatted string
-    """
-    if type(datetime_object) is datetime.datetime or type(datetime_object) is datetime.date: 
-        return datetime_object.strftime('%Y%m%d')
+                relativedelta(years = year_offset, 
+                    months = month_offset, 
+                    days = day_offset)
+                )
     
 def date_into_template_generator(template,  # string to pass date into
                                 year = None,  # user inputted year
                                 month = None,  # user inputted month
                                 day = None,  # user inputted day
-                                year_offset = None,  # integer to add to year, defaults to 0
-                                month_offset = None,  # integer to add to month, defaults to 0
-                                day_offset = None,  # integer to add to day, defaults to 0
+                                year_offset = 0,  # integer to add to year, defaults to 0
+                                month_offset = 0,  # integer to add to month, defaults to 0
+                                day_offset = 0,  # integer to add to day, defaults to 0
                                 ):
     """
     Inserts the year, month, day into a string template. Values 
@@ -72,12 +63,10 @@ def date_into_template_generator(template,  # string to pass date into
         execution_month = kwargs['execution_date'].month if month is None else month    
         execution_day = kwargs['execution_date'].day if day is None else day
         
-        if is_date(execution_year, execution_month, execution_day):
-            pass
-        else:
-            raise Exception('Please enter a valid date. You entered: year: {}, month: {}, day: {}'.format(year,month,day)) #print inputted date 
-            
-        date_string = date_to_string(offset_date(execution_year, execution_month, execution_day, year_offset, month_offset, day_offset))
+        if not is_date(execution_year, execution_month, execution_day):
+            raise Exception('Please enter a valid date. You entered: year: {}, month: {}, day: {}'.format(year,month,day)) 
+
+        date_string = offset_date(execution_year, execution_month, execution_day, year_offset, month_offset, day_offset).strftime('%Y%m%d')
 
         return template.format(
             date_string[0:4],
@@ -92,9 +81,9 @@ def date_into_template(template,
                         year = None, 
                         month = None,  
                         day = None, 
-                        year_offset = None, 
-                        month_offset = None, 
-                        day_offset = None, 
+                        year_offset = 0, 
+                        month_offset = 0, 
+                        day_offset = 0, 
                         ):
     """
     Wrapper for date_into_template_generator function
