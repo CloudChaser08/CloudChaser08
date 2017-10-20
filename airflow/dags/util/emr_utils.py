@@ -70,7 +70,7 @@ def _wait_for_steps(cluster_id):
             elif step['Status']['State'] == "FAILED":
                 failed_steps += 1
     if failed_steps > 0:
-        print("Step failed on cluster: " + cluster_id)
+        raise Exception("Step failed on cluster: " + cluster_id)
 
 
 def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size, purpose, connected_to_metastore=False):

@@ -179,6 +179,7 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         task_id='delete_emr_cluster',
         provide_context=True,
         python_callable=do_delete_emr_cluster,
+        trigger_rule='all_done',
         op_kwargs=dag_config,
         dag=dag
     )
