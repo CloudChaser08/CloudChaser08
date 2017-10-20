@@ -64,7 +64,7 @@ def date_into_template_generator(template,  # string to pass date into
         execution_day = kwargs['execution_date'].day if day is None else day
         
         if not is_date(execution_year, execution_month, execution_day):
-            raise Exception('Please enter a valid date. You entered: year: {}, month: {}, day: {}'.format(year,month,day)) 
+            raise ValueError('Please enter a valid date. You entered: year: {}, month: {}, day: {}'.format(year,month,day)) 
 
         date_string = offset_date(execution_year, execution_month, execution_day, year_offset, month_offset, day_offset).strftime('%Y%m%d')
 
