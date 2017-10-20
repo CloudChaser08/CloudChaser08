@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS matching_payload;
 CREATE TABLE matching_payload (
         personId varchar ENCODE lzo,
         hvid text ENCODE lzo,
+        parentid text ENCODE lzo,
         threeDigitZip char(3) ENCODE lzo,
         yearOfBirth text ENCODE lzo
         )

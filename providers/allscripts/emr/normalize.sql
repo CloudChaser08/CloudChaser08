@@ -13,7 +13,7 @@ INSERT INTO emr_common_model (
         ndc_code
         )
 SELECT DISTINCT
-    payload.hvid,
+    COALESCE(payload.parentid, payload.hvid),
     '1',
     codes.claim_type,
     encounters.encounterDTTM,
