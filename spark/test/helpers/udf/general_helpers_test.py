@@ -51,6 +51,15 @@ def test_uniquify():
     assert gh.uniquify('10:10:10') == '10'
     assert gh.uniquify('10:10:20') == '10:20'
 
+def test_is_int():
+    assert gh.is_int('1')
+    assert gh.is_int(1)
+    assert gh.is_int(1.0)
+    assert not gh.is_int('1.1')
+    assert not gh.is_int(1.1)
+    assert not gh.is_int('string')
+    assert not gh.is_int(None)
+
 def test_obfuscate_hvid():
     assert gh.obfuscate_hvid('1234567', 'CPQ-013') == 'CEB8F9B33421E4DEB16CE7FE1358D554'
     with pytest.raises(ValueError) as excinfo:

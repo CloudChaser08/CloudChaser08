@@ -80,6 +80,17 @@ def test_apply_date_cap(spark):
     spark['sqlContext'].sql = old_sql_func
 
 
+def test_deobfuscate_hvid(spark):
+    df = spark['spark'].sparkContext.parallelize([
+        Row(row_id=1, hvid='100001'),
+        Row(row_id=2, hvid='100001I')
+    ]).toDF()
+
+    assert postprocessor.deobfuscate_hvid('test_proj')(df).collect() \
+        == [Row(row_id=1, hvid='1299049670'),
+            Row(row_id=2, hvid=None)]
+
+
 def test_apply_whitelist(spark):
     "Ensure specified whitelisting is applied"
 

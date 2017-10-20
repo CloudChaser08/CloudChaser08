@@ -11,7 +11,7 @@ SELECT
     NULL,                                                       -- vdr_org_id
     CONCAT('disp_', disp.id),                                   -- vdr_proc_id
     NULL,                                                       -- vdr_proc_id_qual
-    mp.hvid,                                                    -- hvid
+    dem.patient_id,                                             -- hvid
     COALESCE(
         mp.yearOfBirth,
         SUBSTRING(dem.birth_date, 0, 4)

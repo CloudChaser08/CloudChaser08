@@ -13,7 +13,7 @@ SELECT
     NULL,                                                     -- vdr_enc_id_qual
     NULL,                                                     -- vdr_alt_enc_id
     NULL,                                                     -- vdr_alt_enc_id_qual
-    mp.hvid,                                                  -- hvid
+    d.patient_id,                                             -- hvid
     COALESCE(
         mp.yearOfBirth,
         SUBSTRING(d.birth_date, 0, 4)

@@ -120,8 +120,10 @@ CREATE TABLE demographics_transactions_dedup AS (
             ) upi ON dem.patient_id = upi.patient_id
         AND dem.hvJoinKey = upi.hvJoinKey
     WHERE dem.import_source_id IS NOT NULL
+        DISTRIBUTE BY patient_id
         )
     ;
+CACHE TABLE demographics_transactions_dedup;
 
 DROP TABLE IF EXISTS diagnosis_transactions;
 CREATE EXTERNAL TABLE diagnosis_transactions (

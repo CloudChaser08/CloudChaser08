@@ -159,6 +159,31 @@ def get_gen_ref_date(sqlc, feed_id, domain_name):
         return None
 
 
+def deobfuscate_hvid(project_name, hvid_col='hvid', nullify_non_integers=False):
+    """
+    Generate a function that will deobfuscate the hvid column in the
+    given dataframe
+
+    `nullify_non_integers` should be set to True if the hvid column might
+    contain invalid integers
+    """
+    if nullify_non_integers:
+        # only deobfuscate valid integers
+        column = when(
+            udf(gen_helpers.is_int)(col(hvid_col)).cast('boolean'),
+            col(hvid_col).cast('int')
+        ).otherwise(lit(None))
+    else:
+        column = col(hvid_col).cast('int')
+
+    def out(df):
+        return df.withColumn(
+            hvid_col,
+            udf(gen_helpers.slightly_deobfuscate_hvid)(column, lit(project_name))
+        )
+    return out
+
+
 def compose(*functions):
     """
     Utility method for composing a series of functions.

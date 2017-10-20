@@ -17,8 +17,13 @@ from spark.helpers.privacy.emr import                   \
     diagnosis as priv_diagnosis,                        \
     medication as priv_medication
 
+# staging for deliverable
+DELIVERABLE_LOC = 'hdfs:///deliverable/'
+
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
+    global DELIVERABLE_LOC
+
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     setid = 'EMR.{}.zip'.format(date_obj.strftime('%m%d%Y'))
@@ -43,6 +48,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ) + '/'
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/cardinal/emr/resources/matching/'
+        ) + '/'
+        DELIVERABLE_LOC = file_utils.get_abs_path(
+            script_path, '../../../test/providers/cardinal/emr/resources/delivery/'
         ) + '/'
     elif airflow_test:
         demographics_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/demographics/'.format(
@@ -254,7 +262,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             ]
         )(
             runner.sqlContext.sql('select * from {}'.format(table['table_name']))
-        ).createTempView(table['table_name'])
+        ).createOrReplaceTempView(table['table_name'])
+
+        # unload delivery file for cardinal
+        normalized_records_unloader.unload_delimited_file(
+            spark, runner, '{}{}/'.format(DELIVERABLE_LOC, table['data_type']), table['table_name'], test=test
+        )
+
+        # deobfuscate hvid
+        postprocessor.deobfuscate_hvid('Cardinal_MPI-0', nullify_non_integers=True)(
+            runner.sqlContext.sql('select * from {}'.format(table['table_name']))
+        ).createOrReplaceTempView(table['table_name'])
 
         if not test:
             normalized_records_unloader.partition_and_rename(
@@ -281,10 +299,17 @@ def main(args):
 
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/spark-output/'
+        deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/delivery/{}/'.format(
+            args.date.replace('-', '/')
+        )
     else:
         output_path = 's3://salusv/warehouse/parquet/emr/2017-08-09/'
+        deliverable_path = 's3://salusv/deliverable/cardinal_raintree_emr-0/{}/'.format(
+            args.date.replace('-', '/')
+        )
 
     normalized_records_unloader.distcp(output_path)
+    normalized_records_unloader.distcp(deliverable_path, DELIVERABLE_LOC)
 
 
 if __name__ == "__main__":

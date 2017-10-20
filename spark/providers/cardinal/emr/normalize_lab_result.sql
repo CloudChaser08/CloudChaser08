@@ -13,7 +13,7 @@ SELECT
     NULL,                                                     -- vdr_lab_test_id_qual
     NULL,                                                     -- vdr_lab_result_id
     NULL,                                                     -- vdr_lab_result_id_qual
-    mp.hvid,                                                  -- hvid
+    d.patient_id,                                             -- hvid
     COALESCE(
         mp.yearOfBirth,
         SUBSTRING(d.birth_date, 0, 4)

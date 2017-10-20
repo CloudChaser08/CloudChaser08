@@ -2,10 +2,13 @@ import pytest
 
 import shutil
 import logging
+import os
 import datetime
+import gzip
 
 import spark.providers.cardinal.emr.sparkNormalizeCardinalEMR as cardinal_emr
 import spark.helpers.file_utils as file_utils
+import spark.helpers.udf.general_helpers as gen_helpers
 
 from pyspark.sql import Row
 
@@ -15,6 +18,10 @@ encounter_results = []
 medication_results = []
 procedure_results = []
 diagnosis_results = []
+
+script_path = __file__
+output_test_location = file_utils.get_abs_path(script_path, './resources/output/')
+delivery_test_location = file_utils.get_abs_path(script_path, './resources/delivery/')
 
 
 def cleanup(spark):
@@ -31,9 +38,14 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('dispense_transactions')
 
     try:
-        shutil.rmtree(file_utils.get_abs_path(__file__, './resources/output/'))
+        shutil.rmtree(output_test_location)
     except:
         logging.warn('No output directory.')
+
+    try:
+        shutil.rmtree(delivery_test_location)
+    except:
+        logging.warn('No delivery directory.')
 
 
 @pytest.mark.usefixtures("spark")
@@ -162,6 +174,50 @@ def test_first_last_name_parsing():
 
 def test_diagnosis_priority():
     assert [r.diag_prty_cd for r in diagnosis_results][:4] == ['1', '10', '2', '1']
+
+
+def test_data_export():
+    "Ensure that the exported data is exactly the same as the warehouse data"
+    for common_model in [
+            ('clinical_observation', clinical_observation_results),
+            ('diagnosis', diagnosis_results),
+            ('encounter', encounter_results),
+            ('lab_result', lab_result_results),
+            ('medication', medication_results),
+            ('procedure', procedure_results)
+    ]:
+        # ensure this common model was exported
+        assert common_model[0] in os.listdir(delivery_test_location)
+
+        # open exported file
+        with gzip.open(
+                delivery_test_location + '/' + common_model[0] + '/part-00000.gz'
+        ) as exported_results:
+
+            # strip quotes and split gzip by line and delimiter (|)
+            exported_results_full = [[el.replace('"', '') for el in res.split('|')]
+                                     for res in exported_results.read().splitlines()]
+
+            # ensure both result sets have same length
+            assert len(exported_results_full) == len(common_model[1])
+
+            # ensure the results are the same
+            for result_row_index, res in enumerate(exported_results_full):
+                for result_col_index in range(len(res)):
+                    coalesced_res = (res[result_col_index] if res[result_col_index] != '' else None)
+
+                    # hvid will need to be deobfuscated
+                    if common_model[1][result_row_index][result_col_index] == common_model[1][result_row_index].hvid:
+                        if common_model[1][result_row_index].hvid:
+                            assert str(gen_helpers.slightly_deobfuscate_hvid(
+                                int(coalesced_res), 'Cardinal_MPI-0'
+                            )) == str(common_model[1][result_row_index][result_col_index])
+                        else:
+                            assert not coalesced_res
+
+                    # all other columns should be the same
+                    else:
+                        assert str(coalesced_res) == str(common_model[1][result_row_index][result_col_index])
 
 
 def test_cleanup(spark):
