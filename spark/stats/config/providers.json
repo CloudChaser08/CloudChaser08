@@ -2,11 +2,56 @@
     "providers" : 
     [
         {
-            "name"          : "test_provider",
-            "datafeed_id"   : "27",
-            "datatype"      : "medicalclaims",
-            "date_field"    : "date_service",
-            "record_field"  : "claim_id"
+            "name"              : "test_medical_provider",
+            "datafeed_id"       : "27",
+            "datatype"          : "medicalclaims",
+            "date_field"        : "date_service",
+            "record_field"      : "claim_id",
+            "fill_rate"         : "medicalclaims/fill_rates.json",
+            "key_stats"         : null,
+            "top_values"        : null,
+            "longitudinality"   : null,
+            "year_over_year"    : null,
+            "epi_calcs"         : null
+        },
+        {
+            "name"              : "test_pharmacy_provider",
+            "datafeed_id"       : "28",
+            "datatype"          : "pharmacyclaims",
+            "date_field"        : "date_service",
+            "record_field"      : null,
+            "fill_rate"         : "pharmacyclaims/fill_rates.json",
+            "key_stats"         : null,
+            "top_values"        : null,
+            "longitudinality"   : null,
+            "year_over_year"    : null,
+            "epi_calcs"         : null
+        },
+        {
+            "name"              : "test_lab_test_provider",
+            "datafeed_id"       : "29",
+            "datatype"          : "lab_tests",
+            "date_field"        : "date_service",
+            "record_field"      : null,
+            "fill_rate"         : "lab_tests/fill_rates.json",
+            "key_stats"         : null,
+            "top_values"        : null,
+            "longitudinality"   : null,
+            "year_over_year"    : null,
+            "epi_calcs"         : null
+        },
+        {
+            "name"              : "test_consumer_provider",
+            "datafeed_id"       : "30",
+            "datatype"          : "consumer",
+            "date_field"        : "date_service",
+            "record_field"      : null,
+            "fill_rate"         : "consumer/fill_rates.json",
+            "key_stats"         : null,
+            "top_values"        : null,
+            "longitudinality"   : null,
+            "year_over_year"    : null,
+            "epi_calcs"         : null
         }
     ]
 }
