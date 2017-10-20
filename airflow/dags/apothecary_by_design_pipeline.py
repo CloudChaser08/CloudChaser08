@@ -31,14 +31,12 @@ mdag = HVDAG.HVDAG(
 
 if HVDAG.HVDAG.airflow_env == 'test':
     test_loc  = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/'
-    S3_TRANSACTION_RAW_TXN_URL = test_loc + 'raw/transactions/'
-    S3_TRANSACTION_RAW_ADD_URL = test_loc + 'raw/additionaldata/'
+    S3_TRANSACTION_RAW_URL = test_loc + 'raw/'
     S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE = test_loc + 'out/{}/{}/{}/transactions/'
     S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE = test_loc + 'out/{}/{}/{}/additionaldata/'
     S3_PAYLOAD_DEST = test_loc + 'payload/'
 else:
-    S3_TRANSACTION_RAW_TXN_URL = 's3://healthverity/incoming/pharmacyclaims/apothecarybydesign/transactions/'
-    S3_TRANSACTION_RAW_ADD_URL = 's3://healthverity/incoming/pharmacyclaims/apothecarybydesign/additionaldata/'
+    S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/abd/'
     S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/transactions/'
     S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/additionaldata/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/'
@@ -47,8 +45,9 @@ TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}/'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/additionaldata/'
 DEID_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/transactions/'
 
-TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'   #TODO: replace when know their format
-DEID_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'       #TODO: replace when know their format
+TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'        #TODO: replace when know their format
+DEID_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'            #TODO: replace when know their format
+MATCHING_DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}.txt'    #TODO: replace when know their format
 
 def get_formatted_date(ds, kwargs):
     return kwargs['ds_nodash']
@@ -86,7 +85,13 @@ def get_transaction_file_paths(ds, kwargs):
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_TXN_URL + DEID_FILE_NAME_TEMPLATE.format(
+    return [get_tmp_dir(ds, kwargs) + DEID_FILE_NAME_TEMPLATE.format(
+        get_formatted_date(ds, kwargs)
+    )]
+
+
+def get_matching_deid_file_urls(ds, kwargs):
+    return [S3_TRANSACTION_RAW_URL + MATCHING_DEID_FILE_NAME_TEMPLATE.format(
         get_formatted_date(ds, kwargs)
     )]
 
@@ -142,12 +147,30 @@ def generate_file_validation_task(
 
 if HVDAG.HVDAG.airflow_env != 'test':
     validate_transaction = generate_file_validation_task(
-        'transaction', S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLAT,
-        ES3_TRANSACTION_FILE_NAME_TEMPLATE, 1000000
+        'transaction', S3_TRANSACTION_RAW_URL,
+        TRANSACTION_FILE_NAME_TEMPLATE, 1000000
     )
     validate_deid = generate_file_validation_task(
-        'deid', S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE,
+        'deid', S3_TRANSACTION_RAW_URL,
         DEID_FILE_NAME_TEMPLATE, 1000000
+    )
+    validate_matching_deid = generate_file_validation_task(
+        'matching_deid', S3_TRANSACTION_RAW_URL,
+        MATCHING_DEID_FILE_NAME_TEMPLATE, 1000000
+    )
+
+    queue_up_for_matching = SubDagOperator(
+        subdag=queue_up_for_matching.queue_up_for_matching(
+            DAG_NAME,
+            'queue_up_for_matching',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'source_files_func' : get_matching_deid_file_urls
+            }
+        ),
+        task_id='queue_up_for_matching',
+        dag=mdag
     )
 
 fetch_deid_file = SubDagOperator(
@@ -161,7 +184,7 @@ fetch_deid_file = SubDagOperator(
             'expected_file_name_func': insert_formatted_date_function(
                 DEID_FILE_NAME_TEMPLATE
             ),
-            's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_TXN_URL.split('/')[3:]),
+            's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
@@ -180,7 +203,7 @@ fetch_additionaldata_file = SubDagOperator(
             'expected_file_name_func'   : insert_formatted_date_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
-            's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_ADD_URL.split('/')[3:]),
+            's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
@@ -203,29 +226,16 @@ decrypt_deid = SubDagOperator(
     dag=mdag
 )
 
-decrypt_additionaldata = SubDagOperator(
-    subdag=decrypt_files.decrypt_files(
-        DAG_NAME,
-        'decrypt_additionaldata_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_dir_func'                        : get_tmp_dir,
-            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
-        }
-    ),
-    task_id='decrypt_additionaldata_file',
-    dag=mdag
-)
-
 ### DAG STRUCTURE ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_additionaldata_file.set_upstream(validate_transaction)
     fetch_deid_file.set_upstream(validate_deid)
-    queue_up_for_matching.set_upstream(validate_deid)
+    queue_up_for_matching.set_upstream(validate_matching_deid)
 
 decrypt_deid.set_upstream(fetch_deid_file)
-decrypt_additionaldata.set_upstream(fetch_additionaldata_file)
+
+#split_additionaldata_file.set_upstream(fetch_additionaldata_file)
+#split_deid_file.set_upstream(decrypt_deid)
 
 #
 #
@@ -265,20 +275,6 @@ decrypt_additionaldata.set_upstream(fetch_additionaldata_file)
 #    dag=mdag
 #)
 #
-#if HVDAG.HVDAG.airflow_env != 'test':
-#    queue_up_for_matching = SubDagOperator(
-#        subdag=queue_up_for_matching.queue_up_for_matching(
-#            DAG_NAME,
-#            'queue_up_for_matching',
-#            default_args['start_date'],
-#            mdag.schedule_interval,
-#            {
-#                'source_files_func' : get_deid_file_urls
-#            }
-#        ),
-#        task_id='queue_up_for_matching',
-#        dag=mdag
-#    )
 #
 ##
 ## Post-Matching
