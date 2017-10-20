@@ -61,8 +61,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 
 def get_formatted_date(ds, kwargs):
-    adjusted_date = kwargs['execution_date']
-    return adjusted_date.strftime('%Y%m%d')
+    return kwargs['execution_date'].strftime('%Y%m%d')
 
 
 def insert_formatted_date_function(template):
@@ -287,8 +286,8 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 sql_template = """
-    ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='diplmoat', part_best_date='{0}-{1}')
-    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=diplmoat/part_best_date={0}-{1}/'
+    ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='diplomat', part_best_date='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=diplomat/part_best_date={0}-{1}/'
 """
 
 if HVDAG.HVDAG.airflow_env != 'test':
