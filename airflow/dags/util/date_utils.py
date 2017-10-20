@@ -75,8 +75,8 @@ def date_into_template_generator(template,  # string to pass date into
         if is_date(execution_year, execution_month, execution_day):
             pass
         else:
-            raise Exception('Please enter a valid date. You entered: year: %s, month: %s, day: %s' % (year,month,day)) #print inputted date 
-
+            raise Exception('Please enter a valid date. You entered: year: {}, month: {}, day: {}'.format(year,month,day)) #print inputted date 
+            
         date_string = date_to_string(offset_date(execution_year, execution_month, execution_day, year_offset, month_offset, day_offset))
 
         return template.format(
