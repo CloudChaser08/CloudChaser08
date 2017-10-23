@@ -63,7 +63,7 @@ def get_file_date_nodash(kwargs):
     return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d') # Interval unclear
 
 def insert_file_date_function(template):
-    def out(ds, kwargs)
+    def out(ds, kwargs):
         ds_nodash = get_file_date_nodash(kwargs)
         return template.format(
             ds_nodash[0:4],
@@ -83,9 +83,6 @@ def insert_execution_date_function(template):
             kwargs['ds_nodash'][6:8]
         )
     return out
-
-def insert_execution_date(template, ds, kwargs):
-    return insert_execution_date_function(template)(ds, kwargs)
 
 get_tmp_dir = insert_execution_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
@@ -150,7 +147,7 @@ def get_transaction_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + insert_file_date(TRANSACTION_FILE_NAME_TEMPLATE, ds, kwargs)]
 
 def do_decompress_transactions(ds, **kwargs):
-    decompression.decompress_7z_file(get_transaction_file_paths[0], get_tmp_dir() + 'decompressed/')
+    decompression.decompress_7z_file(get_transaction_file_paths[0], get_tmp_dir(ds, kwargs) + 'decompressed/')
 
 decompress_transactions = PythonOperator(
     task_id='decompress_transactions',
@@ -178,7 +175,7 @@ split_transactions = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_dir_func'             : lambda ds, kwargs: get_tmp_dir() + 'decompressed/',
+            'tmp_dir_func'             : lambda ds, kwargs: get_tmp_dir(ds, kwargs) + 'decompressed/',
             'file_paths_to_split_func' : get_decompressed_transaction_file_paths,
             's3_prefix_func'           : get_s3_prefix,
             'num_splits'               : 1
