@@ -183,6 +183,8 @@ CREATE TABLE medication_common_model AS
 SELECT * FROM medication_common_model_bak
 WHERE medctn_diag_cd IS NULL;
 
+-- Can't join on an exploded column, so we have to do this explicit insert
+-- in order to whitelist the diagnosis code column
 INSERT INTO medication_common_model
 SELECT
     row_id,
@@ -326,6 +328,9 @@ LEFT JOIN icd_diag_codes
     ON medication_common_model_bak.medctn_diag_cd = icd_diag_codes.code
 WHERE medication_common_model_bak.medctn_diag_cd IS NOT NULL;
 
+-- Due to whitelisting, we may end up with several rows with blank diagnosis
+-- for the same medication order. Distinct them to reduce the number of
+-- duplicates
 DROP TABLE IF EXISTS medication_common_model_bak;
 ALTER TABLE medication_common_model RENAME TO medication_common_model_bak;
 CREATE TABLE medication_common_model AS SELECT DISTINCT * FROM medication_common_model_bak;
