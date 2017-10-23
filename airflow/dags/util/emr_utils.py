@@ -54,21 +54,33 @@ def _get_emr_cluster_ip_address(cluster_id):
     )
 
 
-def _wait_for_steps(cluster_id):
-    incomplete_steps = 1
+def _get_cluster_step_statuses_by_id(cluster_id):
+    cluster_steps = json.loads(check_output([
+        'aws', 'emr', 'list-steps', '--cluster-id', cluster_id
+    ]))
+
     failed_steps = 0
+    incomplete_steps = 0
+
+    for step in cluster_steps['Steps']:
+        if step['Status']['State'] == "PENDING" or step['Status']['State'] == "RUNNING":
+            incomplete_steps += 1
+        elif step['Status']['State'] == "FAILED":
+            failed_steps += 1
+
+    return incomplete_steps, failed_steps
+
+
+def get_cluster_step_statuses(cluster_name):
+    _get_cluster_step_statuses_by_id(_get_emr_cluster_id(cluster_name))
+
+
+def _wait_for_steps(cluster_id):
+    incomplete_steps, failed_steps = _get_cluster_step_statuses_by_id(cluster_id)
     while incomplete_steps > 0:
-        incomplete_steps = 0
         time.sleep(60)
-        cluster_steps = json.loads(check_output([
-            'aws', 'emr', 'list-steps', '--cluster-id', cluster_id
-        ]))
-        for step in cluster_steps['Steps']:
-            if step['Status']['State'] == "PENDING" \
-               or step['Status']['State'] == "RUNNING":
-                incomplete_steps += 1
-            elif step['Status']['State'] == "FAILED":
-                failed_steps += 1
+        incomplete_steps, failed_steps = _get_cluster_step_statuses_by_id(cluster_id)
+
     if failed_steps > 0:
         raise Exception("Step failed on cluster: " + cluster_id)
 
