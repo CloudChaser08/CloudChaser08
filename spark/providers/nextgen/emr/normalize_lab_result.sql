@@ -122,10 +122,6 @@ SELECT
         substring(rslt.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM labresult rslt
-<<<<<<< Updated upstream
-    LEFT JOIN demographics_dedup dem ON rslt.ReportingEnterpriseID = dem.ReportingEnterpriseID
-        AND rslt.NextGenGroupID = dem.NextGenGroupID
-=======
     LEFT JOIN demographics_local dem ON rslt.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND rslt.NextGenGroupID = dem.NextGenGroupID
         AND COALESCE(
@@ -137,7 +133,6 @@ FROM labresult rslt
                 substring(rslt.referencedatetime, 1, 8)
             ) <= substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
->>>>>>> Stashed changes
     LEFT JOIN ref_gen_ref ref ON ref.gen_ref_domn_nm = 'emr_lab_result.lab_test_nm'
         AND TRIM(UPPER(rslt.emrcode)) = ref.gen_ref_itm_nm
         AND ref.whtlst_flg = 'Y'
@@ -237,11 +232,7 @@ SELECT
     'LIPID_PANEL',                          -- lab_test_panel_nm
     NULL,                                   -- lab_test_nm
     NULL,                                   -- lab_test_desc
-<<<<<<< Updated upstream
-    ARRAY('134577', '20859', '25718', '20933')[n.n],
-=======
     ARRAY('134577', '20859', '25718', '20933')[explode_idx],
->>>>>>> Stashed changes
                                             -- lab_test_loinc_cd
     NULL,                                   -- lab_test_snomed_cd
     NULL,                                   -- lab_test_vdr_cd
@@ -250,19 +241,11 @@ SELECT
     NULL,                                   -- lab_test_alt_cd_qual
     NULL,                                   -- lab_result_nm
     NULL,                                   -- lab_result_desc
-<<<<<<< Updated upstream
-    ARRAY(lip.ldl, lip.hdl, lip.triglycerides, lip.totalcholesterol)[n.n],
-                                            -- lab_result_msrmt
-    ARRAY('mg/dl', 'mg/dl or mg/mL', 'mg/dl', 'mg/dl')[n.n],
-                                            -- lab_result_uom
-    ARRAY('LDL_CHOLESTEROL', 'HDL_CHOLESTEROL', 'TRIGLYCERIDES', 'TOTAL_CHOLESTEROL')[n.n],
-=======
     ARRAY(lip.ldl, lip.hdl, lip.triglycerides, lip.totalcholesterol)[explode_idx],
                                             -- lab_result_msrmt
     ARRAY('mg/dl', 'mg/dl or mg/mL', 'mg/dl', 'mg/dl')[explode_idx],
                                             -- lab_result_uom
     ARRAY('LDL_CHOLESTEROL', 'HDL_CHOLESTEROL', 'TRIGLYCERIDES', 'TOTAL_CHOLESTEROL')[explode_idx],
->>>>>>> Stashed changes
                                             -- lab_result_qual
     NULL,                                   -- lab_result_abnorm_flg
     NULL,                                   -- lab_result_norm_min_msrmt
