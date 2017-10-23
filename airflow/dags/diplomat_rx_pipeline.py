@@ -26,7 +26,7 @@ DAG_NAME = 'diplomat_rx_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 10, 2, 12),
+    'start_date': datetime(2017, 9, 25, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -56,16 +56,12 @@ MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Diplomat RX deid file'
-DEID_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt.zip'
-DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerityPHIOut_{}.csv'
+DEID_FILE_NAME_TEMPLATE = 'HealthVerityPHIOut_{}.csv'
 MINIMUM_DEID_FILE_SIZE = 500
 
 
 def get_formatted_date(ds, kwargs):
-    def out(ds, kwargs):
-        adjusted_date = kwargs['execution_date'] + timedelta(days=7)
-        return adjusted_date.strftime('%Y%m%d')
-    return out
+    return kwargs['execution_date'].strftime('%Y%m%d')
 
 
 def insert_formatted_date_function(template):
@@ -272,7 +268,7 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func'      : lambda ds, k: [
                 insert_formatted_date_function(
-                    DEID_UNZIPPED_FILE_NAME_TEMPLATE
+                    DEID_FILE_NAME_TEMPLATE
                 )(ds, k)
             ],
             'file_date_func'                    : insert_current_date_function(
@@ -289,10 +285,7 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-sql_template = """
-    ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='diplmoat', part_best_date='{0}-{1}')
-    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=diplmoat/part_best_date={0}-{1}/'
-"""
+repair_table = "MSCK REPAIR TABLE pharmacyclaims_20170602"
 
 if HVDAG.HVDAG.airflow_env != 'test':
     update_analytics_db = SubDagOperator(
@@ -302,7 +295,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : insert_current_date_function(sql_template)
+                'sql_command_func' : lambda ds, k: repair_table
             }
         ),
         task_id='update_analytics_db',
