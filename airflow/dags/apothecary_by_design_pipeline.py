@@ -1,6 +1,7 @@
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
+from subprocess import check_call
 
 #hv-specific modules
 import common.HVDAG as HVDAG
@@ -9,9 +10,12 @@ import subdags.s3_fetch_file as s3_fetch_file
 import subdags.decrypt_files as decrypt_files
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.queue_up_for_matching as queue_up_for_matching
+import subdags.split_push_files as split_push_files
+
+import util.s3_utils as s3_utils
 
 for m in [HVDAG, s3_validate_file, s3_fetch_file, detect_move_normalize,
-          queue_up_for_matching]:
+          queue_up_for_matching, split_push_files, s3_utils]:
     reload(m)
 
 DAG_NAME = 'apothecary_by_design_pipeline'
@@ -35,11 +39,13 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE = test_loc + 'out/{}/{}/{}/transactions/'
     S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE = test_loc + 'out/{}/{}/{}/additionaldata/'
     S3_PAYLOAD_DEST = test_loc + 'payload/'
+    S3_NORMALIZED_DATA_URL = test_loc + 'spark-output/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/abd/'
     S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/transactions/'
     S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/additionaldata/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/'
+    S3_NORMALIZED_DATA_URL = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=apothecary_by_design/'
 
 TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}/'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/additionaldata/'
@@ -54,6 +60,13 @@ def get_formatted_date(ds, kwargs):
 
 
 def insert_formatted_date_function(template):
+    def out(ds, kwargs):
+        return template.format(get_formatted_date(ds, kwargs))
+
+    return out
+
+
+def insert_formatted_regex_function(template):
     def out(ds, kwargs):
         return template.format(get_formatted_date(ds, kwargs))
 
@@ -84,8 +97,8 @@ def get_transaction_file_paths(ds, kwargs):
     )]
 
 
-def get_deid_file_urls(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + DEID_FILE_NAME_TEMPLATE.format(
+def get_deid_file_paths(ds, kwargs):
+    return [get_deid_tmp_dir(ds, kwargs) + DEID_FILE_NAME_TEMPLATE.format(
         get_formatted_date(ds, kwargs)
     )]
 
@@ -94,17 +107,6 @@ def get_matching_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL + MATCHING_DEID_FILE_NAME_TEMPLATE.format(
         get_formatted_date(ds, kwargs)
     )]
-
-
-def encrypted_decrypted_file_paths_function(ds, kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
-    encrypted_file_path = file_dir \
-        + TRANSACTION_FILE_NAME_TEMPLATE.format(
-            get_formatted_date(ds, kwargs)
-        )
-    return [
-        [encrypted_file_path, encrypted_file_path + '.gz']
-    ]
 
 
 def encrypted_decrypted_deid_file_paths_function(ds, kwargs):
@@ -226,40 +228,82 @@ decrypt_deid = SubDagOperator(
     dag=mdag
 )
 
+
+split_additionaldata_file = SubDagOperator(
+    subdag=split_push_files.split_push_files(
+        DAG_NAME,
+        'split_additionaldata_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_dir_func'             : get_tmp_dir,
+            'file_paths_to_split_func' : get_transaction_file_paths,
+            'file_name_pattern_func'   : insert_formatted_regex_function(
+                TRANSACTION_FILE_NAME_TEMPLATE
+            ),
+            's3_prefix_func'           : insert_current_date_function(
+                S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE
+            ),
+            'num_splits'               : 20
+        }
+    ),
+    task_id='split_additionaldata_file',
+    dag=mdag
+)
+
+
+split_deid_file = SubDagOperator(
+    subdag=split_push_files.split_push_files(
+        DAG_NAME,
+        'split_deid_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_dir_func'             : get_deid_tmp_dir,
+            'file_paths_to_split_func' : get_deid_file_paths,
+            'file_name_pattern_func'   : insert_formatted_regex_function(
+                DEID_FILE_NAME_TEMPLATE
+            ),
+            's3_prefix_func'           : insert_current_date_function(
+                S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE
+            ),
+            'num_splits'               : 20
+        }
+    ),
+    task_id='split_deid_file',
+    dag=mdag
+)
+
+
+def do_delete_existing_data(ds, **kwargs):
+    check_call(['aws', 's3', 'rm', '--recursive', kwargs['NORMALIZED_DATA_URL']])
+
+
+delete_existing_data = PythonOperator(
+    task_id = 'delete_existing_data',
+    python_callable = do_delete_existing_data,
+    op_kwargs = {
+        'NORMALIZED_DATA_URL'  : S3_NORMALIZED_DATA_URL
+    },
+    provide_context = True,
+    dag = mdag
+)
+
+
 ### DAG STRUCTURE ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_additionaldata_file.set_upstream(validate_transaction)
     fetch_deid_file.set_upstream(validate_deid)
     queue_up_for_matching.set_upstream(validate_matching_deid)
+    detect_move_normalize.set_upstream(queue_up_for_matching)
 
 decrypt_deid.set_upstream(fetch_deid_file)
 
-#split_additionaldata_file.set_upstream(fetch_additionaldata_file)
-#split_deid_file.set_upstream(decrypt_deid)
+split_additionaldata_file.set_upstream(fetch_additionaldata_file)
+split_deid_file.set_upstream(decrypt_deid)
 
-#
-#
-#split_transaction = SubDagOperator(
-#    subdag=split_push_files.split_push_files(
-#        DAG_NAME,
-#        'split_transaction_file',
-#        default_args['start_date'],
-#        mdag.schedule_interval,
-#        {
-#            'tmp_dir_func'             : get_tmp_dir,
-#            'file_paths_to_split_func' : get_transaction_file_paths,
-#            'file_name_pattern_func'   : insert_formatted_regex_function(
-#                TRANSACTION_FILE_NAME_TEMPLATE
-#            ),
-#            's3_prefix_func'           : insert_current_date_function(
-#                S3_TRANSACTION_PROCESSED_URL_TEMPLATE
-#            ),
-#            'num_splits'               : 20
-#        }
-#    ),
-#    task_id='split_transaction_file',
-#    dag=mdag
-#)
+delete_existing_data.set_upstream([split_additionaldata_file, split_deid_file])
+
 #
 #clean_up_workspace = SubDagOperator(
 #    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
