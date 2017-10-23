@@ -12,6 +12,7 @@ parser.add_argument('--output_path', type=str)
 parser.add_argument('--database', type=str, nargs='?')
 parser.add_argument('--cluster_endpoint', type=str)
 parser.add_argument('--s3_credentials', type=str)
+parser.add_argument('--gz', default=False, action='store_true')
 parser.add_argument('--rs_user', type=str, nargs='?')
 parser.add_argument('--rs_password', type=str, nargs='?')
 args = parser.parse_args()
@@ -22,8 +23,6 @@ psql = ['psql', '-h', args.cluster_endpoint, '-p', '5439']
 if args.rs_user:
     psql.append('-U')
     psql.append(args.rs_user)
-
-psql.append('-w')
 
 transactional_vitals = args.transactional_path + '/vitals/'
 transactional_vaccines = args.transactional_path + '/vaccines/'
@@ -48,6 +47,11 @@ subprocess.call(' '.join(
 ), shell=True)
 
 # load transactional data
+if args.gz:
+    load_script = 'load_transactions_gz.sql'
+else:
+    load_script = 'load_transactions_bz2.sql'
+
 subprocess.call(' '.join(
     psql
     + ['-v', 'transactional_vaccines_input_path="\'' + transactional_vaccines + '\'"']
@@ -62,7 +66,7 @@ subprocess.call(' '.join(
     # + ['-v', 'transactional_allergies_input_path="\'' + transactional_allergies + '\'"']
     # + ['-v', 'transactional_vitals_input_path="\'' + transactional_vitals + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + [db, '<', 'load_transactions.sql']
+    + [db, '<', load_script]
 ), shell=True)
 
 # load matching payload
