@@ -29,7 +29,7 @@ TMP_PATH_TEMPLATE = '/tmp/cardinal_pds/pharmacyclaims/{}/'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 9, 15, 12),
+    'start_date': datetime(2017, 10, 23, 19),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -37,7 +37,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 12 * * 5',   # Every Friday at 8:00AM EST
+    schedule_interval = '0 19 * * *',   # Every day at 3:00PM EST
     default_args = default_args
 )
 
@@ -408,10 +408,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
         dag = mdag
     )
 
-    sql_template = """
-        ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='cardinal_pds', part_best_date='{0}-{1}')
-        LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=cardinal_pds/part_best_date={0}-{1}/'
-    """
+    sql_template = "MSCK REPAIR TABLE pharmacyclaims_20170602"
 
     update_analytics_db = SubDagOperator(
         subdag=update_analytics_db.update_analytics_db(
