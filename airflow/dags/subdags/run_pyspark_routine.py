@@ -9,18 +9,18 @@ for m in [emr_utils, HVDAG]:
 
 def do_create_cluster(ds, **kwargs):
     emr_utils.create_emr_cluster(
-        kwargs['EMR_CLUSTER_NAME'],
+        kwargs['EMR_CLUSTER_NAME_FUNC'](ds, kwargs),
         kwargs.get('NUM_NODES', 5),
         kwargs.get('NODE_TYPE', 'm4.xlarge'),
         kwargs.get('EBS_VOLUME_SIZE', 50),
         kwargs.get('PURPOSE', 'none'),
-        kwargs.get('CONNECTED_TO_METASTORE', False)
+        kwargs.get('CONNECT_TO_METASTORE', False)
     )
 
 
 def do_run_pyspark_routine(ds, **kwargs):
     emr_utils.run_script(
-        kwargs['EMR_CLUSTER_NAME'],
+        kwargs['EMR_CLUSTER_NAME_FUNC'](ds, kwargs),
         kwargs['PYSPARK_SCRIPT_NAME'],
         kwargs['PYSPARK_ARGS_FUNC'](ds, kwargs),
         kwargs.get('SPARK_CONF_ARGS', None)
@@ -28,7 +28,9 @@ def do_run_pyspark_routine(ds, **kwargs):
 
 
 def do_delete_cluster(ds, **kwargs):
-    emr_utils.delete_emr_cluster(ds, kwargs)
+    emr_utils.delete_emr_cluster(
+        kwargs['EMR_CLUSTER_NAME_FUNC'](ds, kwargs)
+    )
 
 
 def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
@@ -40,7 +42,7 @@ def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_in
         - start_date: same as parent dag start date
         - schedule interval: same as the parent schedule interval
         - dag_config: A dictionary expecting the following keys (* -> required, o -> optional):
-            * EMR_CLUSTER_NAME
+            * EMR_CLUSTER_NAME_FUNC
                 - Name of the EMR cluster
             * PYSPARK_SCRIPT_NAME
                 - Name of the pyspark script to run
@@ -55,7 +57,7 @@ def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_in
                 - Size of the EBS Storage 
             o PURPOSE (default: 'none')
                 - Purpose of the cluster and routine being ran on it
-            o CONNECTED_TO_METASTORE (default: False)
+            o CONNECT_TO_METASTORE (default: False)
                 - Boolean indicating if we should connect to metastore or not
             o SPARK_CONF_ARGS (default: None)
                 - List of configurations for running a pyspark job
@@ -66,8 +68,8 @@ def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_in
     if dag_config is None:
         raise Exception('Must pass in a dictionary dag_config')
     
-    if 'EMR_CLUSTER_NAME' not in dag_config:
-        raise Exception('EMR_CLUSTER_NAME must be specified in dag_config')
+    if 'EMR_CLUSTER_NAME_FUNC' not in dag_config:
+        raise Exception('EMR_CLUSTER_NAME_FUNC must be specified in dag_config')
 
     if 'PYSPARK_SCRIPT_NAME' not in dag_config:
         raise Exception('PYSPARK_SCRIPT_NAME must be specified in dag_config')
@@ -92,7 +94,7 @@ def run_pyspark_routine(parent_dag_name, child_dag_name, start_date, schedule_in
         task_id = 'create_cluster',
         provide_context = True,
         op_kwargs = dag_config,
-        python_callable = do_create_cluster
+        python_callable = do_create_cluster,
         dag = dag
     )
 
