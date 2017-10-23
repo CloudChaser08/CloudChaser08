@@ -3,7 +3,9 @@ SELECT
     mp.hvid,
     mp.gender,
     UPPER(mp.state),
-    SUBSTRING(CURRENT_DATE(), 0, 4) - CAST(mp.yearOfBirth AS int),
+    CAST(
+        SUBSTRING(CURRENT_DATE(), 0, 4) - CAST(mp.yearOfBirth AS int) AS int
+        ),
     transactional.drug,
     clean_up_diagnosis_code(transactional.diagnosis, '02', NULL),
     transactional.lab,
