@@ -72,7 +72,7 @@ def _get_cluster_step_statuses_by_id(cluster_id):
 
 
 def get_cluster_step_statuses(cluster_name):
-    _get_cluster_step_statuses_by_id(_get_emr_cluster_id(cluster_name))
+    return _get_cluster_step_statuses_by_id(_get_emr_cluster_id(cluster_name))
 
 
 def _wait_for_steps(cluster_id):
