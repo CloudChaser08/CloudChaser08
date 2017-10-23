@@ -285,10 +285,7 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-sql_template = """
-    ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='diplomat', part_best_date='{0}-{1}')
-    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=diplomat/part_best_date={0}-{1}/'
-"""
+repair_table = "MSCK REPAIR TABLE pharmacyclaims_20170602"
 
 if HVDAG.HVDAG.airflow_env != 'test':
     update_analytics_db = SubDagOperator(
@@ -298,7 +295,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : insert_current_date_function(sql_template)
+                'sql_command_func' : lambda ds, k: repair_table
             }
         ),
         task_id='update_analytics_db',
