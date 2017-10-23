@@ -1,7 +1,7 @@
 INSERT INTO pharmacyclaims_common_model
 SELECT
     NULL,                       --record_id
-    SKUtilizationKey,           --claim_id
+    sk_utilization_key,         --claim_id
     NULL,                       --hvid
     NULL,                       --created
     '3',                        --model_version
@@ -14,8 +14,8 @@ SELECT
     NULL,                       --patient_year_of_birth
     NULL,                       --patient_zip3
     NULL,                       --patient_state
-    DispenseDttm,               --date_service
-    EffectiveStartDate,         --date_written
+    dispense_dttm,              --date_service
+    effective_start_date,       --date_written
     NULL,                       --year_of_injury
     NULL,                       --date_authorized
     NULL,                       --time_authorized
@@ -28,12 +28,12 @@ SELECT
     NULL,                       --reject_reason_code_3
     NULL,                       --reject_reason_code_4
     NULL,                       --reject_reason_code_5
-    DrgCode,                    --diagnosis_code
+    drg_code,                   --diagnosis_code
     '99',                       --diagnosis_code_qual
     NULL,                       --procedure_code
     NULL,                       --procedure_code_qual
-    NDC,                        --ndc_code
-    HDC,                        --product_service_id
+    ndc,                        --ndc_code
+    hdc,                        --product_service_id
     '99',                       --product_service_id_qual
     NULL,                       --rx_number
     NULL,                       --rx_number_qual
@@ -41,8 +41,8 @@ SELECT
     NULL,                       --processor_control_number
     NULL,                       --fill_number
     NULL,                       --refill_auth_amount
-    QTY,                        --dispensed_quantity
-    UOMQTY,                     --unit_of_measure
+    qty,                        --dispensed_quantity
+    uom_qty,                    --unit_of_measure
     NULL,                       --days_supply
     NULL,                       --pharmacy_npi
     NULL,                       --prov_dispensing_npi
@@ -80,10 +80,10 @@ SELECT
     NULL,                       --remaining_benefit
     NULL,                       --copay_coinsurance
     NULL,                       --basis_of_cost_determination
-    ExtendedCost,               --submitted_ingredient_cost
+    extended_cost,              --submitted_ingredient_cost
     NULL,                       --submitted_dispensing_fee
     NULL,                       --submitted_incentive
-    Revenue,                    --submitted_gross_due
+    revenue,                    --submitted_gross_due
     NULL,                       --submitted_professional_service_fee
     NULL,                       --submitted_patient_pay
     NULL,                       --submitted_other_claimed_qual
@@ -101,14 +101,14 @@ SELECT
     NULL,                       --coupon_type
     NULL,                       --coupon_number
     NULL,                       --coupon_value
-    SKClientTypeKey,            --pharmacy_other_id
+    sk_client_type_key,         --pharmacy_other_id
     '99',                       --pharmacy_other_qual
     NULL,                       --pharmacy_postal_code
     NULL,                       --prov_dispensing_id
     NULL,                       --prov_dispensing_qual
-    PrescribingPhysicianCode,   --prov_prescribing_id
+    prescribing_physician_code, --prov_prescribing_id
     '99',                       --prov_prescribing_qual
-    PhysicianCode,              --prov_primary_care_id
+    physician_code,             --prov_primary_care_id
     '99',                       --prov_primary_care_qual
     NULL,                       --other_payer_coverage_type
     NULL,                       --other_payer_coverage_id
