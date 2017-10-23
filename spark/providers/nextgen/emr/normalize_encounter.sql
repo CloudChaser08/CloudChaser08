@@ -117,7 +117,7 @@ FROM encounter_dedup enc
                 substring(enc.referencedatetime, 1, 8)
             ) >= substring(dem.recorddate, 1, 8)
         AND (COALESCE(
-                substring(enc.encounterdate, 1, 8),
+                substring(enc.encounterdatetime, 1, 8),
                 substring(enc.referencedatetime, 1, 8)
             ) <= substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL);

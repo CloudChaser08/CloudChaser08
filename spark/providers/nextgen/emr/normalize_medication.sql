@@ -107,7 +107,7 @@ SELECT
     extract_date(
         substring(med.datestopped, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                  -- medctn_end_dt
-    trim(split(med.diagnosis_code_id, ',')[explode_idx]),
+    clean_up_freetext(trim(split(med.diagnosis_code_id, ',')[explode_idx]), true),
                                             -- medctn_diag_cd
     NULL,                                   -- medctn_diag_cd_qual
     med.emrcode,                            -- medctn_ndc

@@ -43,6 +43,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/nextgen/emr/resources/input/'
         ) + '/'
+        demo_reference_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/nextgen/emr/resources/reference/demo/'
+        ) + '/'
+        enc_reference_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/nextgen/emr/resources/reference/enc/'
+        ) + '/'
 # NOTE: No matching data yet
 #        matching_path = file_utils.get_abs_path(
 #            script_path, '../../../test/providers/nextgen/emr/resources/matching/'
@@ -52,6 +58,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/input/{}/'.format(
             date_input.replace('-', '/')
         )
+        demo_reference_path = S3_DEMOGRAPHICS_REFERENCE
+        enc_reference_path  = S3_ENCOUNTER_REFERENCE
 # NOTE: No matching data yet
 #        matching_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/payload/{}/'.format(
 #            date_input.replace('-', '/')
@@ -61,6 +69,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = 's3a://salusv/incoming/emr/nextgen/{}/'.format(
             date_input.replace('-', '/')
         )
+        demo_reference_path = S3_DEMOGRAPHICS_REFERENCE
+        enc_reference_path  = S3_ENCOUNTER_REFERENCE
 # NOTE: No matching data yet
 #        matching_path = 's3a://salusv/matching/payload/emr/nextgen/{}/'.format(
 #            date_input.replace('-', '/')
@@ -152,8 +162,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('load_transactions.sql', [
         ['input_root_path', input_root_path],
         ['input_path', input_path],
-        ['s3_encounter_reference', S3_ENCOUNTER_REFERENCE],
-        ['s3_demographics_reference', S3_DEMOGRAPHICS_REFERENCE],
+        ['s3_encounter_reference', enc_reference_path],
+        ['s3_demographics_reference', demo_reference_path],
     ])
     logging.debug("Loaded transactions data")
 

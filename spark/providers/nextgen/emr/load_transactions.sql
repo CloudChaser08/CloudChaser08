@@ -110,9 +110,9 @@ SELECT
     column8  as encounterdescription,
     column9  as hcpzipcode,
     column10 as hcpprimarytaxonomy,
-    regexp_extract(input_file_name(), 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
-    regexp_extract(input_file_name(), 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
-    regexp_extract(input_file_name(), '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
+    regexp_extract(input_file_name, 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
+    regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
+    regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
 WHERE tbl_type = '0007.001';
 
@@ -151,9 +151,9 @@ SELECT
     column10 as zip3,
     column11 as coveredbymedicarepartbflag,
     column12 as patientpseudonym,
-    regexp_extract(input_file_name(), 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
-    regexp_extract(input_file_name(), 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
-    regexp_extract(input_file_name(), '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
+    regexp_extract(input_file_name, 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
+    regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
+    regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
 WHERE tbl_type = '0005.001';
 

@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS encounter_dedup
+DROP TABLE IF EXISTS encounter_dedup;
 CREATE TABLE encounter_dedup
     STORED AS ORC
 AS SELECT
@@ -28,7 +28,7 @@ FROM (
         FROM old_encounter
     ) encounter_union
 ) encounter_distinct
-WHERE encounter_w_nextrecorddate IS NULL;
+WHERE nextrecorddate IS NULL;
 
 DROP TABLE IF EXISTS demographics_local;
 CREATE TABLE demographics_local
