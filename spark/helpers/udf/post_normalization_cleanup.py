@@ -221,8 +221,8 @@ def cap_year_of_birth(age, date_service, year_of_birth):
 
 # Mask 3 digit zip codes that have very small populations
 def mask_zip_code(zip_code):
-    if zip_code in ["036","692","878","059","790","879","063","821", \
-            "884","102","823","890","203","830","893"]:
+    if zip_code in ["036","102","203","205","369","556","692","821", \
+            "823","878","879","884","893"]:
         return "000"
     else:
         return zip_code
