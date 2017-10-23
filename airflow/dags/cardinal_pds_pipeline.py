@@ -69,7 +69,7 @@ HV_SLASH_INCOMING = 'testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/moved
                     if HVDAG.HVDAG.airflow_env == 'test' else 'incoming/cardinal/pds/'
 
 def get_file_date_nodash(kwargs):
-    return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
+    return (kwargs['execution_date'] + timedelta(days=1)).strftime('%Y%m%d')
 
 
 def insert_formatted_file_date_function(template):
