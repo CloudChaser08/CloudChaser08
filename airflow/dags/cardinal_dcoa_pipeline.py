@@ -14,7 +14,6 @@ import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.run_pyspark_routine as run_pyspark_routine
-import util.decompression as decompression
 import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file,
@@ -253,9 +252,6 @@ fetch_normalized_data = PythonOperator(
 )
 
 def delivery_file_path_func(ds, kwargs):
-    print get_tmp_dir(ds, kwargs)
-    print insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split('/')[-1]
-    print kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'fetch_normalized_data', key = 'part_file')
     return [
         get_tmp_dir(ds, kwargs) + \
             insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split('/')[-1] + \
