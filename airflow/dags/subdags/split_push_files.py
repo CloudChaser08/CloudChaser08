@@ -66,7 +66,7 @@ def do_push_part_files(ds, **kwargs):
     for i in xrange(0, len(files), 5):
         processes = []
         for j in xrange(i, min(i + 5, len(files))):
-            kwrags['file_to_push'] = files[j]
+            kwargs['file_to_push'] = files[j]
             s3_prefix = kwargs['s3_prefix_func'](ds, kwargs)
             processes.append(s3_utils.copy_file_async(tmp_dir + files[j], s3_prefix))
         for p in processes:
