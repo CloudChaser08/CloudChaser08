@@ -275,6 +275,8 @@ TABLES = ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment'
 
 def get_visonex_sql_commands(ds, kwargs):
     drop_template = "ALTER TABLE visonex.{} DROP PARTITION (part_best_date > '')"
+    # This string goes through 2 call of .format. The first one will insert the
+    # dates, the second inserts the table name. That is why table is escaped
     add_template = """
         ALTER TABLE visonex.{{table}} ADD PARTITION (part_best_date='{0}-{1}')
         LOCATION 's3a://salusv/warehouse/parquet/custom/2017-09-27/visonex/{{table}}/part_best_date={0}-{1}/'
