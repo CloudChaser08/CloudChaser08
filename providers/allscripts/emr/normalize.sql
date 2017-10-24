@@ -18,7 +18,7 @@ SELECT DISTINCT
     codes.claim_type,
     encounters.encounterDTTM,
     encounters.encounterid,
-    as_patients.dobyear,
+    payload.yearOfBirth,
     payload.threeDigitZip,
     CASE as_patients.gender 
     WHEN 'Male' THEN 'M'

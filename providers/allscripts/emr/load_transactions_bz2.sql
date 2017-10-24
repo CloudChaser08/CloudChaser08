@@ -27,7 +27,7 @@
 --         primarykey      text ENCODE lzo
 --         ) DISTKEY(encounterID) SORTKEY(encounterID);
 
--- COPY transactional_allergies FROM :transactional_allergies_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+-- COPY transactional_allergies FROM :transactional_allergies_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 -- DROP TABLE IF EXISTS transactional_appointments;
 -- CREATE TABLE transactional_appointments (
@@ -51,7 +51,7 @@
 --     primarykey                    text ENCODE lzo
 --     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
--- COPY transactional_appointments FROM :transactional_appointments_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+-- COPY transactional_appointments FROM :transactional_appointments_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 DROP TABLE IF EXISTS transactional_encounters;
 CREATE TABLE transactional_encounters (
@@ -76,7 +76,7 @@ CREATE TABLE transactional_encounters (
     primarykey               text ENCODE lzo
     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
-COPY transactional_encounters FROM :transactional_encounters_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+COPY transactional_encounters FROM :transactional_encounters_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 DROP TABLE IF EXISTS transactional_medications;
 CREATE TABLE transactional_medications (
@@ -148,7 +148,7 @@ CREATE TABLE transactional_medications (
     primarykey                    text ENCODE lzo
     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
-COPY transactional_medications FROM :transactional_medications_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+COPY transactional_medications FROM :transactional_medications_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 DROP TABLE IF EXISTS transactional_orders;
 CREATE TABLE transactional_orders (
@@ -186,7 +186,7 @@ CREATE TABLE transactional_orders (
     primarykey                text ENCODE lzo
     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
-COPY transactional_orders FROM :transactional_orders_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+COPY transactional_orders FROM :transactional_orders_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 DROP TABLE IF EXISTS transactional_patients;
 CREATE TABLE transactional_patients (
@@ -210,7 +210,7 @@ CREATE TABLE transactional_patients (
     primarykey         text ENCODE lzo
     ) DISTKEY(genpatientID) SORTKEY(genpatientID);
 
-COPY transactional_patients FROM :transactional_patients_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+COPY transactional_patients FROM :transactional_patients_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 DROP TABLE IF EXISTS transactional_problems;
 CREATE TABLE transactional_problems (
@@ -246,7 +246,7 @@ CREATE TABLE transactional_problems (
     primarykey      text ENCODE lzo
     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
-COPY transactional_problems FROM :transactional_problems_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+COPY transactional_problems FROM :transactional_problems_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 -- DROP TABLE IF EXISTS transactional_providers;
 -- CREATE TABLE transactional_providers (
@@ -276,7 +276,7 @@ COPY transactional_problems FROM :transactional_problems_input_path CREDENTIALS 
 --     primarykey               text ENCODE lzo
 --     ) DISTKEY(genproviderID) SORTKEY(genproviderID);
 
--- COPY transactional_providers FROM :transactional_providers_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+-- COPY transactional_providers FROM :transactional_providers_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 DROP TABLE IF EXISTS transactional_results;
 CREATE TABLE transactional_results (
@@ -309,7 +309,7 @@ CREATE TABLE transactional_results (
     primarykey      text ENCODE lzo
     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
-COPY transactional_results FROM :transactional_results_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+COPY transactional_results FROM :transactional_results_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 DROP TABLE IF EXISTS transactional_vaccines;
 CREATE TABLE transactional_vaccines (
@@ -342,7 +342,7 @@ CREATE TABLE transactional_vaccines (
     primarykey        text ENCODE lzo
     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
-COPY transactional_vaccines FROM :transactional_vaccines_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+COPY transactional_vaccines FROM :transactional_vaccines_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';
 		
 -- DROP TABLE IF EXISTS transactional_vitals;
 -- CREATE TABLE transactional_vitals (
@@ -370,4 +370,4 @@ COPY transactional_vaccines FROM :transactional_vaccines_input_path CREDENTIALS 
 --     primarykey      text ENCODE lzo
 --     ) DISTKEY(encounterID) SORTKEY(encounterID);
 
--- COPY transactional_vitals FROM :transactional_vitals_input_path CREDENTIALS :credentials EMPTYASNULL DELIMITER '|';
+-- COPY transactional_vitals FROM :transactional_vitals_input_path CREDENTIALS :credentials EMPTYASNULL BZIP2 DELIMITER '|';

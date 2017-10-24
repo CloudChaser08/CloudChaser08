@@ -12,6 +12,7 @@ parser.add_argument('--output_path', type=str)
 parser.add_argument('--database', type=str, nargs='?')
 parser.add_argument('--cluster_endpoint', type=str)
 parser.add_argument('--s3_credentials', type=str)
+parser.add_argument('--gz', default=False, action='store_true')
 parser.add_argument('--rs_user', type=str, nargs='?')
 parser.add_argument('--rs_password', type=str, nargs='?')
 args = parser.parse_args()
@@ -23,17 +24,17 @@ if args.rs_user:
     psql.append('-U')
     psql.append(args.rs_user)
 
-transactional_vitals = args.transactional_path + '_Vitals.txt'
-transactional_vaccines = args.transactional_path + '_Vaccines.txt'
-transactional_results = args.transactional_path + '_Results.txt'
-transactional_providers = args.transactional_path + '_Providers.txt'
-transactional_problems = args.transactional_path + '_Problems.txt'
-transactional_patients = args.transactional_path + '_PatientDemographics.txt'
-transactional_orders = args.transactional_path + '_Orders.txt'
-transactional_medications = args.transactional_path + '_Medications.txt'
-transactional_encounters = args.transactional_path + '_Encounters.txt'
-transactional_appointments = args.transactional_path + '_Appointments.txt'
-transactional_allergies = args.transactional_path + '_Allergies.txt'
+transactional_vitals = args.transactional_path + '/vitals/'
+transactional_vaccines = args.transactional_path + '/vaccines/'
+transactional_results = args.transactional_path + '/results/'
+transactional_providers = args.transactional_path + '/providers/'
+transactional_problems = args.transactional_path + '/problems/'
+transactional_patients = args.transactional_path + '/patientdemographics/'
+transactional_orders = args.transactional_path + '/orders/'
+transactional_medications = args.transactional_path + '/medications/'
+transactional_encounters = args.transactional_path + '/encounters/'
+transactional_appointments = args.transactional_path + '/appointments/'
+transactional_allergies = args.transactional_path + '/allergies/'
 
 # create common model table
 subprocess.call(' '.join(
@@ -46,6 +47,11 @@ subprocess.call(' '.join(
 ), shell=True)
 
 # load transactional data
+if args.gz:
+    load_script = 'load_transactions_gz.sql'
+else:
+    load_script = 'load_transactions_bz2.sql'
+
 subprocess.call(' '.join(
     psql
     + ['-v', 'transactional_vaccines_input_path="\'' + transactional_vaccines + '\'"']
@@ -60,7 +66,7 @@ subprocess.call(' '.join(
     # + ['-v', 'transactional_allergies_input_path="\'' + transactional_allergies + '\'"']
     # + ['-v', 'transactional_vitals_input_path="\'' + transactional_vitals + '\'"']
     + ['-v', 'credentials="\'' + args.s3_credentials + '\'"']
-    + [db, '<', 'load_transactions.sql']
+    + [db, '<', load_script]
 ), shell=True)
 
 # load matching payload
