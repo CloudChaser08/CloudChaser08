@@ -10,13 +10,8 @@ def test_init():
     test_config_dir = '/'.join(__file__.split('/')[:-1]) + '/resources/' 
 
 def test_reads_sub_conf():
-<<<<<<< HEAD
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
     conf = config_reader.get_provider_config('test', conf_file)
-=======
-    conf = config_reader.get_provider_config('test', test_config_dir, \
-                            'main_config.json')
->>>>>>> added parameter to specify config dir for get_provider_config
     assert 'fill_rate' in conf
     assert conf['fill_rate'] != None
     assert conf['fill_rate']['sub_field'] == 'dang'
@@ -24,26 +19,16 @@ def test_reads_sub_conf():
 
 
 def test_does_not_read_sub_conf_when_null():
-<<<<<<< HEAD
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
     conf = config_reader.get_provider_config('other_test', conf_file)
-=======
-    conf = config_reader.get_provider_config('other_test', test_config_dir, \
-                                'main_config.json')
->>>>>>> added parameter to specify config dir for get_provider_config
     assert 'fill_rate' in conf
     assert conf['fill_rate'] == None
 
 
 def test_exception_raised_when_provider_conf_datatype_is_null():
     with pytest.raises(Exception) as e_info:
-<<<<<<< HEAD
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
         conf = config_reader.get_provider_config('bad_conf', conf_file)
-=======
-        conf = config_reader.get_provider_config('bad_conf', test_config_dir, \
-                                'main_config.json')
->>>>>>> added parameter to specify config dir for get_provider_config
 
     exception = e_info.value
     assert exception.message.startswith('datatype is not specified for provider')
@@ -60,13 +45,8 @@ def test_exception_raised_when_provider_conf_datatype_not_specified():
 
 def test_exception_raised_when_provider_not_in_providers_conf_file():
     with pytest.raises(Exception) as e_info:
-<<<<<<< HEAD
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
         conf = config_reader.get_provider_config('lol', conf_file)
-=======
-        conf = config_reader.get_provider_config('lol', test_config_dir, \
-                                'main_config.json')
->>>>>>> added parameter to specify config dir for get_provider_config
 
     exception = e_info.value
     assert exception.message == 'lol is not in the providers config file'
