@@ -31,40 +31,60 @@ def test_offset_date_with_valid_and_invalid_input():
     """
     test offset_date raises appropriate Exceptions and Errors with invalid input
     """
-    with pytest.raises(Exception):
-        offset_date(1899, 10, 10) 
-    with pytest.raises(ValueError):
+    with pytest.raises(Exception) as e_info:
+        offset_date(1899, 10, 10)
+    exception = e_info.value
+    assert exception.message.startswith('Year must be >= 1900')
+
+    with pytest.raises(ValueError) as e_info:
         offset_date(2000, 10, 0)
-    with pytest.raises(TypeError):
+    exception = e_info.value
+    assert exception.message.startswith('day is out of range')
+
+    with pytest.raises(TypeError) as e_info:
         offset_date('something','comepletely', 'different')
-    with pytest.raises(ValueError):
+    exception = e_info.value
+    assert exception.message.startswith('an integer is required')
+
+    with pytest.raises(ValueError) as e_info:
         offset_date(2012, 2, 30)
-    with pytest.raises(Exception):
+    exception = e_info.value
+    assert exception.message.startswith('day is out of range')
+
+    with pytest.raises(Exception) as e_info:
         offset_date(2012, 10, 10, year_offset = '')
-    with pytest.raises(ValueError):
+    exception = e_info.value
+    assert exception.message.startswith('year_offset must be an integer')
+
+    with pytest.raises(ValueError) as e_info:
         offset_date(2012, -10, 10)
-    with pytest.raises(ValueError):
+    exception = e_info.value
+    assert exception.message.startswith('month must be in 1..12')
+
+    with pytest.raises(ValueError) as e_info:
         offset_date(2012, 10, -30)
+    exception = e_info.value
+    assert exception.message.startswith('day is out of range')
 
     # test offset_date returns datetime object of appropriately shifted date
     
-    assert offset_date(2012, 10, 1) == datetime.datetime(2012, 10, 1)
-    assert offset_date(2012, 10, 1, year_offset = 1) == datetime.datetime(2013,
-     10, 1)
-    assert offset_date(2012, 10, 1, month_offset = 1) == datetime.datetime(2012, 11, 1)
-    assert offset_date(2012, 10, 1, day_offset = 1) == datetime.datetime(2012, 10, 2)
+    assert offset_date(2012, 10, 1) == ['2012', '10', '01']
+    assert offset_date(2012, 10, 1, year_offset = 1) == ['2013',
+     '10', '01']
+    assert offset_date(2012, 10, 1, month_offset = 1) == ['2012', '11', '01']
+    assert offset_date(2012, 10, 1, day_offset = 1) == ['2012', '10', '02']
     # negative input for offsets
-    assert offset_date(2012, 10, 1, year_offset = -1) == datetime.datetime(2011, 10, 1)
-    assert offset_date(2012, 10, 1, month_offset = -1) == datetime.datetime(2012, 9, 1)
-    assert offset_date(2012, 10, 1, day_offset = -1) == datetime.datetime(2012, 9, 30)
+    assert offset_date(2012, 10, 1, year_offset = -1) == ['2011', '10', '01']
+    assert offset_date(2012, 10, 1, month_offset = -1) == ['2012', '09', '01']
+    assert offset_date(2012, 10, 1, day_offset = -1) == ['2012', '09', '30']
     # try all
-    assert offset_date(2012, 10, 1, day_offset = 1, month_offset = -1, year_offset = 12) == datetime.datetime(2024, 9, 2)
+    assert offset_date(2012, 10, 1, day_offset = 1, month_offset = -1, year_offset = 12) == ['2024', '09', '02']
 
 def test_date_into_template_with_all_input():
     """
     test wrapper function with all inputs given
     """
-    assert date_into_template(TEMPLATE, kwargs, year = 1991, day = 06, month = 10, year_offset = 21, day_offset = 11, month_offset = 0) == '2012-10-17'
+    assert insert_date_into_template(TEMPLATE, kwargs, year = 1991, day = 6, month = 10, year_offset = 21, day_offset = 11, month_offset = 0) == '2012-10-17'
 
 
 
