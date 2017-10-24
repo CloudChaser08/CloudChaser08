@@ -13,7 +13,7 @@ SELECT
     mp.age,                                   -- patient_age
     mp.yearOfBirth,                           -- patient_year_of_birth
     mp.threeDigitZip,                         -- patient_zip3
-    UPPER(mp.state),                          -- patient_state
+    TRIM(UPPER(mp.state)),                    -- patient_state
     extract_date(
         t.datefilled, '%m/%d/%Y', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                    -- date_service
