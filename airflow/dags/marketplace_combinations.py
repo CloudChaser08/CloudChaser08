@@ -31,7 +31,7 @@ def do_generate_combination_hlls(ds, **kwargs):
             'spark.executor.instances=80, --conf, spark.yarn.executor.memoryOverhead=1024,'
             '--conf, spark.scheduler.minRegisteredResourcesRatio=1, --conf,'
             'spark.scheduler.maxRegisteredResourcesWaitingTime=60s,'
-            '~/mellon-assembly-latest.jar, --patientDir,'
+            '/tmp/mellon-assembly-latest.jar, --patientDir,'
             "'s3a://healthverityreleases/PatientIntersector/hll_seq_data_store/patient/',"
             '--partitions, 2000, --attributes,'
             "'age,biomarker,diagnosis,drug,gender,lab,procedure,region,state']")]
