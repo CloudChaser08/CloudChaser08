@@ -4,7 +4,8 @@ import pytest
 from util.date_utils import *
 
 
-kwargs={'execution_date': datetime.datetime(2017, 10, 13),'ds_nodash':'20171025'} # example airflow variable, kwargs{'execution_date'} is a datetime.datetime object
+kwargs={'execution_date': datetime.datetime(2017, 10, 13), \
+        'ds_nodash':'20171025'}
 
 TEMPLATE = '{}-{}-{}' #example template to input date
 
@@ -68,23 +69,25 @@ def test_offset_date_with_valid_and_invalid_input():
 
     # test offset_date returns datetime object of appropriately shifted date
     
-    assert offset_date(2012, 10, 1) == ['2012', '10', '01']
-    assert offset_date(2012, 10, 1, year_offset = 1) == ['2013',
-     '10', '01']
-    assert offset_date(2012, 10, 1, month_offset = 1) == ['2012', '11', '01']
-    assert offset_date(2012, 10, 1, day_offset = 1) == ['2012', '10', '02']
+    assert offset_date(2012, 10, 1) == ('2012', '10', '01')
+    assert offset_date(2012, 10, 1, year_offset = 1) == ('2013',
+     '10', '01')
+    assert offset_date(2012, 10, 1, month_offset = 1) == ('2012', '11', '01')
+    assert offset_date(2012, 10, 1, day_offset = 1) == ('2012', '10', '02')
     # negative input for offsets
-    assert offset_date(2012, 10, 1, year_offset = -1) == ['2011', '10', '01']
-    assert offset_date(2012, 10, 1, month_offset = -1) == ['2012', '09', '01']
-    assert offset_date(2012, 10, 1, day_offset = -1) == ['2012', '09', '30']
+    assert offset_date(2012, 10, 1, year_offset = -1) == ('2011', '10', '01')
+    assert offset_date(2012, 10, 1, month_offset = -1) == ('2012', '09', '01')
+    assert offset_date(2012, 10, 1, day_offset = -1) == ('2012', '09', '30')
     # try all
-    assert offset_date(2012, 10, 1, day_offset = 1, month_offset = -1, year_offset = 12) == ['2024', '09', '02']
+    assert offset_date(2012, 10, 1, day_offset = 1, month_offset = -1, \
+        year_offset = 12) == ('2024', '09', '02')
 
 def test_date_into_template_with_all_input():
     """
     test wrapper function with all inputs given
     """
-    assert insert_date_into_template(TEMPLATE, kwargs, year = 1991, day = 6, month = 10, year_offset = 21, day_offset = 11, month_offset = 0) == '2012-10-17'
+    assert insert_date_into_template(TEMPLATE, kwargs, year = 1991, day = 6, \
+        month = 10, year_offset = 21, day_offset = 11, month_offset = 0) == '2012-10-17'
 
 
 

@@ -24,7 +24,8 @@ def offset_date(year,
     month, day. Offset values default to zero.
     """
     if year < 1900:
-        raise ValueError('Year must be >= 1900') #strftime requires year >= 1900
+        raise ValueError('Year must be >= 1900') # strftime requires year 
+                                                 # >= 1900
 
     if type(year_offset) is str:
         raise TypeError('year_offset must be an integer')
@@ -33,16 +34,12 @@ def offset_date(year,
     if type(day_offset) is str:
         raise TypeError('day_offset must be an integer')
 
-    if year_offset == 0 and month_offset == 0 and day_offset == 0: 
-        date = datetime.datetime(year, month, day).strftime('%Y%m%d')
-        return [date[0:4], date[4:6], date[6:8]]                     
-    else:
-        date = (datetime.datetime(year,month,day) + 
+    date = (datetime.datetime(year,month,day) + 
                 relativedelta(years = year_offset, 
                     months = month_offset, 
                     days = day_offset)).strftime('%Y%m%d')
                 
-        return [date[0:4], date[4:6], date[6:8]]
+    return (date[0:4], date[4:6], date[6:8])
     
 def generate_insert_date_into_template_function(template,  # string to pass date into
                                 year = None,  # user inputted year
@@ -61,21 +58,21 @@ def generate_insert_date_into_template_function(template,  # string to pass date
     """
     def out(ds, kwargs):
 
-        execution_year = kwargs['execution_date'].year if year is None else year  
-        execution_month = kwargs['execution_date'].month if month is None else month    
-        execution_day = kwargs['execution_date'].day if day is None else day
+        output_year = kwargs['execution_date'].year if year is None else year  
+        output_month = kwargs['execution_date'].month if month is None else month    
+        output_day = kwargs['execution_date'].day if day is None else day
         
-        if not is_date(execution_year, execution_month, execution_day):
-            raise ValueError('Please enter a valid date. You entered: year: \
-                {}, month: {}, day: {}'.format(year,month,day)) 
+        if not is_date(output_year, output_month, output_day):
+            raise ValueError('Please enter a valid date. You entered: \
+                year: {}, month: {}, day: {}'.format(year,month,day)) 
 
-        date_string = offset_date(execution_year, execution_month, \
-        execution_day, year_offset, month_offset, day_offset)
+        (output_year, output_month, output_day) = offset_date(output_year,\
+            output_month, output_day, year_offset, month_offset, day_offset)
 
         return template.format(
-            date_string[0],
-            date_string[1],
-            date_string[2]
+            output_year,
+            output_month,
+            output_day
         )
 
     return out
@@ -92,4 +89,5 @@ def insert_date_into_template(template,
     """
     Wrapper for date_into_template_generator function
     """
-    return generate_insert_date_into_template_function(template, year, month, day, year_offset, month_offset, day_offset)(None, kwargs)
+    return generate_insert_date_into_template_function(template, year, month, \
+        day, year_offset, month_offset, day_offset)(None, kwargs)
