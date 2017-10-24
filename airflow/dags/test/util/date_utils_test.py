@@ -1,5 +1,5 @@
 import datetime 
-from dateutil.relativedelta import relativedelta #http://dateutil.readthedocs.io/en/stable/relativedelta.html
+from dateutil.relativedelta import relativedelta
 import pytest
 from util.date_utils import *
 
