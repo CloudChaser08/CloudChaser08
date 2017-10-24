@@ -34,7 +34,7 @@ def _extract_provider_conf(provider_name, providers_conf):
     return conf[0]
 
 
-def get_provider_config(provider_name, config_dir, providers_conf_file):
+def get_provider_config(provider_name, providers_conf_file):
     '''
     Read the providers config files and each associated stat calc config file
     and combine them into one provider config object.
