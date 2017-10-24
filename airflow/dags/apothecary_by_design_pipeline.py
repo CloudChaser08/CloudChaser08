@@ -106,7 +106,7 @@ def get_deid_file_paths(ds, kwargs):
 
 
 def get_matching_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + MATCHING_DEID_FILE_NAME_TEMPLATE.format(
+    return [MATCHING_DEID_FILE_NAME_TEMPLATE.format(
         get_formatted_date(ds, kwargs)
     )]
 
@@ -305,12 +305,63 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
+#
+# Post-Matching
+#
+def norm_args(ds, k):
+    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    if HVDAG.HVDAG.airflow_env == 'test':
+        base += ['--airflow_test']
+
+    return base
+
+if HVDAG.HVDAG.airflow_env != 'test':
+    detect_move_normalize_dag = SubDagOperator(
+        subdag=detect_move_normalize.detect_move_normalize(
+            DAG_NAME,
+            'detect_move_normalize',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'expected_matching_files_func'      : get_matching_deid_file_urls,
+                'file_date_func'                    : insert_current_date_function(
+                    '{}/{}/{}'
+                ),
+                's3_payload_loc_url'                : S3_PAYLOAD_DEST,
+                'vendor_uuid'                       : '51ca8f88-040a-47f1-b78a-491c8632fedd',
+                'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/apothecary_by_design/pharmacyclaims/sparkNormalizeApothecaryByDesign.py',
+                'pyspark_normalization_args_func'   : norm_args,
+                'pyspark'                           : True
+            }
+        ),
+        task_id='detect_move_normalize',
+        dag=mdag
+    )
+
+    sql_template = """
+        MSCK REPAIR TABLE pharmacyclaims_20170602 
+    """
+    update_analytics_db = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_analytics_db',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func' : lambda ds, k: insert_current_date(sql_template, k)
+                if insert_current_date('{}-{}-{}', k).find('-01') == 7 else ''
+            }
+        ),
+        task_id='update_analytics_db',
+        dag=mdag
+    )
+
 ### DAG STRUCTURE ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_additionaldata_file.set_upstream(validate_transaction)
     fetch_deid_file.set_upstream(validate_deid)
     queue_up_for_matching.set_upstream(validate_matching_deid)
-    detect_move_normalize.set_upstream(queue_up_for_matching)
+    detect_move_normalize_dag.set_upstream(queue_up_for_matching)
 
 decrypt_deid.set_upstream(fetch_deid_file)
 
@@ -320,76 +371,6 @@ split_deid_file.set_upstream(decrypt_deid)
 delete_existing_data.set_upstream([split_additionaldata_file, split_deid_file])
 clean_up_workspace.set_upstream([split_additionaldata_file, split_deid_file])
 
-##
-## Post-Matching
-##
-#def norm_args(ds, k):
-#    base = ['--date', insert_current_date('{}-{}-{}', k)]
-#    if HVDAG.HVDAG.airflow_env == 'test':
-#        base += ['--airflow_test']
-#
-#    return base
-#
-#
-#detect_move_normalize_dag = SubDagOperator(
-#    subdag=detect_move_normalize.detect_move_normalize(
-#        DAG_NAME,
-#        'detect_move_normalize',
-#        default_args['start_date'],
-#        mdag.schedule_interval,
-#        {
-#            'expected_matching_files_func'      : insert_formatted_date_function(
-#                DEID_FILE_NAME_TEMPLATE
-#            ),
-#            'file_date_func'                    : insert_current_date_function(
-#                '{}/{}/{}'
-#            ),
-#            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
-#            'vendor_uuid'                       : '51ca8f88-040a-47f1-b78a-491c8632fedd',
-#            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/apothecary_by_design/pharmacyclaims/sparkNormalizeApothecaryByDesign.py',
-#            'pyspark_normalization_args_func'   : norm_args,
-#            'pyspark'                           : True
-#        }
-#    ),
-#    task_id='detect_move_normalize',
-#    dag=mdag
-#)
-#
-#sql_template = """
-#    ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='apothecary_by_design', part_best_date='{0}-{1}')
-#    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=apothecary_by_design/part_best_date={0}-{1}/'
-#"""
-#
-#if HVDAG.HVDAG.airflow_env != 'test':
-#    update_analytics_db = SubDagOperator(
-#        subdag=update_analytics_db.update_analytics_db(
-#            DAG_NAME,
-#            'update_analytics_db',
-#            default_args['start_date'],
-#            mdag.schedule_interval,
-#            {
-#                'sql_command_func' : lambda ds, k: insert_current_date(sql_template, k)
-#                if insert_current_date('{}-{}-{}', k).find('-01') == 7 else ''
-#            }
-#        ),
-#        task_id='update_analytics_db',
-#        dag=mdag
-#    )
-#
-#
-#if HVDAG.HVDAG.airflow_env != 'test':
-#    fetch_transaction.set_upstream(validate_transaction)
-#    queue_up_for_matching.set_upstream(validate_deid)
-#
-#    detect_move_normalize_dag.set_upstream(
-#        [queue_up_for_matching, split_transaction]
-#    )
-#    update_analytics_db.set_upstream(detect_move_normalize_dag)
-#else:
-#    detect_move_normalize_dag.set_upstream(split_transaction)
-#
-#decrypt_transaction.set_upstream(fetch_transaction)
-#split_transaction.set_upstream(decrypt_transaction)
-#
-## cleanup
-#clean_up_workspace.set_upstream(split_transaction)
+detect_move_normalize_dag.set_upstream(delete_existing_data)
+update_analytics_db.set_upstream(detect_move_normalize_dag)
+
