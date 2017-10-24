@@ -11,11 +11,13 @@ import subdags.decrypt_files as decrypt_files
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.split_push_files as split_push_files
+import subdags.clean_up_tmp_dir as clean_up_tmp_dir 
 
 import util.s3_utils as s3_utils
 
 for m in [HVDAG, s3_validate_file, s3_fetch_file, detect_move_normalize,
-          queue_up_for_matching, split_push_files, s3_utils]:
+          queue_up_for_matching, split_push_files, s3_utils,
+          clean_up_tmp_dir]:
     reload(m)
 
 DAG_NAME = 'apothecary_by_design_pipeline'
@@ -29,7 +31,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = None,               #TODO: determine when we start
+    schedule_interval = '0 0 * * *',        #TODO: determine when we start
     default_args = default_args
 )
 
@@ -289,6 +291,19 @@ delete_existing_data = PythonOperator(
     dag = mdag
 )
 
+clean_up_workspace = SubDagOperator(
+    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+        DAG_NAME,
+        'clean_up_workspace',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE
+        }
+    ),
+    task_id='clean_up_workspace',
+    dag=mdag
+)
 
 ### DAG STRUCTURE ###
 if HVDAG.HVDAG.airflow_env != 'test':
@@ -303,23 +318,8 @@ split_additionaldata_file.set_upstream(fetch_additionaldata_file)
 split_deid_file.set_upstream(decrypt_deid)
 
 delete_existing_data.set_upstream([split_additionaldata_file, split_deid_file])
+clean_up_workspace.set_upstream([split_additionaldata_file, split_deid_file])
 
-#
-#clean_up_workspace = SubDagOperator(
-#    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
-#        DAG_NAME,
-#        'clean_up_workspace',
-#        default_args['start_date'],
-#        mdag.schedule_interval,
-#        {
-#            'tmp_path_template': TMP_PATH_TEMPLATE
-#        }
-#    ),
-#    task_id='clean_up_workspace',
-#    dag=mdag
-#)
-#
-#
 ##
 ## Post-Matching
 ##
