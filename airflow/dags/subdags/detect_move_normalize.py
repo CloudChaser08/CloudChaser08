@@ -130,12 +130,15 @@ def do_create_emr_cluster(ds, cluster_identifier=None, **kwargs):
 def do_delete_emr_cluster(ds, cluster_identifier=None, **kwargs):
     cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
 
-    _, failed_steps = emr_utils.get_cluster_step_statuses(cluster_name)
+    cluster_steps = emr_utils.get_cluster_steps(cluster_name)
 
     emr_utils.delete_emr_cluster(cluster_name)
 
-    if failed_steps > 0:
-        exit(1)
+    if emr_utils.step_list_contains_failed_step(cluster_steps):
+        raise Exception(
+            'Deleted cluster with failed steps. The following steps failed: '
+            + ', '.join([s.name for s in cluster_steps if s.failed])
+        )
 
 def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
