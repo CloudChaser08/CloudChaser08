@@ -29,7 +29,7 @@ TMP_PATH_TEMPLATE = '/tmp/cardinal_pds/pharmacyclaims/{}/'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 10, 23, 19),
+    'start_date': datetime(2017, 10, 23, 20),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -37,7 +37,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 19 * * *',   # Every day at 3:00PM EST
+    schedule_interval = '0 20 * * *',   # Every day at 4:00PM EST
     default_args = default_args
 )
 
