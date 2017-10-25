@@ -11,26 +11,28 @@ TEMPLATE = '{}-{}-{}' #example template to input date
 
 def test_is_date_input():
     """
-    test is_date boolean is False with valid and invalid input
+    test is_date boolean is True with valid and False with invalid input
     """
-   #year
+    # invalid inputs:
+    # year
     assert not is_date(0, 10, 1) 
     assert not is_date('It\'s...', 10, 1)
-    #month
+    # month
     assert not is_date(2017, 0, 1) 
     assert not is_date(2017, 13, 1) 
     assert not is_date(2017, 'Nobody expects the Sp-', 1) 
-    #day
+    # day
     assert not is_date(2017, 10, 0) 
     assert not is_date(2017, 10, 32) 
     assert not is_date(2017, 2, 29)
 
-    # test is_date boolean is True with valid input
+    # valid input
     assert is_date(2017,10,10)
 
 def test_offset_date_with_valid_and_invalid_input():
     """
-    test offset_date raises appropriate Exceptions and Errors with invalid input
+    test offset_date raises appropriate Exceptions/Errors with 
+    invalid input and correct value with valid input 
     """
     with pytest.raises(Exception) as e_info:
         offset_date(1899, 10, 10)
