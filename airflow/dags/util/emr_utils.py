@@ -10,6 +10,14 @@ import util.s3_utils as s3_utils
 
 reload(s3_utils)
 
+class EMRStep:
+    """An EMR cluster step"""
+
+    def __init__(self, step_id, name, failed=False, incomplete=False):
+        self.step_id = step_id
+        self.name = name
+        self.failed = failed
+        self.incomplete = incomplete
 
 #
 # EMR
@@ -54,23 +62,55 @@ def _get_emr_cluster_ip_address(cluster_id):
     )
 
 
+def _get_cluster_steps_by_id(cluster_id):
+    cluster_steps_raw_output = json.loads(check_output([
+        'aws', 'emr', 'list-steps', '--cluster-id', cluster_id
+    ]))
+
+    steps = []
+
+    for raw_step in cluster_steps_raw_output['Steps']:
+        step = EMRStep(raw_step['Id'], raw_step['Name'])
+        if raw_step['Status']['State'] == "PENDING" or raw_step['Status']['State'] == "RUNNING":
+            step.incomplete = True
+        elif raw_step['Status']['State'] == "FAILED":
+            step.failed = True
+        steps.append(step)
+
+    return steps
+
+
+def get_cluster_steps(cluster_name):
+    return _get_cluster_steps_by_id(_get_emr_cluster_id(cluster_name))
+
+
+def step_list_contains_failed_step(steps):
+    if [s for s in steps if s.failed]:
+        return True
+    else:
+        return False
+
+
+def step_list_contains_incomplete_step(steps):
+    if [s for s in steps if s.incomplete]:
+        return True
+    else:
+        return False
+
+
 def _wait_for_steps(cluster_id):
-    incomplete_steps = 1
-    failed_steps = 0
-    while incomplete_steps > 0:
-        incomplete_steps = 0
+    cluster_steps = _get_cluster_steps_by_id(cluster_id)
+
+    while step_list_contains_incomplete_step(cluster_steps):
         time.sleep(60)
-        cluster_steps = json.loads(check_output([
-            'aws', 'emr', 'list-steps', '--cluster-id', cluster_id
-        ]))
-        for step in cluster_steps['Steps']:
-            if step['Status']['State'] == "PENDING" \
-               or step['Status']['State'] == "RUNNING":
-                incomplete_steps += 1
-            elif step['Status']['State'] == "FAILED":
-                failed_steps += 1
-    if failed_steps > 0:
-        print("Step failed on cluster: " + cluster_id)
+        cluster_steps = _get_cluster_steps_by_id(cluster_id)
+
+    if step_list_contains_failed_step(cluster_steps):
+        raise Exception(
+            "Steps failed on cluster {}: {}".format(
+                cluster_id, ', '.join([s.name for s in cluster_steps if s.failed])
+            )
+        )
 
 
 def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size, purpose, connected_to_metastore=False):
