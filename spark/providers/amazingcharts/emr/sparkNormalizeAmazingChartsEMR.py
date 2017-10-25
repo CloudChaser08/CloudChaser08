@@ -7,13 +7,24 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 
-def run(spark, runner, date_input):
+def run(spark, runner, date_input, airflow_test=False):
 
     script_path = __file__
 
-    input_path = 's3a://salusv/incoming/emr/amazingcharts/{}/'.format(date_input.replace('-', '/'))
-    multum_to_ndc_path = 's3a://salusv/incoming/emr/amazingcharts/{}/d_multum_to_ndc/'.format(date_input.split('-')[0])
-    matching_path = 's3a://salusv/matching/payload/emr/amazingcharts/{}/'.format(date_input.replace('-', '/'))
+    if airflow_test:
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/emr/out/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        multum_to_ndc_path = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/emr/multum/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/emr/matching/{}/'.format(
+            date_input.replace('-', '/')
+        )
+    else:
+        input_path = 's3a://salusv/incoming/emr/amazingcharts/{}/'.format(date_input.replace('-', '/'))
+        multum_to_ndc_path = 's3a://salusv/incoming/emr/amazingcharts/{}/d_multum_to_ndc/'.format(date_input.split('-')[0])
+        matching_path = 's3a://salusv/matching/payload/emr/amazingcharts/{}/'.format(date_input.replace('-', '/'))
 
     runner.run_spark_script('amazingcharts_skinny_model.sql', [
         ['table', 'normalized_data', False],
@@ -56,11 +67,14 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 
-    output_path = 's3://salusv/warehouse/parquet/emr/amazingcharts/'
+    if args.airflow_test:
+        output_path = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/emr/spark-output/'
+    else:
+        output_path = 's3://salusv/warehouse/parquet/emr/amazingcharts/'
 
     normalized_records_unloader.distcp(output_path)
 
@@ -68,5 +82,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
+    parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
