@@ -59,6 +59,11 @@ def test_offset_date_with_valid_and_invalid_input():
     exception = e_info.value
     assert exception.message.startswith('year_offset must be an integer')
 
+    with pytest.raises(Exception) as e_info:
+        offset_date(2012, 10, 10, year_offset = 5.6)
+    exception = e_info.value
+    assert exception.message.startswith('year_offset must be an integer')
+
     with pytest.raises(ValueError) as e_info:
         offset_date(2012, -10, 10)
     exception = e_info.value
