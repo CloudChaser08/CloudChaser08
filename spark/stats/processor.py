@@ -19,8 +19,8 @@ def _run_fill_rates(df, provider_conf):
         cols = [c for c in df.columns if c not in \
                 provider_conf['fill_rates']['blacklist_columns']]
         fill_rate_cols_df = df.select(*[col(c) for c in cols])
-        fill_rates_df = fill_rate.calculate_fill_rate(fill_rate_cols_df)
-        return fill_rates_df
+        fill_rates = fill_rate.calculate_fill_rate(fill_rate_cols_df).collect()
+        return fill_rates
 
     return None
 
@@ -69,7 +69,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
 
 
     # Generate fill rates
-    fill_rates = fill_rate.calculate_fill_rate(gen_stats_df).collect()
+    fill_rates = _run_fill_rates(gen_stats_df, provider_conf)
 
     # Generate key stats
     key_stats = None

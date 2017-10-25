@@ -15,7 +15,7 @@ build-notest: clean-build
 	echo "Created target/${APP_NAME}.zip"
 
 spark-test: build-notest clean-test
-	pytest -v
+	pytest -v || rm -r target/${APP_NAME}.zip
 	@$(MAKE) clean-test
 
 build: spark-test
