@@ -4,7 +4,7 @@ import pytest
 
 def is_date(year, month, day):
     """
-    Uses a datetime object to validate UI date.
+    Uses a datetime object to validate a user-inputted date. Returns a boolean value.
     """
     try:
         datetime.datetime(year, month, day)
@@ -27,11 +27,11 @@ def offset_date(year,
         raise ValueError('Year must be >= 1900') # strftime requires year 
                                                  # >= 1900
 
-    if type(year_offset) is str:
+    if type(year_offset) in (str,float):
         raise TypeError('year_offset must be an integer')
-    if type(month_offset) is str:
+    if type(month_offset) in (str,float):
         raise TypeError('month_offset must be an integer')
-    if type(day_offset) is str:
+    if type(day_offset) in (str,float):
         raise TypeError('day_offset must be an integer')
 
     date = (datetime.datetime(year,month,day) + 
@@ -52,7 +52,7 @@ def generate_insert_date_into_template_function(template,  # string to pass date
     """
     Inserts the year, month, day into a string template. Values 
     of year, month, and day can be specified by the user individually. 
-    These default to those given by the execution_date. The parameters
+    These default to those given by the airflow execution_date. The parameters
     year_offset, month_offset, and day_offset are integers to add to the
     respective values.   
     """
@@ -87,7 +87,7 @@ def insert_date_into_template(template,
                         day_offset = 0, 
                         ):
     """
-    Wrapper for date_into_template_generator function
+    Wrapper for generate_insert_date_into_template_function
     """
     return generate_insert_date_into_template_function(template, year, month, \
         day, year_offset, month_offset, day_offset)(None, kwargs)
