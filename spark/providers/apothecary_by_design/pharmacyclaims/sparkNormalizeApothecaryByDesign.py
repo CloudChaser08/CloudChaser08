@@ -113,6 +113,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id = '45', vendor_id = '204', filename = setid),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '45', 'EARLIEST_VALID_SERVICE_DATE'),
         pharm_priv.filter
     )(
         runner.sqlContext.sql('select * from pharmacyclaims_common_model')
