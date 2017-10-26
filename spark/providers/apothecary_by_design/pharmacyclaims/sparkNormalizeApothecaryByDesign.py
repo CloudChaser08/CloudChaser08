@@ -1,5 +1,8 @@
-import argparse
 from datetime import datetime
+from pyspark.sql.functions import isnull, lead
+from pyspark.sql import Window
+import argparse
+
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -95,12 +98,12 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     runner.sqlContext.sql('select * from abd_transactions_with_dupes') \
             .dropDuplicates(['sales_id']) \
             .createTempView('abd_transactions')
+    window = Window.orderBy('ticket_dt').partitionBy('sales_cd')
     runner.sqlContext.sql('select * from abd_additional_data_with_dupes') \
-            .rdd \
-            .map(lambda row: (row.sales_cd, row)) \
-            .reduceByKey(lambda x, y: x if x.ticket_dt > y.ticket_dt else y) \
-            .map(lambda kv: kv[1]) \
-            .toDF().createTempView('abd_additional_data')
+            .withColumn('next_ticket_dt', lead('ticket_dt', 1).over(window)) \
+            .where(isnull('next_ticket_dt')) \
+            .drop('next_ticket_dt') \
+            .createTempView('abd_additional_data')
 
     # Run the normalization script on the transaction data
     # and matching payload
