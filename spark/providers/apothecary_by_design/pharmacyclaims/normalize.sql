@@ -18,9 +18,7 @@ SELECT
         txn.patient_ship_state_cd))),           -- patient_state
     extract_date(
         COALESCE(ad.fill_dt, ad.ticket_dt),
-        '%Y%m%d',
-        CAST({min_date} AS DATE),
-        CAST({max_date} AS DATE)
+        '%Y%m%d'
     ),                                          -- date_service
     NULL,                                       -- date_written
     NULL,                                       -- year_of_injury

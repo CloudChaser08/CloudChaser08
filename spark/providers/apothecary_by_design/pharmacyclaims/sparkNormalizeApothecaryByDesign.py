@@ -107,10 +107,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     # Run the normalization script on the transaction data
     # and matching payload
-    runner.run_spark_script('normalize.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
+    runner.run_spark_script('normalize.sql', [])
 
     # Apply clean up and privacy filtering
     postprocessor.compose(
