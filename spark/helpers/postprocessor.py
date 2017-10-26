@@ -85,10 +85,12 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
     return out
 
 
-def apply_whitelist(sqlc, col_name, domain_name):
+def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None):
     """
     Apply whitelist defined for this provider in the ref_gen_ref table
     """
+    if comp_col_names is None:
+        comp_col_names = []
 
     try:
         values = [r.gen_ref_itm_nm for r in sqlc.sql("""
@@ -107,10 +109,16 @@ def apply_whitelist(sqlc, col_name, domain_name):
         logging.warn("No whitelist specified for {}".format(domain_name))
 
     def out(df):
-        return df.withColumn(
+        df = df.withColumn(
             col_name, when(udf(gen_helpers.clean_up_freetext)(upper(col(col_name))).isin(values),
                            udf(gen_helpers.clean_up_freetext)(upper(col(col_name)))).otherwise(lit(None))
         )
+        for comp_col_name in comp_col_names:
+            df = df.withColumn(
+                comp_col_name, when(udf(gen_helpers.clean_up_freetext)(upper(col(col_name))).isin(values),
+                            col(comp_col_name)).otherwise(lit(None))
+            )
+        return df
 
     return out
 

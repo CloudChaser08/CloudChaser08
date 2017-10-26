@@ -24,18 +24,8 @@ from spark.helpers.privacy.emr import                   \
 import logging
 
 LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
-
-# TODO: add support for listing local directories for testing purposes
-def get_prefix_dir_paths(root_path, recurse=2):
-    root_path = root_path.replace('s3a', 's3')
-    dirs = map(lambda x: x.split('PRE')[-1][1:], \
-            filter(lambda x: 'PRE' in x, check_output(['aws', 's3', 'ls', root_path]).split("\n")))
-    if recurse > 0:
-        return reduce(lambda x,y: x + y, \
-                map(lambda d: get_prefix_dir_paths(root_path + d, recurse - 1), dirs), [])
-    else:
-        return map(lambda d: root_path + d, dirs)
-
+S3_ENCOUNTER_REFERENCE    = 's3a://salusv/reference/nextgen/encounter_dedupe/'
+S3_DEMOGRAPHICS_REFERENCE = 's3a://salusv/reference/nextgen/demographics_orc/'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
@@ -53,6 +43,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/nextgen/emr/resources/input/'
         ) + '/'
+        demo_reference_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/nextgen/emr/resources/reference/demo/'
+        ) + '/'
+        enc_reference_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/nextgen/emr/resources/reference/enc/'
+        ) + '/'
 # NOTE: No matching data yet
 #        matching_path = file_utils.get_abs_path(
 #            script_path, '../../../test/providers/nextgen/emr/resources/matching/'
@@ -62,6 +58,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/input/{}/'.format(
             date_input.replace('-', '/')
         )
+        demo_reference_path = S3_DEMOGRAPHICS_REFERENCE
+        enc_reference_path  = S3_ENCOUNTER_REFERENCE
 # NOTE: No matching data yet
 #        matching_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/payload/{}/'.format(
 #            date_input.replace('-', '/')
@@ -71,6 +69,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = 's3a://salusv/incoming/emr/nextgen/{}/'.format(
             date_input.replace('-', '/')
         )
+        demo_reference_path = S3_DEMOGRAPHICS_REFERENCE
+        enc_reference_path  = S3_ENCOUNTER_REFERENCE
 # NOTE: No matching data yet
 #        matching_path = 's3a://salusv/matching/payload/emr/nextgen/{}/'.format(
 #            date_input.replace('-', '/')
@@ -80,6 +80,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     external_table_loader.load_icd_proc_codes(runner.sqlContext)
     external_table_loader.load_hcpcs_codes(runner.sqlContext)
     external_table_loader.load_cpt_codes(runner.sqlContext)
+    external_table_loader.load_loinc_codes(runner.sqlContext)
     external_table_loader.load_ref_gen_ref(runner.sqlContext)
     logging.debug("Loaded external tables")
 
@@ -160,27 +161,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     runner.run_spark_script('load_transactions.sql', [
         ['input_root_path', input_root_path],
-        ['input_path', input_path]
+        ['input_path', input_path],
+        ['s3_encounter_reference', enc_reference_path],
+        ['s3_demographics_reference', demo_reference_path],
     ])
     logging.debug("Loaded transactions data")
-
-    if test:
-        partitions = [input_root_path]
-    else:
-        partitions = map(lambda x: x.replace('s3://', 's3a://'), get_prefix_dir_paths(input_root_path, 2))
-
-    for part in partitions:
-        identifier = '/'.join(part.split('/')[-3:])
-        runner.run_spark_script('../../../common/add_partition.sql', [
-            ['table_name', 'all_raw_data', False],
-            ['partition_identifiers', "part_processdate='{}'".format(identifier), False],
-            ['partition_location', part]
-        ])
 
     runner.run_spark_script('deduplicate_transactions.sql')
 
     transaction_tables = [
-        'demographics_dedup', 'encounter_dedup', 'vitalsigns', 'lipidpanel',
+        'demographics_local', 'encounter_dedup', 'vitalsigns', 'lipidpanel',
         'allergy', 'substanceusage', 'diagnosis', 'order', 'laborder',
         'labresult', 'medicationorder', 'procedure', 'extendeddata'
     ]
@@ -242,6 +232,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     def update_clinical_observation_whitelists(whitelists):
         return [w for w in whitelists if w['column_name'] not in ['clin_obsn_nm', 'clin_obsn_result_desc']]
 
+    def update_lab_result_whitelists(whitelists):
+        return [w for w in whitelists if w['column_name'] not in ['lab_test_nm']]
+
     normalized_tables = [
         {
             'table_name'    : 'clinical_observation_common_model',
@@ -249,7 +242,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'data_type'     : 'clinical_observation',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_clinical_observation,
-            'filter_args'   : update_clinical_observation_whitelists
+            'filter_args'   : [update_clinical_observation_whitelists]
         },
         {
             'table_name'    : 'diagnosis_common_model',
@@ -284,7 +277,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'script_name'   : 'emr/lab_result_common_model_v4.sql',
             'data_type'     : 'lab_result',
             'date_column'   : 'part_mth',
-            'privacy_filter': priv_lab_result
+            'privacy_filter': priv_lab_result,
+            'filter_args'   : [update_lab_result_whitelists]
         },
         {
             'table_name'    : 'lab_order_common_model',

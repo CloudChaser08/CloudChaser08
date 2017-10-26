@@ -76,7 +76,8 @@ SELECT
     NULL,                                   -- proc_rndrg_prov_state_cd
     NULL,                                   -- proc_rndrg_prov_zip_cd
     proc.emrcode,                           -- proc_cd
-    'CPT',                                  -- proc_cd_qual
+    CASE WHEN proc.emrcode IS NOT NULL THEN 'CPT'
+        END,                                -- proc_cd_qual
     NULL,                                   -- proc_cd_1_modfr
     NULL,                                   -- proc_cd_2_modfr
     NULL,                                   -- proc_cd_3_modfr
@@ -96,5 +97,14 @@ SELECT
     NULL,                                   -- rec_stat_cd
     'procedure'                             -- prmy_src_tbl_nm
 FROM `procedure` proc
-    LEFT JOIN demographics_dedup dem ON proc.ReportingEnterpriseID = dem.ReportingEnterpriseID
-        AND proc.NextGenGroupID = dem.NextGenGroupID;
+    LEFT JOIN demographics_local dem ON proc.ReportingEnterpriseID = dem.ReportingEnterpriseID
+        AND proc.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(proc.encounterdate, 1, 8),
+                substring(proc.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(proc.encounterdate, 1, 8),
+                substring(proc.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL);

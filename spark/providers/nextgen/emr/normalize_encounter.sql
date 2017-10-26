@@ -12,7 +12,8 @@ SELECT
     NULL,                                   -- hvm_vdr_feed_id
     enc.reportingenterpriseid,              -- vdr_org_id
     enc.encounterid,                        -- vdr_enc_id
-    'VENDOR',                               -- vdr_enc_id_qual
+    CASE WHEN enc.encounterid IS NOT NULL THEN 'VENDOR'
+        END,                                -- vdr_enc_id_qual
     NULL,                                   -- vdr_alt_enc_id
     NULL,                                   -- vdr_alt_enc_id_qual
     concat_ws('_', 'NG',
@@ -109,8 +110,14 @@ SELECT
     NULL,                                   -- rec_stat_cd
     'encounter'                             -- prmy_src_tbl_nm
 FROM encounter_dedup enc
-    LEFT JOIN demographics_dedup dem ON enc.ReportingEnterpriseID = dem.ReportingEnterpriseID
-        AND enc.NextGenGroupID = dem.NextGenGroupID;
-
-    
-
+    LEFT JOIN demographics_local dem ON enc.ReportingEnterpriseID = dem.ReportingEnterpriseID
+        AND enc.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(enc.encounterdatetime, 1, 8),
+                substring(enc.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(enc.encounterdatetime, 1, 8),
+                substring(enc.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL);

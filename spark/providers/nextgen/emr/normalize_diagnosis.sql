@@ -96,7 +96,9 @@ SELECT
     NULL,                                   -- diag_resltn_nm
     NULL,                                   -- diag_resltn_desc
     clean_up_numeric_code(diag.statusid),   -- diag_stat_cd
-    NULL,                                   -- diag_stat_cd_qual
+    CASE WHEN clean_up_numeric_code(diag.statusid) IS NOT NULL
+            THEN 'VENDOR'
+        END,                                -- diag_stat_cd_qual
     ref1.gen_ref_itm_nm,                    -- diag_stat_nm
     clean_up_freetext(diag.statusidtext, false),
                                             -- diag_stat_desc
@@ -109,8 +111,17 @@ SELECT
     NULL,                                   -- rec_stat_cd
     'diagnosis'                             -- prmy_src_tbl_nm
 FROM diagnosis diag
-    LEFT JOIN demographics_dedup dem ON diag.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON diag.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND diag.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(diag.encounterdate, 1, 8),
+                substring(diag.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(diag.encounterdate, 1, 8),
+                substring(diag.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref1 ON ref1.hvm_vdr_feed_id = 35
         AND ref1.gen_ref_domn_nm = 'diagnosis.statusid'
         AND diag.statusid = ref1.gen_ref_cd

@@ -86,17 +86,19 @@ SELECT
     NULL,                                   -- clin_obsn_data_ctgy_nm
     NULL,                                   -- clin_obsn_data_ctgy_desc
     ref2.gen_ref_cd,                        -- clin_obsn_typ_cd
-    'VENDOR',                               -- clin_obsn_typ_cd_qual
+    CASE WHEN ref2.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END,                                -- clin_obsn_typ_cd_qual
     ref3.gen_ref_itm_nm,                    -- clin_obsn_typ_nm
     NULL,                                   -- clin_obsn_typ_desc
     ref1.gen_ref_cd,                        -- clin_obsn_substc_cd
-    NULL,                                   -- clin_obsn_substc_cd_qual
+    CASE WHEN ref1.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END,                                -- clin_obsn_substc_cd_qual
     ref1.gen_ref_itm_nm,                    -- clin_obsn_substc_nm
     NULL,                                   -- clin_obsn_substc_desc
     NULL,                                   -- clin_obsn_cd
     NULL,                                   -- clin_obsn_cd_qual
     CASE WHEN CAST(sub.emrcode AS DOUBLE) IS NOT NULL THEN sub.emrcode
-        ELSE ref4.gen_ref_itm_nm END        -- clin_obsn_nm
+        ELSE ref4.gen_ref_itm_nm END,       -- clin_obsn_nm
     NULL,                                   -- clin_obsn_desc
     NULL,                                   -- clin_obsn_diag_cd
     NULL,                                   -- clin_obsn_diag_cd_qual
@@ -120,24 +122,32 @@ SELECT
         substring(sub.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM substanceusage sub
-    LEFT JOIN demographics_dedup dem ON sub.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON sub.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND sub.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(sub.encounterdate, 1, 8),
+                substring(sub.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(sub.encounterdate, 1, 8),
+                substring(sub.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref1 ON ref1.hvm_vdr_feed_id = 35
         AND ref1.gen_ref_domn_nm = 'substanceusage.substancecode'
         AND sub.substancecode = ref1.gen_ref_cd
         AND ref1.whtlst_flg = 'Y'
     LEFT JOIN ref_gen_ref ref2 ON ref2.hvm_vdr_feed_id = 35
         AND ref2.gen_ref_domn_nm = 'extendeddata.clinicalrecordtypecode'
-        AND clean_up_freetext(ext.clinicalrecordtypecode, false) = ref2.gen_ref_cd
+        AND clean_up_freetext(sub.clinicalrecordtypecode, false) = ref2.gen_ref_cd
         AND ref2.whtlst_flg = 'Y'
     LEFT JOIN ref_gen_ref ref3 ON ref3.hvm_vdr_feed_id = 35
         AND ref3.gen_ref_domn_nm = 'extendeddata.clinicalrecorddescription'
-        AND clean_up_freetext(ext.clinicalrecorddescription, false) = ref3.gen_ref_itm_nm
+        AND clean_up_freetext(sub.clinicalrecorddescription, false) = ref3.gen_ref_itm_nm
         AND ref3.whtlst_flg = 'Y'
     LEFT JOIN ref_gen_ref ref4 ON ref4.gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
         AND TRIM(UPPER(sub.emrcode)) = ref4.gen_ref_itm_nm
         AND ref4.whtlst_flg = 'Y';
-
 
 
 -- ALLERGY DATA IS NOT YET CERTIFIED
@@ -273,7 +283,6 @@ FROM substanceusage sub
 --        AND ref2.gen_ref_domn_nm = 'allergy.allergentype'
 --        AND agy.allergentype = ref2.gen_ref_cd
 
-SET spark.sql.shuffle.partitions=2500; 
 INSERT INTO clinical_observation_common_model
 SELECT
     NULL,                                   -- row_id
@@ -358,11 +367,13 @@ SELECT
     NULL,                                   -- clin_obsn_data_src_nm
     NULL,                                   -- clin_obsn_data_src_desc
     ref2.gen_ref_cd,                        -- clin_obsn_data_ctgy_cd
-    NULL,                                   -- clin_obsn_data_ctgy_cd_qual
+    CASE WHEN ref2.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END,                                -- clin_obsn_data_ctgy_cd_qual
     ref2.gen_ref_itm_nm,                    -- clin_obsn_data_ctgy_nm
     NULL,                                   -- clin_obsn_data_ctgy_desc
     ref3.gen_ref_cd,                        -- clin_obsn_typ_cd
-    'VENDOR',                               -- clin_obsn_typ_cd_qual
+    CASE WHEN ref3.gen_ref_cd IS NOT NULL THEN 'VENDOR'
+        END,                                -- clin_obsn_typ_cd_qual
     ref4.gen_ref_itm_nm,                    -- clin_obsn_typ_nm
     NULL,                                   -- clin_obsn_typ_desc
     NULL,                                   -- clin_obsn_substc_cd
@@ -372,7 +383,7 @@ SELECT
     NULL,                                   -- clin_obsn_cd
     NULL,                                   -- clin_obsn_cd_qual
     CASE WHEN CAST(ext.emrcode AS DOUBLE) IS NOT NULL THEN ext.emrcode
-        ELSE ref5.gen_ref_itm_nm END        -- clin_obsn_nm
+        ELSE ref5.gen_ref_itm_nm END,       -- clin_obsn_nm
     NULL,                                   -- clin_obsn_desc
     NULL,                                   -- clin_obsn_diag_cd
     NULL,                                   -- clin_obsn_diag_cd_qual
@@ -383,7 +394,7 @@ SELECT
     NULL,                                   -- clin_obsn_result_cd_qual
     NULL,                                   -- clin_obsn_result_nm
     CASE WHEN CAST(ext.result AS DOUBLE) IS NOT NULL THEN ext.result
-        ELSE ref6.gen_ref_itm_nm END),      -- clin_obsn_result_desc
+        ELSE ref6.gen_ref_itm_nm END,       -- clin_obsn_result_desc
     NULL,                                   -- clin_obsn_msrmt
     NULL,                                   -- clin_obsn_uom
     NULL,                                   -- clin_obsn_qual
@@ -397,8 +408,17 @@ SELECT
         substring(ext.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM extendeddata ext
-    LEFT JOIN demographics_dedup dem ON ext.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON ext.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND ext.NextGenGroupID = dem.NextGenGroupID
+        AND COALESCE(
+                substring(ext.encounterdate, 1, 8),
+                substring(ext.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(ext.encounterdate, 1, 8),
+                substring(ext.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref2 ON ref2.hvm_vdr_feed_id = 35
         AND ref2.gen_ref_domn_nm = 'extendeddata.datacategory'
         AND ext.datacategory = ref2.gen_ref_cd
@@ -417,4 +437,3 @@ FROM extendeddata ext
     LEFT JOIN ref_gen_ref ref6 ON ref6.gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_result_desc'
         AND TRIM(UPPER(ext.result)) = ref6.gen_ref_itm_nm
         AND ref6.whtlst_flg = 'Y';
-SET spark.sql.shuffle.partitions={partitions}; 

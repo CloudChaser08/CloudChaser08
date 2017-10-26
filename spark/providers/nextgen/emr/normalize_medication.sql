@@ -107,8 +107,8 @@ SELECT
     extract_date(
         substring(med.datestopped, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         ),                                  -- medctn_end_dt
-    CASE WHEN icd_diag_codes.code IS NOT NULL THEN icd_diag_codes.code
-        ELSE NULL END,                      -- medctn_diag_cd
+    clean_up_freetext(trim(split(med.diagnosis_code_id, ',')[explode_idx]), true),
+                                            -- medctn_diag_cd
     NULL,                                   -- medctn_diag_cd_qual
     med.emrcode,                            -- medctn_ndc
     NULL,                                   -- medctn_lblr_cd
@@ -160,15 +160,178 @@ SELECT
         substring(med.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   -- part_mth
 FROM medicationorder med
-    LEFT JOIN demographics_dedup dem ON med.ReportingEnterpriseID = dem.ReportingEnterpriseID
+    LEFT JOIN demographics_local dem ON med.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND med.NextGenGroupID = dem.NextGenGroupID
-    CROSS JOIN medication_exploder n
-    LEFT JOIN icd_diag_codes ON clean_up_freetext(trim(split(med.diagnosis_code_id, ',')[n.n]), true) = icd_diag_codes.code
-WHERE (split(med.diagnosis_code_id, ',')[n.n] IS NOT NULL
-        AND trim(split(med.diagnosis_code_id, ',')[n.n]) != '')
-    OR (n.n = 0 AND trim(clean_up_freetext(med.diagnosis_code_id, true)) IS NULL)
+        AND COALESCE(
+                substring(med.encounterdate, 1, 8),
+                substring(med.referencedatetime, 1, 8)
+            ) >= substring(dem.recorddate, 1, 8)
+        AND (COALESCE(
+                substring(med.encounterdate, 1, 8),
+                substring(med.referencedatetime, 1, 8)
+            ) <= substring(dem.nextrecorddate, 1, 8)
+            OR dem.nextrecorddate IS NULL)
+    CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4)) as explode_idx) x
+WHERE ((split(med.diagnosis_code_id, ',')[explode_idx] IS NOT NULL
+            AND trim(split(med.diagnosis_code_id, ',')[explode_idx]) != '')
+        OR (explode_idx = 0 AND regexp_extract(med.diagnosis_code_id, '([^,\\s])') IS NULL))
 DISTRIBUTE BY hvid;
 
+DROP TABLE IF EXISTS medication_common_model_bak;
+ALTER TABLE medication_common_model RENAME TO medication_common_model_bak;
+CREATE TABLE medication_common_model AS
+SELECT * FROM medication_common_model_bak
+WHERE medctn_diag_cd IS NULL;
+
+-- Can't join on an exploded column, so we have to do this explicit insert
+-- in order to whitelist the diagnosis code column
+INSERT INTO medication_common_model
+SELECT
+    row_id,
+    hv_medctn_id,
+    crt_dt,
+    mdl_vrsn_num,
+    data_set_nm,
+    src_vrsn_id,
+    hvm_vdr_id,
+    hvm_vdr_feed_id,
+    vdr_org_id,
+    vdr_medctn_ord_id,
+    vdr_medctn_ord_id_qual,
+    vdr_medctn_admin_id,
+    vdr_medctn_admin_id_qual,
+    hvid,
+    ptnt_birth_yr,
+    ptnt_age_num,
+    ptnt_lvg_flg,
+    ptnt_dth_dt,
+    ptnt_gender_cd,
+    ptnt_state_cd,
+    ptnt_zip3_cd,
+    hv_enc_id,
+    enc_dt,
+    medctn_ord_dt,
+    medctn_admin_dt,
+    medctn_rndrg_fclty_npi,
+    medctn_rndrg_fclty_vdr_id,
+    medctn_rndrg_fclty_vdr_id_qual,
+    medctn_rndrg_fclty_alt_id,
+    medctn_rndrg_fclty_alt_id_qual,
+    medctn_rndrg_fclty_tax_id,
+    medctn_rndrg_fclty_dea_id,
+    medctn_rndrg_fclty_state_lic_id,
+    medctn_rndrg_fclty_comrcl_id,
+    medctn_rndrg_fclty_nucc_taxnmy_cd,
+    medctn_rndrg_fclty_alt_taxnmy_id,
+    medctn_rndrg_fclty_alt_taxnmy_id_qual,
+    medctn_rndrg_fclty_mdcr_speclty_cd,
+    medctn_rndrg_fclty_alt_speclty_id,
+    medctn_rndrg_fclty_alt_speclty_id_qual,
+    medctn_rndrg_fclty_nm,
+    medctn_rndrg_fclty_addr_1_txt,
+    medctn_rndrg_fclty_addr_2_txt,
+    medctn_rndrg_fclty_state_cd,
+    medctn_rndrg_fclty_zip_cd,
+    medctn_ordg_prov_npi,
+    medctn_ordg_prov_vdr_id,
+    medctn_ordg_prov_vdr_id_qual,
+    medctn_ordg_prov_alt_id,
+    medctn_ordg_prov_alt_id_qual,
+    medctn_ordg_prov_tax_id,
+    medctn_ordg_prov_dea_id,
+    medctn_ordg_prov_state_lic_id,
+    medctn_ordg_prov_comrcl_id,
+    medctn_ordg_prov_upin,
+    medctn_ordg_prov_ssn,
+    medctn_ordg_prov_nucc_taxnmy_cd,
+    medctn_ordg_prov_alt_taxnmy_id,
+    medctn_ordg_prov_alt_taxnmy_id_qual,
+    medctn_ordg_prov_mdcr_speclty_cd,
+    medctn_ordg_prov_alt_speclty_id,
+    medctn_ordg_prov_alt_speclty_id_qual,
+    medctn_ordg_prov_frst_nm,
+    medctn_ordg_prov_last_nm,
+    medctn_ordg_prov_addr_1_txt,
+    medctn_ordg_prov_addr_2_txt,
+    medctn_ordg_prov_state_cd,
+    medctn_ordg_prov_zip_cd,
+    medctn_adminrg_fclty_npi,
+    medctn_adminrg_fclty_vdr_id,
+    medctn_adminrg_fclty_vdr_id_qual,
+    medctn_adminrg_fclty_alt_id,
+    medctn_adminrg_fclty_alt_id_qual,
+    medctn_adminrg_fclty_tax_id,
+    medctn_adminrg_fclty_dea_id,
+    medctn_adminrg_fclty_state_lic_id,
+    medctn_adminrg_fclty_comrcl_id,
+    medctn_adminrg_fclty_nucc_taxnmy_cd,
+    medctn_adminrg_fclty_alt_taxnmy_id,
+    medctn_adminrg_fclty_alt_taxnmy_id_qual,
+    medctn_adminrg_fclty_mdcr_speclty_cd,
+    medctn_adminrg_fclty_alt_speclty_id,
+    medctn_adminrg_fclty_alt_speclty_id_qual,
+    medctn_adminrg_fclty_nm,
+    medctn_adminrg_fclty_addr_1_txt,
+    medctn_adminrg_fclty_addr_2_txt,
+    medctn_adminrg_fclty_state_cd,
+    medctn_adminrg_fclty_zip_cd,
+    rx_num,
+    medctn_start_dt,
+    medctn_end_dt,
+    icd_diag_codes.code,
+    medctn_diag_cd_qual,
+    medctn_ndc,
+    medctn_lblr_cd,
+    medctn_drug_and_strth_cd,
+    medctn_pkg_cd,
+    medctn_hicl_thrptc_cls_cd,
+    medctn_hicl_cd,
+    medctn_gcn_cd,
+    medctn_rxnorm_cd,
+    medctn_snomed_cd,
+    medctn_genc_ok_flg,
+    medctn_brd_nm,
+    medctn_genc_nm,
+    medctn_rx_flg,
+    medctn_rx_qty,
+    medctn_dly_qty,
+    medctn_dispd_qty,
+    medctn_days_supply_qty,
+    medctn_admin_unt_qty,
+    medctn_admin_freq_qty,
+    medctn_admin_sched_cd,
+    medctn_admin_sched_qty,
+    medctn_admin_sig_cd,
+    medctn_admin_sig_txt,
+    medctn_admin_form_nm,
+    medctn_specl_pkgg_cd,
+    medctn_strth_txt,
+    medctn_strth_txt_qual,
+    medctn_dose_txt,
+    medctn_dose_txt_qual,
+    medctn_admin_rte_txt,
+    medctn_orig_rfll_qty,
+    medctn_fll_num,
+    medctn_remng_rfll_qty,
+    medctn_last_rfll_dt,
+    medctn_smpl_flg,
+    medctn_elect_rx_flg,
+    medctn_verfd_flg,
+    medctn_prod_svc_id,
+    medctn_prod_svc_id_qual,
+    data_captr_dt,
+    rec_stat_cd,
+    prmy_src_tbl_nm,
+    part_mth
+FROM medication_common_model_bak
+LEFT JOIN icd_diag_codes
+    ON medication_common_model_bak.medctn_diag_cd = icd_diag_codes.code
+WHERE medication_common_model_bak.medctn_diag_cd IS NOT NULL;
+
+-- Due to whitelisting, we may end up with several rows with blank diagnosis
+-- for the same medication order. Distinct them to reduce the number of
+-- duplicates
+DROP TABLE IF EXISTS medication_common_model_bak;
 ALTER TABLE medication_common_model RENAME TO medication_common_model_bak;
 CREATE TABLE medication_common_model AS SELECT DISTINCT * FROM medication_common_model_bak;
 DROP TABLE medication_common_model_bak;

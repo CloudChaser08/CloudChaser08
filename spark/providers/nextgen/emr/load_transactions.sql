@@ -44,16 +44,11 @@ CREATE EXTERNAL TABLE new_raw_data (
         )
     STORED AS TEXTFILE
     LOCATION {input_path}
-    ;
+;
 
+set hive.exec.dynamic.partition.mode=nonstrict;
 DROP TABLE IF EXISTS new_raw_data_local;
-CREATE TABLE new_raw_data_local
-STORED AS PARQUET
-AS
-SELECT *, input_file_name() as input_file_name FROM new_raw_data;
-
-DROP TABLE IF EXISTS all_raw_data;
-CREATE EXTERNAL TABLE all_raw_data (
+CREATE TABLE new_raw_data_local (
         column1                    string,
         column2                    string,
         column3                    string,
@@ -90,19 +85,59 @@ CREATE EXTERNAL TABLE all_raw_data (
         column34                   string,
         column35                   string,
         column36                   string,
-        column37                   string
+        column37                   string,
+        input_file_name            string
     )
-    PARTITIONED BY (part_processdate string)
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    WITH SERDEPROPERTIES (
-        'separatorChar' = '|'
-        )
-    STORED AS TEXTFILE
-    LOCATION {input_root_path}
-    ;
+    PARTITIONED BY (tbl_type string)
+    STORED AS ORC;
 
-DROP VIEW IF EXISTS demographics;
-CREATE VIEW demographics AS
+INSERT INTO new_raw_data_local
+SELECT *, input_file_name(), column4
+FROM new_raw_data
+WHERE column1 = '5'
+DISTRIBUTE BY rand();
+
+DROP VIEW IF EXISTS new_encounter;
+CREATE VIEW new_encounter AS
+SELECT
+    column1  as preambleformatcode,
+    column2  as nextgengroupid,
+    column3  as referencedatetime,
+    column4  as postamblecategoryformat,
+    column5  as encounterid,
+    column6  as encounterdatetime,
+    column7  as encountertype,
+    column8  as encounterdescription,
+    column9  as hcpzipcode,
+    column10 as hcpprimarytaxonomy,
+    regexp_extract(input_file_name, 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
+    regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
+    regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
+FROM new_raw_data_local
+WHERE tbl_type = '0007.001';
+
+DROP TABLE IF EXISTS old_encounter;
+CREATE EXTERNAL TABLE old_encounter (
+        preambleformatcode         string,
+        nextgengroupid             string,
+        referencedatetime          string,
+        postamblecategoryformat    string,
+        encounterid                string,
+        encounterdatetime          string,
+        encountertype              string,
+        encounterdescription       string,
+        hcpzipcode                 string,
+        hcpprimarytaxonomy         string,
+        reportingenterpriseid      string,
+        recorddate                 string,
+        dataset                    string,
+        nextrecorddate             string
+    )
+STORED AS ORC
+LOCATION {s3_encounter_reference};
+
+DROP VIEW IF EXISTS new_demographics;
+CREATE VIEW new_demographics AS
 SELECT
     column1  as preambleformatcode,
     column2  as nextgengroupid,
@@ -116,30 +151,33 @@ SELECT
     column10 as zip3,
     column11 as coveredbymedicarepartbflag,
     column12 as patientpseudonym,
-    regexp_extract(input_file_name(), 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
-    regexp_extract(input_file_name(), 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
-    regexp_extract(input_file_name(), '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
-FROM all_raw_data
-WHERE column4 = '0005.001';
+    regexp_extract(input_file_name, 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
+    regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
+    regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
+FROM new_raw_data_local
+WHERE tbl_type = '0005.001';
 
-DROP VIEW IF EXISTS encounter;
-CREATE VIEW encounter AS
-SELECT
-    column1  as preambleformatcode,
-    column2  as nextgengroupid,
-    column3  as referencedatetime,
-    column4  as postamblecategoryformat,
-    column5  as encounterid,
-    column6  as encounterdatetime,
-    column7  as encountertype,
-    column8  as encounterdescription,
-    column9  as hcpzipcode,
-    column10 as hcpprimarytaxonomy,
-    regexp_extract(input_file_name(), 'NG_LSSA_([^_]*)_[^\.]*.txt') as reportingenterpriseid,
-    regexp_extract(input_file_name(), 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
-    regexp_extract(input_file_name(), '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
-FROM all_raw_data
-WHERE column4 = '0007.001';
+DROP TABLE IF EXISTS old_demographics;
+CREATE EXTERNAL TABLE old_demographics (
+        preambleformatcode         string,
+        nextgengroupid             string,
+        referencedatetime          string,
+        postamblecategoryformat    string,
+        datacapturedate            string,
+        birthyear                  string,
+        birthmonth                 string,
+        gender                     string,
+        race                       string,
+        zip3                       string,
+        coveredbymedicarepartbflag string,
+        patientpseudonym           string,
+        reportingenterpriseid      string,
+        recorddate                 string,
+        dataset                    string,
+        nextrecorddate             string
+    )
+STORED AS ORC
+LOCATION {s3_demographics_reference};
 
 DROP VIEW IF EXISTS vitalsigns;
 CREATE VIEW vitalsigns AS
@@ -174,7 +212,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0010.001';
+WHERE tbl_type = '0010.001';
 
 DROP VIEW IF EXISTS lipidpanel;
 CREATE VIEW lipidpanel AS
@@ -194,7 +232,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0020.001';
+WHERE tbl_type = '0020.001';
 
 DROP VIEW IF EXISTS allergy;
 CREATE VIEW allergy AS
@@ -217,7 +255,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0030.001';
+WHERE tbl_type = '0030.001';
 
 DROP VIEW IF EXISTS substanceusage;
 CREATE VIEW substanceusage AS
@@ -237,7 +275,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0040.001';
+WHERE tbl_type = '0040.001';
 
 DROP VIEW IF EXISTS diagnosis;
 CREATE VIEW diagnosis AS
@@ -260,7 +298,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0050.001';
+WHERE tbl_type = '0050.001';
 
 DROP VIEW IF EXISTS `order`;
 CREATE VIEW `order` AS
@@ -306,7 +344,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0060.001';
+WHERE tbl_type = '0060.001';
 
 DROP VIEW IF EXISTS laborder;
 CREATE VIEW laborder AS
@@ -332,7 +370,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0070.001';
+WHERE tbl_type = '0070.001';
 
 DROP VIEW IF EXISTS labresult;
 CREATE VIEW labresult AS
@@ -357,7 +395,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0080.001';
+WHERE tbl_type = '0080.001';
 
 DROP VIEW IF EXISTS medicationorder;
 CREATE VIEW medicationorder AS
@@ -389,7 +427,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0090.001';
+WHERE tbl_type = '0090.001';
 
 DROP VIEW IF EXISTS `procedure`;
 CREATE VIEW `procedure` AS
@@ -406,7 +444,7 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0100.001';
+WHERE tbl_type = '0100.001';
 
 DROP VIEW IF EXISTS extendeddata;
 CREATE VIEW extendeddata AS
@@ -428,4 +466,4 @@ SELECT
     regexp_extract(input_file_name, 'NG_LSSA_[^_]*_([^\.]*).txt') as recorddate,
     regexp_extract(input_file_name, '(NG_LSSA_[^_]*_[^\.]*.txt)') as dataset
 FROM new_raw_data_local
-WHERE column4 = '0110.001';
+WHERE tbl_type = '0110.001';

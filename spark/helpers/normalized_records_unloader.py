@@ -115,7 +115,12 @@ def partition_and_rename(
             ['distribution_key', distribution_key, False]
         ])
 
-    part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
+    # This will throw an exception if the partition path does not exist which
+    # happens when a partition has no data in it and was not created
+    try:
+        part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
+    except:
+        part_files = []
 
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
         mk_move_file(file_date, test_dir is not None)

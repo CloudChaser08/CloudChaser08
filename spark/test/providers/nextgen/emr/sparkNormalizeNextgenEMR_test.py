@@ -109,8 +109,8 @@ def test_provider_order_actcode():
     # CPT codes
     assert len(filter(lambda r: r.prov_ord_cd == '36415', results['provider_order'])) == 1
 
-    # ICD codes
-    assert len(filter(lambda r: r.prov_ord_cd == 'E782', results['provider_order'])) == 1
+    # ICD codes (won't show up because punctuation will cause whitelisting to fail)
+    assert len(filter(lambda r: r.prov_ord_cd == 'E782', results['provider_order'])) == 0
     assert len(filter(lambda r: r.prov_ord_cd == 'V200XXA', results['provider_order'])) == 0
 
     # Random data
