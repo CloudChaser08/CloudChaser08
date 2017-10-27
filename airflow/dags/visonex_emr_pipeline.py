@@ -99,7 +99,7 @@ def generate_file_validation_task(
                 'expected_file_name_func' : insert_file_date_function(
                     path_template
                 ),
-                'file_name_pattern_func'  : lambda ds, kwargs: path_template.format('\\d{8}'),
+                'file_name_pattern_func'  : lambda ds, kwargs: path_template.format('\\d{4}', '\\d{2}', '\\d{2}'),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'               : 'healthverity',
@@ -196,6 +196,7 @@ clean_up_workspace = SubDagOperator(
         }
     ),
     task_id='clean_up_workspace',
+    trigger_rule='all_done',
     dag=mdag
 )
 
@@ -225,7 +226,7 @@ def get_deid_file_names(ds, kwargs):
     return [insert_file_date(DEID_FILE_NAME_TEMPLATE, ds, kwargs)]
 
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    base = ['--date', insert_file_date('{}-{}-{}', ds, k)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -271,16 +272,11 @@ TABLES = ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment'
         'zipgeo']
 
 def get_visonex_sql_commands(ds, kwargs):
-    drop_template = "ALTER TABLE visonex.{} DROP PARTITION (part_best_date > '')"
-    # This string goes through 2 call of .format. The first one will insert the
-    # dates, the second inserts the table name. That is why table is escaped
     add_template = """
-        ALTER TABLE visonex.{{table}} ADD PARTITION (part_best_date='{0}-{1}')
-        LOCATION 's3a://salusv/warehouse/parquet/custom/2017-09-27/visonex/{{table}}/part_best_date={0}-{1}/'
+        MSCK REPAIR TABLE visonex.{table}
     """
 
-    return [drop_template.format(table) for table in TABLES] + \
-            [insert_file_date(add_template, ds, kwargs).format(table=table) for table in TABLES]
+    return [add_template.format(table) for table in TABLES]
 
 if HVDAG.HVDAG.airflow_env != 'test':
 
