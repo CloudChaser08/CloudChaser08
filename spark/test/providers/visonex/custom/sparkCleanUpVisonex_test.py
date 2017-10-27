@@ -18,6 +18,7 @@ def cleanup(spark):
                 except:
                     logging.warn("Error dropping '{}'".format(table))
 
+
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
