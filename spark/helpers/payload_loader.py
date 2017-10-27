@@ -17,7 +17,7 @@ DEFAULT_ATTRS = [
 ]
 
 
-def load(runner, location, extra_cols=None):
+def load(runner, location, table_name='matching_payload', extra_cols=None):
     """
     Load matching data for a provider
     """
@@ -52,4 +52,6 @@ def load(runner, location, extra_cols=None):
     )
 
     runner.sqlContext.sql('DROP TABLE IF EXISTS matching_payload')
-    final_payload.registerTempTable("matching_payload")
+    final_payload.registerTempTable(table_name)
+
+
