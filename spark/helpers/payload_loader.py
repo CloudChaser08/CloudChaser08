@@ -17,7 +17,7 @@ DEFAULT_ATTRS = [
 ]
 
 
-def load(runner, location, table_name='matching_payload', extra_cols=None):
+def load(runner, location, extra_cols=None, table_name='matching_payload'):
     """
     Load matching data for a provider
     """
