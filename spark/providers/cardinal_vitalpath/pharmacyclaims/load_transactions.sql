@@ -12,8 +12,9 @@ CREATE EXTERNAL TABLE cardinal_vitalpath_med (
     formname                    string,
     hvJoinKey                   string
 )
-ROW FORMATE SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' 
+ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe' 
 STORED AS TEXTFILE
+LOCATION {med_input_path}
 ;
 
 DROP TABLE IF EXISTS cardinal_vitalpath_patient;
@@ -26,7 +27,8 @@ CREATE EXTERNAL TABLE cardinal_vitalpath_patient (
 	gender						string,
 	hvJoinKey					string
 )
-ROW FORMATE SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' 
+ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe' 
 STORED AS TEXTFILE
+LOCATION {patient_input_path}
 ;
 
