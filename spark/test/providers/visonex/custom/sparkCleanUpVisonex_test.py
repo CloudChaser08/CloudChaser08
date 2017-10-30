@@ -1,5 +1,4 @@
 import pytest
-import logging
 
 import spark.providers.visonex.sparkCleanUpVisonex as visonex
 
@@ -8,15 +7,9 @@ results = []
 def cleanup(spark):
     for table in visonex.TABLES:
         try:
-            spark['sqlContext'].sql('DROP TABLE IF EXISTS {}'.format(table))
+            spark['sqlContext'].sql('DROP VIEW IF EXISTS {}'.format(table))
         except:
-            try:
-                spark['sqlContext'].sql('DROP VIEW IF EXISTS {}'.format(table))
-            except:
-                try:
-                    spark['sqlContext'].dropTempView(table)
-                except:
-                    logging.warn("Error dropping '{}'".format(table))
+            spark['sqlContext'].sql('DROP TABLE IF EXISTS {}'.format(table))
 
 
 @pytest.mark.usefixtures("spark")

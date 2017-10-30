@@ -15,6 +15,8 @@ def cleanup(spark):
     for t in tables:
         spark['sqlContext'].dropTempTable('{}_common_model'.format(t))
 
+    spark['sqlContext'].sql('DROP VIEW IF EXISTS labresult')
+
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
