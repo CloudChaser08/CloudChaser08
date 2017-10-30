@@ -4,7 +4,7 @@ CREATE TABLE matching_payload_broken (
 claimId string,
 hvid string,
 parentid string,
-threeDigitZip char(3)
+threeDigitZip string
 )
 ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
 WITH SERDEPROPERTIES (

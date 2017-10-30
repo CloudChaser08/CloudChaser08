@@ -5,6 +5,8 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.file_utils as file_utils
+import spark.helpers.postprocessor as postprocessor
+from spark.helpers.privacy import medicalclaims as priv_medicalclaims
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
@@ -71,12 +73,14 @@ def run(spark, runner, date_input, test=False):
     runner.run_spark_script('normalize_institutional_claims.sql')
 
     # Privacy filtering
-    runner.run_spark_script('../../../common/medicalclaims_post_normalization_cleanup.sql', [
-        ['filename', setid],
-        ['today', TODAY],
-        ['feedname', '10'],
-        ['vendor', '11']
-    ])
+    postprocessor.compose(
+        postprocessor.add_universal_columns(
+            feed_id='10', vendor_id='11', filename=setid
+        ),
+        priv_medicalclaims.filter
+    )(
+        runner.sqlContext.sql('select * from medicalclaims_common_model')
+    ).createTempView('medicalclaims_common_model')
 
     if not test:
         normalized_records_unloader.partition_and_rename(
