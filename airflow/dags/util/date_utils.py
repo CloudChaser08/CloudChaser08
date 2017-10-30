@@ -68,12 +68,12 @@ def generate_insert_date_into_template_function(template,  # string to pass date
             output_month = date.month if month is None else month    
             output_day = date.day if day is None else day
 
-        elif str(date) in nodash_list:
+        elif date in nodash_list:
             output_year = int(date[0:4]) if year is None else year  
             output_month = int(date[4:6]) if month is None else month    
             output_day = int(date[6:8]) if day is None else day
 
-        elif str(date) in dash_list:
+        elif date in dash_list:
             output_year = int(date[0:4]) if year is None else year  
             output_month = int(date[5:7]) if month is None else month    
             output_day = int(date[8:10]) if day is None else day
