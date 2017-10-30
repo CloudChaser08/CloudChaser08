@@ -83,7 +83,7 @@ def generate_insert_date_into_template_function(template,  # string to pass date
 
         if not is_date(output_year, output_month, output_day):
             raise ValueError('Please enter a valid date. You entered: \
-year: {}, month: {}, day: {}'.format(year,month,day)) 
+                year: {}, month: {}, day: {}'.format(year,month,day)) 
 
         (output_year, output_month, output_day) = offset_date(output_year,\
             output_month, output_day, year_offset, month_offset, day_offset)
