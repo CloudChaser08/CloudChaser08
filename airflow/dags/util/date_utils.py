@@ -1,4 +1,4 @@
-import datetime 
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pytest
 
@@ -7,7 +7,7 @@ def is_date(year, month, day):
     Uses a datetime object to validate a user-inputted date. Returns a boolean value.
     """
     try:
-        datetime.datetime(year, month, day)
+        datetime(year, month, day)
         return True
     except (ValueError, TypeError, SyntaxError):
         return False
@@ -34,7 +34,7 @@ def offset_date(year,
     if type(day_offset) in (str,float):
         raise TypeError('day_offset must be an integer')
 
-    date = (datetime.datetime(year,month,day) + 
+    date = (datetime(year,month,day) + 
                 relativedelta(years = year_offset, 
                     months = month_offset, 
                     days = day_offset)).strftime('%Y%m%d')
@@ -42,25 +42,21 @@ def offset_date(year,
     return (date[0:4], date[4:6], date[6:8])
     
 def generate_insert_date_into_template_function(template,  # string to pass date into
-                                year = None,  # user inputted year
-                                month = None,  # user inputted month
-                                day = None,  # user inputted day
+                                fixed_year = None,  # user inputted year
+                                fixed_month = None,  # user inputted month
+                                fixed_day = None,  # user inputted day
                                 year_offset = 0,  # integer to add to year, defaults to 0
                                 month_offset = 0,  # integer to add to month, defaults to 0
                                 day_offset = 0,  # integer to add to day, defaults to 0
                                 ):
     """
-    Inserts the year, month, day into a string template. Values 
-    of year, month, and day can be specified by the user individually. 
-    These default to those given by the airflow execution_date. The parameters
-    year_offset, month_offset, and day_offset are integers to add to the
-    respective values.   
+    Inserts the year, month, day into a string template. The date defaults to the execution_date, but fixed values of year, month, and day can be specified individually by the user withthe variables fixed_year, fixed_month, fixed_day. The parameters year_offset, month_offset, and day_offset are integers to add to the respective values.   
     """
     def out(ds, kwargs):
 
-        output_year = kwargs['execution_date'].year if year is None else year  
-        output_month = kwargs['execution_date'].month if month is None else month    
-        output_day = kwargs['execution_date'].day if day is None else day
+        output_year = kwargs['execution_date'].year if fixed_year is None else fixed_year  
+        output_month = kwargs['execution_date'].month if fixed_month is None else fixed_month    
+        output_day = kwargs['execution_date'].day if fixed_day is None else fixed_day
         
         if not is_date(output_year, output_month, output_day):
             raise ValueError('Please enter a valid date. You entered: \
@@ -79,9 +75,9 @@ def generate_insert_date_into_template_function(template,  # string to pass date
 
 def insert_date_into_template(template, 
                         kwargs, 
-                        year = None, 
-                        month = None,  
-                        day = None, 
+                        fixed_year = None, 
+                        fixed_month = None,  
+                        fixed_day = None, 
                         year_offset = 0, 
                         month_offset = 0, 
                         day_offset = 0, 
@@ -89,5 +85,5 @@ def insert_date_into_template(template,
     """
     Wrapper for generate_insert_date_into_template_function
     """
-    return generate_insert_date_into_template_function(template, year, month, \
-        day, year_offset, month_offset, day_offset)(None, kwargs)
+    return generate_insert_date_into_template_function(template, fixed_year, fixed_month, \
+        fixed_day, year_offset, month_offset, day_offset)(None, kwargs)

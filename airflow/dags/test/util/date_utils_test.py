@@ -1,10 +1,10 @@
-import datetime 
+from datetime import datetime 
 from dateutil.relativedelta import relativedelta
 import pytest
 from util.date_utils import *
 
 
-kwargs={'execution_date': datetime.datetime(2017, 10, 13), \
+kwargs={'execution_date': datetime(2017, 10, 13), \
         'ds_nodash':'20171025'}
 
 TEMPLATE = '{}-{}-{}' #example template to input date
@@ -34,7 +34,7 @@ def test_offset_date_with_valid_and_invalid_input():
     test offset_date raises appropriate Exceptions/Errors with 
     invalid input and correct value with valid input 
     """
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(Exception) as e_info:
         offset_date(1899, 10, 10)
     exception = e_info.value
     assert exception.message.startswith('Year must be >= 1900')
@@ -54,13 +54,8 @@ def test_offset_date_with_valid_and_invalid_input():
     exception = e_info.value
     assert exception.message.startswith('day is out of range')
 
-    with pytest.raises(TypeError) as e_info:
+    with pytest.raises(Exception) as e_info:
         offset_date(2012, 10, 10, year_offset = '')
-    exception = e_info.value
-    assert exception.message.startswith('year_offset must be an integer')
-
-    with pytest.raises(TypeError) as e_info:
-        offset_date(2012, 10, 10, year_offset = 5.6)
     exception = e_info.value
     assert exception.message.startswith('year_offset must be an integer')
 
@@ -93,8 +88,8 @@ def test_date_into_template_with_all_input():
     """
     test wrapper function with all inputs given
     """
-    assert insert_date_into_template(TEMPLATE, kwargs, year = 1991, day = 6, \
-        month = 10, year_offset = 21, day_offset = 11, month_offset = 0) == '2012-10-17'
+    assert insert_date_into_template(TEMPLATE, kwargs, fixed_year = 1991, fixed_day = 6, \
+        fixed_month = 10, year_offset = 21, day_offset = 11, month_offset = 0) == '2012-10-17'
 
 
 
