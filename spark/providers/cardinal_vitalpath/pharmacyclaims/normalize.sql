@@ -21,7 +21,9 @@ SELECT
     NULL,                                     -- patient_state
     extract_date(
         med.clinicalorderdate,
-        '%Y%m%d'
+        '%Y%m%d',
+        CAST({min_date} AS DATE),
+        CAST({max_date} AS DATE)
     ),                                        -- date_service
     NULL,                                     -- date_written
     NULL,                                     -- year_of_injury

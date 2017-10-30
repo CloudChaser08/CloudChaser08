@@ -80,7 +80,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     patient_df = runner.sqlContext.sql('select * from cardinal_vitalpath_patient')
     postprocessor.trimmify(patient_df).createTempView('cardinal_vitalpath_patient')
 
-    runner.run_spark_script('normalize.sql', []) 
+    runner.run_spark_script('normalize.sql', [
+        ['min_date', min_date],
+        ['max_date', max_date]
+    ]) 
 
     postprocessor.compose(
         postprocessor.nullify,
