@@ -93,7 +93,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if not test:
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql', 'cardinal_pds',
-            'pharmacyclaims_common_model_final', 'date_service', date_input
+            'pharmacyclaims_common_model', 'date_service', date_input
         )
 
 
