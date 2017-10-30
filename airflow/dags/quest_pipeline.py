@@ -73,7 +73,22 @@ DEID_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt.zip'
 DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt'
 MINIMUM_DEID_FILE_SIZE = 500
 
+#used more than once: 
+quest_current_date = generate_insert_date_into_template_function('{}{}{}', 
+    fixed_year = datetime.now().year,  # can I simply use execution_date
+    fixed_month = datetime.now().month, # since the tasks are run daily?
+    fixed_day = datetime.now().day,
+    day_offset = -3)(ds,kwargs) 
 
+quest_formatted_date = quest_current_date + \
+    generate_insert_date_into_template_function('{}{}{}', 
+                                fixed_year = datetime.now().year, 
+                                fixed_month = datetime.now().month, 
+                                fixed_day = datetime.now().day, 
+                                day_offset = -2
+                                )(ds, kwargs)[4:8]
+
+"""
 def get_quest_current_date(ds, kwargs):
     return (
         datetime.strptime(kwargs['yesterday_ds_nodash'], '%Y%m%d') - timedelta(days=2)
@@ -100,6 +115,7 @@ def insert_todays_date_function(template):
     def out(ds, kwargs):
         return template.format(kwargs['ds_nodash'])
     return out
+    """
 
 
 def insert_formatted_regex_function(template):
@@ -107,7 +123,7 @@ def insert_formatted_regex_function(template):
         return template.format('\d{12}')
     return out
 
-
+"""
 def insert_current_date(template, kwargs):
     return template.format(
         get_quest_current_date(None, kwargs)[0:4],
@@ -120,24 +136,20 @@ def insert_current_date_function(template):
     def out(ds, kwargs):
         return insert_current_date(template, kwargs)
     return out
+    """ 
 
-
-get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
-get_addon_tmp_dir = insert_todays_date_function(TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
-get_trunk_tmp_dir = insert_todays_date_function(TRANSACTION_TRUNK_TMP_PATH_TEMPLATE)
+get_tmp_dir = TMP_PATH_TEMPLATE.format(generate_insert_date_into_template_function('{}{}{}')(ds, kwargs))
+get_addon_tmp_dir = TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format(generate_insert_date_into_template_function('{}{}{}')(dss, kwargs))
+get_trunk_tmp_dir = TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format(generate_insert_date_into_template_function('{}{}{}')(ds, kwargs))
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
-        get_formatted_date(ds, kwargs)
-    )]
+    return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(quest_formatted_date)]
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_addon_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
-        + TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE.format(
-            get_formatted_date(ds, kwargs)
-        )
+        + TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE.format(quest_formatted_date)
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
@@ -146,14 +158,14 @@ def get_addon_unzipped_file_paths(ds, kwargs):
     file_dir = get_addon_tmp_dir(ds, kwargs)
     return [file_dir
             + TRANSACTION_ADDON_UNZIPPED_FILE_NAME_TEMPLATE.format(
-                get_formatted_date(ds, kwargs)
+                quest_formatted_date
             )]
 
 def get_trunk_unzipped_file_paths(ds, kwargs):
     file_dir = get_trunk_tmp_dir(ds, kwargs)
     return [file_dir
             + TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE.format(
-                get_formatted_date(ds, kwargs)
+                quest_formatted_date
             )]
 
 def generate_transaction_file_validation_dag(
@@ -208,9 +220,14 @@ def generate_fetch_dag(
             mdag.schedule_interval,
             {
                 'tmp_path_template'      : local_path_template,
-                'expected_file_name_func': insert_formatted_date_function(
-                    file_name_template
-                ),
+                'expected_file_name_func':# insert_formatted_date_function
+                    file_name_template.format(quest_current_ds + \
+                    insert_date_into_template('{}{}{}',kwargs, 
+                                                year = datetime.now().year, 
+                                                month = datetime.now().month, 
+                                                day = datetime.now().day, 
+                                                day_offset = -1
+                                                )[4:8]),
                 's3_prefix'              : s3_path_template,
                 's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
             }
