@@ -61,7 +61,7 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 
 def get_formatted_date(ds, kwargs):
-    return kwargs['execution_date'].strftime('%Y%m%d')
+    return (kwargs['execution_date'] + timedelta(days=6)).strftime('%Y%m%d')
 
 
 def insert_formatted_date_function(template):
