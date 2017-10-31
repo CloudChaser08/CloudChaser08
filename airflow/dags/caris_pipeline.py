@@ -172,12 +172,10 @@ def generate_transaction_file_validation_dag(
 
 if HVDAG.HVDAG.airflow_env != 'test':
     validate_transactional = generate_transaction_file_validation_dag(
-        'transaction', TRANSACTION_FILE_NAME_STUB_TEMPLATE,
-        1000000
+        'transaction', TRANSACTION_FILE_NAME_STUB_TEMPLATE, 1000
     )
     validate_deid = generate_transaction_file_validation_dag(
-        'deid', DEID_FILE_NAME_STUB_TEMPLATE,
-        1000000
+        'deid', DEID_FILE_NAME_STUB_TEMPLATE, 1000
     )
 
 fetch_transactional = SubDagOperator(
