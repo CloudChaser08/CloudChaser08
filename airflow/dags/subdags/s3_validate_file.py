@@ -3,6 +3,7 @@ from airflow.operators import BashOperator, \
     BranchPythonOperator, SlackAPIOperator
 from datetime import timedelta
 import re
+import logging
 
 import util.s3_utils as s3_utils
 import config as config
@@ -23,6 +24,8 @@ def do_is_valid_new_file(ds, **kwargs):
     s3_keys = s3_utils.list_s3_bucket_files(
         's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/', s3_connection_id
     )
+
+    logging.info("Looking for file: {}".format(expected_file_name))
 
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
         if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > 0:
