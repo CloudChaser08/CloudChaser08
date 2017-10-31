@@ -15,12 +15,13 @@ build-notest: clean-build
 	echo "Created target/${APP_NAME}.zip"
 
 spark-test: clean-test build-notest
-	pytest -v || rm target/${APP_NAME}.zip
+	pytest -v || (rm target/${APP_NAME}.zip && exit 1)
 	@$(MAKE) clean-test
 
 # excludes external table loader tests
+# excludes nextgen tests while they depend on external tables
 spark-test-jenkins: clean-test build-notest
-	pytest -v --ignore=test/helpers/external_table_loader_test.py || rm target/${APP_NAME}.zip
-	@$(MAKE) clean-test
+	pytest -v --ignore=test/helpers/external_table_loader_test.py \
+                  --ignore=test/providers/nextgen || (rm target/${APP_NAME}.zip && exit 1)
 
 build: spark-test
