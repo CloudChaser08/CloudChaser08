@@ -42,12 +42,14 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE = test_loc + 'out/{}/{}/{}/additionaldata/'
     S3_PAYLOAD_DEST = test_loc + 'payload/'
     S3_NORMALIZED_DATA_URL = test_loc + 'spark-output/'
+    S3_BACKUP_NORMALIZED_DATA_URL = test_loc + 'spark-backup/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/abd/'
     S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/transactions/'
     S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/additionaldata/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/'
     S3_NORMALIZED_DATA_URL = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=apothecary_by_design/'
+    S3_BACKUP_NORMALIZED_DATA_URL = 's3://salusv/warehouse/parquet/pharmacyclaims/_archive/part_provider=apothecary_by_design/{}/'
 
 TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}/'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/additionaldata/'
@@ -277,15 +279,20 @@ split_deid_file = SubDagOperator(
 )
 
 
-def do_delete_existing_data(ds, **kwargs):
-    check_call(['aws', 's3', 'rm', '--recursive', kwargs['NORMALIZED_DATA_URL']])
+def do_backup_existing_data(ds, **kwargs):
+    check_call(['aws', 's3', 'rm', '--recursive',
+                kwargs['BACKUP_NORMALIZED_DATA_URL'])
+    check_call(['aws', 's3', 'mv', '--recursive', 
+                kwargs['NORMALIZED_DATA_URL'],
+                kwargs['BACKUP_NORMALIZED_DATA_URL'])
 
 
-delete_existing_data = PythonOperator(
-    task_id = 'delete_existing_data',
-    python_callable = do_delete_existing_data,
+backup_existing_data = PythonOperator(
+    task_id = 'backup_existing_data',
+    python_callable = do_backup_existing_data,
     op_kwargs = {
-        'NORMALIZED_DATA_URL'  : S3_NORMALIZED_DATA_URL
+        'NORMALIZED_DATA_URL'           : S3_NORMALIZED_DATA_URL,
+        'BACKUP_NORMALIZED_DATA_URL'    : S3_BACKUP_NORMALIZED_DATA_URL
     },
     provide_context = True,
     dag = mdag
@@ -367,9 +374,9 @@ decrypt_deid.set_upstream(fetch_deid_file)
 split_additionaldata_file.set_upstream(fetch_additionaldata_file)
 split_deid_file.set_upstream(decrypt_deid)
 
-delete_existing_data.set_upstream([split_additionaldata_file, split_deid_file])
+backup_existing_data.set_upstream([split_additionaldata_file, split_deid_file])
 clean_up_workspace.set_upstream([split_additionaldata_file, split_deid_file])
 
-detect_move_normalize_dag.set_upstream(delete_existing_data)
+detect_move_normalize_dag.set_upstream(backup_existing_data)
 update_analytics_db.set_upstream(detect_move_normalize_dag)
 
