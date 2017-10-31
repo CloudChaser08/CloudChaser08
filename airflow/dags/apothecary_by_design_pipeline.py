@@ -52,12 +52,12 @@ else:
     S3_BACKUP_NORMALIZED_DATA_URL = 's3://salusv/warehouse/parquet/pharmacyclaims/_archive/part_provider=apothecary_by_design/{}/'
 
 TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}/'
-TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/additionaldata/'
-DEID_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/transactions/'
+ADDITIONALDATA_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/additionaldata/'
+TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/transactions/'
 
-TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'        #TODO: replace when know their format
-DEID_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'            #TODO: replace when know their format
-MATCHING_DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}.txt'    #TODO: replace when know their format
+ADDITIONALDATA_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'        #TODO: replace when know their format
+TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'            #TODO: replace when know their format
+DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}.txt'    #TODO: replace when know their format
 
 def get_formatted_date(ds, kwargs):
     return kwargs['ds_nodash']
@@ -92,23 +92,23 @@ def insert_current_date_function(template):
     return out
 
 
-get_tmp_dir = insert_formatted_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
-get_deid_tmp_dir = insert_formatted_date_function(DEID_TMP_PATH_TEMPLATE)
+get_tmp_dir = insert_formatted_date_function(ADDITIONALDATA_TMP_PATH_TEMPLATE)
+get_deid_tmp_dir = insert_formatted_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
+
+def get_additionaldata_file_paths(ds, kwargs):
+    return [get_tmp_dir(ds, kwargs) + ADDITIONALDATA_FILE_NAME_TEMPLATE.format(
+        get_formatted_date(ds, kwargs)
+    )]
+
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(
+    return [get_deid_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(
         get_formatted_date(ds, kwargs)
     )]
 
 
-def get_deid_file_paths(ds, kwargs):
-    return [get_deid_tmp_dir(ds, kwargs) + DEID_FILE_NAME_TEMPLATE.format(
-        get_formatted_date(ds, kwargs)
-    )]
-
-
-def get_matching_deid_file_urls(ds, kwargs):
-    return [MATCHING_DEID_FILE_NAME_TEMPLATE.format(
+def get_deid_file_urls(ds, kwargs):
+    return [DEID_FILE_NAME_TEMPLATE.format(
         get_formatted_date(ds, kwargs)
     )]
 
@@ -116,7 +116,7 @@ def get_matching_deid_file_urls(ds, kwargs):
 def encrypted_decrypted_deid_file_paths_function(ds, kwargs):
     file_dir = get_deid_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
-            + DEID_FILE_NAME_TEMPLATE.format(
+            + TRANSACTION_FILE_NAME_TEMPLATE.format(
             get_formatted_date(ds, kwargs)
         )
     return [
@@ -152,6 +152,10 @@ def generate_file_validation_task(
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
+    validate_additionaldata = generate_file_validation_task(
+        'additionaldata', S3_TRANSACTION_RAW_URL,
+        ADDITIONALDATA_FILE_NAME_TEMPLATE, 1000000
+    )
     validate_transaction = generate_file_validation_task(
         'transaction', S3_TRANSACTION_RAW_URL,
         TRANSACTION_FILE_NAME_TEMPLATE, 1000000
@@ -159,10 +163,6 @@ if HVDAG.HVDAG.airflow_env != 'test':
     validate_deid = generate_file_validation_task(
         'deid', S3_TRANSACTION_RAW_URL,
         DEID_FILE_NAME_TEMPLATE, 1000000
-    )
-    validate_matching_deid = generate_file_validation_task(
-        'matching_deid', S3_TRANSACTION_RAW_URL,
-        MATCHING_DEID_FILE_NAME_TEMPLATE, 1000000
     )
 
     queue_up_for_matching = SubDagOperator(
@@ -172,29 +172,29 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : get_matching_deid_file_urls
+                'source_files_func' : get_deid_file_urls
             }
         ),
         task_id='queue_up_for_matching',
         dag=mdag
     )
 
-fetch_deid_file = SubDagOperator(
+fetch_transaction_file = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
         DAG_NAME,
-        'fetch_deid_file',
+        'fetch_transaction_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template'      : DEID_TMP_PATH_TEMPLATE,
+            'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
             'expected_file_name_func': insert_formatted_date_function(
-                DEID_FILE_NAME_TEMPLATE
+                TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
-    task_id='fetch_deid_file',
+    task_id='fetch_transaction_file',
     dag=mdag
 )
 
@@ -205,9 +205,9 @@ fetch_additionaldata_file = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template'     : TRANSACTION_TMP_PATH_TEMPLATE,
+            'tmp_path_template'     : ADDITIONALDATA_TMP_PATH_TEMPLATE,
             'expected_file_name_func'   : insert_formatted_date_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+                ADDITIONALDATA_FILE_NAME_TEMPLATE
             ),
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -217,10 +217,10 @@ fetch_additionaldata_file = SubDagOperator(
     dag=mdag
 )
 
-decrypt_deid = SubDagOperator(
+decrypt_transaction = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
         DAG_NAME,
-        'decrypt_deid_file',
+        'decrypt_transaction_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
@@ -228,7 +228,7 @@ decrypt_deid = SubDagOperator(
             'encrypted_decrypted_file_paths_func' : encrypted_decrypted_deid_file_paths_function
         }
     ),
-    task_id='decrypt_deid_file',
+    task_id='decrypt_transaction_file',
     dag=mdag
 )
 
@@ -241,9 +241,9 @@ split_additionaldata_file = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_dir_func'             : get_tmp_dir,
-            'file_paths_to_split_func' : get_transaction_file_paths,
+            'file_paths_to_split_func' : get_additionaldata_file_paths,
             'file_name_pattern_func'   : insert_formatted_regex_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+                ADDITIONALDATA_FILE_NAME_TEMPLATE
             ),
             's3_prefix_func'           : insert_current_date_function(
                 S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE
@@ -256,17 +256,17 @@ split_additionaldata_file = SubDagOperator(
 )
 
 
-split_deid_file = SubDagOperator(
+split_transaction_file = SubDagOperator(
     subdag=split_push_files.split_push_files(
         DAG_NAME,
-        'split_deid_file',
+        'split_transaction_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
             'tmp_dir_func'             : get_deid_tmp_dir,
-            'file_paths_to_split_func' : get_deid_file_paths,
+            'file_paths_to_split_func' : get_transaction_file_paths,
             'file_name_pattern_func'   : insert_formatted_regex_function(
-                DEID_FILE_NAME_TEMPLATE
+                TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix_func'           : insert_current_date_function(
                 S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE
@@ -274,7 +274,7 @@ split_deid_file = SubDagOperator(
             'num_splits'               : 20
         }
     ),
-    task_id='split_deid_file',
+    task_id='split_transaction_file',
     dag=mdag
 )
 
@@ -330,7 +330,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_matching_files_func'      : get_matching_deid_file_urls,
+                'expected_matching_files_func'      : get_deid_file_urls,
                 'file_date_func'                    : insert_current_date_function(
                     '{}/{}/{}'
                 ),
@@ -364,18 +364,18 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 ### DAG STRUCTURE ###
 if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_additionaldata_file.set_upstream(validate_transaction)
-    fetch_deid_file.set_upstream(validate_deid)
-    queue_up_for_matching.set_upstream(validate_matching_deid)
+    fetch_additionaldata_file.set_upstream(validate_additionaldata)
+    fetch_transaction_file.set_upstream(validate_transaction)
+    queue_up_for_matching.set_upstream(validate_deid)
     detect_move_normalize_dag.set_upstream(queue_up_for_matching)
 
-decrypt_deid.set_upstream(fetch_deid_file)
+decrypt_transaction.set_upstream(fetch_transaction_file)
 
 split_additionaldata_file.set_upstream(fetch_additionaldata_file)
-split_deid_file.set_upstream(decrypt_deid)
+split_transaction_file.set_upstream(decrypt_transaction)
 
-backup_existing_data.set_upstream([split_additionaldata_file, split_deid_file])
-clean_up_workspace.set_upstream([split_additionaldata_file, split_deid_file])
+backup_existing_data.set_upstream([split_additionaldata_file, split_transaction_file])
+clean_up_workspace.set_upstream([split_additionaldata_file, split_transaction_file])
 
 detect_move_normalize_dag.set_upstream(backup_existing_data)
 update_analytics_db.set_upstream(detect_move_normalize_dag)
