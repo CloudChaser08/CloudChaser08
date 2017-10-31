@@ -123,8 +123,8 @@ def test_init(spark):
                     _inject_get_provider_conf_no_fill_rate_calc)
 
 def test_fill_rate_calculated():
-    assert results_distinct_column['fill_rates'] != None
-    assert results_no_distinct_column['fill_rates'] != None
+    assert results_distinct_column['fill_rates'] is not None
+    assert results_no_distinct_column['fill_rates'] is not None
 
 
 def test_fill_rate_dataframe_count():
@@ -133,9 +133,9 @@ def test_fill_rate_dataframe_count():
 
 
 def test_fill_rate_column_are_blacklisted():
-    assert len(set(results_distinct_column['fill_rates'].columns) \
+    assert len(set(results_distinct_column['fill_rates'][0].asDict().keys()) \
                 .intersection(set(fill_rate_conf['blacklist_columns']))) == 0
-    assert len(set(results_no_distinct_column['fill_rates'].columns) \
+    assert len(set(results_no_distinct_column['fill_rates'][0].asDict().keys()) \
                 .intersection(set(fill_rate_conf['blacklist_columns']))) == 0
 
 

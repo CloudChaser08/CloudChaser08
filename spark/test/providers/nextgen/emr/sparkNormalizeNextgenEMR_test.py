@@ -15,6 +15,8 @@ def cleanup(spark):
     for t in tables:
         spark['sqlContext'].dropTempTable('{}_common_model'.format(t))
 
+    spark['sqlContext'].sql('DROP VIEW IF EXISTS labresult')
+
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
@@ -26,7 +28,7 @@ def test_init(spark):
                                  .collect()
     deduped_encounter = spark['sqlContext'].sql('select * from encounter_dedup') \
                             .collect()
-    deduped_demographics = spark['sqlContext'].sql('select * from demographics_dedup') \
+    deduped_demographics = spark['sqlContext'].sql('select * from demographics_local') \
                             .collect()
 
 
@@ -49,7 +51,7 @@ def test_encounter_demographics_deduped():
 
     global deduped_encounter, deduped_demographics
     assert len(deduped_encounter) == 1
-    assert len(deduped_demographics) == 1
+    assert len(deduped_demographics) == 4
 
 def test_lab_order_diagnoses_split():
     """Ensure that diagnoses in lab order records are split, put on individual rows,
