@@ -66,8 +66,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['properties', '', False]
     ])
 
-    payload_loader.load(runner, medical_matching_path, ['hvJoinKey', 'patientid'], 'cardinal_vitalpath_med_deid')
-    payload_loader.load(runner, patient_matching_path, ['hvJoinKey', 'patientid'], 'cardinal_vitalpath_patient_deid')
+    payload_loader.load(runner, medical_matching_path, ['hvJoinKey', 'patientId'], 'cardinal_vitalpath_med_deid')
+    payload_loader.load(runner, patient_matching_path, ['hvJoinKey', 'patientId'], 'cardinal_vitalpath_patient_deid')
 
     runner.run_spark_script('load_transactions.sql', [
         ['med_input_path', medical_input_path],

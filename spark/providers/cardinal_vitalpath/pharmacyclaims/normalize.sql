@@ -128,6 +128,6 @@ SELECT
     NULL                                      -- logical_delete_reason
 FROM cardinal_vitalpath_med med 
 	LEFT OUTER JOIN cardinal_vitalpath_med_deid med_deid ON med.hvJoinKey = med_deid.hvJoinKey 
-	LEFT OUTER JOIN cardinal_vitalpath_patient_deid patient_deid ON med_deid.patientid = patient_deid.patientid 
+	LEFT OUTER JOIN cardinal_vitalpath_patient_deid patient_deid ON med_deid.patientId = patient_deid.patientId 
 	LEFT OUTER JOIN cardinal_vitalpath_patient patient ON patient.hvJoinKey = patient_deid.hvJoinKey
 ;
