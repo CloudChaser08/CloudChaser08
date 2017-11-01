@@ -42,7 +42,9 @@ SELECT
     NULL,                                     -- diagnosis_code_qual
     UPPER(med.jcode),                         -- procedure_code
     NULL,                                     -- procedure_code_qual
-    med.ndc,                                  -- ndc_code
+    clean_up_numeric_code(
+        med.ndc
+    ),                                        -- ndc_code
     NULL,                                     -- product_service_id
     NULL,                                     -- product_service_id_qual
     NULL,                                     -- rx_number
