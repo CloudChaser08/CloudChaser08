@@ -120,11 +120,19 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     ).createTempView('pharmacyclaims_common_model')
 
     if not test:
+        hvm_historical = postprocessor.get_gen_ref_date(runner.sqlContext, '45', 'HVM_AVAILABLE_HISTORY_START_DATE')
+        if hvm_historical is None:
+            hvm_historical = postprocessor.get_gen_ref_date(runner.sqlContext, '45', 'EARLIEST_VALID_SERVICE_DATE')
+        if hvm_historical is None:
+            hvm_historical = date(1901, 1, 1) 
+
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql',
             'apothecary_by_design', 'pharmacyclaims_common_model',
             'date_service', date_input,
-            hvm_historical_date = datetime.strptime(min_date, '%Y-%m-%d')
+            hvm_historical_date = datetime(hvm_historical.year,
+                                           hvm_historical.month,
+                                           hvm_historical.day)
         )
 
 
