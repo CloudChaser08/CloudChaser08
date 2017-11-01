@@ -30,7 +30,7 @@ SELECT DISTINCT
     codes.loinc_code,
     codes.ndc_code
 FROM transactional_encounters encounters
-    INNER JOIN (
+    LEFT JOIN (
     -- diagnoses
     SELECT
         encounterid,
@@ -124,7 +124,3 @@ FROM transactional_encounters encounters
     ON encounters.encounterid = codes.encounterid AND encounters.gen2patientID = codes.gen2patientID
     INNER JOIN transactional_patients as_patients ON encounters.gen2patientID = as_patients.gen2patientID
     INNER JOIN matching_payload payload ON encounters.gen2patientID = upper(payload.personid)
-WHERE codes.diagnosis_code IS NOT NULL 
-    OR codes.procedure_code IS NOT NULL
-    OR codes.ndc_code IS NOT NULL
-    OR codes.loinc_code IS NOT NULL
