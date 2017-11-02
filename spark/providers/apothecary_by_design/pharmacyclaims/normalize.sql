@@ -37,8 +37,7 @@ SELECT
     NULL,                                       -- diagnosis_code_qual
     NULL,                                       -- procedure_code
     NULL,                                       -- procedure_code_qual
-    clean_up_numeric_code(
-            ad.national_drug_cd),               -- ndc_code
+    ad.national_drug_cd,                        -- ndc_code
     NULL,                                       -- product_service_id
     NULL,                                       -- product_service_id_qual
     ad.rx_nbr,                                  -- rx_number
