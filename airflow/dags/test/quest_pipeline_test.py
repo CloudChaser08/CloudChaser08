@@ -56,7 +56,7 @@ def test_insert_formatted_date_function():
 
 def test_insert_execution_date_function():
     template = '_{}_'
-    assert generate_insert_date_into_template_function(
+    assert date_utils.generate_insert_date_into_template_function(
         template.format('{}{}{}')) \
         == '_{}_'.format(execution_date)
 
