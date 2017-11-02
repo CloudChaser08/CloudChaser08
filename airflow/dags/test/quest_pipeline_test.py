@@ -2,13 +2,13 @@ import pytest
 from datetime import datetime
 import airflow.models
 import mock
-import util.date_utils as dateutils
+import util.date_utils as date_utils
 
 quest = None
 
 ds = {}
 kwargs = {
-    'execution_date': datetime(2017,04,25),
+    'execution_date': datetime(2017,4,25),
     'yesterday_ds_nodash': '20170424',
     'ds_nodash': '20170425'
 }
@@ -49,15 +49,15 @@ def test_get_formatted_date():
 
 
 def test_insert_formatted_date_function():
-    template = '_{}_'
-    assert template.format(quest.get_formatted_date(ds, kwargs)) \
-        == template.format(expected_formatted_date)
+      template = '_{}_'
+ -    assert quest.insert_formatted_date_function(template)(ds, kwargs) \
+          == template.format(expected_formatted_date)
 
 
-def test_insert_todays_date_function():
+def test_insert_execution_date_function():
     template = '_{}_'
-    assert template.format(dateutils.generate_insert_date_into_template_function('{}{}{}')(ds, kwargs))
- \
+    assert generate_insert_date_into_template_function(
+        template.format('{}{}{}')) \
         == '_{}_'.format(execution_date)
 
 
@@ -67,13 +67,13 @@ def test_insert_formatted_regex_function():
         == '_{}_'.format('\d{12}')
 
 
-def test_insert_current_date():
+def test_inserting_current_date():
     template = '_{}_{}_{}_'
-    assert dateutils.insert_date_into_template(template, k, day_offset = -3) \
+    assert date_utils.insert_date_into_template(template, k, day_offset = -3) \
         == '_2017_04_22_'
 
 
-def test_insert_current_date_function():
+def test_inserting_current_date_function():
     template = '_{}_{}_{}_'
     assert template.format(quest.get_formatted_date(ds, kwargs)) \
         == '_2017_04_22_'

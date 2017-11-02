@@ -15,12 +15,12 @@ import subdags.update_analytics_db as update_analytics_db
 
 import util.decompression as decompression
 
-import util.date_utils as dateutils 
+import util.date_utils as date_utils 
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
         split_push_files, queue_up_for_matching,
         detect_move_normalize, decompression, HVDAG,
-        update_analytics_db]:
+        update_analytics_db, date_utils]:
     reload(m)
 
 # Applies to all files
@@ -76,20 +76,31 @@ DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt'
 MINIMUM_DEID_FILE_SIZE = 500
 
 def get_formatted_date(ds, kwargs):
-    return ( dateutils.generate_insert_date_into_template_function(template,
+    return ( date_utils.generate_insert_date_into_template_function('{}{}{}',
          day_offset = -3)(ds,kwargs)
-          + dateutils.generate_insert_date_into_template_function('{1}{2}', 
+          + date_utils.generate_insert_date_into_template_function('{1}{2}', 
             day_offset = -2)(ds,kwargs)
             )
+
+def insert_formatted_date_function(template):
+    def out(ds, kwargs):
+        return template.format(get_formatted_date(ds, kwargs))
+    return out
 
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
         return template.format('\d{12}')
     return out
 
-get_tmp_dir = TMP_PATH_TEMPLATE.format(dateutils.generate_insert_date_into_template_function('{}{}{}')(ds, kwargs))
-get_addon_tmp_dir = TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format(dateutils.generate_insert_date_into_template_function('{}{}{}')(ds, kwargs))
-get_trunk_tmp_dir = TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format(dateutils.generate_insert_date_into_template_function('{}{}{}')(ds, kwargs))
+get_tmp_dir = generate_insert_date_into_template_function(
+    TMP_PATH_TEMPLATE.format('{}{}{}')
+    )
+get_addon_tmp_dir = generate_insert_date_into_template_function(
+    TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format('{}{}{}')
+    )
+get_trunk_tmp_dir = generate_insert_date_into_template_function(
+    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format('{}{}{}')
+    )
 
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
@@ -130,8 +141,9 @@ def generate_transaction_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : path_template.format(get_formatted_date(ds, kwargs))
-                ,
+                'expected_file_name_func' : insert_formatted_date_function(
+                    path_template
+                ),
                 'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
                 ),
@@ -171,8 +183,9 @@ def generate_fetch_dag(
             mdag.schedule_interval,
             {
                 'tmp_path_template'      : local_path_template,
-                'expected_file_name_func': file_name_template.format(get_formatted_date(ds, kwargs))
-                ,
+                'expected_file_name_func': insert_formatted_date_function(
+                    file_name_template
+                ),
                 's3_prefix'              : s3_path_template,
                 's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
             }
@@ -273,8 +286,9 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
                 'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
                 ),
-                's3_prefix_func'           : s3_destination.format(get_formatted_date(ds, kwargs))
-                ,
+                's3_prefix_func'           : generate_insert_date_into_template_function( 
+                    s3_destination, day_offset = -3
+                ),
                 'num_splits'               : num_splits
             }
         ),
@@ -330,7 +344,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', dateutils.insert_date_into_template('{}-{}-{}', k, day_offset = -3)] 
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = -3)] 
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -347,7 +361,9 @@ detect_move_normalize_dag = SubDagOperator(
             'expected_matching_files_func'      : lambda ds, k: [
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(get_formatted_date(ds, kwargs))
             ],
-            'file_date_func'                    : dateutils.generate_insert_date_into_template_function('{}/{}/{}', day_offset = -3)(ds,kwargs),
+            'file_date_func'                    : generate_insert_date_into_template_function( 
+                '{}/{}/{}', day_offset = -3
+                ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
@@ -372,9 +388,9 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: dateutils.insert_date_into_template(sql_new_template, k,
+                'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(sql_new_template, k,
          day_offset = -3) \
-                    if dateutils.insert_date_into_template('{}-{}-{}', k,
+                    if date_utils.insert_date_into_template('{}-{}-{}', k,
          day_offset = -3).find('-01') == 7 else ''
             }
         ),
