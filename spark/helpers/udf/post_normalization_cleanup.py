@@ -149,16 +149,14 @@ def filter_due_to_place_of_service(prov_detail, place_of_service_std_id):
 
 
 def obscure_inst_type_of_bill(inst_type_of_bill):
-    if isinstance(inst_type_of_bill, str) \
-       and inst_type_of_bill.startswith('3'):
-        return 'X' + inst_type_of_bill[1:]
+    if str(inst_type_of_bill).startswith('3'):
+        return 'X' + str(inst_type_of_bill)[1:]
     else:
         return inst_type_of_bill
 
 
 def filter_due_to_inst_type_of_bill(prov_detail, inst_type_of_bill):
-    if isinstance(inst_type_of_bill, str) \
-       and inst_type_of_bill.startswith('3'):
+    if str(inst_type_of_bill).startswith('3'):
         return None
     else:
         return prov_detail
