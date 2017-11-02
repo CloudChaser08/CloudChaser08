@@ -48,10 +48,11 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
             date_input.replace('-', '/')
         )
 
+    external_table_loader.load_ref_gen_ref(runner.sqlContext)
+
     if test:
         min_date = '1900-01-01'
     else:
-        external_table_loader.load_ref_gen_ref(runner.sqlContext)
         min_date = postprocessor.get_gen_ref_date(
             runner.sqlContext,
             '45',
