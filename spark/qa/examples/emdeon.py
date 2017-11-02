@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 from spark.spark_setup import init
 from spark.runner import Runner
 import spark.helpers.file_utils as file_utils
@@ -40,7 +38,7 @@ datafeed = Datafeed(
     source_data_claim_full_name='emdeon_dx_raw_local.column1',
     source_data_service_line_full_name='emdeon_dx_raw_local.column3',
     target_data_claim_column_name='claim_id',
-    target_data_service_line_column_name='service_line_id'
+    target_data_service_line_column_name='service_line_number'
 )
 
 # run tests
