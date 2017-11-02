@@ -42,9 +42,7 @@ SELECT
     NULL,                                     -- diagnosis_code_qual
     UPPER(med.jcode),                         -- procedure_code
     NULL,                                     -- procedure_code_qual
-    clean_up_numeric_code(
-        med.ndc
-    ),                                        -- ndc_code
+    med.ndc,                                  -- ndc_code
     NULL,                                     -- product_service_id
     NULL,                                     -- product_service_id_qual
     NULL,                                     -- rx_number
@@ -66,8 +64,8 @@ SELECT
     NULL,                                     -- payer_plan_id
     NULL,                                     -- payer_plan_name
     NULL,                                     -- payer_type
-    med.unitquantity,                         -- compound_code
-    NULL,                                     -- unit_dose_indicator
+    NULL,                                     -- compound_code
+    med.unitquantity,                         -- unit_dose_indicator
     NULL,                                     -- dispensed_as_written
     NULL,                                     -- prescription_origin
     NULL,                                     -- submission_clarification
