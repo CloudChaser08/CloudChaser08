@@ -49,8 +49,8 @@ def test_get_formatted_date():
 
 
 def test_insert_formatted_date_function():
-      template = '_{}_'
- -    assert quest.insert_formatted_date_function(template)(ds, kwargs) \
+    template = '_{}_'
+    assert quest.insert_formatted_date_function(template)(ds, kwargs) \
           == template.format(expected_formatted_date)
 
 
