@@ -6,6 +6,7 @@ from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
@@ -57,7 +58,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')[:-3]
         )
 
-    min_date = '2011-01-01'
+    external_table_loader.load_ref_gen_ref(runner.sqlContext)
+
+    min_date = postprocessor.get_gen_ref_date(
+                runner.sqlContext,
+                '30',
+                'EARLIEST_VALID_SERVICE_DATE'
+    ).isoformat()
     max_date = date_input
 
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
@@ -94,15 +101,32 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ).createTempView('pharmacyclaims_common_model')
 
     if not test:
+        hvm_historical = postprocessor.get_gen_ref_date(
+            runner.sqlContext,
+            '30',
+            'HVM_AVAILABLE_HISTORY_START_DATE'
+        )
+        if hvm_historical is None:
+            hvm_historical = postprocessor.get_gen_ref_date(
+                runner.sqlContext,
+                '30',
+                'EARLIEST_VALID_SERVICE_DATE'
+            )
+        if hvm_historical is None:
+            hvm_historical = date('1901', '1', '1')
+
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql', 'cardinal_vitalpath',
-            'pharmacyclaims_common_model', 'date_service', date_input
+            'pharmacyclaims_common_model', 'date_service', date_input,
+            hvm_historical_date = datetime(hvm_historical.year,
+                                           hvm_historical.month,
+                                           hvm_historical.day)
         )
 
 
 def main(args):
     # init
-    spark, sqlContext = init("CardinalRx")
+    spark, sqlContext = init("Cardinal_VitalPath")
 
     # initialize runner
     runner = Runner(sqlContext)
