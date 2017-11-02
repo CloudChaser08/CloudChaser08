@@ -13,8 +13,6 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
 def run(spark, runner, date_input, test = False, airflow_test = False):
-    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
-
     setid = 'hv_export_data_{}'.format(date_input.replace('-', ''))
 
     script_path = __file__
