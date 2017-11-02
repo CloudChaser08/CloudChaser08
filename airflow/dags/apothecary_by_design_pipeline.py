@@ -280,11 +280,9 @@ split_transaction_file = SubDagOperator(
 
 
 def do_backup_existing_data(ds, **kwargs):
-    check_call(['aws', 's3', 'rm', '--recursive',
-                kwargs['BACKUP_NORMALIZED_DATA_URL'])
-    check_call(['aws', 's3', 'mv', '--recursive', 
-                kwargs['NORMALIZED_DATA_URL'],
-                kwargs['BACKUP_NORMALIZED_DATA_URL'])
+    s3_utils.delete_path_recursive(kwargs['BACKUP_NORMALIZED_DATA_URL'])
+    s3_utils.move_path_recursive(kwargs['NORMALIZED_DATA_URL'],
+                                 kwargs['BACKUP_NORMALIZED_DATA_URL'])
 
 
 backup_existing_data = PythonOperator(
