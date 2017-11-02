@@ -48,18 +48,15 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
             date_input.replace('-', '/')
         )
 
-
-    external_table_loader.load_ref_gen_ref(runner.sqlContext)
     if test:
         min_date = '1900-01-01'
     else:
-        min_date = runner.sqlContext.sql(
-                    '''
-                    SELECT gen_ref_1_dt FROM ref_gen_ref 
-                    WHERE hvm_vdr_feed_id = '45' 
-                    AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-                    '''
-                ).take(1)[0].gen_ref_1_dt.isoformat()
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
+        min_date = postprocessor.get_gen_ref_date(
+            runner.sqlContext,
+            '45',
+            'EARLIEST_VALID_SERVICE_DATE'
+        ).isoformat()
     max_date = date_input
 
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
@@ -118,9 +115,17 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     ).createTempView('pharmacyclaims_common_model')
 
     if not test:
-        hvm_historical = postprocessor.get_gen_ref_date(runner.sqlContext, '45', 'HVM_AVAILABLE_HISTORY_START_DATE')
+        hvm_historical = postprocessor.get_gen_ref_date(
+            runner.sqlContext,
+            '45',
+            'HVM_AVAILABLE_HISTORY_START_DATE'
+        )
         if hvm_historical is None:
-            hvm_historical = postprocessor.get_gen_ref_date(runner.sqlContext, '45', 'EARLIEST_VALID_SERVICE_DATE')
+            hvm_historical = postprocessor.get_gen_ref_date(
+                runner.sqlContext,
+                '45',
+                'EARLIEST_VALID_SERVICE_DATE'
+            )
         if hvm_historical is None:
             hvm_historical = date(1901, 1, 1) 
 
