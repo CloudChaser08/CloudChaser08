@@ -3,7 +3,7 @@ import argparse
 import spark.spark_setup as spark_setup
 
 import spark.stats.config.reader.config_reader as config_reader
-import spark.stats.processor.processor as processor
+import spark.stats.processor as processor
 
 def run(spark, sqlContext, provider_name, quarter, start_date, \
         end_date, earliest_date, get_data_func, get_provider_conf_func, \
