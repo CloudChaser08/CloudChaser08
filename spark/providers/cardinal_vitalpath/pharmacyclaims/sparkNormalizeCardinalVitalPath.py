@@ -58,13 +58,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')[:-3]
         )
 
-    external_table_loader.load_ref_gen_ref(runner.sqlContext)
+    if test:
+        min_date = '1901-01-01'
+    else:
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    min_date = postprocessor.get_gen_ref_date(
-                runner.sqlContext,
-                '30',
-                'EARLIEST_VALID_SERVICE_DATE'
-    ).isoformat()
+        min_date = postprocessor.get_gen_ref_date(
+                    runner.sqlContext,
+                    '30',
+                    'EARLIEST_VALID_SERVICE_DATE'
+        ).isoformat()
+
     max_date = date_input
 
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
