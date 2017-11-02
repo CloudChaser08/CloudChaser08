@@ -92,13 +92,13 @@ def insert_formatted_regex_function(template):
         return template.format('\d{12}')
     return out
 
-get_tmp_dir = generate_insert_date_into_template_function(
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE.format('{}{}{}')
     )
-get_addon_tmp_dir = generate_insert_date_into_template_function(
+get_addon_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format('{}{}{}')
     )
-get_trunk_tmp_dir = generate_insert_date_into_template_function(
+get_trunk_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format('{}{}{}')
     )
 
@@ -286,7 +286,7 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
                 'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
                 ),
-                's3_prefix_func'           : generate_insert_date_into_template_function( 
+                's3_prefix_func'           : date_utils.generate_insert_date_into_template_function( 
                     s3_destination, day_offset = -3
                 ),
                 'num_splits'               : num_splits
@@ -361,7 +361,7 @@ detect_move_normalize_dag = SubDagOperator(
             'expected_matching_files_func'      : lambda ds, k: [
                 DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(get_formatted_date(ds, kwargs))
             ],
-            'file_date_func'                    : generate_insert_date_into_template_function( 
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function( 
                 '{}/{}/{}', day_offset = -3
                 ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
