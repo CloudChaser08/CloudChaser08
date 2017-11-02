@@ -104,3 +104,5 @@ def test_one_csv_for_each_stat_calc():
 
 def test_cleanup():
     check_call(['rm', '-r', output_dir])
+
+
