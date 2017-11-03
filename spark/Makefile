@@ -21,7 +21,7 @@ spark-test: clean-test build-notest
 # excludes external table loader tests
 # excludes nextgen tests while they depend on external tables
 spark-test-jenkins: clean-test build-notest
-	pytest -v --ignore=test/helpers/external_table_loader_test.py \
+	pytest -v -x --ignore=test/helpers/external_table_loader_test.py \
                   --ignore=test/providers/nextgen || (rm target/${APP_NAME}.zip && exit 1)
 
 build: spark-test
