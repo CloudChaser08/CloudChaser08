@@ -23,7 +23,7 @@ def test_init(spark):
             gen_ref_1_dt = datetime.date(1901, 1, 1),
             whtlst_flg = '' 
         )
-    ]).toDF().createTempView('ref_gen_ref')
+    ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
     abd.run(spark['spark'], spark['runner'], '2017-10-06', test = True)
     global results
