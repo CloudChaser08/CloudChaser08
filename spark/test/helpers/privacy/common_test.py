@@ -72,3 +72,23 @@ def test_filter(spark):
     # assert original transformer was not modified by additional
     # transforms dict update
     assert common_priv.column_transformer == old_transformer
+
+
+def test_whitelist(spark):
+    test_df = spark['spark'].sparkContext.parallelize([
+        ['PA'], ['NJ'], ['VT'], ['CA']
+    ]).toDF(StructType([
+        StructField('patient_state', StringType())
+    ]))
+
+    spark['spark'].sparkContext.parallelize([
+        ['PA'], ['NJ'], ['VT']
+    ]).toDF(StructType([
+        StructField('geo_state_pstl_cd', StringType())
+    ])).registerTempTable('ref_geo_state')
+
+    # assertion with no additional transforms
+    assert common_priv.filter(test_df, sqlc=spark['sqlContext']).collect() \
+        == [Row('PA'), Row('NJ'), Row('VT'), Row(None)]
+
+    spark['sqlContext'].dropTempTable('ref_geo_state')

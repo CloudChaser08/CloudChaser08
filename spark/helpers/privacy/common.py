@@ -70,7 +70,7 @@ def filter(df, additional_transforms={}, sqlc=None, update_whitelists=lambda x: 
     # apply transforms
     transformed_df = df.select(*map(_transform(modified_column_transformer), df.columns))
 
-    if sqlc:
+    if sqlc and [whtlist for whtlist in whitelists if whtlist['column_name'] in df.columns]:
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
             *[
