@@ -1,5 +1,6 @@
 from pyspark.sql.functions import col, udf
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
+import spark.helpers.postprocessor as postprocessor
 
 # These are functions that we apply to columns that are shared between
 # datatypes. The configuration for each column here contains a 'func'
@@ -32,6 +33,13 @@ column_transformer = {
     }
 }
 
+whitelists = [
+    {
+        'column_name': 'patient_state',
+        'domain_name': 'geo_state_pstl_cd',
+        'table_name': 'ref_geo_state'
+    }
+]
 
 def _transform(transformer):
     def col_func(column_name):
@@ -53,10 +61,23 @@ def _transform(transformer):
     return col_func
 
 
-def filter(df, additional_transforms={}):
+def filter(df, additional_transforms={}, sqlc=None, update_whitelists=lambda x: x, ):
     # add in additional transformations to columns not found in the
     # generic column_transformer dict above
     modified_column_transformer = dict(column_transformer)
     modified_column_transformer.update(additional_transforms)
 
-    return df.select(*map(_transform(modified_column_transformer), df.columns))
+    # apply transforms
+    transformed_df = df.select(*map(_transform(modified_column_transformer), df.columns))
+
+    if sqlc:
+        whtlsts = update_whitelists(whitelists)
+        return postprocessor.compose(
+            *[
+                postprocessor.apply_whitelist(
+                    sqlc, whitelist['column_name'], whitelist['domain_name'], table_name=whitelist.get('table_name')
+                ) for whitelist in whtlsts
+            ]
+        )(transformed_df)
+    else:
+        return transformed_df

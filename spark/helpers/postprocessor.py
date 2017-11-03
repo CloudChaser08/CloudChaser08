@@ -85,25 +85,39 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
     return out
 
 
-def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None):
+def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, table_name=None):
     """
-    Apply whitelist defined for this provider in the ref_gen_ref table
+    Apply whitelist defined for this provider in the ref_gen_ref table.
+
+    If a custom table_name is specified, the domain_name is assumed to
+    be a column from that table.
     """
     if comp_col_names is None:
         comp_col_names = []
 
-    try:
-        values = [r.gen_ref_itm_nm for r in sqlc.sql("""
-        SELECT gen_ref_itm_nm
-        FROM ref_gen_ref
-        WHERE whtlst_flg = 'Y' AND gen_ref_domn_nm = '{}'
-        """.format(domain_name)).collect()]
-    except:
-        logging.error("Error occurred while loading whitelist resuilts for domain_name = '{}', "
-                      + "check to make sure ref_gen_ref was loaded before calling this function.".format(
-                          domain_name
-                      ))
-        raise
+    if table_name:
+        try:
+            values = [r[domain_name] for r in sqlc.sql("""
+            SELECT {domain_name}
+            FROM {table_name}
+            """.format(domain_name=domain_name, table_name=table_name)).collect()]
+        except:
+            logging.error("Error occurred while loading whitelist results in table {}. ".format(table_name)
+                          + "Check to make sure this table was loaded before calling this function.")
+            raise
+    else:
+        try:
+            values = [r.gen_ref_itm_nm for r in sqlc.sql("""
+            SELECT gen_ref_itm_nm
+            FROM ref_gen_ref
+            WHERE whtlst_flg = 'Y' AND gen_ref_domn_nm = '{}'
+            """.format(domain_name)).collect()]
+        except:
+            logging.error("Error occurred while loading whitelist results for domain_name = '{}', "
+                          + "check to make sure ref_gen_ref was loaded before calling this function.".format(
+                              domain_name
+                          ))
+            raise
 
     if not values:
         logging.warn("No whitelist specified for {}".format(domain_name))
