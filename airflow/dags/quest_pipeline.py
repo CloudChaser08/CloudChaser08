@@ -40,7 +40,6 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-global quest_day_offset
 quest_day_offset = -3
 
 # Applies to all transaction files
