@@ -1,6 +1,7 @@
 import datetime
 import pytest
 
+from pyspark.sql import Row
 import spark.providers.apothecary_by_design.pharmacyclaims.sparkNormalizeApothecaryByDesign as abd
 
 results = None
@@ -13,6 +14,16 @@ def cleanup(spark):
 
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
+    spark['spark'].sparkContext.parallelize([
+        Row(
+            hvm_vdr_feed_id = '45',
+            gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_itm_nm = '',
+            gen_ref_1_dt = datetime.date(1901, 1, 1),
+            whtlst_flg = '' 
+        )
+    ]).toDF().createTempView('ref_gen_ref')
+
     abd.run(spark['spark'], spark['runner'], '2017-10-06', test = True)
     global results
     results = spark['sqlContext'] \
