@@ -1,0 +1,10 @@
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"1","hvJoinKey":"a","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"2","hvJoinKey":"b","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"3","hvJoinKey":"c","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"4","hvJoinKey":"d","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"5","hvJoinKey":"e","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"6","hvJoinKey":"f","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"7","hvJoinKey":"g","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"8","hvJoinKey":"h","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"9","hvJoinKey":"i","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
+{"errors":{},"isInvalid":true,"newHVID":false,"patientId":"10","hvJoinKey":"j","provider":"p","invalidReason":{"provider_specific_criteria":true,"dateOfBirth":false,"clusterA":false,"threeDigitZip":false}}
