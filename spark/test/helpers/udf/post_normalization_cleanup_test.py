@@ -2,6 +2,9 @@ import datetime
 import spark.helpers.udf.post_normalization_cleanup as cleanup
 import pytest
 
+def test_obscure_inst_type_of_bill():
+    assert cleanup.obscure_inst_type_of_bill('300') == 'X00'
+    assert cleanup.obscure_inst_type_of_bill('200') == '200'
 
 def test_age_cap():
     assert cleanup.cap_age('100') == '90'
