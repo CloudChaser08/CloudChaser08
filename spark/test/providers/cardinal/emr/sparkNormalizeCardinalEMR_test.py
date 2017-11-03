@@ -30,7 +30,7 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('lab_transactions')
     spark['sqlContext'].dropTempTable('dispense_transactions')
 
-    spark['sqlContext'].dropTempTAble('ref_gen_ref')
+    spark['sqlContext'].dropTempTable('ref_gen_ref')
 
     try:
         shutil.rmtree(file_utils.get_abs_path(__file__, './resources/output/'))
