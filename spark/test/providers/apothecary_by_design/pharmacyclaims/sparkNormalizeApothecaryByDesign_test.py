@@ -10,6 +10,7 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
     spark['sqlContext'].dropTempTable('abd_transaction')
     spark['sqlContext'].dropTempTable('abd_additional_data')
+    spark['sqlContext'].dropTempTable('ref_gen_ref')
 
 
 @pytest.mark.usefixtures('spark')
@@ -56,3 +57,9 @@ def test_compound_code_is_1_or_2_or_0():
 def test_states_are_all_upper_case():
     for r in results:
         assert r.patient_state.isupper()
+
+
+def test_cleanup(spark):
+    cleanup(spark)
+
+
