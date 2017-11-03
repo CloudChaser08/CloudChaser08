@@ -86,16 +86,18 @@ def delete_path_recursive(target_path, env=get_aws_env()):
         check_call(['aws', 's3', 'rm', '--recursive', target_path])
 
 
-def move_path_recrusive(source_path, target_path, env=get_aws_env()):
+def move_path_recursive(source_path, target_path, env=get_aws_env()):
     '''
     This function will recursively move the contents of a source s3 path
     to a target s3 path
     '''
     s_path = source_path if source_path.endswith('/') else source_path + '/'
     t_path = target_path if target_path.endswith('/') else target_path + '/'
-    if s3_key_exists(s_path + '*') and s3_key_exists(t_path + '*'):
+    if s3_key_exists(s_path + '*'):
         check_call(['aws', 's3', 'mv', '--recursive',
                     '--sse', 'AES256', s_path, t_path])
+    else:
+        raise Exception("S3 Key: {} does not exist".format(s_path))
 
 
 def list_s3_bucket(path, s3_connection_id=DEFAULT_CONNECTION_ID):
