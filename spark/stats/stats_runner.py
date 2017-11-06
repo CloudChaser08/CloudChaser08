@@ -16,7 +16,10 @@ def run(spark, sqlContext, provider_name, quarter, start_date, \
 
     for key, stat in all_stats.items():
         if stat:
-            #TODO: write out data to csv file
+            with open(provider_name + '_' + stat + '.csv') as f:
+                for row in stat:
+                    for col in row:
+                        f.write(col + ',' + row[col] + '\n')
 
     return all_stats
 
