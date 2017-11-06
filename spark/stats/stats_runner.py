@@ -3,6 +3,7 @@ import argparse
 import spark.spark_setup as spark_setup
 
 import spark.stats.config.reader.config_reader as config_reader
+import spark.helpers.stats.utils as stat_utils
 import spark.stats.processor as processor
 
 def run(spark, sqlContext, provider_name, quarter, start_date, \
@@ -37,7 +38,7 @@ def main(args):
                         .init('{} marketplace stats'.format(provider_name))
 
     # Set up function arguments
-    get_data_func = processor._get_all_data
+    get_data_func = stats_utils.get_provider_data
     get_provider_conf_func = lambda x: config_reader.get_provider_config( \
                                     x, config_dir, 'providers.json')
 
