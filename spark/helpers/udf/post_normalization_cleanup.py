@@ -3,6 +3,8 @@ import datetime
 import re
 import logging
 
+import spark.helpers.constants as constants
+
 
 def uppercase_code(code):
     try:
@@ -224,6 +226,14 @@ def mask_zip_code(zip_code):
         return "000"
     else:
         return zip_code
+
+
+def validate_state_code(state):
+    if state and str(state).strip().upper() in constants.states:
+        return str(state).strip().upper()
+    else:
+        return None
+
 
 vital_sign_units = {
     'HEIGHT' : ['INCHES'],

@@ -15,5 +15,5 @@ def test_filter(spark):
     ]))
 
     # assert privacy filtering is being applied
-    assert lab_priv.filter(spark['sqlContext'])(test_df).collect() \
+    assert lab_priv.filter(test_df).collect() \
         == [Row('01010101'), Row('0101'), Row(None), Row('01')]

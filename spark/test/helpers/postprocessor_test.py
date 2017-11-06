@@ -126,33 +126,3 @@ def test_apply_whitelist(spark):
         raise
 
     spark['sqlContext'].sql = old_sql_func
-
-
-def test_apply_whitelist_with_table(spark):
-    "Ensure specified whitelisting is applied when a custom whitelist table is specified"
-
-    df = spark['spark'].sparkContext.parallelize([
-        Row(row_id=1, whitelist_col='this value is ok'),
-        Row(row_id=2, whitelist_col='this value is not ok'),
-        Row(row_id=3, whitelist_col='this value is also not ok'),
-        Row(row_id=4, whitelist_col='this value is neutral'),
-        Row(row_id=5, whitelist_col='this value is a-ok')
-    ]).toDF()
-
-    spark['spark'].sparkContext.parallelize([
-        ['THIS VALUE IS OK'],
-        ['THIS VALUE IS A OK']
-    ]).toDF(StructType([
-        StructField('custom_col', StringType())
-    ])).registerTempTable('my_custom_whitelist_table')
-
-    whitelisted = postprocessor.apply_whitelist(spark['sqlContext'], 'whitelist_col', 'custom_col',
-                                                table_name='my_custom_whitelist_table')(df).collect()
-
-    for row in whitelisted:
-        if row.row_id in [2, 3, 4]:
-            assert not row.whitelist_col
-        elif row.row_id == 1:
-            assert row.whitelist_col == 'THIS VALUE IS OK'
-        elif row.row_id == 5:
-            assert row.whitelist_col == 'THIS VALUE IS A OK'

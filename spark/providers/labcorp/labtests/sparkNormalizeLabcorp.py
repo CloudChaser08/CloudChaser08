@@ -1,4 +1,3 @@
-#! /usr/bin/python
 import argparse
 from datetime import datetime
 from spark.runner import Runner
@@ -30,10 +29,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
     else:
         input_path = 's3a://salusv/incoming/labtests/labcorp/{}/'.format(
-            date_input.replace('-', '/')
+            '/'.join(date_input.split('-')[:2])
         )
         matching_path = 's3a://salusv/matching/payload/labtests/labcorp/{}/'.format(
-            date_input.replace('-', '/')
+            '/'.join(date_input.split('-')[:2])
         )
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -60,7 +59,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
 
     # trim and remove nulls from raw input
-    postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(
+    postprocessor.compose(
+        postprocessor.trimmify,
+        lambda df: postprocessor.nullify(df, preprocess_func=lambda x: x.replace('X', ''))
+    )(
         runner.sqlContext.sql('select * from transactions')
     ).createTempView('transactions')
 
@@ -74,7 +76,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             vendor_id=vendor_id,
             filename='record_data_HV_{}.txt.name.csv'.format(date_obj.strftime('%Y%m%d'))
         ),
-        lab_priv.filter(runner.sqlContext),
+        lab_priv.filter,
         postprocessor.apply_date_cap(runner.sqlContext, 'date_specimen', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE')
     )(
         runner.sqlContext.sql('select * from lab_common_model')
@@ -105,7 +107,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/labcorp/labtests/spark-output/'
     else:
-        output_path = 's3a://salusv/warehouse/parquet/labtests/2017-02-16/'
+        output_path = 's3a://salusv/warehouse/parquet/labtests/2017-11-06/'
 
     normalized_records_unloader.distcp(output_path)
 

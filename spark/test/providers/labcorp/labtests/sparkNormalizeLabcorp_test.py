@@ -17,7 +17,6 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('lab_common_model')
     spark['sqlContext'].dropTempTable('transactions')
     spark['sqlContext'].dropTempTable('ref_gen_ref')
-    spark['sqlContext'].dropTempTable('ref_geo_state')
 
     try:
         shutil.rmtree(file_utils.get_abs_path(__file__, './resources/output/'))
@@ -39,11 +38,6 @@ def test_init(spark):
         )
     ]).toDF().createTempView('ref_gen_ref')
 
-    spark['spark'].sparkContext.parallelize([
-        Row(geo_state_pstl_cd='NC'),
-        Row(geo_state_pstl_cd='TX')
-    ]).toDF().createTempView('ref_geo_state')
-
     labcorp.run(spark['spark'], spark['runner'], '2017-05-01', True)
     global results, transactions
     results = spark['sqlContext'].sql('select * from lab_common_model') \
@@ -57,7 +51,7 @@ def test_init(spark):
 
 def test_states_whitelisted():
     "Ensure only whitelisted states were included"
-    assert set([r.patient_state for r in results]) == {None, 'NC', 'TX'}
+    assert set([r.patient_state for r in results]) == {None, 'PA', 'DE', 'NJ', 'NY'}
 
 
 def test_fixed_width_parsing():

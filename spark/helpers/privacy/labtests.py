@@ -5,10 +5,8 @@ lab_transformer = {
     'loinc_code': {
         'func': post_norm_cleanup.clean_up_numeric_code,
         'args': ['loinc_code']
-    },
+    }
 }
 
-def filter(sqlc):
-    def out(df):
-        return priv_common.filter(df, sqlc=sqlc, additional_transforms=lab_transformer)
-    return out
+def filter(df):
+    return priv_common.filter(df, additional_transforms=lab_transformer)
