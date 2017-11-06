@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import spark.spark_setup as spark_setup
 
@@ -14,12 +15,13 @@ def run(spark, sqlContext, provider_name, quarter, start_date, \
                 provider_name, quarter, start_date, end_date, earliest_date, \
                 get_data_func, get_provider_conf_func)
 
+    os.mkdir(output_dir)
     for key, stat in all_stats.items():
         if stat:
-            with open(provider_name + '_' + stat + '.csv') as f:
+            with open(output_dir + provider_name + '_' + key + '.csv', 'w') as f:
                 for row in stat:
-                    for col in row:
-                        f.write(col + ',' + row[col] + '\n')
+                    for col, value in row.asDict().items():
+                        f.write(col + ',' + str(value) + '\n')
 
     return all_stats
 

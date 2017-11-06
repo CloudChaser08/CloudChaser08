@@ -18,7 +18,7 @@ earliest_date = None
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
     global results, output_dir, data_row, provider, quarter, \
-            start_date, end_date, earliest_date
+            start_date, end_date, earliest_date, output_dir
 
     output_dir = '/'.join(__file__.split('/')[:-1]) + '/output/'
 
@@ -39,7 +39,7 @@ def test_init(spark):
         return df
 
 
-    fill_rate_conf = { 'columns': ['claim_id', 'service_date', 'col_3'] }
+    fill_rate_conf = { 'blacklist_columns': ['col_1', 'col_2'] }
 
     def _inject_get_provider_conf(*params):
         return {
@@ -68,39 +68,17 @@ def test_init(spark):
             output_dir)
 
 
-def test_something():
-    print results
-    results['fill_rates'].show()
-
-
 def test_output_directory_created():
     test_dir = '/'.join(__file__.split('/')[:-1]) + '/'
     assert 'output' in check_output(['ls', test_dir]).split('\n')
 
 
-def test_directories_made_for_each_stat_calc():
-    output_dir_contents = check_output(['ls', output_dir]).split('\n')
-    filename_format = provider + '_' + quarter + '_{}.csv'
-    for key, df in results.items():
-        if df:
-            assert filename_format.format(key) in output_dir_contents
-        else:
-            assert filename_format.format(key) not in output_dir_contents
+def test_csv_made_for_each_non_null_stat_calc():
+    output_files = check_output(['ls', output_dir]).split('\n')
+    created_stats = ['fill_rates']
+    for stat in created_stats:
+        assert 1 in [1 if stat in f else 0 for f in output_files]
 
-
-def test_writes_success_for_each_stat_calc():
-    output_dir_format = output_dir + provider + '_' + quarter + '_{}.csv/'
-    for key, df in results.items():
-        if df:
-            assert '_SUCCESS' in check_output(['ls', output_dir_format.format(key)]).split('\n')
-
-
-def test_one_csv_for_each_stat_calc():
-    output_dir_format = output_dir + provider + '_' + quarter + '_{}.csv/'
-    for key, df in results.items():
-        if df:
-            stat_output_dir = check_output(['ls', output_dir_format.format(key)]).split('\n')
-            assert len(filter(lambda x: x.startswith('part'), stat_output_dir)) == 1
 
 def test_cleanup():
     check_call(['rm', '-r', output_dir])
