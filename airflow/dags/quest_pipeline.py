@@ -23,7 +23,7 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}{}{}/'
+TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
 DAG_NAME = 'quest_pipeline'
 
 default_args = {
@@ -94,13 +94,13 @@ def insert_formatted_regex_function(template):
     return out
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
-    TMP_PATH_TEMPLATE
+    TMP_PATH_TEMPLATE.format('{}{}{}')
     )
 get_addon_tmp_dir = date_utils.generate_insert_date_into_template_function(
-    TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+    TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format('{}{}{}')
     )
 get_trunk_tmp_dir = date_utils.generate_insert_date_into_template_function(
-    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format('{}{}{}')
     )
 
 def get_deid_file_urls(ds, kwargs):
@@ -360,7 +360,9 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds, k: [
-                DEID_UNZIPPED_FILE_NAME_TEMPLATE.format(get_formatted_date(ds, kwargs))
+                insert_formatted_date_function(
+                    DEID_UNZIPPED_FILE_NAME_TEMPLATE
+                    )
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function( 
                 '{}/{}/{}', day_offset = quest_day_offset
