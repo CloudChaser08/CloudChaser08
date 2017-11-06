@@ -39,8 +39,9 @@ def main(args):
 
     # Set up function arguments
     get_data_func = stats_utils.get_provider_data
-    get_provider_conf_func = lambda x: config_reader.get_provider_config( \
-                                    x, config_dir, 'providers.json')
+    get_provider_conf_func = config_reader. \
+                             generate_get_provider_config_function(
+                                providers_conf_file)
 
     # Calculate marketplace stats
     all_stats = run(spark, sqlContext, provider_name, quarter, \

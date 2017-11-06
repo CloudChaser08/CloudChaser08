@@ -34,7 +34,7 @@ def _extract_provider_conf(provider_name, providers_conf):
     return conf[0]
 
 
-def get_provider_config(provider_name, providers_conf_file):
+def generate_get_provider_config_function(providers_conf_file):
     '''
     Read the providers config files and each associated stat calc config file
     and combine them into one provider config object.
@@ -43,34 +43,36 @@ def get_provider_config(provider_name, providers_conf_file):
         - providers_conf_file: Absolute path of the location of the
                                config file with all provider configs.
     Output:
-        - provider_conf: A python dict of the providers config with
-                         each associated stat calcs config embedded
+        - out: A function that creates the provider config 
+               for the inputed provider_name
     '''
-
     providers_conf = _get_config_from_json(providers_conf_file)
 
     if 'providers' not in providers_conf:
         raise Exception('{} does not contain providers list'.format(providers_conf))
 
-    provider_conf = _extract_provider_conf(provider_name, providers_conf)
+    def out(provider_name):
+        provider_conf = _extract_provider_conf(provider_name, providers_conf)
 
-    # Check that datatype is specified
-    if not 'datatype' in provider_conf or provider_conf['datatype'] == None:
-        raise Exception('datatype is not specified for provider {}'.format(provider_name))
+        # Check that datatype is specified
+        if not 'datatype' in provider_conf or provider_conf['datatype'] == None:
+            raise Exception('datatype is not specified for provider {}'.format(provider_name))
 
-    # Get each individual stat calcs config based on the config path in them
-    stat_calcs = ['fill_rate', 'key_stats', 'top_values', \
-                 'longitudinality', 'year_over_year', 'epi_calcs']
-    for calc in stat_calcs:
-        if calc not in provider_conf:
-            logging.info('No config for {} found in {} config, falling back to default.'.format(calc, provider_name))
-            conf_file_loc = get_abs_path(providers_conf_file, 
-                                        provider_conf['datatype'] + '/' + calc + '.json')
-            provider_conf[calc] = _get_config_from_json(conf_file_loc)
-        elif provider_conf[calc]:
-            conf_file_loc = get_abs_path(providers_conf_file, provider_conf[calc])
-            provider_conf[calc] = _get_config_from_json(conf_file_loc)
-    
-    return provider_conf
+        # Get each individual stat calcs config based on the config path in them
+        stat_calcs = ['fill_rate', 'key_stats', 'top_values', \
+                     'longitudinality', 'year_over_year', 'epi_calcs']
+        for calc in stat_calcs:
+            if calc not in provider_conf:
+                logging.info('No config for {} found in {} config, falling back to default.'.format(calc, provider_name))
+                conf_file_loc = get_abs_path(providers_conf_file, 
+                                            provider_conf['datatype'] + '/' + calc + '.json')
+                provider_conf[calc] = _get_config_from_json(conf_file_loc)
+            elif provider_conf[calc]:
+                conf_file_loc = get_abs_path(providers_conf_file, provider_conf[calc])
+                provider_conf[calc] = _get_config_from_json(conf_file_loc)
+        
+        return provider_conf
+
+    return out
 
 
