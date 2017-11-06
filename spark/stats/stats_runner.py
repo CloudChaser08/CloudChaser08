@@ -10,15 +10,15 @@ def run(spark, sqlContext, provider_name, quarter, start_date, \
         end_date, earliest_date, get_data_func, get_provider_conf_func, \
         output_dir):
 
-    all_stats_df = processor.run_marketplace_stats(spark, sqlContext, \
+    all_stats = processor.run_marketplace_stats(spark, sqlContext, \
                 provider_name, quarter, start_date, end_date, earliest_date, \
                 get_data_func, get_provider_conf_func)
 
-    for key, df in all_stats_df.items():
-        if df:
-            df.coalesce(1).write.option('header', 'true').csv(output_dir + provider_name + '_' + quarter + '_' + key + '.csv')
+    for key, stat in all_stats.items():
+        if stat:
+            #TODO: write out data to csv file
 
-    return all_stats_df
+    return all_stats
 
 
 def main(args):
@@ -43,7 +43,7 @@ def main(args):
                                     x, config_dir, 'providers.json')
 
     # Calculate marketplace stats
-    all_stats_df = run(spark, sqlContext, provider_name, quarter, \
+    all_stats = run(spark, sqlContext, provider_name, quarter, \
                     start_date, end_date, earliest_date, config_dir)
 
 
