@@ -3,12 +3,6 @@ import pytest
 import spark.stats.config.reader.config_reader as config_reader
 from spark.helpers.file_utils import get_abs_path
 
-test_config_dir = None
-
-def test_init():
-    global test_config_dir
-    test_config_dir = '/'.join(__file__.split('/')[:-1]) + '/resources/' 
-
 def test_reads_sub_conf():
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
     conf = config_reader.generate_get_provider_config_function(conf_file)('test')
