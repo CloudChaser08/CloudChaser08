@@ -91,7 +91,7 @@ FROM laborder ord
         AND (COALESCE(
                 substring(ord.encounterdate, 1, 8),
                 substring(ord.referencedatetime, 1, 8)
-            ) <= substring(dem.nextrecorddate, 1, 8)
+            ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) as explode_idx) x
 WHERE ((trim(split(ord.diagnoses, ',')[explode_idx]) IS NOT NULL AND trim(split(ord.diagnoses, ',')[explode_idx]) != '')

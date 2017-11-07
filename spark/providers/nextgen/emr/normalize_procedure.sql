@@ -106,5 +106,5 @@ FROM `procedure` proc
         AND (COALESCE(
                 substring(proc.encounterdate, 1, 8),
                 substring(proc.referencedatetime, 1, 8)
-            ) <= substring(dem.nextrecorddate, 1, 8)
+            ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL);
