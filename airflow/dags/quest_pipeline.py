@@ -362,7 +362,7 @@ detect_move_normalize_dag = SubDagOperator(
             'expected_matching_files_func'      : lambda ds, k: [
                 insert_formatted_date_function(
                     DEID_UNZIPPED_FILE_NAME_TEMPLATE
-                    )
+                )(ds, k)
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function( 
                 '{}/{}/{}', day_offset = quest_day_offset
