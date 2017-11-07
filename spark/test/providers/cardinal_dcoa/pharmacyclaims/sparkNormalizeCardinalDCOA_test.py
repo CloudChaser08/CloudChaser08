@@ -55,6 +55,11 @@ def test_prov_primary_care_qual_is_99():
         assert row.prov_primary_care_qual == '99'
 
 
+def test_discharge_date_filled():
+    for row in results:
+        assert row.discharge_date is not None
+
+
 def test_cleanup(spark):
     cleanup(spark)
 

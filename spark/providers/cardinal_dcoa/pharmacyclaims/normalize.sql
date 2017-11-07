@@ -19,6 +19,7 @@ SELECT
     NULL,                       --year_of_injury
     NULL,                       --date_authorized
     NULL,                       --time_authorized
+    discharge_dttm,             --discharge_date
     NULL,                       --transaction_code_std
     NULL,                       --transaction_code_vendor
     NULL,                       --response_code_std
