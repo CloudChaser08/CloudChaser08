@@ -120,7 +120,7 @@ FROM diagnosis diag
         AND (COALESCE(
                 substring(diag.encounterdate, 1, 8),
                 substring(diag.referencedatetime, 1, 8)
-            ) <= substring(dem.nextrecorddate, 1, 8)
+            ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref1 ON ref1.hvm_vdr_feed_id = 35
         AND ref1.gen_ref_domn_nm = 'diagnosis.statusid'

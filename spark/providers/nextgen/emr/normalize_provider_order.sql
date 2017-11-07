@@ -199,7 +199,7 @@ FROM `ord_clean_actcodes` ord
         AND (COALESCE(
                 substring(ord.encounterdate, 1, 8),
                 substring(ord.referencedatetime, 1, 8)
-            ) <= substring(dem.nextrecorddate, 1, 8)
+            ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref1 ON ref1.hvm_vdr_feed_id = 35
         AND ref1.gen_ref_domn_nm = 'order.actmood'

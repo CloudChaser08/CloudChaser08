@@ -176,7 +176,7 @@ FROM vitalsigns_w_msrmt vsn
         AND (COALESCE(
                 substring(vsn.encounterdate, 1, 8),
                 substring(vsn.referencedatetime, 1, 8)
-            ) <= substring(dem.nextrecorddate, 1, 8)
+            ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)) as explode_idx) x
 WHERE (vsn.vit_sign_msrmt[explode_idx] IS NOT NULL AND vsn.vit_sign_msrmt[explode_idx] != '')

@@ -131,7 +131,7 @@ FROM labresult rslt
         AND (COALESCE(
                 substring(rslt.encounterdate, 1, 8),
                 substring(rslt.referencedatetime, 1, 8)
-            ) <= substring(dem.nextrecorddate, 1, 8)
+            ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
     LEFT JOIN ref_gen_ref ref ON ref.gen_ref_domn_nm = 'emr_lab_result.lab_test_nm'
         AND TRIM(UPPER(rslt.emrcode)) = ref.gen_ref_itm_nm
@@ -268,7 +268,7 @@ FROM lipidpanel lip
         AND (COALESCE(
                 substring(lip.encounterdate, 1, 8),
                 substring(lip.referencedatetime, 1, 8)
-            ) <= substring(dem.nextrecorddate, 1, 8)
+            ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3)) as explode_idx) x
 WHERE

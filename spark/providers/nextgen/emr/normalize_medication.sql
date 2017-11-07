@@ -169,7 +169,7 @@ FROM medicationorder med
         AND (COALESCE(
                 substring(med.encounterdate, 1, 8),
                 substring(med.referencedatetime, 1, 8)
-            ) <= substring(dem.nextrecorddate, 1, 8)
+            ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4)) as explode_idx) x
 WHERE ((split(med.diagnosis_code_id, ',')[explode_idx] IS NOT NULL
