@@ -37,6 +37,8 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('lab_transactions')
     spark['sqlContext'].dropTempTable('dispense_transactions')
 
+    spark['sqlContext'].dropTempTable('ref_gen_ref')
+
     try:
         shutil.rmtree(output_test_location)
     except:
