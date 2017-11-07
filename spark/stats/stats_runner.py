@@ -8,14 +8,12 @@ import spark.helpers.stats.utils as stat_utils
 import spark.stats.processor as processor
 
 def run(spark, sqlContext, provider_name, quarter, start_date, \
-        end_date, earliest_date, get_data_func, get_provider_conf_func, \
-        output_dir):
+        end_date, earliest_date, output_dir):
 
     all_stats = processor.run_marketplace_stats(spark, sqlContext, \
-                provider_name, quarter, start_date, end_date, earliest_date, \
-                get_data_func, get_provider_conf_func)
+                provider_name, quarter, start_date, end_date, earliest_date)
 
-    os.mkdir(output_dir)
+    os.makedirs(output_dir)
     for key, stat in all_stats.items():
         if stat:
             with open(output_dir + provider_name + '_' + key + '.csv', 'w') as f:
