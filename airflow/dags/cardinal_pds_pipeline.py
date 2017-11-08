@@ -17,10 +17,11 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.update_analytics_db as update_analytics_db
 import util.s3_utils as s3_utils
+import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching, clean_up_tmp_dir,
-          detect_move_normalize, HVDAG, s3_utils, update_analytics_db]:
+          detect_move_normalize, HVDAG, s3_utils, update_analytics_db, date_utils]:
     reload(m)
 
 # Applies to all files
@@ -29,7 +30,7 @@ TMP_PATH_TEMPLATE = '/tmp/cardinal_pds/pharmacyclaims/{}/'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 10, 23, 20),
+    'start_date': datetime(2017, 9, 15, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -37,7 +38,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 20 * * *',   # Every day at 4:00PM EST
+    schedule_interval = '0 12 * * 5',   # Every Friday at 8:00AM EST
     default_args = default_args
 )
 
@@ -68,58 +69,22 @@ DEID_FILE_PREFIX = 'PDS_deid_data_'
 HV_SLASH_INCOMING = 'testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/moved_raw/' \
                     if HVDAG.HVDAG.airflow_env == 'test' else 'incoming/cardinal/pds/'
 
-def get_file_date_nodash(kwargs):
-    return (kwargs['execution_date'] + timedelta(days=1)).strftime('%Y%m%d')
-
-
-def insert_formatted_file_date_function(template):
-    def out(ds, kwargs):
-        return template.format(get_file_date_nodash(kwargs))
-    return out
-
-def get_date(kwargs):
-    return kwargs['ds_nodash']
-
-
-def insert_formatted_date_function(template):
-    def out(ds, kwargs):
-        return template.format(get_date(kwargs))
-    return out
-
-
 def get_formatted_datetime(ds, kwargs):
     return kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
-
 
 def insert_formatted_datetime_function(template):
     def out(ds, kwargs):
         return template.format(get_formatted_datetime(ds, kwargs))
     return out
 
-
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format(get_file_date_nodash(kwargs) + '\d{6}')
+        return template.format(date_utils.insert_date_into_template('{}{}{}', kwargs, day_offset = 7) + '\d{6}')
     return out
 
-
-def insert_current_date(template, kwargs):
-    ds_nodash = get_file_date_nodash(kwargs)
-    return template.format(
-        ds_nodash[0:4],
-        ds_nodash[4:6],
-        ds_nodash[6:8]
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(
+    TRANSACTION_TMP_PATH_TEMPLATE.format('{}{}{}')
     )
-
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return insert_current_date(template, kwargs)
-    return out
-
-
-get_tmp_dir = insert_formatted_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
-
 
 def get_transaction_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(
@@ -301,7 +266,7 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            's3_prefix_func'           : insert_current_date_function(
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
                 S3_TRANSACTION_PROCESSED_URL_TEMPLATE
             ),
             'num_splits'               : 20
@@ -345,7 +310,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -360,7 +325,7 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : get_deid_file_names,
-            'file_date_func'                    : insert_current_date_function(
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}'
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
@@ -380,8 +345,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
         provide_context=True,
         python_callable=lambda ds, **kwargs: \
             s3_utils.fetch_file_from_s3(
-                insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs),
-                get_tmp_dir(ds, kwargs) + insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
+                date_utils.insert_date_into_template(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs),
+                get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
         ),
         dag=mdag
     )
@@ -395,10 +360,10 @@ if HVDAG.HVDAG.airflow_env != 'test':
             {
                 'file_paths_func'       : lambda ds, kwargs: [
                     get_tmp_dir(ds, kwargs) + \
-                        insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
+                        date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
                 ],
                 's3_prefix_func'        : lambda ds, kwargs: \
-                    '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:-1]) + '/',
+                    '/'.join(date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:-1]) + '/',
                 's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
                 'aws_access_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
                 'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
@@ -408,7 +373,10 @@ if HVDAG.HVDAG.airflow_env != 'test':
         dag = mdag
     )
 
-    sql_template = "MSCK REPAIR TABLE pharmacyclaims_20170602"
+    sql_template = """
+        ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='cardinal_pds', part_best_date='{0}-{1}')
+        LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=cardinal_pds/part_best_date={0}-{1}/'
+    """
 
     update_analytics_db = SubDagOperator(
         subdag=update_analytics_db.update_analytics_db(
@@ -417,8 +385,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: insert_current_date_function(sql_template)(ds, k)
-                if insert_current_date_function('{2}')(ds, k) < '08' else ''
+                'sql_command_func' : lambda ds, k: date_utils.generate_insert_date_into_template_function(sql_template)(ds, k)
+                if date_utils.generate_insert_date_into_template_function('{2}')(ds, k) < '08' else ''
             }
         ),
         task_id='update_analytics_db',

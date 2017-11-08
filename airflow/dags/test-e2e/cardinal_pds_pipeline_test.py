@@ -13,7 +13,7 @@ def cleanup():
 
     subprocess.check_call([
         'aws', 's3', 'rm', '--recursive', CARDINAL_PDS_TEST_DIR + '/spark-output/'
-    )]
+    ])
 
 
 def test_run():
