@@ -30,7 +30,7 @@ TMP_PATH_TEMPLATE = '/tmp/cardinal_pds/pharmacyclaims/{}/'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 9, 15, 12),
+    'start_date': datetime(2017, 10, 23, 20),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -38,7 +38,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 12 * * 5',   # Every Friday at 8:00AM EST
+    schedule_interval = '0 20 * * *',   # Every Friday at 8:00AM EST
     default_args = default_args
 )
 
@@ -79,7 +79,7 @@ def insert_formatted_datetime_function(template):
 
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format(date_utils.insert_date_into_template('{}{}{}', kwargs, day_offset = 7) + '\d{6}')
+        return template.format(date_utils.insert_date_into_template('{}{}{}', kwargs, day_offset = 1) + '\d{6}')
     return out
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
@@ -373,10 +373,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
         dag = mdag
     )
 
-    sql_template = """
-        ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='cardinal_pds', part_best_date='{0}-{1}')
-        LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=cardinal_pds/part_best_date={0}-{1}/'
-    """
+    sql_template = "MSCK REPAIR TABLE pharmacyclaims_20170602"
 
     update_analytics_db = SubDagOperator(
         subdag=update_analytics_db.update_analytics_db(
