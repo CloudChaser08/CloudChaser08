@@ -22,12 +22,12 @@ fill_rate_conf = None
 @pytest.fixture(autouse=True)
 def setup_teardown():
     old_get_data_func = stats_utils.get_provider_data
-    old_generate_get_provider_config_function_func = config_reader.generate_get_provider_config_function
+    old_get_provider_config_func = config_reader.get_provider_config
 
     yield
 
     stats_utils.get_provider_data = old_get_data_func
-    config_reader.generate_get_provider_config_function = old_generate_get_provider_config_function_func
+    config_reader.get_provider_config = old_get_provider_config_func
 
 
 @pytest.mark.usefixtures('spark')
@@ -35,7 +35,7 @@ def test_init(spark):
     global df, provider_name, results_distinct_column, \
             results_no_distinct_column, results_no_fill_rate, \
             columns, data_row, fill_rate_conf, old_get_data_func, \
-            old_generate_get_provider_config_function_func
+            old_get_provider_config_func
 
     provider_name = 'test'
 
@@ -118,19 +118,19 @@ def test_init(spark):
         }
     )
 
-    config_reader.generate_get_provider_config_function = get_prov_conf
+    config_reader.get_provider_config = get_prov_conf
     results_distinct_column = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
                     provider_name, quarter, start_date, end_date, \
                     earliest_date)
 
-    config_reader.generate_get_provider_config_function = get_prov_conf_no_unique_column
+    config_reader.get_provider_config = get_prov_conf_no_unique_column
     results_no_distinct_column = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
                     provider_name, quarter, start_date, end_date, \
                     earliest_date)
 
-    config_reader.generate_get_provider_config_function = get_prov_conf_no_fill_rate_calc
+    config_reader.get_provider_config = get_prov_conf_no_fill_rate_calc
     results_no_fill_rate = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
                     provider_name, quarter, start_date, end_date, \

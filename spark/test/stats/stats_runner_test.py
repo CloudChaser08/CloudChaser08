@@ -22,19 +22,19 @@ earliest_date = None
 @pytest.fixture(autouse=True)
 def setup_teardown():
     old_get_data_func = stats_utils.get_provider_data
-    old_generate_get_provider_config_function_func = config_reader.generate_get_provider_config_function
+    old_get_provider_config_func = config_reader.get_provider_config
 
     yield
 
     stats_utils.get_provider_data = old_get_data_func
-    config_reader.generate_get_provider_config_function = old_generate_get_provider_config_function_func
+    config_reader.get_provider_config = old_get_provider_config_func
 
 
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
     global results, output_dir, data_row, provider, quarter, \
             start_date, end_date, earliest_date, output_dir, \
-            old_get_data_func, old_generate_get_provider_config_function_func
+            old_get_data_func, old_get_provider_config_func
 
     output_dir = '/'.join(__file__.split('/')[:-1]) + '/output/'
 
@@ -54,7 +54,7 @@ def test_init(spark):
         ]).toDF()
     )
 
-    config_reader.generate_get_provider_config_function = Mock(
+    config_reader.get_provider_config = Mock(
         return_value = {
             'name'              : 'test',
             'datafeed_id'       : '27',
