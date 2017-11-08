@@ -38,7 +38,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 20 * * *',   # Every Friday at 8:00AM EST
+    schedule_interval = '0 20 * * *',   # Every day at 4:00PM EST
     default_args = default_args
 )
 
