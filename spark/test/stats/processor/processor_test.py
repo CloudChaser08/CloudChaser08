@@ -19,11 +19,15 @@ data_row = None
 
 fill_rate_conf = None
 
-old_get_data_func = None
-old_generate_get_provider_config_function_func = None
+@pytest.fixture(autouse=True)
+def setup_teardown():
+    old_get_data_func = stats_utils.get_provider_data
+    old_generate_get_provider_config_function_func = config_reader.generate_get_provider_config_function
 
-def cleanup(spark):
-    pass
+    yield
+
+    stats_utils.get_provider_data = old_get_data_func
+    config_reader.generate_get_provider_config_function = old_generate_get_provider_config_function_func
 
 
 @pytest.mark.usefixtures('spark')
@@ -45,9 +49,6 @@ def test_init(spark):
 
     columns = ['claim_id', 'service_date', 'col_1', 'col_2', 'col_3']
     data_row = Row(*columns)
-
-    old_get_data_func = stats_utils.get_provider_data
-    old_generate_get_provider_config_function_func = config_reader.generate_get_provider_config_function
 
     inject_data_mock = Mock(
         return_value = spark['spark'].sparkContext.parallelize([
@@ -154,10 +155,5 @@ def test_fill_rate_column_are_blacklisted():
 
 def test_no_df_if_fill_rates_is_none_in_provider_conf():
     assert results_no_fill_rate['fill_rates'] == None
-
-
-def test_cleanup():
-    stats_utils.get_provider_data = old_get_data_func
-    config_reader.generate_get_provider_config_function = old_generate_get_provider_config_function_func
 
 

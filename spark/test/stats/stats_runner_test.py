@@ -19,9 +19,16 @@ start_date = None
 end_date = None
 earliest_date = None
 
-# Mocked functions
-old_get_data_func = None
-old_generate_get_provider_config_function_func = None
+@pytest.fixture(autouse=True)
+def setup_teardown():
+    old_get_data_func = stats_utils.get_provider_data
+    old_generate_get_provider_config_function_func = config_reader.generate_get_provider_config_function
+
+    yield
+
+    stats_utils.get_provider_data = old_get_data_func
+    config_reader.generate_get_provider_config_function = old_generate_get_provider_config_function_func
+
 
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
@@ -33,8 +40,6 @@ def test_init(spark):
 
     data_row = Row('claim_id', 'service_date', 'col_1', 'col_2', 'col_3')
     
-    # Mock get_provider_data
-    old_get_data_func = stats_utils.get_provider_data
     stats_utils.get_provider_data = Mock(
         return_value = spark['spark'].sparkContext.parallelize([
             data_row('0', '1995-10-11', None, 'a', 'b'),
@@ -49,8 +54,6 @@ def test_init(spark):
         ]).toDF()
     )
 
-    # Mock generate_get_provider_config_function
-    old_generate_get_provider_config_function_func = config_reader.generate_get_provider_config_function
     config_reader.generate_get_provider_config_function = Mock(
         return_value = lambda *x: {
             'name'              : 'test',
@@ -90,10 +93,6 @@ def test_csv_made_for_each_non_null_stat_calc():
 
 
 def test_cleanup():
-    # Replace mocked functions
-    stats_utils.get_provider_data = old_get_data_func
-    config_reader.generate_get_provider_config_function = old_generate_get_provider_config_function_func
-
     check_call(['rm', '-r', output_dir])
 
 
