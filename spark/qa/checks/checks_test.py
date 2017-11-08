@@ -3,6 +3,7 @@ import pytest
 from pyspark.sql.functions import col
 
 import spark.qa.checks.utils as check_utils
+import spark.helpers.constants as constants
 
 
 @pytest.mark.usefixtures("datafeed")
@@ -92,3 +93,146 @@ def test_valid_gender_values_in_target(datafeed):
 
     for row in patient_gender_values:
         assert row[datafeed.target_data_gender_column_name] in ['M', 'F', 'U', None]
+
+
+def test_valid_patient_state_values_in_target(datafeed):
+    """
+    All patient_state values in the target data are validvalid
+    """
+
+    # check dependencies
+    check_utils.check_dependencies(datafeed, [
+        'target_data', 'target_data_patient_state_column_name'
+    ])
+
+    distinct_patient_state_values = datafeed.target_data.filter(
+        col(datafeed.target_data_patient_state_column_name).isNotNull()
+    ).select(
+        col(datafeed.target_data_patient_state_column_name)
+    ).distinct()
+
+    assert distinct_patient_state_values.count() <= len(constants.states)
+
+    for state_value in distinct_patient_state_values.collect():
+        if state_value is not None:
+            assert state_value in constants.states
+
+
+def test_full_fill_rate_for_record_id(datafeed):
+    """
+    record_id should never be null or blank
+    """
+    check_utils.check_dependencies(
+        datafeed, [
+            'target_data', 'target_data_record_id_column_name'
+        ]
+    )
+
+    check_utils.assert_full_fill_in_target(
+        datafeed.target_data, datafeed.target_data_record_id_column_name
+    )
+
+
+def test_full_fill_rate_for_created_date(datafeed):
+    """
+    created_date should never be null or blank
+    """
+    check_utils.check_dependencies(
+        datafeed, [
+            'target_data', 'target_data_created_date_column_name'
+        ]
+    )
+
+    check_utils.assert_full_fill_in_target(
+        datafeed.target_data, datafeed.target_data_created_date_column_name
+    )
+
+
+def test_full_fill_rate_for_model_version(datafeed):
+    """
+    model_version should never be null or blank
+    """
+    check_utils.check_dependencies(
+        datafeed, [
+            'target_data', 'target_data_model_version_column_name'
+        ]
+    )
+
+    check_utils.assert_full_fill_in_target(
+        datafeed.target_data, datafeed.target_data_model_version_column_name
+    )
+
+
+def test_full_fill_rate_for_data_set(datafeed):
+    """
+    data_set should never be null or blank
+    """
+    check_utils.check_dependencies(
+        datafeed, [
+            'target_data', 'target_data_data_set_column_name'
+        ]
+    )
+
+    check_utils.assert_full_fill_in_target(
+        datafeed.target_data, datafeed.target_data_data_set_column_name
+    )
+
+
+def test_full_fill_rate_for_data_feed(datafeed):
+    """
+    data_feed should never be null or blank
+    """
+    check_utils.check_dependencies(
+        datafeed, [
+            'target_data', 'target_data_data_feed_column_name'
+        ]
+    )
+
+    check_utils.assert_full_fill_in_target(
+        datafeed.target_data, datafeed.target_data_data_feed_column_name
+    )
+
+
+def test_full_fill_rate_for_data_vendor(datafeed):
+    """
+    data_vendor should never be null or blank
+    """
+    check_utils.check_dependencies(
+        datafeed, [
+            'target_data', 'target_data_data_vendor_column_name'
+        ]
+    )
+
+    check_utils.assert_full_fill_in_target(
+        datafeed.target_data, datafeed.target_data_data_vendor_column_name
+    )
+
+
+def test_full_fill_rate_for_provider_partition(datafeed):
+    """
+    provider_partition should never be null or blank
+    """
+    check_utils.check_dependencies(
+        datafeed, [
+            'target_data', 'target_data_provider_partition_column_name'
+        ]
+    )
+
+    check_utils.assert_full_fill_in_target(
+        datafeed.target_data, datafeed.target_data_provider_partition_column_name
+    )
+
+
+def test_full_fill_rate_for_date_partition(datafeed):
+    """
+    date_partition should never be null or blank
+    """
+    check_utils.check_dependencies(
+        datafeed, [
+            'target_data', 'target_data_date_partition_column_name'
+        ]
+    )
+
+    check_utils.assert_full_fill_in_target(
+        datafeed.target_data, datafeed.target_data_date_partition_column_name
+    )

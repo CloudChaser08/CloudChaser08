@@ -15,16 +15,63 @@ class Datafeed:
 
     def __init__(
             self,
-            datatype,                                        # datatype
-            source_data=None,                                # map of table name to a dataframe representing the data for that table
-            target_data=None,                                # dataframe containing the normalized data
-            source_data_hvid_full_name=None,                 # name of the hvid in the source data - in the format table_name.column_name
-            source_data_claim_full_name=None,                # name of the claim_id in the source_data - in the format table_name.column_name
-            source_data_service_line_full_name=None,         # name of the service_line_id in the source_data - in the format table_name.column_name
-            target_data_hvid_column_name='hvid',             # name of hvid column in target_data
-            target_data_claim_column_name=None,              # name of claim_id column in target_data
-            target_data_service_line_column_name=None,       # name of service_line_id column in target_data
-            target_data_gender_column_name='patient_gender'  # name of service_line_id column in target_data
+
+            # datatype
+            datatype,
+
+            # map of table name to a dataframe representing the data for that table
+            source_data=None,
+
+            # dataframe containing the normalized data
+            target_data=None,
+
+            # name of the hvid in the source data - in the format table_name.column_name
+            source_data_hvid_full_name=None,
+
+            # name of the claim_id in the source_data - in the format table_name.column_name
+            source_data_claim_full_name=None,
+
+            # name of the service_line_id in the source_data - in the format table_name.column_name
+            source_data_service_line_full_name=None,
+
+            # name of hvid column in target_data
+            target_data_hvid_column_name='hvid',
+
+            # name of claim_id column in target_data
+            target_data_claim_column_name=None,
+
+            # name of service_line_id column in target_data
+            target_data_service_line_column_name=None,
+
+            # name of gender column in target_data
+            target_data_gender_column_name='patient_gender',
+
+            # name of patient_state column in target_data
+            target_data_patient_state_column_name='patient_state',
+
+            # name of record_id column in target_data
+            target_data_record_id_column_name='record_id',
+
+            # name of created_date column in target_data
+            target_data_created_date_column_name='created',
+
+            # name of model_version column in target_data
+            target_data_model_version_column_name='model_version',
+
+            # name of data_set column in target_data
+            target_data_data_set_column_name='data_set',
+
+            # name of data_feed column in target_data
+            target_data_data_feed_column_name='data_feed',
+
+            # name of data_vendor column in target_data
+            target_data_data_vendor_column_name='data_vendor',
+
+            # name of provider_partition column in target_data
+            target_data_provider_partition_column_name='part_provider',
+
+            # name of date_partition column in target_data
+            target_data_date_partition_column_name='part_best_date'
     ):
 
         # set this instance as the active datafeed
@@ -62,6 +109,15 @@ class Datafeed:
         self.target_data_claim_column_name = target_data_claim_column_name
         self.target_data_service_line_column_name = target_data_service_line_column_name
         self.target_data_gender_column_name = target_data_gender_column_name
+        self.target_data_patient_state_column_name = target_data_patient_state_column_name
+        self.target_data_record_id_column_name = target_data_record_id_column_name
+        self.target_data_created_date_column_name = target_data_created_date_column_name
+        self.target_data_model_version_column_name = target_data_model_version_column_name
+        self.target_data_data_set_column_name = target_data_data_set_column_name
+        self.target_data_data_feed_column_name = target_data_data_feed_column_name
+        self.target_data_data_vendor_column_name = target_data_data_vendor_column_name
+        self.target_data_provider_partition_column_name = target_data_provider_partition_column_name
+        self.target_data_date_partition_column_name = target_data_date_partition_column_name
 
     def run_checks(self):
         """
