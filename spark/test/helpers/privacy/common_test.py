@@ -45,17 +45,18 @@ def test_transform(spark):
 def test_filter(spark):
     # test df including commonly filtered fields
     test_df = spark['spark'].sparkContext.parallelize([
-        ['100', '1880', '2017-01-01', 'dummyval']
+        ['100', '1880', '2017-01-01', 'INV', 'dummyval'],
     ]).toDF(StructType([
         StructField('patient_age', StringType()),
         StructField('patient_year_of_birth', StringType()),
         StructField('date_service', StringType()),
+        StructField('patient_state', StringType()),
         StructField('notransform', StringType()),
     ]))
 
     # assertion with no additional transforms
     assert common_priv.filter(test_df).collect() \
-        == [Row('90', '1927', '2017-01-01', 'dummyval')]
+        == [Row('90', '1927', '2017-01-01', None, 'dummyval')]
 
     # save original state of built-in transformer
     old_transformer = dict(common_priv.column_transformer)
@@ -67,7 +68,7 @@ def test_filter(spark):
             'args': ['notransform'],
             'built-in': True
         }
-    }).collect() == [Row('90', '1927', '2017-01-01', 'DUMMYVAL')]
+    }).collect() == [Row('90', '1927', '2017-01-01', None, 'DUMMYVAL')]
 
     # assert original transformer was not modified by additional
     # transforms dict update

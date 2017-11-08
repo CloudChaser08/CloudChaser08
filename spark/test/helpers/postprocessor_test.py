@@ -3,7 +3,7 @@ import pytest
 import mock
 import datetime
 
-from pyspark.sql import Row
+from pyspark.sql.types import StructField, StructType, StringType, Row
 
 import spark.helpers.postprocessor as postprocessor
 

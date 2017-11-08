@@ -107,6 +107,22 @@ def test_zip_code_masking():
     # valid zip code
     assert cleanup.mask_zip_code("190") == "190"
 
+
+def test_state_validation():
+    # no state
+    assert cleanup.validate_state_code(None) is None
+
+    # valid state
+    assert cleanup.validate_state_code('pa') == 'PA'
+    assert cleanup.validate_state_code('PA') == 'PA'
+    assert cleanup.validate_state_code('PA ') == 'PA'
+
+    # invalid state
+    assert cleanup.validate_state_code('') is None
+    assert cleanup.validate_state_code(9) is None
+    assert cleanup.validate_state_code('inv') is None
+
+
 def test_vital_sign_clean_up():
     # vital sign that we don't clean up
     assert cleanup.clean_up_vital_sign('O2_SATURATION', '85', 'PERCENT', 'M', '48', None, None, None) == '85'

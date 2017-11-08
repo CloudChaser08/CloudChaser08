@@ -87,7 +87,7 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
 
 def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None):
     """
-    Apply whitelist defined for this provider in the ref_gen_ref table
+    Apply whitelist defined for this provider in the ref_gen_ref table.
     """
     if comp_col_names is None:
         comp_col_names = []
@@ -99,7 +99,7 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None):
         WHERE whtlst_flg = 'Y' AND gen_ref_domn_nm = '{}'
         """.format(domain_name)).collect()]
     except:
-        logging.error("Error occurred while loading whitelist resuilts for domain_name = '{}', "
+        logging.error("Error occurred while loading whitelist results for domain_name = '{}', "
                       + "check to make sure ref_gen_ref was loaded before calling this function.".format(
                           domain_name
                       ))

@@ -26,6 +26,10 @@ column_transformer = {
         'func': post_norm_cleanup.mask_zip_code,
         'args': ['patient_zip3']
     },
+    'patient_state': {
+        'func': post_norm_cleanup.validate_state_code,
+        'args': ['patient_state']
+    },
     'ndc_code': {
         'func': post_norm_cleanup.clean_up_numeric_code,
         'args': ['ndc_code']
