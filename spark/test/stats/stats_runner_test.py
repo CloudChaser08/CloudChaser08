@@ -55,7 +55,7 @@ def test_init(spark):
     )
 
     config_reader.generate_get_provider_config_function = Mock(
-        return_value = lambda *x: {
+        return_value = {
             'name'              : 'test',
             'datafeed_id'       : '27',
             'datatype'          : 'medicalclaims',

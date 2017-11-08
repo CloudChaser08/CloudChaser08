@@ -70,7 +70,7 @@ def test_init(spark):
                                'service_date', 'col_3'] }
 
     get_prov_conf = Mock(
-        return_value = lambda *x: {
+        return_value = {
             'name'              : 'test',
             'datafeed_id'       : '27',
             'datatype'          : 'medicalclaims',
@@ -86,7 +86,7 @@ def test_init(spark):
     )
 
     get_prov_conf_no_unique_column = Mock(
-        return_value = lambda *x: 
+        return_value = 
         {
             'name'              : 'test',
             'datafeed_id'       : '27',
@@ -103,7 +103,7 @@ def test_init(spark):
     )
 
     get_prov_conf_no_fill_rate_calc = Mock(
-        return_value = lambda *x: {
+        return_value = {
             'name'              : 'test',
             'datafeed_id'       : '27',
             'datatype'          : 'medicalclaims',

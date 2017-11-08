@@ -46,7 +46,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     # Get provider config
     config_dir = '/'.join(__file__.split('/')[:-1]) + '/config/'
     provider_conf = config_reader.generate_get_provider_config_function(
-                                    config_dir)(provider_name)
+                                    config_dir, provider_name)
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
