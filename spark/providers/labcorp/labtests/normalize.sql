@@ -4,7 +4,7 @@ SELECT
     NULL,                                -- claim_id
     mp.hvid,                             -- hvid
     NULL,                                -- created
-    NULL,                                -- model_version
+    '03',                                -- model_version
     NULL,                                -- data_set
     NULL,                                -- data_feed
     NULL,                                -- data_vendor
