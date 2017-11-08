@@ -40,12 +40,6 @@ def main(args):
     spark, sqlContext = spark_setup \
                         .init('{} marketplace stats'.format(provider_name))
 
-    # Set up function arguments
-    get_data_func = stats_utils.get_provider_data
-    get_provider_conf_func = config_reader. \
-                             generate_get_provider_config_function(
-                                providers_conf_file)
-
     # Calculate marketplace stats
     all_stats = run(spark, sqlContext, provider_name, quarter, \
                     start_date, end_date, earliest_date, config_dir)
