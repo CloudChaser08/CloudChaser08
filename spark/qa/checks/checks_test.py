@@ -113,9 +113,9 @@ def test_valid_patient_state_values_in_target(datafeed):
 
     assert distinct_patient_state_values.count() <= len(constants.states)
 
-    for state_value in distinct_patient_state_values.collect():
+    for state_value in [row[datafeed.target_data_patient_state_column_name] for row in distinct_patient_state_values.collect()]:
         if state_value is not None:
-            assert state_value in constants.states
+            assert str(state_value) in constants.states
 
 
 def test_full_fill_rate_for_record_id(datafeed):
