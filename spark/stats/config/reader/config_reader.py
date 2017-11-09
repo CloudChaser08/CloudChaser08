@@ -43,8 +43,8 @@ def get_provider_config(providers_conf_file, provider_name):
         - providers_conf_file: Absolute path of the location of the
                                config file with all provider configs.
     Output:
-        - out: A function that creates the provider config 
-               for the inputed provider_name
+        - provider_conf: A python dict of the providers config with
+                         each associated stat calcs config embedded
     '''
     providers_conf = _get_config_from_json(providers_conf_file)
 
