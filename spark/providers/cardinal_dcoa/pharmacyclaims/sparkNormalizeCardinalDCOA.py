@@ -27,7 +27,7 @@ def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test
         input_path = 's3://salusv/incoming/pharmacyclaims/cardinal_dcoa/{}/'\
                         .format(date_path)
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v4.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
         ['properties', '', False],
         ['external', '', False]
@@ -88,3 +88,4 @@ if __name__ == '__main__':
     parser.add_argument('--num_output_files', default=20, type=int)
     args = parser.parse_args()
     main(args)
+
