@@ -34,7 +34,7 @@ def _extract_provider_conf(provider_name, providers_conf):
     return conf[0]
 
 
-def get_provider_config(provider_name, providers_conf_file):
+def get_provider_config(providers_conf_file, provider_name):
     '''
     Read the providers config files and each associated stat calc config file
     and combine them into one provider config object.
@@ -46,7 +46,6 @@ def get_provider_config(provider_name, providers_conf_file):
         - provider_conf: A python dict of the providers config with
                          each associated stat calcs config embedded
     '''
-
     providers_conf = _get_config_from_json(providers_conf_file)
 
     if 'providers' not in providers_conf:

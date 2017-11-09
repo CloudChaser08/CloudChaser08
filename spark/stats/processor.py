@@ -1,4 +1,5 @@
 import spark.stats.calc.fill_rate as fill_rate
+import spark.stats.config.reader.config_reader as config_reader
 import spark.helpers.stats.utils as utils
 import spark.helpers.postprocessor as postprocessor
 
@@ -26,8 +27,7 @@ def _run_fill_rates(df, provider_conf):
 
 
 def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
-                          start_date, end_date, earliest_date, \
-                          get_data_func, get_provider_conf_func):
+                          start_date, end_date, earliest_date):
     '''
     Runs all the relevant marketplace stats for a provider in a given
     date range / quarter
@@ -39,14 +39,14 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
         - start_date: starting date of the date range
         - end_date: ending date of the date range
         - earliest_date: earliest date for a particular stat calc (forget right now, not fill rates)
-        - get_data_func: function that fetches the data that we'll calculate stats on
-        - get_provider_conf_func: function that gets the providers config info
     Output:
         - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
 
     # Get provider config
-    provider_conf = get_provider_conf_func(provider_name)
+    config_dir = '/'.join(__file__.split('/')[:-1]) + '/config/'
+    provider_conf = config_reader.get_provider_config(
+                                    config_dir, provider_name)
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
@@ -54,7 +54,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     distinct_column_name = provider_conf['record_field']
 
     # Get data
-    all_data_df = get_data_func(sqlContext, datatype, provider_name)
+    all_data_df = utils.get_provider_data(sqlContext, datatype, provider_name)
 
     # provider, start_date, end_date df cache
     # used for fill rate, top values, and key stats

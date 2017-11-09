@@ -56,3 +56,18 @@ def select_data_in_date_range(start_date, end_date, date_column_name):
     return out
 
 
+def get_provider_data(sqlContext, datatype, provider_name):
+    '''
+    Fetch all the provider data for a provider from the warehouse.
+    Input:
+        - sqlContext:       Spark SqlContext for accessing warehouse
+        - datatype:         The datatype for the provider (i.e. pharmacyclaims, events, etc...)
+        - provider_name:    The name of the provider in the part_provider partition
+    Output:
+        - df:   pyspark.sql.DataFrame of the data
+    '''
+    df = sqlContext.sql('SELECT * FROM {} WHERE part_provider={}' \
+                        .format(datatype, provider_name))
+    return df
+
+
