@@ -68,6 +68,7 @@ DEID_FILE_PREFIX = 'PDS_deid_data_'
 # Where raw transactions should go
 HV_SLASH_INCOMING = 'testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/moved_raw/' \
                     if HVDAG.HVDAG.airflow_env == 'test' else 'incoming/cardinal/pds/'
+cardinal_day_offset = 1
 
 def get_formatted_datetime(ds, kwargs):
     return kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
@@ -79,7 +80,7 @@ def insert_formatted_datetime_function(template):
 
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format(date_utils.insert_date_into_template('{}{}{}', kwargs, day_offset = 1) + '\d{6}')
+        return template.format(date_utils.insert_date_into_template('{}{}{}', kwargs, day_offset = cardinal_day_offset) + '\d{6}')
     return out
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
@@ -267,7 +268,7 @@ split_transaction = SubDagOperator(
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
             's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
-                S3_TRANSACTION_PROCESSED_URL_TEMPLATE
+                S3_TRANSACTION_PROCESSED_URL_TEMPLATE, day_offset = cardinal_day_offset
             ),
             'num_splits'               : 20
         }
@@ -310,7 +311,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = cardinal_day_offset)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -326,7 +327,7 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func'      : get_deid_file_names,
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
-                '{}/{}/{}'
+                '{}/{}/{}', day_offset = cardinal_day_offset
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'cddbdc93-c3cf-42a0-915b-605333639602',
@@ -345,8 +346,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
         provide_context=True,
         python_callable=lambda ds, **kwargs: \
             s3_utils.fetch_file_from_s3(
-                date_utils.insert_date_into_template(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs),
-                get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
+                date_utils.insert_date_into_template(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs, day_offset = cardinal_day_offset),
+                get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs, day_offset = cardinal_day_offset).split('/')[-1]
         ),
         dag=mdag
     )
@@ -360,10 +361,10 @@ if HVDAG.HVDAG.airflow_env != 'test':
             {
                 'file_paths_func'       : lambda ds, kwargs: [
                     get_tmp_dir(ds, kwargs) + \
-                        date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
+                        date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs, day_offset = cardinal_day_offset).split('/')[-1]
                 ],
                 's3_prefix_func'        : lambda ds, kwargs: \
-                    '/'.join(date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:-1]) + '/',
+                    '/'.join(date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs, day_offset = cardinal_day_offset).split('/')[3:-1]) + '/',
                 's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
                 'aws_access_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
                 'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
@@ -382,8 +383,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: date_utils.generate_insert_date_into_template_function(sql_template)(ds, k)
-                if date_utils.generate_insert_date_into_template_function('{2}')(ds, k) < '08' else ''
+                'sql_command_func' : lambda ds, k: date_utils.generate_insert_date_into_template_function(sql_template, day_offset = cardinal_day_offset)(ds, k)
+                if date_utils.generate_insert_date_into_template_function('{2}', day_offset = cardinal_day_offset)(ds, k) < '08' else ''
             }
         ),
         task_id='update_analytics_db',
