@@ -1,6 +1,6 @@
 import subprocess
 
-CARDINAL_PDS_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/'
+CARDINAL_PDS_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims'
 
 def cleanup():
     subprocess.check_call([
@@ -23,13 +23,13 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'cardinal_pds_pipeline',
-        '-s', '2017-07-18', '-e', '2017-07-18', '-I'
+        '-s', '2017-08-23', '-e', '2017-08-23', '-I'
     ])
 
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', CARDINAL_PDS_TEST_DIR + '/out/2017/07/25/'
+        'aws', 's3', 'ls', CARDINAL_PDS_TEST_DIR + '/out/2017/08/24/'
     ])) > 0
 
 
