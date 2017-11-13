@@ -3,6 +3,7 @@ import re
 
 import common.HVDAG as HVDAG
 import util.s3_utils as s3_utils
+import util.date_utils as date_utils
 
 for m in [s3_utils, HVDAG]:
     reload(m)
@@ -13,7 +14,10 @@ def do_fetch_file(ds, **kwargs):
     new_file_name      = kwargs['new_file_name_func'](ds, kwargs)
     s3_prefix          = kwargs['s3_prefix']
 
-    tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
+    if kwargs['tmp_path_template'].count('{}') is 3:
+        tmp_path = date_utils.insert_date_into_template(kwargs['tmp_path_template'],kwargs)
+    else:
+        tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
 
     if 'regex_name_match' in kwargs and kwargs['regex_name_match']:
         s3_keys = s3_utils.list_s3_bucket_files(
@@ -53,7 +57,7 @@ def s3_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval
 
     create_tmp_dir = BashOperator(
         task_id='create_tmp_dir',
-        bash_command='mkdir -p {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}')),
+        bash_command='mkdir -p {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}','','')),
         dag=dag
     )
 
