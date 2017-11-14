@@ -14,7 +14,7 @@ def do_fetch_file(ds, **kwargs):
     new_file_name      = kwargs['new_file_name_func'](ds, kwargs)
     s3_prefix          = kwargs['s3_prefix']
 
-    if kwargs['tmp_path_template'].count('{}') is 3:
+    if kwargs['tmp_path_template'].count('{}') >= 3:
         tmp_path = date_utils.insert_date_into_template(kwargs['tmp_path_template'],kwargs)
     else:
         tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
