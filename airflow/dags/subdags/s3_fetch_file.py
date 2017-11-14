@@ -5,7 +5,7 @@ import common.HVDAG as HVDAG
 import util.s3_utils as s3_utils
 import util.date_utils as date_utils
 
-for m in [s3_utils, HVDAG]:
+for m in [s3_utils, HVDAG, date_utils]:
     reload(m)
 
 def do_fetch_file(ds, **kwargs):
