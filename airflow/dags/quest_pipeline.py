@@ -23,7 +23,7 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
+TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}{}{}/'
 DAG_NAME = 'quest_pipeline'
 
 default_args = {
@@ -94,13 +94,13 @@ def insert_formatted_regex_function(template):
     return out
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
-    TMP_PATH_TEMPLATE.format('{}{}{}')
+    TMP_PATH_TEMPLATE
     )
 get_addon_tmp_dir = date_utils.generate_insert_date_into_template_function(
-    TRANSACTION_ADDON_TMP_PATH_TEMPLATE.format('{}{}{}')
+    TRANSACTION_ADDON_TMP_PATH_TEMPLATE
     )
 get_trunk_tmp_dir = date_utils.generate_insert_date_into_template_function(
-    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE.format('{}{}{}')
+    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
     )
 
 def get_deid_file_urls(ds, kwargs):
@@ -257,8 +257,8 @@ decrypt_addon = SubDagOperator(
 def gunzip_step(task_id, tmp_path_template, tmp_file_template):
     def execute(ds, **kwargs):
         decompression.decompress_gzip_file(
-            tmp_path_template.format(kwargs['ds_nodash'])
-            + tmp_file_template.format(get_formatted_date(ds, kwargs))
+            date_utils.insert_date_into_template(tmp_path_template, kwargs)
+            + date_utils.insert_date_into_template(tmp_file_template, kwargs)
         )
     return PythonOperator(
         task_id='gunzip_' + task_id + '_file',
@@ -311,7 +311,7 @@ split_trunk = split_step(
 def clean_up_workspace_step(task_id, template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', template.format(kwargs['ds_nodash'])
+            'rm', '-rf', insert_date_into_template(template, kwargs)
         ])
     return PythonOperator(
         task_id='clean_up_workspace_' + task_id,
