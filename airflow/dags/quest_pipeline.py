@@ -40,7 +40,7 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-quest_day_offset = -3
+QUEST_DAY_OFFSET = -3
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -78,9 +78,9 @@ MINIMUM_DEID_FILE_SIZE = 500
 
 def get_formatted_date(ds, kwargs):
     return ( date_utils.generate_insert_date_into_template_function('{}{}{}',
-         day_offset = quest_day_offset)(ds,kwargs)
+         day_offset = QUEST_DAY_OFFSET)(ds,kwargs)
           + date_utils.generate_insert_date_into_template_function('{1}{2}', 
-            day_offset = quest_day_offset + 1)(ds,kwargs)
+            day_offset = QUEST_DAY_OFFSET + 1)(ds,kwargs)
             )
 
 def insert_formatted_date_function(template):
@@ -288,7 +288,7 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
                     path_template
                 ),
                 's3_prefix_func'           : date_utils.generate_insert_date_into_template_function( 
-                    s3_destination, day_offset = quest_day_offset   
+                    s3_destination, day_offset = QUEST_DAY_OFFSET   
                 ),
                 'num_splits'               : num_splits
             }
@@ -345,7 +345,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = quest_day_offset)] 
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = QUEST_DAY_OFFSET)] 
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -365,7 +365,7 @@ detect_move_normalize_dag = SubDagOperator(
                 )(ds, k)
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function( 
-                '{}/{}/{}', day_offset = quest_day_offset
+                '{}/{}/{}', day_offset = QUEST_DAY_OFFSET
                 ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
@@ -392,9 +392,9 @@ if HVDAG.HVDAG.airflow_env != 'test':
             mdag.schedule_interval,
             {
                 'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(sql_new_template, k,
-         day_offset = quest_day_offset) \
+         day_offset = QUEST_DAY_OFFSET) \
                     if date_utils.insert_date_into_template('{}-{}-{}', k,
-         day_offset = quest_day_offset).find('-01') == 7 else ''
+         day_offset = QUEST_DAY_OFFSET).find('-01') == 7 else ''
             }
         ),
         task_id='update_analytics_db',
