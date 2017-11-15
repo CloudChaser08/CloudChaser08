@@ -23,13 +23,13 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'cardinal_pds_pipeline',
-        '-s', '2017-08-23', '-e', '2017-08-23', '-I'
+        '-s', '2017-10-27', '-e', '2017-10-27', '-I'
     ])
 
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', CARDINAL_PDS_TEST_DIR + '/out/2017/08/24/'
+        'aws', 's3', 'ls', CARDINAL_PDS_TEST_DIR + '/out/2017/08/28/'
     ])) > 0
 
 
