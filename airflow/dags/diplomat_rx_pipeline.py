@@ -22,7 +22,7 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/diplomat/pharmacyclaims/{}/'
+TMP_PATH_TEMPLATE = '/tmp/diplomat/pharmacyclaims/{}{}{}/'
 DAG_NAME = 'diplomat_rx_pipeline'
 
 default_args = {
@@ -59,7 +59,7 @@ MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Diplomat RX deid file'
-DEID_FILE_NAME_TEMPLATE = 'HealthVerityPHIOut_{}.csv'
+DEID_FILE_NAME_TEMPLATE = 'HealthVerityPHIOut_{}{}{}.csv'
 MINIMUM_DEID_FILE_SIZE = 500
 
 def insert_formatted_regex_function(template):
@@ -68,13 +68,13 @@ def insert_formatted_regex_function(template):
     return out
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
-    TMP_PATH_TEMPLATE.format('{}{}{}')
+    TMP_PATH_TEMPLATE
     )
 
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL + 
         date_utils.insert_date_into_template(
-            DEID_FILE_NAME_TEMPLATE.format('{}{}{}'),
+            DEID_FILE_NAME_TEMPLATE,
             kwargs, day_offset = DIPLOMAT_DAY_OFFSET
     )]
 
@@ -107,8 +107,7 @@ def generate_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : insert_formatted_date_function(
-                    path_template
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(path_template, day_offset = DIPLOMAT_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
@@ -181,7 +180,7 @@ split_transaction = SubDagOperator(
             'file_name_pattern_func'   : insert_formatted_regex_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
-            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(TRANSACTION_S3_SPLIT_URL
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(TRANSACTION_S3_SPLIT_URL, day_offset = DIPLOMAT_DAY_OFFSET
             ),
             'num_splits'               : 20
         }
@@ -194,7 +193,7 @@ split_transaction = SubDagOperator(
 def clean_up_workspace_step(template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', date_utils.insert_date_into_template(template.format('{}{}{}'),kwargs)
+            'rm', '-rf', date_utils.insert_date_into_template(template,kwargs)
         ])
     return PythonOperator(
         task_id='clean_up_workspace',
@@ -227,7 +226,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = DIPLOMAT_DAY_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -243,11 +242,11 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func'      : lambda ds, k: [
                 date_utils.generate_insert_date_into_template_function(
-                    DEID_FILE_NAME_TEMPLATE.format("{}{}{}"), day_offset = DIPLOMAT_DAY_OFFSET
+                    DEID_FILE_NAME_TEMPLATE, day_offset = DIPLOMAT_DAY_OFFSET
                 )(ds, k)
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
-                '{}/{}/{}'
+                '{}/{}/{}', day_offset = DIPLOMAT_DAY_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'd5e03dcc-afd4-4915-a007-5e974942519e',
