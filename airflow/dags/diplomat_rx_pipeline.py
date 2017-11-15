@@ -13,11 +13,12 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.update_analytics_db as update_analytics_db
 
 import util.decompression as decompression
+import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching,
           detect_move_normalize, decompression, HVDAG,
-          update_analytics_db]:
+          update_analytics_db, date_utils]:
     reload(m)
 
 # Applies to all files
@@ -37,6 +38,8 @@ mdag = HVDAG.HVDAG(
     schedule_interval="0 12 * * 2",  # tuesdays
     default_args=default_args
 )
+
+DIPLOMAT_DAY_OFFSET = 6
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -59,65 +62,36 @@ DEID_FILE_DESCRIPTION = 'Diplomat RX deid file'
 DEID_FILE_NAME_TEMPLATE = 'HealthVerityPHIOut_{}.csv'
 MINIMUM_DEID_FILE_SIZE = 500
 
-
-def get_formatted_date(ds, kwargs):
-    return (kwargs['execution_date'] + timedelta(days=6)).strftime('%Y%m%d')
-
-
-def insert_formatted_date_function(template):
-    def out(ds, kwargs):
-        return template.format(get_formatted_date(ds, kwargs))
-    return out
-
-
-def insert_todays_date_function(template):
-    def out(ds, kwargs):
-        return template.format(kwargs['ds_nodash'])
-    return out
-
-
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
         return template.format('\d{8}')
     return out
 
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return template.format(
-            kwargs['ds_nodash'][0:4],
-            kwargs['ds_nodash'][4:6],
-            kwargs['ds_nodash'][6:8]
-        )
-    return out
-
-
-def insert_current_date(template, kwargs):
-    return template.format(
-        kwargs['ds_nodash'][0:4],
-        kwargs['ds_nodash'][4:6],
-        kwargs['ds_nodash'][6:8]
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(
+    TMP_PATH_TEMPLATE.format('{}{}{}')
     )
 
-get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
-
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
-        get_formatted_date(ds, kwargs)
+    return [S3_TRANSACTION_RAW_URL + 
+        date_utils.insert_date_into_template(
+            DEID_FILE_NAME_TEMPLATE.format('{}{}{}'),
+            kwargs, day_offset = DIPLOMAT_DAY_OFFSET
     )]
 
 def get_transaction_file_paths(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     return [file_dir
-            + TRANSACTION_FILE_NAME_TEMPLATE.format(
-                get_formatted_date(ds, kwargs)
+            + date_utils.insert_date_into_template(
+            TRANSACTION_FILE_NAME_TEMPLATE.format('{}{}{}'),
+            kwargs, day_offset = DIPLOMAT_DAY_OFFSET
             )]
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
-        + TRANSACTION_FILE_NAME_TEMPLATE.format(
-            get_formatted_date(ds, kwargs)
+        + date_utils.insert_date_into_template(
+            TRANSACTION_FILE_NAME_TEMPLATE.format('{}{}{}'),
+            kwargs, day_offset = DIPLOMAT_DAY_OFFSET
         )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
@@ -167,8 +141,10 @@ fetch_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func': insert_formatted_date_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE.format(
+                "{}{}{}"), day_offset = DIPLOMAT_DAY_OFFSET
+                
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -205,8 +181,7 @@ split_transaction = SubDagOperator(
             'file_name_pattern_func'   : insert_formatted_regex_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
-            's3_prefix_func'           : insert_current_date_function(
-                TRANSACTION_S3_SPLIT_URL
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(TRANSACTION_S3_SPLIT_URL
             ),
             'num_splits'               : 20
         }
@@ -219,7 +194,7 @@ split_transaction = SubDagOperator(
 def clean_up_workspace_step(template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', template.format(kwargs['ds_nodash'])
+            'rm', '-rf', date_utils.insert_date_into_template(template.format('{}{}{}'),kwargs)
         ])
     return PythonOperator(
         task_id='clean_up_workspace',
@@ -252,7 +227,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -267,11 +242,11 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds, k: [
-                insert_formatted_date_function(
-                    DEID_FILE_NAME_TEMPLATE
+                date_utils.generate_insert_date_into_template_function(
+                    DEID_FILE_NAME_TEMPLATE.format("{}{}{}"), day_offset = DIPLOMAT_DAY_OFFSET
                 )(ds, k)
             ],
-            'file_date_func'                    : insert_current_date_function(
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}'
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
