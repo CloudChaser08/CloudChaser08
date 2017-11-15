@@ -102,7 +102,7 @@ SELECT
     NULL,                                   -- data_captr_dt
     NULL,                                   -- rec_stat_cd
     NULL                                    -- prmy_src_tbl_nm
-FROM transactions_diagnosis diag
-    LEFT JOIN transactions_demographics dem ON diag.id = dem.demographicid
+FROM diagnosis_transactions diag
+    LEFT JOIN demographics_transactions dem ON diag.id = dem.demographicid
     LEFT JOIN matching_payload pay ON dem.hvJoinKey = pay.hvJoinKey
     ;

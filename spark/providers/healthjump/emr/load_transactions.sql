@@ -73,6 +73,7 @@ CREATE TABLE diagnosis_transactions (
         id    string,
         date  string,
         diag  string
+        )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (
         'separatorChar' = '|'
@@ -86,6 +87,7 @@ CREATE TABLE loinc_transactions (
         id     string,
         date   string,
         loinc  string
+        )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (
         'separatorChar' = '|'
@@ -99,6 +101,7 @@ CREATE TABLE ndc_transactions (
         id    string,
         date  string,
         ndc   string
+        )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (
         'separatorChar' = '|'

@@ -54,26 +54,30 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     runner.run_spark_script('../../../common/emr/diagnosis_common_model_v5.sql', [
         ['table_name', 'diagnosis_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
     runner.run_spark_script('../../../common/emr/lab_order_common_model_v3.sql', [
         ['table_name', 'lab_order_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
     runner.run_spark_script('../../../common/emr/procedure_common_model_v4.sql', [
         ['table_name', 'procedure_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
     runner.run_spark_script('../../../common/emr/medication_common_model_v4.sql', [
         ['table_name', 'medication_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', '', False]
     ])
 
     runner.run_spark_script('load_transactions.sql', [
         ['cpt_path', input_path + 'cpt/'],
-        ['diag_path', input_path + 'diag/']
-        ['loinc_path', input_path + 'loinc/']
-        ['ndc_path', input_path + 'ndc/']
+        ['diag_path', input_path + 'diag/'],
+        ['loinc_path', input_path + 'loinc/'],
+        ['ndc_path', input_path + 'ndc/'],
         ['demographics_path', input_path + 'demographics/']
     ])
 
@@ -102,22 +106,26 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         {
             'table_name': 'diagnosis_common_model',
             'script_name': 'diagnosis_common_model_v5.sql',
-            'privacy_filter': diag_priv
+            'privacy_filter': diag_priv,
+            'date': 'diag_dt'
         },
         {
             'table_name': 'procedure_common_model',
             'script_name': 'procedure_common_model_v3.sql',
-            'privacy_filter': proc_priv
+            'privacy_filter': proc_priv,
+            'date': 'proc_dt'
         },
         {
             'table_name': 'lab_order_common_model',
             'script_name': 'lab_order_common_model_v4.sql',
-            'privacy_filter': lab_order_priv
+            'privacy_filter': lab_order_priv,
+            'date': 'lab_ord_dt'
         },
         {
             'table_name': 'medication_common_model',
             'script_name': 'medication_common_model_v4.sql',
-            'privacy_filter': med_priv
+            'privacy_filter': med_priv,
+            'date': 'medctn_admin_dt'
         }
     ]
     for normalized_table in normalized_tables:
@@ -125,10 +133,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             postprocessor.add_universal_columns(
                 feed_id=vendor_feed_id,
                 vendor_id=vendor_id,
-                filename='record_data_HV_{}.txt.name.csv'.format(date_obj.strftime('%Y%m%d'))
+                filename='record_data_HV_{}.txt.name.csv'.format(date_obj.strftime('%Y%m%d')),
+
+                # rename defaults
+                record_id='row_id', created='crt_dt', data_set='data_set_nm',
+                data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
             ),
-            normalized_table['privacy_filter'].filter,
-            postprocessor.apply_date_cap(runner.sqlContext, 'date_specimen', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE')
+            normalized_table['privacy_filter'].filter(runner.sqlContext),
+            postprocessor.apply_date_cap(
+                runner.sqlContext, normalized_table['date'], max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'
+            )
         )(
             runner.sqlContext.sql('select * from {}'.format(normalized_table['table_name']))
         ).createTempView(normalized_table['table_name'])
@@ -136,7 +150,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         if not test:
             normalized_records_unloader.partition_and_rename(
                 spark, runner, 'emr', normalized_table['script_name'], 'healthjump',
-                normalized_table['table_name'], 'date_specimen', date_input,
+                normalized_table['table_name'], normalized_table['date'], date_input,
                 hvm_historical_date=datetime(
                     hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
                 )

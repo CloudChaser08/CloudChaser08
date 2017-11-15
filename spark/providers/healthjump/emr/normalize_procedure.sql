@@ -9,8 +9,8 @@ SELECT
     NULL,                                   -- hvm_vdr_id
     NULL,                                   -- hvm_vdr_feed_id
     NULL,                                   -- vdr_org_id
-    NULL,                                   -- vdr_diag_id
-    NULL,                                   -- vdr_diag_id_qual
+    NULL,                                   -- vdr_proc_id
+    NULL,                                   -- vdr_proc_id_qual
     pay.hvid,                               -- hvid
     pay.yearOfBirth,                        -- ptnt_birth_yr
     NULL,                                   -- ptnt_age_num
@@ -24,7 +24,6 @@ SELECT
     UPPER(COALESCE(pay.state, dem.state)),  -- ptnt_state_cd
     pay.threeDigitZip,                      -- ptnt_zip3_cd
     NULL,                                   -- hv_enc_id
-    NULL,                                   -- enc_dt
     NULL,                                   -- enc_dt
     CASE
       WHEN LENGTH(proc.date) = 8 AND LOCATE('/', proc.date) = 0
@@ -82,7 +81,7 @@ SELECT
     NULL,                                   -- proc_cd_qual
     CASE
       WHEN LENGTH(CLEAN_UP_PROCEDURE_CODE(proc.cpt)) = 7
-      THEN SUBSTRING(CLEAN_UP_PROCEDURE_CODE(proc.cpt), 5, 2)
+      THEN SUBSTRING(CLEAN_UP_PROCEDURE_CODE(proc.cpt), 6, 2)
       WHEN LENGTH(CLEAN_UP_PROCEDURE_CODE(proc.cpt)) = 2
       THEN CLEAN_UP_PROCEDURE_CODE(proc.cpt)
     END,                                    -- proc_cd_1_modfr
@@ -103,7 +102,7 @@ SELECT
     NULL,                                   -- data_captr_dt
     NULL,                                   -- rec_stat_cd
     NULL                                    -- prmy_src_tbl_nm
-FROM transactions_procedure proc
-    LEFT JOIN transactions_demographics dem ON proc.id = dem.demographicid
+FROM cpt_transactions proc
+    LEFT JOIN demographics_transactions dem ON proc.id = dem.demographicid
     LEFT JOIN matching_payload pay ON dem.hvJoinKey = pay.hvJoinKey
     ;
