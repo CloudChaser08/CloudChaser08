@@ -25,14 +25,14 @@ DAG_NAME = 'apothecary_by_design_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 10, 8),    #TODO: determine when we start
+    'start_date': datetime(2017, 11, 13),
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 0 * * *',        #TODO: determine when we start
+    schedule_interval = '0 16 * * 1',        #TODO: determine when we start
     default_args = default_args
 )
 
@@ -321,29 +321,29 @@ def norm_args(ds, k):
 
     return base
 
-if HVDAG.HVDAG.airflow_env != 'test':
-    detect_move_normalize_dag = SubDagOperator(
-        subdag=detect_move_normalize.detect_move_normalize(
-            DAG_NAME,
-            'detect_move_normalize',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'expected_matching_files_func'      : get_deid_file_urls,
-                'file_date_func'                    : insert_current_date_function(
-                    '{}/{}/{}'
-                ),
-                's3_payload_loc_url'                : S3_PAYLOAD_DEST,
-                'vendor_uuid'                       : '51ca8f88-040a-47f1-b78a-491c8632fedd',
-                'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/apothecary_by_design/pharmacyclaims/sparkNormalizeApothecaryByDesign.py',
-                'pyspark_normalization_args_func'   : norm_args,
-                'pyspark'                           : True
-            }
-        ),
-        task_id='detect_move_normalize',
-        dag=mdag
-    )
+detect_move_normalize_dag = SubDagOperator(
+    subdag=detect_move_normalize.detect_move_normalize(
+        DAG_NAME,
+        'detect_move_normalize',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'expected_matching_files_func'      : get_deid_file_urls,
+            'file_date_func'                    : insert_current_date_function(
+                '{}/{}/{}'
+            ),
+            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
+            'vendor_uuid'                       : '51ca8f88-040a-47f1-b78a-491c8632fedd',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/apothecary_by_design/pharmacyclaims/sparkNormalizeApothecaryByDesign.py',
+            'pyspark_normalization_args_func'   : norm_args,
+            'pyspark'                           : True
+        }
+    ),
+    task_id='detect_move_normalize',
+    dag=mdag
+)
 
+if HVDAG.HVDAG.airflow_env != 'test':
     sql_template = """
         MSCK REPAIR TABLE pharmacyclaims_20170602 
     """
@@ -367,6 +367,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction_file.set_upstream(validate_transaction)
     queue_up_for_matching.set_upstream(validate_deid)
     detect_move_normalize_dag.set_upstream(queue_up_for_matching)
+    update_analytics_db.set_upstream(detect_move_normalize_dag)
 
 decrypt_transaction.set_upstream(fetch_transaction_file)
 
@@ -377,5 +378,3 @@ backup_existing_data.set_upstream([split_additionaldata_file, split_transaction_
 clean_up_workspace.set_upstream([split_additionaldata_file, split_transaction_file])
 
 detect_move_normalize_dag.set_upstream(backup_existing_data)
-update_analytics_db.set_upstream(detect_move_normalize_dag)
-
