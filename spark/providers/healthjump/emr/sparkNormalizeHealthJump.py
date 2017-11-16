@@ -32,10 +32,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
     else:
         input_path = 's3a://salusv/incoming/emr/healthjump/{}/'.format(
-            '/'.join(date_input.split('-')[:2])
+            date_input.replace('-', '/')
         )
         matching_path = 's3a://salusv/matching/payload/emr/healthjump/{}/'.format(
-            '/'.join(date_input.split('-')[:2])
+            date_input.replace('-', '/')
         )
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -90,7 +90,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     for transaction_table in transaction_tables:
         postprocessor.compose(
             postprocessor.trimmify,
-            lambda df: postprocessor.nullify(df, preprocess_func=lambda x: x.replace('X', ''))
+            lambda df: postprocessor.nullify(df, preprocess_func=lambda x: x.replace('X', '') if x else x)
         )(
             runner.sqlContext.sql('select * from {}'.format(transaction_table))
         ).createTempView(transaction_table)
@@ -105,26 +105,30 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized_tables = [
         {
             'table_name': 'diagnosis_common_model',
-            'script_name': 'diagnosis_common_model_v5.sql',
+            'script_name': 'emr/diagnosis_common_model_v5.sql',
             'privacy_filter': diag_priv,
+            'data_type': 'diagnosis',
             'date': 'diag_dt'
         },
         {
             'table_name': 'procedure_common_model',
-            'script_name': 'procedure_common_model_v3.sql',
+            'script_name': 'emr/procedure_common_model_v4.sql',
             'privacy_filter': proc_priv,
+            'data_type': 'procedure',
             'date': 'proc_dt'
         },
         {
             'table_name': 'lab_order_common_model',
-            'script_name': 'lab_order_common_model_v4.sql',
+            'script_name': 'emr/lab_order_common_model_v3.sql',
             'privacy_filter': lab_order_priv,
+            'data_type': 'lab_order',
             'date': 'lab_ord_dt'
         },
         {
             'table_name': 'medication_common_model',
-            'script_name': 'medication_common_model_v4.sql',
+            'script_name': 'emr/medication_common_model_v4.sql',
             'privacy_filter': med_priv,
+            'data_type': 'medication',
             'date': 'medctn_admin_dt'
         }
     ]
@@ -149,9 +153,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         if not test:
             normalized_records_unloader.partition_and_rename(
-                spark, runner, 'emr', normalized_table['script_name'], 'healthjump',
+                spark, runner, 'emr', normalized_table['script_name'], '47',
                 normalized_table['table_name'], normalized_table['date'], date_input,
-                hvm_historical_date=datetime(
+                staging_subdir='{}/'.format(normalized_table['data_type']),
+                distribution_key='row_id', provider_partition='part_hvm_vdr_feed_id',
+                date_partition='part_mth', hvm_historical_date=datetime(
                     hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
                 )
             )
@@ -172,7 +178,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/healthjump/emr/spark-output/'
     else:
-        output_path = 's3a://salusv/warehouse/parquet/emr/2017-11-06/'
+        output_path = 's3a://salusv/warehouse/parquet/emr/2017-11-15/'
 
     normalized_records_unloader.distcp(output_path)
 
