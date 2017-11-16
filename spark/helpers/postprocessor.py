@@ -85,7 +85,7 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
     return out
 
 
-def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None):
+def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_col_name='gen_ref_itm_nm', clean_up_freetext = True):
     """
     Apply whitelist defined for this provider in the ref_gen_ref table.
     """
@@ -94,10 +94,10 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None):
 
     try:
         values = [r.gen_ref_itm_nm for r in sqlc.sql("""
-        SELECT gen_ref_itm_nm
+        SELECT {}
         FROM ref_gen_ref
         WHERE whtlst_flg = 'Y' AND gen_ref_domn_nm = '{}'
-        """.format(domain_name)).collect()]
+        """.format(whitelist_col_name, domain_name)).collect()]
     except:
         logging.error("Error occurred while loading whitelist results for domain_name = '{}', "
                       + "check to make sure ref_gen_ref was loaded before calling this function.".format(
@@ -109,13 +109,17 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None):
         logging.warn("No whitelist specified for {}".format(domain_name))
 
     def out(df):
+        if clean_up_freetext:
+            c = udf(gen_helpers.clean_up_freetext)(upper(col(col_name)))
+        else:
+            c = upper(col(col_name))
+
         df = df.withColumn(
-            col_name, when(udf(gen_helpers.clean_up_freetext)(upper(col(col_name))).isin(values),
-                           udf(gen_helpers.clean_up_freetext)(upper(col(col_name)))).otherwise(lit(None))
+            col_name, when(c.isin(values), c).otherwise(lit(None))
         )
         for comp_col_name in comp_col_names:
             df = df.withColumn(
-                comp_col_name, when(udf(gen_helpers.clean_up_freetext)(upper(col(col_name))).isin(values),
+                comp_col_name, when(c.isin(values),
                             col(comp_col_name)).otherwise(lit(None))
             )
         return df
