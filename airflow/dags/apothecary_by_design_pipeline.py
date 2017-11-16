@@ -12,12 +12,13 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.split_push_files as split_push_files
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir 
+import subdags.update_analytics_db as update_analytics_db
 
 import util.s3_utils as s3_utils
 
 for m in [HVDAG, s3_validate_file, s3_fetch_file, detect_move_normalize,
-          queue_up_for_matching, split_push_files, s3_utils,
-          clean_up_tmp_dir]:
+          queue_up_for_matching, split_push_files, update_analytics_db,
+          s3_utils, clean_up_tmp_dir]:
     reload(m)
 
 DAG_NAME = 'apothecary_by_design_pipeline'
@@ -55,9 +56,9 @@ TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}/'
 ADDITIONALDATA_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/additionaldata/'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/transactions/'
 
-ADDITIONALDATA_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'        #TODO: replace when know their format
-TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'            #TODO: replace when know their format
-DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}.txt'    #TODO: replace when know their format
+ADDITIONALDATA_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'
+TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'
+DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}.txt'
 
 def get_formatted_date(ds, kwargs):
     return kwargs['ds_nodash']
