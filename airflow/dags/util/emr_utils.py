@@ -184,7 +184,8 @@ def run_script(cluster_name, script_name, args, spark_conf_args):
     normalize_step = (
         'Type=Spark,Name="Normalize",ActionOnFailure=CONTINUE, '
         'Args=[--jars,'
-        '/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
+        '"/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
+        '/home/hadoop/spark/common/HiveJDBC41.jar",'
         '--py-files, /home/hadoop/spark/target/dewey.zip, {}]'
     ).format(
         ','.join(spark_conf_args + [script_name] + args)
