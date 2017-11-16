@@ -138,11 +138,11 @@ FROM substanceusage sub
         AND sub.substancecode = ref1.gen_ref_cd
         AND ref1.whtlst_flg = 'Y'
     LEFT JOIN ref_gen_ref ref2 ON ref2.hvm_vdr_feed_id = 35
-        AND ref2.gen_ref_domn_nm = 'extendeddata.clinicalrecordtypecode'
+        AND ref2.gen_ref_domn_nm = 'substanceusage.clinicalrecordtypecode'
         AND clean_up_freetext(sub.clinicalrecordtypecode, false) = ref2.gen_ref_cd
         AND ref2.whtlst_flg = 'Y'
     LEFT JOIN ref_gen_ref ref3 ON ref3.hvm_vdr_feed_id = 35
-        AND ref3.gen_ref_domn_nm = 'extendeddata.clinicalrecorddescription'
+        AND ref3.gen_ref_domn_nm = 'substanceusage.clinicalrecorddescription'
         AND clean_up_freetext(sub.clinicalrecorddescription, false) = ref3.gen_ref_itm_nm
         AND ref3.whtlst_flg = 'Y'
     LEFT JOIN ref_gen_ref ref4 ON ref4.gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'

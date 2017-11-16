@@ -233,7 +233,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         return [w for w in whitelists if w['column_name'] not in ['clin_obsn_nm', 'clin_obsn_result_desc']]
 
     def update_lab_result_whitelists(whitelists):
-        return [w for w in whitelists if w['column_name'] not in ['lab_test_nm']]
+        return [w for w in whitelists if w['column_name'] not in ['lab_test_nm', 'lab_result_nm', 'lab_result_uom']]
 
     normalized_tables = [
         {
