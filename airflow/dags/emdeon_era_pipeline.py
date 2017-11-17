@@ -8,11 +8,12 @@ import subdags.split_push_files as split_push_files
 import subdags.s3_fetch_file as s3_fetch_file
 import subdags.update_analytics_db as update_analytics_db
 import util.decompression as decompression
+import util.date_utils as date_utils
 import common.HVDAG as HVDAG
 
 for m in [
         subdags.emdeon_validate_fetch_file, decompression,
-        HVDAG, split_push_files, s3_fetch_file, update_analytics_db
+        HVDAG, split_push_files, s3_fetch_file, update_analytics_db, date_utils
 ]:
     reload(m)
 
@@ -87,6 +88,8 @@ mdag = HVDAG.HVDAG(
     schedule_interval="0 12 * * *",
     default_args=default_args
 )
+
+EMDEON_ERA_DAY_OFFSET = -1
 
 # Validate and fetch all files from the SFTP server
 if airflow_env != 'test':
@@ -167,31 +170,10 @@ if airflow_env != 'test':
 # POST-SFTP TASKS
 #
 
-def insert_execution_date_function(file_name_template):
-    def out(ds, k):
-        return file_name_template.format(k['yesterday_ds_nodash'])
-    return out
-
-
 def expected_file_name_pattern_func(file_name_template):
     def out(ds, k):
         return file_name_template.format('\d{8}')
     return out
-
-
-def insert_current_date(template, kwargs):
-    return template.format(
-        kwargs['yesterday_ds_nodash'][0:4],
-        kwargs['yesterday_ds_nodash'][4:6],
-        kwargs['yesterday_ds_nodash'][6:8]
-    )
-
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return insert_current_date(template, kwargs)
-    return out
-
 
 def get_tmp_dir(ds, k):
     return TMP_PATH_TEMPLATE.format(k['ds_nodash'])
@@ -209,8 +191,7 @@ def generate_fetch_dag(
             mdag.schedule_interval,
             {
                 'tmp_path_template'      : TMP_PATH_TEMPLATE + task_id + '/',
-                'expected_file_name_func': insert_execution_date_function(
-                    file_name_template
+                'expected_file_name_func': date_utils.generate_insert_date_into_template_function(file_name_template.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET
                 ),
                 's3_prefix'              : s3_path_template,
                 's3_bucket'              : 'salusv' if airflow_env == 'test' else 'healthverity'
@@ -233,7 +214,7 @@ fetch_link_file = generate_fetch_dag(
 def do_unzip_file(task_id, file_name_template):
     def out(ds, **kwargs):
         tmp_path = get_tmp_dir(ds, kwargs) + task_id + '/'
-        file_path = tmp_path + file_name_template.format(kwargs['yesterday_ds_nodash'])
+        file_path = tmp_path + date_utils.insert_date_into_template(file_name_template.format('{}{}{}'), kwargs, day_offset = EMDEON_ERA_DAY_OFFSET)
         decompression.decompress_gzip_file(file_path)
     return PythonOperator(
         task_id='unzip_' + task_id + '_file',
@@ -262,9 +243,9 @@ def generate_parse_transactions_step():
         os.mkdir(serviceline_tmp_path)
         os.mkdir(claim_tmp_path)
 
-        transaction_file = transaction_tmp_path + insert_execution_date_function(TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE)(ds, kwargs)
-        serviceline_file = serviceline_tmp_path + insert_execution_date_function(TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE)(ds, kwargs)
-        claim_file = claim_tmp_path + insert_execution_date_function(TRANSACTION_CLAIM_FILE_NAME_TEMPLATE)(ds, kwargs)
+        transaction_file = transaction_tmp_path + date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET)(ds, kwargs)
+        serviceline_file = serviceline_tmp_path + date_utils.generate_insert_date_into_template_function(TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET)(ds, kwargs)
+        claim_file = claim_tmp_path + date_utils.generate_insert_date_into_template_function(TRANSACTION_CLAIM_FILE_NAME_TEMPLATE.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET)(ds, kwargs)
 
         with open(serviceline_file, 'w') as serviceline, open(claim_file, 'w') as claim, open(transaction_file, 'r') as transactions:
             for line in transactions:
@@ -294,11 +275,11 @@ def generate_split_dag(task_id, file_name_unzipped_template, s3_destination):
                 'tmp_dir_func'             : lambda ds, k: get_tmp_dir(ds, k) + task_id + '/',
                 'file_paths_to_split_func' : lambda ds, k: [
                     get_tmp_dir(ds, k) + task_id + '/' +
-                    insert_execution_date_function(file_name_unzipped_template)(ds, k)
+                    date_utils.generate_insert_date_into_template_function(file_name_unzipped_template.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET)(ds, k)
                 ],
                 'file_name_pattern_func'   : expected_file_name_pattern_func(file_name_unzipped_template),
-                's3_prefix_func'           : insert_current_date_function(
-                    s3_destination
+                's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
+                    s3_destination, day_offset = EMDEON_ERA_DAY_OFFSET
                 ),
                 'num_splits'               : 20
             }
@@ -334,7 +315,7 @@ def generate_update_analytics_db_dag(table_name, era_table_type):
     """
 
     def sql_command_func(ds, k):
-        current_date = insert_current_date('{}{}{}', k)
+        current_date = date_utils.insert_date_into_template('{}{}{}', k, day_offset = EMDEON_ERA_DAY_OFFSET)
         return sql_new_template.format(
             table_name=table_name,
             era_table_type=era_table_type,
