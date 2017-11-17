@@ -25,7 +25,7 @@ DAG_NAME = 'apothecary_by_design_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 11, 13),
+    'start_date': datetime(2017, 11, 13, 16),
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
