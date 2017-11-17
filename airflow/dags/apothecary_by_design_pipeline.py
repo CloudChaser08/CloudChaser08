@@ -61,7 +61,7 @@ TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'
 DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}.txt'
 
 def get_formatted_date(ds, kwargs):
-    return kwargs['ds_nodash']
+    return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
 
 
 def insert_formatted_date_function(template):
@@ -79,10 +79,11 @@ def insert_formatted_regex_function(template):
 
 
 def insert_current_date(template, kwargs):
+    ds_nodash = (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
     return template.format(
-        kwargs['ds_nodash'][0:4],
-        kwargs['ds_nodash'][4:6],
-        kwargs['ds_nodash'][6:8]
+        ds_nodash[0:4],
+        ds_nodash[4:6],
+        ds_nodash[6:8]
     )
 
 
