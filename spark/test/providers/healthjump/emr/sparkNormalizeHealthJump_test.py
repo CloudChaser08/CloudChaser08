@@ -17,6 +17,7 @@ def cleanup(spark):
     spark['sqlContext'].sql('DROP TABLE IF EXISTS diagnosis_transactions')
     spark['sqlContext'].sql('DROP TABLE IF EXISTS loinc_transactions')
     spark['sqlContext'].sql('DROP TABLE IF EXISTS ndc_transactions')
+    spark['sqlContext'].sql('DROP VIEW IF EXISTS ref_gen_ref')
 
 
 @pytest.mark.usefixtures("spark")
