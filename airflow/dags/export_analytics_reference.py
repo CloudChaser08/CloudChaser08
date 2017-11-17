@@ -46,6 +46,12 @@ def generate_table_export_task(table, s3_path):
         dag=dag
     )
 
-generate_table_export_task('gen_ref', 's3://salusv/reference/dw/gen_ref/gen_ref.bz2')
-generate_table_export_task('gen_ref_dt', 's3://salusv/reference/dw/gen_ref_dt/gen_ref_dt.bz2')
-generate_table_export_task('gen_ref_whtlst', 's3://salusv/reference/dw/gen_ref_whtlst/gen_ref_whtlst.bz2')
+if HVDAG.HVDAG.airflow_env != 'test':
+    generate_table_export_task('gen_ref', 's3://salusv/reference/dw/gen_ref/gen_ref.bz2')
+    generate_table_export_task('gen_ref_dt', 's3://salusv/reference/dw/gen_ref_dt/gen_ref_dt.bz2')
+    generate_table_export_task('gen_ref_whtlst', 's3://salusv/reference/dw/gen_ref_whtlst/gen_ref_whtlst.bz2')
+    generate_table_export_task('gen_geo_state', 's3://salusv/reference/dw/gen_geo_state/gen_geo_state.bz2')
+    generate_table_export_task('gen_vdr', 's3://salusv/reference/dw/gen_vdr/gen_vdr.bz2')
+    generate_table_export_task('gen_vdr_feed', 's3://salusv/reference/dw/gen_vdr_feed/gen_vdr_feed.bz2')
+if HVDAG.HVDAG.airflow_env == 'test':
+    generate_table_export_task('gen_ref', 's3://salusv/testing/dewey/airflow/e2e/export_analytics_reference/gen_ref.bz2')
