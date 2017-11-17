@@ -60,8 +60,19 @@ ADDITIONALDATA_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'
 TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'
 DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}.txt'
 
-def get_formatted_date(ds, kwargs):
+def get_start_date(ds, kwargs):
     return kwargs['ds_nodash']
+
+
+def insert_formatted_start_date_function(template):
+    def out(ds, kwargs):
+        return template.format(get_start_date(ds, kwargs))
+
+    return out
+
+
+def get_formatted_date(ds, kwargs):
+    return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
 
 
 def insert_formatted_date_function(template):
@@ -79,10 +90,11 @@ def insert_formatted_regex_function(template):
 
 
 def insert_current_date(template, kwargs):
+    ds_nodash = (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
     return template.format(
-        kwargs['ds_nodash'][0:4],
-        kwargs['ds_nodash'][4:6],
-        kwargs['ds_nodash'][6:8]
+        ds_nodash[0:4],
+        ds_nodash[4:6],
+        ds_nodash[6:8]
     )
 
 
@@ -93,8 +105,8 @@ def insert_current_date_function(template):
     return out
 
 
-get_tmp_dir = insert_formatted_date_function(ADDITIONALDATA_TMP_PATH_TEMPLATE)
-get_deid_tmp_dir = insert_formatted_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_tmp_dir = insert_formatted_start_date_function(ADDITIONALDATA_TMP_PATH_TEMPLATE)
+get_deid_tmp_dir = insert_formatted_start_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
 def get_additionaldata_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + ADDITIONALDATA_FILE_NAME_TEMPLATE.format(
