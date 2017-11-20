@@ -41,8 +41,8 @@ CREATE EXTERNAL TABLE transactions_addon_dupes (
         gender               string,
         diagnosis_code       string,
         icd_codeset_ind      string,
-        acct_zip_code        string,
-        acct_npi             string,
+        acct_zip             string,
+        npi                  string,
         hv_join_key          string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
@@ -72,10 +72,12 @@ CREATE TABLE transactional_raw (
         date_of_service      string,
         date_collected       string,
         diagnosis_code       string,
-        icd_codeset_ind      string
+        icd_codeset_ind      string,
+        acct_zip             string,
+        npi                  string
         );
 
-INSERT INTO transactional_raw 
+INSERT INTO transactional_raw
 SELECT addon.hv_join_key,
     trunk.accn_id,
     trunk.dosid,
@@ -89,8 +91,10 @@ SELECT addon.hv_join_key,
     addon.date_of_service,
     addon.date_collected,
     addon.diagnosis_code,
-    addon.icd_codeset_ind
+    addon.icd_codeset_ind,
+    addon.acct_zip,
+    addon.npi
 FROM transactions_trunk trunk
-    INNER JOIN transactions_addon addon ON trunk.accn_id = addon.accn_id 
+    INNER JOIN transactions_addon addon ON trunk.accn_id = addon.accn_id
     AND trunk.dosid = addon.dosid
 ;

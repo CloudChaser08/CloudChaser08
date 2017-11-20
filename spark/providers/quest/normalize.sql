@@ -3,7 +3,7 @@ INSERT INTO lab_common_model
 SELECT
     NULL,                                   -- record_id
     CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
-    mp.hvid,                                -- hvid
+    COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
     {today},                                -- created
     '1',                                    -- model_version
     {filename},                             -- data_set
@@ -66,7 +66,7 @@ SELECT
     NULL,                                   -- procedure_code
     NULL,                                   -- procedure_code_qual
     NULL,                                   -- lab_npi
-    NULL,                                   -- ordering_npi
+    q.npi,                                  -- ordering_npi
     NULL,                                   -- payer_id
     NULL,                                   -- payer_id_qual
     NULL,                                   -- payer_name
@@ -79,10 +79,25 @@ SELECT
     NULL,                                   -- lab_other_qual
     NULL,                                   -- ordering_other_id
     NULL,                                   -- ordering_other_qual
+    NULL,                                   -- ordering_name
     NULL,                                   -- ordering_market_type
-    NULL                                    -- ordering_specialty
+    NULL,                                   -- ordering_specialty
+    NULL,                                   -- ordering_vendor_id
+    NULL,                                   -- ordering_tax_id
+    NULL,                                   -- ordering_dea_id
+    NULL,                                   -- ordering_ssn
+    NULL,                                   -- ordering_state_license
+    NULL,                                   -- ordering_upin
+    NULL,                                   -- ordering_commercial_id
+    NULL,                                   -- ordering_address_1
+    NULL,                                   -- ordering_address_2
+    NULL,                                   -- ordering_city
+    NULL,                                   -- ordering_state
+    q.acct_zip,                             -- ordering_zip
+    NULL                                    -- logical_delete_reason
 FROM transactional_raw q
-    LEFT JOIN matching_payload mp ON {join}
+    LEFT JOIN original_mp mp ON {join}
+    LEFT JOIN augmented_with_prov_attrs_mp prov_mp ON q.accn_id = prov_mp.claimId
     CROSS JOIN diagnosis_exploder n
 
 -- implicit here is that q.diagnosis_code itself is not null or blank
@@ -95,7 +110,7 @@ INSERT INTO lab_common_model
 SELECT
     NULL,                                   -- record_id
     CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
-    mp.hvid,                                -- hvid
+    COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
     {today},                                -- created
     '1',                                    -- model_version
     {filename},                             -- data_set
@@ -148,7 +163,7 @@ SELECT
     NULL,                                   -- procedure_code
     NULL,                                   -- procedure_code_qual
     NULL,                                   -- lab_npi
-    NULL,                                   -- ordering_npi
+    q.npi,                                  -- ordering_npi
     NULL,                                   -- payer_id
     NULL,                                   -- payer_id_qual
     NULL,                                   -- payer_name
@@ -161,10 +176,25 @@ SELECT
     NULL,                                   -- lab_other_qual
     NULL,                                   -- ordering_other_id
     NULL,                                   -- ordering_other_qual
+    NULL,                                   -- ordering_name
     NULL,                                   -- ordering_market_type
     NULL                                    -- ordering_specialty
+    NULL,                                   -- ordering_vendor_id
+    NULL,                                   -- ordering_tax_id
+    NULL,                                   -- ordering_dea_id
+    NULL,                                   -- ordering_ssn
+    NULL,                                   -- ordering_state_license
+    NULL,                                   -- ordering_upin
+    NULL,                                   -- ordering_commercial_id
+    NULL,                                   -- ordering_address_1
+    NULL,                                   -- ordering_address_2
+    NULL,                                   -- ordering_city
+    NULL,                                   -- ordering_state
+    q.acct_zip,                             -- ordering_zip
+    NULL                                    -- logical_delete_reason
 FROM transactional_raw q
-    LEFT JOIN matching_payload mp ON {join}
+    LEFT JOIN original_mp mp ON {join}
+    LEFT JOIN augmented_with_prov_attrs_mp prov_mp ON q.accn_id = prov_mp.claimId
 WHERE q.diagnosis_code IS NULL
     OR q.diagnosis_code = ''
     ;

@@ -1,7 +1,6 @@
 #! /usr/bin/python
 import argparse
 import time
-import logging
 from datetime import timedelta, datetime
 from pyspark.sql.functions import monotonically_increasing_id
 from spark.runner import Runner
@@ -47,18 +46,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     trunk_path = input_path + 'trunk/'
     addon_path = input_path + 'addon/'
 
+    # provider addon information will be at the month level
+    prov_addon_path = '/'.join(input_path.split('/')[:-1]) + '/provider_addon/'
+    prov_matching_path = '/'.join(matching_path.split('/')[:-1]) + '/provider_addon/'
+
     min_date = '2013-01-01'
     max_date = date_input
 
     # create helper tables
     runner.run_spark_script('create_helper_tables.sql')
 
-    runner.run_spark_script('../../common/lab_common_model.sql', [
+    runner.run_spark_script('../../common/lab_common_model_v3.sql', [
         ['table_name', 'lab_common_model', False],
         ['properties', '', False]
     ])
 
-    payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
+    payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'], table_name='original_mp')
+    payload_loader.load(runner, prov_matching_path, ['hvJoinKey', 'claimId'], table_name='augmented_with_prov_attrs_mp')
 
     if date_obj.strftime('%Y%m%d') >= '20171016':
         runner.run_spark_script('load_and_merge_transactions_v2.sql', [
@@ -68,11 +72,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     elif date_obj.strftime('%Y%m%d') >= '20160831':
         runner.run_spark_script('load_and_merge_transactions.sql', [
             ['trunk_path', trunk_path],
-            ['addon_path', addon_path]
+            ['addon_path', addon_path],
+            ['prov_addon_path', prov_addon_path]
         ])
     else:
         runner.run_spark_script('load_transactions.sql', [
-            ['input_path', input_path]
+            ['input_path', input_path],
+            ['prov_addon_path', prov_addon_path]
         ])
 
     runner.run_spark_script('normalize.sql', [
@@ -97,7 +103,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'lab', 'lab_common_model.sql', 'quest',
+            spark, runner, 'lab', 'lab_common_model_v3.sql', 'quest',
             'lab_common_model', 'date_service', date_input
         )
 

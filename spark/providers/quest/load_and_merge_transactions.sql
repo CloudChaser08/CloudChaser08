@@ -55,6 +55,22 @@ DROP TABLE IF EXISTS transactions_addon;
 CREATE TABLE transactions_addon
 AS SELECT DISTINCT * FROM transactions_addon_dupes;
 
+DROP TABLE IF EXISTS transactional_provider_addon;
+CREATE EXTERNAL TABLE transactional_provider_addon (
+        accn_id              string,
+        dosid                string,
+        lab_code             string,
+        acct_zip             string,
+        npi                  string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        'separatorChar' = '\t'
+        )
+    STORED AS TEXTFILE
+    LOCATION {provider_addon_path}
+    ;
+
 DROP TABLE IF EXISTS transactional_raw;
 CREATE TABLE transactional_raw (
         hv_join_key          string,
@@ -70,10 +86,12 @@ CREATE TABLE transactional_raw (
         date_of_service      string,
         date_collected       string,
         diagnosis_code       string,
-        icd_codeset_ind      string
+        icd_codeset_ind      string,
+        acct_zip             string,
+        npi                  string
         );
 
-INSERT INTO transactional_raw 
+INSERT INTO transactional_raw
 SELECT addon.hv_join_key,
     trunk.accn_id,
     trunk.dosid,
@@ -87,8 +105,12 @@ SELECT addon.hv_join_key,
     addon.date_of_service,
     addon.date_collected,
     addon.diagnosis_code,
-    addon.icd_codeset_ind
+    addon.icd_codeset_ind,
+    prov_addon.acct_zip,
+    prov_addon.npi
 FROM transactions_trunk trunk
-    INNER JOIN transactions_addon addon ON trunk.accn_id = addon.accn_id 
+    INNER JOIN transactions_addon addon ON trunk.accn_id = addon.accn_id
     AND trunk.dosid = addon.dosid
+    LEFT JOIN transactions_provider_addon prov_addon ON trunk.accn_id = prov_addon.accn_id
+    AND trunk.dosid = prov_addon.dosid
 ;
