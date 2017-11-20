@@ -93,11 +93,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             ['prov_addon_path', prov_addon_path]
         ])
 
-    postprocessor.compose(
-        postprocessor.trimmify, postprocessor.nullify
-    )(
-        runner.sqlContext.sql('select * from transactional_raw')
-    ).createTempView('transactional_raw')
+    for transactional_table in ['transactional_raw', 'original_mp', 'augmented_with_prov_attrs_mp']:
+        postprocessor.compose(
+            postprocessor.trimmify, postprocessor.nullify
+        )(
+            runner.sqlContext.sql('select * from {}'.format(transactional_table))
+        ).createTempView('{}'.format(transactional_table))
 
     runner.run_spark_script('normalize.sql', [
         ['join', (

@@ -10,11 +10,31 @@ SELECT
     NULL,                                   -- data_feed
     NULL,                                   -- data_vendor
     '1',                                    -- source_version
-    mp.gender,                              -- patient_gender
-    mp.age,                                 -- patient_age
-    mp.yearOfBirth,                         -- patient_year_of_birth
-    mp.threeDigitZip,                       -- patient_zip3
-    mp.state,                               -- patient_state
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.gender
+    ELSE mp.gender
+    END,                                    -- patient_gender
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.age
+    ELSE mp.age
+    END,                                    -- patient_age
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.yearOfBirth
+    ELSE mp.yearOfBirth
+    END,                                    -- patient_year_of_birth
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.threeDigitZip
+    ELSE mp.threeDigitZip
+    END,                                    -- patient_zip3
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.state
+    ELSE mp.state
+    END,                                    -- patient_state
     extract_date(
         q.date_of_service, '%Y%m%d'
         ),                                  -- date_service
@@ -103,11 +123,31 @@ SELECT
     NULL,                                   -- data_feed
     NULL,                                   -- data_vendor
     '1',                                    -- source_version
-    mp.gender,                              -- patient_gender
-    mp.age,                                 -- patient_age
-    mp.yearOfBirth,                         -- patient_year_of_birth
-    mp.threeDigitZip,                       -- patient_zip3
-    mp.state,                               -- patient_state
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.gender
+    ELSE mp.gender
+    END,                                    -- patient_gender
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.age
+    ELSE mp.age
+    END,                                    -- patient_age
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.yearOfBirth
+    ELSE mp.yearOfBirth
+    END,                                    -- patient_year_of_birth
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.threeDigitZip
+    ELSE mp.threeDigitZip
+    END,                                    -- patient_zip3
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN prov_mp.state
+    ELSE mp.state
+    END,                                    -- patient_state
     extract_date(
         q.date_of_service, '%Y%m%d'
         ),                                  -- date_service
