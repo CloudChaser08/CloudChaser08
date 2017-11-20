@@ -55,8 +55,8 @@ DROP TABLE IF EXISTS transactions_addon;
 CREATE TABLE transactions_addon
 AS SELECT DISTINCT * FROM transactions_addon_dupes;
 
-DROP TABLE IF EXISTS transactional_provider_addon;
-CREATE EXTERNAL TABLE transactional_provider_addon (
+DROP TABLE IF EXISTS transactions_provider_addon;
+CREATE EXTERNAL TABLE transactions_provider_addon (
         accn_id              string,
         dosid                string,
         lab_code             string,
@@ -68,7 +68,7 @@ CREATE EXTERNAL TABLE transactional_provider_addon (
         'separatorChar' = '\t'
         )
     STORED AS TEXTFILE
-    LOCATION {provider_addon_path}
+    LOCATION {prov_addon_path}
     ;
 
 DROP TABLE IF EXISTS transactional_raw;

@@ -23,10 +23,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/quest/resources/input/'
+            script_path, '../../test/providers/quest/resources/input/year/month/day/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/quest/resources/matching/'
+            script_path, '../../test/providers/quest/resources/matching/year/month/day/'
         ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/out/{}/'.format(
@@ -47,8 +47,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     addon_path = input_path + 'addon/'
 
     # provider addon information will be at the month level
-    prov_addon_path = '/'.join(input_path.split('/')[:-1]) + '/provider_addon/'
-    prov_matching_path = '/'.join(matching_path.split('/')[:-1]) + '/provider_addon/'
+    prov_addon_path = '/'.join(input_path.split('/')[:-2]) + '/provider_addon/'
+    prov_matching_path = '/'.join(matching_path.split('/')[:-2]) + '/provider_addon/'
 
     min_date = '2013-01-01'
     max_date = date_input
@@ -62,7 +62,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'], table_name='original_mp')
-    payload_loader.load(runner, prov_matching_path, ['hvJoinKey', 'claimId'], table_name='augmented_with_prov_attrs_mp')
+    payload_loader.load(runner, prov_matching_path, ['claimId'], table_name='augmented_with_prov_attrs_mp')
 
     if date_obj.strftime('%Y%m%d') >= '20171016':
         runner.run_spark_script('load_and_merge_transactions_v2.sql', [

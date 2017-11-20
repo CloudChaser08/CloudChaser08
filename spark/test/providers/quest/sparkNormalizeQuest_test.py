@@ -54,5 +54,24 @@ def test_diagnosis_qual_translation():
         .diagnosis_code_qual == '01'
 
 
+def test_provider_derived_hvids_added():
+    "Ensure that hvids are derived from the provider addon file first"
+    assert filter(lambda r: r.claim_id.startswith('2073344007'), results)[0] \
+        .hvid == '9999'
+
+    assert filter(lambda r: r.claim_id.startswith('2073344008'), results)[0] \
+        .hvid == '9999'
+
+    assert filter(lambda r: r.claim_id.startswith('2073344009'), results)[0] \
+        .hvid == '0000'
+
+
+def test_provider_information_appended():
+    "Ensure that hvids are derived from the provider addon file first"
+    assert filter(lambda r: r.claim_id.startswith('2073344007'), results)[0].ordering_npi == '1376766659'
+
+    assert filter(lambda r: r.claim_id.startswith('2073344009'), results)[0].ordering_zip == '19147'
+
+
 def test_cleanup(spark):
     spark['sqlContext'].dropTempTable('lab_common_model')

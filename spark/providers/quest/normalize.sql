@@ -178,7 +178,7 @@ SELECT
     NULL,                                   -- ordering_other_qual
     NULL,                                   -- ordering_name
     NULL,                                   -- ordering_market_type
-    NULL                                    -- ordering_specialty
+    NULL,                                   -- ordering_specialty
     NULL,                                   -- ordering_vendor_id
     NULL,                                   -- ordering_tax_id
     NULL,                                   -- ordering_dea_id
