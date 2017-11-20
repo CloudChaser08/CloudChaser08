@@ -1,0 +1,150 @@
+INSERT INTO medication_common_model
+SELECT
+    NULL,                                   -- row_id
+    NULL,                                   -- hv_medctn_id
+    NULL,                                   -- crt_dt
+    '4',                                    -- mdl_vrsn_num
+    NULL,                                   -- data_set_nm
+    NULL,                                   -- src_vrsn_id
+    NULL,                                   -- hvm_vdr_id
+    NULL,                                   -- hvm_vdr_feed_id
+    NULL,                                   -- vdr_org_id
+    NULL,                                   -- vdr_medctn_ord_id
+    NULL,                                   -- vdr_medctn_ord_id_qual
+    NULL,                                   -- vdr_medctn_admin_id
+    NULL,                                   -- vdr_medctn_admin_id_qual
+    pay.hvid,                               -- hvid
+    pay.yearOfBirth,                        -- ptnt_birth_yr
+    NULL,                                   -- ptnt_age_num
+    NULL,                                   -- ptnt_lvg_flg
+    NULL,                                   -- ptnt_dth_dt
+    CASE
+      WHEN UPPER(COALESCE(pay.gender, dem.gender)) IN ('F', 'M')
+      THEN UPPER(COALESCE(pay.gender, dem.gender))
+      ELSE 'U'
+    END,                                    -- ptnt_gender_cd
+    UPPER(COALESCE(pay.state, dem.state)),  -- ptnt_state_cd
+    pay.threeDigitZip,                      -- ptnt_zip3_cd
+    NULL,                                   -- hv_enc_id
+    NULL,                                   -- enc_dt
+    NULL,                                   -- medctn_ord_dt
+    CASE
+      WHEN LENGTH(med.date) = 8 AND LOCATE('/', med.date) = 0
+      THEN EXTRACT_DATE(med.date, '%Y%m%d', CAST('1900-01-01' AS date))
+      WHEN LENGTH(med.date) = 10 AND LOCATE('/', med.date) <> 0
+      THEN EXTRACT_DATE(med.date, '%m/%d/%Y', CAST('1900-01-01' AS date))
+    END,                                    -- medctn_admin_dt
+    NULL,                                   -- medctn_rndrg_fclty_npi
+    NULL,                                   -- medctn_rndrg_fclty_vdr_id
+    NULL,                                   -- medctn_rndrg_fclty_vdr_id_qual
+    NULL,                                   -- medctn_rndrg_fclty_alt_id
+    NULL,                                   -- medctn_rndrg_fclty_alt_id_qual
+    NULL,                                   -- medctn_rndrg_fclty_tax_id
+    NULL,                                   -- medctn_rndrg_fclty_dea_id
+    NULL,                                   -- medctn_rndrg_fclty_state_lic_id
+    NULL,                                   -- medctn_rndrg_fclty_comrcl_id
+    NULL,                                   -- medctn_rndrg_fclty_nucc_taxnmy_cd
+    NULL,                                   -- medctn_rndrg_fclty_alt_taxnmy_id
+    NULL,                                   -- medctn_rndrg_fclty_alt_taxnmy_id_qual
+    NULL,                                   -- medctn_rndrg_fclty_mdcr_speclty_cd
+    NULL,                                   -- medctn_rndrg_fclty_alt_speclty_id
+    NULL,                                   -- medctn_rndrg_fclty_alt_speclty_id_qual
+    NULL,                                   -- medctn_rndrg_fclty_nm
+    NULL,                                   -- medctn_rndrg_fclty_addr_1_txt
+    NULL,                                   -- medctn_rndrg_fclty_addr_2_txt
+    NULL,                                   -- medctn_rndrg_fclty_state_cd
+    NULL,                                   -- medctn_rndrg_fclty_zip_cd
+    NULL,                                   -- medctn_ordg_prov_npi
+    NULL,                                   -- medctn_ordg_prov_vdr_id
+    NULL,                                   -- medctn_ordg_prov_vdr_id_qual
+    NULL,                                   -- medctn_ordg_prov_alt_id
+    NULL,                                   -- medctn_ordg_prov_alt_id_qual
+    NULL,                                   -- medctn_ordg_prov_tax_id
+    NULL,                                   -- medctn_ordg_prov_dea_id
+    NULL,                                   -- medctn_ordg_prov_state_lic_id
+    NULL,                                   -- medctn_ordg_prov_comrcl_id
+    NULL,                                   -- medctn_ordg_prov_upin
+    NULL,                                   -- medctn_ordg_prov_ssn
+    NULL,                                   -- medctn_ordg_prov_nucc_taxnmy_cd
+    NULL,                                   -- medctn_ordg_prov_alt_taxnmy_id
+    NULL,                                   -- medctn_ordg_prov_alt_taxnmy_id_qual
+    NULL,                                   -- medctn_ordg_prov_mdcr_speclty_cd
+    NULL,                                   -- medctn_ordg_prov_alt_speclty_id
+    NULL,                                   -- medctn_ordg_prov_alt_speclty_id_qual
+    NULL,                                   -- medctn_ordg_prov_frst_nm
+    NULL,                                   -- medctn_ordg_prov_last_nm
+    NULL,                                   -- medctn_ordg_prov_addr_1_txt
+    NULL,                                   -- medctn_ordg_prov_addr_2_txt
+    NULL,                                   -- medctn_ordg_prov_state_cd
+    NULL,                                   -- medctn_ordg_prov_zip_cd
+    NULL,                                   -- medctn_adminrg_fclty_npi
+    NULL,                                   -- medctn_adminrg_fclty_vdr_id
+    NULL,                                   -- medctn_adminrg_fclty_vdr_id_qual
+    NULL,                                   -- medctn_adminrg_fclty_alt_id
+    NULL,                                   -- medctn_adminrg_fclty_alt_id_qual
+    NULL,                                   -- medctn_adminrg_fclty_tax_id
+    NULL,                                   -- medctn_adminrg_fclty_dea_id
+    NULL,                                   -- medctn_adminrg_fclty_state_lic_id
+    NULL,                                   -- medctn_adminrg_fclty_comrcl_id
+    NULL,                                   -- medctn_adminrg_fclty_nucc_taxnmy_cd
+    NULL,                                   -- medctn_adminrg_fclty_alt_taxnmy_id
+    NULL,                                   -- medctn_adminrg_fclty_alt_taxnmy_id_qual
+    NULL,                                   -- medctn_adminrg_fclty_mdcr_speclty_cd
+    NULL,                                   -- medctn_adminrg_fclty_alt_speclty_id
+    NULL,                                   -- medctn_adminrg_fclty_alt_speclty_id_qual
+    NULL,                                   -- medctn_adminrg_fclty_nm
+    NULL,                                   -- medctn_adminrg_fclty_addr_1_txt
+    NULL,                                   -- medctn_adminrg_fclty_addr_2_txt
+    NULL,                                   -- medctn_adminrg_fclty_state_cd
+    NULL,                                   -- medctn_adminrg_fclty_zip_cd
+    NULL,                                   -- rx_num
+    NULL,                                   -- medctn_start_dt
+    NULL,                                   -- medctn_end_dt
+    NULL,                                   -- medctn_diag_cd
+    NULL,                                   -- medctn_diag_cd_qual
+    med.ndc,                                -- medctn_ndc
+    NULL,                                   -- medctn_lblr_cd
+    NULL,                                   -- medctn_drug_and_strth_cd
+    NULL,                                   -- medctn_pkg_cd
+    NULL,                                   -- medctn_hicl_thrptc_cls_cd
+    NULL,                                   -- medctn_hicl_cd
+    NULL,                                   -- medctn_gcn_cd
+    NULL,                                   -- medctn_rxnorm_cd
+    NULL,                                   -- medctn_snomed_cd
+    NULL,                                   -- medctn_genc_ok_flg
+    NULL,                                   -- medctn_brd_nm
+    NULL,                                   -- medctn_genc_nm
+    NULL,                                   -- medctn_rx_flg
+    NULL,                                   -- medctn_rx_qty
+    NULL,                                   -- medctn_dly_qty
+    NULL,                                   -- medctn_dispd_qty
+    NULL,                                   -- medctn_days_supply_qty
+    NULL,                                   -- medctn_admin_unt_qty
+    NULL,                                   -- medctn_admin_freq_qty
+    NULL,                                   -- medctn_admin_sched_cd
+    NULL,                                   -- medctn_admin_sched_qty
+    NULL,                                   -- medctn_admin_sig_cd
+    NULL,                                   -- medctn_admin_sig_txt
+    NULL,                                   -- medctn_admin_form_nm
+    NULL,                                   -- medctn_specl_pkgg_cd
+    NULL,                                   -- medctn_strth_txt
+    NULL,                                   -- medctn_strth_txt_qual
+    NULL,                                   -- medctn_dose_txt
+    NULL,                                   -- medctn_dose_txt_qual
+    NULL,                                   -- medctn_admin_rte_txt
+    NULL,                                   -- medctn_orig_rfll_qty
+    NULL,                                   -- medctn_fll_num
+    NULL,                                   -- medctn_remng_rfll_qty
+    NULL,                                   -- medctn_last_rfll_dt
+    NULL,                                   -- medctn_smpl_flg
+    NULL,                                   -- medctn_elect_rx_flg
+    NULL,                                   -- medctn_verfd_flg
+    NULL,                                   -- medctn_prod_svc_id
+    NULL,                                   -- medctn_prod_svc_id_qual
+    NULL,                                   -- data_captr_dt
+    NULL,                                   -- rec_stat_cd
+    NULL                                    -- prmy_src_tbl_nm
+FROM ndc_transactions med
+    LEFT JOIN demographics_transactions dem ON med.id = dem.demographicid
+    LEFT JOIN matching_payload pay ON dem.hvJoinKey = pay.hvJoinKey
+    ;

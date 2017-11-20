@@ -108,6 +108,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'script_name': 'emr/diagnosis_common_model_v5.sql',
             'privacy_filter': diag_priv,
             'data_type': 'diagnosis',
+            'min_cap_date_domain': 'EARLIEST_VALID_DIAGNOSIS_DATE',
             'date': 'diag_dt'
         },
         {
@@ -115,6 +116,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'script_name': 'emr/procedure_common_model_v4.sql',
             'privacy_filter': proc_priv,
             'data_type': 'procedure',
+            'min_cap_date_domain': 'EARLIEST_VALID_SERVICE_DATE',
             'date': 'proc_dt'
         },
         {
@@ -122,6 +124,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'script_name': 'emr/lab_order_common_model_v3.sql',
             'privacy_filter': lab_order_priv,
             'data_type': 'lab_order',
+            'min_cap_date_domain': 'EARLIEST_VALID_SERVICE_DATE',
             'date': 'lab_ord_dt'
         },
         {
@@ -129,6 +132,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'script_name': 'emr/medication_common_model_v4.sql',
             'privacy_filter': med_priv,
             'data_type': 'medication',
+            'min_cap_date_domain': 'EARLIEST_VALID_SERVICE_DATE',
             'date': 'medctn_admin_dt'
         }
     ]
@@ -145,7 +149,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             ),
             normalized_table['privacy_filter'].filter(runner.sqlContext),
             postprocessor.apply_date_cap(
-                runner.sqlContext, normalized_table['date'], max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'
+                runner.sqlContext, normalized_table['date'], max_date, vendor_feed_id,
+                normalized_table['min_cap_date_domain']
             )
         )(
             runner.sqlContext.sql('select * from {}'.format(normalized_table['table_name']))
