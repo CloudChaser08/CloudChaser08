@@ -119,6 +119,13 @@ def clean_up_ndc_code(ndc_code):
         return None
 
 
+def clean_up_npi_code(npi_code):
+    if len(clean_up_numeric_code(npi_code)) == 10:
+        return clean_up_numeric_code(npi_code)
+    else:
+        return None
+
+
 # These places of service pose a risk of revealing the patient's
 # residence, set them to unkown, and remove data about them
 # 5 Indian Health Service Free-standing Facility

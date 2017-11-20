@@ -5,6 +5,10 @@ lab_transformer = {
     'loinc_code': {
         'func': post_norm_cleanup.clean_up_numeric_code,
         'args': ['loinc_code']
+    },
+    'ordering_npi': {
+        'func': post_norm_cleanup.clean_up_npi_code,
+        'args': ['ordering_npi']
     }
 }
 
