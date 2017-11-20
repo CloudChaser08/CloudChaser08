@@ -7,7 +7,10 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.external_table_loader as external_table_loader
+import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.privacy.labtests as lab_priv
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
@@ -18,6 +21,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     setid = 'HealthVerity_' + \
             date_obj.strftime('%Y%m%d') + \
             (date_obj + timedelta(days=1)).strftime('%m%d')
+
+    vendor_feed_id = '18'
+    vendor_id = '7'
 
     script_path = __file__
 
@@ -50,8 +56,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     prov_addon_path = '/'.join(input_path.split('/')[:-2]) + '/provider_addon/'
     prov_matching_path = '/'.join(matching_path.split('/')[:-2]) + '/provider_addon/'
 
-    min_date = '2013-01-01'
+    hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id, "HVM_AVAILABLE_HISTORY_START_DATE")
+    earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id, "EARLIEST_VALID_SERVICE_DATE")
+    hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
+        earliest_valid_service_date if earliest_valid_service_date else datetime.date(1901, 1, 1)
     max_date = date_input
+
+    if not test:
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     # create helper tables
     runner.run_spark_script('create_helper_tables.sql')
@@ -81,30 +93,43 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             ['prov_addon_path', prov_addon_path]
         ])
 
+    postprocessor.compose(
+        postprocessor.trimmify, postprocessor.nullify
+    )(
+        runner.sqlContext.sql('select * from transactional_raw')
+    ).createTempView('transactional_raw')
+
     runner.run_spark_script('normalize.sql', [
-        ['filename', setid],
-        ['today', TODAY],
-        ['feedname', '18'],
-        ['vendor', '7'],
         ['join', (
             'q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key'
             if date_obj.strftime('%Y%m%d') >= '20160831' else 'q.accn_id = mp.claimid'
-        ), False],
-        ['min_date', min_date],
-        ['max_date', max_date]
+        ), False]
     ])
 
-    # add in primary key
-    runner.sqlContext.sql('select * from lab_common_model').withColumn(
-        'record_id', monotonically_increasing_id()
-    ).createTempView(
-        'lab_common_model'
-    )
+    postprocessor.compose(
+        postprocessor.add_universal_columns(
+            feed_id=vendor_feed_id,
+            vendor_id=vendor_id,
+            filename=setid
+        ),
+        lab_priv.filter,
+        postprocessor.apply_date_cap(
+            runner.sqlContext, 'date_service', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'
+        ),
+        postprocessor.apply_date_cap(
+            runner.sqlContext, 'date_specimen', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'
+        )
+    )(
+        runner.sqlContext.sql('select * from lab_common_model')
+    ).createTempView('lab_common_model')
 
     if not test:
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'lab', 'lab_common_model_v3.sql', 'quest',
-            'lab_common_model', 'date_service', date_input
+            'lab_common_model', 'date_service', date_input,
+            hvm_historical_date=datetime(
+                hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
+            )
         )
 
 

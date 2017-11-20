@@ -4,28 +4,22 @@ SELECT
     NULL,                                   -- record_id
     CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
     COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
-    {today},                                -- created
+    NULL,                                   -- created
     '1',                                    -- model_version
-    {filename},                             -- data_set
-    {feedname},                             -- data_feed
-    {vendor},                               -- data_vendor
+    NULL,                                   -- data_set
+    NULL,                                   -- data_feed
+    NULL,                                   -- data_vendor
     '1',                                    -- source_version
     mp.gender,                              -- patient_gender
-    cap_age(mp.age),                        -- patient_age
-    cap_year_of_birth(
-        mp.age,
-        CAST(extract_date(
-            q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
-            ) AS DATE),
-        mp.yearOfBirth
-        ),                                  -- patient_year_of_birth
+    mp.age,                                 -- patient_age
+    mp.yearOfBirth,                         -- patient_year_of_birth
     mp.threeDigitZip,                       -- patient_zip3
-    UPPER(mp.state),                        -- patient_state
+    mp.state,                               -- patient_state
     extract_date(
-        q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        q.date_of_service, '%Y%m%d'
         ),                                  -- date_service
     extract_date(
-        q.date_collected, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        q.date_collected, '%Y%m%d'
         ),                                  -- date_specimen
     NULL,                                   -- date_report
     NULL,                                   -- time_report
@@ -50,15 +44,7 @@ SELECT
     NULL,                                   -- ref_range_alpha
     NULL,                                   -- abnormal_flag
     NULL,                                   -- fasting_status
-    clean_up_diagnosis_code(
-        SPLIT(q.diagnosis_code, '\\^')[n.n],
-        CASE q.icd_codeset_ind
-        WHEN '9' THEN '01' WHEN '0' THEN '02'
-        END,
-        CAST(extract_date(
-            q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
-            ) as DATE)
-        ),                                  -- diagnosis_code
+    SPLIT(q.diagnosis_code, '\\^')[n.n],    -- diagnosis_code
     CASE q.icd_codeset_ind
     WHEN '9' THEN '01' WHEN '0' THEN '02'
     END,                                    -- diagnosis_code_qual
@@ -111,28 +97,22 @@ SELECT
     NULL,                                   -- record_id
     CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
     COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
-    {today},                                -- created
+    NULL,                                   -- created
     '1',                                    -- model_version
-    {filename},                             -- data_set
-    {feedname},                             -- data_feed
-    {vendor},                               -- data_vendor
+    NULL,                                   -- data_set
+    NULL,                                   -- data_feed
+    NULL,                                   -- data_vendor
     '1',                                    -- source_version
     mp.gender,                              -- patient_gender
-    cap_age(mp.age),                        -- patient_age
-    cap_year_of_birth(
-        mp.age,
-        CAST(extract_date(
-                q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
-                ) AS DATE),
-        mp.yearOfBirth
-        ),                                  -- patient_year_of_birth
+    mp.age,                                 -- patient_age
+    mp.yearOfBirth,                         -- patient_year_of_birth
     mp.threeDigitZip,                       -- patient_zip3
-    UPPER(mp.state),                        -- patient_state
+    mp.state,                               -- patient_state
     extract_date(
-        q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        q.date_of_service, '%Y%m%d'
         ),                                  -- date_service
     extract_date(
-        q.date_collected, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        q.date_collected, '%Y%m%d'
         ),                                  -- date_specimen
     NULL,                                   -- date_report
     NULL,                                   -- time_report
@@ -196,5 +176,4 @@ FROM transactional_raw q
     LEFT JOIN original_mp mp ON {join}
     LEFT JOIN augmented_with_prov_attrs_mp prov_mp ON q.accn_id = prov_mp.claimId
 WHERE q.diagnosis_code IS NULL
-    OR q.diagnosis_code = ''
     ;
