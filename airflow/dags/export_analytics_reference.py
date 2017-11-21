@@ -24,7 +24,7 @@ default_args = {
 dag = HVDAG.HVDAG(
     'export_analytics_reference',
     default_args=default_args,
-    start_date=datetime(2017, 11, 16),
+    start_date=datetime(2017, 11, 20),
     schedule_interval='@daily'
 )
 psql_env                = dict(os.environ)
@@ -132,7 +132,7 @@ def generate_table_create_task(table, csv_s3a_url, parquet_s3a_url):
             'SET parquet.compression=GZIP',
             insert_into_parquet_table,
             DROP_TABLE_TEMPLATE.format('dw.' + table),
-            RENAME_TABLE_TEMPLATE.format('dw_stg.' + table + '_' + str(ts), 'dw.' + table)
+            RENAME_TABLE_TEMPLATE.format('dw_stg.' + table + '_' + str(ts), 'dw.' + table),
             DROP_TABLE_TEMPLATE.format('dw_stg.' + table + '_csv'),
         ]
         hive_execute(sqls)
