@@ -347,7 +347,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
         python_callable=lambda ds, **kwargs: \
             s3_utils.fetch_file_from_s3(
                 date_utils.insert_date_into_template(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs, day_offset = CARDINAL_DAY_OFFSET),
-                get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs, day_offset = cardinal_day_offset).split('/')[-1]
+                get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs, day_offset = CARDINAL_DAY_OFFSET).split('/')[-1]
         ),
         dag=mdag
     )
