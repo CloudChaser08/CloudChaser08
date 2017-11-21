@@ -29,7 +29,7 @@ def test_run():
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', CARDINAL_PDS_TEST_DIR + '/out/2017/08/28/'
+        'aws', 's3', 'ls', CARDINAL_PDS_TEST_DIR + '/out/2017/10/28/'
     ])) > 0
 
 
