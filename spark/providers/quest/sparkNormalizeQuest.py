@@ -98,7 +98,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             postprocessor.trimmify, postprocessor.nullify
         )(
             runner.sqlContext.sql('select * from {}'.format(transactional_table))
-        ).createTempView('{}'.format(transactional_table))
+        ).createOrReplaceTempView('{}'.format(transactional_table))
 
     runner.run_spark_script('normalize.sql', [
         ['join', (

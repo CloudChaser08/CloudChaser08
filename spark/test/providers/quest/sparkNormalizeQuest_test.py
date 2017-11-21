@@ -14,6 +14,8 @@ results = []
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('lab_common_model')
     spark['sqlContext'].dropTempTable('ref_gen_ref')
+    spark['sqlContext'].dropTempTable('original_mp')
+    spark['sqlContext'].dropTempTable('augmented_with_prov_attrs_mp')
 
     try:
         shutil.rmtree(file_utils.get_abs_path(__file__, './resources/output/'))

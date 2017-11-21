@@ -120,8 +120,9 @@ def clean_up_ndc_code(ndc_code):
 
 
 def clean_up_npi_code(npi_code):
-    if len(clean_up_numeric_code(npi_code)) == 10:
-        return clean_up_numeric_code(npi_code)
+    cleaned = clean_up_numeric_code(npi_code)
+    if cleaned and len(cleaned) == 10:
+        return cleaned
     else:
         return None
 
