@@ -54,7 +54,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # provider addon information will be at the month level
     prov_addon_path = '/'.join(input_path.split('/')[:-2]) + '/provider_addon/'
-    prov_matching_path = '/'.join(matching_path.split('/')[:-2]) + '/provider_addon/'
+
+    # provider matching information is stored in <matching_path>/provider_addon/<y>/<m>/<d>/
+    prov_matching_path = '/'.join(matching_path.split('/')[:-4]) + '/provider_addon/' \
+                         + '/'.join(matching_path.split('/')[-4:])
 
     hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id, "HVM_AVAILABLE_HISTORY_START_DATE")
     earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id, "EARLIEST_VALID_SERVICE_DATE")
