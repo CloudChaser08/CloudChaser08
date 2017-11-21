@@ -77,11 +77,10 @@ DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt'
 MINIMUM_DEID_FILE_SIZE = 500
 
 def get_formatted_date(ds, kwargs):
-    return ( date_utils.generate_insert_date_into_template_function('{}{}{}',
+    return date_utils.generate_insert_date_into_template_function('{}{}{}',
          day_offset = QUEST_DAY_OFFSET)(ds,kwargs)
           + date_utils.generate_insert_date_into_template_function('{1}{2}', 
             day_offset = QUEST_DAY_OFFSET + 1)(ds,kwargs)
-            )
 
 def insert_formatted_date_function(template):
     def out(ds, kwargs):
@@ -257,8 +256,7 @@ decrypt_addon = SubDagOperator(
 def gunzip_step(task_id, tmp_path_template, tmp_file_template):
     def execute(ds, **kwargs):
         decompression.decompress_gzip_file(
-            date_utils.insert_date_into_template(tmp_path_template, kwargs)
-            + date_utils.insert_date_into_template(tmp_file_template, kwargs)
+            date_utils.insert_date_into_template(tmp_path_template, kwargs) + tmp_file_template.format(get_formatted_date(ds, kwargs))
         )
     return PythonOperator(
         task_id='gunzip_' + task_id + '_file',
