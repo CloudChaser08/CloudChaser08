@@ -2,7 +2,7 @@
 INSERT INTO lab_common_model
 SELECT
     NULL,                                   -- record_id
-    CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
+    CONCAT(q.accn_id, '_', q.dosid),        -- claim_id
     COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
     NULL,                                   -- created
     '3',                                    -- model_version
@@ -115,7 +115,7 @@ WHERE SPLIT(TRIM(q.diagnosis_code),'\\^')[n.n] IS NOT NULL
 INSERT INTO lab_common_model
 SELECT
     NULL,                                   -- record_id
-    CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
+    CONCAT(q.accn_id, '_', q.dosid),        -- claim_id
     COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
     NULL,                                   -- created
     '3',                                    -- model_version

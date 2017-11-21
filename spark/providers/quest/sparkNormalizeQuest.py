@@ -1,8 +1,8 @@
 #! /usr/bin/python
 import argparse
 import time
+import logging
 from datetime import timedelta, datetime
-from pyspark.sql.functions import monotonically_increasing_id
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -77,9 +77,21 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'], table_name='original_mp')
-    payload_loader.load(runner, prov_matching_path, ['claimId'], table_name='augmented_with_prov_attrs_mp')
 
-    if date_obj.strftime('%Y%m%d') >= '20171016':
+    # not all dates have an augmented payload - create an empty one if
+    # no payload can be found
+    try:
+        payload_loader.load(runner, prov_matching_path, ['claimId'], table_name='augmented_with_prov_attrs_mp')
+    except:
+        logging.warn("No augmented payload file found!")
+
+        runner.sqlContext.sql("DROP TABLE IF EXISTS augmented_with_prov_attrs_mp")
+        runner.sqlContext.sql(
+            "CREATE TABLE augmented_with_prov_attrs_mp AS "
+            "SELECT * FROM original_mp WHERE 1 = 0"
+        )
+
+    if date_obj.strftime('%Y%m%d') >= '20171015':
         runner.run_spark_script('load_and_merge_transactions_v2.sql', [
             ['trunk_path', trunk_path],
             ['addon_path', addon_path]
