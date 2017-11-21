@@ -5,34 +5,34 @@ SELECT
     CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
     COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
     NULL,                                   -- created
-    '1',                                    -- model_version
+    '3',                                    -- model_version
     NULL,                                   -- data_set
     NULL,                                   -- data_feed
     NULL,                                   -- data_vendor
     '1',                                    -- source_version
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.gender
+    THEN COALESCE(prov_mp.gender, mp.gender)
     ELSE mp.gender
     END,                                    -- patient_gender
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.age
+    THEN COALESCE(prov_mp.age, mp.age)
     ELSE mp.age
     END,                                    -- patient_age
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.yearOfBirth
+    THEN COALESCE(prov_mp.yearOfBirth, mp.yearOfBirth)
     ELSE mp.yearOfBirth
     END,                                    -- patient_year_of_birth
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.threeDigitZip
+    THEN COALESCE(prov_mp.threeDigitZip, mp.threeDigitZip)
     ELSE mp.threeDigitZip
     END,                                    -- patient_zip3
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.state
+    THEN COALESCE(prov_mp.state, mp.state)
     ELSE mp.state
     END,                                    -- patient_state
     extract_date(
@@ -118,34 +118,34 @@ SELECT
     CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
     COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
     NULL,                                   -- created
-    '1',                                    -- model_version
+    '3',                                    -- model_version
     NULL,                                   -- data_set
     NULL,                                   -- data_feed
     NULL,                                   -- data_vendor
     '1',                                    -- source_version
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.gender
+    THEN COALESCE(prov_mp.gender, mp.gender)
     ELSE mp.gender
     END,                                    -- patient_gender
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.age
+    THEN COALESCE(prov_mp.age, mp.age)
     ELSE mp.age
     END,                                    -- patient_age
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.yearOfBirth
+    THEN COALESCE(prov_mp.yearOfBirth, mp.yearOfBirth)
     ELSE mp.yearOfBirth
     END,                                    -- patient_year_of_birth
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.threeDigitZip
+    THEN COALESCE(prov_mp.threeDigitZip, mp.threeDigitZip)
     ELSE mp.threeDigitZip
     END,                                    -- patient_zip3
     CASE
     WHEN prov_mp.hvid IS NOT NULL
-    THEN prov_mp.state
+    THEN COALESCE(prov_mp.state, mp.state)
     ELSE mp.state
     END,                                    -- patient_state
     extract_date(
