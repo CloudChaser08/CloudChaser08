@@ -78,7 +78,9 @@ LOCATION '{s3a_url}'
 
 INSERT_INTO_PARQUET_TABLE_TEMPLATE = """
 INSERT INTO dw_stg.{table}_{ts}
-SELECT * FROM dw_stg.{table}_csv
+SELECT 
+    {nullified_columns}
+FROM dw_stg.{table}_csv
 DISTRIBUTE BY rand()
 """
 
@@ -96,6 +98,10 @@ FROM INFORMATION_SCHEMA.COLUMNS
 WHERE table_name = '{}'
 """
 
+NULLIFY_COLUMN_TEMPLATE = """
+CASE WHEN {column} = '' THEN NULL ELSE {column} END AS {column}
+"""
+
 def generate_table_create_task(table, csv_s3a_url, parquet_s3a_url):
     def do_table_create(ds, **kwargs):
         ts = int(mktime(gmtime()))
@@ -104,7 +110,7 @@ def generate_table_create_task(table, csv_s3a_url, parquet_s3a_url):
         # Generate the Hive table structure from the PSQL table structure
         table_struct_raw   = check_output('psql -c "\d {}"'.format(table), env=psql_env, shell=True)
         column_details_raw = [l for l in table_struct_raw.split('\n') if '|' in l][1:]
-        column_details     = [map(lambda v: v.strip(), c.split('|')[:2]) for c in column_details_raw]
+        column_details     = [[v.strip() for v in c.split('|')[:2]] for c in column_details_raw]
         columns_hive       = [[c[0], psql_to_hive_type(c[1])] for c in column_details]
         table_structure    = ','.join([' '.join(c) for c in columns_hive])
 
@@ -114,7 +120,9 @@ def generate_table_create_task(table, csv_s3a_url, parquet_s3a_url):
         create_parquet_table        = CREATE_PARQUET_TABLE_TEMPLATE.format(
                 table=table, table_structure=table_structure, s3a_url=p_s3a_url, ts=ts
         )
-        insert_into_parquet_table   = INSERT_INTO_PARQUET_TABLE_TEMPLATE.format(table=table, ts=ts)
+
+        nullified_columns = ','.join([NULLIFY_COLUMN_TEMPLATE.format(column=c[0]) for c in columns_hive])
+        insert_into_parquet_table = INSERT_INTO_PARQUET_TABLE_TEMPLATE.format(table=table, nullified_columns=nullified_columns, ts=ts)
         sqls = [
             DROP_TABLE_TEMPLATE.format('dw_stg.' + table + '_csv'), # Just to be safe
             DROP_TABLE_TEMPLATE.format('dw_stg.' + table + '_' + str(ts)), # Just to be safe
@@ -123,9 +131,7 @@ def generate_table_create_task(table, csv_s3a_url, parquet_s3a_url):
             'SET spark.sql.shuffle.partitions=5',
             'SET parquet.compression=GZIP',
             insert_into_parquet_table,
-            DROP_TABLE_TEMPLATE.format('dw_stg.' + table + '_bkp'),
             DROP_TABLE_TEMPLATE.format('dw.' + table),
-            RENAME_TABLE_TEMPLATE.format('dw.' + table, 'dw_stg.' + table + '_bkp'),
             RENAME_TABLE_TEMPLATE.format('dw_stg.' + table + '_' + str(ts), 'dw.' + table)
             DROP_TABLE_TEMPLATE.format('dw_stg.' + table + '_csv'),
         ]
