@@ -13,7 +13,7 @@ SELECT
     NULL,                                   -- vdr_diag_id_qual
     pay.hvid,                               -- hvid
     pay.yearOfBirth,                        -- ptnt_birth_yr
-    NULL,                                   -- ocptnt_age_num
+    NULL,                                   -- ptnt_age_num
     NULL,                                   -- ptnt_lvg_flg
     NULL,                                   -- ptnt_dth_dt
     CASE
