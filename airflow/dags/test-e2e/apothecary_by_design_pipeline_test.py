@@ -1,6 +1,6 @@
 import subprocess
 
-APOTHECARY_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/pharmacyclaims'
+APOTHECARY_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign'
 
 
 def cleanup():
@@ -13,7 +13,7 @@ def cleanup():
     ])
 
     subprocess.check_call([
-        'aws', 's3', 'rm', '--recursive', APOTHECARY_TEST_DIR + '/spark-output/'
+        'aws', 's3', 'mv', '--recursive', APOTHECARY_TEST_DIR + '/spark-backup/', APOTHECARY_TEST_DIR + '/spark-output/'
     ])
 
 
@@ -47,6 +47,11 @@ def test_normalized_data_exists():
         'aws', 's3', 'ls', APOTHECARY_TEST_DIR + '/spark-output/part_provider=apothecarybydesign/'
     ])) > 0
 
+
+def test_backup_data_exists():
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', APOTHECARY_TEST_DIR + '/spark-backup/part_provider=apothecarybydesign/'
+    ])) > 0
 
 def test_cleanup():
     cleanup()

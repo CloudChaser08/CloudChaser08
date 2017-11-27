@@ -15,10 +15,11 @@ import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.update_analytics_db as update_analytics_db
 
 import util.s3_utils as s3_utils
+import util.date_utils as date_utils
 
 for m in [HVDAG, s3_validate_file, s3_fetch_file, detect_move_normalize,
           queue_up_for_matching, split_push_files, update_analytics_db,
-          s3_utils, clean_up_tmp_dir]:
+          s3_utils, date_utils, clean_up_tmp_dir]:
     reload(m)
 
 DAG_NAME = 'apothecary_by_design_pipeline'
@@ -36,6 +37,8 @@ mdag = HVDAG.HVDAG(
     default_args = default_args
 )
 
+ABD_DAY_OFFSET = 7
+
 if HVDAG.HVDAG.airflow_env == 'test':
     test_loc  = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/'
     S3_TRANSACTION_RAW_URL = test_loc + 'raw/'
@@ -50,87 +53,45 @@ else:
     S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/{}/{}/additionaldata/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/'
     S3_NORMALIZED_DATA_URL = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=apothecary_by_design/'
-    S3_BACKUP_NORMALIZED_DATA_URL = 's3://salusv/warehouse/parquet/pharmacyclaims/_archive/part_provider=apothecary_by_design/{}/'
+    S3_BACKUP_NORMALIZED_DATA_URL = 's3://salusv/warehouse/parquet/pharmacyclaims/_archive/part_provider=apothecary_by_design/{}{}{}/'
 
-TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}/'
+TMP_PATH_TEMPLATE = '/tmp/apothecary_by_design/pharmacyclaims/{}{}{}/'
 ADDITIONALDATA_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/additionaldata/'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/transactions/'
 
-ADDITIONALDATA_FILE_NAME_TEMPLATE = 'hv_export_data_{}.txt'
-TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}.txt'
-DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}.txt'
+ADDITIONALDATA_FILE_NAME_TEMPLATE = 'hv_export_data_{}{}{}.txt'
+TRANSACTION_FILE_NAME_TEMPLATE = 'hv_export_po_deid_{}{}{}.txt'
+DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}{}{}.txt'
 
-def get_start_date(ds, kwargs):
-    return kwargs['ds_nodash']
-
-
-def insert_formatted_start_date_function(template):
-    def out(ds, kwargs):
-        return template.format(get_start_date(ds, kwargs))
-
-    return out
-
-
-def get_formatted_date(ds, kwargs):
-    return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
-
-
-def insert_formatted_date_function(template):
-    def out(ds, kwargs):
-        return template.format(get_formatted_date(ds, kwargs))
-
-    return out
-
-
-def insert_formatted_regex_function(template):
-    def out(ds, kwargs):
-        return template.format(get_formatted_date(ds, kwargs))
-
-    return out
-
-
-def insert_current_date(template, kwargs):
-    ds_nodash = (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d')
-    return template.format(
-        ds_nodash[0:4],
-        ds_nodash[4:6],
-        ds_nodash[6:8]
-    )
-
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return insert_current_date(template, kwargs)
-
-    return out
-
-
-get_tmp_dir = insert_formatted_start_date_function(ADDITIONALDATA_TMP_PATH_TEMPLATE)
-get_deid_tmp_dir = insert_formatted_start_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(ADDITIONALDATA_TMP_PATH_TEMPLATE)
+get_deid_tmp_dir = date_utils.generate_insert_date_into_template_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
 def get_additionaldata_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + ADDITIONALDATA_FILE_NAME_TEMPLATE.format(
-        get_formatted_date(ds, kwargs)
+    return [get_tmp_dir(ds, kwargs) +
+        date_utils.insert_date_into_template(ADDITIONALDATA_FILE_NAME_TEMPLATE,
+            kwargs, day_offset = ABD_DAY_OFFSET
     )]
 
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_deid_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(
-        get_formatted_date(ds, kwargs)
+    return [get_deid_tmp_dir(ds, kwargs) +
+        date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE,
+            kwargs, day_offset = ABD_DAY_OFFSET
     )]
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [DEID_FILE_NAME_TEMPLATE.format(
-        get_formatted_date(ds, kwargs)
-    )]
+    return [
+        date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs, day_offset = ABD_DAY_OFFSET)
+    ]
 
 
 def encrypted_decrypted_deid_file_paths_function(ds, kwargs):
     file_dir = get_deid_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
-            + TRANSACTION_FILE_NAME_TEMPLATE.format(
-            get_formatted_date(ds, kwargs)
+            + date_utils.insert_date_into_template(
+                TRANSACTION_FILE_NAME_TEMPLATE,
+                kwargs, day_offset = ABD_DAY_OFFSET
         )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
@@ -147,11 +108,9 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : insert_formatted_date_function(
-                    path_template
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(path_template, day_offset = ABD_DAY_OFFSET
                 ),
-                'file_name_pattern_func'  : insert_formatted_regex_function(
-                    path_template
+                'file_name_pattern_func'  : date_utils.generate_insert_date_into_template_function(path_template, day_offset = ABD_DAY_OFFSET
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(s3_path.split('/')[3:]),
@@ -200,8 +159,7 @@ fetch_transaction_file = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func': insert_formatted_date_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE, day_offset = ABD_DAY_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -219,8 +177,7 @@ fetch_additionaldata_file = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'     : ADDITIONALDATA_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : insert_formatted_date_function(
-                ADDITIONALDATA_FILE_NAME_TEMPLATE
+            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(ADDITIONALDATA_FILE_NAME_TEMPLATE, day_offset = ABD_DAY_OFFSET
             ),
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -255,11 +212,10 @@ split_additionaldata_file = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_additionaldata_file_paths,
-            'file_name_pattern_func'   : insert_formatted_regex_function(
-                ADDITIONALDATA_FILE_NAME_TEMPLATE
+            'file_name_pattern_func'   : date_utils.generate_insert_date_into_template_function(ADDITIONALDATA_FILE_NAME_TEMPLATE, day_offset = ABD_DAY_OFFSET
+                
             ),
-            's3_prefix_func'           : insert_current_date_function(
-                S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE, day_offset = ABD_DAY_OFFSET
             ),
             'num_splits'               : 20
         }
@@ -278,11 +234,10 @@ split_transaction_file = SubDagOperator(
         {
             'tmp_dir_func'             : get_deid_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : insert_formatted_regex_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+            'file_name_pattern_func'   : date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE, day_offset = ABD_DAY_OFFSET
+                
             ),
-            's3_prefix_func'           : insert_current_date_function(
-                S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE, day_offset = ABD_DAY_OFFSET
             ),
             'num_splits'               : 20
         }
@@ -316,7 +271,7 @@ clean_up_workspace = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template': TMP_PATH_TEMPLATE
+            'tmp_path_template': TMP_PATH_TEMPLATE.format('{}','','')
         }
     ),
     task_id='clean_up_workspace',
@@ -327,7 +282,7 @@ clean_up_workspace = SubDagOperator(
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = ABD_DAY_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -341,8 +296,7 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : get_deid_file_urls,
-            'file_date_func'                    : insert_current_date_function(
-                '{}/{}/{}'
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function('{}/{}/{}', day_offset = ABD_DAY_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '51ca8f88-040a-47f1-b78a-491c8632fedd',
