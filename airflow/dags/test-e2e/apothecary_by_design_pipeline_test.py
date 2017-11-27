@@ -32,7 +32,7 @@ def test_run():
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', APOTHECARY_TEST_DIR + '/out/2017/11/27/transactions/'
+        'aws', 's3', 'ls', APOTHECARY_TEST_DIR + '/out/2017/11/27/'
     ])) > 0
 
 
