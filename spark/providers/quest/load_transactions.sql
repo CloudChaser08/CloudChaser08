@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS transactional_raw_noprov;
-CREATE EXTERNAL TABLE transactional_raw_noprov (
+DROP TABLE IF EXISTS transactions_raw_noprov;
+CREATE EXTERNAL TABLE transactions_raw_noprov (
         accn_id              string,
         dosid                string,
         local_order_code     string,
@@ -22,8 +22,8 @@ CREATE EXTERNAL TABLE transactional_raw_noprov (
     LOCATION {input_path}
     ;
 
-DROP TABLE IF EXISTS transactions_provider_addon;
-CREATE EXTERNAL TABLE transactions_provider_addon (
+DROP TABLE IF EXISTS transactions_provider_addon_dupes;
+CREATE EXTERNAL TABLE transactions_provider_addon_dupes (
         accn_id              string,
         dosid                string,
         lab_code             string,
@@ -38,8 +38,12 @@ CREATE EXTERNAL TABLE transactions_provider_addon (
     LOCATION {prov_addon_path}
     ;
 
+DROP TABLE IF EXISTS transactions_provider_addon;
+CREATE TABLE transactions_provider_addon
+AS SELECT DISTINCT * FROM transactions_provider_addon_dupes;
+
 DROP TABLE IF EXISTS transactional_raw;
-CREATE EXTERNAL TABLE transactional_raw (
+CREATE TABLE transactional_raw (
         accn_id              string,
         dosid                string,
         local_order_code     string,
@@ -59,7 +63,7 @@ CREATE EXTERNAL TABLE transactional_raw (
     ;
 
 INSERT INTO transactional_raw
-SELECT addon.hv_join_key,
+SELECT DISTINCT
     trunk.accn_id,
     trunk.dosid,
     trunk.local_order_code,
