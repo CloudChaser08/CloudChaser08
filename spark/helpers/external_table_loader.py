@@ -33,6 +33,7 @@ def load_icd_diag_codes(sqlContext):
                 .alias('code') \
             ) \
         ) \
+        .distinct() \
         .cache() \
         .createOrReplaceTempView('icd_diag_codes')
 
@@ -46,6 +47,7 @@ def load_icd_proc_codes(sqlContext):
 def load_hcpcs_codes(sqlContext):
     _get_table_as_df(sqlContext, 'default', 'ref_hcpcs') \
         .select('hcpc') \
+        .distinct() \
         .cache() \
         .createOrReplaceTempView('hcpcs_codes')
 

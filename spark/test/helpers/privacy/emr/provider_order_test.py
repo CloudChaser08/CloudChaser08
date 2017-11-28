@@ -7,11 +7,13 @@ from pyspark.sql.types import StructField, StructType, StringType, Row
 def test_init(spark):
     # whitelists
     spark['spark'].sparkContext.parallelize([
-        ['GOODVAL', 'Y', 'emr_prov_ord.prov_ord_alt_cd'],
-        ['GOODVAL', 'Y', 'emr_prov_ord.prov_ord_alt_nm'],
-        ['DUMMYVAL', 'Y', 'emr_prov_ord_test.notransform']
+        ['', 'GOODVAL', '', 'Y', 'emr_prov_ord.prov_ord_alt_cd'],
+        ['GOODVAL', '', '', 'Y', 'emr_prov_ord.prov_ord_alt_nm'],
+        ['DUMMYVAL', '', '', 'Y', 'emr_prov_ord_test.notransform']
     ]).toDF(StructType([
         StructField('gen_ref_itm_nm', StringType()),
+        StructField('gen_ref_cd', StringType()),
+        StructField('gen_ref_itm_desc', StringType()),
         StructField('whtlst_flg', StringType()),
         StructField('gen_ref_domn_nm', StringType())
     ])).createOrReplaceTempView('ref_gen_ref')

@@ -133,12 +133,18 @@ FROM labresult rslt
                 substring(rslt.referencedatetime, 1, 8)
             ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
-    LEFT JOIN ref_gen_ref ref ON ref.gen_ref_domn_nm = 'emr_lab_result.lab_test_nm'
-        AND TRIM(UPPER(rslt.emrcode)) = ref.gen_ref_itm_nm
-        AND ref.whtlst_flg = 'Y'
-    LEFT JOIN ref_gen_ref ref2 ON ref2.gen_ref_domn_nm = 'emr_lab_result.lab_result_nm'
-        AND TRIM(UPPER(rslt.result)) = ref2.gen_ref_itm_nm
-        AND ref2.whtlst_flg = 'Y';
+    LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
+            FROM ref_gen_ref
+            WHERE gen_ref_domn_nm = 'emr_lab_result.lab_test_nm'
+                AND whtlst_flg = 'Y'
+        ) ref
+        ON TRIM(UPPER(rslt.emrcode)) = ref.gen_ref_itm_nm
+    LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
+            FROM ref_gen_ref
+            WHERE gen_ref_domn_nm = 'emr_lab_result.lab_result_nm'
+            AND whtlst_flg = 'Y'
+        ) ref2
+        ON TRIM(UPPER(rslt.result)) = ref2.gen_ref_itm_nm;
 
 
 INSERT INTO lab_result_common_model

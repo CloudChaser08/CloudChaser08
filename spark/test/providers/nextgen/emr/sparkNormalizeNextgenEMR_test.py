@@ -118,6 +118,12 @@ def test_provider_order_actcode():
     # Random data
     assert len(filter(lambda r: r.prov_ord_cd == 'Einstein', results['provider_order'])) == 0
 
+def test_provider_order_acttext():
+    """Ensure that only whitelisted values are allowed in provider order text column"""
+
+    global results
+    assert len(filter(lambda r: r.prov_ord_alt_cd == 'PROTIME', results['provider_order'])) == 1
+
 def test_vital_sign_msrmt():
     """Ensure that vital signs are proprely mapped and filtered in accordance
     with privacy rules"""
