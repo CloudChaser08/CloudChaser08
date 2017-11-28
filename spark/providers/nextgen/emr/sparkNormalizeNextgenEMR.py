@@ -125,7 +125,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('../../../common/emr/medication_common_model_v4.sql', [
         ['table_name', 'medication_common_model', False],
         ['additional_columns', [
-            ['part_mth', 'string']
+            ['part_mth', 'string'],
+            ['row_num',  'string']
         ]],
         ['properties', '', False]
     ])
@@ -211,6 +212,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['min_date', min_date],
         ['max_date', max_date]
     ])
+    runner.sqlContext.sql('SELECT * FROM medication_common_model_bak').drop('row_num').createOrReplaceTempView('medication_common_model')
     logging.debug("Normalized medication")
     runner.run_spark_script('normalize_provider_order.sql', [
         ['min_date', min_date],
@@ -326,7 +328,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             table['privacy_filter'].filter(*filter_args)
         )(
             runner.sqlContext.sql('select * from {}'.format(table['table_name']))
-        ).createTempView(table['table_name'])
+        ).createOrReplaceTempView(table['table_name'])
 
         columns = filter(lambda x: x != 'part_mth', map(lambda x: x.name, \
                       runner.sqlContext.sql('SELECT * FROM {}'.format(table['table_name'])).schema.fields))
