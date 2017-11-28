@@ -1,12 +1,14 @@
 from pyspark.sql.functions import col, countDistinct, lit 
 
-def _col_top_values(df, c, num):
+def _col_top_values(df, c, num, distinct_column=None):
     '''
     Calculate the top values for a given column
     Input:
         - df: the dataframe to calculate the top value on.
         - c: dataframe column of type pyspark.sql.Column
         - num: number of top values to get.
+        - distinct_column: column name of column to count distinct values of
+                           for group counts.
     Output:
         - tv: the top values for that column in descending order
               along with the count
