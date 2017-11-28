@@ -122,7 +122,6 @@ def test_provider_order_acttext():
     """Ensure that only whitelisted values are allowed in provider order text column"""
 
     global results
-    print results['provider_order']
     assert len(filter(lambda r: r.prov_ord_alt_cd == 'PROTIME', results['provider_order'])) == 1
 
 def test_vital_sign_msrmt():
