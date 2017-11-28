@@ -357,7 +357,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-31/'
+        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 
     normalized_records_unloader.distcp(output_path)
 
