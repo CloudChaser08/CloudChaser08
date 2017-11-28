@@ -26,24 +26,18 @@ def _col_top_values(df, c, num, distinct_column=None):
               +----------------+--------------------------+
     '''
 
+    result_df = df.withColumnRenamed(c, 'col') \
+                  .groupBy('col')
     if (distinct_column):
-        return df.withColumnRenamed(c, 'col') \
-                 .groupBy('col') \
-                 .agg(countDistinct(col(distinct_column)).alias('count')) \
-                 .withColumn('name', lit(c)) \
-                 .select('name', 'col', 'count') \
-                 .dropna(subset=['col']) \
-                 .sort(col('count').desc()) \
-                 .limit(num)
+        result_df = result_df.agg(countDistinct(col(distinct_column)).alias('count'))
     else:
-        return df.withColumnRenamed(c, 'col') \
-                 .groupBy('col') \
-                 .count() \
-                 .withColumn('name', lit(c)) \
-                 .select('name', 'col', 'count') \
-                 .dropna(subset=['col']) \
-                 .sort(col('count').desc()) \
-                 .limit(num)
+        result_df = result_df.count()
+
+    return result_df.withColumn('name', lit(c)) \
+                    .select('name', 'col', 'count') \
+                    .dropna(subset=['col']) \
+                    .sort(col('count').desc()) \
+                    .limit(num)
 
 
 def calculate_top_values(df, max_top_values, distinct_column=None):
