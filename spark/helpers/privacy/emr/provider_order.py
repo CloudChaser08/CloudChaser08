@@ -14,8 +14,8 @@ whitelists = [
     },
     {
         'column_name' : 'prov_ord_alt_nm',
-        'domain_name' : 'emr_prov_ord.prov_ord_alt_nm'
-        'clean_up_freetext' : False,
+        'domain_name' : 'emr_prov_ord.prov_ord_alt_nm',
+        'clean_up_freetext' : False
     },
     {
         'column_name'           : 'prov_ord_alt_desc',
@@ -78,7 +78,7 @@ def filter(sqlc, update_whitelists=lambda x: x):
             *[
                 postprocessor.apply_whitelist(sqlc, whitelist['column_name'],
                     whitelist['domain_name'], whitelist.get('comp_column_names'),
-                    whitelist.get('clean_up_freetext'))
+                    whitelist.get('whitelist_column_name'), whitelist.get('clean_up_freetext'))
                 for whitelist in whtlsts
             ]
         )(
