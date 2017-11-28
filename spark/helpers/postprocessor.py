@@ -92,8 +92,14 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
     if comp_col_names is None:
         comp_col_names = []
 
+    if whitelist_col_name is None:
+        whitelist_col_name = 'gen_ref_itm_nm'
+
+    if clean_up_freetext is None:
+        clean_up_freetext = True
+
     try:
-        values = [r.gen_ref_itm_nm for r in sqlc.sql("""
+        values = [r.asDict()[whitelist_col_name] for r in sqlc.sql("""
         SELECT {}
         FROM ref_gen_ref
         WHERE whtlst_flg = 'Y' AND gen_ref_domn_nm = '{}'
