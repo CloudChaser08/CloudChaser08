@@ -60,7 +60,10 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
                  and its associated counts
     '''
 
-    columns = df.columns
+    if distinct_column:
+        columns = list(filter(lambda x: x != distinct_column, df.columns))
+    else:
+        columns = df.columns
     if len(columns) == 0:
         raise Exception('Dataframe with no columns passed in for top values calculation')
 
