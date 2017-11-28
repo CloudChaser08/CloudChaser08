@@ -54,10 +54,20 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
         - distinct_column: if not None, consider COUNT(DISTINCT distinct_column)
                            as the count for top values
     Output:
-        - top_values: a Dictionary of each columns top values
-                      and its associated counts
+        - tv_df: a pyspark.sql.DataFrame of each columns top values
+                 and its associated counts
     '''
 
-    pass
+    columns = df.columns
+    if len(columns) == 0:
+        raise Exception('Dataframe with no columns passed in for top values calculation')
+
+    col = columns[0]
+    tv_df = _col_top_values(df, col, max_top_values, distinct_column)
+    for col in columns[1:]:
+        ctv_dv = _col_top_values(df, col, max_top_values, distinct_column)
+        tv_df = tv_df.union(ctv_df)
+
+    return tv_df
 
 
