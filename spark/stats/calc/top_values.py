@@ -32,6 +32,7 @@ def _col_top_values(df, c, num, distinct_column=None):
                  .agg(countDistinct(col(distinct_column)).alias('count')) \
                  .withColumn('name', lit(c)) \
                  .select('name', 'col', 'count') \
+                 .dropna(subset=['col']) \
                  .sort(col('count').desc()) \
                  .limit(num)
     else:
@@ -40,6 +41,7 @@ def _col_top_values(df, c, num, distinct_column=None):
                  .count() \
                  .withColumn('name', lit(c)) \
                  .select('name', 'col', 'count') \
+                 .dropna(subset=['col']) \
                  .sort(col('count').desc()) \
                  .limit(num)
 
@@ -65,7 +67,7 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
     col = columns[0]
     tv_df = _col_top_values(df, col, max_top_values, distinct_column)
     for col in columns[1:]:
-        ctv_dv = _col_top_values(df, col, max_top_values, distinct_column)
+        ctv_df = _col_top_values(df, col, max_top_values, distinct_column)
         tv_df = tv_df.union(ctv_df)
 
     return tv_df
