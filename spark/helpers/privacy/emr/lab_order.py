@@ -6,6 +6,10 @@ lab_order_transformer = {
     'lab_ord_diag_cd': {
         'func': post_norm_cleanup.clean_up_diagnosis_code,
         'args': ['lab_ord_diag_cd', 'lab_ord_diag_cd_qual', 'enc_dt']
+    },
+    'lab_ord_loinc_cd': {
+        'func': post_norm_cleanup.clean_up_numeric_code,
+        'args': ['lab_ord_loinc_cd']
     }
 }
 
