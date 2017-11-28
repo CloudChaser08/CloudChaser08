@@ -212,6 +212,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['min_date', min_date],
         ['max_date', max_date]
     ])
+    # The row_num column is generated inside the normalize_medication.sql
+    # script in order to ensure that when we run a distinct to remove
+    # duplicates, we maintain  at least 1 normalized row per source row 
     runner.sqlContext.sql('SELECT * FROM medication_common_model_bak').drop('row_num').createOrReplaceTempView('medication_common_model')
     logging.debug("Normalized medication")
     runner.run_spark_script('normalize_provider_order.sql', [

@@ -89,6 +89,10 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
     """
     Apply whitelist defined for this provider in the ref_gen_ref table.
     """
+
+    # We never want these values to be None, but sometimes, for code simplicity
+    # reasons, thir function is called with the keyword argument specified but
+    # with a None value
     if comp_col_names is None:
         comp_col_names = []
 
