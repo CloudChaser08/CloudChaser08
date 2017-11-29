@@ -512,11 +512,11 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-def insert_file_date(template, kwargs):
+def insert_file_date(template, ds):
     return template.format(
-        kwargs['ds'][0:4],
-        kwargs['ds'][5:7],
-        kwargs['ds'][8:10]
+        ds[0:4],
+        ds[5:7],
+        ds[8:10]
     )
 
 sql_template = """
@@ -531,7 +531,7 @@ update_analytics_db = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : lambda ds, k: insert_file_date(sql_template, k)
+            'sql_command_func' : lambda ds, k: insert_file_date(sql_template, ds)
         }
     ),
     task_id='update_analytics_db',
