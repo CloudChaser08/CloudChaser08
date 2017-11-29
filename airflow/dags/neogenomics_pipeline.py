@@ -59,11 +59,6 @@ TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE = 'TestMeta_{}{}{}.dat'
 DEID_FILE_NAME_TEMPLATE = 'TestPHI_{}{}{}.dat.gz'
 DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'TestPHI_{}{}{}.dat'
 
-def insert_formatted_regex_function(template):
-    def out(ds, kwargs):
-        return re.sub(r'(%Y|%m|%d)', '{}', template).format('\d{4}', '\d{2}', '\d{2]')
-    return out
-
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
         DEID_FILE_NAME_TEMPLATE, kwargs, day_offset = NEOGENOMICS_DAY_OFFSET
@@ -96,7 +91,7 @@ def generate_file_validation_task(
                     )(ds, k)
                 ),
                 'file_name_pattern_func': lambda ds, k: (
-                    insert_formatted_regex_function(
+                    date_utils.generate_insert_regex_into_template_function(
                         path_template
                     )(ds, k)
                 ),
@@ -173,7 +168,7 @@ split_transactional = SubDagOperator(
             ),
             'file_paths_to_split_func': get_unzipped_file_paths,
             'file_name_pattern_func': lambda ds, k: (
-                insert_formatted_regex_function(
+                date_utils.generate_insert_regex_into_template_function(
                     TRANSACTION_FILE_NAME_TEMPLATE
                 )(ds, k)
             ),
