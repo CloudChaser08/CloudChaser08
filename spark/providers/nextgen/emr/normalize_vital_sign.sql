@@ -50,8 +50,8 @@ SELECT *,
         vsn.respirationrate,
         vsn.haqscore,
         vsn.pain,
-        CASE WHEN vsn.heightft IS NOT NULL
-                THEN extract_number(vsn.heightft) * 12 + extract_number(vsn.heightin)
+        CASE WHEN vsn.heightft IS NOT NULL OR vsn.heightin IS NOT NULL
+                THEN coalesce(extract_number(vsn.heightft), 0) * 12 + coalesce(extract_number(vsn.heightin), 0)
             WHEN vsn.heightcm IS NOT NULL
                 THEN floor(extract_number(vsn.heightcm) * 2.54)
             END,

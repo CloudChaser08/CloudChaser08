@@ -125,7 +125,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('../../../common/emr/medication_common_model_v4.sql', [
         ['table_name', 'medication_common_model', False],
         ['additional_columns', [
-            ['part_mth', 'string']
+            ['part_mth', 'string'],
+            ['row_num',  'string']
         ]],
         ['properties', '', False]
     ])
@@ -211,6 +212,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['min_date', min_date],
         ['max_date', max_date]
     ])
+    # The row_num column is generated inside the normalize_medication.sql
+    # script in order to ensure that when we run a distinct to remove
+    # duplicates, we maintain  at least 1 normalized row per source row 
+    runner.sqlContext.sql('SELECT * FROM medication_common_model_bak').drop('row_num').createOrReplaceTempView('medication_common_model')
     logging.debug("Normalized medication")
     runner.run_spark_script('normalize_provider_order.sql', [
         ['min_date', min_date],
@@ -233,7 +238,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         return [w for w in whitelists if w['column_name'] not in ['clin_obsn_nm', 'clin_obsn_result_desc']]
 
     def update_lab_result_whitelists(whitelists):
-        return [w for w in whitelists if w['column_name'] not in ['lab_test_nm']]
+        return [w for w in whitelists if w['column_name'] not in ['lab_test_nm', 'lab_result_nm', 'lab_result_uom']]
 
     normalized_tables = [
         {
@@ -326,7 +331,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             table['privacy_filter'].filter(*filter_args)
         )(
             runner.sqlContext.sql('select * from {}'.format(table['table_name']))
-        ).createTempView(table['table_name'])
+        ).createOrReplaceTempView(table['table_name'])
 
         columns = filter(lambda x: x != 'part_mth', map(lambda x: x.name, \
                       runner.sqlContext.sql('SELECT * FROM {}'.format(table['table_name'])).schema.fields))
@@ -355,7 +360,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-31/'
+        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 
     normalized_records_unloader.distcp(output_path)
 

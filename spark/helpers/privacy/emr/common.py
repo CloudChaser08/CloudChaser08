@@ -13,6 +13,10 @@ emr_transformer = {
     'ptnt_zip3_cd': {
         'func': post_norm_cleanup.mask_zip_code,
         'args': ['ptnt_zip3_cd']
+    },
+    'ptnt_state_cd': {
+        'func': post_norm_cleanup.validate_state_code,
+        'args': ['ptnt_state_cd']
     }
 }
 

@@ -158,7 +158,8 @@ SELECT
     'medicationorder',                      -- prmy_src_tbl_nm
     extract_date(
         substring(med.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
-        )                                   -- part_mth
+        ),                                  -- part_mth
+    monotonically_increasing_id()           -- row_num
 FROM medicationorder med
     LEFT JOIN demographics_local dem ON med.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND med.NextGenGroupID = dem.NextGenGroupID
@@ -322,7 +323,8 @@ SELECT
     data_captr_dt,
     rec_stat_cd,
     prmy_src_tbl_nm,
-    part_mth
+    part_mth,
+    row_num
 FROM medication_common_model_bak
 LEFT JOIN icd_diag_codes
     ON medication_common_model_bak.medctn_diag_cd = icd_diag_codes.code
@@ -335,3 +337,4 @@ DROP TABLE IF EXISTS medication_common_model_bak;
 ALTER TABLE medication_common_model RENAME TO medication_common_model_bak;
 CREATE TABLE medication_common_model AS SELECT DISTINCT * FROM medication_common_model_bak;
 DROP TABLE medication_common_model_bak;
+ALTER TABLE medication_common_model RENAME TO medication_common_model_bak;

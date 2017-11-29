@@ -34,6 +34,22 @@ def test_year_of_birth_cap():
     ) is None
 
 
+def test_clean_up_ndc_code():
+    # 11 digits
+    assert cleanup.clean_up_ndc_code('00000000000') == '00000000000'
+    assert cleanup.clean_up_ndc_code('000000001ab-00') == '00000000100'
+
+    # 10 digits
+    assert cleanup.clean_up_ndc_code('0000000000') == '0000000000'
+    assert cleanup.clean_up_ndc_code('000000001-0') == '0000000010'
+
+    # other digit counts
+    assert cleanup.clean_up_ndc_code('0000000') is None
+    assert cleanup.clean_up_ndc_code('abc') is None
+    assert cleanup.clean_up_ndc_code(None) is None
+    assert cleanup.clean_up_ndc_code('00000000000000000000000000000') is None
+
+
 def test_clean_up_diagnosis_code():
     # no code
     assert cleanup.clean_up_diagnosis_code(None, None, None) is None
@@ -127,7 +143,7 @@ def test_vital_sign_clean_up():
     # vital sign that we don't clean up
     assert cleanup.clean_up_vital_sign('O2_SATURATION', '85', 'PERCENT', 'M', '48', None, None, None) == '85'
 
-    # Peter Dinklage 
+    # Peter Dinklage
     # Age, no YOB
     assert cleanup.clean_up_vital_sign('HEIGHT', '53', 'INCHES', 'M', '48', None, None, None) \
         is None

@@ -226,9 +226,12 @@ FROM `ord_clean_actcodes` ord
     LEFT JOIN loinc_codes ON translate(ord.clean_actcode, '-', '') = loinc_codes.loinc_num
         AND ord.clean_actcode IS NOT NULL AND ord.clean_actcode != ''
         AND ord.clean_actcode != 'NG'
-    LEFT JOIN ref_gen_ref ref3 ON ord.clean_actcode = ref3.gen_ref_cd
-        AND ord.clean_actcode IS NOT NULL AND ord.clean_actcode != ''
-        AND ref3.gen_ref_domn_nm = 'emr_prov_ord.prov_ord_cd'
-        AND ref3.whtlst_flg = 'Y'
+    LEFT JOIN (SELECT DISTINCT gen_ref_cd
+            FROM ref_gen_ref
+            WHERE gen_ref_domn_nm = 'emr_prov_ord.prov_ord_cd'
+                AND whtlst_flg = 'Y'
+        ) ref3
+        ON ord.clean_actcode = ref3.gen_ref_cd
+            AND ord.clean_actcode IS NOT NULL AND ord.clean_actcode != ''
     LEFT JOIN icd_diag_codes diag2 ON clean_up_freetext(ord.actdiagnosiscode, true) = diag2.code
         AND ord.clean_actdiagnosiscode IS NOT NULL AND ord.clean_actdiagnosiscode != '';

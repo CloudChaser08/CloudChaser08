@@ -137,17 +137,26 @@ FROM substanceusage sub
         AND ref1.gen_ref_domn_nm = 'substanceusage.substancecode'
         AND sub.substancecode = ref1.gen_ref_cd
         AND ref1.whtlst_flg = 'Y'
-    LEFT JOIN ref_gen_ref ref2 ON ref2.hvm_vdr_feed_id = 35
-        AND ref2.gen_ref_domn_nm = 'extendeddata.clinicalrecordtypecode'
-        AND clean_up_freetext(sub.clinicalrecordtypecode, false) = ref2.gen_ref_cd
-        AND ref2.whtlst_flg = 'Y'
-    LEFT JOIN ref_gen_ref ref3 ON ref3.hvm_vdr_feed_id = 35
-        AND ref3.gen_ref_domn_nm = 'extendeddata.clinicalrecorddescription'
-        AND clean_up_freetext(sub.clinicalrecorddescription, false) = ref3.gen_ref_itm_nm
-        AND ref3.whtlst_flg = 'Y'
-    LEFT JOIN ref_gen_ref ref4 ON ref4.gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
-        AND TRIM(UPPER(sub.emrcode)) = ref4.gen_ref_itm_nm
-        AND ref4.whtlst_flg = 'Y';
+    LEFT JOIN (SELECT DISTINCT gen_ref_cd
+            FROM ref_gen_ref
+            WHERE hvm_vdr_feed_id = 35
+                AND gen_ref_domn_nm = 'substanceusage.clinicalrecordtypecode'
+                AND whtlst_flg = 'Y'
+        ) ref2
+        ON clean_up_freetext(sub.clinicalrecordtypecode, false) = ref2.gen_ref_cd
+    LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
+            FROM ref_gen_ref
+            WHERE hvm_vdr_feed_id = 35
+                AND gen_ref_domn_nm = 'substanceusage.clinicalrecorddescription'
+                AND whtlst_flg = 'Y'
+        ) ref3
+        ON clean_up_freetext(sub.clinicalrecorddescription, false) = ref3.gen_ref_itm_nm
+    LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
+        FROM ref_gen_ref
+        WHERE gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
+            AND whtlst_flg = 'Y'
+        ) ref4
+        ON TRIM(UPPER(sub.emrcode)) = ref4.gen_ref_itm_nm;
 
 
 -- ALLERGY DATA IS NOT YET CERTIFIED
@@ -417,23 +426,36 @@ FROM extendeddata ext
         AND (COALESCE(
                 substring(ext.encounterdate, 1, 8),
                 substring(ext.referencedatetime, 1, 8)
-            ) <= substring(dem.nextrecorddate, 1, 8)
+            ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
-    LEFT JOIN ref_gen_ref ref2 ON ref2.hvm_vdr_feed_id = 35
-        AND ref2.gen_ref_domn_nm = 'extendeddata.datacategory'
+    LEFT JOIN ref_gen_ref ref2
+        ON hvm_vdr_feed_id = 35
+        AND gen_ref_domn_nm = 'extendeddata.datacategory'
+        AND whtlst_flg = 'Y'
         AND ext.datacategory = ref2.gen_ref_cd
-        AND ref2.whtlst_flg = 'Y'
-    LEFT JOIN ref_gen_ref ref3 ON ref3.hvm_vdr_feed_id = 35
-        AND ref3.gen_ref_domn_nm = 'extendeddata.clinicalrecordtypecode'
-        AND clean_up_freetext(ext.clinicalrecordtypecode, false) = ref3.gen_ref_cd
-        AND ref3.whtlst_flg = 'Y'
-    LEFT JOIN ref_gen_ref ref4 ON ref4.hvm_vdr_feed_id = 35
-        AND ref4.gen_ref_domn_nm = 'extendeddata.clinicalrecorddescription'
-        AND clean_up_freetext(ext.clinicalrecorddescription, false) = ref4.gen_ref_itm_nm
-        AND ref4.whtlst_flg = 'Y'
-    LEFT JOIN ref_gen_ref ref5 ON ref5.gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
-        AND TRIM(UPPER(ext.emrcode)) = ref5.gen_ref_itm_nm
-        AND ref5.whtlst_flg = 'Y'
-    LEFT JOIN ref_gen_ref ref6 ON ref6.gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_result_desc'
-        AND TRIM(UPPER(ext.result)) = ref6.gen_ref_itm_nm
-        AND ref6.whtlst_flg = 'Y';
+    LEFT JOIN (SELECT DISTINCT gen_ref_cd
+            FROM ref_gen_ref
+            WHERE hvm_vdr_feed_id = 35
+                AND gen_ref_domn_nm = 'extendeddata.clinicalrecordtypecode'
+                AND whtlst_flg = 'Y'
+        ) ref3
+        ON clean_up_freetext(ext.clinicalrecordtypecode, false) = ref3.gen_ref_cd
+    LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
+            FROM ref_gen_ref
+            WHERE hvm_vdr_feed_id = 35
+                AND whtlst_flg = 'Y'
+                AND gen_ref_domn_nm = 'extendeddata.clinicalrecorddescription'
+        ) ref4
+        ON clean_up_freetext(ext.clinicalrecorddescription, false) = ref4.gen_ref_itm_nm
+    LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
+            FROM ref_gen_ref
+            WHERE gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
+                AND whtlst_flg = 'Y'
+        ) ref5
+        ON TRIM(UPPER(ext.emrcode)) = ref5.gen_ref_itm_nm
+    LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
+            FROM ref_gen_ref
+            WHERE gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_result_desc'
+                AND whtlst_flg = 'Y'
+        ) ref6
+        ON TRIM(UPPER(ext.result)) = ref6.gen_ref_itm_nm;

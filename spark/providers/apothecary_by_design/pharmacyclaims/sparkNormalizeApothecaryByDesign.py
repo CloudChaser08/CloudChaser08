@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from pyspark.sql.functions import isnull, lead
 from pyspark.sql import Window
 import argparse
@@ -28,13 +28,13 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
             script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/matching/'
         )
     elif airflow_test:
-        txn_input_path = 's3://salusv/testing/dewey/airflow/e2e/abd/pharmacyclaims/out/transaction/{}/'.format(
+        txn_input_path = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/out/{}/transactions/'.format(
             date_input.replace('-', '/')
         )
-        add_input_path = 's3://salusv/testing/dewey/airflow/e2e/abd/pharmacyclaims/out/additional/{}/'.format(
+        add_input_path = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/out/{}/additionaldata/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/abd/pharmacyclaims/payload/{}/'.format(
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/payload/{}/'.format(
             date_input.replace('-', '/')
         )
     else:

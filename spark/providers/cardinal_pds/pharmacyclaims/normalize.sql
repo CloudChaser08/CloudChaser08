@@ -62,7 +62,10 @@ SELECT
     CASE
         WHEN t.servicer_provider_id_qual = '01' THEN t.service_provider_id ELSE NULL
     END,                                      -- pharmacy_npi
-    NULL,                                     -- prov_dispensing_npi
+    CASE
+        WHEN t.provider_id_qualifier = '1' THEN t.provider_id
+        ELSE NULL
+    END,                                      -- prov_dispensing_npi
     NULL,                                     -- payer_id
     NULL,                                     -- payer_id_qual
     NULL,                                     -- payer_name
@@ -84,7 +87,10 @@ SELECT
     NULL,                                     -- reason_for_service
     NULL,                                     -- professional_service_code
     NULL,                                     -- result_of_service_code
-    NULL,                                     -- prov_prescribing_npi
+    CASE
+        WHEN t.prescriber_id_qualifier = '01' THEN t.prescriber_id
+        ELSE NULL
+    END,                                      -- prov_prescribing_npi
     NULL,                                     -- prov_primary_care_npi
     t.coordination_of_benefits_count,         -- cob_count
     t.submitted_usual_and_customary_amount,   -- usual_and_customary_charge
@@ -126,14 +132,26 @@ SELECT
     END,                                      -- pharmacy_other_id
     CASE
         WHEN t.pharmacy_ncpdp IS NOT NULL THEN '07'
-        WHEN t.servicer_provider_id_qual != '01' THEN t.servicer_provider_id_qual
+        WHEN t.servicer_provider_id_qual != '01' AND t.service_provider_id IS NOT NULL THEN t.servicer_provider_id_qual
         ELSE NULL
     END,                                      -- pharmacy_other_qual
     NULL,                                     -- pharmacy_postal_code
-    t.provider_id,                            -- prov_dispensing_id
-    t.provider_id_qualifier,                  -- prov_dispensing_qual
-    t.prescriber_id,                          -- prov_prescribing_id
-    t.prescriber_id_qualifier,                -- prov_prescribing_qual
+    CASE
+        WHEN t.provider_id_qualifier <> '1' THEN t.provider_id
+        ELSE NULL
+    END,                                      -- prov_dispensing_id
+    CASE
+        WHEN t.provider_id_qualifier <> '1' AND t.provider_id IS NOT NULL THEN t.provider_id_qualifier
+        ELSE NULL
+    END,                                      -- prov_dispensing_qual
+    CASE
+        WHEN t.prescriber_id_qualifier <> '01' THEN t.prescriber_id
+        ELSE NULL
+    END,                                      -- prov_prescribing_id
+    CASE 
+        WHEN t.prescriber_id_qualifier <> '01' AND t.prescriber_id IS NOT NULL THEN t.prescriber_id_qualifier
+        ELSE NULL
+    END,                                      -- prov_prescribing_qual
     NULL,                                     -- prov_primary_care_id
     NULL,                                     -- prov_primary_care_qual
     t.other_payor_coverage_type,              -- other_payer_coverage_type
