@@ -24,21 +24,21 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'apothecary_by_design_pipeline',
-        '-s', '2017-11-20T16:00:00',
-        '-e', '2017-11-20T16:00:00',
+        '-s', '2017-11-06T16:00:00',
+        '-e', '2017-11-06T16:00:00',
         '-I'
     ])
 
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', APOTHECARY_TEST_DIR + '/out/2017/11/27/'
+        'aws', 's3', 'ls', APOTHECARY_TEST_DIR + '/out/2017/11/13/'
     ])) > 0
 
 
 def test_matching_payload_moved():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', APOTHECARY_TEST_DIR + '/payload/2017/11/27/'
+        'aws', 's3', 'ls', APOTHECARY_TEST_DIR + '/payload/2017/11/13/'
     ])) > 0
 
 
