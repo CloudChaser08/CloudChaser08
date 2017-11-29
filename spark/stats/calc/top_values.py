@@ -26,13 +26,17 @@ def _col_top_values(df, c, num, distinct_column=None):
               +----------------+--------------------------+
     '''
 
+    # Group the DataFrame by the column we want to calculate
+    # top values for.
     result_df = df.withColumnRenamed(c, 'col') \
                   .groupBy('col')
+    # Aggregate the DataFrame based on whether or not
+    # to count based on a distinct value or not
     if (distinct_column):
         result_df = result_df.agg(countDistinct(col(distinct_column)).alias('count'))
     else:
         result_df = result_df.count()
-
+    # Build the output from the aggregation
     return result_df.withColumn('name', lit(c)) \
                     .select('name', 'col', 'count') \
                     .dropna(subset=['col']) \
