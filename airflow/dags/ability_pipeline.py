@@ -19,12 +19,13 @@ import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.update_analytics_db as update_analytics_db
 
 import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file, s3_push_files, decrypt_files,
         split_push_files, queue_up_for_matching, clean_up_tmp_dir,
-        detect_move_normalize, HVDAG, s3_utils]:
+        detect_move_normalize, HVDAG, s3_utils, update_analytics_db]:
     reload(m)
 
 # Applies to all files
@@ -511,6 +512,32 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+def insert_file_date(template, kwargs):
+    return template.format(
+        kwargs['ds'][0:4],
+        kwargs['ds'][5:7],
+        kwargs['ds'][8:10]
+    )
+
+sql_template = """
+    ALTER TABLE medicalclaims_old ADD PARTITION (part_provider='ability', part_processdate='{0}/{1}/02')
+    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/ability/{0}/{1}/{2}/'
+"""
+
+update_analytics_db = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k: insert_file_date(sql_template, k)
+        }
+    ),
+    task_id='update_analytics_db',
+    dag=mdag
+)
+
 clean_up_tmp_dir_dag = SubDagOperator(
     subdag=clean_up_tmp_dir.clean_up_tmp_dir(
         DAG_NAME,
@@ -578,3 +605,4 @@ short_circuit_normalization.set_upstream([
 ])
 
 detect_move_normalize_dag.set_upstream(short_circuit_normalization)
+update_analytics_db.set_upstream(detect_move_normalize_dag)
