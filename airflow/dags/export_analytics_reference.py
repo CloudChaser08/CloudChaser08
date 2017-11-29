@@ -50,6 +50,11 @@ def psql_to_hive_type(psql_type):
         'integer'   : 'int',
         'date'      : 'date'
     }
+
+    # We want to map multiple Postgres types to a hive type
+    # (e.g. character(10) => string and character varying(256) => string)
+    # This loop converts from a Postgres type of a hive type based on a
+    # substring match
     for k in psql_hive_type:
         if k in psql_type:
             return psql_hive_type[k]
