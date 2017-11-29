@@ -78,11 +78,6 @@ def insert_formatted_datetime_function(template):
         return template.format(get_formatted_datetime(ds, kwargs))
     return out
 
-def insert_formatted_regex_function(template):
-    def out(ds, kwargs):
-        return template.format(date_utils.insert_date_into_template('{}{}{}', kwargs, day_offset = CARDINAL_DAY_OFFSET) + '\d{6}')
-    return out
-
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TMP_PATH_TEMPLATE
     )
@@ -126,11 +121,15 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : insert_formatted_regex_function(
-                    path_template
+                'expected_file_name_func' : date_utils.generate_insert_regex_into_template_function(path_template,
+                        year = insert_date_into_template('{}{}{}',kwargs,
+                            day_offset = CARDINAL_DAY_OFFSET) 
+                            + '\d{6}'
                 ),
-                'file_name_pattern_func'  : insert_formatted_regex_function(
-                    path_template
+                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(path_template,
+                    year = insert_date_into_template('{}{}{}',kwargs, 
+                        day_offset = CARDINAL_DAY_OFFSET) 
+                        + '\d{6}'
                 ),
                 'regex_name_match'        : True,
                 'minimum_file_size'       : minimum_file_size,
@@ -165,8 +164,11 @@ fetch_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : insert_formatted_regex_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+            'expected_file_name_func'   : date_utils.generate_insert_regex_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE, 
+                year = insert_date_into_template('{}{}{}',kwargs, 
+                    day_offset = CARDINAL_DAY_OFFSET) 
+                    + '\d{6}'
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -185,8 +187,10 @@ fetch_deid = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : insert_formatted_regex_function(
-                DEID_FILE_NAME_TEMPLATE
+            'expected_file_name_func'   : date_utils.generate_insert_regex_into_template_function(DEID_FILE_NAME_TEMPLATE, 
+                year = insert_date_into_template('{}{}{}',kwargs, 
+                    day_offset = CARDINAL_DAY_OFFSET) 
+                    + '\d{6}'
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -199,7 +203,7 @@ fetch_deid = SubDagOperator(
 
 def do_get_datetime(ds, **kwargs):
     expected_filename = kwargs['expected_file_name_func'](ds, kwargs)
-    files = os.listdir(insert_date_into_template(TRANSACTION_TMP_PATH_TEMPLATE,kwargs))
+    files = os.listdir(get_tmp_dir(ds, kwargs))
 
     expected_filename = filter(lambda k: re.search(expected_filename, k), files)[0]
     file_datetime = expected_filename[-14:]
@@ -210,8 +214,11 @@ get_datetime = PythonOperator(
     task_id = 'get_datetime',
     python_callable = do_get_datetime,
     op_kwargs = {
-        'expected_file_name_func' : insert_formatted_regex_function(
-            TRANSACTION_FILE_NAME_TEMPLATE
+        'expected_file_name_func' : date_utils.generate_insert_regex_into_template_function(
+            TRANSACTION_FILE_NAME_TEMPLATE, 
+            year = insert_date_into_template('{}{}{}',kwargs, 
+                day_offset = CARDINAL_DAY_OFFSET) 
+                + '\d{6}'
         )
     },
     provide_context = True,
@@ -383,7 +390,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: date_utils.generate_insert_date_into_template_function(sql_template, day_offset = CARDINAL_DAY_OFFSET)(ds, k)
+                'sql_command_func' : lambda ds, k: sql_template
                 if date_utils.generate_insert_date_into_template_function('{2}', day_offset = CARDINAL_DAY_OFFSET)(ds, k) < '08' else ''
             }
         ),
