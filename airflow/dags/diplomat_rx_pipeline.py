@@ -54,18 +54,13 @@ else:
 # Transaction file
 TRANSACTION_S3_SPLIT_URL = S3_TRANSACTION_PROCESSED_URL_TEMPLATE
 TRANSACTION_FILE_DESCRIPTION = 'Diplomat RX transaction addon file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'HealthVerityOut_{}.csv'
+TRANSACTION_FILE_NAME_TEMPLATE = 'HealthVerityOut_{}{}{}.csv'
 MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Diplomat RX deid file'
 DEID_FILE_NAME_TEMPLATE = 'HealthVerityPHIOut_{}{}{}.csv'
 MINIMUM_DEID_FILE_SIZE = 500
-
-def insert_formatted_regex_function(template):
-    def out(ds, kwargs):
-        return template.format('\d{8}')
-    return out
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE
@@ -82,7 +77,7 @@ def get_transaction_file_paths(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     return [file_dir
             + date_utils.insert_date_into_template(
-            TRANSACTION_FILE_NAME_TEMPLATE.format('{}{}{}'),
+            TRANSACTION_FILE_NAME_TEMPLATE,
             kwargs, day_offset = DIPLOMAT_DAY_OFFSET
             )]
 
@@ -90,7 +85,7 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
         + date_utils.insert_date_into_template(
-            TRANSACTION_FILE_NAME_TEMPLATE.format('{}{}{}'),
+            TRANSACTION_FILE_NAME_TEMPLATE,
             kwargs, day_offset = DIPLOMAT_DAY_OFFSET
         )
     return [
@@ -109,8 +104,10 @@ def generate_file_validation_dag(
             {
                 'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(path_template, day_offset = DIPLOMAT_DAY_OFFSET
                 ),
-                'file_name_pattern_func'  : insert_formatted_regex_function(
-                    path_template
+                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(path_template,
+                    year = '\d{8}',
+                    month = '',
+                    day = ''
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -141,8 +138,7 @@ fetch_transaction = SubDagOperator(
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE.format(
-                "{}{}{}"), day_offset = DIPLOMAT_DAY_OFFSET
+                TRANSACTION_FILE_NAME_TEMPLATE, day_offset = DIPLOMAT_DAY_OFFSET
                 
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -177,8 +173,12 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : insert_formatted_regex_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE, 
+                year = '\d{8}',
+                month = '',
+                day = ''
+                
             ),
             's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(TRANSACTION_S3_SPLIT_URL, day_offset = DIPLOMAT_DAY_OFFSET
             ),
@@ -193,7 +193,7 @@ split_transaction = SubDagOperator(
 def clean_up_workspace_step(template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', date_utils.insert_date_into_template(template,kwargs)
+            'rm', '-rf', get_tmp_dir(ds, kwargs)
         ])
     return PythonOperator(
         task_id='clean_up_workspace',
