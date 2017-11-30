@@ -1,6 +1,6 @@
 import datetime
 
-def _get_row_count(sqlc, attribute, start_date, end_date, date_col):
+def _get_row_count(sqlc, start_date, end_date, attribute, date_col):
     '''
     Get the row count for the attribute between the start and end date
     Input:
@@ -10,7 +10,7 @@ def _get_row_count(sqlc, attribute, start_date, end_date, date_col):
         - end_date: end of date range
         - date_col: the name of the column that conains the dates
     '''
-    template = 'SELECT COUNT(*) FROM (SELECT COUNT({}) FROM provider_data WHERE {} >= {} AND {} <= {}'
+    template = 'SELECT COUNT(*) FROM (SELECT {} FROM provider_data WHERE {} >= "{}" AND {} <= "{}")'
     query = template.format(attribute, date_col, start_date, date_col, end_date)
     count = sqlc.sql(query).collect()[0][0]
 
@@ -38,18 +38,18 @@ def calculate_key_stats(sqlc, df, earliest_date, start_date, end_date, \
     row_attribute = provider_conf['key_stats']['row_attribute']
 
     df.createTempView('provider_data')
-    total_patient = _get_row_count(df, earliest_date, end_date, 
-                                   patient_attribute)
-    total_24_month_patient = _get_row_count(df, start_date, end_date,
-                                   patient_attribute)
-    total_record = _get_row_count(df, earliest_date, end_date,
-                                   record_attribute)
-    total_24_month_record = _get_row_count(df, start_date, end_date,
-                                   record_attribute)
-    total_row = _get_row_count(df, earliest_date, start_date, end_date,
-                                   row_attribute)
-    total_24_moth_row = _get_row_count(df, start_date, end_date,
-                                   row_attribute)
+    total_patient = _get_row_count(sqlc, earliest_date, end_date, 
+                                   patient_attribute, date_col)
+    total_24_month_patient = _get_row_count(sqlc, start_date, end_date,
+                                   patient_attribute, date_col)
+    total_record = _get_row_count(sqlc, earliest_date, end_date,
+                                   record_attribute, date_col)
+    total_24_month_record = _get_row_count(sqlc, start_date, end_date,
+                                   record_attribute, date_col)
+    total_row = _get_row_count(sqlc, earliest_date, end_date,
+                                   row_attribute, date_col)
+    total_24_month_row = _get_row_count(sqlc, start_date, end_date,
+                                   row_attribute, date_col)
 
     try:
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m-%d")
@@ -57,7 +57,7 @@ def calculate_key_stats(sqlc, df, earliest_date, start_date, end_date, \
     except:
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m")
         end_date_dt = datetime.datetime.strptime(end_date, "%Y-%m")
-    days = (end_date_dt - earliest_date_dt).days
+    days = float((end_date_dt - earliest_date_dt).days)
 
     key_stats = {
         'total_patient': total_patient,
