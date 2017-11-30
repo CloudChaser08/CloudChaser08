@@ -57,9 +57,8 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
         - tv_df: a pyspark.sql.DataFrame of each columns top values
                  and its associated counts
     '''
-
     if distinct_column:
-        columns = list(filter(lambda x: x != distinct_column, df.columns))
+        columns = df.drop(distinct_column).columns
     else:
         columns = df.columns
     if len(columns) == 0:
@@ -67,7 +66,7 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
 
     return reduce(
         lambda df1, df2: df1.union(df2),
-        [_col_top_values(df, c, max_top_values, distinct_column) for c in columns if c != distinct_column]
+        [_col_top_values(df, c, max_top_values, distinct_column) for c in columns]
     )
 
 
