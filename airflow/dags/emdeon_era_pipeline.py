@@ -49,10 +49,10 @@ else:
 
 # Transaction file
 TRANSACTION_FILE_DESCRIPTION='WebMD ERA transaction file'
-TRANSACTION_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_CS_deid.dat.gz'
-TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE='{}_AF_ERA_CF_ON_CS_deid.dat'
-TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_S_deid.dat'
-TRANSACTION_CLAIM_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_C_deid.dat'
+TRANSACTION_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_CS_deid.dat.gz'
+TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE='{}{}{}_AF_ERA_CF_ON_CS_deid.dat'
+TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_S_deid.dat'
+TRANSACTION_CLAIM_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_C_deid.dat'
 TRANSACTION_DAG_NAME='validate_fetch_transaction_file'
 MINIMUM_TRANSACTION_FILE_SIZE=500
 
@@ -64,8 +64,8 @@ MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 
 # Linking file
 LINK_FILE_DESCRIPTION='WebMD ERA Linking file'
-LINK_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_Link_deid.dat.gz'
-LINK_FILE_NAME_UNZIPPED_TEMPLATE='{}_AF_ERA_CF_ON_Link_deid.dat'
+LINK_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_Link_deid.dat.gz'
+LINK_FILE_NAME_UNZIPPED_TEMPLATE='{}{}{}_AF_ERA_CF_ON_Link_deid.dat'
 LINK_DAG_NAME='validate_fetch_link_file'
 MINIMUM_LINK_FILE_SIZE=500
 
@@ -170,10 +170,6 @@ if airflow_env != 'test':
 # POST-SFTP TASKS
 #
 
-def expected_file_name_pattern_func(file_name_template):
-    def out(ds, k):
-        return file_name_template.format('\d{8}')
-    return out
 
 def get_tmp_dir(ds, k):
     return TMP_PATH_TEMPLATE.format(k['ds_nodash'])
@@ -191,7 +187,7 @@ def generate_fetch_dag(
             mdag.schedule_interval,
             {
                 'tmp_path_template'      : TMP_PATH_TEMPLATE + task_id + '/',
-                'expected_file_name_func': date_utils.generate_insert_date_into_template_function(file_name_template.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET
+                'expected_file_name_func': date_utils.generate_insert_date_into_template_function(file_name_template, day_offset = EMDEON_ERA_DAY_OFFSET
                 ),
                 's3_prefix'              : s3_path_template,
                 's3_bucket'              : 'salusv' if airflow_env == 'test' else 'healthverity'
@@ -214,7 +210,7 @@ fetch_link_file = generate_fetch_dag(
 def do_unzip_file(task_id, file_name_template):
     def out(ds, **kwargs):
         tmp_path = get_tmp_dir(ds, kwargs) + task_id + '/'
-        file_path = tmp_path + date_utils.insert_date_into_template(file_name_template.format('{}{}{}'), kwargs, day_offset = EMDEON_ERA_DAY_OFFSET)
+        file_path = tmp_path + date_utils.insert_date_into_template(file_name_template, kwargs, day_offset = EMDEON_ERA_DAY_OFFSET)
         decompression.decompress_gzip_file(file_path)
     return PythonOperator(
         task_id='unzip_' + task_id + '_file',
@@ -243,9 +239,9 @@ def generate_parse_transactions_step():
         os.mkdir(serviceline_tmp_path)
         os.mkdir(claim_tmp_path)
 
-        transaction_file = transaction_tmp_path + date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET)(ds, kwargs)
-        serviceline_file = serviceline_tmp_path + date_utils.generate_insert_date_into_template_function(TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET)(ds, kwargs)
-        claim_file = claim_tmp_path + date_utils.generate_insert_date_into_template_function(TRANSACTION_CLAIM_FILE_NAME_TEMPLATE.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET)(ds, kwargs)
+        transaction_file = transaction_tmp_path + date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE, day_offset = EMDEON_ERA_DAY_OFFSET)(ds, kwargs)
+        serviceline_file = serviceline_tmp_path + date_utils.generate_insert_date_into_template_function(TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE, day_offset = EMDEON_ERA_DAY_OFFSET)(ds, kwargs)
+        claim_file = claim_tmp_path + date_utils.generate_insert_date_into_template_function(TRANSACTION_CLAIM_FILE_NAME_TEMPLATE, day_offset = EMDEON_ERA_DAY_OFFSET)(ds, kwargs)
 
         with open(serviceline_file, 'w') as serviceline, open(claim_file, 'w') as claim, open(transaction_file, 'r') as transactions:
             for line in transactions:
@@ -275,9 +271,14 @@ def generate_split_dag(task_id, file_name_unzipped_template, s3_destination):
                 'tmp_dir_func'             : lambda ds, k: get_tmp_dir(ds, k) + task_id + '/',
                 'file_paths_to_split_func' : lambda ds, k: [
                     get_tmp_dir(ds, k) + task_id + '/' +
-                    date_utils.generate_insert_date_into_template_function(file_name_unzipped_template.format('{}{}{}'), day_offset = EMDEON_ERA_DAY_OFFSET)(ds, k)
+                    date_utils.generate_insert_date_into_template_function(file_name_unzipped_template, day_offset = EMDEON_ERA_DAY_OFFSET)(ds, k)
                 ],
-                'file_name_pattern_func'   : expected_file_name_pattern_func(file_name_unzipped_template),
+                'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
+                        file_name_unzipped_template,
+                        year = '\d{8}',
+                        month = '',
+                        day = ''
+                        ),
                 's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
                     s3_destination, day_offset = EMDEON_ERA_DAY_OFFSET
                 ),
