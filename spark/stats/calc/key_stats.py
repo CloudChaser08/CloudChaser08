@@ -50,6 +50,7 @@ def calculate_key_stats(sqlc, df, earliest_date, start_date, end_date, \
                                    row_attribute, date_col)
     total_24_month_row = _get_row_count(sqlc, start_date, end_date,
                                    row_attribute, date_col)
+    sqlc.dropTempTable('provider_data')
 
     try:
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m-%d")
