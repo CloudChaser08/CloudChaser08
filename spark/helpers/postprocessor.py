@@ -160,10 +160,15 @@ def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names
 
     def add(df):
         return df.withColumn(record_id, monotonically_increasing_id())                   \
+                 .alias(record_id)                                                       \
                  .withColumn(created, lit(time.strftime('%Y-%m-%d', time.localtime())))  \
+                 .alias(created)                                                         \
                  .withColumn(data_set, coalesce(lit(filename), col(data_set)))           \
+                 .alias(data_set)                                                        \
                  .withColumn(data_feed, lit(feed_id))                                    \
+                 .alias(data_feed)                                                       \
                  .withColumn(data_vendor, lit(vendor_id))                                \
+                 .alias(data_vendor)                                                     \
                  .cache()
     return add
 
