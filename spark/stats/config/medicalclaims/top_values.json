@@ -1,0 +1,31 @@
+{
+    "columns": [
+        "claim_type",
+        "inst_admit_type_std_id",
+        "inst_admit_source_std_id",
+        "inst_discharge_status_std_id",
+        "inst_type_of_bill_std_id",
+        "inst_drg_std_id",
+        "place_of_service_std_id",
+        "service_line_number",
+        "diagnosis_code",
+        "diagnosis_code_qual",
+        "diagnosis_priority",
+        "procedure_code",
+        "procedure_code_qual",
+        "procedure_units",
+        "procedure_modifier_1",
+        "procedure_modifier_2",
+        "procedure_modifier_3",
+        "procedure_modifier_4",
+        "revenue_code",
+        "ndc_code",
+        "medical_coverage_type",
+        "payer_name",
+        "prov_rendering_state",
+        "prov_billing_state",
+        "prov_facility_state"
+    ],
+
+    "max_top_values": 10
+}
