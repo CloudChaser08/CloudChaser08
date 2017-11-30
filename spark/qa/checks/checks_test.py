@@ -87,12 +87,13 @@ def test_valid_gender_values_in_target(datafeed):
         'target_data', 'target_data_gender_column_name'
     ])
 
-    patient_gender_values = datafeed.target_data.select(
-        col(datafeed.target_data_gender_column_name)
-    ).distinct().take(10)
-
-    for row in patient_gender_values:
-        assert row[datafeed.target_data_gender_column_name] in ['M', 'F', 'U', None]
+    patient_gender_values = set([
+        row[datafeed.target_data_gender_column_name] for row in
+        datafeed.target_data.select(
+            col(datafeed.target_data_gender_column_name)
+        ).distinct().take(100)
+    ])
+    assert patient_gender_values.difference(['M', 'F', 'U', None]) == set()
 
 
 def test_valid_patient_state_values_in_target(datafeed):
@@ -105,17 +106,16 @@ def test_valid_patient_state_values_in_target(datafeed):
         'target_data', 'target_data_patient_state_column_name'
     ])
 
-    distinct_patient_state_values = datafeed.target_data.filter(
-        col(datafeed.target_data_patient_state_column_name).isNotNull()
-    ).select(
-        col(datafeed.target_data_patient_state_column_name)
-    ).distinct()
+    distinct_patient_state_values = set([
+        row[datafeed.target_data_patient_state_column_name] for row in
+        datafeed.target_data.filter(
+            col(datafeed.target_data_patient_state_column_name).isNotNull()
+        ).select(
+            col(datafeed.target_data_patient_state_column_name)
+        ).distinct().take(100)
+    ])
 
-    assert distinct_patient_state_values.count() <= len(constants.states)
-
-    for state_value in [row[datafeed.target_data_patient_state_column_name] for row in distinct_patient_state_values.collect()]:
-        if state_value is not None:
-            assert str(state_value) in constants.states
+    assert distinct_patient_state_values.difference(constants.states) == set()
 
 
 def test_full_fill_rate_for_record_id(datafeed):
