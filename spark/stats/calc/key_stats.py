@@ -1,5 +1,5 @@
 import datetime
-from pyspark.sql.functions import col, countDistinct
+from pyspark.sql.functions import col
 
 def _get_row_count(df, start_date, end_date, attribute, date_col):
     '''
@@ -15,7 +15,7 @@ def _get_row_count(df, start_date, end_date, attribute, date_col):
     if attribute == '*':
         count = date_range_df.count()
     else:
-        count = date_range_df.agg(countDistinct(attribute)).collect()[0][0]
+        count = date_range_df.select(attribute).distinct().count()
     return count
 
 

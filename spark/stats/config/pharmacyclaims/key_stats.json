@@ -1,5 +1,5 @@
 {
-    "patient_attribute": "distinct(hvid)",
-    "record_attribute": "distinct(claim_id)",
+    "patient_attribute": "hvid",
+    "record_attribute": "claim_id",
     "row_attribute": "*"
 }

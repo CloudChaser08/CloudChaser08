@@ -1,5 +1,5 @@
 {
-    "patient_attribute": "distinct(hvid)",
+    "patient_attribute": "hvid",
     "record_attribute": "*",
     "row_attribute": "*"
 }
