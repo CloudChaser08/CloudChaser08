@@ -247,3 +247,747 @@ def standard_medicalclaims_datafeed(
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs=skip_unique_match_pairs
     )
+
+
+def standard_pharmacyclaims_datafeed(
+        source_data=None,
+        target_data=None,
+        source_claim_id_full_name=None,
+        source_hvid_full_name=None,
+        source_procedure_code_full_name=None,
+        source_ndc_code_full_name=None,
+        source_payer_name_full_name=None,
+        source_prov_prescribing_npi_full_name=None,
+        source_bin_number_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return standard_datafeed(
+        datatype = types.PHARMACYCLAIMS,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_claim_id_full_name = source_claim_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('procedure_code', source_procedure_code_full_name, 'procedure_code')
+                if source_procedure_code_full_name else None,
+                Comparison('ndc_code', source_ndc_code_full_name, 'ndc_code')
+                if source_ndc_code_full_name else None,
+                Comparison('prov_prescribing_npi', source_prov_prescribing_npi_full_name, 'prov_prescribing_npi')
+                if source_prov_prescribing_npi_full_name else None,
+                Comparison('bin_number', source_bin_number_full_name, 'bin_number')
+                if source_bin_number_full_name else None,
+                Comparison('payer_name', source_payer_name_full_name, 'payer_name')
+                if source_payer_name_full_name else None,
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs=skip_unique_match_pairs
+    )
+
+
+def standard_labtests_datafeed(
+        source_data=None,
+        target_data=None,
+        source_claim_id_full_name=None,
+        source_hvid_full_name=None,
+        source_payer_name_full_name=None,
+        source_procedure_code_full_name=None,
+        source_loinc_code_full_name=None,
+        source_ordering_npi_full_name=None,
+        source_test_ordered_name_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return standard_datafeed(
+        datatype = types.LABTESTS,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_claim_id_full_name = source_claim_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('ordering_state'),
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations=skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('procedure_code', source_procedure_code_full_name, 'procedure_code')
+                if source_procedure_code_full_name else None,
+                Comparison('ordering_npi', source_ordering_npi_full_name, 'ordering_npi')
+                if source_ordering_npi_full_name else None,
+                Comparison('loinc_code', source_loinc_code_full_name, 'loinc_code')
+                if source_loinc_code_full_name else None,
+                Comparison('test_ordered_name', source_test_ordered_name_full_name, 'test_ordered_name')
+                if source_test_ordered_name_full_name else None,
+                Comparison('payer_name', source_payer_name_full_name, 'payer_name')
+                if source_payer_name_full_name else None,
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs=skip_unique_match_pairs
+    )
+
+
+def standard_events_datafeed(
+        source_data=None,
+        target_data=None,
+        source_claim_id_full_name=None,
+        source_hvid_full_name=None,
+        source_event_count_full_name=None,
+        source_event_val_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return standard_datafeed(
+        datatype = types.EVENTS,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_claim_id_full_name = source_claim_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('event_count', source_event_count_full_name, 'event_count')
+                if source_event_count_full_name else None,
+                Comparison('event_val', source_event_val_full_name, 'event_val')
+                if source_event_val_full_name else None,
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs=skip_unique_match_pairs
+    )
+
+
+def standard_enrollment_datafeed(
+        source_data=None,
+        target_data=None,
+        source_claim_id_full_name=None,
+        source_hvid_full_name=None,
+        source_benefit_type_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return standard_datafeed(
+        datatype = types.EVENTS,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_claim_id_full_name = source_claim_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('benefit_type', source_benefit_type_full_name, 'benefit_type')
+                if source_benefit_type_full_name else None
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs=skip_unique_match_pairs
+    )
+
+
+def emr_datafeed(
+        datatype,
+        source_data=None,
+        target_data=None,
+
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None,
+):
+    if not additional_target_full_fill_columns:
+        additional_target_full_fill_columns = []
+    if not skip_target_full_fill_columns:
+        skip_target_full_fill_columns = []
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    if not source_enc_id_full_name:
+        logging.warn('No source enc_id provided, enc_id test will be skipped')
+
+    if not source_hvid_full_name:
+        logging.warn('No source hvid provided, hvid test will be skipped')
+
+    return Datafeed(
+        datatype, source_data, target_data,
+        target_full_fill_columns = [
+            column for column in [
+                'row_id', 'crt_dt', 'mdl_vrsn_num', 'data_set_nm', 'hvm_vdr_feed_id',
+                'hvm_vdr_id', 'part_hvm_vdr_feed_id', 'part_mth'
+            ] if column not in skip_target_full_fill_columns
+        ] + additional_target_full_fill_columns,
+        validations=[
+            validation for validation in [
+                gender_validation('ptnt_gender_cd'),
+                state_validation('ptnt_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        unique_match_pairs=[
+            unique_match_pair for unique_match_pair in [
+                Comparison('enc_id', source_enc_id_full_name, 'enc_id') if source_enc_id_full_name else None,
+                Comparison('hvid', source_hvid_full_name, 'hvid') if source_hvid_full_name else None
+            ] if unique_match_pair and unique_match_pair.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs
+    )
+
+
+def emr_encounter_datafeed(
+        source_data=None,
+        target_data=None,
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+        source_enc_typ_cd_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return emr_datafeed(
+        datatype = types.EMR_ENCOUNTER,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_enc_id_full_name = source_enc_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('enc_rndrg_fclty_state_cd'),
+                state_validation('enc_rndrg_prov_state_cd'),
+                state_validation('enc_rfrg_prov_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('enc_typ_cd', source_enc_typ_cd_full_name, 'enc_typ_cd')
+                if source_enc_typ_cd_full_name else None
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs = skip_unique_match_pairs
+    )
+
+
+def emr_diagnosis_datafeed(
+        source_data=None,
+        target_data=None,
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+
+    return emr_datafeed(
+        datatype = types.EMR_DIAGNOSIS,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_enc_id_full_name = source_enc_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('diag_rndrg_fclty_state_cd'),
+                state_validation('diag_rndrg_prov_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = additional_unique_match_pairs,
+        skip_unique_match_pairs = skip_unique_match_pairs
+    )
+
+
+def emr_procedure_datafeed(
+        source_data=None,
+        target_data=None,
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+        source_proc_cd_full_name=None,
+        source_proc_cd_1_modfr_full_name=None,
+        source_proc_unit_qty_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return emr_datafeed(
+        datatype = types.EMR_PROCEDURE,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_enc_id_full_name = source_enc_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('prov_rndrg_fclty_state_cd'),
+                state_validation('prov_rndrg_prov_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('proc_cd', source_proc_cd_full_name, 'proc_cd')
+                if source_proc_cd_full_name else None,
+                Comparison('proc_cd_1_modfr', source_proc_cd_1_modfr_full_name, 'proc_cd_1_modfr')
+                if source_proc_cd_1_modfr_full_name else None,
+                Comparison('proc_unit_qty', source_proc_unit_qty_full_name, 'proc_unit_qty')
+                if source_proc_unit_qty_full_name else None
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs = skip_unique_match_pairs
+    )
+
+
+def emr_provider_order_datafeed(
+        source_data=None,
+        target_data=None,
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+        source_prov_ord_cd_full_name=None,
+        source_prov_ord_snomed_cd_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return emr_datafeed(
+        datatype = types.EMR_PROVIDER_ORDER,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_enc_id_full_name = source_enc_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('ordg_prov_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('prov_ord_cd', source_prov_ord_cd_full_name, 'prov_ord_cd')
+                if source_prov_ord_cd_full_name else None,
+                Comparison('prov_ord_snomed_cd', source_prov_ord_snomed_cd_full_name, 'prov_ord_snomed_cd')
+                if source_prov_ord_snomed_cd_full_name else None
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs = skip_unique_match_pairs
+    )
+
+
+def emr_lab_order_datafeed(
+        source_data=None,
+        target_data=None,
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+        source_lab_ord_loinc_cd_full_name=None,
+        source_lab_ord_test_nm_full_name=None,
+        source_lab_ord_panel_nm_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return emr_datafeed(
+        datatype = types.EMR_LAB_ORDER,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_enc_id_full_name = source_enc_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('lab_ord_ordg_prov_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('lab_ord_loinc_cd', source_lab_ord_loinc_cd_full_name, 'lab_ord_loinc_cd')
+                if source_lab_ord_loinc_cd_full_name else None,
+                Comparison('lab_ord_test_nm', source_lab_ord_test_nm_full_name, 'lab_ord_test_nm')
+                if source_lab_ord_test_nm_full_name else None,
+                Comparison('lab_ord_panel_nm', source_lab_ord_panel_nm_full_name, 'lab_ord_panel_nm')
+                if source_lab_ord_panel_nm_full_name else None
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs = skip_unique_match_pairs
+    )
+
+
+def emr_lab_result_datafeed(
+        source_data=None,
+        target_data=None,
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+        source_lab_test_nm_full_name=None,
+        source_lab_test_loinc_cd_full_name=None,
+        source_lab_test_snomed_cd_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return emr_datafeed(
+        datatype = types.EMR_LAB_RESULT,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_enc_id_full_name = source_enc_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('lab_test_ordg_prov_state_cd'),
+                state_validation('lab_test_exectg_fclty_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('lab_test_nm', source_lab_test_nm_full_name, 'lab_test_nm')
+                if source_lab_test_nm_full_name else None,
+                Comparison('lab_test_loinc_cd', source_lab_test_loinc_cd_full_name, 'lab_test_loinc_cd')
+                if source_lab_test_loinc_cd_full_name else None,
+                Comparison('lab_test_snomed_cd', source_lab_test_snomed_cd_full_name, 'lab_test_snomed_cd')
+                if source_lab_test_snomed_cd_full_name else None
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs = skip_unique_match_pairs
+    )
+
+
+def emr_medication_datafeed(
+        source_data=None,
+        target_data=None,
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+        source_medctn_ndc_full_name=None,
+        source_medctn_brd_nm_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return emr_datafeed(
+        datatype = types.EMR_MEDICATION,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_enc_id_full_name = source_enc_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('medctn_rndrg_fclty_state_cd'),
+                state_validation('medctn_ordg_prov_state_cd'),
+                state_validation('medctn_adminrg_fclty_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('medctn_ndc', source_medctn_ndc_full_name, 'medctn_ndc')
+                if source_medctn_ndc_full_name else None,
+                Comparison('medctn_brd_nm', source_medctn_brd_nm_full_name, 'medctn_brd_nm')
+                if source_medctn_brd_nm_full_name else None
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs = skip_unique_match_pairs
+    )
+
+
+def emr_clinical_observation_datafeed(
+        source_data=None,
+        target_data=None,
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+        source_clin_obsn_typ_nm_full_name=None,
+        source_clin_obsn_snomed_cd_full_name=None,
+        source_clin_obsn_result_nm_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return emr_datafeed(
+        datatype = types.EMR_CLINICAL_OBSERVATION,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_enc_id_full_name = source_enc_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('clin_obsn_rndrg_fclty_state_cd'),
+                state_validation('clin_obsn_rndrg_prov_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('clin_obsn_typ_nm', source_clin_obsn_typ_nm_full_name, 'clin_obsn_typ_nm')
+                if source_clin_obsn_typ_nm_full_name else None,
+                Comparison('clin_obsn_snomed_cd', source_clin_obsn_snomed_cd_full_name, 'clin_obsn_snomed_cd')
+                if source_clin_obsn_snomed_cd_full_name else None,
+                Comparison('clin_obsn_result_nm', source_clin_obsn_result_nm_full_name, 'clin_obsn_result_nm')
+                if source_clin_obsn_result_nm_full_name else None
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs = skip_unique_match_pairs
+    )
+
+
+def emr_vital_sign_datafeed(
+        source_data=None,
+        target_data=None,
+        source_enc_id_full_name=None,
+        source_hvid_full_name=None,
+        source_vit_sign_typ_cd_full_name=None,
+        source_vit_sign_snomed_cd_full_name=None,
+        source_vit_sign_msrmt_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return emr_datafeed(
+        datatype = types.EMR_VITAL_SIGN,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_enc_id_full_name = source_enc_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('vit_sign_rndrg_fclty_state_cd'),
+                state_validation('vit_sign_rndrg_prov_state_cd')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations = skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('vit_sign_typ_cd', source_vit_sign_typ_cd_full_name, 'vit_sign_typ_cd')
+                if source_vit_sign_typ_cd_full_name else None,
+                Comparison('vit_sign_snomed_cd', source_vit_sign_snomed_cd_full_name, 'vit_sign_snomed_cd')
+                if source_vit_sign_snomed_cd_full_name else None,
+                Comparison('vit_sign_msrmt', source_vit_sign_msrmt_full_name, 'vit_sign_msrmt')
+                if source_vit_sign_msrmt_full_name else None
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs = skip_unique_match_pairs
+    )
