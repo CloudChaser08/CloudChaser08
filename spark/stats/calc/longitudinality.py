@@ -1,4 +1,4 @@
-from pyspark.sql.functions import mean, stddev, count, months_between
+from pyspark.sql.functions import col, min, max, countDistinct, mean, stddev, count, months_between
 from pyspark.sql.types import IntegerType
 
 def _years(s):
@@ -19,28 +19,12 @@ def calculate_longitudinality(sqlc, df, provider_conf):
     patient_identifier = provider_conf['longitudinality']['patient_id_field']
     date_field = provider_conf['date_field']
 
-    df.createTempView('provider_data')
-
-    # Create a view with only relevant information
-    date_sql = 'SELECT DISTINCT {0}, {1} FROM provider_data'
-    date_query = date_sql.format(patient_identifier, date_field)
-    date_df = sqlc.sql(date_query)
-
-    date_df.createTempView('patient_dates')
-
-    min_max_date_sql = '''
-        SELECT 
-            {0},
-            MIN({1}) AS min_date,
-            MAX({1}) AS max_date,
-            COUNT(DISTINCT {1})
-            AS visits 
-            FROM patient_dates
-            GROUP BY {0}
-        '''
-    min_max_date_query = min_max_date_sql.format(patient_identifier, date_field)
-    min_max_date_df = sqlc.sql(min_max_date_query)
-
+    patient_dates_df = df.select(col(patient_identifier), col(date_field)).distinct()
+    min_max_date_df = patient_dates_df.groupby(col(patient_identifier)) \
+                                      .agg(min(col(date_field)).alias('min_date'),
+                                           max((date_field)).alias('max_date'),
+                                           countDistinct(date_field).alias('visits')
+                                        )
     # Calculate the stats
     dates = min_max_date_df.withColumn('months',                   \
                                     months_between(             \
@@ -64,10 +48,6 @@ def calculate_longitudinality(sqlc, df, provider_conf):
                            stddev('visits').cast('int').alias('stddev'))    \
                       .orderBy('years', ascending=False)                    \
                       .collect()
-
-    sqlc.dropTempTable('provider_data')
-    sqlc.dropTempTable('patient_dates')
-
     # Write out to dict
     long_stats = []
     fieldnames = ['value', 'patients', 'avg', 'std']
