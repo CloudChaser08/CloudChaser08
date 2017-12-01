@@ -5,11 +5,10 @@ def _years(s):
     return s / 12
 
 
-def calculate_longitudinality(sqlc, df, provider_conf):
+def calculate_longitudinality(df, provider_conf):
     '''
     Calculate the longitudinality for a given set of data
     Input:
-        -sqlc: a pyspark.sql.SQLContext
         -df: a pyspark.sql.DataFrame
         -provider_conf: A dict of the providers config
     Output:
