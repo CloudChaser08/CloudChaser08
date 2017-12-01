@@ -520,7 +520,7 @@ def insert_file_date(template, ds):
     )
 
 sql_template = """
-    ALTER TABLE medicalclaims_old ADD PARTITION (part_provider='ability', part_processdate='{0}/{1}/02')
+    ALTER TABLE medicalclaims_old ADD PARTITION (part_provider='ability', part_processdate='{0}/{1}/{2}')
     LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/ability/{0}/{1}/{2}/'
 """
 
