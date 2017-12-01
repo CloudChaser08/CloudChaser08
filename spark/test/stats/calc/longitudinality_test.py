@@ -23,14 +23,32 @@ def test_init(spark):
         data_row('2017-11-07', 'a', 's', 'u', 'x'),
         data_row('2017-11-01', 'c', 's', 'a', 'b'),
         data_row('2017-12-21', 'j', 'o', 'e', 'y'),
-        data_row('2016-11-07', 'z', 'y', 'x', 'w')
+        data_row('2016-11-07', 'z', 'y', 'x', 'w'),
+        data_row('2015-01-01', 'z', 'a', 'a', 'a'),
+        data_row('2015-01-01', 'j', 'a', 'a', 'a'),
+        data_row('2015-01-01', 'c', 'a', 'a', 'a'),
+        data_row('2015-01-01', 'a', 'a', 'a', 'a')
     ]).toDF()
-    results = longitudinality.calculate_longitudinality(spark['sqlContext'],
-                df, conf)
+    results = longitudinality.calculate_longitudinality(df, conf)
 
 
-def test_something():
-    print results
-    assert True
+def test_num_of_months_rows_are_correct():
+    months_rows = filter(lambda x: x['value'].endswith('months'), results)
+    assert len(months_rows) == 1
+
+
+def test_num_of_years_rows_are_correct():
+    years_rows = filter(lambda x: x['value'].endswith('years'), results)
+    assert len(years_rows) == 2
+
+
+def test_num_of_patients_per_group_correct():
+    twenty_two_months = filter(lambda x: x['value'].endswith('22 months'), results)[0]
+    two_years = filter(lambda x: x['value'].endswith('2 years'), results)[0]
+    forty_one_years = filter(lambda x: x['value'].endswith('41 years'), results)[0]
+
+    assert twenty_two_months['patients'] == 1
+    assert two_years['patients'] == 3
+    assert forty_one_years['patients'] == 1
 
 
