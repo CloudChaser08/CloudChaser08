@@ -1,28 +1,29 @@
 import datetime
+from pyspark.sql.functions import col, countDistinct
 
-def _get_row_count(sqlc, start_date, end_date, attribute, date_col):
+def _get_row_count(df, start_date, end_date, attribute, date_col):
     '''
     Get the row count for the attribute between the start and end date
     Input:
-        - sqlc: a pyspark.sql.SQLContext
+        - df: a pyspark.sql.DataFrame
         - attribute: what we're counting (i.e. *, distinct(hvid), etc...)
         - start_date: beginning of date range
         - end_date: end of date range
         - date_col: the name of the column that conains the dates
     '''
-    template = 'SELECT COUNT(*) FROM (SELECT {} FROM provider_data WHERE {} >= "{}" AND {} <= "{}")'
-    query = template.format(attribute, date_col, start_date, date_col, end_date)
-    count = sqlc.sql(query).collect()[0][0]
-
+    date_range_df = df.where((col(date_col) >= start_date) & (col(date_col) <= end_date))
+    if attribute == '*':
+        count = date_range_df.count()
+    else:
+        count = date_range_df.agg(countDistinct(attribute)).collect()[0][0]
     return count
 
 
-def calculate_key_stats(sqlc, df, earliest_date, start_date, end_date, \
+def calculate_key_stats(df, earliest_date, start_date, end_date, \
                         provider_conf):
     '''
     Calculate the key stats for a given provider
     Input:
-        - sqlc: a pyspark.sql.SQLContext
         - df: a pyspark.sql.DataFrame
         - earliest_date: start of 24-month date range
         - start_date: beginning of date range
@@ -37,20 +38,22 @@ def calculate_key_stats(sqlc, df, earliest_date, start_date, end_date, \
     record_attribute = provider_conf['key_stats']['record_attribute']
     row_attribute = provider_conf['key_stats']['row_attribute']
 
-    df.createTempView('provider_data')
-    total_patient = _get_row_count(sqlc, earliest_date, end_date, 
+    total_patient = _get_row_count(df, earliest_date, end_date, 
                                    patient_attribute, date_col)
-    total_24_month_patient = _get_row_count(sqlc, start_date, end_date,
+    total_24_month_patient = _get_row_count(df, start_date, end_date,
                                    patient_attribute, date_col)
-    total_record = _get_row_count(sqlc, earliest_date, end_date,
+    total_record = _get_row_count(df, earliest_date, end_date,
                                    record_attribute, date_col)
-    total_24_month_record = _get_row_count(sqlc, start_date, end_date,
+    total_24_month_record = _get_row_count(df, start_date, end_date,
                                    record_attribute, date_col)
-    total_row = _get_row_count(sqlc, earliest_date, end_date,
-                                   row_attribute, date_col)
-    total_24_month_row = _get_row_count(sqlc, start_date, end_date,
-                                   row_attribute, date_col)
-    sqlc.dropTempTable('provider_data')
+    if record_attribute == row_attribute:
+        total_row = total_record
+        total_24_month_row = total_24_month_record
+    else:
+        total_row = _get_row_count(df, earliest_date, end_date,
+                                       row_attribute, date_col)
+        total_24_month_row = _get_row_count(df, start_date, end_date,
+                                       row_attribute, date_col)
 
     try:
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m-%d")

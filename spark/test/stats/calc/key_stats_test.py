@@ -13,8 +13,8 @@ def test_init(spark):
     global df, results
     conf = { 'date_field': 'date',
              'key_stats': {
-                 'patient_attribute': 'distinct b',
-                 'record_attribute': 'distinct c',
+                 'patient_attribute': 'b',
+                 'record_attribute': 'c',
                  'row_attribute': '*'
               }
             }
@@ -27,9 +27,9 @@ def test_init(spark):
         data_row('2017-12-21', 'j', 'o', 'e', 'y'),
         data_row('2016-11-07', 'z', 'y', 'x', 'w')
     ]).toDF()
-    results = key_stats.calculate_key_stats(spark['sqlContext'],
-                df, '2015-11-01', '2017-01-01', '2017-12-01',
-                conf)
+    results = key_stats.calculate_key_stats(df,
+                '2015-11-01', '2017-01-01',
+                '2017-12-01', conf)
 
 
 def test_counts_are_correct_for_date_range():
