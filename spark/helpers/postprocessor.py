@@ -186,6 +186,19 @@ def get_gen_ref_date(sqlc, feed_id, domain_name):
         return None
 
 
+def get_min_date(sqlc, feed_id, fallback_date, *dates):
+    for d in dates:
+        date = return get_gen_ref_date(
+            runner.sqlContext,
+            feed_id,
+            d
+        )
+        if date is not None:
+            return date
+
+    return fallback_date
+
+
 def deobfuscate_hvid(project_name, hvid_col='hvid', nullify_non_integers=False):
     """
     Generate a function that will deobfuscate the hvid column in the
