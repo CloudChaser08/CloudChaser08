@@ -2,8 +2,9 @@ from spark.spark_setup import init
 from spark.runner import Runner
 import spark.helpers.file_utils as file_utils
 
-from spark.qa.datafeed import Datafeed
-import spark.qa.datatypes as types
+import spark.qa.datafeed as datafeed
+
+from pyspark.sql.functions import lit
 
 spark, sqlContext = init("Emdeon Example", True)
 spark_sql_runner = Runner(sqlContext)
@@ -31,18 +32,16 @@ source_data = {
 target_data = sqlContext.read.parquet(EMDEON_TARGET_DATA_LOCATION)
 
 # create an instance of Datafeed
-datafeed = Datafeed(
-    datatype=types.MEDICALCLAIMS,
+emdeon_datafeed = datafeed.standard_medicalclaims_datafeed(
     source_data=source_data,
     target_data=target_data,
-    source_data_claim_full_name='emdeon_dx_raw_local.column1',
-    source_data_service_line_full_name='emdeon_dx_raw_local.column3',
-    target_data_claim_column_name='claim_id',
-    target_data_service_line_column_name='service_line_number'
+    source_claim_id_full_name='emdeon_dx_raw_local.column1',
+    source_service_line_number_full_name='emdeon_dx_raw_local.column3',
+    skip_target_full_fill_columns=['part_provider', 'part_best_date', 'model_version']
 )
 
 # run tests
-datafeed.run_checks()
+emdeon_datafeed.run_checks()
 
 # stop spark
 spark.stop()

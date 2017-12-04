@@ -1,11 +1,48 @@
 import pytest
+import logging
 
 import spark.qa.conf as qa_conf
+import spark.qa.datatypes as types
 import spark.helpers.file_utils as file_utils
+import spark.helpers.constants as constants
 
 # this will be set when a Datafeed instance is created. This instance
 # is used as a fixture for pytest tests.
 active_datafeed = None
+
+class Comparison:
+    """
+    An object to coordinate unique column value comparisons between
+    source and target data
+    """
+    def __init__(self, column_name, source_full_name, target_column_name):
+
+        if not source_full_name or '.' not in source_full_name:
+            raise ValueError('The source_full_name must be in the form <table_name>.<column_name>')
+
+        self.column_name = column_name
+        self.source_table_name = source_full_name.split('.')[0]
+        self.source_column_name = source_full_name.split('.')[1]
+        self.target_column_name = target_column_name
+
+
+class Validation:
+    """
+    An object to coordinate column value validation using a unique
+    column name and a list of valid values for that column
+    """
+    def __init__(self, column_name, whitelist):
+        self.column_name = column_name
+        self.whitelist = whitelist
+
+
+def gender_validation(column_name):
+    return Validation(column_name, constants.genders)
+
+
+def state_validation(column_name):
+    return Validation(column_name, constants.states)
+
 
 class Datafeed:
     """
@@ -25,53 +62,14 @@ class Datafeed:
             # dataframe containing the normalized data
             target_data=None,
 
-            # name of the hvid in the source data - in the format table_name.column_name
-            source_data_hvid_full_name=None,
+            # a list of columns that should be 100% populated in the target data
+            target_full_fill_columns=None,
 
-            # name of the claim_id in the source_data - in the format table_name.column_name
-            source_data_claim_full_name=None,
+            # a list of validation objects - used to validate values in the given column using the given whitelist
+            validations=None,
 
-            # name of the service_line_id in the source_data - in the format table_name.column_name
-            source_data_service_line_full_name=None,
-
-            # name of hvid column in target_data
-            target_data_hvid_column_name='hvid',
-
-            # name of claim_id column in target_data
-            target_data_claim_column_name=None,
-
-            # name of service_line_id column in target_data
-            target_data_service_line_column_name=None,
-
-            # name of gender column in target_data
-            target_data_gender_column_name='patient_gender',
-
-            # name of patient_state column in target_data
-            target_data_patient_state_column_name='patient_state',
-
-            # name of record_id column in target_data
-            target_data_record_id_column_name='record_id',
-
-            # name of created_date column in target_data
-            target_data_created_date_column_name='created',
-
-            # name of model_version column in target_data
-            target_data_model_version_column_name='model_version',
-
-            # name of data_set column in target_data
-            target_data_data_set_column_name='data_set',
-
-            # name of data_feed column in target_data
-            target_data_data_feed_column_name='data_feed',
-
-            # name of data_vendor column in target_data
-            target_data_data_vendor_column_name='data_vendor',
-
-            # name of provider_partition column in target_data
-            target_data_provider_partition_column_name='part_provider',
-
-            # name of date_partition column in target_data
-            target_data_date_partition_column_name='part_best_date'
+            # a list of comparison objects - used to compare source to target for a single column
+            unique_match_pairs=None
     ):
 
         # set this instance as the active datafeed
@@ -83,41 +81,9 @@ class Datafeed:
         self.source_data = source_data
         self.target_data = target_data
 
-        # parse out table/column names from full names
-        if source_data_claim_full_name:
-            self.source_data_claim_table_name = source_data_claim_full_name.split('.')[0]
-            self.source_data_claim_column_name = source_data_claim_full_name.split('.')[1]
-        else:
-            self.source_data_claim_table_name = None
-            self.source_data_claim_column_name = None
-
-        if source_data_service_line_full_name:
-            self.source_data_service_line_table_name = source_data_service_line_full_name.split('.')[0]
-            self.source_data_service_line_column_name = source_data_service_line_full_name.split('.')[1]
-        else:
-            self.source_data_service_line_table_name = None
-            self.source_data_service_line_column_name = None
-
-        if source_data_hvid_full_name:
-            self.source_data_hvid_table_name = source_data_hvid_full_name.split('.')[0]
-            self.source_data_hvid_column_name = source_data_hvid_full_name.split('.')[1]
-        else:
-            self.source_data_hvid_table_name = None
-            self.source_data_hvid_column_name = None
-
-        self.target_data_hvid_column_name = target_data_hvid_column_name
-        self.target_data_claim_column_name = target_data_claim_column_name
-        self.target_data_service_line_column_name = target_data_service_line_column_name
-        self.target_data_gender_column_name = target_data_gender_column_name
-        self.target_data_patient_state_column_name = target_data_patient_state_column_name
-        self.target_data_record_id_column_name = target_data_record_id_column_name
-        self.target_data_created_date_column_name = target_data_created_date_column_name
-        self.target_data_model_version_column_name = target_data_model_version_column_name
-        self.target_data_data_set_column_name = target_data_data_set_column_name
-        self.target_data_data_feed_column_name = target_data_data_feed_column_name
-        self.target_data_data_vendor_column_name = target_data_data_vendor_column_name
-        self.target_data_provider_partition_column_name = target_data_provider_partition_column_name
-        self.target_data_date_partition_column_name = target_data_date_partition_column_name
+        self.target_full_fill_columns = target_full_fill_columns if target_full_fill_columns else []
+        self.validations = validations if validations else []
+        self.unique_match_pairs = unique_match_pairs if unique_match_pairs else []
 
     def run_checks(self):
         """
@@ -136,3 +102,128 @@ class Datafeed:
             # summarize passed, failed and skipped tests
             '-r', 'p f s'
         ])
+
+
+def standard_datafeed(
+        datatype,
+        source_data=None,
+        target_data=None,
+
+        source_claim_id_full_name=None,
+        source_hvid_full_name=None,
+
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None,
+):
+    if not additional_target_full_fill_columns:
+        additional_target_full_fill_columns = []
+    if not skip_target_full_fill_columns:
+        skip_target_full_fill_columns = []
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    if not source_claim_id_full_name:
+        logging.warn('No source claim provided, claim test will be skipped')
+
+    if not source_hvid_full_name:
+        logging.warn('No source hvid provided, hvid test will be skipped')
+
+    return Datafeed(
+        datatype, source_data, target_data,
+        target_full_fill_columns = [
+            column for column in [
+                'record_id', 'created', 'model_version', 'data_set', 'data_feed',
+                'data_vendor', 'part_provider', 'part_best_date'
+            ] if column not in skip_target_full_fill_columns
+        ] + additional_target_full_fill_columns,
+        validations=[
+            validation for validation in [
+                gender_validation('patient_gender'),
+                state_validation('patient_state')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        unique_match_pairs=[
+            unique_match_pair for unique_match_pair in [
+                Comparison('claim', source_claim_id_full_name, 'claim_id') if source_claim_id_full_name else None,
+                Comparison('hvid', source_hvid_full_name, 'hvid') if source_hvid_full_name else None
+            ] if unique_match_pair and unique_match_pair.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs
+    )
+
+
+def standard_medicalclaims_datafeed(
+        source_data=None,
+        target_data=None,
+        source_claim_id_full_name=None,
+        source_hvid_full_name=None,
+        source_procedure_code_full_name=None,
+        source_service_line_number_full_name=None,
+        source_ndc_code_full_name=None,
+        source_procedure_modifier_1_full_name=None,
+        source_prov_rendering_npi_full_name=None,
+        source_payer_name_full_name=None,
+        additional_target_full_fill_columns=None,
+        skip_target_full_fill_columns=None,
+        additional_validations=None,
+        skip_validations=None,
+        additional_unique_match_pairs=None,
+        skip_unique_match_pairs=None
+):
+
+    if not additional_validations:
+        additional_validations = []
+    if not skip_validations:
+        skip_validations = []
+    if not additional_unique_match_pairs:
+        additional_unique_match_pairs = []
+    if not skip_unique_match_pairs:
+        skip_unique_match_pairs = []
+
+    return standard_datafeed(
+        datatype = types.MEDICALCLAIMS,
+        source_data = source_data,
+        target_data = target_data,
+
+        source_claim_id_full_name = source_claim_id_full_name,
+        source_hvid_full_name = source_hvid_full_name,
+        additional_target_full_fill_columns = additional_target_full_fill_columns,
+        skip_target_full_fill_columns = skip_target_full_fill_columns,
+
+        additional_validations = [
+            validation for validation in [
+                state_validation('prov_rendering_state'),
+                state_validation('prov_billing_state'),
+                state_validation('prov_referring_state'),
+                state_validation('prov_facility_state')
+            ] if validation.column_name not in skip_validations
+        ] + additional_validations,
+        skip_validations=skip_validations,
+
+        additional_unique_match_pairs = [
+            comparison for comparison in [
+                Comparison('procedure_code', source_procedure_code_full_name, 'procedure_code')
+                if source_procedure_code_full_name else None,
+                Comparison('service_line_number', source_service_line_number_full_name, 'service_line_number')
+                if source_service_line_number_full_name else None,
+                Comparison('ndc_code', source_ndc_code_full_name, 'ndc_code')
+                if source_ndc_code_full_name else None,
+                Comparison('procedure_modifier_1', source_procedure_modifier_1_full_name, 'procedure_modifier_1')
+                if source_procedure_modifier_1_full_name else None,
+                Comparison('prov_rendering_npi', source_prov_rendering_npi_full_name, 'prov_rendering_npi')
+                if source_prov_rendering_npi_full_name else None,
+                Comparison('payer_name', source_payer_name_full_name, 'payer_name')
+                if source_payer_name_full_name else None,
+            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+        ] + additional_unique_match_pairs,
+        skip_unique_match_pairs=skip_unique_match_pairs
+    )

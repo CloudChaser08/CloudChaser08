@@ -5,7 +5,7 @@ from pyspark.sql.types import StructField, StructType, StringType, Row
 import spark.qa.checks.utils as checks_utils
 
 @pytest.mark.usefixtures("spark")
-def remove_nulls_and_blanks_test(spark):
+def test_remove_nulls_and_blanks(spark):
     test_df = spark['spark'].sparkContext.parallelize([
         [''], [None], ['SOMETHING'], [' ']
     ]).toDF(StructType([
@@ -15,7 +15,7 @@ def remove_nulls_and_blanks_test(spark):
         == [Row('SOMETHING')]
 
 
-def assert_all_values_in_src_and_target_test(spark):
+def test_all_values_in_src_and_target(spark):
     src = spark['spark'].sparkContext.parallelize([
         ['claim-1'],
         ['claim-2'],
@@ -50,7 +50,7 @@ def assert_all_values_in_src_and_target_test(spark):
         assert assertion_error.value.message == 'COLUMN values in source did not exist in target. Examples: claim-3'
 
 
-def assert_full_fill_in_target_test(spark):
+def test_full_fill_in_target(spark):
     broken = spark['spark'].sparkContext.parallelize([
         ['claim-1'],
         [None],

@@ -18,3 +18,5 @@ states = [
     'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'VI',
     'WA', 'WV', 'WI', 'WY', 'AA', 'AE', 'AP', 'UM'
 ]
+
+genders = ['M', 'F', 'U']
