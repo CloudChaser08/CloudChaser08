@@ -30,12 +30,19 @@ def test_init(spark):
         data_row('2015-01-01', 'j', 'a', 'a', 'a'),
         data_row('2015-01-01', 'c', 'a', 'a', 'a'),
         data_row('2015-01-01', 'a', 'a', 'a', 'a'),
-        data_row('2016-03-01', 'a', 'b', 'c', 'd')
+        data_row('2016-03-01', 'a', 'b', 'c', 'd'),
+        data_row('2016-03-15', 'b', 'a', 'a', 'a')
     ]).toDF()
     results = year_over_year.calculate_year_over_year(df, '2015-01-01', '2017-12-31', conf)
 
 
-def test_something():
-    print results
+def test_number_of_years_calculated_correct():
+    assert len(results.keys()) == 3
+
+
+def test_stat_calc_counts_are_correct():
+    assert results['2017'] == 4
+    assert results['2017_2016'] == 2
+    assert results['2017_2016_2015'] == 1
 
 
