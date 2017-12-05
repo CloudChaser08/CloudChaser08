@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS {table_name};
-CREATE {external} TABLE {table_name} (
+INSERT INTO pharmacyclaims_common_model
+SELECT
         NULL,                                                                                   --record_id
         t.row_id,                                                                               --claim_id
         p.hvid,                                                                                 --hvid
@@ -17,7 +17,7 @@ CREATE {external} TABLE {table_name} (
         NULL,                                                                                   --patient_age
         CASE
             WHEN (YEAR(t.service_date) - COALESCE(p.yearOfBirth, t.birth_date)) > 84 THEN 1927
-            ELSE COALESCE(p.yearOfBirth, t.birthdate)) 
+            ELSE COALESCE(p.yearOfBirth, t.birthdate) 
         END,                                                                                    --patient_year_of_birth
         SUBSTR(TRIM(COALESCE(p.threeDigitZip, t.patient_zip)), 1, 3),                           --patient_zip3
         TRIM(UPPER(COALESCE(p.state, ''))),                                                     --patient_state
@@ -36,7 +36,30 @@ CREATE {external} TABLE {table_name} (
         NULL,                                                                                   --reject_reason_code_3
         NULL,                                                                                   --reject_reason_code_4
         NULL,                                                                                   --reject_reason_code_5
-        NULL                           --diagnosis_code
+        CASE
+            WHEN ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
+                       t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
+                       t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
+                       t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
+                       t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n]
+                 IS NULL THEN NULL
+            WHEN t.service_date < '2015-10-01'
+                AND SUBSTR(TRIM(UPPER(ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
+                       t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
+                       t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
+                       t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
+                       t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n])), 1, 1) = 'A'
+                THEN SUBSTR(TRIM(UPPER(ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
+                       t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
+                       t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
+                       t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
+                       t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n])), 2, 10)
+            ELSE TRIM(UPPER(ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
+                       t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
+                       t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
+                       t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
+                       t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n]))    
+        END,                                                                                    --diagnosis_code
         NULL                           --diagnosis_code_qual
         NULL                           --procedure_code
         NULL                           --procedure_code_qual
@@ -124,6 +147,7 @@ CREATE {external} TABLE {table_name} (
         NULL                           --other_payer_date
         NULL                           --other_payer_coverage_code
         NULL                           --logical_delete_reason
-        )
-    {properties}
-    ;
+FROM mckesson_macrohelix_transactions t
+LEFT OUTER JOIN payload p ON t.hvJoinKey = p.hvJoinKey
+CROSS JOIN exploder e
+;
