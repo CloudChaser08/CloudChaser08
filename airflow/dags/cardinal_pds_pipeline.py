@@ -122,12 +122,12 @@ def generate_file_validation_task(
             mdag.schedule_interval,
             {
                 'expected_file_name_func' : date_utils.generate_insert_regex_into_template_function(path_template,
-                        year = insert_date_into_template('{}{}{}',kwargs,
+                        year_regex = insert_date_into_template('{}{}{}',kwargs,
                             day_offset = CARDINAL_DAY_OFFSET) 
                             + '\d{6}'
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(path_template,
-                    year = insert_date_into_template('{}{}{}',kwargs, 
+                    year_regex = insert_date_into_template('{}{}{}',kwargs, 
                         day_offset = CARDINAL_DAY_OFFSET) 
                         + '\d{6}'
                 ),
@@ -166,7 +166,7 @@ fetch_transaction = SubDagOperator(
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
             'expected_file_name_func'   : date_utils.generate_insert_regex_into_template_function(
                 TRANSACTION_FILE_NAME_TEMPLATE, 
-                year = insert_date_into_template('{}{}{}',kwargs, 
+                year_regex = insert_date_into_template('{}{}{}',kwargs, 
                     day_offset = CARDINAL_DAY_OFFSET) 
                     + '\d{6}'
             ),
@@ -188,7 +188,7 @@ fetch_deid = SubDagOperator(
         {
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
             'expected_file_name_func'   : date_utils.generate_insert_regex_into_template_function(DEID_FILE_NAME_TEMPLATE, 
-                year = insert_date_into_template('{}{}{}',kwargs, 
+                year_regex = insert_date_into_template('{}{}{}',kwargs, 
                     day_offset = CARDINAL_DAY_OFFSET) 
                     + '\d{6}'
             ),
@@ -216,7 +216,7 @@ get_datetime = PythonOperator(
     op_kwargs = {
         'expected_file_name_func' : date_utils.generate_insert_regex_into_template_function(
             TRANSACTION_FILE_NAME_TEMPLATE, 
-            year = insert_date_into_template('{}{}{}',kwargs, 
+            year_regex = insert_date_into_template('{}{}{}',kwargs, 
                 day_offset = CARDINAL_DAY_OFFSET) 
                 + '\d{6}'
         )
