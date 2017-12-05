@@ -69,6 +69,9 @@ DEID_FILE_PREFIX = 'PDS_deid_data_'
 HV_SLASH_INCOMING = 'testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/moved_raw/' \
                     if HVDAG.HVDAG.airflow_env == 'test' else 'incoming/cardinal/pds/'
 CARDINAL_DAY_OFFSET = 1
+CARDINAL_REGEX = insert_date_into_template('{}{}{}',kwargs,
+                            day_offset = CARDINAL_DAY_OFFSET) 
+                            + '\d{6}'
 
 def get_formatted_datetime(ds, kwargs):
     return kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
@@ -121,15 +124,13 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : date_utils.generate_insert_regex_into_template_function(path_template,
-                        year_regex = insert_date_into_template('{}{}{}',kwargs,
-                            day_offset = CARDINAL_DAY_OFFSET) 
-                            + '\d{6}'
+                'expected_file_name_func' : date_utils.generate_insert_regex_into_template_function(
+                        path_template,
+                        year_regex = CARDINAL_REGEX
                 ),
-                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(path_template,
-                    year_regex = insert_date_into_template('{}{}{}',kwargs, 
-                        day_offset = CARDINAL_DAY_OFFSET) 
-                        + '\d{6}'
+                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
+                        path_template,
+                        year_regex = CARDINAL_REGEX
                 ),
                 'regex_name_match'        : True,
                 'minimum_file_size'       : minimum_file_size,
@@ -165,10 +166,8 @@ fetch_transaction = SubDagOperator(
         {
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
             'expected_file_name_func'   : date_utils.generate_insert_regex_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE, 
-                year_regex = insert_date_into_template('{}{}{}',kwargs, 
-                    day_offset = CARDINAL_DAY_OFFSET) 
-                    + '\d{6}'
+                    TRANSACTION_FILE_NAME_TEMPLATE, 
+                    year_regex = CARDINAL_REGEX
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -187,10 +186,9 @@ fetch_deid = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : date_utils.generate_insert_regex_into_template_function(DEID_FILE_NAME_TEMPLATE, 
-                year_regex = insert_date_into_template('{}{}{}',kwargs, 
-                    day_offset = CARDINAL_DAY_OFFSET) 
-                    + '\d{6}'
+            'expected_file_name_func'   : date_utils.generate_insert_regex_into_template_function( 
+                    DEID_FILE_NAME_TEMPLATE, 
+                    year_regex = CARDINAL_REGEX
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -215,10 +213,8 @@ get_datetime = PythonOperator(
     python_callable = do_get_datetime,
     op_kwargs = {
         'expected_file_name_func' : date_utils.generate_insert_regex_into_template_function(
-            TRANSACTION_FILE_NAME_TEMPLATE, 
-            year_regex = insert_date_into_template('{}{}{}',kwargs, 
-                day_offset = CARDINAL_DAY_OFFSET) 
-                + '\d{6}'
+                TRANSACTION_FILE_NAME_TEMPLATE, 
+                year_regex = CARDINAL_REGEX
         )
     },
     provide_context = True,
