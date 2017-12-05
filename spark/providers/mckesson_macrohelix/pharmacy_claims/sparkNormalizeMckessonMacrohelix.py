@@ -17,7 +17,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/mckesson_macrohelix/pharmacyclaims/resources/txn_input/' 
+            script_path, '../../../test/providers/mckesson_macrohelix/pharmacyclaims/resources/input/' 
         )
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/mckesson_macrohelix/pharmacyclaims/resources/matching/'
