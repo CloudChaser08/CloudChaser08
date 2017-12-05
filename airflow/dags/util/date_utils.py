@@ -88,9 +88,9 @@ def insert_date_into_template(template,
     return generate_insert_date_into_template_function(template, fixed_year, fixed_month, \
         fixed_day, year_offset, month_offset, day_offset)(None, kwargs)
 
-def generate_insert_regex_into_template_function(template, year = '\d{4}',
-    month =  '\d{2}',
-    day =  '\d{2}'
+def generate_insert_regex_into_template_function(template, year_regex = '\d{4}',
+    month_regex =  '\d{2}',
+    day_regex =  '\d{2}'
     ):
     """
     Inserts the year pattern, month pattern, and day pattern into a string template.
