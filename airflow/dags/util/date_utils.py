@@ -98,7 +98,7 @@ def generate_insert_regex_into_template_function(template, year_regex = '\d{4}',
     def out(ds, kwargs):
 
         return template.format(
-            year, month, day,
+            year_regex, month_regex, day_regex,
         )
 
     return out
