@@ -7,6 +7,7 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
+import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
@@ -42,6 +43,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     min_date = postprocessor.get_min_date(
                     runner,
+                    '48',
                     None,
                     'HVM_AVAILABLE_HISTORY_START_DATE'
                 )
@@ -66,6 +68,8 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         runner.sqlContext.sql('select * from mckesson_macrohelix_transactions')
     ).createTempView('mckesson_macrohelix_transactions')
 
+    explode.generate_exploder_table(spark, 24, 'exploder')
+
     runner.run_spark_script('normalize.sql', [])
 
     postprocessor.compose(
@@ -80,6 +84,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     if not test:
         hvm_historical = postprocessor.get_min_date(
                         runner,
+                        '48',
                         date(1900, 1, 1),
                         'HVM_AVAILABLE_HISTORY_START_DATE',
                         'EARLIST_VALID_SERVICE_DATE'
