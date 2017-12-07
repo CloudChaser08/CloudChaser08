@@ -261,7 +261,7 @@ def gunzip_step(task_id, tmp_path_template, tmp_file_template):
             tmp_file_template.format(get_formatted_date(ds, kwargs))
         ) 
         # insert exectuion date into tmp_path_template and insert formatted
-          # date into tmp_file_template 
+        # date into tmp_file_template 
     return PythonOperator(
         task_id='gunzip_' + task_id + '_file',
         provide_context=True,
