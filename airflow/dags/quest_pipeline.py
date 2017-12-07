@@ -256,8 +256,12 @@ decrypt_addon = SubDagOperator(
 def gunzip_step(task_id, tmp_path_template, tmp_file_template):
     def execute(ds, **kwargs):
         decompression.decompress_gzip_file(
-            date_utils.insert_date_into_template(tmp_path_template, kwargs) + tmp_file_template.format(get_formatted_date(ds, kwargs))
-        )
+            date_utils.insert_date_into_template(tmp_path_template, kwargs) 
+            + 
+            tmp_file_template.format(get_formatted_date(ds, kwargs))
+        ) 
+        # insert exectuion date into tmp_path_template and insert formatted
+          # date into tmp_file_template 
     return PythonOperator(
         task_id='gunzip_' + task_id + '_file',
         provide_context=True,
