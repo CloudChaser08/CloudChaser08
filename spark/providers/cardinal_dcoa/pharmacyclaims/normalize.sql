@@ -71,7 +71,7 @@ SELECT
     NULL,                            --prov_prescribing_npi
     NULL,                            --prov_primary_care_npi
     NULL,                            --cob_count
-    NULL,                            --usual_and_customary_charge
+    acq_cost,                        --usual_and_customary_charge
     NULL,                            --product_selection_attributed
     NULL,                            --other_payer_recognized
     NULL,                            --periodic_deductible_applied
@@ -117,16 +117,15 @@ SELECT
     NULL,                            --other_payer_date
     NULL,                            --other_payer_coverage_code
     NULL,                            --logical_delete_reason
-    acq_cost,                        --dcoa_acq_cost
-    extended_fee,                    --dcoa_extended_fee
-    patient_type,                    --dcoa_patient_type
-    outlier,                         --dcoa_outlier
-    monthly_patient_days,            --dcoa_monthly_patient_days
-    discharge,                       --dcoa_discharge
-    discharge_patient_days,          --dcoa_discharge_patient_days
-    total_patient_days,              --dcoa_total_patient_days
-    client_name,                     --dcoa_client_name
-    address1,                        --dcoa_address1
-    service_area_description,        --dcoa_service_area_description
-    master_service_area_description  --dcoa_master_service_area_description
+    patient_type,                    --patient_type_vendor
+    outlier,                         --outlier_vendor
+    monthly_patient_days,            --monthly_patient_days_vendor
+    extended_fee,                    --extended_fee_vendor
+    discharge,                       --discharges_vendor
+    discharge_patient_days,          --discharge_patient_days_vendor
+    total_patient_days,              --total_patient_days_vendor
+    client_name,                     --pharmacy_name
+    address1,                        --pharmacy_address
+    service_area_description,        --pharmacy_service_area_vendor
+    master_service_area_description  --pharmacy_master_service_area_vendor
 FROM cardinal_dcoa_transactions;

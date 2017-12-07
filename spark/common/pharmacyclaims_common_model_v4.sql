@@ -117,6 +117,7 @@ CREATE {external} TABLE {table_name} (
         other_payer_date                           date,
         other_payer_coverage_code                  string,
         logical_delete_reason                      string
+        {additional_columns}
         )
     {properties}
     ;

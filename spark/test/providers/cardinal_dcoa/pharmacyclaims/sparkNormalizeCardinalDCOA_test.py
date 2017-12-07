@@ -6,10 +6,13 @@ results = None
 
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
+    spark['sqlContext'].dropTempTable('cardinal_dcoa_transactions')
 
 
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
+    cleanup(spark)
+
     global results
     cardinal_dcoa.run(spark['spark'], spark['runner'], '2017-09-25', test=True)
     results = spark['sqlContext'].sql('select * from pharmacyclaims_common_model') \
@@ -62,5 +65,3 @@ def test_discharge_date_filled():
 
 def test_cleanup(spark):
     cleanup(spark)
-
-

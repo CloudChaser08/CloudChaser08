@@ -31,6 +31,19 @@ def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v4.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
         ['properties', '', False],
+        ['additional_columns', [
+            ['patient_type_vendor', 'string'],
+            ['outlier_vendor', 'string'],
+            ['monthly_patient_days_vendor', 'string'],
+            ['extended_fee_vendor', 'string'],
+            ['discharges_vendor', 'string'],
+            ['discharge_patient_days_vendor', 'string'],
+            ['total_patient_days_vendor', 'string'],
+            ['pharmacy_name', 'string'],
+            ['pharmacy_address', 'string'],
+            ['pharmacy_service_area_vendor', 'string'],
+            ['pharmacy_master_service_area_vendor', 'string']
+        ], False],
         ['external', '', False]
     ])
 
@@ -43,22 +56,6 @@ def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test
     # Remove leading and trailing whitespace from any strings
     postprocessor.trimmify(runner.sqlContext.sql('select * from cardinal_dcoa_transactions'))\
                     .createTempView('cardinal_dcoa_transactions')
-
-    # add additional columns to our common model that are required by cardinal
-    runner.sqlContext.sql('select * from pharmacyclaims_common_model')             \
-                     .withColumn('dcoa_acq_cost', lit(""))                         \
-                     .withColumn('dcoa_extended_fee', lit(""))                     \
-                     .withColumn('dcoa_patient_type', lit(""))                     \
-                     .withColumn('dcoa_outlier', lit(""))                          \
-                     .withColumn('dcoa_monthly_patient_days', lit(""))             \
-                     .withColumn('dcoa_discharge', lit(""))                        \
-                     .withColumn('dcoa_discharge_patient_days', lit(""))           \
-                     .withColumn('dcoa_total_patient_days', lit(""))               \
-                     .withColumn('dcoa_client_name', lit(""))                      \
-                     .withColumn('dcoa_address1', lit(""))                         \
-                     .withColumn('dcoa_service_area_description', lit(""))         \
-                     .withColumn('dcoa_master_service_area_description', lit(""))  \
-                     .createTempView('pharmacyclaims_common_model')
 
     # Normalize the transaction data into the
     # pharmacyclaims common model using transaction data
