@@ -57,12 +57,12 @@ S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/pds/cardinal_
 # Transaction Addon file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 TRANSACTION_FILE_DESCRIPTION = 'Cardinal PDS RX transaction file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'PDS_record_data_{}'
+TRANSACTION_FILE_NAME_TEMPLATE = 'PDS_record_data_{}{}{}'
 TRANSACTION_FILE_PREFIX = 'PDS_record_data_'
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Cardinal PDS RX deid file'
-DEID_FILE_NAME_TEMPLATE = 'PDS_deid_data_{}'
+DEID_FILE_NAME_TEMPLATE = 'PDS_deid_data_{}{}{}'
 DEID_FILE_PREFIX = 'PDS_deid_data_'
 
 # Where raw transactions should go
@@ -71,7 +71,7 @@ HV_SLASH_INCOMING = 'testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/moved
 CARDINAL_DAY_OFFSET = 1
 CARDINAL_REGEX = insert_date_into_template('{}{}{}',kwargs,
                             day_offset = CARDINAL_DAY_OFFSET) 
-                            + '\d{6}'
+                            + '\d{2}'
 
 def get_formatted_datetime(ds, kwargs):
     return kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
