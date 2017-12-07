@@ -188,8 +188,8 @@ def get_gen_ref_date(sqlc, feed_id, domain_name):
 
 def get_min_date(sqlc, feed_id, fallback_date, *dates):
     for d in dates:
-        date = return get_gen_ref_date(
-            runner.sqlContext,
+        date = get_gen_ref_date(
+            sqlc,
             feed_id,
             d
         )

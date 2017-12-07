@@ -2,7 +2,7 @@ import datetime
 import pytest
 
 from pyspark.sql import Row
-import spark.providers.mckesson_macrohelix.pharmacyclaims.sparkNormalizeMckessonMacrohelix as mmh
+import spark.providers.mckesson_macrohelix.pharmacy_claims.sparkNormalizeMckessonMacrohelix as mmh
 
 results = None
 
@@ -19,6 +19,13 @@ def test_init(spark):
         Row(
             hvm_vdr_feed_id = '48',
             gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_itm_nm = '',
+            gen_ref_1_dt = datetime.date(1901, 1, 1),
+            whtlst_flg = '' 
+        ),
+        Row(
+            hvm_vdr_feed_id = '48',
+            gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE',
             gen_ref_itm_nm = '',
             gen_ref_1_dt = datetime.date(1901, 1, 1),
             whtlst_flg = '' 

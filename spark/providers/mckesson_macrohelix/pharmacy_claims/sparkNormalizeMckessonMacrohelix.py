@@ -42,7 +42,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     min_date = postprocessor.get_min_date(
-                    runner,
+                    runner.sqlContext,
                     '48',
                     None,
                     'HVM_AVAILABLE_HISTORY_START_DATE'
@@ -83,7 +83,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     if not test:
         hvm_historical = postprocessor.get_min_date(
-                        runner,
+                        runner.sqlContext,
                         '48',
                         date(1900, 1, 1),
                         'HVM_AVAILABLE_HISTORY_START_DATE',
