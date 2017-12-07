@@ -47,9 +47,10 @@ CREATE EXTERNAL TABLE mckesson_macrohelix_transactions(
     dx_21                       string,
     dx_22                       string,
     dx_23                       string,
-    dx_24                       string
+    dx_24                       string,
+    hvJoinKey                   string
 )
-ROW FORMAT SERDE 'org.apache.hive.hadoop.serde2.OpenCSVSerde'
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 WITH SERDEPROPERTIES (
     "separatorChar" = "|"
 )

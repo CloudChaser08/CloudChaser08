@@ -17,7 +17,7 @@ SELECT DISTINCT
         NULL,                                                                                   --patient_age
         CASE
             WHEN (YEAR(t.service_date) - COALESCE(p.yearOfBirth, t.birth_date)) > 84 THEN 1927
-            ELSE COALESCE(p.yearOfBirth, t.birthdate) 
+            ELSE COALESCE(p.yearOfBirth, t.birth_date) 
         END,                                                                                    --patient_year_of_birth
         SUBSTR(TRIM(COALESCE(p.threeDigitZip, t.patient_zip)), 1, 3),                           --patient_zip3
         TRIM(UPPER(COALESCE(p.state, ''))),                                                     --patient_state
@@ -153,7 +153,7 @@ SELECT DISTINCT
         NULL,                                                                                   --other_payer_coverage_code
         NULL                                                                                    --logical_delete_reason
 FROM mckesson_macrohelix_transactions t
-LEFT OUTER JOIN payload p ON t.hvJoinKey = p.hvJoinKey
+LEFT OUTER JOIN matching_payload p ON t.hvJoinKey = p.hvJoinKey
 CROSS JOIN exploder e
 
 WHERE

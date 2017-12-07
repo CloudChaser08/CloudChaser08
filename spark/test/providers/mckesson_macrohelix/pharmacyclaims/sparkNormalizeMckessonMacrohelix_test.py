@@ -4,6 +4,7 @@ import pytest
 from pyspark.sql import Row
 import spark.providers.mckesson_macrohelix.pharmacy_claims.sparkNormalizeMckessonMacrohelix as mmh
 
+source = None
 results = None
 
 def cleanup(spark):
@@ -33,14 +34,23 @@ def test_init(spark):
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
     mmh.run(spark['spark'], spark['runner'], '2017-10-06', test = True)
-    global results
+    global source, results
+    source = spark['sqlContext'] \
+                .sql('select * from mckesson_macrohelix_transactions') \
+                .collect()
     results = spark['sqlContext'] \
                 .sql('select * from pharmacyclaims_common_model') \
                 .collect()
 
 
-def test_something():
-    print results
+# 4 rows with 11 diagnoses + 6 rows with 13 diagnoses = 122 rows in results
+def test_results_exploded_properly():
+    assert len(results) == 122
+
+
+# Each row in source has a blacklisted icd9/10 code, check they were nulled out
+def test_exploded_diagnosis_codes_nulled_out():
+    assert len([r for r in results if r.diagnosis_code is None]) == 10
 
 
 def test_cleanup(spark):

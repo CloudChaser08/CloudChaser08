@@ -64,9 +64,11 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         ['input_path', input_path],
     ])
 
-    postprocessor.trimmify(
-        runner.sqlContext.sql('select * from mckesson_macrohelix_transactions')
-    ).createTempView('mckesson_macrohelix_transactions')
+    postprocessor.compose(
+        postprocessor.nullify,
+        postprocessor.trimmify
+    )(runner.sqlContext.sql('select * from mckesson_macrohelix_transactions')) \
+    .createTempView('mckesson_macrohelix_transactions')
 
     explode.generate_exploder_table(spark, 24, 'exploder')
 
@@ -75,7 +77,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id = '48', vendor_id = '86', filename = setid),
-        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '48', None, min_date),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '48', None, min_date.isoformat()),
         pharm_priv.filter
     )(
         runner.sqlContext.sql('select * from pharmacyclaims_common_model')
