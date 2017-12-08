@@ -175,7 +175,7 @@ def generate_file_validation_task(
             }
         ),
         task_id = 'validate_' + task_id + '_file',
-        retries = 6,
+        retries = 4,
         retry_delay = timedelta(minutes = 2),
         dag = mdag
     )
