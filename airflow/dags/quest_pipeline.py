@@ -14,15 +14,16 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.update_analytics_db as update_analytics_db
 
 import util.decompression as decompression
+import util.date_utils as date_utils 
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
         split_push_files, queue_up_for_matching,
         detect_move_normalize, decompression, HVDAG,
-        update_analytics_db]:
+        update_analytics_db, date_utils]:
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}/'
+TMP_PATH_TEMPLATE = '/tmp/quest/labtests/{}{}{}/'
 DAG_NAME = 'quest_pipeline'
 
 default_args = {
@@ -38,6 +39,8 @@ mdag = HVDAG.HVDAG(
     schedule_interval="0 14 * * *",
     default_args=default_args
 )
+
+QUEST_DAY_OFFSET = -3
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -73,59 +76,31 @@ DEID_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt.zip'
 DEID_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_1_DeID.txt'
 MINIMUM_DEID_FILE_SIZE = 500
 
-
-def get_quest_current_date(ds, kwargs):
-    return (
-        datetime.strptime(kwargs['yesterday_ds_nodash'], '%Y%m%d') - timedelta(days=2)
-    ).strftime('%Y%m%d')
-
-
-def inc_ds_nodash(ds_nodash):
-    return (
-        datetime.strptime(ds_nodash, '%Y%m%d') + timedelta(days=1)
-    ).strftime('%Y%m%d')
-
-
 def get_formatted_date(ds, kwargs):
-    return get_quest_current_date(ds, kwargs) + inc_ds_nodash(get_quest_current_date(ds, kwargs))[4:8]
-
+    return date_utils.generate_insert_date_into_template_function('{}{}{}',
+         day_offset = QUEST_DAY_OFFSET)(ds,kwargs)
+          + date_utils.generate_insert_date_into_template_function('{1}{2}', 
+            day_offset = QUEST_DAY_OFFSET + 1)(ds,kwargs)
 
 def insert_formatted_date_function(template):
     def out(ds, kwargs):
         return template.format(get_formatted_date(ds, kwargs))
     return out
 
-
-def insert_todays_date_function(template):
-    def out(ds, kwargs):
-        return template.format(kwargs['ds_nodash'])
-    return out
-
-
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
         return template.format('\d{12}')
     return out
 
-
-def insert_current_date(template, kwargs):
-    return template.format(
-        get_quest_current_date(None, kwargs)[0:4],
-        get_quest_current_date(None, kwargs)[4:6],
-        get_quest_current_date(None, kwargs)[6:8]
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(
+    TMP_PATH_TEMPLATE
     )
-
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return insert_current_date(template, kwargs)
-    return out
-
-
-get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
-get_addon_tmp_dir = insert_todays_date_function(TRANSACTION_ADDON_TMP_PATH_TEMPLATE)
-get_trunk_tmp_dir = insert_todays_date_function(TRANSACTION_TRUNK_TMP_PATH_TEMPLATE)
-
+get_addon_tmp_dir = date_utils.generate_insert_date_into_template_function(
+    TRANSACTION_ADDON_TMP_PATH_TEMPLATE
+    )
+get_trunk_tmp_dir = date_utils.generate_insert_date_into_template_function(
+    TRANSACTION_TRUNK_TMP_PATH_TEMPLATE
+    )
 
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
@@ -280,10 +255,13 @@ decrypt_addon = SubDagOperator(
 
 def gunzip_step(task_id, tmp_path_template, tmp_file_template):
     def execute(ds, **kwargs):
+        # insert exectuion date into tmp_path_template and insert formatted
+        # date into tmp_file_template
         decompression.decompress_gzip_file(
-            tmp_path_template.format(kwargs['ds_nodash'])
-            + tmp_file_template.format(get_formatted_date(ds, kwargs))
-        )
+            date_utils.insert_date_into_template(tmp_path_template, kwargs) 
+            + 
+            tmp_file_template.format(get_formatted_date(ds, kwargs))
+        )  
     return PythonOperator(
         task_id='gunzip_' + task_id + '_file',
         provide_context=True,
@@ -311,8 +289,8 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
                 'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
                 ),
-                's3_prefix_func'           : insert_current_date_function(
-                    s3_destination
+                's3_prefix_func'           : date_utils.generate_insert_date_into_template_function( 
+                    s3_destination, day_offset = QUEST_DAY_OFFSET   
                 ),
                 'num_splits'               : num_splits
             }
@@ -335,7 +313,7 @@ split_trunk = split_step(
 def clean_up_workspace_step(task_id, template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', template.format(kwargs['ds_nodash'])
+            'rm', '-rf', insert_date_into_template(template, kwargs)
         ])
     return PythonOperator(
         task_id='clean_up_workspace_' + task_id,
@@ -369,7 +347,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = QUEST_DAY_OFFSET)] 
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -388,9 +366,9 @@ detect_move_normalize_dag = SubDagOperator(
                     DEID_UNZIPPED_FILE_NAME_TEMPLATE
                 )(ds, k)
             ],
-            'file_date_func'                    : insert_current_date_function(
-                '{}/{}/{}'
-            ),
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function( 
+                '{}/{}/{}', day_offset = QUEST_DAY_OFFSET
+                ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '1b3f553d-7db8-43f3-8bb0-6e0b327320d9',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/quest/sparkNormalizeQuest.py',
@@ -415,8 +393,10 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: insert_current_date(sql_new_template, k) \
-                    if insert_current_date('{}-{}-{}', k).find('-01') == 7 else ''
+                'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(sql_new_template, k,
+         day_offset = QUEST_DAY_OFFSET) \
+                    if date_utils.insert_date_into_template('{}-{}-{}', k,
+         day_offset = QUEST_DAY_OFFSET).find('-01') == 7 else ''
             }
         ),
         task_id='update_analytics_db',
