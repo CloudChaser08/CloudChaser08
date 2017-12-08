@@ -104,10 +104,8 @@ def generate_file_validation_dag(
             {
                 'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(path_template, day_offset = DIPLOMAT_DAY_OFFSET
                 ),
-                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(path_template,
-                    year_regex = '\d{8}',
-                    month_regex = '',
-                    day_regex = ''
+                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
+                    path_template,
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -174,10 +172,7 @@ split_transaction = SubDagOperator(
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
             'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE, 
-                year_regex = '\d{8}',
-                month_regex = '',
-                day_regex = ''
+                TRANSACTION_FILE_NAME_TEMPLATE
                 
             ),
             's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(TRANSACTION_S3_SPLIT_URL, day_offset = DIPLOMAT_DAY_OFFSET
