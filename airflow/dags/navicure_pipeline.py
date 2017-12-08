@@ -54,11 +54,11 @@ def get_tmp_dir(ds, kwargs):
     return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
 
 def get_expected_transaction_file_name(ds, kwargs):
-    file_date = get_file_date(ds, kwargs)
+    file_date = insert_formatted_date_function('{}-{}-{}')(ds, kwargs)
     return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date)
 
 def get_expected_transaction_file_name_gz(ds, kwargs):
-    file_date = get_file_date(ds, kwargs)
+    file_date = insert_formatted_date_function('{}-{}-{}')(ds, kwargs)
     return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date) + '.gz'
 
 def get_encrypted_decrypted_file_paths(ds, kwargs):
@@ -103,7 +103,7 @@ def get_expected_matching_files(ds, kwargs):
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 8, 2),
+    'start_date': datetime(2017, 8, 7, 13),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2),
