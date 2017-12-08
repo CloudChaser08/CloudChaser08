@@ -1,0 +1,5 @@
+{
+    "patient_attribute": "hvid",
+    "record_attribute": "claim_id",
+    "row_attribute": "*"
+}
