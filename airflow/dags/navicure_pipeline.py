@@ -39,7 +39,7 @@ MINIMUM_TRANSACTION_FILE_SIZE=500
 # Deid file
 DEID_FILE_DESCRIPTION='Navicure deid file'
 S3_DEID_RAW_PATH='incoming/navicure/'
-DEID_FILE_NAME_TEMPLATE='HealthVerity-{}-record-data-Navicure'
+DEID_FILE_NAME_TEMPLATE='HealthVerity-{}-deid-data-Navicure'
 MINIMUM_DEID_FILE_SIZE=500
 
 S3_TEXT_NAVICURE_PREFIX = 'warehouse/text/medicalclaims/navicure/'
