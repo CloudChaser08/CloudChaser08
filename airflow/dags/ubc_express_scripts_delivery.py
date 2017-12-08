@@ -64,7 +64,7 @@ run_pyspark_export_routine = PythonOperator(
     provide_context=True,
     python_callable=do_run_pyspark_export_routine,
     op_kwargs={
-        'pyspark_script_name' : '/home/airflow/spark/delivery/ubc_0/sparkExtractUBC.py',
+        'pyspark_script_name' : '/home/hadoop/spark/delivery/ubc_0/sparkExtractUBC.py',
         'pyspark_args_func'   : get_export_args
     },
     dag=mdag
