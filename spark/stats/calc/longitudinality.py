@@ -18,17 +18,19 @@ def calculate_longitudinality(df, provider_conf):
     patient_identifier = provider_conf['longitudinality']['patient_id_field']
     date_field = provider_conf['date_field']
 
-    patient_dates_df = df.select(col(patient_identifier), col(date_field)).distinct()
-    min_max_date_df = patient_dates_df.groupby(col(patient_identifier)) \
+    # Select the columns we care about
+    patient_dates = df.select(col(patient_identifier), col(date_field)).distinct()
+    # Calculate the min_date, max_date, and num_visits for each patient
+    patient_visits = patient_dates.groupby(col(patient_identifier)) \
                                       .agg(min(col(date_field)).alias('min_date'),
                                            max((date_field)).alias('max_date'),
                                            countDistinct(date_field).alias('visits')
                                         )
     # Calculate the stats
-    dates = min_max_date_df.withColumn('months',                            \
+    dates = patient_visits.withColumn('months',                             \
                                     months_between(                         \
-                                        min_max_date_df.max_date,           \
-                                        min_max_date_df.min_date            \
+                                        patient_visits.max_date,            \
+                                        patient_visits.min_date             \
                                         ).cast(IntegerType())               \
                                     )
     dates = dates.withColumn("years", _years(dates.months).cast(IntegerType()))
