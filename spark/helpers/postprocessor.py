@@ -138,7 +138,7 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
 
 
 def add_universal_columns(feed_id, vendor_id, filename, 
-                          model_version_number, **alternate_column_names):
+                          model_version_number=None, **alternate_column_names):
     """
     Add columns to a dataframe that are universal across all
     healthverity datasets. If filename is None, the input_file_name
@@ -162,7 +162,7 @@ def add_universal_columns(feed_id, vendor_id, filename,
     model_version = alternate_column_names.get('model_version', 'model_version')
 
     def add(df):
-        return df.withColumn(record_id, monotonically_increasing_id())                   \
+        result_df = df.withColumn(record_id, monotonically_increasing_id())              \
                  .alias(record_id)                                                       \
                  .withColumn(created, lit(time.strftime('%Y-%m-%d', time.localtime())))  \
                  .alias(created)                                                         \
@@ -171,10 +171,14 @@ def add_universal_columns(feed_id, vendor_id, filename,
                  .withColumn(data_feed, lit(feed_id))                                    \
                  .alias(data_feed)                                                       \
                  .withColumn(data_vendor, lit(vendor_id))                                \
-                 .alias(data_vendor)                                                     \
+                 .alias(data_vendor)
+        if model_version_number:
+            result_df = result_df                                                        \
                  .withColumn(model_version, lit(model_version_number))                   \
-                 .alias(model_version)                                                   \
-                 .cache()
+                 .alias(model_version)                                                   
+        result_df = result_df.cache()
+        return result_df
+
     return add
 
 
