@@ -23,13 +23,13 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
 
     patient_dates_df = df.select(col(patient_identifier), col(date_field)) \
                          .where((col(date_field) >= earliest_date) & (col(date_field) <= end_date))
-    hvid_years = df.groupby(patient_identifier).agg(collect_set(year(date_field)).alias('years'))
+    hvid_years = patient_dates_df.groupby(patient_identifier).agg(collect_set(year(date_field)).alias('years'))
 
     start_year = _parse_year(earliest_date)
     end_year = _parse_year(end_date)
     year_range = range(start_year, end_year + 1)
 
-    # Add boolean columns for each year
+    # Add boolean columns for each year and set to true if a patient had a visit in that year
     for yr in year_range:
         hvid_years = hvid_years.withColumn("in_{}".format(yr), array_contains(hvid_years.years, "{}".format(yr)))
 
@@ -38,7 +38,8 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
     # Starting from most recent year, calcualate year over year
     yoy_stats = {}
     for i, yar in enumerate(reversed_year_range, 1):
-	yoy_calc = hvid_years.where(reduce(and_, map(lambda x: col("in_{}".format(x)), reversed_year_range[:i]))).count()
+        # Filter based on patients who have had visits for every year from year i to most recent year and take the count
+        yoy_calc = hvid_years.where(reduce(and_, map(lambda x: col("in_{}".format(x)), reversed_year_range[:i]))).count()
         yoy_key = '_'.join(map(str, reversed_year_range[:i]))
         yoy_stats[yoy_key] = yoy_calc
     return yoy_stats
