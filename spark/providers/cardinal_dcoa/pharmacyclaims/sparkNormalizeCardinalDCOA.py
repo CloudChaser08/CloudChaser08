@@ -4,12 +4,11 @@ from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharmacy_priv
-from pyspark.sql.functions import lit
 
-def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test=False):
+
+def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     date_path = date_input.replace('-', '/')
 
