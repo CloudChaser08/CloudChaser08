@@ -1,0 +1,148 @@
+#! /usr/bin/python
+import argparse
+from datetime import datetime
+import re
+from spark.runner import Runner
+from spark.spark_setup import init
+import spark.helpers.file_utils as file_utils
+import spark.helpers.postprocessor as postprocessor
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
+
+def _get_rollup_vals(diagnosis_mapfile_path, diagnosis_code_range):
+    """
+    Get a list of rollup values, each of which encompass the given
+    diagnosis_code_range
+    """
+    maximum_matches = 0
+    rollups = []
+
+    with open(diagnosis_mapfile_path, 'r') as diagnosis_mapfile:
+        for line in diagnosis_mapfile:
+            matches = 0
+            for low_level_code in line.split('\t')[1].split('|'):
+                for code_prefix in diagnosis_code_range:
+                    if low_level_code.startswith(code_prefix):
+                        matches += 1
+                        break
+
+            if matches > maximum_matches:
+                print("new maximum for {}: {}".format(str(diagnosis_code_range), str(matches)))
+                rollups = [line.split('\t')[0]]
+                maximum_matches = matches
+            elif matches == maximum_matches:
+                rollups.append(line.split('\t')[0])
+
+    return rollups
+
+
+def _enumerate_range(range_string):
+    """
+    Given a range string like 'A01-A10', return an enumerated list of diagnosis codes like [A01, A02, ..., A10]
+    """
+    return [
+        range_string[0] + str(range_element) for range_element in range(
+            int(range_string.split('-')[0][1:]), int(range_string.split('-')[1][1:]) + 1
+        )
+    ]
+
+
+def create_row_exploder(spark, sqlc, diagnosis_mapfile_path):
+    """
+    Translate the ICD10Code column in the given treato_data dataframe into a list
+    of rollup hash values based on the given diagnosis_mapfile_path. Use
+    this list of rollup values to explode the given csv, and create a
+    new csv at the given output_csv_path.
+    """
+    unique_vals = [r.icd10code for r in sqlc.sql('select distinct icd10code from transactions').collect()]
+    exploder = []
+
+    for val in unique_vals:
+        if '-' in val:
+            diag_range = _enumerate_range(val)
+        else:
+            diag_range = [re.sub(r'[^A-Za-z0-9]', '', val)]
+
+        rollup_vals = _get_rollup_vals(diagnosis_mapfile_path, diag_range)
+
+        exploder.extend([[val, rollup] for rollup in rollup_vals])
+
+    spark.sparkContext.parallelize(exploder).toDF(['treato_val', 'hv_rollup']).registerTempTable('hv_rollup_exploder')
+
+
+def run(spark, runner, date_input, diagnosis_mapfile_path, test=False):
+    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
+
+    vendor_feed_id = ''
+    vendor_id = ''
+
+    script_path = __file__
+
+    if test:
+        input_path = file_utils.get_abs_path(
+            script_path, '../../test/providers/treato/resources/input/'
+        ) + '/'
+    else:
+        input_path = 's3a://salusv/incoming/emr/treato/{}/'.format(
+            date_input.replace('-', '/')
+        )
+
+    runner.run_spark_script('../../common/emr/diagnosis_common_model_v5.sql', [
+        ['table_name', 'emr_diagnosis_common_model', False],
+        ['additional_columns', [], False],
+        ['properties', '', False]
+    ])
+
+    runner.run_spark_script('load_transactions.sql', [
+        ['input_path', input_path]
+    ])
+
+    create_row_exploder(spark, runner.sqlContext, diagnosis_mapfile_path)
+
+    runner.run_spark_script('normalize.sql')
+
+    postprocessor.add_universal_columns(
+        feed_id=vendor_feed_id,
+        vendor_id=vendor_id,
+        filename = 'output_' + date_obj.strftime('%Y%m%d') + '_FakeAuthorIDs.csv',
+
+        # rename defaults
+        record_id='row_id', created='crt_dt', data_set='data_set_nm',
+        data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
+    )(
+        runner.sqlContext.sql('select * from emr_diagnosis_common_model')
+    ).createTempView('emr_diagnosis_common_model')
+
+    if not test:
+        normalized_records_unloader.partition_and_rename(
+            spark, runner, 'emr', 'emr/diagnosis_common_model_v5.sql', vendor_feed_id,
+            'emr_diagnosis_common_model', 'enc_dt', date_input,
+            staging_subdir='{}/diagnosis', distribution_key='row_id',
+            provider_partition='part_hvm_vdr_feed_id', date_partition='part_mth'
+        )
+
+
+def main(args):
+    # init
+    spark, sqlContext = init("Quest")
+
+    # initialize runner
+    runner = Runner(sqlContext)
+
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
+
+    spark.stop()
+
+    if args.airflow_test:
+        output_path = 's3://salusv/testing/dewey/airflow/e2e/treato/emr/spark-output/'
+    else:
+        output_path = 's3://salusv/warehouse/parquet/emr/2017-02-16/'
+
+    normalized_records_unloader.distcp(output_path)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--date', type=str)
+    parser.add_argument('--airflow_test', default=False, action='store_true')
+    args = parser.parse_args()
+    main(args)
