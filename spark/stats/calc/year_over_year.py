@@ -21,9 +21,9 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
     patient_identifier = provider_conf['year_over_year']['patient_id_field']
     date_field = provider_conf['date_field']
 
-    patient_dates_df = df.select(col(patient_identifier), col(date_field)) \
+    patient_visit_dates = df.select(col(patient_identifier), col(date_field)) \
                          .where((col(date_field) >= earliest_date) & (col(date_field) <= end_date))
-    hvid_years = patient_dates_df.groupby(patient_identifier).agg(collect_set(year(date_field)).alias('years'))
+    hvid_years = patient_visit_dates.groupby(patient_identifier).agg(collect_set(year(date_field)).alias('years'))
 
     start_year = _parse_year(earliest_date)
     end_year = _parse_year(end_date)
