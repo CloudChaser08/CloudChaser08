@@ -76,7 +76,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     postprocessor.compose(
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id = '48', vendor_id = '86', filename = setid),
+        postprocessor.add_universal_columns(feed_id = '48', vendor_id = '86', filename = setid, model_version_number = '4'),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '48', None, min_date.isoformat()),
         pharm_priv.filter
     )(

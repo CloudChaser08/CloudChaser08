@@ -53,6 +53,11 @@ def test_exploded_diagnosis_codes_nulled_out():
     assert len([r for r in results if r.diagnosis_code is None]) == 10
 
 
+def test_model_version_inserted_for_each_row():
+    for r in results:
+        assert r.model_version == '4'
+
+
 def test_cleanup(spark):
     cleanup(spark)
 
