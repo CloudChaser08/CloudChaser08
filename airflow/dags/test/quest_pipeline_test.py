@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime
 import airflow.models
 import mock
-import util.date_utils as date_utils
+import dags.util.date_utils as date_utils
 
 quest = None
 
@@ -56,9 +56,9 @@ def test_insert_formatted_date_function():
 
 def test_insert_execution_date_function():
     template = '_{}_'
-    assert date_utils.generate_insert_date_into_template_function(
-        template.format('{}{}{}')) \
-        == '_{}_'.format(execution_date)
+    assert date_utils.insert_date_into_template(
+        template.format('{}{}{}'), kwargs
+    ) == '_{}_'.format(execution_date)
 
 
 def test_insert_formatted_regex_function():
@@ -69,13 +69,7 @@ def test_insert_formatted_regex_function():
 
 def test_inserting_current_date():
     template = '_{}_{}_{}_'
-    assert date_utils.insert_date_into_template(template, k, day_offset = -3) \
-        == '_2017_04_22_'
-
-
-def test_inserting_current_date_function():
-    template = '_{}_{}_{}_'
-    assert template.format(quest.get_formatted_date(ds, kwargs)) \
+    assert date_utils.insert_date_into_template(template, kwargs, day_offset = -3) \
         == '_2017_04_22_'
 
 
