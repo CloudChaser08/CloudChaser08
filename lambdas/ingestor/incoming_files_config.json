@@ -1,0 +1,6 @@
+[
+    {"s3_key_regex": "incoming/mckessonrx/HVUnRes.Record.(\\d{8})", "provider_name": "mckesson_unres", "date_pattern": "%Y%m%d"}, 
+    {"s3_key_regex": "incoming/mckessonrx/HVUnRes.DEID.(\\d{8})", "provider_name": "mckesson_unres", "date_pattern": "%Y%m%d"}, 
+    {"s3_key_regex": "incoming/mckessonrx/HVRes.DEID.(\\d{8})", "provider_name": "mckesson_res", "date_pattern": "%Y%m%d"}, 
+    {"s3_key_regex": "incoming/mckessonrx/HVRes.DEID.(\\d{8})", "provider_name": "mckesson_res", "date_pattern": "%Y%m%d"}
+]

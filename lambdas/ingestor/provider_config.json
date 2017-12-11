@@ -1,0 +1,4 @@
+[
+    {"provider_name": "mckesson_unres", "configuration": {"dag_name": "mckessonrx_pipeline", "expected_files": [{"s3_key_pattern": "incoming/mckessonrx/HVUnRes.Record.%Y%m%d"}, {"s3_key_pattern": "incoming/mckessonrx/HVUnRes.DEID.%Y%m%d"}]}},
+    {"provider_name": "mckesson_res", "configuration": {"dag_name": "mckessonrx_res_pipeline", "expected_files": [{"s3_key_pattern": "incoming/mckessonrx/HVRes.Record.%Y%m%d"}, {"s3_key_pattern": "incoming/mckessonrx/HVRes.DEID.%Y%m%d"}]}}
+]
