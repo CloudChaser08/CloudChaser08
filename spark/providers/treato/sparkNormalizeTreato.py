@@ -17,18 +17,31 @@ def _get_rollup_vals(diagnosis_mapfile_path, diagnosis_code_range):
     rollups = []
 
     with open(diagnosis_mapfile_path, 'r') as diagnosis_mapfile:
+
         for line in diagnosis_mapfile:
             matches = 0
+
+            # find all codes on this line of the diagnosis mapfile
+            # that match any of the codes in the diagnosis_code_range
             for low_level_code in line.split('\t')[1].split('|'):
                 for code_prefix in diagnosis_code_range:
                     if low_level_code.startswith(code_prefix):
                         matches += 1
                         break
 
+            # if the amount of matches on this line exceeds the
+            # current max, then this line is a better rollup to use
+            # for this range. reset the current max and the current
+            # rollup array
             if matches > maximum_matches:
                 print("new maximum for {}: {}".format(str(diagnosis_code_range), str(matches)))
                 rollups = [line.split('\t')[0]]
                 maximum_matches = matches
+
+            # if the amount of matches on this line is equal to the
+            # current max, then this line is exactly as good of a
+            # rollup to use as the current max, append the rollup to
+            # the list
             elif matches == maximum_matches:
                 rollups.append(line.split('\t')[0])
 
@@ -48,22 +61,30 @@ def _enumerate_range(range_string):
 
 def create_row_exploder(spark, sqlc, diagnosis_mapfile_path):
     """
-    Translate the ICD10Code column in the given treato_data dataframe into a list
-    of rollup hash values based on the given diagnosis_mapfile_path. Use
-    this list of rollup values to explode the given csv, and create a
-    new csv at the given output_csv_path.
+    Translate the ICD10Code column in the given treato_data dataframe
+    into a list of rollup hash values based on the given
+    diagnosis_mapfile_path. Use this list of rollup values to explode
+    the given csv, and create a new csv at the given output_csv_path.
     """
+
+    # get all unique diagnosis range values from the transactional data
     unique_vals = [r.icd10code for r in sqlc.sql('select distinct icd10code from transactions').collect()]
     exploder = []
 
     for val in unique_vals:
+
+        # if this val contains a hyphen, it is a range. enumerate all
+        # codes in the range.
         if '-' in val:
             diag_range = _enumerate_range(val)
+
+        # if this code is not a range, just use a single element array
         else:
             diag_range = [re.sub(r'[^A-Za-z0-9]', '', val)]
 
+        # get all of the relevent hv rollup values for this diagnosis
+        # range from the given mapfile
         rollup_vals = _get_rollup_vals(diagnosis_mapfile_path, diag_range)
-
         exploder.extend([[val, rollup] for rollup in rollup_vals])
 
     spark.sparkContext.parallelize(exploder).toDF(['treato_val', 'hv_rollup']).registerTempTable('hv_rollup_exploder')
