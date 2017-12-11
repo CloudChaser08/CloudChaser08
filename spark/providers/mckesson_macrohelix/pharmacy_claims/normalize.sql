@@ -1,5 +1,5 @@
 INSERT INTO pharmacyclaims_common_model
-SELECT DISTINCT
+SELECT
         NULL,                                                                                   --record_id
         t.row_id,                                                                               --claim_id
         p.hvid,                                                                                 --hvid
@@ -166,10 +166,14 @@ WHERE
 -- if all diagnoses are null, include one row w/ null diagnosis_code
 -- this will only keep one b/c we are doing a SELECT DISTINCT
 OR
+(
     COALESCE(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
           t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
           t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
           t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
           t.dx_21, t.dx_22, t.dx_23, t.dx_24) IS NULL
+    AND
+    e.n = 0
+)
 ;
 

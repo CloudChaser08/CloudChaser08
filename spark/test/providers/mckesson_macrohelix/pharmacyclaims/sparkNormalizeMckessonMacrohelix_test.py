@@ -43,14 +43,15 @@ def test_init(spark):
                 .collect()
 
 
-# 4 rows with 11 diagnoses + 6 rows with 13 diagnoses = 122 rows in results
+# 4 rows with 11 diagnoses + 6 rows with 13 diagnoses + 1 row no diagnoses = 123 rows in results
+# (4 * 11)                 + (6 * 13)                 + (1 * 1)            = 123
 def test_results_exploded_properly():
-    assert len(results) == 122
+    assert len(results) == 123
 
 
 # Each row in source has a blacklisted icd9/10 code, check they were nulled out
 def test_exploded_diagnosis_codes_nulled_out():
-    assert len([r for r in results if r.diagnosis_code is None]) == 10
+    assert len([r for r in results if r.diagnosis_code is None and r.claim_id != '10']) == 10
 
 
 def test_model_version_inserted_for_each_row():
