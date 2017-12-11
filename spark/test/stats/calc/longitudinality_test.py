@@ -32,7 +32,7 @@ def test_init(spark):
 def test_num_of_months_rows_are_correct():
     print results
     months_rows = filter(lambda x: x['value'].endswith('months'), results)
-    assert len(months_rows) == 1
+    assert len(months_rows) == 2
 
 
 def test_num_of_years_rows_are_correct():
@@ -41,12 +41,12 @@ def test_num_of_years_rows_are_correct():
 
 
 def test_num_of_patients_per_group_correct():
-    twenty_two_months = filter(lambda x: x['value'].endswith('22 months'), results)[0]
+    twenty_four_months = filter(lambda x: x['value'].endswith('24 months'), results)[0]
     two_years = filter(lambda x: x['value'].endswith('2 years'), results)[0]
     forty_one_years = filter(lambda x: x['value'].endswith('41 years'), results)[0]
 
-    assert twenty_two_months['patients'] == 1
-    assert two_years['patients'] == 3
+    assert twenty_four_months['patients'] == 1
+    assert two_years['patients'] == 1
     assert forty_one_years['patients'] == 1
 
 

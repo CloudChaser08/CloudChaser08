@@ -25,22 +25,22 @@ def calculate_longitudinality(df, provider_conf):
                                            countDistinct(date_field).alias('visits')
                                         )
     # Calculate the stats
-    dates = min_max_date_df.withColumn('months',                   \
-                                    months_between(             \
-                                        min_max_date_df.max_date,  \
-                                        min_max_date_df.min_date   \
-                                        ).cast(IntegerType())   \
+    dates = min_max_date_df.withColumn('months',                            \
+                                    months_between(                         \
+                                        min_max_date_df.max_date,           \
+                                        min_max_date_df.min_date            \
+                                        ).cast(IntegerType())               \
                                     )
     dates = dates.withColumn("years", _years(dates.months).cast(IntegerType()))
 
-    months = dates.where('months <= 24')                                \
-                  .groupby('months')                                    \
-                  .agg(count('*').alias('patients'),                    \
-                       mean('visits').cast('int').alias('avg'),         \
-                       stddev('visits').cast('int').alias('stddev'))    \
-                  .orderBy('months', ascending=False)                   \
+    months = dates.where('months <= 24')                                    \
+                  .groupby('months')                                        \
+                  .agg(count('*').alias('patients'),                        \
+                       mean('visits').cast('int').alias('avg'),             \
+                       stddev('visits').cast('int').alias('stddev'))        \
+                  .orderBy('months', ascending=False)                       \
                   .collect()
-    years_long = dates.where('years >= 2')                                  \
+    years_long = dates.where('months >= 24')                                \
                       .groupby('years')                                     \
                       .agg(count('*').alias('patients'),                    \
                            mean('visits').cast('int').alias('avg'),         \
