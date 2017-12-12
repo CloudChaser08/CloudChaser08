@@ -42,54 +42,56 @@ else:
     S3_PARQUET_MAP='healthveritydev/jcap/parquet/loinc_map/'
     AIRFLOW_ENV='dev'
 
-REF_LOINC_SCHEMA = """
-            loinc_num string,
-            component string,
-            property string,
-            time_aspct string,
-            loinc_system string,
-            scale_type string,
-            method_type string,
-            loinc_class string,
-            versionlastchanged string,
-            chng_type string,
-            definitiondescription string,
-            status string,
-            consumer_name string,
-            classtype double,
-            formula string,
-            species string,
-            exmpl_answers string,
-            survey_quest_text string,
-            survey_quest_src string,
-            unitsrequired string,
-            submitted_units string,
-            relatednames2 string,
-            shortname string,
-            order_obs string,
-            cdisc_common_tests string,
-            hl7_field_subfield_id string,
-            external_copyright_notice string,
-            example_units string,
-            long_common_name string,
-            unitsandrange string,
-            document_section string,
-            example_ucum_units string,
-            example_si_ucum_units string,
-            status_reason string,
-            status_text string,
-            change_reason_public string,
-            common_test_rank double,
-            common_order_rank double,
-            common_si_test_rank double,
-            hl7_attachment_structure string,
-            external_copyright_link string,
-            paneltype string,
-            askatorderentry string,
-            associatedobservations string,
-            versionfirstreleased string,
-            validhl7attachmentrequest string
-"""
+REF_LOINC_COLUMNS = [
+            ['loinc_num', 'string'],
+            ['component', 'string'],
+            ['property', 'string'],
+            ['time_aspct', 'string'],
+            ['loinc_system', 'string'],
+            ['scale_type', 'string'],
+            ['method_type', 'string'],
+            ['loinc_class', 'string'],
+            ['versionlastchanged', 'string'],
+            ['chng_type', 'string'],
+            ['definitiondescription', 'string'],
+            ['status', 'string'],
+            ['consumer_name', 'string'],
+            ['classtype', 'double'],
+            ['formula', 'string'],
+            ['species', 'string'],
+            ['exmpl_answers', 'string'],
+            ['survey_quest_text', 'string'],
+            ['survey_quest_src', 'string'],
+            ['unitsrequired', 'string'],
+            ['submitted_units', 'string'],
+            ['relatednames2', 'string'],
+            ['shortname', 'string'],
+            ['order_obs', 'string'],
+            ['cdisc_common_tests', 'string'],
+            ['hl7_field_subfield_id', 'string'],
+            ['external_copyright_notice', 'string'],
+            ['example_units', 'string'],
+            ['long_common_name', 'string'],
+            ['unitsandrange', 'string'],
+            ['document_section', 'string'],
+            ['example_ucum_units', 'string'],
+            ['example_si_ucum_units', 'string'],
+            ['status_reason', 'string'],
+            ['status_text', 'string'],
+            ['change_reason_public', 'string'],
+            ['common_test_rank', 'double'],
+            ['common_order_rank', 'double'],
+            ['common_si_test_rank', 'double'],
+            ['hl7_attachment_structure', 'string'],
+            ['external_copyright_link', 'string'],
+            ['paneltype', 'string'],
+            ['askatorderentry', 'string'],
+            ['associatedobservations', 'string'],
+            ['versionfirstreleased', 'string'],
+            ['validhl7attachmentrequest', 'string']
+];
+
+REF_LOINC_SCHEMA = ',\n'.join([col[0] + ' ' + col[1] for col in REF_LOINC_COLUMNS])
 
 dd = hv_datadog(env=AIRFLOW_ENV, keys=loads(Variable.get('DATADOG_KEYS')))
 
@@ -232,13 +234,15 @@ def create_new_loinc_table(tomorrow_ds, schema, s3_loinc, s3_map, ref_loinc_sche
         """CREATE EXTERNAL TABLE IF NOT EXISTS {0}.ref_loinc like {0}.ref_loinc_new STORED AS PARQUET""".format(schema),
 
 
+        # We need to strip any non-numeric characters out of the LOINC codes
         """ INSERT INTO {0}.ref_loinc_new
-                select * from (
+                select regexp_replace(a.loinc_num, '[^0-9]', '') as loinc_num, {1} from (
                     SELECT * FROM {0}.temp_ref_loinc t
                     UNION DISTINCT
-                    SELECT * FROM {0}.ref_loinc r WHERE r.loinc_num NOT IN (SELECT loinc_num FROM {0}.temp_ref_loinc)
+                    SELECT * FROM {0}.ref_loinc r WHERE r.loinc_num NOT IN
+                        (SELECT regexp_replace(loinc_num, '[^0-9]', '') FROM {0}.temp_ref_loinc)
                 ) a
-           """.format(schema),
+           """.format(schema, ', '.join([c[0] for c in REF_LOINC_COLUMNS[1:]])),
 
         """DROP TABLE IF EXISTS {}.ref_loinc_map_to_new""".format(schema),
 
@@ -250,7 +254,10 @@ def create_new_loinc_table(tomorrow_ds, schema, s3_loinc, s3_map, ref_loinc_sche
             STORED AS PARQUET
             LOCATION 's3n://{}{}/'""".format(schema, s3_map, tomorrow_ds),
 
-        """INSERT INTO {0}.ref_loinc_map_to_new SELECT * FROM {0}.temp_ref_loinc_map_to""".format(schema)
+        # We need to strip any non-numeric characters out of the LOINC codes
+        """INSERT INTO {0}.ref_loinc_map_to_new
+            SELECT regexp_replace(loinc_num, '[^0-9]', '') as loinc_num, map_to, comment
+            FROM {0}.temp_ref_loinc_map_to""".format(schema)
     ]
 
     hive_execute(sqls)
