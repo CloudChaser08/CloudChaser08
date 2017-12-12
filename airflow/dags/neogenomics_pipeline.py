@@ -47,7 +47,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/payload/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/neogenomics/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/{}/{}/{}}/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/neogenomics/'
 
 
