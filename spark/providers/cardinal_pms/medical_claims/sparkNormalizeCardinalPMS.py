@@ -46,7 +46,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Remove leading and trailing whitespace from any strings
     # Nullify rows that require it
-    postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(
+    postprocessor.compose(postprocessor.nullify, postprocessor.trimmify)(
         runner.sqlContext.sql('select * from transactional_cardinal_pms')
     ).createTempView('transactional_cardinal_pms')
     logging.debug('Trimmed and nullified data')
