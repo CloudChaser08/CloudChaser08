@@ -8,7 +8,7 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
-def _get_rollup_vals(diagnosis_mapfile_path, diagnosis_code_range):
+def _get_rollup_vals(diagnosis_mapfile, diagnosis_code_range):
     """
     Get a list of rollup values, each of which encompass the given
     diagnosis_code_range
@@ -16,34 +16,31 @@ def _get_rollup_vals(diagnosis_mapfile_path, diagnosis_code_range):
     maximum_matches = 0
     rollups = []
 
-    with open(diagnosis_mapfile_path, 'r') as diagnosis_mapfile:
+    for line in diagnosis_mapfile:
+        matches = 0
 
-        for line in diagnosis_mapfile:
-            matches = 0
+        # find all codes on this line of the diagnosis mapfile
+        # that match any of the codes in the diagnosis_code_range
+        for low_level_code in line.split('\t')[1].split('|'):
+            for code_prefix in diagnosis_code_range:
+                if low_level_code.startswith(code_prefix):
+                    matches += 1
+                    break
 
-            # find all codes on this line of the diagnosis mapfile
-            # that match any of the codes in the diagnosis_code_range
-            for low_level_code in line.split('\t')[1].split('|'):
-                for code_prefix in diagnosis_code_range:
-                    if low_level_code.startswith(code_prefix):
-                        matches += 1
-                        break
+        # if the amount of matches on this line exceeds the
+        # current max, then this line is a better rollup to use
+        # for this range. reset the current max and the current
+        # rollup array
+        if matches > maximum_matches:
+            rollups = [line.split('\t')[0]]
+            maximum_matches = matches
 
-            # if the amount of matches on this line exceeds the
-            # current max, then this line is a better rollup to use
-            # for this range. reset the current max and the current
-            # rollup array
-            if matches > maximum_matches:
-                print("new maximum for {}: {}".format(str(diagnosis_code_range), str(matches)))
-                rollups = [line.split('\t')[0]]
-                maximum_matches = matches
-
-            # if the amount of matches on this line is equal to the
-            # current max, then this line is exactly as good of a
-            # rollup to use as the current max, append the rollup to
-            # the list
-            elif matches == maximum_matches:
-                rollups.append(line.split('\t')[0])
+        # if the amount of matches on this line is equal to the
+        # current max, then this line is exactly as good of a
+        # rollup to use as the current max, append the rollup to
+        # the list
+        elif matches == maximum_matches:
+            rollups.append(line.split('\t')[0])
 
     return rollups
 
@@ -59,11 +56,11 @@ def _enumerate_range(range_string):
     ]
 
 
-def create_row_exploder(spark, sqlc, diagnosis_mapfile_path):
+def create_row_exploder(spark, sqlc, diagnosis_mapfile):
     """
     Translate the ICD10Code column in the given treato_data dataframe
     into a list of rollup hash values based on the given
-    diagnosis_mapfile_path. Use this list of rollup values to explode
+    diagnosis_mapfile. Use this list of rollup values to explode
     the given csv, and create a new csv at the given output_csv_path.
     """
 
@@ -84,17 +81,17 @@ def create_row_exploder(spark, sqlc, diagnosis_mapfile_path):
 
         # get all of the relevent hv rollup values for this diagnosis
         # range from the given mapfile
-        rollup_vals = _get_rollup_vals(diagnosis_mapfile_path, diag_range)
+        rollup_vals = _get_rollup_vals(diagnosis_mapfile, diag_range)
         exploder.extend([[val, rollup] for rollup in rollup_vals])
 
     spark.sparkContext.parallelize(exploder).toDF(['treato_val', 'hv_rollup']).registerTempTable('hv_rollup_exploder')
 
 
-def run(spark, runner, date_input, diagnosis_mapfile_path, test=False):
+def run(spark, runner, date_input, diagnosis_mapfile, test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
-    vendor_feed_id = ''
-    vendor_id = ''
+    vendor_feed_id = '52'
+    vendor_id = '233'
 
     script_path = __file__
 
@@ -117,7 +114,9 @@ def run(spark, runner, date_input, diagnosis_mapfile_path, test=False):
         ['input_path', input_path]
     ])
 
-    create_row_exploder(spark, runner.sqlContext, diagnosis_mapfile_path)
+    create_row_exploder(spark, runner.sqlContext, diagnosis_mapfile)
+
+    diagnosis_mapfile.close()
 
     runner.run_spark_script('normalize.sql')
 
@@ -137,26 +136,23 @@ def run(spark, runner, date_input, diagnosis_mapfile_path, test=False):
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'emr', 'emr/diagnosis_common_model_v5.sql', vendor_feed_id,
             'emr_diagnosis_common_model', 'enc_dt', date_input,
-            staging_subdir='{}/diagnosis', distribution_key='row_id',
+            staging_subdir='diagnosis/', distribution_key='row_id',
             provider_partition='part_hvm_vdr_feed_id', date_partition='part_mth'
         )
 
 
 def main(args):
     # init
-    spark, sqlContext = init("Quest")
+    spark, sqlContext = init("Treato")
 
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, args.diagnosis_mapfile_path)
+    run(spark, runner, args.date, args.diagnosis_mapfile)
 
     spark.stop()
 
-    if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/treato/emr/spark-output/'
-    else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
+    output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 
     normalized_records_unloader.distcp(output_path)
 
@@ -164,6 +160,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
-    parser.add_argument('--diagnosis_mapfile_path', type=str)
+    parser.add_argument('--diagnosis_mapfile', type=argparse.FileType())
     args = parser.parse_args()
     main(args)

@@ -27,11 +27,11 @@ def test_init(spark):
 
 def test_correct_output():
     "Ensure that year of birth capping was applied"
-    assert [(row.hvid, row.diag_cd) for row in results] == [
-        ('A0000002', 'hash4'),
+    assert sorted([(row.hvid, row.diag_cd) for row in results]) == sorted([
         ('A0000001', 'hash2'),
-        ('A0000001', 'hash3')
-    ]
+        ('A0000001', 'hash3'),
+        ('A0000002', 'hash4')
+    ])
 
 
 def test_cleanup(spark):
