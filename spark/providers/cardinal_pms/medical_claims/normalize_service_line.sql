@@ -1,5 +1,5 @@
 INSERT INTO medicalclaims_common_model
-SELECT DISTINCT
+SELECT
     NULL,                                       -- record_id
     t.ediclaim_id,                              -- claim_id
     'TBD',                                      -- hvid
@@ -20,7 +20,7 @@ SELECT DISTINCT
         t.dateservicestart,
         {min_date},
         {max_date}
-    ),                                          -- date_service **TODO: apply capping?**
+    ),                                          -- date_service
     NULL,                                       -- date_service_end
     NULL,                                       -- inst_date_admitted
     NULL,                                       -- inst_date_discharged
@@ -212,5 +212,7 @@ WHERE
     ( 
         COALESCE(t.linkeddiagnosisone, t.linkeddiagnosistwo,
         t.linkeddiagnosisthree, t.linkeddiagnosisfour) IS NULL
+        AND
+        sl_explode.n = 0
     )
 ;

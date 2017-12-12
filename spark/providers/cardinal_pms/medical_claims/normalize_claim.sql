@@ -175,19 +175,20 @@ SELECT
     NULL                                        -- cob_ins_type_code_2
 FROM transactional_cardinal_pms t
     CROSS JOIN claim_exploder c_explode
-    LEFT JOIN medicalclaims_common_model mcm
-    ON
-    t.ediclaim_id = mcm.claim_id
-    AND 
-    ARRAY(t.principaldiagnosis, t.diagnosistwo, t.diagnosisthree, t.diagnosisfour,
-        t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
-        )[c_explode.n] <> mcm.diagnosis_code
 WHERE
     -- Filter out cases from explosion where diagnosis_code would be null
     (
         ARRAY(t.principaldiagnosis, t.diagnosistwo, t.diagnosisthree, t.diagnosisfour,
             t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
             )[c_explode.n] IS NOT NULL
+    )
+    AND
+    -- Don't include the row if the diagnosis is also a service-line diagnosis
+    (
+        ARRAY(t.principaldiagnosis, t.diagnosistwo, t.diagnosisthree, t.diagnosisfour,
+            t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
+        )[c_explode.n] NOT IN (t.linkeddiagnosisone, t.linkeddiagnosistwo,
+                                    t.linkeddiagnosisthree, t.linkeddiagnosisfour)
     )
 DISTRIBUTE BY t.ediclaim_id
 ;

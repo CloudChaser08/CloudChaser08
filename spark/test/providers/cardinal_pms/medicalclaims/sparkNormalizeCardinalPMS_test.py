@@ -19,7 +19,7 @@ def test_init(spark):
     global results
     results = spark['sqlContext'].sql('select * from medicalclaims_common_model') \
                                  .collect()
-    print results
+    print len(results)
 
 def test_cleanup(spark):
     cleanup(spark)
