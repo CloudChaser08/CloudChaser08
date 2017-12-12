@@ -149,14 +149,14 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, args.diagnosis_mapfile_path)
 
     spark.stop()
 
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/treato/emr/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2017-02-16/'
+        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 
     normalized_records_unloader.distcp(output_path)
 
@@ -164,6 +164,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
-    parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--diagnosis_mapfile_path', type=str)
     args = parser.parse_args()
     main(args)
