@@ -16,16 +16,32 @@ def _get_rollup_vals(diagnosis_mapfile, diagnosis_code_range):
     maximum_matches = 0
     rollups = []
 
+    diagnosis_code_range = sorted(diagnosis_code_range)
+
     for line in diagnosis_mapfile:
         matches = 0
 
+        sorted_line = sorted(line.split('\t')[1].split('|'))
+
+        # if the greatest element of the range is less than this
+        # low level code, none of these will match
+        if diagnosis_code_range[-1] < sorted_line[0][:len(diagnosis_code_range[-1])]:
+            continue
+
         # find all codes on this line of the diagnosis mapfile
         # that match any of the codes in the diagnosis_code_range
-        for low_level_code in line.split('\t')[1].split('|'):
-            for code_prefix in diagnosis_code_range:
-                if low_level_code.startswith(code_prefix):
-                    matches += 1
-                    break
+        i = j = 0
+        while i < len(sorted_line) and j < len(diagnosis_code_range):
+            if sorted_line[i].startswith(diagnosis_code_range[j]):
+                matches += 1
+                i += 1
+                j += 1
+
+            elif sorted_line[i] < diagnosis_code_range[j]:
+                i += 1
+
+            elif sorted_line[i] > diagnosis_code_range[j]:
+                j += 1
 
         # if the amount of matches on this line exceeds the
         # current max, then this line is a better rollup to use
@@ -41,6 +57,9 @@ def _get_rollup_vals(diagnosis_mapfile, diagnosis_code_range):
         # the list
         elif matches == maximum_matches:
             rollups.append(line.split('\t')[0])
+
+    # reset mapfile pointer
+    diagnosis_mapfile.seek(0)
 
     return rollups
 
