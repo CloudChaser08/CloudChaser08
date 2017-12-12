@@ -18,8 +18,7 @@ SELECT
     NULL,                                       -- date_received
     extract_date(
         t.dateservicestart,
-        {min_date},
-        {max_date}
+        '%Y-%m-%d'
     ),                                          -- date_service
     NULL,                                       -- date_service_end
     NULL,                                       -- inst_date_admitted
@@ -39,7 +38,7 @@ SELECT
     NULL,                                       -- inst_drg_std_id
     NULL,                                       -- inst_drg_vendor_id
     NULL,                                       -- inst_drg_vendor_desc
-    t.facilitycode,                             -- place_of_service_std_id **TODO: mask as usual? **
+    t.facilitycode,                             -- place_of_service_std_id
     NULL,                                       -- place_of_service_vendor_id
     NULL,                                       -- place_of_service_vendor_desc
     t.linesequencenumber,                       -- service_line_number

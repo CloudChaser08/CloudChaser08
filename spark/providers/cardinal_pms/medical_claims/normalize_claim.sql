@@ -18,14 +18,12 @@ SELECT
     NULL,                                       -- date_received
     extract_date(
         t.dateservicestart,
-        {min_date},
-        {max_date}
-    ),                                          -- date_service **TODO: cap **
+        '%Y-%m-%d'
+    ),                                          -- date_service
     extract_date(
         t.dateservicestart,
-        {min_date},
-        {max_date}
-    ),                                          -- date_service_end **TODO: cap **
+        '%Y-%m-%d'
+    ),                                          -- date_service_end
     NULL,                                       -- inst_date_admitted
     NULL,                                       -- inst_date_discharged
     NULL,                                       -- inst_admit_type_std_id

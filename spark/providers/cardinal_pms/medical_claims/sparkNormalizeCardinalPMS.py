@@ -13,10 +13,6 @@ import spark.helpers.privacy.medicalclaims as medical_priv
 
 import logging
 
-# TODO: get these from DB
-MIN_DATE='0000-01-01'
-MAX_DATE='9999-12-31'
-
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
 
@@ -60,10 +56,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     logging.debug('Created exploder table for service-line')
 
     # Normalize service-line
-    runner.run_spark_script('normalize_service_line.sql', [
-        ['min_date', MIN_DATE],
-        ['max_date', MAX_DATE]
-    ])
+    runner.run_spark_script('normalize_service_line.sql', [])
     logging.debug('Finished normalizing for service-line')
 
     # Create exploder table for claim
@@ -71,10 +64,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     logging.debug('Created exploder for claim')
 
     # Normalize claim
-    runner.run_spark_script('normalize_claim.sql', [
-        ['min_date', MIN_DATE],
-        ['max_date', MAX_DATE]
-    ])
+    runner.run_spark_script('normalize_claim.sql', [])
     logging.debug('Finished normalizing for claim')
 
     # Postprocessing
@@ -83,8 +73,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.add_universal_columns(
             feed_id='41',
             vendor_id='188',
-            # TODO: this is not right, fix when we know what the name format is.
-            filename='PMS_Claims_{}.psv'.format(date_obj.strftime('%Y%m%d'))
+            filename='PMS_record_data_{}'.format(date_obj.strftime('%Y%m%d'))
         ),
         medical_priv.filter
     )(
