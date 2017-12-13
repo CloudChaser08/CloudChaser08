@@ -162,7 +162,7 @@ def add_universal_columns(feed_id, vendor_id, filename,
     model_version = alternate_column_names.get('model_version', 'model_version')
 
     def add(df):
-        result_df = df.withColumn(record_id, monotonically_increasing_id())              \
+        return df.withColumn(record_id, monotonically_increasing_id())                   \
                  .alias(record_id)                                                       \
                  .withColumn(created, lit(time.strftime('%Y-%m-%d', time.localtime())))  \
                  .alias(created)                                                         \
@@ -171,13 +171,11 @@ def add_universal_columns(feed_id, vendor_id, filename,
                  .withColumn(data_feed, lit(feed_id))                                    \
                  .alias(data_feed)                                                       \
                  .withColumn(data_vendor, lit(vendor_id))                                \
-                 .alias(data_vendor)
-        if model_version_number:
-            result_df = result_df                                                        \
-                 .withColumn(model_version, lit(model_version_number))                   \
-                 .alias(model_version)                                                   
-        result_df = result_df.cache()
-        return result_df
+                 .alias(data_vendor)                                                     \
+                 .withColumn(model_version,
+                             coalesce(lit(model_version_number), col(model_version)))    \
+                 .alias(model_version)                                                   \
+                 .cache()
 
     return add
 
