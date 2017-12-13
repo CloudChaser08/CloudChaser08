@@ -16,7 +16,7 @@ import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching, clean_up_tmp_dir,
-          detect_move_normalize, decompression, HVDAG]:
+          detect_move_normalize, decompression, HVDAG, date_utils]:
     reload(m)
 
 # Applies to all files
@@ -291,8 +291,10 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : lambda ds, k: get_tmp_dir(ds, k)
-                + date_utils.insert_date_into_template(TRANSACTION_DEMO_FILE_NAME_DEID_TEMPLATE, k)
+                'source_files_func' : lambda ds, k: [
+                    get_tmp_dir(ds, k)
+                    + date_utils.insert_date_into_template(TRANSACTION_DEMO_FILE_NAME_DEID_TEMPLATE, k)
+                ]
             }
         ),
         task_id='queue_up_for_matching',
