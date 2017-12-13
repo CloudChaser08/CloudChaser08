@@ -41,11 +41,11 @@ def test_all_values_in_src_and_target(spark):
     ]))
 
     # this works
-    checks_utils.assert_all_values_in_src_and_target(src, target, 'col1', 'col1', 'COLUMN')
+    checks_utils.assert_all_values_in_src_and_target(src, target, 'col1', 'col1')
 
     # this fails
     with pytest.raises(AssertionError) as assertion_error:
-        checks_utils.assert_all_values_in_src_and_target(src, target_broken, 'col1', 'col1', 'COLUMN')
+        checks_utils.assert_all_values_in_src_and_target(src, target_broken, 'col1', 'col1')
 
         assert assertion_error.value.message == 'COLUMN values in source did not exist in target. Examples: claim-3'
 

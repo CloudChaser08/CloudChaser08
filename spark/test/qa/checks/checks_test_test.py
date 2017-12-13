@@ -66,6 +66,47 @@ def test_state_validation(spark):
         checks_test.test_validations(broken, qa_datafeed.state_validation('patient_state'))
 
 
+def test_age_validation(spark):
+    working = qa_datafeed.standard_medicalclaims_datafeed(
+        target_data=spark['spark'].sparkContext.parallelize([
+            ['1'],
+            ['84'],
+            ['55'],
+            [None]
+        ]).toDF(StructType([
+            StructField('patient_age', StringType())
+        ]))
+    )
+
+    broken_negative = qa_datafeed.standard_medicalclaims_datafeed(
+        target_data=spark['spark'].sparkContext.parallelize([
+            ['-1'],
+            ['11'],
+            [None]
+        ]).toDF(StructType([
+            StructField('patient_age', StringType())
+        ]))
+    )
+
+    broken_uncapped = qa_datafeed.standard_medicalclaims_datafeed(
+        target_data=spark['spark'].sparkContext.parallelize([
+            ['-1'],
+            ['11'],
+            [None]
+        ]).toDF(StructType([
+            StructField('patient_age', StringType())
+        ]))
+    )
+
+    checks_test.test_validations(working, qa_datafeed.age_validation('patient_age'))
+
+    with pytest.raises(AssertionError):
+        checks_test.test_validations(broken_negative, qa_datafeed.age_validation('patient_age'))
+
+    with pytest.raises(AssertionError):
+        checks_test.test_validations(broken_uncapped, qa_datafeed.age_validation('patient_age'))
+
+
 def test_full_fill_rates(spark):
     working = qa_datafeed.standard_medicalclaims_datafeed(
         target_data=spark['spark'].sparkContext.parallelize([

@@ -44,7 +44,7 @@ def state_validation(column_name):
 
 
 def age_validation(column_name):
-    return Validation(column_name, range(0, 85))
+    return Validation(column_name, [str(num) for num in range(0, 85)])
 
 
 class Datafeed:
