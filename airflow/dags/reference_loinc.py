@@ -256,7 +256,9 @@ def create_new_loinc_table(tomorrow_ds, schema, s3_loinc, s3_map, ref_loinc_sche
 
         # We need to strip any non-numeric characters out of the LOINC codes
         """INSERT INTO {0}.ref_loinc_map_to_new
-            SELECT regexp_replace(loinc_num, '[^0-9]', '') as loinc_num, map_to, comment
+            SELECT regexp_replace(loinc_num, '[^0-9]', '') as loinc_num,
+            regexp_replace(map_to, '[^0-9]', '') as map_to,
+            comment
             FROM {0}.temp_ref_loinc_map_to""".format(schema)
     ]
 
