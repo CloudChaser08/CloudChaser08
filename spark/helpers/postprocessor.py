@@ -193,7 +193,7 @@ def get_gen_ref_date(sqlc, feed_id, domain_name):
         return None
 
 
-def get_min_date(sqlc, feed_id, fallback_date, *dates):
+def coalesce_dates(sqlc, feed_id, fallback_date, *dates):
     '''
       - Note: *dates must be input in order of importance.
               i.e.

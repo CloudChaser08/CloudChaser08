@@ -41,13 +41,13 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    min_date = postprocessor.get_min_date(
+    min_date = postprocessor.coalesce_dates(
                     runner.sqlContext,
                     '48',
                     None,
                     'HVM_AVAILABLE_HISTORY_START_DATE'
                 )
-    if not min_date:
+    if min_date:
         min_date = min_date.isoformat()
 
     max_date = date_input
@@ -77,14 +77,14 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id = '48', vendor_id = '86', filename = setid, model_version_number = '4'),
-        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '48', None, min_date.isoformat()),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '48', None, min_date),
         pharm_priv.filter
     )(
         runner.sqlContext.sql('select * from pharmacyclaims_common_model')
     ).createTempView('pharmacyclaims_common_model')
 
     if not test:
-        hvm_historical = postprocessor.get_min_date(
+        hvm_historical = postprocessor.coalesce_dates(
                         runner.sqlContext,
                         '48',
                         date(1900, 1, 1),
