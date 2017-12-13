@@ -1,5 +1,5 @@
 INSERT INTO pharmacyclaims_common_model
-SELECT
+SELECT DISTINCT
         NULL,                                                                                   --record_id
         t.row_id,                                                                               --claim_id
         p.hvid,                                                                                 --hvid
@@ -172,8 +172,6 @@ OR
           t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
           t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
           t.dx_21, t.dx_22, t.dx_23, t.dx_24) IS NULL
-    AND
-    e.n = 0
 )
 ;
 
