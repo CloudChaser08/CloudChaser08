@@ -87,8 +87,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         runner.sqlContext.sql("DROP TABLE IF EXISTS augmented_with_prov_attrs_mp")
         runner.sqlContext.sql(
-            "CREATE TABLE augmented_with_prov_attrs_mp AS "
-            "SELECT * FROM original_mp WHERE 1 = 0"
+            "CREATE TABLE augmented_with_prov_attrs_mp LIKE original_mp"
         )
 
     if date_obj.strftime('%Y%m%d') >= '20171015':
