@@ -2,30 +2,44 @@
 INSERT INTO lab_common_model
 SELECT
     NULL,                                   -- record_id
-    CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
-    mp.hvid,                                -- hvid
-    {today},                                -- created
-    '1',                                    -- model_version
-    {filename},                             -- data_set
-    {feedname},                             -- data_feed
-    {vendor},                               -- data_vendor
+    CONCAT(q.accn_id, '_', q.dosid),        -- claim_id
+    COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
+    NULL,                                   -- created
+    '3',                                    -- model_version
+    NULL,                                   -- data_set
+    NULL,                                   -- data_feed
+    NULL,                                   -- data_vendor
     '1',                                    -- source_version
-    mp.gender,                              -- patient_gender
-    cap_age(mp.age),                        -- patient_age
-    cap_year_of_birth(
-        mp.age,
-        CAST(extract_date(
-            q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
-            ) AS DATE),
-        mp.yearOfBirth
-        ),                                  -- patient_year_of_birth
-    mp.threeDigitZip,                       -- patient_zip3
-    UPPER(mp.state),                        -- patient_state
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.gender, mp.gender)
+    ELSE mp.gender
+    END,                                    -- patient_gender
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.age, mp.age)
+    ELSE mp.age
+    END,                                    -- patient_age
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.yearOfBirth, mp.yearOfBirth)
+    ELSE mp.yearOfBirth
+    END,                                    -- patient_year_of_birth
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.threeDigitZip, mp.threeDigitZip)
+    ELSE mp.threeDigitZip
+    END,                                    -- patient_zip3
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.state, mp.state)
+    ELSE mp.state
+    END,                                    -- patient_state
     extract_date(
-        q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        q.date_of_service, '%Y%m%d'
         ),                                  -- date_service
     extract_date(
-        q.date_collected, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        q.date_collected, '%Y%m%d'
         ),                                  -- date_specimen
     NULL,                                   -- date_report
     NULL,                                   -- time_report
@@ -50,15 +64,7 @@ SELECT
     NULL,                                   -- ref_range_alpha
     NULL,                                   -- abnormal_flag
     NULL,                                   -- fasting_status
-    clean_up_diagnosis_code(
-        SPLIT(q.diagnosis_code, '\\^')[n.n],
-        CASE q.icd_codeset_ind
-        WHEN '9' THEN '01' WHEN '0' THEN '02'
-        END,
-        CAST(extract_date(
-            q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
-            ) as DATE)
-        ),                                  -- diagnosis_code
+    SPLIT(q.diagnosis_code, '\\^')[n.n],    -- diagnosis_code
     CASE q.icd_codeset_ind
     WHEN '9' THEN '01' WHEN '0' THEN '02'
     END,                                    -- diagnosis_code_qual
@@ -66,7 +72,7 @@ SELECT
     NULL,                                   -- procedure_code
     NULL,                                   -- procedure_code_qual
     NULL,                                   -- lab_npi
-    NULL,                                   -- ordering_npi
+    q.npi,                                  -- ordering_npi
     NULL,                                   -- payer_id
     NULL,                                   -- payer_id_qual
     NULL,                                   -- payer_name
@@ -79,10 +85,25 @@ SELECT
     NULL,                                   -- lab_other_qual
     NULL,                                   -- ordering_other_id
     NULL,                                   -- ordering_other_qual
+    NULL,                                   -- ordering_name
     NULL,                                   -- ordering_market_type
-    NULL                                    -- ordering_specialty
+    NULL,                                   -- ordering_specialty
+    NULL,                                   -- ordering_vendor_id
+    NULL,                                   -- ordering_tax_id
+    NULL,                                   -- ordering_dea_id
+    NULL,                                   -- ordering_ssn
+    NULL,                                   -- ordering_state_license
+    NULL,                                   -- ordering_upin
+    NULL,                                   -- ordering_commercial_id
+    NULL,                                   -- ordering_address_1
+    NULL,                                   -- ordering_address_2
+    NULL,                                   -- ordering_city
+    NULL,                                   -- ordering_state
+    q.acct_zip,                             -- ordering_zip
+    NULL                                    -- logical_delete_reason
 FROM transactional_raw q
-    LEFT JOIN matching_payload mp ON {join}
+    LEFT JOIN original_mp mp ON {join}
+    LEFT JOIN augmented_with_prov_attrs_mp prov_mp ON q.accn_id = prov_mp.claimId
     CROSS JOIN diagnosis_exploder n
 
 -- implicit here is that q.diagnosis_code itself is not null or blank
@@ -94,30 +115,44 @@ WHERE SPLIT(TRIM(q.diagnosis_code),'\\^')[n.n] IS NOT NULL
 INSERT INTO lab_common_model
 SELECT
     NULL,                                   -- record_id
-    CONCAT(TRIM(q.accn_id), '_', q.dosid),  -- claim_id
-    mp.hvid,                                -- hvid
-    {today},                                -- created
-    '1',                                    -- model_version
-    {filename},                             -- data_set
-    {feedname},                             -- data_feed
-    {vendor},                               -- data_vendor
+    CONCAT(q.accn_id, '_', q.dosid),        -- claim_id
+    COALESCE(prov_mp.hvid, mp.hvid),        -- hvid
+    NULL,                                   -- created
+    '3',                                    -- model_version
+    NULL,                                   -- data_set
+    NULL,                                   -- data_feed
+    NULL,                                   -- data_vendor
     '1',                                    -- source_version
-    mp.gender,                              -- patient_gender
-    cap_age(mp.age),                        -- patient_age
-    cap_year_of_birth(
-        mp.age,
-        CAST(extract_date(
-                q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
-                ) AS DATE),
-        mp.yearOfBirth
-        ),                                  -- patient_year_of_birth
-    mp.threeDigitZip,                       -- patient_zip3
-    UPPER(mp.state),                        -- patient_state
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.gender, mp.gender)
+    ELSE mp.gender
+    END,                                    -- patient_gender
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.age, mp.age)
+    ELSE mp.age
+    END,                                    -- patient_age
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.yearOfBirth, mp.yearOfBirth)
+    ELSE mp.yearOfBirth
+    END,                                    -- patient_year_of_birth
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.threeDigitZip, mp.threeDigitZip)
+    ELSE mp.threeDigitZip
+    END,                                    -- patient_zip3
+    CASE
+    WHEN prov_mp.hvid IS NOT NULL
+    THEN COALESCE(prov_mp.state, mp.state)
+    ELSE mp.state
+    END,                                    -- patient_state
     extract_date(
-        q.date_of_service, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        q.date_of_service, '%Y%m%d'
         ),                                  -- date_service
     extract_date(
-        q.date_collected, '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        q.date_collected, '%Y%m%d'
         ),                                  -- date_specimen
     NULL,                                   -- date_report
     NULL,                                   -- time_report
@@ -148,7 +183,7 @@ SELECT
     NULL,                                   -- procedure_code
     NULL,                                   -- procedure_code_qual
     NULL,                                   -- lab_npi
-    NULL,                                   -- ordering_npi
+    q.npi,                                  -- ordering_npi
     NULL,                                   -- payer_id
     NULL,                                   -- payer_id_qual
     NULL,                                   -- payer_name
@@ -161,10 +196,24 @@ SELECT
     NULL,                                   -- lab_other_qual
     NULL,                                   -- ordering_other_id
     NULL,                                   -- ordering_other_qual
+    NULL,                                   -- ordering_name
     NULL,                                   -- ordering_market_type
-    NULL                                    -- ordering_specialty
+    NULL,                                   -- ordering_specialty
+    NULL,                                   -- ordering_vendor_id
+    NULL,                                   -- ordering_tax_id
+    NULL,                                   -- ordering_dea_id
+    NULL,                                   -- ordering_ssn
+    NULL,                                   -- ordering_state_license
+    NULL,                                   -- ordering_upin
+    NULL,                                   -- ordering_commercial_id
+    NULL,                                   -- ordering_address_1
+    NULL,                                   -- ordering_address_2
+    NULL,                                   -- ordering_city
+    NULL,                                   -- ordering_state
+    q.acct_zip,                             -- ordering_zip
+    NULL                                    -- logical_delete_reason
 FROM transactional_raw q
-    LEFT JOIN matching_payload mp ON {join}
+    LEFT JOIN original_mp mp ON {join}
+    LEFT JOIN augmented_with_prov_attrs_mp prov_mp ON q.accn_id = prov_mp.claimId
 WHERE q.diagnosis_code IS NULL
-    OR q.diagnosis_code = ''
     ;
