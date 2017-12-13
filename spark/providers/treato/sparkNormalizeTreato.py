@@ -5,6 +5,7 @@ import re
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
+import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
@@ -108,7 +109,7 @@ def create_row_exploder(spark, sqlc, diagnosis_mapfile):
     for val in unique_vals:
 
         # append the value itself to the exploder in order to capture the raw value
-        exploder.append([val, val])
+        exploder.append([val, post_norm_cleanup.clean_up_diagnosis_code(val, '02', None)])
 
         # if this val contains a hyphen, it is a range. enumerate all
         # codes in the range.
