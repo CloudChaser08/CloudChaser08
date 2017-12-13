@@ -29,6 +29,7 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
     end_year = _parse_year(end_date)
     year_range = range(start_year, end_year + 1)
 
+    # df.select('b', year('date').alias('date')).withColumn('rank', rank().over(window)).where(end_year - col('rank') + 1 == col('date')).groupby('date').count().show()
     # Add boolean columns for each year and set to true if a patient had a visit in that year
     for yr in year_range:
         hvid_years = hvid_years.withColumn("in_{}".format(yr), array_contains(hvid_years.years, "{}".format(yr)))
