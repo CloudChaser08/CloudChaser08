@@ -12,25 +12,31 @@ SELECT
     transactional.procedure,
     enc.encounter_date
 FROM (
+    SELECT patient_key, max(encounter_date) as encounter_date
+    FROM f_encounter
+    GROUP BY patient_key
+        ) enc
+    INNER JOIN matching_payload mp ON enc.patient_key = mp.personId
+    LEFT JOIN (
         (
-        SELECT patient_key, 
-            problem_icd as diagnosis, 
-            '' as drug, 
+        SELECT patient_key,
+            problem_icd as diagnosis,
+            '' as drug,
             '' as procedure,
             '' as lab
         FROM f_diagnosis diag
             )
-    UNION (
-        SELECT med.patient_key, 
-            '' as diagnosis, 
+        UNION (
+        SELECT med.patient_key,
+            '' as diagnosis,
             ndc.ndc as drug,
             '' as procedure,
             '' as lab
-        FROM f_medication med 
+        FROM f_medication med
             INNER JOIN d_drug drug on med.drug_key = drug.drug_key
             INNER JOIN d_multum_to_ndc ndc on drug.drug_id = ndc.multum_id
             )
-    UNION (
+        UNION (
         SELECT proc.patient_key,
             '' as diagnosis,
             '' as drug,
@@ -39,7 +45,7 @@ FROM (
         FROM f_procedure proc
             INNER JOIN d_cpt cpt on proc.cpt_key = cpt.cpt_key
             )
-    UNION (
+        UNION (
         SELECT patient_key,
             '' as diagnosis,
             '' as drug,
@@ -47,11 +53,6 @@ FROM (
             loinc_test_code as lab
         FROM f_lab
             )
-        ) transactional
-    LEFT JOIN matching_payload mp ON transactional.patient_key = mp.personId
-    LEFT JOIN (
-        SELECT patient_key, max(encounter_date) as encounter_date
-        FROM f_encounter
-        GROUP BY patient_key
-            ) enc ON transactional.patient_key = enc.patient_key
+        ) transactional ON transactional.patient_key = enc.patient_key
+
     ;
