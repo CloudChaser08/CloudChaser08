@@ -107,6 +107,9 @@ def create_row_exploder(spark, sqlc, diagnosis_mapfile):
 
     for val in unique_vals:
 
+        # append the value itself to the exploder in order to capture the raw value
+        exploder.append([val, val])
+
         # if this val contains a hyphen, it is a range. enumerate all
         # codes in the range.
         if '-' in val:
