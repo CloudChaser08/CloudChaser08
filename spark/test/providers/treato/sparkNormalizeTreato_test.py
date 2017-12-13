@@ -28,12 +28,16 @@ def test_init(spark):
 def test_correct_output():
     "Ensure that correct rollups are applied"
     assert sorted([(row.hvid, row.diag_cd) for row in results]) == [
-        ('A0000001', 'hash2'),
-        ('A0000001', 'hash3'),
-        ('A0000002', 'hash4'),
-        ('A0000003', 'hash7'),
-        ('A0000004', 'hash5'),
-        ('A0000004', 'hash6')
+        ('A0000001', 'A50A64'),
+        ('A0000001', 'HASH2'),
+        ('A0000001', 'HASH3'),
+        ('A0000002', 'A201'),
+        ('A0000002', 'HASH4'),
+        ('A0000003', 'A01A20'),
+        ('A0000003', 'HASH7'),
+        ('A0000004', 'A01B20'),
+        ('A0000004', 'HASH5'),
+        ('A0000004', 'HASH6')
     ]
 
 
