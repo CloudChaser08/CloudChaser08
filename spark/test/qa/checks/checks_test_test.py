@@ -150,7 +150,7 @@ def test_unique_val_comparison(spark):
         }
     )
 
-    comparison = qa_datafeed.Comparison('record_id', 'src_table.record_id', 'record_id')
+    comparison = qa_datafeed.Comparison('src_table.record_id', 'record_id')
 
     checks_test.test_all_unique_vals_in_src_and_target(working, comparison)
 
