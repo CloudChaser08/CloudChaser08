@@ -496,7 +496,8 @@ def emr_datafeed(
         validations=[
             validation for validation in [
                 gender_validation('ptnt_gender_cd'),
-                state_validation('ptnt_state_cd')
+                state_validation('ptnt_state_cd'),
+                age_validation('ptnt_age_num')
             ] if validation.column_name not in skip_validations
         ] + additional_validations,
         unique_match_pairs=[
