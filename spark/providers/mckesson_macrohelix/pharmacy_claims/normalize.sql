@@ -18,7 +18,10 @@ SELECT
         COALESCE(p.yearOfBirth, t.birth_date),                                                  --patient_year_of_birth
         SUBSTR(TRIM(COALESCE(p.threeDigitZip, t.patient_zip)), 1, 3),                           --patient_zip3
         TRIM(UPPER(COALESCE(p.state, ''))),                                                     --patient_state
-        t.service_date,                                                                         --date_service
+        extract_date(
+            t.service_date,
+            '%Y-%m-%d'
+        ),                                                                                      --date_service
         NULL,                                                                                   --date_written
         NULL,                                                                                   --year_of_injury
         NULL,                                                                                   --date_authorized

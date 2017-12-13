@@ -65,14 +65,14 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     ])
 
     postprocessor.compose(
-        postprocessor.nullify,
-        postprocessor.trimmify
+        postprocessor.trimmify,
+        postprocessor.nullify
     )(runner.sqlContext.sql('select * from mckesson_macrohelix_transactions')) \
     .createTempView('mckesson_macrohelix_transactions')
 
     explode.generate_exploder_table(spark, 24, 'exploder')
 
-    runner.run_spark_script('normalize.sql', [])
+    runner.run_spark_script('normalize.sql')
 
     postprocessor.compose(
         postprocessor.nullify,
