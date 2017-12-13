@@ -15,10 +15,7 @@ SELECT
             ELSE 'U'
         END,                                                                                    --patient_gender
         NULL,                                                                                   --patient_age
-        CASE
-            WHEN (YEAR(t.service_date) - COALESCE(p.yearOfBirth, t.birth_date)) > 84 THEN 1927
-            ELSE COALESCE(p.yearOfBirth, t.birth_date) 
-        END,                                                                                    --patient_year_of_birth
+        COALESCE(p.yearOfBirth, t.birth_date),                                                  --patient_year_of_birth
         SUBSTR(TRIM(COALESCE(p.threeDigitZip, t.patient_zip)), 1, 3),                           --patient_zip3
         TRIM(UPPER(COALESCE(p.state, ''))),                                                     --patient_state
         t.service_date,                                                                         --date_service
