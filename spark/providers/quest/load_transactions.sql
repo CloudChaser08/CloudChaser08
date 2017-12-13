@@ -42,27 +42,8 @@ DROP TABLE IF EXISTS transactions_provider_addon;
 CREATE TABLE transactions_provider_addon
 AS SELECT DISTINCT * FROM transactions_provider_addon_dupes;
 
-DROP TABLE IF EXISTS transactional_raw;
-CREATE TABLE transactional_raw (
-        accn_id              string,
-        dosid                string,
-        local_order_code     string,
-        standard_order_code  string,
-        order_name           string,
-        loinc_code           string,
-        local_result_code    string,
-        result_name          string,
-        lab_id               string,
-        date_of_service      string,
-        date_collected       string,
-        diagnosis_code       string,
-        icd_codeset_ind      string,
-        acct_zip             string,
-        npi                  string
-        )
-    ;
-
-INSERT INTO transactional_raw
+DROP VIEW IF EXISTS transactional_raw;
+CREATE VIEW transactional_raw AS
 SELECT DISTINCT
     trunk.accn_id,
     trunk.dosid,
