@@ -26,7 +26,7 @@ FROM (
             '' as lab
         FROM f_diagnosis diag
             )
-    UNION (
+        UNION (
         SELECT med.patient_key,
             '' as diagnosis,
             ndc.ndc as drug,
@@ -36,7 +36,7 @@ FROM (
             INNER JOIN d_drug drug on med.drug_key = drug.drug_key
             INNER JOIN d_multum_to_ndc ndc on drug.drug_id = ndc.multum_id
             )
-    UNION (
+        UNION (
         SELECT proc.patient_key,
             '' as diagnosis,
             '' as drug,
@@ -45,7 +45,7 @@ FROM (
         FROM f_procedure proc
             INNER JOIN d_cpt cpt on proc.cpt_key = cpt.cpt_key
             )
-    UNION (
+        UNION (
         SELECT patient_key,
             '' as diagnosis,
             '' as drug,
