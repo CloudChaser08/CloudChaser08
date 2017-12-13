@@ -43,6 +43,10 @@ def state_validation(column_name):
     return Validation(column_name, constants.states)
 
 
+def age_validation(column_name):
+    return Validation(column_name, range(0, 85))
+
+
 class Datafeed:
     """
     A datafeed instance on which to run checks. This datafeed will
@@ -148,7 +152,8 @@ def standard_datafeed(
         validations=[
             validation for validation in [
                 gender_validation('patient_gender'),
-                state_validation('patient_state')
+                state_validation('patient_state'),
+                age_validation('patient_age')
             ] if validation.column_name not in skip_validations
         ] + additional_validations,
         unique_match_pairs=[
