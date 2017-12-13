@@ -4,16 +4,16 @@ from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharmacy_priv
 
-def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test=False):
+
+def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     date_path = date_input.replace('-', '/')
-    
+
     setid = 'dcoa_data_{}'.format(date_obj.strftime('%Y%m%d'))
-    
+
     script_path = __file__
 
     if test:
@@ -30,6 +30,19 @@ def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v4.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
         ['properties', '', False],
+        ['additional_columns', [
+            ['patient_type_vendor', 'string'],
+            ['outlier_vendor', 'string'],
+            ['monthly_patient_days_vendor', 'string'],
+            ['extended_fee_vendor', 'string'],
+            ['discharges_vendor', 'string'],
+            ['discharge_patient_days_vendor', 'string'],
+            ['total_patient_days_vendor', 'string'],
+            ['pharmacy_name', 'string'],
+            ['pharmacy_address', 'string'],
+            ['pharmacy_service_area_vendor', 'string'],
+            ['pharmacy_master_service_area_vendor', 'string']
+        ], False],
         ['external', '', False]
     ])
 
@@ -45,9 +58,9 @@ def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test
 
     # Normalize the transaction data into the
     # pharmacyclaims common model using transaction data
-    runner.run_spark_script('normalize.sql', [ ])
+    runner.run_spark_script('normalize.sql')
 
-    # Postprocessing 
+    # Postprocessing
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='44', vendor_id='42', filename=setid),
@@ -62,7 +75,7 @@ def run(spark, runner, date_input, num_output_files=20, test=False, airflow_test
             output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/delivery/{}/'.format(date_path)
         else:
             output_path = 's3://salusv/deliverable/cardinal_dcoa/{}/'.format(date_path)
-            
+
         delivery_df = runner.sqlContext.sql('select * from pharmacyclaims_common_model')
         delivery_df.repartition(num_output_files).write.csv(path=output_path, compression="gzip", sep="|", quoteAll=True, header=True)
 
@@ -77,7 +90,7 @@ def main(args):
     # Run the normalization routine
     run(spark, runner, args.date, airflow_test=args.airflow_test, \
             num_output_files=args.num_output_files)
-    
+
     # Tell spark to shutdown
     spark.stop()
 
@@ -88,4 +101,3 @@ if __name__ == '__main__':
     parser.add_argument('--num_output_files', default=20, type=int)
     args = parser.parse_args()
     main(args)
-
