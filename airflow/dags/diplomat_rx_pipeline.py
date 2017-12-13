@@ -102,7 +102,9 @@ def generate_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(path_template, day_offset = DIPLOMAT_DAY_OFFSET
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
+                    path_template, 
+                    day_offset = DIPLOMAT_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
                     path_template,
@@ -136,8 +138,7 @@ fetch_transaction = SubDagOperator(
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE, day_offset = DIPLOMAT_DAY_OFFSET
-                
+                TRANSACTION_FILE_NAME_TEMPLATE, day_offset = DIPLOMAT_DAY_OFFSET  
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -173,7 +174,6 @@ split_transaction = SubDagOperator(
             'file_paths_to_split_func' : get_transaction_file_paths,
             'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
-                
             ),
             's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(TRANSACTION_S3_SPLIT_URL, day_offset = DIPLOMAT_DAY_OFFSET
             ),
