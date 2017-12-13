@@ -24,5 +24,5 @@ def pytest_generate_tests(metafunc):
     # unique_match tests
     elif 'unique_match_pair' in metafunc.fixturenames:
         metafunc.parametrize("unique_match_pair", qa_datafeed.active_datafeed.unique_match_pairs, ids=[
-            unique_match_pair.column_name for unique_match_pair in qa_datafeed.active_datafeed.unique_match_pairs
+            unique_match_pair.target_column_name for unique_match_pair in qa_datafeed.active_datafeed.unique_match_pairs
         ])

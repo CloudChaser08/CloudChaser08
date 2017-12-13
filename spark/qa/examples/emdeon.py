@@ -4,8 +4,6 @@ import spark.helpers.file_utils as file_utils
 
 import spark.qa.datafeed as datafeed
 
-from pyspark.sql.functions import lit
-
 spark, sqlContext = init("Emdeon Example", True)
 spark_sql_runner = Runner(sqlContext)
 

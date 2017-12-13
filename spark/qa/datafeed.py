@@ -15,12 +15,11 @@ class Comparison:
     An object to coordinate unique column value comparisons between
     source and target data
     """
-    def __init__(self, column_name, source_full_name, target_column_name):
+    def __init__(self, source_full_name, target_column_name):
 
         if not source_full_name or '.' not in source_full_name:
             raise ValueError('The source_full_name must be in the form <table_name>.<column_name>')
 
-        self.column_name = column_name
         self.source_table_name = source_full_name.split('.')[0]
         self.source_column_name = source_full_name.split('.')[1]
         self.target_column_name = target_column_name
@@ -154,9 +153,9 @@ def standard_datafeed(
         ] + additional_validations,
         unique_match_pairs=[
             unique_match_pair for unique_match_pair in [
-                Comparison('claim', source_claim_id_full_name, 'claim_id') if source_claim_id_full_name else None,
-                Comparison('hvid', source_hvid_full_name, 'hvid') if source_hvid_full_name else None
-            ] if unique_match_pair and unique_match_pair.column_name not in skip_unique_match_pairs
+                Comparison(source_claim_id_full_name, 'claim_id') if source_claim_id_full_name else None,
+                Comparison(source_hvid_full_name, 'hvid') if source_hvid_full_name else None
+            ] if unique_match_pair and unique_match_pair.target_column_name not in skip_unique_match_pairs
         ] + additional_unique_match_pairs
     )
 
@@ -211,19 +210,19 @@ def standard_medicalclaims_datafeed(
 
         additional_unique_match_pairs = [
             comparison for comparison in [
-                Comparison('procedure_code', source_procedure_code_full_name, 'procedure_code')
+                Comparison(source_procedure_code_full_name, 'procedure_code')
                 if source_procedure_code_full_name else None,
-                Comparison('service_line_number', source_service_line_number_full_name, 'service_line_number')
+                Comparison(source_service_line_number_full_name, 'service_line_number')
                 if source_service_line_number_full_name else None,
-                Comparison('ndc_code', source_ndc_code_full_name, 'ndc_code')
+                Comparison(source_ndc_code_full_name, 'ndc_code')
                 if source_ndc_code_full_name else None,
-                Comparison('procedure_modifier_1', source_procedure_modifier_1_full_name, 'procedure_modifier_1')
+                Comparison(source_procedure_modifier_1_full_name, 'procedure_modifier_1')
                 if source_procedure_modifier_1_full_name else None,
-                Comparison('prov_rendering_npi', source_prov_rendering_npi_full_name, 'prov_rendering_npi')
+                Comparison(source_prov_rendering_npi_full_name, 'prov_rendering_npi')
                 if source_prov_rendering_npi_full_name else None,
-                Comparison('payer_name', source_payer_name_full_name, 'payer_name')
+                Comparison(source_payer_name_full_name, 'payer_name')
                 if source_payer_name_full_name else None,
-            ] if comparison and comparison.column_name not in skip_unique_match_pairs
+            ] if comparison and comparison.target_column_name not in skip_unique_match_pairs
         ] + additional_unique_match_pairs,
         skip_unique_match_pairs=skip_unique_match_pairs
     )

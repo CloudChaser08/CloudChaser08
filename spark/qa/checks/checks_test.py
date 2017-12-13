@@ -53,6 +53,5 @@ def test_all_unique_vals_in_src_and_target(datafeed, unique_match_pair):
         datafeed.source_data[unique_match_pair.source_table_name],
         datafeed.target_data,
         unique_match_pair.source_column_name,
-        unique_match_pair.target_column_name,
-        unique_match_pair.column_name
+        unique_match_pair.target_column_name
     )
