@@ -65,7 +65,7 @@ def get_deid_file_urls(ds, kwargs):
     )]
 
 def get_unzipped_file_paths(ds, kwargs):
-    file_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)(ds, kwargs)
+    file_dir = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
     return [
         file_dir
         + date_utils.insert_date_into_template(
@@ -86,15 +86,15 @@ def generate_file_validation_task(
             mdag.schedule_interval,
             {
                 'expected_file_name_func': lambda ds, k: (
-                    date_utils.generate_insert_date_into_template_function(
-                        path_template, day_offset = NEOGENOMICS_DAY_OFFSET
-                    )(ds, k)
+                    date_utils.insert_date_into_template(
+                        path_template, 
+                        day_offset = NEOGENOMICS_DAY_OFFSET
+                    )
                 ),
-                'file_name_pattern_func': lambda ds, k: (
-                    date_utils.generate_insert_regex_into_template_function(
-                        path_template
-                    )(ds, k)
-                ),
+                'file_name_pattern_func': 
+                date_utils.generate_insert_regex_into_template_function(
+                    path_template
+                    )(ds, k),
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket': 'healthverity',
@@ -125,9 +125,8 @@ fetch_transactional = SubDagOperator(
         {
             'tmp_path_template': TMP_PATH_TEMPLATE,
             'expected_file_name_func': lambda ds, k: (
-                date_utils.generate_insert_date_into_template_function(
-                    TRANSACTION_FILE_NAME_TEMPLATE, day_offset = NEOGENOMICS_DAY_OFFSET
-                )(ds, k)
+                date_utils.insert_date_into_template(
+                    TRANSACTION_FILE_NAME_TEMPLATE, k, day_offset = NEOGENOMICS_DAY_OFFSET)
             ),
             's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity',
@@ -141,7 +140,7 @@ fetch_transactional = SubDagOperator(
 def gunzip_step(tmp_path_template, tmp_file_template):
     def execute(ds, **kwargs):
         decompression.decompress_gzip_file(
-            date_utils.generate_insert_date_into_template_function(tmp_path_template)(ds, kwargs)
+            date_utils.insert_date_into_template(tmp_path_template, kwargs)
             + date_utils.insert_date_into_template(tmp_file_template, kwargs, day_offset = NEOGENOMICS_DAY_OFFSET)
         )
     return PythonOperator(
@@ -187,7 +186,7 @@ split_transactional = SubDagOperator(
 def clean_up_workspace_step(task_id, template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', date_utils.generate_insert_date_into_template_function(template)(ds, kwargs)
+            'rm', '-rf', date_utils.insert_date_into_template(template, kwargs)
         ])
     return PythonOperator(
         task_id='clean_up_workspace_' + task_id,
@@ -234,13 +233,14 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func': lambda ds, k: [
-                date_utils.generate_insert_date_into_template_function(
+                date_utils.insert_date_into_template(
                     DEID_FILE_NAME_UNZIPPED_TEMPLATE, 
+                    k,
                     day_offset = NEOGENOMICS_DAY_OFFSET
-                )(ds, k)
+                )
             ],
-            'file_date_func': date_utils.generate_insert_date_into_template_function(
-                '{}/{}/{}', day_offset = NEOGENOMICS_DAY_OFFSET
+            'file_date_func': date_utils.insert_date_into_template(
+                '{}/{}/{}', kwargs, day_offset = NEOGENOMICS_DAY_OFFSET
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
             'vendor_uuid': 'cc11bfe2-d75a-432f-96b4-71240433d46f',
