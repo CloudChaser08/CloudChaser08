@@ -42,7 +42,7 @@ def test_number_of_years_calculated_correct():
 
 def test_stat_calc_counts_are_correct():
     assert results['2017'] == 4
-    assert results['2017_2016'] == 2
-    assert results['2017_2016_2015'] == 1
+    assert results['2016'] == 2
+    assert results['2015'] == 1
 
 
