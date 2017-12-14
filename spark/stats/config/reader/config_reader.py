@@ -1,6 +1,10 @@
 import json
 import logging
+import os
+from contextlib import closing
+import psycopg2
 from spark.helpers.file_utils import get_abs_path
+
 
 def _get_config_from_json(filename):
     '''
@@ -34,6 +38,52 @@ def _extract_provider_conf(provider_name, providers_conf):
     return conf[0]
 
 
+def _get_top_values_columns(datafeed_id):
+    conn = psycopg2.connect(
+        host='pg-prod.healthverity.com',
+        database='config',
+        user='hvreadonly',
+        password=os.environ.get('PGPASSWORD')
+    )
+
+    get_columns_sql = """
+        select f.physical_name, f.id as field_id
+            from marketplace_datafield f
+            join marketplace_datatable t on t.id = f.datatable_id
+            join marketplace_datamodel m on m.id = t.datamodel_id
+            join marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
+        where dm.datafeed_id = %s and m.is_supplemental = 'f' and f.top_values= 't';
+    """
+
+    with closing(conn.cursor()) as cursor:
+        cursor.execute(get_columns_sql, (datafeed_id,))
+        cols = cursor.fetchall()
+    return dict(cols)
+
+
+def _get_fill_rate_columns(datafeed_id):
+    conn = psycopg2.connect(
+        host='pg-prod.healthverity.com',
+        database='config',
+        user='hvreadonly',
+        password=os.environ.get('PGPASSWORD')
+    )
+
+    get_columns_sql = """
+        select f.physical_name, f.id as field_id
+            from marketplace_datafield f
+            join marketplace_datatable t on t.id = f.datatable_id
+            join marketplace_datamodel m on m.id = t.datamodel_id
+            join marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
+        where dm.datafeed_id = %s and m.is_supplemental = 'f';
+    """
+
+    with closing(conn.cursor()) as cursor:
+        cursor.execute(get_columns_sql, (datafeed_id,))
+        cols = cursor.fetchall()
+    return dict(cols)
+
+
 def get_provider_config(providers_conf_file, provider_name):
     '''
     Read the providers config files and each associated stat calc config file
@@ -57,19 +107,23 @@ def get_provider_config(providers_conf_file, provider_name):
     if not 'datatype' in provider_conf or provider_conf['datatype'] == None:
         raise Exception('datatype is not specified for provider {}'.format(provider_name))
 
-    # Get each individual stat calcs config based on the config path in them
-    stat_calcs = ['fill_rate', 'key_stats', 'top_values', \
-                 'longitudinality', 'year_over_year', 'epi_calcs']
-    for calc in stat_calcs:
+    # configure stats whose configurations come from the marketplace db
+    if provider_conf['fill_rate']:
+        provider_conf['fill_rate_columns'] = _get_fill_rate_columns(provider_conf['datafeed_id'])
+
+    if provider_conf['top_values']:
+        provider_conf['top_values_columns'] = _get_top_values_columns(provider_conf['datafeed_id'])
+
+    # configure stats whose configurations do not come from the marketplace db
+    no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year', 'epi_calcs']
+    for calc in no_db_stat_calcs:
         if calc not in provider_conf:
             logging.info('No config for {} found in {} config, falling back to default.'.format(calc, provider_name))
-            conf_file_loc = get_abs_path(providers_conf_file, 
+            conf_file_loc = get_abs_path(providers_conf_file,
                                         provider_conf['datatype'] + '/' + calc + '.json')
-            provider_conf[calc] = _get_config_from_json(conf_file_loc)
+            provider_conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
         elif provider_conf[calc]:
             conf_file_loc = get_abs_path(providers_conf_file, provider_conf[calc])
-            provider_conf[calc] = _get_config_from_json(conf_file_loc)
-    
+            provider_conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
+
     return provider_conf
-
-
