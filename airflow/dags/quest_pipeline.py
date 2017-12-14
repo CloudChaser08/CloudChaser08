@@ -313,7 +313,7 @@ split_trunk = split_step(
 def clean_up_workspace_step(task_id, template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', insert_date_into_template(template, kwargs)
+            'rm', '-rf', date_utils.insert_date_into_template(template, kwargs)
         ])
     return PythonOperator(
         task_id='clean_up_workspace_' + task_id,
