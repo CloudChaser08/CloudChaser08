@@ -35,7 +35,7 @@ def calculate_longitudinality(df, provider_conf):
                                     )
     dates = dates.withColumn("years", _years(dates.months).cast(IntegerType()))
 
-    months = dates.where('months <= 24')                                    \
+    months = dates.where('months < 24')                                     \
                   .groupby('months')                                        \
                   .agg(count('*').alias('patients'),                        \
                        mean('visits').cast('int').alias('avg'),             \

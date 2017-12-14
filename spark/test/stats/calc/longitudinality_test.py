@@ -24,7 +24,8 @@ def test_init(spark):
         data_row('2017-11-01', 'c', 's', 'a', 'b'),
         data_row('2017-12-21', 'j', 'o', 'e', 'y'),
         data_row('2015-12-21', 'j', 'a', 'a', 'a'),
-        data_row('2016-11-07', 'z', 'y', 'x', 'w')
+        data_row('2016-11-07', 'z', 'y', 'x', 'w'),
+        data_row('2016-12-16', 'z', 'a', 'b', 'c')
     ]).toDF()
     results = longitudinality.calculate_longitudinality(df, conf)
 
@@ -41,11 +42,11 @@ def test_num_of_years_rows_are_correct():
 
 
 def test_num_of_patients_per_group_correct():
-    twenty_four_months = filter(lambda x: x['value'].endswith('24 months'), results)[0]
+    one_months = filter(lambda x: x['value'].endswith('1 months'), results)[0]
     two_years = filter(lambda x: x['value'].endswith('2 years'), results)[0]
     forty_one_years = filter(lambda x: x['value'].endswith('41 years'), results)[0]
 
-    assert twenty_four_months['patients'] == 1
+    assert one_months['patients'] == 1
     assert two_years['patients'] == 1
     assert forty_one_years['patients'] == 1
 
