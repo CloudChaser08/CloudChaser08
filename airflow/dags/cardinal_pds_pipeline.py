@@ -117,7 +117,7 @@ def generate_file_validation_task(
             mdag.schedule_interval,
             {
                 'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
-                        path_template + '\d{{6}}'
+                        path_template + '\d{{6}}', day_offset = CARDINAL_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
                         path_template + '\d{{6}}'
@@ -155,8 +155,8 @@ fetch_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : date_utils.generate_insert_regex_into_template_function(
-                    TRANSACTION_FILE_NAME_TEMPLATE + '\d{{6}}'
+            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(
+                    TRANSACTION_FILE_NAME_TEMPLATE + '\d{{6}}', day_offset = CARDINAL_DAY_OFFSET
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -175,8 +175,8 @@ fetch_deid = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : date_utils.generate_insert_regex_into_template_function( 
-                    DEID_FILE_NAME_TEMPLATE + '\d{{6}}'
+            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(
+                    DEID_FILE_NAME_TEMPLATE + '\d{{6}}', day_offset = CARDINAL_DAY_OFFSET
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -200,8 +200,8 @@ get_datetime = PythonOperator(
     task_id = 'get_datetime',
     python_callable = do_get_datetime,
     op_kwargs = {
-        'expected_file_name_func' : date_utils.generate_insert_regex_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE + '\d{{6}}'
+        'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE + '\d{{6}}', day_offset = CARDINAL_DAY_OFFSET
         )
     },
     provide_context = True,
