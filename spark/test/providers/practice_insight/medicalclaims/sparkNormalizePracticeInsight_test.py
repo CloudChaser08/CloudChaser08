@@ -15,8 +15,13 @@ def get_rows_for_test(claim_id):
     )
 
 
+def clean_up(spark):
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS transactional_raw')
+
+
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
+    clean_up(spark)
     practice_insight.run_part(
         spark['spark'], spark['runner'], '1', '2016-12-31', 40, True
     )
@@ -160,3 +165,7 @@ def test_service_date_p_use_stmnt():
         )
     )
     assert svc_date == [datetime.date(2016, 2, 1)]
+
+
+def test_clean_up(spark):
+    clean_up(spark)
