@@ -14,7 +14,7 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.update_analytics_db as update_analytics_db
 
 import util.decompression as decompression
-import util.date_utils as date_utils 
+import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
         split_push_files, queue_up_for_matching,
@@ -68,7 +68,6 @@ TRANSACTION_TRUNK_FILE_DESCRIPTION = 'Quest transaction trunk file'
 TRANSACTION_TRUNK_UNZIPPED_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2'
 TRANSACTION_TRUNK_FILE_NAME_TEMPLATE = 'HealthVerity_{}_2.gz.zip'
 TRANSACTION_TRUNK_DAG_NAME = 'validate_fetch_transaction_trunk_file'
-MINIMUM_TRANSACTION_TRUNK_FILE_SIZE = 15
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Quest deid file'
@@ -160,15 +159,15 @@ def generate_transaction_file_validation_dag(
 if HVDAG.HVDAG.airflow_env != 'test':
     validate_addon = generate_transaction_file_validation_dag(
         'addon', TRANSACTION_ADDON_FILE_NAME_TEMPLATE,
-        1000000
+        MINIMUM_TRANSACTION_FILE_SIZE
     )
     validate_trunk = generate_transaction_file_validation_dag(
         'trunk', TRANSACTION_TRUNK_FILE_NAME_TEMPLATE,
-        10000000
+        MINIMUM_TRANSACTION_FILE_SIZE
     )
     validate_deid = generate_transaction_file_validation_dag(
         'deid', DEID_FILE_NAME_TEMPLATE,
-        10000000
+        MINIMUM_DEID_FILE_SIZE
     )
 
 
@@ -258,10 +257,10 @@ def gunzip_step(task_id, tmp_path_template, tmp_file_template):
         # insert exectuion date into tmp_path_template and insert formatted
         # date into tmp_file_template
         decompression.decompress_gzip_file(
-            date_utils.insert_date_into_template(tmp_path_template, kwargs) 
-            + 
+            date_utils.insert_date_into_template(tmp_path_template, kwargs)
+            +
             tmp_file_template.format(get_formatted_date(ds, kwargs))
-        )  
+        )
     return PythonOperator(
         task_id='gunzip_' + task_id + '_file',
         provide_context=True,
@@ -289,8 +288,8 @@ def split_step(task_id, tmp_dir_func, file_paths_to_split_func, s3_destination, 
                 'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
                 ),
-                's3_prefix_func'           : date_utils.generate_insert_date_into_template_function( 
-                    s3_destination, day_offset = QUEST_DAY_OFFSET   
+                's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
+                    s3_destination, day_offset = QUEST_DAY_OFFSET
                 ),
                 'num_splits'               : num_splits
             }
@@ -347,7 +346,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = QUEST_DAY_OFFSET)] 
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = QUEST_DAY_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -366,7 +365,7 @@ detect_move_normalize_dag = SubDagOperator(
                     DEID_UNZIPPED_FILE_NAME_TEMPLATE
                 )(ds, k)
             ],
-            'file_date_func'                    : date_utils.generate_insert_date_into_template_function( 
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}', day_offset = QUEST_DAY_OFFSET
                 ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
