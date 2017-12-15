@@ -286,8 +286,8 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 sql_new_template = """
-    ALTER TABLE labtests_20170216 ADD PARTITION (part_provider='caris', part_best_date='{}-{}')
-    LOCATION 's3a://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=caris/part_best_date={}-{}/'
+    ALTER TABLE labtests_20170216 ADD PARTITION (part_provider='caris', part_best_date='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=caris/part_best_date={0}-{1}/'
 """
 
 if HVDAG.HVDAG.airflow_env != 'test':
