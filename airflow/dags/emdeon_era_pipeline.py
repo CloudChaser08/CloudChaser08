@@ -187,8 +187,7 @@ def generate_fetch_dag(
             mdag.schedule_interval,
             {
                 'tmp_path_template'      : TMP_PATH_TEMPLATE + task_id + '/',
-                'expected_file_name_func': date_utils\
-                .generate_insert_date_into_template_function(
+                'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
                     file_name_template,
                     day_offset = EMDEON_ERA_DAY_OFFSET
                 ),
@@ -217,7 +216,7 @@ def do_unzip_file(task_id, file_name_template):
             file_name_template, 
             kwargs, 
             day_offset = EMDEON_ERA_DAY_OFFSET
-            )
+        )
         decompression.decompress_gzip_file(file_path)
     return PythonOperator(
         task_id='unzip_' + task_id + '_file',
@@ -250,17 +249,17 @@ def generate_parse_transactions_step():
             TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE,
             kwargs,
             day_offset = EMDEON_ERA_DAY_OFFSET
-            )
+        )
         serviceline_file = serviceline_tmp_path + date_utils.insert_date_into_template(
             TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE, 
             kwargs,
             day_offset = EMDEON_ERA_DAY_OFFSET
-            )
+        )
         claim_file = claim_tmp_path + date_utils.insert_date_into_template(
             TRANSACTION_CLAIM_FILE_NAME_TEMPLATE,
             kwargs,
             day_offset = EMDEON_ERA_DAY_OFFSET
-            )
+        )
 
         with open(serviceline_file, 'w') as serviceline, open(claim_file, 'w') as claim, open(transaction_file, 'r') as transactions:
             for line in transactions:
@@ -293,11 +292,12 @@ def generate_split_dag(task_id, file_name_unzipped_template, s3_destination):
                     date_utils.insert_date_into_template(
                         file_name_unzipped_template,
                         kwargs, 
-                        day_offset = EMDEON_ERA_DAY_OFFSET)
+                        day_offset = EMDEON_ERA_DAY_OFFSET
+                    )
                 ],
                 'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
                         file_name_unzipped_template
-                        ),
+                    ),
                 's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
                     s3_destination, 
                     day_offset = EMDEON_ERA_DAY_OFFSET
