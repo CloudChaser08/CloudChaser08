@@ -296,8 +296,8 @@ def generate_split_dag(task_id, file_name_unzipped_template, s3_destination):
                     )
                 ],
                 'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
-                        file_name_unzipped_template
-                    ),
+                    file_name_unzipped_template
+                ),
                 's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
                     s3_destination, 
                     day_offset = EMDEON_ERA_DAY_OFFSET
