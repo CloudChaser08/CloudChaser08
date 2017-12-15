@@ -291,7 +291,7 @@ def generate_split_dag(task_id, file_name_unzipped_template, s3_destination):
                     get_tmp_dir(ds, k) + task_id + '/' +
                     date_utils.insert_date_into_template(
                         file_name_unzipped_template,
-                        kwargs, 
+                        k,
                         day_offset = EMDEON_ERA_DAY_OFFSET
                     )
                 ],
