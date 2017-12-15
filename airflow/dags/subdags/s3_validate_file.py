@@ -94,7 +94,7 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         method='chat.postMessage',
         retries=0,
         api_params={
-            'channel'  : config.SLACK_CHANNEL,
+            'channel'  : config.PROVIDER_ALERTS_CHANNEL,
             'text'     : 'No new {} matching expected patten found'.format(dag_config['file_description']),
             'username' : 'AirFlow',
             'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
@@ -108,7 +108,7 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         method='chat.postMessage',
         retries=0,
         api_params={
-            'channel'  : config.SLACK_CHANNEL,
+            'channel'  : config.PROVIDER_ALERTS_CHANNEL,
             'text'     : 'No new {} found'.format(dag_config['file_description']),
             'username' : 'AirFlow',
             'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
@@ -122,7 +122,7 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         method='chat.postMessage',
         retries=0,
         api_params={
-            'channel'  : config.SLACK_CHANNEL,
+            'channel'  : config.PROVIDER_ALERTS_CHANNEL,
             'text'     : '{} is of an unexpected size'.format(dag_config['file_description']),
             'username' : 'AirFlow',
             'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
