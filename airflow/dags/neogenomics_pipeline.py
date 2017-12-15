@@ -85,16 +85,14 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': lambda ds, k: (
-                    date_utils.insert_date_into_template(
-                        path_template, 
-                        day_offset = NEOGENOMICS_DAY_OFFSET
-                    )
+                'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
+                    path_template, 
+                    k,
+                    day_offset = NEOGENOMICS_DAY_OFFSET
                 ),
-                'file_name_pattern_func': 
-                date_utils.generate_insert_regex_into_template_function(
+                'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
                     path_template
-                    )(ds, k),
+                ),
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket': 'healthverity',
@@ -124,9 +122,9 @@ fetch_transactional = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template': TMP_PATH_TEMPLATE,
-            'expected_file_name_func': lambda ds, k: (
-                date_utils.insert_date_into_template(
-                    TRANSACTION_FILE_NAME_TEMPLATE, k, day_offset = NEOGENOMICS_DAY_OFFSET)
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE, 
+                day_offset = NEOGENOMICS_DAY_OFFSET
             ),
             's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity',
@@ -166,10 +164,8 @@ split_transactional = SubDagOperator(
                 TMP_PATH_TEMPLATE
             ),
             'file_paths_to_split_func': get_unzipped_file_paths,
-            'file_name_pattern_func': lambda ds, k: (
-                date_utils.generate_insert_regex_into_template_function(
+            'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
                     TRANSACTION_FILE_NAME_TEMPLATE
-                )(ds, k)
             ),
             's3_prefix_func': date_utils.generate_insert_date_into_template_function(
                 S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 
