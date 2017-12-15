@@ -107,7 +107,7 @@ def generate_file_validation_dag(
                     day_offset = DIPLOMAT_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
-                    path_template,
+                    path_template
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -236,9 +236,11 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds, k: [
-                date_utils.generate_insert_date_into_template_function(
-                    DEID_FILE_NAME_TEMPLATE, day_offset = DIPLOMAT_DAY_OFFSET
-                )(ds, k)
+                date_utils.insert_date_into_template(
+                    DEID_FILE_NAME_TEMPLATE, 
+                    kwargs,
+                    day_offset = DIPLOMAT_DAY_OFFSET
+                    )
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}', day_offset = DIPLOMAT_DAY_OFFSET
