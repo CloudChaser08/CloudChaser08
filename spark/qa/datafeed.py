@@ -106,6 +106,19 @@ class Datafeed:
             '-r', 'p f s'
         ])
 
+def build_test_list(default_tests, additional_tests, skip_tests):
+    def get_test_id(test):
+        if type(test) is str:
+            return test
+        elif type(test) is Comparison:
+            return test.target_column_name
+        elif type(test) is Validation:
+            return test.column_name
+
+    return [
+        test for test in default_tests if get_test_id(test) not in skip_tests
+    ] + additional_tests
+
 
 def standard_datafeed(
         datatype,
@@ -143,25 +156,16 @@ def standard_datafeed(
 
     return Datafeed(
         datatype, source_data, target_data,
-        target_full_fill_columns = [
-            column for column in [
-                'record_id', 'created', 'model_version', 'data_set', 'data_feed',
-                'data_vendor', 'part_provider', 'part_best_date'
-            ] if column not in skip_target_full_fill_columns
-        ] + additional_target_full_fill_columns,
-        validations=[
-            validation for validation in [
-                gender_validation('patient_gender'),
-                state_validation('patient_state'),
-                age_validation('patient_age')
-            ] if validation.column_name not in skip_validations
-        ] + additional_validations,
-        unique_match_pairs=[
-            unique_match_pair for unique_match_pair in [
-                Comparison(source_claim_id_full_name, 'claim_id') if source_claim_id_full_name else None,
-                Comparison(source_hvid_full_name, 'hvid') if source_hvid_full_name else None
-            ] if unique_match_pair and unique_match_pair.target_column_name not in skip_unique_match_pairs
-        ] + additional_unique_match_pairs
+        target_full_fill_columns = build_test_list([
+            'record_id', 'created', 'model_version', 'data_set', 'data_feed', 'data_vendor'
+        ], skip_target_full_fill_columns, additional_target_full_fill_columns),
+        validations = build_test_list([
+            gender_validation('patient_gender'), state_validation('patient_state'), age_validation('patient_age')
+        ], skip_validations, additional_validations),
+        unique_match_pairs= build_test_list([
+            Comparison(source_claim_id_full_name, 'claim_id') if source_claim_id_full_name else None,
+            Comparison(source_hvid_full_name, 'hvid') if source_hvid_full_name else None
+        ], skip_unique_match_pairs, additional_unique_match_pairs)
     )
 
 
@@ -203,31 +207,27 @@ def standard_medicalclaims_datafeed(
         additional_target_full_fill_columns = additional_target_full_fill_columns,
         skip_target_full_fill_columns = skip_target_full_fill_columns,
 
-        additional_validations = [
-            validation for validation in [
-                state_validation('prov_rendering_state'),
-                state_validation('prov_billing_state'),
-                state_validation('prov_referring_state'),
-                state_validation('prov_facility_state')
-            ] if validation.column_name not in skip_validations
-        ] + additional_validations,
+        additional_validations = build_test_list([
+            state_validation('prov_rendering_state'),
+            state_validation('prov_billing_state'),
+            state_validation('prov_referring_state'),
+            state_validation('prov_facility_state')
+        ], skip_validations, additional_validations),
         skip_validations=skip_validations,
 
-        additional_unique_match_pairs = [
-            comparison for comparison in [
-                Comparison(source_procedure_code_full_name, 'procedure_code')
-                if source_procedure_code_full_name else None,
-                Comparison(source_service_line_number_full_name, 'service_line_number')
-                if source_service_line_number_full_name else None,
-                Comparison(source_ndc_code_full_name, 'ndc_code')
-                if source_ndc_code_full_name else None,
-                Comparison(source_procedure_modifier_1_full_name, 'procedure_modifier_1')
-                if source_procedure_modifier_1_full_name else None,
-                Comparison(source_prov_rendering_npi_full_name, 'prov_rendering_npi')
-                if source_prov_rendering_npi_full_name else None,
-                Comparison(source_payer_name_full_name, 'payer_name')
-                if source_payer_name_full_name else None,
-            ] if comparison and comparison.target_column_name not in skip_unique_match_pairs
-        ] + additional_unique_match_pairs,
+        additional_unique_match_pairs = build_test_list([
+            Comparison(source_procedure_code_full_name, 'procedure_code')
+            if source_procedure_code_full_name else None,
+            Comparison(source_service_line_number_full_name, 'service_line_number')
+            if source_service_line_number_full_name else None,
+            Comparison(source_ndc_code_full_name, 'ndc_code')
+            if source_ndc_code_full_name else None,
+            Comparison(source_procedure_modifier_1_full_name, 'procedure_modifier_1')
+            if source_procedure_modifier_1_full_name else None,
+            Comparison(source_prov_rendering_npi_full_name, 'prov_rendering_npi')
+            if source_prov_rendering_npi_full_name else None,
+            Comparison(source_payer_name_full_name, 'payer_name')
+            if source_payer_name_full_name else None,
+        ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs=skip_unique_match_pairs
     )

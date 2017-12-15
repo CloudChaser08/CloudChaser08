@@ -35,7 +35,7 @@ emdeon_datafeed = datafeed.standard_medicalclaims_datafeed(
     target_data=target_data,
     source_claim_id_full_name='emdeon_dx_raw_local.column1',
     source_service_line_number_full_name='emdeon_dx_raw_local.column3',
-    skip_target_full_fill_columns=['part_provider', 'part_best_date', 'model_version']
+    skip_target_full_fill_columns=['model_version']
 )
 
 # run tests
