@@ -50,14 +50,7 @@ SELECT
         t.diagnosissix, t.diagnosisseven, t.diagnosiseight
         )[c_explode.n],                         -- diagnosis_code
     NULL,                                       -- diagnosis_code_qual
-    CASE
-        WHEN ARRAY(t.principaldiagnosis, t.diagnosistwo,
-            t.diagnosisthree, t.diagnosisfour, t.diagnosisfive,
-            t.diagnosissix, t.diagnosisseven, t.diagnosiseight
-            )[c_explode.n] IS NOT NULL
-            THEN c_explode.n + 1
-        ELSE NULL
-    END,                                        -- diagnosis_priority
+    NULL,                                       -- diagnosis_priority
     NULL,                                       -- admit_diagnosis_ind
     NULL,                                       -- procedure_code
     NULL,                                       -- procedure_code_qual
@@ -183,7 +176,7 @@ WHERE
     AND
     -- Don't include the row if the diagnosis is also a service-line diagnosis
     (
-        CAST(c_explode.n AS STRING) NOT IN (COALESCE(t.linkeddiagnosisone, ''),
+        CAST((c_explode.n + 1) AS STRING) NOT IN (COALESCE(t.linkeddiagnosisone, ''),
                                             COALESCE(t.linkeddiagnosistwo, ''),
                                             COALESCE(t.linkeddiagnosisthree, ''),
                                             COALESCE(t.linkeddiagnosisfour, ''))
