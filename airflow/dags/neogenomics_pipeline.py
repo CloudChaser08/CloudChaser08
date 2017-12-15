@@ -87,7 +87,6 @@ def generate_file_validation_task(
             {
                 'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
                     path_template, 
-                    k,
                     day_offset = NEOGENOMICS_DAY_OFFSET
                 ),
                 'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
