@@ -6,6 +6,7 @@ from spark.runner import Runner
 from spark.spark_setup import init
 
 import spark.helpers.file_utils as file_utils
+import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
@@ -20,16 +21,25 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = file_utils.get_abs_path(
             script_path,  '../../../test/providers/cardinal_pms/medicalclaims/resources/input/'
         ) + '/'
+        matching_path = file_utils.get_abs_path(
+            script_path,  '../../../test/providers/cardinal_pms/medicalclaims/resources/payload/'
+        ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}'\
                         .format(date_input.replace('-', '/'))
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/payload/{}'\
+                        .format(date_input.replace('-', '/'))
     else:
         input_path = 's3://salusv/incoming/medicalclaims/cardinal_pms/{}/'\
+                        .format(date_input.replace('-', '/'))
+        input_path = 's3://salusv/matching/payload/medicalclaims/cardinal_pms/{}/'\
                         .format(date_input.replace('-', '/'))
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     # Note: This routine does not contain any matching payloads
+    # LOLJK
+    payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     # Create the medical claims table to store the results in
     runner.run_spark_script('../../../common/medicalclaims_common_model.sql', [

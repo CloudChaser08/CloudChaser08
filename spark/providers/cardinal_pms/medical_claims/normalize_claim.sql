@@ -2,14 +2,14 @@ INSERT INTO medicalclaims_common_model
 SELECT
     NULL,                                       -- record_id
     t.ediclaim_id,                              -- claim_id
-    NULL,                                       -- hvid
+    t.hvid,                                     -- hvid
     NULL,                                       -- created
     '2' ,                                       -- model_version
     NULL,                                       -- data_set
     NULL,                                       -- data_feed
     NULL,                                       -- data_vendor
     NULL,                                       -- source_version
-    NULL,                                       -- patient_gender
+    p.gender,                                   -- patient_gender
     NULL,                                       -- patient_age
     NULL,                                       -- patient_year_of_birth
     NULL,                                       -- patient_zip3
@@ -165,6 +165,8 @@ SELECT
     NULL,                                       -- cob_payer_claim_filing_ind_code_2
     NULL                                        -- cob_ins_type_code_2
 FROM transactional_cardinal_pms t
+    LEFT OUTER JOIN matching_payload p
+    ON t.hvJoinKey = p.hvJoinKey
     CROSS JOIN claim_exploder c_explode
 WHERE
     -- Filter out cases from explosion where diagnosis_code would be null
