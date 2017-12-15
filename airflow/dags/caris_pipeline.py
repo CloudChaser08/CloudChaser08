@@ -162,9 +162,10 @@ fetch_transactional = SubDagOperator(
         {
             'tmp_path_template': TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                    TRANSACTION_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(k),
+                    TRANSACTION_FILE_NAME_STUB_TEMPLATE + '\d{{6}}',
                     month_offset = CARIS_MONTH_OFFSET
             ),
+            'regex_name_match': True,
             's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket': S3_TRANSACTION_RAW_URL.split('/')[2]
         }
