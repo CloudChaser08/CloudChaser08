@@ -234,8 +234,8 @@ detect_move_normalize_dag = SubDagOperator(
                     day_offset = NEOGENOMICS_DAY_OFFSET
                 )
             ],
-            'file_date_func': date_utils.insert_date_into_template(
-                '{}/{}/{}', kwargs, day_offset = NEOGENOMICS_DAY_OFFSET
+            'file_date_func': date_utils.generate_insert_date_into_template_function(
+                '{}/{}/{}', day_offset = NEOGENOMICS_DAY_OFFSET
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
             'vendor_uuid': 'cc11bfe2-d75a-432f-96b4-71240433d46f',
