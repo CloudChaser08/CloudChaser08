@@ -49,7 +49,7 @@ else:
 
 # Transaction file
 TRANSACTION_FILE_DESCRIPTION='WebMD ERA transaction file'
-TRANSACTION_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_CS_deid.dat.gz'
+TRANSACTION_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_CS_deid.dat.gz'
 TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE='{}{}{}_AF_ERA_CF_ON_CS_deid.dat'
 TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_S_deid.dat'
 TRANSACTION_CLAIM_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_C_deid.dat'
@@ -64,7 +64,7 @@ MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 
 # Linking file
 LINK_FILE_DESCRIPTION='WebMD ERA Linking file'
-LINK_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_Link_deid.dat.gz'
+LINK_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_Link_deid.dat.gz'
 LINK_FILE_NAME_UNZIPPED_TEMPLATE='{}{}{}_AF_ERA_CF_ON_Link_deid.dat'
 LINK_DAG_NAME='validate_fetch_link_file'
 MINIMUM_LINK_FILE_SIZE=500
@@ -188,7 +188,7 @@ def generate_fetch_dag(
             {
                 'tmp_path_template'      : TMP_PATH_TEMPLATE + task_id + '/',
                 'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                    file_name_template,
+                    file_name_template.format('{}{}{}'),
                     day_offset = EMDEON_ERA_DAY_OFFSET
                 ),
                 's3_prefix'              : s3_path_template,
@@ -213,7 +213,7 @@ def do_unzip_file(task_id, file_name_template):
     def out(ds, **kwargs):
         tmp_path = get_tmp_dir(ds, kwargs) + task_id + '/'
         file_path = tmp_path + date_utils.insert_date_into_template(
-            file_name_template, 
+            file_name_template.format('{}{}{}'),
             kwargs, 
             day_offset = EMDEON_ERA_DAY_OFFSET
         )
@@ -291,7 +291,7 @@ def generate_split_dag(task_id, file_name_unzipped_template, s3_destination):
                     get_tmp_dir(ds, k) + task_id + '/' +
                     date_utils.insert_date_into_template(
                         file_name_unzipped_template,
-                        kwargs, 
+                        k,
                         day_offset = EMDEON_ERA_DAY_OFFSET
                     )
                 ],
