@@ -127,9 +127,13 @@ def generate_transaction_file_validation_dag(
             {
                 'expected_file_name_func':
                     date_utils.generate_insert_date_into_template_function(
-                        path_template + get_date_timestamp(k), month_offset = CARIS_MONTH_OFFSET
+                        path_template + '\d{{6}}', month_offset = CARIS_MONTH_OFFSET
                 ),
-                'file_name_pattern_func': get_expected_file_name_pattern(path_template),
+                'file_name_pattern_func':
+                    date_utils.generate_insert_regex_into_template_function(
+                        path_template + '\d{{6}}'
+                ),
+                'regex_name_match': True,
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket': S3_TRANSACTION_RAW_URL.split('/')[2],
