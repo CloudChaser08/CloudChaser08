@@ -14,15 +14,16 @@ import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.update_analytics_db as update_analytics_db
 import util.s3_utils as s3_utils
+import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching,
           detect_move_normalize, update_analytics_db,
-          s3_utils, HVDAG]:
+          s3_utils, HVDAG, date_utils]:
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/caris/labtests/{}/'
+TMP_PATH_TEMPLATE = '/tmp/caris/labtests/{}{}{}/'
 DAG_NAME = 'caris_pipeline'
 
 default_args = {
@@ -38,6 +39,8 @@ mdag = HVDAG.HVDAG(
     schedule_interval="0 12 2 * *",
     default_args=default_args
 )
+
+CARIS_MONTH_OFFSET = 1
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -67,8 +70,9 @@ def get_date_timestamp(kwargs):
     try:
         if TIMESTAMP == '':
             TIMESTAMP = filter(
-                lambda p: insert_current_date(
-                    TRANSACTION_FILE_NAME_STUB_TEMPLATE, kwargs
+                lambda p: date_utils.insert_date_into_template(
+                    TRANSACTION_FILE_NAME_STUB_TEMPLATE, kwargs, 
+                    month_offset = CARIS_MONTH_OFFSET
                 ) in p,
                 s3_utils.list_s3_bucket(
                     S3_TRANSACTION_RAW_URL
@@ -77,68 +81,36 @@ def get_date_timestamp(kwargs):
     finally:
         return TIMESTAMP
 
-
-def insert_execution_date_function(template):
-    def out(ds, kwargs):
-        return template.format(kwargs['ds_nodash'])
-    return out
-
-
-def insert_formatted_regex_function(template):
-    def out(ds, kwargs):
-        return template.format('\d{4}', '\d{2}')
-    return out
-
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        adjusted_date = kwargs['execution_date'] \
-                        + relativedelta.relativedelta(months=1)
-        return template.format(
-            str(adjusted_date.year),
-            str(adjusted_date.month).zfill(2)
-        )
-    return out
-
-
-def insert_current_date(template, kwargs):
-    return insert_current_date_function(template)(None, kwargs)
-
-
 def get_expected_file_name_pattern(file_name_template):
     def out(ds, kwargs):
-        return insert_formatted_regex_function(
+        return date_utils.generate_insert_regex_into_template_function(
             file_name_template
         )(ds, kwargs) + get_date_timestamp(kwargs)
     return out
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + insert_current_date(
-        DEID_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(kwargs),
-        kwargs
+    return [S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
+        DEID_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(kwargs), kwargs, month_offset = CARIS_MONTH_OFFSET
     )]
 
-
 def encrypted_decrypted_file_paths_function(ds, kwargs):
-    file_dir = insert_execution_date_function(TMP_PATH_TEMPLATE)(ds, kwargs)
+    file_dir = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
     encrypted_file_path = file_dir \
-        + insert_current_date(
+        + date_utils.insert_date_into_template(
             TRANSACTION_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(kwargs),
-            kwargs
+            kwargs, month_offset = CARIS_MONTH_OFFSET
         )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
 
-
 def get_unzipped_file_paths(ds, kwargs):
-    file_dir = insert_execution_date_function(TMP_PATH_TEMPLATE)(ds, kwargs)
+    file_dir = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
     return [
-        file_dir
-        + insert_current_date(
+        file_dir + date_utils.insert_date_into_template(
             TRANSACTION_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(kwargs),
-            kwargs
+            kwargs, month_offset = CARIS_MONTH_OFFSET
         )
     ]
 
@@ -153,10 +125,9 @@ def generate_transaction_file_validation_dag(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': lambda ds, k: (
-                    insert_current_date_function(
-                        path_template
-                    )(ds, k) + get_date_timestamp(k)
+                'expected_file_name_func':
+                    date_utils.generate_insert_date_into_template_function(
+                        path_template + get_date_timestamp(k), month_offset = CARIS_MONTH_OFFSET
                 ),
                 'file_name_pattern_func': get_expected_file_name_pattern(path_template),
                 'minimum_file_size': minimum_file_size,
@@ -186,10 +157,9 @@ fetch_transactional = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template': TMP_PATH_TEMPLATE,
-            'expected_file_name_func': lambda ds, k: (
-                insert_current_date_function(
-                    TRANSACTION_FILE_NAME_STUB_TEMPLATE
-                )(ds, k) + get_date_timestamp(k)
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
+                    TRANSACTION_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(k),
+                    month_offset = CARIS_MONTH_OFFSET
             ),
             's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket': S3_TRANSACTION_RAW_URL.split('/')[2]
@@ -206,7 +176,7 @@ decrypt_transactional = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_dir_func': insert_execution_date_function(TMP_PATH_TEMPLATE),
+            'tmp_dir_func': date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE),
             'encrypted_decrypted_file_paths_func':
             encrypted_decrypted_file_paths_function
         }
@@ -224,15 +194,15 @@ def split_step():
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_dir_func': insert_execution_date_function(
+                'tmp_dir_func': date_utils.generate_insert_date_into_template_function(
                     TMP_PATH_TEMPLATE
                 ),
                 'file_paths_to_split_func': get_unzipped_file_paths,
                 'file_name_pattern_func': get_expected_file_name_pattern(
                     TRANSACTION_FILE_NAME_STUB_TEMPLATE
                 ),
-                's3_prefix_func': insert_current_date_function(
-                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE
+                's3_prefix_func': date_utils.generate_insert_date_into_template_function(
+                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE, month_offset = CARIS_MONTH_OFFSET
                 ),
                 'num_splits': 20
             }
@@ -248,7 +218,7 @@ split_transactional = split_step()
 def clean_up_workspace_step(task_id, template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', template.format(kwargs['ds_nodash'])
+            'rm', '-rf', date_utils.insert_date_into_template(template,kwargs)
         ])
     return PythonOperator(
         task_id='clean_up_workspace_' + task_id,
@@ -281,7 +251,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-01', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-01', k, month_offset = CARIS_MONTH_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -296,12 +266,13 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds, k: [
-                insert_current_date_function(
-                    DEID_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(k)
-                )(ds, k)
+                date_utils.insert_date_into_template(DEID_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(k),
+                    kwargs,
+                    month_offset = CARIS_MONTH_OFFSET
+                    )
             ],
-            'file_date_func'                    : insert_current_date_function(
-                '{}/{}'
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
+                '{}/{}',month_offset = CARIS_MONTH_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'd701240c-35be-4e71-94fc-9460b85b1515',
@@ -327,7 +298,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: insert_current_date(sql_new_template, k)
+                'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(sql_new_template, k, month_offset = CARIS_MONTH_OFFSET)
             }
         ),
         task_id='update_analytics_db',
