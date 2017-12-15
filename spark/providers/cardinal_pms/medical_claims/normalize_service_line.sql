@@ -2,7 +2,7 @@ INSERT INTO medicalclaims_common_model
 SELECT
     NULL,                                       -- record_id
     t.ediclaim_id,                              -- claim_id
-    'TBD',                                      -- hvid
+    NULL,                                       -- hvid
     NULL,                                       -- created
     '2',                                        -- model_version
     NULL,                                       -- data_set
@@ -42,16 +42,25 @@ SELECT
     NULL,                                       -- place_of_service_vendor_id
     NULL,                                       -- place_of_service_vendor_desc
     t.linesequencenumber,                       -- service_line_number
-    ARRAY(
-        t.linkeddiagnosisone, t.linkeddiagnosistwo,
-        t.linkeddiagnosisthree, t.linkeddiagnosisfour,
-        NULL)[sl_explode.n],                    -- diagnosis_code
+    ARRAY(t.principaldiagnosis, t.diagnosistwo,
+        t.diagnosisthree, t.diagnosisfour, t.diagnosisfive,
+        t.diagnosissix, t.diagnosisseven, t.diagnosiseight
+        )
+        [
+            CAST(
+            ARRAY(
+                t.linkeddiagnosisone, t.linkeddiagnosistwo,
+                t.linkeddiagnosisthree, t.linkeddiagnosisfour,
+                NULL)[sl_explode.n]
+                AS INTEGER
+            ) - 1
+        ],                                      -- diagnosis_code
     NULL,                                       -- diagnosis_code_qual
     CASE
         WHEN ARRAY(t.linkeddiagnosisone, t.linkeddiagnosistwo,
             t.linkeddiagnosisthree, t.linkeddiagnosisfour,
             NULL)[sl_explode.n] IS NOT NULL
-            THEN sl_explode.n
+            THEN sl_explode.n + 1
         ELSE NULL 
     END,                                        -- diagnosis_priority
     NULL,                                       -- admit_diagnosis_ind
@@ -207,7 +216,7 @@ WHERE
         IS NOT NULL 
     ) 
     OR 
-    -- If all are NULL, include one row w/ NULL diagnosis_code (SELECT DISTINCT)
+    -- If all are NULL, include one row w/ NULL diagnosis_code
     ( 
         COALESCE(t.linkeddiagnosisone, t.linkeddiagnosistwo,
         t.linkeddiagnosisthree, t.linkeddiagnosisfour) IS NULL

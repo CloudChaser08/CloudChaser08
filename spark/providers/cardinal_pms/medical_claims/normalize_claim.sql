@@ -55,7 +55,7 @@ SELECT
             t.diagnosisthree, t.diagnosisfour, t.diagnosisfive,
             t.diagnosissix, t.diagnosisseven, t.diagnosiseight
             )[c_explode.n] IS NOT NULL
-            THEN c_explode.n
+            THEN c_explode.n + 1
         ELSE NULL
     END,                                        -- diagnosis_priority
     NULL,                                       -- admit_diagnosis_ind
@@ -183,10 +183,10 @@ WHERE
     AND
     -- Don't include the row if the diagnosis is also a service-line diagnosis
     (
-        ARRAY(t.principaldiagnosis, t.diagnosistwo, t.diagnosisthree, t.diagnosisfour,
-            t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
-        )[c_explode.n] NOT IN (t.linkeddiagnosisone, t.linkeddiagnosistwo,
-                                    t.linkeddiagnosisthree, t.linkeddiagnosisfour)
+        CAST(c_explode.n AS STRING) NOT IN (COALESCE(t.linkeddiagnosisone, ''),
+                                            COALESCE(t.linkeddiagnosistwo, ''),
+                                            COALESCE(t.linkeddiagnosisthree, ''),
+                                            COALESCE(t.linkeddiagnosisfour, ''))
     )
 DISTRIBUTE BY t.ediclaim_id
 ;
