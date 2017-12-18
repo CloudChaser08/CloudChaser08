@@ -43,7 +43,7 @@ class HVDAG(DAG):
             "text"       : "Execution date: {}\nFailure timestamp {}".format(ti.execution_date, ti.start_date)
         }
 
-        slack.send_message(config.SLACK_CHANNEL, attachment=attachment)
+        slack.send_message(config.AIRFLOW_ALERTS_CHANNEL, attachment=attachment)
 
     def _on_retry(self, context):
         dag_id = "{}.{}".format(
