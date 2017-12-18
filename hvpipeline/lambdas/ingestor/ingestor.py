@@ -1,15 +1,17 @@
 import boto3
 import paramiko
-import json
 import re
 from botocore.exceptions import ClientError
 from datetime import datetime, timedelta
+import hvpipeline.models as pipeline_models
+import hvpipeline.db as pipeline_db
 
 def lambda_handler(event, context):
     for rec in event['Records']:
         msg = rec['Sns']['Message']
         key = json.loads(msg)['Records'][0]['s3']['object']['key']
 
+    db = pipeline_db.
     with open('incoming_files_config.json') as infile:
         incoming_files = json.loads(infile.read())
 
