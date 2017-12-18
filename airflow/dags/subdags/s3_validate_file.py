@@ -1,9 +1,9 @@
 from airflow.models import Variable
-from airflow.operators import BashOperator, \
-    BranchPythonOperator, SlackAPIOperator
+from airflow.operators import BashOperator, BranchPythonOperator, PythonOperator
 from datetime import timedelta
 import re
 import logging
+from slackclient import SlackClient
 
 import util.s3_utils as s3_utils
 import config as config
@@ -55,6 +55,21 @@ def do_is_valid_new_file(ds, **kwargs):
 
     return kwargs['is_new_valid']
 
+def send_slack_alert(ds, **kwargs):
+    sc = SlackClient(Variable.get('SlackToken'))
+    description = kwargs['file_description']
+    template = kwargs['templates_dict']['message']
+    expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
+    text = template.format(description, expected_file_name)
+    api_params={
+        'channel'  : config.PROVIDER_ALERTS_CHANNEL,
+        'text'     : text,
+        'username' : 'AirFlow',
+        'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
+    }
+    r = sc.api_call('chat.postMessage', **api_params)
+    if not r['ok']:
+        raise AirflowException("Slack API call failed: ({})".format(r['error']))
 
 def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
@@ -88,45 +103,39 @@ def s3_validate_file(parent_dag_name, child_dag_name, start_date, schedule_inter
         dag=dag
     )
     
-    alert_is_bad_name = SlackAPIOperator(
+    alert_is_bad_name = PythonOperator(
         task_id='alert_is_bad_name',
-        token=Variable.get('SlackToken'),
-        method='chat.postMessage',
-        retries=0,
-        api_params={
-            'channel'  : config.PROVIDER_ALERTS_CHANNEL,
-            'text'     : 'No new {} matching expected patten found'.format(dag_config['file_description']),
-            'username' : 'AirFlow',
-            'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
+        provide_context=True,
+        python_callable=send_slack_alert,
+        op_kwargs=dag_config,
+        templates_dict={
+            'message': 'No new {} ({}) matching expected patten found'
         },
+        retries=0,
         dag=dag
     )
-    
-    alert_no_new_file = SlackAPIOperator(
+
+    alert_no_new_file = PythonOperator(
         task_id='alert_no_new_file',
-        token=Variable.get('SlackToken'),
-        method='chat.postMessage',
-        retries=0,
-        api_params={
-            'channel'  : config.PROVIDER_ALERTS_CHANNEL,
-            'text'     : 'No new {} found'.format(dag_config['file_description']),
-            'username' : 'AirFlow',
-            'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
+        provide_context=True,
+        python_callable=send_slack_alert,
+        op_kwargs=dag_config,
+        templates_dict={
+            'message': 'No new {} ({}) found'
         },
+        retries=0,
         dag=dag
     )
-    
-    alert_file_size_problem = SlackAPIOperator(
+
+    alert_file_size_problem = PythonOperator(
         task_id='alert_file_size_problem',
-        token=Variable.get('SlackToken'),
-        method='chat.postMessage',
-        retries=0,
-        api_params={
-            'channel'  : config.PROVIDER_ALERTS_CHANNEL,
-            'text'     : '{} is of an unexpected size'.format(dag_config['file_description']),
-            'username' : 'AirFlow',
-            'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
+        provide_context=True,
+        python_callable=send_slack_alert,
+        op_kwargs=dag_config,
+        templates_dict={
+            'message': '{} ({}) is of an unexpected size'
         },
+        retries=0,
         dag=dag
     )
 
