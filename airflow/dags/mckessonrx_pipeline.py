@@ -78,7 +78,9 @@ def get_deid_file_urls(ds, kwargs):
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
-        + date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs
+        + date_utils.insert_date_into_template(
+            TRANSACTION_FILE_NAME_TEMPLATE, 
+            kwargs
         )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
@@ -98,9 +100,8 @@ def generate_file_validation_task(
                 'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
                     path_template
                 ),
-                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(path_template,year_regex = '\d{8}',
-                    month_regex = '',
-                    day_regex = ''
+                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
+                    path_template
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -167,10 +168,7 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE, 
-                year_regex = '\d{8}',
-                month_regex = '',
-                day_regex = ''
+            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_TEMPLATE
             ),
