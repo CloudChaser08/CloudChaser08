@@ -284,8 +284,7 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 sql_template = """
-    ALTER TABLE pharmacyclaims_20170602 ADD PARTITION (part_provider='mckesson', part_best_date='{0}-{1}')
-    LOCATION 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=mckesson/part_best_date={0}-{1}/'
+    MSCK REPAIR TABLE pharmacyclaims_20170602
 """
 
 if HVDAG.HVDAG.airflow_env != 'test':
