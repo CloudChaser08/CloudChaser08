@@ -112,10 +112,15 @@ def get_provider_config(providers_conf_file, provider_name):
 
     # configure stats whose configurations come from the marketplace db
     if provider_conf['fill_rate']:
-        provider_conf['fill_rate_conf'] = _get_fill_rate_columns(provider_conf['datafeed_id'])
+        provider_conf['fill_rate_conf'] = {
+            "columns": _get_fill_rate_columns(provider_conf['datafeed_id'])
+        }
 
     if provider_conf['top_values']:
-        provider_conf['top_values_conf'] = _get_top_values_columns(provider_conf['datafeed_id'])
+        provider_conf['top_values_conf'] = {
+            "columns": _get_top_values_columns(provider_conf['datafeed_id']),
+            "max_values": _get_top_values_columns(provider_conf['datafeed_id'])
+        }
 
     # configure stats whose configurations do not come from the marketplace db
     no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year', 'epi_calcs']

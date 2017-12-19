@@ -1,11 +1,11 @@
 import argparse
 import os
+import logging
 
 import spark.spark_setup as spark_setup
 
-import spark.stats.config.reader.config_reader as config_reader
-import spark.helpers.stats.utils as stat_utils
 import spark.stats.processor as processor
+
 
 def run(spark, sqlContext, provider_name, quarter, start_date, \
         end_date, earliest_date, output_dir):
@@ -13,10 +13,16 @@ def run(spark, sqlContext, provider_name, quarter, start_date, \
     all_stats = processor.run_marketplace_stats(spark, sqlContext, \
                 provider_name, quarter, start_date, end_date, earliest_date)
 
-    os.makedirs(output_dir)
+    output_dir = output_dir[:-1] if output_dir.endswith('/') else output_dir
+
+    try:
+        os.makedirs(output_dir)
+    except:
+        logging.warn("Output dir already exists")
+
     for key, stat in all_stats.items():
         if stat:
-            with open(output_dir + provider_name + '_' + key + '.csv', 'w') as f:
+            with open(output_dir + '/' + provider_name + '_' + key + '.csv', 'w') as f:
                 for row in stat:
                     for col, value in row.asDict().items():
                         f.write(col + ',' + str(value) + '\n')
@@ -55,4 +61,3 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', type = str)
     args = parser.parse_args()
     main(args)
-

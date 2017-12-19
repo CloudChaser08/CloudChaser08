@@ -41,7 +41,7 @@ def test_init(spark):
 
     spark_obj = spark['spark']
     sqlContext = spark['sqlContext']
-    
+
     quarter = 'Q32017'
     start_date = '2015-06-27'
     end_date = '2017-03-15'
@@ -66,8 +66,7 @@ def test_init(spark):
 
     stats_utils.get_provider_data = inject_data_mock
 
-    fill_rate_conf = { 'blacklist_columns': ['claim_id', \
-                               'service_date', 'col_3'] }
+    fill_rate_conf = {"columns": ['col_1', 'col_2']}
 
     get_prov_conf = Mock(
         return_value = {
@@ -76,7 +75,8 @@ def test_init(spark):
             'datatype'          : 'medicalclaims',
             'date_field'        : 'service_date',
             'record_field'      : 'claim_id',
-            'fill_rates'        : fill_rate_conf,
+            'fill_rates'        : True,
+            'fill_rates_conf'   : fill_rate_conf,
             'key_stats'         : None,
             'top_values'        : None,
             'longitudinality'   : None,
@@ -86,14 +86,15 @@ def test_init(spark):
     )
 
     get_prov_conf_no_unique_column = Mock(
-        return_value = 
+        return_value =
         {
             'name'              : 'test',
             'datafeed_id'       : '27',
             'datatype'          : 'medicalclaims',
             'date_field'        : 'service_date',
             'record_field'      : None,
-            'fill_rates'        : fill_rate_conf,
+            'fill_rates'        : True,
+            'fill_rates_conf'   : fill_rate_conf,
             'key_stats'         : None,
             'top_values'        : None,
             'longitudinality'   : None,
@@ -141,19 +142,14 @@ def test_fill_rate_calculated():
     assert results_no_distinct_column['fill_rates'] is not None
 
 
+def test_fill_rate_values():
+    assert results_distinct_column['fill_rates'] == [Row(1, 1)]
+
+
 def test_fill_rate_dataframe_count():
     assert len(results_distinct_column['fill_rates']) == 1
     assert len(results_no_distinct_column['fill_rates']) == 1
 
 
-def test_fill_rate_column_are_blacklisted():
-    assert len(set(results_distinct_column['fill_rates'][0].asDict().keys()) \
-                .intersection(set(fill_rate_conf['blacklist_columns']))) == 0
-    assert len(set(results_no_distinct_column['fill_rates'][0].asDict().keys()) \
-                .intersection(set(fill_rate_conf['blacklist_columns']))) == 0
-
-
 def test_no_df_if_fill_rates_is_none_in_provider_conf():
     assert results_no_fill_rate['fill_rates'] == None
-
-
