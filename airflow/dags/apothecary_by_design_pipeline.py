@@ -68,21 +68,28 @@ get_deid_tmp_dir = date_utils.generate_insert_date_into_template_function(TRANSA
 
 def get_additionaldata_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) +
-        date_utils.insert_date_into_template(ADDITIONALDATA_FILE_NAME_TEMPLATE,
-            kwargs, day_offset = ABD_DAY_OFFSET
+        date_utils.insert_date_into_template(
+            ADDITIONALDATA_FILE_NAME_TEMPLATE,
+            kwargs, 
+            day_offset = ABD_DAY_OFFSET
     )]
 
 
 def get_transaction_file_paths(ds, kwargs):
     return [get_deid_tmp_dir(ds, kwargs) +
-        date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE,
-            kwargs, day_offset = ABD_DAY_OFFSET
+        date_utils.insert_date_into_template(
+            TRANSACTION_FILE_NAME_TEMPLATE,
+            kwargs, 
+            day_offset = ABD_DAY_OFFSET
     )]
 
 
 def get_deid_file_urls(ds, kwargs):
     return [
-        date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs, day_offset = ABD_DAY_OFFSET)
+        date_utils.insert_date_into_template(
+            DEID_FILE_NAME_TEMPLATE, 
+            kwargs, 
+            day_offset = ABD_DAY_OFFSET)
     ]
 
 
@@ -108,9 +115,13 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(path_template, day_offset = ABD_DAY_OFFSET
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
+                    path_template, 
+                    day_offset = ABD_DAY_OFFSET
                 ),
-                'file_name_pattern_func'  : date_utils.generate_insert_date_into_template_function(path_template, day_offset = ABD_DAY_OFFSET
+                'file_name_pattern_func'  : date_utils.generate_insert_date_into_template_function(
+                    path_template, 
+                    day_offset = ABD_DAY_OFFSET
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(s3_path.split('/')[3:]),
@@ -159,7 +170,8 @@ fetch_transaction_file = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE, day_offset = ABD_DAY_OFFSET
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE, 
+                day_offset = ABD_DAY_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -177,7 +189,8 @@ fetch_additionaldata_file = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'     : ADDITIONALDATA_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(ADDITIONALDATA_FILE_NAME_TEMPLATE, day_offset = ABD_DAY_OFFSET
+            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(ADDITIONALDATA_FILE_NAME_TEMPLATE, 
+                day_offset = ABD_DAY_OFFSET
             ),
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -212,10 +225,12 @@ split_additionaldata_file = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_additionaldata_file_paths,
-            'file_name_pattern_func'   : date_utils.generate_insert_date_into_template_function(ADDITIONALDATA_FILE_NAME_TEMPLATE, day_offset = ABD_DAY_OFFSET
+            'file_name_pattern_func'   : date_utils.generate_insert_date_into_template_function(ADDITIONALDATA_FILE_NAME_TEMPLATE, 
+                day_offset = ABD_DAY_OFFSET
                 
             ),
-            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE, day_offset = ABD_DAY_OFFSET
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE, 
+                day_offset = ABD_DAY_OFFSET
             ),
             'num_splits'               : 20
         }
@@ -234,10 +249,12 @@ split_transaction_file = SubDagOperator(
         {
             'tmp_dir_func'             : get_deid_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE, day_offset = ABD_DAY_OFFSET
+            'file_name_pattern_func'   : date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE, 
+                day_offset = ABD_DAY_OFFSET
                 
             ),
-            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE, day_offset = ABD_DAY_OFFSET
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE, 
+                day_offset = ABD_DAY_OFFSET
             ),
             'num_splits'               : 20
         }
@@ -271,7 +288,7 @@ clean_up_workspace = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template': TMP_PATH_TEMPLATE.format('{}','','')
+            'tmp_path_template': TMP_PATH_TEMPLATE
         }
     ),
     task_id='clean_up_workspace',
