@@ -185,7 +185,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : get_deid_file_urls
+                'source_files_func' : lambda ds, k: [S3_TRANSACTION_RAW_URL + f for f in get_deid_file_urls(ds, k)]
             }
         ),
         task_id='queue_up_for_matching',
