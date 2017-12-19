@@ -20,6 +20,27 @@ def _get_config_from_json(filename):
         return data
 
 
+def _get_config_from_db(query):
+    '''
+    Runs query on marketplace prod and returns a results dict.
+    Input:
+        - query: The query to run
+    Output:
+        - data: the config represented as a Python dict
+    '''
+    conn = psycopg2.connect(
+        host='pg-prod.healthverity.com',
+        database='config',
+        user='hvreadonly',
+        password=os.environ.get('PGPASSWORD')
+    )
+
+    with closing(conn.cursor()) as cursor:
+        cursor.execute(query)
+        results = cursor.fetchall()
+    return dict(results)
+
+
 def _extract_provider_conf(provider_name, providers_conf):
     '''
     Get a specific providers config from the config file with all
@@ -39,12 +60,6 @@ def _extract_provider_conf(provider_name, providers_conf):
 
 
 def _get_top_values_columns(datafeed_id):
-    conn = psycopg2.connect(
-        host='pg-prod.healthverity.com',
-        database='config',
-        user='hvreadonly',
-        password=os.environ.get('PGPASSWORD')
-    )
 
     get_columns_sql = """
         select f.physical_name, f.id as field_id
@@ -52,22 +67,13 @@ def _get_top_values_columns(datafeed_id):
             join marketplace_datatable t on t.id = f.datatable_id
             join marketplace_datamodel m on m.id = t.datamodel_id
             join marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
-        where dm.datafeed_id = %s and m.is_supplemental = 'f' and f.top_values= 't';
-    """
+        where dm.datafeed_id = {} and m.is_supplemental = 'f' and f.top_values= 't';
+    """.format(datafeed_id)
 
-    with closing(conn.cursor()) as cursor:
-        cursor.execute(get_columns_sql, (datafeed_id,))
-        cols = cursor.fetchall()
-    return dict(cols)
+    return _get_config_from_db(get_columns_sql)
 
 
 def _get_fill_rate_columns(datafeed_id):
-    conn = psycopg2.connect(
-        host='pg-prod.healthverity.com',
-        database='config',
-        user='hvreadonly',
-        password=os.environ.get('PGPASSWORD')
-    )
 
     get_columns_sql = """
         select f.physical_name, f.id as field_id
@@ -75,13 +81,10 @@ def _get_fill_rate_columns(datafeed_id):
             join marketplace_datatable t on t.id = f.datatable_id
             join marketplace_datamodel m on m.id = t.datamodel_id
             join marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
-        where dm.datafeed_id = %s and m.is_supplemental = 'f';
-    """
+        where dm.datafeed_id = {} and m.is_supplemental = 'f';
+    """.format(datafeed_id)
 
-    with closing(conn.cursor()) as cursor:
-        cursor.execute(get_columns_sql, (datafeed_id,))
-        cols = cursor.fetchall()
-    return dict(cols)
+    return _get_config_from_db(get_columns_sql)
 
 
 def get_provider_config(providers_conf_file, provider_name):
