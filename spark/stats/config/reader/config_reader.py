@@ -104,15 +104,15 @@ def get_provider_config(providers_conf_file, provider_name):
     provider_conf = _extract_provider_conf(provider_name, providers_conf)
 
     # Check that datatype is specified
-    if not 'datatype' in provider_conf or provider_conf['datatype'] == None:
+    if 'datatype' not in provider_conf or provider_conf['datatype'] is None:
         raise Exception('datatype is not specified for provider {}'.format(provider_name))
 
     # configure stats whose configurations come from the marketplace db
     if provider_conf['fill_rate']:
-        provider_conf['fill_rate_columns'] = _get_fill_rate_columns(provider_conf['datafeed_id'])
+        provider_conf['fill_rate_conf'] = _get_fill_rate_columns(provider_conf['datafeed_id'])
 
     if provider_conf['top_values']:
-        provider_conf['top_values_columns'] = _get_top_values_columns(provider_conf['datafeed_id'])
+        provider_conf['top_values_conf'] = _get_top_values_columns(provider_conf['datafeed_id'])
 
     # configure stats whose configurations do not come from the marketplace db
     no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year', 'epi_calcs']
