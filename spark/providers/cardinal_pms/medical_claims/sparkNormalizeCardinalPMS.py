@@ -67,6 +67,24 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.run_spark_script('normalize_service_line.sql', [])
     logging.debug('Finished normalizing for service-line')
 
+    # Create a table that contains one row for each claim
+    # where the service line is the lowest number
+    window = Window.paritionBy(col('ediclaim_id')).orderBy(col('linesequencenumber').desc())
+    runner.sqlContext.sql('select * from transactional_cardinal_pms')           \
+          .withColumn('first', first(col('linesequencenumber')).over(window))   \
+          .where(col('linesequencenumber') == col('first'))                     \
+          .drop(col('first'))                                                   \
+          .createTempView('limited_transactional_cardinal_pms')
+
+    # Create a table that contains a each unique
+    # diagnosis code and claim id
+    runner.sqlContext.cql('select * from medicalclaims_common_model')           \
+          .groupby(col('claim_id'))                                             \
+          .agg(collect_set(col('diagnosis_code')).alias('diagnosis_codes'))     \
+          .withColumn('diagnosis_code', explode(col('diagnosis_codes')))        \
+          .select(col('claim_id'), col('diagnosis_code'))                       \
+          .createTempView('service_line_diags')
+
     # Create exploder table for claim
     explode.generate_exploder_table(spark, 8, 'claim_exploder')
     logging.debug('Created exploder for claim')

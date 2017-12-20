@@ -164,7 +164,7 @@ SELECT
     NULL,                                       -- cob_payer_hpid_2
     NULL,                                       -- cob_payer_claim_filing_ind_code_2
     NULL                                        -- cob_ins_type_code_2
-FROM transactional_cardinal_pms t
+FROM limited_transactional_cardinal_pms t
     LEFT OUTER JOIN matching_payload p
     ON t.hvJoinKey = p.hvJoinKey
     CROSS JOIN claim_exploder c_explode
