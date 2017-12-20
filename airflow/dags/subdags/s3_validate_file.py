@@ -28,7 +28,7 @@ def do_is_valid_new_file(ds, **kwargs):
     logging.info("Looking for file: {}".format(expected_file_name))
 
     if len(filter(lambda k: len(re.findall(file_name_pattern, k.split('/')[-1])) == 1, s3_keys)) == 0:
-        if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > 0:
+        if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > kwargs['ti'].try_number:
             raise ValueError('No files of the expected pattern')
         return kwargs['is_bad_name']
 
@@ -38,7 +38,7 @@ def do_is_valid_new_file(ds, **kwargs):
             or ('regex_name_match' in kwargs and kwargs['regex_name_match'] and \
             len(filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)) > 0)):
 
-        if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > 0:
+        if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > kwargs['ti'].try_number:
             raise ValueError('No new file found')
         return kwargs['is_not_new']
 
@@ -49,7 +49,7 @@ def do_is_valid_new_file(ds, **kwargs):
     if s3_utils.get_file_size(
             's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/' + s3_key, s3_connection_id
     ) < minimum_file_size:
-        if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > 0:
+        if 'quiet_retries' in kwargs and kwargs['quiet_retries'] > kwargs['ti'].try_number:
             raise ValueError('File is of an unexpected size')
         return kwargs['is_not_valid']
 
