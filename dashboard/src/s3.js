@@ -29,8 +29,6 @@ exports.getS3Calls = function() {
         var prefix = (providerConf.hasOwnProperty('s3Bucket')) ? providerConf.providerPrefix + '/'
             : 'incoming/' + providerConf.providerPrefix + '/';
 
-        if (providerConf.id == 'cardinal_mpi') console.log(bucket + '/' + prefix);
-
         var params = {
           Bucket : bucket,
           Prefix : prefix,
@@ -76,7 +74,7 @@ exports.uploadFile = function(content, filename, callback) {
   var params = {
     Body: content,
     Bucket: filename.split('/')[2],
-    Key: filename.split('/').slice(3).reduce(function(x, y) {return x + '/' + y;}),
+    Key: filename.split('/').slice(3).join('/'),
     ServerSideEncryption: "AES256",
     ContentType: 'text/html'
   };
