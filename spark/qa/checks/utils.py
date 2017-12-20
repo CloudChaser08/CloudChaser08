@@ -19,7 +19,7 @@ def remove_nulls_and_blanks(table, column):
 
 
 def assert_all_values_in_src_and_target(
-        source_table, target_table, source_column_name, target_column_name, value_display_name
+        source_table, target_table, source_column_name, target_column_name
 ):
     """
     All values that exist in the source exist in the target, and vice-versa
@@ -35,13 +35,13 @@ def assert_all_values_in_src_and_target(
 
     assert common_value_count == src_value_count, \
         "{} values in source did not exist in target. Examples: {}".format(
-            value_display_name, ', '.join([
+            target_column_name, ', '.join([
                 r[source_column_name] for r in src_values.subtract(target_values).take(10)
             ]))
 
     assert common_value_count == target_value_count, \
         "{} values in target did not exist in source. Examples: {}".format(
-            value_display_name, ', '.join([
+            target_column_name, ', '.join([
                 r[target_column_name] for r in target_values.subtract(src_values).take(10)
             ]))
 
