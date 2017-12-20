@@ -1,6 +1,5 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-import pytest
 
 def is_date(year, month, day):
     """
@@ -92,19 +91,25 @@ def generate_insert_regex_into_template_function(template,
     year_regex = '\d{4}',
     month_regex =  '\d{2}',
     day_regex =  '\d{2}',
-    custom_pattern = None
+    custom_pattern = None,
+    custom_pattern_2 = None,
+    custom_pattern_3 = None
     ):
     """
     Inserts the year pattern, month pattern, and day pattern into a string template. User can specify a custom pattern string through the variable custom_pattern.
     """
     def out(ds, kwargs):
-        if custom_pattern is None:
+        if custom_pattern is None and custom_pattern_2 is None and custom_pattern_3 is None:
             return template.format(
                 year_regex, month_regex, day_regex,
             )
+
         else:
+            pattern_1 = '' if custom_pattern is None else custom_pattern
+            pattern_2 = '' if custom_pattern_2 is None else custom_pattern_2    
+            pattern_3 = '' if custom_pattern_3 is None else custom_pattern_3
             return template.format(
-                custom_pattern,'',''
+                pattern_1, pattern_2, pattern_3
             )
 
     return out
