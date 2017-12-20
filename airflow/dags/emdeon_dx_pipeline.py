@@ -14,6 +14,7 @@ import subdags.emdeon_validate_fetch_file
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.split_push_files as split_push_files
 import subdags.update_analytics_db as update_analytics_db
+import util.date_utils as date_utils
 
 for m in [subdags.emdeon_validate_fetch_file, HVDAG, detect_move_normalize,
           split_push_files, update_analytics_db]:
@@ -22,8 +23,8 @@ for m in [subdags.emdeon_validate_fetch_file, HVDAG, detect_move_normalize,
 from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
 
 # Applies to all files
-TMP_PATH_TEMPLATE='/tmp/webmd/medicalclaims/{}/'
-TMP_PATH_PARTS_TEMPLATE='/tmp/webmd/medicalclaims/{}/parts/'
+TMP_PATH_TEMPLATE='/tmp/webmd/medicalclaims/{}{}{}/'
+TMP_PATH_PARTS_TEMPLATE='/tmp/webmd/medicalclaims/{}{}{}/parts/'
 DAG_NAME='emdeon_dx_pipeline'
 DATATYPE='medicalclaims'
 
@@ -31,7 +32,7 @@ DATATYPE='medicalclaims'
 TRANSACTION_FILE_DESCRIPTION='WebMD DX transaction file'
 S3_TRANSACTION_SPLIT_PATH='s3://salusv/incoming/medicalclaims/emdeon/'
 S3_TRANSACTION_RAW_PATH='s3://healthverity/incoming/medicalclaims/emdeon/transactions/'
-TRANSACTION_FILE_NAME_TEMPLATE='{}_Claims_US_CF_D_deid.dat.gz'
+TRANSACTION_FILE_NAME_TEMPLATE='{}{}{}_Claims_US_CF_D_deid.dat.gz'
 TRANSACTION_DAG_NAME='validate_fetch_transaction_file'
 MINIMUM_TRANSACTION_FILE_SIZE=500
 
@@ -51,34 +52,35 @@ MINIMUM_DEID_FILE_SIZE=500
 
 S3_PAYLOAD_LOC='s3://salusv/matching/payload/medicalclaims/emdeon/'
 
-def get_file_name_pattern(ds, kwargs):
-    return TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
+EMDEON_DX_DAY_OFFSET = -1
+
+tmp_path = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
+tmp_path_parts = date_utils.insert_date_into_template(TMP_PATH_PARTS_TEMPLATE, kwargs)
+
 
 def do_unzip_file(ds, **kwargs):
-    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    file_path = tmp_path + TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds_nodash'])
+    file_path = tmp_path + date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE, 
+        day_offset = EMDEON_DX_DAY_OFFSET
+    )
     check_call(['gzip', '-d', '-k', '-f', file_path])
 
 def do_split_file(ds, **kwargs):
-    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
-    file_name = TRANSACTION_FILE_NAME_TEMPLATE.replace('.gz', '').format(kwargs['yesterday_ds_nodash'])
+    file_name = date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE.replace('.gz', ''),
+        kwargs,
+        day_offset = EMDEON_DX_DAY_OFFSET
+    )
     file_path = tmp_path + file_name
     check_call(['mkdir', '-p', tmp_path_parts])
     check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(tmp_path_parts, file_name)])
 
 def do_zip_part_files(ds, **kwargs):
-    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
-
     file_list = os.listdir(tmp_path_parts)
     for file_name in file_list:
         check_call(['lbzip2', '{}{}'.format(tmp_path_parts, file_name)])
 
 def do_push_splits_to_s3(ds, **kwargs):
-    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
-
     file_list = os.listdir(tmp_path_parts)
     file_name = file_list[0]
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
@@ -160,10 +162,16 @@ log_file_volume = PythonOperator(
     provide_context=True,
     python_callable=split_push_files.do_log_file_volume(
         DAG_NAME,
-        get_file_name_pattern,
+        date_utils.generate_insert_regex_into_template_function(
+            TRANSACTION_FILE_NAME_TEMPLATE
+        ),
         lambda ds, k: [
-            TMP_PATH_TEMPLATE.format(k['ds_nodash'])
-            + TRANSACTION_FILE_NAME_TEMPLATE.format(k['yesterday_ds_nodash'])
+            date_utils.insert_date_into_template(TMP_PATH_TEMPLATE,kwargs)
+            + date_utils.insert_date_into_template(
+                TRANSACTION_FILE_NAME_TEMPLATE,
+                kwargs,
+                day_offset = EMDEON_DX_DAY_OFFSET
+            )
         ]
     ),
     dag=mdag
@@ -203,20 +211,6 @@ queue_up_for_matching = BashOperator(
     dag=mdag
 )
 
-def insert_file_date_func(template):
-    def out(ds, kwargs):
-        return template.format(
-            kwargs['yesterday_ds'][0:4],
-            kwargs['yesterday_ds'][5:7],
-            kwargs['yesterday_ds'][8:10]
-        )
-    return out
-
-def expected_matching_files_func(ds, kwargs):
-    deid_file_name = DEID_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds_nodash'])
-    return [deid_file_name.replace('.gz', '')]
-
-
 #
 # Post-Matching
 #
@@ -227,15 +221,19 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : expected_matching_files_func,
-            'file_date_func'                    : insert_file_date_func(
-                '{}/{}/{}'
+            'expected_matching_files_func'      : date_utils.generate_insert_date_into_template_function(
+                DEID_FILE_NAME_TEMPLATE.replace('.gz',''),
+                day_offset = EMDEON_DX_DAY_OFFSET
+                ),
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
+                '{}/{}/{}',
+                day_offset = EMDEON_DX_DAY_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_LOC,
             'vendor_uuid'                       : '86396771-0345-4d67-83b3-7e22fded9e1d',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/emdeon/medicalclaims/sparkNormalizeEmdeonDX.py',
             'pyspark_normalization_args_func'   : lambda ds, k: [
-                '--date', insert_file_date_func('{}-{}-{}')(ds, k)
+                '--date', date_util.insert_date_into_template('{}-{}-{}', k, day_offset = EMDEON_DX_DAY_OFFSET)
             ],
             'pyspark'                           : True
         }
@@ -256,8 +254,12 @@ update_analytics_db = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : lambda ds, k: insert_file_date_func(sql_template)(ds, k)
-            if insert_file_date_func('{}-{}-{}')(ds, k).find('-01') == 7 else ''
+            'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(
+                sql_template,
+                kwargs,
+                day_offset = EMDEON_DX_DAY_OFFSET
+            )
+            if date_utils.insert_date_into_template('{}-{}-{}', k).find('-01') == 7 else ''
         }
     ),
     task_id='update_analytics_db',
