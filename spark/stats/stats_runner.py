@@ -7,17 +7,17 @@ import spark.spark_setup as spark_setup
 import spark.stats.processor as processor
 
 
-def run(spark, sqlContext, provider_name, quarter, start_date, \
+def run(spark, sqlContext, provider_name, quarter, start_date,
         end_date, earliest_date, output_dir):
 
-    all_stats = processor.run_marketplace_stats(spark, sqlContext, \
+    all_stats = processor.run_marketplace_stats(spark, sqlContext,
                 provider_name, quarter, start_date, end_date, earliest_date)
 
     output_dir = output_dir[:-1] if output_dir.endswith('/') else output_dir
 
     try:
         os.makedirs(output_dir)
-    except:
+    except OSError:
         logging.warn("Output dir already exists")
 
     for key, stat in all_stats.items():
@@ -39,16 +39,13 @@ def main(args):
     earliest_date = args.earliest_date
     output_dir = args.output_dir
 
-    # Get the directory of provider configs
-    config_dir = '/'.join(__file__.split('/')[:-1]) + '/config/'
-
     # set up spark
     spark, sqlContext = spark_setup \
                         .init('{} marketplace stats'.format(provider_name))
 
     # Calculate marketplace stats
-    all_stats = run(spark, sqlContext, provider_name, quarter, \
-                    start_date, end_date, earliest_date, config_dir)
+    run(spark, sqlContext, provider_name, quarter, start_date,
+        end_date, earliest_date, output_dir)
 
 
 if __name__ == '__main__':
