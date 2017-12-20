@@ -1,15 +1,15 @@
 INSERT INTO medicalclaims_common_model
-SELECT DISTINCT
+SELECT
     NULL,                                       -- record_id
     t.ediclaim_id,                              -- claim_id
-    'TBD',                                      -- hvid
+    t.hvid,                                     -- hvid
     NULL,                                       -- created
     '2',                                        -- model_version
     NULL,                                       -- data_set
     NULL,                                       -- data_feed
     NULL,                                       -- data_vendor
     NULL,                                       -- source_version
-    NULL,                                       -- patient_gender
+    p.gender,                                   -- patient_gender
     NULL,                                       -- patient_age
     NULL,                                       -- patient_year_of_birth
     NULL,                                       -- patient_zip3
@@ -18,9 +18,8 @@ SELECT DISTINCT
     NULL,                                       -- date_received
     extract_date(
         t.dateservicestart,
-        {min_date},
-        {max_date}
-    ),                                          -- date_service **TODO: apply capping?**
+        '%Y-%m-%d'
+    ),                                          -- date_service
     NULL,                                       -- date_service_end
     NULL,                                       -- inst_date_admitted
     NULL,                                       -- inst_date_discharged
@@ -39,20 +38,29 @@ SELECT DISTINCT
     NULL,                                       -- inst_drg_std_id
     NULL,                                       -- inst_drg_vendor_id
     NULL,                                       -- inst_drg_vendor_desc
-    t.facilitycode,                             -- place_of_service_std_id **TODO: mask as usual? **
+    t.facilitycode,                             -- place_of_service_std_id
     NULL,                                       -- place_of_service_vendor_id
     NULL,                                       -- place_of_service_vendor_desc
     t.linesequencenumber,                       -- service_line_number
-    ARRAY(
-        t.linkeddiagnosisone, t.linkeddiagnosistwo,
-        t.linkeddiagnosisthree, t.linkeddiagnosisfour,
-        NULL)[sl_explode.n],                    -- diagnosis_code
+    ARRAY(t.principaldiagnosis, t.diagnosistwo,
+        t.diagnosisthree, t.diagnosisfour, t.diagnosisfive,
+        t.diagnosissix, t.diagnosisseven, t.diagnosiseight
+        )
+        [
+            CAST(
+            ARRAY(
+                t.linkeddiagnosisone, t.linkeddiagnosistwo,
+                t.linkeddiagnosisthree, t.linkeddiagnosisfour,
+                NULL)[sl_explode.n]
+                AS INTEGER
+            ) - 1
+        ],                                      -- diagnosis_code
     NULL,                                       -- diagnosis_code_qual
     CASE
         WHEN ARRAY(t.linkeddiagnosisone, t.linkeddiagnosistwo,
             t.linkeddiagnosisthree, t.linkeddiagnosisfour,
             NULL)[sl_explode.n] IS NOT NULL
-            THEN sl_explode.n
+            THEN sl_explode.n + 1
         ELSE NULL 
     END,                                        -- diagnosis_priority
     NULL,                                       -- admit_diagnosis_ind
@@ -199,6 +207,8 @@ SELECT DISTINCT
     NULL,                                       -- cob_payer_claim_filing_ind_code_2
     NULL                                        -- cob_ins_type_code_2
 FROM transactional_cardinal_pms t
+    LEFT OUTER JOIN matching_payload p
+    ON t.hvJoinKey = p.hvJoinKey
     CROSS JOIN service_line_exploder sl_explode
 WHERE
     -- Filter out cases from explosion where diagnosis_code is NULL
@@ -208,9 +218,11 @@ WHERE
         IS NOT NULL 
     ) 
     OR 
-    -- If all are NULL, include one row w/ NULL diagnosis_code (SELECT DISTINCT)
+    -- If all are NULL, include one row w/ NULL diagnosis_code
     ( 
         COALESCE(t.linkeddiagnosisone, t.linkeddiagnosistwo,
         t.linkeddiagnosisthree, t.linkeddiagnosisfour) IS NULL
+        AND
+        sl_explode.n = 0
     )
 ;

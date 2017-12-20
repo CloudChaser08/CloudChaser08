@@ -2,14 +2,14 @@ INSERT INTO medicalclaims_common_model
 SELECT
     NULL,                                       -- record_id
     t.ediclaim_id,                              -- claim_id
-    NULL,                                       -- hvid
+    t.hvid,                                     -- hvid
     NULL,                                       -- created
     '2' ,                                       -- model_version
     NULL,                                       -- data_set
     NULL,                                       -- data_feed
     NULL,                                       -- data_vendor
     NULL,                                       -- source_version
-    NULL,                                       -- patient_gender
+    p.gender,                                   -- patient_gender
     NULL,                                       -- patient_age
     NULL,                                       -- patient_year_of_birth
     NULL,                                       -- patient_zip3
@@ -18,14 +18,12 @@ SELECT
     NULL,                                       -- date_received
     extract_date(
         t.dateservicestart,
-        {min_date},
-        {max_date}
-    ),                                          -- date_service **TODO: cap **
+        '%Y-%m-%d'
+    ),                                          -- date_service
     extract_date(
         t.dateservicestart,
-        {min_date},
-        {max_date}
-    ),                                          -- date_service_end **TODO: cap **
+        '%Y-%m-%d'
+    ),                                          -- date_service_end
     NULL,                                       -- inst_date_admitted
     NULL,                                       -- inst_date_discharged
     NULL,                                       -- inst_admit_type_std_id
@@ -52,14 +50,7 @@ SELECT
         t.diagnosissix, t.diagnosisseven, t.diagnosiseight
         )[c_explode.n],                         -- diagnosis_code
     NULL,                                       -- diagnosis_code_qual
-    CASE
-        WHEN ARRAY(t.principaldiagnosis, t.diagnosistwo,
-            t.diagnosisthree, t.diagnosisfour, t.diagnosisfive,
-            t.diagnosissix, t.diagnosisseven, t.diagnosiseight
-            )[c_explode.n] IS NOT NULL
-            THEN c_explode.n
-        ELSE NULL
-    END,                                        -- diagnosis_priority
+    NULL,                                       -- diagnosis_priority
     NULL,                                       -- admit_diagnosis_ind
     NULL,                                       -- procedure_code
     NULL,                                       -- procedure_code_qual
@@ -174,20 +165,23 @@ SELECT
     NULL,                                       -- cob_payer_claim_filing_ind_code_2
     NULL                                        -- cob_ins_type_code_2
 FROM transactional_cardinal_pms t
+    LEFT OUTER JOIN matching_payload p
+    ON t.hvJoinKey = p.hvJoinKey
     CROSS JOIN claim_exploder c_explode
-    LEFT JOIN medicalclaims_common_model mcm
-    ON
-    t.ediclaim_id = mcm.claim_id
-    AND 
-    ARRAY(t.principaldiagnosis, t.diagnosistwo, t.diagnosisthree, t.diagnosisfour,
-        t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
-        )[c_explode.n] <> mcm.diagnosis_code
 WHERE
     -- Filter out cases from explosion where diagnosis_code would be null
     (
         ARRAY(t.principaldiagnosis, t.diagnosistwo, t.diagnosisthree, t.diagnosisfour,
             t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
             )[c_explode.n] IS NOT NULL
+    )
+    AND
+    -- Don't include the row if the diagnosis is also a service-line diagnosis
+    (
+        CAST((c_explode.n + 1) AS STRING) NOT IN (COALESCE(t.linkeddiagnosisone, ''),
+                                            COALESCE(t.linkeddiagnosistwo, ''),
+                                            COALESCE(t.linkeddiagnosisthree, ''),
+                                            COALESCE(t.linkeddiagnosisfour, ''))
     )
 DISTRIBUTE BY t.ediclaim_id
 ;

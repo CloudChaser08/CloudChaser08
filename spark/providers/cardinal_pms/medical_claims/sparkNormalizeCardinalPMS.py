@@ -6,16 +6,13 @@ from spark.runner import Runner
 from spark.spark_setup import init
 
 import spark.helpers.file_utils as file_utils
+import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.medicalclaims as medical_priv
 
 import logging
-
-# TODO: get these from DB
-MIN_DATE='0000-01-01'
-MAX_DATE='9999-12-31'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
@@ -24,16 +21,25 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = file_utils.get_abs_path(
             script_path,  '../../../test/providers/cardinal_pms/medicalclaims/resources/input/'
         ) + '/'
+        matching_path = file_utils.get_abs_path(
+            script_path,  '../../../test/providers/cardinal_pms/medicalclaims/resources/payload/'
+        ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}'\
                         .format(date_input.replace('-', '/'))
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/payload/{}'\
+                        .format(date_input.replace('-', '/'))
     else:
         input_path = 's3://salusv/incoming/medicalclaims/cardinal_pms/{}/'\
+                        .format(date_input.replace('-', '/'))
+        input_path = 's3://salusv/matching/payload/medicalclaims/cardinal_pms/{}/'\
                         .format(date_input.replace('-', '/'))
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     # Note: This routine does not contain any matching payloads
+    # LOLJK
+    payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     # Create the medical claims table to store the results in
     runner.run_spark_script('../../../common/medicalclaims_common_model.sql', [
@@ -60,10 +66,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     logging.debug('Created exploder table for service-line')
 
     # Normalize service-line
-    runner.run_spark_script('normalize_service_line.sql', [
-        ['min_date', MIN_DATE],
-        ['max_date', MAX_DATE]
-    ])
+    runner.run_spark_script('normalize_service_line.sql', [])
     logging.debug('Finished normalizing for service-line')
 
     # Create exploder table for claim
@@ -71,10 +74,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     logging.debug('Created exploder for claim')
 
     # Normalize claim
-    runner.run_spark_script('normalize_claim.sql', [
-        ['min_date', MIN_DATE],
-        ['max_date', MAX_DATE]
-    ])
+    runner.run_spark_script('normalize_claim.sql', [])
     logging.debug('Finished normalizing for claim')
 
     # Postprocessing
@@ -83,8 +83,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.add_universal_columns(
             feed_id='41',
             vendor_id='188',
-            # TODO: this is not right, fix when we know what the name format is.
-            filename='PMS_Claims_{}.psv'.format(date_obj.strftime('%Y%m%d'))
+            filename='PMS_record_data_{}'.format(date_obj.strftime('%Y%m%d'))
         ),
         medical_priv.filter
     )(

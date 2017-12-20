@@ -1,3 +1,4 @@
+import pdb
 import pytest
 
 import logging
@@ -19,7 +20,19 @@ def test_init(spark):
     global results
     results = spark['sqlContext'].sql('select * from medicalclaims_common_model') \
                                  .collect()
-    print results
+    print len(results)
+    pdb.set_trace()
+
+
+def test_claim_levels_all_populated():
+    assert len(filter(lambda r: r.service_line_number is None, results)) == 23
+
+
+def test_service_line_levels_all_populated():
+    assert len(filter(lambda r: r.service_line_number is not None, results)) == 27
+
 
 def test_cleanup(spark):
     cleanup(spark)
+
+
