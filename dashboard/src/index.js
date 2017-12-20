@@ -38,9 +38,10 @@ function buildFullDataset(airflowResults, providerIncoming) {
   function nextDate() {
     return providerConf.schedule(executionDates[executionDates.length-1]);
   }
-  while (providerConf.schedule(nextDate()) <= Date.now()) {
+
+  while (nextDate() <= Date.now()) {
     executionDates.push(nextDate());
-  } 
+  }
 
   function getExpectedFilename(date) {
     return providerConf.executionDateToFilename(date);
@@ -49,6 +50,12 @@ function buildFullDataset(airflowResults, providerIncoming) {
   return executionDates.map(function(exDate) {
     var airflowData = airflowResults.rows.filter(function(resultRow) {
       var date = new Date(resultRow[0]);
+
+      // offset the execution date
+      if (!providerConf.hasOwnProperty('noAirflowOffset') || !providerConf.noAirflowOffset) {
+        date = providerConf.schedule(date);
+      }
+
       var formatted = (
         (1900 + date.getYear()) + '-'
           + helpers.leftZPad((date.getMonth() + 1).toString()) + '-'
@@ -141,6 +148,10 @@ exports.handler = function(event, context) {
           return d.incomingFiles.length > 0;
         });
 
+        if (existingFiles.length == 0) throw new Error(
+          "No files found in s3 for the following provider: " + providerConf.displayName
+        );
+
         var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
 
         var healthLabel;
@@ -184,12 +195,12 @@ exports.handler = function(event, context) {
               else dateClass = 'fully-loaded';
               if (dateClass === 'not-sent') {
                 return '<li class=' + dateClass + '>' +
-                  '<b>' + d.executionDate + '</b><br/>' + 
+                  '<b>' + d.executionDate + '</b><br/>' +
                   d.expectedFile + '</li>';
               }
               else {
                 return '<li class=' + dateClass + '>' +
-                  '<b>' + d.executionDate + '</b><br/>' + 
+                  '<b>' + d.executionDate + '</b><br/>' +
                   d.incomingFiles.join('<br/>') + '</li>';
               }
             }).reduce(function (el1, el2) {

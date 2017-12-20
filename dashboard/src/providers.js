@@ -25,6 +25,9 @@ exports.schedule = {
 //   schedule                 -> The airflow schedule for this provider's DAG (from the schedule object above)
 //   startDate                -> The date from which to enumerate all of this provider's execution dates for the purposes
 //                               of this dashboard
+//   noAirflowOffset          -> (Optional) A boolean value to indicate whether the automation routine accounted
+//                               for the default airflow offset
+//   s3Bucket                 -> (Optional) Use a different s3 bucket than the default (healthverity)
 //   airflowPipelineName      -> The name of this provider's airflow pipeline
 //   expectedFilenameRegex    -> A regex describing the structure of this provider's incoming file names
 //   filenameToExecutionDate  -> A function to be used to convert an incoming file name to an execution date of the
@@ -32,9 +35,10 @@ exports.schedule = {
 exports.config = [
   {
     id: 'practice_insight_dx',
-    displayName: 'Practice Insight',
+    displayName: 'Practice Insight DX',
     providerPrefix: 'practiceinsight',
     schedule: this.schedule.MONTHLY,
+    noAirflowOffset: true,
     startDate: new Date('2017-01-02'),
     airflowPipelineName: 'practice_insight_pipeline',
     expectedFilenameRegex: /^.*HV\.data\.837\.[0-9]{4}\.[a-z]{3}\.csv\.gz$/,
@@ -57,7 +61,7 @@ exports.config = [
   },
   {
     id: 'caris_labtests',
-    displayName: 'Caris',
+    displayName: 'Caris Lab',
     providerPrefix: 'caris',
     schedule: this.schedule.MONTHLY,
     startDate: new Date('2017-01-02'),
@@ -65,17 +69,15 @@ exports.config = [
     expectedFilenameRegex: /^.*DATA_[0-9]{14}$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('_')[1];
-      var executionDate = helpers.addMonths(-1)(new Date(isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-02'));
-      return helpers.formatDate(executionDate);
+      return helpers.formatDate(new Date(isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-02'));
     },
     executionDateToFilename: function(date) {
-      var nextDay = new Date(date.getTime() + (24 * 60 * 60 * 1000));
-      return 'incoming/caris/DATA_' + nextDay.getFullYear() + helpers.leftZPad(nextDay.getDate(), 2) + '<########>';
+      return 'incoming/caris/DATA_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) + '[0-9]{8}';
     }
   },
   {
     id: 'emdeon_dx',
-    displayName: 'EmdeonDX',
+    displayName: 'Emdeon DX',
     providerPrefix: 'medicalclaims/emdeon/transactions',
     schedule: this.schedule.DAILY,
     startDate: new Date('2017-01-01'),
@@ -83,16 +85,20 @@ exports.config = [
     expectedFilenameRegex: /^.*[0-9]{8}_Claims_US_CF_D_deid\.dat\.gz$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('/')[4].split('_')[0];
-      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+      var adjusted = helpers.addDays(2)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
     },
     executionDateToFilename: function(date) {
-      return 'incoming/medicalclaims/emdeon/transactions/' + date.getFullYear() +
-        helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2) + '_Claims_US_CF_D_deid.dat.gz';
+      var adjusted = helpers.addDays(-2)(date);
+      return 'incoming/medicalclaims/emdeon/adjusted/' + date.getFullYear() +
+        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '_Claims_US_CF_D_deid.dat.gz';
     }
   },
   {
     id: 'emdeon_rx',
-    displayName: 'EmdeonRX',
+    displayName: 'Emdeon RX',
     providerPrefix: 'pharmacyclaims/emdeon/transactions',
     schedule: this.schedule.DAILY,
     startDate: new Date('2017-01-01'),
@@ -100,16 +106,41 @@ exports.config = [
     expectedFilenameRegex: /^.*[0-9]{8}_RX_DEID_CF_ON\.dat\.gz/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('/')[4].split('_')[0];
-      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+      var adjusted = helpers.addDays(2)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
     },
     executionDateToFilename: function(date) {
-      return 'incoming/pharmacyclaims/emdeon/transactions/' + date.getFullYear() +
-        helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2) + '_RX_DEID_CF_ON.dat.gz';
+      var adjusted = helpers.addDays(-2)(date);
+      return 'incoming/pharmacyclaims/emdeon/adjusted/' + date.getFullYear() +
+        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '_RX_DEID_CF_ON.dat.gz';
+    }
+  },
+  {
+    id: 'emdeon_era',
+    displayName: 'Emdeon ERA',
+    providerPrefix: 'era/emdeon/transactions',
+    schedule: this.schedule.DAILY,
+    startDate: new Date('2017-01-01'),
+    airflowPipelineName: 'emdeon_era_pipeline',
+    expectedFilenameRegex: /^.*[0-9]{8}_AF_ERA_CF_ON_CS_deid\.dat\.gz/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('/')[4].split('_')[0];
+      var adjusted = helpers.addDays(2)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      var adjusted = helpers.addDays(-2)(date);
+      return 'incoming/era/emdeon/transactions/' + adjusted.getFullYear() +
+        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '_AF_ERA_CF_ON_CS_deid.dat.gz';
     }
   },
   {
     id: 'quest_labtests',
-    displayName: 'Quest',
+    displayName: 'Quest Lab',
     providerPrefix: 'quest',
     startDate: new Date('2017-01-01'),
     schedule: this.schedule.DAILY,
@@ -117,38 +148,42 @@ exports.config = [
     expectedFilenameRegex: /^.*HealthVerity_[0-9]{12}_2\.gz.zip$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('_')[1].substring(0, 8);
-      var adjustedDate = helpers.addDays(3)(
-        new Date(isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8))
-      );
-      return helpers.formatDate(adjustedDate);
+      var adjusted = helpers.addDays(4)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
     },
     executionDateToFilename: function(date) {
-      var twoDaysPrior = new Date(date.getTime() - (2 * 24 * 60 * 60 * 1000));
-      var nextDay = new Date(twoDaysPrior.getTime() + (24 * 60 * 60 * 1000));
-      return 'incoming/quest/HealthVerity_' + twoDaysPrior.getFullYear() + helpers.leftZPad(twoDaysPrior.getMonth() + 1, 2) +
-        helpers.leftZPad(twoDaysPrior.getDate(), 2) + helpers.leftZPad(nextDay.getMonth() + 1, 2) + helpers.leftZPad(nextDay.getDate(), 2) + '_2.gz.zip';
+      var adjusted = helpers.addDays(-4)(date);
+      var nextDay = helpers.addDays(1)(adjusted);
+      return 'incoming/quest/HealthVerity_' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2) +
+        helpers.leftZPad(adjusted.getDate(), 2) + helpers.leftZPad(nextDay.getMonth() + 1, 2) + helpers.leftZPad(nextDay.getDate(), 2) + '_2.gz.zip';
     }
   },
   {
     id: 'ability_dx',
-    displayName: 'Ability',
+    displayName: 'Ability DX',
     providerPrefix: 'ability',
     startDate: new Date('2017-01-01'),
     schedule: this.schedule.DAILY,
     airflowPipelineName: 'ability_pipeline',
     expectedFilenameRegex: /^.*[a-z]+\.from_[0-9]{4}-[0-9]{2}-[0-9]{2}\.to_[0-9]{4}-[0-9]{2}-[0-9]{2}\.zip$/,
     filenameToExecutionDate: function(filename) {
-      return filename.split('_')[2].split('.')[0];
+      var isolatedDate = filename.split('_')[2].split('.')[0];
+      var adjusted = helpers.addDays(1)(new Date(isolatedDate));
+      return helpers.formatDate(adjusted);
     },
     executionDateToFilename: function(date) {
-      var previousDay = new Date(date.getTime() - (24 * 60 * 60 * 1000));
-      return 'incoming/ability/[app].from_' + previousDay.getFullYear() + '-' + helpers.leftZPad(previousDay.getMonth() + 1, 2) + '-' +
-        previousDay.getDate() + '.to_' + date.getFullYear() + '-' + helpers.leftZPad(date.getMonth() + 1, 2) + '-' + helpers.leftZPad(date.getDate(), 2) + '.zip';
+      var adjusted = helpers.addDays(-1)(date);
+      var previousDay = helpers.addDays(-1)(adjusted);
+      return 'incoming/ability/[app].from_' + previousDay.getFullYear() + '-' + helpers.leftZPad(previousDay.getMonth() + 1, 2) + '-'
+        + previousDay.getDate() + '.to_' + adjusted.getFullYear() + '-' + helpers.leftZPad(adjusted.getMonth() + 1, 2)
+        + '-' + helpers.leftZPad(adjusted.getDate(), 2) + '.zip';
     }
   },
   {
     id: 'esi_rx',
-    displayName: 'Express Scripts',
+    displayName: 'Express Scripts RX',
     providerPrefix: 'esi',
     schedule: this.schedule.WEEKLY,
     startDate: new Date('2017-01-01'),
@@ -156,14 +191,36 @@ exports.config = [
     expectedFilenameRegex: /^.*10130X001_HV_RX_Claims_D[0-9]{8}.txt$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('_')[4].split('.')[0].substring(1);
-      var adjusted = helpers.addDays(-6)(new Date(
+      var adjusted = helpers.addDays(1)(new Date(
         isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
       ));
       return helpers.formatDate(adjusted);
     },
     executionDateToFilename: function(date) {
-      return 'incoming/esi/10130X001_HV_RX_Claims_D' + date.getFullYear() + 
-        helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2) + '.txt';
+      var adjusted = helpers.addDays(-1)(date);
+      return 'incoming/esi/10130X001_HV_RX_Claims_D' + adjusted.getFullYear() +
+        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '.txt';
+    }
+  },
+  {
+    id: 'esi_enrollment',
+    displayName: 'Express Scripts Enrollment',
+    providerPrefix: 'esi',
+    schedule: this.schedule.WEEKLY,
+    startDate: new Date('2017-01-01'),
+    airflowPipelineName: 'express_scripts_pipeline',
+    expectedFilenameRegex: /^.*10130X001_HV_RX_ENROLLMENT_D[0-9]{8}.txt$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('_')[4].split('.')[0].substring(1);
+      var adjusted = helpers.addDays(1)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      var adjusted = helpers.addDays(-1)(date);
+      return 'incoming/esi/10130X001_HV_RX_ENROLLMENT_D' + adjusted.getFullYear() +
+        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '.txt';
     }
   },
   {
@@ -176,10 +233,15 @@ exports.config = [
     expectedFilenameRegex: /^.*HVUnRes.Record.[0-9]{8}$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('.')[2];
-      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+      var adjusted = helpers.addDays(1)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
     },
     executionDateToFilename: function(date) {
-      return 'incoming/mckessonrx/HVUnRes.Record.' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2);
+      var adjusted = helpers.addDays(-1)(date);
+      return 'incoming/mckessonrx/HVUnRes.Record.' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2)
+        + helpers.leftZPad(adjusted.getDate(), 2);
     }
   },
   {
@@ -192,10 +254,15 @@ exports.config = [
     expectedFilenameRegex: /^.*HVRes.Record.[0-9]{8}$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('.')[2];
-      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+      var adjusted = helpers.addDays(1)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
     },
     executionDateToFilename: function(date) {
-      return 'incoming/mckessonrx/HVRes.Record.' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2);
+      var adjusted = helpers.addDays(-1)(date);
+      return 'incoming/mckessonrx/HVRes.Record.' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2)
+        + helpers.leftZPad(adjusted.getDate(), 2);
     }
   },
   {
@@ -208,12 +275,90 @@ exports.config = [
     expectedFilenameRegex: /^.*HealthVerityOut_[0-9]{8}.csv$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('_')[1].split('.')[0];
+      var adjusted = helpers.addDays(1)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      var adjusted = helpers.addDays(-1)(date);
+      return 'incoming/diplomat/HealthVerityOut_' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2)
+        + helpers.leftZPad(adjusted.getDate(), 2)
+        + '.csv';
+    }
+  },
+  {
+    id: 'apothecary_by_design',
+    displayName: 'Apothecary By Design RX',
+    providerPrefix: 'abd',
+    schedule: this.schedule.WEEKLY,
+    startDate: new Date('2017-06-05'),
+    airflowPipelineName: 'apothecary_by_design_pipeline',
+    expectedFilenameRegex: /^.*hv_export_data_[0-9]{8}.txt$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('_')[3].split('.')[0];
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
     },
     executionDateToFilename: function(date) {
-      return 'incoming/diplomat/HealthVerityOut_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) + helpers.leftZPad(date.getDate(), 2)
-        + '.csv';
+      return 'incoming/abd/hv_export_data_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
+        + helpers.leftZPad(date.getDate(), 2)
+        + '.txt';
     }
-  }
+  },
+  {
+    id: 'cardinal_mpi',
+    displayName: 'Cardinal MPI',
+    s3Bucket: 'hvincoming',
+    providerPrefix: 'cardinal_raintree/mpi',
+    schedule: this.schedule.DAILY,
+    startDate: new Date('2017-06-01'),
+    airflowPipelineName: 'cardinal_mpi_pipeline',
+    expectedFilenameRegex: /^.*mpi.[0-9]{8}T[0-9]{6}.zip$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('.')[1].split('T')[0];
+      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+    },
+    executionDateToFilename: function(date) {
+      return 'cardinal_raintree/mpi/mpi_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
+        + helpers.leftZPad(date.getDate(), 2)
+        + 'T[0-9]{6}.zip';
+    }
+  },
+  {
+    id: 'cardinal_pds',
+    displayName: 'Cardinal PDS RX',
+    providerPrefix: 'cardinal/pds',
+    schedule: this.schedule.DAILY,
+    startDate: new Date('2017-06-01'),
+    airflowPipelineName: 'cardinal_pds_pipeline',
+    expectedFilenameRegex: /^.*PDS_record_data_[0-9]{14}$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('_')[3].substring(0, 8);
+      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
+    },
+    executionDateToFilename: function(date) {
+      return 'incoming/cardinal/pds/PDS_record_data_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
+        + helpers.leftZPad(date.getDate(), 2)
+        + '[0-9]{6}';
+    }
+  },
+  {
+    id: 'navicure',
+    displayName: 'Navicure DX',
+    providerPrefix: 'navicure',
+    schedule: this.schedule.DAILY,
+    startDate: new Date('2017-06-01'),
+    airflowPipelineName: 'navicure_pipeline',
+    expectedFilenameRegex: /^.*HealthVerity-[0-9]{4}-[0-9]{2}-[0-9]{2}-record-data-Navicure$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('-').slice(1, 4).join('-');
+      var adjusted = helpers.addDays(31)(new Date(isolatedDate));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      var adjusted = helpers.addDays(-31)(date);
+      return 'incoming/navicure/HealthVerity-' + adjusted.getFullYear() + '-' + helpers.leftZPad(adjusted.getMonth() + 1, 2)
+        + '-' + helpers.leftZPad(adjusted.getDate(), 2) + '-record-data-Navicure';
+    }
+  },
 ];
-
