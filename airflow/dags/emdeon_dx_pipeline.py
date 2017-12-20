@@ -46,7 +46,7 @@ MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 # Deid file
 DEID_FILE_DESCRIPTION='WebMD DX deid file'
 S3_DEID_RAW_PATH='s3://healthverity/incoming/medicalclaims/emdeon/deid/'
-DEID_FILE_NAME_TEMPLATE='{}_Claims_US_CF_Hash_File_HV_Encrypt.dat.gz'
+DEID_FILE_NAME_TEMPLATE='{}{}{}_Claims_US_CF_Hash_File_HV_Encrypt.dat.gz'
 DEID_DAG_NAME='validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE=500
 
@@ -201,7 +201,7 @@ push_splits_to_s3 = PythonOperator(
 queue_up_for_matching = BashOperator(
     task_id='queue_up_for_matching',
     bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3_batchless.sh {}{}'.format(
-                 S3_DEID_RAW_PATH, (DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}')) + 
+                 S3_DEID_RAW_PATH, (DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}'),'','') + 
                  ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}'),
     params={'sequence_num' : 0,
             'matching_engine_env' : 'prod-matching-engine',
