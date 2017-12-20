@@ -37,8 +37,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
-    # Note: This routine does not contain any matching payloads
-    # LOLJK
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     # Create the medical claims table to store the results in

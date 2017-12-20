@@ -1,4 +1,3 @@
-import pdb
 import pytest
 
 import logging
@@ -20,8 +19,6 @@ def test_init(spark):
     global results
     results = spark['sqlContext'].sql('select * from medicalclaims_common_model') \
                                  .collect()
-    print len(results)
-    pdb.set_trace()
 
 
 def test_claim_levels_all_populated():
