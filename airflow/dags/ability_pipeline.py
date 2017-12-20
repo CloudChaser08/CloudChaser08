@@ -67,7 +67,6 @@ MINIMUM_EASE_FILE_SIZE=15000
 
 def get_tmp_dir(ds, kwargs):
     return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-# date_utils.insert_date_into_template(TMP_PATH_TEMPLATE.format('{}{}{}'), kwargs)
 
 def get_expected_file_name(template):
     return date_utils.generate_insert_regex_into_template_function(template, 
@@ -82,8 +81,7 @@ def get_expected_file_regex(template):
 
 def get_ap_transaction_tmp_dir(ds, kwargs):
     return get_tmp_dir(ds, kwargs) + 'ap/transaction/'
-#get_ap_transaction_tmp_dir = ate_utils.insert_date_into_template(TMP_PATH_TEMPLATE.format('{}{}{}'), kwargs) + 'ap/transaction/'
-
+    
 def get_transaction_files_paths_func(tmp_dir_func):
     def get_transaction_files_paths(ds, kwargs):
         file_dir = tmp_dir_func(ds, kwargs)
