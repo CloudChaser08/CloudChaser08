@@ -5,11 +5,18 @@ import datetime
 
 base = declarative_base()
 
+class FILE_ARRIVAL_STATUS():
+    ARRIVED_ON_TIME = 'FILE ARRIVED ON TIME'
+    ARRIVED_LATE    = 'FILE ARRIVED LATE'
+    IS_LATE         = 'FILE IS LATE'
+
 class FileArrivalLog(base):
     __tablename__ = "file_arrival_log"
-    s3_key = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
 
-    provider_feed_id = Column(Integer, nullable=False)
+    s3_key = Column(String, nullable=False)
+    data_feed_file_configuration_id = Column(Integer,
+            ForeignKey('data_feed_file_configuration.id'), nullable=False)
     received_dt = Column(DateTime)
     batch_dt = Column(DateTime, nullable=False)
     status = Column(String, nullable=False)
@@ -21,8 +28,11 @@ class DataFeedConfiguration(base):
     hvm_feed_id = Column(Integer, nullable=False)
     feed_name = Column(String, nullable=False)
     dag_name = Column(String, nullable=False)
-    grace_period = Column(Integer, nullable=False) # In seconds
+    dag_date_offset = Column(Integer)
+    dag_date_offset_qualifier = Column(String)
+    grace_period_seconds = Column(Integer, nullable=False)
     cron_schedule = Column(String, nullable=False)
+    start_dt = Column(DateTime, nullable=False)
 
 class DataFeedFileConfiguration(base):
     __tablename__ = "data_feed_file_configuration"
