@@ -14,3 +14,8 @@ def get_db_session():
     db = get_db_connection()
     Session = sessionmaker(bind=db)
     return Session()
+
+def lock_table(session, table_class):
+    session.execute('LOCK TABLES :table WRITE',
+            {'table': table_class.__tablename__}
+    )
