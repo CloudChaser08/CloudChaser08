@@ -6,6 +6,8 @@ import spark.stats.stats_runner as stats_runner
 from pyspark.sql import Row
 from subprocess import check_call, check_output
 
+import spark.helpers.file_utils as file_utils
+
 import spark.stats.config.reader.config_reader as config_reader
 import spark.helpers.stats.utils as stats_utils
 
@@ -36,10 +38,10 @@ def test_init(spark):
             start_date, end_date, earliest_date, output_dir, \
             old_get_data_func, old_get_provider_config_func
 
-    output_dir = '/'.join(__file__.split('/')[:-1]) + '/output/'
+    output_dir = file_utils.get_abs_path(__file__, './output')
 
     data_row = Row('claim_id', 'service_date', 'col_1', 'col_2', 'col_3')
-    
+
     stats_utils.get_provider_data = Mock(
         return_value = spark['spark'].sparkContext.parallelize([
             data_row('0', '1995-10-11', None, 'a', 'b'),
@@ -61,7 +63,8 @@ def test_init(spark):
             'datatype'          : 'medicalclaims',
             'date_field'        : 'service_date',
             'record_field'      : 'claim_id',
-            'fill_rates'        : { 'blacklist_columns': ['col_1', 'col_2'] },
+            'fill_rates'        : True,
+            'fill_rates_conf'   : {'columns': ['claim_id', 'service_date', 'col_3']},
             'key_stats'         : None,
             'top_values'        : None,
             'longitudinality'   : None,
@@ -69,7 +72,7 @@ def test_init(spark):
             'epi_calcs'         : None
         }
     )
-    
+
     provider = 'test_provider'
     quarter = 'Q12017'
     start_date = '2015-04-01'
@@ -94,5 +97,3 @@ def test_csv_made_for_each_non_null_stat_calc():
 
 def test_cleanup():
     check_call(['rm', '-r', output_dir])
-
-

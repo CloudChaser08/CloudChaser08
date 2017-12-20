@@ -1,15 +1,29 @@
 import pytest
+from mock import Mock
 
 import spark.stats.config.reader.config_reader as config_reader
 from spark.helpers.file_utils import get_abs_path
 
-def test_reads_sub_conf():
+@pytest.fixture(autouse=True)
+def setup_teardown():
+    old_get_fill_rate_cols_fn = config_reader._get_fill_rate_columns
+
+    yield
+
+    config_reader._get_fill_rate_columns = old_get_fill_rate_cols_fn
+
+
+def test_fill_rate_get_columns():
+
+    config_reader._get_fill_rate_columns = Mock(return_value=["one", "two"])
+
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
     conf = config_reader.get_provider_config(conf_file, 'test')
     assert 'fill_rate' in conf
-    assert conf['fill_rate'] != None
-    assert conf['fill_rate']['sub_field'] == 'dang'
-    assert conf['fill_rate']['cool_stuff'] == 'not really'
+    assert 'fill_rate_conf' in conf
+    assert conf['fill_rate']
+    assert conf['fill_rate_conf']
+    assert conf['fill_rate_conf'] == {"columns": ['one', 'two']}
 
 
 def test_does_not_read_sub_conf_when_null():
@@ -44,13 +58,3 @@ def test_exception_raised_when_provider_not_in_providers_conf_file():
 
     exception = e_info.value
     assert exception.message == 'lol is not in the providers config file'
-
-
-def test_default_config_used_when_key_not_specified_in_json():
-    conf_file = get_abs_path(__file__, 'resources/main_config.json')
-    conf = config_reader.get_provider_config(conf_file, 'test_missing_key')
-
-    assert conf['fill_rate'] is not None
-    assert conf['fill_rate']['cols'] == ['one', 'two']
-    assert conf['fill_rate']['other_info'] == 'hi'
-

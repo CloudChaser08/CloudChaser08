@@ -15,10 +15,9 @@ def _run_fill_rates(df, provider_conf):
         - _: a dataframe with the result of fill_rate.calculate_fill_rate
              or None if provider_conf specifies not to calculate
     '''
-    if provider_conf['fill_rates']:
+    if provider_conf.get('fill_rates_conf'):
         # Get only the columns needed to calculate fill rates on
-        cols = [c for c in df.columns if c not in \
-                provider_conf['fill_rates']['blacklist_columns']]
+        cols = [c for c in df.columns if c in provider_conf['fill_rates_conf']['columns']]
         fill_rate_cols_df = df.select(*[col(c) for c in cols])
         fill_rates = fill_rate.calculate_fill_rate(fill_rate_cols_df).collect()
         return fill_rates
@@ -35,7 +34,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
         - spark: spark session object
         - sqlContext: SQLContext of the spark session
         - provider_name: name of the provider we are running stats on
-        - quarter: quarter to run stats on 
+        - quarter: quarter to run stats on
         - start_date: starting date of the date range
         - end_date: ending date of the date range
         - earliest_date: earliest date for a particular stat calc (forget right now, not fill rates)
@@ -106,5 +105,3 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
         'epi_calcs': epi_calcs
     }
     return all_stats
-
-
