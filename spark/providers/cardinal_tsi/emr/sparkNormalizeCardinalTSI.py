@@ -132,7 +132,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
                 # rename defaults
                 record_id='row_id', created='crt_dt', data_set='data_set_nm',
-                data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
+                data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id',
+                model_version='mdl_vrsn_num'
             ),
 
             table['privacy_filter'].filter(runner.sqlContext, additional_transforms=table['custom_transformer']),

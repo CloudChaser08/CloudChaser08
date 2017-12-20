@@ -137,7 +137,8 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
     return out
 
 
-def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names):
+def add_universal_columns(feed_id, vendor_id, filename, 
+                          model_version_number=None, **alternate_column_names):
     """
     Add columns to a dataframe that are universal across all
     healthverity datasets. If filename is None, the input_file_name
@@ -150,6 +151,7 @@ def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names
     - data_feed: Marketplace feed ID
     - data_set: Source filename
     - data_vendor: Marketplace vendor ID
+    - model_version: the version of the associated common model used
 
     """
     record_id = alternate_column_names.get('record_id', 'record_id')
@@ -157,6 +159,7 @@ def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names
     data_set = alternate_column_names.get('data_set', 'data_set')
     data_feed = alternate_column_names.get('data_feed', 'data_feed')
     data_vendor = alternate_column_names.get('data_vendor', 'data_vendor')
+    model_version = alternate_column_names.get('model_version', 'model_version')
 
     def add(df):
         return df.withColumn(record_id, monotonically_increasing_id())                   \
@@ -169,7 +172,11 @@ def add_universal_columns(feed_id, vendor_id, filename, **alternate_column_names
                  .alias(data_feed)                                                       \
                  .withColumn(data_vendor, lit(vendor_id))                                \
                  .alias(data_vendor)                                                     \
+                 .withColumn(model_version,
+                             coalesce(lit(model_version_number), col(model_version)))    \
+                 .alias(model_version)                                                   \
                  .cache()
+
     return add
 
 
@@ -184,6 +191,29 @@ def get_gen_ref_date(sqlc, feed_id, domain_name):
         return res[0].gen_ref_1_dt
     else:
         return None
+
+
+def coalesce_dates(sqlc, feed_id, fallback_date, *dates):
+    '''
+      - Note: *dates must be input in order of importance.
+              i.e.
+              get_min_date(sqlc,
+                           feed_id,
+                           fallback_date,
+                           date_pick_me_first,
+                           date_pick_me_second,
+                           ...)
+    '''
+    for d in dates:
+        date = get_gen_ref_date(
+            sqlc,
+            feed_id,
+            d
+        )
+        if date is not None:
+            return date
+
+    return fallback_date
 
 
 def deobfuscate_hvid(project_name, hvid_col='hvid', nullify_non_integers=False):

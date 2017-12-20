@@ -17,6 +17,7 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('unrestricted_transactions')
     spark['sqlContext'].dropTempTable('restricted_pharmacyclaims_common_model')
     spark['sqlContext'].dropTempTable('restricted_transactions')
+    spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
 
     try:
         shutil.rmtree(file_utils.get_abs_path(__file__, './resources/output/'))
