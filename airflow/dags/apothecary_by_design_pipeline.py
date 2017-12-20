@@ -76,7 +76,8 @@ def get_additionaldata_file_paths(ds, kwargs):
             ADDITIONALDATA_FILE_NAME_TEMPLATE,
             kwargs, 
             day_offset = ABD_DAY_OFFSET
-    )]
+        )
+    ]
 
 
 def get_transaction_file_paths(ds, kwargs):
@@ -85,7 +86,8 @@ def get_transaction_file_paths(ds, kwargs):
             TRANSACTION_FILE_NAME_TEMPLATE,
             kwargs, 
             day_offset = ABD_DAY_OFFSET
-    )]
+        )
+    ]
 
 
 def get_deid_file_urls(ds, kwargs):
@@ -232,9 +234,11 @@ split_additionaldata_file = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_additionaldata_file_paths,
-            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(ADDITIONALDATA_FILE_NAME_TEMPLATE
+            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
+                ADDITIONALDATA_FILE_NAME_TEMPLATE
             ),
-            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE, 
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
+                S3_TRANSACTION_PROCESSED_URL_ADD_TEMPLATE, 
                 day_offset = ABD_DAY_OFFSET
             ),
             'num_splits'               : 20
@@ -254,9 +258,11 @@ split_transaction_file = SubDagOperator(
         {
             'tmp_dir_func'             : get_deid_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE
+            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE
             ),
-            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE, 
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
+                S3_TRANSACTION_PROCESSED_URL_TXN_TEMPLATE, 
                 day_offset = ABD_DAY_OFFSET
             ),
             'num_splits'               : 20
