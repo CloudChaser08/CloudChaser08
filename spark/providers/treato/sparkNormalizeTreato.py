@@ -165,10 +165,11 @@ def run(spark, runner, date_input, diagnosis_mapfile, test=False):
         feed_id=vendor_feed_id,
         vendor_id=vendor_id,
         filename = 'output_' + date_obj.strftime('%Y%m%d') + '_FakeAuthorIDs.csv',
+        model_version_number='05',
 
         # rename defaults
         record_id='row_id', created='crt_dt', data_set='data_set_nm',
-        data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id'
+        data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id', model_version='mdl_vrsn_num'
     )(
         runner.sqlContext.sql('select * from emr_diagnosis_common_model')
     ).createTempView('emr_diagnosis_common_model')

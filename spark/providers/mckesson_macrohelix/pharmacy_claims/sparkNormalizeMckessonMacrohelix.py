@@ -18,7 +18,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/mckesson_macrohelix/pharmacyclaims/resources/input/' 
+            script_path, '../../../test/providers/mckesson_macrohelix/pharmacyclaims/resources/input/'
         )
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/mckesson_macrohelix/pharmacyclaims/resources/matching/'
@@ -55,7 +55,8 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     runner.run_spark_script('../../../common/pharmacyclaims_common_model_v4.sql', [
         ['external', '', False],
         ['table_name', 'pharmacyclaims_common_model', False],
-        ['properties', '', False]
+        ['properties', '', False],
+        ['additional_columns', [], False]
     ])
 
     payload_loader.load(runner, matching_path, ['claimId', 'patientId', 'hvJoinKey'])
@@ -126,6 +127,3 @@ if __name__ == '__main__':
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
-
-
-

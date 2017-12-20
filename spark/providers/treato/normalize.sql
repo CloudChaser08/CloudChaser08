@@ -3,7 +3,7 @@ SELECT
     NULL,                -- row_id
     NULL,                -- hv_diag_id
     NULL,                -- crt_dt
-    '05',                -- mdl_vrsn_num
+    NULL,                -- mdl_vrsn_num
     NULL,                -- data_set_nm
     NULL,                -- src_vrsn_id
     NULL,                -- hvm_vdr_id
