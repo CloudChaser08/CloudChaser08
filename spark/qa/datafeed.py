@@ -10,6 +10,7 @@ import spark.helpers.constants as constants
 # is used as a fixture for pytest tests.
 active_datafeed = None
 
+
 class Comparison:
     """
     An object to coordinate unique column value comparisons between
@@ -107,7 +108,22 @@ class Datafeed:
         ])
 
 def build_test_list(default_tests, additional_tests, skip_tests):
+    """
+    Build a list of tests to run given a list of default tests, a list
+    of tests to add to the default, and a list of default tests to
+    skip.
+
+    Tests can be one of several types:
+      full fill tests     - string
+      validation tests    - Validation
+      unique match tests  - Comparison
+    """
+
     def get_test_id(test):
+        """
+        Given a test, return a string id for that test that can be used to
+        compare against the skip test list
+        """
         if type(test) is str:
             return test
         elif type(test) is Comparison:
