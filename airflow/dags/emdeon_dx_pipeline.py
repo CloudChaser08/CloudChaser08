@@ -17,7 +17,7 @@ import subdags.update_analytics_db as update_analytics_db
 import util.date_utils as date_utils
 
 for m in [subdags.emdeon_validate_fetch_file, HVDAG, detect_move_normalize,
-          split_push_files, update_analytics_db]:
+          split_push_files, update_analytics_db, date_utils]:
     reload(m)
 
 from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
