@@ -226,10 +226,9 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds,k: [
+            'expected_matching_files_func'      :
                 date_utils.generate_insert_date_into_template_function(DEID_FILE_NAME_TEMPLATE                    
-                )(ds, k)
-            ],
+                ),
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}'
                 ),
