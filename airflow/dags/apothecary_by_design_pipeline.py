@@ -65,10 +65,10 @@ DEID_FILE_NAME_TEMPLATE = 'hv_export_o_deid_{}{}{}.txt'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     ADDITIONALDATA_TMP_PATH_TEMPLATE
-    )
+)
 get_deid_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TMP_PATH_TEMPLATE
-    )
+)
 
 def get_additionaldata_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) +
@@ -105,9 +105,9 @@ def encrypted_decrypted_deid_file_paths_function(ds, kwargs):
     encrypted_file_path = file_dir \
             + date_utils.insert_date_into_template(
                 TRANSACTION_FILE_NAME_TEMPLATE,
-                kwargs, 
+                kwargs,
                 day_offset = ABD_DAY_OFFSET
-        )
+            )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
@@ -163,7 +163,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             mdag.schedule_interval,
             {
                 'source_files_func' : lambda ds, k: [
-                S3_TRANSACTION_RAW_URL + f for f in get_deid_file_urls(ds, k)
+                    S3_TRANSACTION_RAW_URL + f for f in get_deid_file_urls(ds, k)
                 ]
             }
         ),
@@ -179,7 +179,8 @@ fetch_transaction_file = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE, 
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE,
                 day_offset = ABD_DAY_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -198,7 +199,8 @@ fetch_additionaldata_file = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'     : ADDITIONALDATA_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(ADDITIONALDATA_FILE_NAME_TEMPLATE, 
+            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(
+                ADDITIONALDATA_FILE_NAME_TEMPLATE, 
                 day_offset = ABD_DAY_OFFSET
             ),
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
