@@ -4,8 +4,8 @@ import os
 
 def get_db_connection():
     db_string = "postgres://{}:{}@{}:{}/{}".format(
-        os.getenv('DB_USER'), os.getenv('DB_PASSWORD'), os.getenv('DB_HOST'),
-        os.getenv('DB_PORT'), os.getenv('DB_SCHEMA')
+        os.getenv('PGUSER'), os.getenv('PGPASSWORD'), os.getenv('PGHOST'),
+        os.getenv('PGPORT'), os.getenv('PGDATABASE')
     )
 
     return create_engine(db_string)  
