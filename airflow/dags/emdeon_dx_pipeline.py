@@ -54,12 +54,12 @@ S3_PAYLOAD_LOC='s3://salusv/matching/payload/medicalclaims/emdeon/'
 
 EMDEON_DX_DAY_OFFSET = -1
 
-tmp_path = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
-tmp_path_parts = date_utils.generate_insert_date_into_template_function(TMP_PATH_PARTS_TEMPLATE)
+get_tmp_path = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
+get_tmp_path_parts = date_utils.generate_insert_date_into_template_function(TMP_PATH_PARTS_TEMPLATE)
 
 
 def do_unzip_file(ds, **kwargs):
-    file_path = tmp_path(ds,kwargs) + date_utils.insert_date_into_template(
+    file_path = get_tmp_path(ds,kwargs) + date_utils.insert_date_into_template(
         TRANSACTION_FILE_NAME_TEMPLATE, 
         day_offset = EMDEON_DX_DAY_OFFSET
     )
@@ -71,22 +71,22 @@ def do_split_file(ds, **kwargs):
         kwargs,
         day_offset = EMDEON_DX_DAY_OFFSET
     )
-    file_path = tmp_path(ds,kwargs) + file_name
-    check_call(['mkdir', '-p', tmp_path_parts(ds,kwargs)])
-    check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(
-        tmp_path_parts(ds,kwargs), file_name)]
-    )
+    file_path = get_tmp_path(ds,kwargs) + file_name
+    check_call(['mkdir', '-p', get_tmp_path_parts(ds,kwargs)])
+    check_call(['split', '-n', 'l/20', file_path, 
+        '{}{}.'.format(get_tmp_path_parts(ds,kwargs), file_name)
+    ])
 
 def do_zip_part_files(ds, **kwargs):
-    file_list = os.listdir(tmp_path_parts)
+    file_list = os.listdir(get_tmp_path_parts)
     for file_name in file_list:
-        check_call(['lbzip2', '{}{}'.format(tmp_path_parts(ds,kwargs), file_name)])
+        check_call(['lbzip2', '{}{}'.format(get_tmp_path_parts(ds,kwargs), file_name)])
 
 def do_push_splits_to_s3(ds, **kwargs):
-    file_list = os.listdir(tmp_path_parts(ds,kwargs))
+    file_list = os.listdir(get_tmp_path_parts(ds,kwargs))
     file_name = file_list[0]
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
-    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts(ds,kwargs), "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
+    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', get_tmp_path_parts(ds,kwargs), "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
 
 default_args = {
     'owner': 'airflow',
@@ -168,7 +168,7 @@ log_file_volume = PythonOperator(
             TRANSACTION_FILE_NAME_TEMPLATE
         ),
         lambda ds, k: [
-            date_utils.insert_date_into_template(TMP_PATH_TEMPLATE,kwargs)
+            get_tmp_path(ds, k)
             + date_utils.insert_date_into_template(
                 TRANSACTION_FILE_NAME_TEMPLATE,
                 kwargs,
@@ -224,12 +224,11 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds, k: [ 
-            date_utils.insert_date_into_template(
-                DEID_FILE_NAME_TEMPLATE.replace('.gz',''),
-                k,
-                day_offset = EMDEON_DX_DAY_OFFSET
-                )
-            ],
+                date_utils.insert_date_into_template(
+                    DEID_FILE_NAME_TEMPLATE.replace('.gz',''),
+                    k,
+                    day_offset = EMDEON_DX_DAY_OFFSET
+            )],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}',
                 day_offset = EMDEON_DX_DAY_OFFSET
