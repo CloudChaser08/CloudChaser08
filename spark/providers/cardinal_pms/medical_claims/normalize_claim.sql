@@ -2,16 +2,18 @@ INSERT INTO medicalclaims_common_model
 SELECT
     NULL,                                       -- record_id
     t.ediclaim_id,                              -- claim_id
-    t.hvid,                                     -- hvid
+    COALESCE(p.hvid, t.hvid),                   -- hvid
     NULL,                                       -- created
     '2' ,                                       -- model_version
     NULL,                                       -- data_set
     NULL,                                       -- data_feed
     NULL,                                       -- data_vendor
     NULL,                                       -- source_version
-    p.gender,                                   -- patient_gender
+    COALESCE(p.gender, t.patientgender),        -- patient_gender
     NULL,                                       -- patient_age
-    NULL,                                       -- patient_year_of_birth
+    COALESCE(p.yearOfBirth,
+             YEAR(t.patientdob)
+    ),                                          -- patient_year_of_birth
     NULL,                                       -- patient_zip3
     NULL,                                       -- patient_state
     'P',                                        -- claim_type
