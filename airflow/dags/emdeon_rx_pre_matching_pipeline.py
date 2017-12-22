@@ -46,51 +46,56 @@ MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 # Deid file
 DEID_FILE_DESCRIPTION='WebMD RX deid file'
 S3_DEID_RAW_PATH='s3://healthverity/incoming/pharmacyclaims/emdeon/deid/'
-DEID_FILE_NAME_TEMPLATE='{}_RX_Ident_CF_ON_PHI_Hash_HV_Encrypt.dat.gz'
+DEID_FILE_NAME_TEMPLATE='{}{}{}_RX_Ident_CF_ON_PHI_Hash_HV_Encrypt.dat.gz'
 DEID_DAG_NAME='validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE=500
 
 EMDEON_RX_DAY_OFFSET = -1
 
-def get_file_name_pattern(ds, kwargs):
-    return TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
-date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE)
+get_file_name_pattern = date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE)
 
+tmp_path = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
+tmp_path_parts = generate_insert_date_into_template_function(TMP_PATH_PARTS_TEMPLATE)
 
 def do_unzip_file(ds, **kwargs):
-    tmp_path = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
-    file_path = tmp_path + date_utils.insert_date_into_template(
-        TRANSACTION_FILE_NAME_TEMPLATE, kwargs, day_offset = EMDEON_RX_DAY_OFFSET)
+    file_path = tmp_path(ds, kwargs) + date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE,
+        kwargs,
+        day_offset = EMDEON_RX_DAY_OFFSET
+    )
     check_call(['gzip', '-d', '-k', '-f', file_path])
 
 def do_split_file(ds, **kwargs):
-    tmp_path = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
-    tmp_path_parts = date_utils.insert_date_into_template(TMP_PATH_PARTS_TEMPLATE, kwargs)
-    file_name = TRANSACTION_FILE_NAME_TEMPLATE.replace('.gz', '').format(kwargs['yesterday_ds_nodash'])
-    file_path = tmp_path + file_name
-    check_call(['mkdir', '-p', tmp_path_parts])
-    check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(tmp_path_parts, file_name)])
+    file_name = date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE.replace('.gz', ''),
+        kwargs,
+        day_offset = EMDEON_RX_DAY_OFFSET
+    )
+    file_path = tmp_path(ds, kwargs) + file_name
+    check_call(['mkdir', '-p', tmp_path_parts(ds, kwargs)])
+    check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(tmp_path_parts(ds, kwargs), file_name)])
 
 def do_zip_part_files(ds, **kwargs):
-    tmp_path = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
-    tmp_path_parts = date_utils.insert_date_into_template(TMP_PATH_PARTS_TEMPLATE, kwargs)
     file_list = os.listdir(tmp_path_parts)
     for file_name in file_list:
-        check_call(['lbzip2', '{}{}'.format(tmp_path_parts, file_name)])
+        check_call(['lbzip2', '{}{}'.format(tmp_path_parts(ds, kwargs), file_name)])
 
 def do_push_splits_to_s3(ds, **kwargs):
-    tmp_path = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
-    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
-
-    file_list = os.listdir(tmp_path_parts)
+    file_list = os.listdir(tmp_path_parts(ds, kwargs))
     file_name = file_list[0]
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
-    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
+    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts(ds, kwargs), "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
 
 def do_trigger_post_matching_dag(context, dag_run_obj):
     file_dir = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, context)
-    transaction_file_name = date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, context, day_offset = EMDEON_RX_DAY_OFFSET)
-    deid_file_name = date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, context, day_offset = EMDEON_RX_DAY_OFFSET)
+    transaction_file_name = date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE,
+        context,
+        day_offset = EMDEON_RX_DAY_OFFSET
+    )
+    deid_file_name = date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE,
+        context,
+        day_offset = EMDEON_RX_DAY_OFFSET
+    )
     row_count = check_output(['zgrep', '-c', '^', file_dir + transaction_file_name])
     dag_run_obj.payload = {
             "deid_filename": deid_file_name.replace('.gz', ''),
@@ -175,7 +180,7 @@ log_file_volume = PythonOperator(
     provide_context=True,
     python_callable=split_push_files.do_log_file_volume(
         DAG_NAME,
-        get_file_name_pattern,
+        get_file_name_pattern(ds, k,
         lambda ds, k: [
             date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, k)
             + date_utils.insert_date_into_template(
@@ -231,7 +236,7 @@ trigger_post_matching_dag = TriggerDagRunOperator(
 
 clean_up_workspace = BashOperator(
     task_id='clean_up_workspace',
-    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}')),
+    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}'),'',''),
     trigger_rule='all_done',
     dag=mdag
 )
