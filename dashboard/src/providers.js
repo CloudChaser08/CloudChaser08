@@ -92,7 +92,7 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-2)(date);
-      return 'incoming/medicalclaims/emdeon/adjusted/' + date.getFullYear() +
+      return 'incoming/medicalclaims/emdeon/transactions/' + date.getFullYear() +
         helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '_Claims_US_CF_D_deid.dat.gz';
     }
   },
@@ -113,7 +113,7 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-2)(date);
-      return 'incoming/pharmacyclaims/emdeon/adjusted/' + date.getFullYear() +
+      return 'incoming/pharmacyclaims/emdeon/transactions/' + date.getFullYear() +
         helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '_RX_DEID_CF_ON.dat.gz';
     }
   },
