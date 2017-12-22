@@ -132,7 +132,6 @@ SELECT
 
     logical_delete_reason
 
-/*UPDATE THIS SECTION WITH THE APPROPRIATE JOINS AND WHERE CLAUSE RESTRICTIONS*/
 FROM default.pharmacyclaims a
 WHERE part_provider='apothecary_by_design'
     AND a.ndc_code IN ('59572063255','59572063106')

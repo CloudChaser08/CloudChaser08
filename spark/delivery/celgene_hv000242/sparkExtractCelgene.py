@@ -21,19 +21,19 @@ def run(spark, runner, date_input, test=False):
     else:
         STAGING_DIR = constants.hdfs_staging_dir
 
-    PHARMACY_OUT_TEMPLATE = STAGING_DIR + '/pharmacyclaims'
+    PHARMACY_OUT_TEMPLATE = STAGING_DIR + '/pharmacy_claims'
     NPPES_OUT_TEMPLATE = STAGING_DIR + '/nppes'
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
-    start_date = date_obj - timedelta(days=9)
-    end_date = date_obj - timedelta(days=3)
+    start_date = (date_obj - timedelta(days=9)).isoformat()
+    end_date = (date_obj - timedelta(days=3)).isoformat()
 
     runner.sqlContext.sql('CREATE DATABASE IF NOT EXISTS {}'.format(CELGENE_SCHEMA))
 
     runner.run_spark_script('create_pharmacy_extract.sql', [
         ['celgene_schema', CELGENE_SCHEMA, False],
-        ['start_date', start_date, False],
-        ['end_date', end_date, False]
+        ['start_date', start_date],
+        ['end_date', end_date]
     ])
 
     runner.run_spark_script('create_nppes_extract.sql', [

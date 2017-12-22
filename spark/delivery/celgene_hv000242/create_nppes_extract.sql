@@ -19,7 +19,7 @@ SELECT
     practice_country,
     practice_phone,
     taxonomy_code_1
-FROM ref_nppes a
-    INNER JOIN cel242.pharmacy_claims b ON a.npi = b.prov_prescribing_npi
+FROM default.ref_nppes a
+    INNER JOIN cel242.pharmacyclaims_extract b ON a.npi = b.prov_prescribing_npi
 ORDER BY 1
     ;
