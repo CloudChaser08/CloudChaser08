@@ -148,10 +148,6 @@ exports.handler = function(event, context) {
           return d.incomingFiles.length > 0;
         });
 
-        if (existingFiles.length == 0) throw new Error(
-          "No files found in s3 for the following provider: " + providerConf.displayName
-        );
-
         var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
 
         var healthLabel;
@@ -176,7 +172,9 @@ exports.handler = function(event, context) {
           // date ingested HTML for this provider
           dateIngestedContent: '<tr id="' + providerConf.id + '">' +
             '<td><a href="#">' + providerConf.displayName + '</a></td>' +
-            '<td data-sortnumber=' + dateSortNum(existingFiles[0].executionDate) + '>' + existingFiles[0].executionDate + '</td>' +
+            '<td data-sortnumber=' + dateSortNum(
+              ((0 in existingFiles) ? existingFiles[0].executionDate : '0000-01-01')
+            ) + '>' + ((0 in existingFiles) ? existingFiles[0].executionDate : 'No files') + '</td>' +
             '<td data-sortnumber=' + dateSortNum(latestIngestionDate) + '>' + latestIngestionDate + '</td>' +
             '<td data-sortnumber=' + healthLabel[0] + '>' + healthLabel[1] + '</td>' +
             '</tr>',

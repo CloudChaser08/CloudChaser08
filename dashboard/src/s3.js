@@ -24,14 +24,9 @@ exports.getS3Calls = function() {
       // returns 1000 files per request.
       function recursiveList(continuationToken) {
 
-        var bucket = (providerConf.hasOwnProperty('s3Bucket')) ? providerConf.s3Bucket
-            : 'healthverity';
-        var prefix = (providerConf.hasOwnProperty('s3Bucket')) ? providerConf.providerPrefix + '/'
-            : 'incoming/' + providerConf.providerPrefix + '/';
-
         var params = {
-          Bucket : bucket,
-          Prefix : prefix,
+          Bucket : 'healthverity',
+          Prefix : 'incoming/' + providerConf.providerPrefix + '/',
           Delimiter : '/'
         };
         if (continuationToken) {

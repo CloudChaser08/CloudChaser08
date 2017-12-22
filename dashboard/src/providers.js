@@ -27,7 +27,6 @@ exports.schedule = {
 //                               of this dashboard
 //   noAirflowOffset          -> (Optional) A boolean value to indicate whether the automation routine accounted
 //                               for the default airflow offset
-//   s3Bucket                 -> (Optional) Use a different s3 bucket than the default (healthverity)
 //   airflowPipelineName      -> The name of this provider's airflow pipeline
 //   expectedFilenameRegex    -> A regex describing the structure of this provider's incoming file names
 //   filenameToExecutionDate  -> A function to be used to convert an incoming file name to an execution date of the
@@ -308,8 +307,7 @@ exports.config = [
   {
     id: 'cardinal_mpi',
     displayName: 'Cardinal MPI',
-    s3Bucket: 'hvincoming',
-    providerPrefix: 'cardinal_raintree/mpi',
+    providerPrefix: 'incoming/cardinal/mpi',
     schedule: this.schedule.DAILY,
     startDate: new Date('2017-06-01'),
     airflowPipelineName: 'cardinal_mpi_pipeline',
