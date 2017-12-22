@@ -307,7 +307,7 @@ exports.config = [
   {
     id: 'cardinal_mpi',
     displayName: 'Cardinal MPI',
-    providerPrefix: 'incoming/cardinal/mpi',
+    providerPrefix: 'cardinal/mpi',
     schedule: this.schedule.DAILY,
     startDate: new Date('2017-06-01'),
     airflowPipelineName: 'cardinal_mpi_pipeline',
@@ -317,7 +317,7 @@ exports.config = [
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
     },
     executionDateToFilename: function(date) {
-      return 'cardinal_raintree/mpi/mpi_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
+      return 'incoming/cardinal/mpi/mpi_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
         + helpers.leftZPad(date.getDate(), 2)
         + 'T[0-9]{6}.zip';
     }
