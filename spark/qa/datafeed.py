@@ -107,7 +107,7 @@ class Datafeed:
             '-r', 'p f s'
         ])
 
-def build_test_list(default_tests, additional_tests, skip_tests):
+def build_test_list(default_tests, skip_tests, additional_tests):
     """
     Build a list of tests to run given a list of default tests, a list
     of tests to add to the default, and a list of default tests to
