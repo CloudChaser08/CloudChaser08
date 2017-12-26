@@ -30,7 +30,7 @@
         {
             "name"              : "caris",
             "datafeed_id"       : "14",
-            "datatype"          : "lab_tests",
+            "datatype"          : "labtests",
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
@@ -82,7 +82,7 @@
         {
             "name"              : "quest",
             "datafeed_id"       : "18",
-            "datatype"          : "lab_tests",
+            "datatype"          : "labtests",
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
@@ -199,7 +199,7 @@
         {
             "name"              : "courtagen",
             "datafeed_id"       : "28",
-            "datatype"          : "lab_tests",
+            "datatype"          : "labtests",
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
@@ -212,7 +212,7 @@
         {
             "name"              : "neogenomics",
             "datafeed_id"       : "32",
-            "datatype"          : "lab_tests",
+            "datatype"          : "labtests",
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,

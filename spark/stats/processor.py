@@ -2,6 +2,8 @@ import spark.stats.calc.fill_rate as fill_rate
 import spark.stats.config.reader.config_reader as config_reader
 import spark.helpers.stats.utils as utils
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.file_utils as file_utils
+import inspect
 
 from pyspark.sql.functions import col
 
@@ -15,11 +17,15 @@ def _run_fill_rates(df, provider_conf):
         - _: a dataframe with the result of fill_rate.calculate_fill_rate
              or None if provider_conf specifies not to calculate
     '''
-    if provider_conf.get('fill_rates_conf'):
+    if provider_conf.get('fill_rate_conf'):
         # Get only the columns needed to calculate fill rates on
-        cols = [c for c in df.columns if c in provider_conf['fill_rates_conf']['columns']]
-        fill_rate_cols_df = df.select(*[col(c) for c in cols])
-        fill_rates = fill_rate.calculate_fill_rate(fill_rate_cols_df).collect()
+        i = 0
+        fill_rates = []
+        cols = [c for c in df.columns if c in provider_conf['fill_rate_conf']['columns']]
+        while i < len(cols):
+            fill_rate_cols_df = df.select(*[col(c) for c in cols[i:i+10]])
+            fill_rates += fill_rate.calculate_fill_rate(fill_rate_cols_df).collect()
+            i = i + 10
         return fill_rates
 
     return None
@@ -43,9 +49,10 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     '''
 
     # Get provider config
-    config_dir = '/'.join(__file__.split('/')[:-1]) + '/config/'
+    this_file = inspect.getmodule(inspect.stack()[1][0]).__file__
+    config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
     provider_conf = config_reader.get_provider_config(
-                                    config_dir, provider_name)
+                                    config_file, provider_name)
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
@@ -55,17 +62,19 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     # Get data
     all_data_df = utils.get_provider_data(sqlContext, datatype, provider_name)
 
+    # Desired number of partitions when calculating
+    partitions = int(spark.conf.get('spark.sql.shuffle.partitions'))
+
     # provider, start_date, end_date df cache
     # used for fill rate, top values, and key stats
     if distinct_column_name:
         gen_stats_df = postprocessor.compose(
             utils.select_data_in_date_range(start_date, end_date, date_column_field),
             utils.select_distinct_values_from_column(distinct_column_name)
-        )(all_data_df).cache()
+        )(all_data_df).repartition(partitions)
     else:
         gen_stats_df = utils.select_data_in_date_range(start_date, \
-                        end_date, date_column_field)(all_data_df).cache()
-
+                        end_date, date_column_field)(all_data_df).repartition(partitions)
 
     # Generate fill rates
     fill_rates = _run_fill_rates(gen_stats_df, provider_conf)

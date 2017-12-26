@@ -66,7 +66,7 @@ def get_provider_data(sqlContext, datatype, provider_name):
     Output:
         - df:   pyspark.sql.DataFrame of the data
     '''
-    df = sqlContext.sql('SELECT * FROM {} WHERE part_provider={}' \
+    df = sqlContext.sql("SELECT * FROM {} WHERE part_provider='{}'" \
                         .format(datatype, provider_name))
     return df
 

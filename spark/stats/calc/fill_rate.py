@@ -14,7 +14,7 @@ def _col_fill_rate(c, row_count):
     Output:
         - fr: the fill rate for that column of type pyspark.sql.Column
     '''
-    is_not_null = col(c).isNotNull() & ~isnan(c) & (trim(col(c)) != '')
+    is_not_null = col(c).isNotNull() & (trim(col(c)) != '')
     fr = (sum(is_not_null.cast("integer")) / row_count).alias(c)
     return fr
 
