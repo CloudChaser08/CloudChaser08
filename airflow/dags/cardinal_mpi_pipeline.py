@@ -12,12 +12,13 @@ import subdags.s3_fetch_file as s3_fetch_file
 import subdags.s3_push_files as s3_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import util.decompression as decompression
 import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, queue_up_for_matching, s3_fetch_file,
           detect_move_normalize, HVDAG, decompression,
-          s3_utils]:
+          s3_utils, clean_up_tmp_dir]:
     reload(m)
 
 # Applies to all files
@@ -39,8 +40,10 @@ mdag = HVDAG.HVDAG(
 
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/payload/'
+    RAW_SOURCE_OF_TRUTH = 'testing/dewey/airflow/e2e/cardinal_mpi/medicalclaims/moved_raw/'
 else:
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/custom/cardinal_mpi/'
+    RAW_SOURCE_OF_TRUTH = 'incoming/cardinal/mpi/'
 
 TMP_PATH_TEMPLATE='/tmp/cardinal_mpi/custom/{}/'
 S3_DEID_RAW_URL='s3://hvincoming/cardinal_raintree/mpi/'
@@ -64,11 +67,13 @@ def insert_current_date(template, kwargs):
 def get_tmp_dir(ds, kwargs):
     return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
 
-def get_deid_file_urls(ds, kwargs):
+def get_files_matching_template(template, ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
-    todays_file_regex = insert_current_date(DEID_FILE_NAME_UNZIPPED_TEMPLATE, kwargs)
-    files = filter(lambda f: re.search(todays_file_regex, f), os.listdir(file_dir))
-    return map(lambda f: file_dir + f, files)
+    file_regex = insert_current_date(template, kwargs)
+    return [file_dir + f for f in os.listdir(file_dir) if re.search(file_regex, f)]
+
+def get_deid_file_urls(ds, kwargs):
+    return get_files_matching_template(DEID_FILE_NAME_UNZIPPED_TEMPLATE, ds, kwargs)
 
 
 def generate_file_validation_task(
@@ -132,11 +137,26 @@ fetch_deid_file_dag = SubDagOperator(
     dag=mdag
 )
 
+push_to_healthverity_incoming = SubDagOperator(
+    subdag = s3_push_files.s3_push_files(
+        DAG_NAME,
+        'push_to_healthverity_incoming',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'file_paths_func'   : lambda ds, kwargs: get_files_matching_template(DEID_FILE_NAME_TEMPLATE, ds, kwargs),
+            'tmp_dir_func'      : get_tmp_dir,
+            's3_prefix_func'    : lambda ds, kwargs: RAW_SOURCE_OF_TRUTH,
+            's3_bucket'         : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
+        }
+    ),
+    task_id = 'push_to_healthverity_incoming',
+    dag = mdag
+)
+
 def do_unzip_file(ds, **kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
-    todays_file_regex = insert_current_date(DEID_FILE_NAME_TEMPLATE, kwargs)
-    files = filter(lambda f: re.search(todays_file_regex, f), os.listdir(file_dir))
-    decompression.decompress_zip_file(file_dir + files[0], file_dir)
+    files = get_files_matching_template(DEID_FILE_NAME_TEMPLATE, ds, kwargs)
+    decompression.decompress_zip_file(files[0], file_dir)
 
 unzip_deid_file = PythonOperator(
     task_id='unzip_deid_file',
@@ -230,14 +250,32 @@ if HVDAG.HVDAG.airflow_env != 'test':
         dag = mdag
     )
 
+clean_up_workspace = SubDagOperator(
+    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+        DAG_NAME,
+        'clean_up_workspace',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE
+        }
+    ),
+    task_id='clean_up_workspace',
+    dag=mdag
+)
+
+before_cleanup = [unzip_deid_file, push_to_healthverity_incoming]
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_deid_file_dag.set_upstream(validate_deid)
     queue_up_for_matching.set_upstream(unzip_deid_file)
     detect_move_normalize_dag.set_upstream(queue_up_for_matching)
     fetch_normalized_data.set_upstream(detect_move_normalize_dag)
     deliver_normalized_data.set_upstream(fetch_normalized_data)
+    before_cleanup += [deliver_normalized_data]
 
 unzip_deid_file.set_upstream(fetch_deid_file_dag)
+push_to_healthverity_incoming.set_upstream(fetch_deid_file_dag)
+clean_up_workspace.set_upstream(before_cleanup)
 
 # implicit else, run detect_move_normalize_dag without waiting for the
 # matching payload (test mode)
