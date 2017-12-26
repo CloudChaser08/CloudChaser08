@@ -1,4 +1,5 @@
 import spark.stats.calc.fill_rate as fill_rate
+import spark.stats.calc.top_values as top_values
 import spark.stats.config.reader.config_reader as config_reader
 import spark.helpers.stats.utils as utils
 import spark.helpers.postprocessor as postprocessor
@@ -21,6 +22,32 @@ def _run_fill_rates(df, provider_conf):
         # Get only the columns needed to calculate fill rates on
         cols = [c for c in df.columns if c in provider_conf['fill_rate_conf']['columns']]
         return fill_rate.calculate_fill_rate(fill_rate_cols_df)
+
+    return None
+
+def _run_top_values(df, provider_conf):
+    '''
+    A wrapper around top_values method calculating the N most common values
+    in each column
+    Input:
+        -df: a dataframe
+        -provider_conf: a dictionary w/ the providers configuration data
+    Output:
+        - _: a dataframe with the result of top_values.calculate_top_values
+             or None if provider_conf specifies not to calculate
+    '''
+    if provider_conf.get('top_values_conf'):
+        # Get only the columns needed to calculate fill rates on
+        i = 0
+        top_values_res = []
+        cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns']]
+        max_num_values = provider_conf['top_values_conf']['max_values']
+        while i < len(cols):
+            top_values_cols_df = df.select(*[col(c) for c in cols[i:i+10]])
+            top_values_res += top_values.calculate_top_values(top_values_cols_df,
+                                                             max_num_values).collect()
+            i = i + 10
+        return top_values_res
 
     return None
 
@@ -77,7 +104,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     key_stats = None
 
     # Generate top values
-    top_values = None
+    top_values = _run_top_values(gen_stats_df, provider_conf)
 
     gen_stats_df.unpersist()
 
