@@ -119,7 +119,7 @@ def get_provider_config(providers_conf_file, provider_name):
     if provider_conf['top_values']:
         provider_conf['top_values_conf'] = {
             "columns": _get_top_values_columns(provider_conf['datafeed_id']),
-            "max_values": _get_top_values_columns(provider_conf['datafeed_id'])
+            "max_values": 10
         }
 
     # configure stats whose configurations do not come from the marketplace db
