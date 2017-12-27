@@ -369,15 +369,13 @@ exports.config = [
     expectedFilenameRegex: /^.*NeoG_HV_STD_W_[0-9]{8}_[0-9]{8}_NPHI.txt$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('_')[5];
-      var adjusted = helpers.addDays(7)(new Date(isolatedDate));
-      return helpers.formatDate(adjusted);
+      return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
     },
     executionDateToFilename: function(date) {
-      var adjusted = helpers.addDays(-7)(date);
-      var yesterday = helpers.addDays(-1)(adjusted);
+      var yesterday = helpers.addDays(-1)(date);
       return 'incoming/neogenomics/NeoG_HV_STD_W_' + yesterday.getFullYear() + helpers.leftZPad(yesterday.getMonth() + 1, 2)
-        + helpers.leftZPad(yesterday.getDate(), 2) + '_' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2)
-        + helpers.leftZPad(adjusted.getDate(), 2) + '_NPHI.txt';
+        + helpers.leftZPad(yesterday.getDate(), 2) + '_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
+        + helpers.leftZPad(date.getDate(), 2) + '_NPHI.txt';
     }
   },
 ];
