@@ -1,8 +1,6 @@
-from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
-import re
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -48,31 +46,28 @@ if HVDAG.HVDAG.airflow_env == 'test':
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/neogenomics/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/{}/{}/{}/'
+    S3_TRANSACTION_PROCESSED_TESTS_URL_TEMPLATE = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'tests/'
+    S3_TRANSACTION_PROCESSED_RESULTS_URL_TEMPLATE = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'results/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/neogenomics/'
 
 
-# Transaction file without the trailing timestamp
-TRANSACTION_FILE_NAME_TEMPLATE = 'TestMeta_{}{}{}.dat.gz'
-TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE = 'TestMeta_{}{}{}.dat'
+TRANSACTION_RESULTS_FILE_NAME_TEMPLATE = 'NeoG_HV_STD_W_{{}}{{}}{{}}_{}{}{}_R.txt'
+TRANSACTION_TESTS_FILE_NAME_TEMPLATE = 'NeoG_HV_STD_W_{{}}{{}}{{}}_{}{}{}_NPHI.txt'
 
-# Deid file without the trailing timestamp
-DEID_FILE_NAME_TEMPLATE = 'TestPHI_{}{}{}.dat.gz'
-DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'TestPHI_{}{}{}.dat'
+DEID_FILE_NAME_TEMPLATE = 'NeoG_HV_STD_W_{{}}{{}}{{}}_{}{}{}_PHI.txt'
 
-def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
-        DEID_FILE_NAME_TEMPLATE, kwargs, day_offset = NEOGENOMICS_DAY_OFFSET
-    )]
+def generate_file_name_function(template):
+    return lambda ds, k: date_utils.insert_date_into_template(
+        date_utils.insert_date_into_template(
+            template, k, day_offset=NEOGENOMICS_DAY_OFFSET
+        ), k, day_offset=NEOGENOMICS_DAY_OFFSET - 1
+    )
 
-def get_unzipped_file_paths(ds, kwargs):
-    file_dir = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
-    return [
-        file_dir
-        + date_utils.insert_date_into_template(
-            TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE, kwargs, 
-            day_offset = NEOGENOMICS_DAY_OFFSET
-        )
-    ]
+
+def generate_file_name_pattern_function(template):
+    return lambda ds, k: date_utils.generate_insert_regex_into_template_function(
+        date_utils.generate_insert_regex_into_template_function(template)(ds, k)
+    )(ds, k)
 
 
 def generate_file_validation_task(
@@ -85,13 +80,8 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                    path_template, 
-                    day_offset = NEOGENOMICS_DAY_OFFSET
-                ),
-                'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
-                    path_template
-                ),
+                'expected_file_name_func': generate_file_name_function(path_template),
+                'file_name_pattern_func': generate_file_name_pattern_function(path_template),
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket': 'healthverity',
@@ -104,8 +94,12 @@ def generate_file_validation_task(
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    validate_transactional = generate_file_validation_task(
-        'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
+    validate_transactional_tests = generate_file_validation_task(
+        'transaction_tests', TRANSACTION_TESTS_FILE_NAME_TEMPLATE,
+        1000000
+    )
+    validate_transactional_results = generate_file_validation_task(
+        'transaction_results', TRANSACTION_RESULTS_FILE_NAME_TEMPLATE,
         1000000
     )
     validate_deid = generate_file_validation_task(
@@ -113,68 +107,61 @@ if HVDAG.HVDAG.airflow_env != 'test':
         1000000
     )
 
-fetch_transactional = SubDagOperator(
-    subdag=s3_fetch_file.s3_fetch_file(
-        DAG_NAME,
-        'fetch_transaction_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_path_template': TMP_PATH_TEMPLATE,
-            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE, 
-                day_offset = NEOGENOMICS_DAY_OFFSET
-            ),
-            's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity',
-        }
-    ),
-    task_id='fetch_transaction_file',
-    dag=mdag
-)
-
-
-def gunzip_step(tmp_path_template, tmp_file_template):
-    def execute(ds, **kwargs):
-        decompression.decompress_gzip_file(
-            date_utils.insert_date_into_template(tmp_path_template, kwargs)
-            + date_utils.insert_date_into_template(tmp_file_template, kwargs, day_offset = NEOGENOMICS_DAY_OFFSET)
-        )
-    return PythonOperator(
-        task_id='gunzip_transaction_file',
-        provide_context=True,
-        python_callable=execute,
+def generate_fetch_transactional_task(task_id, template):
+    return SubDagOperator(
+        subdag=s3_fetch_file.s3_fetch_file(
+            DAG_NAME,
+            'fetch_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_path_template': TMP_PATH_TEMPLATE,
+                'expected_file_name_func': generate_file_name_function(template),
+                's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+                's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity',
+            }
+        ),
+        task_id='fetch_' + task_id + '_file',
         dag=mdag
     )
 
 
-gunzip_transactional = gunzip_step(
-    TMP_PATH_TEMPLATE, TRANSACTION_FILE_NAME_TEMPLATE
-)
+fetch_transactional_tests = generate_fetch_transactional_task('transaction_tests', TRANSACTION_TESTS_FILE_NAME_TEMPLATE)
+fetch_transactional_results = generate_fetch_transactional_task('transaction_results', TRANSACTION_RESULTS_FILE_NAME_TEMPLATE)wx
 
-split_transactional = SubDagOperator(
-    subdag=split_push_files.split_push_files(
-        DAG_NAME,
-        'split_transaction_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_dir_func': date_utils.generate_insert_date_into_template_function(
-                TMP_PATH_TEMPLATE
-            ),
-            'file_paths_to_split_func': get_unzipped_file_paths,
-            'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
-                    TRANSACTION_FILE_NAME_TEMPLATE
-            ),
-            's3_prefix_func': date_utils.generate_insert_date_into_template_function(
-                S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 
-                day_offset = NEOGENOMICS_DAY_OFFSET
-            ),
-            'num_splits': 20
-        }
-    ),
-    task_id='split_transaction_file',
-    dag=mdag
+
+def generate_split_transactional_task(task_id, template, s3_template):
+    return SubDagOperator(
+        subdag=split_push_files.split_push_files(
+            DAG_NAME,
+            'split_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_dir_func': date_utils.generate_insert_date_into_template_function(
+                    TMP_PATH_TEMPLATE
+                ),
+                'file_paths_to_split_func': lambda ds, k: [
+                    date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, k)
+                    + generate_file_name_function(template)(ds, k)
+                ],
+                'file_name_pattern_func': generate_file_name_pattern_function(template),
+                's3_prefix_func': date_utils.generate_insert_date_into_template_function(
+                    s3_template, day_offset = NEOGENOMICS_DAY_OFFSET
+                ),
+                'num_splits': 20
+            }
+        ),
+        task_id='split_' + task_id + '_file',
+        dag=mdag
+    )
+
+
+split_transactional_tests = generate_split_transactional_task(
+    'transaction_tests', TRANSACTION_TESTS_FILE_NAME_TEMPLATE, S3_TRANSACTION_PROCESSED_TESTS_URL_TEMPLATE
+)
+split_transactional_results = generate_split_transactional_task(
+    'transaction_results', TRANSACTION_RESULTS_FILE_NAME_TEMPLATE, S3_TRANSACTION_PROCESSED_RESULTS_URL_TEMPLATE
 )
 
 
@@ -202,7 +189,11 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func': get_deid_file_urls
+                'source_files_func': lambda ds, k: [
+                    S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
+                        DEID_FILE_NAME_TEMPLATE, k, day_offset = NEOGENOMICS_DAY_OFFSET
+                    )
+                ]
             }
         ),
         task_id='queue_up_for_matching',
@@ -229,8 +220,7 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func': lambda ds, k: [
                 date_utils.insert_date_into_template(
-                    DEID_FILE_NAME_UNZIPPED_TEMPLATE, 
-                    k,
+                    DEID_FILE_NAME_TEMPLATE, k,
                     day_offset = NEOGENOMICS_DAY_OFFSET
                 )
             ],
@@ -249,19 +239,20 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_transactional.set_upstream(validate_transactional)
+    fetch_transactional_tests.set_upstream(validate_transactional_tests)
+    fetch_transactional_results.set_upstream(validate_transactional_results)
     queue_up_for_matching.set_upstream(validate_deid)
     detect_move_normalize_dag.set_upstream(
-        [queue_up_for_matching, split_transactional]
+        [queue_up_for_matching, split_transactional_tests, split_transactional_results]
     )
 else:
     detect_move_normalize_dag.set_upstream(
-        split_transactional
+        [split_transactional_tests, split_transactional_results]
     )
 
-gunzip_transactional.set_upstream(fetch_transactional)
-split_transactional.set_upstream(gunzip_transactional)
+split_transactional_tests.set_upstream(fetch_transactional_tests)
+split_transactional_results.set_upstream(fetch_transactional_results)
 
 clean_up_workspace.set_upstream(
-    split_transactional
+    [split_transactional_tests, split_transactional_results]
 )
