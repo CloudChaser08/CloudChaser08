@@ -9,13 +9,14 @@ import subdags.s3_fetch_file as s3_fetch_file
 import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
+import subdags.update_analytics_db as update_analytics_db
 import subdags.detect_move_normalize as detect_move_normalize
 import util.s3_utils as s3_utils
 import util.decompression as decompression
 import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
-          queue_up_for_matching, detect_move_normalize, s3_utils,
+          queue_up_for_matching, update_analytics_db, detect_move_normalize, s3_utils,
           decompression, date_utils, HVDAG]:
     reload(m)
 
@@ -246,6 +247,23 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+sql_new_template = """MSCK REPAIR TABLE labtests_20170216"""
+
+if HVDAG.HVDAG.airflow_env != 'test':
+    update_analytics_db = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_analytics_db',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func' : lambda ds, k: sql_new_template
+            }
+        ),
+        task_id='update_analytics_db',
+        dag=mdag
+    )
+
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transactional_tests.set_upstream(validate_transactional_tests)
     fetch_transactional_results.set_upstream(validate_transactional_results)
@@ -253,6 +271,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transactional_tests, split_transactional_results]
     )
+
+    update_analytics_db.set_upstream(detect_move_normalize_dag)
 else:
     detect_move_normalize_dag.set_upstream(
         [split_transactional_tests, split_transactional_results]
