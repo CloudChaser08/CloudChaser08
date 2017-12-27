@@ -359,4 +359,25 @@ exports.config = [
         + '-' + helpers.leftZPad(adjusted.getDate(), 2) + '-record-data-Navicure';
     }
   },
+  {
+    id: 'neogenomics',
+    displayName: 'Neogenomics Lab',
+    providerPrefix: 'neogenomics',
+    schedule: this.schedule.WEEKLY,
+    startDate: new Date('2017-10-02'),
+    airflowPipelineName: 'neogenomics_pipeline',
+    expectedFilenameRegex: /^.*NeoG_HV_STD_W_[0-9]{8}_[0-9]{8}_NPHI.txt$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('_')[5];
+      var adjusted = helpers.addDays(7)(new Date(isolatedDate));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      var adjusted = helpers.addDays(-7)(date);
+      var yesterday = helpers.addDays(-1)(adjusted);
+      return 'incoming/neogenomics/NeoG_HV_STD_W_' + yesterday.getFullYear() + helpers.leftZPad(yesterday.getMonth() + 1, 2)
+        + helpers.leftZPad(yesterday.getDate(), 2) + '_' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2)
+        + helpers.leftZPad(adjusted.getDate(), 2) + '_NPHI.txt';
+    }
+  },
 ];
