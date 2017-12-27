@@ -202,9 +202,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             mdag.schedule_interval,
             {
                 'source_files_func': lambda ds, k: [
-                    S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
-                        DEID_FILE_NAME_TEMPLATE, k, day_offset = NEOGENOMICS_DAY_OFFSET
-                    )
+                    S3_TRANSACTION_RAW_URL + generate_file_name_function(DEID_FILE_NAME_TEMPLATE)(ds, k)
                 ]
             }
         ),
