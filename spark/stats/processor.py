@@ -1,5 +1,8 @@
 import spark.stats.calc.fill_rate as fill_rate
 import spark.stats.calc.top_values as top_values
+import spark.stats.calc.key_stats as key_stats
+import spark.stats.calc.longitudinality as longitudinality
+import spark.stats.calc.year_over_year as year_over_year
 import spark.stats.config.reader.config_reader as config_reader
 import spark.helpers.stats.utils as utils
 import spark.helpers.postprocessor as postprocessor
@@ -41,6 +44,25 @@ def _run_top_values(df, provider_conf):
         cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns']]
         max_num_values = provider_conf['top_values_conf']['max_values']
         return top_values.calculate_top_values(top_values_cols_df, max_num_values)
+
+    return None
+
+def _run_key_stats(df, earliest_date, start_date, end_date, provider_conf):
+    if provider_conf.get('key_stats'):
+        return key_stats.calculate_key_stats(df, earliest_date, start_date,
+                end_date, provider_conf)
+
+    return None
+
+def _run_longitudinality(df, provider_conf):
+    if provider_conf.get('longitudinality'):
+        return longitudinality.calculate_longitudinality(df, provider_conf)
+
+    return None
+
+def _run_year_over_year(df, provider_conf):
+    if provider_conf.get('year_over_year'):
+        return year_over_year.calculate_year_over_year(df, provider_conf)
 
     return None
 
@@ -93,23 +115,23 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     # Generate fill rates
     fill_rates = _run_fill_rates(gen_stats_df, provider_conf)
 
-    # Generate key stats
-    key_stats = None
-
     # Generate top values
     top_values = _run_top_values(gen_stats_df, provider_conf)
 
-    gen_stats_df.unpersist()
+    # Generate key stats
+    key_stats = _run_key_stats(all_data_df, earlier_date, start_date, end_date,
+            provider_conf)
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year
-    date_stats_df = None
+    date_stats_df = all_data_df.select("hvid", provider_conf['date_field']) \
+            .repartition(partitions)
 
     # Generate Longitudinality
-    longitudinality = None
+    longitudinality = _run_longitudinality(date_stats_df, provider_conf)
 
     # Generate year over year
-    year_over_year = None
+    year_over_year = _run_year_over_year(date_stats_df, provider_conf)
 
     # datafeed_id, provider, datatype, quarter df cache
     # used for epidemiological

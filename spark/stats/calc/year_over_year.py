@@ -3,8 +3,10 @@ from operator import and_
 from pyspark.sql.functions import rank, year, col
 from pyspark.sql.window import Window
 
+PATIENT_IDENTIFIER = 'hvid'
+
 def _parse_year(s):
-        return datetime.strptime(s, "%Y-%m-%d").year
+    return datetime.strptime(s, "%Y-%m-%d").year
 
 
 def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
@@ -19,7 +21,7 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
         yoy_stats: a Dictionary of the stats
     '''
 
-    patient_identifier = provider_conf['year_over_year']['patient_id_field']
+    patient_identifier = PATIENT_IDENTIFIER
     date_field = provider_conf['date_field']
 
     end_year = _parse_year(end_date)
