@@ -5,7 +5,7 @@ from subprocess import check_output, check_call, STDOUT
 from json import loads as json_loads
 import logging
 import os
-#import pysftp
+import pysftp
 import re
 import sys
 
