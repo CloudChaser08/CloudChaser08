@@ -138,7 +138,7 @@ def emdeon_validate_fetch_file(parent_dag_name, child_dag_name, start_date, sche
     
     create_tmp_dir = BashOperator(
         task_id='create_tmp_dir',
-        bash_command='mkdir -p {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}')),
+        bash_command='mkdir -p {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}','','')),
         dag=dag
     )
     

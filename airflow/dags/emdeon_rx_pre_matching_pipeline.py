@@ -5,7 +5,7 @@ from subprocess import check_output, check_call, STDOUT
 from json import loads as json_loads
 import logging
 import os
-import pysftp
+#import pysftp
 import re
 import sys
 
@@ -55,7 +55,7 @@ EMDEON_RX_DAY_OFFSET = -1
 get_file_name_pattern = date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE)
 
 tmp_path = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
-tmp_path_parts = generate_insert_date_into_template_function(TMP_PATH_PARTS_TEMPLATE)
+tmp_path_parts = date_utils.generate_insert_date_into_template_function(TMP_PATH_PARTS_TEMPLATE)
 
 def do_unzip_file(ds, **kwargs):
     file_path = tmp_path(ds, kwargs) + date_utils.insert_date_into_template(
@@ -180,7 +180,7 @@ log_file_volume = PythonOperator(
     provide_context=True,
     python_callable=split_push_files.do_log_file_volume(
         DAG_NAME,
-        get_file_name_pattern(ds, k,
+        get_file_name_pattern,
         lambda ds, k: [
             date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, k)
             + date_utils.insert_date_into_template(
@@ -217,7 +217,7 @@ push_splits_to_s3 = PythonOperator(
 queue_up_for_matching = BashOperator(
     task_id='queue_up_for_matching',
     bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3_batchless.sh {}{}'.format(
-                     S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}')) +
+                     S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}','','')) +
                  ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}',
     params={'sequence_num' : 0,
             'matching_engine_env' : 'prod-matching-engine',
@@ -236,7 +236,7 @@ trigger_post_matching_dag = TriggerDagRunOperator(
 
 clean_up_workspace = BashOperator(
     task_id='clean_up_workspace',
-    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}'),'',''),
+    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}','','')),
     trigger_rule='all_done',
     dag=mdag
 )
