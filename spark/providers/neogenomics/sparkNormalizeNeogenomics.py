@@ -66,7 +66,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['input_path', input_path]
     ])
 
-
     runner.run_spark_script('normalize.sql', [
         ['filename', setid],
         ['today', TODAY],

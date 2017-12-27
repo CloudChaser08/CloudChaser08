@@ -25,7 +25,7 @@ DAG_NAME = 'neogenomics_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 4, 13, 12),
+    'start_date': datetime(2017, 10, 2, 17),
     'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
