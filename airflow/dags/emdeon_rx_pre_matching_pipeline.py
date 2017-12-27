@@ -87,7 +87,7 @@ def do_push_splits_to_s3(ds, **kwargs):
     check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts(ds, kwargs), "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
 
 def do_trigger_post_matching_dag(context, dag_run_obj):
-    file_dir = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, context)
+    file_dir = tmp_path(ds, context)
     transaction_file_name = date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE,
         context,
         day_offset = EMDEON_RX_DAY_OFFSET
@@ -182,7 +182,7 @@ log_file_volume = PythonOperator(
         DAG_NAME,
         get_file_name_pattern,
         lambda ds, k: [
-            date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, k)
+            tmp_path(TMP_PATH_TEMPLATE, k)
             + date_utils.insert_date_into_template(
                 TRANSACTION_FILE_NAME_TEMPLATE, 
                 k, 
