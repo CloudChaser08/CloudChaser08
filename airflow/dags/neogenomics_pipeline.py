@@ -127,7 +127,7 @@ def generate_fetch_transactional_task(task_id, template):
 
 
 fetch_transactional_tests = generate_fetch_transactional_task('transaction_tests', TRANSACTION_TESTS_FILE_NAME_TEMPLATE)
-fetch_transactional_results = generate_fetch_transactional_task('transaction_results', TRANSACTION_RESULTS_FILE_NAME_TEMPLATE)wx
+fetch_transactional_results = generate_fetch_transactional_task('transaction_results', TRANSACTION_RESULTS_FILE_NAME_TEMPLATE)
 
 
 def generate_split_transactional_task(task_id, template, s3_template):
