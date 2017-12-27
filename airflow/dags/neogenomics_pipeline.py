@@ -46,13 +46,16 @@ if HVDAG.HVDAG.airflow_env == 'test':
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/neogenomics/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/labtests/neogenomics/{}/{}/{}/'
-    S3_TRANSACTION_PROCESSED_TESTS_URL_TEMPLATE = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'tests/'
-    S3_TRANSACTION_PROCESSED_RESULTS_URL_TEMPLATE = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'results/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/labtests/neogenomics/'
 
+S3_TRANSACTION_PROCESSED_TESTS_URL_TEMPLATE = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'tests/'
+S3_TRANSACTION_PROCESSED_RESULTS_URL_TEMPLATE = S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'results/'
 
 TRANSACTION_RESULTS_FILE_NAME_TEMPLATE = 'NeoG_HV_STD_W_{{}}{{}}{{}}_{}{}{}_R.txt'
 TRANSACTION_TESTS_FILE_NAME_TEMPLATE = 'NeoG_HV_STD_W_{{}}{{}}{{}}_{}{}{}_NPHI.txt'
+
+TMP_PATH_TESTS_TEMPLATE = TMP_PATH_TEMPLATE + 'tests/'
+TMP_PATH_RESULTS_TEMPLATE = TMP_PATH_TEMPLATE + 'results/'
 
 DEID_FILE_NAME_TEMPLATE = 'NeoG_HV_STD_W_{{}}{{}}{{}}_{}{}{}_PHI.txt'
 
@@ -66,7 +69,9 @@ def generate_file_name_function(template):
 
 def generate_file_name_pattern_function(template):
     return lambda ds, k: date_utils.generate_insert_regex_into_template_function(
-        date_utils.generate_insert_regex_into_template_function(template)(ds, k)
+        date_utils.generate_insert_regex_into_template_function(
+            template, year_regex = '\d{{4}}', month_regex = '\d{{2}}', day_regex = '\d{{2}}'
+        )(ds, k)
     )(ds, k)
 
 
@@ -107,7 +112,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
         1000000
     )
 
-def generate_fetch_transactional_task(task_id, template):
+def generate_fetch_transactional_task(task_id, file_template, local_template):
     return SubDagOperator(
         subdag=s3_fetch_file.s3_fetch_file(
             DAG_NAME,
@@ -115,8 +120,8 @@ def generate_fetch_transactional_task(task_id, template):
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_path_template': TMP_PATH_TEMPLATE,
-                'expected_file_name_func': generate_file_name_function(template),
+                'tmp_path_template': local_template,
+                'expected_file_name_func': generate_file_name_function(file_template),
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket': 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity',
             }
@@ -126,11 +131,15 @@ def generate_fetch_transactional_task(task_id, template):
     )
 
 
-fetch_transactional_tests = generate_fetch_transactional_task('transaction_tests', TRANSACTION_TESTS_FILE_NAME_TEMPLATE)
-fetch_transactional_results = generate_fetch_transactional_task('transaction_results', TRANSACTION_RESULTS_FILE_NAME_TEMPLATE)
+fetch_transactional_tests = generate_fetch_transactional_task(
+    'transaction_tests', TRANSACTION_TESTS_FILE_NAME_TEMPLATE, TMP_PATH_TESTS_TEMPLATE
+)
+fetch_transactional_results = generate_fetch_transactional_task(
+    'transaction_results', TRANSACTION_RESULTS_FILE_NAME_TEMPLATE, TMP_PATH_RESULTS_TEMPLATE
+)
 
 
-def generate_split_transactional_task(task_id, template, s3_template):
+def generate_split_transactional_task(task_id, file_template, s3_template, local_template):
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
@@ -139,13 +148,13 @@ def generate_split_transactional_task(task_id, template, s3_template):
             mdag.schedule_interval,
             {
                 'tmp_dir_func': date_utils.generate_insert_date_into_template_function(
-                    TMP_PATH_TEMPLATE
+                    local_template
                 ),
                 'file_paths_to_split_func': lambda ds, k: [
-                    date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, k)
-                    + generate_file_name_function(template)(ds, k)
+                    date_utils.insert_date_into_template(local_template, k)
+                    + generate_file_name_function(file_template)(ds, k)
                 ],
-                'file_name_pattern_func': generate_file_name_pattern_function(template),
+                'file_name_pattern_func': generate_file_name_pattern_function(file_template),
                 's3_prefix_func': date_utils.generate_insert_date_into_template_function(
                     s3_template, day_offset = NEOGENOMICS_DAY_OFFSET
                 ),
@@ -158,10 +167,12 @@ def generate_split_transactional_task(task_id, template, s3_template):
 
 
 split_transactional_tests = generate_split_transactional_task(
-    'transaction_tests', TRANSACTION_TESTS_FILE_NAME_TEMPLATE, S3_TRANSACTION_PROCESSED_TESTS_URL_TEMPLATE
+    'transaction_tests', TRANSACTION_TESTS_FILE_NAME_TEMPLATE, S3_TRANSACTION_PROCESSED_TESTS_URL_TEMPLATE,
+    TMP_PATH_TESTS_TEMPLATE
 )
 split_transactional_results = generate_split_transactional_task(
-    'transaction_results', TRANSACTION_RESULTS_FILE_NAME_TEMPLATE, S3_TRANSACTION_PROCESSED_RESULTS_URL_TEMPLATE
+    'transaction_results', TRANSACTION_RESULTS_FILE_NAME_TEMPLATE, S3_TRANSACTION_PROCESSED_RESULTS_URL_TEMPLATE,
+    TMP_PATH_RESULTS_TEMPLATE
 )
 
 
@@ -219,10 +230,7 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func': lambda ds, k: [
-                date_utils.insert_date_into_template(
-                    DEID_FILE_NAME_TEMPLATE, k,
-                    day_offset = NEOGENOMICS_DAY_OFFSET
-                )
+                generate_file_name_function(DEID_FILE_NAME_TEMPLATE)(ds, k)
             ],
             'file_date_func': date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}', day_offset = NEOGENOMICS_DAY_OFFSET
