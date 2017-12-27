@@ -38,9 +38,10 @@ function buildFullDataset(airflowResults, providerIncoming) {
   function nextDate() {
     return providerConf.schedule(executionDates[executionDates.length-1]);
   }
-  while (providerConf.schedule(nextDate()) <= Date.now()) {
+
+  while (nextDate() <= Date.now()) {
     executionDates.push(nextDate());
-  } 
+  }
 
   function getExpectedFilename(date) {
     return providerConf.executionDateToFilename(date);
@@ -49,6 +50,12 @@ function buildFullDataset(airflowResults, providerIncoming) {
   return executionDates.map(function(exDate) {
     var airflowData = airflowResults.rows.filter(function(resultRow) {
       var date = new Date(resultRow[0]);
+
+      // offset the execution date
+      if (!providerConf.hasOwnProperty('noAirflowOffset') || !providerConf.noAirflowOffset) {
+        date = providerConf.schedule(date);
+      }
+
       var formatted = (
         (1900 + date.getYear()) + '-'
           + helpers.leftZPad((date.getMonth() + 1).toString()) + '-'
@@ -165,7 +172,9 @@ exports.handler = function(event, context) {
           // date ingested HTML for this provider
           dateIngestedContent: '<tr id="' + providerConf.id + '">' +
             '<td><a href="#">' + providerConf.displayName + '</a></td>' +
-            '<td data-sortnumber=' + dateSortNum(existingFiles[0].executionDate) + '>' + existingFiles[0].executionDate + '</td>' +
+            '<td data-sortnumber=' + dateSortNum(
+              ((0 in existingFiles) ? existingFiles[0].executionDate : '0000-01-01')
+            ) + '>' + ((0 in existingFiles) ? existingFiles[0].executionDate : 'No files') + '</td>' +
             '<td data-sortnumber=' + dateSortNum(latestIngestionDate) + '>' + latestIngestionDate + '</td>' +
             '<td data-sortnumber=' + healthLabel[0] + '>' + healthLabel[1] + '</td>' +
             '</tr>',
@@ -184,12 +193,12 @@ exports.handler = function(event, context) {
               else dateClass = 'fully-loaded';
               if (dateClass === 'not-sent') {
                 return '<li class=' + dateClass + '>' +
-                  '<b>' + d.executionDate + '</b><br/>' + 
+                  '<b>' + d.executionDate + '</b><br/>' +
                   d.expectedFile + '</li>';
               }
               else {
                 return '<li class=' + dateClass + '>' +
-                  '<b>' + d.executionDate + '</b><br/>' + 
+                  '<b>' + d.executionDate + '</b><br/>' +
                   d.incomingFiles.join('<br/>') + '</li>';
               }
             }).reduce(function (el1, el2) {

@@ -23,6 +23,7 @@ exports.getS3Calls = function() {
       // this function is used for pagination - the aws sdk only
       // returns 1000 files per request.
       function recursiveList(continuationToken) {
+
         var params = {
           Bucket : 'healthverity',
           Prefix : 'incoming/' + providerConf.providerPrefix + '/',
@@ -66,9 +67,9 @@ exports.getS3Calls = function() {
  */
 exports.uploadFile = function(content, filename, callback) {
   var params = {
-    Body: content, 
-    Bucket: filename.split('/')[2], 
-    Key: filename.split('/').slice(3).reduce(function(x, y) {return x + '/' + y;}), 
+    Body: content,
+    Bucket: filename.split('/')[2],
+    Key: filename.split('/').slice(3).join('/'),
     ServerSideEncryption: "AES256",
     ContentType: 'text/html'
   };
