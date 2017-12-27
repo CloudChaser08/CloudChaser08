@@ -8,10 +8,10 @@
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -21,10 +21,10 @@
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -34,10 +34,10 @@
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
             "epi_calcs"         : null
         },
         {
@@ -47,10 +47,10 @@
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -60,10 +60,10 @@
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -72,11 +72,11 @@
             "datatype"          : "consumer",
             "date_field"        : "event_date",
             "record_field"      : null,
-            "fill_rate"         : true,
-            "key_stats"         : null,
-            "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "fill_rate"         : false,
+            "key_stats"         : false,
+            "top_values"        : false,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
             "epi_calcs"         : null
         },
         {
@@ -86,10 +86,10 @@
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -98,11 +98,11 @@
             "datatype"          : "medicalclaims",
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
-            "fill_rate"         : true,
-            "key_stats"         : null,
-            "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "fill_rate"         : false,
+            "key_stats"         : false,
+            "top_values"        : false,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
             "epi_calcs"         : null
         },
         {
@@ -112,10 +112,10 @@
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -125,10 +125,10 @@
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -137,11 +137,11 @@
             "datatype"          : "emr",
             "date_field"        : "date_service",
             "record_field"      : null,
-            "fill_rate"         : true,
-            "key_stats"         : null,
-            "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "fill_rate"         : false,
+            "key_stats"         : true,
+            "top_values"        : false,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -150,11 +150,11 @@
             "datatype"          : "emr",
             "date_field"        : "date_service",
             "record_field"      : null,
-            "fill_rate"         : true,
-            "key_stats"         : null,
-            "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "fill_rate"         : false,
+            "key_stats"         : true,
+            "top_values"        : false,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
             "epi_calcs"         : null
         },
         {
@@ -164,10 +164,10 @@
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -177,10 +177,10 @@
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
-            "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "key_stats"         : true,
+            "top_values"        : false,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
             "epi_calcs"         : null
         },
         {
@@ -190,10 +190,10 @@
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -203,10 +203,10 @@
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -216,10 +216,10 @@
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
             "epi_calcs"         : null
         },
         {
@@ -229,10 +229,10 @@
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -241,11 +241,11 @@
             "datatype"          : "emr",
             "date_field"        : "date_service",
             "record_field"      : null,
-            "fill_rate"         : true,
-            "key_stats"         : null,
-            "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "fill_rate"         : false,
+            "key_stats"         : true,
+            "top_values"        : false,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -255,10 +255,10 @@
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
             "fill_rate"         : true,
-            "key_stats"         : null,
+            "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         },
         {
@@ -268,10 +268,10 @@
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : true,
-            "key_stats"         : null,
-            "top_values"        : true,
-            "longitudinality"   : null,
-            "year_over_year"    : null,
+            "key_stats"         : true,
+            "top_values"        : false,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
             "epi_calcs"         : null
         }
     ]
