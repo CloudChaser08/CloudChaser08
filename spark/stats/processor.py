@@ -19,14 +19,8 @@ def _run_fill_rates(df, provider_conf):
     '''
     if provider_conf.get('fill_rate_conf'):
         # Get only the columns needed to calculate fill rates on
-        i = 0
-        fill_rates = []
         cols = [c for c in df.columns if c in provider_conf['fill_rate_conf']['columns']]
-        while i < len(cols):
-            fill_rate_cols_df = df.select(*[col(c) for c in cols[i:i+10]])
-            fill_rates += fill_rate.calculate_fill_rate(fill_rate_cols_df).collect()
-            i = i + 10
-        return fill_rates
+        return fill_rate.calculate_fill_rate(fill_rate_cols_df)
 
     return None
 

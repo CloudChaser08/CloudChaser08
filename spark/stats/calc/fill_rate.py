@@ -28,7 +28,12 @@ def calculate_fill_rate(df):
         fr_df: the fill rates for each column as a pyspark.sql.DataFrame
     '''
     row_count = df.count()
-    fr_df = df.agg(*[_col_fill_rate(c, row_count) for c in df.columns])
-    return fr_df
 
+    # Do the calculation on 10 columns at a time to reduce memory footprint
+    i = 0
+    fill_rates = []
+    while i < len(cols):
+        fill_rates += df.agg(*[_col_fill_rate(c, row_count) for c in df.columns[i:i+10]]).collect()
+        i = i + 10
+    return fill_rates
 
