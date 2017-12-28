@@ -67,7 +67,7 @@ def _run_year_over_year(df, provider_conf):
     return None
 
 
-def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
+def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
                           start_date, end_date, earliest_date):
     '''
     Runs all the relevant marketplace stats for a provider in a given
@@ -75,7 +75,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     Input:
         - spark: spark session object
         - sqlContext: SQLContext of the spark session
-        - provider_name: name of the provider we are running stats on
+        - feed_id: id of the provider feed we are running stats on
         - quarter: quarter to run stats on
         - start_date: starting date of the date range
         - end_date: ending date of the date range
@@ -88,7 +88,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     this_file = inspect.getmodule(inspect.stack()[1][0]).__file__
     config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
     provider_conf = config_reader.get_provider_config(
-                                    config_file, provider_name)
+                                    config_file, feed_id)
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
@@ -96,7 +96,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     distinct_column_name = provider_conf['record_field']
 
     # Get data
-    all_data_df = utils.get_provider_data(sqlContext, datatype, provider_name)
+    all_data_df = utils.get_provider_data(sqlContext, datatype, feed_id)
 
     # Desired number of partitions when calculating
     partitions = int(spark.conf.get('spark.sql.shuffle.partitions'))
