@@ -14,14 +14,17 @@ import subdags.split_push_files as split_push_files
 
 import common.HVDAG as HVDAG
 
-for m in [subdags.emdeon_validate_fetch_file, split_push_files, HVDAG]:
+import util.date_utils as date_utils
+
+for m in [subdags.emdeon_validate_fetch_file, split_push_files, HVDAG,
+    date_utils]:
     reload(m)
 
 from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
 
 # Applies to all files
-TMP_PATH_TEMPLATE='/tmp/webmd/pharmacyclaims/{}/'
-TMP_PATH_PARTS_TEMPLATE='/tmp/webmd/pharmacyclaims/{}/parts/'
+TMP_PATH_TEMPLATE='/tmp/webmd/pharmacyclaims/{}{}{}/'
+TMP_PATH_PARTS_TEMPLATE='/tmp/webmd/pharmacyclaims/{}{}{}/parts/'
 DAG_NAME='emdeon_rx_pre_matching_pipeline'
 DATATYPE='pharmacyclaims'
 
@@ -29,61 +32,70 @@ DATATYPE='pharmacyclaims'
 TRANSACTION_FILE_DESCRIPTION='WebMD RX transaction file'
 S3_TRANSACTION_SPLIT_PATH='s3://salusv/incoming/pharmacyclaims/emdeon/'
 S3_TRANSACTION_RAW_PATH='s3://healthverity/incoming/pharmacyclaims/emdeon/transactions/'
-TRANSACTION_FILE_NAME_TEMPLATE='{}_RX_DEID_CF_ON.dat.gz'
+TRANSACTION_FILE_NAME_TEMPLATE='{}{}{}_RX_DEID_CF_ON.dat.gz'
 TRANSACTION_DAG_NAME='validate_fetch_transaction_file'
 MINIMUM_TRANSACTION_FILE_SIZE=500
 
 # Transaction MFT file
 TRANSACTION_MFT_FILE_DESCRIPTION='WebMD RX transaction mft file'
 S3_TRANSACTION_MFT_RAW_PATH='s3://healthverity/incoming/pharmacyclaims/emdeon/transactions/'
-TRANSACTION_MFT_FILE_NAME_TEMPLATE='{}_RX_DEID_CF_ON.dat.mft'
+TRANSACTION_MFT_FILE_NAME_TEMPLATE='{}{}{}_RX_DEID_CF_ON.dat.mft'
 TRANSACTION_MFT_DAG_NAME='validate_fetch_transaction_mft_file'
 MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 
 # Deid file
 DEID_FILE_DESCRIPTION='WebMD RX deid file'
 S3_DEID_RAW_PATH='s3://healthverity/incoming/pharmacyclaims/emdeon/deid/'
-DEID_FILE_NAME_TEMPLATE='{}_RX_Ident_CF_ON_PHI_Hash_HV_Encrypt.dat.gz'
+DEID_FILE_NAME_TEMPLATE='{}{}{}_RX_Ident_CF_ON_PHI_Hash_HV_Encrypt.dat.gz'
 DEID_DAG_NAME='validate_fetch_deid_file'
 MINIMUM_DEID_FILE_SIZE=500
 
-def get_file_name_pattern(ds, kwargs):
-    return TRANSACTION_FILE_NAME_TEMPLATE.format('\d{8}')
+EMDEON_RX_DAY_OFFSET = -1
+
+get_file_name_pattern = date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE)
+
+tmp_path = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
+tmp_path_parts = date_utils.generate_insert_date_into_template_function(TMP_PATH_PARTS_TEMPLATE)
 
 def do_unzip_file(ds, **kwargs):
-    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    file_path = tmp_path + TRANSACTION_FILE_NAME_TEMPLATE.format(kwargs['yesterday_ds_nodash'])
+    file_path = tmp_path(ds, kwargs) + date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE,
+        kwargs,
+        day_offset = EMDEON_RX_DAY_OFFSET
+    )
     check_call(['gzip', '-d', '-k', '-f', file_path])
 
 def do_split_file(ds, **kwargs):
-    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
-    file_name = TRANSACTION_FILE_NAME_TEMPLATE.replace('.gz', '').format(kwargs['yesterday_ds_nodash'])
-    file_path = tmp_path + file_name
-    check_call(['mkdir', '-p', tmp_path_parts])
-    check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(tmp_path_parts, file_name)])
+    file_name = date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE.replace('.gz', ''),
+        kwargs,
+        day_offset = EMDEON_RX_DAY_OFFSET
+    )
+    file_path = tmp_path(ds, kwargs) + file_name
+    check_call(['mkdir', '-p', tmp_path_parts(ds, kwargs)])
+    check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(tmp_path_parts(ds, kwargs), file_name)])
 
 def do_zip_part_files(ds, **kwargs):
-    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
-
     file_list = os.listdir(tmp_path_parts)
     for file_name in file_list:
-        check_call(['lbzip2', '{}{}'.format(tmp_path_parts, file_name)])
+        check_call(['lbzip2', '{}{}'.format(tmp_path_parts(ds, kwargs), file_name)])
 
 def do_push_splits_to_s3(ds, **kwargs):
-    tmp_path = TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-    tmp_path_parts = TMP_PATH_PARTS_TEMPLATE.format(kwargs['ds_nodash'])
-
-    file_list = os.listdir(tmp_path_parts)
+    file_list = os.listdir(tmp_path_parts(ds, kwargs))
     file_name = file_list[0]
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
-    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts, "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
+    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts(ds, kwargs), "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
 
 def do_trigger_post_matching_dag(context, dag_run_obj):
-    file_dir = TMP_PATH_TEMPLATE.format(context['ds_nodash'])
-    transaction_file_name = TRANSACTION_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
-    deid_file_name = DEID_FILE_NAME_TEMPLATE.format(context['yesterday_ds_nodash'])
+    file_dir = tmp_path(ds, context)
+    transaction_file_name = date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE,
+        context,
+        day_offset = EMDEON_RX_DAY_OFFSET
+    )
+    deid_file_name = date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE,
+        context,
+        day_offset = EMDEON_RX_DAY_OFFSET
+    )
     row_count = check_output(['zgrep', '-c', '^', file_dir + transaction_file_name])
     dag_run_obj.payload = {
             "deid_filename": deid_file_name.replace('.gz', ''),
@@ -170,8 +182,12 @@ log_file_volume = PythonOperator(
         DAG_NAME,
         get_file_name_pattern,
         lambda ds, k: [
-            TMP_PATH_TEMPLATE.format(k['ds_nodash'])
-            + TRANSACTION_FILE_NAME_TEMPLATE.format(k['yesterday_ds_nodash'])
+            tmp_path(TMP_PATH_TEMPLATE, k)
+            + date_utils.insert_date_into_template(
+                TRANSACTION_FILE_NAME_TEMPLATE, 
+                k, 
+                day_offset = EMDEON_RX_DAY_OFFSET
+            )
         ]
     ),
     dag=mdag
@@ -201,7 +217,7 @@ push_splits_to_s3 = PythonOperator(
 queue_up_for_matching = BashOperator(
     task_id='queue_up_for_matching',
     bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3_batchless.sh {}{}'.format(
-                     S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}')) +
+                     S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}','','')) +
                  ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}',
     params={'sequence_num' : 0,
             'matching_engine_env' : 'prod-matching-engine',
@@ -220,7 +236,7 @@ trigger_post_matching_dag = TriggerDagRunOperator(
 
 clean_up_workspace = BashOperator(
     task_id='clean_up_workspace',
-    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}')),
+    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}','','')),
     trigger_rule='all_done',
     dag=mdag
 )
