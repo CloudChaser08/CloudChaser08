@@ -14,12 +14,14 @@ import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.run_pyspark_routine as run_pyspark_routine
+import util.decompression as decompression
 import util.s3_utils as s3_utils
+import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file,
           s3_push_files, decrypt_files, split_push_files,
           clean_up_tmp_dir, run_pyspark_routine, HVDAG,
-          decompression, s3_utils]:
+          decompression, s3_utils, date_utils]:
     reload(m)
 
 # Applies to all files
@@ -38,7 +40,7 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-TRANSACTION_FILE_NAME_TEMPLATE = 'out-record-{}.dat'   #TODO: This might change
+TRANSACTION_FILE_NAME_TEMPLATE = 'out-record-{}{}{}.dat'   #TODO: This might change
 EMR_CLUSTER_NAME_TEMPLATE = 'cardinal_dcoa_delivery_{}'
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/raw/'
@@ -51,38 +53,14 @@ else:
     S3_DELIVERY_FILE_OUTPUT_LOCATION = 's3://salusv/deliverable/cardinal_dcoa/{}/{}/{}/'
     S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/dcoa/cardinal_dcoa_normalized_{}{}{}.psv.gz'      #TODO: Decide where this is dropped
 
-TMP_PATH_TEMPLATE='/tmp/cardinal_dcoa/pharmacyclaims/{}/'
+TMP_PATH_TEMPLATE='/tmp/cardinal_dcoa/pharmacyclaims/{}{}{}/'
 
-def get_date(kwargs):
-    return (kwargs['execution_date'] + timedelta(days=1)).strftime('%Y%m%d')
+CARDINAL_DCOA_DAY_OFFSET = 1
 
-
-def insert_formatted_date_function(template):
-    def out(ds, kwargs):
-        return template.format(get_date(kwargs))
-    return out
-
-
-def insert_current_date(template, kwargs):
-    ds_nodash = get_date(kwargs)
-    return template.format(
-        ds_nodash[0:4],
-        ds_nodash[4:6],
-        ds_nodash[6:8]
-    )
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return insert_current_date(template, kwargs)
-    return out
-
-
-def get_tmp_dir(ds, kwargs):
-    return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
-
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
 
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-{}', k),
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = CARDINAL_DCOA_DAY_OFFSET),
             '--num_output_files', '1']
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
@@ -91,13 +69,23 @@ def norm_args(ds, k):
 
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + insert_formatted_date_function(TRANSACTION_FILE_NAME_TEMPLATE)(ds, kwargs)]
+    return [get_tmp_dir(ds, kwargs) +\
+        date_utils.insert_date_into_template(
+            TMP_PATH_TEMPLATE,
+            kwargs,
+            day_offset = CARDINAL_DCOA_DAY_OFFSET
+        )
+    ]
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
-        + insert_formatted_date_function(TRANSACTION_FILE_NAME_TEMPLATE)(ds, kwargs)
+        + date_utils.insert_date_into_template(
+            TRANSACTION_FILE_NAME_TEMPLATE, 
+            kwargs, 
+            day_offset = CARDINAL_DCOA_DAY_OFFSET
+        )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
@@ -114,9 +102,11 @@ def generate_file_validation_task(
             mdag.schedule_interval,
             {
                 'expected_file_name_func'   : lambda ds, k: (
-                    insert_formatted_date_function(
-                        path_template
-                    )(ds, k)
+                    date_utils.insert_date_into_template(
+                        path_template,
+                        kwargs,
+                        day_offset = CARDINAL_DCOA_DAY_OFFSET
+                    )
                 ),
                 'file_name_pattern_func'    : lambda ds, k: (
                     DEID_FILE_NAME_REGEX
@@ -149,8 +139,9 @@ fetch_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'         : TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : insert_formatted_date_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE,
+                day_offset = CARDINAL_DCOA_DAY_OFFSET
             ),
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
@@ -184,8 +175,9 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            's3_prefix_func'           : insert_current_date_function(
-                S3_TRANSACTION_PROCESSED_URL_TEMPLATE
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
+                S3_TRANSACTION_PROCESSED_URL_TEMPLATE,
+                day_offset = CARDINAL_DCOA_DAY_OFFSET
             ),
             'num_splits'               : 20
         }
@@ -215,7 +207,10 @@ run_normalization = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'EMR_CLUSTER_NAME_FUNC': insert_formatted_date_function(EMR_CLUSTER_NAME_TEMPLATE),
+            'EMR_CLUSTER_NAME_FUNC': date_utils.generate_insert_date_into_template_function(
+                EMR_CLUSTER_NAME_TEMPLATE, 
+                day_offset = CARDINAL_DCOA_DAY_OFFSET
+            ),
             'PYSPARK_SCRIPT_NAME': '/home/hadoop/spark/providers/cardinal_dcoa/pharmacyclaims/sparkNormalizeCardinalDCOA.py',
             'PYSPARK_ARGS_FUNC': norm_args,
             'NUM_NODES': 5,
@@ -231,16 +226,27 @@ run_normalization = SubDagOperator(
 
 def do_fetch_normalized_data(ds, **kwargs):
     bucket_files = s3_utils.list_s3_bucket_files(
-                    insert_current_date(
-                        S3_DELIVERY_FILE_OUTPUT_LOCATION,
-                        kwargs
-                    ))
+        date_utils.insert_date_into_template(
+            S3_DELIVERY_FILE_OUTPUT_LOCATION,
+            kwargs,
+            day_offset = CARDINAL_DCOA_DAY_OFFSET
+        )
+    )
     part_file = list(filter(lambda x: x != '_SUCCESS', bucket_files))[0]
     kwargs['ti'].xcom_push(key = 'part_file', value = part_file)
 
     s3_utils.fetch_file_from_s3(
-        insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION + part_file, kwargs),
-        get_tmp_dir(ds, kwargs) + insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION + part_file, kwargs).split('/')[-1]
+        date_utils.insert_date_into_template(
+            S3_DELIVERY_FILE_OUTPUT_LOCATION + part_file,
+            kwargs,
+            day_offset = CARDINAL_DCOA_DAY_OFFSET
+        ),
+        get_tmp_dir(ds, kwargs) +\
+        date_utils.insert_date_into_template(
+            S3_DELIVERY_FILE_OUTPUT_LOCATION + part_file,
+            kwargs,
+            day_offset = CARDINAL_DCOA_DAY_OFFSET
+        ).split('/')[-1]
     )
 
     
@@ -254,7 +260,10 @@ fetch_normalized_data = PythonOperator(
 def delivery_file_path_func(ds, kwargs):
     return [
         get_tmp_dir(ds, kwargs) + \
-            insert_current_date(S3_DELIVERY_FILE_OUTPUT_LOCATION, kwargs).split('/')[-1] + \
+            date_utils.insert_date_into_template(
+                S3_DELIVERY_FILE_OUTPUT_LOCATION,
+                kwargs,
+                day_offset = CARDINAL_DCOA_DAY_OFFSET).split('/')[-1] + \
             kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'fetch_normalized_data', key = 'part_file')
         ]
 
@@ -268,7 +277,9 @@ deliver_normalized_data = SubDagOperator(
         {
             'file_paths_func'       : delivery_file_path_func,
             's3_prefix_func'        : lambda ds, kwargs: \
-                '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
+                '/'.join(date_utils.insert_date_into_template(
+                    S3_DESTINATION_FILE_URL_TEMPLATE, kwargs,
+                    day_offset = CARDINAL_DCOA_DAY_OFFSET).split('/')[3:]),
             's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
             'aws_secret_key_id'     : Variable.get('AWS_ACCESS_KEY_ID') if HVDAG.HVDAG.airflow_env == 'test' else Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
             'aws_secret_access_key' : Variable.get('AWS_SECRET_ACCESS_KEY') if HVDAG.HVDAG.airflow_env == 'test' else Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
