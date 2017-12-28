@@ -13,7 +13,6 @@ pharmacy_results = None
 nppes_results = None
 
 def cleanup(spark):
-    spark['sqlContext'].sql('DROP DATABASE IF EXISTS {} CASCADE'.format(celgene.CELGENE_SCHEMA))
     spark['sqlContext'].sql('DROP TABLE IF EXISTS default.ref_nppes')
 
     try:
@@ -30,8 +29,6 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
-
-    spark['sqlContext'].sql('CREATE DATABASE {}'.format(celgene.CELGENE_SCHEMA))
 
     # load pharmacyclaims table
     spark['runner'].run_spark_script('../../../common/pharmacyclaims_common_model_v4.sql', [
@@ -78,10 +75,10 @@ def test_init(spark):
 
     global pharmacy_results, nppes_results
     pharmacy_results = spark['sqlContext'].sql(
-        'select * from {}.pharmacyclaims_extract'.format(celgene.CELGENE_SCHEMA)
+        'select * from pharmacyclaims_extract'
     ).collect()
     nppes_results = spark['sqlContext'].sql(
-        'select * from {}.nppes_extract'.format(celgene.CELGENE_SCHEMA)
+        'select * from nppes_extract'
     ).collect()
 
 

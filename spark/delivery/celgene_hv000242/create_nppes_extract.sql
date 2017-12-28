@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS {celgene_schema}.nppes_extract;
-CREATE TABLE {celgene_schema}.nppes_extract AS
 SELECT
     npi,
     entity_type,
@@ -20,6 +18,5 @@ SELECT
     practice_phone,
     taxonomy_code_1
 FROM default.ref_nppes a
-    INNER JOIN cel242.pharmacyclaims_extract b ON a.npi = b.prov_prescribing_npi
+    INNER JOIN pharmacyclaims_extract b ON a.npi = b.prov_prescribing_npi
 ORDER BY 1
-    ;

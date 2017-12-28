@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS {celgene_schema}.pharmacyclaims_extract;
-CREATE TABLE {celgene_schema}.pharmacyclaims_extract AS
 SELECT
     record_id,
     claim_id,
@@ -136,4 +134,3 @@ FROM default.pharmacyclaims a
 WHERE part_provider='apothecary_by_design'
     AND a.ndc_code IN ('59572063255','59572063106')
     AND date_service BETWEEN {start_date} AND {end_date}
-    ;
