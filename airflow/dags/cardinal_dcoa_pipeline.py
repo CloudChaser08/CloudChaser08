@@ -69,7 +69,7 @@ def norm_args(ds, k):
 
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) +\
+    return [get_tmp_dir(ds, kwargs)[:-1] +\
         date_utils.insert_date_into_template(
             TMP_PATH_TEMPLATE,
             kwargs,
