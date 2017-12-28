@@ -19,7 +19,7 @@ def cleanup():
 
 def test_run():
     cleanup()
-    subprocss.check_call([
+    subprocess.check_call([
         'airflow', 'clear', '-c', 'cardinal_dcoa_pipeline'
     ])
     subprocess.check_call([
