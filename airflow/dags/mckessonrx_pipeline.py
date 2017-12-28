@@ -62,7 +62,7 @@ DEID_FILE_NAME_TEMPLATE = 'HVUnRes.DEID.{}{}{}'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TMP_PATH_TEMPLATE
-    )
+)
 
 
 def get_transaction_file_paths(ds, kwargs):
@@ -168,10 +168,8 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE
-            ),
-            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_TEMPLATE
-            ),
+            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE),
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_TEMPLATE),
             'num_splits'               : 20
         }
     ),
@@ -227,11 +225,9 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      :
-                date_utils.generate_insert_date_into_template_function(DEID_FILE_NAME_TEMPLATE                    
-                ),
-            'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
-                '{}/{}/{}'
-                ),
+                date_utils.generate_insert_date_into_template_function(DEID_FILE_NAME_TEMPLATE),
+            'file_date_func'                    : 
+                date_utils.generate_insert_date_into_template_function('{}/{}/{}'),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'f6b4eefd-988a-4ca3-9efd-0140607c8985',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/mckesson/pharmacyclaims/sparkNormalizeMcKessonRx.py',
