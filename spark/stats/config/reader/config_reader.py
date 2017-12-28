@@ -125,13 +125,13 @@ def get_provider_config(providers_conf_file, provider_name):
     # configure stats whose configurations do not come from the marketplace db
     no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year', 'epi_calcs']
     for calc in no_db_stat_calcs:
-        if calc not in provider_conf:
+        if calc + '_conf_file' not in provider_conf:
             logging.info('No config for {} found in {} config, falling back to default.'.format(calc, provider_name))
             conf_file_loc = get_abs_path(providers_conf_file,
                                         provider_conf['datatype'] + '/' + calc + '.json')
             provider_conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
-        elif provider_conf[calc]:
-            conf_file_loc = get_abs_path(providers_conf_file, provider_conf[calc])
+        elif provider_conf[calc + '_conf_file']:
+            conf_file_loc = get_abs_path(providers_conf_file, provider_conf[calc + '_conf_file'])
             provider_conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
 
     return provider_conf
