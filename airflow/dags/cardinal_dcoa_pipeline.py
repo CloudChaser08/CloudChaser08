@@ -69,9 +69,9 @@ def norm_args(ds, k):
 
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs)[:-1] +\
+    return [get_tmp_dir(ds, kwargs) +\
         date_utils.insert_date_into_template(
-            TMP_PATH_TEMPLATE,
+            TRANSACTION_FILE_NAME_TEMPLATE,
             kwargs,
             day_offset = CARDINAL_DCOA_DAY_OFFSET
         )
