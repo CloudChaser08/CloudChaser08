@@ -15,10 +15,11 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import util.decompression as decompression
 import util.s3_utils as s3_utils
+import util.date_utils as date_utils
 
 for m in [s3_validate_file, queue_up_for_matching, s3_fetch_file,
           detect_move_normalize, HVDAG, decompression,
-          s3_utils, clean_up_tmp_dir]:
+          s3_utils, clean_up_tmp_dir, date_utils]:
     reload(m)
 
 # Applies to all files
@@ -45,31 +46,22 @@ else:
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/custom/cardinal_mpi/'
     RAW_SOURCE_OF_TRUTH = 'incoming/cardinal/mpi/'
 
-TMP_PATH_TEMPLATE='/tmp/cardinal_mpi/custom/{}/'
+TMP_PATH_TEMPLATE='/tmp/cardinal_mpi/custom/{}{}{}/'
 S3_DEID_RAW_URL='s3://hvincoming/cardinal_raintree/mpi/'
-DEID_FILE_NAME_TEMPLATE = 'mpi.%Y%m%dT\d{2}\d{2}\d{2}.zip'
+DEID_FILE_NAME_TEMPLATE = 'mpi.{}{}{}T\d{2}\d{2}\d{2}.zip'
 DEID_FILE_NAME_REGEX = 'mpi.\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}.zip'
-DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'mpi-deid.%Y%m%dT\d{2}\d{2}\d{2}.dat'
+DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'mpi-deid.{}{}{}T\d{2}\d{2}\d{2}.dat'
 
-S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/warehouse/text/custom/cardinal_mpi/%Y/%m/%d/part-00000.gz'
-S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/mpi/cardinal_mpi_matched_%Y%m%d.psv.gz'
+S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/warehouse/text/custom/cardinal_mpi/{}/{}/{}/part-00000.gz'
+S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/mpi/cardinal_mpi_matched_{}{}{}.psv.gz'
 
-def insert_current_date_function(date_template):
-    def out(ds, kwargs):
-        date = kwargs['execution_date'] + timedelta(days=1)
-        return date.strftime(date_template)
-    return out
+CARDINAL_MPI_DAY_OFFSET = 1
 
-
-def insert_current_date(template, kwargs):
-    return insert_current_date_function(template)(None, kwargs)
-
-def get_tmp_dir(ds, kwargs):
-    return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
 
 def get_files_matching_template(template, ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
-    file_regex = insert_current_date(template, kwargs)
+    file_regex = insert_date_into_template(template, kwargs, day_offset = CARDINAL_MPI_DAY_OFFSET)
     return [file_dir + f for f in os.listdir(file_dir) if re.search(file_regex, f)]
 
 def get_deid_file_urls(ds, kwargs):
@@ -87,9 +79,11 @@ def generate_file_validation_task(
             mdag.schedule_interval,
             {
                 'expected_file_name_func'   : lambda ds, k: (
-                    insert_current_date_function(
-                        path_template
-                    )(ds, k)
+                    date_utils.generate_insert_date_into_template_function(
+                        path_template,
+                        k,
+                        day_offset = CARDINAL_MPI_DAY_OFFSET
+                    )
                 ),
                 'file_name_pattern_func'    : lambda ds, k: (
                     DEID_FILE_NAME_REGEX
@@ -124,9 +118,11 @@ fetch_deid_file_dag = SubDagOperator(
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
             'expected_file_name_func': lambda ds, k: (
-                insert_current_date_function(
-                    DEID_FILE_NAME_TEMPLATE
-                )(ds, k)
+                date_utils.generate_insert_date_into_template_function(
+                    DEID_FILE_NAME_TEMPLATE,
+                    k,
+                    day_offset = CARDINAL_MPI_DAY_OFFSET  
+                )
             ),
             's3_prefix'              : '/'.join(S3_DEID_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'hvincoming',
@@ -186,7 +182,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('%Y-%m-%d', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = CARDINAL_MPI_DAY_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -202,8 +198,9 @@ detect_move_normalize_dag = SubDagOperator(
             'expected_matching_files_func': lambda ds, k: (
                 map(lambda f: f.split('/')[-1], get_deid_file_urls(ds, k))
             ),
-            'file_date_func': insert_current_date_function(
-                '%Y/%m/%d'
+            'file_date_func': date_utils.generate_insert_date_into_template_function(
+                '{}/{}/{}',
+                day_offset = CARDINAL_MPI_DAY_OFFSET
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
             'vendor_uuid': 'eb27309e-adce-4057-b00c-69b8373e6f9c',
@@ -222,8 +219,16 @@ if HVDAG.HVDAG.airflow_env != 'test':
         provide_context=True,
         python_callable=lambda ds, **kwargs: \
             s3_utils.fetch_file_from_s3(
-                insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs),
-                get_tmp_dir(ds, kwargs) + insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs).split("/")[-1]
+                date_utils.insert_date_into_template(
+                    S3_NORMALIZED_FILE_URL_TEMPLATE,
+                    kwargs,
+                    day_offset = CARDINAL_MPI_DAY_OFFSET
+                ),
+                get_tmp_dir(ds, kwargs) + \
+                    date_utils.insert_date_into_template(
+                        S3_NORMALIZED_FILE_URL_TEMPLATE, 
+                        kwargs,
+                        day_offset = CARDINAL_MPI_DAY_OFFSET).split("/")[-1]
         ),
         dag=mdag
     )
@@ -237,10 +242,13 @@ if HVDAG.HVDAG.airflow_env != 'test':
             {
                 'file_paths_func'       : lambda ds, kwargs: [
                     get_tmp_dir(ds, kwargs) + \
-                        insert_current_date(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs).split('/')[-1]
+                        date_utils.insert_date_into_template(
+                            S3_NORMALIZED_FILE_URL_TEMPLATE, 
+                            kwargs, 
+                            day_offset = CARDINAL_MPI_DAY_OFFSET).split('/')[-1]
                 ],
                 's3_prefix_func'        : lambda ds, kwargs: \
-                    '/'.join(insert_current_date(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
+                    '/'.join(date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs).split('/')[3:]),
                 's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
                 'aws_access_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
                 'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
