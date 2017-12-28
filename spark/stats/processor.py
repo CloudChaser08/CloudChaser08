@@ -38,16 +38,9 @@ def _run_top_values(df, provider_conf):
     '''
     if provider_conf.get('top_values_conf'):
         # Get only the columns needed to calculate fill rates on
-        i = 0
-        top_values_res = []
         cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns']]
         max_num_values = provider_conf['top_values_conf']['max_values']
-        while i < len(cols):
-            top_values_cols_df = df.select(*[col(c) for c in cols[i:i+10]])
-            top_values_res += top_values.calculate_top_values(top_values_cols_df,
-                                                             max_num_values).collect()
-            i = i + 10
-        return top_values_res
+        return top_values.calculate_top_values(top_values_cols_df, max_num_values)
 
     return None
 
