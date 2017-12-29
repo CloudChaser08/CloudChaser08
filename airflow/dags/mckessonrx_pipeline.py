@@ -66,13 +66,15 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(
 
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs
-    )]
+    return [get_tmp_dir(ds, kwargs) +\
+     date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
+    ]
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs
-    )]
+    return [S3_TRANSACTION_RAW_URL +\
+     date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
+    ]
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
@@ -132,7 +134,8 @@ fetch_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -168,8 +171,14 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(TRANSACTION_FILE_NAME_TEMPLATE),
-            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_PROCESSED_URL_TEMPLATE),
+            'file_name_pattern_func'   : 
+                date_utils.generate_insert_regex_into_template_function(
+                    TRANSACTION_FILE_NAME_TEMPLATE
+                ),
+            's3_prefix_func'           : 
+                date_utils.generate_insert_date_into_template_function(
+                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE
+                ),
             'num_splits'               : 20
         }
     ),
@@ -224,8 +233,9 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      :
-                date_utils.generate_insert_date_into_template_function(DEID_FILE_NAME_TEMPLATE),
+            'expected_matching_files_func'      : [
+                date_utils.generate_insert_date_into_template_function(DEID_FILE_NAME_TEMPLATE)
+            ],
             'file_date_func'                    : 
                 date_utils.generate_insert_date_into_template_function('{}/{}/{}'),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
@@ -251,8 +261,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(sql_template, k)
-                if date_utils.insert_date_into_template('{}-{}-{}', k).find('-01') == 7 else ''
+                'sql_command_func' : 
+                    date_utils.generate_insert_date_into_template_function(sql_template)
             }
         ),
         task_id='update_analytics_db',
