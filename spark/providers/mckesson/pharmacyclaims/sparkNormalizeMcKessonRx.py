@@ -81,10 +81,10 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
         unres_matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/payload/{}/'.format(
             date_input.replace('-', '/')
         )
-        unres_input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_res/pharmacyclaims/out/{}/'.format(
+        res_input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_res/pharmacyclaims/out/{}/'.format(
             date_input.replace('-', '/')
         )
-        unres_matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_res/pharmacyclaims/payload/{}/'.format(
+        res_matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_res/pharmacyclaims/payload/{}/'.format(
             date_input.replace('-', '/')
         )
     else:
