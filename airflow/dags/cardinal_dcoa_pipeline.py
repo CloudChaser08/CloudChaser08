@@ -101,12 +101,11 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func'   : lambda ds, k: (
-                    date_utils.insert_date_into_template(
+                'expected_file_name_func'   :
+                    date_utils.generate_insert_date_into_template_function(
                         path_template,
-                        kwargs,
                         day_offset = CARDINAL_DCOA_DAY_OFFSET
-                    )
+                    
                 ),
                 'file_name_pattern_func'    : lambda ds, k: (
                     DEID_FILE_NAME_REGEX
@@ -276,10 +275,14 @@ deliver_normalized_data = SubDagOperator(
         mdag.schedule_interval,
         {
             'file_paths_func'       : delivery_file_path_func,
-            's3_prefix_func'        : lambda ds, kwargs: \
-                '/'.join(date_utils.insert_date_into_template(
-                    S3_DESTINATION_FILE_URL_TEMPLATE, kwargs,
-                    day_offset = CARDINAL_DCOA_DAY_OFFSET).split('/')[3:]),
+            's3_prefix_func'        : 
+                lambda ds, kwargs: '/'.join(
+                    date_utils.insert_date_into_template(
+                        S3_DESTINATION_FILE_URL_TEMPLATE, 
+                        kwargs,
+                        day_offset = CARDINAL_DCOA_DAY_OFFSET
+                    ).split('/')[3:]
+                ),
             's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
             'aws_secret_key_id'     : Variable.get('AWS_ACCESS_KEY_ID') if HVDAG.HVDAG.airflow_env == 'test' else Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
             'aws_secret_access_key' : Variable.get('AWS_SECRET_ACCESS_KEY') if HVDAG.HVDAG.airflow_env == 'test' else Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
