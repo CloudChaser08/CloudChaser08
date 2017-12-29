@@ -18,7 +18,7 @@ for m in [
 
 DAG_NAME='celgene_delivery'
 
-EMR_CLUSTER_NAME='delivery_cluster-celgene'
+EMR_CLUSTER_NAME_TEMPLATE='delivery_cluster-celgene242-{}{}{}'
 NUM_NODES=5
 NODE_TYPE='m4.2xlarge'
 EBS_VOLUME_SIZE='100'
@@ -38,19 +38,22 @@ NPPES_FILENAME = 'nppes_{}{}{}.csv.gz'
 
 
 def do_create_cluster(ds, **kwargs):
-    emr_utils.create_emr_cluster(EMR_CLUSTER_NAME, NUM_NODES, NODE_TYPE,
-            EBS_VOLUME_SIZE, 'delivery', connected_to_metastore=True)
+    emr_utils.create_emr_cluster(
+        date_utils.insert_date_into_template(EMR_CLUSTER_NAME_TEMPLATE, kwargs, day_offset=CELGENE_DAY_OFFSET),
+        NUM_NODES, NODE_TYPE, EBS_VOLUME_SIZE, 'delivery', connected_to_metastore=True)
 
 
 def do_delete_cluster(ds, **kwargs):
-    emr_utils.delete_emr_cluster(EMR_CLUSTER_NAME)
+    emr_utils.delete_emr_cluster(
+        date_utils.insert_date_into_template(EMR_CLUSTER_NAME_TEMPLATE, kwargs, day_offset=CELGENE_DAY_OFFSET)
+    )
 
 
 def do_run_pyspark_export_routine(ds, **kwargs):
     emr_utils.export(
-        EMR_CLUSTER_NAME,
-        kwargs['pyspark_script_name'],
-        kwargs['pyspark_args_func'](ds, kwargs)
+        date_utils.insert_date_into_template(
+            EMR_CLUSTER_NAME_TEMPLATE, kwargs, day_offset=CELGENE_DAY_OFFSET
+        ), kwargs['pyspark_script_name'], kwargs['pyspark_args_func'](ds, kwargs)
     )
 
 
@@ -62,7 +65,7 @@ def get_export_args(ds, kwargs):
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 12, 26),
+    'start_date': datetime(2017, 12, 19, 19),
     'end_date': datetime(2018, 8, 1),
     'depends_on_past': False,
     'retries': 3,
@@ -80,7 +83,7 @@ apothecary_by_design = ExternalTaskSensor(
     task_id='wait_for_abd',
     external_dag_id='apothecary_by_design_pipeline',
     external_task_id='update_analytics_db',
-    execution_delta=timedelta(days=1), # abd runs on mondays
+    execution_delta=timedelta(days=1, hours=3), # abd runs on mondays
     dag=mdag
 )
 
