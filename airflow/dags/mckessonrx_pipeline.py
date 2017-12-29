@@ -67,13 +67,13 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(
 
 def get_transaction_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) +\
-     date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
+        date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
     ]
 
 
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL +\
-     date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
+        date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
     ]
 
 
