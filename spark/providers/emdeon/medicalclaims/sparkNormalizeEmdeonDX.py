@@ -74,6 +74,7 @@ def run(spark, runner, date_input, test=False):
 
     # Privacy filtering
     postprocessor.compose(
+        postprocessor.trimmify, postprocessor.nullify,
         postprocessor.add_universal_columns(
             feed_id='10', vendor_id='11', filename=setid
         ),
