@@ -225,21 +225,25 @@ CREATE VIEW default.medicalclaims (
     total_charge,
     total_allowed,
     CASE
+        WHEN TRIM(prov_rendering_npi) = '' THEN NULL
         WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_npi
     END as prov_rendering_npi,
     CASE
+        WHEN TRIM(prov_billing_npi) = '' THEN NULL
         WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_npi
     END as prov_billing_npi,
     CASE
+        WHEN TRIM(prov_referring_npi) = '' THEN NULL
         WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_npi
     END as prov_referring_npi,
     CASE
+        WHEN TRIM(prov_facility_npi) = '' THEN NULL
         WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_npi
@@ -624,21 +628,25 @@ SELECT CAST(record_id AS bigint),
     CAST(total_charge AS float),
     CAST(total_allowed AS float),
     CASE
+        WHEN TRIM(prov_rendering_npi) = '' THEN NULL
         WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_rendering_npi
     END as prov_rendering_npi,
     CASE
+        WHEN TRIM(prov_billing_npi) = '' THEN NULL
         WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_billing_npi
     END as prov_billing_npi,
     CASE
+        WHEN TRIM(prov_referring_npi) = '' THEN NULL
         WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_referring_npi
     END as prov_referring_npi,
     CASE
+        WHEN TRIM(prov_facility_npi) = '' THEN NULL
         WHEN ARRAY_CONTAINS(ARRAY('5', '05', '6', '06', '7', '07', '8', '08', '9', '09', '12', '13', '14', '33'), place_of_service_std_id) OR
             SUBSTRING(inst_type_of_bill_std_id, 1, 1) = '3' THEN NULL
         ELSE prov_facility_npi
