@@ -25,21 +25,21 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'neogenomics_pipeline',
-        '-s', '2017-04-13T12:00:00',
-        '-e', '2017-04-13T12:00:00',
+        '-s', '2017-09-25T17:00:00',
+        '-e', '2017-09-25T17:00:00',
         '-I'
     ])
 
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', NEOGENOMICS_TEST_DIR + '/out/2017/04/20/'
+        'aws', 's3', 'ls', NEOGENOMICS_TEST_DIR + '/out/2017/10/02/'
     ])) > 0
 
 
 def test_matching_payload_moved():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', NEOGENOMICS_TEST_DIR + '/payload/2017/04/20/'
+        'aws', 's3', 'ls', NEOGENOMICS_TEST_DIR + '/payload/2017/10/02/'
     ])) > 0
 
 

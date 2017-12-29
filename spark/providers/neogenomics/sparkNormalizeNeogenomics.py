@@ -46,6 +46,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
+    if date_input >= '2017-09-26':
+        input_path = input_path + 'tests/'
+
     min_date = '2010-01-01'
     max_date = date_input
 
