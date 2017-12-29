@@ -62,7 +62,7 @@ def get_export_args(ds, kwargs):
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 5, 8),
+    'start_date': datetime(2017, 12, 26),
     'end_date': datetime(2018, 8, 1),
     'depends_on_past': False,
     'retries': 3,
@@ -109,6 +109,10 @@ delete_cluster = PythonOperator(
     dag=mdag
 )
 
+#
+# NOTE: Uncomment the commented-out portions of this routine and fix
+# the DAG dependency structure after QC on 1/2
+#
 
 def generate_fetch_dag(task_id, temp_path_template, s3_path_template, s3_file_name_template):
     return SubDagOperator(
@@ -135,12 +139,12 @@ def generate_fetch_dag(task_id, temp_path_template, s3_path_template, s3_file_na
     )
 
 
-fetch_pharmacyclaims_output = generate_fetch_dag(
-    'pharmacyclaims', PHARMACY_STAGING_TEMPLATE, PHARMACY_S3_PATH_TEMPLATE, PHARMACY_FILENAME
-)
-fetch_nppes_output = generate_fetch_dag(
-    'nnpes', NPPES_STAGING_TEMPLATE, NPPES_S3_PATH_TEMPLATE, NPPES_FILENAME
-)
+# fetch_pharmacyclaims_output = generate_fetch_dag(
+#     'pharmacyclaims', PHARMACY_STAGING_TEMPLATE, PHARMACY_S3_PATH_TEMPLATE, PHARMACY_FILENAME
+# )
+# fetch_nppes_output = generate_fetch_dag(
+#     'nnpes', NPPES_STAGING_TEMPLATE, NPPES_S3_PATH_TEMPLATE, NPPES_FILENAME
+# )
 
 
 def generate_sftp_upload_task(task_id, temp_path_template, file_name_template):
@@ -161,12 +165,12 @@ def generate_sftp_upload_task(task_id, temp_path_template, file_name_template):
     )
 
 
-sftp_upload_pharmacyclaims = generate_sftp_upload_task(
-    'pharmacyclaims', PHARMACY_STAGING_TEMPLATE, PHARMACY_FILENAME
-)
-sftp_upload_nppes = generate_sftp_upload_task(
-    'nppes', NPPES_STAGING_TEMPLATE, NPPES_FILENAME
-)
+# sftp_upload_pharmacyclaims = generate_sftp_upload_task(
+#     'pharmacyclaims', PHARMACY_STAGING_TEMPLATE, PHARMACY_FILENAME
+# )
+# sftp_upload_nppes = generate_sftp_upload_task(
+#     'nppes', NPPES_STAGING_TEMPLATE, NPPES_FILENAME
+# )
 
 
 def generate_delivery_alert_task():
@@ -188,29 +192,30 @@ def generate_delivery_alert_task():
 
 slack_alert_delivery_complete = generate_delivery_alert_task()
 
-clean_up = SubDagOperator(
-    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
-        DAG_NAME,
-        'clean_up',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_path_template'      : date_utils.generate_insert_date_into_template_function(
-                TMP_PATH_TEMPLATE
-            )
-        }
-    ),
-    task_id='clean_up',
-    dag=mdag
-)
+# clean_up = SubDagOperator(
+#     subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+#         DAG_NAME,
+#         'clean_up',
+#         default_args['start_date'],
+#         mdag.schedule_interval,
+#         {
+#             'tmp_path_template'      : date_utils.generate_insert_date_into_template_function(
+#                 TMP_PATH_TEMPLATE
+#             )
+#         }
+#     ),
+#     task_id='clean_up',
+#     dag=mdag
+# )
 
 create_cluster.set_upstream(apothecary_by_design)
 run_pyspark_export_routine.set_upstream(create_cluster)
 delete_cluster.set_upstream(run_pyspark_export_routine)
-run_pyspark_export_routine.set_downstream([
-    fetch_pharmacyclaims_output, fetch_nppes_output
-])
-sftp_upload_pharmacyclaims.set_upstream(fetch_pharmacyclaims_output)
-sftp_upload_nppes.set_upstream(fetch_nppes_output)
-slack_alert_delivery_complete.set_upstream([sftp_upload_nppes, sftp_upload_pharmacyclaims])
-clean_up.set_upstream([sftp_upload_nppes, sftp_upload_pharmacyclaims])
+slack_alert_delivery_complete.set_upstream(run_pyspark_export_routine)
+# run_pyspark_export_routine.set_downstream([
+#     fetch_pharmacyclaims_output, fetch_nppes_output
+# ])
+# sftp_upload_pharmacyclaims.set_upstream(fetch_pharmacyclaims_output)
+# sftp_upload_nppes.set_upstream(fetch_nppes_output)
+# slack_alert_delivery_complete.set_upstream([sftp_upload_nppes, sftp_upload_pharmacyclaims])
+# clean_up.set_upstream([sftp_upload_nppes, sftp_upload_pharmacyclaims])
