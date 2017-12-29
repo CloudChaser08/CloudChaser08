@@ -78,7 +78,7 @@ def do_split_file(ds, **kwargs):
     ])
 
 def do_zip_part_files(ds, **kwargs):
-    file_list = os.listdir(get_tmp_path_parts)
+    file_list = os.listdir(get_tmp_path_parts(ds, kwargs))
     for file_name in file_list:
         check_call(['lbzip2', '{}{}'.format(get_tmp_path_parts(ds,kwargs), file_name)])
 
@@ -86,7 +86,12 @@ def do_push_splits_to_s3(ds, **kwargs):
     file_list = os.listdir(get_tmp_path_parts(ds,kwargs))
     file_name = file_list[0]
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
-    check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', get_tmp_path_parts(ds,kwargs), "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
+    check_call(
+        ['aws', 's3', 'cp', '--sse', 'AES256', '--recursive',
+            get_tmp_path_parts(ds,kwargs), 
+            "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)
+        ]
+    )
 
 default_args = {
     'owner': 'airflow',
@@ -203,7 +208,7 @@ push_splits_to_s3 = PythonOperator(
 queue_up_for_matching = BashOperator(
     task_id='queue_up_for_matching',
     bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3_batchless.sh {}{}'.format(
-                 S3_DEID_RAW_PATH, (DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}'),'','') + 
+                 S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}','','') + 
                  ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}'),
     params={'sequence_num' : 0,
             'matching_engine_env' : 'prod-matching-engine',
@@ -228,7 +233,8 @@ detect_move_normalize_dag = SubDagOperator(
                     DEID_FILE_NAME_TEMPLATE.replace('.gz',''),
                     k,
                     day_offset = EMDEON_DX_DAY_OFFSET
-            )],
+                )
+            ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}',
                 day_offset = EMDEON_DX_DAY_OFFSET
@@ -258,12 +264,10 @@ update_analytics_db = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(
+            'sql_command_func' : date_utils.generate_insert_date_into_template_function(
                 sql_template,
-                kwargs,
                 day_offset = EMDEON_DX_DAY_OFFSET
             )
-            if date_utils.insert_date_into_template('{}-{}-{}', k).find('-01') == 7 else ''
         }
     ),
     task_id='update_analytics_db',
@@ -272,7 +276,7 @@ update_analytics_db = SubDagOperator(
 
 clean_up_workspace = BashOperator(
     task_id='clean_up_workspace',
-    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}')),
+    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ds_nodash }}','','')),
     trigger_rule='all_done',
     dag=mdag
 )
