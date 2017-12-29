@@ -10,8 +10,8 @@ import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
 import subdags.detect_move_normalize as detect_move_normalize
 import util.s3_utils as s3_utils
-
-for m in [s3_validate_file, detect_move_normalize, HVDAG, s3_utils]:
+import util.date_utils as date_utils
+for m in [s3_validate_file, detect_move_normalize, HVDAG, s3_utils, date_utils]:
     reload(m)
 
 # Applies to all files
@@ -46,50 +46,24 @@ TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 TRANSACTION_FILE_DESCRIPTION = 'Nextgen EMR transaction file'
 TRANSACTION_FILE_NAME_TEMPLATE = 'NG_LSSA_{}_{}.txt.gz'
 
-def get_file_date_nodash(kwargs):
-    # TODO: Updat ethis to the correct date
-    return (kwargs['execution_date']).strftime('%Y%m01')
-
-
-def insert_formatted_file_date_function(template):
-    def out(ds, kwargs):
-        return template.format(get_file_date_nodash(kwargs))
-    return out
+NEXTGEN_FIXED_DAY = 1
 
 def get_date(kwargs):
     return kwargs['ds_nodash']
 
-
-def insert_formatted_date_function(template):
-    def out(ds, kwargs):
-        return template.format(get_date(kwargs))
-    return out
-
-
 def get_formatted_datetime(ds, kwargs):
     return kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
 
-
 def insert_formatted_regex_function(template):
     def out(ds, kwargs):
-        return template.format('\d{5}', get_file_date_nodash(kwargs))
+        return template.format('\d{5}', 
+            date_utils.insert_date_into_template(
+                '{}{}{}', 
+                kwargs,
+                fixed_day = NEXTGEN_FIXED_DAY
+            )
+        )
     return out
-
-
-def insert_current_date(template, kwargs):
-    ds_nodash = get_file_date_nodash(kwargs)
-    return template.format(
-        ds_nodash[0:4],
-        ds_nodash[4:6],
-        ds_nodash[6:8]
-    )
-
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return insert_current_date(template, kwargs)
-    return out
-
 
 # There are going to be hundreds of files, check that at
 # least the first one is like this
@@ -103,8 +77,9 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : insert_formatted_file_date_function(
-                    path_template
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
+                    path_template,
+                    fixed_day = NEXTGEN_FIXED_DAY
                 ),
                 'file_name_pattern_func'  : insert_formatted_regex_function(
                     path_template
@@ -130,7 +105,7 @@ def do_copy_to_internal_s3(ds, kwargs):
     all_files = s3_utils.list_s3_bucket_files(S3_TRANSACTION_RAW_URL)
     regex_pattern = insert_formatted_regex_function(TRANSACTION_FILE_NAME_TEMPLATE)
     new_files = [f for f in all_files if re.search(regex_pattern, f)]
-    internal_s3_dest = insert_current_date(S3_TRANSACTION_PROCESSED_URL_TEMPLATE, kwargs)
+    internal_s3_dest = date_utils.insert_date_into_template(S3_TRANSACTION_PROCESSED_URL_TEMPLATE, kwargs)
 
     # Nextgen sends us 1 file per "enterprise", resulting in hundreds of files
     # every time they send us an update. This code will copy the files in
@@ -160,7 +135,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -175,7 +150,7 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda x: [],
-            'file_date_func'                    : insert_current_date_function(
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}'
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
