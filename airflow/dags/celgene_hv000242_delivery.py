@@ -63,7 +63,7 @@ def get_export_args(ds, kwargs):
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2017, 5, 8),
-    'end_date': datetime(2018, 8, 9),
+    'end_date': datetime(2018, 8, 1),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2),
@@ -172,8 +172,8 @@ sftp_upload_nppes = generate_sftp_upload_task(
 def generate_delivery_alert_task():
     def do_send_message(ds, **kwargs):
         slack.send_message(
-            'provider_alerts', date_utils.insert_date_into_template(
-                'Celgene {}{}{} has been delivered', kwargs,
+            'delivery', date_utils.insert_date_into_template(
+                '@reynaklesh Celgene {}{}{} has been delivered', kwargs,
                 day_offset=CELGENE_DAY_OFFSET
             )
         )
