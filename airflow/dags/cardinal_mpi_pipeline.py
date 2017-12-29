@@ -49,7 +49,7 @@ else:
 TMP_PATH_TEMPLATE='/tmp/cardinal_mpi/custom/{}{}{}/'
 S3_DEID_RAW_URL='s3://hvincoming/cardinal_raintree/mpi/'
 DEID_FILE_NAME_TEMPLATE = 'mpi.{}{}{}T\d{{2}}\d{{2}}\d{{2}}.zip'
-DEID_FILE_NAME_REGEX = 'mpi.\d{{4}}\d{{2}}\d{{2}}T\d{{2}}\d{{2}}\d{{2}}.zip'
+DEID_FILE_NAME_REGEX = 'mpi.\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}.zip'
 DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'mpi-deid.{}{}{}T\d{2}\d{2}\d{2}.dat'
 
 S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/warehouse/text/custom/cardinal_mpi/{}/{}/{}/part-00000.gz'
@@ -78,12 +78,10 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func'   : lambda ds, k: (
+                'expected_file_name_func'   :
                     date_utils.generate_insert_date_into_template_function(
                         path_template,
-                        k,
                         day_offset = CARDINAL_MPI_DAY_OFFSET
-                    )
                 ),
                 'file_name_pattern_func'    : lambda ds, k: (
                     DEID_FILE_NAME_REGEX
@@ -117,12 +115,10 @@ fetch_deid_file_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func': lambda ds, k: (
+            'expected_file_name_func':
                 date_utils.generate_insert_date_into_template_function(
                     DEID_FILE_NAME_TEMPLATE,
-                    k,
-                    day_offset = CARDINAL_MPI_DAY_OFFSET  
-                )
+                    day_offset = CARDINAL_MPI_DAY_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_DEID_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'hvincoming',
