@@ -12,7 +12,8 @@ def do_fetch_file(ds, **kwargs):
     # We expect the files that were made available on the FTP server on $ds to have the date from the day before $ds in the name
     expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
     new_file_name      = kwargs['new_file_name_func'](ds, kwargs)
-    s3_prefix          = kwargs['s3_prefix']
+    s3_bucket          = kwargs['s3_bucket'] if kwargs.get('s3_bucket') else kwargs['s3_bucket_func'](ds, kwargs)
+    s3_prefix          = kwargs['s3_prefix'] if kwargs.get('s3_prefix') else kwargs['s3_prefix_func'](ds, kwargs)
 
     if kwargs['tmp_path_template'].count('{}') >= 3:
         tmp_path = date_utils.insert_date_into_template(kwargs['tmp_path_template'],kwargs)
@@ -21,7 +22,7 @@ def do_fetch_file(ds, **kwargs):
 
     if 'regex_name_match' in kwargs and kwargs['regex_name_match']:
         s3_keys = s3_utils.list_s3_bucket_files(
-            's3://' + kwargs['s3_bucket'] + '/' + s3_prefix,
+            's3://' + s3_bucket + '/' + s3_prefix,
             kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
         )
 
@@ -35,7 +36,7 @@ def do_fetch_file(ds, **kwargs):
         new_file_name = expected_file_name
 
     s3_utils.fetch_file_from_s3(
-        's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + expected_file_name,
+        's3://' + s3_bucket + '/' + s3_prefix + expected_file_name,
         tmp_path + new_file_name,
         kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
     )
