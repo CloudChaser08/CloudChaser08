@@ -38,6 +38,8 @@ def calculate_fill_rate(df):
         df_tmp = df.agg(*[_col_fill_rate(c, row_count) for c in df.columns[i:i+BATCH_SIZE]]).cache()
         res += reduce(
             lambda df1, df2: df1.union(df2),
-            [df_tmp.select(col(c).alias('fill')).withColumn('field', lit(c))]
+            [df_tmp.select(lit(c).alias('field'), col(c).alias('fill')) for c in df_tmp.columns]
         ).collect()
         i += BATCH_SIZE
+
+    return res

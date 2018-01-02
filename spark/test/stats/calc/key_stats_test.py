@@ -12,13 +12,9 @@ results = None
 def test_init(spark):
     global df, results
     conf = { 'date_field': 'date',
-             'key_stats': {
-                 'patient_attribute': 'b',
-                 'record_attribute': 'c',
-                 'row_attribute': '*'
-              }
+             'record_attribute' : 'c'
             }
-    data_row = Row('date', 'b', 'c', 'd', 'e')
+    data_row = Row('date', 'hvid', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
         data_row('1975-12-11', 'b', 'c', 'd', 'e'),
         data_row('2017-11-08', 'b', 'e', 'f', 'g'),

@@ -70,7 +70,7 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
     while i < len(columns):
         top_values_res += reduce(
             lambda df1, df2: df1.union(df2),
-            [_col_top_values(df, c, max_top_values, distinct_column) for c in columns[i:i+BATCH_SIZE]
+            [_col_top_values(df, c, max_top_values, distinct_column) for c in columns[i:i+BATCH_SIZE]]
         ).collect()
         i = i + BATCH_SIZE
     return top_values_res

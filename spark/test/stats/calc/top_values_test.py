@@ -38,13 +38,13 @@ def test_init(spark):
 
 def test_top_values_created_for_each_column():
     # expected = num_cols * max_top_values
-    assert results_no_distinct.count() == 5 * max_top_values
-    assert results_distinct.count() == 4 * max_top_values 
+    assert len(results_no_distinct) == 5 * max_top_values
+    assert len(results_distinct) == 4 * max_top_values 
 
 
 def test_duplicate_values_not_counted_twice_when_distinct_column_is_not_none():
-    assert results_no_distinct.where(col('name') == 'a').where(col('col') == 'a').collect()[0]['count'] == 2
-    assert results_distinct.where(col('name') == 'a').where(col('col') == 'a').collect()[0]['count'] == 1
+    assert [r for r in results_no_distinct if r['name'] == 'a' and r['col'] == 'a'][0]['count'] == 2
+    assert [r for r in results_distinct if r['name'] == 'a' and r['col'] == 'a'][0]['count'] == 1
 
 
 def test_exception_thrown_when_no_columns_have_top_values_to_calculate():

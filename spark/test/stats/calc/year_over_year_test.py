@@ -14,11 +14,9 @@ results = None
 def test_init(spark):
     global df, results
     conf = { 'date_field': 'date',
-             'year_over_year': {
-                 'patient_id_field': 'b'
-              }
+             'year_over_year': True
             }
-    data_row = Row('date', 'b', 'c', 'd', 'e')
+    data_row = Row('date', 'hvid', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
         data_row('1975-12-11', 'b', 'c', 'd', 'e'),
         data_row('2017-11-08', 'b', 'e', 'f', 'g'),
@@ -37,12 +35,13 @@ def test_init(spark):
 
 
 def test_number_of_years_calculated_correct():
-    assert len(results.keys()) == 3
+    assert len(results) == 3
 
 
 def test_stat_calc_counts_are_correct():
-    assert results['2017'] == 4
-    assert results['2016'] == 2
-    assert results['2015'] == 1
+    print results
+    assert [r for r in results if r['year'] == 2017][0]['count'] == 4
+    assert [r for r in results if r['year'] == 2016][0]['count'] == 2
+    assert [r for r in results if r['year'] == 2015][0]['count'] == 1
 
 

@@ -18,7 +18,7 @@ def test_fill_rate_get_columns():
     config_reader._get_fill_rate_columns = Mock(return_value=["one", "two"])
 
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
-    conf = config_reader.get_provider_config(conf_file, 'test')
+    conf = config_reader.get_provider_config(conf_file, '1')
     assert 'fill_rate' in conf
     assert 'fill_rate_conf' in conf
     assert conf['fill_rate']
@@ -28,7 +28,7 @@ def test_fill_rate_get_columns():
 
 def test_does_not_read_sub_conf_when_null():
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
-    conf = config_reader.get_provider_config(conf_file, 'other_test')
+    conf = config_reader.get_provider_config(conf_file, '2')
     assert 'fill_rate' in conf
     assert conf['fill_rate'] == None
 
@@ -36,19 +36,19 @@ def test_does_not_read_sub_conf_when_null():
 def test_exception_raised_when_provider_conf_datatype_is_null():
     with pytest.raises(Exception) as e_info:
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
-        conf = config_reader.get_provider_config(conf_file, 'bad_conf')
+        conf = config_reader.get_provider_config(conf_file, '3')
 
     exception = e_info.value
-    assert exception.message.startswith('datatype is not specified for provider')
+    assert exception.message.startswith('datatype is not specified for feed 3')
 
 
 def test_exception_raised_when_provider_conf_datatype_not_specified():
     with pytest.raises(Exception) as e_info:
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
-        conf = config_reader.get_provider_config(conf_file, 'bad_conf_2')
+        conf = config_reader.get_provider_config(conf_file, '4')
 
     exception = e_info.value
-    assert exception.message.startswith('datatype is not specified for provider')
+    assert exception.message.startswith('datatype is not specified for feed 4')
 
 
 def test_exception_raised_when_provider_not_in_providers_conf_file():
@@ -57,4 +57,4 @@ def test_exception_raised_when_provider_not_in_providers_conf_file():
         conf = config_reader.get_provider_config(conf_file, 'lol')
 
     exception = e_info.value
-    assert exception.message == 'lol is not in the providers config file'
+    assert exception.message == 'Feed lol is not in the providers config file'

@@ -115,7 +115,7 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
                         end_date, date_column_field)(all_data_df).coalesce(partitions)
 
     # Generate fill rates
-    fill_rates = None #_run_fill_rates(gen_stats_df, provider_conf)
+    fill_rates = _run_fill_rates(gen_stats_df, provider_conf)
 
     # Generate top values
     top_values = _run_top_values(gen_stats_df, provider_conf)
