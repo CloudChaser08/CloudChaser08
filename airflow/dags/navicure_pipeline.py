@@ -19,27 +19,29 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.update_analytics_db as update_analytics_db
 
+import date_utils.date_utils as date_utils
+
 for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
         queue_up_for_matching, detect_move_normalize, clean_up_tmp_dir, HVDAG,
-        update_analytics_db]:
+        update_analytics_db, date_utils]:
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE='/tmp/navicure/medicalclaims/{}/'
-DAG_NAME='navicure_pipeline'
+TMP_PATH_TEMPLATE = '/tmp/navicure/medicalclaims/{}{}{}/'
+DAG_NAME = 'navicure_pipeline'
 
 # Transaction file
 TRANSACTION_FILE_DESCRIPTION='Navicure transaction file'
 S3_TRANSACTION_PREFIX='incoming/medicalclaims/navicure/'
 S3_TRANSACTION_SPLIT_PATH='s3://salusv/' + S3_TRANSACTION_PREFIX
 S3_TRANSACTION_RAW_PATH='incoming/navicure/'
-TRANSACTION_FILE_NAME_TEMPLATE='HealthVerity-{}-record-data-Navicure'
+TRANSACTION_FILE_NAME_TEMPLATE='HealthVerity-{}-{}-{}-record-data-Navicure'
 MINIMUM_TRANSACTION_FILE_SIZE=500
 
 # Deid file
 DEID_FILE_DESCRIPTION='Navicure deid file'
 S3_DEID_RAW_PATH='incoming/navicure/'
-DEID_FILE_NAME_TEMPLATE='HealthVerity-{}-deid-data-Navicure'
+DEID_FILE_NAME_TEMPLATE='HealthVerity-{}-{}-{}-deid-data-Navicure'
 MINIMUM_DEID_FILE_SIZE=500
 
 S3_TEXT_NAVICURE_PREFIX = 'warehouse/text/medicalclaims/navicure/'
@@ -50,56 +52,49 @@ S3_PAYLOAD_LOC_URL = 's3://salusv/matching/payload/medicalclaims/navicure/'
 
 S3_ORIGIN_BUCKET = 'healthverity'
 
-def get_tmp_dir(ds, kwargs):
-    return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
+NAVICURE_DAY_OFFSET = -31
 
-def get_expected_transaction_file_name(ds, kwargs):
-    file_date = insert_formatted_date_function('{}-{}-{}')(ds, kwargs)
-    return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date)
-
-def get_expected_transaction_file_name_gz(ds, kwargs):
-    file_date = insert_formatted_date_function('{}-{}-{}')(ds, kwargs)
-    return TRANSACTION_FILE_NAME_TEMPLATE.format(file_date) + '.gz'
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
 
 def get_encrypted_decrypted_file_paths(ds, kwargs):
     tmp_dir = get_tmp_dir(ds, kwargs)
-    expected_input = get_expected_transaction_file_name(ds, kwargs)
-    expected_output = get_expected_transaction_file_name_gz(ds, kwargs).replace('-Navicure','.decrypted')
+    expected_input = date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE,
+        kwargs,
+        day_offset = NAVICURE_DAY_OFFSET)
+    expected_output = expected_input.replace('-Navicure','.decrypted') + '.gz'
     return [
         [tmp_dir + expected_input, tmp_dir + expected_output]
     ]
 
-def get_expected_transaction_file_regex(ds, kwargs):
-    return TRANSACTION_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}')
-
 def get_transaction_files_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + get_expected_transaction_file_name(ds, kwargs).replace('-Navicure','.decrypted')]
+    expected_input = date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE,
+        kwargs,
+        day_offset = -31)
+    return [get_tmp_dir(ds, kwargs) + expected_input.replace('-Navicure','.decrypted')]
 
 def get_s3_transaction_prefix(ds, kwargs):
-    return S3_TRANSACTION_SPLIT_PATH + insert_formatted_date_function('{}/{}/{}/')(ds, kwargs)
-
-def get_expected_deid_file_name(ds, kwargs):
-    file_date = insert_formatted_date_function('{}-{}-{}')(ds, kwargs)
-    return DEID_FILE_NAME_TEMPLATE.format(file_date)
-
-def get_expected_deid_file_regex(ds, kwargs):
-    return DEID_FILE_NAME_TEMPLATE.format('\d{4}-\d{2}-\d{2}')
-
-def insert_formatted_date_function(template):
-    def get_formatted_date(ds, kwargs):
-        date = kwargs['execution_date'] - timedelta(days=31)
-        return template.format(date.strftime('%Y'), date.strftime('%m'), date.strftime('%d'))
-
-    return get_formatted_date
+    return date_utils.insert_date_into_template(
+        S3_TRANSACTION_SPLIT_PATH + '{}/{}/{}/',
+        kwargs,
+        day_offset = NAVICURE_DAY_OFFSET
+    )
 
 def get_parquet_dates(ds, kwargs):
-    return [insert_formatted_date_function('{}/{}/{}')(ds, kwargs)]
+    return [date_utils.insert_date_into_template('{}/{}/{}', kwargs, day_offset = NAVICURE_DAY_OFFSET)]
+
 
 def get_deid_file_urls(ds, kwargs):
-    return ['s3://healthverity/' + S3_DEID_RAW_PATH + get_expected_deid_file_name(ds, kwargs)]
+    return ['s3://healthverity/' + S3_DEID_RAW_PATH + 
+        date_utils.insert_date_into_template(
+            DEID_FILE_NAME_TEMPLATE,
+            kwargs,
+            day_offset = NAVICURE_DAY_OFFSET
+        )]
 
 def get_expected_matching_files(ds, kwargs):
-    return [get_expected_deid_file_name(ds, kwargs)]
+    return [date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, day_offset = NAVICURE_DAY_OFFSET)]
 
 default_args = {
     'owner': 'airflow',
@@ -123,8 +118,15 @@ validate_transaction_file_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_file_name_func': get_expected_transaction_file_name,
-            'file_name_pattern_func' : get_expected_transaction_file_regex,
+            'expected_file_name_func': 
+                date_utils.generate_insert_date_into_template_function(
+                    TRANSACTION_FILE_NAME_TEMPLATE,
+                    day_offset = NAVICURE_DAY_OFFSET
+                ),
+            'file_name_pattern_func' : 
+                date_utils.generate_insert_regex_into_template_function(
+                    TRANSACTION_FILE_NAME_TEMPLATE
+                    ),
             'minimum_file_size'      : MINIMUM_TRANSACTION_FILE_SIZE,
             's3_prefix'              : S3_TRANSACTION_RAW_PATH,
             's3_bucket'              : S3_ORIGIN_BUCKET,
@@ -142,8 +144,15 @@ validate_deid_file_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_file_name_func': get_expected_deid_file_name,
-            'file_name_pattern_func' : get_expected_deid_file_regex,
+            'expected_file_name_func': 
+                date_utils.generate_insert_date_into_template_function(
+                    DEID_FILE_NAME_TEMPLATE,
+                    day_offset = NAVICURE_DAY_OFFSET
+                ),
+            'file_name_pattern_func' : 
+                date_utils.generate_insert_regex_into_template_function(
+                    DEID_FILE_NAME_TEMPLATE
+                ),
             'minimum_file_size'      : MINIMUM_DEID_FILE_SIZE,
             's3_prefix'              : S3_DEID_RAW_PATH,
             's3_bucket'              : S3_ORIGIN_BUCKET,
@@ -162,7 +171,11 @@ fetch_transaction_file_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func': get_expected_transaction_file_name,
+            'expected_file_name_func': 
+                date_utils.generate_insert_date_into_template_function(
+                    TRANSACTION_FILE_NAME_TEMPLATE,
+                    day_offset = NAVICURE_DAY_OFFSET
+                ),
             's3_prefix'              : S3_DEID_RAW_PATH,
             's3_bucket'              : S3_ORIGIN_BUCKET
         }
@@ -225,7 +238,11 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'   : get_expected_matching_files,
-            'file_date_func'                 : insert_formatted_date_function('{}-{}-{}'),
+            'file_date_func'                 : 
+                date_utils.generate_insert_date_into_template_function(
+                    '{}-{}-{}',
+                    day_offset = NAVICURE_DAY_OFFSET
+                ),
             'incoming_path'                  : S3_TRANSACTION_PREFIX,
             'normalization_routine_directory': '/home/airflow/airflow/dags/providers/navicure/medicalclaims/',
             'normalization_routine_script'   : '/home/airflow/airflow/dags/providers/navicure/medicalclaims/rsNormalizeNavicure.py',
@@ -255,7 +272,12 @@ update_analytics_db_old = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : lambda ds, k: sql_old_template.format(insert_formatted_date_function('{}/{}/{}')(ds, k))
+            'sql_command_func' : lambda ds, k: sql_old_template.format(
+                date_utils.insert_date_into_template(
+                    '{}/{}/{}',
+                    day_offset = NAVICURE_DAY_OFFSET
+                )
+            )
         }
     ),
     task_id='update_analytics_db_old',
