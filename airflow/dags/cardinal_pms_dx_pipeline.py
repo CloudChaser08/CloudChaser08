@@ -72,23 +72,27 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    validate_transaction = s3_validate_file.s3_validate_file(
-        DAG_NAME,
-        'validate_transaction_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
-            ),
-            'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
-            ),
-            'minimum_file_size'       : 1000000,
-            's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'               : 'healthverity',
-            'file_description'        : 'Cardinal RCM DX ' + task_id + ' file'
-        }
+    validate_transaction = SubDagOperator(
+        subdag=s3_validate_file.s3_validate_file(
+            DAG_NAME,
+            'validate_transaction_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
+                    TRANSACTION_FILE_NAME_TEMPLATE
+                ),
+                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
+                    TRANSACTION_FILE_NAME_TEMPLATE
+                ),
+                'minimum_file_size'       : 1000000,
+                's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+                's3_bucket'               : 'healthverity',
+                'file_description'        : 'Cardinal RCM DX transaction file'
+            }
+        ),
+        task_id='validate_transaction_file',
+        dag=mdag
     )
 
 fetch_transaction = SubDagOperator(
