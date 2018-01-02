@@ -11,7 +11,9 @@ SELECT
     NULL,                -- vdr_org_id
     NULL,                -- vdr_diag_id
     NULL,                -- vdr_diag_id_qual
-    t.authorid,          -- hvid
+    CONCAT(
+        'TREATO-', t.authorid
+        ),               -- hvid
     NULL,                -- ptnt_birth_yr
     NULL,                -- ptnt_age_num
     NULL,                -- ptnt_lvg_flg
