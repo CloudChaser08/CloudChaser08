@@ -107,10 +107,10 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
         gen_stats_df = postprocessor.compose(
             utils.select_data_in_date_range(start_date, end_date, date_column_field),
             utils.select_distinct_values_from_column(distinct_column_name)
-        )(all_data_df).repartition(partitions)
+        )(all_data_df).coalesce(partitions)
     else:
         gen_stats_df = utils.select_data_in_date_range(start_date, \
-                        end_date, date_column_field)(all_data_df).repartition(partitions)
+                        end_date, date_column_field)(all_data_df).coalesce(partitions)
 
     # Generate fill rates
     fill_rates = _run_fill_rates(gen_stats_df, provider_conf)
@@ -124,8 +124,7 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year
-    date_stats_df = all_data_df.select("hvid", provider_conf['date_field']) \
-            .repartition(partitions)
+    date_stats_df = all_data_df.select("hvid", provider_conf['date_field']).coalesce(partitions)
 
     # Generate Longitudinality
     longitudinality = _run_longitudinality(date_stats_df, provider_conf)
