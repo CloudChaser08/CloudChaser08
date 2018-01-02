@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col, isnan, trim, udf, collect_list, when
+from pyspark.sql.functions import col, trim, udf, collect_list, when
 
 def select_distinct_values_from_column(column_name):
     '''
@@ -14,7 +14,7 @@ def select_distinct_values_from_column(column_name):
              for each distinct value in the column_name column
     '''
     def out(df):
-        is_not_null = lambda c: col(c).isNotNull() & ~isnan(c) & (trim(col(c)) != '')
+        is_not_null = lambda c: col(c).isNotNull() & (trim(col(c)) != '')
         non_distinct_columns = list(filter(lambda x: x != column_name, df.columns))
         # Nullify all possible "empty" values
         mapped_df = df.withColumn(column_name, col(column_name))
