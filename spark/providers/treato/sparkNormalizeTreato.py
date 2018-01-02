@@ -1,6 +1,5 @@
 #! /usr/bin/python
 import argparse
-from datetime import datetime
 import re
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -8,6 +7,7 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+
 
 def _get_rollup_vals(diagnosis_mapfile, diagnosis_code_range):
     """
@@ -56,7 +56,7 @@ def _get_rollup_vals(diagnosis_mapfile, diagnosis_code_range):
         # current max, then this line is exactly as good of a
         # rollup to use as the current max, append the rollup to
         # the list
-        elif matches == maximum_matches:
+        elif maximum_matches > 0 and matches == maximum_matches:
             rollups.append(line.split('\t')[0])
 
     # reset mapfile pointer
@@ -71,8 +71,7 @@ def _enumerate_range(range_string):
     """
 
     # check that the diag range can be enumerated (contains integers on either side)
-    if re.match('[0-9]+', range_string.split('-')[0][1:]) \
-       and re.match('[0-9]+', range_string.split('-')[1][1:]):
+    if range_string.split('-')[0][1:].isdigit() and range_string.split('-')[1][1:].isdigit():
 
         # this range spans across letter prefixes
         if range_string[0] != range_string.split('-')[1][0]:
@@ -99,7 +98,8 @@ def _enumerate_range(range_string):
 
     # this range cannot be enumerated, just return the two sides of the range
     else:
-        return set([range_string.split('-')])
+        return set(range_string.split('-'))
+
 
 def create_row_exploder(spark, sqlc, diagnosis_mapfile):
     """
@@ -136,8 +136,6 @@ def create_row_exploder(spark, sqlc, diagnosis_mapfile):
 
 
 def run(spark, runner, date_input, diagnosis_mapfile, test=False):
-    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
-
     vendor_feed_id = '52'
     vendor_id = '233'
 
