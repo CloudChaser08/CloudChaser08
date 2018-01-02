@@ -125,6 +125,9 @@ def get_provider_config(providers_conf_file, feed_id):
     # configure stats whose configurations do not come from the marketplace db
     no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year', 'epi_calcs']
     for calc in no_db_stat_calcs:
+        if not provider_conf.get(calc):
+            continue
+
         if calc + '_conf_file' not in provider_conf:
             logging.info('No config for {} found in feed {} config, falling back to default.'.format(calc, feed_id))
             conf_file_loc = get_abs_path(providers_conf_file,
