@@ -26,6 +26,7 @@ CREATE EXTERNAL TABLE ambry_transactions (
     icd10_11                string,
     icd10_12                string,
     hvJoinKey               string
+)
 ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 WITH SERDEPROPERTIES (
     "separatorChar" = "|"

@@ -7,8 +7,9 @@ import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 # arguments to that function.
 column_transformer = {
     'patient_gender': {
-        'func': post_norm_cleanup.clean_up_gender
+        'func': post_norm_cleanup.clean_up_gender,
         'args': ['patient_gender']
+    },
     'patient_age': {
         'func': post_norm_cleanup.cap_age,
         'args': ['patient_age']

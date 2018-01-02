@@ -22,7 +22,7 @@ SELECT
         TRIM(COALESCE(p.threeDigitZip, t.patient_zip_code)),
         1,
         3
-    )                       -- patient_zip3
+    ),                      -- patient_zip3
     TRIM(UPPER(COALESCE(
         p.state,
         ''
@@ -30,15 +30,11 @@ SELECT
     extract_date(
         t.order_date,
         '%Y/%m/%d'
-        {min_date},
-        {max_date}
     ),                      -- date_service
     NULL,                   -- date_specimen
     extract_date(
         t.reported_date,
         '%Y/%m/%d'
-        {min_date},
-        {max_date}
     ),                      -- date_report
     NULL,                   -- time_report
     NULL,                   -- loinc_code
@@ -67,7 +63,7 @@ SELECT
         t.icd10_7, t.icd10_8, t.icd10_9, t.icd10_10, t.icd10_11, t.icd10_12)[e.n]
     )),                     -- diagnosis_code
     NULL,                   -- diagnosis_code_qual
-    e.n + 1,                   -- diagnosis_code_priority
+    e.n + 1,                -- diagnosis_code_priority
     NULL,                   -- procedure_code
     NULL,                   -- procedure_code_qual
     NULL,                   -- lab_npi
@@ -101,7 +97,7 @@ SELECT
     NULL,                   -- ordering_zip
     NULL                    -- logical_delete_reason
 FROM ambry_transactions t
-    LEFT OUTER JOIN payload p
+    LEFT OUTER JOIN matching_payload p
     CROSS JOIN exploder e
     ON t.hvJoinKey = p.hvJoinKey
 WHERE

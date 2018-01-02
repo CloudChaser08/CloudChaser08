@@ -1,6 +1,6 @@
 #! /usr/bin/python
 import argparse
-from datetime import datetime
+from datetime import datetime, date
 
 from pyspark.sql.functions import col, explode, split
 
@@ -10,7 +10,7 @@ from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.explode as explode
+import spark.helpers.explode as exploder
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.labtests as labtests_priv
 
@@ -39,10 +39,24 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
+    if not test:
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
+
+    min_date = postprocessor.coalesce_dates(
+                    runner.sqlContext,
+                    '43',
+                    None,
+                    'EARLIEST_VALID_SERVICE_DATE'
+                )
+    if min_date:
+        min_date = min_date.isoformat()
+
+    max_date = date_input
+
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimid'])
 
     # Create the labtests table to store the results in
-    runner.run_spark_script('../../../common/labtests_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/lab_common_model_v3.sql', [
         ['table_name', 'labtests_common_model', False],
         ['properties', '', False]
     ])
@@ -70,10 +84,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     logging.debug('Trimmed and nullified data')
 
     # Create exploder table for pivoting ICD10 codes
-    explode.generate_exploder_table(spark, 12)
+    exploder.generate_exploder_table(spark, 12)
 
     # Normalize
-    runner.run_spark_script('normalize.sql', [])
+    runner.run_spark_script('normalize.sql')
     logging.debug('Finished normalizing')
 
     # Postprocessing
@@ -85,6 +99,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             filename='plain.txt'.format(date_obj.strftime('%Y%m%d')),   #NOTE: will need to change once known
             model_version_number='04'
         ),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '43', None, min_date),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_report', max_date, '43', None, min_date),
         labtests_priv.filter
     )(
         runner.sqlContext.sql('select * from labtests_common_model')
@@ -92,9 +108,19 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     logging.debug('Finished post-processing')
     
     if not test:
+        hvm_historical = postprocessor.coalesce_dates(
+                        runner.sqlContext,
+                        '43',
+                        date(1901, 1, 1),
+                        'HVM_AVAILABLE_HISTORY_START_DATE',
+                        'EARLIEST_VALID_SERVICE_DATE'
+        )
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'labtests', 'labtests_common_model_v3.sql', 'ambry',
-            'labtests_common_model', 'date_service', date_input
+            'labtests_common_model', 'date_service', date_input,
+            hvm_historical_date = datetime(hvm_historical.year,
+                                           hvm_historical.month,
+                                           hvm_historical.day)
         )
 
 
