@@ -45,9 +45,9 @@ def generate_insert_date_into_template_function(template,  # string to pass date
                                 fixed_year = None,  # user inputted year
                                 fixed_month = None,  # user inputted month
                                 fixed_day = None,  # user inputted day
-                                year_format = '%Y',
-                                month_format = '%m',
-                                day_format = '%d',
+                                year_format = '%Y', # format of output year
+                                month_format = '%m', # format of output month
+                                day_format = '%d', # format of output day
                                 year_offset = 0,  # integer to add to year, defaults to 0
                                 month_offset = 0,  # integer to add to month, defaults to 0
                                 day_offset = 0,  # integer to add to day, defaults to 0
