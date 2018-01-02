@@ -64,8 +64,8 @@ def get_transaction_file_paths(ds, kwargs):
     ]
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL +\
-     date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
+    return [S3_TRANSACTION_RAW_URL 
+        + date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
     ]
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
@@ -219,9 +219,10 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds,k: [
-                date_utils.generate_insert_date_into_template_function(
-                    DEID_FILE_NAME_TEMPLATE
-                )(ds, k)
+                date_utils.insert_date_into_template(
+                    DEID_FILE_NAME_TEMPLATE,
+                    k
+                )
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}'
