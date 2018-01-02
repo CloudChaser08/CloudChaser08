@@ -44,10 +44,4 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
                   .groupby('year').count()                                                      \
                   .collect()
 
-    # Starting from most recent year, calcualate year over year
-    stats = {}
-    for stat in yoy_stats:
-        stats[str(stat.year)] = stat['count']
-    return stats
-
-
+    return yoy_stats
