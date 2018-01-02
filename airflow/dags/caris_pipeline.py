@@ -71,7 +71,7 @@ def get_date_timestamp(kwargs):
         if TIMESTAMP == '':
             TIMESTAMP = filter(
                 lambda p: date_utils.insert_date_into_template(
-                    TRANSACTION_FILE_NAME_STUB_TEMPLATE, kwargs, 
+                    TRANSACTION_FILE_NAME_STUB_TEMPLATE, kwargs,
                     month_offset = CARIS_MONTH_OFFSET
                 ) in p,
                 s3_utils.list_s3_bucket(
@@ -272,9 +272,8 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func'      : lambda ds, k: [
                 date_utils.insert_date_into_template(DEID_FILE_NAME_STUB_TEMPLATE + get_date_timestamp(k),
-                    kwargs,
-                    month_offset = CARIS_MONTH_OFFSET
-                    )
+                    k, month_offset = CARIS_MONTH_OFFSET
+                )
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}',month_offset = CARIS_MONTH_OFFSET
