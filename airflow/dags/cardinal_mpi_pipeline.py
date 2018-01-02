@@ -61,7 +61,7 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TE
 
 def get_files_matching_template(template, ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
-    file_regex = insert_date_into_template(template, kwargs, day_offset = CARDINAL_MPI_DAY_OFFSET)
+    file_regex = date_utils.insert_date_into_template(template, kwargs, day_offset = CARDINAL_MPI_DAY_OFFSET)
     return [file_dir + f for f in os.listdir(file_dir) if re.search(file_regex, f)]
 
 def get_deid_file_urls(ds, kwargs):
@@ -147,6 +147,7 @@ push_to_healthverity_incoming = SubDagOperator(
 )
 
 def do_unzip_file(ds, **kwargs):
+    file_dir = get_tmp_dir(ds, kwargs)
     files = get_files_matching_template(DEID_FILE_NAME_TEMPLATE, ds, kwargs)
     decompression.decompress_zip_file(files[0], file_dir)
 
