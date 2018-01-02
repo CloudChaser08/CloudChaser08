@@ -1,2 +1,6 @@
 nppes/nppes_data
 *.pyc
+.cache/
+derby.log
+metastore_db/
+spark-warehouse/
