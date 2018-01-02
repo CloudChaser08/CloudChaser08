@@ -23,9 +23,12 @@ def run(spark, sqlContext, feed_id, quarter, start_date,
     for key, stat in all_stats.items():
         if stat:
             with open(output_dir + '/' + feed_id + '_' + key + '.csv', 'w') as f:
+                # Write out the header
+                cols = [str(c) for c in stat[0].asDict().keys()]
+                f.write(','.join(cols) + '\n')
                 for row in stat:
-                    for col, value in row.asDict().items():
-                        f.write(col + ',' + str(value) + '\n')
+                    # Write out each row
+                    f.write(','.join([str(row[c]) for c in cols]) + '\n')
 
     return all_stats
 
