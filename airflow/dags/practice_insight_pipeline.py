@@ -18,13 +18,14 @@ import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.update_analytics_db as update_analytics_db
+import util.date_utils as date_utils
 
 import util.decompression as decompression
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching,
           detect_move_normalize, decompression,
-          update_analytics_db]:
+          update_analytics_db, date_utils]:
     reload(m)
 
 # Applies to all files
@@ -33,7 +34,7 @@ DAG_NAME = 'practice_insight_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 3, 2, 12),
+    'start_date': datetime(2017, 3, 16, 8),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -41,10 +42,11 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 12 2 * *",
+    schedule_interval="0 8 16 * *",
     default_args=default_args
 )
 
+PRACTICE_INSIGHT_OFFSET = 1
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -66,47 +68,7 @@ TRANSACTION_835_FILE_NAME_TEMPLATE = TRANSACTION_UNZIPPED_835_FILE_NAME_TEMPLATE
 DEID_FILE_NAME_TEMPLATE = 'HV.phi.{}.{}.o'
 
 
-def insert_todays_date_function(template):
-    def out(ds, kwargs):
-        return template.format(kwargs['ds_nodash'])
-    return out
-
-
-def insert_formatted_regex_function(template):
-    def out(ds, kwargs):
-        return template.format('\d{4}', '[a-z]{3}')
-    return out
-
-
-def insert_current_plaintext_date_function(template):
-    def out(ds, kwargs):
-        return template.format(
-            kwargs['ds_nodash'][0:4],
-            datetime.strptime(
-                kwargs['ds_nodash'], '%Y%m%d'
-            ).strftime('%b').lower()
-        )
-    return out
-
-
-def insert_current_plaintext_date(template, kwargs):
-    return insert_current_plaintext_date_function(template)(None, kwargs)
-
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return template.format(
-            kwargs['ds_nodash'][0:4],
-            kwargs['ds_nodash'][4:6]
-        )
-    return out
-
-
-def insert_current_date(template, kwargs):
-    return insert_current_date_function(template)(None, kwargs)
-
-
-get_tmp_dir = insert_todays_date_function(TMP_PATH_TEMPLATE)
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE, )
 
 
 def get_deid_file_urls(ds, kwargs):
