@@ -19,7 +19,7 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.update_analytics_db as update_analytics_db
 
-import date_utils.date_utils as date_utils
+import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
         queue_up_for_matching, detect_move_normalize, clean_up_tmp_dir, HVDAG,
