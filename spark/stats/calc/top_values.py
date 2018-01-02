@@ -64,15 +64,15 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
     if len(columns) == 0:
         raise ValueError('Dataframe with no columns passed in for top values calculation')
 
-    # Do the calculation on 10 columns at a time to reduce memory footprint
+    BATCH_SIZE = 10
     i = 0
     top_values_res = []
     while i < len(columns):
         top_values_res += reduce(
             lambda df1, df2: df1.union(df2),
-            [_col_top_values(df, c, max_top_values, distinct_column) for c in columns[i:i+10]
+            [_col_top_values(df, c, max_top_values, distinct_column) for c in columns[i:i+BATCH_SIZE]
         ).collect()
-        i = i + 10
+        i = i + BATCH_SIZE
     return top_values_res
 
 
