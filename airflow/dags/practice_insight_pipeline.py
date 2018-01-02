@@ -68,15 +68,21 @@ TRANSACTION_835_FILE_NAME_TEMPLATE = TRANSACTION_UNZIPPED_835_FILE_NAME_TEMPLATE
 DEID_FILE_NAME_TEMPLATE = 'HV.phi.{}.{}.o'
 
 
-get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE, )
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
+
+
+def generate_pi_insert_date_function(template):
+    return date_utils.generate_insert_date_into_template_function(
+        template, month_format='%b', month_offset=PRACTICE_INSIGHT_OFFSET
+    )
 
 
 def get_deid_file_urls(ds, kwargs):
     return [
         S3_TRANSACTION_RAW_URL
-        + insert_current_plaintext_date(
-            DEID_FILE_NAME_TEMPLATE, kwargs
-        )
+        + generate_pi_insert_date_function(
+            DEID_FILE_NAME_TEMPLATE
+        )(ds, kwargs)
     ]
 
 
@@ -92,18 +98,18 @@ def get_unzipped_837_file_paths(part):
     """
     def out(ds, kwargs):
         return [
-            get_837_part_tmp_dir(part)(ds, kwargs) + insert_current_plaintext_date(
-                TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
-            )
+            get_837_part_tmp_dir(part)(ds, kwargs) + generate_pi_insert_date_function(
+                TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE
+            )(ds, kwargs)
         ]
     return out
 
 
 def get_unzipped_835_file_paths(ds, kwargs):
     return [
-        get_tmp_dir(ds, kwargs) + insert_current_plaintext_date(
-            TRANSACTION_UNZIPPED_835_FILE_NAME_TEMPLATE, kwargs
-        )
+        get_tmp_dir(ds, kwargs) + generate_pi_insert_date_function(
+            TRANSACTION_UNZIPPED_835_FILE_NAME_TEMPLATE
+        )(ds, kwargs)
     ]
 
 
@@ -117,12 +123,9 @@ def generate_transaction_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func':
-                insert_current_plaintext_date_function(
-                    path_template
-                ),
-                'file_name_pattern_func': insert_formatted_regex_function(
-                    path_template
+                'expected_file_name_func': generate_pi_insert_date_function(path_template),
+                'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
+                    path_template, month_regex='[a-z]{3}'
                 ),
                 'minimum_file_size': minimum_file_size,
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -133,7 +136,6 @@ def generate_transaction_file_validation_task(
         task_id='validate_' + task_id + '_file',
         dag=mdag
     )
-
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
@@ -160,7 +162,7 @@ def generate_fetch_transaction_task(task_id, file_name_template):
             mdag.schedule_interval,
             {
                 'tmp_path_template': TMP_PATH_TEMPLATE,
-                'expected_file_name_func': insert_current_plaintext_date_function(
+                'expected_file_name_func': generate_pi_insert_date_function(
                     file_name_template
                 ),
                 's3_prefix': '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -184,9 +186,9 @@ def generate_gunzip_task(task_id, file_name_template):
     def execute(ds, **kwargs):
         tmp_dir = get_tmp_dir(ds, kwargs)
         decompression.decompress_gzip_file(
-            tmp_dir + insert_current_plaintext_date(
-                file_name_template, kwargs
-            ),
+            tmp_dir + generate_pi_insert_date_function(
+                file_name_template
+            )(ds, kwargs)
         )
 
     return PythonOperator(
@@ -220,13 +222,13 @@ def split_transaction_into_parts_func(ds, **kwargs):
     ])
     check_call([
         'split', '-n', 'l/4', get_tmp_dir(ds, kwargs)
-        + insert_current_plaintext_date(
-            TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
-        ),
+        + generate_pi_insert_date_function(
+            TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE
+        )(ds, kwargs),
         get_tmp_dir(ds, kwargs) + 'presplit/'
-        + insert_current_plaintext_date(
-            TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
-        ) + '.'
+        + generate_pi_insert_date_function(
+            TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE
+        )(ds, kwargs) + '.'
     ])
     for i in range(1, 5):
         os.mkdir(get_837_part_tmp_dir(i)(ds, kwargs))
@@ -237,16 +239,16 @@ def split_transaction_into_parts_func(ds, **kwargs):
             get_tmp_dir(ds, kwargs) + 'presplit/'
             + filter(
                 lambda f: f.startswith(
-                    insert_current_plaintext_date(
-                        TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
-                    )
+                    generate_pi_insert_date_function(
+                        TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE
+                    )(ds, kwargs)
                 ),
                 os.listdir(get_tmp_dir(ds, kwargs) + 'presplit/')
             )[0],
             get_837_part_tmp_dir(i)(ds, kwargs)
-            + insert_current_plaintext_date(
-                TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE, kwargs
-            )
+            + generate_pi_insert_date_function(
+                TRANSACTION_UNZIPPED_837_FILE_NAME_TEMPLATE
+            )(ds, kwargs)
         )
 
 
@@ -271,12 +273,12 @@ def split_step(
             {
                 'tmp_dir_func': tmp_dir_func,
                 'file_paths_to_split_func': file_paths_to_split_func,
-                'file_name_pattern_func': insert_formatted_regex_function(
-                    filename_template
+                'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
+                    filename_template, month_regex='[a-z]{3}'
                 ),
-                's3_prefix_func': lambda ds, k: insert_current_date_function(
-                    s3_destination
-                )(ds, k),
+                's3_prefix_func': date_utils.generate_insert_date_into_template_function(
+                    s3_destination, month_offset=PRACTICE_INSIGHT_OFFSET
+                ),
                 'num_splits': num_splits
             }
         ),
@@ -304,7 +306,7 @@ split_transactional_835 = split_step(
 
 def clean_up_workspace_func(ds, **kwargs):
     check_call([
-        'rm', '-rf', TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
+        'rm', '-rf', get_tmp_dir(ds, kwargs)
     ])
 
 
@@ -333,7 +335,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-01', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-01', month_offset=PRACTICE_INSIGHT_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -352,12 +354,12 @@ def generate_detect_move_normalize_dag():
             mdag.schedule_interval,
             {
                 'expected_matching_files_func': lambda ds, k: [
-                    insert_current_plaintext_date_function(
+                    generate_pi_insert_date_function(
                         DEID_FILE_NAME_TEMPLATE
                     )(ds, k)
                 ],
-                'file_date_func': insert_current_date_function(
-                    '{}/{}'
+                'file_date_func': date_utils.generate_insert_date_into_template_function(
+                    '{}/{}', month_offset=PRACTICE_INSIGHT_OFFSET
                 ),
                 's3_payload_loc_url': S3_PAYLOAD_DEST,
                 'vendor_uuid': 'b29eb316-a398-4fdc-b8da-2cff26f86bad',
@@ -376,8 +378,7 @@ def generate_detect_move_normalize_dag():
 detect_move_normalize_dag = generate_detect_move_normalize_dag()
 
 sql_template = """
-    ALTER TABLE medicalclaims_new ADD PARTITION (part_provider='practice_insight', part_best_date='{0}-{1}')
-    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/2017-02-24/part_provider=practice_insight/part_best_date={0}-{1}/'
+    MSCK REPAIR TABLE medicalclaims_new
 """
 
 sql_template_835 = """
@@ -393,7 +394,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : insert_current_date_function(sql_template)
+                'sql_command_func' : lambda ds, k: sql_template
             }
         ),
         task_id='update_analytics_db',
@@ -406,7 +407,9 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : insert_current_date_function(sql_template_835)
+                'sql_command_func' : date_utils.generate_insert_date_into_template_function(
+                    sql_template_835, month_offset=PRACTICE_INSIGHT_OFFSET
+                )
             }
         ),
         task_id='update_analytics_db_835',

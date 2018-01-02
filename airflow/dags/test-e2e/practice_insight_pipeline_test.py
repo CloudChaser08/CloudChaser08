@@ -24,8 +24,8 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'practice_insight_pipeline',
-        '-s', '2017-03-02T12:00:00',
-        '-e', '2017-03-02T12:00:00',
+        '-s', '2017-02-16T08:00:00',
+        '-e', '2017-02-16T08:00:00',
         '-I'
     ])
 

@@ -45,12 +45,20 @@ def generate_insert_date_into_template_function(template,  # string to pass date
                                 fixed_year = None,  # user inputted year
                                 fixed_month = None,  # user inputted month
                                 fixed_day = None,  # user inputted day
+                                year_format = '%Y',
+                                month_format = '%m',
+                                day_format = '%d',
                                 year_offset = 0,  # integer to add to year, defaults to 0
                                 month_offset = 0,  # integer to add to month, defaults to 0
                                 day_offset = 0,  # integer to add to day, defaults to 0
                                 ):
     """
-    Inserts the year, month, day into a string template. The date defaults to the execution_date, but fixed values of year, month, and day can be specified individually by the user withthe variables fixed_year, fixed_month, fixed_day. The parameters year_offset, month_offset, and day_offset are integers to add to the respective values.
+    Inserts the year, month, day into a string template. The date
+    defaults to the execution_date, but fixed values of year, month,
+    and day can be specified individually by the user withthe
+    variables fixed_year, fixed_month, fixed_day. The parameters
+    year_offset, month_offset, and day_offset are integers to add to
+    the respective values.
     """
     def out(ds, kwargs):
 
@@ -62,13 +70,18 @@ def generate_insert_date_into_template_function(template,  # string to pass date
             raise ValueError('Please enter a valid date. You entered: \
                 year: {}, month: {}, day: {}'.format(output_year,output_month,output_day))
 
-        (output_year, output_month, output_day) = offset_date(output_year,\
-            output_month, output_day, year_offset, month_offset, day_offset)
+        (output_year, output_month, output_day) = offset_date(
+            output_year, output_month, output_day, year_offset, month_offset, day_offset
+        )
+
+        formatted_year, formatted_month, formatted_day = datetime.date(
+            output_year, output_month, output_day
+        ).strftime('{}-{}-{}'.format(year_format, month_format, day_format)).split('-')
 
         return template.format(
-            output_year,
-            output_month,
-            output_day
+            formatted_year,
+            formatted_month,
+            formatted_day
         )
 
     return out
@@ -78,6 +91,9 @@ def insert_date_into_template(template,
                         fixed_year = None,
                         fixed_month = None,
                         fixed_day = None,
+                        year_format = '%Y',
+                        month_format = '%m',
+                        day_format = '%d',
                         year_offset = 0,
                         month_offset = 0,
                         day_offset = 0,
@@ -85,8 +101,11 @@ def insert_date_into_template(template,
     """
     Wrapper for generate_insert_date_into_template_function
     """
-    return generate_insert_date_into_template_function(template, fixed_year, fixed_month, \
-        fixed_day, year_offset, month_offset, day_offset)(None, kwargs)
+    return generate_insert_date_into_template_function(
+        template, fixed_year=fixed_year, fixed_month=fixed_month, fixed_day=fixed_day,
+        year_format=year_format, month_format=month_format, day_format=day_format,
+        year_offset=year_offset, month_offset=month_offset, day_offset=day_offset
+    )(None, kwargs)
 
 def generate_insert_regex_into_template_function(template,
     year_regex = '\d{4}',
