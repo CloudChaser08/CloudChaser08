@@ -1,4 +1,4 @@
-from datetime import datetime 
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pytest
 from util.date_utils import *
@@ -15,15 +15,15 @@ def test_is_date_input():
     """
     # invalid inputs:
     # year
-    assert not is_date(0, 10, 1) 
+    assert not is_date(0, 10, 1)
     assert not is_date('It\'s...', 10, 1)
     # month
-    assert not is_date(2017, 0, 1) 
-    assert not is_date(2017, 13, 1) 
-    assert not is_date(2017, 'Nobody expects the Sp-', 1) 
+    assert not is_date(2017, 0, 1)
+    assert not is_date(2017, 13, 1)
+    assert not is_date(2017, 'Nobody expects the Sp-', 1)
     # day
-    assert not is_date(2017, 10, 0) 
-    assert not is_date(2017, 10, 32) 
+    assert not is_date(2017, 10, 0)
+    assert not is_date(2017, 10, 32)
     assert not is_date(2017, 2, 29)
 
     # valid input
@@ -31,8 +31,8 @@ def test_is_date_input():
 
 def test_offset_date_with_valid_and_invalid_input():
     """
-    test offset_date raises appropriate Exceptions/Errors with 
-    invalid input and correct value with valid input 
+    test offset_date raises appropriate Exceptions/Errors with
+    invalid input and correct value with valid input
     """
     with pytest.raises(Exception) as e_info:
         offset_date(1899, 10, 10)
@@ -70,19 +70,18 @@ def test_offset_date_with_valid_and_invalid_input():
     assert exception.message.startswith('day is out of range')
 
     # test offset_date returns datetime object of appropriately shifted date
-    
-    assert offset_date(2012, 10, 1) == ('2012', '10', '01')
-    assert offset_date(2012, 10, 1, year_offset = 1) == ('2013',
-     '10', '01')
-    assert offset_date(2012, 10, 1, month_offset = 1) == ('2012', '11', '01')
-    assert offset_date(2012, 10, 1, day_offset = 1) == ('2012', '10', '02')
+
+    assert offset_date(2012, 10, 1) == (2012, 10, 1)
+    assert offset_date(2012, 10, 1, year_offset = 1) == (2013, 10, 1)
+    assert offset_date(2012, 10, 1, month_offset = 1) == (2012, 11, 1)
+    assert offset_date(2012, 10, 1, day_offset = 1) == (2012, 10, 2)
     # negative input for offsets
-    assert offset_date(2012, 10, 1, year_offset = -1) == ('2011', '10', '01')
-    assert offset_date(2012, 10, 1, month_offset = -1) == ('2012', '09', '01')
-    assert offset_date(2012, 10, 1, day_offset = -1) == ('2012', '09', '30')
+    assert offset_date(2012, 10, 1, year_offset = -1) == (2011, 10, 1)
+    assert offset_date(2012, 10, 1, month_offset = -1) == (2012, 9, 1)
+    assert offset_date(2012, 10, 1, day_offset = -1) == (2012, 9, 30)
     # try all
-    assert offset_date(2012, 10, 1, day_offset = 1, month_offset = -1, \
-        year_offset = 12) == ('2024', '09', '02')
+    assert offset_date(2012, 10, 1, day_offset = 1, month_offset = -1,
+        year_offset = 12) == (2024, 9, 2)
 
 def test_date_into_template_with_all_input():
     """
@@ -90,7 +89,3 @@ def test_date_into_template_with_all_input():
     """
     assert insert_date_into_template(TEMPLATE, kwargs, fixed_year = 1991, fixed_day = 6, \
         fixed_month = 10, year_offset = 21, day_offset = 11, month_offset = 0) == '2012-10-17'
-
-
-
-

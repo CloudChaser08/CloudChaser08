@@ -1,6 +1,5 @@
-from datetime import datetime
+from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
-import pytest
 
 def is_date(year, month, day):
     """
@@ -39,7 +38,7 @@ def offset_date(year,
                     months = month_offset,
                     days = day_offset)).strftime('%Y%m%d')
 
-    return (date[0:4], date[4:6], date[6:8])
+    return (int(date[0:4]), int(date[4:6]), int(date[6:8]))
 
 def generate_insert_date_into_template_function(template,  # string to pass date into
                                 fixed_year = None,  # user inputted year
@@ -74,7 +73,7 @@ def generate_insert_date_into_template_function(template,  # string to pass date
             output_year, output_month, output_day, year_offset, month_offset, day_offset
         )
 
-        formatted_year, formatted_month, formatted_day = datetime.date(
+        formatted_year, formatted_month, formatted_day = date(
             output_year, output_month, output_day
         ).strftime('{}-{}-{}'.format(year_format, month_format, day_format)).split('-')
 

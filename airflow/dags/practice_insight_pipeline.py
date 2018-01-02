@@ -29,7 +29,7 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/practice_insight/medicalclaims/{}/'
+TMP_PATH_TEMPLATE = '/tmp/practice_insight/medicalclaims/{}{}{}/'
 DAG_NAME = 'practice_insight_pipeline'
 
 default_args = {
@@ -72,9 +72,9 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TE
 
 
 def generate_pi_insert_date_function(template):
-    return date_utils.generate_insert_date_into_template_function(
-        template, month_format='%b', month_offset=PRACTICE_INSIGHT_OFFSET
-    )
+    return lambda ds, k: template.split('.')[0] + '.' + date_utils.insert_date_into_template(
+        '.'.join(template.split('.')[1:]), k, month_format='%b', month_offset=PRACTICE_INSIGHT_OFFSET
+    ).lower()
 
 
 def get_deid_file_urls(ds, kwargs):
@@ -335,7 +335,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-01', month_offset=PRACTICE_INSIGHT_OFFSET)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-01', k, month_offset=PRACTICE_INSIGHT_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
