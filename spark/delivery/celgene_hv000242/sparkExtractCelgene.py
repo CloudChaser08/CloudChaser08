@@ -43,7 +43,7 @@ def run(spark, runner, date_input, test=False):
         )
 
         extractor.export_table(
-            runner.sqlContext, 'pharmacyclaims_extract', None,
+            runner.sqlContext, 'nppes_extract', None,
             file_utils.get_abs_path(
                 script_path, NPPES_OUT_TEMPLATE.format(date_input.replace('-', ''))
             ), partitions=1, output_file_name='nppes_{}'.format(date_obj.strftime('%Y%m%d'))
