@@ -57,7 +57,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimid'])
 
     # Create the labtests table to store the results in
-    runner.run_spark_script('../../../common/lab_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/lab_common_model_v4.sql', [
         ['table_name', 'labtests_common_model', False],
         ['properties', '', False]
     ])
@@ -117,7 +117,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                         'EARLIEST_VALID_SERVICE_DATE'
         )
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'labtests', 'lab_common_model_v3.sql', 'ambry',
+            spark, runner, 'labtests', 'lab_common_model_v4.sql', 'ambry',
             'labtests_common_model', 'date_service', date_input,
             hvm_historical_date = datetime(hvm_historical.year,
                                            hvm_historical.month,
@@ -139,7 +139,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/ambry/labtests/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/text/labtests/ambry/'
+        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
     normalized_records_unloader.distcp(output_path)
 
