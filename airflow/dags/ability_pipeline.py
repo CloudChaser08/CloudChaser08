@@ -19,17 +19,19 @@ import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.update_analytics_db as update_analytics_db
 
 import util.s3_utils as s3_utils
 import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, s3_push_files, decrypt_files,
         split_push_files, queue_up_for_matching, clean_up_tmp_dir,
-        detect_move_normalize, HVDAG, s3_utils, date_utils]:
+        detect_move_normalize, HVDAG, s3_utils, update_analytics_db,
+        date_utils]:
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE='/tmp/ability/medicalclaims/{}/'
+TMP_PATH_TEMPLATE='/tmp/ability/medicalclaims/{}{}{}/'
 DAG_NAME='ability_pipeline'
 
 S3_TEXT_ABILITY_PREFIX = 'warehouse/text/medicalclaims/ability/'
@@ -50,38 +52,33 @@ HV_S3_TRANSACTION_BUCKET='salusv'
 # Ability AP file
 AP_FILE_DESCRIPTION='Ability AP file'
 ABILITY_S3_AP_PREFIX='ap-daily/'
-AP_FILE_NAME_TEMPLATE='ap.from_{0}.to_{1}.zip'
+AP_FILE_NAME_TEMPLATE='ap.from_\d{{4}}-\d{{2}}-\d{{2}}.to_{}-{}-{}.zip'
 MINIMUM_AP_FILE_SIZE=15000
 
 # Ability SES file
 SES_FILE_DESCRIPTION='Ability SES file'
 ABILITY_S3_SES_PREFIX='ses-daily/'
-SES_FILE_NAME_TEMPLATE='ses.from_{0}.to_{1}.zip'
+SES_FILE_NAME_TEMPLATE='ses.from_\d{{4}}-\d{{2}}-\d{{2}}.to_{}-{}-{}.zip'
 MINIMUM_SES_FILE_SIZE=15000
 
 # Ability EASE file
 EASE_FILE_DESCRIPTION='Ability EASE file'
 ABILITY_S3_EASE_PREFIX='ease-daily/'
-EASE_FILE_NAME_TEMPLATE='ease.from_{0}.to_{1}.zip'
+EASE_FILE_NAME_TEMPLATE='ease.from_\d{{4}}-\d{{2}}-\d{{2}}.to_{}-{}-{}.zip'
 MINIMUM_EASE_FILE_SIZE=15000
 
-def get_tmp_dir(ds, kwargs):
-    return TMP_PATH_TEMPLATE.format(kwargs['ds_nodash'])
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
 
 def get_expected_file_name(template):
-    return date_utils.generate_insert_regex_into_template_function(template, 
-        custom_pattern = '\d{4}-\d{2}-\d{2}',
-        custom_pattern_2 = ds
-        )
+    return date_utils.generate_insert_date_into_template_function(template)
+
 def get_expected_file_regex(template):
-    return date_utils.generate_insert_regex_into_template_function(template, 
-        custom_pattern = '\d{4}-\d{2}-\d{2}',
-        custom_pattern_2 = '\d{4}-\d{2}-\d{2}'
-        )
+    return date_utils.generate_insert_regex_into_template_function(template)
+
 
 def get_ap_transaction_tmp_dir(ds, kwargs):
     return get_tmp_dir(ds, kwargs) + 'ap/transaction/'
-    
+
 def get_transaction_files_paths_func(tmp_dir_func):
     def get_transaction_files_paths(ds, kwargs):
         file_dir = tmp_dir_func(ds, kwargs)
@@ -170,7 +167,7 @@ def get_ease_encrypted_decrypted_file_paths(ds, kwargs):
     return fs
 
 def do_unzip_files(ds, **kwargs):
-    tmp_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
+    tmp_dir = date_utils.insert_date_into_template(kwargs['tmp_path_template'], kwargs)
     expected_file = filter(lambda f: \
         os.path.isfile(tmp_dir + f) and re.search(kwargs['expected_file_name_func'](ds, kwargs), f), \
         os.listdir(tmp_dir))[0]
@@ -180,15 +177,15 @@ def do_unzip_files(ds, **kwargs):
     ])
 
 def do_move_files(ds, **kwargs):
-    old_file_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + kwargs['origin_dir']
-    new_file_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + kwargs['dest_dir']
+    old_file_dir = date_utils.insert_date_into_template(kwargs['tmp_path_template'], kwargs) + kwargs['origin_dir']
+    new_file_dir = date_utils.insert_date_into_template(kwargs['tmp_path_template'], kwargs) + kwargs['dest_dir']
     check_call(['mkdir', '-p', new_file_dir])
     for f in os.listdir(old_file_dir):
         if os.path.isfile(old_file_dir + f) and re.search(kwargs['filename_pattern'], f):
             check_call(['mv', old_file_dir + f, new_file_dir + f])
 
 def do_rename_files(ds, **kwargs):
-    file_dir = kwargs['tmp_path_template'].format(kwargs['ds_nodash']) + kwargs['file_dir']
+    file_dir = date_utils.insert_date_into_template(kwargs['tmp_path_template'], kwargs) + kwargs['file_dir']
     files = os.listdir(file_dir)
     for f in files:
         if os.path.isfile(file_dir + f):
@@ -381,14 +378,16 @@ def queue_up_for_matching_subdag(product, source_files_func):
     )
 
 
-validate_ap_file_dag = validate_file_subdag('ap', get_expected_file_name(AP_FILE_NAME_TEMPLATE), get_expected_file_regex(AP_FILE_NAME_TEMPLATE),
-        MINIMUM_AP_FILE_SIZE, ABILITY_S3_AP_PREFIX, AP_FILE_DESCRIPTION)
+validate_ap_file_dag = validate_file_subdag('ap', get_expected_file_name(AP_FILE_NAME_TEMPLATE),
+    get_expected_file_regex(AP_FILE_NAME_TEMPLATE), MINIMUM_AP_FILE_SIZE, ABILITY_S3_AP_PREFIX, AP_FILE_DESCRIPTION)
 
-fetch_ap_file_dag = fetch_file_subdag('ap', get_expected_file_name(AP_FILE_NAME_TEMPLATE), ABILITY_S3_AP_PREFIX)
+fetch_ap_file_dag = fetch_file_subdag('ap', get_expected_file_name(AP_FILE_NAME_TEMPLATE)
+, ABILITY_S3_AP_PREFIX)
 
 push_ap_file_dag = push_file_subdag('ap', get_ap_file_paths)
 
-unzip_ap_files = unzip_files_operator('ap', get_expected_file_name(AP_FILE_NAME_TEMPLATE), 'ap/')
+unzip_ap_files = unzip_files_operator('ap', get_expected_file_name(AP_FILE_NAME_TEMPLATE)
+, 'ap/')
 
 move_ap_deid_files = move_files_operator('ap', 'deid', 'ap/', '^deid', 'ap/deid/')
 
@@ -402,12 +401,13 @@ decrypt_ap_transaction_files_dag = decrypt_transaction_files_subdag('ap', get_ap
         get_ap_encrypted_decrypted_file_paths)
 
 split_push_ap_transaction_files_dag = split_push_transaction_files_subdag('ap', get_ap_transaction_tmp_dir,
-        get_ap_transaction_files_paths, get_expected_file_name(AP_FILE_NAME_TEMPLATE))
+        get_ap_transaction_files_paths, get_expected_file_name(AP_FILE_NAME_TEMPLATE)
+)
 
 queue_up_ap_for_matching_dag = queue_up_for_matching_subdag('ap', get_ap_deid_file_paths)
 
 validate_ses_file_dag = validate_file_subdag('ses', get_expected_file_name(SES_FILE_NAME_TEMPLATE), get_expected_file_regex(SES_FILE_NAME_TEMPLATE),
-        MINIMUM_SES_FILE_SIZE, ABILITY_S3_SES_PREFIX, SES_FILE_DESCRIPTION)
+    MINIMUM_SES_FILE_SIZE, ABILITY_S3_SES_PREFIX, SES_FILE_DESCRIPTION)
 
 fetch_ses_file_dag = fetch_file_subdag('ses', get_expected_file_name(SES_FILE_NAME_TEMPLATE), ABILITY_S3_SES_PREFIX)
 
@@ -505,6 +505,32 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+def insert_file_date(template, ds):
+    return template.format(
+        ds[0:4],
+        ds[5:7],
+        ds[8:10]
+    )
+
+sql_template = """
+    ALTER TABLE medicalclaims_old ADD PARTITION (part_provider='ability', part_processdate='{0}/{1}/{2}')
+    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/ability/{0}/{1}/{2}/'
+"""
+
+update_analytics_db = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k: insert_file_date(sql_template, ds)
+        }
+    ),
+    task_id='update_analytics_db',
+    dag=mdag
+)
+
 clean_up_tmp_dir_dag = SubDagOperator(
     subdag=clean_up_tmp_dir.clean_up_tmp_dir(
         DAG_NAME,
@@ -572,3 +598,4 @@ short_circuit_normalization.set_upstream([
 ])
 
 detect_move_normalize_dag.set_upstream(short_circuit_normalization)
+update_analytics_db.set_upstream(detect_move_normalize_dag)

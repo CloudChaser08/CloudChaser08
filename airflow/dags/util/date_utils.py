@@ -1,5 +1,6 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+import pytest
 
 def is_date(year, month, day):
     """
@@ -11,11 +12,11 @@ def is_date(year, month, day):
     except (ValueError, TypeError, SyntaxError):
         return False
 
-def offset_date(year, 
-                month, 
-                day, 
-                year_offset = 0, 
-                month_offset = 0, 
+def offset_date(year,
+                month,
+                day,
+                year_offset = 0,
+                month_offset = 0,
                 day_offset = 0
                 ):
     """
@@ -23,7 +24,7 @@ def offset_date(year,
     month, day. Offset values default to zero.
     """
     if year < 1900:
-        raise ValueError('Year must be >= 1900') # strftime requires year 
+        raise ValueError('Year must be >= 1900') # strftime requires year
                                                  # >= 1900
 
     if type(year_offset) in (str,float):
@@ -33,13 +34,13 @@ def offset_date(year,
     if type(day_offset) in (str,float):
         raise TypeError('day_offset must be an integer')
 
-    date = (datetime(year,month,day) + 
-                relativedelta(years = year_offset, 
-                    months = month_offset, 
+    date = (datetime(year,month,day) +
+                relativedelta(years = year_offset,
+                    months = month_offset,
                     days = day_offset)).strftime('%Y%m%d')
-                
+
     return (date[0:4], date[4:6], date[6:8])
-    
+
 def generate_insert_date_into_template_function(template,  # string to pass date into
                                 fixed_year = None,  # user inputted year
                                 fixed_month = None,  # user inputted month
@@ -49,17 +50,17 @@ def generate_insert_date_into_template_function(template,  # string to pass date
                                 day_offset = 0,  # integer to add to day, defaults to 0
                                 ):
     """
-    Inserts the year, month, day into a string template. The date defaults to the execution_date, but fixed values of year, month, and day can be specified individually by the user withthe variables fixed_year, fixed_month, fixed_day. The parameters year_offset, month_offset, and day_offset are integers to add to the respective values.   
+    Inserts the year, month, day into a string template. The date defaults to the execution_date, but fixed values of year, month, and day can be specified individually by the user withthe variables fixed_year, fixed_month, fixed_day. The parameters year_offset, month_offset, and day_offset are integers to add to the respective values.
     """
     def out(ds, kwargs):
 
-        output_year = kwargs['execution_date'].year if fixed_year is None else fixed_year  
-        output_month = kwargs['execution_date'].month if fixed_month is None else fixed_month    
+        output_year = kwargs['execution_date'].year if fixed_year is None else fixed_year
+        output_month = kwargs['execution_date'].month if fixed_month is None else fixed_month
         output_day = kwargs['execution_date'].day if fixed_day is None else fixed_day
-        
+
         if not is_date(output_year, output_month, output_day):
             raise ValueError('Please enter a valid date. You entered: \
-                year: {}, month: {}, day: {}'.format(output_year,output_month,output_day)) 
+                year: {}, month: {}, day: {}'.format(output_year,output_month,output_day))
 
         (output_year, output_month, output_day) = offset_date(output_year,\
             output_month, output_day, year_offset, month_offset, day_offset)
@@ -72,14 +73,14 @@ def generate_insert_date_into_template_function(template,  # string to pass date
 
     return out
 
-def insert_date_into_template(template, 
-                        kwargs, 
-                        fixed_year = None, 
-                        fixed_month = None,  
-                        fixed_day = None, 
-                        year_offset = 0, 
-                        month_offset = 0, 
-                        day_offset = 0, 
+def insert_date_into_template(template,
+                        kwargs,
+                        fixed_year = None,
+                        fixed_month = None,
+                        fixed_day = None,
+                        year_offset = 0,
+                        month_offset = 0,
+                        day_offset = 0,
                         ):
     """
     Wrapper for generate_insert_date_into_template_function
@@ -87,29 +88,23 @@ def insert_date_into_template(template,
     return generate_insert_date_into_template_function(template, fixed_year, fixed_month, \
         fixed_day, year_offset, month_offset, day_offset)(None, kwargs)
 
-def generate_insert_regex_into_template_function(template, 
+def generate_insert_regex_into_template_function(template,
     year_regex = '\d{4}',
     month_regex =  '\d{2}',
     day_regex =  '\d{2}',
-    custom_pattern = None,
-    custom_pattern_2 = None,
-    custom_pattern_3 = None
+    custom_pattern = None
     ):
     """
     Inserts the year pattern, month pattern, and day pattern into a string template. User can specify a custom pattern string through the variable custom_pattern.
     """
     def out(ds, kwargs):
-        if custom_pattern is None and custom_pattern_2 is None and custom_pattern_3 is None:
+        if custom_pattern is None:
             return template.format(
                 year_regex, month_regex, day_regex,
             )
-
         else:
-            pattern_1 = '' if custom_pattern is None else custom_pattern
-            pattern_2 = '' if custom_pattern_2 is None else custom_pattern_2    
-            pattern_3 = '' if custom_pattern_3 is None else custom_pattern_3
             return template.format(
-                pattern_1, pattern_2, pattern_3
+                custom_pattern,'',''
             )
 
     return out
