@@ -50,7 +50,7 @@ TMP_PATH_TEMPLATE='/tmp/cardinal_mpi/custom/{}{}{}/'
 S3_DEID_RAW_URL='s3://hvincoming/cardinal_raintree/mpi/'
 DEID_FILE_NAME_TEMPLATE = 'mpi.{}{}{}T\d{{2}}\d{{2}}\d{{2}}.zip'
 DEID_FILE_NAME_REGEX = 'mpi.\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}.zip'
-DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'mpi-deid.{}{}{}T\d{2}\d{2}\d{2}.dat'
+DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'mpi-deid.{}{}{}T\d{{2}}\d{{2}}\d{{2}}.dat'
 
 S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/warehouse/text/custom/cardinal_mpi/{}/{}/{}/part-00000.gz'
 S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/mpi/cardinal_mpi_matched_{}{}{}.psv.gz'
