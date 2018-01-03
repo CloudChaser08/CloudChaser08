@@ -75,10 +75,9 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : 
-                date_utils.generate_insert_date_into_template_function(
-                    path_template,
-                    day_offset = VISIONEX_DAY_OFFSET
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
+                        path_template,
+                        day_offset = VISIONEX_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : lambda ds, kwargs: path_template.format('\\d{4}', '\\d{2}', '\\d{2}'),
                 'minimum_file_size'       : minimum_file_size,
@@ -112,8 +111,7 @@ fetch_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : 
-            date_utils.generate_insert_date_into_template_function(
+            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(
                 TRANSACTION_FILE_NAME_TEMPLATE,
                 day_offset = VISIONEX_DAY_OFFSET
             ),
@@ -192,11 +190,13 @@ clean_up_workspace = SubDagOperator(
 )
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
-        DEID_FILE_NAME_TEMPLATE,
-        kwargs,
-        day_offset = VISIONEX_DAY_OFFSET
-    )]
+    return [
+        S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
+            DEID_FILE_NAME_TEMPLATE,
+            kwargs,
+            day_offset=VISIONEX_DAY_OFFSET
+        )
+    ]
 
 if HVDAG.HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
@@ -218,18 +218,22 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def get_deid_file_names(ds, kwargs):
-    return [ date_utils.insert_date_into_template(
+
+    return [
+        date_utils.insert_date_into_template(
             DEID_FILE_NAME_TEMPLATE,
             kwargs,
-            day_offset = VISIONEX_DAY_OFFSET
-        )]
+            day_offset=VISIONEX_DAY_OFFSET
+        )
+    ]
 
 def norm_args(ds, k):
     base = ['--date', date_utils.insert_date_into_template(
-        '{}-{}-{}', 
-        k,
-        day_offset = VISIONEX_DAY_OFFSET
-        )]
+            '{}-{}-{}', 
+            k,
+            day_offset = VISIONEX_DAY_OFFSET
+        )
+    ]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
