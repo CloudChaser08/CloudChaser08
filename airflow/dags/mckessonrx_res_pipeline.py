@@ -58,21 +58,20 @@ TRANSACTION_FILE_NAME_TEMPLATE = 'HVRes.Record.{}{}{}'
 DEID_FILE_DESCRIPTION = 'McKesson RX Restricted deid file'
 DEID_FILE_NAME_TEMPLATE = 'HVRes.DEID.{}{}{}'
 
-#~~~~~~~~~~~~~~~~~~~~~~~~
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TMP_PATH_TEMPLATE
 )
 
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) +\
-        date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
+    return [get_tmp_dir(ds, kwargs) 
+        + date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
     ]
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL +\
-        date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
+    return [S3_TRANSACTION_RAW_URL 
+        + date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
     ]
 
 
