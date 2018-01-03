@@ -36,9 +36,9 @@ def test_year_of_birth_cap():
 
 def test_clean_up_gender():
     assert cleanup.clean_up_gender('F') == 'F'
-    assert cleanup.clean_up_gender('f') == 'U'
+    assert cleanup.clean_up_gender('f') == 'F'
     assert cleanup.clean_up_gender('M') == 'M'
-    assert cleanup.clean_up_gender('m') == 'U'
+    assert cleanup.clean_up_gender('  m ') == 'M'
     assert cleanup.clean_up_gender('U') == 'U'
     assert cleanup.clean_up_gender(27) == 'U'
     assert cleanup.clean_up_gender(None) == 'U'
