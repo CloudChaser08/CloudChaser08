@@ -117,7 +117,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                         'EARLIEST_VALID_SERVICE_DATE'
         )
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'labtests', 'labtests_common_model_v3.sql', 'ambry',
+            spark, runner, 'labtests', 'lab_common_model_v3.sql', 'ambry',
             'labtests_common_model', 'date_service', date_input,
             hvm_historical_date = datetime(hvm_historical.year,
                                            hvm_historical.month,
