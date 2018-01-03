@@ -2,7 +2,7 @@ INSERT INTO medicalclaims_common_model
 SELECT
     NULL,                                       -- record_id
     t.ediclaim_id,                              -- claim_id
-    COALESCE(p.hvid, t.hvid),                   -- hvid
+    t.hvid,                                     -- hvid
     NULL,                                       -- created
     '2' ,                                       -- model_version
     NULL,                                       -- data_set
