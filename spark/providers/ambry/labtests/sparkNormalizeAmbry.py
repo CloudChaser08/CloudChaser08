@@ -34,7 +34,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     else:
         input_path = 's3://salusv/incoming/labtests/ambry/{}/'\
                         .format(date_input.replace('-', '/'))
-        input_path = 's3://salusv/matching/payload/labtests/ambry/{}/'\
+        matching_path = 's3://salusv/matching/payload/labtests/ambry/{}/'\
                         .format(date_input.replace('-', '/'))
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
