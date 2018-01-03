@@ -79,7 +79,11 @@ def get_decrypted_transaction_files_paths(ds, kwargs):
     ]
 
 def get_s3_transaction_prefix(ds, kwargs):
-    return S3_TRANSACTION_SPLIT_PATH + date_utils.insert_date_into_template('{}/{}/{}/', kwargs)
+    return S3_TRANSACTION_SPLIT_PATH + date_utils.insert_date_into_template(
+        '{}/{}/{}/',
+        kwargs,
+        day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
+    )
 
 def get_deid_file_urls(ds, kwargs):
     return ['s3://healthverity/' + S3_DEID_RAW_PATH 
