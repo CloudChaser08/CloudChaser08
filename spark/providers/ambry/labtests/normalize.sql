@@ -9,11 +9,11 @@ SELECT
     NULL,                   -- data_feed
     NULL,                   -- data_vendor
     NULL,                   -- source_version
-    UPPER(TRIM(COALESCE(
-                p.gender,
-                t.gender,
-                'U'
-    ))),                    -- patient_gender
+    COALESCE(
+        p.gender,
+        t.gender,
+        'U'
+    ),                      -- patient_gender
     NULL,                   -- patient_age
     COALESCE(p.yearOfBirth,
              YEAR(t.date_of_birth)
@@ -97,9 +97,8 @@ SELECT
     NULL,                   -- ordering_zip
     NULL                    -- logical_delete_reason
 FROM ambry_transactions t
-    LEFT OUTER JOIN matching_payload p
+    LEFT OUTER JOIN matching_payload p ON t.hvJoinKey = p.hvJoinKey
     CROSS JOIN exploder e
-    ON t.hvJoinKey = p.hvJoinKey
 WHERE
     -- Filter out cases from explosion where diagnosis_code is NULL
     (
