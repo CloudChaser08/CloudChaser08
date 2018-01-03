@@ -244,7 +244,7 @@ detect_move_normalize_dag = SubDagOperator(
             'vendor_uuid'                       : '86396771-0345-4d67-83b3-7e22fded9e1d',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/emdeon/medicalclaims/sparkNormalizeEmdeonDX.py',
             'pyspark_normalization_args_func'   : lambda ds, k: [
-                '--date', date_util.insert_date_into_template('{}-{}-{}', k, day_offset = EMDEON_DX_DAY_OFFSET)
+                '--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = EMDEON_DX_DAY_OFFSET)
             ],
             'pyspark'                           : True
         }
