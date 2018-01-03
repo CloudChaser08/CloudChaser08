@@ -68,13 +68,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
     logging.debug('Loaded the transaction')
 
-    # Explode on Genes_Tested field
+    # Explode on genes_tested field
     runner.sqlContext.sql('select * from ambry_transactions')   \
-          .withColumn('Genes_Tested',                           \
-                       explode(split(col('Genes_Tested'), ',')) \
+          .withColumn('genes_tested',                           \
+                       explode(split(col('genes_tested'), ',')) \
                      )                                          \
           .createTempView('ambry_transactions_gene_exploded')
-    logging.debug('Exploded transactions on Gene_Tested field.')
+    logging.debug('Exploded transactions on gene_tested field.')
 
     # Remove leading and trailing whitespace from any strings
     # Nullify rows that require it
