@@ -76,7 +76,7 @@ def do_split_file(ds, **kwargs):
     check_call(['split', '-n', 'l/20', file_path, '{}{}.'.format(tmp_path_parts(ds, kwargs), file_name)])
 
 def do_zip_part_files(ds, **kwargs):
-    file_list = os.listdir(tmp_path_parts)
+    file_list = os.listdir(tmp_path_parts(ds, kwargs))
     for file_name in file_list:
         check_call(['lbzip2', '{}{}'.format(tmp_path_parts(ds, kwargs), file_name)])
 
@@ -87,7 +87,7 @@ def do_push_splits_to_s3(ds, **kwargs):
     check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', tmp_path_parts(ds, kwargs), "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)])
 
 def do_trigger_post_matching_dag(context, dag_run_obj):
-    file_dir = tmp_path(ds, context)
+    file_dir = tmp_path(context['ds'], context)
     transaction_file_name = date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE,
         context,
         day_offset = EMDEON_RX_DAY_OFFSET

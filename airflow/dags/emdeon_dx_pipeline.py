@@ -61,6 +61,7 @@ get_tmp_path_parts = date_utils.generate_insert_date_into_template_function(TMP_
 def do_unzip_file(ds, **kwargs):
     file_path = get_tmp_path(ds,kwargs) + date_utils.insert_date_into_template(
         TRANSACTION_FILE_NAME_TEMPLATE, 
+        kwargs,
         day_offset = EMDEON_DX_DAY_OFFSET
     )
     check_call(['gzip', '-d', '-k', '-f', file_path])
@@ -176,7 +177,7 @@ log_file_volume = PythonOperator(
             get_tmp_path(ds, k)
             + date_utils.insert_date_into_template(
                 TRANSACTION_FILE_NAME_TEMPLATE,
-                kwargs,
+                k,
                 day_offset = EMDEON_DX_DAY_OFFSET
             )
         ]
