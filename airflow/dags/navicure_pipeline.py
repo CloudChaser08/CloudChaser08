@@ -71,7 +71,8 @@ def get_transaction_files_paths(ds, kwargs):
     expected_input = date_utils.insert_date_into_template(
         TRANSACTION_FILE_NAME_TEMPLATE,
         kwargs,
-        day_offset = -31)
+        day_offset = NAVICURE_DAY_OFFSET
+    )
     return [get_tmp_dir(ds, kwargs) + expected_input.replace('-Navicure','.decrypted')]
 
 def get_s3_transaction_prefix(ds, kwargs):
@@ -94,7 +95,7 @@ def get_deid_file_urls(ds, kwargs):
         )]
 
 def get_expected_matching_files(ds, kwargs):
-    return [date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, day_offset = NAVICURE_DAY_OFFSET)]
+    return [date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs, day_offset = NAVICURE_DAY_OFFSET)]
 
 default_args = {
     'owner': 'airflow',
@@ -275,6 +276,7 @@ update_analytics_db_old = SubDagOperator(
             'sql_command_func' : lambda ds, k: sql_old_template.format(
                 date_utils.insert_date_into_template(
                     '{}/{}/{}',
+                    k,
                     day_offset = NAVICURE_DAY_OFFSET
                 )
             )
