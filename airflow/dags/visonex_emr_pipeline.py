@@ -79,7 +79,8 @@ def generate_file_validation_task(
                         path_template,
                         day_offset = VISIONEX_DAY_OFFSET
                 ),
-                'file_name_pattern_func'  : lambda ds, kwargs: path_template.format('\\d{4}', '\\d{2}', '\\d{2}'),
+                'file_name_pattern_func'  : 
+                    date_utils.generate_insert_regex_into_template_function(path_template),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'               : 'healthverity',
