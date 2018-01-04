@@ -22,12 +22,18 @@ def test_init(spark):
 
 
 def test_claim_levels_all_populated():
-    assert len(filter(lambda r: r.service_line_number is None, results)) == 23
+    assert len(filter(lambda r: r.service_line_number is None, results)) == 5
 
 
 def test_service_line_levels_all_populated():
     assert len(filter(lambda r: r.service_line_number is not None, results)) == 27
 
+
+def test_claim_levels_are_unique():
+    claim_diags = filter(lambda r: r.service_line_number is None, results)
+    unique_claim_diags = set(map(lambda r: (r.claim_id, r.diagnosis_code), claim_diags))
+
+    assert len(claim_diags) == len(unique_claim_diags)
 
 def test_cleanup(spark):
     cleanup(spark)

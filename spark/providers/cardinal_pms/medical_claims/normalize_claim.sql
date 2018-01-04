@@ -9,9 +9,11 @@ SELECT
     NULL,                                       -- data_feed
     NULL,                                       -- data_vendor
     NULL,                                       -- source_version
-    p.gender,                                   -- patient_gender
+    COALESCE(p.gender, t.patientgender),        -- patient_gender
     NULL,                                       -- patient_age
-    NULL,                                       -- patient_year_of_birth
+    COALESCE(p.yearOfBirth,
+             YEAR(t.patientdob)
+    ),                                          -- patient_year_of_birth
     NULL,                                       -- patient_zip3
     NULL,                                       -- patient_state
     'P',                                        -- claim_type
@@ -164,10 +166,15 @@ SELECT
     NULL,                                       -- cob_payer_hpid_2
     NULL,                                       -- cob_payer_claim_filing_ind_code_2
     NULL                                        -- cob_ins_type_code_2
-FROM transactional_cardinal_pms t
+FROM limited_transactional_cardinal_pms t
     LEFT OUTER JOIN matching_payload p
     ON t.hvJoinKey = p.hvJoinKey
     CROSS JOIN claim_exploder c_explode
+    LEFT OUTER JOIN service_line_diags d
+    ON t.ediclaim_id = d.claim_id AND 
+       ARRAY(t.principaldiagnosis, t.diagnosistwo, t.diagnosisthree, t.diagnosisfour,
+            t.diagnosisfive, t.diagnosissix, t.diagnosisseven, t.diagnosiseight
+            )[c_explode.n] = d.diagnosis_code
 WHERE
     -- Filter out cases from explosion where diagnosis_code would be null
     (
@@ -176,12 +183,12 @@ WHERE
             )[c_explode.n] IS NOT NULL
     )
     AND
-    -- Don't include the row if the diagnosis is also a service-line diagnosis
+    -- Only include the row if the diagnosis is not a service-line diagnosis.
+    -- This would mean that doing a LEFT OUTER JOIN on service_line_diags temp
+    -- table would have null values for d.diagnosis_code and d.claim_id 
+    -- (b/c no service line diagnosis existed)
     (
-        CAST((c_explode.n + 1) AS STRING) NOT IN (COALESCE(t.linkeddiagnosisone, ''),
-                                            COALESCE(t.linkeddiagnosistwo, ''),
-                                            COALESCE(t.linkeddiagnosisthree, ''),
-                                            COALESCE(t.linkeddiagnosisfour, ''))
+        d.diagnosis_code IS NULL AND d.claim_id IS NULL
     )
 DISTRIBUTE BY t.ediclaim_id
 ;

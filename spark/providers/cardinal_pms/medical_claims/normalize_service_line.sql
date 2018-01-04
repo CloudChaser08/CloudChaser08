@@ -9,9 +9,11 @@ SELECT
     NULL,                                       -- data_feed
     NULL,                                       -- data_vendor
     NULL,                                       -- source_version
-    p.gender,                                   -- patient_gender
+    COALESCE(p.gender, t.patientgender),        -- patient_gender
     NULL,                                       -- patient_age
-    NULL,                                       -- patient_year_of_birth
+    COALESCE(p.yearOfBirth,
+             YEAR(t.patientdob)
+    ),                                          -- patient_year_of_birth
     NULL,                                       -- patient_zip3
     NULL,                                       -- patient_state
     'P',                                        -- claim_type
