@@ -46,7 +46,7 @@ HV_S3_RAW_PREFIX='incoming/ability/'
 HV_S3_RAW_BUCKET='healthverity'
 
 HV_S3_TRANSACTION_PREFIX='incoming/medicalclaims/ability/'
-HV_S3_TRANSACTION_PREFIX_TEMPLATE=HV_S3_TRANSACTION_PREFIX+'{}/'
+HV_S3_TRANSACTION_PREFIX_TEMPLATE=HV_S3_TRANSACTION_PREFIX+'{}/{}/{}/'
 HV_S3_TRANSACTION_BUCKET='salusv'
 
 # Ability AP file
@@ -119,7 +119,8 @@ def get_ease_transaction_tmp_dir(ds, kwargs):
 get_ease_transaction_files_paths = get_transaction_files_paths_func(get_ease_transaction_tmp_dir)
 
 def get_s3_transaction_path(ds, kwargs):
-    return 's3://' + HV_S3_TRANSACTION_BUCKET + '/' + HV_S3_TRANSACTION_PREFIX_TEMPLATE.format(ds.replace('-', '/'))
+    return 's3://' + HV_S3_TRANSACTION_BUCKET + '/' \
+    + date_utils.insert_date_into_template(HV_S3_TRANSACTION_PREFIX_TEMPLATE, kwargs)
 
 def get_s3_raw_prefix(ds, kwargs):
     return HV_S3_RAW_PREFIX
@@ -197,7 +198,10 @@ def get_expected_matching_files(ds, kwargs):
     ]
     res = []
     for product in ['ap', 'ses', 'ease']:
-        transaction_file_path = '{}{}_{}*'.format(get_s3_transaction_path(ds, kwargs), ds.replace('-', '_'), product)
+        transaction_file_path = '{}{}_{}*'.format(
+            get_s3_transaction_path(ds, kwargs),
+            date_utils.insert_date_into_template('{}_{}_{}', kwargs), product
+        )
         if s3_utils.s3_key_exists(transaction_file_path):
             for payload in payloads_per_product:
                 res.append(ds.replace('-', '_') + '_' + product + '_' + payload)
@@ -505,13 +509,6 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-def insert_file_date(template, ds):
-    return template.format(
-        ds[0:4],
-        ds[5:7],
-        ds[8:10]
-    )
-
 sql_template = """
     ALTER TABLE medicalclaims_old ADD PARTITION (part_provider='ability', part_processdate='{0}/{1}/{2}')
     LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/ability/{0}/{1}/{2}/'
@@ -524,7 +521,9 @@ update_analytics_db = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : lambda ds, k: insert_file_date(sql_template, ds)
+            'sql_command_func' : date_utils.generate_insert_date_into_template_function(
+                sql_template
+            )
         }
     ),
     task_id='update_analytics_db',
