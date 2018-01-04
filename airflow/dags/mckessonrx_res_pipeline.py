@@ -231,8 +231,8 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : [
-                date_utils.generate_insert_date_into_template_function(DEID_FILE_NAME_TEMPLATE)
+            'expected_matching_files_func'      : lambda  ds, k : [
+                date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, k)
             ],
             'file_date_func'                    : 
                 date_utils.generate_insert_date_into_template_function('{}/{}/{}'),
@@ -261,8 +261,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : 
-                    date_utils.generate_insert_date_into_template_function(sql_template)
+                lambda ds, k: sql_template
             }
         ),
         task_id='update_analytics_db',
