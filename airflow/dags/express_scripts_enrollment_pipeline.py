@@ -72,7 +72,7 @@ def get_encrypted_decrypted_file_paths(ds, kwargs):
 def get_decrypted_transaction_files_paths(ds, kwargs):
     return [ get_tmp_dir(ds, kwargs)
         + date_utils.generate_insert_date_into_template_function(
-            TRANSACTION_FILE_NAME_TEMPLATE,
+            TRANSACTION_FILE_NAME_TEMPLATE_DECRYPTED,
             day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
         )
         + '.decrypted'
@@ -95,7 +95,7 @@ def get_deid_file_urls(ds, kwargs):
     ]
 
 def get_expected_matching_files(ds, kwargs):
-    return [date_utils.generate_insert_date_into_template_function(
+    return [date_utils.insert_date_into_template(
         DEID_FILE_NAME_TEMPLATE, 
         kwargs, 
         day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
@@ -313,7 +313,7 @@ update_analytics_db_drop = SubDagOperator(
         {
             'sql_command_func' : date_utils.generate_insert_date_into_template_function(
                 sql_template_drop,
-                day_offset = -1
+                day_offset = EXPRESS_SCRIPTS_DAY_OFFSET-7
             )
         }
     ),

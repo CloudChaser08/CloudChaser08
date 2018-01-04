@@ -81,7 +81,6 @@ def get_transaction_files_paths(ds, kwargs):
     ]
 
 def get_parquet_dates(ds, kwargs):
-    date_path = ds.replace('-', '/')
     date_path = date_utils.insert_date_into_template(
         '{}/{}/{}',
         kwargs,
@@ -105,8 +104,9 @@ def get_deid_file_urls(ds, kwargs):
 
 def get_expected_matching_files(ds, kwargs):
     return [
-        date_utils.generate_insert_date_into_template_function(
+        date_utils.insert_date_into_template(
             DEID_FILE_NAME_TEMPLATE,
+            kwargs,
             day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
         )
     ]
@@ -133,7 +133,7 @@ validate_transaction_file_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_file_name_func': date_utils.generate_insert_regex_into_template_function(
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
             'file_name_pattern_func' : date_utils.generate_insert_regex_into_template_function(
