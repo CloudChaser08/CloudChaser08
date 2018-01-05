@@ -254,8 +254,7 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 sql_template = """
-    ALTER TABLE medicalclaims_new ADD PARTITION (part_provider='emdeon', part_best_date='{0}-{1}')
-    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/2017-02-24/part_provider=emdeon/part_best_date={0}-{1}/'
+    MSCK REPAIR TABLE medicalclaims_new 
 """
 
 update_analytics_db = SubDagOperator(
@@ -265,10 +264,7 @@ update_analytics_db = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : date_utils.generate_insert_date_into_template_function(
-                sql_template,
-                day_offset = EMDEON_DX_DAY_OFFSET
-            )
+            'sql_command_func' : lambda ds, k: sql_template
         }
     ),
     task_id='update_analytics_db',
