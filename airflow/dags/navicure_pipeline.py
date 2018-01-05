@@ -61,7 +61,8 @@ def get_encrypted_decrypted_file_paths(ds, kwargs):
     expected_input = date_utils.insert_date_into_template(
         TRANSACTION_FILE_NAME_TEMPLATE,
         kwargs,
-        day_offset = NAVICURE_DAY_OFFSET)
+        day_offset = NAVICURE_DAY_OFFSET
+    )
     expected_output = expected_input.replace('-Navicure','.decrypted') + '.gz'
     return [
         [tmp_dir + expected_input, tmp_dir + expected_output]
