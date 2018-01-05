@@ -40,7 +40,7 @@ def test_init(spark):
 
     output_dir = file_utils.get_abs_path(__file__, './output')
 
-    data_row = Row('claim_id', 'service_date', 'col_1', 'col_2', 'col_3')
+    data_row = Row('claim_id', 'service_date', 'hvid', 'col_2', 'col_3')
 
     stats_utils.get_provider_data = Mock(
         return_value = spark['spark'].sparkContext.parallelize([
@@ -64,7 +64,7 @@ def test_init(spark):
             'date_field'        : 'service_date',
             'record_field'      : 'claim_id',
             'fill_rates'        : True,
-            'fill_rates_conf'   : {'columns': ['claim_id', 'service_date', 'col_3']},
+            'fill_rate_conf'    : {'columns': ['claim_id', 'service_date', 'col_3']},
             'key_stats'         : None,
             'top_values'        : None,
             'longitudinality'   : None,

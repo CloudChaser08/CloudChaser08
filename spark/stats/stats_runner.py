@@ -7,11 +7,11 @@ import spark.spark_setup as spark_setup
 import spark.stats.processor as processor
 
 
-def run(spark, sqlContext, provider_name, quarter, start_date,
+def run(spark, sqlContext, feed_id, quarter, start_date,
         end_date, earliest_date, output_dir):
 
     all_stats = processor.run_marketplace_stats(spark, sqlContext,
-                provider_name, quarter, start_date, end_date, earliest_date)
+                feed_id, quarter, start_date, end_date, earliest_date)
 
     output_dir = output_dir[:-1] if output_dir.endswith('/') else output_dir
 
@@ -22,17 +22,20 @@ def run(spark, sqlContext, provider_name, quarter, start_date,
 
     for key, stat in all_stats.items():
         if stat:
-            with open(output_dir + '/' + provider_name + '_' + key + '.csv', 'w') as f:
+            with open(output_dir + '/' + feed_id + '_' + key + '.csv', 'w') as f:
+                # Write out the header
+                cols = [str(c) for c in stat[0].asDict().keys()]
+                f.write(','.join(cols) + '\n')
                 for row in stat:
-                    for col, value in row.asDict().items():
-                        f.write(col + ',' + str(value) + '\n')
+                    # Write out each row
+                    f.write(','.join([str(row[c]) for c in cols]) + '\n')
 
     return all_stats
 
 
 def main(args):
     # Parse out the cli args
-    provider_name = args.provider_name
+    feed_id = args.feed_id
     quarter = args.quarter
     start_date = args.start_date
     end_date = args.end_date
@@ -41,16 +44,16 @@ def main(args):
 
     # set up spark
     spark, sqlContext = spark_setup \
-                        .init('{} marketplace stats'.format(provider_name))
+                        .init('Feed {} marketplace stats'.format(feed_id))
 
     # Calculate marketplace stats
-    run(spark, sqlContext, provider_name, quarter, start_date,
+    run(spark, sqlContext, feed_id, quarter, start_date,
         end_date, earliest_date, output_dir)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--provider_name', type = str)
+    parser.add_argument('--feed_id', type = str)
     parser.add_argument('--quarter', type = str)
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)

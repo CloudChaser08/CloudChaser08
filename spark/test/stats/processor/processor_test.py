@@ -37,7 +37,7 @@ def test_init(spark):
             columns, data_row, fill_rate_conf, old_get_data_func, \
             old_get_provider_config_func
 
-    provider_name = 'test'
+    feed_id = '27'
 
     spark_obj = spark['spark']
     sqlContext = spark['sqlContext']
@@ -47,7 +47,7 @@ def test_init(spark):
     end_date = '2017-03-15'
     earliest_date = '1992-11-07'
 
-    columns = ['claim_id', 'service_date', 'col_1', 'col_2', 'col_3']
+    columns = ['claim_id', 'service_date', 'hvid', 'col_2', 'col_3']
     data_row = Row(*columns)
 
     inject_data_mock = Mock(
@@ -66,7 +66,7 @@ def test_init(spark):
 
     stats_utils.get_provider_data = inject_data_mock
 
-    fill_rate_conf = {"columns": ['col_1', 'col_2']}
+    fill_rate_conf = {"columns": ['hvid', 'col_2']}
 
     get_prov_conf = Mock(
         return_value = {
@@ -76,7 +76,7 @@ def test_init(spark):
             'date_field'        : 'service_date',
             'record_field'      : 'claim_id',
             'fill_rates'        : True,
-            'fill_rates_conf'   : fill_rate_conf,
+            'fill_rate_conf'    : fill_rate_conf,
             'key_stats'         : None,
             'top_values'        : None,
             'longitudinality'   : None,
@@ -94,7 +94,7 @@ def test_init(spark):
             'date_field'        : 'service_date',
             'record_field'      : None,
             'fill_rates'        : True,
-            'fill_rates_conf'   : fill_rate_conf,
+            'fill_rate_conf'    : fill_rate_conf,
             'key_stats'         : None,
             'top_values'        : None,
             'longitudinality'   : None,
@@ -122,19 +122,19 @@ def test_init(spark):
     config_reader.get_provider_config = get_prov_conf
     results_distinct_column = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
-                    provider_name, quarter, start_date, end_date, \
+                    feed_id, quarter, start_date, end_date, \
                     earliest_date)
 
     config_reader.get_provider_config = get_prov_conf_no_unique_column
     results_no_distinct_column = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
-                    provider_name, quarter, start_date, end_date, \
+                    feed_id, quarter, start_date, end_date, \
                     earliest_date)
 
     config_reader.get_provider_config = get_prov_conf_no_fill_rate_calc
     results_no_fill_rate = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
-                    provider_name, quarter, start_date, end_date, \
+                    feed_id, quarter, start_date, end_date, \
                     earliest_date)
 
 def test_fill_rate_calculated():
@@ -143,12 +143,12 @@ def test_fill_rate_calculated():
 
 
 def test_fill_rate_values():
-    assert results_distinct_column['fill_rates'] == [Row(1, 1)]
+    assert results_distinct_column['fill_rates'] == [Row('hvid', 1.0), Row('col_2', 1.0)]
 
 
 def test_fill_rate_dataframe_count():
-    assert len(results_distinct_column['fill_rates']) == 1
-    assert len(results_no_distinct_column['fill_rates']) == 1
+    assert len(results_distinct_column['fill_rates']) == 2
+    assert len(results_no_distinct_column['fill_rates']) == 2
 
 
 def test_no_df_if_fill_rates_is_none_in_provider_conf():

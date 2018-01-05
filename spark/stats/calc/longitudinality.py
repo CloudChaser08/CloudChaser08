@@ -1,6 +1,8 @@
 from pyspark.sql.functions import col, min, max, countDistinct, mean, stddev, count, months_between
 from pyspark.sql.types import IntegerType
 
+PATIENT_IDENTIFIER = 'hvid'
+
 def _years(s):
     return s / 12
 
@@ -15,7 +17,7 @@ def calculate_longitudinality(df, provider_conf):
         - long_stats: the longitudinal stats for the data
     '''
     # Get the field names we need
-    patient_identifier = provider_conf['longitudinality']['patient_id_field']
+    patient_identifier = PATIENT_IDENTIFIER
     date_field = provider_conf['date_field']
 
     # Select the columns we care about

@@ -1,0 +1,3 @@
+# Requires postgres development libraries to be installed
+# "sudo yum install postgresql-devel" on Amazon EMR
+psycopg2

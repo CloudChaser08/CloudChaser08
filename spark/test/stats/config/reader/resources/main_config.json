@@ -2,7 +2,7 @@
     "providers": [
         {
             "name":             "test",
-            "datafeed_id":      "0",
+            "datafeed_id":      "1",
             "datatype":         "sub_conf",
             "fill_rate":        true,
             "key_stats":        null,
@@ -14,7 +14,7 @@
         },
         {
             "name":             "other_test",
-            "datafeed_id":      "0",
+            "datafeed_id":      "2",
             "datatype":         "sub_conf",
             "fill_rate":        null,
             "key_stats":        null,
@@ -26,20 +26,20 @@
         },
         {
             "name":             "bad_conf",
-            "datafeed_id":      "0",
+            "datafeed_id":      "3",
             "datatype":         null,
             "fill_rate":        null,
             "uh_oh":            null
         },
         {
             "name":             "bad_conf_2",
-            "datafeed_id":      "0",
+            "datafeed_id":      "4",
             "fill_rate":        null,
             "uh_oh":            null
         },
         {
             "name":             "test_missing_key",
-            "datafeed_id":      "0",
+            "datafeed_id":      "5",
             "datatype":         "sub_conf",
             "key_stats":        null,
             "top_values":       null,

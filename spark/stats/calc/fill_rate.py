@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col, sum, isnan, count, trim
+from pyspark.sql.functions import col, sum, isnan, count, trim, lit
 
 def _col_fill_rate(c, row_count):
     '''
@@ -14,7 +14,7 @@ def _col_fill_rate(c, row_count):
     Output:
         - fr: the fill rate for that column of type pyspark.sql.Column
     '''
-    is_not_null = col(c).isNotNull() & ~isnan(c) & (trim(col(c)) != '')
+    is_not_null = col(c).isNotNull() & (trim(col(c)) != '')
     fr = (sum(is_not_null.cast("integer")) / row_count).alias(c)
     return fr
 
@@ -28,7 +28,18 @@ def calculate_fill_rate(df):
         fr_df: the fill rates for each column as a pyspark.sql.DataFrame
     '''
     row_count = df.count()
-    fr_df = df.agg(*[_col_fill_rate(c, row_count) for c in df.columns])
-    return fr_df
 
+    # Imperical data shows that 16 columns leads to optimal performance 
+    BATCH_SIZE = 16
 
+    i = 0
+    res = []
+    while i < len(df.columns):
+        df_tmp = df.agg(*[_col_fill_rate(c, row_count) for c in df.columns[i:i+BATCH_SIZE]]).cache()
+        res += reduce(
+            lambda df1, df2: df1.union(df2),
+            [df_tmp.select(lit(c).alias('field'), col(c).alias('fill')) for c in df_tmp.columns]
+        ).collect()
+        i += BATCH_SIZE
+
+    return res

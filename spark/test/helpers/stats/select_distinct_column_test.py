@@ -22,7 +22,7 @@ def test_init(spark):
         data_row('2828', '   ', 'hey', 'hi'),
         data_row('2929', None, '', ' '),
         data_row('2828', None, None, 'oh no'),
-        data_row('0', float('Nan'), None, 'c')
+        data_row('0', None, None, 'c')
     ]).toDF()
     results = select_distinct_values_from_column(distinct_column_name)(df)
     expected_df = spark['spark'].sparkContext.parallelize([

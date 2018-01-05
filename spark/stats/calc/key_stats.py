@@ -34,9 +34,9 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
                      patient, record, and row
     '''
     date_col = provider_conf['date_field']
-    patient_attribute = provider_conf['key_stats']['patient_attribute']
-    record_attribute = provider_conf['key_stats']['record_attribute']
-    row_attribute = provider_conf['key_stats']['row_attribute']
+    patient_attribute = 'hvid'
+    record_attribute = provider_conf.get('record_attribute', '*')
+    row_attribute = '*'
 
     total_patient = _get_row_count(df, earliest_date, end_date, 
                                    patient_attribute, date_col)

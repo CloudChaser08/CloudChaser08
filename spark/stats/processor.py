@@ -1,7 +1,13 @@
 import spark.stats.calc.fill_rate as fill_rate
+import spark.stats.calc.top_values as top_values
+import spark.stats.calc.key_stats as key_stats
+import spark.stats.calc.longitudinality as longitudinality
+import spark.stats.calc.year_over_year as year_over_year
 import spark.stats.config.reader.config_reader as config_reader
 import spark.helpers.stats.utils as utils
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.file_utils as file_utils
+import inspect
 
 from pyspark.sql.functions import col
 
@@ -15,17 +21,55 @@ def _run_fill_rates(df, provider_conf):
         - _: a dataframe with the result of fill_rate.calculate_fill_rate
              or None if provider_conf specifies not to calculate
     '''
-    if provider_conf.get('fill_rates_conf'):
+    if provider_conf.get('fill_rate_conf'):
         # Get only the columns needed to calculate fill rates on
-        cols = [c for c in df.columns if c in provider_conf['fill_rates_conf']['columns']]
-        fill_rate_cols_df = df.select(*[col(c) for c in cols])
-        fill_rates = fill_rate.calculate_fill_rate(fill_rate_cols_df).collect()
-        return fill_rates
+        cols = [c for c in df.columns if c in provider_conf['fill_rate_conf']['columns']]
+        fill_rate_cols_df = df.select(*cols)
+        return fill_rate.calculate_fill_rate(fill_rate_cols_df)
+
+    return None
+
+def _run_top_values(df, provider_conf):
+    '''
+    A wrapper around top_values method calculating the N most common values
+    in each column
+    Input:
+        -df: a dataframe
+        -provider_conf: a dictionary w/ the providers configuration data
+    Output:
+        - _: a dataframe with the result of top_values.calculate_top_values
+             or None if provider_conf specifies not to calculate
+    '''
+    if provider_conf.get('top_values_conf'):
+        # Get only the columns needed to calculate fill rates on
+        cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns']]
+        max_num_values = provider_conf['top_values_conf']['max_values']
+        top_values_cols_df = df.select(*cols)
+        return top_values.calculate_top_values(top_values_cols_df, max_num_values)
+
+    return None
+
+def _run_key_stats(df, earliest_date, start_date, end_date, provider_conf):
+    if provider_conf.get('key_stats'):
+        return key_stats.calculate_key_stats(df, earliest_date, start_date,
+                end_date, provider_conf)
+
+    return None
+
+def _run_longitudinality(df, provider_conf):
+    if provider_conf.get('longitudinality'):
+        return longitudinality.calculate_longitudinality(df, provider_conf)
+
+    return None
+
+def _run_year_over_year(df, earliest_date, end_date, provider_conf):
+    if provider_conf.get('year_over_year'):
+        return year_over_year.calculate_year_over_year(df, earliest_date, end_date, provider_conf)
 
     return None
 
 
-def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
+def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
                           start_date, end_date, earliest_date):
     '''
     Runs all the relevant marketplace stats for a provider in a given
@@ -33,7 +77,7 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     Input:
         - spark: spark session object
         - sqlContext: SQLContext of the spark session
-        - provider_name: name of the provider we are running stats on
+        - feed_id: id of the provider feed we are running stats on
         - quarter: quarter to run stats on
         - start_date: starting date of the date range
         - end_date: ending date of the date range
@@ -43,9 +87,10 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     '''
 
     # Get provider config
-    config_dir = '/'.join(__file__.split('/')[:-1]) + '/config/'
+    this_file = inspect.getmodule(inspect.stack()[1][0]).__file__
+    config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
     provider_conf = config_reader.get_provider_config(
-                                    config_dir, provider_name)
+                                    config_file, feed_id)
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
@@ -53,7 +98,10 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
     distinct_column_name = provider_conf['record_field']
 
     # Get data
-    all_data_df = utils.get_provider_data(sqlContext, datatype, provider_name)
+    all_data_df = utils.get_provider_data(sqlContext, datatype, provider_conf['name'])
+
+    # Desired number of partitions when calculating
+    partitions = int(spark.conf.get('spark.sql.shuffle.partitions'))
 
     # provider, start_date, end_date df cache
     # used for fill rate, top values, and key stats
@@ -61,32 +109,30 @@ def run_marketplace_stats(spark, sqlContext, provider_name, quarter, \
         gen_stats_df = postprocessor.compose(
             utils.select_data_in_date_range(start_date, end_date, date_column_field),
             utils.select_distinct_values_from_column(distinct_column_name)
-        )(all_data_df).cache()
+        )(all_data_df).coalesce(partitions)
     else:
         gen_stats_df = utils.select_data_in_date_range(start_date, \
-                        end_date, date_column_field)(all_data_df).cache()
-
+                        end_date, date_column_field)(all_data_df).coalesce(partitions)
 
     # Generate fill rates
     fill_rates = _run_fill_rates(gen_stats_df, provider_conf)
 
-    # Generate key stats
-    key_stats = None
-
     # Generate top values
-    top_values = None
+    top_values = _run_top_values(gen_stats_df, provider_conf)
 
-    gen_stats_df.unpersist()
+    # Generate key stats
+    key_stats = _run_key_stats(all_data_df, earliest_date, start_date, end_date,
+            provider_conf)
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year
-    date_stats_df = None
+    date_stats_df = all_data_df.select("hvid", provider_conf['date_field']).coalesce(partitions)
 
     # Generate Longitudinality
-    longitudinality = None
+    longitudinality = _run_longitudinality(date_stats_df, provider_conf)
 
     # Generate year over year
-    year_over_year = None
+    year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
 
     # datafeed_id, provider, datatype, quarter df cache
     # used for epidemiological

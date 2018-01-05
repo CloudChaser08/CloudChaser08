@@ -12,11 +12,9 @@ results = None
 def test_init(spark):
     global df, results
     conf = { 'date_field': 'date',
-             'longitudinality': {
-                 'patient_id_field': 'b'
-              }
+             'longitudinality': True
             }
-    data_row = Row('date', 'b', 'c', 'd', 'e')
+    data_row = Row('date', 'hvid', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
         data_row('1975-12-11', 'b', 'c', 'd', 'e'),
         data_row('2017-11-08', 'b', 'e', 'f', 'g'),
@@ -31,7 +29,6 @@ def test_init(spark):
 
 
 def test_num_of_months_rows_are_correct():
-    print results
     months_rows = filter(lambda x: x['value'].endswith('months'), results)
     assert len(months_rows) == 2
 
