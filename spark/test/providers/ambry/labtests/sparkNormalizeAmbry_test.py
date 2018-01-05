@@ -51,6 +51,11 @@ def test_number_of_target_rows_per_source_row_correct_length():
     assert len(filter(lambda x: x.claim_id == 'e', results)) == 1
 
 
+def test_test_battery_name_field_is_populated():
+    for r in results:
+        assert r.test_battery_name is not None
+
+
 def test_cleanup(spark):
     cleanup(spark)
 

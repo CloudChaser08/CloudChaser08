@@ -43,7 +43,10 @@ SELECT
     NULL,                   -- test_number
     NULL,                   -- test_battery_local_id
     NULL,                   -- test_battery_std_id
-    NULL,                   -- test_battery_name
+    CONCAT(
+        t.final_test_name,
+        '(', t.test_category, ')'
+    ),                      -- test_battery_name
     NULL,                   -- test_ordered_local_id
     NULL,                   -- test_ordered_std_id
     NULL,                   -- test_ordered_name
