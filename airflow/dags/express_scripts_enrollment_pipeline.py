@@ -22,7 +22,7 @@ import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
         queue_up_for_matching, detect_move_normalize, clean_up_tmp_dir, HVDAG,
-        update_analytics_db]:
+        update_analytics_db, date_utils]:
     reload(m)
 
 # Applies to all files
