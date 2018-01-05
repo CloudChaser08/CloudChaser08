@@ -13,11 +13,12 @@ import subdags.update_analytics_db as update_analytics_db
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
 import util.decompression as decompression
+import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching, clean_up_tmp_dir,
           detect_move_normalize, decompression, HVDAG,
-          update_analytics_db]:
+          update_analytics_db, date_utils]:
     reload(m)
 
 # Applies to all files
@@ -51,69 +52,35 @@ else:
 # Transaction Addon file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 TRANSACTION_FILE_DESCRIPTION = 'McKesson RX Restricted transaction file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'HVRes.Record.{}'
+TRANSACTION_FILE_NAME_TEMPLATE = 'HVRes.Record.{}{}{}'
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'McKesson RX Restricted deid file'
-DEID_FILE_NAME_TEMPLATE = 'HVRes.DEID.{}'
+DEID_FILE_NAME_TEMPLATE = 'HVRes.DEID.{}{}{}'
 
-
-def get_formatted_date(ds, kwargs):
-    return kwargs['ds_nodash']
-
-
-def insert_formatted_date_function(template):
-    def out(ds, kwargs):
-        return template.format(get_formatted_date(ds, kwargs))
-    return out
-
-
-def insert_todays_date_function(template):
-    def out(ds, kwargs):
-        return template.format(kwargs['ds_nodash'])
-    return out
-
-
-def insert_formatted_regex_function(template):
-    def out(ds, kwargs):
-        return template.format('\d{8}')
-    return out
-
-
-def insert_current_date(template, kwargs):
-    return template.format(
-        kwargs['ds_nodash'][0:4],
-        kwargs['ds_nodash'][4:6],
-        kwargs['ds_nodash'][6:8]
-    )
-
-
-def insert_current_date_function(template):
-    def out(ds, kwargs):
-        return insert_current_date(template, kwargs)
-    return out
-
-
-get_tmp_dir = insert_todays_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(
+    TRANSACTION_TMP_PATH_TEMPLATE
+)
 
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(
-        get_formatted_date(ds, kwargs)
-    )]
+    return [get_tmp_dir(ds, kwargs) 
+        + date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
+    ]
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(
-        get_formatted_date(ds, kwargs)
-    )]
+    return [S3_TRANSACTION_RAW_URL 
+        + date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
+    ]
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
-        + TRANSACTION_FILE_NAME_TEMPLATE.format(
-            get_formatted_date(ds, kwargs)
+        + date_utils.insert_date_into_template(
+            TRANSACTION_FILE_NAME_TEMPLATE, 
+            kwargs
         )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
@@ -130,10 +97,10 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : insert_formatted_date_function(
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
                     path_template
                 ),
-                'file_name_pattern_func'  : insert_formatted_regex_function(
+                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
                     path_template
                 ),
                 'minimum_file_size'       : minimum_file_size,
@@ -165,7 +132,7 @@ fetch_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func': insert_formatted_date_function(
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -202,12 +169,14 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : insert_formatted_regex_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
-            ),
-            's3_prefix_func'           : insert_current_date_function(
-                S3_TRANSACTION_PROCESSED_URL_TEMPLATE
-            ),
+            'file_name_pattern_func'   : 
+                date_utils.generate_insert_regex_into_template_function(
+                    TRANSACTION_FILE_NAME_TEMPLATE
+                ),
+            's3_prefix_func'           : 
+                date_utils.generate_insert_date_into_template_function(
+                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE
+                ),
             'num_splits'               : 20
         }
     ),
@@ -248,7 +217,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', insert_current_date('{}-{}-{}', k), '--restricted']
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k), '--restricted']
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -262,14 +231,12 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds,k: [
-                insert_formatted_date_function(
-                    DEID_FILE_NAME_TEMPLATE
-                )(ds, k)
+            'expected_matching_files_func'      : lambda  ds, k : [
+                date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, k)
             ],
-            'file_date_func'                    : insert_current_date_function(
-                '{}/{}/{}'
-            ),
+            'file_date_func'                    : 
+                date_utils.generate_insert_date_into_template_function('{}/{}/{}'),
+            
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'f6b4eefd-988a-4ca3-9efd-0140607c8985',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/mckesson/pharmacyclaims/sparkNormalizeMcKessonRx.py',
@@ -294,7 +261,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: insert_current_date(sql_template, k)
+                lambda ds, k: sql_template
             }
         ),
         task_id='update_analytics_db',
