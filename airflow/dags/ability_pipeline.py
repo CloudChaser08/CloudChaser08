@@ -190,7 +190,7 @@ def do_rename_files(ds, **kwargs):
     files = os.listdir(file_dir)
     for f in files:
         if os.path.isfile(file_dir + f):
-            check_call(['mv', file_dir + f, file_dir + ds.replace("-","_") + "_" + kwargs['prefix'] + "_" + f])
+            check_call(['mv', file_dir + f, file_dir + date_utils.insert_date_into_template('{}_{}_{}',kwargs) + "_" + kwargs['prefix'] + "_" + f])
 
 def get_expected_matching_files(ds, kwargs):
     payloads_per_product = [
@@ -204,7 +204,11 @@ def get_expected_matching_files(ds, kwargs):
         )
         if s3_utils.s3_key_exists(transaction_file_path):
             for payload in payloads_per_product:
-                res.append(ds.replace('-', '_') + '_' + product + '_' + payload)
+                res.append(
+                    date_utils.insert_date_into_template(
+                        '{}_{}_{}',kwargs
+                    ) + '_' + product + '_' + payload
+                )
 
     return res
     
