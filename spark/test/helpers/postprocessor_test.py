@@ -3,9 +3,10 @@ import pytest
 import mock
 import datetime
 
-from pyspark.sql.types import StructField, StructType, StringType, Row
+from pyspark.sql.types import Row
 
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.file_utils as file_utils
 
 
 @pytest.mark.usefixtures("spark")
@@ -126,3 +127,17 @@ def test_apply_whitelist(spark):
         raise
 
     spark['sqlContext'].sql = old_sql_func
+
+
+def test_add_input_filename(spark):
+    script_path = __file__
+    df = spark['sqlContext'].read.csv(file_utils.get_abs_path(script_path, './resources/input_filename.txt.aa.txt'))
+
+    with_filename = postprocessor.add_input_filename('source_file_name')(df)
+    with_filename_parent_dir = postprocessor.add_input_filename('source_file_name', True)(df)
+
+    for row in with_filename.collect():
+        assert row.source_file_name == 'input_filename.txt'
+
+    for row in with_filename_parent_dir.collect():
+        assert row.source_file_name == "file://" + file_utils.get_abs_path(script_path, './resources/input_filename.txt')

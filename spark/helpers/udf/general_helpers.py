@@ -146,5 +146,15 @@ def slightly_deobfuscate_hvid(hvid, key):
     return slightly_obfuscate_hvid(hvid, key)
 
 
+def remove_split_suffix(filename, include_parent_dirs=False):
+    "Remove suffix added by the split_push_files subdag"
+    # remove suffix if found
+    if re.search('\.[a-z]{2}\..+$', filename):
+        filename = '.'.join(filename.split('.')[:-2])
+
+    # strip parent dirs if option is specified
+    return filename if include_parent_dirs else filename.split('/')[-1]
+
+
 def to_json(val):
     return json.dumps(val)

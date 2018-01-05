@@ -1,7 +1,8 @@
 # Generic, agnostic functions to be applied on a dataframe
 
 import spark.helpers.udf.general_helpers as gen_helpers
-from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, upper, coalesce
+from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, upper, \
+    coalesce, input_file_name
 import functools
 import logging
 import time
@@ -137,7 +138,7 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
     return out
 
 
-def add_universal_columns(feed_id, vendor_id, filename, 
+def add_universal_columns(feed_id, vendor_id, filename,
                           model_version_number=None, **alternate_column_names):
     """
     Add columns to a dataframe that are universal across all
@@ -237,6 +238,17 @@ def deobfuscate_hvid(project_name, hvid_col='hvid', nullify_non_integers=False):
         return df.withColumn(
             hvid_col,
             udf(gen_helpers.slightly_deobfuscate_hvid)(column, lit(project_name))
+        )
+    return out
+
+
+def add_input_filename(column_name, include_parent_dirs=False):
+    "Add the input file name to a dataframe, removing the split suffix"
+    def out(df):
+        return df.withColumn(
+            column_name, input_file_name()
+        ).cache().withColumn(
+            column_name, udf(gen_helpers.remove_split_suffix)(col(column_name), lit(include_parent_dirs))
         )
     return out
 
