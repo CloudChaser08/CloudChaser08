@@ -17,10 +17,12 @@ import subdags.detect_move_normalize as detect_move_normalize
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.update_analytics_db as update_analytics_db
 import util.s3_utils as s3_utils
+import util.date_utils as date_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching, clean_up_tmp_dir,
-          detect_move_normalize, HVDAG, s3_utils, update_analytics_db]:
+          detect_move_normalize, HVDAG, s3_utils, update_analytics_db,
+          date_utils]:
     reload(m)
 
 # Applies to all files
@@ -59,32 +61,9 @@ TRANSACTION_FILE_NAME_TEMPLATE = 'HealthVerity-{}{}{}.zip'
 DEID_FILE_DESCRIPTION = 'Visonex EMR deid file'
 DEID_FILE_NAME_TEMPLATE = 'HealthVerity-{}{}{}.zip'
 
-def get_file_date_nodash(kwargs):
-    return (kwargs['execution_date'] + timedelta(days=7)).strftime('%Y%m%d') # Interval unclear
+VISIONEX_DAY_OFFSET = 7
 
-def insert_file_date_function(template):
-    def out(ds, kwargs):
-        ds_nodash = get_file_date_nodash(kwargs)
-        return template.format(
-            ds_nodash[0:4],
-            ds_nodash[4:6],
-            ds_nodash[6:8]
-        )
-    return out
-
-def insert_file_date(template, ds, kwargs):
-    return insert_file_date_function(template)(ds, kwargs)
-
-def insert_execution_date_function(template):
-    def out(ds, kwargs):
-        return template.format(
-            kwargs['ds_nodash'][0:4],
-            kwargs['ds_nodash'][4:6],
-            kwargs['ds_nodash'][6:8]
-        )
-    return out
-
-get_tmp_dir = insert_execution_date_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_tmp_dir =  date_utils.generate_insert_date_into_template_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
 def generate_file_validation_task(
     task_id, path_template, minimum_file_size
@@ -96,10 +75,12 @@ def generate_file_validation_task(
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'expected_file_name_func' : insert_file_date_function(
-                    path_template
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
+                        path_template,
+                        day_offset = VISIONEX_DAY_OFFSET
                 ),
-                'file_name_pattern_func'  : lambda ds, kwargs: path_template.format('\\d{4}', '\\d{2}', '\\d{2}'),
+                'file_name_pattern_func'  : 
+                    date_utils.generate_insert_regex_into_template_function(path_template),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'               : 'healthverity',
@@ -131,8 +112,9 @@ fetch_transaction = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : insert_file_date_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE,
+                day_offset = VISIONEX_DAY_OFFSET
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -144,7 +126,13 @@ fetch_transaction = SubDagOperator(
 )
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + insert_file_date(TRANSACTION_FILE_NAME_TEMPLATE, ds, kwargs)]
+    return [
+        get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(
+            TRANSACTION_FILE_NAME_TEMPLATE,
+            kwargs,
+            day_offset = VISIONEX_DAY_OFFSET
+        )
+    ]
 
 def do_decompress_transactions(ds, **kwargs):
     decompression.decompress_7z_file(get_transaction_file_paths[0], get_tmp_dir(ds, kwargs) + 'decompressed/')
@@ -164,8 +152,10 @@ def get_decompressed_transaction_file_paths(ds, kwargs):
 def get_s3_prefix(ds, kwargs):
     FILE_PREFIX = 'Xport_HealthVerity.dbo.'
     table = kwargs['file_to_push'].replace(FILE_PREFIX, '').split('.')[0]
-    return insert_file_date(
-        S3_TRANSACTION_PROCESSED_URL_TEMPLATE + table.lower() + '/', ds, kwargs
+    return date_utils.insert_date_into_template(
+        S3_TRANSACTION_PROCESSED_URL_TEMPLATE + table.lower() + '/',
+        kwargs,
+        day_offset = VISIONEX_DAY_OFFSET
     )
 
 split_transactions = SubDagOperator(
@@ -201,7 +191,13 @@ clean_up_workspace = SubDagOperator(
 )
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL + insert_file_date(DEID_FILE_NAME_TEMPLATE, ds, kwargs)]
+    return [
+        S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
+            DEID_FILE_NAME_TEMPLATE,
+            kwargs,
+            day_offset=VISIONEX_DAY_OFFSET
+        )
+    ]
 
 if HVDAG.HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
@@ -223,10 +219,22 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def get_deid_file_names(ds, kwargs):
-    return [insert_file_date(DEID_FILE_NAME_TEMPLATE, ds, kwargs)]
+
+    return [
+        date_utils.insert_date_into_template(
+            DEID_FILE_NAME_TEMPLATE,
+            kwargs,
+            day_offset=VISIONEX_DAY_OFFSET
+        )
+    ]
 
 def norm_args(ds, k):
-    base = ['--date', insert_file_date('{}-{}-{}', ds, k)]
+    base = ['--date', date_utils.insert_date_into_template(
+            '{}-{}-{}', 
+            k,
+            day_offset = VISIONEX_DAY_OFFSET
+        )
+    ]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -240,8 +248,10 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : get_deid_file_names,
-            'file_date_func'                    : insert_file_date_function(
-                '{}/{}/{}'
+            'file_date_func'                    : 
+            date_utils.generate_insert_date_into_template_function(
+                '{}/{}/{}',
+                day_offset = VISIONEX_DAY_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'ef178614-a48e-4ff1-9f8b-8d8833891364',
