@@ -128,7 +128,7 @@ validate_transaction_file_dag = SubDagOperator(
             'file_name_pattern_func' : 
                 date_utils.generate_insert_regex_into_template_function(
                     TRANSACTION_FILE_NAME_TEMPLATE
-                    ),
+                ),
             'minimum_file_size'      : MINIMUM_TRANSACTION_FILE_SIZE,
             's3_prefix'              : S3_TRANSACTION_RAW_PATH,
             's3_bucket'              : S3_ORIGIN_BUCKET,
