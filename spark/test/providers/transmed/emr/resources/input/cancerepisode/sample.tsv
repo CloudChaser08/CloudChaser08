@@ -1,0 +1,10 @@
+ce-pk0	claim-0	56	C42.1 - Bone marrow		negative_type-,positive_blacklisted_type+,negative_type-		
+ce-pk1	claim-1	60	C50.9 - Breast, NOS		positive_type+		
+ce-pk2	claim-2	62	C56.9 - Ovary		negative_type-		
+ce-pk3	claim-3	58	C77.4 - Lymph nodes of inguinal region or leg				
+ce-pk4	claim-4	69	C20.9 - Rectum, NOS	814 - ADENOCARCINOMA, NOS		UNK	
+ce-pk5	claim-5	70	C34.8 - Overlapping lesion of lung				
+ce-pk6	claim-6	86	C44.6 - Skin of upper limb and shoulder	HIST		STAGE	TUMGRADE
+ce-pk7	claim-7	76	C34.1 - Upper lobe, lung	807 - SQUAMOUS CELL CARCINOMA, NOS		IB	
+ce-pk8	claim-8	50	C22.0 - Liver			II	
+ce-pk9	claim-9	83	C44.6 - Skin of upper limb and shoulder			UNK	
