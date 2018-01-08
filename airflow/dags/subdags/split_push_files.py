@@ -10,6 +10,11 @@ import util.datadog_utils as datadog
 for m in [s3_utils, datadog, HVDAG]:
     reload(m)
 
+
+def get_parts_dir(ds, k):
+    return k['parts_dir_func'](ds, k) if k.get('parts_dir_func') else 'parts'
+
+
 def do_log_file_volume(dag_name, file_name_pattern_func=None, file_paths_to_split_func=None):
     """Log file volume to datadog.
 
@@ -39,7 +44,7 @@ def do_log_file_volume(dag_name, file_name_pattern_func=None, file_paths_to_spli
     return out
 
 def do_create_parts_dir(ds, **kwargs):
-    tmp_dir = kwargs['tmp_dir_func'](ds, kwargs) + 'parts/'
+    tmp_dir = kwargs['tmp_dir_func'](ds, kwargs) + get_parts_dir(ds, kwargs) + '/'
     check_call(['mkdir', '-p', tmp_dir])
 
 def do_split_files(ds, **kwargs):
@@ -51,17 +56,17 @@ def do_split_files(ds, **kwargs):
         f = fp.split('/')[-1]
         check_call([
             'split', '-n', 'l/' + str(kwargs['num_splits']), fp,
-            tmp_dir + 'parts/' + f + '.'
+            tmp_dir + get_parts_dir(ds, kwargs) + '/' + f + '.'
         ])
 
 def do_bzip_part_files(ds, **kwargs):
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
-    files = os.listdir(tmp_dir + 'parts/')
+    files = os.listdir(tmp_dir + get_parts_dir(ds, kwargs) + '/')
     for f in files:
-        check_call(['lbzip2', '-z', tmp_dir + 'parts/' + f])
+        check_call(['lbzip2', '-z', tmp_dir + get_parts_dir(ds, kwargs) + '/' + f])
 
 def do_push_part_files(ds, **kwargs):
-    tmp_dir   = kwargs['tmp_dir_func'](ds, kwargs) + 'parts/'
+    tmp_dir   = kwargs['tmp_dir_func'](ds, kwargs) + get_parts_dir(ds, kwargs) + '/'
     files = os.listdir(tmp_dir)
     for i in xrange(0, len(files), 5):
         processes = []
@@ -80,7 +85,7 @@ def do_clean_up(ds, **kwargs):
 
     for fp in file_paths_to_split:
         check_call(['rm', fp])
-    check_call(['rm', '-r', tmp_dir + 'parts'])
+    check_call(['rm', '-r', tmp_dir + get_parts_dir(ds, kwargs)])
 
 def split_push_files(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):
     default_args = {
