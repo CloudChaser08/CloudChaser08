@@ -1,9 +1,5 @@
-from airflow.models import Variable
-from airflow.operators import BashOperator, PythonOperator
-from datetime import datetime, timedelta
+from airflow.operators import PythonOperator
 import boto3
-import logging
-import os
 
 import common.HVDAG as HVDAG
 
@@ -18,7 +14,7 @@ def do_push_files(ds, **kwargs):
         s3 = boto3.resource('s3', aws_access_key_id=kwargs['aws_access_key_id'], aws_secret_access_key=kwargs['aws_secret_access_key'])
     else:
         s3 = boto3.resource('s3')
-    
+
     for f in file_paths:
         fn = f.split('/')[-1]
         obj = s3.Object(kwargs['s3_bucket'], s3_prefix + fn)

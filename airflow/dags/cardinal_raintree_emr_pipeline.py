@@ -1,4 +1,5 @@
-from airflow.operators import SubDagOperator
+from airflow.models import Variable
+from airflow.operators import SubDagOperator, PythonOperator
 from datetime import datetime, timedelta
 import os
 import re
@@ -51,8 +52,9 @@ else:
     S3_TRANSACTION_INTERIM_URL = 's3://healthverity/incoming/cardinal/emr/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/emr/cardinal/{}/{}/{}/'
 
-S3_CARDINAL_DELIVERABLE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/emr/cardinal_emr_{{}}_normalized_{}{}{}.psv.gz'
+S3_CARDINAL_DELIVERABLE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/emr/'
 S3_HV_DELIVERABLE_URL_TEMPLATE = 's3://salusv/deliverable/cardinal_raintree_emr-0/{}/{}/{}/'
+DELIVERABLE_FILE_NAME_TEMPLATE = 'cardinal_emr_{{}}_normalized_{}{}{}.psv.gz'
 
 # Transaction Files
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
@@ -383,6 +385,81 @@ if HVDAG.HVDAG.airflow_env != 'test':
         'lab_result'
     )
 
+    def generate_rename_deliverable_dag(deliverable_table_name, old_path, new_path):
+        def do_rename(ds, **kwargs):
+            current_path = get_tmp_dir(ds, kwargs) + deliverable_table_name + '/part-00000.gz'
+            new_path = current_path.replace('part-00000.gz', date_utils.insert_date_into_template(
+                DELIVERABLE_FILE_NAME_TEMPLATE, kwargs, day_offset=CARDINAL_DAY_OFFSET
+            ).format(deliverable_table_name))
+            os.rename(current_path, new_path)
+
+        return PythonOperator(
+            task_id='rename_{}_file'.format(deliverable_table_name),
+            provide_context=True,
+            python_callable=do_rename,
+            dag=mdag
+        )
+
+    rename_deliverable_clin_obsn = generate_rename_deliverable_dag(
+        'clinical_observation',
+    )
+    rename_deliverable_medctn = generate_rename_deliverable_dag(
+        'medication'
+    )
+    rename_deliverable_diag = generate_rename_deliverable_dag(
+        'diagnosis'
+    )
+    rename_deliverable_enc = generate_rename_deliverable_dag(
+        'encounter'
+    )
+    rename_deliverable_proc = generate_rename_deliverable_dag(
+        'procedure'
+    )
+    rename_deliverable_lab_res = generate_rename_deliverable_dag(
+        'lab_result'
+    )
+
+    def generate_push_deliverable_dag(deliverable_table_name):
+        return SubDagOperator(
+            subdag=s3_push_files.s3_push_files(
+                DAG_NAME,
+                'push_{}_file'.format(deliverable_table_name),
+                default_args['start_date'],
+                mdag.schedule_interval,
+                {
+                    'file_paths_func'       : lambda ds, k: [
+                        get_tmp_dir(ds, k) + deliverable_table_name + '/' + f for f in
+                        os.listdir(get_tmp_dir(ds, k) + deliverable_table_name + '/')
+                    ],
+                    's3_prefix_func'        : lambda ds, k: '/'.join(S3_CARDINAL_DELIVERABLE_URL_TEMPLATE.split('/')[3:]),
+                    's3_bucket'             : S3_CARDINAL_DELIVERABLE_URL_TEMPLATE.split('/')[2],
+                    'aws_access_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
+                    'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
+                }
+            ),
+            task_id='push_{}_file'.format(deliverable_table_name),
+            dag=mdag
+        )
+
+    push_deliverable_clin_obsn = generate_push_deliverable_dag(
+        'clinical_observation',
+    )
+    push_deliverable_medctn = generate_push_deliverable_dag(
+        'medication'
+    )
+    push_deliverable_diag = generate_push_deliverable_dag(
+        'diagnosis'
+    )
+    push_deliverable_enc = generate_push_deliverable_dag(
+        'encounter'
+    )
+    push_deliverable_proc = generate_push_deliverable_dag(
+        'procedure'
+    )
+    push_deliverable_lab_res = generate_push_deliverable_dag(
+        'lab_result'
+    )
+
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction_demo.set_upstream(validate_transaction_demo)
     fetch_transaction_deid.set_upstream(validate_transaction_deid)
@@ -405,6 +482,20 @@ if HVDAG.HVDAG.airflow_env != 'test':
         fetch_deliverable_proc,
         fetch_deliverable_lab_res
     ])
+
+    rename_deliverable_clin_obsn.set_upstream(fetch_deliverable_clin_obsn)
+    rename_deliverable_medctn.set_upstream(fetch_deliverable_medctn)
+    rename_deliverable_diag.set_upstream(fetch_deliverable_diag)
+    rename_deliverable_enc.set_upstream(fetch_deliverable_enc)
+    rename_deliverable_proc.set_upstream(fetch_deliverable_proc)
+    rename_deliverable_lab_res.set_upstream(fetch_deliverable_lab_res)
+
+    push_deliverable_clin_obsn.set_upstream(rename_deliverable_clin_obsn)
+    push_deliverable_medctn.set_upstream(rename_deliverable_medctn)
+    push_deliverable_diag.set_upstream(rename_deliverable_diag)
+    push_deliverable_enc.set_upstream(rename_deliverable_enc)
+    push_deliverable_proc.set_upstream(rename_deliverable_proc)
+    push_deliverable_lab_res.set_upstream(rename_deliverable_lab_res)
 
 push_raw_transactions_to_incoming.set_upstream([
     fetch_transaction_demo,
