@@ -11,6 +11,7 @@ import subdags.s3_push_files as s3_push_files
 import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
 import util.decompression as decompression
@@ -50,12 +51,16 @@ else:
     S3_TRANSACTION_INTERIM_URL = 's3://healthverity/incoming/cardinal/emr/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/emr/cardinal/{}/{}/{}/'
 
+S3_CARDINAL_DELIVERABLE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/emr/cardinal_emr_{{}}_normalized_{}{}{}.psv.gz'
+S3_HV_DELIVERABLE_URL_TEMPLATE = 's3://salusv/deliverable/cardinal_raintree_emr-0/{}/{}/{}/'
+
 # Transaction Files
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 
 # Transaction demographics
 TRANSACTION_DEMO_FILE_DESCRIPTION = 'Cardinal Raintree EMR transaction demographics file'
 TRANSACTION_DEMO_FILE_NAME_TEMPLATE = 'Demographic_records_{}{}{}[0-9]{{6}}.dat'
+TRANSACTION_DEID_FILE_NAME_TEMPLATE = 'Demographic_deid_{}{}{}[0-9]{{6}}.dat'
 
 # Transaction diagnosis
 TRANSACTION_DIAG_FILE_DESCRIPTION = 'Cardinal Raintree EMR transaction diagnosis file'
@@ -110,6 +115,10 @@ if HVDAG.HVDAG.airflow_env != 'test':
         'transaction_demo', TRANSACTION_DEMO_FILE_NAME_TEMPLATE,
         10000
     )
+    validate_transaction_deid = generate_file_validation_dag(
+        'transaction_deid', TRANSACTION_DEID_FILE_NAME_TEMPLATE,
+        10000
+    )
     validate_transaction_diag = generate_file_validation_dag(
         'transaction_diag', TRANSACTION_DIAG_FILE_NAME_TEMPLATE,
         10000
@@ -153,6 +162,9 @@ def generate_fetch_transaction_dag(task_id, transaction_file_name_template):
 fetch_transaction_demo = generate_fetch_transaction_dag(
     'transaction_demo', TRANSACTION_DEMO_FILE_NAME_TEMPLATE,
 )
+fetch_transaction_deid = generate_fetch_transaction_dag(
+    'transaction_deid', TRANSACTION_DEID_FILE_NAME_TEMPLATE,
+)
 fetch_transaction_diag = generate_fetch_transaction_dag(
     'transaction_diag', TRANSACTION_DIAG_FILE_NAME_TEMPLATE,
 )
@@ -165,6 +177,30 @@ fetch_transaction_enc = generate_fetch_transaction_dag(
 fetch_transaction_disp = generate_fetch_transaction_dag(
     'transaction_disp', TRANSACTION_DISP_FILE_NAME_TEMPLATE,
 )
+
+
+if HVDAG.HVDAG.airflow_env != 'test':
+    queue_up_for_matching = SubDagOperator(
+        subdag=queue_up_for_matching.queue_up_for_matching(
+            DAG_NAME,
+            'queue_up_for_matching',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'source_files_func' : lambda ds, k: [
+                    S3_TRANSACTION_RAW_URL + transaction_file
+                    for transaction_file in os.listdir(get_tmp_dir(ds, k)) if re.search(
+                        date_utils.insert_date_into_template(
+                            TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
+                        ), transaction_file
+                    )
+                ],
+                'priority'          : 'priority1'
+            }
+        ),
+        task_id='queue_up_for_matching',
+        dag=mdag
+    )
 
 
 def generate_push_to_incoming_dag():
@@ -307,13 +343,68 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-# addon
+if HVDAG.HVDAG.airflow_env != 'test':
+    def generate_fetch_deliverable_dag(deliverable_table_name):
+        return SubDagOperator(
+            subdag=s3_fetch_file.s3_fetch_file(
+                DAG_NAME,
+                'fetch_{}_file'.format(deliverable_table_name),
+                default_args['start_date'],
+                mdag.schedule_interval,
+                {
+                    'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE + deliverable_table_name + '/',
+                    'expected_file_name_func': lambda ds, k: 'part-00000.gz',
+                    's3_prefix_func'         : date_utils.generate_insert_date_into_template_function(
+                        '/'.join(S3_HV_DELIVERABLE_URL_TEMPLATE.split('/')[3:]) + deliverable_table_name
+                    ),
+                    's3_bucket'              : S3_HV_DELIVERABLE_URL_TEMPLATE.split('/')[2]
+                }
+            ),
+            task_id='fetch_{}_file'.format(deliverable_table_name),
+            dag=mdag
+        )
+
+    fetch_deliverable_clin_obsn = generate_fetch_deliverable_dag(
+        'clinical_observation'
+    )
+    fetch_deliverable_medctn = generate_fetch_deliverable_dag(
+        'medication'
+    )
+    fetch_deliverable_diag = generate_fetch_deliverable_dag(
+        'diagnosis'
+    )
+    fetch_deliverable_enc = generate_fetch_deliverable_dag(
+        'encounter'
+    )
+    fetch_deliverable_proc = generate_fetch_deliverable_dag(
+        'procedure'
+    )
+    fetch_deliverable_lab_res = generate_fetch_deliverable_dag(
+        'lab_result'
+    )
+
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction_demo.set_upstream(validate_transaction_demo)
+    fetch_transaction_deid.set_upstream(validate_transaction_deid)
     fetch_transaction_diag.set_upstream(validate_transaction_diag)
     fetch_transaction_disp.set_upstream(validate_transaction_disp)
     fetch_transaction_enc.set_upstream(validate_transaction_enc)
     fetch_transaction_lab.set_upstream(validate_transaction_lab)
+
+    queue_up_for_matching.set_upstream(fetch_transaction_deid)
+
+    queue_up_for_matching.set_downstream([
+        clean_up_workspace, detect_move_normalize_dag
+    ])
+
+    detect_move_normalize.set_downstream([
+        fetch_deliverable_clin_obsn,
+        fetch_deliverable_medctn,
+        fetch_deliverable_diag,
+        fetch_deliverable_enc,
+        fetch_deliverable_proc,
+        fetch_deliverable_lab_res
+    ])
 
 push_raw_transactions_to_incoming.set_upstream([
     fetch_transaction_demo,
@@ -347,4 +438,3 @@ detect_move_normalize_dag.set_upstream([
     split_transaction_enc,
     split_transaction_lab
 ])
-p
