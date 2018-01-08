@@ -135,7 +135,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
-    if date_input <= '2018-01-01':
+    if date_input <= '2017-12-27':
         runner.run_spark_script('load_transactions.sql', [
             ['demographics_input_path', demographics_input_path],
             ['diagnosis_input_path', diagnosis_input_path],
