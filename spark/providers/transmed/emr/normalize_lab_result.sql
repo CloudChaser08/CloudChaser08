@@ -82,7 +82,13 @@ SELECT
         SPLIT(ce.breastcancertype, ',')[n],
         '[-+]', ''
         )                 AS lab_test_vdr_cd,
-    NULL                  AS lab_test_vdr_cd_qual,
+    CASE
+      WHEN TRIM(REGEXP_REPLACE(
+          SPLIT(ce.breastcancertype, ',')[n],
+          '[-+]', ''
+          )) <> ''
+      THEN 'VENDOR'
+    END                   AS lab_test_vdr_cd_qual,
     NULL                  AS lab_test_alt_cd,
     NULL                  AS lab_test_alt_cd_qual,
     CASE
