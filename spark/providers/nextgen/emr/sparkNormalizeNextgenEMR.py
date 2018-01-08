@@ -24,7 +24,7 @@ from spark.helpers.privacy.emr import                   \
 import logging
 
 LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
-S3_ENCOUNTER_REFERENCE    = 's3a://salusv/reference/nextgen/encounter_dedupe/'
+S3_ENCOUNTER_REFERENCE    = 's3a://salusv/reference/nextgen/encounter_deduped/'
 S3_DEMOGRAPHICS_REFERENCE = 's3a://salusv/reference/nextgen/demographics_orc/'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -362,6 +362,32 @@ def main(args):
         output_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/spark-output/'
     else:
         output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
+        try:
+            check_output(['hadoop', 'fs', '-ls', '/user/hive/warehouse/encounter_dedup'])
+            check_output(['aws', 's3', 'rm', '--recursive',
+                        S3_ENCOUNTER_REFERENCE.replace("s3a://", "s3://")])
+            check_output(['s3-dist-cp', '--src', '/user/hive/warehouse/encounter_dedup',
+                        '--dest', S3_ENCOUNTER_REFERENCE])
+        except:
+            logging.warn("Something went wrong in persisting the new distinct encounter data")
+
+        try:
+            check_output(['hadoop', 'fs', '-ls', '/user/hive/warehouse/demographics_local'])
+            check_output(['aws', 's3', 'rm', '--recursive',
+                        S3_DEMOGRAPHICS_REFERENCE.replace("s3a://", "s3://")])
+            check_output(['s3-dist-cp', '--src', '/user/hive/warehouse/demographics_local',
+                        '--dest', S3_DEMOGRAPHICS_REFERENCE])
+        except:
+            logging.warn("Something went wrong in persisting the new demographics data")
+
+
+        try:
+            check_output(['hadoop', 'fs', '-ls', '/staging/encounter/'])
+            check_output(['aws', 's3', 'rm', '--recursive',
+                        output_dir + 'encounter/part_hvm_vdr_feed_id=35/'])
+        except:
+            logging.warn("Something went wrong in removing the old normalized encounter data")
+
 
     normalized_records_unloader.distcp(output_path)
 
