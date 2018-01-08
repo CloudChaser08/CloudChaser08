@@ -47,10 +47,12 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/raw/'
     S3_TRANSACTION_INTERIM_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/healthverity/incoming/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/{}/{}/'
+    S3_MATCHING_PAYLOAD_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/matching/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://hvincoming/cardinal_raintree/emr/'
     S3_TRANSACTION_INTERIM_URL = 's3://healthverity/incoming/cardinal/emr/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/emr/cardinal/{}/{}/{}/'
+    S3_MATCHING_PAYLOAD_URL = 's3://salusv/matching/payload/emr/cardinal/'
 
 S3_CARDINAL_DELIVERABLE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/emr/'
 S3_HV_DELIVERABLE_URL_TEMPLATE = 's3://salusv/deliverable/cardinal_raintree_emr-0/{}/{}/{}/'
@@ -331,10 +333,15 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds, k: [],
+            'expected_matching_files_func'      : lambda ds,k: [
+                date_utils.insert_date_into_template(
+                    TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
+                )
+            ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}', day_offset=CARDINAL_DAY_OFFSET
             ),
+            's3_payload_loc_url'                : S3_MATCHING_PAYLOAD_URL,
             'vendor_uuid'                       : '46d06413-e37d-4978-9194-8623516223cc',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/cardinal/emr/sparkNormalizeCardinalEMR.py',
             'pyspark_normalization_args_func'   : norm_args,
