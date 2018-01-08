@@ -42,4 +42,6 @@ def calculate_fill_rate(df):
         ).collect()
         i += BATCH_SIZE
 
-    return res
+    stats = map(lambda r: {'field': r.field, 'fill': r.fill}, res)
+
+    return stats
