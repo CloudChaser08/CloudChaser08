@@ -68,7 +68,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         dispense_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/dispense/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/payload/{}/'.format(
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/matching/{}/'.format(
             date_input.replace('-', '/')
         )
     else:

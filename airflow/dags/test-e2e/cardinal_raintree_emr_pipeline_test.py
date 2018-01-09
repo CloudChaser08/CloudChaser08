@@ -13,7 +13,7 @@ def cleanup():
     ])
 
     subprocess.check_call([
-        'aws', 's3', 'rm', '--recursive', CARDINAL_TEST_DIR + '/deliverable/'
+        'aws', 's3', 'rm', '--recursive', CARDINAL_TEST_DIR + '/delivery/'
     ])
 
     subprocess.check_call([
@@ -55,6 +55,33 @@ def test_normalized_data_exists():
     ])) > 0
     assert len(subprocess.check_output([
         'aws', 's3', 'ls', CARDINAL_TEST_DIR + '/spark-output/procedure/part_hvm_vdr_feed_id=40/'
+    ])) > 0
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', CARDINAL_TEST_DIR + '/spark-output/lab_result/part_hvm_vdr_feed_id=40/'
+    ])) > 0
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', CARDINAL_TEST_DIR + '/spark-output/medication/part_hvm_vdr_feed_id=40/'
+    ])) > 0
+
+
+def test_delivery_created():
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', CARDINAL_TEST_DIR + '/delivery/2017/12/27/clinical_observation/'
+    ])) > 0
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', CARDINAL_TEST_DIR + '/delivery/2017/12/27/diagnosis/'
+    ])) > 0
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', CARDINAL_TEST_DIR + '/delivery/2017/12/27/encounter/'
+    ])) > 0
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', CARDINAL_TEST_DIR + '/delivery/2017/12/27/procedure/'
+    ])) > 0
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', CARDINAL_TEST_DIR + '/delivery/2017/12/27/lab_result/'
+    ])) > 0
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', CARDINAL_TEST_DIR + '/delivery/2017/12/27/medication/'
     ])) > 0
 
 

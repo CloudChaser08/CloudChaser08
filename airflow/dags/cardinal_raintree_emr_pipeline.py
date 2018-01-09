@@ -47,7 +47,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/raw/'
     S3_TRANSACTION_INTERIM_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/healthverity/incoming/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/{}/{}/'
-    S3_MATCHING_PAYLOAD_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/matching/'
+    S3_MATCHING_PAYLOAD_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/matching/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://hvincoming/cardinal_raintree/emr/'
     S3_TRANSACTION_INTERIM_URL = 's3://healthverity/incoming/cardinal/emr/'
@@ -85,6 +85,14 @@ TRANSACTION_DISP_FILE_NAME_TEMPLATE = 'Order_Dispense_record_data_{}{}{}[0-9]{{6
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(TRANSACTION_TMP_PATH_TEMPLATE)
 
 CARDINAL_DAY_OFFSET = 1
+
+
+def get_expected_matching_files(ds, k):
+    formatted_template = date_utils.insert_date_into_template(
+        TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
+    )
+    return [formatted_template[:formatted_template.index('[0-9]{6}')]]
+
 
 def generate_file_validation_dag(
         task_id, path_template, minimum_file_size
@@ -240,7 +248,8 @@ def generate_decrypt_dag():
                 'tmp_dir_func'                        : get_tmp_dir,
                 'encrypted_decrypted_file_paths_func' : lambda ds, k: [
                     [get_tmp_dir(ds, k) + f, get_tmp_dir(ds, k) + f + '.gz']
-                    for f in os.listdir(get_tmp_dir(ds, k)) if f.endswith('.dat')
+                    for f in os.listdir(get_tmp_dir(ds, k))
+                    if f.endswith('.dat') and 'deid' not in f.lower()
                 ]
             }
         ),
@@ -319,7 +328,7 @@ clean_up_workspace = SubDagOperator(
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset=CARDINAL_DAY_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -333,11 +342,7 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds,k: [
-                date_utils.insert_date_into_template(
-                    TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
-                )
-            ],
+            'expected_matching_files_func'      : get_expected_matching_files,
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}', day_offset=CARDINAL_DAY_OFFSET
             ),
@@ -364,7 +369,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
                     'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE + deliverable_table_name + '/',
                     'expected_file_name_func': lambda ds, k: 'part-00000.gz',
                     's3_prefix_func'         : date_utils.generate_insert_date_into_template_function(
-                        '/'.join(S3_HV_DELIVERABLE_URL_TEMPLATE.split('/')[3:]) + deliverable_table_name
+                        '/'.join(S3_HV_DELIVERABLE_URL_TEMPLATE.split('/')[3:]) + deliverable_table_name + '/',
+                        day_offset=CARDINAL_DAY_OFFSET
                     ),
                     's3_bucket'              : S3_HV_DELIVERABLE_URL_TEMPLATE.split('/')[2]
                 }
@@ -392,7 +398,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
         'lab_result'
     )
 
-    def generate_rename_deliverable_dag(deliverable_table_name, old_path, new_path):
+    def generate_rename_deliverable_dag(deliverable_table_name):
         def do_rename(ds, **kwargs):
             current_path = get_tmp_dir(ds, kwargs) + deliverable_table_name + '/part-00000.gz'
             new_path = current_path.replace('part-00000.gz', date_utils.insert_date_into_template(
@@ -467,6 +473,20 @@ if HVDAG.HVDAG.airflow_env != 'test':
         'lab_result'
     )
 
+    clean_up_workspace_post_delivery = SubDagOperator(
+        subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+            DAG_NAME,
+            'clean_up_workspace_post_delivery',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_path_template': TMP_PATH_TEMPLATE
+            }
+        ),
+        task_id='clean_up_workspace_post_delivery',
+        dag=mdag
+    )
+
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction_demo.set_upstream(validate_transaction_demo)
     fetch_transaction_deid.set_upstream(validate_transaction_deid)
@@ -481,7 +501,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
         clean_up_workspace, detect_move_normalize_dag
     ])
 
-    detect_move_normalize.set_downstream([
+    detect_move_normalize_dag.set_downstream([
         fetch_deliverable_clin_obsn,
         fetch_deliverable_medctn,
         fetch_deliverable_diag,
@@ -503,6 +523,15 @@ if HVDAG.HVDAG.airflow_env != 'test':
     push_deliverable_enc.set_upstream(rename_deliverable_enc)
     push_deliverable_proc.set_upstream(rename_deliverable_proc)
     push_deliverable_lab_res.set_upstream(rename_deliverable_lab_res)
+
+    clean_up_workspace_post_delivery.set_upstream([
+        push_deliverable_clin_obsn,
+        push_deliverable_medctn,
+        push_deliverable_diag,
+        push_deliverable_enc,
+        push_deliverable_proc,
+        push_deliverable_lab_res
+    ])
 
 push_raw_transactions_to_incoming.set_upstream([
     fetch_transaction_demo,
