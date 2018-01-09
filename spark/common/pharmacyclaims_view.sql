@@ -249,8 +249,16 @@ SELECT CAST(record_id AS bigint),
     created,
     model_version,
     data_set,
-    data_feed,
-    data_vendor,
+    CASE WHEN data_feed = 'accredo pharmacy claims' THEN '16'
+         WHEN data_feed = 'express scripts pharmacy claims' THEN '16'
+         WHEN data_feed = 'genoa pharmacy claims' THEN '21'
+         WHEN data_feed = 'webmd pharmacy claims' THEN '11'
+         ELSE data_feed END AS data_feed,
+    CASE WHEN data_vendor = 'accredo' THEN '17'
+         WHEN data_vendor = 'express scripts' THEN '17'
+         WHEN data_vendor = 'genoa' THEN '20'
+         WHEN data_vendor = 'webmd' THEN '11'
+         ELSE data_vendor END AS data_vendor,
     source_version,
     patient_gender,
     patient_age,
