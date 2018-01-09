@@ -348,8 +348,8 @@
             "fill_rate"         : true,
             "key_stats"         : true,
             "top_values"        : false,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
             "epi_calcs"         : null
         },
         {
