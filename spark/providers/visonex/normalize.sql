@@ -484,6 +484,428 @@ FROM dialysistreatment base
         procedurecode as ndc_code,
         startdate as date_service
     FROM patientmedadministered
+    UNION
+
+    -- misc tables with no codes
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'ADDRESS' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM address
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'DIALYSISTRAINING' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM dialysistraining
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'FACILITYADMITDISCHARGE' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM facilityadmitdischarge
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'INSURANCE' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM insurance
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'MODALITYCHANGEHISTORYCROWNWEB' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM modalitychangehistorycrownweb
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTACCESS' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientaccess
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'NURSINGHOMEHISTORY' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM nursinghomehistory
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTACCESS_OTHERACCESSEVENT' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientaccess_otheraccessevent
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTACCESS_PLACEDRECORDED' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientaccess_placedrecorded
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTACCESS_REMOVED' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientaccess_removed
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTALLERGY' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientallergy
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTALLERGY' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientallergy
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTCOMORBIDITYANDTRANSPLANTSTATE' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientcomorbidityandtransplantstate
+    UNION
+    SELECT analyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTDATA' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientdata
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTDIALYSISPRESCRIPTION' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM patientdialysisprescription
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTDIALYSISRXHEMO' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientdialysisrxhemo
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTDIALYSISRXPD' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientdialysisrxpd
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTDIALYSISRXPDEXCHANGES' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientdialysisrxpdexchanges
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTEVENT' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM patientevent
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTFLUIDWEIGHTMANAGEMENT' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM patientfluidweightmanagement
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTHEIGHTHISTORY' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM patientheighthistory
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTINFECTION' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM patientinfection
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTINFECTION_LABORGANISM' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientinfection_laborganism
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTINFECTION_LABORGANISMDRUG' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientinfection_laborganismdrug
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTINFECTION_MEDICATION' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientinfection_medication
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTINFECTION_LABRESULTCULTURE' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM patientinfection_labresultculture
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTINSTABILITYHISTORY' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientinstabilityhistory
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', '',
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTMASTERSCHEDULEHEADER' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        NULL as date_service
+    FROM patientmasterscheduleheader
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTMEDNOTGIVEN' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM patientmednotgiven
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTSTATUSHISTORY' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM patientstatushistory
         ) big_union ON CONCAT(
         base.patientidnumber,
         '-', base.analyticdos,
