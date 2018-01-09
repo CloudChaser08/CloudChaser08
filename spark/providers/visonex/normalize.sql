@@ -230,7 +230,7 @@ FROM dialysistreatment base
         NULL AS diagnosis_code_qual,
         NULL AS procedure_code,
         NULL AS ndc_code,
-        thedate AS date_service 
+        thedate AS date_service
     FROM labpanelsdrawn
     UNION
     SELECT
@@ -352,7 +352,7 @@ FROM dialysistreatment base
         NULL AS ndc_code,
         startdate as date_service
     FROM problemlist
-    UNION 
+    UNION
     SELECT
         b.patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
@@ -466,7 +466,7 @@ FROM dialysistreatment base
         INNER JOIN labresult b ON a.universalserviceid=b.universalserviceid
         AND a.observationidentifier=b.observationidentifier AND a.testname=b.testname
 
-    UNION 
+    UNION
 
     -- ndc
     -- cleaning: only contain numeric characters, must be 11-digits long

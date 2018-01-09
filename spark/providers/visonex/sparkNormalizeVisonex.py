@@ -1,8 +1,7 @@
-#! /usr/bin/python
-import os
 import argparse
 import time
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from pyspark.sql.functions import monotonically_increasing_id
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -76,7 +75,10 @@ payload_loader.load(runner, matching_path, ['claimId'])
 
 runner.run_spark_script('normalize.sql', [
     ['today', TODAY],
-    ['filename', 'HealthVerity-20170201'],
+    ['filename', 'HealthVerity-{}-{}.zip'.format(
+        date_obj.strftime('%Y%m01'), ((date_obj.replace(day=1) + relativedelta(months=1))
+                                      - relativedelta(days=1)).strftime('%Y%m%d')
+    )],
     ['feedname', '23'],
     ['vendor', '33'],
     ['min_date', min_date],
