@@ -38,18 +38,6 @@ def insert_date(template):
 
 
 input_prefix = insert_date('s3://salusv/incoming/emr/visonex/{}/{}/{}/')
-hospitalization_input = input_prefix + 'hospitalization/'
-immunization_input = input_prefix + 'immunization/'
-labpanelsdrawn_input = input_prefix + 'labpanelsdrawn/'
-labresult_input = input_prefix + 'labresult/'
-patientaccess_examproc_input = input_prefix + 'patientaccess_examproc/'
-patientdiagcodes_input = input_prefix + 'patientdiagcodes/'
-patientmedadministered_input = input_prefix + 'patientmedadministered/'
-patientmedprescription_input = input_prefix + 'patientmedprescription/'
-labidlist_input = input_prefix + 'labidlist/'
-problemlist_input = input_prefix + 'problemlist/'
-dialysistreatment_input = input_prefix + 'dialysistreatment/'
-
 matching_path = insert_date('s3://salusv/matching/payload/emr/visonex/{}/{}/{}/')
 
 runner.run_spark_script('../../common/emr_common_model.sql', [
@@ -58,17 +46,7 @@ runner.run_spark_script('../../common/emr_common_model.sql', [
 ])
 
 runner.run_spark_script('load_transactions.sql', [
-    ['hospitalization_input', hospitalization_input],
-    ['immunization_input', immunization_input],
-    ['labpanelsdrawn_input', labpanelsdrawn_input],
-    ['labresult_input', labresult_input],
-    ['patientaccess_examproc_input', patientaccess_examproc_input],
-    ['patientdiagcodes_input', patientdiagcodes_input],
-    ['patientmedadministered_input', patientmedadministered_input],
-    ['patientmedprescription_input', patientmedprescription_input],
-    ['labidlist_input', labidlist_input],
-    ['problemlist_input', problemlist_input],
-    ['dialysistreatment_input', dialysistreatment_input]
+    ['input_path', input_prefix, False]
 ])
 
 payload_loader.load(runner, matching_path, ['claimId'])

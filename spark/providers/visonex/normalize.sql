@@ -547,7 +547,7 @@ FROM dialysistreatment base
         CONCAT(
             patientidnumber,
              '-', '',
-             '-', clinicorganizationidnumber
+             '-', ''
             ) as claim_id,
         'MODALITYCHANGEHISTORYCROWNWEB' as claim_type,
         NULL AS diagnosis_code,
@@ -699,9 +699,9 @@ FROM dialysistreatment base
     UNION
     SELECT patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            patientidnumber,
-             '-', '',
-             '-', clinicorganizationidnumber
+            '',
+            '-', '',
+            '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTDIALYSISRXHEMO' as claim_type,
         NULL AS diagnosis_code,
@@ -713,9 +713,9 @@ FROM dialysistreatment base
     UNION
     SELECT patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            patientidnumber,
-             '-', '',
-             '-', clinicorganizationidnumber
+            '',
+            '-', '',
+            '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTDIALYSISRXPD' as claim_type,
         NULL AS diagnosis_code,
@@ -727,9 +727,9 @@ FROM dialysistreatment base
     UNION
     SELECT patientdataanalyticrowidnumber as visonex_patient_id,
         CONCAT(
-            patientidnumber,
-             '-', '',
-             '-', clinicorganizationidnumber
+            '',
+            '-', '',
+            '-', clinicorganizationidnumber
             ) as claim_id,
         'PATIENTDIALYSISRXPDEXCHANGES' as claim_type,
         NULL AS diagnosis_code,
@@ -906,6 +906,20 @@ FROM dialysistreatment base
         NULL as ndc_code,
         analyticdos as date_service
     FROM patientstatushistory
+    UNION
+    SELECT patientdataanalyticrowidnumber as visonex_patient_id,
+        CONCAT(
+            patientidnumber,
+             '-', analyticdos,
+             '-', clinicorganizationidnumber
+            ) as claim_id,
+        'PATIENTCMS2728' as claim_type,
+        NULL AS diagnosis_code,
+        NULL AS diagnosis_code_qual,
+        NULL AS procedure_code,
+        NULL as ndc_code,
+        analyticdos as date_service
+    FROM patientcms2728
         ) big_union ON CONCAT(
         base.patientidnumber,
         '-', base.analyticdos,
