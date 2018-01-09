@@ -6,8 +6,7 @@ from pyspark.sql.functions import monotonically_increasing_id
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.payload_loader as payload_loader
-import spark.helpers.constants as constants
-
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 # init
 spark, sqlContext = init("Visonex")
@@ -68,41 +67,10 @@ sqlContext.sql('select * from emr_common_model').withColumn(
     'record_id', monotonically_increasing_id()
 ).createTempView('emr_common_model')
 
-runner.run_spark_script('../../common/emr_common_model.sql', [
-    ['table_name', 'final_unload', False],
-    [
-        'properties',
-        constants.unload_properties_template.format(args.output_path),
-        False
-    ]
-])
-
-old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
-
-runner.run_spark_script('../../common/unload_common_model.sql', [
-    [
-        'select_statement',
-        "SELECT *, 'visonex' as provider, 'NULL' as best_date "
-        + "FROM emr_common_model "
-        + "WHERE date_start IS NULL",
-        False
-    ],
-    ['unload_partition_count', '20', False],
-    ['original_partition_count', old_partition_count, False],
-    ['distribution_key', 'record_id', False]
-])
-
-runner.run_spark_script('../../common/unload_common_model.sql', [
-    [
-        'select_statement',
-        "SELECT *, 'visonex' as provider, regexp_replace(cast(date_start as string), '-..$', '') as best_date "
-        + "FROM emr_common_model "
-        + "WHERE date_start IS NOT NULL",
-        False
-    ],
-    ['unload_partition_count', '20', False],
-    ['original_partition_count', old_partition_count, False],
-    ['distribution_key', 'record_id', False]
-])
+normalized_records_unloader.partition_and_rename(
+    spark, runner, 'emr', 'emr_common_model.sql', 'visonex',
+    'emr_common_model', 'date_start', args.date
+)
+normalized_records_unloader.distcp(args.output_path)
 
 spark.stop()
