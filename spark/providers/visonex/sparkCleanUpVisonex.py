@@ -57,8 +57,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['claimId'])
 
-    input_path_config = [[table + '_input', input_path + table + '/'] for table in TABLES]
-    runner.run_spark_script('load_transactions.sql', input_path_config)
+    runner.run_spark_script('load_transactions.sql', [
+        ['input_path', input_path, False]
+    ])
 
     # trim and nullify all incoming transactions tables
     for table in TABLES:

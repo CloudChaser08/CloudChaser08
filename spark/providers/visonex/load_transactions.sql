@@ -15,23 +15,24 @@ CREATE EXTERNAL TABLE address (
     LOCATION '{input_path}address/'
     ;
 
--- DROP TABLE IF EXISTS clinicpreference;
--- CREATE EXTERNAL TABLE clinicpreference (
---         analyticrowidnumber         string,
---         clinicorganizationidnumber  string,
---         associationidnumber         string,
---         labmethodalbumin            string,
---         serumalbuminlower           string,
---         hemodialysismethod          string,
---         peritonealdialysismethod    string,
---         pnameasure                  string,
---         bsamethod                   string,
---         creatineclearancemethod     string,
---         inactivatedate              string
---         )
---     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
---     STORED AS TEXTFILE
---     LOCATION '{input_path}clinicpreference/'
+DROP TABLE IF EXISTS clinicpreference;
+CREATE EXTERNAL TABLE clinicpreference (
+        analyticrowidnumber         string,
+        clinicorganizationidnumber  string,
+        associationidnumber         string,
+        labmethodalbumin            string,
+        serumalbuminlower           string,
+        hemodialysismethod          string,
+        peritonealdialysismethod    string,
+        pnameasure                  string,
+        bsamethod                   string,
+        creatineclearancemethod     string,
+        inactivatedate              string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION '{input_path}clinicpreference/'
+    ;
 
 DROP TABLE IF EXISTS dialysistraining;
 CREATE EXTERNAL TABLE dialysistraining (
@@ -352,33 +353,35 @@ CREATE EXTERNAL TABLE labresult (
     LOCATION '{input_path}labresult/'
     ;
 
--- DROP TABLE IF EXISTS medication;
--- CREATE EXTERNAL TABLE medication (
---         medidnumber     string,
---         addeddate       string,
---         lasteditdate    string,
---         inactivatedate  string
---         )
---     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
---     STORED AS TEXTFILE
---     LOCATION '{input_path}medication/'
+DROP TABLE IF EXISTS medication;
+CREATE EXTERNAL TABLE medication (
+        medidnumber     string,
+        addeddate       string,
+        lasteditdate    string,
+        inactivatedate  string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION '{input_path}medication/'
+    ;
 
--- DROP TABLE IF EXISTS medicationgroup;
--- CREATE EXTERNAL TABLE medicationgroup (
---         medicationgroupidnumber         string,
---         medicationgroupname             string,
---         medicationname                  string,
---         crownmedicationname             string,
---         route                           string,
---         original_medgroupiddetailnumb   string,
---         original_medgroupidnumber       string,
---         addeddate                       string,
---         lasteditdate                    string,
---         inactivatedate                  string
---         )
---     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
---     STORED AS TEXTFILE
---     LOCATION '{input_path}medicationgroup/'
+DROP TABLE IF EXISTS medicationgroup;
+CREATE EXTERNAL TABLE medicationgroup (
+        medicationgroupidnumber         string,
+        medicationgroupname             string,
+        medicationname                  string,
+        crownmedicationname             string,
+        route                           string,
+        original_medgroupiddetailnumb   string,
+        original_medgroupidnumber       string,
+        addeddate                       string,
+        lasteditdate                    string,
+        inactivatedate                  string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION '{input_path}medicationgroup/'
+    ;
 
 DROP TABLE IF EXISTS modalitychangehistorycrownweb;
 CREATE EXTERNAL TABLE modalitychangehistorycrownweb (
@@ -1438,50 +1441,53 @@ CREATE EXTERNAL TABLE problemlist (
     LOCATION '{input_path}problemlist/'
     ;
 
--- DROP TABLE IF EXISTS sodiumufprofile;
--- CREATE EXTERNAL TABLE sodiumufprofile (
---         analyticrowidnumber string,
---         profileidnumber     string,
---         profilenumber       string,
---         profiletype         string,
---         begininglevel       string,
---         endinglevel         string,
---         addeddate           string,
---         editdate            string,
---         inactivatedate      string
---         )
---     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
---     STORED AS TEXTFILE
---     LOCATION '{input_path}sodiumufprofile/'
+DROP TABLE IF EXISTS sodiumufprofile;
+CREATE EXTERNAL TABLE sodiumufprofile (
+        analyticrowidnumber string,
+        profileidnumber     string,
+        profilenumber       string,
+        profiletype         string,
+        begininglevel       string,
+        endinglevel         string,
+        addeddate           string,
+        editdate            string,
+        inactivatedate      string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION '{input_path}sodiumufprofile/'
+    ;
 
--- DROP TABLE IF EXISTS stategeo;
--- CREATE EXTERNAL TABLE stategeo (
---         stateabbreviation           string,
---         statename                   string,
---         statefipscode               string,
---         divisionname                string,
---         censusbureaudivisionnumber  string,
---         regionname                  string,
---         censusbureauregionnumber    string
---         )
---     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
---     STORED AS TEXTFILE
---     LOCATION '{input_path}stategeo/'
+DROP TABLE IF EXISTS stategeo;
+CREATE EXTERNAL TABLE stategeo (
+        stateabbreviation           string,
+        statename                   string,
+        statefipscode               string,
+        divisionname                string,
+        censusbureaudivisionnumber  string,
+        regionname                  string,
+        censusbureauregionnumber    string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION '{input_path}stategeo/'
+    ;
 
--- DROP TABLE IF EXISTS zipgeo;
--- CREATE EXTERNAL TABLE zipgeo (
---         geo_id              string,
---         zipcode             string,
---         sumlevel            string,
---         geo_name            string,
---         totalpopulation     string,
---         urbanpopulation     string,
---         insideurbanarea     string,
---         insideurbancluster  string,
---         ruralpopulation     string,
---         na                  string,
---         ruralvsurban        string
---         )
---     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
---     STORED AS TEXTFILE
---     LOCATION '{input_path}zipgeo/'
+DROP TABLE IF EXISTS zipgeo;
+CREATE EXTERNAL TABLE zipgeo (
+        geo_id              string,
+        zipcode             string,
+        sumlevel            string,
+        geo_name            string,
+        totalpopulation     string,
+        urbanpopulation     string,
+        insideurbanarea     string,
+        insideurbancluster  string,
+        ruralpopulation     string,
+        na                  string,
+        ruralvsurban        string
+        )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    STORED AS TEXTFILE
+    LOCATION '{input_path}zipgeo/'
+    ;
