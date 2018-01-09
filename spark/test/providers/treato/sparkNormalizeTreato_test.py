@@ -37,7 +37,8 @@ def test_correct_output():
         ('TREATO-A0000003', 'HASH7'),
         ('TREATO-A0000004', 'A01B20'),
         ('TREATO-A0000004', 'HASH5'),
-        ('TREATO-A0000004', 'HASH6')
+        ('TREATO-A0000004', 'HASH6'),
+        ('TREATO-A0000005', 'C7BC7B')
     ]
 
 
