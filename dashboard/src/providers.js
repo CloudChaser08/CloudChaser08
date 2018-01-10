@@ -37,8 +37,7 @@ exports.config = [
     displayName: 'Practice Insight DX',
     providerPrefix: 'practiceinsight',
     schedule: this.schedule.MONTHLY,
-    noAirflowOffset: true,
-    startDate: new Date('2017-01-02'),
+    startDate: new Date('2017-01-16'),
     airflowPipelineName: 'practice_insight_pipeline',
     expectedFilenameRegex: /^.*HV\.data\.837\.[0-9]{4}\.[a-z]{3}\.csv\.gz$/,
     filenameToExecutionDate: function(filename) {
@@ -47,15 +46,18 @@ exports.config = [
         'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
       ];
       var monthNum = (months.indexOf(filename.split('.')[4]) + 1).toString();
-      return filename.split('.')[3] + '-' + helpers.leftZPad(monthNum) + '-02';
+      var date = filename.split('.')[3] + '-' + helpers.leftZPad(monthNum) + '-16';
+      var adjusted = helpers.addMonths(1)(new Date(date));
+      return helpers.formatDate(adjusted);
     },
     executionDateToFilename: function(date) {
+      var adjusted = helpers.addMonths(-1)(date);
       var months = [
         'jan', 'feb', 'mar', 'apr', 'may', 'jun',
         'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
       ];
-      var month = months[date.getMonth()];
-      return 'incoming/practiceinsight/HV.data.837.' + date.getFullYear() + '.' + month + '.csv.gz';
+      var month = months[adjusted.getMonth()];
+      return 'incoming/practiceinsight/HV.data.837.' + adjusted.getFullYear() + '.' + month + '.csv.gz';
     }
   },
   {
