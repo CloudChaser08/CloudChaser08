@@ -1,6 +1,7 @@
 import logging
 import spark.helpers.file_utils as file_utils
 import inspect
+from pyspark.sql import DataFrame
 
 
 class Runner:
@@ -10,6 +11,15 @@ class Runner:
 
     def __init__(self, sqlContext):
         self.sqlContext = sqlContext
+        self._persisted_dfs = {}
+
+        def persist_and_track(inst, df_identifier, *args, **kwargs):
+            df = inst.persist(*args, **kwargs)
+            self.track_persisted_df(df_identifier, df)
+            return df
+
+        DataFrame.persist_and_track = persist_and_track
+        DataFrame.cache_and_track   = persist_and_track
 
     def run_spark_script(self, script, variables=[], source_file_path=None, return_output=False):
         """
@@ -60,3 +70,23 @@ class Runner:
         if return_output:
             return self.sqlContext.sql(query)
         self.sqlContext.sql(query)
+
+    def track_persisted_df(self, df_identifier, persisted_df):
+        old_df = self._persisted_dfs.get(df_identifier)
+
+        self._persisted_dfs[df_identifier] = persisted_df
+
+        if old_df is not None:
+            logging.warning("Persisted DataFrame with identifier {} already \
+                    existed. The old DataFrame will be unpersisted".format(df_identifier))
+            old_df.unpersist()
+
+    def unpersist(self, df_identifier):
+        df = self._persisted_dfs.get(df_identifier)
+
+        if df is None:
+            logging.warning("Persisted DataFrame with identifier {} not found".format(df_identifier))
+        else:
+            df.unpersist()
+            del self._persisted_dfs[df_identifier]
+
