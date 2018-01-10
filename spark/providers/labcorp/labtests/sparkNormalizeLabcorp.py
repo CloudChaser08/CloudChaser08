@@ -107,7 +107,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/labcorp/labtests/spark-output/'
     else:
-        output_path = 's3a://salusv/warehouse/parquet/labtests/2017-11-06/'
+        output_path = 's3a://salusv/warehouse/parquet/labtests/2017-02-16/'
 
     normalized_records_unloader.distcp(output_path)
 
