@@ -34,7 +34,7 @@ DAG_NAME = 'practice_insight_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 3, 16, 8),
+    'start_date': datetime(2018, 1, 16, 8),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
