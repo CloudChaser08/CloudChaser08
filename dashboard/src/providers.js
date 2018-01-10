@@ -47,11 +47,11 @@ exports.config = [
       ];
       var monthNum = (months.indexOf(filename.split('.')[4]) + 1).toString();
       var date = filename.split('.')[3] + '-' + helpers.leftZPad(monthNum) + '-16';
-      var adjusted = helpers.addMonths(-1)(new Date(date));
+      var adjusted = helpers.addMonths(1)(new Date(date));
       return helpers.formatDate(adjusted);
     },
     executionDateToFilename: function(date) {
-      var adjusted = helpers.addMonths(1)(date);
+      var adjusted = helpers.addMonths(-1)(date);
       var months = [
         'jan', 'feb', 'mar', 'apr', 'may', 'jun',
         'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
