@@ -88,4 +88,5 @@ class Runner:
             logging.warning("Persisted DataFrame with identifier {} not found".format(df_identifier))
         else:
             df.unpersist()
+            del self._persisted_dfs[df_identifier]
 
