@@ -81,10 +81,10 @@ SELECT
     NULL                  AS lab_test_desc,
     NULL                  AS lab_test_loinc_cd,
     NULL                  AS lab_test_snomed_cd,
-    REGEXP_REPLACE(
+    TRIM(REGEXP_REPLACE(
         SPLIT(ce.breastcancertype, ',')[n],
         '[-+]', ''
-        )                 AS lab_test_vdr_cd,
+        ))                AS lab_test_vdr_cd,
     'VENDOR'              AS lab_test_vdr_cd_qual,
     NULL                  AS lab_test_alt_cd,
     NULL                  AS lab_test_alt_cd_qual,

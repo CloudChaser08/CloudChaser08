@@ -20,7 +20,8 @@ whitelists = [
     },
     {
         'column_name': 'lab_test_vdr_cd',
-        'domain_name': 'emr_lab_result.lab_test_vdr_cd'
+        'column_name_quals': ['lab_test_vdr_cd_qual'],
+        'domain_name': 'emr_lab_result.lab_test_vdr_cd',
     },
     {
         'column_name': 'lab_result_nm',
@@ -48,8 +49,10 @@ def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
             *[
-                postprocessor.apply_whitelist(sqlc, whitelist['column_name'], whitelist['domain_name'])
-                for whitelist in whtlsts
+                postprocessor.apply_whitelist(
+                    sqlc, whitelist['column_name'], whitelist['domain_name'],
+                    comp_col_names=whitelist.get('column_name_quals')
+                ) for whitelist in whtlsts
             ]
         )(
             emr_priv_common.filter(df, modified_transformer)
