@@ -9,7 +9,10 @@ SELECT
     NULL                 AS hvm_vdr_feed_id,
     NULL                 AS vdr_org_id,
     t.pk                 AS vdr_diag_id,
-    'VENDOR'             AS vdr_diag_id_qual,
+    CASE
+      WHEN t.pk IS NOT NULL
+      THEN 'VENDOR'
+    END                  AS vdr_diag_id_qual,
     mp.hvid              AS hvid,
     mp.yearOfBirth       AS ptnt_birth_yr,
     t.ageAtDiagnosis     AS ptnt_age_num,

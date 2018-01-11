@@ -9,7 +9,10 @@ SELECT
     NULL                  AS hvm_vdr_feed_id,
     NULL                  AS vdr_org_id,
     ts.pk                 AS vdr_proc_id,
-    'VENDOR'              AS vdr_proc_id_qual,
+    CASE
+      WHEN ts.pk IS NOT NULL
+      THEN 'VENDOR'
+    END                   AS vdr_proc_id_qual,
     mp.hvid               AS hvid,
     mp.yearOfBirth        AS ptnt_birth_yr,
     ce.ageAtDiagnosis     AS ptnt_age_num,
@@ -96,3 +99,4 @@ SELECT
 FROM transactions_treatmentsite ts
     LEFT JOIN transactions_cancerepisode ce ON ts.cancerepisodefk = ce.pk
     LEFT JOIN matching_payload mp ON ts.patientfk = mp.claimid
+WHERE ts.treatmentmodality IS NOT NULL

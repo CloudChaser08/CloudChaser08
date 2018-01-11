@@ -11,7 +11,10 @@ SELECT
     NULL                  AS vdr_lab_test_id,
     NULL                  AS vdr_lab_test_id_qual,
     ce.pk                 AS vdr_lab_result_id,
-    'VENDOR'              AS vdr_lab_result_id_qual,
+    CASE
+      WHEN ce.pk IS NOT NULL
+      THEN 'VENDOR'
+    END                   AS vdr_lab_result_id_qual,
     mp.hvid               AS hvid,
     mp.yearOfBirth        AS ptnt_birth_yr,
     ce.ageAtDiagnosis     AS ptnt_age_num,
@@ -82,13 +85,7 @@ SELECT
         SPLIT(ce.breastcancertype, ',')[n],
         '[-+]', ''
         )                 AS lab_test_vdr_cd,
-    CASE
-      WHEN TRIM(REGEXP_REPLACE(
-          SPLIT(ce.breastcancertype, ',')[n],
-          '[-+]', ''
-          )) <> ''
-      THEN 'VENDOR'
-    END                   AS lab_test_vdr_cd_qual,
+    'VENDOR'              AS lab_test_vdr_cd_qual,
     NULL                  AS lab_test_alt_cd,
     NULL                  AS lab_test_alt_cd_qual,
     CASE
