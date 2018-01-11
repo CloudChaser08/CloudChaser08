@@ -56,6 +56,10 @@ def test_test_battery_name_field_is_populated():
         assert r.test_battery_name is not None
 
 
+def test_test_ordered_name_is_populated():
+    assert len(filter(lambda r: r.test_ordered_name is not None, results)) == 12
+
+
 def test_cleanup(spark):
     cleanup(spark)
 

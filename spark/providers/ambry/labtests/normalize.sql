@@ -49,7 +49,7 @@ SELECT
     ),                      -- test_battery_name
     NULL,                   -- test_ordered_local_id
     NULL,                   -- test_ordered_std_id
-    NULL,                   -- test_ordered_name
+    t.genes_tested,         -- test_ordered_name
     NULL,                   -- result_id
     NULL,                   -- result
     NULL,                   -- result_name
