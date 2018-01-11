@@ -228,6 +228,15 @@ def cap_year_of_birth(age, date_service, year_of_birth):
     except:
         return None
 
+
+# Gender filtering
+def clean_up_gender(gender):
+    if gender and str(gender).strip().upper() in constants.genders:
+        return str(gender).strip().upper()
+    else:
+        return 'U'
+
+
 # Mask 3 digit zip codes that have very small populations
 def mask_zip_code(zip_code):
     if zip_code in ["036","102","203","205","369","556","692","821", \
