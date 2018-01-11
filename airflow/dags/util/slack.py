@@ -6,9 +6,10 @@ def send_message(channel, text=None, attachment=None):
         raise Exception("Slack message must contain either text or attachment")
 
     api_params = {
-        'channel'  : channel,
-        'username' : 'Airflow',
-        'icon_url' : 'https://airflow.incubator.apache.org/_images/pin_large.png'
+        'channel'    : channel,
+        'username'   : 'Airflow',
+        'icon_url'   : 'https://airflow.incubator.apache.org/_images/pin_large.png',
+        'link_names' : True
     }
 
     if attachment is not None:
