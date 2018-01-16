@@ -5,6 +5,9 @@ from botocore.exceptions import ClientError
 from datetime import datetime, timedelta
 import hvpipeline.models as pipeline_models
 import hvpipeline.db as pipeline_db
+import hvpipeline.helpes.dates as dates_helper
+
+from croniter import croniter
 
 def lambda_handler(event, context):
     for rec in event['Records']:
@@ -33,12 +36,19 @@ def lambda_handler(event, context):
     pipeline_db.lock(session, pipeline_models.FileArrivalLog)
     try:
         for conf in matching_configurations:
+            feed_conf = session.query(pipeline_models.DataFeedConfiguration).\
+                filter_by(id=conf.id)
+
+            arrival_status = pipeline_models.FILE_ARRIVAL_STATUS.ARRIVED_ON_TIME
+            if not dates_helper.is_file_on_time(file_date, feed_conf.cron_schedule):
+                arrival_status = pipeline_models.FILE_ARRIVAL_STATUS.ARRIVED_LATE
+
             new_file = pipeline_models.FileArrivalLog(
                     s3_key=key,
                     data_feed_file_configuration_id=conf.id
                     received_dt=datetime.utcnow(),
                     batch_dt=file_date,
-                    status=pipeline_models.FILE_ARRIVAL_STATUS.ARRIVED_ON_TIME
+                    status=arrival_status
             )
 
             session.add(new_file)
