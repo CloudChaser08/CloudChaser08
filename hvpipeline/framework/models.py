@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Enum
 from sqlalchemy.ext.declarative import declarative_base  
 import db as pipeline_db
 import datetime
@@ -19,7 +19,7 @@ class FileArrivalLog(base):
             ForeignKey('data_feed_file_configuration.id'), nullable=False)
     received_dt = Column(DateTime)
     batch_dt = Column(DateTime, nullable=False)
-    status = Column(String, nullable=False)
+    status = Column(Enum(FILE_ARRIVAL_STATUS), nullable=False)
 
 class DataFeedConfiguration(base):
     __tablename__ = "data_feed_configuration"
