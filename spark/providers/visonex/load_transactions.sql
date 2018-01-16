@@ -12,7 +12,7 @@ CREATE EXTERNAL TABLE address (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {address_input}
+    LOCATION '{input_path}address/'
     ;
 
 DROP TABLE IF EXISTS clinicpreference;
@@ -31,7 +31,7 @@ CREATE EXTERNAL TABLE clinicpreference (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {clinicpreference_input}
+    LOCATION '{input_path}clinicpreference/'
     ;
 
 DROP TABLE IF EXISTS dialysistraining;
@@ -54,7 +54,7 @@ CREATE EXTERNAL TABLE dialysistraining (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {dialysistraining_input}
+    LOCATION '{input_path}dialysistraining/'
     ;
 
 DROP TABLE IF EXISTS dialysistreatment;
@@ -136,7 +136,7 @@ CREATE EXTERNAL TABLE dialysistreatment (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {dialysistreatment_input}
+    LOCATION '{input_path}dialysistreatment/'
     ;
 
 DROP TABLE IF EXISTS facilityadmitdischarge;
@@ -164,7 +164,7 @@ CREATE EXTERNAL TABLE facilityadmitdischarge (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {facilityadmitdischarge_input}
+    LOCATION '{input_path}facilityadmitdischarge/'
     ;
 
 DROP TABLE IF EXISTS hospitalization;
@@ -193,7 +193,7 @@ CREATE EXTERNAL TABLE hospitalization (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {hospitalization_input}
+    LOCATION '{input_path}hospitalization/'
     ;
 
 DROP TABLE IF EXISTS immunization;
@@ -230,7 +230,7 @@ CREATE EXTERNAL TABLE immunization (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {immunization_input}
+    LOCATION '{input_path}immunization/'
     ;
 
 DROP TABLE IF EXISTS insurance;
@@ -263,7 +263,7 @@ CREATE EXTERNAL TABLE insurance (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {insurance_input}
+    LOCATION '{input_path}insurance/'
     ;
 
 DROP TABLE IF EXISTS labidlist;
@@ -282,7 +282,7 @@ CREATE EXTERNAL TABLE labidlist (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {labidlist_input}
+    LOCATION '{input_path}labidlist/'
     ;
 
 DROP TABLE IF EXISTS labpanelsdrawn;
@@ -312,7 +312,7 @@ CREATE EXTERNAL TABLE labpanelsdrawn (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {labpanelsdrawn_input}
+    LOCATION '{input_path}labpanelsdrawn/'
     ;
 
 DROP TABLE IF EXISTS labresult;
@@ -350,7 +350,7 @@ CREATE EXTERNAL TABLE labresult (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {labresult_input}
+    LOCATION '{input_path}labresult/'
     ;
 
 DROP TABLE IF EXISTS medication;
@@ -362,7 +362,7 @@ CREATE EXTERNAL TABLE medication (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {medication_input}
+    LOCATION '{input_path}medication/'
     ;
 
 DROP TABLE IF EXISTS medicationgroup;
@@ -380,7 +380,7 @@ CREATE EXTERNAL TABLE medicationgroup (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {medicationgroup_input}
+    LOCATION '{input_path}medicationgroup/'
     ;
 
 DROP TABLE IF EXISTS modalitychangehistorycrownweb;
@@ -401,7 +401,7 @@ CREATE EXTERNAL TABLE modalitychangehistorycrownweb (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {modalitychangehistorycrownweb_input}
+    LOCATION '{input_path}modalitychangehistorycrownweb/'
     ;
 
 DROP TABLE IF EXISTS nursinghomehistory;
@@ -421,7 +421,7 @@ CREATE EXTERNAL TABLE nursinghomehistory (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {nursinghomehistory_input}
+    LOCATION '{input_path}nursinghomehistory/'
     ;
 
 DROP TABLE IF EXISTS patientaccess;
@@ -447,7 +447,7 @@ CREATE EXTERNAL TABLE patientaccess (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientaccess_input}
+    LOCATION '{input_path}patientaccess/'
     ;
 
 DROP TABLE IF EXISTS patientaccess_examproc;
@@ -480,7 +480,7 @@ CREATE EXTERNAL TABLE patientaccess_examproc (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientaccess_examproc_input}
+    LOCATION '{input_path}patientaccess_examproc/'
     ;
 
 DROP TABLE IF EXISTS patientaccess_otheraccessevent;
@@ -503,7 +503,7 @@ CREATE EXTERNAL TABLE patientaccess_otheraccessevent (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientaccess_otheraccessevent_input}
+    LOCATION '{input_path}patientaccess_otheraccessevent/'
     ;
 
 DROP TABLE IF EXISTS patientaccess_placedrecorded;
@@ -535,7 +535,7 @@ CREATE EXTERNAL TABLE patientaccess_placedrecorded (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientaccess_placedrecorded_input}
+    LOCATION '{input_path}patientaccess_placedrecorded/'
     ;
 
 DROP TABLE IF EXISTS patientaccess_removed;
@@ -560,7 +560,7 @@ CREATE EXTERNAL TABLE patientaccess_removed (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientaccess_removed_input}
+    LOCATION '{input_path}patientaccess_removed/'
     ;
 
 DROP TABLE IF EXISTS patientallergy;
@@ -584,7 +584,7 @@ CREATE EXTERNAL TABLE patientallergy (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientallergy_input}
+    LOCATION '{input_path}patientallergy/'
     ;
 
 DROP TABLE IF EXISTS patientcms2728;
@@ -659,7 +659,7 @@ CREATE EXTERNAL TABLE patientcms2728 (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientcms2728_input}
+    LOCATION '{input_path}patientcms2728/'
     ;
 
 DROP TABLE IF EXISTS patientcomorbidityandtransplantstate;
@@ -698,7 +698,7 @@ CREATE EXTERNAL TABLE patientcomorbidityandtransplantstate (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientcomorbidityandtransplantstate_input}
+    LOCATION '{input_path}patientcomorbidityandtransplantstate/'
     ;
 
 DROP TABLE IF EXISTS patientdata;
@@ -739,7 +739,7 @@ CREATE EXTERNAL TABLE patientdata (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientdata_input}
+    LOCATION '{input_path}patientdata/'
     ;
 
 DROP TABLE IF EXISTS patientdiagcodes;
@@ -765,7 +765,7 @@ CREATE EXTERNAL TABLE patientdiagcodes (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientdiagcodes_input}
+    LOCATION '{input_path}patientdiagcodes/'
     ;
 
 DROP TABLE IF EXISTS patientdialysisprescription;
@@ -802,7 +802,7 @@ CREATE EXTERNAL TABLE patientdialysisprescription (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientdialysisprescription_input}
+    LOCATION '{input_path}patientdialysisprescription/'
     ;
 
 DROP TABLE IF EXISTS patientdialysisrxhemo;
@@ -856,7 +856,7 @@ CREATE EXTERNAL TABLE patientdialysisrxhemo (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientdialysisrxhemo_input}
+    LOCATION '{input_path}patientdialysisrxhemo/'
     ;
 
 DROP TABLE IF EXISTS patientdialysisrxpd;
@@ -883,7 +883,7 @@ CREATE EXTERNAL TABLE patientdialysisrxpd (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientdialysisrxpd_input}
+    LOCATION '{input_path}patientdialysisrxpd/'
     ;
 
 DROP TABLE IF EXISTS patientdialysisrxpdexchanges;
@@ -911,7 +911,7 @@ CREATE EXTERNAL TABLE patientdialysisrxpdexchanges (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientdialysisrxpdexchanges_input}
+    LOCATION '{input_path}patientdialysisrxpdexchanges/'
     ;
 
 DROP TABLE IF EXISTS patientevent;
@@ -934,7 +934,7 @@ CREATE EXTERNAL TABLE patientevent (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientevent_input}
+    LOCATION '{input_path}patientevent/'
     ;
 
 DROP TABLE IF EXISTS patientfluidweightmanagement;
@@ -966,7 +966,7 @@ CREATE EXTERNAL TABLE patientfluidweightmanagement (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientfluidweightmanagement_input}
+    LOCATION '{input_path}patientfluidweightmanagement/'
     ;
 
 DROP TABLE IF EXISTS patientheighthistory;
@@ -990,7 +990,7 @@ CREATE EXTERNAL TABLE patientheighthistory (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientheighthistory_input}
+    LOCATION '{input_path}patientheighthistory/'
     ;
 
 DROP TABLE IF EXISTS patientinfection;
@@ -1033,7 +1033,7 @@ CREATE EXTERNAL TABLE patientinfection (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientinfection_input}
+    LOCATION '{input_path}patientinfection/'
     ;
 
 DROP TABLE IF EXISTS patientinfection_laborganism;
@@ -1053,7 +1053,7 @@ CREATE EXTERNAL TABLE patientinfection_laborganism (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientinfection_laborganism_input}
+    LOCATION '{input_path}patientinfection_laborganism/'
     ;
 
 DROP TABLE IF EXISTS patientinfection_laborganismdrug;
@@ -1073,7 +1073,7 @@ CREATE EXTERNAL TABLE patientinfection_laborganismdrug (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientinfection_laborganismdrug_input}
+    LOCATION '{input_path}patientinfection_laborganismdrug/'
     ;
 
 DROP TABLE IF EXISTS patientinfection_labresultculture;
@@ -1097,7 +1097,7 @@ CREATE EXTERNAL TABLE patientinfection_labresultculture (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientinfection_labresultculture_input}
+    LOCATION '{input_path}patientinfection_labresultculture/'
     ;
 
 DROP TABLE IF EXISTS patientinfection_medication;
@@ -1115,7 +1115,7 @@ CREATE EXTERNAL TABLE patientinfection_medication (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientinfection_medication_input}
+    LOCATION '{input_path}patientinfection_medication/'
     ;
 
 DROP TABLE IF EXISTS patientinstabilityhistory;
@@ -1140,7 +1140,7 @@ CREATE EXTERNAL TABLE patientinstabilityhistory (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientinstabilityhistory_input}
+    LOCATION '{input_path}patientinstabilityhistory/'
     ;
 
 DROP TABLE IF EXISTS patientmasterscheduleheader;
@@ -1185,7 +1185,7 @@ CREATE EXTERNAL TABLE patientmasterscheduleheader (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientmasterscheduleheader_input}
+    LOCATION '{input_path}patientmasterscheduleheader/'
     ;
 
 DROP TABLE IF EXISTS patientmedadministered;
@@ -1251,7 +1251,7 @@ CREATE EXTERNAL TABLE patientmedadministered (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientmedadministered_input}
+    LOCATION '{input_path}patientmedadministered/'
     ;
 
 DROP TABLE IF EXISTS patientmednotgiven;
@@ -1319,7 +1319,7 @@ CREATE EXTERNAL TABLE patientmednotgiven (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientmednotgiven_input}
+    LOCATION '{input_path}patientmednotgiven/'
     ;
 
 DROP TABLE IF EXISTS patientmedprescription;
@@ -1384,11 +1384,11 @@ CREATE EXTERNAL TABLE patientmedprescription (
         eprescribed                      string,
         eprescribedquantity              string,
         eprescribedrefill                string,
-        eprescribeddate                  string	
+        eprescribeddate                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    STORED AS TEXTFILE	
-    LOCATION {patientmedprescription_input}
+    STORED AS TEXTFILE
+    LOCATION '{input_path}patientmedprescription/'
     ;
 
 DROP TABLE IF EXISTS patientstatushistory;
@@ -1410,7 +1410,7 @@ CREATE EXTERNAL TABLE patientstatushistory (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {patientstatushistory_input}
+    LOCATION '{input_path}patientstatushistory/'
     ;
 
 DROP TABLE IF EXISTS problemlist;
@@ -1438,7 +1438,7 @@ CREATE EXTERNAL TABLE problemlist (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {problemlist_input}
+    LOCATION '{input_path}problemlist/'
     ;
 
 DROP TABLE IF EXISTS sodiumufprofile;
@@ -1455,7 +1455,7 @@ CREATE EXTERNAL TABLE sodiumufprofile (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {sodiumufprofile_input}
+    LOCATION '{input_path}sodiumufprofile/'
     ;
 
 DROP TABLE IF EXISTS stategeo;
@@ -1470,7 +1470,7 @@ CREATE EXTERNAL TABLE stategeo (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {stategeo_input}
+    LOCATION '{input_path}stategeo/'
     ;
 
 DROP TABLE IF EXISTS zipgeo;
@@ -1489,6 +1489,5 @@ CREATE EXTERNAL TABLE zipgeo (
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     STORED AS TEXTFILE
-    LOCATION {zipgeo_input}
+    LOCATION '{input_path}zipgeo/'
     ;
-
