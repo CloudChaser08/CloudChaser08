@@ -43,7 +43,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    payload_loader.load(runner, matching_path, ['claimId'])
+    payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
     postprocessor.compose(
         postprocessor.add_input_filename('source_file_name'), postprocessor.trimmify, postprocessor.nullify
@@ -61,7 +61,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.add_universal_columns(
             feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=None, model_version_number='04'
         ),
-        priv_labtests.filter(runner.sqlContext, additional_transforms={
+        postprocessor.apply_date_cap(
+            runner.sqlContext, 'date_service', date_input, FEED_ID, 'EARLIEST_VALID_SERVICE_DATE'
+        ),
+        postprocessor.apply_date_cap(
+            runner.sqlContext, 'date_report', date_input, FEED_ID, 'EARLIEST_VALID_SERVICE_DATE'
+        ),
+        lambda df: priv_labtests.filter(df, additional_transforms={
             'diagnosis_code': {
                 'func': lambda c: c, 'args': ['diagnosis_code']
             }

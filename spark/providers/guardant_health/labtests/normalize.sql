@@ -22,7 +22,7 @@ SELECT
             ), 0, 3) AS patient_zip3,
     COALESCE(
         SUBSTR(REGEXP_REPLACE(mp.state, '"', ''), 0, 2),
-        SUBSTR(t.state, 0, 2)
+        SUBSTR(t.patient_state, 0, 2)
         ) AS patient_state,
     EXTRACT_DATE(
         t.report_date,
@@ -47,18 +47,27 @@ SELECT
     NULL AS result_id,
     ARRAY(
         t.chromosome, t.exon, t.mutation_aa, t.mutation_nt, t.maf_percentage,
-        t.ref_seq_transcript_Id, t.genomic_position, t.splice_effect, t.cdna,
+        t.ref_seq_transcript_id, t.genomic_position, t.splice_effect, t.cdna,
         t.indel_type, t.fusion_gene_n, t.fusion_position_a, t.fusion_position_b,
         t.fusion_direction_a, t.fusion_direction_b, t.fusion_downstram_gene,
         t.cnv_copy_number, t.cosmic_id, t.dbsnp_id
         )[re.n] AS result,
-    ARRAY(
-        'chromosome', 'exon', 'mutation_aa', 'mutation_nt', 'maf_percentage',
-        'ref_seq_transcript_Id', 'genomic_position', 'splice_effect', 'cdna',
-        'indel_type', 'fusion_gene_n', 'fusion_position_a', 'fusion_position_b',
-        'fusion_direction_a', 'fusion_direction_b', 'fusion_downstram_gene',
-        'cnv_copy_number', 'cosmic_id', 'dbsnp_id'
-        )[re.n] AS result_name,
+    CASE
+      WHEN ARRAY(
+          t.chromosome, t.exon, t.mutation_aa, t.mutation_nt, t.maf_percentage,
+          t.ref_seq_transcript_id, t.genomic_position, t.splice_effect, t.cdna,
+          t.indel_type, t.fusion_gene_n, t.fusion_position_a, t.fusion_position_b,
+          t.fusion_direction_a, t.fusion_direction_b, t.fusion_downstram_gene,
+          t.cnv_copy_number, t.cosmic_id, t.dbsnp_id
+          )[re.n] IS NOT NULL
+      THEN ARRAY(
+          'chromosome', 'exon', 'mutation_aa', 'mutation_nt', 'maf_percentage',
+          'ref_seq_transcript_id', 'genomic_position', 'splice_effect', 'cdna',
+          'indel_type', 'fusion_gene_n', 'fusion_position_a', 'fusion_position_b',
+          'fusion_direction_a', 'fusion_direction_b', 'fusion_downstram_gene',
+          'cnv_copy_number', 'cosmic_id', 'dbsnp_id'
+          )[re.n]
+    END AS result_name,
     t.variant_type AS result_unit_of_measure,
     NULL AS result_desc,
     NULL AS result_comments,
@@ -116,14 +125,14 @@ WHERE UPPER(COALESCE(t.physician_country, 'UNITED STATES')) = 'UNITED STATES'
     AND (
         ARRAY(
             t.chromosome, t.exon, t.mutation_aa, t.mutation_nt, t.maf_percentage,
-            t.ref_seq_transcript_Id, t.genomic_position, t.splice_effect, t.cdna,
+            t.ref_seq_transcript_id, t.genomic_position, t.splice_effect, t.cdna,
             t.indel_type, t.fusion_gene_n, t.fusion_position_a, t.fusion_position_b,
             t.fusion_direction_a, t.fusion_direction_b, t.fusion_downstram_gene,
             t.cnv_copy_number, t.cosmic_id, t.dbsnp_id
             )[re.n] IS NOT NULL OR (
             COALESCE(
                 t.chromosome, t.exon, t.mutation_aa, t.mutation_nt, t.maf_percentage,
-                t.ref_seq_transcript_Id, t.genomic_position, t.splice_effect, t.cdna,
+                t.ref_seq_transcript_id, t.genomic_position, t.splice_effect, t.cdna,
                 t.indel_type, t.fusion_gene_n, t.fusion_position_a, t.fusion_position_b,
                 t.fusion_direction_a, t.fusion_direction_b, t.fusion_downstram_gene,
                 t.cnv_copy_number, t.cosmic_id, t.dbsnp_id
