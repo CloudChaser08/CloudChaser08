@@ -27,7 +27,7 @@ DAG_NAME = 'guardant_health_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 4, 13, 14),
+    'start_date': datetime(2017, 12, 11, 14),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -35,11 +35,11 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 14 * * *",
+    schedule_interval="0 14 * * 0",
     default_args=default_args
 )
 
-GUARDANT_HEALTH_DAY_OFFSET = -1
+GUARDANT_HEALTH_DAY_OFFSET = 7
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -127,7 +127,7 @@ fetch_transaction = SubDagOperator(
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                file_name_template, day_offset=GUARDANT_HEALTH_DAY_OFFSET
+                TRANSACTION_FILE_NAME_TEMPLATE, day_offset=GUARDANT_HEALTH_DAY_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : S3_TRANSACTION_RAW_URL.split('/')[2]
@@ -181,7 +181,7 @@ split_transaction = SubDagOperator(
 )
 
 
-def clean_up_workspace_step(task_id, template):
+def clean_up_workspace_step(template):
     def execute(ds, **kwargs):
         check_call([
             'rm', '-rf', date_utils.insert_date_into_template(template, kwargs)
