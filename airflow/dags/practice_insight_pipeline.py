@@ -46,7 +46,7 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-PRACTICE_INSIGHT_OFFSET = 1
+PRACTICE_INSIGHT_OFFSET = 0
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
