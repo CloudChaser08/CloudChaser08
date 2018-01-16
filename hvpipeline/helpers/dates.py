@@ -18,3 +18,20 @@ def is_file_on_time(file_date, cron_schedule, grace_period):
         return True
 
     return False
+
+def get_exec_date(file_date, date_offset, date_offset_qualifier):
+    if date_offset_qualifier == 'weeks':
+        date_offset_qualifier = 'days'
+        date_offset *= 7
+
+    exec_date = None
+    if date_offset_qualifier in ('days', 'hours'):
+        exec_date = file_date + timedelta(**{date_offset_qualifier : date_offset})
+    elif date_offset_qualifier == 'months':
+        # Hacky way of adding/substracting months
+        day = file_date.day
+        file_date.replace(day=15)
+        exec_date = file_date + timedelta(days=date_offset * 30)
+        exec_date.replace(day=day)
+
+    return exec_date

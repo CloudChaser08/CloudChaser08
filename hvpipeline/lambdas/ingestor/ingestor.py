@@ -87,14 +87,7 @@ def lambda_handler(event, context):
             date_offset_qualifier = feed_config.dag_date_offset_qualifier
             date_offset = feed_config.dag_date_offset
 
-        if date_offset_qualifier in ('days', 'hours'):
-            exec_date = file_date + timedelta(**{date_offset_qualifier : date_offset})
-        else:
-            # Hacky way of adding/substracting months
-            day = file_date.day
-            file_date.replace(day=15)
-            exec_date = file_date + timedelta(days=date_offset * 30)
-            exec_date.replace(day=day)
+        exec_date = dates_helper.get_exec_date(file_date, date_offset, date_offset_qualifier)
 
         _trigger_dag(provider_config.dag_name, datetime.strftime(exec_date, '%Y-%m-%dT%H%M%S'))
 
