@@ -30,7 +30,7 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
         - end_date: end of date range
         - provider_conf: Dict of the config
     Output:
-        - key_stats: a Dictionary of the key stats for 
+        - key_stats: a Dictionary of the key stats for
                      patient, record, and row
     '''
     date_col = provider_conf['date_field']
@@ -38,7 +38,9 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
     record_attribute = provider_conf.get('record_attribute', '*')
     row_attribute = '*'
 
-    total_patient = _get_row_count(df, earliest_date, end_date, 
+    start_date = max(earliest_date, start_date)
+
+    total_patient = _get_row_count(df, earliest_date, end_date,
                                    patient_attribute, date_col)
     total_24_month_patient = _get_row_count(df, start_date, end_date,
                                    patient_attribute, date_col)
@@ -83,6 +85,4 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
         'yearly_avg_record': (total_record / days) * 365,
     }
 
-    return key_stats 
-
-
+    return key_stats
