@@ -32,7 +32,7 @@ class Runner:
             # there was no source_file_path provided, derive the file
             # path to the calling module's file using inspect.stack()
             source_file_path if source_file_path
-            else inspect.getmodule(inspect.stack()[1][0]).__file__,
+            else inspect.getframeinfo(inspect.stack()[1][0]).filename,
             script
         )
 
