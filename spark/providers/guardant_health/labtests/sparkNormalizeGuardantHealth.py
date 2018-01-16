@@ -1,4 +1,5 @@
 import argparse
+import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.providers.guardant_health.labtests.transaction_schemas import schema as transaction_schema
@@ -77,9 +78,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ).createOrReplaceTempView('normalized_labtests')
 
     if not test:
+        hvm_historical_date = postprocessor.coalesce_dates(
+            runner.sqlContext,
+            FEED_ID,
+            datetime.date(1901, 1, 1),
+            'HVM_AVAILABLE_HISTORY_START_DATE',
+            'EARLIEST_VALID_SERVICE_DATE'
+        )
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'labtests', 'lab_common_model_v4', FEED_ID,
-            'normalized_labtests', 'date_input', date_input
+            spark, runner, 'labtests', 'lab_common_model_v4.sql', 'guardant_health',
+            'normalized_labtests', 'date_service', date_input, hvm_historical_date=datetime.datetime(
+                hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
+            )
         )
 
 
