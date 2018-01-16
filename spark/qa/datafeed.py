@@ -96,10 +96,11 @@ class Datafeed:
         this datafeed.
         """
         logging.getLogger("py4j").setLevel(logging.ERROR)
-        original_stdout = sys.stdout
 
-        if output_file:
-            sys.stdout = open(output_file, 'w')
+        # point stdout to output_file if it was set
+        original_stdout = sys.stdout
+        output_file_handle = open(output_file, 'w') if output_file else sys.stdout
+        sys.stdout = output_file_handle
 
         pytest.main([
             '-v',
@@ -114,7 +115,10 @@ class Datafeed:
             '-r', 'p f s'
         ])
 
-        sys.stdout = original_stdout
+        # close file and reset stdout
+        if output_file:
+            output_file_handle.close()
+            sys.stdout = original_stdout
 
 
 def build_test_list(default_tests, skip_tests, additional_tests):
