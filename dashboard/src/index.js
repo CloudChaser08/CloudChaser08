@@ -11,11 +11,6 @@ var airflow = require('./airflow.js');
 var providers = require('./providers.js');
 var helpers = require('./helpers.js');
 
-// HTML to be displayed
-var html = fs.readFileSync(path.join(__dirname, './public/index.html'), 'utf-8')
-    .replace('{{CSS}}', fs.readFileSync(path.join(__dirname, './public/style.css'), 'utf-8'))
-    .replace('{{JAVASCRIPT}}', fs.readFileSync(path.join(__dirname, './public/main.js'), 'utf-8'));
-
 /**
  * Combines airflow data for a single provider to the list of files in
  * the s3 incoming bucket for that provider
@@ -112,6 +107,13 @@ function estimateProviderHealth(providerData, conf) {
  * Main entry point for this lambda job
  */
 exports.handler = function(event, context) {
+
+  // HTML to be displayed
+  var html = fs.readFileSync(path.join(__dirname, './public/index.html'), 'utf-8')
+      .replace('{{CSS}}', fs.readFileSync(path.join(__dirname, './public/style.css'), 'utf-8'))
+      .replace('{{JAVASCRIPT}}', fs.readFileSync(path.join(__dirname, './public/main.js'), 'utf-8'))
+      .replace('{{TITLE}}', event.dev ? 'Provider Status Dashboard - Dev' : 'Provider Status Dashboard')
+      .replace('{{TITLE}}', event.dev ? 'Provider Status Dashboard - Dev' : 'Provider Status Dashboard');
 
   // assemble all asynchronous calls
   var calls = s3.getS3Calls();
