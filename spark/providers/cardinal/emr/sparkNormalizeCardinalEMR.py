@@ -135,13 +135,22 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
-    runner.run_spark_script('load_transactions.sql', [
-        ['demographics_input_path', demographics_input_path],
-        ['diagnosis_input_path', diagnosis_input_path],
-        ['encounter_input_path', encounter_input_path],
-        ['lab_input_path', lab_input_path],
-        ['dispense_input_path', dispense_input_path]
-    ])
+    if date_input <= '2017-12-27':
+        runner.run_spark_script('load_transactions.sql', [
+            ['demographics_input_path', demographics_input_path],
+            ['diagnosis_input_path', diagnosis_input_path],
+            ['encounter_input_path', encounter_input_path],
+            ['lab_input_path', lab_input_path],
+            ['dispense_input_path', dispense_input_path]
+        ])
+    else:
+        runner.run_spark_script('load_transactions_v2.sql', [
+            ['demographics_input_path', demographics_input_path],
+            ['diagnosis_input_path', diagnosis_input_path],
+            ['encounter_input_path', encounter_input_path],
+            ['lab_input_path', lab_input_path],
+            ['dispense_input_path', dispense_input_path]
+        ])
 
     transaction_tables = [
         'demographics_transactions', 'diagnosis_transactions', 'encounter_transactions',
