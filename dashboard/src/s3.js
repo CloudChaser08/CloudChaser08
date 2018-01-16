@@ -36,7 +36,10 @@ exports.getS3Calls = function() {
           if (err) callback(err);
           else {
             results = results.concat(data.Contents.map(function(key) {
-              return key.Key;
+              return {
+                "key": key.Key,
+                "date": key.LastModified
+              };
             }));
             if (!data.IsTruncated) {
               // attach provider id to a list of relevant files found
@@ -44,7 +47,7 @@ exports.getS3Calls = function() {
               var output = {
                 providerId: providerConf.id,
                 files: results.filter(function(filename) {
-                  return providerConf.expectedFilenameRegex.test(filename);
+                  return providerConf.expectedFilenameRegex.test(filename.key);
                 })
               };
               callback(null, output);

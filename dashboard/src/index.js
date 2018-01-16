@@ -66,12 +66,14 @@ function buildFullDataset(airflowResults, providerIncoming) {
 
     // grab list of incoming files for this execution date
     var incomingFiles = providerIncoming.files.filter(function(file) {
-      return providerConf.filenameToExecutionDate(file) == helpers.formatDate(exDate);
+      return providerConf.filenameToExecutionDate(file.key) == helpers.formatDate(exDate);
     });
 
     return {
       executionDate: helpers.formatDate(exDate),
-      incomingFiles: incomingFiles,
+      incomingFiles: incomingFiles.map(function(f) {
+        return f.key;
+      }),
       expectedFile: getExpectedFilename(exDate),
       ingested: ingested
     };
