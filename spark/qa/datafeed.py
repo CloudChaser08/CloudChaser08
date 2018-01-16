@@ -1,5 +1,6 @@
 import pytest
 import logging
+import sys
 
 import spark.qa.conf as qa_conf
 import spark.qa.datatypes as types
@@ -45,7 +46,7 @@ def state_validation(column_name):
 
 
 def age_validation(column_name):
-    return Validation(column_name, [str(num) for num in range(0, 85)])
+    return Validation(column_name, [str(num) for num in range(0, 85) + [90]])
 
 
 class Datafeed:
@@ -89,11 +90,18 @@ class Datafeed:
         self.validations = validations if validations else []
         self.unique_match_pairs = unique_match_pairs if unique_match_pairs else []
 
-    def run_checks(self):
+    def run_checks(self, output_file=None):
         """
         Kick off a pytest session that will run all checks relevant to
         this datafeed.
         """
+        logging.getLogger("py4j").setLevel(logging.ERROR)
+
+        # point stdout to output_file if it was set
+        original_stdout = sys.stdout
+        output_file_handle = open(output_file, 'w') if output_file else sys.stdout
+        sys.stdout = output_file_handle
+
         pytest.main([
             '-v',
 
@@ -106,6 +114,12 @@ class Datafeed:
             # summarize passed, failed and skipped tests
             '-r', 'p f s'
         ])
+
+        # close file and reset stdout
+        if output_file:
+            output_file_handle.close()
+            sys.stdout = original_stdout
+
 
 def build_test_list(default_tests, skip_tests, additional_tests):
     """
@@ -124,15 +138,15 @@ def build_test_list(default_tests, skip_tests, additional_tests):
         Given a test, return a string id for that test that can be used to
         compare against the skip test list
         """
-        if type(test) is str:
+        if isinstance(test, str):
             return test
-        elif type(test) is Comparison:
+        elif isinstance(test, Comparison):
             return test.target_column_name
-        elif type(test) is Validation:
+        elif isinstance(test, Validation):
             return test.column_name
 
     return [
-        test for test in default_tests if get_test_id(test) not in skip_tests
+        test for test in default_tests if test and get_test_id(test) not in skip_tests
     ] + additional_tests
 
 
@@ -286,15 +300,15 @@ def standard_pharmacyclaims_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('procedure_code', source_procedure_code_full_name, 'procedure_code')
+            Comparison(source_procedure_code_full_name, 'procedure_code')
             if source_procedure_code_full_name else None,
-            Comparison('ndc_code', source_ndc_code_full_name, 'ndc_code')
+            Comparison(source_ndc_code_full_name, 'ndc_code')
             if source_ndc_code_full_name else None,
-            Comparison('prov_prescribing_npi', source_prov_prescribing_npi_full_name, 'prov_prescribing_npi')
+            Comparison(source_prov_prescribing_npi_full_name, 'prov_prescribing_npi')
             if source_prov_prescribing_npi_full_name else None,
-            Comparison('bin_number', source_bin_number_full_name, 'bin_number')
+            Comparison(source_bin_number_full_name, 'bin_number')
             if source_bin_number_full_name else None,
-            Comparison('payer_name', source_payer_name_full_name, 'payer_name')
+            Comparison(source_payer_name_full_name, 'payer_name')
             if source_payer_name_full_name else None,
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs=skip_unique_match_pairs
@@ -344,15 +358,15 @@ def standard_labtests_datafeed(
         skip_validations=skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('procedure_code', source_procedure_code_full_name, 'procedure_code')
+            Comparison(source_procedure_code_full_name, 'procedure_code')
             if source_procedure_code_full_name else None,
-            Comparison('ordering_npi', source_ordering_npi_full_name, 'ordering_npi')
+            Comparison(source_ordering_npi_full_name, 'ordering_npi')
             if source_ordering_npi_full_name else None,
-            Comparison('loinc_code', source_loinc_code_full_name, 'loinc_code')
+            Comparison(source_loinc_code_full_name, 'loinc_code')
             if source_loinc_code_full_name else None,
-            Comparison('test_ordered_name', source_test_ordered_name_full_name, 'test_ordered_name')
+            Comparison(source_test_ordered_name_full_name, 'test_ordered_name')
             if source_test_ordered_name_full_name else None,
-            Comparison('payer_name', source_payer_name_full_name, 'payer_name')
+            Comparison(source_payer_name_full_name, 'payer_name')
             if source_payer_name_full_name else None,
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs=skip_unique_match_pairs
@@ -393,9 +407,9 @@ def standard_events_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('event_count', source_event_count_full_name, 'event_count')
+            Comparison(source_event_count_full_name, 'event_count')
             if source_event_count_full_name else None,
-            Comparison('event_val', source_event_val_full_name, 'event_val')
+            Comparison(source_event_val_full_name, 'event_val')
             if source_event_val_full_name else None,
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs=skip_unique_match_pairs
@@ -434,7 +448,7 @@ def standard_enrollment_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('benefit_type', source_benefit_type_full_name, 'benefit_type')
+            Comparison(source_benefit_type_full_name, 'benefit_type')
             if source_benefit_type_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs=skip_unique_match_pairs
@@ -478,8 +492,7 @@ def emr_datafeed(
     return Datafeed(
         datatype, source_data, target_data,
         target_full_fill_columns = build_test_list([
-            'row_id', 'crt_dt', 'mdl_vrsn_num', 'data_set_nm', 'hvm_vdr_feed_id',
-            'hvm_vdr_id', 'part_hvm_vdr_feed_id', 'part_mth'
+            'row_id', 'crt_dt', 'mdl_vrsn_num', 'data_set_nm', 'hvm_vdr_feed_id', 'hvm_vdr_id'
         ], skip_target_full_fill_columns, additional_target_full_fill_columns),
         validations=build_test_list([
             gender_validation('ptnt_gender_cd'),
@@ -487,8 +500,8 @@ def emr_datafeed(
             age_validation('ptnt_age_num')
         ], skip_validations, additional_validations),
         unique_match_pairs=build_test_list([
-            Comparison('enc_id', source_enc_id_full_name, 'enc_id') if source_enc_id_full_name else None,
-            Comparison('hvid', source_hvid_full_name, 'hvid') if source_hvid_full_name else None
+            Comparison(source_enc_id_full_name, 'enc_id') if source_enc_id_full_name else None,
+            Comparison(source_hvid_full_name, 'hvid') if source_hvid_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs)
     )
 
@@ -534,7 +547,7 @@ def emr_encounter_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('enc_typ_cd', source_enc_typ_cd_full_name, 'enc_typ_cd')
+            Comparison(source_enc_typ_cd_full_name, 'enc_typ_cd')
             if source_enc_typ_cd_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs = skip_unique_match_pairs
@@ -622,11 +635,11 @@ def emr_procedure_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('proc_cd', source_proc_cd_full_name, 'proc_cd')
+            Comparison(source_proc_cd_full_name, 'proc_cd')
             if source_proc_cd_full_name else None,
-            Comparison('proc_cd_1_modfr', source_proc_cd_1_modfr_full_name, 'proc_cd_1_modfr')
+            Comparison(source_proc_cd_1_modfr_full_name, 'proc_cd_1_modfr')
             if source_proc_cd_1_modfr_full_name else None,
-            Comparison('proc_unit_qty', source_proc_unit_qty_full_name, 'proc_unit_qty')
+            Comparison(source_proc_unit_qty_full_name, 'proc_unit_qty')
             if source_proc_unit_qty_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs = skip_unique_match_pairs
@@ -673,9 +686,9 @@ def emr_provider_order_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('prov_ord_cd', source_prov_ord_cd_full_name, 'prov_ord_cd')
+            Comparison(source_prov_ord_cd_full_name, 'prov_ord_cd')
             if source_prov_ord_cd_full_name else None,
-            Comparison('prov_ord_snomed_cd', source_prov_ord_snomed_cd_full_name, 'prov_ord_snomed_cd')
+            Comparison(source_prov_ord_snomed_cd_full_name, 'prov_ord_snomed_cd')
             if source_prov_ord_snomed_cd_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs = skip_unique_match_pairs
@@ -723,11 +736,11 @@ def emr_lab_order_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('lab_ord_loinc_cd', source_lab_ord_loinc_cd_full_name, 'lab_ord_loinc_cd')
+            Comparison(source_lab_ord_loinc_cd_full_name, 'lab_ord_loinc_cd')
             if source_lab_ord_loinc_cd_full_name else None,
-            Comparison('lab_ord_test_nm', source_lab_ord_test_nm_full_name, 'lab_ord_test_nm')
+            Comparison(source_lab_ord_test_nm_full_name, 'lab_ord_test_nm')
             if source_lab_ord_test_nm_full_name else None,
-            Comparison('lab_ord_panel_nm', source_lab_ord_panel_nm_full_name, 'lab_ord_panel_nm')
+            Comparison(source_lab_ord_panel_nm_full_name, 'lab_ord_panel_nm')
             if source_lab_ord_panel_nm_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs = skip_unique_match_pairs
@@ -776,11 +789,11 @@ def emr_lab_result_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('lab_test_nm', source_lab_test_nm_full_name, 'lab_test_nm')
+            Comparison(source_lab_test_nm_full_name, 'lab_test_nm')
             if source_lab_test_nm_full_name else None,
-            Comparison('lab_test_loinc_cd', source_lab_test_loinc_cd_full_name, 'lab_test_loinc_cd')
+            Comparison(source_lab_test_loinc_cd_full_name, 'lab_test_loinc_cd')
             if source_lab_test_loinc_cd_full_name else None,
-            Comparison('lab_test_snomed_cd', source_lab_test_snomed_cd_full_name, 'lab_test_snomed_cd')
+            Comparison(source_lab_test_snomed_cd_full_name, 'lab_test_snomed_cd')
             if source_lab_test_snomed_cd_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs = skip_unique_match_pairs
@@ -829,9 +842,9 @@ def emr_medication_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('medctn_ndc', source_medctn_ndc_full_name, 'medctn_ndc')
+            Comparison(source_medctn_ndc_full_name, 'medctn_ndc')
             if source_medctn_ndc_full_name else None,
-            Comparison('medctn_brd_nm', source_medctn_brd_nm_full_name, 'medctn_brd_nm')
+            Comparison(source_medctn_brd_nm_full_name, 'medctn_brd_nm')
             if source_medctn_brd_nm_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs = skip_unique_match_pairs
@@ -880,11 +893,11 @@ def emr_clinical_observation_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('clin_obsn_typ_nm', source_clin_obsn_typ_nm_full_name, 'clin_obsn_typ_nm')
+            Comparison(source_clin_obsn_typ_nm_full_name, 'clin_obsn_typ_nm')
             if source_clin_obsn_typ_nm_full_name else None,
-            Comparison('clin_obsn_snomed_cd', source_clin_obsn_snomed_cd_full_name, 'clin_obsn_snomed_cd')
+            Comparison(source_clin_obsn_snomed_cd_full_name, 'clin_obsn_snomed_cd')
             if source_clin_obsn_snomed_cd_full_name else None,
-            Comparison('clin_obsn_result_nm', source_clin_obsn_result_nm_full_name, 'clin_obsn_result_nm')
+            Comparison(source_clin_obsn_result_nm_full_name, 'clin_obsn_result_nm')
             if source_clin_obsn_result_nm_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs = skip_unique_match_pairs
@@ -933,11 +946,11 @@ def emr_vital_sign_datafeed(
         skip_validations = skip_validations,
 
         additional_unique_match_pairs = build_test_list([
-            Comparison('vit_sign_typ_cd', source_vit_sign_typ_cd_full_name, 'vit_sign_typ_cd')
+            Comparison(source_vit_sign_typ_cd_full_name, 'vit_sign_typ_cd')
             if source_vit_sign_typ_cd_full_name else None,
-            Comparison('vit_sign_snomed_cd', source_vit_sign_snomed_cd_full_name, 'vit_sign_snomed_cd')
+            Comparison(source_vit_sign_snomed_cd_full_name, 'vit_sign_snomed_cd')
             if source_vit_sign_snomed_cd_full_name else None,
-            Comparison('vit_sign_msrmt', source_vit_sign_msrmt_full_name, 'vit_sign_msrmt')
+            Comparison(source_vit_sign_msrmt_full_name, 'vit_sign_msrmt')
             if source_vit_sign_msrmt_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs),
         skip_unique_match_pairs = skip_unique_match_pairs
