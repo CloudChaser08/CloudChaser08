@@ -219,7 +219,8 @@ exports.handler = function(event, context) {
       }));
 
       // upload the HTML blob to s3
-      s3.uploadFile(output, 's3://hvstatus.healthverity.com/provider-status-dash/index.html', function(err, data) {
+      var upload_url = event.dev ? 's3://hvstatus.healthverity.com/test/provider-status-dash/index.html' : 's3://hvstatus.healthverity.com/provider-status-dash/index.html'
+      s3.uploadFile(output, upload_url, function(err, data) {
         if(err) context.fail(err);
         else context.succeed();
       });
