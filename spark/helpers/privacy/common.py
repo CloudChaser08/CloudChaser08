@@ -61,7 +61,10 @@ def _transform(transformer):
     return col_func
 
 
-def filter(df, additional_transforms={}):
+def filter(df, additional_transforms=None):
+    if not additional_transforms:
+        additional_transforms = {}
+
     # add in additional transformations to columns not found in the
     # generic column_transformer dict above
     modified_column_transformer = dict(column_transformer)
