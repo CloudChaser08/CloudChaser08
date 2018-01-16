@@ -113,7 +113,7 @@ exports.handler = function(event, context) {
       .replace('{{CSS}}', fs.readFileSync(path.join(__dirname, './public/style.css'), 'utf-8'))
       .replace('{{JAVASCRIPT}}', fs.readFileSync(path.join(__dirname, './public/main.js'), 'utf-8'))
       .replace('{{TITLE}}', event.dev ? 'Provider Status Dashboard - Dev' : 'Provider Status Dashboard')
-      .replace('{{TITLE}}', event.dev ? 'Provider Status Dashboard - Dev' : 'Provider Status Dashboard');
+      .replace('{{HEADER}}', event.dev ? 'Provider Status Dashboard - Dev' : 'Provider Status Dashboard');
 
   // assemble all asynchronous calls
   var calls = s3.getS3Calls();
