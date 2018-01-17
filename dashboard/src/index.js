@@ -183,6 +183,10 @@ exports.handler = function(event, context) {
           return file.ingested;
         });
         var latestIngestionDate = ingestedFiles.length ? ingestedFiles[0].executionDate : "Never";
+        if (!providerConf.airflowPipelineName)
+        {
+          latestIngestionDate = "N/A";
+        }
 
         function dateSortNum(d) {
           if (d === "Never") {
