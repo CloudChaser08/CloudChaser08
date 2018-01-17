@@ -242,12 +242,12 @@ def deobfuscate_hvid(project_name, hvid_col='hvid', nullify_non_integers=False):
     return out
 
 
-def add_input_filename(column_name, include_parent_dirs=False):
+def add_input_filename(column_name, include_parent_dirs=False, persisted_df_id='df_with_input_filename'):
     "Add the input file name to a dataframe, removing the split suffix"
     def out(df):
         return df.withColumn(
             column_name, input_file_name()
-        ).cache().withColumn(
+        ).cache_and_track(persisted_df_id).withColumn(
             column_name, udf(gen_helpers.remove_split_suffix)(col(column_name), lit(include_parent_dirs))
         )
     return out
