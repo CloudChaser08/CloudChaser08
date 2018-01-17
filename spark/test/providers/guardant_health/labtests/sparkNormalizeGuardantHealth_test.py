@@ -24,7 +24,7 @@ def test_init(spark):
             gen_ref_1_dt=datetime.date(2013, 1, 1),
             whtlst_flg=''
         )
-    ]).toDF().createTempView('ref_gen_ref')
+    ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
     guardant_health.run(spark['spark'], spark['runner'], '2016-12-31', True)
     global results
