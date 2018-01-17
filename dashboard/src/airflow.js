@@ -19,7 +19,9 @@ var client = new psql.Client({
 // statement for each provider
 const query = {
   text: fs.readFileSync(path.join(__dirname, './provider-ingestion.sql'), 'utf-8').replace(
-    '{{PROVIDERS}}', providers.config.map(function (provider) {
+    '{{PROVIDERS}}', providers.config.filter(function(provider) {
+      return provider.airflowPipelineName;
+    }).map(function (provider) {
       return 'MAX(CASE ' +
         'WHEN true_dag_id = \'' + provider.airflowPipelineName + '\' ' + 
         'AND total_success_count > 0 ' +
