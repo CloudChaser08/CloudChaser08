@@ -380,4 +380,15 @@ exports.config = [
         + helpers.leftZPad(date.getDate(), 2) + '_NPHI.txt';
     }
   },
+  {
+    id: 'ambry',
+    displayName: 'Ambry',
+    providerPrefix: 'ambry',
+    schedule: null,
+    startDate: null,
+    airflowPipelineName: null,
+    expectedFilenameRegex: null,
+    filenameToExecutionDate: null,
+    executionDateToFilename: null
+  }
 ];

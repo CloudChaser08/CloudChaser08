@@ -22,10 +22,17 @@ function buildFullDataset(airflowResults, providerIncoming) {
     return provider.id == providerIncoming.providerId;
   })[0];
 
-  if (!providerConf.schedule)
+  if (!providerConf.airflowPipelineName)
   {
-      // Create dataset for non-automated providers
-      console.log("test");
+    // Create dataset for non-automated providers
+    return providerIncoming.files.map(function(f) {
+      return {
+        executionDate: helpers.formatDate(f.date),
+        incomingFiles: [f.key],
+        expectedFile: null,
+        ingested: false
+      };
+    });
   }
   else
   {
@@ -159,12 +166,18 @@ exports.handler = function(event, context) {
           return d.incomingFiles.length > 0;
         });
 
-        var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
-
         var healthLabel;
-        if (providerHealthPercentage >= 75) healthLabel = [0, 'Healthy'];
-        else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = [1, 'Moderately Healthy'];
-        else healthLabel = [2, 'Unhealthy'];
+        if (!providerConf.airflowPipelineName)
+        {
+          healthLabel = [3, 'Not Automated'];
+        }
+        else
+        {
+          var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
+          if (providerHealthPercentage >= 75) healthLabel = [0, 'Healthy'];
+          else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = [1, 'Moderately Healthy'];
+          else healthLabel = [2, 'Unhealthy'];
+        }
 
         var ingestedFiles = existingFiles.filter(function(file) {
           return file.ingested;
