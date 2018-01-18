@@ -4,7 +4,7 @@ set -x
 
 # Generate all provider stats
 
-if [ -z $1 ] || [ $1 = "-h" ]
+if [ -z $4 ] || [ $1 = "-h" ]
 then
     echo "usage: ./generate_stats.sh [quarter] [start_date] [end_date] [output_dir]"
     exit 0
