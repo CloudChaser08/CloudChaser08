@@ -33,9 +33,9 @@ function generate_stats()
 
     echo "Generating stats for feed $feed_id"
 
-    echo spark-submit --py-files ../target/dewey.zip --conf spark.executor.instances=15 --conf spark.executor.cores=2 --conf spark.executor.memory=10G --conf spark.driver.memory=13G --conf spark.yarn.executor.memoryOverhead=1024 --conf spark.scheduler.minRegisteredResourcesRatio=1 --conf spark.scheduler.maxRegisteredResourcesWaitingTime=60s ../stats_runner.py --feed_id $feed_id --quarter $QUARTER --start_date $START_DATE --end_date $END_DATE --earliest_date $earliest_date --output_dir output/$feed_id
+    spark-submit --py-files ../target/dewey.zip --conf spark.executor.instances=15 --conf spark.executor.cores=2 --conf spark.executor.memory=10G --conf spark.driver.memory=13G --conf spark.yarn.executor.memoryOverhead=1024 --conf spark.scheduler.minRegisteredResourcesRatio=1 --conf spark.scheduler.maxRegisteredResourcesWaitingTime=60s ../stats_runner.py --feed_id $feed_id --quarter $QUARTER --start_date $START_DATE --end_date $END_DATE --earliest_date $earliest_date --output_dir output/$feed_id
 
-    echo aws s3 cp --recursive output/$feed_id $S3_OUTPUT_DIR$QUARTER/$feed_id
+    aws s3 cp --recursive output/$feed_id $S3_OUTPUT_DIR$QUARTER/$feed_id
 }
 
 # Medical Claims (Old Model)
