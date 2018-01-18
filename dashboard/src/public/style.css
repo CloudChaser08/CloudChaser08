@@ -24,6 +24,10 @@ div#time-series li {
     word-break: break-all;
 }
 
+div#time-series .not-automated {
+    background: #fff;
+}
+
 div#time-series .not-sent {
     background: #f99;
 }

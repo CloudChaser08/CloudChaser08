@@ -216,7 +216,8 @@ exports.handler = function(event, context) {
               // calculate class based on the status for this
               // execution date
               var dateClass;
-              if (d.incomingFiles.length === 0) dateClass = 'not-sent';
+              if (!providerConf.airflowPipelineName) dateClass = 'not-automated';
+              else if (d.incomingFiles.length === 0) dateClass = 'not-sent';
               else if (!d.ingested) dateClass = 'not-ingested';
               else dateClass = 'fully-loaded';
               if (dateClass === 'not-sent') {
