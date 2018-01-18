@@ -28,9 +28,7 @@ function buildFullDataset(airflowResults, providerIncoming) {
     return providerIncoming.files.map(function(f) {
       return {
         executionDate: helpers.formatDate(f.date),
-        incomingFiles: [f.key],
-        expectedFile: null,
-        ingested: false
+        incomingFiles: [f.key]
       };
     });
   }

@@ -383,232 +383,101 @@ exports.config = [
   {
     id: 'ambry',
     displayName: 'Ambry RX',
-    providerPrefix: 'ambry',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'ambry'
   },
   {
     id: 'allscripts',
     displayName: 'Allscripts DX',
-    providerPrefix: 'allscripts/claims',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'allscripts/claims'
   },
   {
     id: 'corrona',
     displayName: 'Corrona Registry',
-    providerPrefix: 'corrona',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'corrona'
   },
   {
     id: 'cardinal_rcm',
     displayName: 'Cardinal RCM DX',
-    providerPrefix: 'cardinal/rcm',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'cardinal/rcm'
   },
   {
     id: 'courtagen',
     displayName: 'Courtagen Lab',
-    providerPrefix: 'courtagen',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'courtagen'
   },
   {
     id: 'obit',
     displayName: 'Obituary',
-    providerPrefix: 'obituarydata',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'obituarydata'
   },
   {
     id: 'mindbody',
     displayName: 'MindBody',
-    providerPrefix: 'mindbody',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'mindbody'
   },
   {
     id: 'epsilon',
     displayName: 'Epsilon',
-    providerPrefix: 'epsilon',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'epsilon'
   },
   {
     id: 'acxiom',
     displayName: 'Acxiom',
-    providerPrefix: 'acxiom',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'acxiom'
   },
   {
     id: 'genoa',
     displayName: 'Genoa RX',
-    providerPrefix: 'genoa',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'genoa'
   },
   {
     id: 'cardinal_vitalpath',
     displayName: 'Cardinal Vitalpath RX',
-    providerPrefix: 'cardinal/vitalpath',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'cardinal/vitalpath'
   },
   {
     id: 'allscripts_emr',
     displayName: 'Allscripts EMR',
-    providerPrefix: 'allscripts/emr',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
-  },
-  {
-    id: 'cardinal_vitalpath',
-    displayName: 'Cardinal Vitalpath RX',
-    providerPrefix: 'cardinal_vitalpath',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'allscripts/emr'
   },
   {
     id: 'visonex',
     displayName: 'Visonex EMR',
-    providerPrefix: 'visonex',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'visonex'
   },
   {
     id: 'amazing_charts',
     displayName: 'Amazing Charts EMR',
-    providerPrefix: 'amazingcharts',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'amazingcharts'
   },
   {
     id: 'cardinal_tsi',
     displayName: 'Cardinal TSI EMR',
-    providerPrefix: 'cardinal/tsi',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'cardinal/tsi'
   },
   {
     id: 'cardinal_raintree',
     displayName: 'Cardinal Raintree EMR',
-    providerPrefix: 'cardinal/emr',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'cardinal/emr'
   },
   {
     id: 'nextgen',
     displayName: 'Nextgen EMR',
-    providerPrefix: 'ng-lssa',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'ng-lssa'
   },
   {
     id: 'treato',
     displayName: 'Treato EMR',
-    providerPrefix: 'treato',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'treato'
   },
   {
     id: 'healthjump',
     displayName: 'HealthJump EMR',
-    providerPrefix: 'healthjump',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'healthjump'
   },
   {
     id: 'transmed',
     displayName: 'Transmed EMR',
-    providerPrefix: 'transmed',
-    schedule: null,
-    startDate: null,
-    airflowPipelineName: null,
-    expectedFilenameRegex: null,
-    filenameToExecutionDate: null,
-    executionDateToFilename: null
+    providerPrefix: 'transmed'
   }
 ];
