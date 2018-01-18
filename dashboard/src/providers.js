@@ -570,7 +570,7 @@ exports.config = [
   {
     id: 'nextgen',
     displayName: 'Nextgen EMR',
-    providerPrefix: 'nextgen',
+    providerPrefix: 'ng-lssa',
     schedule: null,
     startDate: null,
     airflowPipelineName: null,
