@@ -118,7 +118,9 @@ SELECT
     t.physician_street_address_1  AS ordering_address_1,
     t.physician_street_address_2  AS ordering_address_2,
     t.physician_city              AS ordering_city,
-    t.physician_state             AS ordering_state,
+    SUBSTR(
+        t.physician_state, 0, 2
+        )                         AS ordering_state,
     t.physician_zipcode           AS ordering_zip,
     NULL                          AS logical_delete_reason
 FROM transactions t
