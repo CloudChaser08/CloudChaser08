@@ -232,7 +232,7 @@ exports.handler = function(event, context) {
               }
             }).reduce(function (el1, el2) {
               return el1 + el2;
-            }) + '</ul>'
+            }, '') + '</ul>'
         };
       });
 
