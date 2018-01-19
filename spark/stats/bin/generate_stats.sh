@@ -39,40 +39,40 @@ function generate_stats()
 }
 
 # Medical Claims (Old Model)
-generate_stats -f 24 -e 2015-01-01      # Private Source 34 (Navicure)
-generate_stats -f 26 -e 2014-12-01      # Allscripts Medical Claims
-generate_stats -f 19 -e 2015-08-01      # Corrona
-generate_stats -f 15 -e 2014-01-01      # Private Source 14 (Ability)
+generate_stats -f 24        # Private Source 34 (Navicure)
+generate_stats -f 26        # Allscripts Medical Claims
+generate_stats -f 19        # Corrona
+generate_stats -f 15        # Private Source 14 (Ability)
 
 # Medical Claims
-generate_stats -f 22 -e 2011-12-01      # Practice Insight
-generate_stats -f 10 -e 2013-01-01      # Emdeon DX
-generate_stats -f 29 -e 2010-02-01      # Cardinal RCM
+generate_stats -f 22        # Practice Insight
+generate_stats -f 10        # Emdeon DX
+generate_stats -f 29        # Cardinal RCM
 
 # Labs
-generate_stats -f 32 -e 2014-01-01      # NeoGenomics
-generate_stats -f 14 -e 2008-01-01      # Caris
-generate_stats -f 28 -e 2012-04-01      # Courtagen
-generate_stats -f 18 -e 2014-08-01      # Quest
-generate_stats -f 46 -e 1901-01-01      # LabCorp
+generate_stats -f 32        # NeoGenomics
+generate_stats -f 14        # Caris
+generate_stats -f 28        # Courtagen
+generate_stats -f 18        # Quest
+generate_stats -f 46        # LabCorp
 
 # Events
-generate_stats -f 27 -e 1994-12-01      # Obit Data
-generate_stats -f 38 -e 2015-04-01      # MindBody
-generate_stats -f 42 -e 1901-01-01      # Epsilon
-generate_stats -f 50 -e 1990-01-01      # Acxiom
-generate_stats -f 56 -e 1990-01-01      # Alliance
+generate_stats -f 27        # Obit Data
+generate_stats -f 38        # MindBody
+generate_stats -f 42        # Epsilon
+generate_stats -f 50        # Acxiom
+generate_stats -f 56        # Alliance
 
 # Pharmacy Claims (Old Model)
-generate_stats -f 11 -e 2013-01-01      # WebMD Rx
-generate_stats -f 21 -e 2010-12-01      # Genoa
-generate_stats -f 16 -e 2009-07-01      # ESI
+generate_stats -f 11        # WebMD Rx
+generate_stats -f 21        # Genoa
+generate_stats -f 16        # ESI
 
 # Pharmacy Claims
-generate_stats -f 33 -e 2011-01-01      # McKesson Rx
-generate_stats -f 36 -e 2010-03-01      # McKesson Rx Restricted
-generate_stats -f 34 -e 2015-01-01      # Diplomat
-generate_stats -f 45 -e 2017-01-01      # Apothecary By Design
-generate_stats -f 30 -e 2010-02-01      # Cardinal Vitalpath
-generate_stats -f 39 -e 2011-02-01      # Cardinal PDS
+generate_stats -f 33        # McKesson Rx
+generate_stats -f 36        # McKesson Rx Restricted
+generate_stats -f 34        # Diplomat
+generate_stats -f 45        # Apothecary By Design
+generate_stats -f 30        # Cardinal Vitalpath
+generate_stats -f 39        # Cardinal PDS
 
