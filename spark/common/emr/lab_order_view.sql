@@ -51,7 +51,7 @@ CREATE VIEW dw.hvm_emr_lab_ord (
     hvm_vdr_feed_id,
     vdr_org_id,
     vdr_lab_ord_id,
-    lvdr_ab_ord_id_qual,
+    vdr_lab_ord_id_qual,
     hvid,
     ptnt_birth_yr,
     ptnt_age_num,
