@@ -70,7 +70,7 @@ def _run_year_over_year(df, earliest_date, end_date, provider_conf):
 
 
 def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
-                          start_date, end_date, earliest_date):
+                          start_date, end_date):
     '''
     Runs all the relevant marketplace stats for a provider in a given
     date range / quarter
@@ -81,7 +81,6 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
         - quarter: quarter to run stats on
         - start_date: starting date of the date range
         - end_date: ending date of the date range
-        - earliest_date: earliest date for a particular stat calc (forget right now, not fill rates)
     Output:
         - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
@@ -91,6 +90,7 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
     config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
     provider_conf = config_reader.get_provider_config(
                                     config_file, feed_id)
+    earliest_date = provider_conf['earliest_date']
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
