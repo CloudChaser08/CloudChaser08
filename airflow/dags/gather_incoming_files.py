@@ -8,16 +8,14 @@ import os
 
 # hv-specific modules
 import common.HVDAG as HVDAG
-import dags.util.s3_utils as s3_utils
-import dags.util.sftp_utils as sftp_utils
+import util.s3_utils as s3_utils
+import util.sftp_utils as sftp_utils
 
 for m in [HVDAG, s3_utils, sftp_utils]:
     reload(m)
 
 # Applies to all files
 DAG_NAME = 'gather_incoming_files'
-
-CONFIG_FILE = 'resources/incoming_files_conf.json'
 
 TMP_DIR = '/tmp/incoming-files/'
 
@@ -33,18 +31,30 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
+CONFIG_FILE = os.getenv("AIRFLOW_HOME") + '/dags/test-e2e/resources/incoming_files_conf.json' \
+    if HVDAG.HVDAG.airflow_env == 'test' \
+    else os.getenv("AIRFLOW_HOME") + '/dags/resources/incoming_files_conf.json'
+
 
 class SFTPConnectionConfig:
     def __init__(self, path, host, user, password):
         self.path = path
         self.host = host
         self.user = user
-        self.password  = password
+        self.password = password
+
+    def asdict(self):
+        return {
+            'path': self.path, 'host': self.host, 'user': self.user, 'password': self.password
+        }
 
 
 class S3ConnectionConfig:
     def __init__(self, path):
         self.path = path
+
+    def asdict(self):
+        return {'path': self.path}
 
 
 class IncomingFileConfig:
@@ -63,7 +73,7 @@ class IncomingFileConfig:
             self.src_conf = S3ConnectionConfig(**src_conf)
 
         self.dest_path = dest_path
-        self.file_name_regexes = file_name_regexes.replace('//', '/')
+        self.file_name_regexes = [regex.replace('//', '/') for regex in file_name_regexes]
 
     def _is_relevant_file(self, filename):
         for regex in self.file_name_regexes:
@@ -76,7 +86,7 @@ class IncomingFileConfig:
             if self.src_system == 's3':
                 s3_utils.copy_file(self.src_conf.path + src_filename, dest_filepath)
             elif self.src_system == 'sftp':
-                fetch_conf = dict(self.sftp_conf)
+                fetch_conf = self.src_conf.asdict()
                 fetch_conf.update({
                     'abs_internal_filepath': TMP_DIR,
                     'abs_external_filepath': self.src_conf.path + src_filename
@@ -88,14 +98,12 @@ class IncomingFileConfig:
 
     def get_new_files(self):
         existing_files = s3_utils.list_s3_bucket_files(self.dest_path)
+        if self.src_system == 's3':
+            src_file_list = s3_utils.list_s3_bucket_files(self.src_conf.path)
+        elif self.src_system == 'sftp':
+            src_file_list = sftp_utils.list_path(**self.src_conf.asdict())
         return [
-            f for f in
-            {
-                's3': s3_utils.list_s3_bucket_files(self.src_conf.path),
-                'sftp': sftp_utils.list_path(
-                    abs_external_filepath=self.src_conf.path, **self.sftp_conf
-                )
-            }[self.src_system] if f not in existing_files and self._is_relevant_file(f)
+            f for f in src_file_list if f not in existing_files and self._is_relevant_file(f)
         ]
 
 
