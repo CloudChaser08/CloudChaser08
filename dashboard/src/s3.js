@@ -36,29 +36,24 @@ exports.getS3Calls = function() {
           if (err) callback(err);
           else {
             results = results.concat(data.Contents.map(function(key) {
-              return {
-                "key": key.Key,
-                "date": key.LastModified
-              };
+              return key.Key;
             }));
             if (!data.IsTruncated) {
-              // attach provider id to a list of relevant files found
-              // in this provider's incoming bucket
               // if the provider is not automated, attach all files found
               var output;
               if (!providerConf.airflowPipelineName)
               {
-                output = {
-                  providerId: providerConf.id,
-                  files: results
-                };
+                  output = {
+                    providerId: providerConf.id,
+                    files: results
+                  };
               }
               else
               {
-                output = {
+                var output = {
                   providerId: providerConf.id,
                   files: results.filter(function(filename) {
-                    return providerConf.expectedFilenameRegex.test(filename.key);
+                    return providerConf.expectedFilenameRegex.test(filename);
                   })
                 };
               }

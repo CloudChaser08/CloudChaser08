@@ -27,8 +27,8 @@ function buildFullDataset(airflowResults, providerIncoming) {
     // Create dataset for non-automated providers
     return providerIncoming.files.map(function(f) {
       return {
-        executionDate: helpers.formatDate(f.date),
-        incomingFiles: [f.key]
+        executionDate: '',
+        incomingFiles: [f]
       };
     });
   }
@@ -78,14 +78,12 @@ function buildFullDataset(airflowResults, providerIncoming) {
 
       // grab list of incoming files for this execution date
       var incomingFiles = providerIncoming.files.filter(function(file) {
-        return providerConf.filenameToExecutionDate(file.key) == helpers.formatDate(exDate);
+        return providerConf.filenameToExecutionDate(file) == helpers.formatDate(exDate);
       });
 
       return {
         executionDate: helpers.formatDate(exDate),
-        incomingFiles: incomingFiles.map(function(f) {
-          return f.key;
-        }),
+        incomingFiles: incomingFiles,
         expectedFile: getExpectedFilename(exDate),
         ingested: ingested
       };
