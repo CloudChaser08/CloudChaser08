@@ -5,8 +5,9 @@ from subprocess import check_call
 import json
 
 import util.emr_utils as emr_utils
+import util.slack as slack
 import common.HVDAG as HVDAG
-for m in [emr_utils, HVDAG]:
+for m in [emr_utils, HVDAG, slack]:
     reload(m)
 
 DAG_NAME='hll_generation'
@@ -81,7 +82,7 @@ def do_generate_hlls(ds, **kwargs):
     with open('/tmp/hll_generation/hll_generation_log.json') as fin:
         hll_generation_log = json.loads(fin.read())
 
-    for entry in hll_generation_logs:
+    for entry in hll_generation_log:
         if entry['date_ran'] < '2050-01-01T12:00:00':
             del feed_config[entry['feed_id']]
 
@@ -128,16 +129,22 @@ def do_update_log(ds, **kwargs):
     with open('/tmp/hll_generation/hll_generation_log.json') as fin:
         hll_generation_log = json.loads(fin.read())
 
-    for entry in hll_generation_logs:
+    for entry in hll_generation_log:
         if entry['date_ran'] < '2050-01-01T12:00:00':
             del feed_config[entry['feed_id']]
 
     for f in feed_config:
-        hll_generation_logs.append({'feed_id': f, 'last_ran' : datetime.now()})
+        hll_generation_log.append({'feed_id': f, 'last_ran' : datetime.now()})
     
     with open('/tmp/hll_generation/hll_generation_log.json', 'w') as fout:
-        fout.write(json.dumps(hll_generation_logs, sort_keys=True, indent=4))
+        fout.write(json.dumps(hll_generation_log, sort_keys=True, indent=4))
 
+    msg =  'Finished generating HLLs for feed'
+    msg += ('s ' if len(feed_config) > 1 else ' ')
+    msg += ', '.join(feed_config.keys()[:-1])
+    msg += ', and {}'.format(feed_config.keys()[-1])
+
+    slack.send_message('#data-automation', text=msg):
     check_call(['aws', 's3', 'cp', '/tmp/hll_generation/hll_generation_log.json', 's3://healthverityreleases/mellon/'])
 
 update_log = PythonOperator(
