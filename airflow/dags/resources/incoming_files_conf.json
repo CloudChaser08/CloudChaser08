@@ -1,7 +1,10 @@
 [
   {
     "feed_name": "cardinal_mpi",
-    "src_path": "s3://hvincoming/cardinal_raintree/mpi/",
+    "src_system": "s3",
+    "src_conf": {
+      "path": "s3://hvincoming/cardinal_raintree/mpi/"
+    },
     "dest_path": "s3://healthverity/incoming/cardinal/mpi/",
     "file_name_regexes": [
       "mpi.\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}\\d{2}.zip"
@@ -9,11 +12,26 @@
   },
   {
     "feed_name": "cardinal_pds",
-    "src_path": "s3://hvincoming/cardinal_raintree/pds/",
+    "src_system": "s3",
+    "src_conf": {
+      "path": "s3://hvincoming/cardinal_raintree/pds/"
+    },
     "dest_path": "s3://healthverity/incoming/cardinal/pds/",
     "file_name_regexes": [
       "PDS_record_data_\\d{2}\\d{2}\\d{2}",
       "PDS_deid_data_\\d{2}\\d{2}\\d{2}",
     ]
-  }
+  },
+  {
+    "feed_name": "emdeon_dx",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "Emdeon SFTP Configuration"
+    },
+    "dest_path": "s3://healthverity/incoming/emdeon/medicalclaims/transactions/",
+    "file_name_regexes": [
+      "PDS_record_data_\\d{2}\\d{2}\\d{2}",
+      "PDS_deid_data_\\d{2}\\d{2}\\d{2}",
+    ]
+  },
 ]
