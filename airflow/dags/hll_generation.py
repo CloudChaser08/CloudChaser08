@@ -5,9 +5,10 @@ from subprocess import check_call
 import json
 
 import util.emr_utils as emr_utils
+import util.s3_utils as s3_utils
 import util.slack as slack
 import common.HVDAG as HVDAG
-for m in [emr_utils, HVDAG, slack]:
+for m in [emr_utils, HVDAG, slack, s3_utils]:
     reload(m)
 
 DAG_NAME='hll_generation'
@@ -52,8 +53,8 @@ mdag = HVDAG.HVDAG(
 
 def do_download_configs(ds, **kwargs):
     check_call(['mkdir', '-p', '/tmp/hll_generation'])
-    check_call(['aws', 's3', 'cp', 's3://healthverityreleases/mellon/hlls_config.json', '/tmp/hll_generation/'])
-    check_call(['aws', 's3', 'cp', 's3://healthverityreleases/mellon/hll_generation_log.json', '/tmp/hll_generation/'])
+    s3_utils.copy_file('s3://healthverityreleases/mellon/hlls_config.json', '/tmp/hll_generation/', encrypt=False)
+    s3_utils.copy_file('s3://healthverityreleases/mellon/hll_generation_log.json', '/tmp/hll_generation/', encrypt=False)
 
 download_configs = PythonOperator(
     task_id='download_configs',
@@ -75,12 +76,12 @@ create_cluster = PythonOperator(
 
 def do_generate_hlls(ds, **kwargs):
     with open('/tmp/hll_generation/hlls_config.json') as fin:
-        hll_configs = json.loads(fin.read())
+        hll_configs = json.loads(fin)
 
     feed_config = dict([(c['feed_id'], c) for c in hll_configs])
 
     with open('/tmp/hll_generation/hll_generation_log.json') as fin:
-        hll_generation_log = json.loads(fin.read())
+        hll_generation_log = json.loads(fin)
 
     for entry in hll_generation_log:
         if entry['date_ran'] < '2050-01-01T12:00:00':
@@ -123,12 +124,12 @@ delete_cluster = PythonOperator(
 
 def do_update_log(ds, **kwargs):
     with open('/tmp/hll_generation/hlls_config.json') as fin:
-        hll_configs = json.loads(fin.read())
+        hll_configs = json.loads(fin)
 
     feed_config = dict([(c['feed_id'], c) for c in hll_configs])
 
     with open('/tmp/hll_generation/hll_generation_log.json') as fin:
-        hll_generation_log = json.loads(fin.read())
+        hll_generation_log = json.loads(fin)
 
     for entry in hll_generation_log:
         if entry['date_ran'] < '2050-01-01T12:00:00':
@@ -146,7 +147,7 @@ def do_update_log(ds, **kwargs):
     msg += ', and {}'.format(feed_config.keys()[-1])
 
     slack.send_message('#data-automation', text=msg)
-    check_call(['aws', 's3', 'cp', '/tmp/hll_generation/hll_generation_log.json', 's3://healthverityreleases/mellon/'])
+    s3_utils.copy_file('/tmp/hll_generation/hll_generation_log.json', 's3://healthverityreleases/mellon/')
 
 update_log = PythonOperator(
     task_id='update_log',
