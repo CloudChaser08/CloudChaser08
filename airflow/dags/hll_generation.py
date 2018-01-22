@@ -97,6 +97,7 @@ def do_generate_hlls(ds, **kwargs):
         args += '--start, 2015-10-01,' if not config.get('no_min_cap') else ''
         args += '--end, 2017-10-01,' if not config.get('no_max_cap') else ''
         args += "--models, '{}',".format(config.get('emr_models')) if config.get('emr_models') else ''
+        args += ', '.join(config.get('flags', '').split())
 
         steps.append(HLL_STEP_TEMPLATE.format(feed_id, args))
     steps.append(HLL_COPY_STEP)
@@ -144,7 +145,7 @@ def do_update_log(ds, **kwargs):
     msg += ', '.join(feed_config.keys()[:-1])
     msg += ', and {}'.format(feed_config.keys()[-1])
 
-    slack.send_message('#data-automation', text=msg):
+    slack.send_message('#data-automation', text=msg)
     check_call(['aws', 's3', 'cp', '/tmp/hll_generation/hll_generation_log.json', 's3://healthverityreleases/mellon/'])
 
 update_log = PythonOperator(
