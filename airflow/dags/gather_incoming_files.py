@@ -33,6 +33,7 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
+
 class SFTPConnectionConfig:
     def __init__(self, path, host, user, password):
         self.path = path
@@ -40,9 +41,11 @@ class SFTPConnectionConfig:
         self.user = user
         self.password  = password
 
+
 class S3ConnectionConfig:
     def __init__(self, path):
         self.path = path
+
 
 class IncomingFileConfig:
     def __init__(
@@ -112,6 +115,7 @@ def generate_detect_move_task(config):
         python_callable=execute,
         dag=mdag
     )
+
 
 with open(CONFIG_FILE, 'r') as incoming_files_config_file:
     tasks = [
