@@ -19,8 +19,6 @@ from spark.helpers.privacy.emr import                   \
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
 
-    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
-
     FEED_ID = '54'
     VENDOR_ID = '152'
 
@@ -64,7 +62,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     def create_and_preprocess_transaction_table(table_name, table_input_path, table_schema):
         postprocessor.compose(
-            postprocessor.add_input_filename('source_file_name'), postprocessor.trimmify, postprocessor.nullify
+            postprocessor.add_input_filename('source_file_name', persisted_df_id='{}_with_input_filename'.format(table_name)),
+            postprocessor.trimmify, postprocessor.nullify
         )(runner.sqlContext.read.csv(
             table_input_path, schema=table_schema, sep='\t'
         )).createOrReplaceTempView(table_name)
@@ -208,6 +207,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 distribution_key='row_id', provider_partition='part_hvm_vdr_feed_id',
                 date_partition='part_mth', columns=common_model_columns
             )
+            for table in ['transactions_cancerepisode', 'transactions_treatmentsite']:
+                runner.unpersist('{}_with_input_filename'.format(table))
 
 
 def main(args):
