@@ -76,12 +76,12 @@ create_cluster = PythonOperator(
 
 def do_generate_hlls(ds, **kwargs):
     with open('/tmp/hll_generation/hlls_config.json') as fin:
-        hll_configs = json.loads(fin)
+        hll_configs = json.load(fin)
 
     feed_config = dict([(c['feed_id'], c) for c in hll_configs])
 
     with open('/tmp/hll_generation/hll_generation_log.json') as fin:
-        hll_generation_log = json.loads(fin)
+        hll_generation_log = json.load(fin)
 
     for entry in hll_generation_log:
         if entry['date_ran'] < '2050-01-01T12:00:00':
@@ -124,12 +124,12 @@ delete_cluster = PythonOperator(
 
 def do_update_log(ds, **kwargs):
     with open('/tmp/hll_generation/hlls_config.json') as fin:
-        hll_configs = json.loads(fin)
+        hll_configs = json.load(fin)
 
     feed_config = dict([(c['feed_id'], c) for c in hll_configs])
 
     with open('/tmp/hll_generation/hll_generation_log.json') as fin:
-        hll_generation_log = json.loads(fin)
+        hll_generation_log = json.load(fin)
 
     for entry in hll_generation_log:
         if entry['date_ran'] < '2050-01-01T12:00:00':
