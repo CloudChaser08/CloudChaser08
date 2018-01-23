@@ -25,7 +25,7 @@ def is_file_on_time(file_date, cron_schedule, grace_period):
 
     # Try to identify which cron iteration this file is from
     while cron.get_current() > (file_date - EPOCH).total_seconds() and \
-            (now - EPOCH).total_seconds() - corn.get_current() <= grace_period:
+            (now - EPOCH).total_seconds() - cron.get_current() <= grace_period:
         cron.get_prev()
 
     # The file arrived on time, or ahead of schedule
