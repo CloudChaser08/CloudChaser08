@@ -194,6 +194,12 @@ def scrape_loinc(tomorrow_ds, **kwargs):
 
 def create_temp_tables(tomorrow_ds, schema, s3, ref_loinc_schema, **kwargs):
 
+    '''
+    Need to load the data into {}.temp_ref_loinc_string first because
+    the OpenCSVSerde will load all fields as string by default.  Once it
+    is loaded there we can insert it into a new table where the fields are
+    properly typed.
+    '''
     sqls = [
         """DROP TABLE IF EXISTS {}.temp_ref_loinc_string""".format(schema),
         """
