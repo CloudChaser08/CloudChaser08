@@ -45,7 +45,6 @@ def test_init(spark):
     quarter = 'Q32017'
     start_date = '2015-06-27'
     end_date = '2017-03-15'
-    earliest_date = '1992-11-07'
 
     columns = ['claim_id', 'service_date', 'hvid', 'col_2', 'col_3']
     data_row = Row(*columns)
@@ -81,7 +80,8 @@ def test_init(spark):
             'top_values'        : None,
             'longitudinality'   : None,
             'year_over_year'    : None,
-            'epi_calcs'         : None
+            'epi_calcs'         : None,
+            'earliest_date'     : '1992-11-07'
         }
     )
 
@@ -99,7 +99,8 @@ def test_init(spark):
             'top_values'        : None,
             'longitudinality'   : None,
             'year_over_year'    : None,
-            'epi_calcs'         : None
+            'epi_calcs'         : None,
+            'earliest_date'     : '1992-11-07'
         }
     )
 
@@ -115,27 +116,25 @@ def test_init(spark):
             'top_values'        : None,
             'longitudinality'   : None,
             'year_over_year'    : None,
-            'epi_calcs'         : None
+            'epi_calcs'         : None,
+            'earliest_date'     : '1992-11-07'
         }
     )
 
     config_reader.get_provider_config = get_prov_conf
     results_distinct_column = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
-                    feed_id, quarter, start_date, end_date, \
-                    earliest_date)
+                    feed_id, quarter, start_date, end_date)
 
     config_reader.get_provider_config = get_prov_conf_no_unique_column
     results_no_distinct_column = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
-                    feed_id, quarter, start_date, end_date, \
-                    earliest_date)
+                    feed_id, quarter, start_date, end_date)
 
     config_reader.get_provider_config = get_prov_conf_no_fill_rate_calc
     results_no_fill_rate = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
-                    feed_id, quarter, start_date, end_date, \
-                    earliest_date)
+                    feed_id, quarter, start_date, end_date)
 
 def test_fill_rate_calculated():
     assert results_distinct_column['fill_rates'] is not None
@@ -143,7 +142,7 @@ def test_fill_rate_calculated():
 
 
 def test_fill_rate_values():
-    assert results_distinct_column['fill_rates'] == [Row('hvid', 1.0), Row('col_2', 1.0)]
+    assert results_distinct_column['fill_rates'] == [{'field': 'hvid', 'fill': 1.0}, {'field': 'col_2', 'fill': 1.0}]
 
 
 def test_fill_rate_dataframe_count():
