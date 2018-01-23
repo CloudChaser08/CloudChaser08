@@ -20,8 +20,8 @@ def test_init(spark):
 def test_filter(spark):
     # test df including commonly filtered fields
     test_df = spark['spark'].sparkContext.parallelize([
-        ['100', '1880', '2017-01-01', 'dummyval', 'GOODVAL', 'badval', None, None, None, None],
-        ['100', '1880', '2017-01-01', 'dummyval2', 'badval', 'goodval', None, None, None, None]
+        ['100', '1880', '2017-01-01', 'dummyval', 'GOODVAL', 'badval', None, None, None, None, None],
+        ['100', '1880', '2017-01-01', 'dummyval2', 'badval', 'goodval', None, None, None, None, None]
     ]).toDF(StructType([
         StructField('ptnt_age_num', StringType()),
         StructField('ptnt_birth_yr', StringType()),
@@ -30,6 +30,7 @@ def test_filter(spark):
         StructField('lab_test_nm', StringType()),
         StructField('lab_test_snomed_cd', StringType()),
         StructField('lab_test_vdr_cd', StringType()),
+        StructField('lab_test_vdr_cd_qual', StringType()),
         StructField('lab_result_nm', StringType()),
         StructField('rec_stat_cd', StringType()),
         StructField('lab_result_uom', StringType())
@@ -37,8 +38,8 @@ def test_filter(spark):
 
     # assertion with no additional transforms
     assert lab_result_priv.filter(spark['sqlContext'])(test_df).collect() \
-        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', None, None, None, None, None),
-            Row('90', '1927', '2017-01-01', 'dummyval2', None, 'GOODVAL', None, None, None, None)]
+        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', None, None, None, None, None, None),
+            Row('90', '1927', '2017-01-01', 'dummyval2', None, 'GOODVAL', None, None, None, None, None)]
 
     # save original state of built-in transformer
     old_transformer = dict(lab_result_priv.lab_result_transformer)
@@ -59,8 +60,8 @@ def test_filter(spark):
                 'func': lambda c: c.replace('bad', 'good'),
                 'args': ['lab_test_nm']
             }
-    })(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, None, None, None, None),
-                               Row('90', '1927', '2017-01-01', None, 'GOODVAL', 'GOODVAL', None, None, None, None)]
+        })(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, None, None, None, None, None),
+                                   Row('90', '1927', '2017-01-01', None, 'GOODVAL', 'GOODVAL', None, None, None, None, None)]
 
     # assert original transformer and whitelist was not modified by
     # additional args

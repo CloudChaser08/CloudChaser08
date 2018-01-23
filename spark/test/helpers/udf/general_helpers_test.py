@@ -79,3 +79,10 @@ def test_slightly_obfuscate_hvid():
 def test_slightly_deobfuscate_hvid():
     assert gh.slightly_deobfuscate_hvid(2004332781, 'CPQ-013') == 1234567
     assert gh.slightly_deobfuscate_hvid(gh.slightly_obfuscate_hvid(1234567, 'CPQ-013'), 'CPQ-013') == 1234567
+
+
+def test_remove_split_suffix():
+    assert gh.remove_split_suffix('/parent/dir/myfile.txt') == 'myfile.txt'
+    assert gh.remove_split_suffix('/parent/dir/myfile.txt.aa.bz2') == 'myfile.txt'
+    assert gh.remove_split_suffix('/parent/dir/myfile.txt', True) == '/parent/dir/myfile.txt'
+    assert gh.remove_split_suffix('/parent/dir/myfile.txt.aa.bz2', True) == '/parent/dir/myfile.txt'
