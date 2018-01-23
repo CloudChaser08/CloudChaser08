@@ -139,7 +139,7 @@ def do_update_log(ds, **kwargs):
         hll_generation_log.append({'feed_id': f, 'last_ran' : datetime.now().isoformat()})
     
     with open('/tmp/hll_generation/hll_generation_log.json', 'w') as fout:
-        fout.write(json.dumps(hll_generation_log, sort_keys=True, indent=4))
+        json.dump(hll_generation_log, fout, sort_keys=True, indent=4)
 
     msg =  'Finished generating HLLs for feed'
     if len(feed_config) > 1:
