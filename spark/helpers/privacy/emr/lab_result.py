@@ -51,7 +51,8 @@ def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
             *[
                 postprocessor.apply_whitelist(
                     sqlc, whitelist['column_name'], whitelist['domain_name'],
-                    comp_col_names=whitelist.get('column_name_quals')
+                    comp_col_names=whitelist.get('column_name_quals'),
+                    clean_up_freetext=whitelist.get('clean_up_freetext', True)
                 ) for whitelist in whtlsts
             ]
         )(
