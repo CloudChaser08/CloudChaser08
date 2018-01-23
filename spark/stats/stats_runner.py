@@ -8,7 +8,7 @@ import spark.stats.processor as processor
 
 
 def run(spark, sqlContext, feed_id, quarter, start_date,
-        end_date, output_dir):
+        end_date, output_dir, index_all_dates=False):
 
     all_stats = processor.run_marketplace_stats(spark, sqlContext,
                 feed_id, quarter, start_date, end_date)
@@ -40,6 +40,7 @@ def main(args):
     start_date = args.start_date
     end_date = args.end_date
     output_dir = args.output_dir
+    index_all_dates = args.index_all_dates
 
     # set up spark
     spark, sqlContext = spark_setup \
@@ -57,5 +58,6 @@ if __name__ == '__main__':
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)
     parser.add_argument('--output_dir', type = str)
+    parser.add_argument('--index_all_dates', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
