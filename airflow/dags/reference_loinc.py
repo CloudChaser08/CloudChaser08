@@ -195,15 +195,30 @@ def scrape_loinc(tomorrow_ds, **kwargs):
 def create_temp_tables(tomorrow_ds, schema, s3, ref_loinc_schema, **kwargs):
 
     sqls = [
-        """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema),
+        """DROP TABLE IF EXISTS {}.temp_ref_loinc_string""".format(schema),
         """
-        CREATE EXTERNAL TABLE {}.temp_ref_loinc (
+        CREATE EXTERNAL TABLE {}.temp_ref_loinc_string (
             {}
         )
         ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
         STORED AS TEXTFILE
         LOCATION 's3a://{}{}/loinc.csv/'
         tblproperties ('skip.header.line.count'='1')""".format(schema, ref_loinc_schema, s3, tomorrow_ds),
+
+        """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema),
+        """
+        CREATE TABLE {}.temp_ref_loinc (
+            {}
+        )
+        """.format(schema, ref_loinc_schema),
+
+        """
+        INSERT INTO {}.temp_ref_loinc SELECT * FROM {}.temp_ref_loinc_string
+        """.format(schema, schema),
+
+        """
+        DROP TABLE {}.temp_ref_loinc_string
+        """.format(schema),
 
         """DROP TABLE IF EXISTS {}.temp_ref_loinc_map_to""".format(schema),
         """

@@ -9,6 +9,8 @@ def hive_execute(sqls, conn_id='hive_analytics'):
         logging.info("Setting SSE")
         cur.execute('set fs.s3a.server-side-encryption-algorithm=AES256')
         cur.execute('set fs.s3n.server-side-encryption-algorithm=AES256')
+        cur.execute('set hive.strict.checks.cartesian.product=false')
+        cur.execute('set hive.mapred.mode=nonstrict')
         for statement in sqls:
             logging.info("SQL: " + statement)
             cur.execute(statement)
