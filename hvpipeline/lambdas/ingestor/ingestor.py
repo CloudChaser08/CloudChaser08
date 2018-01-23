@@ -39,6 +39,10 @@ def lambda_handler(event, context):
             feed_conf = session.query(pipeline_models.DataFeedConfiguration).\
                 filter_by(id=conf.id)
 
+            if not dates_helps.is_file_date_on_schedule(file_date, feed_conf.cron_schedule):
+                #TODO send to error queue
+                continue
+
             arrival_status = pipeline_models.FILE_ARRIVAL_STATUS.ARRIVED_ON_TIME
             if not dates_helper.is_file_on_time(file_date, feed_conf.cron_schedule):
                 arrival_status = pipeline_models.FILE_ARRIVAL_STATUS.ARRIVED_LATE

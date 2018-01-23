@@ -1,7 +1,22 @@
 from croniter import croniter
-from datetime import datetime
+from datetime import datetime, timedelta
 
 EPOCH = datetime(1970, 1, 1)
+
+def is_file_date_on_schedule(file_date, cron_schedule, grace_period):
+    now = datetime.utcnow()
+    cron = croniter(cron_schedule, now)
+    cron.get_next() # Jump to the next time we expect a file
+
+    # Try to identify which cron iteration this file is from
+    while cron.get_current() > (file_date - EPOCH).total_seconds() and \
+            cron.get_current() > 0
+        cron.get_prev()
+
+    if cron.get_current() == (file_date - EPOCH).total_seconds():
+        return True
+
+    return False
 
 def is_file_on_time(file_date, cron_schedule, grace_period):
     now = datetime.utcnow()
