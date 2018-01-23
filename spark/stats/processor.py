@@ -107,8 +107,7 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
     # used for fill rate, top values, and key stats
     if distinct_column_name:
         gen_stats_df = postprocessor.compose(
-            utils.select_data_in_date_range(start_date, end_date, date_column_field),
-            utils.select_distinct_values_from_column(distinct_column_name)
+            utils.select_data_in_date_range(start_date, end_date, date_column_field)
         )(all_data_df).coalesce(partitions)
     else:
         gen_stats_df = utils.select_data_in_date_range(start_date, \
