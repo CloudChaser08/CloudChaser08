@@ -59,10 +59,10 @@ class S3ConnectionConfig:
 
 class IncomingFileConfig:
     def __init__(
-            self, feed_name, src_system, src_conf,
+            self, name, src_system, src_conf,
             dest_path, file_name_regexes, **kwargs
     ):
-        self.feed_name = feed_name
+        self.name = name
         self.src_system = src_system
 
         if self.src_system == 'sftp':
@@ -111,14 +111,14 @@ def generate_detect_move_task(config):
     def execute(ds, **kwargs):
         new_files = config.get_new_files()
         if new_files:
-            logging.info("Moving {} files for {}".format(str(len(new_files)), config.feed_name))
+            logging.info("Moving {} files for {}".format(str(len(new_files)), config.name))
             for f in new_files:
                 config.get_fetch_func()(f, config.dest_path)
         else:
-            logging.info("No new files found for {}".format(config.feed_name))
+            logging.info("No new files found for {}".format(config.name))
 
     return PythonOperator(
-        task_id='copy_' + config.feed_name + '_files',
+        task_id='copy_' + config.name + '_files',
         provide_context=True,
         python_callable=execute,
         dag=mdag

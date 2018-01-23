@@ -1,6 +1,6 @@
 [
   {
-    "feed_name": "cardinal_mpi",
+    "name": "cardinal_mpi",
     "src_system": "s3",
     "src_conf": {
       "path": "s3://hvincoming/cardinal_raintree/mpi/"
@@ -11,7 +11,7 @@
     ]
   },
   {
-    "feed_name": "cardinal_pds",
+    "name": "cardinal_pds",
     "src_system": "s3",
     "src_conf": {
       "path": "s3://hvincoming/cardinal_raintree/pds/"
@@ -23,15 +23,26 @@
     ]
   },
   {
-    "feed_name": "emdeon_dx",
+    "name": "emdeon_dx_transactions",
     "src_system": "sftp",
     "src_conf": {
       "airflow_conf_variable": "Emdeon SFTP Configuration"
     },
     "dest_path": "s3://healthverity/incoming/emdeon/medicalclaims/transactions/",
     "file_name_regexes": [
-      "PDS_record_data_\\d{2}\\d{2}\\d{2}",
-      "PDS_deid_data_\\d{2}\\d{2}\\d{2}",
+      "\\d{2}\\d{2}\\d{2}_Claims_US_CF_D_deid.dat.gz",
+      "\\d{2}\\d{2}\\d{2}_Claims_US_CF_D_deid.dat.mft"
     ]
   },
+  {
+    "name": "emdeon_dx_deid",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "Emdeon SFTP Configuration"
+    },
+    "dest_path": "s3://healthverity/incoming/emdeon/medicalclaims/deid/",
+    "file_name_regexes": [
+      "\\d{2}\\d{2}\\d{2}_Claims_US_CF_Hash_File_HV_Encrypt.dat.gz"
+    ]
+  }
 ]
