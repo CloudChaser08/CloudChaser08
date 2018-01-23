@@ -136,7 +136,7 @@ def do_update_log(ds, **kwargs):
             del feed_config[entry['feed_id']]
 
     for f in feed_config:
-        hll_generation_log.append({'feed_id': f, 'last_ran' : datetime.now().isoformat()})
+        hll_generation_log.append({'feed_id': f, 'date_ran' : datetime.now().isoformat()})
     
     with open('/tmp/hll_generation/hll_generation_log.json', 'w') as fout:
         json.dump(hll_generation_log, fout, sort_keys=True, indent=4)
