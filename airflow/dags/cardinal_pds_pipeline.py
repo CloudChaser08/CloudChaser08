@@ -1,7 +1,6 @@
 from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
-from subprocess import check_call
 import re
 import os
 
@@ -47,7 +46,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/out/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/payload/'
 else:
-    S3_TRANSACTION_RAW_URL = 's3://hvincoming/cardinal_raintree/pds/'
+    S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/cardinal/pds/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/cardinal_pds/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/cardinal_pds/'
 
@@ -65,14 +64,11 @@ DEID_FILE_DESCRIPTION = 'Cardinal PDS RX deid file'
 DEID_FILE_NAME_TEMPLATE = 'PDS_deid_data_{}{}{}'
 DEID_FILE_PREFIX = 'PDS_deid_data_'
 
-# Where raw transactions should go
-HV_SLASH_INCOMING = 'testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/moved_raw/' \
-                    if HVDAG.HVDAG.airflow_env == 'test' else 'incoming/cardinal/pds/'
 CARDINAL_DAY_OFFSET = 1
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TMP_PATH_TEMPLATE
-    )
+)
 
 def get_formatted_datetime(ds, kwargs):
     return kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_datetime', key = 'file_datetime')
@@ -125,7 +121,7 @@ def generate_file_validation_task(
                 'regex_name_match'        : True,
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-                's3_bucket'               : 'hvincoming',
+                's3_bucket'               : S3_TRANSACTION_RAW_URL.split('/')[2],
                 'file_description'        : 'Cardinal PDS RX ' + task_id + ' file',
                 'quiet_retries'           : 24
             }
@@ -160,30 +156,10 @@ fetch_transaction = SubDagOperator(
             ),
             'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
+            's3_bucket'                 : S3_TRANSACTION_RAW_URL.split('/')[2]
         }
     ),
     task_id = 'fetch_transaction_file',
-    dag = mdag
-)
-
-fetch_deid = SubDagOperator(
-    subdag = s3_fetch_file.s3_fetch_file(
-        DAG_NAME,
-        'fetch_deid_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_path_template'         : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func'   : date_utils.generate_insert_date_into_template_function(
-                    DEID_FILE_NAME_TEMPLATE + '\d{{6}}', day_offset = CARDINAL_DAY_OFFSET
-            ),
-            'regex_name_match'          : True,
-            's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
-        }
-    ),
-    task_id = 'fetch_deid_file',
     dag = mdag
 )
 
@@ -214,24 +190,6 @@ def do_get_incoming_file_paths(ds, kwargs):
     return [tmp_dir + TRANSACTION_FILE_PREFIX + file_datetime,
             tmp_dir + DEID_FILE_PREFIX + file_datetime
            ]
-
-
-push_s3 = SubDagOperator(
-    subdag = s3_push_files.s3_push_files(
-        DAG_NAME,
-        'push_s3',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'file_paths_func'   : do_get_incoming_file_paths,
-            'tmp_dir_func'      : get_tmp_dir,
-            's3_prefix_func'    : lambda ds, kwargs: HV_SLASH_INCOMING,
-            's3_bucket'         : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
-        }
-    ),
-    task_id = 'push_s3',
-    dag = mdag
-)
 
 decrypt_transaction = SubDagOperator(
     subdag = decrypt_files.decrypt_files(
@@ -383,7 +341,6 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 ### Dag Structure ###
 if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_deid.set_upstream(validate_deid)
     fetch_transaction.set_upstream(validate_transaction)
     queue_up_for_matching.set_upstream([validate_deid, get_datetime])
     detect_move_normalize_dag.set_upstream(
@@ -391,13 +348,12 @@ if HVDAG.HVDAG.airflow_env != 'test':
     )
     fetch_normalized_data.set_upstream(detect_move_normalize_dag)
     deliver_normalized_data.set_upstream(fetch_normalized_data)
-    clean_up_workspace.set_upstream([push_s3, deliver_normalized_data])
+    clean_up_workspace.set_upstream(deliver_normalized_data)
     update_analytics_db.set_upstream(detect_move_normalize_dag)
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
     clean_up_workspace.set_upstream(split_transaction)
-    
+
 get_datetime.set_upstream(fetch_transaction)
-decrypt_transaction.set_upstream(push_s3)
-push_s3.set_upstream([get_datetime, fetch_deid])
+decrypt_transaction.set_upstream(get_datetime)
 split_transaction.set_upstream(decrypt_transaction)
