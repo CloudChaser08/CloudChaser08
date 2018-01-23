@@ -194,16 +194,37 @@ def scrape_loinc(tomorrow_ds, **kwargs):
 
 def create_temp_tables(tomorrow_ds, schema, s3, ref_loinc_schema, **kwargs):
 
+    '''
+    Need to load the data into {}.temp_ref_loinc_string first because
+    the OpenCSVSerde will load all fields as string by default.  Once it
+    is loaded there we can insert it into a new table where the fields are
+    properly typed.
+    '''
     sqls = [
-        """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema),
+        """DROP TABLE IF EXISTS {}.temp_ref_loinc_string""".format(schema),
         """
-        CREATE EXTERNAL TABLE {}.temp_ref_loinc (
+        CREATE EXTERNAL TABLE {}.temp_ref_loinc_string (
             {}
         )
         ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
         STORED AS TEXTFILE
         LOCATION 's3a://{}{}/loinc.csv/'
         tblproperties ('skip.header.line.count'='1')""".format(schema, ref_loinc_schema, s3, tomorrow_ds),
+
+        """DROP TABLE IF EXISTS {}.temp_ref_loinc""".format(schema),
+        """
+        CREATE TABLE {}.temp_ref_loinc (
+            {}
+        )
+        """.format(schema, ref_loinc_schema),
+
+        """
+        INSERT INTO {}.temp_ref_loinc SELECT * FROM {}.temp_ref_loinc_string
+        """.format(schema, schema),
+
+        """
+        DROP TABLE {}.temp_ref_loinc_string
+        """.format(schema),
 
         """DROP TABLE IF EXISTS {}.temp_ref_loinc_map_to""".format(schema),
         """
