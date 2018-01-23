@@ -1,25 +1,13 @@
 [
   {
-    "feed_name": "cardinal_mpi",
+    "feed_name": "s3_test",
     "src_system": "s3",
     "src_conf": {
-      "path": "s3://hvincoming/cardinal_raintree/mpi/"
+      "path": "s3://salusv/testing/dewey/airflow/e2e/gather_incoming_files/src/"
     },
-    "dest_path": "s3://salusv/testing/dewey/airflow/e2e/incoming-files/cardinal/mpi/",
+    "dest_path": "s3://salusv/testing/dewey/airflow/e2e/gather_incoming_files/dest/",
     "file_name_regexes": [
-      "mpi.\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}\\d{2}.zip"
-    ]
-  },
-  {
-    "feed_name": "cardinal_pds",
-    "src_system": "s3",
-    "src_conf": {
-      "path": "s3://hvincoming/cardinal_raintree/pds/"
-    },
-    "dest_path": "s3://salusv/testing/dewey/airflow/e2e/incoming-files/cardinal/pds/",
-    "file_name_regexes": [
-      "PDS_record_data_\\d{2}\\d{2}\\d{2}",
-      "PDS_deid_data_\\d{2}\\d{2}\\d{2}"
+      "test_file_\\d{4}-\\d{2}-\\d{2}.txt"
     ]
   }
 ]

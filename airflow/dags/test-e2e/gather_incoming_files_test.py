@@ -1,6 +1,6 @@
 import subprocess
 
-INCOMING_FILES_DIR = 's3://salusv/testing/dewey/airflow/e2e/incoming_files/'
+INCOMING_FILES_DIR = 's3://salusv/testing/dewey/airflow/e2e/gather_incoming_files'
 
 
 def cleanup():
@@ -15,7 +15,7 @@ def test_run():
         'airflow', 'clear', '-c', 'gather_incoming_files'
     ])
     subprocess.check_call([
-        'airflow', 'backfill', 'gather_incoming_file',
+        'airflow', 'backfill', 'gather_incoming_files',
         '-s', '2018-01-22T12:00:00',
         '-e', '2018-01-22T12:00:00',
         '-I'
@@ -24,7 +24,7 @@ def test_run():
 
 def test_files_moved():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', INCOMING_FILES_DIR
+        'aws', 's3', 'ls', '{}/dest'.format(INCOMING_FILES_DIR)
     ])) > 0
 
 
