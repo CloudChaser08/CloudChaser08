@@ -142,9 +142,12 @@ def do_update_log(ds, **kwargs):
         fout.write(json.dumps(hll_generation_log, sort_keys=True, indent=4))
 
     msg =  'Finished generating HLLs for feed'
-    msg += ('s ' if len(feed_config) > 1 else ' ')
-    msg += ', '.join(feed_config.keys()[:-1])
-    msg += ', and {}'.format(feed_config.keys()[-1])
+    if len(feed_config) > 1:
+        msg += 's '
+        msg += ', '.join(feed_config.keys()[:-1])
+        msg += ', and {}'.format(feed_config.keys()[-1])
+    else:
+        msg += feed_config.keys()[0]
 
     slack.send_message('#data-automation', text=msg)
     s3_utils.copy_file('/tmp/hll_generation/hll_generation_log.json', 's3://healthverityreleases/mellon/')
