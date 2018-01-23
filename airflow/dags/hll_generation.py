@@ -147,7 +147,7 @@ def do_update_log(ds, **kwargs):
         msg += ', '.join(feed_config.keys()[:-1])
         msg += ', and {}'.format(feed_config.keys()[-1])
     else:
-        msg += feed_config.keys()[0]
+        msg += ' ' + feed_config.keys()[0]
 
     slack.send_message('#data-automation', text=msg)
     s3_utils.copy_file('/tmp/hll_generation/hll_generation_log.json', 's3://healthverityreleases/mellon/')
