@@ -39,10 +39,12 @@ def apply_schema(df, schema, columns_to_fill=None):
     if not columns_to_fill:
         columns_to_fill = schema.names
 
-    return df.select(
-        *[
-            (lit(None) if schema[i] not in columns_to_fill else col(df.columns[i])) \
-                .cast(schema[i].dataType).alias(schema[i].name)
-            for i in xrange(len(schema))
-        ]
-    )
+    new_columns = []
+    for field in schema:
+        if field.name in columns_to_fill:
+            col_value = col(df.columns[columns_to_fill.index(field.name)])
+        else:
+            col_value = lit(None)
+        new_columns.append(col_value.cast(field.dataType).alias(field.name))
+
+    return df.select(*new_columns)
