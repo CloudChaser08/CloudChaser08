@@ -169,6 +169,7 @@ def split_step(task_id, filename, s3_destination_template):
 
 
 split_tasks = [
+    split_step('allergies', 'Allergies.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'allergies/'),
     split_step('appointments', 'Appointments.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'appointments/'),
     split_step('clients', 'Clients.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'clients/'),
     split_step('encounters', 'Encounters.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'encounters/'),
