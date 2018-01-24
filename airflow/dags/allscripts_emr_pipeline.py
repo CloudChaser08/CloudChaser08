@@ -24,11 +24,11 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/allscripts/emr/{}{}{}/'
-DAG_NAME = 'allscripts_pipeline'
+DAG_NAME = 'allscripts_emr_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 4, 13, 14),
+    'start_date': datetime(2018, 10, 22),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -36,7 +36,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 14 * * *",
+    schedule_interval="0 0 22 * *",
     default_args=default_args
 )
 
@@ -45,22 +45,22 @@ ALLSCRIPTS_EMR_MONTH_OFFSET = 1
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/out/{}/{}/{}/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/out/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/payload/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/allscripts/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/emr/allscripts/{}/{}/{}/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/emr/allscripts/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/emr/allscripts/'
 
 # Transaction ZIP
 TRANSACTION_FILE_DESCRIPTION = 'Allscripts EMR transaction ZIP file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'Allscripts_{2}{1}_[0-9]{{7}}_01.zip'
+TRANSACTION_FILE_NAME_TEMPLATE = 'Allscripts_{1}{0}_[0-9]{{7}}_01.zip'
 MINIMUM_TRANSACTION_FILE_SIZE = 5000000000
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Allscripts EMR deid file'
-DEID_FILE_NAME_TEMPLATE = 'Allscripts_HV_{2}{1}_[0-9]{{7}}_01.dat.zip'
-DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'Allscripts_HV_{2}{1}_[0-9]{{7}}_01.dat'
+DEID_FILE_NAME_TEMPLATE = 'Allscripts_HV_{1}{0}_[0-9]{{7}}_01.dat.zip'
+DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'Allscripts_HV_{1}{0}_[0-9]{{7}}_01.dat'
 MINIMUM_DEID_FILE_SIZE = 5000000000
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
@@ -79,10 +79,10 @@ def generate_transaction_file_validation_dag(
             mdag.schedule_interval,
             {
                 'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
-                    path_template, month_format='%b', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+                    path_template, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_date_into_template_function(
-                    path_template, month_format='%b'
+                    path_template, month_format='%b', year_format='%y'
                 ),
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -112,7 +112,7 @@ fetch_transaction = SubDagOperator(
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE, month_format='%b', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+                TRANSACTION_FILE_NAME_TEMPLATE, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : S3_TRANSACTION_RAW_URL.split('/')[2],
@@ -131,7 +131,7 @@ def unzip_step():
         decompression.decompress_7z_file(
             tmp_dir + file_name, tmp_dir, Variable.get("ALLSCRIPTS_EMR_ZIP_PASSWORD")
         )
-        os.rm(file_name)
+        os.remove(tmp_dir + file_name)
     return PythonOperator(
         task_id='unzip_transaction_file',
         provide_context=True,
@@ -169,19 +169,19 @@ def split_step(task_id, filename, s3_destination_template):
 
 
 split_tasks = [
-    split_step('appointments', 'Appointments.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'appointments'),
-    split_step('clients', 'Clients.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'clients'),
-    split_step('encounters', 'Encounters.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'encounters'),
-    split_step('fillrates', 'FillRates.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'fillrates'),
-    split_step('medications', 'Medications.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'medications'),
-    split_step('orders', 'Orders.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'orders'),
-    split_step('patientdemographics', 'PatientDemographics.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'patientdemographics'),
-    split_step('problems', 'Problems.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'problems'),
-    split_step('providers', 'Providers.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'providers'),
-    split_step('results', 'Results.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'results'),
-    split_step('rowcounts', 'RowCounts.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'rowcounts'),
-    split_step('vaccines', 'Vaccines.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'vaccines'),
-    split_step('vitals', 'Vitals.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'vitals')
+    split_step('appointments', 'Appointments.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'appointments/'),
+    split_step('clients', 'Clients.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'clients/'),
+    split_step('encounters', 'Encounters.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'encounters/'),
+    split_step('fillrates', 'FillRates.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'fillrates/'),
+    split_step('medications', 'Medications.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'medications/'),
+    split_step('orders', 'Orders.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'orders/'),
+    split_step('patientdemographics', 'PatientDemographics.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'patientdemographics/'),
+    split_step('problems', 'Problems.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'problems/'),
+    split_step('providers', 'Providers.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'providers/'),
+    split_step('results', 'Results.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'results/'),
+    split_step('rowcounts', 'RowCounts.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'rowcounts/'),
+    split_step('vaccines', 'Vaccines.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'vaccines/'),
+    split_step('vitals', 'Vitals.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'vitals/')
 ]
 
 
@@ -211,7 +211,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             {
                 'source_files_func' : lambda ds, k: [
                     S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
-                        DEID_FILE_NAME_TEMPLATE, k, month_format='%b', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+                        DEID_FILE_NAME_TEMPLATE, k, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
                     )
                 ]
             }
@@ -241,14 +241,15 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func'      : lambda ds, k: [
                 date_utils.insert_date_into_template(
-                    DEID_FILE_NAME_UNZIPPED_TEMPLATE, k, month_format='%b', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+                    '_'.join(DEID_FILE_NAME_UNZIPPED_TEMPLATE.split('_')[:3]), k, month_format='%b', year_format='%y',
+                    month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
                 )
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
-                '{}/{}/{}', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+                '{}/{}', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
-            'vendor_uuid'                       : '0b6cc05b-bff3-4365-b229-8d06480ad4a3',
+            'vendor_uuid'                       : '0b6cc05b-bff3-4365-b229-8d06480ad4a3-emr',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/allscripts/emr/sparkNormalizeAllscriptsEMR.py',
             'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True
