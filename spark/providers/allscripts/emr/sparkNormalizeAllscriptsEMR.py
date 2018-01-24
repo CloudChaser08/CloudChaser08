@@ -3,9 +3,11 @@ import argparse
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.providers.allscripts.emr.transaction_schemas as transaction_schemas
+from spark.common.emr_common_model import schema as emr_common_model_schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.constants as constants
+import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
@@ -38,7 +40,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    payload_loader.load(runner, matching_path, ['personid'])
+    payload_loader.load(runner, matching_path, ['personId', 'parentId'])
 
     transaction_tables = [
         ('vitals', transaction_schemas.vitals),
@@ -46,7 +48,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ('results', transaction_schemas.results),
         ('providers', transaction_schemas.providers),
         ('problems', transaction_schemas.problems),
-        ('patients', transaction_schemas.patientdemographics),
+        ('patientdemographics', transaction_schemas.patientdemographics),
         ('orders', transaction_schemas.orders),
         ('medications', transaction_schemas.medications),
         ('encounters', transaction_schemas.encounters),
@@ -54,16 +56,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ('allergies', transaction_schemas.allergies)
     ]
 
-    for table_name, table_schema in transaction_tables.keys():
+    for table_name, table_schema in transaction_tables:
         postprocessor.compose(
             postprocessor.trimmify, postprocessor.nullify
         )(
             runner.sqlContext.read.csv('{}{}/'.format(input_path, table_name), schema=table_schema)
-        ).createOrReplaceTempView(table_name)
+        ).createOrReplaceTempView('transactional_' + table_name)
 
     # normalize and unload
-    runner.run_spark_script('normalize.sql', return_output=True).repartition(20).write.parquet(
-        constants.hdfs_staging_dir
+    schema_enforcer.apply_schema(
+        runner.run_spark_script('normalize.sql', return_output=True), emr_common_model_schema
+    ).repartition(20).write.parquet(
+        path=constants.hdfs_staging_dir, compression="gzip"
     )
 
 
@@ -81,7 +85,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/emr/allscripts/{}/'.format(args.date.replace('-','/'))
+        output_path = 's3://salusv/warehouse/parquet/emr/allscripts/{}/'.format('/'.join(args.date.split('-')[:2]))
 
     normalized_records_unloader.distcp(output_path)
 

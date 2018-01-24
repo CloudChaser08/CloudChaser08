@@ -1,20 +1,20 @@
 SELECT DISTINCT
-    COALESCE(payload.parentid, payload.hvid)    AS hvid,
-    '1'                                         AS source_version,
-    codes.claim_type                            AS claim_type,
-    encounters.encounterDTTM                    AS date_start,
-    encounters.encounterid                      AS encounter_id,
-    payload.yearOfBirth                         AS patient_year_of_birth,
-    payload.threeDigitZip                       AS patient_zip,
+    COALESCE(payload.parentid, payload.hvid)            AS hvid,
+    '1'                                                 AS source_version,
+    codes.claim_type                                    AS claim_type,
+    encounters.encounterDTTM                            AS date_start,
+    encounters.encounterid                              AS encounter_id,
+    payload.yearOfBirth                                 AS patient_year_of_birth,
+    payload.threeDigitZip                               AS patient_zip,
     CASE
       WHEN as_patients.gender = 'Male' THEN 'M'
       WHEN as_patients.gender = 'Female' THEN 'F'
       ELSE 'Unknown'
-    END                                         AS patient_gender,
-    TRIM(replace(codes.diagnosis_code,'.',''))  AS diagnosis_code,
-    codes.procedure_code                        AS procedure_code,
-    codes.loinc_code                            AS loinc_code,
-    codes.ndc_code                              AS ndc_code
+    END                                                 AS patient_gender,
+    TRIM(REGEXP_REPLACE(codes.diagnosis_code,'\.',''))  AS diagnosis_code,
+    codes.procedure_code                                AS procedure_code,
+    codes.loinc_code                                    AS loinc_code,
+    codes.ndc_code                                      AS ndc_code
 FROM transactional_encounters encounters
     LEFT JOIN (
     -- diagnoses
@@ -108,5 +108,5 @@ FROM transactional_encounters encounters
     FROM transactional_results
         ) codes
     ON encounters.encounterid = codes.encounterid AND encounters.gen2patientID = codes.gen2patientID
-    INNER JOIN transactional_patients as_patients ON encounters.gen2patientID = as_patients.gen2patientID
+    INNER JOIN transactional_patientdemographics as_patients ON encounters.gen2patientID = as_patients.gen2patientID
     INNER JOIN matching_payload payload ON encounters.gen2patientID = UPPER(payload.personid)

@@ -175,7 +175,7 @@ orders = StructType([
     StructField('primarykey', StringType(), True)
 ])
 
-patients = StructType([
+patientdemographics = StructType([
     StructField('rectype', StringType(), True),
     StructField('rectypeVersion', StringType(), True),
     StructField('genclientID', StringType(), True),
