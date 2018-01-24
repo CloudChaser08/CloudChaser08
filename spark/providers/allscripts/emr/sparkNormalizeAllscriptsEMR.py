@@ -14,6 +14,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     script_path = __file__
 
+    date_input = '-'.join(date_input.split('-')[:2])
+
     if test:
         input_path = file_utils.get_abs_path(
             script_path, '../../test/providers/allscripts/resources/input/year/month/day/'
