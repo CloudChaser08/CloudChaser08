@@ -14,8 +14,12 @@ def decompress_gzip_file(input_file):
     """
     subprocess.check_call(['gzip', '-df', input_file])
 
-def decompress_7z_file(input_file, output_dir):
+def decompress_7z_file(input_file, output_dir, password=None):
     """
     Decompress a zip file with 7z. Overwrite is enabled.
     """
-    subprocess.check_call(['7z', 'e', '-o', output_dir, '-y', input_file])
+    base_cmd = ['7z', 'e', '-o', output_dir, '-y', input_file]
+    if password:
+        subprocess.check_call(base_cmd + ['-p', password])
+    else:
+        subprocess.check_call(base_cmd)
