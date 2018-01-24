@@ -26,7 +26,7 @@ def list_path(path, host, user, password):
     List files in a path
     """
     with pysftp.Connection(host, username=user, password=password) as conn:
-        return conn.listdir_attr(path)
+        return conn.listdir(path)
 
 
 def file_exists(path, host, user, password):

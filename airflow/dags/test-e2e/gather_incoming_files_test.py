@@ -5,7 +5,10 @@ INCOMING_FILES_DIR = 's3://salusv/testing/dewey/airflow/e2e/gather_incoming_file
 
 def cleanup():
     subprocess.check_call([
-        'aws', 's3', 'rm', '--recursive', INCOMING_FILES_DIR + '/dest'
+        'aws', 's3', 'rm', '--recursive', INCOMING_FILES_DIR + '/dest_s3'
+    ])
+    subprocess.check_call([
+        'aws', 's3', 'rm', '--recursive', INCOMING_FILES_DIR + '/dest_sftp'
     ])
 
 
@@ -24,7 +27,10 @@ def test_run():
 
 def test_files_moved():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', '{}/dest'.format(INCOMING_FILES_DIR)
+        'aws', 's3', 'ls', '{}/dest_s3'.format(INCOMING_FILES_DIR)
+    ])) > 0
+    assert len(subprocess.check_output([
+        'aws', 's3', 'ls', '{}/dest_sftp'.format(INCOMING_FILES_DIR)
     ])) > 0
 
 

@@ -5,6 +5,7 @@ import re
 import logging
 import json
 import os
+import shutil
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -17,7 +18,7 @@ for m in [HVDAG, s3_utils, sftp_utils]:
 # Applies to all files
 DAG_NAME = 'gather_incoming_files'
 
-TMP_DIR = '/tmp/incoming-files/'
+TMP_DIR = '/tmp/incoming-files'
 
 default_args = {
     'owner': 'airflow',
@@ -67,7 +68,7 @@ class IncomingFileConfig:
 
         if self.src_system == 'sftp':
             self.src_conf = SFTPConnectionConfig(**json.loads(
-                Variable.get(kwargs['src_conf']['airflow_conf_variable'])
+                Variable.get(src_conf['airflow_conf_variable'])
             ))
         elif self.src_system == 's3':
             self.src_conf = S3ConnectionConfig(**src_conf)
@@ -85,15 +86,23 @@ class IncomingFileConfig:
         def out(src_filename, dest_filepath):
             if self.src_system == 's3':
                 s3_utils.copy_file(self.src_conf.path + src_filename, dest_filepath)
+
             elif self.src_system == 'sftp':
+                dest_dir = '{}/{}'.format(TMP_DIR, self.name)
+                try:
+                    os.makedirs(dest_dir)
+                except OSError:
+                    pass
+
                 fetch_conf = self.src_conf.asdict()
                 fetch_conf.update({
-                    'abs_internal_filepath': TMP_DIR,
-                    'abs_external_filepath': self.src_conf.path + src_filename
+                    'path': '{}/{}'.format(self.src_conf.path, src_filename),
+                    'dest_path': '{}/{}'.format(dest_dir, src_filename)
                 })
+
                 sftp_utils.fetch_file(**fetch_conf)
-                s3_utils.copy_file(TMP_DIR + src_filename, dest_filepath)
-                os.rm(TMP_DIR + src_filename)
+                s3_utils.copy_file('{}/{}'.format(dest_dir, src_filename), dest_filepath)
+
         return out
 
     def get_new_files(self):
@@ -130,3 +139,11 @@ with open(CONFIG_FILE, 'r') as incoming_files_config_file:
         generate_detect_move_task(IncomingFileConfig(**conf))
         for conf in json.load(incoming_files_config_file)
     ]
+    clean_up_workspace = PythonOperator(
+        task_id='clean_up_workspace',
+        provide_context=True,
+        python_callable=lambda ds, **k: shutil.rmtree(TMP_DIR, True),
+        dag=mdag
+    )
+
+    clean_up_workspace.set_upstream(tasks)
