@@ -1,5 +1,3 @@
-from pyspark.sql.functions import col, upper, trim
-
 from spark.spark_setup import init
 from spark.runner import Runner
 import spark.providers.guardant_health.labtests.transaction_schemas as transaction_schemas
@@ -7,12 +5,14 @@ import spark.helpers.payload_loader as payload_loader
 
 import spark.qa.datafeed as datafeed
 
-spark, sqlContext = init("Transmed EMR")
+spark, sqlContext = init("Guardant Health")
 spark_sql_runner = Runner(sqlContext)
 
-GUARDANT_HEALTH_SRC_DATA_LOCATION = 's3a://salusv/incoming/labtests/guardant_health/2017/12/18/'
-GUARDANT_HEALTH_MATCHING_PAYLOAD_LOCATION = 's3a://salusv/matching/payload/labtests/guardant_health/2017/12/18/'
-GUARDANT_HEALTH_TARGET_DATA_LOCATION = 's3a://salusv/warehouse/parquet/labtests/2018-01-16/part_provider=guardant_health/*'
+# note that this runs on all of their data, modify these paths to
+# select a subset of their data if this is undesireable
+GUARDANT_HEALTH_SRC_DATA_LOCATION = 's3a://salusv/incoming/labtests/guardant_health/*/*/*'
+GUARDANT_HEALTH_MATCHING_PAYLOAD_LOCATION = 's3a://salusv/matching/payload/labtests/guardant_health/*/*/*'
+GUARDANT_HEALTH_TARGET_DATA_LOCATION = 's3a://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=guardant_health/*'
 
 payload_loader.load(spark_sql_runner, GUARDANT_HEALTH_MATCHING_PAYLOAD_LOCATION, extra_cols=['hvJoinKey'])
 
