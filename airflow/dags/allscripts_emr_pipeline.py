@@ -28,7 +28,7 @@ DAG_NAME = 'allscripts_emr_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 10, 22),
+    'start_date': datetime(2018, 1, 22),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -254,7 +254,8 @@ detect_move_normalize_dag = SubDagOperator(
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/allscripts/emr/sparkNormalizeAllscriptsEMR.py',
             'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True,
-            'cluster_identifier'                : '0b6cc05b-bff3-4365-b229-8d06480ad4a3-emr'
+            'cluster_identifier'                : '0b6cc05b-bff3-4365-b229-8d06480ad4a3-emr',
+            'emr_node_type': 'm4.4xlarge'
         }
     ),
     task_id='detect_move_normalize',
