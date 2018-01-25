@@ -514,8 +514,8 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 sql_template = """
-    ALTER TABLE medicalclaims_old ADD PARTITION (part_provider='ability', part_processdate='{0}/{1}/{2}')
-    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/ability/{0}/{1}/{2}/'
+    ALTER TABLE medicalclaims_old ADD PARTITION (part_provider='ability', part_processdate='{0}-{1}')
+    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/ability/{0}-{1}/'
 """
 
 update_analytics_db = SubDagOperator(
@@ -525,9 +525,9 @@ update_analytics_db = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : date_utils.generate_insert_date_into_template_function(
-                sql_template
-            )
+            'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(
+                sql_template, k
+            ) if date_utils.insert_date_into_template('{}-{}-{}', k).rfind('-01') == 7 else ''
         }
     ),
     task_id='update_analytics_db',
