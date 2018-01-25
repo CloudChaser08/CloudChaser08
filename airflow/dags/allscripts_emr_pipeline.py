@@ -250,10 +250,11 @@ detect_move_normalize_dag = SubDagOperator(
                 '{}/{}', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
-            'vendor_uuid'                       : '0b6cc05b-bff3-4365-b229-8d06480ad4a3-emr',
+            'vendor_uuid'                       : '0b6cc05b-bff3-4365-b229-8d06480ad4a3',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/allscripts/emr/sparkNormalizeAllscriptsEMR.py',
             'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'cluster_identifier'                : '0b6cc05b-bff3-4365-b229-8d06480ad4a3-emr'
         }
     ),
     task_id='detect_move_normalize',
