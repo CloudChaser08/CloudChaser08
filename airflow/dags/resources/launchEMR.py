@@ -132,7 +132,7 @@ EC2_ATTR=("KeyName=emr_deployer,SubnetId={},".format(AZ_INFO[best_az]['subnet'])
         "EmrManagedMasterSecurityGroup=sg-46e8c23e,EmrManagedSlaveSecurityGroup=sg-47e8c23f")
 emr_config_options = []
 if args.use_analytics_metastore == 'true':
-    emr_config_options = ['--configurations', 'file://bin/general-conf/hiveConfiguration.json']
+    emr_config_options = ['--configurations', 'file://hiveConfiguration.json']
 
 emr_tags = "EMRCluster=" + args.cluster_name + "_" + datetime.datetime.now().strftime('%Y%m%d%H%M') + \
         " Service=" + args.cluster_purpose
