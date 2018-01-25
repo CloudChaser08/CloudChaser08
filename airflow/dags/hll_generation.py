@@ -65,7 +65,7 @@ download_configs = PythonOperator(
 
 def do_create_cluster(ds, **kwargs):
     emr_utils.create_emr_cluster(EMR_CLUSTER_NAME, NUM_NODES, NODE_TYPE,
-            EBS_VOLUME_SIZE, 'HLL', use_spot_bids=True)
+            EBS_VOLUME_SIZE, 'HLL')
 
 create_cluster = PythonOperator(
     task_id='create_cluster',

@@ -113,7 +113,7 @@ def _wait_for_steps(cluster_id):
         )
 
 
-def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size, purpose, connected_to_metastore=False, use_spot_bids=False):
+def create_emr_cluster(cluster_name, num_nodes, node_type, ebs_volume_size, purpose, connected_to_metastore=False, use_spot_bids=True):
     """Create an EMR cluster"""
     cluster_details = json.loads(
         check_output([
