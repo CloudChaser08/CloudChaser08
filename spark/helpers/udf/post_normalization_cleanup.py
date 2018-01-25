@@ -118,6 +118,11 @@ def clean_up_procedure_code(procedure_code):
 
 
 def clean_up_ndc_code(ndc_code):
+    """
+    Apply ndc-specific cleaning to target code. Note that this is not a
+    standard procedure for ndc_code values, but can be used in certain
+    situations.
+    """
     clean_code = clean_up_numeric_code(ndc_code)
     if len(str(clean_code)) == 11 or len(str(clean_code)) == 10:
         return clean_code
@@ -131,6 +136,13 @@ def clean_up_npi_code(npi_code):
         return cleaned
     else:
         return None
+
+
+def nullify_due_to_level_of_service(target_column, level_of_service):
+    if level_of_service == '6':
+        return None
+    else:
+        return target_column
 
 
 # These places of service pose a risk of revealing the patient's
