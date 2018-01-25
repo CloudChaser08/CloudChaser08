@@ -3,6 +3,8 @@ from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
 import os
+import re
+import logging
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -15,11 +17,12 @@ import subdags.detect_move_normalize as detect_move_normalize
 
 import util.decompression as decompression
 import util.date_utils as date_utils
+import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
         split_push_files, queue_up_for_matching,
         detect_move_normalize, decompression, HVDAG,
-        date_utils]:
+        date_utils, s3_utils]:
     reload(m)
 
 # Applies to all files
@@ -28,7 +31,7 @@ DAG_NAME = 'allscripts_emr_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 1, 22),
+    'start_date': datetime(2017, 12, 22),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -40,7 +43,7 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-ALLSCRIPTS_EMR_MONTH_OFFSET = 1
+ALLSCRIPTS_EMR_MONTH_OFFSET = 0
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -66,6 +69,18 @@ MINIMUM_DEID_FILE_SIZE = 5000000000
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE
 )
+
+
+def get_deid_file_name(ds, k):
+    deid_regex = date_utils.insert_date_into_template(
+        DEID_FILE_NAME_TEMPLATE, k, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+    )
+    s3_keys = s3_utils.list_s3_bucket_files(
+        S3_TRANSACTION_RAW_URL
+    )
+    return [
+        S3_TRANSACTION_RAW_URL + k for k in s3_keys if re.search(deid_regex, k)
+    ]
 
 
 def generate_transaction_file_validation_dag(
@@ -210,11 +225,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : lambda ds, k: [
-                    S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
-                        DEID_FILE_NAME_TEMPLATE, k, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
-                    )
-                ]
+                'source_files_func' : get_deid_file_name
             }
         ),
         task_id='queue_up_for_matching',
