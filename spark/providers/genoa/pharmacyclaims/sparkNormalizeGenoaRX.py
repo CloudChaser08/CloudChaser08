@@ -73,7 +73,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     # Apply clean up and privacy filtering
     postprocessor.compose(
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id = '21', vendor_id = '20', filename = None),
+        postprocessor.add_universal_columns(feed_id = '21', vendor_id = '20', filename = None, model_version_number = '04'),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '21', 'EARLIEST_VALID_SERVICE_DATE'),
         pharm_priv.filter
     )(

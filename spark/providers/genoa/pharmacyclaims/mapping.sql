@@ -1,7 +1,6 @@
 SELECT
     sales_key                                   AS claim_id,
     hvid                                        AS hvid,
-    '4'                                         AS model_version,
     input_file_name                             AS data_set,
     CASE WHEN UPPER(gender) = 'M' OR UPPER(patient_gender) = 'M' THEN 'M'
         WHEN UPPER(gender) = 'F' OR UPPER(patient_gender) = 'F' THEN 'F'
