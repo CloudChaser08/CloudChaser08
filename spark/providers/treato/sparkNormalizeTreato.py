@@ -1,6 +1,7 @@
 #! /usr/bin/python
 import argparse
 import re
+from pyspark.sql.types import Row
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -9,7 +10,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 
-def _get_rollup_vals(diagnosis_mapfile, diagnosis_code_range):
+def _get_rollup_vals(mapfile_broadcast, diagnosis_code_range):
     """
     Get a list of rollup values, each of which encompass the given
     diagnosis_code_range
@@ -19,10 +20,10 @@ def _get_rollup_vals(diagnosis_mapfile, diagnosis_code_range):
 
     diagnosis_code_range = sorted(diagnosis_code_range)
 
-    for line in diagnosis_mapfile:
+    for line in mapfile_broadcast.value:
         matches = 0
 
-        sorted_line = sorted(line.split('\t')[1].split('|'))
+        sorted_line = sorted(line[1].split('|'))
 
         # if the greatest element of the range is less than this
         # low level code, none of these will match
@@ -49,7 +50,7 @@ def _get_rollup_vals(diagnosis_mapfile, diagnosis_code_range):
         # for this range. reset the current max and the current
         # rollup array
         if matches > maximum_matches:
-            rollups = [line.split('\t')[0]]
+            rollups = [line[0]]
             maximum_matches = matches
 
         # if the amount of matches on this line is equal to the
@@ -57,10 +58,7 @@ def _get_rollup_vals(diagnosis_mapfile, diagnosis_code_range):
         # rollup to use as the current max, append the rollup to
         # the list
         elif maximum_matches > 0 and matches == maximum_matches:
-            rollups.append(line.split('\t')[0])
-
-    # reset mapfile pointer
-    diagnosis_mapfile.seek(0)
+            rollups.append(line[0])
 
     return rollups
 
@@ -101,7 +99,7 @@ def _enumerate_range(range_string):
         return set(range_string.split('-'))
 
 
-def create_row_exploder(spark, sqlc, diagnosis_mapfile):
+def create_row_exploder(spark, sqlc, mapfile_broadcast):
     """
     Translate the ICD10Code column in the given treato_data dataframe
     into a list of rollup hash values based on the given
@@ -110,13 +108,10 @@ def create_row_exploder(spark, sqlc, diagnosis_mapfile):
     """
 
     # get all unique diagnosis range values from the transactional data
-    unique_vals = [r.icd10code for r in sqlc.sql('select distinct icd10code from transactions').collect()]
-    exploder = []
 
-    for val in unique_vals:
+    def process_row(row):
 
-        # append the value itself to the exploder in order to capture the raw value
-        exploder.append([val, post_norm_cleanup.clean_up_diagnosis_code(val, '02', None)])
+        val = row.icd10code
 
         # if this val contains a hyphen, it is a range. enumerate all
         # codes in the range.
@@ -127,12 +122,21 @@ def create_row_exploder(spark, sqlc, diagnosis_mapfile):
         else:
             diag_range = [re.sub(r'[^A-Za-z0-9]', '', val)]
 
-        # get all of the relevent hv rollup values for this diagnosis
+        exploder = []
+
+        # append the value itself to the exploder in order to capture the raw value
+        exploder.append([val, post_norm_cleanup.clean_up_diagnosis_code(val, '02', None)])
+
+        # get all of the relevant hv rollup values for this diagnosis
         # range from the given mapfile
-        rollup_vals = _get_rollup_vals(diagnosis_mapfile, diag_range)
+        rollup_vals = _get_rollup_vals(mapfile_broadcast, diag_range)
         exploder.extend([[val, rollup] for rollup in rollup_vals])
 
-    spark.sparkContext.parallelize(exploder).toDF(['treato_val', 'hv_rollup']).registerTempTable('hv_rollup_exploder')
+        return [Row(val, rollup) for [val, rollup] in exploder]
+
+    sqlc.sql('select distinct icd10code from transactions').rdd.flatMap(process_row).toDF(
+        ['treato_val', 'hv_rollup']
+    ).registerTempTable('hv_rollup_exploder')
 
 
 def run(spark, runner, date_input, diagnosis_mapfile, test=False):
@@ -160,9 +164,13 @@ def run(spark, runner, date_input, diagnosis_mapfile, test=False):
         ['input_path', input_path]
     ])
 
-    create_row_exploder(spark, runner.sqlContext, diagnosis_mapfile)
+    mapfile_broadcast = spark.sparkContext.broadcast(
+        [l.split('\t') for l in diagnosis_mapfile.readlines()]
+    )
 
     diagnosis_mapfile.close()
+
+    create_row_exploder(spark, runner.sqlContext, mapfile_broadcast)
 
     runner.run_spark_script('normalize.sql')
 
