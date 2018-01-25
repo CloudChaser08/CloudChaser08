@@ -72,14 +72,12 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(
 
 
 def get_deid_file_name(ds, k):
-    deid_regex = date_utils.insert_date_into_template(
-        DEID_FILE_NAME_TEMPLATE, k, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
-    )
-    s3_keys = s3_utils.list_s3_bucket_files(
-        S3_TRANSACTION_RAW_URL
-    )
     return [
-        S3_TRANSACTION_RAW_URL + k for k in s3_keys if re.search(deid_regex, k)
+        s3_utils.list_s3_bucket(
+            date_utils.insert_date_into_template(
+                S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'deid/', k, month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+            )
+        )[0]
     ]
 
 
@@ -118,44 +116,82 @@ if HVDAG.HVDAG.airflow_env != 'test':
         'deid', DEID_FILE_NAME_TEMPLATE, MINIMUM_DEID_FILE_SIZE
     )
 
-fetch_transaction = SubDagOperator(
-    subdag=s3_fetch_file.s3_fetch_file(
-        DAG_NAME,
-        'fetch_transaction_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
-            ),
-            's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'              : S3_TRANSACTION_RAW_URL.split('/')[2],
-            'regex_name_match'       : True
-        }
-    ),
-    task_id='fetch_transaction_file',
-    dag=mdag
-)
+def generate_fetch_dag(task_id, file_name_template):
+    return SubDagOperator(
+        subdag=s3_fetch_file.s3_fetch_file(
+            DAG_NAME,
+            'fetch_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_path_template'      : TMP_PATH_TEMPLATE,
+                'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
+                    file_name_template, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+                ),
+                's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
+                's3_bucket'              : S3_TRANSACTION_RAW_URL.split('/')[2],
+                'regex_name_match'       : True
+            }
+        ),
+        task_id='fetch_' + task_id + '_file',
+        dag=mdag
+    )
 
 
-def unzip_step():
+fetch_transaction = generate_fetch_dag('transaction', TRANSACTION_FILE_NAME_TEMPLATE)
+fetch_deid = generate_fetch_dag('deid', DEID_FILE_NAME_TEMPLATE)
+
+
+def unzip_step(task_id, file_name_template):
     def execute(ds, **kwargs):
+        file_name_regex = date_utils.insert_date_into_template(
+            file_name_template, kwargs, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+        )
         tmp_dir = get_tmp_dir(ds, kwargs)
-        file_name = os.listdir(tmp_dir)[0]
+        file_name = [
+            f for f in os.listdir(tmp_dir) if re.search(file_name_regex, f)
+        ][0]
         decompression.decompress_7z_file(
             tmp_dir + file_name, tmp_dir, Variable.get("ALLSCRIPTS_EMR_ZIP_PASSWORD")
         )
         os.remove(tmp_dir + file_name)
     return PythonOperator(
-        task_id='unzip_transaction_file',
+        task_id='unzip_' + task_id + '_file',
         provide_context=True,
         python_callable=execute,
         dag=mdag
     )
 
 
-unzip_transaction = unzip_step()
+unzip_transaction = unzip_step('transaction', TRANSACTION_FILE_NAME_TEMPLATE)
+unzip_deid = unzip_step('deid', DEID_FILE_NAME_TEMPLATE)
+
+
+def generate_push_deid_step():
+    def execute(ds, **kwargs):
+        file_name_regex = date_utils.insert_date_into_template(
+            DEID_FILE_NAME_UNZIPPED_TEMPLATE, kwargs, month_format='%b', year_format='%y', month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+        )
+        tmp_dir = get_tmp_dir(ds, kwargs)
+        file_name = [
+            f for f in os.listdir(tmp_dir) if re.search(file_name_regex, f)
+        ][0]
+        s3_utils.copy_file(
+            tmp_dir + file_name,
+            date_utils.insert_date_into_template(
+                S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'deid/', kwargs, month_offset = ALLSCRIPTS_EMR_MONTH_OFFSET
+            )
+        )
+        os.remove(tmp_dir + file_name)
+    return PythonOperator(
+        task_id='push_deid_file',
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
+
+
+push_deid = generate_push_deid_step()
 
 
 def split_step(task_id, filename, s3_destination_template):
@@ -200,6 +236,21 @@ split_tasks = [
     split_step('vitals', 'Vitals.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'vitals/')
 ]
 
+if HVDAG.HVDAG.airflow_env != 'test':
+    queue_up_for_matching = SubDagOperator(
+        subdag=queue_up_for_matching.queue_up_for_matching(
+            DAG_NAME,
+            'queue_up_for_matching',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'source_files_func' : get_deid_file_name
+            }
+        ),
+        task_id='queue_up_for_matching',
+        dag=mdag
+    )
+
 
 def clean_up_workspace_step():
     def execute(ds, **kwargs):
@@ -216,22 +267,6 @@ def clean_up_workspace_step():
 
 
 clean_up_workspace = clean_up_workspace_step()
-
-if HVDAG.HVDAG.airflow_env != 'test':
-    queue_up_for_matching = SubDagOperator(
-        subdag=queue_up_for_matching.queue_up_for_matching(
-            DAG_NAME,
-            'queue_up_for_matching',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'source_files_func' : get_deid_file_name
-            }
-        ),
-        task_id='queue_up_for_matching',
-        dag=mdag
-    )
-
 
 #
 # Post-Matching
@@ -276,7 +311,8 @@ detect_move_normalize_dag = SubDagOperator(
 
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
-    queue_up_for_matching.set_upstream(validate_deid)
+    fetch_deid.set_upstream(validate_deid)
+    queue_up_for_matching.set_upstream(push_deid)
     detect_move_normalize_dag.set_upstream(
         split_tasks + [queue_up_for_matching]
     )
@@ -286,7 +322,9 @@ else:
     )
 
 unzip_transaction.set_upstream(fetch_transaction)
+unzip_deid.set_upstream(fetch_deid)
 unzip_transaction.set_downstream(split_tasks)
+push_deid.set_upstream(unzip_deid)
 clean_up_workspace.set_upstream(
-    split_tasks
+    split_tasks + [push_deid]
 )
