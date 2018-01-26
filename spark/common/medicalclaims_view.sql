@@ -555,7 +555,7 @@ CREATE VIEW default.medicalclaims (
     cob_ins_type_code_2,
     part_provider,
     CASE WHEN part_best_date NOT IN ('NULL', '0_PREDATES_HVM_HISTORY')
-    THEN CONCAT(REGEXP_REPLACE(part_best_date, '-', '/'), '/01')
+    THEN CONCAT(part_best_date, '-01')
     ELSE '0_PREDATES_HVM_HISTORY'
     END AS part_processdate
 FROM default.medicalclaims_new
@@ -959,9 +959,9 @@ SELECT CAST(record_id AS bigint),
     part_provider,
     CASE
     WHEN part_processdate IN ('NULL', '0_PREDATES_HVM_HISTORY') THEN '0_PREDATES_HVM_HISTORY'
-    WHEN part_provider IN ('ability', 'allscripts')
-    THEN CONCAT(REGEXP_REPLACE(part_processdate, '-', '/'), '/01')
-    ELSE part_processdate
+    WHEN LENGTH(part_processdate) = 4 THEN CONCAT(part_processdate, '-01-01')
+    WHEN part_provider IN ('ability', 'allscripts') THEN CONCAT(part_processdate, '-01')
+    ELSE REGEXP_REPLACE(part_processdate, '/', '-')
     END AS part_processdate
 FROM default.medicalclaims_old
 WHERE part_provider IN ('ability', 'navicure', 'allscripts')
