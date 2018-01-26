@@ -26,10 +26,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../test/providers/allscripts/resources/matching/year/month/day/'
         ) + '/'
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/out/{}/'.format(
+        input_path = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/out/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/payload/{}/'.format(
+        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/payload/{}/'.format(
             date_input.replace('-', '/')
         )
     else:
@@ -60,7 +60,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.compose(
             postprocessor.trimmify, postprocessor.nullify
         )(
-            runner.sqlContext.read.csv('{}{}/'.format(input_path, table_name), schema=table_schema)
+            runner.sqlContext.read.csv('{}{}/'.format(input_path, table_name), schema=table_schema, sep='|')
         ).createOrReplaceTempView('transactional_' + table_name)
 
     # normalize and unload
