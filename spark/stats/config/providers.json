@@ -32,7 +32,7 @@
         {
             "name"              : "caris",
             "datafeed_id"       : "14",
-            "datatype"          : "lab_tests",
+            "datatype"          : "labtests",
             "date_field"        : "date_service",
             "record_field"      : "record_id",
             "fill_rate"         : true,
@@ -87,7 +87,7 @@
         {
             "name"              : "quest",
             "datafeed_id"       : "18",
-            "datatype"          : "lab_tests",
+            "datatype"          : "labtests",
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
             "fill_rate"         : true,
@@ -211,7 +211,7 @@
         {
             "name"              : "courtagen",
             "datafeed_id"       : "28",
-            "datatype"          : "lab_tests",
+            "datatype"          : "labtests",
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
             "fill_rate"         : true,
@@ -225,7 +225,7 @@
         {
             "name"              : "labcorp",
             "datafeed_id"       : "46",
-            "datatype"          : "lab_tests",
+            "datatype"          : "labtests",
             "date_field"        : "date_service",
             "record_field"      : null,
             "fill_rate"         : true,
@@ -239,7 +239,7 @@
         {
             "name"              : "neogenomics",
             "datafeed_id"       : "32",
-            "datatype"          : "lab_tests",
+            "datatype"          : "labtests",
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
             "fill_rate"         : true,
@@ -248,7 +248,8 @@
             "longitudinality"   : false,
             "year_over_year"    : false,
             "epi_calcs"         : null,
-            "earliest_date"     : "2014-01-01"
+            "earliest_date"     : "2014-01-01",
+            "index_all_dates"   : true
         },
         {
             "name"              : "mckesson",
