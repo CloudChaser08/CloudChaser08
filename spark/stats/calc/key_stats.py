@@ -69,7 +69,11 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
     except:
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m")
         end_date_dt = datetime.datetime.strptime(end_date, "%Y-%m")
-    days = float((end_date_dt - earliest_date_dt).days)
+
+    # We only want to do at most 2 years here
+    # This is so we don't have very low daily values for feeds
+    # where we index all dates
+    days = float(min(730, (end_date_dt - earliest_date_dt).days))
 
     key_stats = {
         'total_patient': total_patient,
