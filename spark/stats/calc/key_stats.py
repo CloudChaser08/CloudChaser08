@@ -38,24 +38,30 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
     record_attribute = provider_conf.get('record_attribute', '*')
     row_attribute = '*'
 
-    start_date = max(earliest_date, start_date)
-
-    total_patient = _get_row_count(df, earliest_date, end_date,
-                                   patient_attribute, date_col)
     total_24_month_patient = _get_row_count(df, start_date, end_date,
                                    patient_attribute, date_col)
-    total_record = _get_row_count(df, earliest_date, end_date,
-                                   record_attribute, date_col)
     total_24_month_record = _get_row_count(df, start_date, end_date,
                                    record_attribute, date_col)
     if record_attribute == row_attribute:
-        total_row = total_record
         total_24_month_row = total_24_month_record
     else:
-        total_row = _get_row_count(df, earliest_date, end_date,
-                                       row_attribute, date_col)
         total_24_month_row = _get_row_count(df, start_date, end_date,
                                        row_attribute, date_col)
+
+    if start_date <= earliest_date:
+        total_patient = total_24_month_patient
+        total_record = total_24_month_record
+        total_row = total_24_month_row
+    else:
+        total_patient = _get_row_count(df, earliest_date, end_date, 
+                                       patient_attribute, date_col)
+        total_record = _get_row_count(df, earliest_date, end_date,
+                                       record_attribute, date_col)
+        if record_attribute == row_attribute:
+            total_row = total_record
+        else:
+            total_row = _get_row_count(df, earliest_date, end_date,
+                                           row_attribute, date_col)
 
     try:
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m-%d")
