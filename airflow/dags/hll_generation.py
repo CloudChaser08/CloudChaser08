@@ -2,13 +2,13 @@ from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
 from subprocess import check_call
+import psycopg2
 import json
 
 import util.emr_utils as emr_utils
-import util.s3_utils as s3_utils
 import util.slack as slack
 import common.HVDAG as HVDAG
-for m in [emr_utils, HVDAG, slack, s3_utils]:
+for m in [emr_utils, HVDAG, slack]:
     reload(m)
 
 DAG_NAME='hll_generation'
@@ -35,6 +35,24 @@ MELLON_COPY_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar"
 HLL_COPY_STEP = ('Type=CUSTOM_JAR,Name="Copy HLLs",Jar="command-runner.jar",'
         'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,--src,' + HDFS_STAGING + ','
         '--dest,s3a://healthverityreleases/PatientIntersector/hll_seq_data_store/]')
+HLL_CONFIG_DB = 'hll_config'
+SELECT_CONFIG_AND_LAST_LOG_ENTRY = """
+    SELECT *
+    FROM generation_config
+    LEFT JOIN
+        (
+        SELECT l.*
+        FROM generation_log l
+        INNER JOIN
+            (
+            SELECT feed_id, MAX(generated) last_generated
+            FROM generation_log
+            GROUP BY feed_id
+            ) a
+            ON l.generated=a.last_generated AND l.feed_id = a.feed_id
+        ) gl USING (feed_id)
+    """
+UPDATE_GENERATION_LOG = "INSERT INTO generation_log VALUES (%s)"
 
 default_args = {
     'owner': 'airflow',
@@ -51,17 +69,18 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-def do_download_configs(ds, **kwargs):
-    check_call(['mkdir', '-p', '/tmp/hll_generation'])
-    s3_utils.copy_file('s3://healthverityreleases/mellon/hlls_config.json', '/tmp/hll_generation/', encrypt=False)
-    s3_utils.copy_file('s3://healthverityreleases/mellon/hll_generation_log.json', '/tmp/hll_generation/', encrypt=False)
-
-download_configs = PythonOperator(
-    task_id='download_configs',
-    provide_context=True,
-    python_callable=do_download_configs,
-    dag=mdag
-)
+def get_ref_db_connection():
+    db_config = json.loads(Variable.get('reference_db_user_airflow'))
+    return psycopg2.connect(dbname=HLL_CONFIG_DB, user=db_config['user'],
+            password=db_config['password'], host=db_config['db_host'], 
+            port=db_config['db_port'],
+            cursor_factory=psycopg2.extras.NamedTupleCursor)
+    
+def get_config():
+    with get_ref_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(SELECT_CONFIG_AND_LAST_LOG_ENTRY)
+            return cur.fetchall()
 
 def do_create_cluster(ds, **kwargs):
     emr_utils.create_emr_cluster(EMR_CLUSTER_NAME, NUM_NODES, NODE_TYPE,
@@ -75,33 +94,31 @@ create_cluster = PythonOperator(
 )
 
 def do_generate_hlls(ds, **kwargs):
-    with open('/tmp/hll_generation/hlls_config.json') as fin:
-        hll_configs = json.load(fin)
+    hlls_config = get_config()
 
-    feed_config = dict([(c['feed_id'], c) for c in hll_configs])
-
-    with open('/tmp/hll_generation/hll_generation_log.json') as fin:
-        hll_generation_log = json.load(fin)
-
-    for entry in hll_generation_log:
-        if entry['date_ran'] < '2050-01-01T12:00:00':
-            del feed_config[entry['feed_id']]
-
+    feeds_to_generate = []
     steps = [MELLON_COPY_STEP]
-    for feed_id in feed_config:
-        config = feed_config[feed_id]
-        args = ''
-        args += '--datafeed, {},'.format(feed_id)
-        args += '--modelName, {},'.format(config['model'])
-        args += "--inpath, '{}',".format(config['s3a_path'])
-        args += '--format, {},'.format(config.get('file_format', 'parquet'))
-        args += '--start, 2015-10-01,' if not config.get('no_min_cap') else ''
-        args += '--end, 2017-10-01,' if not config.get('no_max_cap') else ''
-        args += "--models, '{}',".format(config.get('emr_models')) if config.get('emr_models') else ''
-        args += ', '.join(config.get('flags', '').split())
+    for entry in hlls_config:
+        # TODO: Let Airflow figure out the current quarter programatically
+        # For now, hardcode to 2017Q3, with an HLL generation date of 01/03/2018
+        if not entry.generated or entry.is_stale or (not entry.once_only and \
+                entry.generated.replace(tzinfo=None) < datetime(2018, 1, 3, 12)):
 
-        steps.append(HLL_STEP_TEMPLATE.format(feed_id, args))
+            args = ''
+            args += '--datafeed, {},'.format(entry.feed_id)
+            args += '--modelName, {},'.format(entry.model)
+            args += "--inpath, '{}',".format(entry.s3a_url)
+            args += '--format, {},'.format(entry.file_format or 'parquet')
+            args += '--start, 2015-10-01,' if not entry.no_min_cap else ''
+            args += '--end, 2017-10-01,' if not entry.no_max_cap else ''
+            args += "--models, '{}',".format(entry.emr_models) if entry.emr_models else ''
+            args += ', '.join((entry.flags or '').split())
+
+            steps.append(HLL_STEP_TEMPLATE.format(entry.feed_id, args))
+            feeds_to_generate.append(entry.feed_id)
     steps.append(HLL_COPY_STEP)
+
+    kwargs['ti'].xcom_push(key = 'feeds_to_generate', value = json.dumps(feeds_to_generate))
 
     emr_utils.run_steps(EMR_CLUSTER_NAME, steps)
 
@@ -123,34 +140,22 @@ delete_cluster = PythonOperator(
 )
 
 def do_update_log(ds, **kwargs):
-    with open('/tmp/hll_generation/hlls_config.json') as fin:
-        hll_configs = json.load(fin)
-
-    feed_config = dict([(c['feed_id'], c) for c in hll_configs])
-
-    with open('/tmp/hll_generation/hll_generation_log.json') as fin:
-        hll_generation_log = json.load(fin)
-
-    for entry in hll_generation_log:
-        if entry['date_ran'] < '2050-01-01T12:00:00':
-            del feed_config[entry['feed_id']]
-
-    for f in feed_config:
-        hll_generation_log.append({'feed_id': f, 'date_ran' : datetime.now().isoformat()})
-    
-    with open('/tmp/hll_generation/hll_generation_log.json', 'w') as fout:
-        json.dump(hll_generation_log, fout, sort_keys=True, indent=4)
+    feeds_generated = json.loads(kwargs['ti'].xcom_pull(dag_id = DAG_NAME,
+            task_ids = 'generate_hlls', key = 'feeds_to_generate'))
+    for f in feeds_generated:
+        with get_ref_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(UPDATE_GENERATION_LOG, [f])
 
     msg =  'Finished generating HLLs for feed'
-    if len(feed_config) > 1:
+    if len(feeds_generated) > 1:
         msg += 's '
-        msg += ', '.join(feed_config.keys()[:-1])
-        msg += ', and {}'.format(feed_config.keys()[-1])
+        msg += ', '.join(feeds_generated[:-1])
+        msg += ', and {}'.format(feeds_generated[-1])
     else:
-        msg += ' ' + feed_config.keys()[0]
+        msg += ' ' + feeds_generated[0]
 
     slack.send_message('#data-automation', text=msg)
-    s3_utils.copy_file('/tmp/hll_generation/hll_generation_log.json', 's3://healthverityreleases/mellon/')
 
 update_log = PythonOperator(
     task_id='update_log',
@@ -159,7 +164,6 @@ update_log = PythonOperator(
     dag=mdag
 )
 
-create_cluster.set_upstream(download_configs)
 generate_hlls.set_upstream(create_cluster)
 delete_cluster.set_upstream(generate_hlls)
 update_log.set_upstream(delete_cluster)
