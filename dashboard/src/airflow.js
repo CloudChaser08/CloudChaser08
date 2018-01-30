@@ -20,6 +20,7 @@ var client = new psql.Client({
 const query = {
   text: fs.readFileSync(path.join(__dirname, './provider-ingestion.sql'), 'utf-8').replace(
     '{{PROVIDERS}}', providers.config.filter(function(provider) {
+      // This filters out any non-automated providers
       return provider.airflowPipelineName;
     }).map(function (provider) {
       return 'MAX(CASE ' +
