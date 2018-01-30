@@ -53,5 +53,3 @@ def load(runner, location, extra_cols=None, table_name='matching_payload'):
 
     runner.sqlContext.sql('DROP TABLE IF EXISTS {}'.format(table_name))
     final_payload.registerTempTable(table_name)
-
-
