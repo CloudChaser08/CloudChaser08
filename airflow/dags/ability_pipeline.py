@@ -38,10 +38,6 @@ S3_TEXT_ABILITY_PREFIX = 'warehouse/text/medicalclaims/ability/'
 S3_PARQUET_ABILITY_PREFIX = 'warehouse/parquet/medicalclaims/ability/'
 S3_PAYLOAD_LOC_ABILITY_URL = 's3://salusv/matching/payload/medicalclaims/ability/'
 
-# Ability S3 bucket access
-ABILITY_S3_BUCKET=Variable.get('Ability_S3_Bucket')
-ABILITY_S3_CONNECTION='ability_s3_conn'
-
 HV_S3_RAW_PREFIX='incoming/ability/'
 HV_S3_RAW_BUCKET='healthverity'
 
@@ -51,19 +47,16 @@ HV_S3_TRANSACTION_BUCKET='salusv'
 
 # Ability AP file
 AP_FILE_DESCRIPTION='Ability AP file'
-ABILITY_S3_AP_PREFIX='ap-daily/'
 AP_FILE_NAME_TEMPLATE='ap.from_\d{{4}}-\d{{2}}-\d{{2}}.to_{}-{}-{}.zip'
 MINIMUM_AP_FILE_SIZE=15000
 
 # Ability SES file
 SES_FILE_DESCRIPTION='Ability SES file'
-ABILITY_S3_SES_PREFIX='ses-daily/'
 SES_FILE_NAME_TEMPLATE='ses.from_\d{{4}}-\d{{2}}-\d{{2}}.to_{}-{}-{}.zip'
 MINIMUM_SES_FILE_SIZE=15000
 
 # Ability EASE file
 EASE_FILE_DESCRIPTION='Ability EASE file'
-ABILITY_S3_EASE_PREFIX='ease-daily/'
 EASE_FILE_NAME_TEMPLATE='ease.from_\d{{4}}-\d{{2}}-\d{{2}}.to_{}-{}-{}.zip'
 MINIMUM_EASE_FILE_SIZE=15000
 
@@ -211,7 +204,7 @@ def get_expected_matching_files(ds, kwargs):
                 )
 
     return res
-    
+
 def get_file_date(ds, kwargs):
     return ds
 
@@ -246,11 +239,8 @@ def validate_file_subdag(product, expected_file_name_func, file_name_pattern_fun
                 'regex_name_match'       : True,
                 'file_name_pattern_func' : file_name_pattern_func,
                 'minimum_file_size'      : minimum_file_size,
-                's3_prefix'              : s3_prefix,
-                's3_bucket'              : ABILITY_S3_BUCKET,
-                'aws_access_key_id'      : Variable.get('Ability_AWS_ACCESS_KEY_ID'),
-                'aws_secret_access_key'  : Variable.get('Ability_AWS_SECRET_ACCESS_KEY'),
-                's3_connection'          : ABILITY_S3_CONNECTION,
+                's3_prefix'              : HV_S3_RAW_PREFIX,
+                's3_bucket'              : HV_S3_RAW_BUCKET,
                 'file_description'       : file_description
             }
         ),
@@ -269,29 +259,11 @@ def fetch_file_subdag(product, expected_file_name_func, s3_prefix):
                 'tmp_path_template'      : TMP_PATH_TEMPLATE,
                 'expected_file_name_func': expected_file_name_func,
                 'regex_name_match'       : True,
-                's3_prefix'              : s3_prefix,
-                's3_bucket'              : ABILITY_S3_BUCKET,
-                's3_connection'          : ABILITY_S3_CONNECTION
-            }
-        ),
-        task_id='fetch_{}_file'.format(product),
-        dag=mdag
-    )
-
-def push_file_subdag(product, file_paths_func):
-    return SubDagOperator(
-        subdag=s3_push_files.s3_push_files(
-            DAG_NAME,
-            'push_{}_file'.format(product),
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'file_paths_func'        : file_paths_func,
-                's3_prefix_func'         : get_s3_raw_prefix,
+                's3_prefix'              : HV_S3_RAW_PREFIX,
                 's3_bucket'              : HV_S3_RAW_BUCKET
             }
         ),
-        task_id='push_{}_file'.format(product),
+        task_id='fetch_{}_file'.format(product),
         dag=mdag
     )
 
@@ -392,8 +364,6 @@ validate_ap_file_dag = validate_file_subdag('ap', get_expected_file_name(AP_FILE
 fetch_ap_file_dag = fetch_file_subdag('ap', get_expected_file_name(AP_FILE_NAME_TEMPLATE)
 , ABILITY_S3_AP_PREFIX)
 
-push_ap_file_dag = push_file_subdag('ap', get_ap_file_paths)
-
 unzip_ap_files = unzip_files_operator('ap', get_expected_file_name(AP_FILE_NAME_TEMPLATE)
 , 'ap/')
 
@@ -419,8 +389,6 @@ validate_ses_file_dag = validate_file_subdag('ses', get_expected_file_name(SES_F
 
 fetch_ses_file_dag = fetch_file_subdag('ses', get_expected_file_name(SES_FILE_NAME_TEMPLATE), ABILITY_S3_SES_PREFIX)
 
-push_ses_file_dag = push_file_subdag('ses', get_ses_file_paths)
-
 unzip_ses_files = unzip_files_operator('ses', get_expected_file_name(SES_FILE_NAME_TEMPLATE), 'ses/')
 
 move_ses_deid_files = move_files_operator('ses', 'deid', 'ses/', '^deid', 'ses/deid/')
@@ -443,8 +411,6 @@ validate_ease_file_dag = validate_file_subdag('ease', get_expected_file_name(EAS
         MINIMUM_EASE_FILE_SIZE, ABILITY_S3_EASE_PREFIX, EASE_FILE_DESCRIPTION)
 
 fetch_ease_file_dag = fetch_file_subdag('ease', get_expected_file_name(EASE_FILE_NAME_TEMPLATE), ABILITY_S3_EASE_PREFIX)
-
-push_ease_file_dag = push_file_subdag('ease', get_ease_file_paths)
 
 unzip_ease_files = unzip_files_operator('ease', get_expected_file_name(EASE_FILE_NAME_TEMPLATE), 'ease/')
 
@@ -550,8 +516,7 @@ clean_up_tmp_dir_dag = SubDagOperator(
 )
 
 fetch_ap_file_dag.set_upstream(validate_ap_file_dag)
-push_ap_file_dag.set_upstream(fetch_ap_file_dag)
-unzip_ap_files.set_upstream(push_ap_file_dag)
+unzip_ap_files.set_upstream(fetch_ap_file_dag)
 move_ap_deid_files.set_upstream(unzip_ap_files)
 rename_ap_deid_files.set_upstream(move_ap_deid_files)
 queue_up_ap_for_matching_dag.set_upstream(rename_ap_deid_files)
@@ -561,8 +526,7 @@ decrypt_ap_transaction_files_dag.set_upstream(rename_ap_transaction_files)
 split_push_ap_transaction_files_dag.set_upstream(decrypt_ap_transaction_files_dag)
 
 fetch_ses_file_dag.set_upstream(validate_ses_file_dag)
-push_ses_file_dag.set_upstream(fetch_ses_file_dag)
-unzip_ses_files.set_upstream(push_ses_file_dag)
+unzip_ses_files.set_upstream(fetch_ses_file_dag)
 move_ses_deid_files.set_upstream(unzip_ses_files)
 rename_ses_deid_files.set_upstream(move_ses_deid_files)
 queue_up_ses_for_matching_dag.set_upstream(rename_ses_deid_files)
@@ -572,8 +536,7 @@ decrypt_ses_transaction_files_dag.set_upstream(rename_ses_transaction_files)
 split_push_ses_transaction_files_dag.set_upstream(decrypt_ses_transaction_files_dag)
 
 fetch_ease_file_dag.set_upstream(validate_ease_file_dag)
-push_ease_file_dag.set_upstream(fetch_ease_file_dag)
-unzip_ease_files.set_upstream(push_ease_file_dag)
+unzip_ease_files.set_upstream(fetch_ease_file_dag)
 move_ease_deid_files.set_upstream(unzip_ease_files)
 rename_ease_deid_files.set_upstream(move_ease_deid_files)
 queue_up_ease_for_matching_dag.set_upstream(rename_ease_deid_files)
