@@ -1,6 +1,18 @@
 from pyspark.sql.functions import col, udf
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
+
+def update_whitelist(whitelists, column_name, key, value):
+    """
+    Utility function to update a whitelist within a list of whitelists
+    """
+    return [
+        dict([(k, whitelist[k]) for k in whitelist] + [(key, value)])
+        if whitelist['column_name'] == column_name else whitelist
+        for whitelist in whitelists
+    ]
+
+
 # These are functions that we apply to columns that are shared between
 # datatypes. The configuration for each column here contains a 'func'
 # - the function to be applied - as well as a list of 'args' - the
