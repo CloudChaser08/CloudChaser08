@@ -1,342 +1,120 @@
 from pyspark.sql.types import StructType, StructField, StringType
 
 allergies = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('encounterID', StringType(), True),
-    StructField('allergyID', StringType(), True),
-    StructField('versionID', StringType(), True),
-    StructField('auditdataflag', StringType(), True),
-    StructField('name', StringType(), True),
-    StructField('type', StringType(), True),
-    StructField('status', StringType(), True),
-    StructField('reactions', StringType(), True),
-    StructField('ndc', StringType(), True),
-    StructField('ddi', StringType(), True),
-    StructField('gpi', StringType(), True),
-    StructField('rxnorm', StringType(), True),
-    StructField('snomed', StringType(), True),
-    StructField('unverifiedflag', StringType(), True),
-    StructField('reactionDTTM', StringType(), True),
-    StructField('recordedDTTM', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True)
+    for column_name in [
+            'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+            'encounterID', 'allergyID', 'versionID', 'auditdataflag', 'name', 'type', 'status', 'reactions',
+            'ndc', 'ddi', 'gpi', 'rxnorm', 'snomed', 'unverifiedflag', 'reactionDTTM', 'recordedDTTM',
+            'genproviderID', 'gen2providerID', 'primarykey'
+    ]
 ])
 
 appointments = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('encounterID', StringType(), True),
-    StructField('appointmentID', StringType(), True),
-    StructField('versionID', StringType(), True),
-    StructField('auditdataflag', StringType(), True),
-    StructField('status', StringType(), True),
-    StructField('primaryinsurancemedicareflag', StringType(), True),
-    StructField('startdttm', StringType(), True),
-    StructField('enddttm', StringType(), True),
-    StructField('recordedDTTM', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2ProviderID', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True)
+    for column_name in [
+            'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+            'encounterID', 'appointmentID', 'versionID', 'auditdataflag', 'status',
+            'primaryinsurancemedicareflag', 'startdttm', 'enddttm', 'recordedDTTM', 'genproviderID',
+            'gen2ProviderID', 'primarykey'
+    ]
 ])
 
 encounters = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('encounterID', StringType(), True),
-    StructField('versionID', StringType(), True),
-    StructField('auditdataflag', StringType(), True),
-    StructField('type', StringType(), True),
-    StructField('encounterDTTM', StringType(), True),
-    StructField('recordedDTTM', StringType(), True),
-    StructField('genbillingproviderID', StringType(), True),
-    StructField('billinggen2providerID', StringType(), True),
-    StructField('genrenderingproviderID', StringType(), True),
-    StructField('renderinggen2providerID', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True)
+    for column_name in [
+            'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+            'encounterID', 'versionID', 'auditdataflag', 'type', 'encounterDTTM', 'recordedDTTM',
+            'genbillingproviderID', 'billinggen2providerID', 'genrenderingproviderID',
+            'renderinggen2providerID', 'genproviderID', 'gen2providerID', 'primarykey'
+    ]
 ])
 
 medications = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('encounterID', StringType(), True),
-    StructField('medID', StringType(), True),
-    StructField('versionID', StringType(), True),
-    StructField('auditdataflag', StringType(), True),
-    StructField('administeredbygen2providerID', StringType(), True),
-    StructField('prescribedbygen2providerID', StringType(), True),
-    StructField('problemID', StringType(), True),
-    StructField('name', StringType(), True),
-    StructField('status', StringType(), True),
-    StructField('routeofadmin', StringType(), True),
-    StructField('ndc', StringType(), True),
-    StructField('ddi', StringType(), True),
-    StructField('gpi', StringType(), True),
-    StructField('rxnorm', StringType(), True),
-    StructField('cvx', StringType(), True),
-    StructField('sig', StringType(), True),
-    StructField('dose', StringType(), True),
-    StructField('admindose', StringType(), True),
-    StructField('strength', StringType(), True),
-    StructField('form', StringType(), True),
-    StructField('units', StringType(), True),
-    StructField('quantitytodispense', StringType(), True),
-    StructField('frequency', StringType(), True),
-    StructField('frequencyperday', StringType(), True),
-    StructField('daystotake', StringType(), True),
-    StructField('daysupply', StringType(), True),
-    StructField('refills', StringType(), True),
-    StructField('genericflag', StringType(), True),
-    StructField('genericavailableflag', StringType(), True),
-    StructField('DAWflag', StringType(), True),
-    StructField('prescribeaction', StringType(), True),
-    StructField('MedGroup1', StringType(), True),
-    StructField('TherClass1', StringType(), True),
-    StructField('SubClass1', StringType(), True),
-    StructField('MedGroup2', StringType(), True),
-    StructField('TherClass2', StringType(), True),
-    StructField('SubClass2', StringType(), True),
-    StructField('MedGroup3', StringType(), True),
-    StructField('TherClass3', StringType(), True),
-    StructField('SubClass3', StringType(), True),
-    StructField('MedGroup4', StringType(), True),
-    StructField('TherClass4', StringType(), True),
-    StructField('SubClass4', StringType(), True),
-    StructField('MedGroup5', StringType(), True),
-    StructField('TherClass5', StringType(), True),
-    StructField('SubClass5', StringType(), True),
-    StructField('MedGroup6', StringType(), True),
-    StructField('TherClass6', StringType(), True),
-    StructField('SubClass6', StringType(), True),
-    StructField('errorflag', StringType(), True),
-    StructField('eRxtransmittedflag', StringType(), True),
-    StructField('sampleflag', StringType(), True),
-    StructField('unverifiedflag', StringType(), True),
-    StructField('startDTTM', StringType(), True),
-    StructField('endDTTM', StringType(), True),
-    StructField('performeddate', StringType(), True),
-    StructField('recordedDTTM', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True)
+    for column_name in [
+            'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+            'encounterID', 'medID', 'versionID', 'auditdataflag', 'administeredbygen2providerID',
+            'prescribedbygen2providerID', 'problemID', 'name', 'status', 'routeofadmin', 'ndc', 'ddi',
+            'gpi', 'rxnorm', 'cvx', 'sig', 'dose', 'admindose', 'strength', 'form', 'units',
+            'quantitytodispense', 'frequency', 'frequencyperday', 'daystotake', 'daysupply', 'refills',
+            'genericflag', 'genericavailableflag', 'DAWflag', 'prescribeaction', 'MedGroup1', 'TherClass1',
+            'SubClass1', 'MedGroup2', 'TherClass2', 'SubClass2', 'MedGroup3', 'TherClass3', 'SubClass3',
+            'MedGroup4', 'TherClass4', 'SubClass4', 'MedGroup5', 'TherClass5', 'SubClass5', 'MedGroup6',
+            'TherClass6', 'SubClass6', 'errorflag', 'eRxtransmittedflag', 'sampleflag', 'unverifiedflag',
+            'startDTTM', 'endDTTM', 'performeddate', 'recordedDTTM', 'genproviderID', 'gen2providerID',
+            'primarykey'
+    ]
 ])
 
 orders = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('encounterID', StringType(), True),
-    StructField('orderID', StringType(), True),
-    StructField('versionID', StringType(), True),
-    StructField('auditdataflag', StringType(), True),
-    StructField('name', StringType(), True),
-    StructField('type', StringType(), True),
-    StructField('status', StringType(), True),
-    StructField('cpt4', StringType(), True),
-    StructField('cptmod', StringType(), True),
-    StructField('cptpos', StringType(), True),
-    StructField('billingICD9code', StringType(), True),
-    StructField('billingICD10code', StringType(), True),
-    StructField('hcpcs', StringType(), True),
-    StructField('source', StringType(), True),
-    StructField('specimen', StringType(), True),
-    StructField('orderDTTM', StringType(), True),
-    StructField('recordedDTTM', StringType(), True),
-    StructField('approvinggenproviderID', StringType(), True),
-    StructField('approvinggen2providerID', StringType(), True),
-    StructField('orderinggenproviderID', StringType(), True),
-    StructField('orderinggen2providerID', StringType(), True),
-    StructField('performinggenproviderID', StringType(), True),
-    StructField('performinggen2providerID', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True) for
+    column_name in [
+        'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+        'encounterID', 'orderID', 'versionID', 'auditdataflag', 'name', 'type', 'status', 'cpt4', 'cptmod',
+        'cptpos', 'billingICD9code', 'billingICD10code', 'hcpcs', 'source', 'specimen', 'orderDTTM',
+        'recordedDTTM', 'approvinggenproviderID', 'approvinggen2providerID', 'orderinggenproviderID',
+        'orderinggen2providerID', 'performinggenproviderID', 'performinggen2providerID', 'genproviderID',
+        'gen2providerID', 'primarykey'
+    ]
 ])
 
 patientdemographics = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeVersion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('dobyear', StringType(), True),
-    StructField('deceasedFlag', StringType(), True),
-    StructField('gender', StringType(), True),
-    StructField('race', StringType(), True),
-    StructField('ethnicity1', StringType(), True),
-    StructField('zip3', StringType(), True),
-    StructField('state', StringType(), True),
-    StructField('smokingstatusflag', StringType(), True),
-    StructField('lastupdateDTTM', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True)
+    for column_name in [
+            'rectype', 'rectypeVersion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+            'dobyear', 'deceasedFlag', 'gender', 'race', 'ethnicity1', 'zip3', 'state', 'smokingstatusflag',
+            'lastupdateDTTM', 'genproviderID', 'gen2providerID', 'primarykey'
+    ]
 ])
 
 problems = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('encounterID', StringType(), True),
-    StructField('problemID', StringType(), True),
-    StructField('versionID', StringType(), True),
-    StructField('auditdataflag', StringType(), True),
-    StructField('ICD9', StringType(), True),
-    StructField('ICD10', StringType(), True),
-    StructField('snomed', StringType(), True),
-    StructField('medcinID', StringType(), True),
-    StructField('cptcode', StringType(), True),
-    StructField('name', StringType(), True),
-    StructField('type', StringType(), True),
-    StructField('category', StringType(), True),
-    StructField('status', StringType(), True),
-    StructField('level1', StringType(), True),
-    StructField('level2', StringType(), True),
-    StructField('level3', StringType(), True),
-    StructField('errorFlag', StringType(), True),
-    StructField('diagnosisDTTM', StringType(), True),
-    StructField('onsetDTTM', StringType(), True),
-    StructField('resolvedDTTM', StringType(), True),
-    StructField('recordedDTTM', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True)
+    for column_name in [
+            'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+            'encounterID', 'problemID', 'versionID', 'auditdataflag', 'ICD9', 'ICD10', 'snomed', 'medcinID',
+            'cptcode', 'name', 'type', 'category', 'status', 'level1', 'level2', 'level3', 'errorFlag',
+            'diagnosisDTTM', 'onsetDTTM', 'resolvedDTTM', 'recordedDTTM', 'genproviderID', 'gen2providerID',
+            'primarykey'
+    ]
 ])
 
 providers = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('NPI_Title', StringType(), True),
-    StructField('NPI_Gender', StringType(), True),
-    StructField('NPI_TxnCode', StringType(), True),
-    StructField('NPI_TxnClass', StringType(), True),
-    StructField('NPI_TxnType', StringType(), True),
-    StructField('NPI_TxnSpecialty', StringType(), True),
-    StructField('NPI_TPVerifiedSpecialty', StringType(), True),
-    StructField('NPI_DOByear', StringType(), True),
-    StructField('NPI_State', StringType(), True),
-    StructField('specialty', StringType(), True),
-    StructField('credential', StringType(), True),
-    StructField('type', StringType(), True),
-    StructField('NPI', StringType(), True),
-    StructField('pcpflag', StringType(), True),
-    StructField('state', StringType(), True),
-    StructField('inactiveflag', StringType(), True),
-    StructField('lastupdateDTTM', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True)
+    for column_name in [
+            'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genproviderID', 'gen2providerID',
+            'NPI_Title', 'NPI_Gender', 'NPI_TxnCode', 'NPI_TxnClass', 'NPI_TxnType', 'NPI_TxnSpecialty',
+            'NPI_TPVerifiedSpecialty', 'NPI_DOByear', 'NPI_State', 'specialty', 'credential', 'type', 'NPI',
+            'pcpflag', 'state', 'inactiveflag', 'lastupdateDTTM', 'primarykey',
+    ]
 ])
 
 results = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('encounterID', StringType(), True),
-    StructField('resultID', StringType(), True),
-    StructField('versionID', StringType(), True),
-    StructField('auditdataflag', StringType(), True),
-    StructField('orderID', StringType(), True),
-    StructField('panel', StringType(), True),
-    StructField('test', StringType(), True),
-    StructField('value', StringType(), True),
-    StructField('units', StringType(), True),
-    StructField('refrange', StringType(), True),
-    StructField('abnormalflag', StringType(), True),
-    StructField('resultstatus', StringType(), True),
-    StructField('loinc', StringType(), True),
-    StructField('ocdid', StringType(), True),
-    StructField('errorflag', StringType(), True),
-    StructField('resultDTTM', StringType(), True),
-    StructField('performedDTTM', StringType(), True),
-    StructField('recordedDTTM', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True)
+    for column_name in [
+            'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+            'encounterID', 'resultID', 'versionID', 'auditdataflag', 'orderID', 'panel', 'test', 'value',
+            'units', 'refrange', 'abnormalflag', 'resultstatus', 'loinc', 'ocdid', 'errorflag', 'resultDTTM',
+            'performedDTTM', 'recordedDTTM', 'genproviderID', 'gen2providerID', 'primarykey'
+    ]
 ])
 
 vaccines = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('encounterID', StringType(), True),
-    StructField('vaccineID', StringType(), True),
-    StructField('versionID', StringType(), True),
-    StructField('auditdataflag', StringType(), True),
-    StructField('name', StringType(), True),
-    StructField('status', StringType(), True),
-    StructField('ndc', StringType(), True),
-    StructField('ddi', StringType(), True),
-    StructField('gpi', StringType(), True),
-    StructField('rxnorm', StringType(), True),
-    StructField('cvx', StringType(), True),
-    StructField('series', StringType(), True),
-    StructField('dose', StringType(), True),
-    StructField('routeofadmin', StringType(), True),
-    StructField('bodysite', StringType(), True),
-    StructField('manufacturer', StringType(), True),
-    StructField('administeredDTTM', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('recordedDTTM', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True)
+    for column_name in [
+            'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+            'encounterID', 'vaccineID', 'versionID', 'auditdataflag', 'name', 'status', 'ndc', 'ddi', 'gpi',
+            'rxnorm', 'cvx', 'series', 'dose', 'routeofadmin', 'bodysite', 'manufacturer', 'administeredDTTM',
+            'genproviderID', 'gen2providerID', 'recordedDTTM', 'primarykey'
+    ]
 ])
 
 vitals = StructType([
-    StructField('rectype', StringType(), True),
-    StructField('rectypeversion', StringType(), True),
-    StructField('genclientID', StringType(), True),
-    StructField('gen2clientID', StringType(), True),
-    StructField('genpatientID', StringType(), True),
-    StructField('gen2patientID', StringType(), True),
-    StructField('encounterID', StringType(), True),
-    StructField('vitalID', StringType(), True),
-    StructField('versionID', StringType(), True),
-    StructField('auditdataflag', StringType(), True),
-    StructField('name', StringType(), True),
-    StructField('status', StringType(), True),
-    StructField('value', StringType(), True),
-    StructField('units', StringType(), True),
-    StructField('refrange', StringType(), True),
-    StructField('errorflag', StringType(), True),
-    StructField('clinicalDTTM', StringType(), True),
-    StructField('performedDTTM', StringType(), True),
-    StructField('recordedDTTM', StringType(), True),
-    StructField('genproviderID', StringType(), True),
-    StructField('gen2providerID', StringType(), True),
-    StructField('primarykey', StringType(), True)
+    StructField(column_name, StringType(), True) for
+    column_name in [
+        'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
+        'encounterID', 'vitalID', 'versionID', 'auditdataflag', 'name', 'status', 'value', 'units', 'refrange',
+        'errorflag', 'clinicalDTTM', 'performedDTTM', 'recordedDTTM', 'genproviderID', 'gen2providerID',
+        'primarykey'
+    ]
 ])
