@@ -11,7 +11,9 @@ SELECT DISTINCT
       WHEN as_patients.gender = 'Female' THEN 'F'
       ELSE 'Unknown'
     END                                                 AS patient_gender,
-    TRIM(REGEXP_REPLACE(codes.diagnosis_code,'\.',''))  AS diagnosis_code,
+    TRIM(
+        REGEXP_REPLACE(codes.diagnosis_code,'\\.','')
+        )                                               AS diagnosis_code,
     codes.procedure_code                                AS procedure_code,
     codes.loinc_code                                    AS loinc_code,
     codes.ndc_code                                      AS ndc_code
