@@ -75,7 +75,7 @@ def get_transaction_file_paths(ds, kwargs):
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL +\
+    return [
         date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, 
             kwargs, month_offset = OBIT_MONTH_OFFSET)
     ]
@@ -214,7 +214,9 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : get_deid_file_urls
+                'source_files_func' : lambda ds, k: [
+                    S3_TRANSACTION_RAW_URL + f for f in get_deid_file_urls(ds, k)
+                ]
             }
         ),
         task_id='queue_up_for_matching',
@@ -239,9 +241,7 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : [
-                date_utils.generate_insert_date_into_template_function(DEID_FILE_NAME_TEMPLATE, month_offset = OBIT_MONTH_OFFSET)
-            ],
+            'expected_matching_files_func'      : get_deid_file_urls,
             'file_date_func'                    : 
                 date_utils.generate_insert_date_into_template_function('{}/{}/{}', month_offset = OBIT_MONTH_OFFSET),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
