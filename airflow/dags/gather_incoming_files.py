@@ -51,11 +51,20 @@ class SFTPConnectionConfig:
 
 
 class S3ConnectionConfig:
-    def __init__(self, path):
+    def __init__(self, path, **other_configurations):
         self.path = path
+        self.other_configurations = other_configurations
+
+        if other_configurations.get('connection_variable') \
+           and other_configurations.get('aws_credential_variable_prefix'):
+            self.prov_connection = Variable.get(other_configurations['connection_variable'])
+            self.prov_aws_credential_variable_prefix = other_configurations['aws_credential_variable_prefix']
+            self.external_s3 = True
+        else:
+            self.external_s3 = False
 
     def asdict(self):
-        return {'path': self.path}
+        return dict(path=self.path, **self.other_configurations)
 
 
 class IncomingFileConfig:
@@ -85,7 +94,17 @@ class IncomingFileConfig:
     def get_fetch_func(self):
         def out(src_filename, dest_filepath):
             if self.src_system == 's3':
-                s3_utils.copy_file(self.src_conf.path + src_filename, dest_filepath)
+                if self.src_conf.external_s3:
+                    tmp_dir = '{}/{}'.format(TMP_DIR, self.name)
+                    s3_utils.copy_file(
+                        self.src_conf.path + src_filename, tmp_dir,
+                        env=s3_utils.get_aws_env(prefix=self.src_conf.prov_aws_credential_variable_prefix)
+                    )
+                    s3_utils.copy_file(tmp_dir + src_filename, dest_filepath)
+                else:
+                    s3_utils.copy_file(
+                        self.src_conf.path + src_filename, dest_filepath
+                    )
 
             elif self.src_system == 'sftp':
                 dest_dir = '{}/{}'.format(TMP_DIR, self.name)
@@ -108,7 +127,12 @@ class IncomingFileConfig:
     def get_new_files(self):
         existing_files = s3_utils.list_s3_bucket_files(self.dest_path)
         if self.src_system == 's3':
-            src_file_list = s3_utils.list_s3_bucket_files(self.src_conf.path)
+            if self.src_conf.external_s3:
+                src_file_list = s3_utils.list_s3_bucket_files(
+                    self.src_conf.path, s3_connection_id=self.src_conf.prov_connection
+                )
+            else:
+                src_file_list = s3_utils.list_s3_bucket_files(self.src_conf.path)
         elif self.src_system == 'sftp':
             src_file_list = sftp_utils.list_path(**self.src_conf.asdict())
         return [

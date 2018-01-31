@@ -44,5 +44,44 @@
     "file_name_regexes": [
       "\\d{2}\\d{2}\\d{2}_Claims_US_CF_Hash_File_HV_Encrypt.dat.gz"
     ]
+  },
+  {
+    "name": "ability_dx_ap",
+    "src_system": "s3",
+    "src_conf": {
+      "connection_variable": "ability_s3_conn",
+      "aws_credential_variable_prefix": "Ability_",
+      "path": "s3://dplrelease-healthverity/ap-daily/"
+    },
+    "dest_path": "s3://healthverity/incoming/ability/",
+    "file_name_regexes": [
+      "ap.from_\\d{4}-\\d{2}-\\d{2}.to_\\d{4}-\\d{2}-\\d{2}.zip"
+    ]
+  },
+  {
+    "name": "ability_dx_ses",
+    "src_system": "s3",
+    "src_conf": {
+      "connection_variable": "ability_s3_conn",
+      "aws_credential_variable_prefix": "Ability_",
+      "path": "s3://dplrelease-healthverity/ses-daily/"
+    },
+    "dest_path": "s3://healthverity/incoming/ability/",
+    "file_name_regexes": [
+      "ses.from_\\d{4}-\\d{2}-\\d{2}.to_\\d{4}-\\d{2}-\\d{2}.zip"
+    ]
+  },
+  {
+    "name": "ability_dx_ease",
+    "src_system": "s3",
+    "src_conf": {
+      "connection_variable": "ability_s3_conn",
+      "aws_credential_variable_prefix": "Ability_",
+      "path": "s3://dplrelease-healthverity/ease-daily/"
+    },
+    "dest_path": "s3://healthverity/incoming/ability/",
+    "file_name_regexes": [
+      "ease.from_\\d{4}-\\d{2}-\\d{2}.to_\\d{4}-\\d{2}-\\d{2}.zip"
+    ]
   }
 ]
