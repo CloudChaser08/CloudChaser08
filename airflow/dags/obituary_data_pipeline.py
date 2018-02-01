@@ -45,9 +45,9 @@ OBIT_MONTH_OFFSET = 3
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
-    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/obit/event/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/obit/event/out/{}/{}/{}/'
-    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/obit/event/payload/'
+    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/obituarydata/event/raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/obituarydata/event/out/{}/{}/{}/'
+    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/obituarydata/event/payload/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/obituarydata/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/consumer/obituarydata/{}/{}/{}/'
@@ -55,11 +55,11 @@ else:
 
 # Transaction Addon file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
-TRANSACTION_FILE_DESCRIPTION = 'Obituary transaction file'
+TRANSACTION_FILE_DESCRIPTION = 'ObituaryData transaction file'
 TRANSACTION_FILE_NAME_TEMPLATE = 'OD_record_data_{}{}{}_'
 
 # Deid file
-DEID_FILE_DESCRIPTION = 'Obituary deid file'
+DEID_FILE_DESCRIPTION = 'ObituaryData deid file'
 DEID_FILE_NAME_TEMPLATE = 'OD_deid_data_{}{}{}_'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
@@ -143,7 +143,7 @@ fetch_transaction = SubDagOperator(
                 TRANSACTION_FILE_NAME_TEMPLATE, month_offset = OBIT_MONTH_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-            's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
+            's3_bucket'              : S3_TRANSACTION_RAW_URL.split('/')[2]
         }
     ),
     task_id='fetch_transaction_file',
