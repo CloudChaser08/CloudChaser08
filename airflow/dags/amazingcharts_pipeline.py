@@ -25,7 +25,7 @@ DAG_NAME = 'amazingcharts_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 12, 11, 14),
+    'start_date': datetime(2017, 11, 1, 18),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -33,11 +33,11 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 14 * * 0",
+    schedule_interval="0 18 1 2,5,8,11 *",
     default_args=default_args
 )
 
-AMAZINGCHARTS_MONTH_OFFSET = 0
+AMAZINGCHARTS_MONTH_OFFSET = 2
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -51,7 +51,7 @@ else:
 
 # Transaction Zip file
 TRANSACTION_FILE_DESCRIPTION = 'AmazingCharts transaction zip file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'healthverity_{0}_{1}.zip'
+TRANSACTION_FILE_NAME_TEMPLATE = 'healthverity_{0}{1}.zip'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE
@@ -103,16 +103,16 @@ fetch_transaction = SubDagOperator(
 
 def generate_unzip_step(zip_filename_template):
     def execute(ds, **kwargs):
-        decompression.decompress_zip_file(
-            get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(
-                zip_filename_template, kwargs, month_offset=AMAZINGCHARTS_MONTH_OFFSET
-            ), get_tmp_dir(ds, kwargs)
-        )
-        os.remove(get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(
+        zip_filename = date_utils.insert_date_into_template(
             zip_filename_template, kwargs, month_offset=AMAZINGCHARTS_MONTH_OFFSET
-        ))
+        )
+
+        decompression.decompress_zip_file(
+            get_tmp_dir(ds, kwargs) + zip_filename, get_tmp_dir(ds, kwargs)
+        )
+        os.remove(get_tmp_dir(ds, kwargs) + zip_filename)
     return PythonOperator(
-        task_id='unzip_' + zip_filename_template.split('.')[0],
+        task_id='unzip_' + zip_filename_template.format('y', 'm').split('.')[0],
         provide_context=True,
         python_callable=execute,
         dag=mdag
@@ -149,7 +149,7 @@ unzip_steps = [
 
 
 def generate_split_step(filename):
-    file_id = filename.split('/')[0]
+    file_id = filename.split('.')[0]
 
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
@@ -159,9 +159,9 @@ def generate_split_step(filename):
             mdag.schedule_interval,
             {
                 'tmp_dir_func'             : get_tmp_dir,
-                'parts_dir_func'           : file_id + '_parts',
-                'file_paths_to_split_func' : lambda ds, k: [filename],
-                'file_name_pattern_func'   : filename,
+                'parts_dir_func'           : lambda ds, k: file_id + '_parts',
+                'file_paths_to_split_func' : lambda ds, k: [get_tmp_dir(ds, k) + filename],
+                'file_name_pattern_func'   : lambda ds, k: filename,
                 's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
                     S3_TRANSACTION_PROCESSED_URL_TEMPLATE + file_id + '/',
                     month_offset=AMAZINGCHARTS_MONTH_OFFSET
@@ -307,7 +307,7 @@ else:
     detect_move_normalize_dag.set_upstream(split_steps)
 
 unzip_transaction.set_upstream(fetch_transaction)
-unzip_transaction.set_downstream(split_steps + [push_deid_file])
+unzip_transaction.set_downstream(unzip_steps)
 
 split_d_costar.set_upstream(unzip_d_costar)
 split_d_date.set_upstream(unzip_d_date)
