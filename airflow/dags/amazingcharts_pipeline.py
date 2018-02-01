@@ -42,20 +42,16 @@ AMAZINGCHARTS_MONTH_OFFSET = 0
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/emr/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/emr/out/{}/{}/{}/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/emr/out/{0}/{1}/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/emr/payload/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/amazingcharts/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/emr/amazingcharts/{}/{}/{}/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/emr/amazingcharts/{0}/{1}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/emr/amazingcharts/'
 
 # Transaction Zip file
 TRANSACTION_FILE_DESCRIPTION = 'AmazingCharts transaction zip file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'healthverity_{}_{}.zip'
-
-# Deid file
-DEID_FILE_DESCRIPTION = 'AmazingCharts deid file'
-DEID_FILE_NAME_TEMPLATE = 'deid_data_{}_{}_{}'
+TRANSACTION_FILE_NAME_TEMPLATE = 'healthverity_{0}_{1}.zip'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE
@@ -208,7 +204,7 @@ def push_deid_file_step():
     def execute(ds, **kwargs):
         s3_utils.copy_file(
             get_tmp_dir(ds, kwargs) + 'HV_TOKENS.txt', date_utils.insert_date_into_template(
-                S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'deid/HV_TOKENS.txt', kwargs,
+                S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'deid/HV_TOKENS_{0}_{1}.txt', kwargs,
                 month_offset=AMAZINGCHARTS_MONTH_OFFSET
             )
         )
@@ -249,7 +245,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             {
                 'source_files_func' : lambda ds, k: [
                     date_utils.insert_date_into_template(
-                        S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'deid/HV_TOKENS.txt', k,
+                        S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'deid/HV_TOKENS_{0}_{1}.txt', k,
                         month_offset=AMAZINGCHARTS_MONTH_OFFSET
                     )
                 ]
@@ -280,11 +276,11 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func'      : lambda ds, k: [
                 date_utils.insert_date_into_template(
-                    DEID_FILE_NAME_TEMPLATE, k, month_offset=AMAZINGCHARTS_MONTH_OFFSET
+                    'HV_TOKENS_{}_{}.txt', k, month_offset=AMAZINGCHARTS_MONTH_OFFSET
                 )
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
-                '{}/{}/{}', month_offset=AMAZINGCHARTS_MONTH_OFFSET
+                '{}/{}', month_offset=AMAZINGCHARTS_MONTH_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'f00ca57c-4935-494e-9e40-b064fd38afda',
