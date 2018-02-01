@@ -14,12 +14,14 @@ for m in [s3_utils, config, HVDAG]:
 
 def do_is_valid_new_file(ds, **kwargs):
     # We expect the files that were made available on HealthVerity's S3
-    s3_prefix          = kwargs['s3_prefix'][:-1] if kwargs['s3_prefix'].endswith('/') \
+    s3_prefix          = kwargs['s3_prefix_func'](ds, kwargs) if 's3_prefix_func' in kwargs \
                          else kwargs['s3_prefix']
     file_name_pattern  = kwargs['file_name_pattern_func'](ds, kwargs)
     expected_file_name = kwargs['expected_file_name_func'](ds, kwargs)
     minimum_file_size  = kwargs['minimum_file_size']
     s3_connection_id   = kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
+
+    s3_prefix = s3_prefix[:-1] if s3_prefix[-1] == '/' else s3_prefix
 
     s3_keys = s3_utils.list_s3_bucket_files(
         's3://' + kwargs['s3_bucket'] + '/' + s3_prefix + '/', s3_connection_id
