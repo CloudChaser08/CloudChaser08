@@ -8,6 +8,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 
 def run(spark, runner, date_input, airflow_test=False):
+    date_input = '/'.join(date_input.split('/')[:2])
 
     script_path = __file__
 
@@ -37,10 +38,16 @@ def run(spark, runner, date_input, airflow_test=False):
         runner.run_spark_script('../../../common/load_hvid_parent_child_map.sql', [], script_path)
         runner.run_spark_script('fix_matching_payload.sql', [], script_path)
 
-    runner.run_spark_script('load_transactions.sql', [
-        ['d_multum_to_ndc_path', multum_to_ndc_path, False],
-        ['input_path', input_path, False]
-    ], script_path)
+    if date_input < '2018-01':
+        runner.run_spark_script('load_transactions.sql', [
+            ['d_multum_to_ndc_path', multum_to_ndc_path, False],
+            ['input_path', input_path, False]
+        ], script_path)
+    else:
+        runner.run_spark_script('load_transactions_v2.sql', [
+            ['d_multum_to_ndc_path', multum_to_ndc_path, False],
+            ['input_path', input_path, False]
+        ], script_path)
 
     transaction_tables = [
         'f_diagnosis', 'f_encounter', 'f_medication', 'f_procedure', 'f_lab', 'd_drug', 'd_cpt', 'd_multum_to_ndc'
