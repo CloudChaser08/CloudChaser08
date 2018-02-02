@@ -9,6 +9,7 @@ import spark.helpers.explode as explode
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+from spark.helpers.privacy.common import Transformer
 import spark.helpers.privacy.labtests as priv_labtests
 
 
@@ -68,11 +69,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.apply_date_cap(
             runner.sqlContext, 'date_report', date_input, FEED_ID, 'EARLIEST_VALID_SERVICE_DATE'
         ),
-        lambda df: priv_labtests.filter(df, additional_transforms={
-            'diagnosis_code': {
-                'func': lambda c: c, 'args': ['diagnosis_code']
+        lambda df: priv_labtests.filter(df, additional_transformer=Transformer(
+            diagnosis_code={
+                'func': [lambda c: c], 'args': [['diagnosis_code']]
             }
-        })
+        ))
     )(
         runner.sqlContext.sql('select * from {}'.format('normalized_labtests'))
     ).createOrReplaceTempView('normalized_labtests')

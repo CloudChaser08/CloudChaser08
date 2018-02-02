@@ -1,9 +1,8 @@
+from spark.helpers.privacy.common import Transformer
 import spark.helpers.privacy.emr.common as emr_priv_common
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
-provider_order_transformer = {
-}
+provider_order_transformer = Transformer()
 
 whitelists = [
     {
@@ -85,4 +84,3 @@ def filter(sqlc, update_whitelists=lambda x: x):
             emr_priv_common.filter(df, provider_order_transformer)
         )
     return out
-

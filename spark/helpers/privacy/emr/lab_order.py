@@ -1,17 +1,18 @@
+from spark.helpers.privacy.common import Transformer
 import spark.helpers.privacy.emr.common as emr_priv_common
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
-lab_order_transformer = {
-    'lab_ord_diag_cd': {
-        'func': post_norm_cleanup.clean_up_diagnosis_code,
-        'args': ['lab_ord_diag_cd', 'lab_ord_diag_cd_qual', 'enc_dt']
+lab_order_transformer = Transformer(
+    lab_ord_diag_cd={
+        'func': [post_norm_cleanup.clean_up_diagnosis_code],
+        'args': [['lab_ord_diag_cd', 'lab_ord_diag_cd_qual', 'enc_dt']]
     },
-    'lab_ord_loinc_cd': {
-        'func': post_norm_cleanup.clean_up_numeric_code,
-        'args': ['lab_ord_loinc_cd']
+    lab_ord_loinc_cd={
+        'func': [post_norm_cleanup.clean_up_numeric_code],
+        'args': [['lab_ord_loinc_cd']]
     }
-}
+)
 
 whitelists = [
     {
