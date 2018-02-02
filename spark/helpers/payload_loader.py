@@ -43,11 +43,9 @@ def load(runner, location, extra_cols=None, table_name='matching_payload'):
         logging.warning("No HVID columns found in this payload.")
         final_payload = postprocessor.add_null_column('hvid')(raw_payload)
     else:
-        final_payload = raw_payload.select(
-            (
-                [coalesce(*map(lambda x: col(x), relevant_hvid_columns)).alias('hvid')]
-            ) + map(lambda x: col(x), total_attrs)
-        )
+        final_payload = raw_payload.select([
+            coalesce(*map(lambda x: col(x), relevant_hvid_columns)).alias('hvid')
+        ] + map(lambda x: col(x), total_attrs))
 
     runner.sqlContext.sql('DROP TABLE IF EXISTS {}'.format(table_name))
     final_payload.registerTempTable(table_name)

@@ -154,5 +154,10 @@ def test_add_null_column(spark):
     ]).toDF()
     df = postprocessor.add_null_column('test_col')(df)
 
-    populated_row_count = df.select('test_col').where(col('test_col').isNotNull()).count()
-    assert populated_row_count == 0
+    table_row_count = df.select().count()
+    null_column_count = df.select('test_col').where(col('test_col').isNull()).count()
+
+    assert 'test_col' in df.columns
+    assert 'row_id' in df.columns
+    assert null_column_count == table_row_count
+    assert table_row_count == 5

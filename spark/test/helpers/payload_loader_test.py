@@ -15,6 +15,7 @@ no_hvid_location = file_utils.get_abs_path(
 
 @pytest.fixture(autouse=True)
 def setup_teardown(spark):
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS matching_payload')
     spark['sqlContext'].sql('DROP TABLE IF EXISTS test')
     yield
 
@@ -26,13 +27,15 @@ def test_no_hvid_columns(spark):
     """
     payload_loader.load(spark['runner'], no_hvid_location)
 
-    spark['sqlContext'].sql('SELECT hvid FROM matching_payload')
+    assert 'hvid' in spark['sqlContext'].sql('SELECT * FROM matching_payload').columns
 
 
 def test_hvids_are_null(spark):
     """
     Test that hvids are null when missing
     """
+    payload_loader.load(spark['runner'], no_hvid_location)
+
     hvid_count_not_null = spark['sqlContext'].sql('SELECT * FROM matching_payload').where(col("hvid").isNotNull()).count()
 
     assert hvid_count_not_null == 0
@@ -46,7 +49,8 @@ def test_extra_cols(spark):
 
     payload_loader.load(spark['runner'], std_location, extra_cols, table_name='test')
 
-    spark['sqlContext'].sql('SELECT claimId, hvJoinKey from test')
+    assert 'claimId' in spark['sqlContext'].sql('SELECT * FROM test').columns
+    assert 'hvJoinKey' in spark['sqlContext'].sql('SELECT * FROM test').columns
 
 
 def test_correct_hvid_used(spark):
