@@ -17,20 +17,20 @@ describe('addMonths', function () {
   it('Can add months to a date', function() {
     var d = helpers.addMonths(1)(new Date('2016-01-01'));
 
-    expect(d.getYear()).to.equal(116);
-    expect(d.getMonth()).to.equal(1);
-    expect(d.getDate()).to.equal(1);
+    expect(d.getUTCFullYear()).to.equal(2016);
+    expect(d.getUTCMonth()).to.equal(1);
+    expect(d.getUTCDate()).to.equal(1);
   });
   it('Does not modify incoming dates', function() {
     var initial = new Date('2016-01-01');
     var added = helpers.addMonths(1)(initial);
 
-    expect(initial.getYear()).to.equal(116);
-    expect(initial.getMonth()).to.equal(0);
-    expect(initial.getDate()).to.equal(1);
-    expect(added.getYear()).to.equal(116);
-    expect(added.getMonth()).to.equal(1);
-    expect(added.getDate()).to.equal(1);
+    expect(initial.getUTCFullYear()).to.equal(2016);
+    expect(initial.getUTCMonth()).to.equal(0);
+    expect(initial.getUTCDate()).to.equal(1);
+    expect(added.getUTCFullYear()).to.equal(2016);
+    expect(added.getUTCMonth()).to.equal(1);
+    expect(added.getUTCDate()).to.equal(1);
   });
 });
 
@@ -41,20 +41,20 @@ describe('addDays', function () {
   it('Can add months to a date', function() {
     var d = helpers.addDays(1)(new Date('2016-01-01'));
 
-    expect(d.getYear()).to.equal(116);
-    expect(d.getMonth()).to.equal(0);
-    expect(d.getDate()).to.equal(2);
+    expect(d.getUTCFullYear()).to.equal(2016);
+    expect(d.getUTCMonth()).to.equal(0);
+    expect(d.getUTCDate()).to.equal(2);
   });
   it('Does not modify incoming dates', function() {
     var initial = new Date('2016-01-01');
     var added = helpers.addDays(1)(initial);
 
-    expect(initial.getYear()).to.equal(116);
-    expect(initial.getMonth()).to.equal(0);
-    expect(initial.getDate()).to.equal(1);
-    expect(added.getYear()).to.equal(116);
-    expect(added.getMonth()).to.equal(0);
-    expect(added.getDate()).to.equal(2);
+    expect(initial.getUTCFullYear()).to.equal(2016);
+    expect(initial.getUTCMonth()).to.equal(0);
+    expect(initial.getUTCDate()).to.equal(1);
+    expect(added.getUTCFullYear()).to.equal(2016);
+    expect(added.getUTCMonth()).to.equal(0);
+    expect(added.getUTCDate()).to.equal(2);
   });
 });
 

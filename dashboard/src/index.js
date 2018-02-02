@@ -64,9 +64,9 @@ function buildFullDataset(airflowResults, providerIncoming) {
         }
 
         var formatted = (
-          (1900 + date.getYear()) + '-'
-            + helpers.leftZPad((date.getMonth() + 1).toString()) + '-'
-            + helpers.leftZPad(date.getDate().toString())
+          (date.getUTCFullYear()) + '-'
+            + helpers.leftZPad((date.getUTCMonth() + 1).toString()) + '-'
+            + helpers.leftZPad(date.getUTCDate().toString())
         );
 
         return formatted === helpers.formatDate(exDate);
