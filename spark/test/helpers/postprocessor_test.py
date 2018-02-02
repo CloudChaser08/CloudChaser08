@@ -63,7 +63,7 @@ def test_apply_date_cap(spark):
     ])
 
     old_sql_func = spark['sqlContext'].sql
-    #spark['sqlContext'].sql = p
+    spark['sqlContext'].sql = p
 
     try:
         capped = postprocessor.apply_date_cap(spark['sqlContext'], 'date_col', '2016-03-15', '<feedid>', '<domain_name>')(df).collect()
