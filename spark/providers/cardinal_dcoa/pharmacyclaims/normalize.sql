@@ -1,5 +1,3 @@
-INSERT INTO pharmacyclaims_common_model
-SELECT
     NULL,                            --record_id
     sk_utilization_key,              --claim_id
     NULL,                            --hvid
@@ -29,7 +27,10 @@ SELECT
     NULL,                            --reject_reason_code_3
     NULL,                            --reject_reason_code_4
     NULL,                            --reject_reason_code_5
-    drg_code,                        --diagnosis_code
+    CASE
+        WHEN drg_code="-1" THEN NULL
+        ELSE drg_code
+    END,                             --diagnosis_code
     '99',                            --diagnosis_code_qual
     NULL,                            --procedure_code
     NULL,                            --procedure_code_qual
