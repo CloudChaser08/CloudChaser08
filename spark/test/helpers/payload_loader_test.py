@@ -13,8 +13,10 @@ no_hvid_location = file_utils.get_abs_path(
 )
 
 
-def cleanup(spark):
+@pytest.fixture(autouse=True)
+def setup_teardown(spark):
     spark['sqlContext'].sql('DROP TABLE IF EXISTS test')
+    yield
 
 
 @pytest.mark.usefixtures("spark")
@@ -22,7 +24,6 @@ def test_no_hvid_columns(spark):
     """
     Test if hvid column exists despite no hvids in payload
     """
-    cleanup(spark)
     payload_loader.load(spark['runner'], no_hvid_location)
 
     spark['sqlContext'].sql('SELECT hvid FROM matching_payload')
@@ -32,9 +33,8 @@ def test_hvids_are_null(spark):
     """
     Test that hvids are null when missing
     """
-    cleanup(spark)
     row_count = spark['sqlContext'].sql('SELECT * FROM matching_payload').count()
-    hvid_count = spark['sqlContext'].sql('SELECT hvid FROM matching_payload').where(col("hvid").isNull()).count()  # TODO: Fix this 
+    hvid_count = spark['sqlContext'].sql('SELECT * FROM matching_payload').where(col("hvid").isNull()).count()  # TODO: Fix this 
 
     assert hvid_count == row_count
 
@@ -43,7 +43,6 @@ def test_extra_cols(spark):
     """
     Test that extra columns are in final payload
     """
-    cleanup(spark)
     extra_cols = ['claimId', 'hvJoinKey']
 
     payload_loader.load(spark['runner'], std_location, extra_cols, table_name='test')
@@ -52,7 +51,6 @@ def test_extra_cols(spark):
 
 
 def test_correct_hvid_used(spark):
-    cleanup(spark)
 
     payload_loader.load(spark['runner'], std_location, table_name='test')
 
@@ -61,7 +59,6 @@ def test_correct_hvid_used(spark):
 
 
 def test_custom_table_created(spark):
-    cleanup(spark)
     payload_loader.load(spark['runner'], std_location, table_name='test')
 
     tables = spark['sqlContext'].sql('SHOW TABLES')
