@@ -284,7 +284,7 @@ detect_move_normalize_dag = SubDagOperator(
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'f00ca57c-4935-494e-9e40-b064fd38afda',
-            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/amazingcharts/emr/sparkNormalizeAmazingCharts.py',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/amazingcharts/emr/sparkNormalizeAmazingChartsEMR.py',
             'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True
         }
