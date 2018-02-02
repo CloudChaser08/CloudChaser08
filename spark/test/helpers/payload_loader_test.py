@@ -33,10 +33,9 @@ def test_hvids_are_null(spark):
     """
     Test that hvids are null when missing
     """
-    row_count = spark['sqlContext'].sql('SELECT * FROM matching_payload').count()
-    hvid_count = spark['sqlContext'].sql('SELECT * FROM matching_payload').where(col("hvid").isNull()).count()  # TODO: Fix this 
+    hvid_count_not_null = spark['sqlContext'].sql('SELECT * FROM matching_payload').where(col("hvid").isNotNull()).count()
 
-    assert hvid_count == row_count
+    assert hvid_count_not_null == 0
 
 
 def test_extra_cols(spark):
@@ -54,7 +53,7 @@ def test_correct_hvid_used(spark):
 
     payload_loader.load(spark['runner'], std_location, table_name='test')
 
-    parentId_count = spark['sqlContext'].sql('SELECT hvid FROM test WHERE hvid ="999"').count()
+    parentId_count = spark['sqlContext'].sql('SELECT * FROM test').where(col("hvid") == "999").count()
     assert parentId_count == 4  # test that parentId is aliased as hvid where present
 
 

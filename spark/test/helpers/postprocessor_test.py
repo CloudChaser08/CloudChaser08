@@ -3,7 +3,8 @@ import pytest
 import mock
 import datetime
 
-from pyspark.sql.types import Row
+from pyspark.sql.types import Row, StringType
+from pyspark.sql.functions import col, lit, udf
 
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.file_utils as file_utils
@@ -62,7 +63,7 @@ def test_apply_date_cap(spark):
     ])
 
     old_sql_func = spark['sqlContext'].sql
-    spark['sqlContext'].sql = mock.MagicMock(return_value=sample_date_cap)
+    #spark['sqlContext'].sql = p
 
     try:
         capped = postprocessor.apply_date_cap(spark['sqlContext'], 'date_col', '2016-03-15', '<feedid>', '<domain_name>')(df).collect()
@@ -141,3 +142,17 @@ def test_add_input_filename(spark):
 
     for row in with_filename_parent_dir.collect():
         assert row.source_file_name == "file://" + file_utils.get_abs_path(script_path, './resources/input_filename.txt')
+
+
+def test_add_null_column(spark):
+    df = spark['spark'].sparkContext.parallelize([
+        Row(row_id=1),
+        Row(row_id=2),
+        Row(row_id=3),
+        Row(row_id=4),
+        Row(row_id=5)
+    ]).toDF()
+    df = postprocessor.add_null_column('test_col')(df)
+
+    populated_row_count = df.select('test_col').where(col('test_col').isNotNull()).count()
+    assert populated_row_count == 0

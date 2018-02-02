@@ -1,6 +1,7 @@
 # Generic, agnostic functions to be applied on a dataframe
 
 import spark.helpers.udf.general_helpers as gen_helpers
+from pyspark.sql.types import StringType
 from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, upper, \
     coalesce, input_file_name
 import functools
@@ -135,6 +136,15 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
             )
         return df
 
+    return out
+
+
+def add_null_column(col_name):
+    """
+    Add a column of null values with the name col_name to a dataframe
+    """
+    def out(df):
+        return df.withColumn(col_name, lit(None).cast(StringType()))
     return out
 
 
