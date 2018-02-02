@@ -1,5 +1,6 @@
 import pytest
 
+from pyspark.sql.functions import col
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils
 
@@ -19,21 +20,23 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_no_hvid_columns(spark):
     """
-    Test if hvid column exists with null values
+    Test if hvid column exists despite no hvids in payload
     """
     cleanup(spark)
-
     payload_loader.load(spark['runner'], no_hvid_location)
 
-    spark['sqlContext'].sql(
-        'create table test as select * from matching_payload'
-    ).collect()
+    spark['sqlContext'].sql('SELECT hvid FROM matching_payload')
 
-    null_hvid_count = spark['sqlContext'].sql('SELECT hvid FROM test').collect()  # ensure hvid column exists
 
-    row_count = spark['sqlContext'].sql('SELECT COUNT(*) FROM test').head()[0]
+def test_hvids_are_null(spark):
+    """
+    Test that hvids are null when missing
+    """
+    cleanup(spark)
+    row_count = spark['sqlContext'].sql('SELECT * FROM matching_payload').count()
+    hvid_count = spark['sqlContext'].sql('SELECT hvid FROM matching_payload').where(col("hvid").isNull()).count()  # TODO: Fix this 
 
-    assert row_count == len(null_hvid_count)  # test that there are null hvids in every row
+    assert hvid_count == row_count
 
 
 def test_extra_cols(spark):
@@ -43,10 +46,7 @@ def test_extra_cols(spark):
     cleanup(spark)
     extra_cols = ['claimId', 'hvJoinKey']
 
-    payload_loader.load(spark['runner'], std_location, extra_cols)
-    spark['sqlContext'].sql(
-        'create table test as select * from matching_payload'
-    ).collect()
+    payload_loader.load(spark['runner'], std_location, extra_cols, table_name='test')
 
     spark['sqlContext'].sql('SELECT claimId, hvJoinKey from test')
 
@@ -54,19 +54,20 @@ def test_extra_cols(spark):
 def test_correct_hvid_used(spark):
     cleanup(spark)
 
-    payload_loader.load(spark['runner'], std_location)
-    spark['sqlContext'].sql(
-        'create table test as select * from matching_payload'
-    ).collect()
+    payload_loader.load(spark['runner'], std_location, table_name='test')
 
-    parentId_rows = spark['sqlContext'].sql('SELECT hvid FROM test WHERE hvid ="999"').collect()
-    assert len(parentId_rows) == 4  # test that parentId is aliased as hvid where present
+    parentId_count = spark['sqlContext'].sql('SELECT hvid FROM test WHERE hvid ="999"').count()
+    assert parentId_count == 4  # test that parentId is aliased as hvid where present
 
 
-def test_temp_table_created(spark):
+def test_custom_table_created(spark):
     cleanup(spark)
-    payload_loader.load(spark['runner'], std_location)
+    payload_loader.load(spark['runner'], std_location, table_name='test')
 
-    is_Temporary = spark['sqlContext'].sql("SHOW tables").head()[2]
-
-    assert is_Temporary is True
+    tables = spark['sqlContext'].sql('SHOW TABLES')
+    for table in tables.collect():
+        if table.tableName == "matching_payload":
+            table_created = False
+        if table.tableName == "test":
+            table_created = True
+    assert table_created
