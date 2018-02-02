@@ -17,7 +17,8 @@ CREATE EXTERNAL TABLE d_costar (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}d_costar'
+    LOCATION '{input_path}d_costar'
+    ;
 
 DROP TABLE IF EXISTS d_cpt;
 CREATE EXTERNAL TABLE d_cpt (
@@ -35,7 +36,8 @@ CREATE EXTERNAL TABLE d_cpt (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}d_cpt'
+    LOCATION '{input_path}d_cpt'
+    ;
 
 DROP TABLE IF EXISTS d_date;
 CREATE EXTERNAL TABLE d_date (
@@ -54,7 +56,8 @@ CREATE EXTERNAL TABLE d_date (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}d_date'
+    LOCATION '{input_path}d_date'
+    ;
 
 DROP TABLE IF EXISTS d_drug;
 CREATE EXTERNAL TABLE d_drug (
@@ -81,7 +84,8 @@ CREATE EXTERNAL TABLE d_drug (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}d_drug'
+    LOCATION '{input_path}d_drug'
+    ;
 
 DROP TABLE IF EXISTS d_icd10;
 CREATE EXTERNAL TABLE d_icd10 (
@@ -98,7 +102,8 @@ CREATE EXTERNAL TABLE d_icd10 (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}d_icd10'
+    LOCATION '{input_path}d_icd10'
+    ;
 
 DROP TABLE IF EXISTS d_icd9;
 CREATE EXTERNAL TABLE d_icd9 (
@@ -114,7 +119,8 @@ CREATE EXTERNAL TABLE d_icd9 (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}d_icd9'
+    LOCATION '{input_path}d_icd9'
+    ;
 
 DROP TABLE IF EXISTS d_lab_directory;
 CREATE EXTERNAL TABLE d_lab_directory (
@@ -129,7 +135,8 @@ CREATE EXTERNAL TABLE d_lab_directory (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}lab_d_lab_directory'
+    LOCATION '{input_path}lab_d_lab_directory'
+    ;
 
 DROP TABLE IF EXISTS d_patient;
 CREATE EXTERNAL TABLE d_patient (
@@ -156,7 +163,8 @@ CREATE EXTERNAL TABLE d_patient (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}d_patient'
+    LOCATION '{input_path}d_patient'
+    ;
 
 DROP TABLE IF EXISTS d_provider;
 CREATE EXTERNAL TABLE d_provider (
@@ -171,7 +179,8 @@ CREATE EXTERNAL TABLE d_provider (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}d_provider'
+    LOCATION '{input_path}d_provider'
+    ;
 
 DROP TABLE IF EXISTS d_time;
 CREATE EXTERNAL TABLE d_time (
@@ -183,7 +192,8 @@ CREATE EXTERNAL TABLE d_time (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}d_time'
+    LOCATION '{input_path}d_time'
+    ;
 
 DROP TABLE IF EXISTS d_vaccine_cpt;
 CREATE EXTERNAL TABLE d_vaccine_cpt (
@@ -205,7 +215,8 @@ CREATE EXTERNAL TABLE d_vaccine_cpt (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}vaccine_d_vaccine_cpt'
+    LOCATION '{input_path}vaccine_d_vaccine_cpt'
+    ;
 
 DROP TABLE IF EXISTS f_diagnosis;
 CREATE EXTERNAL TABLE f_diagnosis (
@@ -230,7 +241,8 @@ CREATE EXTERNAL TABLE f_diagnosis (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}f_diagnosis'
+    LOCATION '{input_path}f_diagnosis'
+    ;
 
 DROP TABLE IF EXISTS f_encounter;
 CREATE EXTERNAL TABLE f_encounter (
@@ -296,7 +308,8 @@ CREATE EXTERNAL TABLE f_encounter (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}f_encounter'
+    LOCATION '{input_path}f_encounter'
+    ;
 
 DROP TABLE IF EXISTS f_injection;
 CREATE EXTERNAL TABLE f_injection (
@@ -334,7 +347,8 @@ CREATE EXTERNAL TABLE f_injection (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}f_injection'
+    LOCATION '{input_path}f_injection'
+    ;
 
 DROP TABLE IF EXISTS f_lab;
 CREATE EXTERNAL TABLE f_lab (
@@ -388,7 +402,8 @@ CREATE EXTERNAL TABLE f_lab (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}f_lab'
+    LOCATION '{input_path}f_lab'
+    ;
 
 DROP TABLE IF EXISTS f_medication;
 CREATE EXTERNAL TABLE f_medication (
@@ -426,7 +441,8 @@ CREATE EXTERNAL TABLE f_medication (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}f_medication'
+    LOCATION '{input_path}f_medication'
+    ;
 
 DROP TABLE IF EXISTS f_procedure;
 CREATE EXTERNAL TABLE f_procedure (
@@ -446,7 +462,8 @@ CREATE EXTERNAL TABLE f_procedure (
         'separatorChar' = '|'
         )
     STORED AS TEXTFILE
-LOCATION '{input_path}f_procedure'
+    LOCATION '{input_path}f_procedure'
+    ;
 
 DROP TABLE IF EXISTS d_multum_to_ndc;
 CREATE EXTERNAL TABLE d_multum_to_ndc (

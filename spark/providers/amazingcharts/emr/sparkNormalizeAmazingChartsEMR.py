@@ -8,7 +8,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 
 def run(spark, runner, date_input, airflow_test=False):
-    date_input = '/'.join(date_input.split('/')[:2])
+    date_input = '-'.join(date_input.split('-')[:2])
 
     script_path = __file__
 
@@ -63,7 +63,7 @@ def run(spark, runner, date_input, airflow_test=False):
     runner.run_spark_script('normalize.sql', [], script_path)
 
     runner.sqlContext.sql('select * from normalized_data').repartition(50).write.parquet(
-        constants.hdfs_staging_dir + date_input.replace('-', '/')
+        path=constants.hdfs_staging_dir + date_input.replace('-', '/'), compression="gzip"
     )
 
 
