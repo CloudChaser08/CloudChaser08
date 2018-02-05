@@ -102,7 +102,19 @@ column_transformer = Transformer(
 
 
 def _transform(transformer):
-    def generate_function(func, column_name, args):
+    """
+    Generate a function that can be used to transform any column based
+    on the given transformer
+    """
+    def convert_to_single_arg_func(func, column_name, args):
+        """
+        Convert given func to a function that takes a single argument.
+
+        This single argument will be passed in place of the arg in the
+        given args array that aligns with the given column_name. The
+        rest of the args in the args array will be passed into the
+        func as col() objects.
+        """
         return lambda c: func(*[
             c if arg == column_name else col(arg) for arg in args
         ])
@@ -118,7 +130,7 @@ def _transform(transformer):
             # functions to a udf if they are plain python functions,
             # otherwise leave them alone.
             return postprocessor.compose(*[
-                generate_function(
+                convert_to_single_arg_func(
                     func if conf.get('built-in') and conf['built-in'][i] else udf(func),
                     column_name, conf['args'][i]
                 ) for i, func in enumerate(conf['func'])
