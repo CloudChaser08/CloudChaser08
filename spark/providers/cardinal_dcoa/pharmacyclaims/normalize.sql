@@ -1,3 +1,5 @@
+INSERT INTO pharmacyclaims_common_model
+SELECT
     NULL,                            --record_id
     sk_utilization_key,              --claim_id
     NULL,                            --hvid
