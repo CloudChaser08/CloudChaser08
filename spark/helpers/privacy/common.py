@@ -102,6 +102,11 @@ column_transformer = Transformer(
 
 
 def _transform(transformer):
+    def generate_function(func, column_name, args):
+        return lambda c: func(*[
+            c if arg == column_name else col(arg) for arg in args
+        ])
+
     def col_func(column_name):
         if column_name in transformer.transforms:
             # configuration object for this column - contains the function
@@ -113,10 +118,9 @@ def _transform(transformer):
             # functions to a udf if they are plain python functions,
             # otherwise leave them alone.
             return postprocessor.compose(*[
-                lambda c: (
-                    func if conf.get('built-in') and conf['built-in'][i] else udf(func)
-                )(
-                    *[c if arg == column_name else col(arg) for arg in conf['args'][i]]
+                generate_function(
+                    func if conf.get('built-in') and conf['built-in'][i] else udf(func),
+                    column_name, conf['args'][i]
                 ) for i, func in enumerate(conf['func'])
             ])(col(column_name)).alias(column_name)
         else:

@@ -8,9 +8,9 @@ def test_transform(spark):
 
     example_transformer = common_priv.Transformer(
         col1={
-            'func': [upper],
-            'args': [['col1']],
-            'built-in': [True]
+            'func': [upper, lambda c: c[:2] if c else None],
+            'args': [['col1'], ['col1']],
+            'built-in': [True, None]
         },
         col2={
             'func': [lambda c2, c1: c1 + '_' + c2],
@@ -31,7 +31,7 @@ def test_transform(spark):
 
     # built in `upper` transformation
     assert test_df.select(transformer_func('col1')).collect() \
-        == [Row('VAL1')]
+        == [Row('VA')]
 
     # custom function transformation
     assert test_df.select(transformer_func('col2')).collect() \
