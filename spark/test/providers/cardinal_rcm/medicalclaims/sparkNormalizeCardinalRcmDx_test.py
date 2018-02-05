@@ -62,7 +62,7 @@ def test_prov_npi():
     "Ensure that npi fields are populated"
     sample_npi_row = filter(lambda r: r.claim_id == 'claim-1', results)[0]
 
-    assert sample_npi_row.prov_rendering_npi == "RENDPROVNPID"
+    assert sample_npi_row.prov_rendering_npi == "9999999999"
 
 
 def test_cleanup(spark):
