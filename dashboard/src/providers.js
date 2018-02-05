@@ -56,8 +56,8 @@ exports.config = [
         'jan', 'feb', 'mar', 'apr', 'may', 'jun',
         'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
       ];
-      var month = months[adjusted.getMonth()];
-      return 'incoming/practiceinsight/HV.data.837.' + adjusted.getFullYear() + '.' + month + '.csv.gz';
+      var month = months[adjusted.getUTCMonth()];
+      return 'incoming/practiceinsight/HV.data.837.' + adjusted.getUTCFullYear() + '.' + month + '.csv.gz';
     }
   },
   {
@@ -73,7 +73,7 @@ exports.config = [
       return helpers.formatDate(new Date(isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-02'));
     },
     executionDateToFilename: function(date) {
-      return 'incoming/caris/DATA_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) + '[0-9]{8}';
+      return 'incoming/caris/DATA_' + date.getUTCFullYear() + helpers.leftZPad(date.getUTCMonth() + 1, 2) + '[0-9]{8}';
     }
   },
   {
@@ -93,8 +93,8 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-2)(date);
-      return 'incoming/medicalclaims/emdeon/transactions/' + date.getFullYear() +
-        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '_Claims_US_CF_D_deid.dat.gz';
+      return 'incoming/medicalclaims/emdeon/transactions/' + date.getUTCFullYear() +
+        helpers.leftZPad(adjusted.getUTCMonth() + 1, 2) + helpers.leftZPad(adjusted.getUTCDate(), 2) + '_Claims_US_CF_D_deid.dat.gz';
     }
   },
   {
@@ -114,8 +114,8 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-2)(date);
-      return 'incoming/pharmacyclaims/emdeon/transactions/' + date.getFullYear() +
-        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '_RX_DEID_CF_ON.dat.gz';
+      return 'incoming/pharmacyclaims/emdeon/transactions/' + date.getUTCFullYear() +
+        helpers.leftZPad(adjusted.getUTCMonth() + 1, 2) + helpers.leftZPad(adjusted.getUTCDate(), 2) + '_RX_DEID_CF_ON.dat.gz';
     }
   },
   {
@@ -135,8 +135,8 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-2)(date);
-      return 'incoming/era/emdeon/transactions/' + adjusted.getFullYear() +
-        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '_AF_ERA_CF_ON_CS_deid.dat.gz';
+      return 'incoming/era/emdeon/transactions/' + adjusted.getUTCFullYear() +
+        helpers.leftZPad(adjusted.getUTCMonth() + 1, 2) + helpers.leftZPad(adjusted.getUTCDate(), 2) + '_AF_ERA_CF_ON_CS_deid.dat.gz';
     }
   },
   {
@@ -157,8 +157,8 @@ exports.config = [
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-4)(date);
       var nextDay = helpers.addDays(1)(adjusted);
-      return 'incoming/quest/HealthVerity_' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2) +
-        helpers.leftZPad(adjusted.getDate(), 2) + helpers.leftZPad(nextDay.getMonth() + 1, 2) + helpers.leftZPad(nextDay.getDate(), 2) + '_2.gz.zip';
+      return 'incoming/quest/HealthVerity_' + adjusted.getUTCFullYear() + helpers.leftZPad(adjusted.getUTCMonth() + 1, 2) +
+        helpers.leftZPad(adjusted.getUTCDate(), 2) + helpers.leftZPad(nextDay.getUTCMonth() + 1, 2) + helpers.leftZPad(nextDay.getUTCDate(), 2) + '_2.gz.zip';
     }
   },
   {
@@ -177,9 +177,9 @@ exports.config = [
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-1)(date);
       var previousDay = helpers.addDays(-1)(adjusted);
-      return 'incoming/ability/[app].from_' + previousDay.getFullYear() + '-' + helpers.leftZPad(previousDay.getMonth() + 1, 2) + '-'
-        + previousDay.getDate() + '.to_' + adjusted.getFullYear() + '-' + helpers.leftZPad(adjusted.getMonth() + 1, 2)
-        + '-' + helpers.leftZPad(adjusted.getDate(), 2) + '.zip';
+      return 'incoming/ability/[app].from_' + previousDay.getUTCFullYear() + '-' + helpers.leftZPad(previousDay.getUTCMonth() + 1, 2) + '-'
+        + previousDay.getUTCDate() + '.to_' + adjusted.getUTCFullYear() + '-' + helpers.leftZPad(adjusted.getUTCMonth() + 1, 2)
+        + '-' + helpers.leftZPad(adjusted.getUTCDate(), 2) + '.zip';
     }
   },
   {
@@ -199,8 +199,8 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-1)(date);
-      return 'incoming/esi/10130X001_HV_RX_Claims_D' + adjusted.getFullYear() +
-        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '.txt';
+      return 'incoming/esi/10130X001_HV_RX_Claims_D' + adjusted.getUTCFullYear() +
+        helpers.leftZPad(adjusted.getUTCMonth() + 1, 2) + helpers.leftZPad(adjusted.getUTCDate(), 2) + '.txt';
     }
   },
   {
@@ -220,8 +220,8 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-1)(date);
-      return 'incoming/esi/10130X001_HV_RX_ENROLLMENT_D' + adjusted.getFullYear() +
-        helpers.leftZPad(adjusted.getMonth() + 1, 2) + helpers.leftZPad(adjusted.getDate(), 2) + '.txt';
+      return 'incoming/esi/10130X001_HV_RX_ENROLLMENT_D' + adjusted.getUTCFullYear() +
+        helpers.leftZPad(adjusted.getUTCMonth() + 1, 2) + helpers.leftZPad(adjusted.getUTCDate(), 2) + '.txt';
     }
   },
   {
@@ -241,8 +241,8 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-1)(date);
-      return 'incoming/mckessonrx/HVUnRes.Record.' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2)
-        + helpers.leftZPad(adjusted.getDate(), 2);
+      return 'incoming/mckessonrx/HVUnRes.Record.' + adjusted.getUTCFullYear() + helpers.leftZPad(adjusted.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(adjusted.getUTCDate(), 2);
     }
   },
   {
@@ -262,8 +262,8 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-1)(date);
-      return 'incoming/mckessonrx/HVRes.Record.' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2)
-        + helpers.leftZPad(adjusted.getDate(), 2);
+      return 'incoming/mckessonrx/HVRes.Record.' + adjusted.getUTCFullYear() + helpers.leftZPad(adjusted.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(adjusted.getUTCDate(), 2);
     }
   },
   {
@@ -283,8 +283,8 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-1)(date);
-      return 'incoming/diplomat/HealthVerityOut_' + adjusted.getFullYear() + helpers.leftZPad(adjusted.getMonth() + 1, 2)
-        + helpers.leftZPad(adjusted.getDate(), 2)
+      return 'incoming/diplomat/HealthVerityOut_' + adjusted.getUTCFullYear() + helpers.leftZPad(adjusted.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(adjusted.getUTCDate(), 2)
         + '.csv';
     }
   },
@@ -301,8 +301,8 @@ exports.config = [
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
     },
     executionDateToFilename: function(date) {
-      return 'incoming/abd/hv_export_data_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
-        + helpers.leftZPad(date.getDate(), 2)
+      return 'incoming/abd/hv_export_data_' + date.getUTCFullYear() + helpers.leftZPad(date.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(date.getUTCDate(), 2)
         + '.txt';
     }
   },
@@ -319,8 +319,8 @@ exports.config = [
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
     },
     executionDateToFilename: function(date) {
-      return 'incoming/cardinal/mpi/mpi_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
-        + helpers.leftZPad(date.getDate(), 2)
+      return 'incoming/cardinal/mpi/mpi_' + date.getUTCFullYear() + helpers.leftZPad(date.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(date.getUTCDate(), 2)
         + 'T[0-9]{6}.zip';
     }
   },
@@ -337,8 +337,8 @@ exports.config = [
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
     },
     executionDateToFilename: function(date) {
-      return 'incoming/cardinal/pds/PDS_record_data_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
-        + helpers.leftZPad(date.getDate(), 2)
+      return 'incoming/cardinal/pds/PDS_record_data_' + date.getUTCFullYear() + helpers.leftZPad(date.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(date.getUTCDate(), 2)
         + '[0-9]{6}';
     }
   },
@@ -357,8 +357,8 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var adjusted = helpers.addDays(-31)(date);
-      return 'incoming/navicure/HealthVerity-' + adjusted.getFullYear() + '-' + helpers.leftZPad(adjusted.getMonth() + 1, 2)
-        + '-' + helpers.leftZPad(adjusted.getDate(), 2) + '-record-data-Navicure';
+      return 'incoming/navicure/HealthVerity-' + adjusted.getUTCFullYear() + '-' + helpers.leftZPad(adjusted.getUTCMonth() + 1, 2)
+        + '-' + helpers.leftZPad(adjusted.getUTCDate(), 2) + '-record-data-Navicure';
     }
   },
   {
@@ -375,9 +375,9 @@ exports.config = [
     },
     executionDateToFilename: function(date) {
       var yesterday = helpers.addDays(-1)(date);
-      return 'incoming/neogenomics/NeoG_HV_STD_W_' + yesterday.getFullYear() + helpers.leftZPad(yesterday.getMonth() + 1, 2)
-        + helpers.leftZPad(yesterday.getDate(), 2) + '_' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2)
-        + helpers.leftZPad(date.getDate(), 2) + '_NPHI.txt';
+      return 'incoming/neogenomics/NeoG_HV_STD_W_' + yesterday.getUTCFullYear() + helpers.leftZPad(yesterday.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(yesterday.getUTCDate(), 2) + '_' + date.getUTCFullYear() + helpers.leftZPad(date.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(date.getUTCDate(), 2) + '_NPHI.txt';
     }
   },
   {

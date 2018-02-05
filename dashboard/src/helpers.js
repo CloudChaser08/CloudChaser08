@@ -21,14 +21,14 @@ exports.leftZPad = function(string, length) {
 exports.addMonths = function(months) {
   return function f(date) {
     var copy = new Date(date.getTime());
-    copy.setMonth(copy.getMonth() + months);
+    copy.setUTCMonth(copy.getUTCMonth() + months);
     return copy;
   };
 };
 exports.addDays = function(days) {
   return function f(date) {
     var copy = new Date(date.getTime());
-    copy.setDate(copy.getDate() + days);
+    copy.setUTCDate(copy.getUTCDate() + days);
     return copy;
   };
 };
@@ -37,7 +37,7 @@ exports.addDays = function(days) {
  * Convert a Date() object to a formatted text string 'YYYY-mm-dd'
  */
 exports.formatDate = function(date) {
-  return (1900 + date.getYear()) + '-'
-    + this.leftZPad((date.getMonth() + 1).toString()) + '-'
-    + this.leftZPad(date.getDate().toString());
+  return (date.getUTCFullYear()) + '-'
+    + this.leftZPad((date.getUTCMonth() + 1).toString()) + '-'
+    + this.leftZPad(date.getUTCDate().toString());
 };
