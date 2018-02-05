@@ -27,7 +27,7 @@ exports.getS3Calls = function() {
         var params = {
           Bucket : 'healthverity',
           Prefix : 'incoming/' + providerConf.providerPrefix + '/',
-          Delimiter : '/'
+          Delimiter : providerConf.listRecursively ? null : '/' 
         };
         if (continuationToken) {
           params.ContinuationToken = continuationToken;
