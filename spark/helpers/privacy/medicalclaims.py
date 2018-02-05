@@ -39,6 +39,46 @@ medical_transformer = priv_common.Transformer(
     ],
     inst_type_of_bill_std_id=[
         priv_common.TransformFunction(post_norm_cleanup.obscure_inst_type_of_bill, ['inst_type_of_bill_std_id'])
+    ],
+    procedure_modifier_1=[
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_alphanumeric_code, ['procedure_modifier_1']),
+        priv_common.TransformFunction(lambda mod: mod[:2] if mod else None, ['procedure_modifier_1'])
+    ],
+    procedure_modifier_2=[
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_alphanumeric_code, ['procedure_modifier_2']),
+        priv_common.TransformFunction(lambda mod: mod[:2] if mod else None, ['procedure_modifier_2'])
+    ],
+    procedure_modifier_3=[
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_alphanumeric_code, ['procedure_modifier_3']),
+        priv_common.TransformFunction(lambda mod: mod[:2] if mod else None, ['procedure_modifier_3'])
+    ],
+    procedure_modifier_4=[
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_alphanumeric_code, ['procedure_modifier_4']),
+        priv_common.TransformFunction(lambda mod: mod[:2] if mod else None, ['procedure_modifier_4'])
+    ],
+    prov_rendering_npi=[
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_npi_code, ['prov_rendering_npi'])
+    ],
+    prov_billing_npi=[
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_npi_code, ['prov_billing_npi'])
+    ],
+    prov_referring_npi=[
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_npi_code, ['prov_referring_npi'])
+    ],
+    prov_facility_npi=[
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_npi_code, ['prov_facility_npi'])
+    ],
+    prov_rendering_state=[
+        priv_common.TransformFunction(post_norm_cleanup.validate_state_code, ['prov_rendering_state'])
+    ],
+    prov_billing_state=[
+        priv_common.TransformFunction(post_norm_cleanup.validate_state_code, ['prov_billing_state'])
+    ],
+    prov_referring_state=[
+        priv_common.TransformFunction(post_norm_cleanup.validate_state_code, ['prov_referring_state'])
+    ],
+    prov_facility_state=[
+        priv_common.TransformFunction(post_norm_cleanup.validate_state_code, ['prov_facility_state'])
     ]
 ).append(
     priv_common.Transformer(**dict(map(
