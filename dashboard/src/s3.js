@@ -39,14 +39,24 @@ exports.getS3Calls = function() {
               return key.Key;
             }));
             if (!data.IsTruncated) {
-              // attach provider id to a list of relevant files found
-              // in this provider's incoming bucket
-              var output = {
-                providerId: providerConf.id,
-                files: results.filter(function(filename) {
-                  return providerConf.expectedFilenameRegex.test(filename);
-                })
-              };
+              // if the provider is not automated, attach all files found
+              var output;
+              if (!providerConf.airflowPipelineName)
+              {
+                  output = {
+                    providerId: providerConf.id,
+                    files: results
+                  };
+              }
+              else
+              {
+                var output = {
+                  providerId: providerConf.id,
+                  files: results.filter(function(filename) {
+                    return providerConf.expectedFilenameRegex.test(filename);
+                  })
+                };
+              }
               callback(null, output);
             } else {
               recursiveList(data.NextContinuationToken);

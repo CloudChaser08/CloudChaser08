@@ -380,4 +380,104 @@ exports.config = [
         + helpers.leftZPad(date.getDate(), 2) + '_NPHI.txt';
     }
   },
+  {
+    id: 'ambry',
+    displayName: 'Ambry RX',
+    providerPrefix: 'ambry'
+  },
+  {
+    id: 'allscripts',
+    displayName: 'Allscripts DX',
+    providerPrefix: 'allscripts/claims'
+  },
+  {
+    id: 'corrona',
+    displayName: 'Corrona Registry',
+    providerPrefix: 'corrona'
+  },
+  {
+    id: 'cardinal_rcm',
+    displayName: 'Cardinal RCM DX',
+    providerPrefix: 'cardinal/rcm'
+  },
+  {
+    id: 'courtagen',
+    displayName: 'Courtagen Lab',
+    providerPrefix: 'courtagen'
+  },
+  {
+    id: 'obit',
+    displayName: 'Obituary',
+    providerPrefix: 'obituarydata'
+  },
+  {
+    id: 'mindbody',
+    displayName: 'MindBody',
+    providerPrefix: 'mindbody'
+  },
+  {
+    id: 'epsilon',
+    displayName: 'Epsilon',
+    providerPrefix: 'epsilon'
+  },
+  {
+    id: 'acxiom',
+    displayName: 'Acxiom',
+    providerPrefix: 'acxiom'
+  },
+  {
+    id: 'genoa',
+    displayName: 'Genoa RX',
+    providerPrefix: 'genoa'
+  },
+  {
+    id: 'cardinal_vitalpath',
+    displayName: 'Cardinal Vitalpath RX',
+    providerPrefix: 'cardinal/vitalpath'
+  },
+  {
+    id: 'allscripts_emr',
+    displayName: 'Allscripts EMR',
+    providerPrefix: 'allscripts/emr'
+  },
+  {
+    id: 'visonex',
+    displayName: 'Visonex EMR',
+    providerPrefix: 'visonex'
+  },
+  {
+    id: 'amazing_charts',
+    displayName: 'Amazing Charts EMR',
+    providerPrefix: 'amazingcharts'
+  },
+  {
+    id: 'cardinal_tsi',
+    displayName: 'Cardinal TSI EMR',
+    providerPrefix: 'cardinal/tsi'
+  },
+  {
+    id: 'cardinal_raintree',
+    displayName: 'Cardinal Raintree EMR',
+    providerPrefix: 'cardinal/emr'
+  },
+  {
+    id: 'nextgen',
+    displayName: 'Nextgen EMR',
+    providerPrefix: 'ng-lssa'
+  },
+  {
+    id: 'treato',
+    displayName: 'Treato EMR',
+    providerPrefix: 'treato'
+  },
+  {
+    id: 'healthjump',
+    displayName: 'HealthJump EMR',
+    providerPrefix: 'healthjump'
+  },
+  {
+    id: 'transmed',
+    displayName: 'Transmed EMR',
+    providerPrefix: 'transmed'
+  }
 ];

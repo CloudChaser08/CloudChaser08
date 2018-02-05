@@ -17,66 +17,78 @@ var helpers = require('./helpers.js');
  */
 function buildFullDataset(airflowResults, providerIncoming) {
 
-  // the index of the column in the tabular airflow data that
-  // corresponds to this provider
-  var providerColumnIndex = airflowResults.fields.findIndex(function(airflowResultField) {
-    return airflowResultField.name == providerIncoming.providerId;
-  });
-
   // the configuration for this provider
   var providerConf = providers.config.filter(function(provider) {
     return provider.id == providerIncoming.providerId;
   })[0];
 
-  // enumerate all execution dates for this provider
-  var executionDates = [providerConf.startDate];
-  function nextDate() {
-    return providerConf.schedule(executionDates[executionDates.length-1]);
+  if (!providerConf.airflowPipelineName)
+  {
+    // Create dataset for non-automated providers
+    return providerIncoming.files.map(function(f) {
+      return {
+        executionDate: '',
+        incomingFiles: [f]
+      };
+    });
   }
-
-  while (nextDate() <= Date.now()) {
-    executionDates.push(nextDate());
-  }
-
-  function getExpectedFilename(date) {
-    return providerConf.executionDateToFilename(date);
-  }
-  // return an array containing one entry for each execution date
-  return executionDates.map(function(exDate) {
-    var airflowData = airflowResults.rows.filter(function(resultRow) {
-      var date = new Date(resultRow[0]);
-
-      // offset the execution date
-      if (!providerConf.hasOwnProperty('noAirflowOffset') || !providerConf.noAirflowOffset) {
-        date = providerConf.schedule(date);
-      }
-
-      var formatted = (
-        (1900 + date.getYear()) + '-'
-          + helpers.leftZPad((date.getMonth() + 1).toString()) + '-'
-          + helpers.leftZPad(date.getDate().toString())
-      );
-
-      return formatted === helpers.formatDate(exDate);
-    })[0];
-
-    // this execution date will be considered 'ingested' if the
-    // corresponding value in the airflow data is '1'
-    var ingested = typeof airflowData !== 'undefined' && airflowData[providerColumnIndex].toString().trim() === "1";
-
-    // grab list of incoming files for this execution date
-    var incomingFiles = providerIncoming.files.filter(function(file) {
-      return providerConf.filenameToExecutionDate(file) == helpers.formatDate(exDate);
+  else
+  {
+    // the index of the column in the tabular airflow data that
+    // corresponds to this provider
+    var providerColumnIndex = airflowResults.fields.findIndex(function(airflowResultField) {
+      return airflowResultField.name == providerIncoming.providerId;
     });
 
-    return {
-      executionDate: helpers.formatDate(exDate),
-      incomingFiles: incomingFiles,
-      expectedFile: getExpectedFilename(exDate),
-      ingested: ingested
-    };
+    // enumerate all execution dates for this provider
+    var executionDates = [providerConf.startDate];
+    function nextDate() {
+      return providerConf.schedule(executionDates[executionDates.length-1]);
+    }
 
-  });
+    while (nextDate() <= Date.now()) {
+      executionDates.push(nextDate());
+    }
+
+    function getExpectedFilename(date) {
+      return providerConf.executionDateToFilename(date);
+    }
+    // return an array containing one entry for each execution date
+    return executionDates.map(function(exDate) {
+      var airflowData = airflowResults.rows.filter(function(resultRow) {
+        var date = new Date(resultRow[0]);
+
+        // offset the execution date
+        if (!providerConf.hasOwnProperty('noAirflowOffset') || !providerConf.noAirflowOffset) {
+          date = providerConf.schedule(date);
+        }
+
+        var formatted = (
+          (1900 + date.getYear()) + '-'
+            + helpers.leftZPad((date.getMonth() + 1).toString()) + '-'
+            + helpers.leftZPad(date.getDate().toString())
+        );
+
+        return formatted === helpers.formatDate(exDate);
+      })[0];
+
+      // this execution date will be considered 'ingested' if the
+      // corresponding value in the airflow data is '1'
+      var ingested = typeof airflowData !== 'undefined' && airflowData[providerColumnIndex].toString().trim() === "1";
+
+      // grab list of incoming files for this execution date
+      var incomingFiles = providerIncoming.files.filter(function(file) {
+        return providerConf.filenameToExecutionDate(file) == helpers.formatDate(exDate);
+      });
+
+      return {
+        executionDate: helpers.formatDate(exDate),
+        incomingFiles: incomingFiles,
+        expectedFile: getExpectedFilename(exDate),
+        ingested: ingested
+      };
+    });
+  }
 }
 
 /*
@@ -150,17 +162,27 @@ exports.handler = function(event, context) {
           return d.incomingFiles.length > 0;
         });
 
-        var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
-
         var healthLabel;
-        if (providerHealthPercentage >= 75) healthLabel = [0, 'Healthy'];
-        else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = [1, 'Moderately Healthy'];
-        else healthLabel = [2, 'Unhealthy'];
+        if (!providerConf.airflowPipelineName)
+        {
+          healthLabel = [3, 'Not Automated'];
+        }
+        else
+        {
+          var providerHealthPercentage = estimateProviderHealth(allData, providerConf);
+          if (providerHealthPercentage >= 75) healthLabel = [0, 'Healthy'];
+          else if (providerHealthPercentage >= 25 && providerHealthPercentage < 75) healthLabel = [1, 'Moderately Healthy'];
+          else healthLabel = [2, 'Unhealthy'];
+        }
 
         var ingestedFiles = existingFiles.filter(function(file) {
           return file.ingested;
         });
         var latestIngestionDate = ingestedFiles.length ? ingestedFiles[0].executionDate : "Never";
+        if (!providerConf.airflowPipelineName)
+        {
+          latestIngestionDate = "N/A";
+        }
 
         function dateSortNum(d) {
           if (d === "Never") {
@@ -190,7 +212,8 @@ exports.handler = function(event, context) {
               // calculate class based on the status for this
               // execution date
               var dateClass;
-              if (d.incomingFiles.length === 0) dateClass = 'not-sent';
+              if (!providerConf.airflowPipelineName) dateClass = 'not-automated';
+              else if (d.incomingFiles.length === 0) dateClass = 'not-sent';
               else if (!d.ingested) dateClass = 'not-ingested';
               else dateClass = 'fully-loaded';
               if (dateClass === 'not-sent') {
@@ -205,7 +228,7 @@ exports.handler = function(event, context) {
               }
             }).reduce(function (el1, el2) {
               return el1 + el2;
-            }) + '</ul>'
+            }, '') + '</ul>'
         };
       });
 

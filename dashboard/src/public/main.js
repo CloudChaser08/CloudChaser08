@@ -22,6 +22,14 @@ function configureTable() {
       $('#table').bootstrapTable(
         'resetView' , {height: 100}
       );
+
+      // hide the legend if provider is not automated
+      if (row.status == "Not Automated") {
+        $('div#legend').hide();
+      }
+      else {
+        $('div#legend').show();
+      }
     }
   });
 }
