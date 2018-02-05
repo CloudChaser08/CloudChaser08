@@ -11,5 +11,8 @@ upload-dev: build
 deploy-dev: upload-dev
 	aws lambda invoke --function-name provider-status-dash-dev --region us-east-1 --log-type Tail --payload '{"dev": true}' invoke_output.txt
 
-test:
+test: install-deps
 	mocha './src/**/*_test.js'
+
+install-deps:
+	cd src && npm install && cd ..
