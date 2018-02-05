@@ -109,7 +109,13 @@ def clean_up_diagnosis_code(
 
 
 def clean_up_procedure_code(procedure_code):
-    return uppercase_code(clean_up_alphanumeric_code(procedure_code))
+    if procedure_code:
+        up_to_first_space = procedure_code.split()[0]
+        clean_code = uppercase_code(clean_up_alphanumeric_code(up_to_first_space))
+        if clean_code:
+            return clean_code[:min(7, len(clean_code))]
+        else:
+            return None
 
 
 def clean_up_ndc_code(ndc_code):

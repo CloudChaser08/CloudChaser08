@@ -75,15 +75,15 @@ SELECT
     NULL,                                   -- proc_rndrg_prov_state_cd
     NULL,                                   -- proc_rndrg_prov_zip_cd
     CASE
-      WHEN LENGTH(CLEAN_UP_PROCEDURE_CODE(proc.cpt)) >= 5
-      THEN SUBSTRING(CLEAN_UP_PROCEDURE_CODE(proc.cpt), 0, 5)
+      WHEN LENGTH(UPPER(CLEAN_UP_ALPHANUMERIC_CODE(proc.cpt))) >= 5
+      THEN SUBSTRING(UPPER(CLEAN_UP_ALPHANUMERIC_CODE(proc.cpt)), 0, 5)
     END,                                    -- proc_cd
     NULL,                                   -- proc_cd_qual
     CASE
-      WHEN LENGTH(CLEAN_UP_PROCEDURE_CODE(proc.cpt)) = 7
-      THEN SUBSTRING(CLEAN_UP_PROCEDURE_CODE(proc.cpt), 6, 2)
-      WHEN LENGTH(CLEAN_UP_PROCEDURE_CODE(proc.cpt)) = 2
-      THEN CLEAN_UP_PROCEDURE_CODE(proc.cpt)
+      WHEN LENGTH(UPPER(CLEAN_UP_ALPHANUMERIC_CODE(proc.cpt))) = 7
+      THEN SUBSTRING(UPPER(CLEAN_UP_ALPHANUMERIC_CODE(proc.cpt)), 6, 2)
+      WHEN LENGTH(UPPER(CLEAN_UP_ALPHANUMERIC_CODE(proc.cpt))) = 2
+      THEN UPPER(CLEAN_UP_ALPHANUMERIC_CODE(proc.cpt))
     END,                                    -- proc_cd_1_modfr
     NULL,                                   -- proc_cd_2_modfr
     NULL,                                   -- proc_cd_3_modfr
