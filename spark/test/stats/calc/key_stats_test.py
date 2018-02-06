@@ -11,8 +11,9 @@ results = None
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     global df, results
-    conf = { 'date_field': 'date',
-             'record_attribute' : 'c'
+    conf = { 'date_field'       : 'date',
+             'record_attribute' : 'c',
+             'index_all_dates'  : False
             }
     data_row = Row('date', 'hvid', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
