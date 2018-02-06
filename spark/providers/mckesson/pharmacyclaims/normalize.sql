@@ -1,7 +1,7 @@
 SELECT
     t.prescriptionkey                        AS claim_id,
     mp.hvid                                  AS hvid,
-    3                                        AS model_version,
+    6                                        AS model_version,
     mp.gender                                AS patient_gender,
     mp.age                                   AS patient_age,
     mp.yearOfBirth                           AS patient_year_of_birth,
