@@ -34,9 +34,14 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
                      patient, record, and row
     '''
     date_col = provider_conf['date_field']
+    index_all_dates = provider_conf['index_all_dates']
     patient_attribute = 'hvid'
     record_attribute = provider_conf.get('record_attribute', '*')
     row_attribute = '*'
+
+    # If we are indexing all dates, then we want to ignore
+    # the start_date and only use earliest_date
+    start_date = earliest_date if index_all_dates else start_date
 
     total_24_month_patient = _get_row_count(df, start_date, end_date,
                                    patient_attribute, date_col)
@@ -48,7 +53,8 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
         total_24_month_row = _get_row_count(df, start_date, end_date,
                                        row_attribute, date_col)
 
-    if start_date <= earliest_date:
+    if index_all_dates:
+        # start_date == earliest_date, don't recalc
         total_patient = total_24_month_patient
         total_record = total_24_month_record
         total_row = total_24_month_row
@@ -70,10 +76,7 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m")
         end_date_dt = datetime.datetime.strptime(end_date, "%Y-%m")
 
-    # We only want to do at most 2 years here
-    # This is so we don't have very low daily values for feeds
-    # where we index all dates
-    days = float(min(730, (end_date_dt - earliest_date_dt).days))
+    days = (end_date_dt - earliest_date_dt).days
 
     key_stats = {
         'total_patient': total_patient,
