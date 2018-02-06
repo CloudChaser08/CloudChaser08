@@ -27,7 +27,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "2013-01-01"
+            "earliest_date"     : "2012-01-01"
         },
         {
             "name"              : "caris",
@@ -41,7 +41,7 @@
             "longitudinality"   : false,
             "year_over_year"    : false,
             "epi_calcs"         : null,
-            "earliest_date"     : "2008-01-01"
+            "earliest_date"     : "2010-01-01"
         },
         {
             "name"              : "ablility",
@@ -69,7 +69,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "2009-07-01"
+            "earliest_date"     : "2009-08-01"
         },
         {
             "name"              : "medisafe",
@@ -82,7 +82,8 @@
             "top_values"        : false,
             "longitudinality"   : false,
             "year_over_year"    : false,
-            "epi_calcs"         : null
+            "epi_calcs"         : null,
+            "earliest_date"     : "1901-01-01"
         },
         {
             "name"              : "quest",
@@ -124,7 +125,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "2010-12-01"
+            "earliest_date"     : "2011-01-01"
         },
         {
             "name"              : "practice_insight",
@@ -138,7 +139,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "2011-12-01"
+            "earliest_date"     : "2012-01-01"
         },
         {
             "name"              : "visonex",
@@ -151,7 +152,8 @@
             "top_values"        : false,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null
+            "epi_calcs"         : null,
+            "earliest_date"     : "2014-11-01"
         },
         {
             "name"              : "allscripts",
@@ -164,7 +166,8 @@
             "top_values"        : false,
             "longitudinality"   : false,
             "year_over_year"    : false,
-            "epi_calcs"         : null
+            "epi_calcs"         : null,
+            "earliest_date"     : "2014-01-01"
         },
         {
             "name"              : "allscripts",
@@ -178,7 +181,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "2014-12-01"
+            "earliest_date"     : "2015-01-01"
         },
         {
             "name"              : "obituarydata",
@@ -207,20 +210,6 @@
             "year_over_year"    : true,
             "epi_calcs"         : null,
             "earliest_date"     : "2015-01-01"
-        },
-        {
-            "name"              : "courtagen",
-            "datafeed_id"       : "28",
-            "datatype"          : "labtests",
-            "date_field"        : "date_service",
-            "record_field"      : "claim_id",
-            "fill_rate"         : true,
-            "key_stats"         : true,
-            "top_values"        : true,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : null,
-            "earliest_date"     : "2014-04-01"
         },
         {
             "name"              : "labcorp",
@@ -342,7 +331,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "2010-03-01"
+            "earliest_date"     : "2011-01-01"
         },
         {
             "name"              : "nextgen",
@@ -355,7 +344,8 @@
             "top_values"        : false,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null
+            "epi_calcs"         : null,
+            "earliest_date"     : "2003-01-01"
         },
         {
             "name"              : "cardinal_rcm",
@@ -369,7 +359,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "2010-02-01"
+            "earliest_date"     : "2012-01-01"
         },
         {
             "name"              : "mindbody",
@@ -477,7 +467,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "2010-02-01"
+            "earliest_date"     : "2013-01-01"
         },
         {
             "name"              : "cardinal_pds",
@@ -505,7 +495,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "1901-01-01"
+            "earliest_date"     : "2015-09-01"
         },
         {
             "name"              : "acxiom",
@@ -519,7 +509,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null,
-            "earliest_date"     : "1900-01-01"
+            "earliest_date"     : "1990-01-01"
         },
         {
             "name"              : "alliance",
