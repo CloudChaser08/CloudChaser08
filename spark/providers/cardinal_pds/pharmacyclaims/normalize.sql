@@ -1,7 +1,7 @@
 SELECT
     regexp_replace(t.row_id, '[{{}}]', '')    AS claim_id,
     t.unique_patient_id                       AS hvid,
-    3                                         AS model_version,
+    6                                         AS model_version,
     t.version_release_number                  AS source_version,
     COALESCE(t.patient_gender, mp.gender)     AS patient_gender,
     mp.yearOfBirth                            AS patient_year_of_birth,
