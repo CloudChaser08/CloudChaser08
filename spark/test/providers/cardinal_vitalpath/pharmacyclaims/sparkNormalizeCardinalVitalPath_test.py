@@ -25,7 +25,7 @@ def test_hardcode_values():
     for row in results:
         assert row.data_feed == '30'
         assert row.data_vendor == '42'
-        assert row.model_version == '3'
+        assert row.model_version == '6'
 
 
 def test_procedure_code_is_upper_case():
@@ -36,5 +36,3 @@ def test_procedure_code_is_upper_case():
 def test_unit_of_measure_is_upper():
     for row in results:
         assert row.unit_of_measure.isupper()
-
-
