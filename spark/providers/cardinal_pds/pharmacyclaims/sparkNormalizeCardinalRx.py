@@ -138,7 +138,7 @@ LOCATION '{}'
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql', 'cardinal_pds',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql', 'cardinal_pds',
             'pharmacyclaims_common_model_final', 'date_service', date_input
         )
 
@@ -158,7 +158,7 @@ def main(args):
         output_path      = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-output/'
         deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-deliverable-output/'
     else:
-        output_path      = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+        output_path      = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
         deliverable_path = 's3://salusv/deliverable/cardinal_pds-0/'
 
     normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=cardinal_pds/'
