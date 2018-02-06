@@ -125,7 +125,7 @@ class IncomingFileConfig:
         return out
 
     def get_new_files(self):
-        existing_files = s3_utils.list_s3_bucket_files(self.dest_path)
+        existing_files = set(s3_utils.list_s3_bucket_files(self.dest_path))
         if self.src_system == 's3':
             if self.src_conf.external_s3:
                 src_file_list = s3_utils.list_s3_bucket_files(

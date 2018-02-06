@@ -28,10 +28,10 @@
     "src_conf": {
       "airflow_conf_variable": "Emdeon SFTP Configuration"
     },
-    "dest_path": "s3://healthverity/incoming/emdeon/medicalclaims/transactions/",
+    "dest_path": "s3://healthverity/incoming/medicalclaims/emdeon/transactions/",
     "file_name_regexes": [
-      "\\d{2}\\d{2}\\d{2}_Claims_US_CF_D_deid.dat.gz",
-      "\\d{2}\\d{2}\\d{2}_Claims_US_CF_D_deid.dat.mft"
+      "\\d{4}\\d{2}\\d{2}_Claims_US_CF_D_deid.dat.gz",
+      "\\d{4}\\d{2}\\d{2}_Claims_US_CF_D_deid.dat.mft"
     ]
   },
   {
@@ -40,9 +40,67 @@
     "src_conf": {
       "airflow_conf_variable": "Emdeon SFTP Configuration"
     },
-    "dest_path": "s3://healthverity/incoming/emdeon/medicalclaims/deid/",
+    "dest_path": "s3://healthverity/incoming/medicalclaims/emdeon/deid/",
     "file_name_regexes": [
-      "\\d{2}\\d{2}\\d{2}_Claims_US_CF_Hash_File_HV_Encrypt.dat.gz"
+      "\\d{4}\\d{2}\\d{2}_Claims_US_CF_Hash_File_HV_Encrypt.dat.gz"
+    ]
+  },
+  {
+    "name": "emdeon_rx_transactions",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "Emdeon SFTP Configuration"
+    },
+    "dest_path": "s3://healthverity/incoming/pharmacyclaims/emdeon/transactions/",
+    "file_name_regexes": [
+      "\\d{4}\\d{2}\\d{2}_RX_DEID_CF_ON.dat.gz",
+      "\\d{4}\\d{2}\\d{2}_RX_DEID_CF_ON.dat.mft"
+    ]
+  },
+  {
+    "name": "emdeon_rx_deid",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "Emdeon SFTP Configuration"
+    },
+    "dest_path": "s3://healthverity/incoming/pharmacyclaims/emdeon/deid/",
+    "file_name_regexes": [
+      "\\d{4}\\d{2}\\d{2}_RX_Ident_CF_ON_PHI_Hash_HV_Encrypt.dat.gz"
+    ]
+  },
+  {
+    "name": "emdeon_era_transactions",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "Emdeon SFTP Configuration"
+    },
+    "dest_path": "s3://healthverity/incoming/era/emdeon/transactions/",
+    "file_name_regexes": [
+      "\\d{4}\\d{2}\\d{2}_AF_ERA_CF_ON_CS_deid.dat.gz",
+      "\\d{4}\\d{2}\\d{2}_AF_ERA_CF_ON_CS_deid.dat.mft"
+    ]
+  },
+  {
+    "name": "emdeon_era_link",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "Emdeon SFTP Configuration"
+    },
+    "dest_path": "s3://healthverity/incoming/era/emdeon/link/",
+    "file_name_regexes": [
+      "\\d{4}\\d{2}\\d{2}_AF_ERA_CF_ON_Link_deid.dat.gz",
+      "\\d{4}\\d{2}\\d{2}_AF_ERA_CF_ON_Link_deid.dat.mft"
+    ]
+  },
+  {
+    "name": "emdeon_era_deid",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "Emdeon SFTP Configuration"
+    },
+    "dest_path": "s3://healthverity/incoming/era/emdeon/deid/",
+    "file_name_regexes": [
+      "\\d{4}\\d{2}\\d{2}_AF_ERA_CF_ON_Link_deid.dat.gz"
     ]
   },
   {
