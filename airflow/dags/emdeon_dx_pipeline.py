@@ -35,7 +35,7 @@ MINIMUM_TRANSACTION_FILE_SIZE=500
 # Transaction MFT file
 TRANSACTION_MFT_FILE_DESCRIPTION='WebMD DX transaction mft file'
 S3_TRANSACTION_MFT_RAW_PATH='s3://healthverity/incoming/medicalclaims/emdeon/transactions/'
-TRANSACTION_MFT_FILE_NAME_TEMPLATE='{}_Claims_US_CF_D_deid.dat.mft'
+TRANSACTION_MFT_FILE_NAME_TEMPLATE='{}{}{}_Claims_US_CF_D_deid.dat.mft'
 TRANSACTION_MFT_DAG_NAME='validate_fetch_transaction_mft_file'
 MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 
@@ -117,7 +117,6 @@ def generate_transaction_file_validation_dag(
             {
                 'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
                     file_name_template,
-                    kwargs,
                     day_offset = EMDEON_DX_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(

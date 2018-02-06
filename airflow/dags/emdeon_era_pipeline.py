@@ -3,21 +3,19 @@ from airflow.operators import BashOperator, SubDagOperator, PythonOperator
 from datetime import datetime, timedelta
 import os
 
-import subdags.emdeon_validate_fetch_file
 import subdags.split_push_files as split_push_files
 import subdags.s3_fetch_file as s3_fetch_file
+import subdags.s3_validate_file as s3_validate_file
 import subdags.update_analytics_db as update_analytics_db
 import util.decompression as decompression
 import util.date_utils as date_utils
 import common.HVDAG as HVDAG
 
 for m in [
-        subdags.emdeon_validate_fetch_file, decompression,
-        HVDAG, split_push_files, s3_fetch_file, update_analytics_db, date_utils
+        decompression, HVDAG, split_push_files, s3_fetch_file,
+        s3_validate_file, update_analytics_db, date_utils
 ]:
     reload(m)
-
-from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
 
 airflow_env = {
     'prod' : 'prod',
@@ -49,7 +47,7 @@ else:
 
 # Transaction file
 TRANSACTION_FILE_DESCRIPTION='WebMD ERA transaction file'
-TRANSACTION_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_CS_deid.dat.gz'
+TRANSACTION_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_CS_deid.dat.gz'
 TRANSACTION_FILE_NAME_UNZIPPED_TEMPLATE='{}{}{}_AF_ERA_CF_ON_CS_deid.dat'
 TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_S_deid.dat'
 TRANSACTION_CLAIM_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_C_deid.dat'
@@ -58,20 +56,20 @@ MINIMUM_TRANSACTION_FILE_SIZE=500
 
 # Transaction MFT file
 TRANSACTION_MFT_FILE_DESCRIPTION='WebMD ERA transaction mft file'
-TRANSACTION_MFT_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_CS_deid.dat.mft'
+TRANSACTION_MFT_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_CS_deid.dat.mft'
 TRANSACTION_MFT_DAG_NAME='validate_fetch_transaction_mft_file'
 MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 
 # Linking file
 LINK_FILE_DESCRIPTION='WebMD ERA Linking file'
-LINK_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_Link_deid.dat.gz'
+LINK_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_Link_deid.dat.gz'
 LINK_FILE_NAME_UNZIPPED_TEMPLATE='{}{}{}_AF_ERA_CF_ON_Link_deid.dat'
 LINK_DAG_NAME='validate_fetch_link_file'
 MINIMUM_LINK_FILE_SIZE=500
 
 # Linking MFT file
 LINK_MFT_FILE_DESCRIPTION='WebMD ERA Linking mft file'
-LINK_MFT_FILE_NAME_TEMPLATE='{}_AF_ERA_CF_ON_Link_deid.dat.mft'
+LINK_MFT_FILE_NAME_TEMPLATE='{}{}{}_AF_ERA_CF_ON_Link_deid.dat.mft'
 LINK_MFT_DAG_NAME='validate_fetch_link_mft_file'
 MINIMUM_LINK_MFT_FILE_SIZE=15
 
@@ -91,88 +89,54 @@ mdag = HVDAG.HVDAG(
 
 EMDEON_ERA_DAY_OFFSET = -1
 
-# Validate and fetch all files from the SFTP server
-if airflow_env != 'test':
-    validate_fetch_transaction_config = {
-        'tmp_path_template' : TMP_PATH_TEMPLATE,
-        's3_raw_path' : S3_TRANSACTION_RAW_PATH,
-        'file_name_template' : TRANSACTION_FILE_NAME_TEMPLATE,
-        'datatype' : DATATYPE,
-        'minimum_file_size' : MINIMUM_TRANSACTION_FILE_SIZE,
-        'file_description' : TRANSACTION_FILE_DESCRIPTION
-    }
-
-    validate_fetch_transaction_file_dag = SubDagOperator(
-        subdag=emdeon_validate_fetch_file(DAG_NAME, TRANSACTION_DAG_NAME, default_args['start_date'],
-                                          mdag.schedule_interval, validate_fetch_transaction_config),
-        task_id=TRANSACTION_DAG_NAME,
-        retries=0,
-        dag=mdag
-    )
-
-    validate_fetch_transaction_mft_config = {
-        'tmp_path_template' : TMP_PATH_TEMPLATE,
-        's3_raw_path' : S3_TRANSACTION_MFT_RAW_PATH,
-        'file_name_template' : TRANSACTION_MFT_FILE_NAME_TEMPLATE,
-        'datatype' : DATATYPE,
-        'minimum_file_size' : MINIMUM_TRANSACTION_MFT_FILE_SIZE,
-        'file_description' : TRANSACTION_MFT_FILE_DESCRIPTION
-    }
-
-    validate_fetch_transaction_mft_file_dag = SubDagOperator(
-        subdag=emdeon_validate_fetch_file(DAG_NAME, TRANSACTION_MFT_DAG_NAME, default_args['start_date'],
-                                          mdag.schedule_interval, validate_fetch_transaction_mft_config),
-        task_id=TRANSACTION_MFT_DAG_NAME,
-        trigger_rule='all_done',
-        retries=0,
-        dag=mdag
-    )
-
-    validate_fetch_link_config = {
-        'tmp_path_template' : TMP_PATH_TEMPLATE,
-        's3_raw_path' : S3_LINK_RAW_PATH,
-        'file_name_template' : LINK_FILE_NAME_TEMPLATE,
-        'datatype' : DATATYPE,
-        'minimum_file_size' : MINIMUM_LINK_FILE_SIZE,
-        'file_description' : LINK_FILE_DESCRIPTION
-    }
-
-    validate_fetch_link_file_dag = SubDagOperator(
-        subdag=emdeon_validate_fetch_file(
-            DAG_NAME, LINK_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_link_config
-        ),
-        task_id=LINK_DAG_NAME,
-        trigger_rule='all_done',
-        retries=0,
-        dag=mdag
-    )
-
-    validate_fetch_link_mft_config = {
-        'tmp_path_template' : TMP_PATH_TEMPLATE,
-        's3_raw_path' : S3_LINK_MFT_RAW_PATH,
-        'file_name_template' : LINK_MFT_FILE_NAME_TEMPLATE,
-        'datatype' : DATATYPE,
-        'minimum_file_size' : MINIMUM_LINK_MFT_FILE_SIZE,
-        'file_description' : LINK_MFT_FILE_DESCRIPTION
-    }
-
-    validate_fetch_link_mft_file_dag = SubDagOperator(
-        subdag=emdeon_validate_fetch_file(
-            DAG_NAME, LINK_MFT_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_link_mft_config
-        ),
-        task_id=LINK_MFT_DAG_NAME,
-        trigger_rule='all_done',
-        retries=0,
-        dag=mdag
-    )
-
-#
-# POST-SFTP TASKS
-#
-
 
 def get_tmp_dir(ds, k):
     return TMP_PATH_TEMPLATE.format(k['ds_nodash'])
+
+
+def generate_transaction_file_validation_dag(
+        task_id, file_name_template, s3_path, minimum_file_size
+):
+    return SubDagOperator(
+        subdag=s3_validate_file.s3_validate_file(
+            DAG_NAME,
+            'validate_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
+                    file_name_template,
+                    day_offset = EMDEON_ERA_DAY_OFFSET
+                ),
+                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
+                    file_name_template
+                ),
+                'minimum_file_size'       : minimum_file_size,
+                's3_prefix'               : '/'.join(s3_path.split('/')[3:]),
+                's3_bucket'               : s3_path.split('/')[2],
+                'file_description'        : 'Emdeon ' + task_id + ' file'
+            }
+        ),
+        task_id='validate_' + task_id + '_file',
+        dag=mdag
+    )
+
+
+validate_transaction_file = generate_transaction_file_validation_dag(
+    'transaction', TRANSACTION_FILE_NAME_TEMPLATE, S3_TRANSACTION_RAW_PATH, MINIMUM_TRANSACTION_FILE_SIZE
+)
+
+validate_transaction_mft_file = generate_transaction_file_validation_dag(
+    'transaction_mft', TRANSACTION_MFT_FILE_NAME_TEMPLATE, S3_TRANSACTION_MFT_RAW_PATH, MINIMUM_TRANSACTION_MFT_FILE_SIZE
+)
+
+validate_link_file = generate_transaction_file_validation_dag(
+    'link', LINK_FILE_NAME_TEMPLATE, S3_LINK_RAW_PATH, MINIMUM_LINK_FILE_SIZE
+)
+
+validate_link_mft_file = generate_transaction_file_validation_dag(
+    'link_mft', LINK_MFT_FILE_NAME_TEMPLATE, S3_LINK_MFT_RAW_PATH, MINIMUM_LINK_MFT_FILE_SIZE
+)
 
 
 # grab files from healthverity/incoming
@@ -188,7 +152,7 @@ def generate_fetch_dag(
             {
                 'tmp_path_template'      : TMP_PATH_TEMPLATE + task_id + '/',
                 'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                    file_name_template.format('{}{}{}'),
+                    file_name_template,
                     day_offset = EMDEON_ERA_DAY_OFFSET
                 ),
                 's3_prefix'              : s3_path_template,
@@ -213,8 +177,8 @@ def do_unzip_file(task_id, file_name_template):
     def out(ds, **kwargs):
         tmp_path = get_tmp_dir(ds, kwargs) + task_id + '/'
         file_path = tmp_path + date_utils.insert_date_into_template(
-            file_name_template.format('{}{}{}'),
-            kwargs, 
+            file_name_template,
+            kwargs,
             day_offset = EMDEON_ERA_DAY_OFFSET
         )
         decompression.decompress_gzip_file(file_path)
@@ -251,7 +215,7 @@ def generate_parse_transactions_step():
             day_offset = EMDEON_ERA_DAY_OFFSET
         )
         serviceline_file = serviceline_tmp_path + date_utils.insert_date_into_template(
-            TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE, 
+            TRANSACTION_SERVICELINE_FILE_NAME_TEMPLATE,
             kwargs,
             day_offset = EMDEON_ERA_DAY_OFFSET
         )
@@ -299,7 +263,7 @@ def generate_split_dag(task_id, file_name_unzipped_template, s3_destination):
                     file_name_unzipped_template
                 ),
                 's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
-                    s3_destination, 
+                    s3_destination,
                     day_offset = EMDEON_ERA_DAY_OFFSET
                 ),
                 'num_splits'               : 20
@@ -367,11 +331,11 @@ if airflow_env != 'test':
 
 
 if airflow_env != 'test':
-    validate_fetch_transaction_mft_file_dag.set_downstream(clean_up_workspace)
-    validate_fetch_link_mft_file_dag.set_downstream(clean_up_workspace)
+    validate_transaction_mft_file.set_downstream(clean_up_workspace)
+    validate_link_mft_file.set_downstream(clean_up_workspace)
 
-    validate_fetch_transaction_file_dag.set_downstream(fetch_transaction_file)
-    validate_fetch_link_file_dag.set_downstream(fetch_link_file)
+    validate_transaction_file.set_downstream(fetch_transaction_file)
+    validate_link_file.set_downstream(fetch_link_file)
 
     clean_up_workspace.set_downstream([update_analytics_db_claims, update_analytics_db_serviceline, update_analytics_db_link])
 
