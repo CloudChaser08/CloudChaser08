@@ -1,7 +1,7 @@
 SELECT
     ad.sales_cd                                 AS claim_id,
     pay.hvid                                    AS hvid,
-    '3'                                         AS model_version,
+    '6'                                         AS model_version,
     COALESCE(pay.gender, txn.patient_sex_cd)    AS patient_gender,
     COALESCE(pay.age, txn.patient_age_nbr)      AS patient_age,
     COALESCE(pay.yearOfBirth, txn.patient_dob)  AS patient_year_of_birth,
