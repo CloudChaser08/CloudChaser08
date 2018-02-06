@@ -3,6 +3,8 @@ import argparse
 from datetime import datetime, timedelta
 from spark.runner import Runner
 from spark.spark_setup import init
+from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
+import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -65,12 +67,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     min_date = '2011-01-01'
     max_date = date_input
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
-        ['external', '', False],
-        ['table_name', 'pharmacyclaims_common_model', False],
-        ['properties', '', False]
-    ])
-
     payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
     runner.run_spark_script('load_transactions.sql', [
@@ -81,17 +77,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     df = postprocessor.nullify(df, ['NULL', 'Unknown', '-1', '-2'])
     postprocessor.trimmify(df).createTempView('transactions')
 
-    runner.run_spark_script('normalize.sql', [
+    normalized_output = runner.run_spark_script('normalize.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ])
+    ], return_output=True)
 
     postprocessor.compose(
+        lambda x: schema_enforcer.apply_schema(x, pharma_schema),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='39', vendor_id='42', filename=setid),
         pharm_priv.filter
     )(
-        runner.sqlContext.sql('select * from pharmacyclaims_common_model')
+        normalized_output
     ).createTempView('pharmacyclaims_common_model')
 
     properties = """
@@ -100,8 +97,9 @@ PARTITIONED BY (part_best_date string)
 LOCATION '{}'
 """.format(table_format, normalized_path)
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v6.sql', [
         ['external', 'EXTERNAL', False],
+        ['additional_columns', [], False],
         ['table_name', 'normalized_claims', False],
         ['properties', properties, False]
     ])
