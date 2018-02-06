@@ -1,37 +1,73 @@
 import pytest
 
+from pyspark.sql.functions import col
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils
 
-std_payload = []
-no_hvid_payload = []
+std_location = file_utils.get_abs_path(
+    __file__, '../resources/parentId_test_payload.json'
+)
 
-def cleanup(spark):
+no_hvid_location = file_utils.get_abs_path(
+    __file__, '../resources/no_id_test_payload.json'
+)
+
+
+@pytest.fixture(autouse=True)
+def setup_teardown(spark):
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS matching_payload')
     spark['sqlContext'].sql('DROP TABLE IF EXISTS test')
+    yield
+
 
 @pytest.mark.usefixtures("spark")
-def test_init(spark):
-    cleanup(spark)
-    std_location = file_utils.get_abs_path(
-        __file__, '../resources/parentId_test_payload.json'
-    )
+def test_no_hvid_columns(spark):
+    """
+    Test if hvid column exists despite no hvids in payload
+    """
+    payload_loader.load(spark['runner'], no_hvid_location)
 
-    no_hvid_location = file_utils.get_abs_path(
-        __file__, '../resources/no_id_test_payload.json'
-    )
+    assert 'hvid' in spark['sqlContext'].sql('SELECT * FROM matching_payload').columns
 
+
+def test_hvids_are_null(spark):
+    """
+    Test that hvids are null when missing
+    """
+    payload_loader.load(spark['runner'], no_hvid_location)
+
+    hvid_count_not_null = spark['sqlContext'].sql('SELECT * FROM matching_payload').where(col("hvid").isNotNull()).count()
+
+    assert hvid_count_not_null == 0
+
+
+def test_extra_cols(spark):
+    """
+    Test that extra columns are in final payload
+    """
     extra_cols = ['claimId', 'hvJoinKey']
 
-    payload_loader.load(spark['runner'], std_location, extra_cols)
+    payload_loader.load(spark['runner'], std_location, extra_cols, table_name='test')
 
-    global std_payload, no_hvid_payload
-    std_payload = spark['sqlContext'].sql(
-        'select * from matching_payload'
-    ).collect()
+    assert 'claimId' in spark['sqlContext'].sql('SELECT * FROM test').columns
+    assert 'hvJoinKey' in spark['sqlContext'].sql('SELECT * FROM test').columns
 
-    payload_loader.load(spark['runner'], no_hvid_location, extra_cols)
 
-    no_hvid_payload = spark['sqlContext'].sql(
-        'create table test as select * from matching_payload'
-    )
+def test_correct_hvid_used(spark):
 
+    payload_loader.load(spark['runner'], std_location, table_name='test')
+
+    parentId_count = spark['sqlContext'].sql('SELECT * FROM test').where(col("hvid") == "999").count()
+    assert parentId_count == 4  # test that parentId is aliased as hvid where present
+
+
+def test_custom_table_created(spark):
+    payload_loader.load(spark['runner'], std_location, table_name='test')
+
+    tables = spark['sqlContext'].sql('SHOW TABLES')
+    for table in tables.collect():
+        if table.tableName == "matching_payload":
+            table_created = False
+        if table.tableName == "test":
+            table_created = True
+    assert table_created
