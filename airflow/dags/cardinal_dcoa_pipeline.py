@@ -29,18 +29,18 @@ DAG_NAME = 'cardinal_dcoa_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 8, 24, 15),    #TODO: TBD
+    'start_date': datetime(2018, 2, 14, 17),    #TODO: Change this if needed
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval='0 0 * * *',         #TODO: TBD
+    schedule_interval='0 17 * * 1,2,3,4',
     default_args=default_args
 )
 
-TRANSACTION_FILE_NAME_TEMPLATE = 'out-record-{}{}{}.dat'   #TODO: This might change
+TRANSACTION_FILE_NAME_TEMPLATE = 'dcoa.{}{}{}T\d{{6}}.dat'
 EMR_CLUSTER_NAME_TEMPLATE = 'cardinal_dcoa_delivery_{}'
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/raw/'
@@ -142,6 +142,7 @@ fetch_transaction = SubDagOperator(
                 TRANSACTION_FILE_NAME_TEMPLATE,
                 day_offset = CARDINAL_DCOA_DAY_OFFSET
             ),
+            'regex_name_match'          : True,
             's3_prefix'                 : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'                 : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'hvincoming'
         }
