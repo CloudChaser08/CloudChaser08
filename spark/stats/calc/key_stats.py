@@ -78,24 +78,25 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
 
     days = (end_date_dt - earliest_date_dt).days
 
-    key_stats = {
-        'total_patient': total_patient,
-        'total_24_month_patient': total_24_month_patient,
-        'daily_avg_patient': total_patient / days,
-        'monthly_avg_patient': ((total_patient / days) * 365) / 12,
-        'yearly_avg_patient': (total_patient / days) * 365,
+    key_stats = [
+        {'field': 'total_patient', 'value': total_patient},
+        {'field': 'total_24_month_patient', 'value': total_24_month_patient},
+        {'field': 'daily_avg_patient', 'value': total_patient / days},
+        {'field': 'monthly_avg_patient', 'value': ((total_patient / days) * 365) / 12},
+        {'field': 'yearly_avg_patient', 'value': (total_patient / days) * 365},
 
-        'total_row': total_row,
-        'total_24_month_row': total_24_month_row,
-        'daily_avg_row': total_row / days,
-        'monthly_avg_row': ((total_row / days) * 365) / 12,
-        'yearly_avg_row': (total_row / days) * 365,
+        {'field': 'total_row', 'value': total_row},
+        {'field': 'total_24_month_row', 'value': total_24_month_row},
+        {'field': 'daily_avg_row', 'value': total_row / days},
+        {'field': 'monthly_avg_row', 'value': ((total_row / days) * 365) / 12},
+        {'field': 'yearly_avg_row', 'value': (total_row / days) * 365},
 
-        'total_record': total_record,
-        'total_24_month_record': total_24_month_record,
-        'daily_avg_record': total_record / days,
-        'monthly_avg_record': ((total_record / days) * 365) / 12,
-        'yearly_avg_record': (total_record / days) * 365,
-    }
+        {'field': 'total_record', 'value': total_record},
+        {'field': 'total_24_month_record', 'value': total_24_month_record},
+        {'field': 'daily_avg_record', 'value': total_record / days},
+        {'field': 'monthly_avg_record', 'value': ((total_record / days) * 365) / 12},
+        {'field': 'yearly_avg_record', 'value': (total_record / days) * 365}
+    ]
 
-    return key_stats
+    return key_stats 
+
