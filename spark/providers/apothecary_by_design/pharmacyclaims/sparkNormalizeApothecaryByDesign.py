@@ -5,8 +5,10 @@ import argparse
 
 from spark.runner import Runner
 from spark.spark_setup import init
+from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
@@ -19,7 +21,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     if test:
         txn_input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/txn_input/' 
+            script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/txn_input/'
         )
         add_input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/add_input/'
@@ -51,19 +53,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    min_date = postprocessor.get_gen_ref_date(
-        runner.sqlContext,
-        '45',
-        'EARLIEST_VALID_SERVICE_DATE'
-    ).isoformat()
-    
     max_date = date_input
-
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
-        ['external', '', False],
-        ['table_name', 'pharmacyclaims_common_model', False],
-        ['properties', '', False]
-    ])
 
     # Load in the matching payload
     payload_loader.load(runner, matching_path, ['claimId', 'personId', 'hvJoinKey'])
@@ -102,16 +92,17 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     # Run the normalization script on the transaction data
     # and matching payload
-    runner.run_spark_script('normalize.sql', [])
+    normalized_output = runner.run_spark_script('normalize.sql', return_output=True)
 
     # Apply clean up and privacy filtering
     postprocessor.compose(
+        lambda x: schema_enforcer.apply_schema(x, pharma_schema),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id = '45', vendor_id = '204', filename = setid),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '45', 'EARLIEST_VALID_SERVICE_DATE'),
         pharm_priv.filter
     )(
-        runner.sqlContext.sql('select * from pharmacyclaims_common_model')
+        normalized_output
     ).createTempView('pharmacyclaims_common_model')
 
     if not test:
@@ -127,10 +118,10 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
                 'EARLIEST_VALID_SERVICE_DATE'
             )
         if hvm_historical is None:
-            hvm_historical = date(1901, 1, 1) 
+            hvm_historical = date(1901, 1, 1)
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
             'apothecary_by_design', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date = datetime(hvm_historical.year,
@@ -151,7 +142,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+        output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
     normalized_records_unloader.distcp(output_path)
 
@@ -162,5 +153,3 @@ if __name__ == '__main__':
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
-
-
