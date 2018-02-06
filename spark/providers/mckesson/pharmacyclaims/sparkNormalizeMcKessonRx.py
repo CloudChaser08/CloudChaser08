@@ -3,7 +3,9 @@ import argparse
 from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
+from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
 import spark.helpers.file_utils as file_utils
+import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
@@ -23,7 +25,7 @@ def load(input_path, restriction_level):
     ])
     postprocessor.trimmify(
         runner.sqlContext.sql('select * from {}_transactions'.format(restriction_level))
-    ).createTempView('{}_transactions'.format(restriction_level))
+    ).createOrReplaceTempView('{}_transactions'.format(restriction_level))
 
 
 def postprocess_and_unload(date_input, restricted, test_dir):
@@ -45,10 +47,10 @@ def postprocess_and_unload(date_input, restricted, test_dir):
         pharm_priv.filter
     )(
         runner.sqlContext.sql('select * from {}_pharmacyclaims_common_model'.format(restriction_level))
-    ).createTempView('{}_pharmacyclaims_common_model'.format(restriction_level))
+    ).createOrReplaceTempView('{}_pharmacyclaims_common_model'.format(restriction_level))
 
     normalized_records_unloader.partition_and_rename(
-        spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model.sql', provider,
+        spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql', provider,
         '{}_pharmacyclaims_common_model'.format(restriction_level), 'date_service', date_input,
         test_dir=test_dir
     )
@@ -109,20 +111,20 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
         Generic function for running normalization in any mode
         """
         restriction_level = 'restricted' if restricted else 'unrestricted'
-        runner.run_spark_script('../../../common/pharmacyclaims_common_model.sql', [
-            ['table_name', '{}_pharmacyclaims_common_model'.format(restriction_level), False],
-            ['properties', '', False]
-        ])
 
         load(input_path, restriction_level)
 
         payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
-        runner.run_spark_script('normalize.sql', [
+        normalized_output = runner.run_spark_script('normalize.sql', [
             ['min_date', min_date],
             ['max_date', max_date],
             ['restriction_level', restriction_level, False]
-        ])
+        ], return_output=True)
+
+        schema_enforcer.apply_schema(
+            normalized_output, pharma_schema
+        ).createOrReplaceTempView('{}_pharmacyclaims_common_model'.format(restriction_level))
 
         test_dir = file_utils.get_abs_path(
             script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/output/'
@@ -161,7 +163,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/spark-output/'
     else:
-        output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+        output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
     normalized_records_unloader.distcp(output_path)
 
