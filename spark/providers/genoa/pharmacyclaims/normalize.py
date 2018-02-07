@@ -1,4 +1,4 @@
-import spark.common.pharmacyclaims_common_model_v4 as pharmacyclaims_common_model
+import spark.common.pharmacyclaims_common_model_v6 as pharmacyclaims_common_model
 import spark.helpers.schema_enforcer as schema_enforcer
 
 def run(runner):
