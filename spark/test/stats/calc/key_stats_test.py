@@ -11,8 +11,9 @@ results = None
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     global df, results
-    conf = { 'date_field': 'date',
-             'record_attribute' : 'c'
+    conf = { 'date_field'       : 'date',
+             'record_attribute' : 'c',
+             'index_all_dates'  : False
             }
     data_row = Row('date', 'hvid', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
@@ -29,11 +30,11 @@ def test_init(spark):
 
 
 def test_counts_are_correct_for_date_range():
-    assert results['total_patient'] == 4
-    assert results['total_24_month_patient'] == 3
-    assert results['total_record'] == 3
-    assert results['total_24_month_record'] == 2
-    assert results['total_row'] == 4
-    assert results['total_24_month_row'] == 3
+    assert filter(lambda x: x['field'] == 'total_patient', results)[0]['value'] == 4
+    assert filter(lambda x: x['field'] == 'total_24_month_patient', results)[0]['value'] == 3
+    assert filter(lambda x: x['field'] == 'total_record', results)[0]['value'] == 3
+    assert filter(lambda x: x['field'] == 'total_24_month_record', results)[0]['value'] == 2
+    assert filter(lambda x: x['field'] == 'total_row', results)[0]['value'] == 4
+    assert filter(lambda x: x['field'] == 'total_24_month_row', results)[0]['value'] == 3
 
 

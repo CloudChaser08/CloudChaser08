@@ -43,8 +43,8 @@ def test_top_values_created_for_each_column():
 
 
 def test_duplicate_values_not_counted_twice_when_distinct_column_is_not_none():
-    assert [r for r in results_no_distinct if r['name'] == 'a' and r['col'] == 'a'][0]['count'] == 2
-    assert [r for r in results_distinct if r['name'] == 'a' and r['col'] == 'a'][0]['count'] == 1
+    assert filter(lambda x: x['column'] == 'a' and x['value'] == 'a', results_no_distinct)[0]['count'] == 2
+    assert filter(lambda x: x['column'] == 'a' and x['value'] == 'a', results_distinct)[0]['count'] == 1
 
 
 def test_exception_thrown_when_no_columns_have_top_values_to_calculate():

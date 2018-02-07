@@ -69,7 +69,8 @@ def test_init(spark):
             'top_values'        : None,
             'longitudinality'   : None,
             'year_over_year'    : None,
-            'epi_calcs'         : None
+            'epi_calcs'         : None,
+            'earliest_date'     : '1990-01-01'
         }
     )
 
@@ -77,10 +78,8 @@ def test_init(spark):
     quarter = 'Q12017'
     start_date = '2015-04-01'
     end_date = '2017-04-01'
-    earliest_date = '1990-01-01'
     results = stats_runner.run(spark['spark'], spark['sqlContext'], \
-            provider, quarter, start_date, end_date, \
-            earliest_date, output_dir)
+            provider, quarter, start_date, end_date, output_dir)
 
 
 def test_output_directory_created():

@@ -73,7 +73,9 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
             [_col_top_values(df, c, max_top_values, distinct_column) for c in columns[i:i+BATCH_SIZE]]
         ).collect()
         i = i + BATCH_SIZE
-    return top_values_res
 
+    stats = map(lambda r: {'column': r.name, 'value': r.col, 'count': r['count']}, top_values_res)
+
+    return stats
 
 

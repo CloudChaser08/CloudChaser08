@@ -70,7 +70,7 @@ def _run_year_over_year(df, earliest_date, end_date, provider_conf):
 
 
 def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
-                          start_date, end_date, earliest_date):
+                          start_date, end_date):
     '''
     Runs all the relevant marketplace stats for a provider in a given
     date range / quarter
@@ -81,7 +81,6 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
         - quarter: quarter to run stats on
         - start_date: starting date of the date range
         - end_date: ending date of the date range
-        - earliest_date: earliest date for a particular stat calc (forget right now, not fill rates)
     Output:
         - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
@@ -96,6 +95,8 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
     datatype = provider_conf['datatype']
     date_column_field = provider_conf['date_field']
     distinct_column_name = provider_conf['record_field']
+    earliest_date = provider_conf['earliest_date']
+    index_all_dates = provider_conf.get('index_all_dates', False)
 
     # Get data
     all_data_df = utils.get_provider_data(sqlContext, datatype, provider_conf['name'])
@@ -105,11 +106,9 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
 
     # provider, start_date, end_date df cache
     # used for fill rate, top values, and key stats
-    if distinct_column_name:
-        gen_stats_df = postprocessor.compose(
-            utils.select_data_in_date_range(start_date, end_date, date_column_field),
-            utils.select_distinct_values_from_column(distinct_column_name)
-        )(all_data_df).coalesce(partitions)
+    if index_all_dates:
+        gen_stats_df = utils.select_data_in_date_range('1900-01-01', \
+                        end_date, date_column_field)(all_data_df).coalesce(partitions)
     else:
         gen_stats_df = utils.select_data_in_date_range(start_date, \
                         end_date, date_column_field)(all_data_df).coalesce(partitions)
@@ -121,8 +120,12 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
     top_values = _run_top_values(gen_stats_df, provider_conf)
 
     # Generate key stats
-    key_stats = _run_key_stats(all_data_df, earliest_date, start_date, end_date,
-            provider_conf)
+    if index_all_dates:
+        key_stats = _run_key_stats(all_data_df, earliest_date, \
+                        '1900-01-01', end_date, provider_conf)
+    else:
+        key_stats = _run_key_stats(all_data_df, earliest_date, \
+                        start_date, end_date, provider_conf)
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year

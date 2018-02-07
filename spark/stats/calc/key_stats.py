@@ -34,28 +34,40 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
                      patient, record, and row
     '''
     date_col = provider_conf['date_field']
+    index_all_dates = provider_conf.get('index_all_dates', False)
     patient_attribute = 'hvid'
     record_attribute = provider_conf.get('record_attribute', '*')
     row_attribute = '*'
 
-    start_date = max(earliest_date, start_date)
+    # If we are indexing all dates, then we want to ignore
+    # the start_date and only use earliest_date
+    start_date = earliest_date if index_all_dates else start_date
 
-    total_patient = _get_row_count(df, earliest_date, end_date,
-                                   patient_attribute, date_col)
     total_24_month_patient = _get_row_count(df, start_date, end_date,
                                    patient_attribute, date_col)
-    total_record = _get_row_count(df, earliest_date, end_date,
-                                   record_attribute, date_col)
     total_24_month_record = _get_row_count(df, start_date, end_date,
                                    record_attribute, date_col)
     if record_attribute == row_attribute:
-        total_row = total_record
         total_24_month_row = total_24_month_record
     else:
-        total_row = _get_row_count(df, earliest_date, end_date,
-                                       row_attribute, date_col)
         total_24_month_row = _get_row_count(df, start_date, end_date,
                                        row_attribute, date_col)
+
+    if index_all_dates:
+        # start_date == earliest_date, don't recalc
+        total_patient = total_24_month_patient
+        total_record = total_24_month_record
+        total_row = total_24_month_row
+    else:
+        total_patient = _get_row_count(df, earliest_date, end_date, 
+                                       patient_attribute, date_col)
+        total_record = _get_row_count(df, earliest_date, end_date,
+                                       record_attribute, date_col)
+        if record_attribute == row_attribute:
+            total_row = total_record
+        else:
+            total_row = _get_row_count(df, earliest_date, end_date,
+                                           row_attribute, date_col)
 
     try:
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m-%d")
@@ -63,26 +75,28 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
     except:
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m")
         end_date_dt = datetime.datetime.strptime(end_date, "%Y-%m")
-    days = float((end_date_dt - earliest_date_dt).days)
 
-    key_stats = {
-        'total_patient': total_patient,
-        'total_24_month_patient': total_24_month_patient,
-        'daily_avg_patient': total_patient / days,
-        'monthly_avg_patient': ((total_patient / days) * 365) / 12,
-        'yearly_avg_patient': (total_patient / days) * 365,
+    days = (end_date_dt - earliest_date_dt).days
 
-        'total_row': total_row,
-        'total_24_month_row': total_24_month_row,
-        'daily_avg_row': total_row / days,
-        'monthly_avg_row': ((total_row / days) * 365) / 12,
-        'yearly_avg_row': (total_row / days) * 365,
+    key_stats = [
+        {'field': 'total_patient', 'value': total_patient},
+        {'field': 'total_24_month_patient', 'value': total_24_month_patient},
+        {'field': 'daily_avg_patient', 'value': total_patient / days},
+        {'field': 'monthly_avg_patient', 'value': ((total_patient / days) * 365) / 12},
+        {'field': 'yearly_avg_patient', 'value': (total_patient / days) * 365},
 
-        'total_record': total_record,
-        'total_24_month_record': total_24_month_record,
-        'daily_avg_record': total_record / days,
-        'monthly_avg_record': ((total_record / days) * 365) / 12,
-        'yearly_avg_record': (total_record / days) * 365,
-    }
+        {'field': 'total_row', 'value': total_row},
+        {'field': 'total_24_month_row', 'value': total_24_month_row},
+        {'field': 'daily_avg_row', 'value': total_row / days},
+        {'field': 'monthly_avg_row', 'value': ((total_row / days) * 365) / 12},
+        {'field': 'yearly_avg_row', 'value': (total_row / days) * 365},
 
-    return key_stats
+        {'field': 'total_record', 'value': total_record},
+        {'field': 'total_24_month_record', 'value': total_24_month_record},
+        {'field': 'daily_avg_record', 'value': total_record / days},
+        {'field': 'monthly_avg_record', 'value': ((total_record / days) * 365) / 12},
+        {'field': 'yearly_avg_record', 'value': (total_record / days) * 365}
+    ]
+
+    return key_stats 
+
