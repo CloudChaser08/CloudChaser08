@@ -81,19 +81,13 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     ).createOrReplaceTempView('pharmacyclaims_common_model')
 
     if not test:
-        hvm_historical = postprocessor.get_gen_ref_date(
+        hvm_historical = postprocessor.coalesce_dates(
             runner.sqlContext,
             '21',
-            'HVM_AVAILABLE_HISTORY_START_DATE'
+            date(1901, 1, 1),
+            'HVM_AVAILABLE_HISTORY_START_DATE',
+            'EARLIEST_VALID_SERVICE_DATE'
         )
-        if hvm_historical is None:
-            hvm_historical = postprocessor.get_gen_ref_date(
-                runner.sqlContext,
-                '21',
-                'EARLIEST_VALID_SERVICE_DATE'
-            )
-        if hvm_historical is None:
-            hvm_historical = date(1901, 1, 1) 
 
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v4.sql',
