@@ -271,9 +271,9 @@ CREATE VIEW default.pharmacyclaims (
     ELSE '0_PREDATES_HVM_HISTORY'
     END AS part_processdate
 FROM default.pharmacyclaims_20180205
-WHERE part_provider IN ()
+WHERE part_provider IN ('None')
 UNION ALL
-    AS SELECT record_id,
+    SELECT record_id,
     claim_id,
     hvid,
     created,
@@ -559,5 +559,5 @@ SELECT CAST(record_id AS bigint),
       ELSE REGEXP_REPLACE(part_processdate, '/', '-')
     END AS part_processdate
 FROM default.pharmacyclaims_old
-WHERE part_provider IN ('genoa', 'emdeon', 'express_scripts', 'accredo')
+WHERE part_provider IN ('genoa', 'express_scripts', 'accredo')
 ;
