@@ -102,9 +102,19 @@ def load_and_deduplicate_transaction_table(
         date_input.replace('-', '/'), sorted(previous_dates)[-1].replace('-', '/')
     )
 
+    # see if we already deduplicated data for this date_input. if so,
+    # just read it in and return.
     try:
-        # try to load the previously saved deduplicated test data if
-        # it exists
+        runner.sqlContext.read.parquet(
+            input_path + deduplicated_save_path
+        ).createOrReplaceTempView('transactional_{}'.format(entity))
+        return
+    except AnalysisException:
+        # deduplicate data for this date_input did not exist
+        pass
+
+    try:
+        # see if there is deduplicated test data from the previous period
         previous_data = [
             runner.sqlContext.read.parquet(
                 most_recent_date_path + deduplicated_save_path
@@ -112,8 +122,9 @@ def load_and_deduplicate_transaction_table(
         ]
 
     except AnalysisException:
-        # previously saved deduplicated data does not exist, gather
-        # all raw test data
+        # no saved deduplicated data from the current date or the
+        # preceding date, just add all previous data for this entity,
+        # dropping duplicates that exist within the same file
         previous_data = [
             runner.sqlContext.read.csv(
                 path=input_path.replace(

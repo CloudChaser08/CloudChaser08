@@ -8,6 +8,7 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.privacy.labtests as priv_labtests
 import spark.providers.neogenomics.udf as neo_udf
@@ -63,6 +64,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if date_input >= RESULTS_START_DATE:
         neo_deduplicator.load_and_deduplicate_transaction_table(runner, input_path, is_results=True, test=test)
+
+    if not test:
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     normalized_output = runner.run_spark_script(
         'normalize.sql', [
