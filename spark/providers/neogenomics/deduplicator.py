@@ -7,6 +7,7 @@ from pyspark.sql.utils import AnalysisException
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+from spark.providers.neogenomics import RESULTS_START_DATE
 from spark.providers.neogenomics.transactional_schemas import results_schema, tests_schema
 
 
@@ -118,7 +119,8 @@ def load_and_deduplicate_transaction_table(
                 path=input_path.replace(
                     date_input.replace('-','/'),
                     previous_date.replace('-', '/')
-                ) + '{}/'.format(entity), schema=entity_schema, sep='|'
+                ) + ('{}/'.format(entity) if previous_date >= RESULTS_START_DATE else ''),
+                schema=entity_schema, sep='|'
             ).dropDuplicates(primary_key).withColumn(
                 'vendor_date', lit(previous_date)
             ) for previous_date in sorted(previous_dates)

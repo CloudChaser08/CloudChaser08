@@ -12,12 +12,10 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.privacy.labtests as priv_labtests
 import spark.providers.neogenomics.udf as neo_udf
 import spark.providers.neogenomics.deduplicator as neo_deduplicator
+from spark.providers.neogenomics import RESULTS_START_DATE
 
 FEED_ID = '32'
 VENDOR_ID = '78'
-
-# day they started sending results
-RESULTS_START_DATE = '2017-09-26'
 
 script_path = __file__
 
@@ -127,7 +125,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
+        output_path = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
 
     normalized_records_unloader.distcp(output_path)
 
