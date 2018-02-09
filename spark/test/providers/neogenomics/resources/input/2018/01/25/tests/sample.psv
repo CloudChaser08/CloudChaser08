@@ -1,0 +1,5 @@
+L|person2|test2|status|level of service|tech|spec type|body site|diag1,diag2,diag3|09/01/2014|09/01/2014|09/01/2014||duplicated between files|panelcode|testname|testcode|00000
+L|person3|test3|status|level of service|tech|spec type|body site||09/01/2014|09/01/2014|09/01/2014||panel name|panelcode|testname|testcode|00000
+L|person4|test4|status|level of service|tech|spec type|body site||09/01/2014|09/01/2014|09/01/2014||duplicated within file|panelcode|testname|testcode|00000
+L|person4|test4|status|level of service|tech|spec type|body site||09/01/2014|09/01/2014|09/01/2014||duplicated within file|panelcode|testname|testcode|00000
+L|person5|test5|status|level of service|tech|spec type|body site||09/01/2014|09/01/2014|09/01/2014||duplicated between files|this one is older|testname|testcode|00000

@@ -1,15 +1,25 @@
 import argparse
-import time
 from datetime import datetime
-from pyspark.sql.functions import monotonically_increasing_id
+
 from spark.runner import Runner
 from spark.spark_setup import init
+from spark.common.lab_common_model_v4 import schema as lab_schema
 import spark.helpers.file_utils as file_utils
-import spark.helpers.payload_loader as payload_loader
+import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.postprocessor as postprocessor
+import spark.helpers.schema_enforcer as schema_enforcer
+import spark.helpers.privacy.labtests as priv_labtests
 import spark.providers.neogenomics.udf as neo_udf
+import spark.providers.neogenomics.deduplicator as neo_deduplicator
 
-TODAY = time.strftime('%Y-%m-%d', time.localtime())
+FEED_ID = '32'
+VENDOR_ID = '78'
+
+# day they started sending results
+RESULTS_START_DATE = '2017-09-26'
+
+script_path = __file__
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -18,19 +28,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         'clean_neogenomics_diag_list', neo_udf.clean_neogenomics_diag_list
     )
 
-    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
-
-    setid = 'TestMeta_' + date_obj.strftime('%Y%m%d') + '.dat'
-
-    script_path = __file__
-
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/neogenomics/resources/input/'
-        )
+            script_path, '../../test/providers/neogenomics/resources/input/{}/'.format(
+                date_input.replace('-', '/')
+            )
+        ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/neogenomics/resources/matching/'
-        )
+            script_path, '../../test/providers/neogenomics/resources/matching/{}/'.format(
+                date_input.replace('-', '/')
+            )
+        ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/out/{}/'.format(
             date_input.replace('-', '/')
@@ -46,46 +54,61 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    if date_input >= '2017-09-26':
-        input_path = input_path + 'tests/'
-
-    min_date = '2010-01-01'
-    max_date = date_input
+    filename = 'TestMeta_' + date_input.replace('-','') + '.dat'
 
     # create helper tables
-    runner.run_spark_script('create_helper_tables.sql')
+    explode.generate_exploder_table(spark, 50, 'diagnosis_exploder')
 
-    runner.run_spark_script('../../common/lab_common_model_v3.sql', [
-        ['table_name', 'lab_common_model', False],
-        ['properties', '', False]
-    ])
+    neo_deduplicator.load_matching_payloads(runner, matching_path)
 
-    payload_loader.load(runner, matching_path, ['personId'])
+    neo_deduplicator.load_and_deduplicate_transaction_table(runner, input_path, test=test)
 
-    runner.run_spark_script('load_transactions.sql', [
-        ['input_path', input_path]
-    ])
+    if date_input >= RESULTS_START_DATE:
+        neo_deduplicator.load_and_deduplicate_transaction_table(runner, input_path, is_results=True, test=test)
 
-    runner.run_spark_script('normalize.sql', [
-        ['filename', setid],
-        ['today', TODAY],
-        ['feedname', '32'],
-        ['vendor', '78'],
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
-
-    # add in primary key
-    runner.sqlContext.sql('select * from lab_common_model').withColumn(
-        'record_id', monotonically_increasing_id()
-    ).createTempView(
-        'lab_common_model'
+    normalized_output = runner.run_spark_script(
+        'normalize.sql', [
+            [
+                'result_columns', ', r.result_value AS result, r.result_name AS result_name'
+                if date_input>=RESULTS_START_DATE else '', False
+            ], [
+                'result_join', 'LEFT JOIN transactional_results r ON t.test_order_id = r.test_order_id'
+                if date_input >= RESULTS_START_DATE else '', False]
+        ], return_output=True
     )
 
+    postprocessor.compose(
+        lambda df: schema_enforcer.apply_schema(df, lab_schema),
+        postprocessor.add_universal_columns(
+            feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=filename, model_version_number='04'
+        ),
+        postprocessor.apply_date_cap(
+            runner.sqlContext, 'date_service', date_input, FEED_ID, 'EARLIEST_VALID_SERVICE_DATE'
+        ),
+        postprocessor.apply_date_cap(
+            runner.sqlContext, 'date_specimen', date_input, FEED_ID, 'EARLIEST_VALID_SERVICE_DATE'
+        ),
+        postprocessor.apply_date_cap(
+            runner.sqlContext, 'date_report', date_input, FEED_ID, 'EARLIEST_VALID_SERVICE_DATE'
+        ),
+        priv_labtests.filter
+    )(
+        normalized_output
+    ).createOrReplaceTempView('lab_common_model')
+
     if not test:
+        hvm_historical_date = postprocessor.coalesce_dates(
+            runner.sqlContext,
+            FEED_ID,
+            datetime.date(1901, 1, 1),
+            'HVM_AVAILABLE_HISTORY_START_DATE',
+            'EARLIEST_VALID_SERVICE_DATE'
+        )
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'lab', 'lab_common_model_v3.sql', 'neogenomics',
-            'lab_common_model', 'date_service', date_input
+            spark, runner, 'lab', 'lab_common_model_v4.sql', 'neogenomics',
+            'lab_common_model', 'date_service', date_input, hvm_historical_date=datetime(
+                hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
+            )
         )
 
 
