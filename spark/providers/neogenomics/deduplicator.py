@@ -6,6 +6,7 @@ from pyspark.sql.functions import lit, rank, desc, col
 from pyspark.sql.utils import AnalysisException
 
 import spark.helpers.file_utils as file_utils
+import spark.helpers.postprocessor as postprocessor
 import spark.helpers.payload_loader as payload_loader
 from spark.providers.neogenomics import RESULTS_START_DATE
 from spark.providers.neogenomics.transactional_schemas import results_schema, tests_schema
@@ -36,9 +37,10 @@ def get_previous_dates(input_path):
             )['Contents']
         ]
     else:
+        start_index = input_path.split('/').index(date_input.split('-')[0])
         date_list = [
-            '-'.join(el.split('/')[-5:-2])
-            for el in file_utils.recursive_listdir('/'.join(input_path.split('/')[:-3]))
+            '-'.join(el.split('/')[start_index:start_index + 3])
+            for el in file_utils.recursive_listdir('/'.join(input_path.split('/')[:-4]))
         ]
 
     # filter out saved deduplicated dirs, return all dates less than
@@ -97,7 +99,10 @@ def load_and_deduplicate_transaction_table(
 
     deduplicated_save_path = 'deduplicated/{}/'.format(entity)
 
-    previous_dates = get_previous_dates(input_path)
+    previous_dates = [
+        date for date in get_previous_dates(input_path)
+        if not is_results or (is_results and date >= RESULTS_START_DATE)
+    ]
     most_recent_date_path = input_path.replace(
         date_input.replace('-', '/'), sorted(previous_dates)[-1].replace('-', '/')
     )
@@ -126,12 +131,14 @@ def load_and_deduplicate_transaction_table(
         # preceding date, just add all previous data for this entity,
         # dropping duplicates that exist within the same file
         previous_data = [
-            runner.sqlContext.read.csv(
-                path=input_path.replace(
-                    date_input.replace('-','/'),
-                    previous_date.replace('-', '/')
-                ) + ('{}/'.format(entity) if previous_date >= RESULTS_START_DATE else ''),
-                schema=entity_schema, sep='|'
+            postprocessor.add_input_filename('source_file_name', persisted_df_id='{}_{}'.format(entity, previous_date))(
+                runner.sqlContext.read.csv(
+                    path=input_path.replace(
+                        date_input.replace('-','/'),
+                        previous_date.replace('-', '/')
+                    ) + ('{}/'.format(entity) if previous_date >= RESULTS_START_DATE else ''),
+                    schema=entity_schema, sep='|'
+                )
             ).dropDuplicates(primary_key).withColumn(
                 'vendor_date', lit(previous_date)
             ) for previous_date in sorted(previous_dates)
@@ -141,8 +148,10 @@ def load_and_deduplicate_transaction_table(
 
     # deduplicate tests and save work in the input_path
     deduplicated_data = reduce(DataFrame.unionAll, previous_data + [
-        runner.sqlContext.read.csv(
-            path=input_path + '{}/'.format(entity), schema=entity_schema, sep='|'
+        postprocessor.add_input_filename('source_file_name', persisted_df_id='{}_{}'.format(entity, date_input))(
+            runner.sqlContext.read.csv(
+                path=input_path + '{}/'.format(entity), schema=entity_schema, sep='|'
+            )
         ).dropDuplicates(primary_key).withColumn(
             'vendor_date', lit(date_input)
         )
@@ -156,7 +165,15 @@ def load_and_deduplicate_transaction_table(
     ).repartition(1 if test else 100)
 
     # write out the data for future use
-    deduplicated_data.write.parquet(input_path + deduplicated_save_path)
+    postprocessor.compose(
+        postprocessor.trimmify, lambda df: postprocessor.nullify(df, null_vals=['', 'NULL'])
+    )(deduplicated_data).write.parquet(input_path + deduplicated_save_path)
 
-    # save data to a temp table for current use
-    deduplicated_data.createOrReplaceTempView('transactional_{}'.format(entity))
+    # unpersist all cached data
+    for d in sorted(previous_dates) + [date_input]:
+        runner.unpersist('{}_{}'.format(entity, d))
+
+    # reload deduped data from saved location
+    runner.sqlContext.read.parquet(input_path + deduplicated_save_path).createOrReplaceTempView(
+        'transactional_{}'.format(entity)
+    )

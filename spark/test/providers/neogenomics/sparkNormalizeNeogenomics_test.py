@@ -38,7 +38,7 @@ def test_get_previous_dates():
     Ensure the `get_previous_dates` function works correctly
     """
     assert neogenomics_deduplicator.get_previous_dates(file_utils.get_abs_path(script_path, './resources/input/2018/02/08/') + '/') \
-        == {'2018-01-25', '2018-02-01'}
+        == {'2017-01-01', '2018-01-25', '2018-02-01'}
 
 
 @pytest.mark.usefixtures("spark")
@@ -72,6 +72,23 @@ def test_date_parsing():
             assert date_service == '2014-09-01'
 
 
+def test_input_filename():
+    """
+    Ensure that the correct input filename is assigned to each row
+    """
+    for r in results:
+        if r.claim_id in ['test1', 'test2']:
+            assert r.data_set == 'sample_20180208.psv'
+        elif r.claim_id in ['test3', 'test5']:
+            assert r.data_set == 'sample_20180201.psv'
+        elif r.claim_id == 'test4':
+            assert r.data_set == 'sample_20180125.psv'
+        elif r.claim_id == 'test6':
+            assert r.data_set == 'sample_20170101.psv'
+        else:
+            raise ValueError('Unexpected test')
+
+
 def test_diag_list_cleanup():
     """
     Ensure diagnoses have been cleaned
@@ -95,12 +112,13 @@ def test_diag_priority():
     this test simply checks to make sure that the last digit is equal
     to the priority.
 
-    Since test3, test4, and test5 don't have any diags, they are excluded from
-    this test.
+    Since test3, test4, test5, and test6 don't have any diags, they
+    are excluded from this test.
+
     """
     for diagnosis_code, diagnosis_code_priority in [
             (r.diagnosis_code, r.diagnosis_code_priority) for r in results
-            if r.claim_id not in ['test3', 'test4', 'test5']
+            if r.claim_id not in ['test3', 'test4', 'test5', 'test6']
     ]:
         assert diagnosis_code[-1] == diagnosis_code_priority
 
@@ -208,7 +226,7 @@ def test_saved_deduplicated_test_data(spark):
     # assert that all test order ids appear and that they each appear
     # only once
     assert sorted([test.test_order_id for test in saved_tests]) \
-        == ['test1', 'test2', 'test3', 'test4', 'test5']
+        == ['test1', 'test2', 'test3', 'test4', 'test5', 'test6']
 
     # assert that the newest version of duplicate tests was chosen
     assert [test.panel_code for test in saved_tests if test.test_order_id == 'test5'] \
@@ -290,7 +308,8 @@ def test_running_with_saved_deduped_data(spark):
 
     # the remaining results should have remained altered
     for result_value in [res.result for res in altered_results if (res.claim_id, res.result_name) not in [
-            ('test1', 'New Result'), ('test2', 'New Result'), ('test5', 'duplicated between files'), ('test3', 'New Result')
+            ('test1', 'New Result'), ('test2', 'New Result'), ('test5', 'duplicated between files'), ('test3', 'New Result'),
+            ('test6', None)
     ]]:
         assert result_value.endswith('SAVED')
 

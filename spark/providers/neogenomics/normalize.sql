@@ -1,4 +1,5 @@
 SELECT
+    t.source_file_name                      AS data_set,
     t.test_order_id                         AS claim_id,
     mp.hvid                                 AS hvid,
     mp.gender                               AS patient_gender,
