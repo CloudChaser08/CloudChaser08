@@ -70,10 +70,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         'normalize.sql', [
             [
                 'result_columns', ', r.result_value AS result, r.result_name AS result_name'
-                if date_input>=RESULTS_START_DATE else '', False
+                if date_input >= RESULTS_START_DATE else '', False
             ], [
                 'result_join', 'LEFT JOIN transactional_results r ON t.test_order_id = r.test_order_id'
-                if date_input >= RESULTS_START_DATE else '', False]
+                if date_input >= RESULTS_START_DATE else '', False
+            ]
         ], return_output=True
     )
 
