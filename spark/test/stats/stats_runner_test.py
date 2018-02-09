@@ -24,12 +24,10 @@ earliest_date = None
 @pytest.fixture(autouse=True)
 def setup_teardown():
     old_get_data_func = stats_utils.get_provider_data
-    old_get_provider_config_func = config_reader.get_provider_config
 
     yield
 
     stats_utils.get_provider_data = old_get_data_func
-    config_reader.get_provider_config = old_get_provider_config_func
 
 
 @pytest.mark.usefixtures('spark')
@@ -56,8 +54,7 @@ def test_init(spark):
         ]).toDF()
     )
 
-    config_reader.get_provider_config = Mock(
-        return_value = {
+    provider_config = {
             'name'              : 'test',
             'datafeed_id'       : '27',
             'datatype'          : 'medicalclaims',
@@ -72,14 +69,14 @@ def test_init(spark):
             'epi_calcs'         : None,
             'earliest_date'     : '1990-01-01'
         }
-    )
 
     provider = 'test_provider'
     quarter = 'Q12017'
     start_date = '2015-04-01'
     end_date = '2017-04-01'
     results = stats_runner.run(spark['spark'], spark['sqlContext'], \
-            provider, quarter, start_date, end_date, output_dir)
+            provider, quarter, start_date, end_date,
+            provider_config, output_dir)
 
 
 def test_output_directory_created():

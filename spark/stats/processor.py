@@ -70,7 +70,7 @@ def _run_year_over_year(df, earliest_date, end_date, provider_conf):
 
 
 def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
-                          start_date, end_date):
+                          start_date, end_date, provider_conf):
     '''
     Runs all the relevant marketplace stats for a provider in a given
     date range / quarter
@@ -84,12 +84,6 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
     Output:
         - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
-
-    # Get provider config
-    this_file = inspect.getmodule(inspect.stack()[1][0]).__file__
-    config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
-    provider_conf = config_reader.get_provider_config(
-                                    config_file, feed_id)
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
@@ -137,20 +131,12 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
     # Generate year over year
     year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
 
-    # datafeed_id, provider, datatype, quarter df cache
-    # used for epidemiological
-    epi_stats_df = None
-
-    # Generate Epidemiological calculations
-    epi_calcs = None
-
     # Return all the dfs
     all_stats = {
         'fill_rates': fill_rates,
         'key_stats': key_stats,
         'top_values': top_values,
         'longitudinality': longitudinality,
-        'year_over_year': year_over_year,
-        'epi_calcs': epi_calcs
+        'year_over_year': year_over_year
     }
     return all_stats
