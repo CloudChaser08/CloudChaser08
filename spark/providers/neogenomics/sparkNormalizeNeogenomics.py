@@ -1,5 +1,5 @@
 import argparse
-from datetime import datetime
+import datetime
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -53,9 +53,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    filename = 'TestMeta_' + date_input.replace('-','') + '.dat'
-
-    # create helper tables
+    # create helper table
     explode.generate_exploder_table(spark, 50, 'diagnosis_exploder')
 
     neo_deduplicator.load_matching_payloads(runner, matching_path)
@@ -83,7 +81,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     postprocessor.compose(
         lambda df: schema_enforcer.apply_schema(df, lab_schema),
         postprocessor.add_universal_columns(
-            feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=filename, model_version_number='04'
+            feed_id=FEED_ID, vendor_id=VENDOR_ID, filename='TestMeta_' + date_input.replace('-','') + '.dat',
+            model_version_number='04'
         ),
         postprocessor.apply_date_cap(
             runner.sqlContext, 'date_service', date_input, FEED_ID, 'EARLIEST_VALID_SERVICE_DATE'
@@ -109,7 +108,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'lab', 'lab_common_model_v4.sql', 'neogenomics',
-            'lab_common_model', 'date_service', date_input, hvm_historical_date=datetime(
+            'lab_common_model', 'date_service', date_input, hvm_historical_date=datetime.datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             )
         )
