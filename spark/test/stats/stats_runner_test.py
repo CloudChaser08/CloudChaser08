@@ -1,3 +1,4 @@
+import os
 import pytest
 from mock import Mock
 
@@ -37,6 +38,7 @@ def test_init(spark):
             old_get_data_func, old_get_provider_config_func
 
     output_dir = file_utils.get_abs_path(__file__, './output')
+    os.makedirs(output_dir)
 
     data_row = Row('claim_id', 'service_date', 'hvid', 'col_2', 'col_3')
 
@@ -66,7 +68,7 @@ def test_init(spark):
             'top_values'        : None,
             'longitudinality'   : None,
             'year_over_year'    : None,
-            'epi_calcs'         : None,
+            'epi_calc'          : None,
             'earliest_date'     : '1990-01-01'
         }
 

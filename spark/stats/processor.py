@@ -69,7 +69,7 @@ def _run_year_over_year(df, earliest_date, end_date, provider_conf):
     return None
 
 
-def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
+def run_marketplace_stats(spark, sqlContext, quarter, \
                           start_date, end_date, provider_conf):
     '''
     Runs all the relevant marketplace stats for a provider in a given
@@ -87,6 +87,7 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
+    feed_id = provider_conf['datafeed_id']
     date_column_field = provider_conf['date_field']
     distinct_column_name = provider_conf['record_field']
     earliest_date = provider_conf['earliest_date']
@@ -140,3 +141,18 @@ def run_marketplace_stats(spark, sqlContext, feed_id, quarter, \
         'year_over_year': year_over_year
     }
     return all_stats
+
+
+def get_epi_calcs(provider_conf):
+    all_epi = {}
+
+    if not provider_conf['epi_calc']:
+        return all_epi
+
+    fields = provider_conf['epi_calc_fields']
+
+    for f in fields:
+        all_epi[f] = calculate_epi(provider_conf, f)
+
+    return all_epi
+
