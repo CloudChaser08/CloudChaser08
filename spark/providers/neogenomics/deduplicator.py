@@ -26,18 +26,19 @@ def get_previous_dates(input_path):
     Get a list of dates prior to the current input path
     """
     date_input = get_date_from_input_path(input_path)
+    start_index = input_path.split('/').index(date_input.split('-')[0])
 
     # enumerate list of dates by recursively listing input_path
     if input_path.startswith('s3'):
+        start_index = start_index - 3
         date_list = [
-            '-'.join(el['Key'].split('/')[3:6])
+            '-'.join(el['Key'].split('/')[start_index:start_index + 3])
             for el in boto3.client('s3').list_objects_v2(
                 Bucket=input_path.split('/')[2],
                 Prefix='/'.join(input_path.split('/')[3:-4]),
             )['Contents']
         ]
     else:
-        start_index = input_path.split('/').index(date_input.split('-')[0])
         date_list = [
             '-'.join(el.split('/')[start_index:start_index + 3])
             for el in file_utils.recursive_listdir('/'.join(input_path.split('/')[:-4]))
