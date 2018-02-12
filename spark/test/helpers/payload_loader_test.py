@@ -4,12 +4,14 @@ from pyspark.sql.functions import col
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils
 
+script_path = __file__
+
 std_location = file_utils.get_abs_path(
-    __file__, '../resources/parentId_test_payload.json'
+    script_path, '../resources/parentId_test_payload.json'
 )
 
 no_hvid_location = file_utils.get_abs_path(
-    __file__, '../resources/no_id_test_payload.json'
+    script_path, '../resources/no_id_test_payload.json'
 )
 
 
@@ -59,6 +61,14 @@ def test_correct_hvid_used(spark):
 
     parentId_count = spark['sqlContext'].sql('SELECT * FROM test').where(col("hvid") == "999").count()
     assert parentId_count == 4  # test that parentId is aliased as hvid where present
+
+
+def test_return_output(spark):
+    output = payload_loader.load(spark['runner'], std_location, return_output=True)
+    payload_loader.load(spark['runner'], std_location, table_name='compare_to_output')
+
+    assert output
+    assert output.collect() == spark['sqlContext'].sql('select * from compare_to_output').collect()
 
 
 def test_custom_table_created(spark):
