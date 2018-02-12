@@ -1,9 +1,12 @@
 #! /usr/bin/python
 import argparse
 from datetime import datetime
+from pyspark.sql.types import StructType, StructField, StringType
 from spark.runner import Runner
 from spark.spark_setup import init
+from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
 import spark.helpers.file_utils as file_utils
+import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharmacy_priv
 
@@ -27,23 +30,18 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
         input_path = 's3://salusv/incoming/pharmacyclaims/cardinal_dcoa/{}/'\
                         .format(date_path)
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v4.sql', [
-        ['table_name', 'pharmacyclaims_common_model', False],
-        ['properties', '', False],
-        ['additional_columns', [
-            ['patient_type_vendor', 'string'],
-            ['outlier_vendor', 'string'],
-            ['monthly_patient_days_vendor', 'string'],
-            ['extended_fee_vendor', 'string'],
-            ['discharges_vendor', 'string'],
-            ['discharge_patient_days_vendor', 'string'],
-            ['total_patient_days_vendor', 'string'],
-            ['pharmacy_name', 'string'],
-            ['pharmacy_address', 'string'],
-            ['pharmacy_service_area_vendor', 'string'],
-            ['pharmacy_master_service_area_vendor', 'string']
-        ], False],
-        ['external', '', False]
+    dcoa_schema = StructType(pharma_schema.fields + [
+        StructField('patient_type_vendor', StringType(), True),
+        StructField('outlier_vendor', StringType(), True),
+        StructField('monthly_patient_days_vendor', StringType(), True),
+        StructField('extended_fee_vendor', StringType(), True),
+        StructField('discharges_vendor', StringType(), True),
+        StructField('discharge_patient_days_vendor', StringType(), True),
+        StructField('total_patient_days_vendor', StringType(), True),
+        StructField('pharmacy_name', StringType(), True),
+        StructField('pharmacy_address', StringType(), True),
+        StructField('pharmacy_service_area_vendor', StringType(), True),
+        StructField('pharmacy_master_service_area_vendor', StringType(), True)
     ])
 
     # Point Hive to the location of the transaction data
@@ -58,15 +56,16 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
 
     # Normalize the transaction data into the
     # pharmacyclaims common model using transaction data
-    runner.run_spark_script('normalize.sql')
+    normalized_output = runner.run_spark_script('normalize.sql', return_output=True)
 
     # Postprocessing
     postprocessor.compose(
+        lambda x: schema_enforcer.apply_schema(x, dcoa_schema),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='44', vendor_id='42', filename=setid),
         pharmacy_priv.filter
     )(
-        runner.sqlContext.sql('select * from pharmacyclaims_common_model')
+        normalized_output
     ).createTempView('pharmacyclaims_common_model')
 
     if not test:
