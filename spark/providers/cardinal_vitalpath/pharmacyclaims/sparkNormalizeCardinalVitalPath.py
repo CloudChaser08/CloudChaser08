@@ -1,9 +1,11 @@
 #! /usr/bin/python
 import argparse
-from datetime import datetime 
+from datetime import datetime, date
 from spark.runner import Runner
 from spark.spark_setup import init
+from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
 import spark.helpers.file_utils as file_utils
+import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
@@ -71,12 +73,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     max_date = date_input
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
-        ['external', '', False],
-        ['table_name', 'pharmacyclaims_common_model', False],
-        ['properties', '', False]
-    ])
-
     payload_loader.load(runner, medical_matching_path, ['hvJoinKey', 'patientId'], 'cardinal_vitalpath_med_deid')
     payload_loader.load(runner, patient_matching_path, ['hvJoinKey', 'patientId'], 'cardinal_vitalpath_patient_deid')
 
@@ -91,17 +87,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     patient_df = runner.sqlContext.sql('select * from cardinal_vitalpath_patient')
     postprocessor.trimmify(patient_df).createTempView('cardinal_vitalpath_patient')
 
-    runner.run_spark_script('normalize.sql', [
+    normalized_output = runner.run_spark_script('normalize.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ]) 
+    ], return_output=True)
 
     postprocessor.compose(
+        lambda x: schema_enforcer.apply_schema(x, pharma_schema),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='30', vendor_id='42', filename=setid),
         pharm_priv.filter
     )(
-        runner.sqlContext.sql('select * from pharmacyclaims_common_model')
+        normalized_output
     ).createTempView('pharmacyclaims_common_model')
 
     if not test:
@@ -142,7 +139,7 @@ def main(args):
     if args.airflow_test:
         output_path      = 's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/pharmacyclaims/spark-output/'
     else:
-        output_path      = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+        output_path      = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
     normalized_records_unloader.distcp(output_path)
 
@@ -152,4 +149,3 @@ if __name__ == "__main__":
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
-
