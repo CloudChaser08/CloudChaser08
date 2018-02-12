@@ -7,7 +7,7 @@ result = None
 
 def test_init():
     old_get_s3_file_contents = epi._get_s3_file_contents
-    epi._get_s3_file_contents = Mock(return_value = 'junk;more junk;515151;0-17\njunk;even more junk;2727;18-44\njunk;more junk;8;45-64\n')
+    epi._get_s3_file_contents = Mock(return_value = 'part-00001;82;515151;0-17\npart-00002;82;2727;18-44\npart-00003;127;8;45-64\n')
 
     global result
     result = epi.calculate_epi({'datafeed_id': '27'}, 'age')
