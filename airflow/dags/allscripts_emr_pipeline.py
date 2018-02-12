@@ -220,20 +220,14 @@ def split_step(task_id, filename, s3_destination_template):
 
 
 split_tasks = [
-    split_step('allergies', 'Allergies.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'allergies/'),
-    split_step('appointments', 'Appointments.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'appointments/'),
-    split_step('clients', 'Clients.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'clients/'),
-    split_step('encounters', 'Encounters.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'encounters/'),
-    split_step('fillrates', 'FillRates.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'fillrates/'),
-    split_step('medications', 'Medications.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'medications/'),
-    split_step('orders', 'Orders.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'orders/'),
-    split_step('patientdemographics', 'PatientDemographics.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'patientdemographics/'),
-    split_step('problems', 'Problems.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'problems/'),
-    split_step('providers', 'Providers.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'providers/'),
-    split_step('results', 'Results.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'results/'),
-    split_step('rowcounts', 'RowCounts.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'rowcounts/'),
-    split_step('vaccines', 'Vaccines.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'vaccines/'),
-    split_step('vitals', 'Vitals.txt', S3_TRANSACTION_PROCESSED_URL_TEMPLATE + 'vitals/')
+    split_step(lowercase_name, filename, S3_TRANSACTION_PROCESSED_URL_TEMPLATE + '{}/'.format(lowercase_name))
+    for (lowercase_name, filename) in [
+            ('allergies', 'Allergies.txt'), ('appointments', 'Appointments.txt'), ('clients', 'Clients.txt'),
+            ('encounters', 'Encounters.txt'), ('fillrates', 'FillRates.txt'), ('medications', 'Medications.txt'),
+            ('orders', 'Orders.txt'), ('patientdemographics', 'PatientDemographics.txt'), ('problems', 'Problems.txt'),
+            ('providers', 'Providers.txt'), ('results', 'Results.txt'), ('rowcounts', 'RowCounts.txt'),
+            ('vaccines', 'Vaccines.txt'), ('vitals', 'Vitals.txt')
+    ]
 ]
 
 if HVDAG.HVDAG.airflow_env != 'test':
