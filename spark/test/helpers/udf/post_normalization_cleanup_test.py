@@ -68,13 +68,13 @@ def test_clean_up_procedure_code():
     assert cleanup.clean_up_procedure_code('PRO CEDURECODE') == 'PRO'
 
     # alphanumeric
-    assert cleanup.clean_up_procedure_code('!!PR0!1! CEDURECODE') == 'PR01'
+    assert cleanup.clean_up_procedure_code('PR0!1! CEDURECODE') == 'PR0'
 
     # upper
-    assert cleanup.clean_up_procedure_code('!!pro!! cedurecode') == 'PRO'
+    assert cleanup.clean_up_procedure_code('pro!! cedurecode') == 'PRO'
 
     # none
-    assert cleanup.clean_up_procedure_code(None) == None
+    assert cleanup.clean_up_procedure_code(None) is None
 
 
 def test_clean_up_diagnosis_code():
