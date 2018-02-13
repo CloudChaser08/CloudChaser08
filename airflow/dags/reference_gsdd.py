@@ -32,7 +32,7 @@ mdag = HVDAG.HVDAG(
 )
 
 
-def sftp_fetch_files(ds, **kwargs):
+def sftp_fetch_files():
     for filename in FILES_OF_INTEREST:
         sftp_utils.fetch_file(FILE_DIR + filename, DESTINATION + filename, HOST,
                               Variable.get('gsdd_user'),
