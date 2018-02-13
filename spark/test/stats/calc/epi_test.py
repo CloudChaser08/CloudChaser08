@@ -7,7 +7,7 @@ result = None
 
 def test_init():
     old_get_s3_file_contents = epi._get_s3_file_contents
-    epi._get_s3_file_contents = Mock(return_value = 'part-00001;82;515151;0-17\npart-00002;82;2727;18-44\npart-00003;127;8;45-64\n')
+    epi._get_s3_file_contents = Mock(return_value = 'part-00001;82;515151;0-17\npart-00002;82;2727;18-44\npart-00003;127;8;45-64;extra woops!\n')
 
     global result
     result = epi.calculate_epi({'datafeed_id': '27'}, 'age')
@@ -25,8 +25,12 @@ def test_keys_are_named_correctly():
         assert 'value' in r.keys()
 
 
+def test_extra_separators_added_in_field():
+    assert result[2]['field'] == '45-64;extra woops!'
+
+
 def test_list_populated_correctly():
     assert filter(lambda x: x['field'] == '0-17', result)[0]['value'] == '515151'
     assert filter(lambda x: x['field'] == '18-44', result)[0]['value'] == '2727'
-    assert filter(lambda x: x['field'] == '45-64', result)[0]['value'] == '8'
+    assert filter(lambda x: x['field'] == '45-64;extra woops!', result)[0]['value'] == '8'
 
