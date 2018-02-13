@@ -35,8 +35,8 @@ mdag = HVDAG.HVDAG(
 def sftp_fetch_files(ds, **kwargs):
     for filename in FILES_OF_INTEREST:
         sftp_utils.fetch_file(FILE_DIR + filename, DESTINATION + filename, HOST,
-                              username=Variable.get('gsdd_user'),
-                              password=Variable.get("gsdd_password")
+                              Variable.get('gsdd_user'),
+                              Variable.get("gsdd_password")
                               )
 
 
