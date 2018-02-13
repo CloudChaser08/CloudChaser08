@@ -1,6 +1,5 @@
 import datetime
 import spark.helpers.udf.post_normalization_cleanup as cleanup
-import pytest
 
 def test_obscure_inst_type_of_bill():
     assert cleanup.obscure_inst_type_of_bill('300') == 'X00'
@@ -59,6 +58,23 @@ def test_clean_up_ndc_code():
     assert cleanup.clean_up_ndc_code('abc') is None
     assert cleanup.clean_up_ndc_code(None) is None
     assert cleanup.clean_up_ndc_code('00000000000000000000000000000') is None
+
+
+def test_clean_up_procedure_code():
+    # long first word
+    assert cleanup.clean_up_procedure_code('PROCEDURE CODE') == 'PROCEDU'
+
+    # short first word
+    assert cleanup.clean_up_procedure_code('PRO CEDURECODE') == 'PRO'
+
+    # alphanumeric
+    assert cleanup.clean_up_procedure_code('PR0!1! CEDURECODE') == 'PR0'
+
+    # upper
+    assert cleanup.clean_up_procedure_code('pro!! cedurecode') == 'PRO'
+
+    # none
+    assert cleanup.clean_up_procedure_code(None) is None
 
 
 def test_clean_up_diagnosis_code():
