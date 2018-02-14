@@ -107,6 +107,9 @@ def init(provider, local=False):
     sqlContext.registerFunction(
         'clean_up_freetext', clean_up_freetext
     )
+    sqlContext.registerFunction(
+        'densify_array', densify_array
+    )
 
     # helper functions for normalizing medical claims
     sqlContext.registerFunction(

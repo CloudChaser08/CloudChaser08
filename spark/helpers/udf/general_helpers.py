@@ -158,3 +158,25 @@ def remove_split_suffix(filename, include_parent_dirs=False):
 
 def to_json(val):
     return json.dumps(val)
+
+# Some of our normalizations involve exploding a sparse array, keeping only the
+# non-NULL values, and numbering the rows sequentially. Removing NULL values
+# and NULL structures from the array will help achieve that
+#
+# Expected input array of scalar values
+# Output: Array of non-NULL scalar values
+def densify_scalar_array(arr):
+    return [v for v in arr if v is not None]
+
+# Expected input array of arrays of scalar values
+# Output: Array of arrays that contain at least one non-NULL scalar value
+#           OR Array of 1 array full of NULL values if the original array did
+#               not contain a single array with at least one non-NULL value
+def densify_2d_array(arr):
+    res = []
+    for sub_arr in arr:
+        if [v for v in sub_arr if v is not None]:
+            res.append(sub_arr)
+    if not res:
+        return [arr[0]]
+    return res
