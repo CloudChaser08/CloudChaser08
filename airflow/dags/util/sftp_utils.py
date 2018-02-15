@@ -4,34 +4,34 @@
 import pysftp
 
 
-def fetch_file(abs_external_filepath, abs_internal_path, external_host, user, password):
+def fetch_file(path, dest_path, host, user, password):
     """
     Fetch a file from SFTP
     """
-    with pysftp.Connection(external_host, username=user, password=password) as conn:
-        conn.get(abs_external_filepath, abs_internal_path)
+    with pysftp.Connection(host, username=user, password=password) as conn:
+        conn.get(path, dest_path)
 
 
-def upload_file(abs_internal_filepath, abs_external_path, external_host, user, password):
+def upload_file(src_path, path, host, user, password):
     """
     Upload a file to SFTP
     """
-    with pysftp.Connection(external_host, username=user, password=password) as conn:
-        with conn.cd('/'.join(abs_external_path.split('/')[:-1])):
-            conn.put(abs_internal_filepath)
+    with pysftp.Connection(host, username=user, password=password) as conn:
+        with conn.cd('/'.join(path.split('/')[:-1])):
+            conn.put(src_path)
 
 
-def list_path(abs_external_path, external_host, user, password):
+def list_path(path, host, user, password):
     """
     List files in a path
     """
-    with pysftp.Connection(external_host, username=user, password=password) as conn:
-        return conn.listdir_attr(abs_external_path)
+    with pysftp.Connection(host, username=user, password=password) as conn:
+        return conn.listdir(path)
 
 
-def file_exists(abs_external_filepath, external_host, user, password):
+def file_exists(path, host, user, password):
     """
     Determine if a file exists on an sftp server
     """
-    all_files = list_path(abs_external_filepath.split('/')[:-1], external_host, user, password)
-    return all_files.contains(abs_external_filepath.split('/')[-1])
+    all_files = list_path(path.split('/')[:-1], host, user, password)
+    return all_files.contains(path.split('/')[-1])
