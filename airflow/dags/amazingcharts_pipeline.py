@@ -120,32 +120,27 @@ def generate_unzip_step(zip_filename_template):
 
 
 unzip_transaction = generate_unzip_step(TRANSACTION_FILE_NAME_TEMPLATE)
-
-unzip_d_costar = generate_unzip_step("d_costar.zip")
-unzip_d_date = generate_unzip_step("d_date.zip")
-unzip_d_icd10 = generate_unzip_step("d_icd10.zip")
-unzip_d_lab_directory = generate_unzip_step("d_lab_directory.zip")
-unzip_d_provider = generate_unzip_step("d_provider.zip")
-unzip_d_vaccine_cpt = generate_unzip_step("d_vaccine_cpt.zip")
-unzip_f_encounter = generate_unzip_step("f_encounter.zip")
-unzip_f_lab = generate_unzip_step("f_lab.zip")
-unzip_f_procedure = generate_unzip_step("f_procedure.zip")
-unzip_d_cpt = generate_unzip_step("d_cpt.zip")
-unzip_d_drug = generate_unzip_step("d_drug.zip")
-unzip_d_icd9 = generate_unzip_step("d_icd9.zip")
-unzip_d_patient = generate_unzip_step("d_patient.zip")
-unzip_d_time = generate_unzip_step("d_time.zip")
-unzip_f_diagnosis = generate_unzip_step("f_diagnosis.zip")
-unzip_f_injection = generate_unzip_step("f_injection.zip")
-unzip_f_medication = generate_unzip_step("f_medication.zip")
 unzip_hv_tokens = generate_unzip_step("HV_TOKENS.zip")
-unzip_steps = [
-    unzip_d_costar, unzip_d_date, unzip_d_icd10, unzip_d_lab_directory,
-    unzip_d_provider, unzip_d_vaccine_cpt, unzip_f_encounter, unzip_f_lab,
-    unzip_f_procedure, unzip_d_cpt, unzip_d_drug, unzip_d_icd9,
-    unzip_d_patient, unzip_d_time, unzip_f_diagnosis, unzip_f_injection,
-    unzip_f_medication, unzip_hv_tokens
-]
+
+unzip_dict = {
+    'd_costar': generate_unzip_step("d_costar.zip"),
+    'd_date': generate_unzip_step("d_date.zip"),
+    'd_icd10': generate_unzip_step("d_icd10.zip"),
+    'd_lab_directory': generate_unzip_step("d_lab_directory.zip"),
+    'd_provider': generate_unzip_step("d_provider.zip"),
+    'd_vaccine_cpt': generate_unzip_step("d_vaccine_cpt.zip"),
+    'f_encounter': generate_unzip_step("f_encounter.zip"),
+    'f_lab': generate_unzip_step("f_lab.zip"),
+    'f_procedure': generate_unzip_step("f_procedure.zip"),
+    'd_cpt': generate_unzip_step("d_cpt.zip"),
+    'd_drug': generate_unzip_step("d_drug.zip"),
+    'd_icd9': generate_unzip_step("d_icd9.zip"),
+    'd_patient': generate_unzip_step("d_patient.zip"),
+    'd_time': generate_unzip_step("d_time.zip"),
+    'f_diagnosis': generate_unzip_step("f_diagnosis.zip"),
+    'f_injection': generate_unzip_step("f_injection.zip"),
+    'f_medication': generate_unzip_step("f_medication.zip")
+}
 
 
 def generate_split_step(filename):
@@ -174,30 +169,25 @@ def generate_split_step(filename):
     )
 
 
-split_d_costar = generate_split_step("d_costar.psv")
-split_d_date = generate_split_step("d_date.psv")
-split_d_icd10 = generate_split_step("d_icd10.psv")
-split_d_lab_directory = generate_split_step("d_lab_directory.psv")
-split_d_provider = generate_split_step("d_provider.psv")
-split_d_vaccine_cpt = generate_split_step("d_vaccine_cpt.psv")
-split_f_encounter = generate_split_step("f_encounter.psv")
-split_f_lab = generate_split_step("f_lab.psv")
-split_f_procedure = generate_split_step("f_procedure.psv")
-split_d_cpt = generate_split_step("d_cpt.psv")
-split_d_drug = generate_split_step("d_drug.psv")
-split_d_icd9 = generate_split_step("d_icd9.psv")
-split_d_patient = generate_split_step("d_patient.psv")
-split_d_time = generate_split_step("d_time.psv")
-split_f_diagnosis = generate_split_step("f_diagnosis.psv")
-split_f_injection = generate_split_step("f_injection.psv")
-split_f_medication = generate_split_step("f_medication.psv")
-split_steps = [
-    split_d_costar, split_d_date, split_d_icd10, split_d_lab_directory,
-    split_d_provider, split_d_vaccine_cpt, split_f_encounter, split_f_lab,
-    split_f_procedure, split_d_cpt, split_d_drug, split_d_icd9,
-    split_d_patient, split_d_time, split_f_diagnosis, split_f_injection,
-    split_f_medication
-]
+split_dict = {
+    'd_costar': generate_split_step("d_costar.psv"),
+    'd_date': generate_split_step("d_date.psv"),
+    'd_icd10': generate_split_step("d_icd10.psv"),
+    'd_lab_directory': generate_split_step("d_lab_directory.psv"),
+    'd_provider': generate_split_step("d_provider.psv"),
+    'd_vaccine_cpt': generate_split_step("d_vaccine_cpt.psv"),
+    'f_encounter': generate_split_step("f_encounter.psv"),
+    'f_lab': generate_split_step("f_lab.psv"),
+    'f_procedure': generate_split_step("f_procedure.psv"),
+    'd_cpt': generate_split_step("d_cpt.psv"),
+    'd_drug': generate_split_step("d_drug.psv"),
+    'd_icd9': generate_split_step("d_icd9.psv"),
+    'd_patient': generate_split_step("d_patient.psv"),
+    'd_time': generate_split_step("d_time.psv"),
+    'f_diagnosis': generate_split_step("f_diagnosis.psv"),
+    'f_injection': generate_split_step("f_injection.psv"),
+    'f_medication': generate_split_step("f_medication.psv")
+}
 
 
 def push_deid_file_step():
@@ -301,32 +291,18 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
     # post-matching
     detect_move_normalize_dag.set_upstream(
-        split_steps + [queue_up_for_matching]
+        split_dict.values() + [queue_up_for_matching]
     )
 else:
-    detect_move_normalize_dag.set_upstream(split_steps)
+    detect_move_normalize_dag.set_upstream(split_dict.values())
 
 unzip_transaction.set_upstream(fetch_transaction)
-unzip_transaction.set_downstream(unzip_steps)
+unzip_transaction.set_downstream(unzip_dict.values())
 
-split_d_costar.set_upstream(unzip_d_costar)
-split_d_date.set_upstream(unzip_d_date)
-split_d_icd10.set_upstream(unzip_d_icd10)
-split_d_lab_directory.set_upstream(unzip_d_lab_directory)
-split_d_provider.set_upstream(unzip_d_provider)
-split_d_vaccine_cpt.set_upstream(unzip_d_vaccine_cpt)
-split_f_encounter.set_upstream(unzip_f_encounter)
-split_f_lab.set_upstream(unzip_f_lab)
-split_f_procedure.set_upstream(unzip_f_procedure)
-split_d_cpt.set_upstream(unzip_d_cpt)
-split_d_drug.set_upstream(unzip_d_drug)
-split_d_icd9.set_upstream(unzip_d_icd9)
-split_d_patient.set_upstream(unzip_d_patient)
-split_d_time.set_upstream(unzip_d_time)
-split_f_diagnosis.set_upstream(unzip_f_diagnosis)
-split_f_injection.set_upstream(unzip_f_injection)
-split_f_medication.set_upstream(unzip_f_medication)
+for k in split_dict.keys():
+    split_dict[k].set_upstream(unzip_dict[k])
+
 push_deid_file.set_upstream(unzip_hv_tokens)
 
 # cleanup
-clean_up_workspace.set_upstream(split_steps + [push_deid_file])
+clean_up_workspace.set_upstream(split_dict.values() + [push_deid_file])
