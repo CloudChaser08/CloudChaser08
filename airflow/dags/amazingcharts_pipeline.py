@@ -297,7 +297,7 @@ else:
     detect_move_normalize_dag.set_upstream(split_dict.values())
 
 unzip_transaction.set_upstream(fetch_transaction)
-unzip_transaction.set_downstream(unzip_dict.values())
+unzip_transaction.set_downstream(unzip_dict.values() + [unzip_hv_tokens])
 
 for k in split_dict.keys():
     split_dict[k].set_upstream(unzip_dict[k])
