@@ -25,7 +25,7 @@ default_args = {
     'owner': 'airflow',
     'start_date': datetime(2018, 2, 14),
     'depends_on_past': True,
-    'retries': 0,
+    'retries': 0
 }
 
 mdag = HVDAG.HVDAG(
@@ -99,16 +99,17 @@ class IncomingFileConfig:
                 if self.src_conf.external_s3:
                     tmp_dir = '{}/{}'.format(TMP_DIR, self.name)
 
-                try:
-                    os.makedirs(tmp_dir)
-                except OSError:
-                    pass
+                    try:
+                        os.makedirs(tmp_dir)
+                    except OSError:
+                        pass
 
                     s3_utils.copy_file(
                         self.src_conf.path + src_filename, tmp_dir + '/' + src_filename,
                         env=s3_utils.get_aws_env(prefix=self.src_conf.prov_aws_credential_variable_prefix)
                     )
                     s3_utils.copy_file(tmp_dir + '/' + src_filename, dest_filepath)
+                    os.remove(tmp_dir + '/' + src_filename)
                 else:
                     s3_utils.copy_file(
                         self.src_conf.path + src_filename, dest_filepath
@@ -129,6 +130,7 @@ class IncomingFileConfig:
 
                 sftp_utils.fetch_file(**fetch_conf)
                 s3_utils.copy_file('{}/{}'.format(dest_dir, src_filename), dest_filepath)
+                os.remove('{}/{}'.format(dest_dir, src_filename))
 
         return out
 
