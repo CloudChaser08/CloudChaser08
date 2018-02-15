@@ -86,3 +86,13 @@ def test_remove_split_suffix():
     assert gh.remove_split_suffix('/parent/dir/myfile.txt.aa.bz2') == 'myfile.txt'
     assert gh.remove_split_suffix('/parent/dir/myfile.txt', True) == '/parent/dir/myfile.txt'
     assert gh.remove_split_suffix('/parent/dir/myfile.txt.aa.bz2', True) == '/parent/dir/myfile.txt'
+
+def test_densify_scalar_array():
+    assert gh.densify_scalar_array([1,None,2,None,3]) == [1,2,3]
+    assert gh.densify_scalar_array([None,None]) == []
+    assert gh.densify_scalar_array([[1],[None]]) == [[1], [None]]
+
+def test_densify_2d_array():
+    assert gh.densify_2d_array([[1],[None]]) == [[1]]
+    assert gh.densify_2d_array([[1,None,2],[None,None,None]]) == [[1,None,2]]
+    assert gh.densify_2d_array([[None,None,None],[None,None,None]]) == [[None,None,None]]
