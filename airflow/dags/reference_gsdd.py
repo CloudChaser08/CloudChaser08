@@ -1,6 +1,7 @@
 import common.HVDAG as HVDAG
 from datetime import datetime, timedelta
 import json
+import pysftp
 
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
@@ -38,11 +39,14 @@ mdag = HVDAG.HVDAG(
 def sftp_fetch_files():
     sftp_config = json.loads(Variable.get('gsdd_cert'))
     for filename in FILES_OF_INTEREST:
+        cnopts = pysftp.CnOpts()
+        cnopts.hostkeys = None
         sftp_utils.fetch_file(sftp_config['path'] + filename,
                               DESTINATION + filename,
                               sftp_config['host'],
                               sftp_config['user'],
-                              sftp_config['password']
+                              sftp_config['password'],
+                              cnopts
                               )
 
 
