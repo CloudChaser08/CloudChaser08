@@ -26,7 +26,7 @@
     "name": "emdeon_dx_transactions",
     "src_system": "sftp",
     "src_conf": {
-      "airflow_conf_variable": "Emdeon SFTP Configuration"
+      "airflow_conf_variable": "Emdeon DX SFTP Configuration"
     },
     "dest_path": "s3://healthverity/incoming/medicalclaims/emdeon/transactions/",
     "file_name_regexes": [
@@ -38,7 +38,7 @@
     "name": "emdeon_dx_deid",
     "src_system": "sftp",
     "src_conf": {
-      "airflow_conf_variable": "Emdeon SFTP Configuration"
+      "airflow_conf_variable": "Emdeon DX SFTP Configuration"
     },
     "dest_path": "s3://healthverity/incoming/medicalclaims/emdeon/deid/",
     "file_name_regexes": [
@@ -49,7 +49,7 @@
     "name": "emdeon_rx_transactions",
     "src_system": "sftp",
     "src_conf": {
-      "airflow_conf_variable": "Emdeon SFTP Configuration"
+      "airflow_conf_variable": "Emdeon RX SFTP Configuration"
     },
     "dest_path": "s3://healthverity/incoming/pharmacyclaims/emdeon/transactions/",
     "file_name_regexes": [
@@ -61,7 +61,7 @@
     "name": "emdeon_rx_deid",
     "src_system": "sftp",
     "src_conf": {
-      "airflow_conf_variable": "Emdeon SFTP Configuration"
+      "airflow_conf_variable": "Emdeon RX SFTP Configuration"
     },
     "dest_path": "s3://healthverity/incoming/pharmacyclaims/emdeon/deid/",
     "file_name_regexes": [
@@ -72,7 +72,7 @@
     "name": "emdeon_era_transactions",
     "src_system": "sftp",
     "src_conf": {
-      "airflow_conf_variable": "Emdeon SFTP Configuration"
+      "airflow_conf_variable": "Emdeon ERA SFTP Configuration"
     },
     "dest_path": "s3://healthverity/incoming/era/emdeon/transactions/",
     "file_name_regexes": [
@@ -84,7 +84,7 @@
     "name": "emdeon_era_link",
     "src_system": "sftp",
     "src_conf": {
-      "airflow_conf_variable": "Emdeon SFTP Configuration"
+      "airflow_conf_variable": "Emdeon ERA SFTP Configuration"
     },
     "dest_path": "s3://healthverity/incoming/era/emdeon/link/",
     "file_name_regexes": [
@@ -96,7 +96,7 @@
     "name": "emdeon_era_deid",
     "src_system": "sftp",
     "src_conf": {
-      "airflow_conf_variable": "Emdeon SFTP Configuration"
+      "airflow_conf_variable": "Emdeon ERA SFTP Configuration"
     },
     "dest_path": "s3://healthverity/incoming/era/emdeon/deid/",
     "file_name_regexes": [
