@@ -22,7 +22,7 @@ TMP_DIR = '/tmp/incoming-files'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 1, 20),
+    'start_date': datetime(2018, 2, 14),
     'retries': 0,
 }
 
