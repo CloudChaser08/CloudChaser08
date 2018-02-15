@@ -1,5 +1,6 @@
 import common.HVDAG as HVDAG
 from datetime import datetime, timedelta
+import json
 
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
@@ -11,9 +12,11 @@ for m in [sftp_utils, HVDAG]:
     reload(m)
 
 
-HOST = 'sftp.gsdd.net'
-FILE_DIR = 'Data_Files/GSDD5/'
-DESTINATION = 's3://salusv/testing/reference/gsdd/'
+if HVDAG.HVDAG.airflow_env == 'test':
+    DESTINATION = 's3://salusv/testing/reference/gsdd/'
+else:
+    DESTINATION = 's3://salusv/reference/gsdd/'
+
 FILES_OF_INTEREST = ['GSDD.db', 'GSDDMonograph.db']
 
 default_args = {
@@ -33,10 +36,13 @@ mdag = HVDAG.HVDAG(
 
 
 def sftp_fetch_files():
+    sftp_config = json.loads(Variable.get('gsdd_cert'))
     for filename in FILES_OF_INTEREST:
-        sftp_utils.fetch_file(FILE_DIR + filename, DESTINATION + filename, HOST,
-                              Variable.get('gsdd_user'),
-                              Variable.get("gsdd_password")
+        sftp_utils.fetch_file(sftp_config['path'] + filename,
+                              DESTINATION + filename,
+                              sftp_config['host'],
+                              sftp_config['user'],
+                              sftp_config['password']
                               )
 
 
