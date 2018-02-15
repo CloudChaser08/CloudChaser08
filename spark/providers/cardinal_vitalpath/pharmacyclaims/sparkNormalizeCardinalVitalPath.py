@@ -117,7 +117,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             hvm_historical = date('1901', '1', '1')
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql', 'cardinal_vitalpath',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql', 'cardinal_vitalpath',
             'pharmacyclaims_common_model', 'date_service', date_input,
             hvm_historical_date = datetime(hvm_historical.year,
                                            hvm_historical.month,
