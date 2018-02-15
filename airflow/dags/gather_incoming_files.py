@@ -6,6 +6,7 @@ import logging
 import json
 import os
 import shutil
+import time
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -18,11 +19,12 @@ for m in [HVDAG, s3_utils, sftp_utils]:
 # Applies to all files
 DAG_NAME = 'gather_incoming_files'
 
-TMP_DIR = '/tmp/incoming-files'
+TMP_DIR = '/tmp/incoming-files/{}'.format(str(time.time()).replace('.', ''))
 
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2018, 2, 14),
+    'depends_on_past': True,
     'retries': 0,
 }
 
@@ -32,9 +34,9 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-CONFIG_FILE = os.getenv("AIRFLOW_HOME") + '/dags/test-e2e/resources/incoming_files_conf.json' \
+CONFIG_FILE = '/home/airflow/airflow/dags/test-e2e/resources/incoming_files_conf.json' \
     if HVDAG.HVDAG.airflow_env == 'test' \
-    else os.getenv("AIRFLOW_HOME") + '/dags/resources/incoming_files_conf.json'
+    else '/home/airflow/airflow/dags/resources/incoming_files_conf.json'
 
 
 class SFTPConnectionConfig:
@@ -57,7 +59,7 @@ class S3ConnectionConfig:
 
         if other_configurations.get('connection_variable') \
            and other_configurations.get('aws_credential_variable_prefix'):
-            self.prov_connection = Variable.get(other_configurations['connection_variable'])
+            self.prov_connection = other_configurations['connection_variable']
             self.prov_aws_credential_variable_prefix = other_configurations['aws_credential_variable_prefix']
             self.external_s3 = True
         else:
@@ -96,11 +98,17 @@ class IncomingFileConfig:
             if self.src_system == 's3':
                 if self.src_conf.external_s3:
                     tmp_dir = '{}/{}'.format(TMP_DIR, self.name)
+
+                try:
+                    os.makedirs(tmp_dir)
+                except OSError:
+                    pass
+
                     s3_utils.copy_file(
-                        self.src_conf.path + src_filename, tmp_dir,
+                        self.src_conf.path + src_filename, tmp_dir + '/' + src_filename,
                         env=s3_utils.get_aws_env(prefix=self.src_conf.prov_aws_credential_variable_prefix)
                     )
-                    s3_utils.copy_file(tmp_dir + src_filename, dest_filepath)
+                    s3_utils.copy_file(tmp_dir + '/' + src_filename, dest_filepath)
                 else:
                     s3_utils.copy_file(
                         self.src_conf.path + src_filename, dest_filepath
@@ -167,6 +175,7 @@ with open(CONFIG_FILE, 'r') as incoming_files_config_file:
         task_id='clean_up_workspace',
         provide_context=True,
         python_callable=lambda ds, **k: shutil.rmtree(TMP_DIR, True),
+        trigger_rule='all_done',
         dag=mdag
     )
 
