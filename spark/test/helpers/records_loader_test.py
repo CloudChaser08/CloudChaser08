@@ -16,6 +16,9 @@ quoted_csv_location = file_utils.get_abs_path(
 incomplete_csv_location = file_utils.get_abs_path(
     __file__, '../resources/incomplete_records.csv'
 )
+empty_csv_location = file_utils.get_abs_path(
+    __file__, '../resources/blank.csv'
+)
 
 columns = ['id', 'diagnosis_code', 'diagnosis_code_qual', 'prescribing_npi', 'notes']
 
@@ -68,3 +71,11 @@ def test_incomplete_csv(spark):
     assert record.prescribing_npi is None
     assert record.notes is None
 
+def test_incomplete_csv(spark):
+    """
+    Test that an empty CSV still creates a DataFrame
+    """
+    df = records_loader.load(spark['runner'], empty_csv_location, columns, 'csv', ',')
+
+    assert df.count() == 0
+    assert df.columns == columns
