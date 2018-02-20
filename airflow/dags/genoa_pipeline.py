@@ -59,7 +59,7 @@ MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Genoa deid file'
-DEID_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_DeID_Payload_{}{}{}'
+DEID_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_{}{}{}'
 MINIMUM_DEID_FILE_SIZE = 500
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
