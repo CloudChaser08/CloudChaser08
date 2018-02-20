@@ -14,7 +14,7 @@ for m in [sftp_utils, HVDAG]:
 
 
 if HVDAG.HVDAG.airflow_env == 'test':
-    DESTINATION = 's3://salusv/testing/reference/gsdd/'
+    DESTINATION = 's3://salusv/testing/dewey/airflow/reference/gsdd/'
 else:
     DESTINATION = 's3://salusv/reference/gsdd/'
 
@@ -49,6 +49,8 @@ def sftp_fetch_files():
                               cnopts
                               )
 
+# sftp_utils.fetch_files(**sftp_config)
+
 
 fetch_files = PythonOperator(
     task_id='sftp_fetch_files',
@@ -57,10 +59,12 @@ fetch_files = PythonOperator(
 )
 
 
-update_s3_with_new_files = BashOperator(
+if HVDAG.HVDAG.airflow_env != 'test':
+    update_s3_with_new_files = BashOperator(
     task_id='update_s3_from_db_files',
     bash_command='docker run 581191604223.dkr.ecr.us-east-1.amazonaws.com/hvgsdd',
     retries=3,
     dag=mdag)
+    
+    update_s3_with_new_files.set_upstream(fetch_files)
 
-update_s3_with_new_files.set_upstream(fetch_files)
