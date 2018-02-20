@@ -1,5 +1,5 @@
 import pytest
-from spark.helpers.privacy.common import Transformer
+from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.privacy.emr.common as common_emr_priv
 from pyspark.sql.functions import upper
 from pyspark.sql.types import StructField, StructType, StringType, Row
@@ -26,11 +26,9 @@ def test_filter(spark):
 
     # assertion including additional transforms
     assert common_emr_priv.filter(test_df, Transformer(
-        notransform={
-            'func': [upper],
-            'args': [['notransform']],
-            'built-in': [True]
-        }
+        notransform=[
+            TransformFunction(upper, ['notransform'], True)
+        ]
     )).collect() == [Row('90', '1927', '2017-01-01', 'DUMMYVAL')]
 
     # assert original transformer was not modified by additional

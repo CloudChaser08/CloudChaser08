@@ -1,13 +1,14 @@
-from spark.helpers.privacy.common import Transformer
+from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.privacy.emr.common as emr_priv_common
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
 clinical_observation_transformer = Transformer(
-    clin_obsn_diag_cd={
-        'func': [post_norm_cleanup.clean_up_diagnosis_code],
-        'args': [['clin_obsn_diag_cd', 'clin_obsn_diag_cd_qual', 'enc_dt']]
-    }
+    clin_obsn_diag_cd=[
+        TransformFunction(
+            post_norm_cleanup.clean_up_diagnosis_code, ['clin_obsn_diag_cd', 'clin_obsn_diag_cd_qual', 'enc_dt']
+        )
+    ]
 )
 
 whitelists = [

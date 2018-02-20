@@ -10,7 +10,7 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-from spark.helpers.privacy.common import Transformer
+from spark.helpers.privacy.common import Transformer, TransformFunction
 from spark.helpers.privacy.emr import                   \
     clinical_observation as priv_clinical_observation,  \
     procedure as priv_procedure,                        \
@@ -126,10 +126,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'privacy_filter': priv_clinical_observation,
             'model_version': '04',
             'custom_transformer': Transformer(
-                clin_obsn_diag_cd={
-                    'func': [post_norm_cleanup.clean_up_diagnosis_code],
-                    'args': [['clin_obsn_diag_cd', 'clin_obsn_diag_cd_qual', 'date_input']]
-                }
+                clin_obsn_diag_cd=[
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['clin_obsn_diag_cd', 'clin_obsn_diag_cd_qual', 'date_input'])
+                ]
             )
         },
         {
@@ -139,10 +138,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'privacy_filter': priv_diagnosis,
             'model_version': '05',
             'custom_transformer': Transformer(
-                diag_cd={
-                    'func': [post_norm_cleanup.clean_up_diagnosis_code],
-                    'args': [['diag_cd', 'diag_cd_qual', 'date_input']]
-                }
+                diag_cd=[
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['diag_cd', 'diag_cd_qual', 'date_input'])
+                ]
             )
         },
         {
@@ -152,14 +150,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'privacy_filter': priv_procedure,
             'model_version': '04',
             'custom_transformer': Transformer(
-                proc_diag_cd={
-                    'func': [post_norm_cleanup.clean_up_diagnosis_code],
-                    'args': [['proc_diag_cd', 'proc_diag_cd_qual', 'date_input']]
-                },
-                proc_cd={
-                    'func': [lambda cd: cd],
-                    'args': [['proc_cd']]
-                }
+                proc_diag_cd=[
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['proc_diag_cd', 'proc_diag_cd_qual', 'date_input'])
+                ],
+                proc_cd=[
+                    TransformFunction(lambda cd: cd, ['proc_cd'])
+                ]
             )
         },
         {
@@ -169,10 +165,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'privacy_filter': priv_lab_result,
             'model_version': '04',
             'custom_transformer': Transformer(
-                lab_test_diag_cd={
-                    'func': [post_norm_cleanup.clean_up_diagnosis_code],
-                    'args': [['lab_test_diag_cd', 'lab_test_diag_cd_qual', 'date_input']]
-                }
+                lab_test_diag_cd=[
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['lab_test_diag_cd', 'lab_test_diag_cd_qual', 'date_input'])
+                ]
             )
         }
     ]

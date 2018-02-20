@@ -1,5 +1,5 @@
 import pytest
-from spark.helpers.privacy.common import Transformer
+from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.privacy.emr.encounter as encounter_priv
 from pyspark.sql.types import StructField, StructType, StringType, Row
 
@@ -52,10 +52,9 @@ def test_filter(spark):
         spark['sqlContext'],
         update_whitelists=whitelist_update,
         additional_transformer=Transformer(
-            enc_typ_nm={
-                'func': [lambda c: c.replace('bad', 'good')],
-                'args': [['enc_typ_nm']]
-            }
+            enc_typ_nm=[
+                TransformFunction(lambda c: c.replace('bad', 'good'), ['enc_typ_nm'])
+            ]
         ))(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None),
                                    Row('90', '1927', '2017-01-01', None, 'GOODVAL', 'GOODVAL')]
 

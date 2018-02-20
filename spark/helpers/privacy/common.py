@@ -14,6 +14,13 @@ def update_whitelist(whitelists, column_name, key, value):
     ]
 
 
+class TransformFunction:
+    def __init__(self, func, args, built_in = None):
+        self.func = func
+        self.args = args
+        self.built_in = built_in
+
+
 class Transformer:
     """
     A class to store and apply changes to a dictionary of transformations.
@@ -48,11 +55,7 @@ class Transformer:
             modified_column_transformer = dict(self.transforms)
             for el in transformer.transforms.items():
                 if self.transforms.get(el[0]):
-                    modified_column_transformer[el[0]]['func'] = modified_column_transformer[el[0]]['func'] + el[1]['func']
-                    modified_column_transformer[el[0]]['args'] = modified_column_transformer[el[0]]['args'] + el[1]['args']
-                    modified_column_transformer[el[0]]['built-in'] = modified_column_transformer[el[0]].get(
-                        'built-in', [None for _ in self.transforms[el[0]]['func']]
-                    ) + el[1].get('built-in', [None for _ in el[1]['func']])
+                    modified_column_transformer[el[0]] = modified_column_transformer[el[0]] + el[1]
                 else:
                     modified_column_transformer[el[0]] = el[1]
 
@@ -66,38 +69,30 @@ class Transformer:
 # - the function to be applied - as well as a list of 'args' - the
 # arguments to that function.
 column_transformer = Transformer(
-    patient_gender={
-        'func': [post_norm_cleanup.clean_up_gender],
-        'args': [['patient_gender']]
-    },
-    patient_age={
-        'func': [post_norm_cleanup.cap_age],
-        'args': [['patient_age']]
-    },
-    patient_year_of_birth={
-        'func': [post_norm_cleanup.cap_year_of_birth],
-        'args': [['patient_age', 'date_service', 'patient_year_of_birth']]
-    },
-    diagnosis_code={
-        'func': [post_norm_cleanup.clean_up_diagnosis_code],
-        'args': [['diagnosis_code', 'diagnosis_code_qual', 'date_service']]
-    },
-    procedure_code={
-        'func': [post_norm_cleanup.clean_up_procedure_code],
-        'args': [['procedure_code']]
-    },
-    patient_zip3={
-        'func': [post_norm_cleanup.mask_zip_code],
-        'args': [['patient_zip3']]
-    },
-    patient_state={
-        'func': [post_norm_cleanup.validate_state_code],
-        'args': [['patient_state']]
-    },
-    ndc_code={
-        'func': [post_norm_cleanup.clean_up_numeric_code],
-        'args': [['ndc_code']]
-    }
+    patient_gender=[
+        TransformFunction(post_norm_cleanup.clean_up_gender, ['patient_gender'])
+    ],
+    patient_age=[
+        TransformFunction(post_norm_cleanup.cap_age, ['patient_age'])
+    ],
+    patient_year_of_birth=[
+        TransformFunction(post_norm_cleanup.cap_year_of_birth, ['patient_age', 'date_service', 'patient_year_of_birth'])
+    ],
+    diagnosis_code=[
+        TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['diagnosis_code', 'diagnosis_code_qual', 'date_service'])
+    ],
+    procedure_code=[
+        TransformFunction(post_norm_cleanup.clean_up_procedure_code, ['procedure_code'])
+    ],
+    patient_zip3=[
+        TransformFunction(post_norm_cleanup.mask_zip_code, ['patient_zip3'])
+    ],
+    patient_state=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['patient_state'])
+    ],
+    ndc_code=[
+        TransformFunction(post_norm_cleanup.clean_up_numeric_code, ['ndc_code'])
+    ]
 )
 
 
@@ -121,19 +116,18 @@ def _transform(transformer):
 
     def col_func(column_name):
         if column_name in transformer.transforms:
-            # configuration object for this column - contains the function
-            # to be applied on this column as well as required arguments
-            # to that function
-            conf = transformer.transforms[column_name]
+            # transform functions for this column - contains a list of
+            # functions to be applied to this column
+            transform_functions = transformer.transforms[column_name]
 
             # compose input functions. we will need to transform some
             # functions to a udf if they are plain python functions,
             # otherwise leave them alone.
             return postprocessor.compose(*[
                 convert_to_single_arg_func(
-                    func if conf.get('built-in') and conf['built-in'][i] else udf(func),
-                    column_name, conf['args'][i]
-                ) for i, func in enumerate(conf['func'])
+                    transform_function.func if transform_function.built_in else udf(transform_function.func),
+                    column_name, transform_function.args
+                ) for transform_function in transform_functions
             ])(col(column_name)).alias(column_name)
         else:
             # Do nothing to columns not found in the transformer dict

@@ -1,5 +1,5 @@
 import pytest
-from spark.helpers.privacy.common import Transformer
+from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.privacy.emr.medication as medication_priv
 from pyspark.sql.types import StructField, StructType, StringType, Row
 
@@ -56,10 +56,9 @@ def test_filter(spark):
         spark['sqlContext'],
         update_whitelists=whitelist_update,
         additional_transformer=Transformer(
-            medctn_admin_sig_cd={
-                'func': [lambda c: c.replace('bad', 'good')],
-                'args': [['medctn_admin_sig_cd']]
-            }
+            medctn_admin_sig_cd=[
+                TransformFunction(lambda c: c.replace('bad', 'good'), ['medctn_admin_sig_cd'])
+            ]
         ))(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, None, None, None, None),
                                    Row('90', '1927', '2017-01-01', None, 'GOODVAL', 'GOODVAL', None, None, None, None)]
 

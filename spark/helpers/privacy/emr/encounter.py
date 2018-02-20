@@ -1,13 +1,12 @@
-from spark.helpers.privacy.common import Transformer
+from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.privacy.emr.common as emr_priv_common
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
 encounter_transformer = Transformer(
-    ptnt_birth_yr={
-        'func': [post_norm_cleanup.cap_year_of_birth],
-        'args': [['ptnt_age_num', 'enc_start_dt', 'ptnt_birth_yr']]
-    }
+    ptnt_birth_yr=[
+        TransformFunction(post_norm_cleanup.cap_year_of_birth, ['ptnt_age_num', 'enc_start_dt', 'ptnt_birth_yr'])
+    ]
 )
 
 whitelists = [

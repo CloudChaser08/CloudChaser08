@@ -7,15 +7,13 @@ from pyspark.sql.types import StructField, StructType, StringType, Row
 def test_transform(spark):
 
     example_transformer = common_priv.Transformer(
-        col1={
-            'func': [upper, lambda c: c[:2] if c else None],
-            'args': [['col1'], ['col1']],
-            'built-in': [True, None]
-        },
-        col2={
-            'func': [lambda c2, c1: c1 + '_' + c2],
-            'args': [['col2', 'col1']]
-        }
+        col1=[
+            common_priv.TransformFunction(upper, ['col1'], True),
+            common_priv.TransformFunction(lambda c: c[:2] if c else None, ['col1'])
+        ],
+        col2=[
+            common_priv.TransformFunction(lambda c2, c1: c1 + '_' + c2, ['col2', 'col1'])
+        ]
     )
 
     # get transformer function
@@ -63,11 +61,9 @@ def test_filter(spark):
 
     # assertion including additional transforms
     assert common_priv.filter(test_df, common_priv.Transformer(
-        notransform={
-            'func': [upper],
-            'args': [['notransform']],
-            'built-in': [True]
-        }
+        notransform=[
+            common_priv.TransformFunction(upper, ['notransform'], True)
+        ]
     )).collect() == [Row('90', '1927', '2017-01-01', None, 'DUMMYVAL')]
 
     # assert original transformer was not modified by additional

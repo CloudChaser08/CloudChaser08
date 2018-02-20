@@ -9,7 +9,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-from spark.helpers.privacy.common import Transformer
+from spark.helpers.privacy.common import Transformer, TransformFunction
 from spark.helpers.privacy.emr import                   \
     diagnosis as priv_diagnosis,                        \
     medication as priv_medication
@@ -101,10 +101,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'setid': diag_setid,
             'privacy_filter': priv_diagnosis,
             'custom_transformer': Transformer(
-                diag_cd={
-                    'func': [post_norm_cleanup.clean_up_diagnosis_code],
-                    'args': [['diag_cd', 'diag_cd_qual', 'enc_dt']]
-                }
+                diag_cd=[
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['diag_cd', 'diag_cd_qual', 'enc_dt'])
+                ]
             ),
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', None)
