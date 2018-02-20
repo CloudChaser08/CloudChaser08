@@ -129,3 +129,18 @@ def test_apply_schema_type_casting(spark):
 
     assert type(new_df.collect()[0].rendering_npi) == int
 
+@pytest.mark.usefixtures("spark")
+def test_apply_schema_func(spark):
+    '''
+        Check that a schema applying function can be set up independently
+        and then applied to a data frame
+    '''
+    global master_schema
+
+    org_df = spark['sqlContext'].sql("SELECT '1', 'I10', '49999', '1231232123'")
+
+    schema_applying_func = schema_enforcer.apply_schema_func(master_schema)
+
+    new_df = schema_applying_func(org_df)
+
+    assert master_schema.names == new_df.columns
