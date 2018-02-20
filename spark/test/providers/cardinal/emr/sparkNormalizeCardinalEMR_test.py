@@ -119,8 +119,6 @@ def test_clin_obs_result_cd_explosion():
     assert sorted([r.clin_obsn_result_cd for r in clinical_observation_results if r.hv_clin_obsn_id == '40_id-31']) \
         == ['STAGE_OF_DIS', 'STG_CRIT_DESC']
 
-    filter(lambda r: r.hv_clin_obsn_id == '40_id-31', clinical_observation_results)[0].clin_obsn_diag_cd
-
 
 def test_lab_res_nulls():
     assert map(
@@ -153,19 +151,6 @@ def test_date_capping():
 
     # enc_start_date should not be capped -- EARLIEST_VALID_SERVICE_DATE does not exist
     assert [r.enc_start_dt for r in encounter_results if r.vdr_enc_id == 'id-0'][0] == datetime.date(2000, 1, 1)
-
-
-def test_whitelisting():
-    """
-    Ensure whitelist is properly applied
-    """
-    for r in clinical_observation_results:
-        if r.vdr_clin_obsn_id == 'id-34':
-            assert r.clin_obsn_diag_desc == 'WHITELISTED CLIN OBS DIAG DESC VAL 1'
-        elif r.vdr_clin_obsn_id == 'id-35':
-            assert r.clin_obsn_diag_desc == 'WHITELISTED CLIN OBS DIAG DESC VAL 2'
-        else:
-            assert not r.clin_obsn_diag_desc
 
 
 def test_first_last_name_parsing():
