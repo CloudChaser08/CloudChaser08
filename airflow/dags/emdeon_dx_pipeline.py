@@ -1,26 +1,22 @@
 from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
-from subprocess import check_output, check_call, STDOUT
-from json import loads as json_loads
-import logging
+from subprocess import check_call
 import os
-import pysftp
-import re
-import sys
 
 import common.HVDAG as HVDAG
-import subdags.emdeon_validate_fetch_file
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.split_push_files as split_push_files
 import subdags.update_analytics_db as update_analytics_db
+import subdags.s3_validate_file as s3_validate_file
+import subdags.s3_fetch_file as s3_fetch_file
 import util.date_utils as date_utils
 
-for m in [subdags.emdeon_validate_fetch_file, HVDAG, detect_move_normalize,
-          split_push_files, update_analytics_db, date_utils]:
+for m in [
+        HVDAG, detect_move_normalize, split_push_files, s3_validate_file,
+        s3_fetch_file, update_analytics_db, date_utils
+]:
     reload(m)
-
-from subdags.emdeon_validate_fetch_file import emdeon_validate_fetch_file
 
 # Applies to all files
 TMP_PATH_TEMPLATE='/tmp/webmd/medicalclaims/{}{}{}/'
@@ -39,7 +35,7 @@ MINIMUM_TRANSACTION_FILE_SIZE=500
 # Transaction MFT file
 TRANSACTION_MFT_FILE_DESCRIPTION='WebMD DX transaction mft file'
 S3_TRANSACTION_MFT_RAW_PATH='s3://healthverity/incoming/medicalclaims/emdeon/transactions/'
-TRANSACTION_MFT_FILE_NAME_TEMPLATE='{}_Claims_US_CF_D_deid.dat.mft'
+TRANSACTION_MFT_FILE_NAME_TEMPLATE='{}{}{}_Claims_US_CF_D_deid.dat.mft'
 TRANSACTION_MFT_DAG_NAME='validate_fetch_transaction_mft_file'
 MINIMUM_TRANSACTION_MFT_FILE_SIZE=15
 
@@ -60,7 +56,7 @@ get_tmp_path_parts = date_utils.generate_insert_date_into_template_function(TMP_
 
 def do_unzip_file(ds, **kwargs):
     file_path = get_tmp_path(ds,kwargs) + date_utils.insert_date_into_template(
-        TRANSACTION_FILE_NAME_TEMPLATE, 
+        TRANSACTION_FILE_NAME_TEMPLATE,
         kwargs,
         day_offset = EMDEON_DX_DAY_OFFSET
     )
@@ -74,7 +70,7 @@ def do_split_file(ds, **kwargs):
     )
     file_path = get_tmp_path(ds,kwargs) + file_name
     check_call(['mkdir', '-p', get_tmp_path_parts(ds,kwargs)])
-    check_call(['split', '-n', 'l/20', file_path, 
+    check_call(['split', '-n', 'l/20', file_path,
         '{}{}.'.format(get_tmp_path_parts(ds,kwargs), file_name)
     ])
 
@@ -89,7 +85,7 @@ def do_push_splits_to_s3(ds, **kwargs):
     date = '{}/{}/{}'.format(file_name[0:4], file_name[4:6], file_name[6:8])
     check_call(
         ['aws', 's3', 'cp', '--sse', 'AES256', '--recursive',
-            get_tmp_path_parts(ds,kwargs), 
+            get_tmp_path_parts(ds,kwargs),
             "{}{}/".format(S3_TRANSACTION_SPLIT_PATH, date)
         ]
     )
@@ -108,53 +104,63 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-validate_fetch_transaction_config = {
-    'tmp_path_template' : TMP_PATH_TEMPLATE,
-    's3_raw_path' : S3_TRANSACTION_RAW_PATH,
-    'file_name_template' : TRANSACTION_FILE_NAME_TEMPLATE,
-    'datatype' : DATATYPE,
-    'minimum_file_size' : MINIMUM_TRANSACTION_FILE_SIZE,
-    'file_description' : TRANSACTION_FILE_DESCRIPTION
-}
 
-validate_fetch_transaction_file_dag = SubDagOperator(
-    subdag=emdeon_validate_fetch_file(DAG_NAME, TRANSACTION_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_transaction_config),
-    task_id=TRANSACTION_DAG_NAME,
-    retries=0,
-    dag=mdag
+def generate_transaction_file_validation_dag(
+        task_id, file_name_template, s3_path, minimum_file_size
+):
+    return SubDagOperator(
+        subdag=s3_validate_file.s3_validate_file(
+            DAG_NAME,
+            'validate_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
+                    file_name_template,
+                    day_offset = EMDEON_DX_DAY_OFFSET
+                ),
+                'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
+                    file_name_template
+                ),
+                'minimum_file_size'       : minimum_file_size,
+                's3_prefix'               : '/'.join(s3_path.split('/')[3:]),
+                's3_bucket'               : s3_path.split('/')[2],
+                'file_description'        : 'Emdeon ' + task_id + ' file'
+            }
+        ),
+        task_id='validate_' + task_id + '_file',
+        dag=mdag
+    )
+
+
+validate_transaction_file = generate_transaction_file_validation_dag(
+    'transaction', TRANSACTION_FILE_NAME_TEMPLATE, S3_TRANSACTION_RAW_PATH, MINIMUM_TRANSACTION_FILE_SIZE
 )
 
-validate_fetch_transaction_mft_config = {
-    'tmp_path_template' : TMP_PATH_TEMPLATE,
-    's3_raw_path' : S3_TRANSACTION_MFT_RAW_PATH,
-    'file_name_template' : TRANSACTION_MFT_FILE_NAME_TEMPLATE,
-    'datatype' : DATATYPE,
-    'minimum_file_size' : MINIMUM_TRANSACTION_MFT_FILE_SIZE,
-    'file_description' : TRANSACTION_MFT_FILE_DESCRIPTION
-}
-
-validate_fetch_transaction_mft_file_dag = SubDagOperator(
-    subdag=emdeon_validate_fetch_file(DAG_NAME, TRANSACTION_MFT_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_transaction_mft_config),
-    task_id=TRANSACTION_MFT_DAG_NAME,
-    trigger_rule='all_done',
-    retries=0,
-    dag=mdag
+validate_transaction_mft_file = generate_transaction_file_validation_dag(
+    'transaction_mft', TRANSACTION_MFT_FILE_NAME_TEMPLATE, S3_TRANSACTION_MFT_RAW_PATH, MINIMUM_TRANSACTION_MFT_FILE_SIZE
 )
 
-validate_fetch_deid_config = {
-    'tmp_path_template' : TMP_PATH_TEMPLATE,
-    's3_raw_path' : S3_DEID_RAW_PATH,
-    'file_name_template' : DEID_FILE_NAME_TEMPLATE,
-    'datatype' : DATATYPE,
-    'minimum_file_size' : MINIMUM_DEID_FILE_SIZE,
-    'file_description' : DEID_FILE_DESCRIPTION
-}
+validate_deid_file = generate_transaction_file_validation_dag(
+    'deid', DEID_FILE_NAME_TEMPLATE, S3_DEID_RAW_PATH, MINIMUM_DEID_FILE_SIZE
+)
 
-validate_fetch_deid_file_dag = SubDagOperator(
-    subdag=emdeon_validate_fetch_file(DAG_NAME, DEID_DAG_NAME, default_args['start_date'], mdag.schedule_interval, validate_fetch_deid_config),
-    task_id=DEID_DAG_NAME,
-    trigger_rule='all_done',
-    retries=0,
+fetch_transaction_file = SubDagOperator(
+    subdag=s3_fetch_file.s3_fetch_file(
+        DAG_NAME,
+        'fetch_transaction_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template'      : TMP_PATH_TEMPLATE,
+            'expected_file_name_func': generate_insert_date_into_template_function(
+                TRANSACTION_FILE_NAME_TEMPLATE
+            ),
+            's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
+            's3_bucket'              : S3_TRANSACTION_RAW_PATH.split('/')[2],
+        }
+    ),
+    task_id='fetch_transaction_file',
     dag=mdag
 )
 
@@ -209,7 +215,7 @@ push_splits_to_s3 = PythonOperator(
 queue_up_for_matching = BashOperator(
     task_id='queue_up_for_matching',
     bash_command='/home/airflow/airflow/dags/resources/push_file_to_s3_batchless.sh {}{}'.format(
-                 S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}','','') + 
+                 S3_DEID_RAW_PATH, DEID_FILE_NAME_TEMPLATE.format('{{ yesterday_ds_nodash }}','','') +
                  ' {{ params.sequence_num }} {{ params.matching_engine_env }} {{ params.priority }}'),
     params={'sequence_num' : 0,
             'matching_engine_env' : 'prod-matching-engine',
@@ -229,7 +235,7 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds, k: [ 
+            'expected_matching_files_func'      : lambda ds, k: [
                 date_utils.insert_date_into_template(
                     DEID_FILE_NAME_TEMPLATE.replace('.gz',''),
                     k,
@@ -254,7 +260,7 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 sql_template = """
-    MSCK REPAIR TABLE medicalclaims_new 
+    MSCK REPAIR TABLE medicalclaims_new
 """
 
 update_analytics_db = SubDagOperator(
@@ -278,12 +284,13 @@ clean_up_workspace = BashOperator(
     dag=mdag
 )
 
-unzip_file.set_upstream(validate_fetch_transaction_file_dag)
+fetch_transaction_file.set_upstream(validate_transaction_file)
+unzip_file.set_upstream(fetch_transaction_file)
 log_file_volume.set_upstream(unzip_file)
 split_file.set_upstream(unzip_file)
 zip_part_files.set_upstream(split_file)
 push_splits_to_s3.set_upstream(zip_part_files)
-queue_up_for_matching.set_upstream(validate_fetch_deid_file_dag)
-detect_move_normalize_dag.set_upstream([push_splits_to_s3, validate_fetch_transaction_mft_file_dag, queue_up_for_matching])
+queue_up_for_matching.set_upstream(validate_deid_file)
+detect_move_normalize_dag.set_upstream([push_splits_to_s3, validate_transaction_mft_file, queue_up_for_matching])
 update_analytics_db.set_upstream(detect_move_normalize_dag)
-clean_up_workspace.set_upstream([push_splits_to_s3, validate_fetch_transaction_mft_file_dag, queue_up_for_matching, log_file_volume])
+clean_up_workspace.set_upstream([push_splits_to_s3, validate_transaction_mft_file, queue_up_for_matching, log_file_volume])

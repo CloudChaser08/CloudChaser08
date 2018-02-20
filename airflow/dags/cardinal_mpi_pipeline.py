@@ -41,13 +41,11 @@ mdag = HVDAG.HVDAG(
 
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/payload/'
-    RAW_SOURCE_OF_TRUTH = 'testing/dewey/airflow/e2e/cardinal_mpi/medicalclaims/moved_raw/'
 else:
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/custom/cardinal_mpi/'
-    RAW_SOURCE_OF_TRUTH = 'incoming/cardinal/mpi/'
 
 TMP_PATH_TEMPLATE='/tmp/cardinal_mpi/custom/{}{}{}/'
-S3_DEID_RAW_URL='s3://hvincoming/cardinal_raintree/mpi/'
+S3_DEID_RAW_URL='s3://healthverity/incoming/cardinal/mpi/'
 DEID_FILE_NAME_TEMPLATE = 'mpi.{}{}{}T\d{{2}}\d{{2}}\d{{2}}.zip'
 DEID_FILE_NAME_REGEX = 'mpi.\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}.zip'
 DEID_FILE_NAME_UNZIPPED_TEMPLATE = 'mpi-deid.{}{}{}T\d{{2}}\d{{2}}\d{{2}}.dat'
@@ -88,7 +86,7 @@ def generate_file_validation_task(
                 ),
                 'minimum_file_size'         : minimum_file_size,
                 's3_prefix'                 : '/'.join(S3_DEID_RAW_URL.split('/')[3:]),
-                's3_bucket'                 : 'hvincoming',
+                's3_bucket'                 : S3_DEID_RAW_URL.split('/')[2],
                 'file_description'          : 'Cardinal MPI ' + task_id + ' file',
                 'regex_name_match'          : True,
                 'quiet_retries'             : 24
@@ -121,29 +119,12 @@ fetch_deid_file_dag = SubDagOperator(
                     day_offset = CARDINAL_MPI_DAY_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_DEID_RAW_URL.split('/')[3:]),
-            's3_bucket'              : 'hvincoming',
+            's3_bucket'              : S3_DEID_RAW_URL.split('/')[2],
             'regex_name_match'       : True
         }
     ),
     task_id='fetch_deid_file',
     dag=mdag
-)
-
-push_to_healthverity_incoming = SubDagOperator(
-    subdag = s3_push_files.s3_push_files(
-        DAG_NAME,
-        'push_to_healthverity_incoming',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'file_paths_func'   : lambda ds, kwargs: get_files_matching_template(DEID_FILE_NAME_TEMPLATE, ds, kwargs),
-            'tmp_dir_func'      : get_tmp_dir,
-            's3_prefix_func'    : lambda ds, kwargs: RAW_SOURCE_OF_TRUTH,
-            's3_bucket'         : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
-        }
-    ),
-    task_id = 'push_to_healthverity_incoming',
-    dag = mdag
 )
 
 def do_unzip_file(ds, **kwargs):
@@ -223,7 +204,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
                 ),
                 get_tmp_dir(ds, kwargs) + \
                     date_utils.insert_date_into_template(
-                        S3_NORMALIZED_FILE_URL_TEMPLATE, 
+                        S3_NORMALIZED_FILE_URL_TEMPLATE,
                         kwargs,
                         day_offset = CARDINAL_MPI_DAY_OFFSET).split("/")[-1]
         ),
@@ -240,8 +221,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
                 'file_paths_func'       : lambda ds, kwargs: [
                     get_tmp_dir(ds, kwargs) + \
                         date_utils.insert_date_into_template(
-                            S3_NORMALIZED_FILE_URL_TEMPLATE, 
-                            kwargs, 
+                            S3_NORMALIZED_FILE_URL_TEMPLATE,
+                            kwargs,
                             day_offset = CARDINAL_MPI_DAY_OFFSET).split('/')[-1]
                 ],
                 's3_prefix_func'        : lambda ds, kwargs: \
@@ -269,7 +250,7 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
-before_cleanup = [unzip_deid_file, push_to_healthverity_incoming]
+before_cleanup = [unzip_deid_file]
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_deid_file_dag.set_upstream(validate_deid)
     queue_up_for_matching.set_upstream(unzip_deid_file)
@@ -279,7 +260,6 @@ if HVDAG.HVDAG.airflow_env != 'test':
     before_cleanup += [deliver_normalized_data]
 
 unzip_deid_file.set_upstream(fetch_deid_file_dag)
-push_to_healthverity_incoming.set_upstream(fetch_deid_file_dag)
 clean_up_workspace.set_upstream(before_cleanup)
 
 # implicit else, run detect_move_normalize_dag without waiting for the
