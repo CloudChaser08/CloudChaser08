@@ -1,13 +1,13 @@
 SELECT
-    CONCAT('40_enc_', enc.patient_visit_id)                     AS hv_proc_id,
-    enc.patient_visit_id                                        AS vdr_proc_id,
-    CASE
-      WHEN enc.patient_visit_id IS NOT NULL THEN 'VISIT_ID'
-    END                                                         AS vdr_proc_id_qual,
-    enc.id                                                      AS vdr_alt_proc_id,
+    CONCAT('40_', enc.id)                                       AS hv_vit_sign_id,
+    enc.id                                                      AS vdr_vit_sign_id,
     CASE
       WHEN enc.id IS NOT NULL THEN 'VENDOR_ROW_ID'
-    END                                                         AS vdr_alt_proc_id_qual,
+    END                                                         AS vdr_vit_sign_id_qual,
+    enc.id                                                      AS vdr_alt_vit_sign_id,
+    CASE
+      WHEN enc.id IS NOT NULL THEN 'VENDOR_ROW_ID'
+    END                                                         AS vdr_alt_vit_sign_id_qual,
     dem.patient_id                                              AS hvid,
     COALESCE(pay.yearOfBirth, SUBSTRING(dem.birth_date, 0, 4))  AS ptnt_birth_yr,
     CASE
@@ -21,7 +21,7 @@ SELECT
     COALESCE(pay.gender, dem.gender)                            AS ptnt_gender_cd,
     COALESCE(pay.state, dem.state)                              AS ptnt_state_cd,
     COALESCE(pay.threeDigitZip, SUBSTRING(dem.zip_code, 0, 3))  AS ptnt_zip3_cd,
-    CONCAT('40_', enc.patient_visit_id)                         AS hv_enc_id,
+    enc.patient_visit_id                                        AS hv_enc_id,
     EXTRACT_DATE(
         SUBSTRING(enc.visit_date, 0, 10),
         '%Y-%m-%d'
@@ -29,17 +29,23 @@ SELECT
     EXTRACT_DATE(
         SUBSTRING(enc.visit_date, 0, 10),
         '%Y-%m-%d'
-        )                                                       AS proc_dt,
-    enc.practice_id                                             AS proc_rndrg_fclty_vdr_id,
+        )                                                       AS vit_sign_dt,
+    enc.practice_id                                             AS vit_sign_rndrg_fclty_vdr_id,
     CASE WHEN enc.practice_id IS NOT NULL
     THEN 'VENDOR'
-    END                                                         AS proc_rndrg_fclty_vdr_id_qual,
-    enc.provider_npi                                            AS proc_rndrg_prov_npi,
-    enc.cpt                                                     AS proc_cd,
-    CASE WHEN enc.cpt IS NOT NULL THEN 'HC' END                 AS proc_cd_qual,
+    END                                                         AS vit_sign_rndrg_fclty_vdr_id_qual,
+    enc.provider_npi                                            AS vit_sign_rndrg_prov_npi,
+    CASE n.n
+    WHEN 0 THEN 'RAPID3'
+    WHEN 1 THEN 'CDAI'
+    WHEN 2 THEN 'SDAI'
+    END                                                         AS vit_sign_typ_cd,
+    ARRAY(enc.rapid_3, enc.cdai, enc.sdai)[n.n]                 AS vit_sign_msrmt,
     UPPER(enc.system_id)                                        AS data_src_cd,
     'encounter'                                                 AS prmy_src_tbl_nm
 FROM transactions_encounter enc
     LEFT JOIN transactions_demographics dem ON enc.patient_id = dem.patient_id
     LEFT JOIN matching_payload pay ON dem.hvjoinkey = pay.hvjoinkey
-WHERE (pay.state IS NULL OR pay.state <> 'state') AND enc.cpt IS NOT NULL
+    CROSS JOIN vit_sign_exploder n
+WHERE (pay.state IS NULL OR pay.state <> 'state')
+    AND ARRAY(enc.rapid_3, enc.cdai, enc.sdai)[n.n] IS NOT NULL
