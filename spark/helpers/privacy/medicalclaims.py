@@ -42,9 +42,11 @@ medical_transformer = priv_common.Transformer(
     ]
 ).append(
     priv_common.Transformer(**dict(map(
-        lambda c: (c, priv_common.TransformFunction(
-            filter_due_to_pos_itb, [c, 'place_of_service_std_id', 'inst_type_of_bill_std_id', 'claim_type'])
-        ),
+        lambda c: (c, [
+            priv_common.TransformFunction(
+                filter_due_to_pos_itb, [c, 'place_of_service_std_id', 'inst_type_of_bill_std_id', 'claim_type']
+            )
+        ]),
         columns_to_nullify
     )))
 )
