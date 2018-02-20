@@ -13,35 +13,13 @@ medication_transformer = Transformer(
     ],
     rx_num=[
         TransformFunction(md5, ['rx_num'], True)
+    ],
+    medctn_ordg_prov_npi=[
+        TransformFunction(post_norm_cleanup.clean_up_npi_code, ['medctn_ordg_prov_npi'])
     ]
 )
 
-whitelists = [
-    {
-        'column_name': 'medctn_admin_sig_cd',
-        'domain_name': 'emr_medctn.medctn_admin_sig_cd'
-    },
-    {
-        'column_name': 'medctn_admin_sig_txt',
-        'domain_name': 'emr_medctn.medctn_admin_sig_txt'
-    },
-    {
-        'column_name': 'medctn_admin_form_nm',
-        'domain_name': 'emr_medctn.medctn_admin_form_nm'
-    },
-    {
-        'column_name': 'medctn_strth_txt',
-        'domain_name': 'emr_medctn.medctn_strth_txt'
-    },
-    {
-        'column_name': 'medctn_strth_txt_qual',
-        'domain_name': 'emr_medctn.medctn_strth_txt_qual'
-    },
-    {
-        'column_name': 'medctn_admin_rte_txt',
-        'domain_name': 'emr_medctn.medctn_admin_rte_txt'
-    }
-]
+whitelists = []
 
 
 def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):

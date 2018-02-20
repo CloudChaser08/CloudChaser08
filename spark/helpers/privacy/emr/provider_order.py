@@ -1,86 +1,33 @@
-from spark.helpers.privacy.common import Transformer
+from spark.helpers.privacy.common import Transformer, TransformFunction
+import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.privacy.emr.common as emr_priv_common
 import spark.helpers.postprocessor as postprocessor
 
-provider_order_transformer = Transformer()
+provider_order_transformer = Transformer(
+    prov_ord_diag_cd=[
+        TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['prov_ord_diag_cd', 'prov_ord_diag_cd_qual', 'prov_ord_dt'])
+    ]
+)
 
-whitelists = [
-    {
-        'column_name'           : 'prov_ord_alt_cd',
-        'domain_name'           : 'emr_prov_ord.prov_ord_alt_cd',
-        'comp_column_names'     : ['prov_ord_alt_cd_qual'],
-        'whitelist_column_name' : 'gen_ref_cd'
-    },
-    {
-        'column_name' : 'prov_ord_alt_nm',
-        'domain_name' : 'emr_prov_ord.prov_ord_alt_nm',
-        'clean_up_freetext' : False
-    },
-    {
-        'column_name'           : 'prov_ord_alt_desc',
-        'domain_name'           : 'emr_prov_ord.prov_ord_alt_desc',
-        'whitelist_column_name' : 'gen_ref_itm_desc'
-    },
-    {
-        'column_name': 'prov_ord_diag_nm',
-        'domain_name': 'emr_prov_ord.prov_ord_diag_nm'
-    },
-    {
-        'column_name'           : 'prov_ord_rsn_cd',
-        'domain_name'           : 'emr_prov_ord.prov_ord_rsn_cd',
-        'comp_column_names'     : ['prov_ord_rsn_cd_qual'],
-        'whitelist_column_name' : 'gen_ref_cd'
-    },
-    {
-        'column_name': 'prov_ord_rsn_nm',
-        'domain_name': 'emr_prov_ord.prov_ord_rsn_nm'
-    },
-    {
-        'column_name'           : 'prov_ord_stat_cd',
-        'domain_name'           : 'emr_prov_ord.prov_ord_stat_cd',
-        'comp_column_names'     : ['prov_ord_stat_cd_qual'],
-        'whitelist_column_name' : 'gen_ref_cd'
-    },
-    {
-        'column_name': 'prov_ord_complt_rsn_cd',
-        'domain_name': 'emr_prov_ord.prov_ord_complt_rsn_cd'
-    },
-    {
-        'column_name': 'prov_ord_cxld_rsn_cd',
-        'domain_name': 'emr_prov_ord.prov_ord_cxld_rsn_cd'
-    },
-    {
-        'column_name': 'prov_ord_result_desc',
-        'domain_name': 'emr_prov_ord.prov_ord_result_desc'
-    },
-    {
-        'column_name'       : 'prov_ord_trtmt_typ_cd',
-        'domain_name'       : 'emr_prov_ord.prov_ord_trtmt_typ_cd',
-        'comp_column_names' : ['prov_ord_trtmt_typ_cd_qual']
-    },
-    {
-        'column_name'           : 'prov_ord_rfrd_speclty_cd',
-        'domain_name'           : 'emr_prov_ord.prov_ord_rfrd_speclty_cd',
-        'comp_column_names'     : ['prov_ord_rfrd_speclty_cd_qual'],
-        'whitelist_column_name' : 'gen_ref_cd'
-    },
-    {
-        'column_name': 'prov_ord_specl_instrs_desc',
-        'domain_name': 'emr_prov_ord.prov_ord_specl_instrs_desc'
-    }
-]
+whitelists = []
 
-def filter(sqlc, update_whitelists=lambda x: x):
+def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
+    if not additional_transforms:
+        additional_transforms = {}
+
+    modified_transformer = dict(provider_order_transformer)
+    modified_transformer.update(additional_transforms)
+
     def out(df):
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
             *[
                 postprocessor.apply_whitelist(sqlc, whitelist['column_name'],
-                    whitelist['domain_name'], whitelist.get('comp_column_names'),
-                    whitelist.get('whitelist_column_name'), whitelist.get('clean_up_freetext'))
+                    whitelist['domain_name'], whitelist.get('comp_col_names'),
+                    whitelist.get('whitelist_col_name'), whitelist.get('clean_up_freetext_fn'))
                 for whitelist in whtlsts
             ]
         )(
-            emr_priv_common.filter(df, provider_order_transformer)
+            emr_priv_common.filter(df, modified_transformer)
         )
     return out

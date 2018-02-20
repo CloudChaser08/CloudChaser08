@@ -32,10 +32,10 @@ def test_filter(spark):
         StructField('enc_desc', StringType())
     ]))
 
-    # assertion with no additional transforms
+    # assertion with no additional transforms and no whitelisting
     assert encounter_priv.filter(spark['sqlContext'])(test_df).collect() \
-        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', None),
-            Row('90', '1927', '2017-01-01', 'dummyval2', None, 'GOODVAL')]
+        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', 'badval'),
+            Row('90', '1927', '2017-01-01', 'dummyval2', 'badval', 'goodval')]
 
     # save original state of built-in transformer
     old_transformer = Transformer(**dict(encounter_priv.encounter_transformer.transforms))
@@ -45,9 +45,15 @@ def test_filter(spark):
         return whitelist + [{
             'column_name': 'notransform',
             'domain_name': 'emr_enc_test.notransform'
+        }, {
+            'column_name': 'enc_typ_nm',
+            'domain_name': 'emr_enc.enc_typ_nm'
+        }, {
+            'column_name': 'enc_desc',
+            'domain_name': 'emr_enc.enc_desc'
         }]
 
-    # assertion including additional transforms
+    # assertion including additional transforms and whitelisting
     assert encounter_priv.filter(
         spark['sqlContext'],
         update_whitelists=whitelist_update,
