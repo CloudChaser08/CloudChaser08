@@ -29,9 +29,11 @@ pharmacy_transformer = priv_common.Transformer(
     ]
 ).append(
     priv_common.Transformer(**dict(map(
-        lambda c: (c, priv_common.TransformFunction(
-            post_norm_cleanup.nullify_due_to_level_of_service, [c, 'level_of_service']
-        )), columns_to_nullify
+        lambda c: (c, [
+            priv_common.TransformFunction(
+                post_norm_cleanup.nullify_due_to_level_of_service, [c, 'level_of_service']
+            )
+        ]), columns_to_nullify
     )))
 )
 
