@@ -1,6 +1,9 @@
 from pyspark.sql.functions import col, lit
 
 def apply_schema(df, schema, columns_to_fill=None):
+    return apply_schema_func(schema, columns_to_fill)(df)
+
+def apply_schema_func(schema, cols_to_fill=None):
     '''
         Apply/enforce a schema on df using one of 3 strategies:
             1. The input DataFrame column names match a subset of the schema
@@ -22,29 +25,33 @@ def apply_schema(df, schema, columns_to_fill=None):
             input DataFrame are filld with nulls
     '''
 
-    if not columns_to_fill:
-        columns_to_fill = []
+    def out(df):
+        columns_to_fill = cols_to_fill
+        if not columns_to_fill:
+            columns_to_fill = []
 
-    for c in columns_to_fill:
-        if not c in schema.names:
-            raise ValueError("Column {} is not part of the schema".format(c))
-
-    if len(df.columns) != len(schema) and not columns_to_fill:
-        for c in df.columns:
+        for c in columns_to_fill:
             if not c in schema.names:
-                    raise ValueError("Column {} is not part of the schema".format(c))
-            
-        columns_to_fill = df.columns
+                raise ValueError("Column {} is not part of the schema".format(c))
 
-    if not columns_to_fill:
-        columns_to_fill = schema.names
+        if len(df.columns) != len(schema) and not columns_to_fill:
+            for c in df.columns:
+                if not c in schema.names:
+                        raise ValueError("Column {} is not part of the schema".format(c))
 
-    new_columns = []
-    for field in schema:
-        if field.name in columns_to_fill:
-            col_value = col(df.columns[columns_to_fill.index(field.name)])
-        else:
-            col_value = lit(None)
-        new_columns.append(col_value.cast(field.dataType).alias(field.name))
+            columns_to_fill = df.columns
 
-    return df.select(*new_columns)
+        if not columns_to_fill:
+            columns_to_fill = schema.names
+
+        new_columns = []
+        for field in schema:
+            if field.name in columns_to_fill:
+                col_value = col(df.columns[columns_to_fill.index(field.name)])
+            else:
+                col_value = lit(None)
+            new_columns.append(col_value.cast(field.dataType).alias(field.name))
+
+        return df.select(*new_columns)
+
+    return out
