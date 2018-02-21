@@ -9,7 +9,6 @@ from subprocess import check_call, check_output
 
 import spark.helpers.file_utils as file_utils
 
-import spark.stats.config.reader.config_reader as config_reader
 import spark.helpers.stats.utils as stats_utils
 
 results = None
@@ -72,13 +71,11 @@ def test_init(spark):
             'earliest_date'     : '1990-01-01'
         }
 
-    provider = 'test_provider'
     quarter = 'Q12017'
     start_date = '2015-04-01'
     end_date = '2017-04-01'
-    results = stats_runner.run(spark['spark'], spark['sqlContext'], \
-            provider, quarter, start_date, end_date,
-            provider_config, output_dir)
+    results = stats_runner.run(spark['spark'], spark['sqlContext'],
+            quarter, start_date, end_date, provider_config)
 
 
 def test_output_directory_created():

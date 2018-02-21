@@ -4,10 +4,12 @@ import logging
 import inspect
 
 import spark.spark_setup as spark_setup
+import spark.helpers.file_utils as file_utils
+import spark.stats.config.reader.config_reader as config_reader
 
 import spark.stats.processor as processor
 
-def run(spark, sqlContext, provider, quarter, start_date, end_date, provider_config, output_dir):
+def run(spark, sqlContext, quarter, start_date, end_date, provider_config, output_dir):
     # Calculate marketplace stats
     marketplace_stats = processor.run_marketplace_stats(
             spark, sqlContext, quarter, start_date,
@@ -58,8 +60,7 @@ def main(args):
                         .init('Feed {} marketplace stats'.format(feed_id))
 
     # Calculate stats
-    run(spark, sqlContext, provider, quarter, start_date, end_date, provider_config)
-
+    run(spark, sqlContext, quarter, start_date, end_date, provider_conf)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -70,4 +71,3 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', type = str)
     args = parser.parse_args()
     main(args)
-
