@@ -559,7 +559,7 @@ CREATE VIEW default.medicalclaims (
     ELSE '0_PREDATES_HVM_HISTORY'
     END AS part_processdate
 FROM default.medicalclaims_new
-WHERE part_provider IN ('practice_insight', 'emdeon', 'cardinal_rcm')
+WHERE part_provider IN ('practice_insight', 'cardinal_rcm')
 UNION ALL
 SELECT CAST(record_id AS bigint),
     claim_id,
