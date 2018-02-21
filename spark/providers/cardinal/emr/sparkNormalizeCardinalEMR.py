@@ -10,9 +10,17 @@ import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.explode as explode
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-from spark.helpers.privacy.common import update_whitelist
 from spark.helpers.privacy.common import Transformer, TransformFunction
-import spark.common.emr.schemas as emr_schemas
+
+from spark.common.emr.vital_sign import schema_v6 as vital_sign_schema
+from spark.common.emr.medication import schema_v6 as medication_schema
+from spark.common.emr.clinical_observation import schema_v6 as clinical_observation_schema
+from spark.common.emr.encounter import schema_v6 as encounter_schema
+from spark.common.emr.diagnosis import schema_v7 as diagnosis_schema
+from spark.common.emr.lab_result import schema_v6 as lab_result_schema
+from spark.common.emr.procedure import schema_v6 as procedure_schema
+from spark.common.emr.provider_order import schema_v6 as provider_order_schema
+
 import spark.providers.cardinal.emr.transactional_schemas as cardinal_schemas
 from spark.helpers.privacy.emr import                   \
     encounter as priv_encounter,                        \
@@ -112,11 +120,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized_procedure = schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_procedure_enc.sql', return_output=True, source_file_path=script_path
-        ), emr_schemas.procedure_v6
+        ), procedure_schema
     ).union(schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_procedure_disp.sql', return_output=True, source_file_path=script_path
-        ), emr_schemas.procedure_v6
+        ), procedure_schema
     ))
     normalized_provider_order = runner.run_spark_script(
         'normalize_provider_order.sql', return_output=True, source_file_path=script_path
@@ -138,7 +146,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         {
             'normalized_data': normalized_encounter,
             'table_name': 'normalized_encounter',
-            'schema': emr_schemas.encounter_v6,
+            'schema': encounter_schema,
             'script_name': 'emr/encounter_common_model_v6.sql',
             'data_type': 'encounter',
             'model_version': '06',
@@ -165,7 +173,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         }, {
             'normalized_data': normalized_diagnosis,
             'table_name': 'normalized_diagnosis',
-            'schema': emr_schemas.diagnosis_v7,
+            'schema': diagnosis_schema,
             'script_name': 'emr/diagnosis_common_model_v7.sql',
             'data_type': 'diagnosis',
             'model_version': '07',
@@ -198,7 +206,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         }, {
             'normalized_data': normalized_procedure,
             'table_name': 'normalized_procedure',
-            'schema': emr_schemas.procedure_v6,
+            'schema': procedure_schema,
             'script_name': 'emr/procedure_common_model_v6.sql',
             'data_type': 'procedure',
             'model_version': '06',
@@ -217,7 +225,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         }, {
             'normalized_data': normalized_provider_order,
             'table_name': 'normalized_provider_order',
-            'schema': emr_schemas.provider_order_v6,
+            'schema': provider_order_schema,
             'script_name': 'emr/provider_order_common_model_v6.sql',
             'data_type': 'provider_order',
             'model_version': '06',
@@ -240,7 +248,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         }, {
             'normalized_data': normalized_lab_result,
             'table_name': 'normalized_lab_result',
-            'schema': emr_schemas.lab_result_v6,
+            'schema': lab_result_schema,
             'script_name': 'emr/lab_result_common_model_v6.sql',
             'data_type': 'lab_result',
             'model_version': '06',
@@ -252,7 +260,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         }, {
             'normalized_data': normalized_medication,
             'table_name': 'normalized_medication',
-            'schema': emr_schemas.medication_v6,
+            'schema': medication_schema,
             'script_name': 'emr/medication_common_model_v6.sql',
             'data_type': 'medication',
             'model_version': '06',
@@ -280,7 +288,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         }, {
             'normalized_data': normalized_clinical_observation,
             'table_name': 'normalized_clinical_observation',
-            'schema': emr_schemas.clinical_observation_v6,
+            'schema': clinical_observation_schema,
             'script_name': 'emr/clinical_observation_common_model_v6.sql',
             'data_type': 'clinical_observation',
             'model_version': '06',
@@ -306,7 +314,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         }, {
             'normalized_data': normalized_vital_sign,
             'table_name': 'normalized_vital_sign',
-            'schema': emr_schemas.vital_sign_v6,
+            'schema': vital_sign_schema,
             'script_name': 'emr/vital_sign_common_model_v6.sql',
             'data_type': 'vital_sign',
             'model_version': '06',
