@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from subprocess import check_output, check_call
 import os
 
+import subdags.s3_fetch_file as s3_fetch_file
 import subdags.split_push_files as split_push_files
 import subdags.s3_validate_file as s3_validate_file
 
@@ -167,7 +168,7 @@ def generate_fetch_dag(
                     day_offset = EMDEON_RX_DAY_OFFSET
                 ),
                 's3_prefix'              : s3_path_template,
-                's3_bucket'              : 'salusv' if airflow_env == 'test' else 'healthverity'
+                's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
             }
         ),
         task_id='fetch_' + task_id + '_file',
@@ -178,10 +179,6 @@ def generate_fetch_dag(
 fetch_transaction_file = generate_fetch_dag(
     'transaction', '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]), TRANSACTION_FILE_NAME_TEMPLATE
 )
-fetch_link_file = generate_fetch_dag(
-    'link', '/'.join(S3_LINK_RAW_PATH.split('/')[3:]), LINK_FILE_NAME_TEMPLATE
-)
-
 
 unzip_file = PythonOperator(
     task_id='unzip_file',
