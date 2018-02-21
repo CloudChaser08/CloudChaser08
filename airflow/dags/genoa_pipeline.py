@@ -59,7 +59,7 @@ MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Genoa deid file'
-DEID_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_{}{}{}'
+DEID_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_DeID_PHI_{}{}{}'
 MINIMUM_DEID_FILE_SIZE = 500
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
@@ -107,11 +107,11 @@ def generate_file_validation_dag(
             mdag.schedule_interval,
             {
                 'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                    path_template,
+                    path_template + '_\d{{6}}',
                     month_offset=GENOA_MONTH_OFFSET
                 ),
                 'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
-                    path_template
+                    path_template + '_\d{{6}}'
                 ),
                 'minimum_file_size'  : minimum_file_size,
                 's3_prefix'          : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
@@ -143,7 +143,7 @@ fetch_transaction = SubDagOperator(
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE, month_offset=GENOA_MONTH_OFFSET
+                TRANSACTION_FILE_NAME_TEMPLATE + '_\d{{6}}', month_offset=GENOA_MONTH_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
