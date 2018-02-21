@@ -2,7 +2,7 @@ import pytest
 
 import logging
 
-import spark.providers.cardinal_pms.era.sparkNormalizeCardinalPMS as cardinal_pms
+import spark.providers.cardinal_pms.era.sparkNormalizeCardinalPMSERA as cardinal_pms
 
 detail_line_results = []
 summary_results = []
