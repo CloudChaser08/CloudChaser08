@@ -153,7 +153,7 @@ fetch_transaction_file = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func': generate_insert_date_into_template_function(
+            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_PATH.split('/')[3:]),
