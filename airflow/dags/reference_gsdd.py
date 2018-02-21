@@ -55,7 +55,14 @@ def sftp_fetch_files():
 
 def copy_files_to_s3():
     for filename in FILES_OF_INTEREST:
-        s3_utils.copy_file(TMP_PATH+filename, DESTINATION+filename)
+        s3_utils.copy_file(TMP_PATH + filename, DESTINATION + filename)
+
+
+def clean_tmp_dir():
+    check_call([
+        'rm', TMP_PATH + '*'
+    ])
+
 
 fetch_files = PythonOperator(
     task_id='sftp_fetch_files',
@@ -68,23 +75,14 @@ move_files_to_s3 = PythonOperator(
     task_id='move_files_to_s3',
     python_callable=copy_files_to_s3,
     dag=mdag
-    )
+)
 
-
-def clean_up_workspace_step(template):
-    def execute(ds, **kwargs):
-        check_call([
-            'rm', '-rf', TMP_PATH
-        ])
-    return PythonOperator(
-        task_id='clean_up_workspace',
-        provide_context=True,
-        python_callable=execute,
-        trigger_rule='all_done',
-        dag=mdag
-    )
-
-clean_up_workspace = clean_up_workspace_step(TMP_PATH)
+clean_up_tmp_dir = PythonOperator(
+    task_id='clean_up_tmp_dir',
+    python_callable=clean_tmp_dir,
+    trigger_rule='all_done',
+    dag=mdag
+)
 
 if HVDAG.HVDAG.airflow_env != 'test':
     update_s3_with_new_files = BashOperator(
@@ -98,5 +96,4 @@ if HVDAG.HVDAG.airflow_env != 'test':
     move_files_to_s3.set_upstream(update_s3_with_new_files)
 
 move_files_to_s3.set_upstream(fetch_files)
-clean_up_workspace.set_upstream(move_files_to_s3)
-
+clean_up_tmp_dir.set_upstream(move_files_to_s3)
