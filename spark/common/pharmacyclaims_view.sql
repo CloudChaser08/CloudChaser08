@@ -19,6 +19,7 @@ CREATE VIEW default.pharmacyclaims (
         year_of_injury,
         date_authorized,
         time_authorized,
+        discharge_date,
         transaction_code_std,
         transaction_code_vendor,
         response_code_std,
@@ -153,6 +154,7 @@ CREATE VIEW default.pharmacyclaims (
     year_of_injury,
     date_authorized,
     time_authorized,
+    discharge_date,
     transaction_code_std,
     transaction_code_vendor,
     response_code_std,
@@ -271,7 +273,7 @@ CREATE VIEW default.pharmacyclaims (
     ELSE '0_PREDATES_HVM_HISTORY'
     END AS part_processdate
 FROM default.pharmacyclaims_20180205
-WHERE part_provider IN ('apothecary_by_design')
+WHERE part_provider IN ('apothecary_by_design', 'genoa')
 UNION ALL
     SELECT record_id,
     claim_id,
@@ -292,6 +294,7 @@ UNION ALL
     year_of_injury,
     date_authorized,
     time_authorized,
+    discharge_date,
     transaction_code_std,
     transaction_code_vendor,
     response_code_std,
@@ -420,12 +423,10 @@ SELECT CAST(record_id AS bigint),
     data_set,
     CASE WHEN data_feed = 'accredo pharmacy claims' THEN '16'
          WHEN data_feed = 'express scripts pharmacy claims' THEN '16'
-         WHEN data_feed = 'genoa pharmacy claims' THEN '21'
          WHEN data_feed = 'webmd pharmacy claims' THEN '11'
          ELSE data_feed END AS data_feed,
     CASE WHEN data_vendor = 'accredo' THEN '17'
          WHEN data_vendor = 'express scripts' THEN '17'
-         WHEN data_vendor = 'genoa' THEN '20'
          WHEN data_vendor = 'webmd' THEN '11'
          ELSE data_vendor END AS data_vendor,
     source_version,
@@ -439,6 +440,7 @@ SELECT CAST(record_id AS bigint),
     SUBSTRING(date_injury, 0, 4),
     CAST(date_authorized AS date),
     time_authorized,
+    NULL AS discharge_date,
     transaction_code_std,
     transaction_code_vendor,
     response_code_std,
@@ -559,5 +561,5 @@ SELECT CAST(record_id AS bigint),
       ELSE REGEXP_REPLACE(part_processdate, '/', '-')
     END AS part_processdate
 FROM default.pharmacyclaims_old
-WHERE part_provider IN ('genoa', 'express_scripts', 'accredo')
+WHERE part_provider IN ('express_scripts', 'accredo')
 ;
