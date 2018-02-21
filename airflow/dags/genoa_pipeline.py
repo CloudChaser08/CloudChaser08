@@ -39,7 +39,7 @@ mdag = HVDAG.HVDAG(
     default_args=default_args
 )
 
-GENOA_DAY_OFFSET = 0
+GENOA_MONTH_OFFSET = 1
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -71,7 +71,7 @@ def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL +
             date_utils.insert_date_into_template(
                 DEID_FILE_NAME_TEMPLATE,
-                kwargs, day_offset=GENOA_DAY_OFFSET
+                kwargs, month_offset=GENOA_MONTH_OFFSET
             )]
 
 
@@ -80,7 +80,7 @@ def get_transaction_file_paths(ds, kwargs):
     return [file_dir +
             date_utils.insert_date_into_template(
                 TRANSACTION_FILE_NAME_TEMPLATE,
-                kwargs, day_offset=GENOA_DAY_OFFSET
+                kwargs, month_offset=GENOA_MONTH_OFFSET
             )]
 
 
@@ -89,7 +89,7 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     encrypted_file_path = file_dir \
         + date_utils.insert_date_into_template(
             TRANSACTION_FILE_NAME_TEMPLATE,
-            kwargs, day_offset=GENOA_DAY_OFFSET
+            kwargs, month_offset=GENOA_MONTH_OFFSET
         )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
@@ -108,7 +108,7 @@ def generate_file_validation_dag(
             {
                 'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
                     path_template,
-                    day_offset=GENOA_DAY_OFFSET
+                    month_offset=GENOA_MONTH_OFFSET
                 ),
                 'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
                     path_template
@@ -143,7 +143,7 @@ fetch_transaction = SubDagOperator(
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE, day_offset=GENOA_DAY_OFFSET
+                TRANSACTION_FILE_NAME_TEMPLATE, month_offset=GENOA_MONTH_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -181,7 +181,7 @@ split_transaction = SubDagOperator(
                 TRANSACTION_FILE_NAME_TEMPLATE
             ),
             's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_S3_SPLIT_URL, day_offset=GENOA_DAY_OFFSET
+                TRANSACTION_S3_SPLIT_URL, month_offset=GENOA_MONTH_OFFSET
             ),
             'num_splits'               : 20
         }
@@ -227,7 +227,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset=GENOA_DAY_OFFSET)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, month_offset=GENOA_MONTH_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -245,11 +245,11 @@ detect_move_normalize_dag = SubDagOperator(
                 date_utils.insert_date_into_template(
                     DEID_FILE_NAME_TEMPLATE,
                     k,
-                    day_offset=GENOA_DAY_OFFSET
+                    month_offset=GENOA_MONTH_OFFSET
                 )
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
-                '{}/{}/{}', day_offset=GENOA_DAY_OFFSET
+                '{}/{}/{}', month_offset=GENOA_MONTH_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '8ffacdf6-989e-46ac-93e6-6bb3559baa36',
