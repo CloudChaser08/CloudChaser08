@@ -92,7 +92,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     hvm_historical = postprocessor.coalesce_dates(
                     runner.sqlContext,
-                    '43',
+                    '66',
                     date(1901, 1, 1),
                     'HVM_AVAILABLE_HISTORY_START_DATE',
                     'EARLIEST_VALID_SERVICE_DATE'
