@@ -1,6 +1,6 @@
 from pyspark.sql.types import StructType, StructField, LongType, FloatType, IntegerType, StringType, DateType
 
-schema = StructType([
+schema_v1 = StructType([
     StructField('row_id',                            LongType(),     True),
     StructField('hv_medcl_clm_pymt_sumry_id',        StringType(),   True),
     StructField('crt_dt',                            DateType(),     True),
@@ -96,8 +96,10 @@ schema = StructType([
     StructField('reimbmt_rate_pct',                  FloatType(),    True),
     StructField('clm_hcpcs_paybl_amt',               FloatType(),    True),
     StructField('clm_esrd_pymt_amt',                 FloatType(),    True),
+    StructField('clm_amt_seq_num',                   IntegerType(),    True),
     StructField('clm_amt',                           FloatType(),    True),
     StructField('clm_amt_qual',                      StringType(),   True),
+    StructField('clm_qty_seq_num',                   IntegerType(),  True),
     StructField('clm_qty',                           IntegerType(),  True),
     StructField('clm_qty_qual',                      StringType(),   True),
     StructField('clm_adjmt_seq_num',                 IntegerType(),  True),
