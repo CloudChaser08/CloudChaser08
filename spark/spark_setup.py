@@ -1,4 +1,5 @@
 from pyspark.sql import SQLContext, SparkSession
+from pyspark.sql.types import ArrayType, StringType
 from spark.helpers.udf.post_normalization_cleanup import *
 from spark.helpers.udf.general_helpers import *
 from spark.helpers.udf.medicalclaims_helpers import *
@@ -108,10 +109,10 @@ def init(provider, local=False):
         'clean_up_freetext', clean_up_freetext
     )
     sqlContext.registerFunction(
-        'densify_scalar_array', densify_scalar_array
+        'densify_scalar_array', densify_scalar_array, ArrayType(StringType())
     )
     sqlContext.registerFunction(
-        'densify_2d_array', densify_2d_array
+        'densify_2d_array', densify_2d_array, ArrayType(ArrayType(StringType()))
     )
 
     # helper functions for normalizing medical claims

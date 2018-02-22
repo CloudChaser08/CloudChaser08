@@ -8,4 +8,6 @@ def load(runner, location, columns, file_type, delimiter=','):
     schema = StructType([StructField(c, StringType(), True) for c in columns])
 
     if file_type == 'csv':
-        return runner.sqlContext.read.csv(location, schema=schema, sep=delimiter)
+        df = runner.sqlContext.read.csv(location, schema=schema, sep=delimiter)
+        df = df or runner.sqlContext([], schema=schema)
+        return df
