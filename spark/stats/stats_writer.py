@@ -27,6 +27,19 @@ YOY_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_yearoveryearreportitem WHERE 
 YOY_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_yearoveryearreportitem " \
                           "(startyear, value, datafeed_id) values ('{}', '{}', '{}');"
 
+EPI_AGE_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_agereportitem WHERE datafeed_id = '{}';"
+EPI_AGE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_agereportitem (value, age, datafeed_id) " \
+                              "values ('{}', '{}', '{}');"
+EPI_GENDER_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_genderreportitem WHERE datafeed_id = '{}';"
+EPI_GENDER_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_genderreportitem (value, gender, datafeed_id) " \
+                                 "values ('{}', '{}', '{}');"
+EPI_STATE_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_georeportitem WHERE datafeed_id = '{}';"
+EPI_STATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_georeportitem (value, state, datafeed_id) " \
+                                "values ('{}', '{}', '{}');"
+EPI_REGION_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_regionreportitem WHERE datafeed_id = '{}';"
+EPI_REGION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_regionreportitem (value, region, datafeed_id) " \
+                                 "values ('{}', '{}', '{}');"
+
 
 def _generate_queries(stats, datafeed_id):
     """
@@ -57,7 +70,13 @@ def _generate_queries(stats, datafeed_id):
                     yoy_stat['year'], yoy_stat['count'], datafeed_id
                 ))
         elif stat_name == 'epi':
-            pass
+            stat_queries.append(EPI_AGE_DELETE_SQL_TEMPLATE.format(datafeed_id))
+            stat_queries.append(EPI_GENDER_DELETE_SQL_TEMPLATE.format(datafeed_id))
+            stat_queries.append(EPI_STATE_DELETE_SQL_TEMPLATE.format(datafeed_id))
+            stat_queries.append(EPI_REGION_DELETE_SQL_TEMPLATE.format(datafeed_id))
+
+            for epi_stat in stat_value:
+
         elif stat_name == 'fill_rate':
             pass
 
