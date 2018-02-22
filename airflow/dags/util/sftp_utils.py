@@ -4,11 +4,11 @@
 import pysftp
 
 
-def fetch_file(abs_external_filepath, abs_internal_path, external_host, user, password, cnopts=None):
+def fetch_file(abs_external_filepath, abs_internal_path, external_host, user, password):
     """
     Fetch a file from SFTP
     """
-    with pysftp.Connection(external_host, username=user, password=password, cnopts=cnopts) as conn:
+    with pysftp.Connection(external_host, username=user, password=password) as conn:
         conn.get(abs_external_filepath, abs_internal_path)
 
 

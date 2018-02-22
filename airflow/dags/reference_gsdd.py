@@ -1,20 +1,18 @@
 import common.HVDAG as HVDAG
 from datetime import datetime, timedelta
-from subprocess import check_call
 import json
-import pysftp
-
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators import BashOperator, PythonOperator, SubDagOperator
 from airflow.models import Variable
+import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
+import util.date_utils as date_utils
 import util.sftp_utils as sftp_utils
 import util.s3_utils as s3_utils
 
 for m in [sftp_utils, HVDAG]:
     reload(m)
 
-TMP_PATH = '/tmp/reference/gsdd/'
+TMP_PATH_TEMPLATE = '/tmp/reference/gsdd/{}{}{}/'
 
 if HVDAG.HVDAG.airflow_env == 'test':
     DESTINATION = 's3://salusv/testing/dewey/airflow/e2e/reference/gsdd/'
@@ -31,7 +29,6 @@ default_args = {
     'retry_delay': timedelta(minutes=2)
 }
 
-
 mdag = HVDAG.HVDAG(
     'reference_gsdd',
     default_args=default_args,
@@ -39,33 +36,36 @@ mdag = HVDAG.HVDAG(
 )
 
 
-def sftp_fetch_files():
+def sftp_fetch_files(ds, **kwargs):
+    file_path = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
     sftp_config = json.loads(Variable.get('gsdd_cert'))
     for filename in FILES_OF_INTEREST:
-        cnopts = pysftp.CnOpts()
-        cnopts.hostkeys = None
         sftp_utils.fetch_file(sftp_config['path'] + filename,
-                              TMP_PATH + filename,
+                              file_path + filename,
                               sftp_config['host'],
                               sftp_config['user'],
                               sftp_config['password'],
-                              cnopts
                               )
 
 
-def copy_files_to_s3():
+def copy_files_to_s3(ds, **kwargs):
+    file_path = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
     for filename in FILES_OF_INTEREST:
-        s3_utils.copy_file(TMP_PATH + filename, DESTINATION + filename)
+        s3_utils.copy_file(file_path + filename, DESTINATION + filename)
 
 
-def clean_tmp_dir():
-    check_call([
-        'rm', TMP_PATH + '*'
-    ])
+create_tmp_files = BashOperator(
+    task_id='create_tmp_dir',
+    bash_command='mkdir -p ' + TMP_PATH_TEMPLATE.format('{{ ds_nodash }}', '', '') + ';'
+    'touch ' + TMP_PATH_TEMPLATE.format('{{ ds_nodash }}', '', '') + 'GSDD.db;'
+    'touch ' + TMP_PATH_TEMPLATE.format('{{ ds_nodash }}', '', '') + 'GSDDMonograph.db;',
+    dag=mdag
+)
 
 
 fetch_files = PythonOperator(
     task_id='sftp_fetch_files',
+    provide_context=True,
     python_callable=sftp_fetch_files,
     dag=mdag
 )
@@ -73,14 +73,23 @@ fetch_files = PythonOperator(
 
 move_files_to_s3 = PythonOperator(
     task_id='move_files_to_s3',
+    provide_context=True,
     python_callable=copy_files_to_s3,
     dag=mdag
 )
 
-clean_up_tmp_dir = PythonOperator(
-    task_id='clean_up_tmp_dir',
-    python_callable=clean_tmp_dir,
-    trigger_rule='all_done',
+
+clean_up_workspace = SubDagOperator(
+    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+        'reference_gsdd',
+        'clean_up_workspace',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE
+        }
+    ),
+    task_id='clean_up_workspace',
     dag=mdag
 )
 
@@ -88,12 +97,11 @@ if HVDAG.HVDAG.airflow_env != 'test':
     update_s3_with_new_files = BashOperator(
         task_id='update_s3_from_db_files',
         bash_command='docker run 581191604223.dkr.ecr.us-east-1.amazonaws.com/hvgsdd',
-        retries=3,
         dag=mdag
     )
 
-    update_s3_with_new_files.set_upstream(fetch_files)
-    move_files_to_s3.set_upstream(update_s3_with_new_files)
+    update_s3_with_new_files.set_upstream(move_files_to_s3)
 
+fetch_files.set_upstream(create_tmp_files)
 move_files_to_s3.set_upstream(fetch_files)
-clean_up_tmp_dir.set_upstream(move_files_to_s3)
+clean_up_workspace.set_upstream(move_files_to_s3)
