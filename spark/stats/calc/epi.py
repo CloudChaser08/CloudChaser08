@@ -25,8 +25,8 @@ def calculate_epi(provider_conf, field):
         if len(line.strip()) != 0:
             res = line.strip().split(';')[2:]
             value = res[0]
-            field = ';'.join(res[1:])
-            output.append({'field': field, 'value': value})
+            output_field = ';'.join(res[1:])
+            output.append({'field': output_field, 'value': value})
 
     return output
 
