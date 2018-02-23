@@ -41,7 +41,7 @@ def main(args):
     output_dir = args.output_dir
 
     # Get the providers config
-    this_file = inspect.getmodule(inspect.stack()[1][0]).__file__
+    this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
     config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
     provider_conf = config_reader.get_provider_config(
                                     config_file, feed_id)
