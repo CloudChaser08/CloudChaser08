@@ -1,26 +1,27 @@
 import argparse
 import os
 import logging
+import inspect
 
 import spark.spark_setup as spark_setup
 
 import spark.stats.processor as processor
 
+def run(spark, sqlContext, provider, quarter, start_date, end_date, provider_config, output_dir):
+    # Calculate marketplace stats
+    marketplace_stats = processor.run_marketplace_stats(
+            spark, sqlContext, quarter, start_date,
+            end_date, provider_config
+        )
 
-def run(spark, sqlContext, feed_id, quarter, start_date,
-        end_date, output_dir):
+    # Calculate epi calcs
+    epi_calcs = processor.get_epi_calcs(provider_config)
 
-    all_stats = processor.run_marketplace_stats(spark, sqlContext,
-                feed_id, quarter, start_date, end_date)
+    stats = dict(marketplace_stats, **epi_calcs)
 
-    output_dir = output_dir[:-1] if output_dir.endswith('/') else output_dir
-
-    try:
-        os.makedirs(output_dir)
-    except OSError:
-        logging.warn("Output dir already exists")
-
-    for key, stat in all_stats.items():
+    # Write out results
+    feed_id = provider_config['datafeed_id']
+    for key, stat in stats.items():
         if stat:
             with open(output_dir + '/' + feed_id + '_' + key + '.csv', 'w') as f:
                 # Write out the header
@@ -29,8 +30,6 @@ def run(spark, sqlContext, feed_id, quarter, start_date,
                 for row in stat:
                     # Write out each row
                     f.write(','.join([str(row[c]) for c in cols]) + '\n')
-
-    return all_stats
 
 
 def main(args):
@@ -41,13 +40,25 @@ def main(args):
     end_date = args.end_date
     output_dir = args.output_dir
 
+    # Get the providers config
+    this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
+    config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
+    provider_conf = config_reader.get_provider_config(
+                                    config_file, feed_id)
+
+    # Create output directory
+    output_dir = output_dir[:-1] if output_dir.endswith('/') else output_dir
+    try:
+        os.makedirs(output_dir)
+    except OSError:
+        logging.warn("Output dir already exists")
+
     # set up spark
     spark, sqlContext = spark_setup \
                         .init('Feed {} marketplace stats'.format(feed_id))
 
-    # Calculate marketplace stats
-    run(spark, sqlContext, feed_id, quarter, start_date,
-        end_date, earliest_date, output_dir)
+    # Calculate stats
+    run(spark, sqlContext, provider, quarter, start_date, end_date, provider_config)
 
 
 if __name__ == '__main__':
@@ -59,3 +70,4 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', type = str)
     args = parser.parse_args()
     main(args)
+

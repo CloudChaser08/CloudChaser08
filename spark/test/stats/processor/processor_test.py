@@ -22,12 +22,10 @@ fill_rate_conf = None
 @pytest.fixture(autouse=True)
 def setup_teardown():
     old_get_data_func = stats_utils.get_provider_data
-    old_get_provider_config_func = config_reader.get_provider_config
 
     yield
 
     stats_utils.get_provider_data = old_get_data_func
-    config_reader.get_provider_config = old_get_provider_config_func
 
 
 @pytest.mark.usefixtures('spark')
@@ -36,8 +34,6 @@ def test_init(spark):
             results_no_distinct_column, results_no_fill_rate, \
             columns, data_row, fill_rate_conf, old_get_data_func, \
             old_get_provider_config_func
-
-    feed_id = '27'
 
     spark_obj = spark['spark']
     sqlContext = spark['sqlContext']
@@ -67,8 +63,7 @@ def test_init(spark):
 
     fill_rate_conf = {"columns": ['hvid', 'col_2']}
 
-    get_prov_conf = Mock(
-        return_value = {
+    prov_conf = {
             'name'              : 'test',
             'datafeed_id'       : '27',
             'datatype'          : 'medicalclaims',
@@ -83,11 +78,8 @@ def test_init(spark):
             'epi_calcs'         : None,
             'earliest_date'     : '1992-11-07'
         }
-    )
 
-    get_prov_conf_no_unique_column = Mock(
-        return_value =
-        {
+    prov_conf_no_unique_column = {
             'name'              : 'test',
             'datafeed_id'       : '27',
             'datatype'          : 'medicalclaims',
@@ -102,10 +94,8 @@ def test_init(spark):
             'epi_calcs'         : None,
             'earliest_date'     : '1992-11-07'
         }
-    )
 
-    get_prov_conf_no_fill_rate_calc = Mock(
-        return_value = {
+    prov_conf_no_fill_rate_calc = {
             'name'              : 'test',
             'datafeed_id'       : '27',
             'datatype'          : 'medicalclaims',
@@ -119,22 +109,21 @@ def test_init(spark):
             'epi_calcs'         : None,
             'earliest_date'     : '1992-11-07'
         }
-    )
 
-    config_reader.get_provider_config = get_prov_conf
     results_distinct_column = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
-                    feed_id, quarter, start_date, end_date)
+                    quarter, start_date, \
+                    end_date, prov_conf)
 
-    config_reader.get_provider_config = get_prov_conf_no_unique_column
     results_no_distinct_column = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
-                    feed_id, quarter, start_date, end_date)
+                    quarter, start_date, \
+                    end_date, prov_conf_no_unique_column)
 
-    config_reader.get_provider_config = get_prov_conf_no_fill_rate_calc
     results_no_fill_rate = processor.run_marketplace_stats( \
                     spark_obj, sqlContext, \
-                    feed_id, quarter, start_date, end_date)
+                    quarter, start_date, \
+                    end_date, prov_conf_no_fill_rate_calc)
 
 def test_fill_rate_calculated():
     assert results_distinct_column['fill_rates'] is not None
