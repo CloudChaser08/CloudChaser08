@@ -53,7 +53,7 @@ SELECT
       WHEN lab.min_norm = 'NULL'
       THEN NULL
       ELSE lab.min_norm
-    END	AS lab_result_norm_min_msrmt,
+    END                                                         AS lab_result_norm_min_msrmt,
     CASE
       WHEN lab.max_norm = 'NULL'
       THEN NULL
