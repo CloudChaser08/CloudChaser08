@@ -39,6 +39,10 @@ DECOMPRESS_PROFILER_STEP = ('Type=CUSTOM_JAR,Name="Decompress Profiler",Jar="com
         'ActionOnFailure=CONTINUE,Args=[tar,-C,/tmp/,-xzf,/tmp/spark-df-profiling.tar.gz]')
 PROFILER_INSTALL_STEP = ('Type=CUSTOM_JAR,Name="Install Profiler",Jar="command-runner.jar",'
         'ActionOnFailure=CONTINUE,Args=[sudo,pip,install,/tmp/spark-df-profiling/]')
+INSTALL_JSONSERDE_STEP = ('Type=CUSTOM_JAR,Name="Install JSONSerde JAR",Jar="command-runner.jar",'
+        'ActionOnFailure=CONTINUE,Args=[sudo, wget, -O,'
+        '/usr/lib/spark/jars/json-serde-1.3.8-jar-with-dependencies.jar,'
+        'http://www.congiu.net/hive-json-serde/1.3.8/hdp23/json-serde-1.3.8-jar-with-dependencies.jar]')
 PROFILING_CONFIG_DB = 'hll_config'
 SELECT_PENDING_REQUESTS = 'SELECT * FROM profiling_request WHERE completed IS NULL'
 UPDATE_GENERATION_LOG = "UPDATE profiling_request SET completed=now(), s3_url=%s WHERE request_id=%s"
@@ -93,7 +97,8 @@ def do_generate_profiles(ds, **kwargs):
 
     requests_to_complete = []
     steps = [BOTO3_INSTALL_STEP, PROFILER_COPY_STEP,
-            DECOMPRESS_PROFILER_STEP, PROFILER_INSTALL_STEP]
+            DECOMPRESS_PROFILER_STEP, PROFILER_INSTALL_STEP,
+            INSTALL_JSONSERDE_STEP]
     for req in profiling_requests:
         (s3_path, report_name) = get_report_info(req)
         steps.append(PROFILING_STEP_TEMPLATE.format(req.analytics_table, report_name, s3_path))
