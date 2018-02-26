@@ -23,7 +23,7 @@ FILES_OF_INTEREST = ['GSDD.db', 'GSDDMonograph.db']
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 3, 1),
+    'start_date': datetime(2018, 2, 1),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
