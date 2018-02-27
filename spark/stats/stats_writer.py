@@ -1,4 +1,5 @@
 import psycopg2
+import boto3
 import os
 import logging
 from functools import reduce
@@ -16,6 +17,8 @@ MARKETPLACE_CONNECTION_DEV_CONFIG = {
     'user': 'hvreadonly',
     'password': os.environ.get('PGPASSWORD')
 }
+
+S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"
 
 KEYSTATS_UPDATE_SQL_TEMPLATE = "UPDATE marketplace_datafeed SET {} = '{}' WHERE id = '{}';"
 
@@ -51,7 +54,6 @@ TOP_VALS_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
                                "VALUES ('{datafield_id}', '{data_feed_id}', '{top_values}') " \
                                "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                "SET top_values = '{top_values}';"
-
 
 
 def _generate_queries(stats, provider_conf):
@@ -132,15 +134,22 @@ def _generate_queries(stats, provider_conf):
     return queries
 
 
-def _write_queries(queries, output_dir, datafeed_id):
+def _write_queries(queries, datafeed_id, quarter):
+    """
+    Write given queries to s3
+    """
     for stat_name, stat_queries in queries.items():
-        with open('{}_{}.sql'.format(datafeed_id, stat_name), 'w') as query_output:
+        filename = '{}_{}.sql'.format(datafeed_id, stat_name)
+        with open(filename, 'w') as query_output:
             query_output.write('BEGIN;')
             query_output.writelines(stat_queries)
             query_output.write('COMMIT;')
+        boto3.client('s3').upload_file(
+            filename, S3_OUTPUT_DIR.split('/')[2], '/'.join(S3_OUTPUT_DIR.format(quarter).split('/')[3:]) + '/'
+        )
 
 
-def write_to_db(stats, sql_scripts_output_dir, provider_conf, dev=True):
+def write_to_db(stats, provider_conf, quarter, dev=True):
     """
     Generate and execute SQL scripts that are used to export given
     stats dictionary to the marketplace DB (dev by default).
@@ -150,7 +159,7 @@ def write_to_db(stats, sql_scripts_output_dir, provider_conf, dev=True):
 
     queries = _generate_queries(stats, provider_conf)
 
-    _write_queries(queries)
+    _write_queries(queries, provider_conf['datafeed_id'], quarter)
 
     conn = psycopg2.connect(**(
         MARKETPLACE_CONNECTION_DEV_CONFIG if dev else MARKETPLACE_CONNECTION_PROD_CONFIG

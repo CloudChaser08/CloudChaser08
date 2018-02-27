@@ -6,32 +6,23 @@ import inspect
 import spark.spark_setup as spark_setup
 import spark.helpers.file_utils as file_utils
 import spark.stats.config.reader.config_reader as config_reader
-
+import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
 
-def run(spark, sqlContext, quarter, start_date, end_date, provider_config, output_dir):
+def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
     # Calculate marketplace stats
     marketplace_stats = processor.run_marketplace_stats(
-            spark, sqlContext, quarter, start_date,
-            end_date, provider_config
-        )
+        spark, sqlContext, quarter, start_date, end_date, provider_config
+    )
 
     # Calculate epi calcs
     epi_calcs = processor.get_epi_calcs(provider_config)
 
     stats = dict(marketplace_stats, **epi_calcs)
 
-    # Write out results
-    feed_id = provider_config['datafeed_id']
-    for key, stat in stats.items():
-        if stat:
-            with open(output_dir + '/' + feed_id + '_' + key + '.csv', 'w') as f:
-                # Write out the header
-                cols = [str(c) for c in stat[0].keys()]
-                f.write(','.join(cols) + '\n')
-                for row in stat:
-                    # Write out each row
-                    f.write(','.join([str(row[c]) for c in cols]) + '\n')
+    stats_writer.write_to_db(stats, provider_config, quarter)
+
+    return stats
 
 
 def main(args):

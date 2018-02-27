@@ -56,12 +56,12 @@ def calculate_longitudinality(df, provider_conf):
     fieldnames = ['duration', 'value', 'average', 'std_dev']
     for row in months:
         row_dict = dict(zip(fieldnames, row))
-        row_dict['value'] = str(row_dict['value']) + ' months'
+        row_dict['duration'] = str(row_dict['duration']) + ' months'
         long_stats.append(row_dict)
 
     for row in years_long:
         row_dict = dict(zip(fieldnames, row))
-        row_dict['value'] = str(row_dict['value']) + ' years'
+        row_dict['duration'] = str(row_dict['duration']) + ' years'
         long_stats.append(row_dict)
 
     return long_stats
