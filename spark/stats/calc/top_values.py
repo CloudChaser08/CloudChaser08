@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col, countDistinct, lit 
+from pyspark.sql.functions import col, countDistinct, lit
 
 def _col_top_values(df, c, num, distinct_column=None):
     '''
@@ -12,8 +12,8 @@ def _col_top_values(df, c, num, distinct_column=None):
     Output:
         - tv: the top values for that column in descending order
               along with the count
-            
-              i.e. 
+
+              i.e.
               +----------------+-----------+--------------+
               |      name      |    col    |     count    |
               +----------------+-----------+--------------+
@@ -49,7 +49,7 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
     Calculate the top values of a dataframe
     Input:
         - df: a pyspark.sql.DataFrame
-        - max_top_values: the max number of values to 
+        - max_top_values: the max number of values to
                           store for each column
         - distinct_column: if not None, consider COUNT(DISTINCT distinct_column)
                            as the count for top values
@@ -77,5 +77,3 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
     stats = map(lambda r: {'column': r.name, 'value': r.col, 'count': r['count']}, top_values_res)
 
     return stats
-
-

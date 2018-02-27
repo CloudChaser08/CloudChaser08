@@ -1,7 +1,7 @@
 import psycopg2
 import os
 import logging
-
+from functools import reduce
 
 MARKETPLACE_CONNECTION_PROD_CONFIG = {
     'host': 'pg-prod.healthverity.com',
@@ -40,8 +40,21 @@ EPI_REGION_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_regionreportitem WHERE
 EPI_REGION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_regionreportitem (value, region, datafeed_id) " \
                                  "values ('{}', '{}', '{}');"
 
+FILL_RATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
+                                "(datafield_id, data_feed_id, fill_rate) " \
+                                "VALUES ('{datafield_id}', '{data_feed_id}', '{fill_rate}') " \
+                                "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
+                                "SET fill_rate = '{fill_rate}';"
 
-def _generate_queries(stats, datafeed_id):
+TOP_VALS_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
+                               "(datafield_id, data_feed_id, top_values) " \
+                               "VALUES ('{datafield_id}', '{data_feed_id}', '{top_values}') " \
+                               "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
+                               "SET top_values = '{top_values}';"
+
+
+
+def _generate_queries(stats, provider_conf):
     """
     Generate queries based on given stats
     """
@@ -54,31 +67,65 @@ def _generate_queries(stats, datafeed_id):
         if stat_name == 'key_stats':
             for key_stat in stat_value:
                 stat_queries.append(KEYSTATS_UPDATE_SQL_TEMPLATE.format(
-                    key_stat['field'], key_stat['value'], datafeed_id
+                    key_stat['field'], key_stat['value'], provider_conf['datafeed_id']
                 ))
         elif stat_name == 'longitudinality':
-            stat_queries.append(LONGITUDINALITY_DELETE_SQL_TEMPLATE.format(datafeed_id))
+            stat_queries.append(LONGITUDINALITY_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
             for longitudinality_stat in stat_value:
                 stat_queries.append(LONGITUDINALITY_INSERT_SQL_TEMPLATE.format(
                     longitudinality_stat['duration'], longitudinality_stat['value'],
-                    longitudinality_stat['average'], longitudinality_stat['std_dev'], datafeed_id
+                    longitudinality_stat['average'], longitudinality_stat['std_dev'], provider_conf['datafeed_id']
                 ))
         elif stat_name == 'year_over_year':
-            stat_queries.append(YOY_DELETE_SQL_TEMPLATE.format(datafeed_id))
+            stat_queries.append(YOY_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
             for yoy_stat in stat_value:
                 stat_queries.append(YOY_INSERT_SQL_TEMPLATE.format(
-                    yoy_stat['year'], yoy_stat['count'], datafeed_id
+                    yoy_stat['year'], yoy_stat['count'], provider_conf['datafeed_id']
                 ))
         elif stat_name == 'epi':
-            stat_queries.append(EPI_AGE_DELETE_SQL_TEMPLATE.format(datafeed_id))
-            stat_queries.append(EPI_GENDER_DELETE_SQL_TEMPLATE.format(datafeed_id))
-            stat_queries.append(EPI_STATE_DELETE_SQL_TEMPLATE.format(datafeed_id))
-            stat_queries.append(EPI_REGION_DELETE_SQL_TEMPLATE.format(datafeed_id))
+            stat_queries.append(EPI_AGE_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
+            stat_queries.append(EPI_GENDER_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
+            stat_queries.append(EPI_STATE_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
+            stat_queries.append(EPI_REGION_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
 
-            for epi_stat in stat_value:
+            for epi_category in stat_value:
+                if epi_category['field'] == 'region':
+                    query = EPI_REGION_INSERT_SQL_TEMPLATE
+                elif epi_category['field'] == 'state':
+                    query = EPI_STATE_INSERT_SQL_TEMPLATE
+                elif epi_category['field'] == 'age':
+                    query = EPI_AGE_INSERT_SQL_TEMPLATE
+                elif epi_category['field'] == 'gender':
+                    query = EPI_GENDER_INSERT_SQL_TEMPLATE
+
+                for epi_stat in epi_category:
+                    stat_queries.append(
+                        query.format(epi_stat['value'], epi_stat['field'], provider_conf['datafeed_id'])
+                    )
+
+        elif stat_name == 'top_values':
+            columns = set([r['column'] for r in stat_value])
+
+            for column in columns:
+                top_values_string = reduce(lambda x1, x2: x1 + ', ' + x2, [
+                    '{} ({})'.format(r['value'], r['count'])
+                    for r in stat_value if r['column'] == column
+                ])
+                name_id_dict = provider_conf['top_values_conf']['columns']
+
+                stat_queries.append(TOP_VALS_INSERT_SQL_TEMPLATE.format(
+                    datafield_id=name_id_dict[column], data_feed_id=provider_conf['datafeed_id'],
+                    top_values=top_values_string
+                ))
 
         elif stat_name == 'fill_rate':
-            pass
+            name_id_dict = provider_conf['fill_rate_conf']['columns']
+
+            for field_dict in stat_value:
+                stat_queries.append(FILL_RATE_INSERT_SQL_TEMPLATE.format(
+                    datafield_id=name_id_dict[field_dict['field']], data_feed_id=provider_conf['datafeed_id'],
+                    fill_rate=str(float(field_dict['fill']) * 100)
+                ))
 
         queries[stat_name] = stat_queries
 
@@ -93,7 +140,7 @@ def _write_queries(queries, output_dir, datafeed_id):
             query_output.write('COMMIT;')
 
 
-def write_to_db(stats, sql_scripts_output_dir, datafeed_id, dev=True):
+def write_to_db(stats, sql_scripts_output_dir, provider_conf, dev=True):
     """
     Generate and execute SQL scripts that are used to export given
     stats dictionary to the marketplace DB (dev by default).
@@ -101,7 +148,7 @@ def write_to_db(stats, sql_scripts_output_dir, datafeed_id, dev=True):
     SQL Scripts will be saved to the given sql_scripts_output_dir.
     """
 
-    queries = _generate_queries(stats, datafeed_id)
+    queries = _generate_queries(stats, provider_conf)
 
     _write_queries(queries)
 
