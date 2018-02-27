@@ -96,7 +96,7 @@ clean_up_workspace = SubDagOperator(
 if HVDAG.HVDAG.airflow_env != 'test':
     update_s3_with_new_files = BashOperator(
         task_id='update_s3_from_db_files',
-        bash_command='docker run 581191604223.dkr.ecr.us-east-1.amazonaws.com/hvgsdd',
+        bash_command='docker run -rm 581191604223.dkr.ecr.us-east-1.amazonaws.com/hvgsdd',
         dag=mdag
     )
 
