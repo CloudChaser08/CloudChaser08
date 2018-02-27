@@ -11,10 +11,10 @@ def _get_row_count(df, start_date, end_date, attribute, date_col, index_null_dat
         - end_date: end of date range
         - date_col: the name of the column that conains the dates
     '''
-    date_range_df = df.where(
-        ((col(date_col) >= start_date) & (col(date_col) <= end_date))
-        | ((col(date_col).isNull() | trim(col(date_col)) == '') if index_null_dates else False)
-    )
+    filter_by_date = ((col(date_col) >= start_date) & (col(date_col) <= end_date))
+    if index_null_dates:
+        filter_by_date = filter_by_date | (col(date_col).isNull() | trim(col(date_col)) == '')
+    date_range_df = df.where(filter_by_date)
     if attribute == '*':
         count = date_range_df.count()
     else:

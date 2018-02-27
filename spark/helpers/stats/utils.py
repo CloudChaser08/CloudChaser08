@@ -48,12 +48,12 @@ def select_data_in_date_range(start_date, end_date, date_column_name, include_nu
                within the specified date range
     '''
     def out(df):
-        is_in_range = (col(date_column_name) >= start_date) & (col(date_column_name) < end_date)
-        with_nulls = (col(date_column_name).isNull() | trim(col(date_column_name)) == '') \
-                     if include_nulls else False
-        limited_date_df = df.filter(is_in_range | with_nulls)
-        return limited_date_df
+        is_in_range = ((col(date_column_name) >= start_date) & (col(date_column_name) < end_date))
+        if include_nulls:
+            is_in_range = is_in_range | (col(date_column_name).isNull() | trim(col(date_column_name)) == '')
 
+        limited_date_df = df.filter(is_in_range)
+        return limited_date_df
 
     return out
 
