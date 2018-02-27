@@ -4,7 +4,7 @@ def select_distinct_values_from_column(column_name):
     '''
     For each distinct value in the column column_name,
     Create a row with the distinct value and a list for each
-    other column containing all the values from rows where 
+    other column containing all the values from rows where
     column_name == distinct value.  Any empty list
     will be converted to None.
     Input:
@@ -20,7 +20,7 @@ def select_distinct_values_from_column(column_name):
         mapped_df = df.withColumn(column_name, col(column_name))
         for c in non_distinct_columns:
             mapped_df = mapped_df.withColumn(c, when(is_not_null(c), col(c)).otherwise(None))
-        # Group by the distinct column and aggregate each column together 
+        # Group by the distinct column and aggregate each column together
         # as a list
         mapped_df = mapped_df.groupBy(column_name) \
                       .agg(*[collect_list(c).alias(c) for c in non_distinct_columns])
@@ -33,23 +33,25 @@ def select_distinct_values_from_column(column_name):
     return out
 
 
-def select_data_in_date_range(start_date, end_date, date_column_name):
+def select_data_in_date_range(start_date, end_date, date_column_name, include_nulls=False):
     '''
     Filters the dataframe to contains rows between the inputed date range
     for the specified date column
     Input:
         - start_date: string of form YYYY-mm-dd
         - end_date: string of form YYYY-mm-dd
-        - date_column_name: string specifying which column to filter by 
+        - date_column_name: string specifying which column to filter by
                             for the date range
 
     Output:
-        - out: function that inputs a dataframe and returns a dataframe 
+        - out: function that inputs a dataframe and returns a dataframe
                within the specified date range
     '''
     def out(df):
         is_in_range = (col(date_column_name) >= start_date) & (col(date_column_name) < end_date)
-        limited_date_df = df.filter(is_in_range)
+        with_nulls = (col(date_column_name).isNull() | trim(col(date_column_name)) == '') \
+                     if include_nulls else False
+        limited_date_df = df.filter(is_in_range | with_nulls)
         return limited_date_df
 
 
@@ -69,5 +71,3 @@ def get_provider_data(sqlContext, datatype, provider_name):
     df = sqlContext.sql("SELECT * FROM {} WHERE part_provider='{}'" \
                         .format(datatype, provider_name))
     return df
-
-

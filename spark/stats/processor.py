@@ -3,13 +3,8 @@ import spark.stats.calc.top_values as top_values
 import spark.stats.calc.key_stats as key_stats
 import spark.stats.calc.longitudinality as longitudinality
 import spark.stats.calc.year_over_year as year_over_year
-import spark.stats.config.reader.config_reader as config_reader
 import spark.helpers.stats.utils as utils
-import spark.helpers.postprocessor as postprocessor
-import spark.helpers.file_utils as file_utils
-import inspect
 
-from pyspark.sql.functions import col
 
 def _run_fill_rates(df, provider_conf):
     '''
@@ -102,11 +97,13 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
     # provider, start_date, end_date df cache
     # used for fill rate, top values, and key stats
     if index_all_dates:
-        gen_stats_df = utils.select_data_in_date_range('1900-01-01', \
-                        end_date, date_column_field)(all_data_df).coalesce(partitions)
+        gen_stats_df = utils.select_data_in_date_range(
+            '1900-01-01', end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates')
+        )(all_data_df).coalesce(partitions)
     else:
-        gen_stats_df = utils.select_data_in_date_range(start_date, \
-                        end_date, date_column_field)(all_data_df).coalesce(partitions)
+        gen_stats_df = utils.select_data_in_date_range(
+            start_date, end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates')
+        )(all_data_df).coalesce(partitions)
 
     # Generate fill rates
     fill_rates = _run_fill_rates(gen_stats_df, provider_conf)
@@ -115,12 +112,9 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
     top_values = _run_top_values(gen_stats_df, provider_conf)
 
     # Generate key stats
-    if index_all_dates:
-        key_stats = _run_key_stats(all_data_df, earliest_date, \
-                        '1900-01-01', end_date, provider_conf)
-    else:
-        key_stats = _run_key_stats(all_data_df, earliest_date, \
-                        start_date, end_date, provider_conf)
+    key_stats = _run_key_stats(
+        all_data_df, earliest_date, '1900-01-01', end_date, provider_conf
+    )
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year
@@ -155,4 +149,3 @@ def get_epi_calcs(provider_conf):
         all_epi[f] = calculate_epi(provider_conf, f)
 
     return all_epi
-
