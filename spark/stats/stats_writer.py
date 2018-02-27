@@ -1,22 +1,7 @@
-import psycopg2
 import boto3
 import os
 import logging
 from functools import reduce
-
-MARKETPLACE_CONNECTION_PROD_CONFIG = {
-    'host': 'pg-prod.healthverity.com',
-    'database': 'config',
-    'user': 'hvreadonly',
-    'password': os.environ.get('PGPASSWORD')
-}
-
-MARKETPLACE_CONNECTION_DEV_CONFIG = {
-    'host': 'pg-dev.healthverity.com',
-    'database': 'config',
-    'user': 'hvreadonly',
-    'password': os.environ.get('PGPASSWORD')
-}
 
 S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"
 
@@ -160,21 +145,3 @@ def write_to_db(stats, provider_conf, quarter, dev=True):
     queries = _generate_queries(stats, provider_conf)
 
     _write_queries(queries, provider_conf['datafeed_id'], quarter)
-
-    conn = psycopg2.connect(**(
-        MARKETPLACE_CONNECTION_DEV_CONFIG if dev else MARKETPLACE_CONNECTION_PROD_CONFIG
-    ))
-
-    cursor = conn.cursor()
-
-    for stat_name, stat_queries in queries.items():
-        try:
-            for query in stat_queries:
-                cursor.execute(query)
-            cursor.commit()
-        except:
-            logging.error('Could not commit stats for {}.'.format(stat_name))
-            cursor.rollback()
-
-    cursor.close()
-    conn.close()
