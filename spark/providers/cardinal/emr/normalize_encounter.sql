@@ -1,5 +1,5 @@
 SELECT
-    CONCAT('40_', enc.id)                                       AS hv_enc_id,
+    CONCAT('40_', enc.patient_visit_id)                         AS hv_enc_id,
     enc.patient_visit_id                                        AS vdr_enc_id,
     CASE
       WHEN enc.patient_visit_id IS NOT NULL THEN 'VISIT_ID'
