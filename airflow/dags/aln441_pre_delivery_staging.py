@@ -14,10 +14,11 @@ import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import util.decompression as decompression
 import util.s3_utils as s3_utils
 import util.date_utils as date_utils
+import util.hive as hive
 
 for m in [s3_validate_file, s3_fetch_file, s3_push_files,
           HVDAG, decompression, s3_utils,
-          clean_up_tmp_dir, date_utils]:
+          clean_up_tmp_dir, date_utils, hive]:
     reload(m)
 
 DAG_NAME = 'aln441_pre_delivery_staging'
@@ -45,7 +46,7 @@ else:
 TMP_PATH_TEMPLATE='/tmp/aln441/pre_staging/{}{}{}/'
 DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt.zip'
 DATA_FILE_NAME_REGEX = 'HVRequest_output_000441_\d{{14}}.txt.zip'
-DECOMPRESSED_DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt'
+DECOMPRESSED_DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt$'
 ALN441_PRE_DELIVERY_DAY_OFFSET = 7
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
@@ -88,7 +89,7 @@ def generate_file_validation_task(
     )
 
 
-if HVDAG.HVDAG.airflow_env == 'test':
+if HVDAG.HVDAG.airflow_env != 'test':
     validate_data = generate_file_validation_task(
             'data', DATA_FILE_NAME_TEMPLATE,
         250
@@ -150,8 +151,7 @@ push_file_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'file_paths_func'   : lambda ds, k: [k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_filename', key='filename')],
-            's3_prefix_func'    : lambda ds, k: '/'.join(S3_DATA_STAGED_URL_TEMPLATE.split('/')[3:]) + \
-                                    k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_filename', key='filename').split('/')[-1],
+            's3_prefix_func'    : lambda ds, k: '/'.join(S3_DATA_STAGED_URL_TEMPLATE.split('/')[3:]),
             's3_bucket'         : S3_DATA_STAGED_URL_TEMPLATE.split('/')[2]
         }
     ),
@@ -161,7 +161,7 @@ push_file_dag = SubDagOperator(
 
 def do_create_table(ds, **kwargs):
     create_table_statement_template = '''
-    CREATE EXTERNAL TABLE aln441.{} (
+    CREATE EXTERNAL TABLE {}.{} (
         ACCN_ID                 string,
         DOS                     string,
         DOS_ID                  string,
@@ -204,17 +204,54 @@ def do_create_table(ds, **kwargs):
         FASTING_INDICATOR       string
     )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    SERDEPROPERTIES (
+    WITH SERDEPROPERTIES (
         'separatorChar' = '\t'
     )
     STORED AS TEXTFILE
-    LOCATION {}
+    LOCATION '{}'
     tblproperties ('skip.header.line.count'='1')
     '''
 
+    schema = kwargs['schema']
+    table_name = kwargs['ti'].xcom_pull(task_ids='get_filename', key='filename').split('/')[-1][:-4].lower()
+    print schema, table_name
+    queries = [
+        'DROP TABLE IF EXISTS {}.{}'.format(schema, table_name),
+        create_table_statement_template.format(schema, table_name, S3_DATA_STAGED_URL_TEMPLATE)
+    ]
 
-if HVDAG.HVDAG.airflow_env == 'test':
+    print queries[1]
+    hive.hive_execute(queries)
+
+
+create_table = PythonOperator(
+    task_id = 'create_table',
+    provide_context = True,
+    python_callable = do_create_table,
+    op_kwargs = {
+        'schema'    : 'dev' if HVDAG.HVDAG.airflow_env =='test' else 'aln441'
+    },
+    dag = mdag
+)
+
+clean_up_workspace = SubDagOperator(
+    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+        DAG_NAME,
+        'clean_up_workspace',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE
+        }
+    ),
+    task_id='clean_up_workspace',
+    dag=mdag
+)
+
+if HVDAG.HVDAG.airflow_env != 'test':
     fetch_data_file_dag.set_upstream(validate_data)
 unzip_data_file.set_upstream(fetch_data_file_dag)
 get_filename.set_upstream(unzip_data_file)
 push_file_dag.set_upstream(get_filename)
+create_table.set_upstream(push_file_dag)
+clean_up_workspace.set_upstream(push_file_dag)
