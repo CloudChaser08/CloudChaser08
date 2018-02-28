@@ -533,13 +533,18 @@ def test_vital_sign_cardinality():
     """
     Ensure the correct amount of vital_sign records were normalized
     """
-    assert len(vital_sign_results) == 4
+    assert len(vital_sign_results) == 14
 
 
 def test_vital_sign_type_cd():
     """
     Ensure the type codes were exploded and translated correctly
     """
+    assert sorted(set([res.vit_sign_typ_cd for res in vital_sign_results])) == [
+        'CARD_FN_DEC', 'CARD_FN_RAW', 'CDAI', 'DAS28', 'NJC28', 'PAIN',
+        'PGA', 'PTGA', 'RAPID3', 'SDAI', 'SJC28', 'STANFORD_HAQ', 'TJC28'
+    ]
+
     for res in vital_sign_results:
         if res.vit_sign_typ_cd == 'RAPID3':
             assert res.vit_sign_msrmt == 'rapid3'
@@ -547,16 +552,66 @@ def test_vital_sign_type_cd():
             assert res.vit_sign_msrmt == 'sdai'
         elif res.vit_sign_typ_cd == 'CDAI':
             assert res.vit_sign_msrmt == 'cdai'
+        elif res.vit_sign_typ_cd == 'DAS28':
+            assert res.vit_sign_msrmt == 'das28'
+        elif res.vit_sign_typ_cd == 'STANFORD_HAQ':
+            assert res.vit_sign_msrmt == 'stanford_haq'
+        elif res.vit_sign_typ_cd == 'NJC28':
+            assert res.vit_sign_msrmt == 'njc28'
+        elif res.vit_sign_typ_cd == 'TJC28':
+            assert res.vit_sign_msrmt == 'tjc28'
+        elif res.vit_sign_typ_cd == 'SJC28':
+            assert res.vit_sign_msrmt == 'sjc28'
+        elif res.vit_sign_typ_cd == 'PAIN':
+            assert res.vit_sign_msrmt == 'pain'
+        elif res.vit_sign_typ_cd == 'CARD_FN_RAW':
+            assert res.vit_sign_msrmt == 'card_fn_raw'
+        elif res.vit_sign_typ_cd == 'CARD_FN_DEC':
+            assert res.vit_sign_msrmt == 'card_fn_dec'
+        elif res.vit_sign_typ_cd == 'PGA':
+            assert res.vit_sign_msrmt == 'pga'
+        elif res.vit_sign_typ_cd == 'PTGA':
+            assert res.vit_sign_msrmt == 'ptga'
 
-        assert len(
-            [res for res in vital_sign_results if res.vit_sign_typ_cd == 'RAPID3']
-        ) == 1
-        assert len(
-            [res for res in vital_sign_results if res.vit_sign_typ_cd == 'CDAI']
-        ) == 2
-        assert len(
-            [res for res in vital_sign_results if res.vit_sign_typ_cd == 'SDAI']
-        ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'RAPID3']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'CDAI']
+    ) == 2
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'SDAI']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'DAS28']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'STANFORD_HAQ']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'NJC28']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'TJC28']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'SJC28']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'PAIN']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'CARD_FN_RAW']
+    ) == 2
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'CARD_FN_DEC']
+    ) == 2
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'PGA']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'PTGA']
+    ) == 1
 
 
 def test_cleanup(spark):

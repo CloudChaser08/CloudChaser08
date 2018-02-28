@@ -8,7 +8,7 @@ SELECT
     CASE
       WHEN diag.id IS NOT NULL THEN 'VENDOR_ROW_ID'
     END                                                         AS vdr_alt_diag_id_qual,
-    dem.patient_id                                              AS hvid,
+    diag.patient_id                                             AS hvid,
     COALESCE(pay.yearOfBirth, SUBSTRING(dem.birth_date, 0, 4))  AS ptnt_birth_yr,
     CASE
     WHEN COALESCE(

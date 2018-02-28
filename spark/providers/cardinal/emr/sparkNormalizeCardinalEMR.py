@@ -72,7 +72,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
 
     explode.generate_exploder_table(spark, 6, 'clin_obs_exploder')
-    explode.generate_exploder_table(spark, 3, 'vit_sign_exploder')
+    explode.generate_exploder_table(spark, 13, 'vit_sign_exploder')
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
