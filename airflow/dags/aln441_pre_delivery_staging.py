@@ -88,10 +88,11 @@ def generate_file_validation_task(
     )
 
 
-validate_data = generate_file_validation_task(
-        'data', DATA_FILE_NAME_TEMPLATE,
-    250
-)
+if HVDAG.HVDAG.airflow_env == 'test':
+    validate_data = generate_file_validation_task(
+            'data', DATA_FILE_NAME_TEMPLATE,
+        250
+    )
 
 fetch_data_file_dag = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
@@ -158,7 +159,62 @@ push_file_dag = SubDagOperator(
     dag=mdag
 )
 
-fetch_data_file_dag.set_upstream(validate_data)
+def do_create_table(ds, **kwargs):
+    create_table_statement_template = '''
+    CREATE EXTERNAL TABLE aln441.{} (
+        ACCN_ID                 string,
+        DOS                     string,
+        DOS_ID                  string,
+        LAB_CODE                string,
+        QBS_PAYOR_CD            string,
+        INSURANCE_BILLING_TYPE  string,
+        LOCAL_PROFILE_CODE      string,
+        STANDARD_PROFILE_CODE   string,
+        PROFILE_NAME            string,
+        LOCAL_ORDER_CODE        string,
+        STANDARD_ORDER_CODE     string,
+        ORDER_NAME              string,
+        HIPAA_ZIP               string,
+        HIPAA_DOB               string,
+        HIPAA_AGE               string,
+        GENDER                  string,
+        ACCT_ID                 string,
+        ACCT_NAME               string,
+        ACCT_ADDRESS_1          string,
+        ACCT_ADDRESS_2          string,
+        ACCT_CITY               string,
+        ACCT_STATE              string,
+        ACCT_ZIP                string,
+        PHY_NAME                string,
+        NPI                     string,
+        MARKET_TYPE             string,
+        SPECIALTY               string,
+        DIAGNOSIS_CODE          string,
+        ICD_CODESET_IND         string,
+        LOINC_CODE              string,
+        LOCAL_RESULT_CODE       string,
+        RESULT_NAME             string,
+        RESULT_VALUE_A          string,
+        UNITS                   string,
+        REF_RANGE_LOW           string,
+        REF_RANGE_HIGH          string,
+        REF_RANGE_ALPHA         string,
+        ABNORMAL_IND            string,
+        HIPAA_COMMENT           string,
+        FASTING_INDICATOR       string
+    )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    SERDEPROPERTIES (
+        'separatorChar' = '\t'
+    )
+    STORED AS TEXTFILE
+    LOCATION {}
+    tblproperties ('skip.header.line.count'='1')
+    '''
+
+
+if HVDAG.HVDAG.airflow_env == 'test':
+    fetch_data_file_dag.set_upstream(validate_data)
 unzip_data_file.set_upstream(fetch_data_file_dag)
 get_filename.set_upstream(unzip_data_file)
 push_file_dag.set_upstream(get_filename)
