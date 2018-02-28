@@ -20,7 +20,7 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
 
     stats = dict(marketplace_stats, **epi_calcs)
 
-    stats_writer.write_to_db(stats, provider_config, quarter)
+    stats_writer.write_to_s3(stats, provider_config, quarter)
 
     return stats
 

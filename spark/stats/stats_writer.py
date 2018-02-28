@@ -1,6 +1,4 @@
 import boto3
-import os
-import logging
 from functools import reduce
 
 S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"
@@ -134,14 +132,13 @@ def _write_queries(queries, datafeed_id, quarter):
         )
 
 
-def write_to_db(stats, provider_conf, quarter, dev=True):
+def write_to_s3(stats, provider_conf, quarter):
     """
-    Generate and execute SQL scripts that are used to export given
-    stats dictionary to the marketplace DB (dev by default).
+    Generate SQL scripts that are used to export given
+    stats dictionary to the marketplace DB.
 
-    SQL Scripts will be saved to the given sql_scripts_output_dir.
+    Those scripts are saved to S3_OUTPUT_DIR.
     """
 
     queries = _generate_queries(stats, provider_conf)
-
     _write_queries(queries, provider_conf['datafeed_id'], quarter)
