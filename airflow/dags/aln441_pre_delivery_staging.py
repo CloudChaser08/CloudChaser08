@@ -45,7 +45,6 @@ else:
 
 TMP_PATH_TEMPLATE='/tmp/aln441/pre_staging/{}{}{}/'
 DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt.zip'
-DATA_FILE_NAME_REGEX = 'HVRequest_output_000441_\d{{14}}.txt.zip'
 DECOMPRESSED_DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt$'
 ALN441_PRE_DELIVERY_DAY_OFFSET = 7
 
@@ -72,9 +71,7 @@ def generate_file_validation_task(
                         path_template,
                         day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET
                 ),
-                'file_name_pattern_func'    : lambda ds, k: (
-                    DATA_FILE_NAME_REGEX
-                ),
+                'file_name_pattern_func'    : date_utils.generate_insert_regex_into_template(DATA_FILE_NAME_TEMPLATE),
                 'minimum_file_size'         : minimum_file_size,
                 's3_prefix'                 : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
                 's3_bucket'                 : S3_DATA_RAW_URL.split('/')[2],
