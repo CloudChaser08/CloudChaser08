@@ -21,12 +21,12 @@ earliest_date = None
 @pytest.fixture(autouse=True)
 def setup_teardown():
     old_get_data_func = stats_utils.get_provider_data
-    old_write_to_db = stats_writer.write_to_db
+    old_write_to_s3 = stats_writer.write_to_s3
 
     yield
 
     stats_utils.get_provider_data = old_get_data_func
-    stats_writer.write_to_db = old_write_to_db
+    stats_writer.write_to_s3 = old_write_to_s3
 
 
 @pytest.mark.usefixtures('spark')
@@ -51,7 +51,7 @@ def test_init(spark):
         ]).toDF()
     )
 
-    stats_writer.write_to_db = Mock()
+    stats_writer.write_to_s3 = Mock()
 
     provider_config = {
             'name'              : 'test',
