@@ -50,7 +50,7 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
         df, start_date, end_date, patient_attribute, date_col, index_null_dates
     )
     total_24_month_record = _get_row_count(
-        df, start_date, end_date, record_attribute, date_col
+        df, start_date, end_date, record_attribute, date_col, index_null_dates
     )
     if record_attribute == row_attribute:
         total_24_month_row = total_24_month_record
