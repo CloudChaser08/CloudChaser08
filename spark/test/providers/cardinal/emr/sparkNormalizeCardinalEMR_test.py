@@ -533,7 +533,7 @@ def test_vital_sign_cardinality():
     """
     Ensure the correct amount of vital_sign records were normalized
     """
-    assert len(vital_sign_results) == 14
+    assert len(vital_sign_results) == 16
 
 
 def test_vital_sign_type_cd():
