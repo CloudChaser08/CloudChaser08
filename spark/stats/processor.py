@@ -113,7 +113,7 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
 
     # Generate key stats
     key_stats = _run_key_stats(
-        all_data_df, earliest_date, '1900-01-01', end_date, provider_conf
+        all_data_df, earliest_date, start_date, end_date, provider_conf
     )
 
     # datatype, provider, earliest_date, end_date df cache
