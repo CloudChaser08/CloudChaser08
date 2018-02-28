@@ -76,6 +76,7 @@ SELECT
         SUBSTRING(disp.completed_date, 0, 8),
         '%Y%m%d'
         )                                                       AS prov_ord_complt_dt,
+    disp.duration                                               AS prov_ord_durtn_day_cnt,
     EXTRACT_DATE(
         SUBSTRING(disp.cancelled_date, 0, 8),
         '%Y%m%d'
