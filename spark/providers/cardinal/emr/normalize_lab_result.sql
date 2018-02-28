@@ -20,7 +20,11 @@ SELECT
     THEN NULL
     ELSE COALESCE(pay.age, dem.patient_age)
     END                                                         AS ptnt_age_num,
-    COALESCE(pay.gender, dem.gender)                            AS ptnt_gender_cd,
+    CASE
+    WHEN UPPER(COALESCE(pay.gender, dem.gender)) IN ('M', 'F', 'U')
+    THEN UPPER(COALESCE(pay.gender, dem.gender))
+    ELSE 'U'
+    END                                                         AS ptnt_gender_cd,
     COALESCE(pay.state, dem.state)                              AS ptnt_state_cd,
     COALESCE(pay.threeDigitZip, SUBSTRING(dem.zip_code, 0, 3))  AS ptnt_zip3_cd,
     EXTRACT_DATE(
