@@ -51,7 +51,7 @@ SELECT
     WHEN disp.icd_nine IS NOT NULL
     THEN '01'
     END                                                         AS proc_diag_cd_qual,
-    disp.system_id                                              AS data_src_cd,
+    UPPER(disp.system_id)                                       AS data_src_cd,
     CASE
     WHEN INSTR(disp.create_date, '-') > 0
     THEN EXTRACT_DATE(
