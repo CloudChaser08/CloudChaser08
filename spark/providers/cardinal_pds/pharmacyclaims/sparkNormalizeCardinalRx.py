@@ -11,7 +11,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 import subprocess
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import lit, md5
 
 TEXT_FORMAT = """
 ROW FORMAT DELIMITED
@@ -119,7 +119,8 @@ LOCATION '{}'
             slightly_deobfuscate_hvid(cast(hvid as integer), 'Cardinal_MPI-0') as clear_hvid
         FROM pharmacyclaims_common_model"""
     df = runner.sqlContext.sql(clean_hvid_sql)
-    df.withColumn('hvid', df.clear_hvid).drop('clear_hvid') \
+    df.withColumn('hvid', df.clear_hvid).drop('clear_hvid')             \
+            .withColumn('pharmacy_other_id', md5(df.pharmacy_other_id)) \
             .createOrReplaceTempView('pharmacyclaims_common_model')
 
     curr_mo = date_obj.strftime('%Y-%m')
