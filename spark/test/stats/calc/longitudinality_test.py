@@ -1,7 +1,6 @@
 import pytest
 
 from pyspark.sql import Row
-from pyspark.sql.functions import col
 
 import spark.stats.calc.longitudinality as longitudinality
 
@@ -11,9 +10,10 @@ results = None
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     global df, results
-    conf = { 'date_field': 'date',
-             'longitudinality': True
-            }
+    conf = {
+        'date_field': 'date',
+        'longitudinality': True
+    }
     data_row = Row('date', 'hvid', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
         data_row('1975-12-11', 'b', 'c', 'd', 'e'),
@@ -29,22 +29,20 @@ def test_init(spark):
 
 
 def test_num_of_months_rows_are_correct():
-    months_rows = filter(lambda x: x['value'].endswith('months'), results)
+    months_rows = filter(lambda x: x['duration'].endswith('months'), results)
     assert len(months_rows) == 2
 
 
 def test_num_of_years_rows_are_correct():
-    years_rows = filter(lambda x: x['value'].endswith('years'), results)
+    years_rows = filter(lambda x: x['duration'].endswith('years'), results)
     assert len(years_rows) == 2
 
 
 def test_num_of_patients_per_group_correct():
-    one_months = filter(lambda x: x['value'].endswith('1 months'), results)[0]
-    two_years = filter(lambda x: x['value'].endswith('2 years'), results)[0]
-    forty_one_years = filter(lambda x: x['value'].endswith('41 years'), results)[0]
+    one_months = filter(lambda x: x['duration'].endswith('1 months'), results)[0]
+    two_years = filter(lambda x: x['duration'].endswith('2 years'), results)[0]
+    forty_one_years = filter(lambda x: x['duration'].endswith('41 years'), results)[0]
 
-    assert one_months['patients'] == 1
-    assert two_years['patients'] == 1
-    assert forty_one_years['patients'] == 1
-
-
+    assert one_months['value'] == 1
+    assert two_years['value'] == 1
+    assert forty_one_years['value'] == 1

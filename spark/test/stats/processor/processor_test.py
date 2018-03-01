@@ -42,26 +42,26 @@ def test_init(spark):
     start_date = '2015-06-27'
     end_date = '2017-03-15'
 
-    columns = ['claim_id', 'service_date', 'hvid', 'col_2', 'col_3']
-    data_row = Row(*columns)
+    columns = {'claim_id': 0, 'col_2': 3, 'col_3': 4, 'hvid': 2, 'service_date': 1}
+    data_row = Row(*sorted(columns.keys()))
 
     inject_data_mock = Mock(
         return_value = spark['spark'].sparkContext.parallelize([
-            data_row('0', '1995-10-11', None, 'a', 'b'),
-            data_row('0', '2016-01-12', 'a', 'b', 'c'),
-            data_row('1', '2015-11-08', 'a', 'b', '  '),
-            data_row('1', '1974-03-02', '   ', 'b', 'c'),
-            data_row('1', '1993-07-13', 'a', '       ', 'c'),
-            data_row('1', '2017-03-15', 'a', '    ', None),
-            data_row('2', '1800-01-01', 'a', 'b', 'c'),
-            data_row('2', '1850-01-01', 'a', 'b', 'c'),
-            data_row('2', '1900-01-01', 'a', 'b', 'c')
+            data_row('0', 'a', 'b', None, '1995-10-11'),
+            data_row('0', 'b', 'c', 'a', '2016-01-12'),
+            data_row('1', 'b', '  ', 'a', '2015-11-08'),
+            data_row('1', 'b', 'c', '   ', '1974-03-02'),
+            data_row('1', '       ', 'c', 'a', '1993-07-13'),
+            data_row('1', '    ', None, 'a', '2017-03-15'),
+            data_row('2', 'b', 'c', 'a', '1800-01-01'),
+            data_row('2', 'b', 'c', 'a', '1850-01-01'),
+            data_row('2', 'b', 'c', 'a', '1900-01-01')
         ]).toDF()
     )
 
     stats_utils.get_provider_data = inject_data_mock
 
-    fill_rate_conf = {"columns": ['hvid', 'col_2']}
+    fill_rate_conf = {"columns": {'hvid': 1, 'col_2': 2}}
 
     prov_conf = {
             'name'              : 'test',
@@ -131,7 +131,7 @@ def test_fill_rate_calculated():
 
 
 def test_fill_rate_values():
-    assert results_distinct_column['fill_rates'] == [{'field': 'hvid', 'fill': 1.0}, {'field': 'col_2', 'fill': 1.0}]
+    assert results_distinct_column['fill_rates'] == [{'field': 'col_2', 'fill': 1.0}, {'field': 'hvid', 'fill': 1.0}]
 
 
 def test_fill_rate_dataframe_count():

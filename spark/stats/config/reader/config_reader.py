@@ -62,7 +62,7 @@ def _extract_provider_conf(feed_id, providers_conf):
 def _get_top_values_columns(datafeed_id):
 
     get_columns_sql = """
-        select f.physical_name, f.id as field_id
+        select f.physical_name as name, f.id as field_id
             from marketplace_datafield f
             join marketplace_datatable t on t.id = f.datatable_id
             join marketplace_datamodel m on m.id = t.datamodel_id
@@ -76,7 +76,7 @@ def _get_top_values_columns(datafeed_id):
 def _get_fill_rate_columns(datafeed_id):
 
     get_columns_sql = """
-        select f.physical_name, f.id as field_id
+        select f.physical_name as name, f.id as field_id
             from marketplace_datafield f
             join marketplace_datatable t on t.id = f.datatable_id
             join marketplace_datamodel m on m.id = t.datamodel_id
