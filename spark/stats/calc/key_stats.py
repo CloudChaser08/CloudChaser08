@@ -1,7 +1,7 @@
 import datetime
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, trim
 
-def _get_row_count(df, start_date, end_date, attribute, date_col):
+def _get_row_count(df, start_date, end_date, attribute, date_col, index_null_dates=False):
     '''
     Get the row count for the attribute between the start and end date
     Input:
@@ -11,7 +11,10 @@ def _get_row_count(df, start_date, end_date, attribute, date_col):
         - end_date: end of date range
         - date_col: the name of the column that conains the dates
     '''
-    date_range_df = df.where((col(date_col) >= start_date) & (col(date_col) <= end_date))
+    filter_by_date = ((col(date_col) >= start_date) & (col(date_col) <= end_date))
+    if index_null_dates:
+        filter_by_date = filter_by_date | (col(date_col).isNull() | trim(col(date_col)) == '')
+    date_range_df = df.where(filter_by_date)
     if attribute == '*':
         count = date_range_df.count()
     else:
@@ -19,8 +22,7 @@ def _get_row_count(df, start_date, end_date, attribute, date_col):
     return count
 
 
-def calculate_key_stats(df, earliest_date, start_date, end_date, \
-                        provider_conf):
+def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
     '''
     Calculate the key stats for a given provider
     Input:
@@ -35,6 +37,7 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
     '''
     date_col = provider_conf['date_field']
     index_all_dates = provider_conf.get('index_all_dates', False)
+    index_null_dates = provider_conf.get('index_null_dates')
     patient_attribute = 'hvid'
     record_attribute = provider_conf.get('record_attribute', '*')
     row_attribute = '*'
@@ -43,15 +46,18 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
     # the start_date and only use earliest_date
     start_date = earliest_date if index_all_dates else start_date
 
-    total_24_month_patient = _get_row_count(df, start_date, end_date,
-                                   patient_attribute, date_col)
-    total_24_month_record = _get_row_count(df, start_date, end_date,
-                                   record_attribute, date_col)
+    total_24_month_patient = _get_row_count(
+        df, start_date, end_date, patient_attribute, date_col, index_null_dates
+    )
+    total_24_month_record = _get_row_count(
+        df, start_date, end_date, record_attribute, date_col, index_null_dates
+    )
     if record_attribute == row_attribute:
         total_24_month_row = total_24_month_record
     else:
-        total_24_month_row = _get_row_count(df, start_date, end_date,
-                                       row_attribute, date_col)
+        total_24_month_row = _get_row_count(
+            df, start_date, end_date, row_attribute, date_col, index_null_dates
+        )
 
     if index_all_dates:
         # start_date == earliest_date, don't recalc
@@ -59,15 +65,18 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
         total_record = total_24_month_record
         total_row = total_24_month_row
     else:
-        total_patient = _get_row_count(df, earliest_date, end_date, 
-                                       patient_attribute, date_col)
-        total_record = _get_row_count(df, earliest_date, end_date,
-                                       record_attribute, date_col)
+        total_patient = _get_row_count(
+            df, earliest_date, end_date, patient_attribute, date_col, index_null_dates
+        )
+        total_record = _get_row_count(
+            df, earliest_date, end_date, record_attribute, date_col, index_null_dates
+        )
         if record_attribute == row_attribute:
             total_row = total_record
         else:
-            total_row = _get_row_count(df, earliest_date, end_date,
-                                           row_attribute, date_col)
+            total_row = _get_row_count(
+                df, earliest_date, end_date, row_attribute, date_col, index_null_dates
+            )
 
     try:
         earliest_date_dt = datetime.datetime.strptime(earliest_date, "%Y-%m-%d")
@@ -98,5 +107,4 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, \
         {'field': 'yearly_avg_record', 'value': (total_record / days) * 365}
     ]
 
-    return key_stats 
-
+    return key_stats

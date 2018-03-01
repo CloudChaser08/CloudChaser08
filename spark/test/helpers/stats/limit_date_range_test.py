@@ -13,16 +13,19 @@ start_date = None
 end_date = None
 date_column_name = None
 
+data_row = Row('date', 'value')
+
+
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
     global df, results, expected_df, start_date, end_date, date_column_name
-    data_row = Row('date', 'value')
     df = spark['spark'].sparkContext.parallelize([
         data_row('2011-01-01', 'hey'),
         data_row('1992-11-07', 'woah'),
         data_row('2015-05-24', 'yeah'),
         data_row('1999-07-11', 'cool'),
-        data_row('2013-03-15', 'beware')
+        data_row('2013-03-15', 'beware'),
+        data_row(None, 'null date')
     ]).toDF()
     start_date = '1999-07-11'
     end_date = '2013-03-15'
@@ -50,3 +53,12 @@ def test_column_names_equal():
     assert df_cols == results_cols
 
 
+def test_null_dates(spark):
+    null_results = select_data_in_date_range('1999-07-11', '2013-03-15', 'date', True)(df)
+    null_expected_df = spark['spark'].sparkContext.parallelize([
+        data_row('2011-01-01', 'hey'),
+        data_row('1999-07-11', 'cool'),
+        data_row(None, 'null date')
+    ]).toDF()
+
+    assert null_expected_df.subtract(null_results).count() == 0
