@@ -8,6 +8,9 @@ lab_transformer = priv_common.Transformer(
     ordering_npi=[
         priv_common.TransformFunction(post_norm_cleanup.clean_up_npi_code, ['ordering_npi'])
     ],
+    lab_npi=[
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_npi_code, ['lab_npi'])
+    ],
     ordering_state=[
         priv_common.TransformFunction(post_norm_cleanup.validate_state_code, ['ordering_state'])
     ]
