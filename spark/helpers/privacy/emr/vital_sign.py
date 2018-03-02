@@ -14,13 +14,7 @@ vital_sign_transformer = Transformer(
 
 whitelists = []
 
-def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
-    if not additional_transforms:
-        additional_transforms = {}
-
-    modified_transformer = dict(vital_sign_transformer)
-    modified_transformer.update(additional_transforms)
-
+def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):
     def out(df):
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
@@ -29,6 +23,6 @@ def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
                 for whitelist in whtlsts
             ]
         )(
-            emr_priv_common.filter(df, modified_transformer)
+            emr_priv_common.filter(df, vital_sign_transformer.overwrite(additional_transformer))
         )
     return out
