@@ -9,6 +9,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+from spark.helpers.privacy.common import Transformer, TransformFunction
 from spark.helpers.privacy.emr import                   \
     diagnosis as priv_diagnosis,                        \
     medication as priv_medication
@@ -99,12 +100,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'date_column': 'enc_dt',
             'setid': diag_setid,
             'privacy_filter': priv_diagnosis,
-            'custom_transformer': {
-                'diag_cd': {
-                    'func': post_norm_cleanup.clean_up_diagnosis_code,
-                    'args': ['diag_cd', 'diag_cd_qual', 'enc_dt']
-                }
-            },
+            'custom_transformer': Transformer(
+                diag_cd=[
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['diag_cd', 'diag_cd_qual', 'enc_dt'])
+                ]
+            ),
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', None)
             ]
@@ -116,7 +116,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'date_column': 'medctn_start_dt',
             'setid': med_setid,
             'privacy_filter': priv_medication,
-            'custom_transformer': None,
             'date_caps': [
                 ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE', None),
                 ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', None),
@@ -136,7 +135,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 model_version='mdl_vrsn_num'
             ),
 
-            table['privacy_filter'].filter(runner.sqlContext, additional_transforms=table['custom_transformer']),
+            table['privacy_filter'].filter(runner.sqlContext, additional_transformer=table.get('custom_transformer')),
             *[
                 postprocessor.apply_date_cap(runner.sqlContext, date_col, date_input, '31', domain_name, date_function=date_fn)
                 for (date_col, domain_name, date_fn) in table['date_caps']

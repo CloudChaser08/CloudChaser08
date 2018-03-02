@@ -1,4 +1,5 @@
 import pytest
+from spark.helpers.privacy.common import Transformer
 import spark.helpers.privacy.emr.vital_sign as vital_sign_priv
 from pyspark.sql.types import StructField, StructType, StringType, Row
 
@@ -33,7 +34,7 @@ def test_filter(spark):
             Row('90', '1927', '2017-01-01', 'dummyval2')]
 
     # save original state of built-in transformer
-    old_transformer = dict(vital_sign_priv.vital_sign_transformer)
+    old_transformer = Transformer(**dict(vital_sign_priv.vital_sign_transformer.transforms))
     old_whitelists = list(vital_sign_priv.whitelists)
 
     def whitelist_update(whitelist):
@@ -51,5 +52,5 @@ def test_filter(spark):
 
     # assert original transformer and whitelist was not modified by
     # additional args
-    assert vital_sign_priv.vital_sign_transformer == old_transformer
+    assert vital_sign_priv.vital_sign_transformer.transforms == old_transformer.transforms
     assert vital_sign_priv.whitelists == old_whitelists

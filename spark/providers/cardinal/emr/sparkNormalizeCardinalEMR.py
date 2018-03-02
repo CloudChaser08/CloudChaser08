@@ -10,6 +10,7 @@ import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from spark.helpers.privacy.common import update_whitelist
+from spark.helpers.privacy.common import Transformer, TransformFunction
 from spark.helpers.privacy.emr import                   \
     encounter as priv_encounter,                        \
     clinical_observation as priv_clinical_observation,  \
@@ -183,12 +184,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'data_type': 'clinical_observation',
             'date_column': 'clin_obsn_dt',
             'privacy_filter': priv_clinical_observation,
-            'custom_privacy_transformer': {
-                'clin_obsn_diag_cd': {
-                    'func': post_norm_cleanup.clean_up_diagnosis_code,
-                    'args': ['clin_obsn_diag_cd', 'clin_obsn_diag_cd_qual', 'clin_obsn_dt']
-                }
-            },
+            'custom_privacy_transformer': Transformer(
+                clin_obsn_diag_cd=[
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['clin_obsn_diag_cd', 'clin_obsn_diag_cd_qual', 'clin_obsn_dt'])
+                ]
+            ),
             'date_caps': [
                 ('clin_obsn_dt', 'EARLIEST_VALID_SERVICE_DATE'),
                 ('clin_obsn_resltn_dt', 'EARLIEST_VALID_SERVICE_DATE')
@@ -244,12 +244,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'data_type': 'lab_result',
             'date_column': 'lab_test_execd_dt',
             'privacy_filter': priv_lab_result,
-            'custom_privacy_transformer': {
-                'lab_test_diag_cd': {
-                    'func': post_norm_cleanup.clean_up_diagnosis_code,
-                    'args': ['lab_test_diag_cd', 'lab_test_diag_cd_qual', 'lab_test_execd_dt']
-                }
-            },
+            'custom_privacy_transformer': Transformer(
+                lab_test_diag_cd=[
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['lab_test_diag_cd', 'lab_test_diag_cd_qual', 'lab_test_execd_dt'])
+                ]
+            ),
             'custom_whitelist_additions': lambda whitelists: update_whitelist(
                 whitelists, 'lab_test_nm', 'clean_up_freetext', False
             ),
@@ -270,7 +269,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 model_version = 'mdl_vrsn_num'
             ),
             table['privacy_filter'].filter(
-                runner.sqlContext, additional_transforms=table.get('custom_privacy_transformer'),
+                runner.sqlContext, additional_transformer=table.get('custom_privacy_transformer'),
                 update_whitelists=table.get('custom_whitelist_additions', lambda x: x)
             ),
             *[

@@ -1,4 +1,5 @@
 import pytest
+from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.privacy.emr.lab_result as lab_result_priv
 from pyspark.sql.types import StructField, StructType, StringType, Row
 
@@ -42,7 +43,7 @@ def test_filter(spark):
             Row('90', '1927', '2017-01-01', 'dummyval2', None, 'GOODVAL', None, None, None, None, None)]
 
     # save original state of built-in transformer
-    old_transformer = dict(lab_result_priv.lab_result_transformer)
+    old_transformer = Transformer(**dict(lab_result_priv.lab_result_transformer.transforms))
     old_whitelists = list(lab_result_priv.whitelists)
 
     def whitelist_update(whitelist):
@@ -55,15 +56,14 @@ def test_filter(spark):
     assert lab_result_priv.filter(
         spark['sqlContext'],
         update_whitelists=whitelist_update,
-        additional_transforms={
-            'lab_test_nm': {
-                'func': lambda c: c.replace('bad', 'good'),
-                'args': ['lab_test_nm']
-            }
-        })(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, None, None, None, None, None),
+        additional_transformer=Transformer(
+            lab_test_nm=[
+                TransformFunction(lambda c: c.replace('bad', 'good'), ['lab_test_nm'])
+            ]
+        ))(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, None, None, None, None, None),
                                    Row('90', '1927', '2017-01-01', None, 'GOODVAL', 'GOODVAL', None, None, None, None, None)]
 
     # assert original transformer and whitelist was not modified by
     # additional args
     assert lab_result_priv.whitelists == old_whitelists
-    assert lab_result_priv.lab_result_transformer == old_transformer
+    assert lab_result_priv.lab_result_transformer.transforms == old_transformer.transforms

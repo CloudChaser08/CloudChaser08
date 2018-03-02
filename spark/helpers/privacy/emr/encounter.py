@@ -1,13 +1,13 @@
+from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.privacy.emr.common as emr_priv_common
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
-encounter_transformer = {
-    'ptnt_birth_yr': {
-        'func': post_norm_cleanup.cap_year_of_birth,
-        'args': ['ptnt_age_num', 'enc_start_dt', 'ptnt_birth_yr']
-    }
-}
+encounter_transformer = Transformer(
+    ptnt_birth_yr=[
+        TransformFunction(post_norm_cleanup.cap_year_of_birth, ['ptnt_age_num', 'enc_start_dt', 'ptnt_birth_yr'])
+    ]
+)
 
 whitelists = [
     {
@@ -21,13 +21,7 @@ whitelists = [
 ]
 
 
-def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
-    if not additional_transforms:
-        additional_transforms = {}
-
-    modified_transformer = dict(encounter_transformer)
-    modified_transformer.update(additional_transforms)
-
+def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):
     def out(df):
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
@@ -36,6 +30,6 @@ def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
                 for whitelist in whtlsts
             ]
         )(
-            emr_priv_common.filter(df, modified_transformer)
+            emr_priv_common.filter(df, encounter_transformer.overwrite(additional_transformer))
         )
     return out

@@ -1,13 +1,13 @@
+from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.privacy.emr.common as emr_priv_common
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
-lab_result_transformer = {
-    'lab_test_diag_cd': {
-        'func': post_norm_cleanup.clean_up_diagnosis_code,
-        'args': ['lab_test_diag_cd', 'lab_test_diag_cd_qual', 'enc_dt']
-    }
-}
+lab_result_transformer = Transformer(
+    lab_test_diag_cd=[
+        TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['lab_test_diag_cd', 'lab_test_diag_cd_qual', 'enc_dt'])
+    ]
+)
 
 whitelists = [
     {
@@ -38,13 +38,7 @@ whitelists = [
 ]
 
 
-def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
-    if not additional_transforms:
-        additional_transforms = {}
-
-    modified_transformer = dict(lab_result_transformer)
-    modified_transformer.update(additional_transforms)
-
+def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):
     def out(df):
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
@@ -56,6 +50,6 @@ def filter(sqlc, update_whitelists=lambda x: x, additional_transforms=None):
                 ) for whitelist in whtlsts
             ]
         )(
-            emr_priv_common.filter(df, modified_transformer)
+            emr_priv_common.filter(df, lab_result_transformer.overwrite(additional_transformer))
         )
     return out

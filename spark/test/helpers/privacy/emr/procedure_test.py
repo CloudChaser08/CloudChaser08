@@ -1,4 +1,5 @@
 import pytest
+from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.privacy.emr.procedure as procedure_priv
 from pyspark.sql.types import StructField, StructType, StringType, Row
 
@@ -33,7 +34,7 @@ def test_filter(spark):
             Row('90', '1927', '2017-01-01', 'dummyval2')]
 
     # save original state of built-in transformer
-    old_transformer = dict(procedure_priv.procedure_transformer)
+    old_transformer = Transformer(**dict(procedure_priv.procedure_transformer.transforms))
     old_whitelists = list(procedure_priv.whitelists)
 
     def whitelist_update(whitelist):
@@ -46,15 +47,14 @@ def test_filter(spark):
     assert procedure_priv.filter(
         spark['sqlContext'],
         update_whitelists=whitelist_update,
-        additional_transforms={
-            'ptnt_age_num': {
-                'func': lambda c: str(int(c) - 60),
-                'args': ['ptnt_age_num']
-            }
-        })(test_df).collect()  == [Row('40', '1927', '2017-01-01', 'DUMMYVAL'),
+        additional_transformer=Transformer(
+            ptnt_age_num=[
+                TransformFunction(lambda c: str(int(c) - 60), ['ptnt_age_num'])
+            ]
+        ))(test_df).collect()  == [Row('40', '1927', '2017-01-01', 'DUMMYVAL'),
                                    Row('40', '1927', '2017-01-01', None)]
 
     # assert original transformer and whitelist was not modified by
     # additional args
-    assert procedure_priv.procedure_transformer == old_transformer
+    assert procedure_priv.procedure_transformer.transforms == old_transformer.transforms
     assert procedure_priv.whitelists == old_whitelists
