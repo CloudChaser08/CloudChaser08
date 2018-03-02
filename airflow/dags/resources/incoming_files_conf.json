@@ -23,6 +23,22 @@
     ]
   },
   {
+    "name": "cardinal_raintree_emr",
+    "src_system": "s3",
+    "src_conf": {
+      "path": "s3://hvincoming/cardinal_raintree/emr/"
+    },
+    "dest_path": "s3://healthverity/incoming/cardinal/emr/",
+    "file_name_regexes": [
+      "demographics_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
+      "demographics_deid_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
+      "diagnosis_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
+      "encounter_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
+      "lab_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
+      "order_dispense_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat"
+    ]
+  },
+  {
     "name": "emdeon_dx_transactions",
     "src_system": "sftp",
     "src_conf": {
