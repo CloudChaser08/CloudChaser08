@@ -7,8 +7,11 @@ def generate_exploder_table(spark, length, name='exploder'):
     """
     Generate a table with a single column (n) of incrementing integers
     from 0 to length to be used in cross joins for explosion
+
+    Force the number of partitions ot 1 to avoid large numbers of
+    tasks on cross joins
     """
-    spark.sparkContext.parallelize(map(lambda i: [i], range(0, length))).toDF(
+    spark.sparkContext.parallelize(map(lambda i: [i], range(0, length)), 1).toDF(
         StructType([StructField('n', LongType(), True)])
     ).registerTempTable(name)
 
