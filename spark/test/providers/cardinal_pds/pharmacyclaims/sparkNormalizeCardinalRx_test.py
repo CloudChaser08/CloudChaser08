@@ -1,6 +1,7 @@
 import pytest
 
 import datetime
+import hashlib
 
 import spark.providers.cardinal_pds.pharmacyclaims.sparkNormalizeCardinalRx as cardinal_pds
 
@@ -58,7 +59,7 @@ def test_product_code():
 
 def test_pharmacy_ncpdp():
     "Ensure that pharmacy NCPDP numbers are 0 left-padded to 7 characters"
-    sample_row_ndc = filter(lambda r: r.rx_number == '0817b8e97a88844fa6fa894450923ca7', hv_results)[0]
+    sample_row_ndc = filter(lambda r: r.rx_number == '0817b8e97a88844fa6fa894450923ca7', cardinal_results)[0]
 
     assert sample_row_ndc.pharmacy_other_id == '0134635'
 
@@ -74,6 +75,15 @@ def test_logical_delete_reason(spark):
     assert len(filter(lambda r: r.logical_delete_reason == 'Reversed Claim', res)) == 1
     assert len(filter(lambda r: r.logical_delete_reason == 'Reversal', res)) == 1
     assert len(filter(lambda r: r.logical_delete_reason is None, res)) == 1
+
+
+def test_pharmacy_other_id_hashed_in_hv_results_but_not_cardinal_results():
+    hv_sample_row = filter(lambda r: r.rx_number == '0817b8e97a88844fa6fa894450923ca7', hv_results)[0]
+    cardinal_sample_row = filter(lambda r: r.rx_number == '0817b8e97a88844fa6fa894450923ca7', cardinal_results)[0]
+
+    assert hv_sample_row.pharmacy_other_id == hashlib.md5('0134635').hexdigest()
+    assert cardinal_sample_row.pharmacy_other_id == '0134635'
+    
 
 def test_cleanup(spark):
     cleanup(spark)
