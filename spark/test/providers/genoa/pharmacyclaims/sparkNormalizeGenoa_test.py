@@ -45,13 +45,13 @@ def test_init(spark):
 
 def test_hardcode_values():
     for r in results_new:
-        assert r.model_version == '04'
+        assert r.model_version == '06'
         assert r.data_feed == '21'
         assert r.data_vendor == '20'
         assert r.data_set == "HealthVerity_DeID_Payload_20171101_110404.txt"
 
     for r in results_old:
-        assert r.model_version == '04'
+        assert r.model_version == '06'
         assert r.data_feed == '21'
         assert r.data_vendor == '20'
         assert r.data_set == "HealthVerity_DeID_Payload_20150201_110404.txt"
