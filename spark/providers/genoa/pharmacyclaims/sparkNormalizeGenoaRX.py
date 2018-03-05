@@ -75,7 +75,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     # Apply clean up and privacy filtering
     postprocessor.compose(
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id = '21', vendor_id = '20', filename = None, model_version_number = '04'),
+        postprocessor.add_universal_columns(feed_id = '21', vendor_id = '20', filename = None, model_version_number = '06'),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '21', 'EARLIEST_VALID_SERVICE_DATE'),
         pharm_priv.filter
     )(
@@ -92,8 +92,8 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         )
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v4.sql',
-            'genoa2', 'pharmacyclaims_common_model',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
+            'genoa', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date = datetime(hvm_historical.year,
                                            hvm_historical.month,
