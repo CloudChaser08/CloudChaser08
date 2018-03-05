@@ -32,14 +32,3 @@ for x in $(ls /opt/goldstandard/gsdd5/Export/Table/); do
 	# copy with dir name
 	aws s3 cp /opt/goldstandard/gsdd5/Export/Table/$x s3://salusv/reference/gsdd/${dir_name}/$x;
 done
-
-
-# now, we source the env var info, and run this into redshift
-git clone git@github.com:healthverity/dewey.git
-
-. /root/.reference_data_env
-
-cd dewey/providers/gsdd/
-
-#make drop
-#make import
