@@ -1,6 +1,6 @@
 import subprocess
 
-GENOA_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/genoa/pharmacyclaims'
+GENOA_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/genoa'
 
 
 def cleanup():
@@ -24,8 +24,8 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'genoa_pipeline',
-        '-s', '2017-12-01T12:00:00',
-        '-e', '2017-12-01T12:00:00',
+        '-s', '2017-11-01T12:00:00',
+        '-e', '2017-11-01T12:00:00',
         '-I'
     ])
 

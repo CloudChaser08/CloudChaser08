@@ -2,6 +2,9 @@ from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 from subprocess import check_call
 
+import os
+import re
+
 # hv-specific modules
 import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
@@ -43,13 +46,16 @@ GENOA_MONTH_OFFSET = 1
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
-    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/genoa/pharmacyclaims/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/genoa/pharmacyclaims/out/{}/{}/{}/'
-    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/genoa/pharmacyclaims/payload/'
+    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/genoa/raw/'
+    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/genoa/out/{}/{}/{}/transactions/'
+    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/genoa/payload/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/genoa/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/genoa/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/genoa/'
+
+# Zip file
+ZIP_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_{}{}{}'
 
 # Transaction file
 TRANSACTION_S3_SPLIT_URL = S3_TRANSACTION_PROCESSED_URL_TEMPLATE
@@ -66,6 +72,10 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE
 )
 
+get_tmp_unzipped_dir = date_utils.generate_insert_date_into_template_function(
+    TMP_PATH_TEMPLATE + 'DeID_Output/'
+)
+
 
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL +
@@ -75,22 +85,37 @@ def get_deid_file_urls(ds, kwargs):
             )]
 
 
+def get_files_that_match_pattern(file_path, file_prefix):
+    def out(ds, kwargs):
+        files = [
+            f for f in os.listdir(file_path) if re.search(file_prefix, f)
+        ]
+        return files
+    return out
+
+
 def get_transaction_file_paths(ds, kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
+    file_dir = get_tmp_unzipped_dir(ds, kwargs)
+    transaction_file = date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE,
+        kwargs, month_offset=GENOA_MONTH_OFFSET
+    )
+
     return [file_dir +
-            date_utils.insert_date_into_template(
-                TRANSACTION_FILE_NAME_TEMPLATE,
-                kwargs, month_offset=GENOA_MONTH_OFFSET
-            )]
+            get_files_that_match_pattern(file_dir,
+                transaction_file
+            )(ds, kwargs)[0]
+            ]
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
+    file_dir = get_tmp_unzipped_dir(ds, kwargs)
+    encrypted_filename_prefix = date_utils.insert_date_into_template(
+        TRANSACTION_FILE_NAME_TEMPLATE, kwargs, month_offset=GENOA_MONTH_OFFSET
+    )
     encrypted_file_path = file_dir \
-        + date_utils.insert_date_into_template(
-            TRANSACTION_FILE_NAME_TEMPLATE,
-            kwargs, month_offset=GENOA_MONTH_OFFSET
-        )
+        + get_files_that_match_pattern(file_dir, encrypted_filename_prefix)(ds, kwargs)[0]
+
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
     ]
@@ -113,6 +138,7 @@ def generate_file_validation_dag(
                 'file_name_pattern_func': date_utils.generate_insert_regex_into_template_function(
                     path_template + '_\d{{6}}'
                 ),
+                'regex_name_match'        : True,
                 'minimum_file_size'  : minimum_file_size,
                 's3_prefix'          : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'          : 'healthverity',
@@ -134,24 +160,49 @@ if HVDAG.HVDAG.airflow_env != 'test':
         MINIMUM_DEID_FILE_SIZE
     )
 
-fetch_transaction = SubDagOperator(
+fetch_zip_file = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
         DAG_NAME,
-        'fetch_transaction_file',
+        'fetch_zip_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE + '_\d{{6}}', month_offset=GENOA_MONTH_OFFSET
+                ZIP_FILE_NAME_TEMPLATE + '_\d{{6}}', month_offset=GENOA_MONTH_OFFSET
             ),
+            'regex_name_match'        : True,
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
         }
     ),
-    task_id='fetch_transaction_file',
+    task_id='fetch_zip_file',
     dag=mdag
 )
+
+
+def do_unzip_file(task_id, file_name_template):
+    def out(ds, **kwargs):
+        file_name_prefix = date_utils.insert_date_into_template(
+            file_name_template, kwargs, month_offset=GENOA_MONTH_OFFSET
+        )
+
+        tmp_dir = get_tmp_dir(ds, kwargs)
+        file_name = get_files_that_match_pattern(tmp_dir, file_name_prefix)(ds, kwargs)[0]
+        decompression.decompress_zip_file(
+            tmp_dir + file_name, tmp_dir
+        )
+        os.remove(tmp_dir + file_name)
+
+    return PythonOperator(
+        task_id='unzip_file',
+        provide_context=True,
+        python_callable=out,
+        dag=mdag
+    )
+
+
+unzip_transaction = do_unzip_file('transaction', ZIP_FILE_NAME_TEMPLATE)
 
 decrypt_transaction = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
@@ -160,7 +211,7 @@ decrypt_transaction = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_dir_func'                        : get_tmp_dir,
+            'tmp_dir_func'                        : get_tmp_unzipped_dir,
             'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
         }
     ),
@@ -175,10 +226,10 @@ split_transaction = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_dir_func'             : get_tmp_dir,
+            'tmp_dir_func'             : get_tmp_unzipped_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
             'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+                TRANSACTION_FILE_NAME_TEMPLATE + '_\d{{6}}'
             ),
             's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
                 TRANSACTION_S3_SPLIT_URL, month_offset=GENOA_MONTH_OFFSET
@@ -194,7 +245,7 @@ split_transaction = SubDagOperator(
 def clean_up_workspace_step(template):
     def execute(ds, **kwargs):
         check_call([
-            'rm', '-rf', get_tmp_dir(ds, kwargs)
+            'rm', '-rf', get_tmp_unzipped_dir(ds, kwargs)
         ])
     return PythonOperator(
         task_id='clean_up_workspace',
@@ -281,7 +332,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_transaction.set_upstream(validate_transaction)
+    fetch_zip_file.set_upstream(validate_transaction)
 
     # matching
     queue_up_for_matching.set_upstream(validate_deid)
@@ -294,7 +345,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
 
-decrypt_transaction.set_upstream(fetch_transaction)
+unzip_transaction.set_upstream(fetch_zip_file)
+decrypt_transaction.set_upstream(unzip_transaction)
 split_transaction.set_upstream(decrypt_transaction)
 
 # cleanup
