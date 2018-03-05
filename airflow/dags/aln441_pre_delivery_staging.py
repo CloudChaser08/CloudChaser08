@@ -56,41 +56,41 @@ def get_files_matching_template(template, ds, kwargs):
     return [file_dir + f for f in os.listdir(file_dir) if re.search(file_regex, f)]
 
 
-def generate_file_validation_task(
-        task_id, path_template, minimum_file_size
-):
-    return SubDagOperator(
-        subdag=s3_validate_file.s3_validate_file(
-            DAG_NAME,
-            'validate_' + task_id + '_file',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'expected_file_name_func'   :
-                    date_utils.generate_insert_date_into_template_function(
-                        path_template,
-                        day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET
-                ),
-                'file_name_pattern_func'    : date_utils.generate_insert_regex_into_template_function(DATA_FILE_NAME_TEMPLATE),
-                'minimum_file_size'         : minimum_file_size,
-                's3_prefix'                 : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
-                's3_bucket'                 : S3_DATA_RAW_URL.split('/')[2],
-                'file_description'          : 'aln441 pre delivery ' + task_id + ' file',
-                'regex_name_match'          : True
-            }
-        ),
-        task_id='validate_' + task_id + '_file',
-        retries=6,
-        retry_delay=timedelta(minutes=2),
-        dag=mdag
+def do_check_for_file(ds, **kwargs):
+    days_to_check = kwargs['days_to_check']
+
+    s3_keys = s3_utils.list_s3_bucket_files(
+        's3://' + kwargs['s3_bucket'] + '/' + kwargs['s3_prefix'] + '/'
     )
 
+    file_found = False
+    for i in range(days_to_check):
+        d = (kwargs['execution_date'] + timedelta(days=i)).strftime('%Y-%m-%d')
+        expected_file_name = kwargs['expected_filename_func'](d, kwargs)
+        found_results = filter(lambda k: re.search(expected_file_name, k.split('/')[-1], s3_keys))
+        if len(found_results) > 0:
+            file_found = True
+            kwargs['ti'].xcom_push(key = 'filename', value = found_results[0])
+            break
 
-if HVDAG.HVDAG.airflow_env != 'test':
-    validate_data = generate_file_validation_task(
-            'data', DATA_FILE_NAME_TEMPLATE,
-        250
-    )
+    if not file_found:
+        raise Exception('No file has been found')
+
+
+check_for_files = PythonOperator(
+    task_id='check_for_files',
+    provide_context=True,
+    python_callable=do_check_for_files,
+    op_kwargs={
+        's3_prefix'                 : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
+        's3_bucket'                 : S3_DATA_RAW_URL.split('/')[2],
+        'expected_filename_func'    : date_utils.generate_insert_date_into_template(
+                                        DATA_FILE_NAME_TEMPLATE,
+                                        day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET
+                                      )
+    }
+    dag=mdag
+)
 
 fetch_data_file_dag = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
