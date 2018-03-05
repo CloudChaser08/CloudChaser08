@@ -1,6 +1,6 @@
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
-from subprocess import check_call
+
 
 import os
 import re
@@ -14,6 +14,7 @@ import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
 import subdags.update_analytics_db as update_analytics_db
+import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
 import util.decompression as decompression
 import util.date_utils as date_utils
@@ -21,7 +22,7 @@ import util.date_utils as date_utils
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching,
           detect_move_normalize, decompression, HVDAG,
-          update_analytics_db, date_utils]:
+          update_analytics_db, date_utils, clean_up_tmp_dir]:
     reload(m)
 
 # Applies to all files
@@ -242,21 +243,20 @@ split_transaction = SubDagOperator(
 )
 
 
-def clean_up_workspace_step(template):
-    def execute(ds, **kwargs):
-        check_call([
-            'rm', '-rf', get_tmp_unzipped_dir(ds, kwargs)
-        ])
-    return PythonOperator(
-        task_id='clean_up_workspace',
-        provide_context=True,
-        python_callable=execute,
-        trigger_rule='all_done',
-        dag=mdag
-    )
+clean_up_workspace = SubDagOperator(
+    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+        DAG_NAME,
+        'clean_up_workspace',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE
+        }
+    ),
+    task_id='clean_up_workspace',
+    dag=mdag
+)
 
-
-clean_up_workspace = clean_up_workspace_step(TMP_PATH_TEMPLATE)
 
 if HVDAG.HVDAG.airflow_env != 'test':
     queue_up_for_matching = SubDagOperator(
