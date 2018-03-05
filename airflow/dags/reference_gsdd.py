@@ -23,7 +23,7 @@ FILES_OF_INTEREST = ['GSDD.db', 'GSDDMonograph.db']
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 2, 5, 9),
+    'start_date': datetime(2018, 2, 5, 11),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -32,7 +32,7 @@ default_args = {
 mdag = HVDAG.HVDAG(
     'reference_gsdd',
     default_args=default_args,
-    schedule_interval='0 9 5 * *',
+    schedule_interval='0 11 5 * *',
 )
 
 
