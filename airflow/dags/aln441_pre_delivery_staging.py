@@ -25,14 +25,14 @@ DAG_NAME = 'aln441_pre_delivery_staging'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 2, 26, 17),
+    'start_date': datetime(2018, 2, 28, 12),
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 17 * * 5",
+    schedule_interval="0 12 * * 3",
     default_args=default_args
 )
 
