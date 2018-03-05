@@ -92,25 +92,22 @@ check_for_files = PythonOperator(
     dag=mdag
 )
 
-fetch_data_file_dag = SubDagOperator(
-    subdag=s3_fetch_file.s3_fetch_file(
-        DAG_NAME,
-        'fetch_data_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func':
-                date_utils.generate_insert_date_into_template_function(
-                    DATA_FILE_NAME_TEMPLATE,
-                    day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET
-            ),
-            's3_prefix'              : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
-            's3_bucket'              : S3_DATA_RAW_URL.split('/')[2],
-            'regex_name_match'       : True
-        }
-    ),
+
+def do_fetch_data_file(ds, **kwargs):
+    tmp_path_template = kwargs['tmp_path_template']
+    s3_prefix = kwargs['s3_prefix']
+    s3_bucket = kwargs['s3_bucket']
+
+
+fetch_data_file = PythonOperator(
     task_id='fetch_data_file',
+    provide_context=True,
+    python_callable=do_fetch_data_file,
+    op_kwargs={
+        's3_prefix'         : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
+        's3_bucket'         : S3_DATA_RAW_URL.split('/')[2],
+        'tmp_path_template' : TMP_PATH_TEMPLATE
+    },
     dag=mdag
 )
 
@@ -131,6 +128,8 @@ def do_get_filename(ds, **kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     files = get_files_matching_template(DECOMPRESSED_DATA_FILE_NAME_TEMPLATE, ds, kwargs)
     kwargs['ti'].xcom_push(key='filename', value=files[0])
+    # Create tmp dir
+    # Fetch file
 
 
 get_filename = PythonOperator(
