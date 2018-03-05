@@ -75,7 +75,8 @@ TRANSACTION_ENC_FILE_NAME_TEMPLATE = 'encounter_record_data_{}{}{}T[0-9]{{4}}_[0
 # Transaction dispense
 TRANSACTION_DISP_FILE_NAME_TEMPLATE = 'order_dispense_record_data_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
 
-get_tmp_dir = date_utils.generate_insert_date_into_template_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_raw_tmp_dir = date_utils.generate_insert_date_into_template_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
 
 CARDINAL_DAY_OFFSET = 1
 
@@ -191,7 +192,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             {
                 'source_files_func' : lambda ds, k: [
                     S3_TRANSACTION_RAW_URL + transaction_file
-                    for transaction_file in os.listdir(get_tmp_dir(ds, k)) if re.search(
+                    for transaction_file in os.listdir(get_raw_tmp_dir(ds, k)) if re.search(
                         date_utils.insert_date_into_template(
                             TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
                         ), transaction_file
@@ -213,10 +214,10 @@ def generate_decrypt_dag():
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_dir_func'                        : get_tmp_dir,
+                'tmp_dir_func'                        : get_raw_tmp_dir,
                 'encrypted_decrypted_file_paths_func' : lambda ds, k: [
-                    [get_tmp_dir(ds, k) + f, get_tmp_dir(ds, k) + f + '.gz']
-                    for f in os.listdir(get_tmp_dir(ds, k))
+                    [get_raw_tmp_dir(ds, k) + f, get_raw_tmp_dir(ds, k) + f + '.gz']
+                    for f in os.listdir(get_raw_tmp_dir(ds, k))
                     if f.endswith('.dat') and 'deid' not in f.lower()
                 ]
             }
@@ -229,7 +230,41 @@ def generate_decrypt_dag():
 decrypt_files = generate_decrypt_dag()
 
 
+def generate_combine_step(task_id, file_template):
+    """
+    Combine all files for a certain transactional table into one file.
+    """
+    def execute(ds, **kwargs):
+        destination_filename_template = file_template[file_template.index('T[0-9]')]
+        with open(get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(
+            destination_filename_template, kwargs, day_offset=CARDINAL_DAY_OFFSET
+        ), 'w') as dest:
+            for f in [f for f in os.listdir(get_raw_tmp_dir(ds, kwargs)) if re.match(
+                date_utils.insert_date_into_template(
+                    file_template, kwargs, day_offset=CARDINAL_DAY_OFFSET
+                ), f
+            )]:
+                for line in f:
+                    dest.write(line)
+
+    return PythonOperator(
+        task_id='combine_{}_file'.format(task_id),
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
+
+
+combine_transaction_demo = generate_combine_step('transaction_demo', TRANSACTION_DEMO_FILE_NAME_TEMPLATE)
+combine_transaction_diag = generate_combine_step('transaction_diag', TRANSACTION_DIAG_FILE_NAME_TEMPLATE)
+combine_transaction_lab = generate_combine_step('transaction_lab', TRANSACTION_LAB_FILE_NAME_TEMPLATE)
+combine_transaction_enc = generate_combine_step('transaction_enc', TRANSACTION_ENC_FILE_NAME_TEMPLATE)
+combine_transaction_disp = generate_combine_step('transaction_disp', TRANSACTION_DISP_FILE_NAME_TEMPLATE)
+
+
 def generate_split_dag(task_id, file_template, destination_template):
+    file_template = file_template[file_template.index('T[0-9]')]
+
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
@@ -508,12 +543,18 @@ decrypt_files.set_upstream([
 ])
 
 decrypt_files.set_downstream([
-    split_transaction_demo,
-    split_transaction_diag,
-    split_transaction_disp,
-    split_transaction_enc,
-    split_transaction_lab
+    combine_transaction_demo,
+    combine_transaction_diag,
+    combine_transaction_disp,
+    combine_transaction_enc,
+    combine_transaction_lab
 ])
+
+split_transaction_demo.set_upstream(combine_transaction_demo)
+split_transaction_diag.set_upstream(combine_transaction_diag)
+split_transaction_disp.set_upstream(combine_transaction_disp)
+split_transaction_enc.set_upstream(combine_transaction_enc)
+split_transaction_lab.set_upstream(combine_transaction_lab)
 
 clean_up_workspace.set_upstream([
     split_transaction_demo,
