@@ -60,7 +60,7 @@ DELIVERABLE_FILE_NAME_TEMPLATE = 'cardinal_emr_{{}}_normalized_{}{}{}.psv.gz'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 
 # Transaction demographics
-TRANSACTION_DEMO_FILE_NAME_TEMPLATE = 'demographics_record_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
+TRANSACTION_DEMO_FILE_NAME_TEMPLATE = 'demographics_record_data_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
 TRANSACTION_DEID_FILE_NAME_TEMPLATE = 'demographics_deid_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
 
 # Transaction diagnosis
@@ -156,6 +156,7 @@ def generate_fetch_transaction_dag(task_id, transaction_file_name_template):
                     transaction_file_name_template, day_offset=CARDINAL_DAY_OFFSET
                 ),
                 'regex_name_match'       : True,
+                'multi_match'            : True,
                 's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'              : S3_TRANSACTION_RAW_URL.split('/')[2]
             }
@@ -235,7 +236,7 @@ def generate_combine_step(task_id, file_template):
     Combine all files for a certain transactional table into one file.
     """
     def execute(ds, **kwargs):
-        destination_filename_template = file_template[file_template.index('T[0-9]')]
+        destination_filename_template = file_template[:file_template.index('T[0-9]')]
         with open(get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(
             destination_filename_template, kwargs, day_offset=CARDINAL_DAY_OFFSET
         ), 'w') as dest:
@@ -244,8 +245,10 @@ def generate_combine_step(task_id, file_template):
                     file_template, kwargs, day_offset=CARDINAL_DAY_OFFSET
                 ), f
             )]:
-                for line in f:
-                    dest.write(line)
+                with open(get_raw_tmp_dir(ds, kwargs) + f, 'r') as presplit_file:
+                    for line in presplit_file:
+                        dest.write(line)
+                os.remove(get_raw_tmp_dir(ds, kwargs) + f)
 
     return PythonOperator(
         task_id='combine_{}_file'.format(task_id),
@@ -263,7 +266,7 @@ combine_transaction_disp = generate_combine_step('transaction_disp', TRANSACTION
 
 
 def generate_split_dag(task_id, file_template, destination_template):
-    file_template = file_template[file_template.index('T[0-9]')]
+    file_template = file_template[:file_template.index('T[0-9]')]
 
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
@@ -275,11 +278,9 @@ def generate_split_dag(task_id, file_template, destination_template):
                 'tmp_dir_func'             : get_tmp_dir,
                 'parts_dir_func'           : lambda ds, k: '{}_parts'.format(task_id),
                 'file_paths_to_split_func' : lambda ds, k: [
-                    get_tmp_dir(ds, k) + [
-                        f for f in os.listdir(get_tmp_dir(ds, k)) if re.search(
-                            date_utils.insert_date_into_template(file_template, k, day_offset=CARDINAL_DAY_OFFSET), f
-                        )
-                    ][0]
+                    get_tmp_dir(ds, k) + date_utils.insert_date_into_template(
+                        file_template, k, day_offset=CARDINAL_DAY_OFFSET
+                    )
                 ],
                 's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
                     destination_template, day_offset=CARDINAL_DAY_OFFSET
