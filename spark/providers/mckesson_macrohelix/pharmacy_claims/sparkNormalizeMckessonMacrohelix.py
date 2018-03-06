@@ -73,7 +73,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     explode.generate_exploder_table(spark, 24, 'exploder')
 
-    runner.run_spark_script('normalize.sql')
+    runner.run_spark_script('normalize.sql', [['date_input', date_input]])
 
     postprocessor.compose(
         postprocessor.nullify,

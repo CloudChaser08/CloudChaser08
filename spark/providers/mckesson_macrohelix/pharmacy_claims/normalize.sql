@@ -37,28 +37,24 @@ SELECT DISTINCT
         NULL,                                                                                   --reject_reason_code_4
         NULL,                                                                                   --reject_reason_code_5
         CASE
-            WHEN ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
-                       t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
-                       t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
-                       t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
-                       t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n]
-                 IS NULL THEN NULL
-            WHEN t.service_date < '2015-10-01'
-                AND SUBSTR(TRIM(UPPER(ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
-                       t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
-                       t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
-                       t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
-                       t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n])), 1, 1) = 'A'
-                THEN SUBSTR(TRIM(UPPER(ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
-                       t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
-                       t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
-                       t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
-                       t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n])), 2, 10)
-            ELSE TRIM(UPPER(ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
-                       t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
-                       t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
-                       t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
-                       t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n]))    
+        /* service date is null or occurs after the input date */
+        WHEN EXTRACT_DATE(t.service_date, '%Y-%m-%d', NULL, {date_input}) IS NULL THEN NULL,
+        WHEN SUBSTRING(UPPER(ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
+                t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
+                t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
+                t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
+                t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n]), 1, 1) = 'A'
+        AND SUBSTRING(ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
+                t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
+                t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
+                t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
+                t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n], 5, 1) = '.'
+        THEN SUBSTRING(UPPER(source_column), 2, 10)
+        ELSE UPPER(ARRAY(t.dx_01, t.dx_02, t.dx_03, t.dx_04, t.dx_05,
+                t.dx_06, t.dx_07, t.dx_08, t.dx_09, t.dx_10,
+                t.dx_11, t.dx_12, t.dx_13, t.dx_14, t.dx_15,
+                t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
+                t.dx_21, t.dx_22, t.dx_23, t.dx_24)[e.n])
         END,                                                                                    --diagnosis_code
         NULL,                                                                                   --diagnosis_code_qual
         TRIM(UPPER(t.jcode)),                                                                   --procedure_code
