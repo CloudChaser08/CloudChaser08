@@ -107,12 +107,15 @@ check_for_file = PythonOperator(
 def do_fetch_data_file(ds, **kwargs):
     tmp_path_template = kwargs['tmp_path_template']
 
-    tmp_path = tmp_path_template.format(kwargs['ds_nodash'])
-    s3_loc = kwargs['ti'].xcom_pull(tasks = 'check_for_file', key = 'filename')
+    tmp_path = tmp_path_template.format(*ds.split('-'))
+    print 'tmp path: {}'.format(tmp_path)
+    os.makedirs(tmp_path)
+    filename = kwargs['ti'].xcom_pull(task_ids = 'check_for_file', key = 'filename')
+    print 's3_loc: {}'.format('s3://' + kwargs['s3_bucket'] + '/' + kwargs['s3_prefix'] + filename)
 
     s3_utils.fetch_file_from_s3(
-        s3_loc,
-        tmp_path + s3_loc.split('/')[-1]
+        's3://' + kwargs['s3_bucket'] + '/' + kwargs['s3_prefix'] + filename,
+        tmp_path + filename
     )
 
 
@@ -121,6 +124,8 @@ fetch_data_file = PythonOperator(
     provide_context=True,
     python_callable=do_fetch_data_file,
     op_kwargs={
+        's3_prefix'         : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
+        's3_bucket'         : S3_DATA_RAW_URL.split('/')[2],
         'tmp_path_template' : TMP_PATH_TEMPLATE
     },
     dag=mdag
@@ -128,8 +133,8 @@ fetch_data_file = PythonOperator(
 
 def do_unzip_file(ds, **kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
-    files = get_files_matching_template(DATA_FILE_NAME_TEMPLATE, ds, kwargs)
-    decompression.decompress_zip_file(files[0], file_dir)
+    zip_file = kwargs['ti'].xcom_pull(task_ids = 'check_for_file', key = 'filename')
+    decompression.decompress_zip_file(file_dir + zip_file, file_dir)
 
 
 unzip_data_file = PythonOperator(
@@ -139,19 +144,6 @@ unzip_data_file = PythonOperator(
     dag=mdag
 )
 
-def do_get_filename(ds, **kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
-    files = get_files_matching_template(DECOMPRESSED_DATA_FILE_NAME_TEMPLATE, ds, kwargs)
-    kwargs['ti'].xcom_push(key='filename', value=files[0])
-
-
-get_filename = PythonOperator(
-    task_id = 'get_filename',
-    provide_context = True,
-    python_callable = do_get_filename,
-    dag = mdag
-)
-
 push_file_dag = SubDagOperator(
     subdag=s3_push_files.s3_push_files(
         DAG_NAME,
@@ -159,7 +151,8 @@ push_file_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'file_paths_func'   : lambda ds, k: [k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_filename', key='filename')],
+            'file_paths_func'   : lambda ds, k: [get_tmp_dir(ds, k) + \
+                                                k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='check_for_file', key='filename')],
             's3_prefix_func'    : lambda ds, k: '/'.join(S3_DATA_STAGED_URL_TEMPLATE.split('/')[3:]),
             's3_bucket'         : S3_DATA_STAGED_URL_TEMPLATE.split('/')[2]
         }
@@ -222,11 +215,11 @@ def do_create_table(ds, **kwargs):
     '''
 
     schema = kwargs['schema']
-    table_name = kwargs['ti'].xcom_pull(task_ids='get_filename', key='filename').split('/')[-1][:-4].lower()
+    table_name = kwargs['ti'].xcom_pull(task_ids='check_for_file', key='filename')[:-8].lower()
     print schema, table_name
     queries = [
         'DROP TABLE IF EXISTS {}.{}'.format(schema, table_name),
-        create_table_statement_template.format(schema, table_name, S3_DATA_STAGED_URL_TEMPLATE)
+        create_table_statement_template.format(schema, table_name, S3_DATA_STAGED_URL_TEMPLATE).format(*ds.split('/'))
     ]
 
     print queries[1]
@@ -259,7 +252,6 @@ clean_up_workspace = SubDagOperator(
 
 fetch_data_file.set_upstream(check_for_file)
 unzip_data_file.set_upstream(fetch_data_file)
-get_filename.set_upstream(unzip_data_file)
-push_file_dag.set_upstream(get_filename)
+push_file_dag.set_upstream(unzip_data_file)
 create_table.set_upstream(push_file_dag)
 clean_up_workspace.set_upstream(push_file_dag)
