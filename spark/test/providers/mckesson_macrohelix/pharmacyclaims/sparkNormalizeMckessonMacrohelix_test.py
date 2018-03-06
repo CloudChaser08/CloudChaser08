@@ -22,14 +22,14 @@ def test_init(spark):
             gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE',
             gen_ref_itm_nm = '',
             gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = '' 
+            whtlst_flg = ''
         ),
         Row(
             hvm_vdr_feed_id = '48',
             gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE',
             gen_ref_itm_nm = '',
             gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = '' 
+            whtlst_flg = ''
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
@@ -54,6 +54,15 @@ def test_exploded_diagnosis_codes_nulled_out():
     assert len([r for r in results if r.diagnosis_code is None and r.claim_id != '10']) == 10
 
 
+def test_diagnosis_codes_with_prefix_a():
+    assert sorted([r.diagnosis_code for r in results if r.claim_id == '8']) \
+        == [
+            None, '2449', '2724', '4019', '4280', '4580', '49390', '53081', '7802', '78630', '92401',
+            'A41401', # this code had the '.' in the wrong place
+            'E8889'
+        ]
+
+
 def test_model_version_inserted_for_each_row():
     for r in results:
         assert r.model_version == '4'
@@ -61,5 +70,3 @@ def test_model_version_inserted_for_each_row():
 
 def test_cleanup(spark):
     cleanup(spark)
-
-
