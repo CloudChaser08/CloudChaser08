@@ -1,7 +1,7 @@
 #! /usr/bin/python
 import argparse
 from datetime import datetime
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import lit, col
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
@@ -32,7 +32,11 @@ def load(input_path, restriction_level):
     if len(unlabeled_input.columns) == 118:
         labeled_input = runner.sqlContext.createDataFrame(
             unlabeled_input.rdd, transaction_schemas.new_schema
-        ).withColumn('DispensingFeePaid', lit(None))
+        ).withColumn(
+            'DispensingFeePaid', lit(None)
+        ).withColumn(
+            'FillerTransactionTime', col('ClaimTransactionTime')
+        )
     elif len(unlabeled_input.columns) == 119:
         labeled_input = runner.sqlContext.createDataFrame(unlabeled_input.rdd, transaction_schemas.old_schema)
     else:
