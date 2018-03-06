@@ -1,6 +1,7 @@
 #! /usr/bin/python
 import argparse
 from datetime import datetime
+from pyspark.sql.functions import lit
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
@@ -10,6 +11,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
+import spark.providers.mckesson.pharmacyclaims.transaction_schemas as transaction_schemas
 
 runner = None
 spark = None
@@ -17,15 +19,28 @@ spark = None
 
 def load(input_path, restriction_level):
     """
-    Function for loading transactional data
+    Function for loading transactional data.
+
+    Mckesson has 2 schemas - their old schema had 119 columns, their
+    new schema has 118. There is no date cutoff for when the new
+    schema starts and the old ends, so the best way to choose the
+    correct schema is to simply count the columns.
     """
-    runner.run_spark_script('load_transactions.sql', [
-        ['input_path', input_path],
-        ['restriction_level', restriction_level, False]
-    ])
-    postprocessor.trimmify(
-        runner.sqlContext.sql('select * from {}_transactions'.format(restriction_level))
-    ).createOrReplaceTempView('{}_transactions'.format(restriction_level))
+
+    unlabeled_input = runner.sqlContext.read.csv(input_path, sep='|')
+
+    if len(unlabeled_input.columns) == 118:
+        labeled_input = runner.sqlContext.createDataFrame(
+            unlabeled_input.rdd, transaction_schemas.new_schema
+        ).withColumn('DispensingFeePaid', lit(None))
+    elif len(unlabeled_input.columns) == 119:
+        labeled_input = runner.sqlContext.createDataFrame(unlabeled_input.rdd, transaction_schemas.old_schema)
+    else:
+        raise ValueError('Unexpected column length in transaction data: {}'.format(str(len(unlabeled_input.columns))))
+
+    postprocessor.compose(
+        postprocessor.trimmify, postprocessor.nullify
+    )(labeled_input).createOrReplaceTempView('{}_transactions'.format(restriction_level))
 
 
 def postprocess_and_unload(date_input, restricted, test_dir):
