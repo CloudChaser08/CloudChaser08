@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import logging
 import os
 import re
 
@@ -60,14 +61,26 @@ def do_check_for_file(ds, **kwargs):
     days_to_check = kwargs['days_to_check']
 
     s3_keys = s3_utils.list_s3_bucket_files(
-        's3://' + kwargs['s3_bucket'] + '/' + kwargs['s3_prefix'] + '/'
+        's3://' + kwargs['s3_bucket'] + '/' + kwargs['s3_prefix']
     )
+    print 's3_bucket: {}'.format(kwargs['s3_bucket'])
+    print 's3_prefix: {}'.format(kwargs['s3_prefix'])
+    print 's3_keys are: {}'.format(s3_keys)
 
     file_found = False
     for i in range(days_to_check):
+        print 'Checking for day {}'.format(i)
         d = (kwargs['execution_date'] + timedelta(days=i)).strftime('%Y-%m-%d')
-        expected_file_name = kwargs['expected_filename_func'](d, kwargs)
-        found_results = filter(lambda k: re.search(expected_file_name, k.split('/')[-1], s3_keys))
+        print 'datetime: {}'.format(d)
+        fixed_date = d.split('-')
+        expected_file_name = date_utils.generate_insert_date_into_template_function(
+                                kwargs['expected_filename_template'],
+                                fixed_year = int(fixed_date[0]),
+                                fixed_month = int(fixed_date[1]),
+                                fixed_day = int(fixed_date[2])
+                             )(d, kwargs)
+        print 'Expected_filename: {}'.format(expected_file_name)
+        found_results = filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)
         if len(found_results) > 0:
             file_found = True
             kwargs['ti'].xcom_push(key = 'filename', value = found_results[0])
@@ -77,26 +90,30 @@ def do_check_for_file(ds, **kwargs):
         raise Exception('No file has been found')
 
 
-check_for_files = PythonOperator(
-    task_id='check_for_files',
+check_for_file = PythonOperator(
+    task_id='check_for_file',
     provide_context=True,
-    python_callable=do_check_for_files,
+    python_callable=do_check_for_file,
     op_kwargs={
         's3_prefix'                 : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
         's3_bucket'                 : S3_DATA_RAW_URL.split('/')[2],
-        'expected_filename_func'    : date_utils.generate_insert_date_into_template(
-                                        DATA_FILE_NAME_TEMPLATE,
-                                        day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET
-                                      )
-    }
+        'expected_filename_template': DATA_FILE_NAME_TEMPLATE,
+        'days_to_check'             : 7
+    },
     dag=mdag
 )
 
 
 def do_fetch_data_file(ds, **kwargs):
     tmp_path_template = kwargs['tmp_path_template']
-    s3_prefix = kwargs['s3_prefix']
-    s3_bucket = kwargs['s3_bucket']
+
+    tmp_path = tmp_path_template.format(kwargs['ds_nodash'])
+    s3_loc = kwargs['ti'].xcom_pull(tasks = 'check_for_file', key = 'filename')
+
+    s3_utils.fetch_file_from_s3(
+        s3_loc,
+        tmp_path + s3_loc.split('/')[-1]
+    )
 
 
 fetch_data_file = PythonOperator(
@@ -104,8 +121,6 @@ fetch_data_file = PythonOperator(
     provide_context=True,
     python_callable=do_fetch_data_file,
     op_kwargs={
-        's3_prefix'         : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
-        's3_bucket'         : S3_DATA_RAW_URL.split('/')[2],
         'tmp_path_template' : TMP_PATH_TEMPLATE
     },
     dag=mdag
@@ -128,8 +143,6 @@ def do_get_filename(ds, **kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     files = get_files_matching_template(DECOMPRESSED_DATA_FILE_NAME_TEMPLATE, ds, kwargs)
     kwargs['ti'].xcom_push(key='filename', value=files[0])
-    # Create tmp dir
-    # Fetch file
 
 
 get_filename = PythonOperator(
@@ -244,9 +257,8 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
-if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_data_file_dag.set_upstream(validate_data)
-unzip_data_file.set_upstream(fetch_data_file_dag)
+fetch_data_file.set_upstream(check_for_file)
+unzip_data_file.set_upstream(fetch_data_file)
 get_filename.set_upstream(unzip_data_file)
 push_file_dag.set_upstream(get_filename)
 create_table.set_upstream(push_file_dag)
