@@ -38,7 +38,8 @@ INSTALL_JSONSERDE_STEP = ('Type=CUSTOM_JAR,Name="Install JSONSerde JAR",Jar="com
         'ActionOnFailure=CONTINUE,Args=[sudo, wget, -O,'
         '/usr/lib/spark/jars/json-serde-1.3.8-jar-with-dependencies.jar,'
         'http://www.congiu.net/hive-json-serde/1.3.8/hdp23/json-serde-1.3.8-jar-with-dependencies.jar]')
-START_PROFILER_DAEMON_STEP = ('Type=CUSTOM_JAR,Name="Start Data Profiler",ActionOnFailure=TERMINATE_JOB_FLOW,'
+START_PROFILER_DAEMON_STEP = ('Type=CUSTOM_JAR,Name="Start Data Profiler",Jar="command-runner.jar",'
+        'ActionOnFailure=TERMINATE_JOB_FLOW,'
         'Args=[bash,/tmp/spark-df-profiling/bin/launch_profiler_daemon.sh]')
 PROFILING_CONFIG_DB = 'hll_config'
 SELECT_PENDING_REQUESTS = 'SELECT * FROM profiling_request WHERE completed IS NULL'
