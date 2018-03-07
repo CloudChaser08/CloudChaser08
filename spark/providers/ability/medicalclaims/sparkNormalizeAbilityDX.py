@@ -54,11 +54,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         set_id = date_input.replace('-', '_') + '_' + product
 
-        input_path_prefix = input_path_prefix.format(date_input.replace('-', '/')) + set_id + '_'
-        matching_path     = matching_path.format(date_input.replace('-', '/')) + set_id + '_*'
+        input_pth_prefix = input_path_prefix.format(date_input.replace('-', '/')) + set_id + '_'
+        matching_pth     = matching_path.format(date_input.replace('-', '/')) + set_id + '_*'
 
-        load_records.load(runner, input_path_prefix, product, date_input)
-        payload_loader.load(runner, matching_path, ['claimId'])
+        load_records.load(runner, input_pth_prefix, product, date_input)
+        payload_loader.load(runner, matching_pth, ['claimId'])
         runner.sqlContext.sql('SELECT * FROM matching_payload') \
                 .distinct() \
                 .createOrReplaceTempView('matching_payload')
