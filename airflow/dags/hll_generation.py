@@ -65,7 +65,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval=None,
+    schedule_interval='7,22,37,52 * * * *',
     default_args=default_args
 )
 
@@ -76,11 +76,40 @@ def get_ref_db_connection():
             port=db_config['db_port'],
             cursor_factory=psycopg2.extras.NamedTupleCursor)
     
-def get_config():
+def get_feeds_to_generate_configs():
+    all_configs = None
     with get_ref_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(SELECT_CONFIG_AND_LAST_LOG_ENTRY)
-            return cur.fetchall()
+            all_configs = cur.fetchall()
+
+    to_generate_configs = []
+    for entry in all_configs:
+        # TODO: Let Airflow figure out the current quarter programatically
+        # For now, hardcode to 2017Q3, with an HLL generation date of 01/03/2018
+        if not entry.generated or entry.is_stale or (not entry.once_only and \
+                entry.generated.replace(tzinfo=None) < datetime(2018, 1, 3, 12)):
+            to_generate_configs.append(entry)
+
+    return to_generate_configs
+
+def do_check_pending_requests(ds, **kwargs):
+    if not emr_utils.cluster_running(EMR_CLUSTER_NAME):
+        hll_configs = get_feeds_to_generate_configs()
+        if hll_configs:
+            return 'create_cluster'
+
+    return 'do_nothing'
+
+check_pending_requests = BranchPythonOperator(
+    task_id='check_pending_requests',
+    provide_context=True,
+    python_callable=do_check_pending_requests,
+    retries=0,
+    dag=mdag
+)
+
+do_nothing = DummyOperator(task_id='do_nothing', dag=mdag)
 
 def do_create_cluster(ds, **kwargs):
     emr_utils.create_emr_cluster(EMR_CLUSTER_NAME, NUM_NODES, NODE_TYPE,
@@ -94,28 +123,22 @@ create_cluster = PythonOperator(
 )
 
 def do_generate_hlls(ds, **kwargs):
-    hlls_config = get_config()
+    hll_configs = get_feeds_to_generate_configs()
 
-    feeds_to_generate = []
+    feeds_to_generate = [c.feed_id for c in hll_configs]
     steps = [MELLON_COPY_STEP]
-    for entry in hlls_config:
-        # TODO: Let Airflow figure out the current quarter programatically
-        # For now, hardcode to 2017Q3, with an HLL generation date of 01/03/2018
-        if not entry.generated or entry.is_stale or (not entry.once_only and \
-                entry.generated.replace(tzinfo=None) < datetime(2018, 1, 3, 12)):
+    for entry in hll_configs:
+        args = ''
+        args += '--datafeed, {},'.format(entry.feed_id)
+        args += '--modelName, {},'.format(entry.model)
+        args += "--inpath, '{}',".format(entry.s3a_url)
+        args += '--format, {},'.format(entry.file_format or 'parquet')
+        args += '--start, 2015-10-01,' if not entry.no_min_cap else ''
+        args += '--end, 2017-10-01,' if not entry.no_max_cap else ''
+        args += "--models, '{}',".format(entry.emr_models) if entry.emr_models else ''
+        args += ', '.join((entry.flags or '').split())
 
-            args = ''
-            args += '--datafeed, {},'.format(entry.feed_id)
-            args += '--modelName, {},'.format(entry.model)
-            args += "--inpath, '{}',".format(entry.s3a_url)
-            args += '--format, {},'.format(entry.file_format or 'parquet')
-            args += '--start, 2015-10-01,' if not entry.no_min_cap else ''
-            args += '--end, 2017-10-01,' if not entry.no_max_cap else ''
-            args += "--models, '{}',".format(entry.emr_models) if entry.emr_models else ''
-            args += ', '.join((entry.flags or '').split())
-
-            steps.append(HLL_STEP_TEMPLATE.format(entry.feed_id, args))
-            feeds_to_generate.append(entry.feed_id)
+        steps.append(HLL_STEP_TEMPLATE.format(entry.feed_id, args))
     steps.append(HLL_COPY_STEP)
 
     kwargs['ti'].xcom_push(key = 'feeds_to_generate', value = json.dumps(feeds_to_generate))
@@ -164,6 +187,8 @@ update_log = PythonOperator(
     dag=mdag
 )
 
+create_cluster.set_upstream(check_pending_requests)
+do_nothing.set_upstream(check_pending_requests)
 generate_hlls.set_upstream(create_cluster)
 delete_cluster.set_upstream(generate_hlls)
 update_log.set_upstream(delete_cluster)
