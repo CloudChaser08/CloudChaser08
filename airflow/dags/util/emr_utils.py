@@ -208,3 +208,6 @@ def delete_emr_cluster(cluster_name):
     check_call([
         'aws', 'emr', 'terminate-clusters', '--cluster-ids', cluster_id
     ])
+
+def cluster_running(cluster_name):
+    return _get_emr_cluster_id(cluster_name) is not None
