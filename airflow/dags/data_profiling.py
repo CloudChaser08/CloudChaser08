@@ -19,30 +19,27 @@ NUM_NODES=5
 NODE_TYPE='m4.16xlarge'
 EBS_VOLUME_SIZE='100'
 
-PROFILING_STEP_TEMPLATE = ('Type=Spark,Name="{0} Data Profile",ActionOnFailure=TERMINATE_JOB_FLOW, '
-        'Args=[--conf, spark.executor.memory=13G, --conf, spark.driver.memory=10G,'
-        '--conf, spark.executor.cores=4, --conf, spark.executor.instances=80,'
-        '--conf, spark.yarn.executor.memoryOverhead=1024, --conf,'
-        'spark.scheduler.minRegisteredResourcesRatio=1, --conf,'
-        'spark.files.useFetchCache=false, --conf,'
-        'spark.hadoop.fs.s3a.connection.maximum=500, --conf,'
-        'spark.scheduler.maxRegisteredResourcesWaitingTime=60s,'
+PROFILING_STEP_TEMPLATE = ('Type=CUSTOM_JAR,Name="{0} Data Profile",Jar="command-runner.jar",'
+        'ActionOnFailure=TERMINATE_JOB_FLOW, Args=[python,'
         '/tmp/spark-df-profiling/bin/profile_table.py, --report_name, {1},'
         '--table_name, {0}, --s3_path, {2}]')
-BOTO3_INSTALL_STEP = ('Type=CUSTOM_JAR,Name="Install Boto3",Jar="command-runner.jar",'
-        'ActionOnFailure=CONTINUE,Args=[sudo,pip,install,boto3]')
 PROFILER_COPY_STEP = ('Type=CUSTOM_JAR,Name="Copy Profiler",Jar="command-runner.jar",'
         'ActionOnFailure=CONTINUE,Args=[aws,s3,cp,'
         's3://healthverityreleases/profiling/spark-df-profiling.tar.gz,'
         '/tmp/spark-df-profiling.tar.gz]')
+MKDIR_PROFILER_STEP = ('Type=CUSTOM_JAR,Name="Create Profiler Directory",Jar="command-runner.jar",'
+        'ActionOnFailure=CONTINUE,Args=[mkdir,-p,/tmp/spark-df-profiling]')
 DECOMPRESS_PROFILER_STEP = ('Type=CUSTOM_JAR,Name="Decompress Profiler",Jar="command-runner.jar",'
-        'ActionOnFailure=CONTINUE,Args=[tar,-C,/tmp/,-xzf,/tmp/spark-df-profiling.tar.gz]')
+        'ActionOnFailure=CONTINUE,Args=[tar,-C,/tmp/spark-df-profiling/,-xzf,'
+        '/tmp/spark-df-profiling.tar.gz]')
 PROFILER_INSTALL_STEP = ('Type=CUSTOM_JAR,Name="Install Profiler",Jar="command-runner.jar",'
         'ActionOnFailure=CONTINUE,Args=[sudo,pip,install,/tmp/spark-df-profiling/]')
 INSTALL_JSONSERDE_STEP = ('Type=CUSTOM_JAR,Name="Install JSONSerde JAR",Jar="command-runner.jar",'
         'ActionOnFailure=CONTINUE,Args=[sudo, wget, -O,'
         '/usr/lib/spark/jars/json-serde-1.3.8-jar-with-dependencies.jar,'
         'http://www.congiu.net/hive-json-serde/1.3.8/hdp23/json-serde-1.3.8-jar-with-dependencies.jar]')
+START_PROFILER_DAEMON_STEP = ('Type=CUSTOM_JAR,Name="Start Data Profiler",ActionOnFailure=TERMINATE_JOB_FLOW,'
+        'Args=[bash,/tmp/spark-df-profiling/bin/launch_profiler_daemon.sh]')
 PROFILING_CONFIG_DB = 'hll_config'
 SELECT_PENDING_REQUESTS = 'SELECT * FROM profiling_request WHERE completed IS NULL'
 UPDATE_GENERATION_LOG = "UPDATE profiling_request SET completed=now(), s3_url=%s WHERE request_id=%s"
@@ -113,9 +110,9 @@ def do_generate_profiles(ds, **kwargs):
     profiling_requests = get_pending_requests()
 
     requests_to_complete = []
-    steps = [BOTO3_INSTALL_STEP, PROFILER_COPY_STEP,
-            DECOMPRESS_PROFILER_STEP, PROFILER_INSTALL_STEP,
-            INSTALL_JSONSERDE_STEP]
+    steps = [PROFILER_COPY_STEP, MKDIR_PROFILER_STEP, DECOMPRESS_PROFILER_STEP,
+            PROFILER_INSTALL_STEP, INSTALL_JSONSERDE_STEP,
+            START_PROFILER_DAEMON_STEP]
     for req in profiling_requests:
         (s3_path, report_name) = get_report_info(req)
         steps.append(PROFILING_STEP_TEMPLATE.format(req.analytics_table, report_name, s3_path))
