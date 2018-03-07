@@ -218,7 +218,10 @@ CREATE VIEW default.medicalclaims (
     procedure_modifier_3,
     procedure_modifier_4,
     revenue_code,
-    ndc_code,
+    CASE
+      WHEN LENGTH(REGEXP_REPLACE(ndc_code, '[^0-9]', '')) >= 8
+      THEN REGEXP_REPLACE(ndc_code, '[^0-9]', '')
+    END AS ndc_code,
     medical_coverage_type,
     line_charge,
     line_allowed,
@@ -621,7 +624,10 @@ SELECT CAST(record_id AS bigint),
     procedure_modifier_3,
     procedure_modifier_4,
     revenue_code,
-    ndc_code,
+    CASE
+      WHEN LENGTH(REGEXP_REPLACE(ndc_code, '[^0-9]', '')) >= 8
+      THEN REGEXP_REPLACE(ndc_code, '[^0-9]', '')
+    END AS ndc_code,
     medical_coverage_type,
     CAST(line_charge AS float),
     CAST(line_allowed AS float),
