@@ -59,7 +59,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval=None,
+    schedule_interval='3,18,33,48 * * * *',
     default_args=default_args
 )
 
@@ -75,6 +75,23 @@ def get_pending_requests():
         with conn.cursor() as cur:
             cur.execute(SELECT_PENDING_REQUESTS)
             return cur.fetchall()
+
+def do_check_pending_requests(ds, **kwargs):
+    if not emr_utils.cluster_running(EMR_CLUSTER_NAME):
+        if get_pending_requests():
+            return 'create_cluster'
+
+    return 'do_nothing'
+
+check_pending_requests = BranchPythonOperator(
+    task_id='check_pending_requests',
+    provide_context=True,
+    python_callable=do_check_pending_requests,
+    retries=0,
+    dag=mdag
+)
+
+do_nothing = DummyOperator(task_id='do_nothing', dag=mdag)
 
 def do_create_cluster(ds, **kwargs):
     emr_utils.create_emr_cluster(EMR_CLUSTER_NAME, NUM_NODES, NODE_TYPE,
@@ -150,6 +167,8 @@ update_log = PythonOperator(
     dag=mdag
 )
 
+create_cluster.set_upstream(check_pending_requests)
+do_nothing.set_upstream(check_pending_requests)
 generate_profiles.set_upstream(create_cluster)
 delete_cluster.set_upstream(generate_profiles)
 update_log.set_upstream(delete_cluster)
