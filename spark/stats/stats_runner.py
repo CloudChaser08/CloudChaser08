@@ -1,6 +1,4 @@
 import argparse
-import os
-import logging
 import inspect
 
 import spark.spark_setup as spark_setup
@@ -40,19 +38,11 @@ def main(args):
     quarter = args.quarter
     start_date = args.start_date
     end_date = args.end_date
-    output_dir = args.output_dir
 
     # Get the providers config
     this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
     config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
     provider_conf = config_reader.get_provider_config(config_file, feed_id)
-
-    # Create output directory
-    output_dir = output_dir[:-1] if output_dir.endswith('/') else output_dir
-    try:
-        os.makedirs(output_dir)
-    except OSError:
-        logging.warn("Output dir already exists")
 
     # set up spark
     spark, sqlContext = spark_setup \
@@ -67,6 +57,5 @@ if __name__ == '__main__':
     parser.add_argument('--quarter', type = str)
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)
-    parser.add_argument('--output_dir', type = str)
     args = parser.parse_args()
     main(args)
