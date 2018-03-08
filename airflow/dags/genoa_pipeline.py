@@ -29,7 +29,7 @@ DAG_NAME = 'genoa_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 1, 3),
+    'start_date': datetime(2017, 12, 3),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -54,17 +54,17 @@ else:
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/genoa/'
 
 # Zip file
-ZIP_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_{}{}{}'
+ZIP_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_{}{}01'
 
 # Transaction file
 TRANSACTION_S3_SPLIT_URL = S3_TRANSACTION_PROCESSED_URL_TEMPLATE
 TRANSACTION_FILE_DESCRIPTION = 'Genoa transaction file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_DeID_Payload_{}{}{}'
+TRANSACTION_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_DeID_Payload_{}{}01'
 MINIMUM_TRANSACTION_FILE_SIZE = 500
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Genoa deid file'
-DEID_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_DeID_PHI_{}{}{}'
+DEID_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_DeID_PHI_{}{}01'
 MINIMUM_DEID_FILE_SIZE = 500
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
@@ -312,7 +312,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     # matching
     queue_up_for_matching.set_upstream(unzip_incoming_file)
 
-    # post-matchings
+    # post-matching
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
