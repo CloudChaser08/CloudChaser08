@@ -58,7 +58,7 @@ ZIP_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_{}{}{}'
 
 # Transaction file
 TRANSACTION_S3_SPLIT_URL = S3_TRANSACTION_PROCESSED_URL_TEMPLATE
-TRANSACTION_FILE_DESCRIPTION = 'Genoa transaction addon file'
+TRANSACTION_FILE_DESCRIPTION = 'Genoa transaction file'
 TRANSACTION_FILE_NAME_TEMPLATE = 'Genoa_HealthVerity_DeID_Payload_{}{}{}'
 MINIMUM_TRANSACTION_FILE_SIZE = 500
 
@@ -99,8 +99,7 @@ def get_transaction_file_paths(ds, kwargs):
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
-    file_dir = get_tmp_unzipped_dir(ds, kwargs)
-    encrypted_file_path = file_dir + get_filename(file_dir, TRANSACTION_FILE_NAME_TEMPLATE)
+    encrypted_file_path = get_transaction_file_paths(ds, kwargs)[0].replace('.gz', '')
 
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
@@ -137,14 +136,11 @@ def generate_file_validation_dag(
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    validate_transaction = generate_file_validation_dag(
-        'transaction', TRANSACTION_FILE_NAME_TEMPLATE,
+    validate_incoming_file = generate_file_validation_dag(
+        'validate_incoming_zip_file', ZIP_FILE_NAME_TEMPLATE,
         MINIMUM_TRANSACTION_FILE_SIZE
     )
-    validate_deid = generate_file_validation_dag(
-        'deid', DEID_FILE_NAME_TEMPLATE,
-        MINIMUM_DEID_FILE_SIZE
-    )
+
 
 fetch_zip_file = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
@@ -167,7 +163,7 @@ fetch_zip_file = SubDagOperator(
 )
 
 
-def do_unzip_file(task_id, file_name_template):
+def do_unzip_file(file_name_template):
     def out(ds, **kwargs):
         tmp_dir = get_tmp_dir(ds, kwargs)
         file_name = get_filename(tmp_dir, file_name_template)
@@ -182,7 +178,7 @@ def do_unzip_file(task_id, file_name_template):
     )
 
 
-unzip_incoming_file = do_unzip_file('unzip_step', ZIP_FILE_NAME_TEMPLATE)
+unzip_incoming_file = do_unzip_file(ZIP_FILE_NAME_TEMPLATE)
 
 decrypt_transaction = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
@@ -311,12 +307,12 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    validate_transaction.set_upstream(unzip_incoming_file)
+    fetch_zip_file.set_upstream(validate_incoming_file)
 
     # matching
-    queue_up_for_matching.set_upstream(validate_deid)
+    queue_up_for_matching.set_upstream(unzip_incoming_file)
 
-    # post-matching
+    # post-matchings
     detect_move_normalize_dag.set_upstream(
         [queue_up_for_matching, split_transaction]
     )
