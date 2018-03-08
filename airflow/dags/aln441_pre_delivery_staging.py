@@ -197,11 +197,13 @@ def do_create_table(ds, **kwargs):
     '''
 
     schema = kwargs['schema']
+    staging_s3_loc = kwargs['staging_s3_loc_func'](ds, kwargs)
+
     table_name = kwargs['ti'].xcom_pull(task_ids='check_for_file', key='filename')[:-8].lower()
-    print schema, table_name
+    print schema, table_name, staging_s3_loc
     queries = [
         'DROP TABLE IF EXISTS {}.{}'.format(schema, table_name),
-        create_table_statement_template.format(schema, table_name, S3_DATA_STAGED_URL_TEMPLATE).format(*ds.split('-'))
+        create_table_statement_template.format(schema, table_name, staging_s3_loc)
     ]
 
     print queries[1]
@@ -213,7 +215,11 @@ create_table = PythonOperator(
     provide_context = True,
     python_callable = do_create_table,
     op_kwargs = {
-        'schema'    : 'dev' if HVDAG.HVDAG.airflow_env =='test' else 'aln441'
+        'schema'                : 'dev' if HVDAG.HVDAG.airflow_env =='test' else 'aln441',
+        'staging_s3_loc_func'   : date_utils.generate_insert_date_into_template_function(
+                                    S3_DATA_STAGED_URL_TEMPLATE,
+                                    day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET
+                                  )
     },
     dag = mdag
 )
