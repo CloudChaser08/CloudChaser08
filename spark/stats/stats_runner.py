@@ -10,15 +10,24 @@ import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
 
 def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
-    # Calculate marketplace stats
-    marketplace_stats = processor.run_marketplace_stats(
-        spark, sqlContext, quarter, start_date, end_date, provider_config
-    )
+    if provider_config['datatype'] == 'emr':
+        marketplace_stats = dict([
+            (model_conf['table'], processor.run_marketplace_stats(
+                spark, sqlContext, quarter, start_date, end_date,
+                dict([it for it in [provider_config.items() + model_conf.items()]])
+            )) for model_conf in provider_config['models']
+        ])
+        stats = marketplace_stats
+    else:
+        # Calculate marketplace stats
+        marketplace_stats = processor.run_marketplace_stats(
+            spark, sqlContext, quarter, start_date, end_date, provider_config
+        )
 
-    # Calculate epi calcs
-    epi_calcs = processor.get_epi_calcs(provider_config)
+        # Calculate epi calcs
+        epi_calcs = processor.get_epi_calcs(provider_config)
 
-    stats = dict(marketplace_stats, **epi_calcs)
+        stats = dict(marketplace_stats, **epi_calcs)
 
     stats_writer.write_to_s3(stats, provider_config, quarter)
 
@@ -36,8 +45,7 @@ def main(args):
     # Get the providers config
     this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
     config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
-    provider_conf = config_reader.get_provider_config(
-                                    config_file, feed_id)
+    provider_conf = config_reader.get_provider_config(config_file, feed_id)
 
     # Create output directory
     output_dir = output_dir[:-1] if output_dir.endswith('/') else output_dir

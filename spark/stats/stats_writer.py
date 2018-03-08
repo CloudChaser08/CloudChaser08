@@ -117,12 +117,12 @@ def _generate_queries(stats, provider_conf):
     return queries
 
 
-def _write_queries(queries, datafeed_id, quarter):
+def _write_queries(queries, datafeed_id, quarter, identifier=None):
     """
     Write given queries to s3
     """
     for stat_name, stat_queries in queries.items():
-        filename = '{}_{}.sql'.format(datafeed_id, stat_name)
+        filename = '{}_{}{}.sql'.format(datafeed_id, '{}_'.format(identifier) if identifier else '', stat_name)
         with open(filename, 'w') as query_output:
             query_output.write('BEGIN;')
             query_output.writelines(stat_queries)
@@ -139,6 +139,10 @@ def write_to_s3(stats, provider_conf, quarter):
 
     Those scripts are saved to S3_OUTPUT_DIR.
     """
-
-    queries = _generate_queries(stats, provider_conf)
-    _write_queries(queries, provider_conf['datafeed_id'], quarter)
+    if provider_conf['datatype'] == 'emr':
+        for model_conf in provider_conf['models']:
+            queries = _generate_queries(stats[model_conf['table']], model_conf)
+            _write_queries(queries, provider_conf['datafeed_id'], quarter, identifier=model_conf['table'])
+    else:
+        queries = _generate_queries(stats, provider_conf)
+        _write_queries(queries, provider_conf['datafeed_id'], quarter)
