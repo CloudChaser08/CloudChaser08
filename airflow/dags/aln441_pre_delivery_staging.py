@@ -45,7 +45,7 @@ else:
     S3_DATA_STAGED_URL_TEMPLATE = 's3://salusv/incoming/staging/aln441/data/{}/{}/{}/'
 
 TMP_PATH_TEMPLATE='/tmp/aln441/pre_staging/{}{}{}/'
-DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt.zip'
+DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt.gz.zip'
 ALN441_PRE_DELIVERY_DAY_OFFSET = 7
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
@@ -116,7 +116,9 @@ fetch_data_file_subdag = SubDagOperator(
 def do_unzip_file(ds, **kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     zip_file = kwargs['ti'].xcom_pull(task_ids = 'check_for_file', key = 'filename')
+    gzip_file = zip_file[:-4]
     decompression.decompress_zip_file(file_dir + zip_file, file_dir)
+    decompression.decompress_gzip_file(file_dir + gzip_file)
 
 
 unzip_data_file = PythonOperator(
@@ -134,7 +136,7 @@ push_file_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'file_paths_func'   : lambda ds, k: [get_tmp_dir(ds, k) + \
-                                                k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='check_for_file', key='filename')],
+                                    k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='check_for_file', key='filename')[:-7]],
             's3_prefix_func'    : lambda ds, k: '/'.join(S3_DATA_STAGED_URL_TEMPLATE.split('/')[3:]),
             's3_bucket'         : S3_DATA_STAGED_URL_TEMPLATE.split('/')[2]
         }
@@ -199,7 +201,7 @@ def do_create_table(ds, **kwargs):
     schema = kwargs['schema']
     staging_s3_loc = kwargs['staging_s3_loc_func'](ds, kwargs)
 
-    table_name = kwargs['ti'].xcom_pull(task_ids='check_for_file', key='filename')[:-8].lower()
+    table_name = kwargs['ti'].xcom_pull(task_ids='check_for_file', key='filename')[:-11].lower()
     print schema, table_name, staging_s3_loc
     queries = [
         'DROP TABLE IF EXISTS {}.{}'.format(schema, table_name),
