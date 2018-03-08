@@ -8,7 +8,7 @@ SELECT DISTINCT
     mp.state                            AS patient_state,
     'P'                                 AS claim_type,
     extract_date(
-        substring(header.processdate, 1, 8), '%Y%m%d'
+        substring(header.processdate, 1, 10), '%Y-%m-%d'
         )                               AS date_received,
     extract_date(
         substring(COALESCE(
@@ -16,7 +16,7 @@ SELECT DISTINCT
                 (SELECT MIN(sl2.servicestart)
                 FROM transactional_serviceline sl2
                 WHERE sl2.claimid = header.claimid)
-        ), 1, 8), '%Y%m%d'
+        ), 1, 10), '%Y-%m-%d'
         )                               AS date_service,
     extract_date(
         substring(
@@ -28,7 +28,7 @@ SELECT DISTINCT
                     FROM transactional_serviceline sl2
                     WHERE sl2.claimid = header.claimid
                 )
-            END, 1, 8), '%Y%m%d'
+            END, 1, 10), '%Y-%m-%d'
         )                               AS date_service_end,
     header.institutionaltype            AS place_of_service_std_id,
     diagnosis.diagnosiscode             AS diagnosis_code,
@@ -254,9 +254,10 @@ FROM transactional_header header
 
     -- diag
     LEFT JOIN transactional_diagnosis diagnosis ON diagnosis.claimid = header.claimid
-WHERE header.Type = 'Professional'
+WHERE header.type = 'Professional'
     AND diagnosis.diagnosiscode NOT IN (
         SELECT m2.diagnosis_code 
         FROM medicalclaims_common_model m2
         WHERE m2.claim_id = header.claimid
+            AND m2.diagnosis_code IS NOT NULL
     )

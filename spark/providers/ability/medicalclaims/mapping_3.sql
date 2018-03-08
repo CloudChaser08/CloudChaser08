@@ -8,7 +8,7 @@ SELECT
     mp.state                            AS patient_state,
     'I'                                 AS claim_type,
     extract_date(
-        substring(header.processdate, 1, 8), '%Y%m%d'
+        substring(header.processdate, 1, 10), '%Y-%m-%d'
         )                               AS date_received,
     extract_date(
         substring(COALESCE(
@@ -16,7 +16,7 @@ SELECT
                 (SELECT MIN(sl2.servicestart)
                 FROM transactional_serviceline sl2
                 WHERE sl2.claimid = header.claimid)
-        ), 1, 8), '%Y%m%d'
+        ), 1, 10), '%Y-%m-%d'
         )                               AS date_service,
     extract_date(
         substring(
@@ -28,7 +28,7 @@ SELECT
                     FROM transactional_serviceline sl2
                     WHERE sl2.claimid = header.claimid
                 )
-            END, 1, 8), '%Y%m%d'
+            END, 1, 10), '%Y-%m-%d'
         )                               AS date_service_end,
     header.admissiontype                AS inst_admit_type_std_id,
     header.admissionsource              AS inst_admit_source_std_id,
