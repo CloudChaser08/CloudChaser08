@@ -29,7 +29,7 @@ DAG_NAME = 'genoa_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 3, 1),
+    'start_date': datetime(2018, 1, 3),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -37,7 +37,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 0 1 * *",  # first of each month
+    schedule_interval="0 13 3 * *",  # Third of the month at 8am
     default_args=default_args
 )
 
@@ -71,8 +71,9 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE
 )
 
+
 get_tmp_unzipped_dir = date_utils.generate_insert_date_into_template_function(
-    TMP_PATH_TEMPLATE + 'DeID_Output/'
+    TMP_PATH_TEMPLATE + 'DeID_Output/'  # Genoa unzipped folder name
 )
 
 
