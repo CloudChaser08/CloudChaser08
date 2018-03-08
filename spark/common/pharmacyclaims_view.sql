@@ -168,7 +168,10 @@ CREATE VIEW default.pharmacyclaims (
     diagnosis_code_qual,
     procedure_code,
     procedure_code_qual,
-    ndc_code,
+    CASE
+      WHEN LENGTH(REGEXP_REPLACE(ndc_code, '[^0-9]', '')) >= 8
+      THEN REGEXP_REPLACE(ndc_code, '[^0-9]', '')
+    END AS ndc_code,
     product_service_id,
     product_service_id_qual,
     rx_number,
@@ -308,7 +311,10 @@ UNION ALL
     diagnosis_code_qual,
     procedure_code,
     procedure_code_qual,
-    ndc_code,
+    CASE
+      WHEN LENGTH(REGEXP_REPLACE(ndc_code, '[^0-9]', '')) >= 8
+      THEN REGEXP_REPLACE(ndc_code, '[^0-9]', '')
+    END AS ndc_code,
     product_service_id,
     product_service_id_qual,
     rx_number,
@@ -454,7 +460,10 @@ SELECT CAST(record_id AS bigint),
     diagnosis_code_qual,
     procedure_code,
     procedure_code_qual,
-    ndc_code,
+    CASE
+      WHEN LENGTH(REGEXP_REPLACE(ndc_code, '[^0-9]', '')) >= 8
+      THEN REGEXP_REPLACE(ndc_code, '[^0-9]', '')
+    END AS ndc_code,
     product_service_id,
     product_service_id_qual,
     rx_number,

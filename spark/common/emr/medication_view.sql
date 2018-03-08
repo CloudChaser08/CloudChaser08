@@ -128,7 +128,10 @@ CREATE VIEW dw.hvm_emr_medctn (
     medctn_end_dt,
     medctn_diag_cd,
     medctn_diag_cd_qual,
-    medctn_ndc,
+    CASE
+      WHEN LENGTH(REGEXP_REPLACE(medctn_ndc, '[^0-9]', '')) >= 8
+      THEN REGEXP_REPLACE(medctn_ndc, '[^0-9]', '')
+    END AS medctn_ndc,
     medctn_lblr_cd,
     medctn_drug_and_strth_cd,
     medctn_pkg_cd,
