@@ -5,7 +5,8 @@ from contextlib import closing
 import psycopg2
 from spark.helpers.file_utils import get_abs_path
 
-
+# map from emr datatype (table) name to the name of each datatype in
+# the marketplace db
 emr_datatype_name_map = {
     'emr_enc': 'Encounter',
     'emr_diag': 'Diagnosis',
@@ -159,8 +160,9 @@ def get_provider_config(providers_conf_file, feed_id):
         raise Exception('datatype is not specified for feed {}'.format(feed_id))
     elif provider_conf['datatype'] == 'emr':
         provider_conf['models'] = [
-            _fill_in_conf_dict(model_conf, feed_id, providers_conf_file)
-            for model_conf in provider_conf['models']
+            _fill_in_conf_dict(
+                dict(provider_conf.items() + model_conf.items()), feed_id, providers_conf_file
+            ) for model_conf in provider_conf['models']
         ]
         return provider_conf
     else:

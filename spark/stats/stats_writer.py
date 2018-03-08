@@ -49,25 +49,25 @@ def _generate_queries(stats, provider_conf):
     for stat_name, stat_value in stats.items():
         stat_queries = []
 
-        if stat_name == 'key_stats':
+        if stat_name == 'key_stats' and stat_value:
             for key_stat in stat_value:
                 stat_queries.append(KEYSTATS_UPDATE_SQL_TEMPLATE.format(
                     key_stat['field'], key_stat['value'], provider_conf['datafeed_id']
                 ))
-        elif stat_name == 'longitudinality':
+        elif stat_name == 'longitudinality' and stat_value:
             stat_queries.append(LONGITUDINALITY_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
             for longitudinality_stat in stat_value:
                 stat_queries.append(LONGITUDINALITY_INSERT_SQL_TEMPLATE.format(
                     longitudinality_stat['duration'], longitudinality_stat['value'],
                     longitudinality_stat['average'], longitudinality_stat['std_dev'], provider_conf['datafeed_id']
                 ))
-        elif stat_name == 'year_over_year':
+        elif stat_name == 'year_over_year' and stat_value:
             stat_queries.append(YOY_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
             for yoy_stat in stat_value:
                 stat_queries.append(YOY_INSERT_SQL_TEMPLATE.format(
                     yoy_stat['year'], yoy_stat['count'], provider_conf['datafeed_id']
                 ))
-        elif stat_name == 'epi':
+        elif stat_name == 'epi' and stat_value:
             stat_queries.append(EPI_AGE_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
             stat_queries.append(EPI_GENDER_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
             stat_queries.append(EPI_STATE_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
@@ -88,7 +88,7 @@ def _generate_queries(stats, provider_conf):
                         query.format(epi_stat['value'], epi_stat['field'], provider_conf['datafeed_id'])
                     )
 
-        elif stat_name == 'top_values':
+        elif stat_name == 'top_values' and stat_value:
             columns = set([r['column'] for r in stat_value])
 
             for column in columns:
@@ -103,7 +103,7 @@ def _generate_queries(stats, provider_conf):
                     top_values=top_values_string
                 ))
 
-        elif stat_name == 'fill_rate':
+        elif stat_name == 'fill_rates' and stat_value:
             name_id_dict = provider_conf['fill_rate_conf']['columns']
 
             for field_dict in stat_value:
@@ -124,11 +124,11 @@ def _write_queries(queries, datafeed_id, quarter, identifier=None):
     for stat_name, stat_queries in queries.items():
         filename = '{}_{}{}.sql'.format(datafeed_id, '{}_'.format(identifier) if identifier else '', stat_name)
         with open(filename, 'w') as query_output:
-            query_output.write('BEGIN;')
-            query_output.writelines(stat_queries)
-            query_output.write('COMMIT;')
+            query_output.write('BEGIN;\n')
+            query_output.writelines([(q + '\n') for q in stat_queries])
+            query_output.write('COMMIT;\n')
         boto3.client('s3').upload_file(
-            filename, S3_OUTPUT_DIR.split('/')[2], '/'.join(S3_OUTPUT_DIR.format(quarter).split('/')[3:]) + '/'
+            filename, S3_OUTPUT_DIR.split('/')[2], '/'.join(S3_OUTPUT_DIR.format(quarter).split('/')[3:]) + filename
         )
 
 
@@ -139,7 +139,7 @@ def write_to_s3(stats, provider_conf, quarter):
 
     Those scripts are saved to S3_OUTPUT_DIR.
     """
-    if provider_conf['datatype'] == 'emr':
+    if provider_conf['datatype'].startswith('emr'):
         for model_conf in provider_conf['models']:
             queries = _generate_queries(stats[model_conf['datatype']], model_conf)
             _write_queries(queries, provider_conf['datafeed_id'], quarter, identifier=model_conf['datatype'])

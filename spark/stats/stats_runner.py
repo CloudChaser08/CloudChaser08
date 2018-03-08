@@ -16,6 +16,13 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
             )) for model_conf in provider_config['models']
         ])
         stats = marketplace_stats
+
+        for model_conf in provider_config['models']:
+            stats_writer.write_to_s3(
+                stats[model_conf['datatype']],
+                dict([it for it in provider_config.items() + model_conf.items()]),
+                quarter
+            )
     else:
         # Calculate marketplace stats
         marketplace_stats = processor.run_marketplace_stats(
@@ -27,7 +34,7 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
 
         stats = dict(marketplace_stats, **epi_calcs)
 
-    stats_writer.write_to_s3(stats, provider_config, quarter)
+        stats_writer.write_to_s3(stats, provider_config, quarter)
 
     return stats
 
