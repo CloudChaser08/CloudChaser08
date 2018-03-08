@@ -12,9 +12,9 @@ import spark.stats.processor as processor
 def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
     if provider_config['datatype'] == 'emr':
         marketplace_stats = dict([
-            (model_conf['table'], processor.run_marketplace_stats(
+            (model_conf['datatype'], processor.run_marketplace_stats(
                 spark, sqlContext, quarter, start_date, end_date,
-                dict([it for it in [provider_config.items() + model_conf.items()]])
+                dict([it for it in provider_config.items() + model_conf.items()])
             )) for model_conf in provider_config['models']
         ])
         stats = marketplace_stats

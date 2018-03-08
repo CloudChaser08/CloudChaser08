@@ -8,35 +8,27 @@ from pyspark.sql import Row
 import spark.helpers.stats.utils as stats_utils
 import spark.stats.stats_writer as stats_writer
 
-results = None
-output_dir = None
-data_row = None
+# convenience datatype used in tests
+data_row = Row('claim_id', 'service_date', 'hvid', 'col_2', 'col_3')
+quarter = 'Q12017'
 
-provider = None
-quarter = None
-start_date = None
-end_date = None
-earliest_date = None
+expected_results_dict = {
+    'fill_rates': [{'field': u'claim_id', 'fill': 1.0},
+                   {'field': u'service_date', 'fill': 1.0},
+                   {'field': u'col_3', 'fill': 0.3333333333333333}],
+    'key_stats': None,
+    'longitudinality': None,
+    'top_values': None,
+    'year_over_year': None
+}
 
+@pytest.mark.usefixtures('spark')
 @pytest.fixture(autouse=True)
-def setup_teardown():
+def setup_teardown(spark):
     old_get_data_func = stats_utils.get_provider_data
     old_write_to_s3 = stats_writer.write_to_s3
 
-    yield
-
-    stats_utils.get_provider_data = old_get_data_func
-    stats_writer.write_to_s3 = old_write_to_s3
-
-
-@pytest.mark.usefixtures('spark')
-def test_init(spark):
-    global results, output_dir, data_row, provider, quarter, \
-            start_date, end_date, earliest_date, output_dir, \
-            old_get_data_func, old_get_provider_config_func
-
-    data_row = Row('claim_id', 'service_date', 'hvid', 'col_2', 'col_3')
-
+    stats_writer.write_to_s3 = Mock()
     stats_utils.get_provider_data = Mock(
         return_value = spark['spark'].sparkContext.parallelize([
             data_row('0', '1995-10-11', None, 'a', 'b'),
@@ -51,8 +43,13 @@ def test_init(spark):
         ]).toDF()
     )
 
-    stats_writer.write_to_s3 = Mock()
+    yield
 
+    stats_utils.get_provider_data = old_get_data_func
+    stats_writer.write_to_s3 = old_write_to_s3
+
+
+def test_standard_stats(spark):
     provider_config = {
             'name'              : 'test',
             'datafeed_id'       : '27',
@@ -69,20 +66,43 @@ def test_init(spark):
             'earliest_date'     : '1990-01-01'
         }
 
-    quarter = 'Q12017'
     start_date = '2015-04-01'
     end_date = '2017-04-01'
     results = stats_runner.run(spark['spark'], spark['sqlContext'],
                                quarter, start_date, end_date, provider_config)
 
+    assert results == expected_results_dict
 
-def test_stats():
+
+def test_emr_stats(spark):
+    provider_config = {
+        'name'         : 'test_emr',
+        'datafeed_id'  : '48',
+        'datatype'     : 'emr',
+        'models'       : [
+            {
+                'datatype'        : 'emr_diag',
+                'date_field'      : 'service_date',
+                'record_field'    : 'claim_id',
+                'fill_rates'      : True,
+                'fill_rate_conf'  : {'columns': {'claim_id': 1, 'service_date': 2, 'col_3': 3}},
+            }, {
+                'datatype'        : 'emr_clin_obsn',
+                'date_field'      : 'service_date',
+                'record_field'    : 'claim_id',
+                'fill_rates'      : True,
+                'fill_rate_conf'  : {'columns': {'claim_id': 1, 'service_date': 2, 'col_3': 3}},
+            }
+        ],
+        'earliest_date'     : '1990-01-01'
+    }
+
+    start_date = '2015-04-01'
+    end_date = '2017-04-01'
+    results = stats_runner.run(spark['spark'], spark['sqlContext'],
+                               quarter, start_date, end_date, provider_config)
+
     assert results == {
-        'fill_rates': [{'field': u'claim_id', 'fill': 1.0},
-                       {'field': u'service_date', 'fill': 1.0},
-                       {'field': u'col_3', 'fill': 0.3333333333333333}],
-        'key_stats': None,
-        'longitudinality': None,
-        'top_values': None,
-        'year_over_year': None
+        'emr_diag': expected_results_dict,
+        'emr_clin_obsn': expected_results_dict
     }

@@ -141,8 +141,8 @@ def write_to_s3(stats, provider_conf, quarter):
     """
     if provider_conf['datatype'] == 'emr':
         for model_conf in provider_conf['models']:
-            queries = _generate_queries(stats[model_conf['table']], model_conf)
-            _write_queries(queries, provider_conf['datafeed_id'], quarter, identifier=model_conf['table'])
+            queries = _generate_queries(stats[model_conf['datatype']], model_conf)
+            _write_queries(queries, provider_conf['datafeed_id'], quarter, identifier=model_conf['datatype'])
     else:
         queries = _generate_queries(stats, provider_conf)
         _write_queries(queries, provider_conf['datafeed_id'], quarter)

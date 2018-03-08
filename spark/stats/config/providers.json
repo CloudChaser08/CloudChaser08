@@ -531,45 +531,45 @@
             "datatype"          : "emr",
             "models"            : [
               {
-                "table"             : "clin_obsn",
-                "date_field"        : "enc_dt",
-                "record_field"      : null,
-                "fill_rate"         : true
+                "datatype"     : "emr_clin_obsn",
+                "date_field"   : "enc_dt",
+                "record_field" : null,
+                "fill_rate"    : true
               }, {
-                "table"             : "medctn",
-                "date_field"        : "enc_dt",
-                "record_field"      : null,
-                "fill_rate"         : true
+                "datatype"     : "emr_medctn",
+                "date_field"   : "enc_dt",
+                "record_field" : null,
+                "fill_rate"    : true
               }, {
-                "table"             : "vit_sign",
-                "date_field"        : "enc_dt",
-                "record_field"      : null,
-                "fill_rate"         : true
+                "datatype"     : "emr_vit_sign",
+                "date_field"   : "enc_dt",
+                "record_field" : null,
+                "fill_rate"    : true
               }, {
-                "table"             : "prov_ord",
-                "date_field"        : "enc_dt",
-                "record_field"      : null,
-                "fill_rate"         : true
+                "datatype"     : "emr_prov_ord",
+                "date_field"   : "enc_dt",
+                "record_field" : null,
+                "fill_rate"    : true
               }, {
-                "table"             : "lab_result",
-                "date_field"        : "enc_dt",
-                "record_field"      : null,
-                "fill_rate"         : true
+                "datatype"     : "emr_lab_result",
+                "date_field"   : "enc_dt",
+                "record_field" : null,
+                "fill_rate"    : true
               }, {
-                "table"             : "lab_order",
-                "date_field"        : "enc_dt",
-                "record_field"      : null,
-                "fill_rate"         : true
+                "datatype"     : "emr_lab_order",
+                "date_field"   : "enc_dt",
+                "record_field" : null,
+                "fill_rate"    : true
               }, {
-                "table"             : "proc",
-                "date_field"        : "enc_dt",
-                "record_field"      : null,
-                "fill_rate"         : true
+                "datatype"     : "emr_proc",
+                "date_field"   : "enc_dt",
+                "record_field" : null,
+                "fill_rate"    : true
               }, {
-                "table"             : "diag",
-                "date_field"        : "enc_dt",
-                "record_field"      : null,
-                "fill_rate"         : true
+                "datatype"     : "emr_diag",
+                "date_field"   : "enc_dt",
+                "record_field" : null,
+                "fill_rate"    : true
               }
             ],
             "earliest_date"     : "1900-01-01"

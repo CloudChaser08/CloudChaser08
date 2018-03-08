@@ -82,14 +82,15 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
-    feed_id = provider_conf['datafeed_id']
     date_column_field = provider_conf['date_field']
-    distinct_column_name = provider_conf['record_field']
     earliest_date = provider_conf['earliest_date']
     index_all_dates = provider_conf.get('index_all_dates', False)
 
     # Get data
-    all_data_df = utils.get_provider_data(sqlContext, datatype, provider_conf['name'])
+    all_data_df = utils.get_provider_data(
+        sqlContext, datatype,
+        provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name']
+    )
 
     # Desired number of partitions when calculating
     partitions = int(spark.conf.get('spark.sql.shuffle.partitions'))
