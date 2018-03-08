@@ -21,7 +21,7 @@ def load(runner, input_path_prefix, product, file_date):
         { 'table' : 'transactional_servicelineaffiliation', 'prefix' : 'vwservicelineaffiliation'},
         { 'table' : 'transactional_diagnosis', 'prefix' : 'vwdiagnosis'},
         { 'table' : 'transactional_procedure', 'prefix' : 'vwprocedurecode'},
-        { 'table' : 'transactional_billing', 'prefix' : 'vwprocedurecode'},
+        { 'table' : 'transactional_billing', 'prefix' : 'vwbilling'},
         { 'table' : 'transactional_payer', 'prefix' : 'record.vwpayer'},
         { 'table' : 'transactional_claimaffiliation', 'prefix' : 'vwclaimaffiliation'}
     ]
@@ -40,6 +40,7 @@ def load(runner, input_path_prefix, product, file_date):
             .compose(postprocessor.trimmify,
                     lambda x: postprocessor.nullify(x, null_vals=['', 'NULL']))(df) \
             .distinct() \
+            .repartition(500).cache_and_track(c['table']) \
             .createOrReplaceTempView(c['table'])
 
 TABLES = {
