@@ -64,14 +64,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 .createOrReplaceTempView('matching_payload')
 
         # Normalize
-        product_norm = None
-        for mapping in ['mapping_1.sql', 'mapping_2.sql', 'mapping_3.sql']:
-            norm = schema_enforcer.apply_schema(
-                runner.run_spark_script(mapping, return_output=True),
-                medicalclaims_schema
-            )
-            product_norm = norm if product_norm is None else product_norm.union(norm)
-            product_norm.createOrReplaceTempView('medicalclaims_common_model')
+        norm1 = schema_enforcer.apply_schema(
+            runner.run_spark_script('mapping_1.sql', return_output=True),
+            medicalclaims_schema
+        ).distinct()
+        norm1.createOrReplaceTempView('medicalclaims_common_model')
+        norm2 = schema_enforcer.apply_schema(
+            runner.run_spark_script('mapping_2.sql', return_output=True),
+            medicalclaims_schema
+        ).distinct()
+        norm3 = schema_enforcer.apply_schema(
+            runner.run_spark_script('mapping_3.sql', return_output=True),
+            medicalclaims_schema
+        ).distinct()
+
+
+
+        product_norm = norm1.union(norm2).union(norm3)
         logging.debug('Finished normalizing')
 
         hvm_historical = postprocessor.coalesce_dates(
@@ -97,7 +106,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 for c in ['date_received', 'date_service', 'date_service_end']]
         )(
             product_norm
-        )
+        ).repartition(1000)
         logging.debug('Finished post-processing')
 
         all_norm = product_norm if all_norm is None else all_norm.union(product_norm)
@@ -106,7 +115,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', '15',
+            spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'ability',
             'medicalclaims_common_model', 'date_service', date_input,
             hvm_historical_date = hvm_historical
         )
@@ -126,7 +135,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/medicalclaims/ability/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-06/'
+        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
 
 #    normalized_records_unloader.distcp(output_path)
 
