@@ -1,9 +1,7 @@
 from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 
-
 import os
-import re
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -78,44 +76,30 @@ get_tmp_unzipped_dir = date_utils.generate_insert_date_into_template_function(
 )
 
 
+def get_filename(file_dir, file_name_template):
+    for f in os.listdir(file_dir):
+        if f.startswith(file_name_template.split('{}')[0]):
+            file_name = f
+    return file_name
+
+
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL +
-            date_utils.insert_date_into_template(
-                DEID_FILE_NAME_TEMPLATE,
-                kwargs, month_offset=GENOA_MONTH_OFFSET
-            )]
+    file_dir = get_tmp_unzipped_dir(ds, kwargs)
+    deid_filename = get_filename(file_dir, DEID_FILE_NAME_TEMPLATE)
 
-
-def get_files_that_match_pattern(file_path, file_prefix):
-    def out(ds, kwargs):
-        files = [
-            f for f in os.listdir(file_path) if re.search(file_prefix, f)
-        ]
-        return files
-    return out
+    return [S3_TRANSACTION_RAW_URL + deid_filename]
 
 
 def get_transaction_file_paths(ds, kwargs):
     file_dir = get_tmp_unzipped_dir(ds, kwargs)
-    transaction_file = date_utils.insert_date_into_template(
-        TRANSACTION_FILE_NAME_TEMPLATE,
-        kwargs, month_offset=GENOA_MONTH_OFFSET
-    )
+    transaction_filename = get_filename(file_dir, TRANSACTION_FILE_NAME_TEMPLATE)
 
-    return [file_dir +
-            get_files_that_match_pattern(file_dir,
-                transaction_file
-            )(ds, kwargs)[0]
-            ]
+    return [file_dir + transaction_filename]
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_tmp_unzipped_dir(ds, kwargs)
-    encrypted_filename_prefix = date_utils.insert_date_into_template(
-        TRANSACTION_FILE_NAME_TEMPLATE, kwargs, month_offset=GENOA_MONTH_OFFSET
-    )
-    encrypted_file_path = file_dir \
-        + get_files_that_match_pattern(file_dir, encrypted_filename_prefix)(ds, kwargs)[0]
+    encrypted_file_path = file_dir + get_filename(file_dir, TRANSACTION_FILE_NAME_TEMPLATE)
 
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
@@ -184,15 +168,9 @@ fetch_zip_file = SubDagOperator(
 
 def do_unzip_file(task_id, file_name_template):
     def out(ds, **kwargs):
-        file_name_prefix = date_utils.insert_date_into_template(
-            file_name_template, kwargs, month_offset=GENOA_MONTH_OFFSET
-        )
-
         tmp_dir = get_tmp_dir(ds, kwargs)
-        file_name = get_files_that_match_pattern(tmp_dir, file_name_prefix)(ds, kwargs)[0]
-        decompression.decompress_zip_file(
-            tmp_dir + file_name, tmp_dir
-        )
+        file_name = get_filename(tmp_dir, file_name_template)
+        decompression.decompress_zip_file(tmp_dir + file_name, tmp_dir)
         os.remove(tmp_dir + file_name)
 
     return PythonOperator(
@@ -203,7 +181,7 @@ def do_unzip_file(task_id, file_name_template):
     )
 
 
-unzip_transaction = do_unzip_file('transaction', ZIP_FILE_NAME_TEMPLATE)
+unzip_incoming_file = do_unzip_file('unzip_step', ZIP_FILE_NAME_TEMPLATE)
 
 decrypt_transaction = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
@@ -332,7 +310,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_zip_file.set_upstream(validate_transaction)
+    validate_transaction.set_upstream(unzip_incoming_file)
 
     # matching
     queue_up_for_matching.set_upstream(validate_deid)
@@ -345,8 +323,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
 else:
     detect_move_normalize_dag.set_upstream(split_transaction)
 
-unzip_transaction.set_upstream(fetch_zip_file)
-decrypt_transaction.set_upstream(unzip_transaction)
+unzip_incoming_file.set_upstream(fetch_zip_file)
+decrypt_transaction.set_upstream(unzip_incoming_file)
 split_transaction.set_upstream(decrypt_transaction)
 
 # cleanup
