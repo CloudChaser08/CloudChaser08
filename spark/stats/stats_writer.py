@@ -1,4 +1,5 @@
 import boto3
+import os
 from functools import reduce
 
 S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"
@@ -117,18 +118,23 @@ def _generate_queries(stats, provider_conf):
     return queries
 
 
-def _write_queries(queries, datafeed_id, quarter, identifier=None):
+def _write_queries(queries, datafeed_id, quarter, identifier):
     """
-    Write given queries to s3
+    Write given queries to s3.
+
+    Queries will first be written to output/<quarter>/ in case the s3 write fails.
     """
+    output_dir = 'output/{}/'.format(quarter)
+    os.mkdir(output_dir)
     for stat_name, stat_queries in queries.items():
-        filename = '{}_{}{}.sql'.format(datafeed_id, '{}_'.format(identifier) if identifier else '', stat_name)
-        with open(filename, 'w') as query_output:
+        filename = '{}_{}_{}.sql'.format(datafeed_id, identifier, stat_name)
+        with open(output_dir + filename, 'w') as query_output:
             query_output.write('BEGIN;\n')
             query_output.writelines([(q + '\n') for q in stat_queries])
             query_output.write('COMMIT;\n')
         boto3.client('s3').upload_file(
-            filename, S3_OUTPUT_DIR.split('/')[2], '/'.join(S3_OUTPUT_DIR.format(quarter).split('/')[3:]) + filename
+            output_dir + filename, S3_OUTPUT_DIR.split('/')[2],
+            '/'.join(S3_OUTPUT_DIR.format(quarter).split('/')[3:]) + filename
         )
 
 
@@ -139,10 +145,5 @@ def write_to_s3(stats, provider_conf, quarter):
 
     Those scripts are saved to S3_OUTPUT_DIR.
     """
-    if provider_conf['datatype'].startswith('emr'):
-        for model_conf in provider_conf['models']:
-            queries = _generate_queries(stats[model_conf['datatype']], model_conf)
-            _write_queries(queries, provider_conf['datafeed_id'], quarter, identifier=model_conf['datatype'])
-    else:
-        queries = _generate_queries(stats, provider_conf)
-        _write_queries(queries, provider_conf['datafeed_id'], quarter)
+    queries = _generate_queries(stats, provider_conf)
+    _write_queries(queries, provider_conf['datafeed_id'], quarter, provider_conf['datatype'])
