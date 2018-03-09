@@ -1,8 +1,7 @@
 import subprocess
 import spark.helpers.constants as constants
-import spark.helpers.file_utils as file_utils
-import time
-from pyspark.sql.functions import col, lit
+
+from pyspark.sql.functions import when, col, lit
 
 from datetime import datetime
 
@@ -33,6 +32,59 @@ def mk_move_file(prefix, test=False):
     return move_file
 
 
+def unload(
+        spark, runner, df, date_column, partition_name_prefix, provider_partition_value,
+        provider_partition_name='part_provider', date_partition_value=None, date_partition_name='part_best_date',
+        hvm_historical_date=None, staging_subdir='', columns=None, unload_partition_count=20, test_dir=None
+):
+    """
+    Unload normalized data into partitions based on a date column
+    """
+    NULL_PARTITION_NAME = '0_PREDATES_HVM_HISTORY'
+
+    if columns is None:
+        columns = df.columns
+
+    if test_dir:
+        staging_dir = test_dir + staging_subdir
+        part_files_cmd = [
+            'find', staging_dir + provider_partition_name + '=' + provider_partition_value + '/', '-type', 'f'
+        ]
+    else:
+        staging_dir = constants.hdfs_staging_dir + staging_subdir
+        part_files_cmd = [
+            'hadoop', 'fs', '-ls', '-R', staging_dir + provider_partition_name + '=' + provider_partition_value + '/'
+        ]
+
+    if date_partition_value:
+        date_partition_val = lit(date_partition_value)
+    else:
+        when_clause = col(date_column).isNull()
+        if hvm_historical_date:
+            when_clause = (when_clause | (col(date_column) <= hvm_historical_date))
+        date_partition_val = when(when_clause, lit(NULL_PARTITION_NAME)).otherwise(col(date_column).substr(0, 7))
+
+    # add partition columns to the total column list
+    columns.extend([
+        lit(provider_partition_value).alias(provider_partition_name),
+        date_partition_val.alias(date_partition_name)
+    ])
+
+    # repartition and unload
+    df.select(*columns).repartition(unload_partition_count).write.parquet(
+        staging_dir, partitionBy=[provider_partition_name, date_partition_name], compression='gzip', mode='append'
+    )
+
+    # add a prefix to part file names
+    try:
+        part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
+    except:
+        part_files = []
+    spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
+        mk_move_file(partition_name_prefix, test_dir is not None)
+    )
+
+
 def partition_and_rename(
         spark, runner, data_type, common_model_script, provider, table_name, date_column, file_date,
         partition_value=None, hvm_historical_date=None, test_dir=None, staging_subdir='',
@@ -41,7 +93,7 @@ def partition_and_rename(
 ):
     """
     Unload normalized data into partitions based on
-    a date column
+    a date column (DEPRECATED - use `unload` function instead)
     """
     old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
 
