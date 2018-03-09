@@ -29,7 +29,7 @@ DAG_NAME = 'genoa_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 12, 3),
+    'start_date': datetime(2018, 1, 3),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -208,7 +208,7 @@ split_transaction = SubDagOperator(
                 TRANSACTION_FILE_NAME_TEMPLATE + '_\d{{6}}'
             ),
             's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_S3_SPLIT_URL, month_offset=GENOA_MONTH_OFFSET
+                TRANSACTION_S3_SPLIT_URL, month_offset=GENOA_MONTH_OFFSET, fixed_day=1
             ),
             'num_splits'               : 20
         }
@@ -275,7 +275,7 @@ detect_move_normalize_dag = SubDagOperator(
                 )
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
-                '{}/{}/{}', month_offset=GENOA_MONTH_OFFSET
+                '{}/{}/{}', month_offset=GENOA_MONTH_OFFSET, fixed_day=1
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '8ffacdf6-989e-46ac-93e6-6bb3559baa36',
