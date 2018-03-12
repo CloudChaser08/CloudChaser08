@@ -24,7 +24,7 @@ TMP_DIR = '/tmp/incoming-files/{}'.format(str(time.time()).replace('.', ''))
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2018, 2, 14),
-    'depends_on_past': True,
+    'depends_on_past': False,
     'retries': 0
 }
 
