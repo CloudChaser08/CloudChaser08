@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from subprocess import check_call
 import os
 import re
-import logging
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -14,6 +13,7 @@ import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
 import subdags.detect_move_normalize as detect_move_normalize
+import subdags.update_analytics_db as update_analytics_db
 
 import util.decompression as decompression
 import util.date_utils as date_utils
@@ -303,6 +303,41 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 
+def get_sql_commands(ds, k):
+    sql = date_utils.insert_date_into_template(
+        "ALTER TABLE staged.{{table}} ADD PARTITION (part_processdate='{0}/{1}') LOCATION '{0}/{1}/{{table_location}}'", k,
+        month_offset=ALLSCRIPTS_EMR_MONTH_OFFSET
+    )
+    tables = [
+        'allscripts_emr_allergies', 'allscripts_emr_appointments', 'allscripts_emr_clients',
+        'allscripts_emr_encounters', 'allscripts_emr_medications', 'allscripts_emr_orders',
+        'allscripts_emr_patientdemographics', 'allscripts_emr_payload', 'allscripts_emr_problems',
+        'allscripts_emr_providers', 'allscripts_emr_results', 'allscripts_emr_vaccines',
+        'allscripts_emr_vitals'
+    ]
+    return [
+        sql.format(table=table, table_location=table.split('_')[2] + '/' if not table.endswith('payload') else '')
+        for table in tables
+    ]
+
+
+if HVDAG.HVDAG.airflow_env != 'test':
+    update_analyticsdb_staged_tables = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_transaction_tables',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func'  : lambda ds, kwargs : '',
+                'sql_commands_func': get_sql_commands
+            }
+        ),
+        task_id='update_transaction_tables',
+        dag=mdag
+    )
+
+
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
     fetch_deid.set_upstream(validate_deid)
@@ -310,6 +345,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     detect_move_normalize_dag.set_upstream(
         split_tasks + [queue_up_for_matching]
     )
+    update_analyticsdb_staged_tables.set_upstream(detect_move_normalize_dag)
 else:
     detect_move_normalize_dag.set_upstream(
         split_tasks
