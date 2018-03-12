@@ -86,14 +86,14 @@ def get_filename(file_dir, file_name_template):
 
 def get_deid_file_urls(ds, kwargs):
     file_dir = get_tmp_unzipped_dir(ds, kwargs)
-    deid_filename = get_filename(file_dir, DEID_FILE_NAME_TEMPLATE)
+    deid_filename = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='unzip_file', key='deid_filename')
 
-    return [S3_TRANSACTION_RAW_URL + deid_filename]
+    return [file_dir + deid_filename]
 
 
 def get_transaction_file_paths(ds, kwargs):
     file_dir = get_tmp_unzipped_dir(ds, kwargs)
-    transaction_filename = get_filename(file_dir, TRANSACTION_FILE_NAME_TEMPLATE)
+    transaction_filename = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='unzip_file', key='transaction_filename')
 
     return [file_dir + transaction_filename]
 
@@ -169,6 +169,10 @@ def do_unzip_file(file_name_template):
         file_name = get_filename(tmp_dir, file_name_template)
         decompression.decompress_zip_file(tmp_dir + file_name, tmp_dir)
         os.remove(tmp_dir + file_name)
+        transaction_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs,), TRANSACTION_FILE_NAME_TEMPLATE)
+        deid_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs,), DEID_FILE_NAME_TEMPLATE)
+        kwargs['ti'].xcom_push(key='deid_filename', value=deid_filename)
+        kwargs['ti'].xcom_push(key='transaction_filename', value=transaction_filename)
 
     return PythonOperator(
         task_id='unzip_file',
@@ -268,11 +272,7 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds, k: [
-                date_utils.insert_date_into_template(
-                    DEID_FILE_NAME_TEMPLATE,
-                    k,
-                    month_offset=GENOA_MONTH_OFFSET
-                )
+                k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='unzip_file', key='deid_filename')
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}', month_offset=GENOA_MONTH_OFFSET
