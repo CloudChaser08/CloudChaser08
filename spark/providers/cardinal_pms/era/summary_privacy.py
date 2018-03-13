@@ -16,25 +16,19 @@ def filter_due_to_pos_itb(
         place_of_service_std_id
     )
 
-era_summary_transformer = {
-    'drg_cd' : {
-        'func' : post_norm_cleanup.nullify_drg_blacklist,
-        'args' : ['drg_cd']
-    },
-    'pos_cd' : {
-        'func' : post_norm_cleanup.obscure_place_of_service,
-        'args' : ['pos_cd']
-    },
-    'instnl_typ_of_bll_cd' : {
-        'func' : post_norm_cleanup.obscure_inst_type_of_bill,
-        'args' : ['instnl_typ_of_bll_cd']
-    }
-}
-
-era_summary_transformer.update(
-    dict(map(
-        lambda c: (c, {'func': filter_due_to_pos_itb,
-                        'args': [c, 'pos_cd', 'instnl_typ_of_bll_cd']}),
+era_summary_transformer = priv_common.Transformer(
+    drg_cd=[
+        priv_common.TransformFunction(post_norm_cleanup.nullify_drg_blacklist, ['drg_cd'])
+    ],
+    pos_cd=[
+        priv_common.TransformFunction(post_norm_cleanup.obscure_place_of_service, ['pos_cd'])
+    ],
+    instnl_typ_of_bll_cd=[
+        priv_common.TransformFunction(post_norm_cleanup.obscure_inst_type_of_bill, ['instnl_typ_of_bll_cd'])
+    ],
+    **dict(map(
+        lambda c: (c, [priv_common.TransformFunction(filter_due_to_pos_itb,
+                        [c, 'pos_cd', 'instnl_typ_of_bll_cd'])]),
         columns_to_nullify
     ))
 )
