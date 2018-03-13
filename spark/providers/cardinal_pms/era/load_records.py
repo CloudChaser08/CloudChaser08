@@ -5,7 +5,8 @@ def load(runner, input_path_prefix):
 
     for t in TABLES:
         df = records_loader \
-            .load(runner, input_path_prefix + t, TABLE_COLUMNS[t], 'csv', '|')
+            .load(runner, input_path_prefix + t, TABLE_COLUMNS[t], 'csv', '|') \
+            .repartition(500)
         postprocessor \
             .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
             .createOrReplaceTempView(t)
