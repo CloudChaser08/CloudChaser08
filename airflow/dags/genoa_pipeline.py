@@ -169,10 +169,6 @@ def do_unzip_file(file_name_template):
         file_name = get_filename(tmp_dir, file_name_template)
         decompression.decompress_zip_file(tmp_dir + file_name, tmp_dir)
         os.remove(tmp_dir + file_name)
-        transaction_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs,), TRANSACTION_FILE_NAME_TEMPLATE)
-        deid_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs,), DEID_FILE_NAME_TEMPLATE)
-        kwargs['ti'].xcom_push(key='deid_filename', value=deid_filename)
-        kwargs['ti'].xcom_push(key='transaction_filename', value=transaction_filename)
 
     return PythonOperator(
         task_id='unzip_file',
@@ -182,7 +178,23 @@ def do_unzip_file(file_name_template):
     )
 
 
+def do_get_filenames():
+    def out(ds, **kwargs):
+        transaction_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs,), TRANSACTION_FILE_NAME_TEMPLATE)
+        deid_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs,), DEID_FILE_NAME_TEMPLATE)
+        kwargs['ti'].xcom_push(key='deid_filename', value=deid_filename)
+        kwargs['ti'].xcom_push(key='transaction_filename', value=transaction_filename)
+
+    return PythonOperator(
+        task_id='save_filenames',
+        provide_context=True,
+        python_callable=out,
+        dag=mdag
+    )
+
+
 unzip_incoming_file = do_unzip_file(ZIP_FILE_NAME_TEMPLATE)
+get_filenames = do_get_filenames()
 
 decrypt_transaction = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
@@ -310,7 +322,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
     fetch_zip_file.set_upstream(validate_incoming_file)
 
     # matching
-    queue_up_for_matching.set_upstream(unzip_incoming_file)
+    queue_up_for_matching.set_upstream(get_filenames)
 
     # post-matching
     detect_move_normalize_dag.set_upstream(
@@ -321,7 +333,8 @@ else:
     detect_move_normalize_dag.set_upstream(split_transaction)
 
 unzip_incoming_file.set_upstream(fetch_zip_file)
-decrypt_transaction.set_upstream(unzip_incoming_file)
+get_filenames.set_upstream(unzip_incoming_file)
+decrypt_transaction.set_upstream(get_filenames)
 split_transaction.set_upstream(decrypt_transaction)
 
 # cleanup
