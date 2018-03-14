@@ -17,7 +17,7 @@ S3_OUTPUT_DIR=$4
 
 function generate_stats()
 {
-    local OPTIND f,i
+    local OPTIND f
     while getopts "f:" opt; do
         case "$opt" in
             f)  feed_id=$OPTARG

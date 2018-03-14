@@ -141,10 +141,10 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
 def get_epi_calcs(provider_conf):
     all_epi = {}
 
-    if not provider_conf['epi_calc']:
+    if not provider_conf['epi_calcs']:
         return all_epi
 
-    fields = provider_conf['epi_calc_fields']
+    fields = provider_conf.get('epi_calc_fields', ['age', 'gender', 'state', 'region'])
 
     for f in fields:
         all_epi[f] = calculate_epi(provider_conf, f)
