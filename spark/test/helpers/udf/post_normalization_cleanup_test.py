@@ -44,20 +44,6 @@ def test_clean_up_gender():
     assert cleanup.clean_up_gender('abcdefg222') == 'U'
 
 
-def test_clean_up_ndc_code_standard():
-    # 11 digits
-    assert cleanup.clean_up_ndc_code_standard('00000000000') == '00000000000'
-    assert cleanup.clean_up_ndc_code_standard('000000001ab-00') == '00000000100'
-
-    # 10 digits
-    assert cleanup.clean_up_ndc_code_standard('0000000000') == '0000000000'
-    assert cleanup.clean_up_ndc_code_standard('000000001-0') == '0000000010'
-
-    # 8 digits
-    assert cleanup.clean_up_ndc_code_standard('27272727') == '27272727'
-    assert cleanup.clean_up_ndc_code_standard('27a27b27c27d') == '27272727'
-
-
 def test_clean_up_ndc_code():
     # 11 digits
     assert cleanup.clean_up_ndc_code('00000000000') == '00000000000'
@@ -67,11 +53,14 @@ def test_clean_up_ndc_code():
     assert cleanup.clean_up_ndc_code('0000000000') == '0000000000'
     assert cleanup.clean_up_ndc_code('000000001-0') == '0000000010'
 
+    # 8 digits
+    assert cleanup.clean_up_ndc_code('27272727') == '27272727'
+    assert cleanup.clean_up_ndc_code('27a27b27c27d') == '27272727'
+
     # other digit counts
     assert cleanup.clean_up_ndc_code('0000000') is None
     assert cleanup.clean_up_ndc_code('abc') is None
     assert cleanup.clean_up_ndc_code(None) is None
-    assert cleanup.clean_up_ndc_code('00000000000000000000000000000') is None
 
 
 def test_clean_up_procedure_code():

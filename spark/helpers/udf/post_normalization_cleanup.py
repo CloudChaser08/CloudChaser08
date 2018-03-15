@@ -33,7 +33,7 @@ def clean_up_numeric_code(code):
         return None
 
 
-def clean_up_ndc_code_standard(code):
+def clean_up_ndc_code(code):
     """
     Remove any characters other than numbers.
     Convert to NULL any remaining value that is less than 8 in length.
@@ -126,19 +126,6 @@ def clean_up_procedure_code(procedure_code):
         if clean_code:
             up_to_first_space = clean_code.split()[0]
             return up_to_first_space[:7] if up_to_first_space else None
-
-
-def clean_up_ndc_code(ndc_code):
-    """
-    Apply ndc-specific cleaning to target code. Note that this is not a
-    standard procedure for ndc_code values, but can be used in certain
-    situations.
-    """
-    clean_code = clean_up_numeric_code(ndc_code)
-    if len(str(clean_code)) == 11 or len(str(clean_code)) == 10:
-        return clean_code
-    else:
-        return None
 
 
 def clean_up_npi_code(npi_code):
