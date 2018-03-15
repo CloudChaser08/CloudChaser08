@@ -98,19 +98,25 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
     # provider, start_date, end_date df cache
     # used for fill rate, top values, and key stats
     if index_all_dates:
-        gen_stats_df = utils.select_data_in_date_range(
+        multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
             '1900-01-01', end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates')
-        )(all_data_df).coalesce(partitions)
+        )(all_data_df)
     else:
-        gen_stats_df = utils.select_data_in_date_range(
+        multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
             start_date, end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates')
-        )(all_data_df).coalesce(partitions)
+        )(all_data_df)
+
+    sampled_gen_stats_df = sampled_gen_stats_df.coalesce(partitions).cache()
 
     # Generate fill rates
-    fill_rates = _run_fill_rates(gen_stats_df, provider_conf)
+    fill_rates = _run_fill_rates(sampled_gen_stats_df, provider_conf)
 
     # Generate top values
-    top_values = _run_top_values(gen_stats_df, provider_conf)
+    top_values = _run_top_values(sampled_gen_stats_df, provider_conf)
+
+    if top_values:
+        for top_value_stat in top_values:
+            top_value_stat['count'] = int(top_value_stat['count'] * multiplier)
 
     # Generate key stats
     key_stats = _run_key_stats(
@@ -141,10 +147,10 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
 def get_epi_calcs(provider_conf):
     all_epi = {}
 
-    if not provider_conf['epi_calc']:
+    if not provider_conf['epi_calcs']:
         return all_epi
 
-    fields = provider_conf['epi_calc_fields']
+    fields = provider_conf.get('epi_calc_fields', ['age', 'gender', 'state', 'region'])
 
     for f in fields:
         all_epi[f] = calculate_epi(provider_conf, f)

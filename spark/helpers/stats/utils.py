@@ -42,7 +42,6 @@ def select_data_in_date_range(start_date, end_date, date_column_name, include_nu
         - end_date: string of form YYYY-mm-dd
         - date_column_name: string specifying which column to filter by
                             for the date range
-
     Output:
         - out: function that inputs a dataframe and returns a dataframe
                within the specified date range
@@ -54,6 +53,31 @@ def select_data_in_date_range(start_date, end_date, date_column_name, include_nu
 
         limited_date_df = df.filter(is_in_range)
         return limited_date_df
+
+    return out
+
+
+def select_data_sample_in_date_range(start_date, end_date, date_column_name, include_nulls=False, max_sample_size=600000):
+    '''
+    Filters the dataframe to contains rows between the inputed date range
+    for the specified date column
+    Input:
+        - start_date: string of form YYYY-mm-dd
+        - end_date: string of form YYYY-mm-dd
+        - date_column_name: string specifying which column to filter by
+                            for the date range
+        - include_nulls: Flag for whether or not to include nulls in the result set
+
+    Output:
+        - out: function that inputs a dataframe and returns a dataframe
+               within the specified date range
+    '''
+    def out(df):
+        limited_date_df = select_data_in_date_range(start_date, end_date, date_column_name, include_nulls)(df)
+        total_count = limited_date_df.count()
+        fraction = float(min(max_sample_size, total_count)) / float(total_count)
+
+        return 1.0 / fraction, limited_date_df.sample(False, fraction)
 
     return out
 
