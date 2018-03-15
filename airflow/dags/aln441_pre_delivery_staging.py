@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import logging
 import os
 import re
 
@@ -25,14 +26,14 @@ DAG_NAME = 'aln441_pre_delivery_staging'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 2, 26, 17),
+    'start_date': datetime(2018, 2, 28, 12),
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 17 * * 5",
+    schedule_interval="0 12 * * 3",
     default_args=default_args
 )
 
@@ -44,70 +45,67 @@ else:
     S3_DATA_STAGED_URL_TEMPLATE = 's3://salusv/incoming/staging/aln441/data/{}/{}/{}/'
 
 TMP_PATH_TEMPLATE='/tmp/aln441/pre_staging/{}{}{}/'
-DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt.zip'
-DECOMPRESSED_DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt$'
+DATA_FILE_NAME_TEMPLATE = 'HVRequest_output_000441_{}{}{}\d{{6}}.txt.gz.zip'
 ALN441_PRE_DELIVERY_DAY_OFFSET = 7
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
 
-def get_files_matching_template(template, ds, kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
-    file_regex = date_utils.insert_date_into_template(template, kwargs, day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET)
-    return [file_dir + f for f in os.listdir(file_dir) if re.search(file_regex, f)]
+def do_check_for_file(ds, **kwargs):
+    days_to_check = kwargs['days_to_check']
 
-
-def generate_file_validation_task(
-        task_id, path_template, minimum_file_size
-):
-    return SubDagOperator(
-        subdag=s3_validate_file.s3_validate_file(
-            DAG_NAME,
-            'validate_' + task_id + '_file',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'expected_file_name_func'   :
-                    date_utils.generate_insert_date_into_template_function(
-                        path_template,
-                        day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET
-                ),
-                'file_name_pattern_func'    : date_utils.generate_insert_regex_into_template_function(DATA_FILE_NAME_TEMPLATE),
-                'minimum_file_size'         : minimum_file_size,
-                's3_prefix'                 : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
-                's3_bucket'                 : S3_DATA_RAW_URL.split('/')[2],
-                'file_description'          : 'aln441 pre delivery ' + task_id + ' file',
-                'regex_name_match'          : True
-            }
-        ),
-        task_id='validate_' + task_id + '_file',
-        retries=6,
-        retry_delay=timedelta(minutes=2),
-        dag=mdag
+    s3_keys = s3_utils.list_s3_bucket_files(
+        's3://' + kwargs['s3_bucket'] + '/' + kwargs['s3_prefix']
     )
+    logging.debug('s3_bucket: {}'.format(kwargs['s3_bucket']))
+    logging.debug('s3_prefix: {}'.format(kwargs['s3_prefix']))
+    logging.debug('s3_keys are: {}'.format(s3_keys))
+
+    file_found = False
+    for i in range(days_to_check):
+        logging.debug('Checking for day {}'.format(i))
+        d = (kwargs['execution_date'] + timedelta(days=i)).strftime('%Y-%m-%d')
+        fixed_date = d.split('-')
+        expected_file_name = date_utils.generate_insert_date_into_template_function(
+                                kwargs['expected_filename_template'],
+                                fixed_year = int(fixed_date[0]),
+                                fixed_month = int(fixed_date[1]),
+                                fixed_day = int(fixed_date[2])
+                             )(d, kwargs)
+        logging.debug('Expected_filename: {}'.format(expected_file_name))
+        found_results = filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)
+        if len(found_results) > 0:
+            file_found = True
+            kwargs['ti'].xcom_push(key = 'filename', value = found_results[0])
+            break
+
+    if not file_found:
+        raise Exception('No file has been found')
 
 
-if HVDAG.HVDAG.airflow_env != 'test':
-    validate_data = generate_file_validation_task(
-            'data', DATA_FILE_NAME_TEMPLATE,
-        250
-    )
+check_for_file = PythonOperator(
+    task_id='check_for_file',
+    provide_context=True,
+    python_callable=do_check_for_file,
+    op_kwargs={
+        's3_prefix'                 : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
+        's3_bucket'                 : S3_DATA_RAW_URL.split('/')[2],
+        'expected_filename_template': DATA_FILE_NAME_TEMPLATE,
+        'days_to_check'             : ALN441_PRE_DELIVERY_DAY_OFFSET
+    },
+    dag=mdag
+)
 
-fetch_data_file_dag = SubDagOperator(
+fetch_data_file_subdag = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
         DAG_NAME,
         'fetch_data_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func':
-                date_utils.generate_insert_date_into_template_function(
-                    DATA_FILE_NAME_TEMPLATE,
-                    day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET
-            ),
-            's3_prefix'              : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
-            's3_bucket'              : S3_DATA_RAW_URL.split('/')[2],
-            'regex_name_match'       : True
+            'tmp_path_template'         : TMP_PATH_TEMPLATE,
+            'expected_file_name_func'   : lambda ds, k: k['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'check_for_file', key = 'filename'),
+            's3_prefix'                 : '/'.join(S3_DATA_RAW_URL.split('/')[3:]),
+            's3_bucket'                 : S3_DATA_RAW_URL.split('/')[2]
         }
     ),
     task_id='fetch_data_file',
@@ -116,8 +114,10 @@ fetch_data_file_dag = SubDagOperator(
 
 def do_unzip_file(ds, **kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
-    files = get_files_matching_template(DATA_FILE_NAME_TEMPLATE, ds, kwargs)
-    decompression.decompress_zip_file(files[0], file_dir)
+    zip_file = kwargs['ti'].xcom_pull(task_ids = 'check_for_file', key = 'filename')
+    gzip_file = zip_file[:-4]
+    decompression.decompress_zip_file(file_dir + zip_file, file_dir)
+    decompression.decompress_gzip_file(file_dir + gzip_file)
 
 
 unzip_data_file = PythonOperator(
@@ -127,19 +127,6 @@ unzip_data_file = PythonOperator(
     dag=mdag
 )
 
-def do_get_filename(ds, **kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
-    files = get_files_matching_template(DECOMPRESSED_DATA_FILE_NAME_TEMPLATE, ds, kwargs)
-    kwargs['ti'].xcom_push(key='filename', value=files[0])
-
-
-get_filename = PythonOperator(
-    task_id = 'get_filename',
-    provide_context = True,
-    python_callable = do_get_filename,
-    dag = mdag
-)
-
 push_file_dag = SubDagOperator(
     subdag=s3_push_files.s3_push_files(
         DAG_NAME,
@@ -147,7 +134,8 @@ push_file_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'file_paths_func'   : lambda ds, k: [k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_filename', key='filename')],
+            'file_paths_func'   : lambda ds, k: [get_tmp_dir(ds, k) + \
+                                    k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='check_for_file', key='filename')[:-7]],
             's3_prefix_func'    : lambda ds, k: '/'.join(S3_DATA_STAGED_URL_TEMPLATE.split('/')[3:]),
             's3_bucket'         : S3_DATA_STAGED_URL_TEMPLATE.split('/')[2]
         }
@@ -210,14 +198,18 @@ def do_create_table(ds, **kwargs):
     '''
 
     schema = kwargs['schema']
-    table_name = kwargs['ti'].xcom_pull(task_ids='get_filename', key='filename').split('/')[-1][:-4].lower()
-    print schema, table_name
+    staging_s3_loc = kwargs['staging_s3_loc_func'](ds, kwargs)
+
+    table_name = kwargs['ti'].xcom_pull(task_ids='check_for_file', key='filename')[:-11].lower()
+    logging.debug('Warehouse schema: {}'.format(schema))
+    logging.debug('Warehouse table: {}'.format(table_name))
+    logging.debug('Warehouse data location: {}'.format(staging_s3_loc))
     queries = [
         'DROP TABLE IF EXISTS {}.{}'.format(schema, table_name),
-        create_table_statement_template.format(schema, table_name, S3_DATA_STAGED_URL_TEMPLATE)
+        create_table_statement_template.format(schema, table_name, staging_s3_loc)
     ]
 
-    print queries[1]
+    logging.debug('Create table query: {}'.format(queries[1]))
     hive.hive_execute(queries)
 
 
@@ -226,7 +218,11 @@ create_table = PythonOperator(
     provide_context = True,
     python_callable = do_create_table,
     op_kwargs = {
-        'schema'    : 'dev' if HVDAG.HVDAG.airflow_env =='test' else 'aln441'
+        'schema'                : 'dev' if HVDAG.HVDAG.airflow_env =='test' else 'aln441',
+        'staging_s3_loc_func'   : date_utils.generate_insert_date_into_template_function(
+                                    S3_DATA_STAGED_URL_TEMPLATE,
+                                    day_offset = ALN441_PRE_DELIVERY_DAY_OFFSET
+                                  )
     },
     dag = mdag
 )
@@ -245,10 +241,8 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
-if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_data_file_dag.set_upstream(validate_data)
-unzip_data_file.set_upstream(fetch_data_file_dag)
-get_filename.set_upstream(unzip_data_file)
-push_file_dag.set_upstream(get_filename)
+fetch_data_file_subdag.set_upstream(check_for_file)
+unzip_data_file.set_upstream(fetch_data_file_subdag)
+push_file_dag.set_upstream(unzip_data_file)
 create_table.set_upstream(push_file_dag)
 clean_up_workspace.set_upstream(push_file_dag)
