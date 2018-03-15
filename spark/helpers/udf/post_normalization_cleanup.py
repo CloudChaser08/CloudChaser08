@@ -33,6 +33,17 @@ def clean_up_numeric_code(code):
         return None
 
 
+def clean_up_ndc_code_standard(code):
+    """
+    Remove any characters other than numbers.
+    Convert to NULL any remaining value that is less than 8 in length.
+    """
+    clean_code = clean_up_numeric_code(code)
+    if clean_code is None:
+        return clean_code
+    return None if len(clean_code) < 8 else clean_code
+
+
 # These codes are specific enough that along with other public fields they pose a
 # re-identification risk, nullify them
 # ICD9
