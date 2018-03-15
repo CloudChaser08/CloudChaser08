@@ -57,7 +57,7 @@ def select_data_in_date_range(start_date, end_date, date_column_name, include_nu
     return out
 
 
-def select_data_sample_in_date_range(start_date, end_date, date_column_name, include_nulls=False, max_sample_size=7000000):
+def select_data_sample_in_date_range(start_date, end_date, date_column_name, include_nulls=False, max_sample_size=600000):
     '''
     Filters the dataframe to contains rows between the inputed date range
     for the specified date column
