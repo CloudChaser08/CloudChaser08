@@ -56,15 +56,14 @@ def do_check_for_file(ds, **kwargs):
     s3_keys = s3_utils.list_s3_bucket_files(
         's3://' + kwargs['s3_bucket'] + '/' + kwargs['s3_prefix']
     )
-    print 's3_bucket: {}'.format(kwargs['s3_bucket'])
-    print 's3_prefix: {}'.format(kwargs['s3_prefix'])
-    print 's3_keys are: {}'.format(s3_keys)
+    logging.debug('s3_bucket: {}'.format(kwargs['s3_bucket']))
+    logging.debug('s3_prefix: {}'.format(kwargs['s3_prefix']))
+    logging.debug('s3_keys are: {}'.format(s3_keys))
 
     file_found = False
     for i in range(days_to_check):
-        print 'Checking for day {}'.format(i)
+        logging.debug('Checking for day {}'.format(i))
         d = (kwargs['execution_date'] + timedelta(days=i)).strftime('%Y-%m-%d')
-        print 'datetime: {}'.format(d)
         fixed_date = d.split('-')
         expected_file_name = date_utils.generate_insert_date_into_template_function(
                                 kwargs['expected_filename_template'],
@@ -72,7 +71,7 @@ def do_check_for_file(ds, **kwargs):
                                 fixed_month = int(fixed_date[1]),
                                 fixed_day = int(fixed_date[2])
                              )(d, kwargs)
-        print 'Expected_filename: {}'.format(expected_file_name)
+        logging.debug('Expected_filename: {}'.format(expected_file_name))
         found_results = filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)
         if len(found_results) > 0:
             file_found = True
@@ -202,13 +201,15 @@ def do_create_table(ds, **kwargs):
     staging_s3_loc = kwargs['staging_s3_loc_func'](ds, kwargs)
 
     table_name = kwargs['ti'].xcom_pull(task_ids='check_for_file', key='filename')[:-11].lower()
-    print schema, table_name, staging_s3_loc
+    logging.debug('Warehouse schema: {}'.format(schema))
+    logging.debug('Warehouse table: {}'.format(table_name))
+    logging.debug('Warehouse data location: {}'.format(staging_s3_loc))
     queries = [
         'DROP TABLE IF EXISTS {}.{}'.format(schema, table_name),
         create_table_statement_template.format(schema, table_name, staging_s3_loc)
     ]
 
-    print queries[1]
+    logging.debug('Create table query: {}'.format(queries[1]))
     hive.hive_execute(queries)
 
 
