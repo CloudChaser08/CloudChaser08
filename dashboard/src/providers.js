@@ -412,7 +412,6 @@ exports.config = [
         isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
       ));
       return helpers.formatDate(adjusted);
-      //return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
     },
     executionDateToFilename: function(date) {
       return 'incoming/genoa/Genoa_HealthVerity_' + date.getUTCFullYear() + helpers.leftZPad(date.getUTCMonth() + 1, 2)
