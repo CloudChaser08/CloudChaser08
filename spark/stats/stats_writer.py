@@ -125,7 +125,12 @@ def _write_queries(queries, datafeed_id, quarter, identifier):
     Queries will first be written to output/<quarter>/ in case the s3 write fails.
     """
     output_dir = 'output/{}/'.format(quarter)
-    os.mkdir(output_dir)
+
+    try:
+        os.makedirs(output_dir)
+    except:
+        pass
+
     for stat_name, stat_queries in queries.items():
         filename = '{}_{}_{}.sql'.format(datafeed_id, identifier, stat_name)
         with open(output_dir + filename, 'w') as query_output:
