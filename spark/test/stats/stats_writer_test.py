@@ -61,7 +61,7 @@ def test__generate_queries():
                 'count': '90918'
             }
         ],
-        'fill_rate': [
+        'fill_rates': [
             {'field': 'test_column_1', 'fill': '0.92'},
             {'field': 'test_column_2', 'fill': '0'},
             {'field': 'test_column_3', 'fill': '1'}
@@ -74,7 +74,7 @@ def test__generate_queries():
     longitudinality_queries = queries['longitudinality']
     year_over_year_queries = queries['year_over_year']
     top_values_queries = sorted(queries['top_values'])
-    fill_rate_queries = sorted(queries['fill_rate'])
+    fill_rate_queries = sorted(queries['fill_rates'])
 
     assert len(key_stats_queries) == 1
     assert key_stats_queries[0] == "UPDATE marketplace_datafeed SET myfield = 'myvalue' WHERE id = 'TEST_DF';"

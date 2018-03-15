@@ -524,6 +524,89 @@
             "year_over_year"    : true,
             "epi_calcs"         : null,
             "earliest_date"     : "1900-01-01"
+        },
+        {
+            "name"              : "cardinal_raintree_emr",
+            "datafeed_id"       : "40",
+            "datatype"          : "emr",
+            "models"            : [
+              {
+                "datatype"        : "emr_clin_obsn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null,
+                "epi_calcs"       : null
+              }, {
+                "datatype"        : "emr_medctn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null,
+                "epi_calcs"       : null
+              }, {
+                "datatype"        : "emr_vit_sign",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null,
+                "epi_calcs"       : null
+              }, {
+                "datatype"        : "emr_prov_ord",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null,
+                "epi_calcs"       : null
+              }, {
+                "datatype"        : "emr_lab_result",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null,
+                "epi_calcs"       : null
+              }, {
+                "datatype"        : "emr_lab_ord",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null,
+                "epi_calcs"       : null
+              }, {
+                "datatype"        : "emr_proc",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null,
+                "epi_calcs"       : null
+              }, {
+                "datatype"        : "emr_diag",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null,
+                "epi_calcs"       : null
+              }
+            ],
+            "earliest_date"     : "1900-01-01",
+            "index_all_dates"   : true,
+            "index_null_dates"  : true
         }
     ]
 }

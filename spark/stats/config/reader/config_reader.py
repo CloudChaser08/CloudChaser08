@@ -5,6 +5,20 @@ from contextlib import closing
 import psycopg2
 from spark.helpers.file_utils import get_abs_path
 
+# map from emr datatype (table) name to the name of each datatype in
+# the marketplace db
+emr_datatype_name_map = {
+    'emr_enc': 'Encounter',
+    'emr_diag': 'Diagnosis',
+    'emr_clin_obsn': 'Clinical Observation',
+    'emr_proc': 'Procedure',
+    'emr_lab_ord': 'Lab Order',
+    'emr_prov_ord': 'Provider Order',
+    'emr_lab_result': 'Lab Result',
+    'emr_vit_sign': 'Vital Sign',
+    'emr_medctn': 'Medication'
+}
+
 
 def _get_config_from_json(filename):
     '''
@@ -73,18 +87,53 @@ def _get_top_values_columns(datafeed_id):
     return _get_config_from_db(get_columns_sql)
 
 
-def _get_fill_rate_columns(datafeed_id):
-
+def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
     get_columns_sql = """
         select f.physical_name as name, f.id as field_id
             from marketplace_datafield f
             join marketplace_datatable t on t.id = f.datatable_id
             join marketplace_datamodel m on m.id = t.datamodel_id
             join marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
-        where dm.datafeed_id = {} and m.is_supplemental = 'f';
-    """.format(datafeed_id)
+        where dm.datafeed_id = {} and m.is_supplemental = 'f' {};
+    """.format(
+        datafeed_id,
+        "and t.name = '{}'".format(emr_datatype_name_map[emr_datatype]) if emr_datatype else ''
+    )
 
     return _get_config_from_db(get_columns_sql)
+
+
+def _fill_in_conf_dict(conf, feed_id, providers_conf_file):
+    # configure stats whose configurations come from the marketplace db
+    if conf['fill_rate']:
+        conf['fill_rate_conf'] = {
+            "columns": _get_fill_rate_columns(
+                conf['datafeed_id'], conf['datatype'] if conf['datatype'].startswith('emr') else None
+            )
+        }
+
+    if conf['top_values']:
+        conf['top_values_conf'] = {
+            "columns": _get_top_values_columns(conf['datafeed_id']),
+            "max_values": 10
+        }
+
+    # configure stats whose configurations do not come from the marketplace db
+    no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year', 'epi_calcs']
+    for calc in no_db_stat_calcs:
+        if not conf.get(calc):
+            continue
+
+        if calc + '_conf_file' not in conf:
+            logging.info('No config for {} found in feed {} config, falling back to default.'.format(calc, feed_id))
+            conf_file_loc = get_abs_path(providers_conf_file,
+                                        conf['datatype'] + '/' + calc + '.json')
+            conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
+        elif conf[calc + '_conf_file']:
+            conf_file_loc = get_abs_path(providers_conf_file, conf[calc + '_conf_file'])
+            conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
+
+    return conf
 
 
 def get_provider_config(providers_conf_file, feed_id):
@@ -109,32 +158,12 @@ def get_provider_config(providers_conf_file, feed_id):
     # Check that datatype is specified
     if 'datatype' not in provider_conf or provider_conf['datatype'] is None:
         raise Exception('datatype is not specified for feed {}'.format(feed_id))
-
-    # configure stats whose configurations come from the marketplace db
-    if provider_conf['fill_rate']:
-        provider_conf['fill_rate_conf'] = {
-            "columns": _get_fill_rate_columns(provider_conf['datafeed_id'])
-        }
-
-    if provider_conf['top_values']:
-        provider_conf['top_values_conf'] = {
-            "columns": _get_top_values_columns(provider_conf['datafeed_id']),
-            "max_values": 10
-        }
-
-    # configure stats whose configurations do not come from the marketplace db
-    no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year', 'epi_calcs']
-    for calc in no_db_stat_calcs:
-        if not provider_conf.get(calc):
-            continue
-
-        if calc + '_conf_file' not in provider_conf:
-            logging.info('No config for {} found in feed {} config, falling back to default.'.format(calc, feed_id))
-            conf_file_loc = get_abs_path(providers_conf_file,
-                                        provider_conf['datatype'] + '/' + calc + '.json')
-            provider_conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
-        elif provider_conf[calc + '_conf_file']:
-            conf_file_loc = get_abs_path(providers_conf_file, provider_conf[calc + '_conf_file'])
-            provider_conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
-
-    return provider_conf
+    elif provider_conf['datatype'] == 'emr':
+        provider_conf['models'] = [
+            _fill_in_conf_dict(
+                dict(provider_conf.items() + model_conf.items()), feed_id, providers_conf_file
+            ) for model_conf in provider_conf['models']
+        ]
+        return provider_conf
+    else:
+        return _fill_in_conf_dict(provider_conf, feed_id, providers_conf_file)

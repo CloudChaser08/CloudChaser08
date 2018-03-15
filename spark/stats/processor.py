@@ -6,19 +6,19 @@ import spark.stats.calc.year_over_year as year_over_year
 import spark.helpers.stats.utils as utils
 
 
-def _run_fill_rates(df, provider_conf):
+def _run_fill_rates(df, conf):
     '''
     A wrapper around fill_rates calculate fill rate method
     Input:
         -df: a dataframe
-        -provider_conf: a dictionary w/ the providers configuration data
+        -conf: a dictionary w/ the providers configuration data
     Output:
         - _: a dataframe with the result of fill_rate.calculate_fill_rate
-             or None if provider_conf specifies not to calculate
+             or None if conf specifies not to calculate
     '''
-    if provider_conf.get('fill_rate_conf'):
+    if conf.get('fill_rate_conf'):
         # Get only the columns needed to calculate fill rates on
-        cols = [c for c in df.columns if c in provider_conf['fill_rate_conf']['columns'].keys()]
+        cols = [c for c in df.columns if c in conf['fill_rate_conf']['columns'].keys()]
         fill_rate_cols_df = df.select(*cols)
         return fill_rate.calculate_fill_rate(fill_rate_cols_df)
 
@@ -82,14 +82,15 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
 
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
-    feed_id = provider_conf['datafeed_id']
     date_column_field = provider_conf['date_field']
-    distinct_column_name = provider_conf['record_field']
     earliest_date = provider_conf['earliest_date']
     index_all_dates = provider_conf.get('index_all_dates', False)
 
     # Get data
-    all_data_df = utils.get_provider_data(sqlContext, datatype, provider_conf['name'])
+    all_data_df = utils.get_provider_data(
+        sqlContext, datatype,
+        provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name']
+    )
 
     # Desired number of partitions when calculating
     partitions = int(spark.conf.get('spark.sql.shuffle.partitions'))
