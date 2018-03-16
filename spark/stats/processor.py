@@ -3,6 +3,7 @@ import spark.stats.calc.top_values as top_values
 import spark.stats.calc.key_stats as key_stats
 import spark.stats.calc.longitudinality as longitudinality
 import spark.stats.calc.year_over_year as year_over_year
+import spark.stats.calc.epi as epi
 import spark.helpers.stats.utils as utils
 
 
@@ -147,6 +148,6 @@ def get_epi_calcs(provider_conf):
     fields = provider_conf.get('epi_calc_fields', ['age', 'gender', 'state', 'region'])
 
     for f in fields:
-        all_epi[f] = calculate_epi(provider_conf, f)
+        all_epi[f] = epi.calculate_epi(provider_conf, f)
 
     return all_epi
