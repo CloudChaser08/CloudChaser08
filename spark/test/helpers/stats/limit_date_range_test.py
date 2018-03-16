@@ -69,7 +69,7 @@ def test_limit_date_range_sample(spark):
         '1990-01-01', '2018-01-01', 'date', max_sample_size=300
     )(df)
     assert multiplier == 1.0 / (300.0 / 5000.0)
-    assert sample.count() > 275 and sample.count() < 325
+    assert sample.count() > 250 and sample.count() < 350
 
 
 def test_null_dates(spark):

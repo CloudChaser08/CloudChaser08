@@ -29,7 +29,7 @@ def calculate_fill_rate(df):
     '''
     row_count = df.count()
 
-    # Emperical data shows that 16 columns leads to optimal performance
+    # Empirical data shows that 16 columns leads to optimal performance
     BATCH_SIZE = 16
 
     i = 0
