@@ -92,7 +92,9 @@ def test_ndc_cleaning():
     assert [r.medctn_ndc for r in medication_results if r.hvid == 'hvid-4'] == [None]
 
     # code too long
-    assert [r.medctn_ndc for r in medication_results if r.hvid == 'hvid-0'] == [None]
+    # NOTE: As of 2018-03-16, codes no longer have a max cap on length
+    #       see spark/helpers/udf/post_normalization_clean.py:clean_up_ndc_code()
+    assert [r.medctn_ndc for r in medication_results if r.hvid == 'hvid-0'] == ['00093506001111']
 
     # no code
     assert [r.medctn_ndc for r in medication_results if r.hvid == 'hvid-5'] == [None]

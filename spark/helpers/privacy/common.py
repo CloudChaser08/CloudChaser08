@@ -91,7 +91,7 @@ column_transformer = Transformer(
         TransformFunction(post_norm_cleanup.validate_state_code, ['patient_state'])
     ],
     ndc_code=[
-        TransformFunction(post_norm_cleanup.clean_up_numeric_code, ['ndc_code'])
+        TransformFunction(post_norm_cleanup.clean_up_ndc_code, ['ndc_code'])
     ]
 )
 
