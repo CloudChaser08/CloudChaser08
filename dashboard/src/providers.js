@@ -399,6 +399,27 @@ exports.config = [
     listRecursively: true
   },
   {
+    id: 'genoa',
+    displayName: 'Genoa RX',
+    providerPrefix: 'genoa',
+    schedule: this.schedule.MONTHLY,
+    startDate: new Date('2017-12-03'),
+    airflowPipelineName: 'genoa_pipeline',
+    expectedFilenameRegex: /^.*Genoa_HealthVerity_[0-9]{8}_[0-9]{6}.zip$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('_')[2];
+      var adjusted = helpers.addDays(2)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      return 'incoming/genoa/Genoa_HealthVerity_' + date.getUTCFullYear() + helpers.leftZPad(date.getUTCMonth() + 1, 2)
+        + '01'
+        + '_[0-9]{6}.zip';
+    },
+  },
+  {
     id: 'ambry',
     displayName: 'Ambry RX',
     providerPrefix: 'ambry'
@@ -442,11 +463,6 @@ exports.config = [
     id: 'acxiom',
     displayName: 'Acxiom',
     providerPrefix: 'acxiom'
-  },
-  {
-    id: 'genoa',
-    displayName: 'Genoa RX',
-    providerPrefix: 'genoa'
   },
   {
     id: 'cardinal_vitalpath',
