@@ -62,7 +62,7 @@ def test_standard_stats(spark):
             'top_values'        : None,
             'longitudinality'   : None,
             'year_over_year'    : None,
-            'epi_calc'          : None,
+            'epi_calcs'         : None,
             'earliest_date'     : '1990-01-01'
         }
 
