@@ -1,3 +1,4 @@
+DROP VIEW IF EXISTS transactional_raw;
 DROP TABLE IF EXISTS transactional_raw;
 CREATE EXTERNAL TABLE transactional_raw (
         mystery_column                 string,
