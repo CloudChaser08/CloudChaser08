@@ -11,6 +11,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.file_utils as file_utils
 import spark.helpers.explode as explode
 import spark.providers.practice_insight.medicalclaims.udf as pi_udf
+import spark.helpers.postprocessor as postprocessor
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 AIRFLOW_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/'
@@ -116,6 +117,13 @@ def run_part(
     runner.run_spark_script('load_transactions.sql', [
         ['input_path', input_path + part + '/']
     ])
+
+    postprocessor.compose(
+            postprocessor.trimmify,
+            postprocessor.nullify
+        )(
+            runner.sqlContext.sql('SELECT * FROM transactional_raw')
+        ).createOrReplaceTempView('transactional_raw')
 
     # create explosion maps
     runner.run_spark_script('create_exploded_diagnosis_map.sql')

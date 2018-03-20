@@ -66,7 +66,7 @@ SELECT DISTINCT
     NULL,                                                  -- inst_discharge_status_vendor_desc
     CASE
     WHEN transactional.claim_type_cd = 'I'
-    THEN CONCAT(transactional.fclty_type_pos_cd, transactional.claim_freq_cd)
+    THEN CONCAT(COALESCE(transactional.fclty_type_pos_cd, ''), COALESCE(transactional.claim_freq_cd, ''))
     END,                                                   -- inst_type_of_bill_std_id
     NULL,                                                  -- inst_type_of_bill_vendor_id
     NULL,                                                  -- inst_type_of_bill_vendor_desc
@@ -545,8 +545,8 @@ FROM transactional_raw transactional
     LEFT JOIN matching_payload mp ON transactional.src_claim_id = mp.claimid
 
 -- these inner joins will each perform a cartesian product on this table, exploding the table for each diag/proc
-    INNER JOIN exploded_diag_codes diags ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = diags.claim_svc_num
-    INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = procs.claim_svc_num
+    INNER JOIN exploded_diag_codes diags ON CONCAT(COALESCE(transactional.src_claim_id, ''), '__', COALESCE(transactional.src_svc_id, '')) = diags.claim_svc_num
+    INNER JOIN exploded_proc_codes procs ON CONCAT(COALESCE(transactional.src_claim_id, ''), '__', COALESCE(transactional.src_svc_id, '')) = procs.claim_svc_num
     ;
 
 -- Insert service lines for institutional claims with diagnoses (NULLed out above)
@@ -980,7 +980,7 @@ FROM transactional_raw transactional
     LEFT JOIN matching_payload mp ON transactional.src_claim_id = mp.claimid
 
 -- these inner joins will each perform a cartesian product on this table, exploding the table for each proc
-    INNER JOIN exploded_proc_codes procs ON CONCAT(transactional.src_claim_id, '__', transactional.src_svc_id) = procs.claim_svc_num
+    INNER JOIN exploded_proc_codes procs ON CONCAT(COALESCE(transactional.src_claim_id, ''), '__', COALESCE(transactional.src_svc_id, '')) = procs.claim_svc_num
 
 WHERE transactional.claim_type_cd = 'I'
     ;
