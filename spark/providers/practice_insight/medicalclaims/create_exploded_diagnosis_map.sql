@@ -71,6 +71,7 @@ INSERT INTO exploded_diag_codes_nulls (
         );
 
 -- strip out nulls for claim_svc_nums with populated codes, remove dupes
+DROP VIEW IF EXISTS exploded_diag_codes;
 DROP TABLE IF EXISTS exploded_diag_codes;
 CREATE TABLE exploded_diag_codes (
         claim_svc_num string,

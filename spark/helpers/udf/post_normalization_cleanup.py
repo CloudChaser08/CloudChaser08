@@ -123,7 +123,7 @@ def clean_up_procedure_code(procedure_code):
     if procedure_code:
         clean_code = uppercase_code(re.sub('[^a-zA-Z0-9]', ' ', procedure_code))
 
-        if clean_code:
+        if clean_code.strip():
             up_to_first_space = clean_code.split()[0]
             return up_to_first_space[:7] if up_to_first_space else None
 

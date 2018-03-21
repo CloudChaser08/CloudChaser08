@@ -129,6 +129,20 @@ def run_part(
     runner.run_spark_script('create_exploded_diagnosis_map.sql')
     runner.run_spark_script('create_exploded_procedure_map.sql')
 
+    postprocessor.compose(
+            postprocessor.trimmify,
+            postprocessor.nullify
+        )(
+            runner.sqlContext.sql('SELECT * FROM exploded_diag_codes')
+        ).createOrReplaceTempView('exploded_diag_codes')
+
+    postprocessor.compose(
+            postprocessor.trimmify,
+            postprocessor.nullify
+        )(
+            runner.sqlContext.sql('SELECT * FROM exploded_proc_codes')
+        ).createOrReplaceTempView('exploded_proc_codes')
+
     # normalize
     runner.run_spark_script('normalize.sql', [
         [

@@ -16,8 +16,30 @@ def get_rows_for_test(claim_id):
 
 
 def clean_up(spark):
-    spark['sqlContext'].sql('DROP TABLE IF EXISTS transactional_raw')
-
+    try:
+        spark['sqlContext'].sql('DROP VIEW IF EXISTS transactional_raw')
+    except:
+        pass
+    try:
+        spark['sqlContext'].sql('DROP TABLE IF EXISTS transactional_raw')
+    except:
+        pass
+    try:
+        spark['sqlContext'].sql('DROP VIEW IF EXISTS exploded_proc_codes')
+    except:
+        pass
+    try:
+        spark['sqlContext'].sql('DROP TABLE IF EXISTS exploded_proc_codes')
+    except:
+        pass
+    try:
+        spark['sqlContext'].sql('DROP VIEW IF EXISTS exploded_diag_codes')
+    except:
+        pass
+    try:
+        spark['sqlContext'].sql('DROP TABLE IF EXISTS exploded_diag_codes')
+    except:
+        pass
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
