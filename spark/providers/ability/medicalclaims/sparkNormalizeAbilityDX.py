@@ -13,12 +13,14 @@ import spark.helpers.external_table_loader as external_table_loader
 from spark.common.medicalclaims_common_model import schema_v2 as medicalclaims_schema
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.privacy.medicalclaims as medical_priv
+import pyspark.sql.utils.AnalysisException as AnalysisException
 
 import logging
 import load_records
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
+    spark.sparkContext.setCheckpointDir('hdfs:///tmp/checkpoints/')
 
     if test:
         input_path_prefix = file_utils.get_abs_path(
@@ -57,8 +59,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_pth_prefix = input_path_prefix.format(date_input.replace('-', '/')) + set_id + '_'
         matching_pth     = matching_path.format(date_input.replace('-', '/')) + set_id + '_*'
 
-        load_records.load(runner, input_pth_prefix, product, date_input)
-        payload_loader.load(runner, matching_pth, ['claimId'])
+        try:
+            load_records.load(runner, input_pth_prefix, product, date_input)
+        except AnalysisException as e:
+            if 'Path does not exist' in str(e):
+                continue
+            else:
+                raise(e)
+
+        payload_loader.load(runner, matching_pth, ['claimId'], partitions=500, cache=True)
         runner.sqlContext.sql('SELECT * FROM matching_payload') \
                 .distinct() \
                 .createOrReplaceTempView('matching_payload')
@@ -67,12 +76,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         norm1 = schema_enforcer.apply_schema(
             runner.run_spark_script('mapping_1.sql', return_output=True),
             medicalclaims_schema
-        ).distinct()
+        ).distinct().repartition(500, 'claim_id').checkpoint()
         norm1.createOrReplaceTempView('medicalclaims_common_model')
+        remaining_diags = runner.run_spark_script('mapping_pre_2.sql', return_output=True) \
+            .distinct().repartition(500, 'claimid')
+        remaining_diags.createOrReplaceTempView('remaining_diagnosis')
         norm2 = schema_enforcer.apply_schema(
             runner.run_spark_script('mapping_2.sql', return_output=True),
             medicalclaims_schema
-        ).distinct()
+        ).distinct().repartition(500, 'claim_id').checkpoint()
         norm3 = schema_enforcer.apply_schema(
             runner.run_spark_script('mapping_3.sql', return_output=True),
             medicalclaims_schema
@@ -80,7 +92,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 
-        product_norm = norm1.union(norm2).union(norm3)
+        product_norm = norm1.union(norm2).union(norm3).checkpoint()
         logging.debug('Finished normalizing')
 
         hvm_historical = postprocessor.coalesce_dates(
@@ -106,7 +118,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 for c in ['date_received', 'date_service', 'date_service_end']]
         )(
             product_norm
-        ).repartition(1000)
+        ).repartition(1000, 'claim_id')
         logging.debug('Finished post-processing')
 
         all_norm = product_norm if all_norm is None else all_norm.union(product_norm)
@@ -137,7 +149,7 @@ def main(args):
     else:
         output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
 
-#    normalized_records_unloader.distcp(output_path)
+    normalized_records_unloader.distcp(output_path)
 
 
 if __name__ == '__main__':
