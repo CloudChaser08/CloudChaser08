@@ -38,6 +38,7 @@ INSERT INTO exploded_proc_codes_nulls (
         );
 
 -- strip out nulls for claim_svc_nums with populated codes, remove dupes
+DROP VIEW IF EXISTS exploded_proc_codes;
 DROP TABLE IF EXISTS exploded_proc_codes;
 CREATE TABLE exploded_proc_codes (
         claim_svc_num string,
