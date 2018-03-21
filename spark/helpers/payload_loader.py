@@ -17,7 +17,7 @@ DEFAULT_ATTRS = [
 ]
 
 
-def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False):
+def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False, partitions=200, cache=False):
     """
     Load matching data for a provider
     """
@@ -46,6 +46,10 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
         final_payload = raw_payload.select([
             coalesce(*map(lambda x: col(x), relevant_hvid_columns)).alias('hvid')
         ] + map(lambda x: col(x), total_attrs))
+
+    final_payload = final_payload.repartition(partitions)
+    if cache:
+        final_payload = final_payload.cache_and_track(table_name)
 
     if return_output:
         return final_payload
