@@ -14,6 +14,7 @@ def load(runner, input_path_prefix, product, file_date):
                 lambda x: postprocessor.nullify(x, null_vals=['', 'NULL']))(df) \
         .drop('claimid2', 'hvjoinkey') \
         .distinct() \
+        .repartition(500, 'claimid').cache_and_track('transactional_header') \
         .createOrReplaceTempView('transactional_header')
 
     conf = [
@@ -40,8 +41,18 @@ def load(runner, input_path_prefix, product, file_date):
             .compose(postprocessor.trimmify,
                     lambda x: postprocessor.nullify(x, null_vals=['', 'NULL']))(df) \
             .distinct() \
-            .repartition(500).cache_and_track(c['table']) \
+            .repartition(500, 'claimid').cache_and_track(c['table']) \
             .createOrReplaceTempView(c['table'])
+
+    for affiliation_type in ['Rendering', 'Referring', 'ServiceLocation', 'AmbulanceDropOff', 'Supervising', 'Operating', 'Purchased', 'Other']:
+        df = runner.sqlContext.sql("SELECT * FROM transactional_servicelineaffiliation WHERE type = '{}'".format(affiliation_type))
+        df.cache_and_track('transactional_servicelineaffiliation_' + affiliation_type.lower()) \
+            .createOrReplaceTempView('transactional_servicelineaffiliation_' + affiliation_type.lower())
+
+    for affiliation_type in ['Rendering', 'Referring', 'ServiceLocation', 'AmbulanceDropOff', 'Supervising', 'Operating', 'Purchased', 'Other']:
+        df = runner.sqlContext.sql("SELECT * FROM transactional_claimaffiliation WHERE type = '{}'".format(affiliation_type))
+        df.cache_and_track('transactional_claimaffiliation_' + affiliation_type.lower()) \
+            .createOrReplaceTempView('transactional_claimaffiliation_' + affiliation_type.lower())
 
 TABLES = {
     'transactional_header' : [

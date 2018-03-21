@@ -454,46 +454,30 @@ FROM transactional_header header
     LEFT JOIN transactional_billing billing ON header.claimid = billing.claimid
 
     -- providers
-    LEFT JOIN transactional_servicelineaffiliation rendering ON serviceline.servicelineid = rendering.servicelineid 
+    LEFT JOIN transactional_servicelineaffiliation_rendering rendering ON serviceline.servicelineid = rendering.servicelineid
         AND serviceline.claimid = rendering.claimid
-        AND rendering.type = 'Rendering'
-    LEFT JOIN transactional_claimaffiliation rendering_claim ON header.claimid = rendering_claim.claimid 
-        AND rendering_claim.type = 'Rendering'
-    LEFT JOIN transactional_servicelineaffiliation referring ON serviceline.servicelineid = referring.servicelineid 
+    LEFT JOIN transactional_claimaffiliation_rendering rendering_claim ON header.claimid = rendering_claim.claimid
+    LEFT JOIN transactional_servicelineaffiliation_referring referring ON serviceline.servicelineid = referring.servicelineid
         AND serviceline.claimid = referring.claimid
-        AND referring.type = 'Referring'
-    LEFT JOIN transactional_claimaffiliation referring_claim ON header.claimid = referring_claim.claimid 
-        AND referring_claim.type = 'Referring'
-    LEFT JOIN transactional_servicelineaffiliation servicelocation ON serviceline.servicelineid = servicelocation.servicelineid 
+    LEFT JOIN transactional_claimaffiliation_referring referring_claim ON header.claimid = referring_claim.claimid
+    LEFT JOIN transactional_servicelineaffiliation_servicelocation servicelocation ON serviceline.servicelineid = servicelocation.servicelineid
         AND serviceline.claimid = servicelocation.claimid
-        AND servicelocation.type = 'ServiceLocation'
-    LEFT JOIN transactional_claimaffiliation servicelocation_claim ON header.claimid = servicelocation_claim.claimid 
-        AND servicelocation_claim.type = 'ServiceLocation'
-    LEFT JOIN transactional_servicelineaffiliation ambulancedropoff ON serviceline.servicelineid = ambulancedropoff.servicelineid 
+    LEFT JOIN transactional_claimaffiliation_servicelocation servicelocation_claim ON header.claimid = servicelocation_claim.claimid
+    LEFT JOIN transactional_servicelineaffiliation_ambulancedropoff ambulancedropoff ON serviceline.servicelineid = ambulancedropoff.servicelineid
         AND serviceline.claimid = ambulancedropoff.claimid
-        AND ambulancedropoff.type = 'AmbulanceDropOff'
-    LEFT JOIN transactional_claimaffiliation ambulancedropoff_claim ON header.claimid = ambulancedropoff_claim.claimid 
-        AND ambulancedropoff_claim.type = 'AmbulanceDropOff'
-    LEFT JOIN transactional_servicelineaffiliation supervising ON serviceline.servicelineid = supervising.servicelineid 
+    LEFT JOIN transactional_claimaffiliation_ambulancedropoff ambulancedropoff_claim ON header.claimid = ambulancedropoff_claim.claimid
+    LEFT JOIN transactional_servicelineaffiliation_supervising supervising ON serviceline.servicelineid = supervising.servicelineid
         AND serviceline.claimid = supervising.claimid
-        AND supervising.type = 'Supervising'
-    LEFT JOIN transactional_claimaffiliation supervising_claim ON header.claimid = supervising_claim.claimid 
-        AND supervising_claim.type = 'Supervising'
-    LEFT JOIN transactional_servicelineaffiliation operating ON serviceline.servicelineid = operating.servicelineid 
+    LEFT JOIN transactional_claimaffiliation_supervising supervising_claim ON header.claimid = supervising_claim.claimid
+    LEFT JOIN transactional_servicelineaffiliation_operating operating ON serviceline.servicelineid = operating.servicelineid
         AND serviceline.claimid = operating.claimid
-    AND operating.type = 'Operating'
-        LEFT JOIN transactional_claimaffiliation operating_claim ON header.claimid = operating_claim.claimid 
-    AND operating_claim.type = 'Operating'
-        LEFT JOIN transactional_servicelineaffiliation purchased ON serviceline.servicelineid = purchased.servicelineid 
-    AND serviceline.claimid = purchased.claimid
-        AND purchased.type = 'Purchased'
-    LEFT JOIN transactional_claimaffiliation purchased_claim ON header.claimid = purchased_claim.claimid 
-        AND purchased_claim.type = 'Purchased'
-    LEFT JOIN transactional_servicelineaffiliation other ON serviceline.servicelineid = other.servicelineid 
+    LEFT JOIN transactional_claimaffiliation_operating operating_claim ON header.claimid = operating_claim.claimid
+    LEFT JOIN transactional_servicelineaffiliation_purchased purchased ON serviceline.servicelineid = purchased.servicelineid
+        AND serviceline.claimid = purchased.claimid
+    LEFT JOIN transactional_claimaffiliation_purchased purchased_claim ON header.claimid = purchased_claim.claimid
+    LEFT JOIN transactional_servicelineaffiliation_other other ON serviceline.servicelineid = other.servicelineid
         AND serviceline.claimid = other.claimid
-        AND other.type = 'Other'
-    LEFT JOIN transactional_claimaffiliation other_claim ON header.claimid = other_claim.claimid 
-        AND other_claim.type = 'Other'
+    LEFT JOIN transactional_claimaffiliation_other other_claim ON header.claimid = other_claim.claimid
 
     -- payers
     LEFT JOIN transactional_payer payer1 ON header.claimid = payer1.claimid
@@ -507,9 +491,9 @@ FROM transactional_header header
     LEFT JOIN transactional_diagnosis diagnosis ON diagnosis.claimid = header.claimid
         AND header.Type = 'Professional'
         AND (
-            serviceline.diagnosiscodepointer1 = diagnosis.sequencenumber 
-            OR serviceline.diagnosiscodepointer2 = diagnosis.sequencenumber 
-            OR serviceline.diagnosiscodepointer3 = diagnosis.sequencenumber 
-            OR serviceline.diagnosiscodepointer4 = diagnosis.sequencenumber 
+            serviceline.diagnosiscodepointer1 = diagnosis.sequencenumber
+            OR serviceline.diagnosiscodepointer2 = diagnosis.sequencenumber
+            OR serviceline.diagnosiscodepointer3 = diagnosis.sequencenumber
+            OR serviceline.diagnosiscodepointer4 = diagnosis.sequencenumber
             )
     LEFT JOIN transactional_procedure proc ON proc.claimid = header.claimid

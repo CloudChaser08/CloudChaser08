@@ -233,22 +233,14 @@ FROM transactional_header header
     LEFT JOIN transactional_billing billing ON header.claimid = billing.claimid
 
     -- providers
-    LEFT JOIN transactional_claimaffiliation rendering_claim ON header.claimid = rendering_claim.claimid 
-    AND rendering_claim.type = 'Rendering'
-    LEFT JOIN transactional_claimaffiliation referring_claim ON header.claimid = referring_claim.claimid 
-    AND referring_claim.type = 'Referring'
-    LEFT JOIN transactional_claimaffiliation servicelocation_claim ON header.claimid = servicelocation_claim.claimid 
-    AND servicelocation_claim.type = 'ServiceLocation'
-    LEFT JOIN transactional_claimaffiliation ambulancedropoff_claim ON header.claimid = ambulancedropoff_claim.claimid 
-    AND ambulancedropoff_claim.type = 'AmbulanceDropOff'
-    LEFT JOIN transactional_claimaffiliation supervising_claim ON header.claimid = supervising_claim.claimid 
-    AND supervising_claim.type = 'Supervising'
-    LEFT JOIN transactional_claimaffiliation operating_claim ON header.claimid = operating_claim.claimid 
-    AND operating_claim.type = 'Operating'
-    LEFT JOIN transactional_claimaffiliation purchased_claim ON header.claimid = purchased_claim.claimid 
-    AND purchased_claim.type = 'Purchased'
-    LEFT JOIN transactional_claimaffiliation other_claim ON header.claimid = other_claim.claimid 
-    AND other_claim.type = 'Other'
+    LEFT JOIN transactional_claimaffiliation_rendering rendering_claim ON header.claimid = rendering_claim.claimid
+    LEFT JOIN transactional_claimaffiliation_referring referring_claim ON header.claimid = referring_claim.claimid
+    LEFT JOIN transactional_claimaffiliation_servicelocation servicelocation_claim ON header.claimid = servicelocation_claim.claimid
+    LEFT JOIN transactional_claimaffiliation_ambulancedropoff ambulancedropoff_claim ON header.claimid = ambulancedropoff_claim.claimid
+    LEFT JOIN transactional_claimaffiliation_supervising supervising_claim ON header.claimid = supervising_claim.claimid
+    LEFT JOIN transactional_claimaffiliation_operating operating_claim ON header.claimid = operating_claim.claimid
+    LEFT JOIN transactional_claimaffiliation_purchased purchased_claim ON header.claimid = purchased_claim.claimid
+    LEFT JOIN transactional_claimaffiliation_other other_claim ON header.claimid = other_claim.claimid
 
     -- payer
     LEFT JOIN transactional_payer payer1 ON header.claimid = payer1.claimid
