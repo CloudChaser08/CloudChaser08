@@ -17,7 +17,7 @@ DEFAULT_ATTRS = [
 ]
 
 
-def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False):
+def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False, partitions=200, cache=False):
     """
     Load matching data for a provider
     """
@@ -47,8 +47,12 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
             coalesce(*map(lambda x: col(x), relevant_hvid_columns)).alias('hvid')
         ] + map(lambda x: col(x), total_attrs))
 
+    final_payload = final_payload.repartition(partitions)
+    if cache:
+        final_payload = final_payload.cache_and_track(table_name)
+
     if return_output:
         return final_payload
     else:
         runner.sqlContext.sql('DROP TABLE IF EXISTS {}'.format(table_name))
-        final_payload.repartition(500).cache_and_track(table_name).registerTempTable(table_name)
+        final_payload.registerTempTable(table_name)
