@@ -1,4 +1,3 @@
-INSERT INTO pharmacyclaims_common_model
 SELECT DISTINCT
         t.row_id                                                                               AS claim_id,
         p.hvid                                                                                 AS hvid,
@@ -71,5 +70,3 @@ OR
           t.dx_16, t.dx_17, t.dx_18, t.dx_19, t.dx_20,
           t.dx_21, t.dx_22, t.dx_23, t.dx_24) IS NULL
 )
-;
-

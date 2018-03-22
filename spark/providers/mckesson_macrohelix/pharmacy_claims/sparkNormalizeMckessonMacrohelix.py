@@ -3,15 +3,17 @@ import argparse
 
 from spark.runner import Runner
 from spark.spark_setup import init
+from spark.common.pharmacyclaims_common_model_v6 import schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
+import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
-def run(spark, runner, date_input, test = False, airflow_test = False):
+def run(spark, runner, date_input, test=False, airflow_test=False):
     setid = 'MHHealthVerity.Record.{}'.format(date_input.replace('-', ''))
 
     script_path = __file__
@@ -31,7 +33,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
             date_input.replace('-', '/')
         )
     else:
-        input_path = 's3://salusv/incoming/pharmacyclaims/mckesson_macrohelix/{}/transactions/'.format(
+        input_path = 's3://salusv/incoming/pharmacyclaims/mckesson_macrohelix/{}/'.format(
             date_input.replace('-', '/')
         )
         matching_path = 's3://salusv/matching/payload/pharmacyclaims/mckesson_macrohelix/{}/'.format(
@@ -52,54 +54,57 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
 
     max_date = date_input
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v4.sql', [
-        ['external', '', False],
-        ['table_name', 'pharmacyclaims_common_model', False],
-        ['properties', '', False],
-        ['additional_columns', [], False]
-    ])
-
     payload_loader.load(runner, matching_path, ['claimId', 'patientId', 'hvJoinKey'])
 
-    runner.run_spark_script('load_transactions.sql', [
-        ['input_path', input_path],
-    ])
-
-    postprocessor.compose(
-        postprocessor.trimmify,
-        postprocessor.nullify
-    )(runner.sqlContext.sql('select * from mckesson_macrohelix_transactions')) \
-    .createTempView('mckesson_macrohelix_transactions')
+    import load_transactions
+    load_transactions.load(runner, input_path)
 
     explode.generate_exploder_table(spark, 24, 'exploder')
 
-    runner.run_spark_script('normalize.sql', [['date_input', date_input]])
+    normalized_df = runner.run_spark_script(
+        'normalize.sql',
+        [['date_input', date_input]],
+        return_output=True
+    )
 
     postprocessor.compose(
+        schema_enforcer.apply_schema_func(schema),
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id = '48', vendor_id = '86', filename = setid, model_version_number = '4'),
-        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '48', None, min_date),
+        postprocessor.add_universal_columns(
+            feed_id='48',
+            vendor_id='86',
+            filename=setid,
+            model_version_number='4'
+        ),
+        postprocessor.apply_date_cap(
+            runner.sqlContext,
+            'date_service',
+            max_date,
+            '48',
+            None,
+            min_date
+        ),
         pharm_priv.filter
     )(
-        runner.sqlContext.sql('select * from pharmacyclaims_common_model')
-    ).createTempView('pharmacyclaims_common_model')
+        normalized_df
+    ).createOrReplaceTempView('pharmacyclaims_common_model')
 
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
-                        runner.sqlContext,
-                        '48',
-                        date(1900, 1, 1),
-                        'HVM_AVAILABLE_HISTORY_START_DATE',
-                        'EARLIST_VALID_SERVICE_DATE'
+            runner.sqlContext,
+            '48',
+            date(1900, 1, 1),
+            'HVM_AVAILABLE_HISTORY_START_DATE',
+            'EARLIST_VALID_SERVICE_DATE'
         )
 
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v4.sql',
             'mckesson_macro_helix', 'pharmacyclaims_common_model',
             'date_service', date_input,
-            hvm_historical_date = datetime(hvm_historical.year,
-                                           hvm_historical.month,
-                                           hvm_historical.day)
+            hvm_historical_date=datetime(hvm_historical.year,
+                                         hvm_historical.month,
+                                         hvm_historical.day)
         )
 
 
@@ -115,8 +120,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macrohelix/spark-output/'
     else:
-        # TODO: change to where v4 is located
-        output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+        output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
     normalized_records_unloader.distcp(output_path)
 
