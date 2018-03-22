@@ -16,7 +16,7 @@ SELECT
                 (SELECT MIN(sl2.servicestart)
                 FROM transactional_serviceline sl2
                 WHERE sl2.claimid = header.claimid)
-        ), 1, 10), '%Y-%m-%d'
+        ), 1, 10), '%Y-%m-%d', CAST({min_date} AS DATE)
         )                               AS date_service,
     extract_date(
         substring(
@@ -28,7 +28,7 @@ SELECT
                     FROM transactional_serviceline sl2
                     WHERE sl2.claimid = header.claimid
                 )
-            END, 1, 10), '%Y-%m-%d'
+            END, 1, 10), '%Y-%m-%d', CAST({min_date} AS DATE)
         )                               AS date_service_end,
     header.institutionaltype            AS place_of_service_std_id,
     diagnosis.diagnosiscode             AS diagnosis_code,

@@ -13,7 +13,7 @@ import spark.helpers.external_table_loader as external_table_loader
 from spark.common.medicalclaims_common_model import schema_v2 as medicalclaims_schema
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.privacy.medicalclaims as medical_priv
-import pyspark.sql.utils.AnalysisException as AnalysisException
+from pyspark.sql.utils import AnalysisException
 
 import logging
 import load_records
@@ -74,7 +74,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         # Normalize
         norm1 = schema_enforcer.apply_schema(
-            runner.run_spark_script('mapping_1.sql', return_output=True),
+            runner.run_spark_script('mapping_1.sql', [['min_date', min_date]], return_output=True),
             medicalclaims_schema
         ).distinct().repartition(500, 'claim_id').checkpoint()
         norm1.createOrReplaceTempView('medicalclaims_common_model')
@@ -82,11 +82,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             .distinct().repartition(500, 'claimid')
         remaining_diags.createOrReplaceTempView('remaining_diagnosis')
         norm2 = schema_enforcer.apply_schema(
-            runner.run_spark_script('mapping_2.sql', return_output=True),
+            runner.run_spark_script('mapping_2.sql', [['min_date', min_date]], return_output=True),
             medicalclaims_schema
         ).distinct().repartition(500, 'claim_id').checkpoint()
         norm3 = schema_enforcer.apply_schema(
-            runner.run_spark_script('mapping_3.sql', return_output=True),
+            runner.run_spark_script('mapping_3.sql', [['min_date', min_date]], return_output=True),
             medicalclaims_schema
         ).distinct()
 
