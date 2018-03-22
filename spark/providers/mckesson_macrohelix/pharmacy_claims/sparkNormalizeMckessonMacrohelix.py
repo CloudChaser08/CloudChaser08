@@ -69,13 +69,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),
-        postprocessor.nullify,
         postprocessor.add_universal_columns(
             feed_id='48',
             vendor_id='86',
             filename=setid,
             model_version_number='4'
         ),
+        postprocessor.nullify,
         postprocessor.apply_date_cap(
             runner.sqlContext,
             'date_service',
