@@ -35,7 +35,6 @@ TMP_PATH_TEMPLATE='/tmp/ability/medicalclaims/{}{}{}/'
 DAG_NAME='ability_pipeline'
 
 S3_TEXT_ABILITY_PREFIX = 'warehouse/text/medicalclaims/ability/'
-S3_PARQUET_ABILITY_PREFIX = 'warehouse/parquet/medicalclaims/ability/'
 S3_PAYLOAD_LOC_ABILITY_URL = 's3://salusv/matching/payload/medicalclaims/ability/'
 
 HV_S3_RAW_PREFIX='incoming/ability/'
@@ -207,9 +206,6 @@ def get_expected_matching_files(ds, kwargs):
 
 def get_file_date(ds, kwargs):
     return ds
-
-def get_parquet_dates(ds, kwargs):
-    return [ds[:7]]
 
 default_args = {
     'owner': 'airflow',
@@ -459,18 +455,23 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'   : get_expected_matching_files,
-            'file_date_func'                 : get_file_date,
-            'incoming_path'                  : HV_S3_TRANSACTION_PREFIX,
-            'normalization_routine_directory': '/home/airflow/airflow/dags/providers/ability/',
-            'normalization_routine_script'   : '/home/airflow/airflow/dags/providers/ability/rsNormalizeAbilityDaily.py',
-            'parquet_dates_func'             : get_parquet_dates,
-            's3_text_path_prefix'            : S3_TEXT_ABILITY_PREFIX,
-            's3_parquet_path_prefix'         : S3_PARQUET_ABILITY_PREFIX,
-            's3_payload_loc_url'             : S3_PAYLOAD_LOC_ABILITY_URL,
-            'vendor_description'             : 'Ability DX',
-            'vendor_uuid'                    : '10d4caa3-056e-42c7-aab9-401ca375fee1',
-            'feed_data_type'                 : 'medical-old'
+            'expected_matching_files_func'      : get_expected_matching_files,
+            'file_date_func'                    : get_file_date,
+            's3_payload_loc_url'                : S3_PAYLOAD_LOC_ABILITY_URL,
+            'vendor_uuid'                       : '10d4caa3-056e-42c7-aab9-401ca375fee1',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/ability/medicalclaims/sparkNormalizeAbilityDX.py',
+            'pyspark_normalization_args_func'   : lambda ds, k: [
+                '--date', date_utils.insert_date_into_template('{}-{}-{}', k)
+            ],
+            'pyspark'                           : True,
+            'emr_num_nodes'                     : 10,
+            'emr_node_type'                     : 'm4.2xlarge',
+            'emr_ebs_volume_size'               : 100,
+            'spark_conf_args'                   : ['--conf', 'spark.sql.shuffle.partitions=1000',
+                '--conf', 'spark.executor.cores=4', '--conf', 'spark.executor.memory=10G',
+                '--conf', 'spark.hadoop.fs.s3a.maximum.connections=1000',
+                '--conf', 'spark.files.useFetchCache=false'
+            ]
         }
     ),
     task_id='detect_move_normalize',
@@ -478,8 +479,7 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 sql_template = """
-    ALTER TABLE medicalclaims_old ADD PARTITION (part_provider='ability', part_processdate='{0}-{1}')
-    LOCATION 's3a://salusv/warehouse/parquet/medicalclaims/ability/{0}-{1}/'
+    MSCK REPAIR TABLE medicalclaims_new
 """
 
 update_analytics_db = SubDagOperator(
@@ -489,9 +489,7 @@ update_analytics_db = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(
-                sql_template, k
-            ) if date_utils.insert_date_into_template('{}-{}-{}', k).rfind('-01') == 7 else ''
+            'sql_command_func' : lambda ds, k: sql_template
         }
     ),
     task_id='update_analytics_db',
