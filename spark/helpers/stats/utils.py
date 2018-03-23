@@ -57,7 +57,7 @@ def select_data_in_date_range(start_date, end_date, date_column_name, include_nu
     return out
 
 
-def select_data_sample_in_date_range(start_date, end_date, date_column_name, include_nulls=False, max_sample_size=600000):
+def select_data_sample_in_date_range(start_date, end_date, date_column_name, include_nulls=False, max_sample_size=7000000, record_field=None):
     '''
     Filters the dataframe to contains rows between the inputed date range
     for the specified date column
@@ -67,17 +67,30 @@ def select_data_sample_in_date_range(start_date, end_date, date_column_name, inc
         - date_column_name: string specifying which column to filter by
                             for the date range
         - include_nulls: Flag for whether or not to include nulls in the result set
+        - max_sample_size: Maximum number of records to include in the sample
+        - record_field: The field name containing record ids, in case we want the
+                        calculation based on the number of records rather than the
+                        number of rows
 
     Output:
-        - out: function that inputs a dataframe and returns a dataframe
-               within the specified date range
+        - out: function that inputs a dataframe and returns a (1) multiplication factor
+               for projecting how much data should be in the full set based on the sample
+               and (2) dataframe with a random sample within the specified date range
     '''
     def out(df):
         limited_date_df = select_data_in_date_range(start_date, end_date, date_column_name, include_nulls)(df)
-        total_count = limited_date_df.count()
-        fraction = float(min(max_sample_size, total_count)) / float(total_count)
+        if record_field:
+            distinct_records = limited_date_df.select(record_field).distinct()
+            total_count = distinct_records.count()
+            fraction = float(min(max_sample_size, total_count)) / float(total_count)
+            records_sample = distinct_records.sample(False, fraction)
+            res = limited_date_df.join(records_sample, records_sample[record_field] == limited_date_df[record_field], 'leftsemi')
+        else:
+            total_count = limited_date_df.count()
+            fraction = float(min(max_sample_size, total_count)) / float(total_count)
+            res = limited_date_df.sample(False, fraction)
 
-        return 1.0 / fraction, limited_date_df.sample(False, fraction)
+        return 1.0 / fraction, res
 
     return out
 
