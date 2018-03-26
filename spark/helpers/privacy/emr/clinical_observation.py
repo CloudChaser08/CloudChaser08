@@ -9,10 +9,16 @@ clinical_observation_transformer = Transformer(
             post_norm_cleanup.clean_up_diagnosis_code, ['clin_obsn_diag_cd', 'clin_obsn_diag_cd_qual', 'enc_dt']
         )
     ],
+    clin_obsn_ndc=[
+        TransformFunction(post_norm_cleanup.clean_up_ndc_code, ['clin_obsn_ndc'])
+    ],
     clin_obsn_rndrg_prov_npi=[
         TransformFunction(
             post_norm_cleanup.clean_up_npi_code, ['clin_obsn_rndrg_prov_npi']
         )
+    ],
+    clin_obsn_rndrg_prov_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['clin_obsn_rndrg_prov_state_cd'])
     ]
 )
 

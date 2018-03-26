@@ -9,6 +9,9 @@ lab_result_transformer = Transformer(
     ],
     lab_test_loinc_cd=[
         TransformFunction(post_norm_cleanup.clean_up_loinc_code, ['lab_test_loinc_cd'])
+    ],
+    lab_test_ordg_prov_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['lab_test_ordg_prov_state_cd'])
     ]
 )
 

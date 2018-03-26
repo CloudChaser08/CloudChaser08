@@ -6,6 +6,9 @@ import spark.helpers.postprocessor as postprocessor
 provider_order_transformer = Transformer(
     prov_ord_diag_cd=[
         TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['prov_ord_diag_cd', 'prov_ord_diag_cd_qual', 'prov_ord_dt'])
+    ],
+    ordg_prov_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['ordg_prov_state_cd'])
     ]
 )
 

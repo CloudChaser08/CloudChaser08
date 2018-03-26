@@ -7,11 +7,30 @@ procedure_transformer = Transformer(
     proc_cd=[
         TransformFunction(post_norm_cleanup.clean_up_procedure_code, ['proc_cd'])
     ],
+    proc_cd_1_modfr=[
+        TransformFunction(post_norm_cleanup.clean_up_alphanumeric_code, ['proc_cd_1_modfr']),
+        TransformFunction(lambda mod: mod[:2] if mod else None, ['proc_cd_1_modfr'])
+    ],
+    proc_cd_2_modfr=[
+        TransformFunction(post_norm_cleanup.clean_up_alphanumeric_code, ['proc_cd_2_modfr']),
+        TransformFunction(lambda mod: mod[:2] if mod else None, ['proc_cd_2_modfr'])
+    ],
+    proc_cd_3_modfr=[
+        TransformFunction(post_norm_cleanup.clean_up_alphanumeric_code, ['proc_cd_3_modfr']),
+        TransformFunction(lambda mod: mod[:2] if mod else None, ['proc_cd_3_modfr'])
+    ],
+    proc_cd_4_modfr=[
+        TransformFunction(post_norm_cleanup.clean_up_alphanumeric_code, ['proc_cd_4_modfr']),
+        TransformFunction(lambda mod: mod[:2] if mod else None, ['proc_cd_4_modfr'])
+    ],
     proc_diag_cd=[
         TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['proc_diag_cd', 'proc_diag_cd_qual', 'proc_dt'])
     ],
     proc_rndrg_prov_npi=[
         TransformFunction(post_norm_cleanup.clean_up_npi_code, ['proc_rndrg_prov_npi'])
+    ],
+    proc_rndrg_prov_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['proc_rndrg_prov_state_cd'])
     ]
 )
 

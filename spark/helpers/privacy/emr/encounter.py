@@ -9,6 +9,9 @@ encounter_transformer = Transformer(
     ],
     enc_rndrg_prov_npi=[
         TransformFunction(post_norm_cleanup.clean_up_npi_code, ['enc_rndrg_prov_npi'])
+    ],
+    enc_rndrg_prov_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['enc_rndrg_prov_state_cd'])
     ]
 )
 

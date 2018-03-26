@@ -9,29 +9,15 @@ lab_order_transformer = Transformer(
     ],
     lab_ord_loinc_cd=[
         TransformFunction(post_norm_cleanup.clean_up_numeric_code, ['lab_ord_loinc_cd'])
+    ],
+    lab_ord_ordg_prov_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['lab_ord_ordg_prov_state_cd'])
     ]
 )
 
-whitelists = [
-    {
-        'column_name': 'lab_ord_snomed_cd',
-        'domain_name': 'SNOMED'
-    },
-    {
-        'column_name': 'lab_ord_alt_cd',
-        'domain_name': 'emr_lab_ord.lab_ord_alt_cd'
-    },
-    {
-        'column_name': 'lab_ord_test_nm',
-        'domain_name': 'emr_lab_ord.lab_ord_test_nm'
-    },
-    {
-        'column_name': 'rec_stat_cd',
-        'domain_name': 'emr_lab_ord.rec_stat_cd'
-    }
-]
+whitelists = []
 
-def filter(sqlc, update_whitelists=lambda x: x):
+def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):
     def out(df):
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
@@ -40,6 +26,6 @@ def filter(sqlc, update_whitelists=lambda x: x):
                 for whitelist in whtlsts
             ]
         )(
-            emr_priv_common.filter(df, lab_order_transformer)
+            emr_priv_common.filter(df, lab_order_transformer.overwrite(additional_transformer))
         )
     return out

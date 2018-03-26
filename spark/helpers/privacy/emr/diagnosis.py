@@ -9,6 +9,9 @@ diagnosis_transformer = Transformer(
     ],
     diag_rndrg_prov_npi=[
         TransformFunction(post_norm_cleanup.clean_up_npi_code, ['diag_rndrg_prov_npi'])
+    ],
+    diag_rndrg_prov_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['diag_rndrg_prov_state_cd'])
     ]
 )
 
