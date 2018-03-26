@@ -127,11 +127,15 @@ def test_diag_cd_explosion():
 
 
 def test_lab_ord_explosion():
-    assert [
-        (res.lab_ord_diag_cd, res.lab_ord_diag_cd_qual) for res in lab_order_results
-    ] == [
-        ('V90', '01'), ('V90', '01'), ('V90', '01'),
-        (None, '02'), (None, '02'), (None, '02')
+    assert sorted([
+        (res.hv_lab_ord_id, res.lab_ord_diag_cd, res.lab_ord_diag_cd_qual) for res in lab_order_results
+    ]) == [
+        ('25_gen2patientid-0_orderid-0_1', None, '02'),
+        ('25_gen2patientid-0_orderid-0_1', 'V90', '01'),
+        ('25_gen2patientid-1_orderid-1_1', None, '02'),
+        ('25_gen2patientid-1_orderid-1_1', 'V90', '01'),
+        ('25_gen2patientid-2_orderid-2_1', None, '02'),
+        ('25_gen2patientid-2_orderid-2_1', 'V90', '01')
     ]
 
 
