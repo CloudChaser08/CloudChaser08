@@ -92,5 +92,114 @@ def test_deduplication():
         == sorted(set([res.hv_enc_id for res in encounter_results]))
 
 
+def test_clin_obsn_explosion():
+    assert sorted([
+        (res.hv_clin_obsn_id, res.clin_obsn_substc_cd, res.clin_obsn_substc_cd_qual)
+        for res in clinical_observation_results
+    ]) == [
+        ('25_gen2patientid-0_algid-0_0', 'DDI', 'DDI'),
+        ('25_gen2patientid-0_algid-0_0', 'RXNORM', 'RXNORM'),
+        ('25_gen2patientid-1_algid-1_0', 'GPI', 'GPI'),
+        ('25_gen2patientid-2_algid-2_0', None, None)
+    ]
+
+
+def test_diag_alt_cd():
+    assert set(
+        [(res.diag_alt_cd, res.diag_alt_cd_qual)
+         for res in diagnosis_results]
+    ) == {
+        ('level1: level2: level3', 'LEVEL1_LEVEL2_LEVEL3'),
+        ('level2', 'LEVEL1_LEVEL2_LEVEL3'),
+        ('level3', 'LEVEL1_LEVEL2_LEVEL3')
+    }
+
+
+def test_diag_cd_explosion():
+    assert sorted(
+        [(res.hv_diag_id, res.diag_cd, res.diag_cd_qual) for res in diagnosis_results]
+    ) == [
+        ('25_gen2patientid-0_prbid-0_0', None, None),
+        ('25_gen2patientid-1_prbid-1_0', 'V700', '01'),
+        ('25_gen2patientid-1_prbid-1_0', 'Z0000', '02'),
+        ('25_gen2patientid-2_prbid-2_0', 'V700', '01')
+    ]
+
+
+def test_lab_ord_explosion():
+    assert [
+        (res.lab_ord_diag_cd, res.lab_ord_diag_cd_qual) for res in lab_order_results
+    ] == [
+        ('V90', '01'), ('V90', '01'), ('V90', '01'),
+        (None, '02'), (None, '02'), (None, '02')
+    ]
+
+
+def test_lab_result_rec_stat_cd():
+    assert sorted(
+        [(res.hv_lab_result_id, res.rec_stat_cd) for res in lab_result_results]
+    ) == [
+        ('25_gen2patientid-0_resid-0_0', 'Current Record'),
+        ('25_gen2patientid-1_resid-1_0', 'Historical Record: Entered in Error'),
+        ('25_gen2patientid-2_resid-2_0', 'Entered in Error')
+    ]
+
+
+def test_medctn_alt_substc_cd():
+    assert sorted(
+        [(res.hv_medctn_id, res.medctn_alt_substc_cd, res.medctn_alt_substc_cd_qual)
+         for res in medication_results]
+    ) == [('25_gen2patientid-0_medid-0_0', '02100020000105', 'GPI'),
+          ('25_gen2patientid-0_medid-0_0', '25915', 'DDI'),
+          ('25_gen2patientid-0_medid-0_0', '309112', 'RXNORM'),
+          ('25_gen2patientid-1_medid-1_0', '02100020000105', 'GPI'),
+          ('25_gen2patientid-1_medid-1_0', '25915', 'DDI'),
+          ('25_gen2patientid-1_medid-1_0', '309112', 'RXNORM'),
+          ('25_gen2patientid-2_medid-2_0', '02100020000105', 'GPI'),
+          ('25_gen2patientid-2_medid-2_0', '25915', 'DDI'),
+          ('25_gen2patientid-2_medid-2_0', '309112', 'RXNORM')]
+
+
+def test_proc_explosion():
+    assert sorted(
+        [(res.hv_proc_id, res.proc_cd, res.proc_cd_qual, res.proc_diag_cd, res.proc_diag_cd_qual)
+         for res in procedure_results]
+    ) == [
+        ('25_gen2patientid-0_orderid-0_1', '0000', 'HCPCS', None, '02'),
+        ('25_gen2patientid-0_orderid-0_1', '0000', 'HCPCS', 'V90', '01'),
+        ('25_gen2patientid-0_orderid-0_1', '36475', 'CPTCODE', None, '02'),
+        ('25_gen2patientid-0_orderid-0_1', '36475', 'CPTCODE', 'V90', '01'),
+        ('25_gen2patientid-0_prbid-0_0', None, None, None, None),
+        ('25_gen2patientid-1_orderid-1_1', '0000', 'HCPCS', None, '02'),
+        ('25_gen2patientid-1_orderid-1_1', '0000', 'HCPCS', 'V90', '01'),
+        ('25_gen2patientid-1_orderid-1_1', '36475', 'CPTCODE', None, '02'),
+        ('25_gen2patientid-1_orderid-1_1', '36475', 'CPTCODE', 'V90', '01'),
+        ('25_gen2patientid-1_prbid-1_0', None, None, 'V700', '01'),
+        ('25_gen2patientid-1_prbid-1_0', None, None, 'Z0000', '02'),
+        ('25_gen2patientid-2_orderid-2_1', '0000', 'HCPCS', None, '02'),
+        ('25_gen2patientid-2_orderid-2_1', '0000', 'HCPCS', 'V90', '01'),
+        ('25_gen2patientid-2_orderid-2_1', '36475', 'CPTCODE', None, '02'),
+        ('25_gen2patientid-2_orderid-2_1', '36475', 'CPTCODE', 'V90', '01'),
+        ('25_gen2patientid-2_prbid-2_0', None, None, 'V700', '01')
+    ]
+
+
+def test_prov_ord_explosion():
+    assert sorted(
+        [(res.hv_prov_ord_id, res.prov_ord_diag_cd, res.prov_ord_diag_cd_qual)
+         for res in provider_order_results]
+    ) == [
+        ('25_gen2patientid-0_orderid-0_1', None, '02'),
+        ('25_gen2patientid-0_orderid-0_1', 'V90', '01'),
+        ('25_gen2patientid-0_vacid-0_17194404700007', None, None),
+        ('25_gen2patientid-1_orderid-1_1', None, '02'),
+        ('25_gen2patientid-1_orderid-1_1', 'V90', '01'),
+        ('25_gen2patientid-1_vacid-1_17194404700007', None, None),
+        ('25_gen2patientid-2_orderid-2_1', None, '02'),
+        ('25_gen2patientid-2_orderid-2_1', 'V90', '01'),
+        ('25_gen2patientid-2_vacid-2_17194404700007', None, None)
+    ]
+
+
 def test_cleanup(spark):
     cleanup(spark)
