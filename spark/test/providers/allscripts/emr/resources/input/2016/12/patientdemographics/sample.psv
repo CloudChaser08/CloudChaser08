@@ -1,0 +1,4 @@
+﻿Rectype|RecTypeVersion|GenClientID|Gen2ClientID|GenPatientID|Gen2PatientID|DOByear|DeceasedFlag|Gender|Race|Ethnicity1|Zip3|State|SmokingStatusFlag|LastUpdateDTTM|GenProviderID|Gen2ProviderID|PrimaryKey
+PAT|5.2|genclientid-0|gen2clientid-0|genpatientid-0|gen2patientid-0|1997|0|Female||Other|334|FL||2016-01-15 05:55:40.057|genproviderid-0|gen2providerid-0|pk-0
+PAT|5.2|genclientid-1|gen2clientid-1|genpatientid-1|gen2patientid-1|1997|0|Female||Other|334|FL||2016-01-15 05:55:40.057|genproviderid-1|gen2providerid-1|pk-1
+PAT|5.2|genclientid-2|gen2clientid-2|genpatientid-2|gen2patientid-2|1997|0|Female||Other|334|FL||2016-01-15 05:55:40.057|genproviderid-2|gen2providerid-2|pk-2

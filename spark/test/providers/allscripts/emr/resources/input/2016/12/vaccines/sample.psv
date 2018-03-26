@@ -1,0 +1,4 @@
+﻿RecType|RecTypeVersion|GenClientID|Gen2ClientID|GenPatientID|Gen2PatientID|EncounterID|VaccineID|VersionID|AuditDataFlag|Name|Status|NDC|DDI|GPI|RxNorm|CVX|Series|Dose|RouteOfAdmin|BodySite|Manufacturer|AdministeredDTTM|GenProviderID|Gen2ProviderID|RecordedDTTM|PrimaryKey
+VAC|5.2|genclientid-0|gen2clientid-0|genpatientid-0|gen2patientid-0|encid-0|vacid-0|17194404700007||HPV (Gardasil)|Hold For|0|0|0|0|0|||||||genproviderid-0|gen2providerid-0|2016-01-01 00:19:04|pk-0
+VAC|5.2|genclientid-1|gen2clientid-1|genpatientid-1|gen2patientid-1|encid-1|vacid-1|17194404700007||HPV (Gardasil)|Hold For|0|0|0|0|0|||||||genproviderid-1|gen2providerid-1|2016-01-01 00:19:04|pk-1
+VAC|5.2|genclientid-2|gen2clientid-2|genpatientid-2|gen2patientid-2|encid-2|vacid-2|17194404700007||HPV (Gardasil)|Hold For|0|0|0|0|0|||||||genproviderid-2|gen2providerid-2|2016-01-01 00:19:04|pk-2
