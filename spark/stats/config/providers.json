@@ -277,7 +277,8 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : true
+            "epi_calcs"         : true,
+            "earliest_date"     : "1901-01-01"
         },
         {
             "name"              : "diplomat",
