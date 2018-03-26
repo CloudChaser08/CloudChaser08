@@ -152,4 +152,6 @@ FROM transactional_problems prb
     LEFT JOIN transactional_providers prv ON prv.gen2providerid = prb.hv_gen2providerid
     LEFT JOIN transactional_clients clt ON prb.genclientid = clt.genclientid
     CROSS JOIN diag_exploder n
-WHERE ARRAY(prb.icd9, prb.icd10)[n.n] IS NOT NULL OR COALESCE(prb.icd9, prb.icd10) IS NULL
+WHERE ARRAY(prb.icd9, prb.icd10)[n.n] IS NOT NULL OR (
+        COALESCE(prb.icd9, prb.icd10) IS NULL AND n.n = 0
+        )

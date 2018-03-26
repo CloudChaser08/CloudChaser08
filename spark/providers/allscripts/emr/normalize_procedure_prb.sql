@@ -120,6 +120,7 @@ SELECT
     END                                                                       AS proc_alt_cd_qual,
     ARRAY(prb.icd9, prb.icd10)[n.n]                                           AS proc_diag_cd,
     CASE
+    WHEN ARRAY(prb.icd9, prb.icd10)[n.n] IS NULL THEN NULL
     WHEN n.n = 0 THEN '01' ELSE '02'
     END                                                                       AS proc_diag_cd_qual,
     TRIM(prb.status)                                                          AS proc_stat_cd,
@@ -166,4 +167,4 @@ FROM transactional_problems prb
     LEFT JOIN transactional_providers prv ON prv.gen2providerid = prb.hv_gen2providerid
     LEFT JOIN transactional_clients clt ON prb.genclientid = clt.genclientid
     CROSS JOIN diag_exploder n
-WHERE ARRAY(prb.icd9, prb.icd10)[n.n] IS NOT NULL OR COALESCE(prb.icd9, prb.icd10) IS NULL
+WHERE ARRAY(prb.icd9, prb.icd10)[n.n] IS NOT NULL OR (COALESCE(prb.icd9, prb.icd10) IS NULL AND n.n = 0)
