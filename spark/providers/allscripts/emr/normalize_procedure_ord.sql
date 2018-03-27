@@ -39,6 +39,7 @@ SELECT
     ELSE 'HCPCS'
     END                                                                     AS proc_cd_qual,
     ord.cptmod                                                              AS proc_cd_1_modfr,
+    NULL                                                                    AS proc_snomed_cd,
     SUBSTRING(
         CONCAT(
             CASE
@@ -140,11 +141,11 @@ FROM transactional_orders ord
     CROSS JOIN proc_exploder n
     CROSS JOIN diag_exploder n2
 WHERE UPPER(COALESCE(ord.type, '')) <> 'LABORATORY'
-        AND (0 <> LENGTH(COALESCE(ord.cpt4, '')) OR 0 <> LENGTH(COALESCE(ord.hcpcs, '')))
-        AND (
-            ARRAY(ord.billingicd9code, ord.billingicd10code)[n2.n] IS NOT NULL
-            OR (
-                COALESCE(ord.billingicd9code, ord.billingicd10code) IS NULL
-                AND n2.n = 0
-                )
+    AND ARRAY(ord.cpt4, ord.hcpcs)[n.n] IS NOT NULL
+    AND (
+        ARRAY(ord.billingicd9code, ord.billingicd10code)[n2.n] IS NOT NULL
+        OR (
+            COALESCE(ord.billingicd9code, ord.billingicd10code) IS NULL
+            AND n2.n = 0
             )
+        )

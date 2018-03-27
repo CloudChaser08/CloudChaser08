@@ -26,6 +26,7 @@ SELECT
     UPPER(prv.state)                                                          AS proc_rndrg_prov_state_cd,
     prb.cptcode                                                               AS proc_cd,
     CASE WHEN prb.cptcode IS NOT NULL THEN 'CPTCODE' END                      AS proc_cd_qual,
+    NULL                                                                      AS proc_cd_1_modfr,
     UPPER(prb.snomed)                                                         AS proc_snomed_cd,
     SUBSTRING(
         CONCAT(

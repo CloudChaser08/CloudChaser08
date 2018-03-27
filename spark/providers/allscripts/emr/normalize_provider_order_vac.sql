@@ -79,3 +79,4 @@ FROM transactional_vaccines vac
     LEFT JOIN matching_payload pay ON UPPER(ptn.gen2patientID) = UPPER(pay.personid)
     LEFT JOIN transactional_providers prv ON prv.gen2providerid = vac.hv_gen2providerid
     LEFT JOIN transactional_clients clt ON vac.genclientid = clt.genclientid
+WHERE vac.gen2patientID IS NOT NULL

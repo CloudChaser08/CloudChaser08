@@ -44,7 +44,9 @@ SELECT
     NULL                                                                    AS prov_ord_vcx_cd,
     NULL                                                                    AS prov_ord_vcx_nm,
     ARRAY(ord.billingicd9code, ord.billingicd10code)[n2.n]                  AS prov_ord_diag_cd,
-    CASE WHEN n2.n = 0 THEN '01' ELSE '02' END                              AS prov_ord_diag_cd_qual,
+    CASE
+    WHEN ARRAY(ord.billingicd9code, ord.billingicd10code)[n2.n] IS NULL THEN NULL
+    WHEN n2.n = 0 THEN '01' ELSE '02' END                              AS prov_ord_diag_cd_qual,
     TRIM(UPPER(ord.status))                                                 AS prov_ord_stat_cd,
     CASE WHEN ord.status IS NOT NULL THEN 'ORDER_STATUS' END                AS prov_ord_stat_cd_qual,
     NULL                                                                    AS prov_ord_complt_dt,
