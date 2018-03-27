@@ -17,15 +17,15 @@ def run(spark, runner, source):
 
     # We will use this window to make sure we select the HVID-NGID pair
     # that had the highest matchScore.
-    window = Window.orderBy('matchScore').partitionBy('hvJoinKey')
+    window = Window.orderBy('matchScore').partitionBy('nextgen_id')
 
     payload_df.select(['hvid', 'hvJoinKey', 'matchScore']) \
               .withColumn('enterprise_id', enterprise_udf(input_file_name())) \
               .withColumn('nextgen_id', concat_ws('_', lit('NG'), col('enterprise_id'), col('hvJoinKey'))) \
+              .select(['hvid', 'matchScore', 'nextgen_id']) \
               .withColumn('next_match_score', lead('matchScore', 1).over(window)) \
               .where(isnull('next_match_score')) \
               .drop('next_match_score') \
-              .select(['hvid', 'nextgen_id']) \
               .createOrReplaceTempView('nextgen_crosswalk')
 
 
