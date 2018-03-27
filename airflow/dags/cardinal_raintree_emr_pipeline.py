@@ -60,20 +60,20 @@ DELIVERABLE_FILE_NAME_TEMPLATE = 'cardinal_emr_{{}}_normalized_{}{}{}.psv.gz'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 
 # Transaction demographics
-TRANSACTION_DEMO_FILE_NAME_TEMPLATE = 'demographics_record_data_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
-TRANSACTION_DEID_FILE_NAME_TEMPLATE = 'demographics_deid_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
+TRANSACTION_DEMO_FILE_NAME_TEMPLATE = 'demographics_record_data_{}{}{}T[0-9]{{2}}.dat'
+TRANSACTION_DEID_FILE_NAME_TEMPLATE = 'demographics_deid_{}{}{}T[0-9]{{2}}.dat'
 
 # Transaction diagnosis
-TRANSACTION_DIAG_FILE_NAME_TEMPLATE = 'diagnosis_record_data_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
+TRANSACTION_DIAG_FILE_NAME_TEMPLATE = 'diagnosis_record_data_{}{}{}T[0-9]{{2}}.dat'
 
 # Transaction lab
-TRANSACTION_LAB_FILE_NAME_TEMPLATE = 'lab_record_data_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
+TRANSACTION_LAB_FILE_NAME_TEMPLATE = 'lab_record_data_{}{}{}T[0-9]{{2}}.dat'
 
 # Transaction encounter
-TRANSACTION_ENC_FILE_NAME_TEMPLATE = 'encounter_record_data_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
+TRANSACTION_ENC_FILE_NAME_TEMPLATE = 'encounter_record_data_{}{}{}T[0-9]{{2}}.dat'
 
 # Transaction dispense
-TRANSACTION_DISP_FILE_NAME_TEMPLATE = 'order_dispense_record_data_{}{}{}T[0-9]{{4}}_[0-9]{{3}}.dat'
+TRANSACTION_DISP_FILE_NAME_TEMPLATE = 'order_dispense_record_data_{}{}{}T[0-9]{{2}}.dat'
 
 get_raw_tmp_dir = date_utils.generate_insert_date_into_template_function(TRANSACTION_TMP_PATH_TEMPLATE)
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
@@ -85,7 +85,7 @@ def get_expected_matching_files(ds, k):
     formatted_template = date_utils.insert_date_into_template(
         TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
     )
-    return [formatted_template[:formatted_template.index('T[0-9]{4}')]]
+    return [formatted_template[:formatted_template.index('T[0-9]{2}')]]
 
 
 def generate_file_validation_dag(
@@ -102,7 +102,7 @@ def generate_file_validation_dag(
                     path_template, day_offset=CARDINAL_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
-                    path_template, day_offset=CARDINAL_DAY_OFFSET
+                    path_template
                 ),
                 'regex_name_match'        : True,
                 'minimum_file_size'       : minimum_file_size,
