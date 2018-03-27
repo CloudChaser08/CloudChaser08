@@ -18,7 +18,7 @@ from spark.common.emr.provider_order import schema_v7 as provider_order_schema
 from spark.common.emr.lab_order import schema_v6 as lab_order_schema
 from spark.common.emr.lab_result import schema_v7 as lab_result_schema
 from spark.common.emr.medication import schema_v7 as medication_schema
-from spark.common.emr.clinical_observation import schema_v6 as clinical_observation_schema
+from spark.common.emr.clinical_observation import schema_v7 as clinical_observation_schema
 from spark.common.emr.vital_sign import schema_v7 as vital_sign_schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.explode as explode
@@ -50,7 +50,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
 
     matching_date = '2017-09' if date_input <= '2017-09' else date_input
 
-    max_cap = (date_obj + relativedelta(month=1) - relativedelta(day=1)).strftime('%Y-%m-%d')
+    max_cap = (date_obj + relativedelta(months=1) - relativedelta(days=1)).strftime('%Y-%m-%d')
 
     if test:
         input_path = file_utils.get_abs_path(
@@ -266,7 +266,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'data': normalized_clinical_observation,
             'privacy': clinical_observation_priv,
             'schema': clinical_observation_schema,
-            'model_version': '06',
+            'model_version': '07',
             'join_key': 'hv_clin_obsn_id',
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
