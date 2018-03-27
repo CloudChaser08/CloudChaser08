@@ -80,18 +80,24 @@ def convert_value(value, conversion):
 
 
 def convert_kg_to_lb(value):
-    if value is not None:
-        return round(value * 2.2046, 2)
+    try:
+        return round(float(value) * 2.2046, 2)
+    except:
+        return None
 
 
 def convert_cm_to_in(value):
-    if value is not None:
-        return round(value * 0.3937, 2)
+    try:
+        return round(float(value) * 0.3937, 2)
+    except:
+        return None
 
 
 def convert_celsius_to_fahrenheit(value):
-    if value is not None:
+    try:
         return round((float(value) * 9 / 5) + 32, 2)
+    except:
+        return None
 
 
 def create_range(max):
