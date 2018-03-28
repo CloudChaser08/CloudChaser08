@@ -562,7 +562,7 @@ CREATE VIEW default.medicalclaims (
     ELSE '0_PREDATES_HVM_HISTORY'
     END AS part_processdate
 FROM default.medicalclaims_new
-WHERE part_provider IN ('practice_insight', 'cardinal_rcm')
+WHERE part_provider IN ('practice_insight', 'cardinal_rcm', 'ability')
 UNION ALL
 SELECT CAST(record_id AS bigint),
     claim_id,
@@ -966,9 +966,9 @@ SELECT CAST(record_id AS bigint),
     CASE
     WHEN part_processdate IN ('NULL', '0_PREDATES_HVM_HISTORY') THEN '0_PREDATES_HVM_HISTORY'
     WHEN LENGTH(part_processdate) = 4 THEN CONCAT(part_processdate, '-01-01')
-    WHEN part_provider IN ('ability', 'allscripts') THEN CONCAT(part_processdate, '-01')
+    WHEN part_provider IN ('allscripts') THEN CONCAT(part_processdate, '-01')
     ELSE REGEXP_REPLACE(part_processdate, '/', '-')
     END AS part_processdate
 FROM default.medicalclaims_old
-WHERE part_provider IN ('ability', 'navicure', 'allscripts')
+WHERE part_provider IN ('navicure', 'allscripts')
 ;
