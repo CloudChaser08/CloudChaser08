@@ -9,6 +9,9 @@ procedure_transformer = Transformer(
     ],
     proc_diag_cd=[
         TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['proc_diag_cd', 'proc_diag_cd_qual', 'proc_dt'])
+    ],
+    proc_rndrg_prov_npi=[
+        TransformFunction(post_norm_cleanup.clean_up_npi_code, ['proc_rndrg_prov_npi'])
     ]
 )
 

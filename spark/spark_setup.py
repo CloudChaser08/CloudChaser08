@@ -68,6 +68,9 @@ def init(provider, local=False):
         'cap_year_of_birth', cap_year_of_birth
     )
     sqlContext.registerFunction(
+        'is_int', is_int
+    )
+    sqlContext.registerFunction(
         'clean_up_numeric_code', clean_up_numeric_code
     )
     sqlContext.registerFunction(

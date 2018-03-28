@@ -23,9 +23,9 @@ def test_filter(spark):
     # test df including commonly filtered fields
     test_df = spark['spark'].sparkContext.parallelize([
         ['100', '1880', '2017-01-01', 'dummyval', 'GOODVAL', 'goodval_qual',
-         'badval', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+         'badval', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None],
         ['100', '1880', '2017-01-01', 'dummyval2', 'badval', 'badval_qual',
-         'goodval', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
+         'goodval', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
     ]).toDF(StructType([
         StructField('ptnt_age_num', StringType()),
         StructField('ptnt_birth_yr', StringType()),
@@ -53,9 +53,9 @@ def test_filter(spark):
 
     # assertion with no additional transforms
     assert provider_order_priv.filter(spark['sqlContext'])(test_df).collect() \
-        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', 'goodval_qual', None, None,
+        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', 'goodval_qual', 'badval', None,
                 None, None, None, None, None, None, None, None, None, None, None, None, None, None),
-            Row('90', '1927', '2017-01-01', 'dummyval2', None, None, 'GOODVAL', None,
+            Row('90', '1927', '2017-01-01', 'dummyval2', 'badval', 'badval_qual', 'goodval', None,
                 None, None, None, None, None, None, None, None, None, None, None, None, None, None)]
 
     # save original state of built-in transformer
@@ -65,6 +65,14 @@ def test_filter(spark):
         return whitelist + [{
             'column_name': 'notransform',
             'domain_name': 'emr_prov_ord_test.notransform'
+        }, {
+            'column_name': 'prov_ord_alt_cd',
+            'domain_name': 'emr_prov_ord.prov_ord_alt_cd',
+            'whitelist_col_name': 'gen_ref_cd',
+            'comp_col_names': ['prov_ord_alt_cd_qual']
+        }, {
+            'column_name': 'prov_ord_alt_nm',
+            'domain_name': 'emr_prov_ord.prov_ord_alt_nm'
         }]
 
     # assertion including additional transforms

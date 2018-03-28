@@ -11,7 +11,7 @@ def clean_up_freetext(val, remove_periods=False):
     Convert multiple consequtive spaces into a single space
     """
     try:
-        new_val = re.sub(r'  *', ' ', re.sub(r'[^A-Za-z0-9 .&#%]', ' ', val))
+        new_val = re.sub(r'  *', ' ', re.sub(r'[^A-Za-z0-9 .&#%]', ' ', val)).strip()
         if remove_periods:
             new_val = new_val.replace('.', '')
         return new_val
@@ -103,11 +103,13 @@ def is_int(val):
         return True
     elif type(val) is float:
         return val.is_integer()
-    elif type(val) is str:
+    else:
         try:
             int(val)
             return True
         except ValueError:
+            return False
+        except TypeError:
             return False
 
 

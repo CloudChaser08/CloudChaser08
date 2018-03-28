@@ -6,19 +6,13 @@ import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 encounter_transformer = Transformer(
     ptnt_birth_yr=[
         TransformFunction(post_norm_cleanup.cap_year_of_birth, ['ptnt_age_num', 'enc_start_dt', 'ptnt_birth_yr'])
+    ],
+    enc_rndrg_prov_npi=[
+        TransformFunction(post_norm_cleanup.clean_up_npi_code, ['enc_rndrg_prov_npi'])
     ]
 )
 
-whitelists = [
-    {
-        'column_name': 'enc_typ_nm',
-        'domain_name': 'emr_enc.enc_typ_nm'
-    },
-    {
-        'column_name': 'enc_desc',
-        'domain_name': 'emr_enc.enc_desc'
-    }
-]
+whitelists = []
 
 
 def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):
@@ -26,8 +20,10 @@ def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
             *[
-                postprocessor.apply_whitelist(sqlc, whitelist['column_name'], whitelist['domain_name'])
-                for whitelist in whtlsts
+                postprocessor.apply_whitelist(
+                    sqlc, whitelist['column_name'], whitelist['domain_name'], comp_col_names=whitelist.get('comp_col_names'),
+                    whitelist_col_name=whitelist.get('whitelist_col_name'), clean_up_freetext_fn=whitelist.get('clean_up_freetext_fn')
+                ) for whitelist in whtlsts
             ]
         )(
             emr_priv_common.filter(df, encounter_transformer.overwrite(additional_transformer))

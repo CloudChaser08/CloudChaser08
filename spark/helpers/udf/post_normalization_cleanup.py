@@ -128,6 +128,10 @@ def clean_up_procedure_code(procedure_code):
             return up_to_first_space[:7] if up_to_first_space else None
 
 
+def clean_up_loinc_code(loinc_code):
+    return clean_up_numeric_code(loinc_code)
+
+
 def clean_up_npi_code(npi_code):
     cleaned = clean_up_numeric_code(npi_code)
     if cleaned and len(cleaned) == 10:

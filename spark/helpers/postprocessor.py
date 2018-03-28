@@ -87,7 +87,7 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
     return out
 
 
-def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_col_name='gen_ref_itm_nm', clean_up_freetext = True):
+def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_col_name='gen_ref_itm_nm', clean_up_freetext_fn=None, feed_id=None):
     """
     Apply whitelist defined for this provider in the ref_gen_ref table.
     """
@@ -101,15 +101,26 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
     if whitelist_col_name is None:
         whitelist_col_name = 'gen_ref_itm_nm'
 
-    if clean_up_freetext is None:
-        clean_up_freetext = True
+    if clean_up_freetext_fn is None:
+        def clean_up_freetext_fn(x):
+            if x:
+                return gen_helpers.clean_up_freetext(x.upper())
+            else:
+                return None
 
-    try:
-        values = [r.asDict()[whitelist_col_name] for r in sqlc.sql("""
+    SQL_TEMPLATE = """
         SELECT {}
         FROM ref_gen_ref
         WHERE whtlst_flg = 'Y' AND gen_ref_domn_nm = '{}'
-        """.format(whitelist_col_name, domain_name)).collect()]
+    """
+
+    if feed_id:
+        SQL_TEMPLATE = SQL_TEMPLATE + " AND hvm_vdr_feed_id='{}'".format(feed_id)
+
+    try:
+        values = [r.asDict()[whitelist_col_name] for r in sqlc.sql(
+            SQL_TEMPLATE.format(whitelist_col_name, domain_name)
+        ).collect()]
     except:
         logging.error("Error occurred while loading whitelist results for domain_name = '{}', "
                       + "check to make sure ref_gen_ref was loaded before calling this function.".format(
@@ -121,11 +132,7 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
         logging.warn("No whitelist specified for {}".format(domain_name))
 
     def out(df):
-        if clean_up_freetext:
-            c = udf(gen_helpers.clean_up_freetext)(upper(col(col_name)))
-        else:
-            c = upper(col(col_name))
-
+        c = udf(clean_up_freetext_fn)(col(col_name))
         df = df.withColumn(
             col_name, when(c.isin(values), c).otherwise(lit(None))
         )

@@ -9,7 +9,7 @@ def test_init(spark):
     # whitelists
     spark['spark'].sparkContext.parallelize([
         ['GOODVAL', 'Y', 'emr_clin_obsn.clin_obsn_nm'],
-        ['GOODVAL', 'Y', 'emr_medctn.clin_obsn_diag_nm'],
+        ['GOODVAL', 'Y', 'emr_clin_obsn.clin_obsn_diag_nm'],
         ['DUMMYVAL', 'Y', 'emr_clin_obsn_test.notransform']
     ]).toDF(StructType([
         StructField('gen_ref_itm_nm', StringType()),
@@ -36,8 +36,8 @@ def test_filter(spark):
 
     # assertion with no additional transforms
     assert clinical_observation_priv.filter(spark['sqlContext'])(test_df).collect() \
-        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', None, None, None),
-            Row('90', '1927', '2017-01-01', 'dummyval2', None, 'GOODVAL', None, None)]
+        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', 'badval', 'desc', 'desc'),
+            Row('90', '1927', '2017-01-01', 'dummyval2', 'badval', 'goodval', 'desc', 'desc')]
 
     # save original state of built-in transformer
     old_transformer = Transformer(**dict(clinical_observation_priv.clinical_observation_transformer.transforms))
@@ -47,6 +47,12 @@ def test_filter(spark):
         return whitelist + [{
             'column_name': 'notransform',
             'domain_name': 'emr_clin_obsn_test.notransform'
+        }, {
+            'column_name': 'clin_obsn_nm',
+            'domain_name': 'emr_clin_obsn.clin_obsn_nm'
+        }, {
+            'column_name': 'clin_obsn_diag_nm',
+            'domain_name': 'emr_clin_obsn.clin_obsn_diag_nm'
         }]
 
     # assertion including additional transforms
@@ -57,8 +63,8 @@ def test_filter(spark):
             clin_obsn_nm=[
                 TransformFunction(lambda c: c.replace('bad', 'good'), ['clin_obsn_nm'])
             ]
-        ))(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, None, None),
-                                   Row('90', '1927', '2017-01-01', None, 'GOODVAL', 'GOODVAL', None, None)]
+        ))(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, 'desc', 'desc'),
+                                   Row('90', '1927', '2017-01-01', None, 'GOODVAL', 'GOODVAL', 'desc', 'desc')]
 
     # assert original transformer and whitelist was not modified by
     # additional args

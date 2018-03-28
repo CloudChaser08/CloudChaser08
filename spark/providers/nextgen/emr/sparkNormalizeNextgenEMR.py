@@ -214,7 +214,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
     # The row_num column is generated inside the normalize_medication.sql
     # script in order to ensure that when we run a distinct to remove
-    # duplicates, we maintain  at least 1 normalized row per source row 
+    # duplicates, we maintain  at least 1 normalized row per source row
     runner.sqlContext.sql('SELECT * FROM medication_common_model_bak').drop('row_num').createOrReplaceTempView('medication_common_model')
     logging.debug("Normalized medication")
     runner.run_spark_script('normalize_provider_order.sql', [
@@ -234,11 +234,91 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ])
     logging.debug("Normalized vital sign")
 
-    def update_clinical_observation_whitelists(whitelists):
-        return [w for w in whitelists if w['column_name'] not in ['clin_obsn_nm', 'clin_obsn_result_desc']]
+    def update_encounter_whitelists(whitelists):
+        return whitelists + [{
+            'column_name': 'enc_typ_nm',
+            'domain_name': 'emr_enc.enc_typ_nm'
+        }]
+
+    def update_diagnosis_whitelists(whitelists):
+        return whitelists + [{
+            'column_name': 'diag_stat_desc',
+            'domain_name': 'emr_diag.diag_stat_desc',
+            'whitelist_col_name': 'gen_ref_itm_desc'
+        }]
+
+    def update_lab_order_whitelists(whitelists):
+        return whitelists + [{
+            'column_name': 'lab_ord_snomed_cd',
+            'domain_name': 'SNOMED',
+            'whitelist_col_name': 'gen_ref_cd'
+        }, {
+            'column_name': 'lab_ord_alt_cd',
+            'domain_name': 'emr_lab_ord.lab_ord_alt_cd',
+            'whitelist_col_name': 'gen_ref_cd'
+        }, {
+            'column_name': 'lab_ord_test_nm',
+            'domain_name': 'emr_lab_ord.lab_ord_test_nm'
+        }, {
+            'column_name': 'rec_stat_cd',
+            'domain_name': 'emr_lab_ord.rec_stat_cd',
+            'whitelist_col_name': 'gen_ref_cd'
+        }]
 
     def update_lab_result_whitelists(whitelists):
-        return [w for w in whitelists if w['column_name'] not in ['lab_test_nm', 'lab_result_nm', 'lab_result_uom']]
+        return whitelists + [{
+            'column_name': 'lab_test_nm',
+            'domain_name': 'emr_lab_result.lab_test_nm',
+            'clean_up_freetext_fn': lambda x: x.upper() if x else None
+        }, {
+            'column_name': 'lab_result_nm',
+            'domain_name': 'emr_lab_result.lab_result_nm',
+            'clean_up_freetext_fn': lambda x: x.upper() if x else None
+        }, {
+            'column_name': 'lab_test_snomed_cd',
+            'domain_name': 'SNOMED',
+            'whitelist_col_name': 'gen_ref_cd'
+        }, {
+            'column_name': 'lab_test_vdr_cd',
+            'domain_name': 'emr_lab_result.lab_test_vdr_cd',
+            'whitelist_col_name': 'gen_ref_cd'
+        }, {
+            'column_name': 'rec_stat_cd',
+            'domain_name': 'emr_lab_result.rec_stat_cd',
+            'whitelist_col_name': 'gen_ref_cd'
+        }]
+
+    def update_medication_whitelists(whitelists):
+        return whitelists + [{
+            'column_name': 'medctn_admin_sig_cd',
+            'domain_name': 'emr_medctn.medctn_admin_sig_cd',
+            'whitelist_col_name': 'gen_ref_cd'
+        }, {
+            'column_name': 'medctn_admin_sig_txt',
+            'domain_name': 'emr_medctn.medctn_admin_sig_txt',
+            'whitelist_col_name': 'gen_ref_itm_desc'
+        }]
+
+    def update_clinical_observation_whitelists(whitelists):
+        return whitelists + [{
+            'column_name': 'clin_obsn_typ_cd',
+            'domain_name': 'substanceusage.clinicalrecordtypecode',
+            'whitelist_col_name': 'gen_ref_cd',
+            'feed_id': '35',
+            'comp_col_names': ['clin_obsn_typ_cd_qual']
+        }, {
+            'column_name': 'clin_obsn_typ_nm',
+            'domain_name': 'substanceusage.clinicalrecorddescription',
+            'feed_id': '35'
+        }, {
+            'column_name': 'clin_obsn_nm',
+            'domain_name': 'emr_clin_obsn.clin_obsn_nm',
+            'clean_up_freetext_fn': lambda x: x.upper() if x else None
+        }, {
+            'column_name': 'clin_obsn_result_desc',
+            'domain_name': 'emr_clin_obsn.clin_obsn_desc',
+            'clean_up_freetext_fn': lambda x: x.upper() if x else None
+        }]
 
     normalized_tables = [
         {
@@ -254,21 +334,24 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'script_name'   : 'emr/diagnosis_common_model_v5.sql',
             'data_type'     : 'diagnosis',
             'date_column'   : 'enc_dt',
-            'privacy_filter': priv_diagnosis
+            'privacy_filter': priv_diagnosis,
+            'filter_args'   : [update_diagnosis_whitelists]
         },
         {
             'table_name'    : 'encounter_common_model',
             'script_name'   : 'emr/encounter_common_model_v4.sql',
             'data_type'     : 'encounter',
             'date_column'   : 'enc_start_dt',
-            'privacy_filter': priv_encounter
+            'privacy_filter': priv_encounter,
+            'filter_args'   : [update_encounter_whitelists]
         },
         {
             'table_name'    : 'medication_common_model',
             'script_name'   : 'emr/medication_common_model_v4.sql',
             'data_type'     : 'medication',
             'date_column'   : 'part_mth',
-            'privacy_filter': priv_medication
+            'privacy_filter': priv_medication,
+            'filter_args'   : [update_medication_whitelists]
         },
         {
             'table_name'    : 'procedure_common_model',
@@ -290,7 +373,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'script_name'   : 'emr/lab_order_common_model_v3.sql',
             'data_type'     : 'lab_order',
             'date_column'   : 'part_mth',
-            'privacy_filter': priv_lab_order
+            'privacy_filter': priv_lab_order,
+            'filter_args'   : [update_lab_order_whitelists]
         },
         {
             'table_name'    : 'provider_order_common_model',
@@ -318,7 +402,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         historical_date = LAST_RESORT_MIN_DATE
 
     for table in normalized_tables:
-        filter_args = [runner.sqlContext] + table.get('filter_args', []) 
+        filter_args = [runner.sqlContext] + table.get('filter_args', [])
         postprocessor.compose(
             postprocessor.add_universal_columns(
                 feed_id='35', vendor_id='118', filename=None,
