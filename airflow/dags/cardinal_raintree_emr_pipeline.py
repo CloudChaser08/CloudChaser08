@@ -17,6 +17,7 @@ import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
 import util.decompression as decompression
 import util.date_utils as date_utils
+import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file, s3_push_files,
           decrypt_files, split_push_files, clean_up_tmp_dir,
@@ -61,7 +62,7 @@ TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 
 # Transaction demographics
 TRANSACTION_DEMO_FILE_NAME_TEMPLATE = 'demographics_record_data_{}{}{}T[0-9]{{2}}.dat'
-TRANSACTION_DEID_FILE_NAME_TEMPLATE = 'demographics_deid_{}{}{}T[0-9]{{2}}.dat'
+TRANSACTION_DEID_FILE_NAME_TEMPLATE = 'demographics_deid_data_{}{}{}T[0-9]{{2}}.dat'
 
 # Transaction diagnosis
 TRANSACTION_DIAG_FILE_NAME_TEMPLATE = 'diagnosis_record_data_{}{}{}T[0-9]{{2}}.dat'
@@ -79,13 +80,6 @@ get_raw_tmp_dir = date_utils.generate_insert_date_into_template_function(TRANSAC
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
 
 CARDINAL_DAY_OFFSET = 1
-
-
-def get_expected_matching_files(ds, k):
-    formatted_template = date_utils.insert_date_into_template(
-        TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
-    )
-    return [formatted_template[:formatted_template.index('T[0-9]{2}')]]
 
 
 def generate_file_validation_dag(
@@ -184,6 +178,13 @@ fetch_transaction_disp = generate_fetch_transaction_dag(
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
+    def get_expected_matching_files(ds, k):
+        formatted_template = date_utils.insert_date_into_template(
+            TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
+        )
+        prefix = formatted_template[:formatted_template.index('T[0-9]{2}')]
+        return [el for el in s3_utils.list_s3_bucket(S3_TRANSACTION_RAW_URL) if prefix in el]
+
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,
@@ -191,14 +192,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : lambda ds, k: [
-                    S3_TRANSACTION_RAW_URL + transaction_file
-                    for transaction_file in os.listdir(get_raw_tmp_dir(ds, k)) if re.search(
-                        date_utils.insert_date_into_template(
-                            TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
-                        ), transaction_file
-                    )
-                ],
+                'source_files_func' : get_expected_matching_files,
                 'priority'          : 'priority1'
             }
         ),
