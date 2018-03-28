@@ -26,6 +26,7 @@ def run(spark, runner, source):
               .withColumn('next_match_score', lead('matchScore', 1).over(window)) \
               .where(isnull('next_match_score')) \
               .drop('next_match_score') \
+              .where(~isnull('hvid')) \
               .createOrReplaceTempView('nextgen_crosswalk')
 
 
