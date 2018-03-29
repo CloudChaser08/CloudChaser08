@@ -7,8 +7,8 @@ SELECT
     pay.hvid                                                                  AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                                    AS ptnt_birth_yr,
     CASE
-    WHEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) IN ('F', 'M', 'U')
-    THEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) ELSE 'U'
+    WHEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) IN ('F', 'M', 'U')
+    THEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) ELSE 'U'
     END                                                                       AS ptnt_gender_cd,
     ptn.state                                                                 AS ptnt_state_cd,
     SUBSTRING(COALESCE(ptn.zip3, pay.threedigitzip, ''), 1, 3)                AS ptnt_zip3_cd,
@@ -59,7 +59,7 @@ SELECT
     WHEN TRIM(UPPER(alg.unverifiedflag)) = 'N' THEN 'Y'
     END                                                                       AS clin_obsn_verfd_by_prov_flg,
     UPPER(clt.sourcesystemcode)                                               AS data_src_cd,
-    alg.recordedDTTM                                                          AS data_captr_dt,
+    alg.recordeddttm                                                          AS data_captr_dt,
     CASE
     WHEN TRIM(COALESCE(alg.auditdataflag, '')) = '0'
     THEN 'Current Record'
@@ -76,16 +76,17 @@ FROM transactional_allergies alg
     LEFT JOIN transactional_providers prv ON prv.gen2providerid = alg.hv_gen2providerid
     LEFT JOIN transactional_clients clt ON alg.genclientid = clt.genclientid
     CROSS JOIN clin_obsn_exploder n
-WHERE
-    ARRAY(
-        CASE WHEN alg.rxnorm != '0' THEN alg.rxnorm END,
-        CASE WHEN alg.gpi != '0' THEN alg.gpi END,
-        CASE WHEN alg.ddi != '0' THEN alg.ddi END
-        )[n.n] IS NOT NULL
-    OR (
-        COALESCE(
+WHERE alg.gen2patientid IS NOT NULL AND (
+        ARRAY(
             CASE WHEN alg.rxnorm != '0' THEN alg.rxnorm END,
             CASE WHEN alg.gpi != '0' THEN alg.gpi END,
             CASE WHEN alg.ddi != '0' THEN alg.ddi END
-            ) IS NULL AND n.n = 0
+            )[n.n] IS NOT NULL
+        OR (
+            COALESCE(
+                CASE WHEN alg.rxnorm != '0' THEN alg.rxnorm END,
+                CASE WHEN alg.gpi != '0' THEN alg.gpi END,
+                CASE WHEN alg.ddi != '0' THEN alg.ddi END
+                ) IS NULL AND n.n = 0
+            )
         )

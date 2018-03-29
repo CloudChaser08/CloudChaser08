@@ -9,8 +9,8 @@ SELECT
     pay.hvid                                                                  AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                                    AS ptnt_birth_yr,
     CASE
-    WHEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) IN ('F', 'M', 'U')
-    THEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) ELSE 'U'
+    WHEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) IN ('F', 'M', 'U')
+    THEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) ELSE 'U'
     END                                                                       AS ptnt_gender_cd,
     ptn.state                                                                 AS ptnt_state_cd,
     SUBSTRING(COALESCE(ptn.zip3, pay.threedigitzip, ''), 1, 3)                AS ptnt_zip3_cd,
@@ -152,6 +152,8 @@ FROM transactional_problems prb
     LEFT JOIN transactional_providers prv ON prv.gen2providerid = prb.hv_gen2providerid
     LEFT JOIN transactional_clients clt ON prb.genclientid = clt.genclientid
     CROSS JOIN diag_exploder n
-WHERE ARRAY(prb.icd9, prb.icd10)[n.n] IS NOT NULL OR (
-        COALESCE(prb.icd9, prb.icd10) IS NULL AND n.n = 0
+WHERE prb.gen2patientid IS NOT NULL AND (
+        ARRAY(prb.icd9, prb.icd10)[n.n] IS NOT NULL OR (
+            COALESCE(prb.icd9, prb.icd10) IS NULL AND n.n = 0
+            )
         )

@@ -7,8 +7,8 @@ SELECT
     pay.hvid                                                                AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                                  AS ptnt_birth_yr,
     CASE
-    WHEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) IN ('F', 'M', 'U')
-    THEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) ELSE 'U'
+    WHEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) IN ('F', 'M', 'U')
+    THEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) ELSE 'U'
     END                                                                     AS ptnt_gender_cd,
     ptn.state                                                               AS ptnt_state_cd,
     SUBSTRING(COALESCE(ptn.zip3, pay.threedigitzip, ''), 1, 3)              AS ptnt_zip3_cd,
@@ -142,6 +142,7 @@ FROM transactional_orders ord
     CROSS JOIN diag_exploder n2
 WHERE UPPER(COALESCE(ord.type, '')) <> 'LABORATORY'
     AND ARRAY(ord.cpt4, ord.hcpcs)[n.n] IS NOT NULL
+    AND ord.gen2patientid IS NOT NULL
     AND (
         ARRAY(ord.billingicd9code, ord.billingicd10code)[n2.n] IS NOT NULL
         OR (

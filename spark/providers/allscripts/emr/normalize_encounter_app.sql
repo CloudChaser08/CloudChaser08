@@ -16,8 +16,8 @@ SELECT
     pay.hvid                                                    AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                      AS ptnt_birth_yr,
     CASE
-    WHEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) IN ('F', 'M', 'U')
-    THEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) ELSE 'U'
+    WHEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) IN ('F', 'M', 'U')
+    THEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) ELSE 'U'
     END                                                         AS ptnt_gender_cd,
     ptn.state                                                   AS ptnt_state_cd,
     SUBSTRING(COALESCE(ptn.zip3, pay.threedigitzip, ''), 1, 3)  AS ptnt_zip3_cd,
@@ -59,3 +59,4 @@ FROM transactional_appointments app
     LEFT JOIN matching_payload pay ON UPPER(ptn.gen2patientID) = UPPER(pay.personid)
     LEFT JOIN transactional_providers prv ON prv.gen2providerid = app.hv_gen2providerid
     LEFT JOIN transactional_clients clt ON app.genclientid = clt.genclientid
+WHERE app.gen2patientid IS NOT NULL

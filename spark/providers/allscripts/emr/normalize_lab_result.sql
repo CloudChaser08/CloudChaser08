@@ -9,13 +9,14 @@ SELECT
     pay.hvid                                                                 AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                                   AS ptnt_birth_yr,
     CASE
-    WHEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) IN ('F', 'M', 'U')
-    THEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) ELSE 'U'
+    WHEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) IN ('F', 'M', 'U')
+    THEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) ELSE 'U'
     END                                                                      AS ptnt_gender_cd,
     ptn.state                                                                AS ptnt_state_cd,
     SUBSTRING(COALESCE(ptn.zip3, pay.threedigitzip, ''), 1, 3)               AS ptnt_zip3_cd,
     CONCAT('25_', res.gen2patientid, '_', res.encounterid)                   AS hv_enc_id,
     enc.encounterdttm                                                        AS enc_dt,
+    CONCAT('25_', res.gen2patientid, '_', res.orderid)                       AS hv_lab_ord_id,
     res.performeddttm                                                        AS lab_test_execd_dt,
     res.resultdttm                                                           AS lab_result_dt,
     res.gen2providerid                                                       AS lab_test_ordg_prov_vdr_id,
@@ -75,3 +76,4 @@ FROM transactional_results res
     LEFT JOIN matching_payload pay ON UPPER(ptn.gen2patientID) = UPPER(pay.personid)
     LEFT JOIN transactional_providers prv ON prv.gen2providerid = res.hv_gen2providerid
     LEFT JOIN transactional_clients clt ON res.genclientid = clt.genclientid
+WHERE res.gen2patientid IS NOT NULL

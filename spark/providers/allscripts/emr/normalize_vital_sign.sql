@@ -7,8 +7,8 @@ SELECT
     pay.hvid                                                                AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                                  AS ptnt_birth_yr,
     CASE
-    WHEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) IN ('F', 'M', 'U')
-    THEN UPPER(COALESCE(ptn.gender, pay.gender, 'U')) ELSE 'U'
+    WHEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) IN ('F', 'M', 'U')
+    THEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) ELSE 'U'
     END                                                                     AS ptnt_gender_cd,
     ptn.state                                                               AS ptnt_state_cd,
     SUBSTRING(COALESCE(ptn.zip3, pay.threedigitzip, ''), 1, 3)              AS ptnt_zip3_cd,
@@ -60,3 +60,4 @@ FROM transactional_vitals vit
     AND ref.gen_ref_domn_nm = 'allscripts_emr.vitals'
     AND TRIM(UPPER(vit.name)) = ref.gen_ref_cd
     AND TRIM(UPPER(COALESCE(vit.units, ''))) = ref.gen_ref_itm_nm
+WHERE vit.gen2patientid IS NOT NULL
