@@ -30,12 +30,12 @@
     },
     "dest_path": "s3://healthverity/incoming/cardinal/emr/",
     "file_name_regexes": [
-      "demographics_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
-      "demographics_deid_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
-      "diagnosis_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
-      "encounter_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
-      "lab_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat",
-      "order_dispense_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}_\\d{3}.dat"
+      "demographics_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}.*.dat",
+      "demographics_deid_data_\\d{4}\\d{2}\\d{2}T\\d{2}.*.dat",
+      "diagnosis_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}.*.dat",
+      "encounter_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}.*.dat",
+      "lab_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}.*.dat",
+      "order_dispense_record_data_\\d{4}\\d{2}\\d{2}T\\d{2}.*.dat"
     ]
   },
   {

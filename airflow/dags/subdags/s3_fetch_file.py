@@ -14,6 +14,10 @@ def do_fetch_file(ds, **kwargs):
     new_file_name      = kwargs['new_file_name_func'](ds, kwargs)
     s3_bucket          = kwargs['s3_bucket'] if kwargs.get('s3_bucket') else kwargs['s3_bucket_func'](ds, kwargs)
     s3_prefix          = kwargs['s3_prefix'] if kwargs.get('s3_prefix') else kwargs['s3_prefix_func'](ds, kwargs)
+    multi_match        = kwargs.get('multi_match')
+
+    if new_file_name and multi_match:
+        raise ValueError('new_file_name cannot be set if multi_match is true')
 
     if kwargs['tmp_path_template'].count('{}') >= 3:
         tmp_path = date_utils.insert_date_into_template(kwargs['tmp_path_template'],kwargs)
@@ -26,20 +30,22 @@ def do_fetch_file(ds, **kwargs):
             kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
         )
 
-        expected_file_name = \
-            filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)[0]
+        expected_file_names = filter(lambda k: re.search(expected_file_name, k.split('/')[-1]), s3_keys)
 
-    # When a new file name is not specified, use the expected file name
-    # This is useful when the expected file name is determined using a regular expression
-    # since the exact file name is unknown
-    if new_file_name is None:
-        new_file_name = expected_file_name
+        if not kwargs.get('multi_match'):
+            expected_file_names = [expected_file_names[0]]
+    else:
+        expected_file_names = [expected_file_name]
 
-    s3_utils.fetch_file_from_s3(
-        's3://' + s3_bucket + '/' + s3_prefix + expected_file_name,
-        tmp_path + new_file_name,
-        kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
-    )
+    for file_name in expected_file_names:
+        # When a new file name is not specified, use the expected file name
+        dest_file_name = new_file_name if new_file_name else file_name
+
+        s3_utils.fetch_file_from_s3(
+            's3://' + s3_bucket + '/' + s3_prefix + file_name,
+            tmp_path + dest_file_name,
+            kwargs.get('s3_connection', s3_utils.DEFAULT_CONNECTION_ID)
+        )
 
 
 def s3_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval, dag_config):

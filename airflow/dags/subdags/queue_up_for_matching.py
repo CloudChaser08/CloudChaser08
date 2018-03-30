@@ -1,4 +1,5 @@
 import os
+import logging
 from airflow.models import Variable
 from airflow.operators import PythonOperator
 from subprocess import check_call
@@ -27,7 +28,11 @@ def do_queue_up_for_matching(ds, **kwargs):
     if 'priority' in kwargs:
         queue_up_cmd[4] = kwargs['priority']
 
+    if not source_files:
+        logging.warn("Source files func returned no files. No files queued.")
+
     for f in source_files:
+        logging.info("Queueing up {}".format(f))
         queue_up_cmd[1] = f
         check_call(queue_up_cmd, env=environ)
 

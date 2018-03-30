@@ -17,6 +17,7 @@ import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 
 import util.decompression as decompression
 import util.date_utils as date_utils
+import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file, s3_push_files,
           decrypt_files, split_push_files, clean_up_tmp_dir,
@@ -45,12 +46,10 @@ mdag = HVDAG.HVDAG(
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/raw/'
-    S3_TRANSACTION_INTERIM_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/healthverity/incoming/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/{}/{}/'
     S3_MATCHING_PAYLOAD_URL = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/matching/'
 else:
-    S3_TRANSACTION_RAW_URL = 's3://hvincoming/cardinal_raintree/emr/'
-    S3_TRANSACTION_INTERIM_URL = 's3://healthverity/incoming/cardinal/emr/'
+    S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/cardinal/emr/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/emr/cardinal/{}/{}/{}/'
     S3_MATCHING_PAYLOAD_URL = 's3://salusv/matching/payload/emr/cardinal/'
 
@@ -62,36 +61,25 @@ DELIVERABLE_FILE_NAME_TEMPLATE = 'cardinal_emr_{{}}_normalized_{}{}{}.psv.gz'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 
 # Transaction demographics
-TRANSACTION_DEMO_FILE_DESCRIPTION = 'Cardinal Raintree EMR transaction demographics file'
-TRANSACTION_DEMO_FILE_NAME_TEMPLATE = 'Demographic_records_{}{}{}[0-9]{{6}}.dat'
-TRANSACTION_DEID_FILE_NAME_TEMPLATE = 'Demographic_deid_{}{}{}[0-9]{{6}}.dat'
+TRANSACTION_DEMO_FILE_NAME_TEMPLATE = 'demographics_record_data_{}{}{}T[0-9]{{2}}.dat'
+TRANSACTION_DEID_FILE_NAME_TEMPLATE = 'demographics_deid_data_{}{}{}T[0-9]{{2}}.dat'
 
 # Transaction diagnosis
-TRANSACTION_DIAG_FILE_DESCRIPTION = 'Cardinal Raintree EMR transaction diagnosis file'
-TRANSACTION_DIAG_FILE_NAME_TEMPLATE = 'Diagnosis_record_data_{}{}{}[0-9]{{6}}.dat'
+TRANSACTION_DIAG_FILE_NAME_TEMPLATE = 'diagnosis_record_data_{}{}{}T[0-9]{{2}}.dat'
 
 # Transaction lab
-TRANSACTION_LAB_FILE_DESCRIPTION = 'Cardinal Raintree EMR transaction lab file'
-TRANSACTION_LAB_FILE_NAME_TEMPLATE = 'Lab_record_data_{}{}{}[0-9]{{6}}.dat'
+TRANSACTION_LAB_FILE_NAME_TEMPLATE = 'lab_record_data_{}{}{}T[0-9]{{2}}.dat'
 
 # Transaction encounter
-TRANSACTION_ENC_FILE_DESCRIPTION = 'Cardinal Raintree EMR transaction encounter file'
-TRANSACTION_ENC_FILE_NAME_TEMPLATE = 'Encounter_record_data_{}{}{}[0-9]{{6}}.dat'
+TRANSACTION_ENC_FILE_NAME_TEMPLATE = 'encounter_record_data_{}{}{}T[0-9]{{2}}.dat'
 
 # Transaction dispense
-TRANSACTION_DISP_FILE_DESCRIPTION = 'Cardinal Raintree EMR transaction dispense file'
-TRANSACTION_DISP_FILE_NAME_TEMPLATE = 'Order_Dispense_record_data_{}{}{}[0-9]{{6}}.dat'
+TRANSACTION_DISP_FILE_NAME_TEMPLATE = 'order_dispense_record_data_{}{}{}T[0-9]{{2}}.dat'
 
-get_tmp_dir = date_utils.generate_insert_date_into_template_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_raw_tmp_dir = date_utils.generate_insert_date_into_template_function(TRANSACTION_TMP_PATH_TEMPLATE)
+get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
 
 CARDINAL_DAY_OFFSET = 1
-
-
-def get_expected_matching_files(ds, k):
-    formatted_template = date_utils.insert_date_into_template(
-        TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
-    )
-    return [formatted_template[:formatted_template.index('[0-9]{6}')]]
 
 
 def generate_file_validation_dag(
@@ -108,12 +96,12 @@ def generate_file_validation_dag(
                     path_template, day_offset=CARDINAL_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
-                    path_template, day_offset=CARDINAL_DAY_OFFSET
+                    path_template
                 ),
                 'regex_name_match'        : True,
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
-                's3_bucket'               : 'healthverity',
+                's3_bucket'               : S3_TRANSACTION_RAW_URL.split('/')[2],
                 'file_description'        : 'Cardinal Raintree EMR ' + task_id + ' file'
             }
         ),
@@ -162,6 +150,7 @@ def generate_fetch_transaction_dag(task_id, transaction_file_name_template):
                     transaction_file_name_template, day_offset=CARDINAL_DAY_OFFSET
                 ),
                 'regex_name_match'       : True,
+                'multi_match'            : True,
                 's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'              : S3_TRANSACTION_RAW_URL.split('/')[2]
             }
@@ -173,9 +162,6 @@ def generate_fetch_transaction_dag(task_id, transaction_file_name_template):
 
 fetch_transaction_demo = generate_fetch_transaction_dag(
     'transaction_demo', TRANSACTION_DEMO_FILE_NAME_TEMPLATE,
-)
-fetch_transaction_deid = generate_fetch_transaction_dag(
-    'transaction_deid', TRANSACTION_DEID_FILE_NAME_TEMPLATE,
 )
 fetch_transaction_diag = generate_fetch_transaction_dag(
     'transaction_diag', TRANSACTION_DIAG_FILE_NAME_TEMPLATE,
@@ -192,6 +178,13 @@ fetch_transaction_disp = generate_fetch_transaction_dag(
 
 
 if HVDAG.HVDAG.airflow_env != 'test':
+    def get_expected_matching_files(ds, k):
+        formatted_template = date_utils.insert_date_into_template(
+            TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
+        )
+        prefix = formatted_template[:formatted_template.index('T[0-9]{2}')]
+        return [el for el in s3_utils.list_s3_bucket(S3_TRANSACTION_RAW_URL) if prefix in el]
+
     queue_up_for_matching = SubDagOperator(
         subdag=queue_up_for_matching.queue_up_for_matching(
             DAG_NAME,
@@ -199,42 +192,13 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'source_files_func' : lambda ds, k: [
-                    S3_TRANSACTION_RAW_URL + transaction_file
-                    for transaction_file in os.listdir(get_tmp_dir(ds, k)) if re.search(
-                        date_utils.insert_date_into_template(
-                            TRANSACTION_DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_DAY_OFFSET
-                        ), transaction_file
-                    )
-                ],
+                'source_files_func' : get_expected_matching_files,
                 'priority'          : 'priority1'
             }
         ),
         task_id='queue_up_for_matching',
         dag=mdag
     )
-
-
-def generate_push_to_incoming_dag():
-    return SubDagOperator(
-        subdag=s3_push_files.s3_push_files(
-            DAG_NAME,
-            'push_raw_transactions_to_incoming',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'file_paths_func'      : lambda ds, k: [
-                    get_tmp_dir(ds, k) + f for f in os.listdir(get_tmp_dir(ds, k))
-                ],
-                's3_prefix_func'       : lambda ds, k: '/'.join(S3_TRANSACTION_INTERIM_URL.split('/')[3:]),
-                's3_bucket'            : S3_TRANSACTION_INTERIM_URL.split('/')[2]
-            }
-        ),
-        task_id='push_raw_transactions_to_incoming',
-        dag=mdag
-    )
-
-push_raw_transactions_to_incoming = generate_push_to_incoming_dag()
 
 
 def generate_decrypt_dag():
@@ -245,10 +209,10 @@ def generate_decrypt_dag():
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'tmp_dir_func'                        : get_tmp_dir,
+                'tmp_dir_func'                        : get_raw_tmp_dir,
                 'encrypted_decrypted_file_paths_func' : lambda ds, k: [
-                    [get_tmp_dir(ds, k) + f, get_tmp_dir(ds, k) + f + '.gz']
-                    for f in os.listdir(get_tmp_dir(ds, k))
+                    [get_raw_tmp_dir(ds, k) + f, get_raw_tmp_dir(ds, k) + f + '.gz']
+                    for f in os.listdir(get_raw_tmp_dir(ds, k))
                     if f.endswith('.dat') and 'deid' not in f.lower()
                 ]
             }
@@ -261,7 +225,43 @@ def generate_decrypt_dag():
 decrypt_files = generate_decrypt_dag()
 
 
+def generate_combine_step(task_id, file_template):
+    """
+    Combine all files for a certain transactional table into one file.
+    """
+    def execute(ds, **kwargs):
+        destination_filename_template = file_template[:file_template.index('T[0-9]')]
+        with open(get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(
+            destination_filename_template, kwargs, day_offset=CARDINAL_DAY_OFFSET
+        ), 'w') as dest:
+            for f in [f for f in os.listdir(get_raw_tmp_dir(ds, kwargs)) if re.match(
+                date_utils.insert_date_into_template(
+                    file_template, kwargs, day_offset=CARDINAL_DAY_OFFSET
+                ), f
+            )]:
+                with open(get_raw_tmp_dir(ds, kwargs) + f, 'r') as presplit_file:
+                    for line in presplit_file:
+                        dest.write(line)
+                os.remove(get_raw_tmp_dir(ds, kwargs) + f)
+
+    return PythonOperator(
+        task_id='combine_{}_file'.format(task_id),
+        provide_context=True,
+        python_callable=execute,
+        dag=mdag
+    )
+
+
+combine_transaction_demo = generate_combine_step('transaction_demo', TRANSACTION_DEMO_FILE_NAME_TEMPLATE)
+combine_transaction_diag = generate_combine_step('transaction_diag', TRANSACTION_DIAG_FILE_NAME_TEMPLATE)
+combine_transaction_lab = generate_combine_step('transaction_lab', TRANSACTION_LAB_FILE_NAME_TEMPLATE)
+combine_transaction_enc = generate_combine_step('transaction_enc', TRANSACTION_ENC_FILE_NAME_TEMPLATE)
+combine_transaction_disp = generate_combine_step('transaction_disp', TRANSACTION_DISP_FILE_NAME_TEMPLATE)
+
+
 def generate_split_dag(task_id, file_template, destination_template):
+    file_template = file_template[:file_template.index('T[0-9]')]
+
     return SubDagOperator(
         subdag=split_push_files.split_push_files(
             DAG_NAME,
@@ -272,11 +272,9 @@ def generate_split_dag(task_id, file_template, destination_template):
                 'tmp_dir_func'             : get_tmp_dir,
                 'parts_dir_func'           : lambda ds, k: '{}_parts'.format(task_id),
                 'file_paths_to_split_func' : lambda ds, k: [
-                    get_tmp_dir(ds, k) + [
-                        f for f in os.listdir(get_tmp_dir(ds, k)) if re.search(
-                            date_utils.insert_date_into_template(file_template, k, day_offset=CARDINAL_DAY_OFFSET), f
-                        )
-                    ][0]
+                    get_tmp_dir(ds, k) + date_utils.insert_date_into_template(
+                        file_template, k, day_offset=CARDINAL_DAY_OFFSET
+                    )
                 ],
                 's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
                     destination_template, day_offset=CARDINAL_DAY_OFFSET
@@ -489,14 +487,12 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction_demo.set_upstream(validate_transaction_demo)
-    fetch_transaction_deid.set_upstream(validate_transaction_deid)
     fetch_transaction_diag.set_upstream(validate_transaction_diag)
     fetch_transaction_disp.set_upstream(validate_transaction_disp)
     fetch_transaction_enc.set_upstream(validate_transaction_enc)
     fetch_transaction_lab.set_upstream(validate_transaction_lab)
 
-    queue_up_for_matching.set_upstream(fetch_transaction_deid)
-
+    queue_up_for_matching.set_upstream(validate_transaction_deid)
     queue_up_for_matching.set_downstream([
         clean_up_workspace, detect_move_normalize_dag
     ])
@@ -533,7 +529,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
         push_deliverable_lab_res
     ])
 
-push_raw_transactions_to_incoming.set_upstream([
+decrypt_files.set_upstream([
     fetch_transaction_demo,
     fetch_transaction_diag,
     fetch_transaction_disp,
@@ -541,14 +537,19 @@ push_raw_transactions_to_incoming.set_upstream([
     fetch_transaction_lab
 ])
 
-decrypt_files.set_upstream(push_raw_transactions_to_incoming)
 decrypt_files.set_downstream([
-    split_transaction_demo,
-    split_transaction_diag,
-    split_transaction_disp,
-    split_transaction_enc,
-    split_transaction_lab
+    combine_transaction_demo,
+    combine_transaction_diag,
+    combine_transaction_disp,
+    combine_transaction_enc,
+    combine_transaction_lab
 ])
+
+split_transaction_demo.set_upstream(combine_transaction_demo)
+split_transaction_diag.set_upstream(combine_transaction_diag)
+split_transaction_disp.set_upstream(combine_transaction_disp)
+split_transaction_enc.set_upstream(combine_transaction_enc)
+split_transaction_lab.set_upstream(combine_transaction_lab)
 
 clean_up_workspace.set_upstream([
     split_transaction_demo,
