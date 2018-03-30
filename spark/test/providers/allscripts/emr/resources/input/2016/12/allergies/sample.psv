@@ -1,5 +1,4 @@
-﻿RecType|RecTypeVersion|GenClientID|Gen2ClientID|GenPatientID|Gen2PatientID|EncounterID|AllergyID|VersionID|AuditDataFlag|Name|Type|Status|Reactions|NDC|DDI|GPI|RxNorm|Snomed|UnverifiedFlag|ReactionDTTM|RecordedDTTM|GenProviderID|Gen2ProviderID|PrimaryKey
-ALL|5.2|genclientid-0|gen2clientid-0|genpatientid-0|gen2patientid-0|encid-0|algid-0|0||No Known Drug Allergies|Medication|Active|||DDI||RXNORM||N||2016-01-01 00:02:15|genproviderid-0|gen2providerid-0|pk-0
+﻿ALL|5.2|genclientid-0|gen2clientid-0|genpatientid-0|gen2patientid-0|encid-0|algid-0|0||No Known Drug Allergies|Medication|Active|||DDI||RXNORM||N||2016-01-01 00:02:15|genproviderid-0|gen2providerid-0|pk-0
 ALL|5.2|genclientid-0|gen2clientid-0|genpatientid-0|gen2patientid-0|encid-0|algid-0|0||No Known Drug Allergies|Medication|Active|||DDI||RXNORM||N||2016-01-01 00:02:15|genproviderid-0|gen2providerid-0|pk-0
 ALL|5.2|genclientid-1|gen2clientid-1|genpatientid-1|gen2patientid-1|encid-1|algid-1|0||No Known Drug Allergies|Medication|Active|||0|GPI|||N||2016-01-01 00:02:15|genproviderid-1|gen2providerid-1|pk-1
 ALL|5.2|genclientid-2|gen2clientid-2|genpatientid-2|gen2patientid-2|encid-2|algid-2|0||No Known Drug Allergies|Medication|Active|||0||||N||2016-01-01 00:02:15|genproviderid-2|gen2providerid-2|pk-2

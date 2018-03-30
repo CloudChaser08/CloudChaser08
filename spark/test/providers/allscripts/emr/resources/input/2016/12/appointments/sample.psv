@@ -1,4 +1,3 @@
-﻿RecType|RectypeVersion|GenClientID|Gen2ClientID|GenPatientID|Gen2PatientID|EncounterID|AppointmentID|VersionID|AuditDataFlag|Status|PrimaryInsuranceMedicareFlag|StartDTTM|EndDTTM|RecordedDTTM|GenProviderID|Gen2ProviderID|PrimaryKey
-APPT|5.2|genclientid-0|gen2clientid-0|genpatientid-0|gen2patientid-0|encid-0|apptid-0|0||Completed|N|2016-08-01 09:30:00.000||2016-09-05 06:21:12.040|genproviderid-0|gen2providerid-0|pk-0
+﻿APPT|5.2|genclientid-0|gen2clientid-0|genpatientid-0|gen2patientid-0|encid-0|apptid-0|0||Completed|N|2016-08-01 09:30:00.000||2016-09-05 06:21:12.040|genproviderid-0|gen2providerid-0|pk-0
 APPT|5.2|genclientid-1|gen2clientid-1|genpatientid-1|gen2patientid-1|encid-1|apptid-1|0||Completed|N|2016-08-01 09:30:00.000||2016-09-05 06:21:12.040|genproviderid-1|gen2providerid-1|pk-1
 APPT|5.2|genclientid-1|gen2clientid-2|genpatientid-2|gen2patientid-2|encid-2|apptid-2|0||Completed|N|2016-08-01 09:30:00.000||2016-09-05 06:21:12.040|genproviderid-2|gen2providerid-2|pk-2
