@@ -267,6 +267,20 @@
             "epi_calcs"         : null
         },
         {
+            "name"              : "mckesson_macro_helix",
+            "datafeed_id"       : "48",
+            "datatype"          : "pharmacyclaims",
+            "date_field"        : "date_service",
+            "record_field"      : "claim_id",
+            "fill_rate"         : true,
+            "key_stats"         : true,
+            "top_values"        : true,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
+            "epi_calcs"         : true,
+            "earliest_date"     : "1901-01-01"
+        },
+        {
             "name"              : "diplomat",
             "datafeed_id"       : "34",
             "datatype"          : "pharmacyclaims",
