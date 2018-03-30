@@ -1,14 +1,11 @@
 import pytest
 
-import shutil
-import logging
-import os
-import datetime
 import gzip
+import shutil
+import datetime
 
 import spark.providers.cardinal.emr.sparkNormalizeCardinalEMR as cardinal_emr
 import spark.helpers.file_utils as file_utils
-import spark.helpers.udf.general_helpers as gen_helpers
 
 from pyspark.sql import Row
 
@@ -16,8 +13,19 @@ clinical_observation_results = []
 lab_result_results = []
 encounter_results = []
 medication_results = []
+provider_order_results = []
 procedure_results = []
 diagnosis_results = []
+vital_sign_results = []
+
+clinical_observation_delivery_results = []
+lab_result_delivery_results = []
+encounter_delivery_results = []
+medication_delivery_results = []
+provider_order_delivery_results = []
+procedure_delivery_results = []
+diagnosis_delivery_results = []
+vital_sign_delivery_results = []
 
 script_path = __file__
 output_test_location = file_utils.get_abs_path(script_path, './resources/output/')
@@ -25,186 +33,585 @@ delivery_test_location = file_utils.get_abs_path(script_path, './resources/deliv
 
 
 def cleanup(spark):
-    spark['sqlContext'].dropTempTable('clinical_observation_common_model')
-    spark['sqlContext'].dropTempTable('diagnosis_common_model')
-    spark['sqlContext'].dropTempTable('encounter_common_model')
-    spark['sqlContext'].dropTempTable('medication_common_model')
-    spark['sqlContext'].dropTempTable('procedure_common_model')
-
-    spark['sqlContext'].dropTempTable('demographics_transactions')
-    spark['sqlContext'].dropTempTable('diagnosis_transactions')
-    spark['sqlContext'].dropTempTable('encounter_transactions')
-    spark['sqlContext'].dropTempTable('lab_transactions')
-    spark['sqlContext'].dropTempTable('dispense_transactions')
+    """
+    Teardown after testing
+    """
+    spark['sqlContext'].dropTempTable('transactions_demographics')
+    spark['sqlContext'].dropTempTable('transactions_diagnosis')
+    spark['sqlContext'].dropTempTable('transactions_encounter')
+    spark['sqlContext'].dropTempTable('transactions_lab')
+    spark['sqlContext'].dropTempTable('transactions_dispense')
 
     spark['sqlContext'].dropTempTable('ref_gen_ref')
 
     try:
         shutil.rmtree(output_test_location)
     except:
-        logging.warn('No output directory.')
+        pass
 
     try:
         shutil.rmtree(delivery_test_location)
     except:
-        logging.warn('No delivery directory.')
+        pass
 
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
+    """
+    Initialize all normalized result sets based on test data
+    """
     cleanup(spark)
 
     spark['spark'].sparkContext.parallelize([
         Row(
             hvm_vdr_feed_id='40',
-            gen_ref_domn_nm='EARLIEST_VALID_DIAGNOSIS_DATE',
-            gen_ref_itm_nm=None,
+            gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_cd=None,
+            gen_ref_itm_nm='',
+            gen_ref_itm_desc=None,
             gen_ref_1_dt=datetime.date(2016, 1, 1),
             whtlst_flg=None
         ),
         Row(
-            hvm_vdr_feed_id=None,
-            gen_ref_domn_nm='emr_medctn.clin_obsn_diag_desc',
-            gen_ref_itm_nm='WHITELISTED CLIN OBS DIAG DESC VAL 1',
-            gen_ref_1_dt=None,
-            whtlst_flg='Y',
+            hvm_vdr_feed_id='40',
+            gen_ref_domn_nm='EARLIEST_VALID_DIAGNOSIS_DATE',
+            gen_ref_cd=None,
+            gen_ref_itm_nm='',
+            gen_ref_itm_desc=None,
+            gen_ref_1_dt=datetime.date(2016, 2, 1),
+            whtlst_flg=None
         ),
         Row(
             hvm_vdr_feed_id=None,
-            gen_ref_domn_nm='emr_medctn.clin_obsn_diag_desc',
-            gen_ref_itm_nm='WHITELISTED CLIN OBS DIAG DESC VAL 2',
+            gen_ref_domn_nm='emr_enc.enc_typ_cd',
+            gen_ref_cd='WHITELISTED TYP CD 1',
+            gen_ref_itm_nm='',
+            gen_ref_itm_desc=None,
             gen_ref_1_dt=None,
-            whtlst_flg='Y',
+            whtlst_flg='Y'
         ),
         Row(
             hvm_vdr_feed_id=None,
-            gen_ref_domn_nm='emr_medctn.clin_obsn_diag_desc',
-            gen_ref_itm_nm='BLACKLISTED CLIN OBS DIAG DESC VAL',
+            gen_ref_domn_nm='emr_enc.enc_typ_cd',
+            gen_ref_cd='WHITELISTED TYP CD 2',
+            gen_ref_itm_nm='',
+            gen_ref_itm_desc=None,
             gen_ref_1_dt=None,
-            whtlst_flg='N',
+            whtlst_flg='Y'
+        ),
+        Row(
+            hvm_vdr_feed_id=None,
+            gen_ref_domn_nm='emr_enc.enc_typ_cd',
+            gen_ref_cd='BLACKLISTED TYP CD 2',
+            gen_ref_itm_nm='',
+            gen_ref_itm_desc=None,
+            gen_ref_1_dt=None,
+            whtlst_flg='N'
+        ),
+        Row(
+            hvm_vdr_feed_id=None,
+            gen_ref_domn_nm='emr_diag.diag_resltn_desc',
+            gen_ref_cd=None,
+            gen_ref_itm_nm='',
+            gen_ref_itm_desc='whiteLISTED resolution desc',
+            gen_ref_1_dt=None,
+            whtlst_flg='Y'
+        ),
+        Row(
+            hvm_vdr_feed_id=None,
+            gen_ref_domn_nm='emr_clin_obsn.clin_obsn_desc',
+            gen_ref_cd=None,
+            gen_ref_itm_nm='',
+            gen_ref_itm_desc='WHiTeListed clin desc',
+            gen_ref_1_dt=None,
+            whtlst_flg='Y'
+        ),
+        Row(
+            hvm_vdr_feed_id=None,
+            gen_ref_domn_nm='emr_diag.diag_meth_cd',
+            gen_ref_cd='WHITELISTED METHD OF DIAGNOSIS',
+            gen_ref_itm_nm='',
+            gen_ref_itm_desc=None,
+            gen_ref_1_dt=None,
+            whtlst_flg='Y'
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
     cardinal_emr.run(spark['spark'], spark['runner'], '2017-08-31', True)
-    global clinical_observation_results, lab_result_results, encounter_results, \
-        medication_results, procedure_results, diagnosis_results
-    clinical_observation_results = spark['sqlContext'].sql('select * from clinical_observation_common_model') \
+    global clinical_observation_results, lab_result_results, encounter_results, medication_results, \
+        provider_order_results, procedure_results, diagnosis_results, vital_sign_results, \
+        clinical_observation_delivery_results, lab_result_delivery_results, encounter_delivery_results, \
+        medication_delivery_results, provider_order_delivery_results, procedure_delivery_results, \
+        diagnosis_delivery_results, vital_sign_delivery_results
+
+    encounter_results = spark['sqlContext'].sql('select * from normalized_encounter') \
+                                           .collect()
+
+    with gzip.open(
+            file_utils.get_abs_path(script_path, './resources/delivery/encounter/part-00000.gz'), 'r'
+    ) as enc_delivery:
+        encounter_delivery_results = enc_delivery.readlines()
+
+    diagnosis_results = spark['sqlContext'].sql('select * from normalized_diagnosis') \
+                                           .collect()
+    with gzip.open(
+            file_utils.get_abs_path(script_path, './resources/delivery/diagnosis/part-00000.gz'), 'r'
+    ) as diag_delivery:
+        diagnosis_delivery_results = diag_delivery.readlines()
+
+    procedure_results = spark['sqlContext'].sql('select * from normalized_procedure') \
+                                           .collect()
+    with gzip.open(
+            file_utils.get_abs_path(script_path, './resources/delivery/procedure/part-00000.gz'), 'r'
+    ) as proc_delivery:
+        procedure_delivery_results = proc_delivery.readlines()
+
+    provider_order_results = spark['sqlContext'].sql('select * from normalized_provider_order') \
+                                                .collect()
+    with gzip.open(
+            file_utils.get_abs_path(script_path, './resources/delivery/provider_order/part-00000.gz'), 'r'
+    ) as prov_ord_delivery:
+        provider_order_delivery_results = prov_ord_delivery.readlines()
+
+    lab_result_results = spark['sqlContext'].sql('select * from normalized_lab_result') \
+                                            .collect()
+    with gzip.open(
+            file_utils.get_abs_path(script_path, './resources/delivery/lab_result/part-00000.gz'), 'r'
+    ) as lab_result_delivery:
+        lab_result_delivery_results = lab_result_delivery.readlines()
+
+    medication_results = spark['sqlContext'].sql('select * from normalized_medication') \
+                                            .collect()
+    with gzip.open(
+            file_utils.get_abs_path(script_path, './resources/delivery/medication/part-00000.gz'), 'r'
+    ) as medication_delivery:
+        medication_delivery_results = medication_delivery.readlines()
+
+    clinical_observation_results = spark['sqlContext'].sql('select * from normalized_clinical_observation') \
                                                       .collect()
-    lab_result_results = spark['sqlContext'].sql('select * from lab_result_common_model') \
+    with gzip.open(
+            file_utils.get_abs_path(script_path, './resources/delivery/clinical_observation/part-00000.gz'), 'r'
+    ) as clinical_observation_delivery:
+        clinical_observation_delivery_results = clinical_observation_delivery.readlines()
+
+    vital_sign_results = spark['sqlContext'].sql('select * from normalized_vital_sign') \
                                             .collect()
-    encounter_results = spark['sqlContext'].sql('select * from encounter_common_model') \
-                                           .collect()
-    medication_results = spark['sqlContext'].sql('select * from medication_common_model') \
-                                            .collect()
-    procedure_results = spark['sqlContext'].sql('select * from procedure_common_model') \
-                                           .collect()
-    diagnosis_results = spark['sqlContext'].sql('select * from diagnosis_common_model') \
-                                           .collect()
+    with gzip.open(
+            file_utils.get_abs_path(script_path, './resources/delivery/vital_sign/part-00000.gz'), 'r'
+    ) as vital_sign_delivery:
+        vital_sign_delivery_results = vital_sign_delivery.readlines()
 
 
-def test_deduplication():
-    """All samples have duplicates - ensure there are none in the output
+def test_hvids():
     """
-    for res in [clinical_observation_results, lab_result_results, encounter_results,
-                medication_results, procedure_results, diagnosis_results]:
-        assert len(res) == len(set(res))
-
-
-def test_clin_obs_priv_filter():
-    assert filter(lambda r: r.hv_clin_obsn_id == '40_id-31', clinical_observation_results)[0].clin_obsn_diag_cd \
-        == 'TESTDIAG0'
-
-
-def test_clin_obs_result_cd_explosion():
-    assert sorted([r.clin_obsn_result_cd for r in clinical_observation_results if r.hv_clin_obsn_id == '40_id-31']) \
-        == ['STAGE_OF_DIS', 'STG_CRIT_DESC']
-
-
-def test_lab_res_nulls():
-    assert map(
-        lambda r: r.lab_test_nm,
-        filter(lambda r: r.hv_lab_result_id in ['40_id-11', '40_id-12', '40_id-13'], lab_result_results)
-    ) == [None, None, None]
-
-
-def test_medication_zeros_nullified(spark):
-    """Ensure that 0's converted to NULL in medication data
+    Ensure HVIDs are deobfuscated in output tables, and are still
+    obfuscated in the delivery
     """
-    dispense_transactions = spark['sqlContext'].sql('select * from dispense_transactions') \
-                                               .collect()
-    assert [(r.qty, r.num_doses) for r in dispense_transactions if r.id == 'id-41'] == [('0', '0')]
-    assert [(r.medctn_dispd_qty, r.medctn_admin_unt_qty) for r in medication_results if r.hv_medctn_id == '40_id-41'] == [(None, None)]
 
-    assert len(encounter_results) == len(set(encounter_results))
+    # encounters
+    assert sorted(set([res.hvid for res in encounter_results])) == ['100000', '100001', '100002']
+    assert sorted(set([enc.split('|')[13] for enc in encounter_delivery_results])) \
+        == ['"1483966080"', '"1483966081"', '"1483966082"']
+
+    # diagnoses
+    assert sorted(set([res.hvid for res in diagnosis_results])) == ['100000', '100001', '100002']
+    assert sorted(set([diag.split('|')[13] for diag in diagnosis_delivery_results])) \
+        == ['"1483966080"', '"1483966081"', '"1483966082"']
+
+    # procedures
+    assert sorted(set([res.hvid for res in procedure_results])) == ['100000', '100001', '100002']
+    assert sorted(set([proc.split('|')[13] for proc in procedure_delivery_results])) \
+        == ['"1483966080"', '"1483966081"', '"1483966082"']
+
+    # provider order
+    assert sorted(set([res.hvid for res in provider_order_results])) == ['100000', '100001', '100002']
+    assert sorted(set([prov_ord.split('|')[13] for prov_ord in provider_order_delivery_results])) \
+        == ['"1483966080"', '"1483966081"', '"1483966082"']
+
+    # lab result
+    assert sorted(set([res.hvid for res in lab_result_results])) == ['100000', '100001', '100002']
+    assert sorted(set([lab_result.split('|')[17] for lab_result in lab_result_delivery_results])) \
+        == ['"1483966080"', '"1483966081"', '"1483966082"']
+
+    # medication
+    assert sorted(set([res.hvid for res in medication_results])) == ['100000', '100001', '100002']
+    assert sorted(set([medication.split('|')[17] for medication in medication_delivery_results])) \
+        == ['"1483966080"', '"1483966081"', '"1483966082"']
+
+    # clinical_observation
+    assert sorted(set([res.hvid for res in clinical_observation_results])) == ['100000', '100002']
+    assert sorted(set([clinical_observation.split('|')[13] for clinical_observation in clinical_observation_delivery_results])) \
+        == ['"1483966080"', '"1483966082"']
+
+    # vital_sign
+    assert sorted(set([res.hvid for res in vital_sign_results])) == ['100000', '100001', '100002']
+    assert sorted(set([vital_sign.split('|')[13] for vital_sign in vital_sign_delivery_results])) \
+        == ['"1483966080"', '"1483966081"', '"1483966082"']
 
 
-def test_date_capping():
+def test_encounter_cardinality():
     """
-    Ensure dates were capped according to gen ref table
+    Ensure the correct amount of encounters were normalized
     """
-    # diag_dt should be capped based on EARLIEST_VALID_DIAGNOSIS_DATE
-    for r in diagnosis_results:
-        if r.vdr_diag_id == 'id-31':
-            assert r.diag_dt == '2016-01-02'
-        elif r.vdr_diag_id in ('id-32', 'id-33'):
-            assert not r.diag_dt
-
-    # enc_start_date should not be capped -- EARLIEST_VALID_SERVICE_DATE does not exist
-    assert [r.enc_start_dt for r in encounter_results if r.vdr_enc_id == 'id-0'][0] == datetime.date(2000, 1, 1)
+    assert len(encounter_results) == 3
 
 
-def test_first_last_name_parsing():
-    assert [(r.medctn_ordg_prov_frst_nm, r.medctn_ordg_prov_last_nm)
-            for r in medication_results if r.hv_medctn_id in ['40_id-41', '40_id-42', '40_id-43']] \
-        == [('wayne', 'gretzky'), ('michael', 'jordan, phd'), (None, 'prince')]
+def test_encounter_date_cap():
+    """
+    Ensure the correct date caps were applied to the encounter table
+    """
+    for res in encounter_results:
+        if res.hv_enc_id == '40_enc-0':
+            assert not res.enc_start_dt
+            assert not res.enc_end_dt
+        elif res.hv_enc_id == '40_enc-1':
+            assert res.enc_start_dt == '2017-01-01'
+            assert res.enc_end_dt == '2017-01-10'
+        elif res.hv_enc_id == '40_enc-2':
+            assert res.enc_start_dt == '2017-01-01'
+            assert not res.enc_end_dt
 
 
-def test_diagnosis_priority():
-    assert [r.diag_prty_cd for r in diagnosis_results][:4] == ['1', '10', '2', '1']
+def test_encounter_whitelist():
+    """
+    Ensure custom whitelist was applied to the encounter table
+    """
+    for res in encounter_results:
+        if res.hv_enc_id == '40_enc-0':
+            assert res.enc_typ_cd == 'WHITELISTED TYP CD 1'
+            assert res.enc_typ_cd_qual == 'VENDOR'
+        elif res.hv_enc_id == '40_enc-1':
+            assert res.enc_typ_cd == 'WHITELISTED TYP CD 2'
+            assert res.enc_typ_cd_qual == 'VENDOR'
+        elif res.hv_enc_id == '40_enc-2':
+            assert not res.enc_typ_cd
+            assert not res.enc_typ_cd_qual
 
 
-def test_data_export():
-    "Ensure that the exported data is exactly the same as the warehouse data"
-    for common_model in [
-            ('clinical_observation', clinical_observation_results),
-            ('diagnosis', diagnosis_results),
-            ('encounter', encounter_results),
-            ('lab_result', lab_result_results),
-            ('medication', medication_results),
-            ('procedure', procedure_results)
-    ]:
-        # ensure this common model was exported
-        assert common_model[0] in os.listdir(delivery_test_location)
+def test_diagnosis_cardinality():
+    """
+    Ensure the correct amount of diagnosis records were normalized
+    """
+    assert len(diagnosis_results) == 3
 
-        # open exported file
-        with gzip.open(
-                delivery_test_location + '/' + common_model[0] + '/part-00000.gz'
-        ) as exported_results:
 
-            # strip quotes and split gzip by line and delimiter (|)
-            exported_results_full = [[el.replace('"', '') for el in res.split('|')]
-                                     for res in exported_results.read().splitlines()]
+def test_diagnosis_date_cap():
+    """
+    Ensure the correct amount of diagnosis records were normalized
+    """
+    for res in diagnosis_results:
+        if res.hv_diag_id == '40_diag-0':
+            assert not res.diag_dt
+            assert res.diag_resltn_dt == '2017-01-01'
+        elif res.hv_diag_id == '40_diag-1':
+            assert res.diag_start_dt == '2016-02-01'
+            assert res.diag_end_dt == '2017-01-10'
+        elif res.hv_diag_id == '40_diag-2':
+            assert res.diag_start_dt == '2016-02-01'
+            assert not res.diag_end_dt
 
-            # ensure both result sets have same length
-            assert len(exported_results_full) == len(common_model[1])
 
-            # ensure the results are the same
-            for result_row_index, res in enumerate(exported_results_full):
-                for result_col_index in range(len(res)):
-                    coalesced_res = (res[result_col_index] if res[result_col_index] != '' else None)
+def test_diagnosis_whitelist():
+    """
+    Ensure custom whitelist was applied to the diagnosis table
+    """
+    for res in diagnosis_results:
+        if res.hv_diag_id == '40_diag-0':
+            assert res.diag_resltn_desc == 'whiteLISTED resolution desc'
+            assert res.diag_meth_cd == 'WHITELISTED METHD OF DIAGNOSIS'
+            assert res.diag_meth_cd_qual == 'VENDOR'
+        elif res.hv_diag_id == '40_diag-1':
+            assert not res.diag_resltn_desc
+            assert res.diag_meth_cd == 'WHITELISTED METHD OF DIAGNOSIS'
+            assert res.diag_meth_cd_qual == 'VENDOR'
+        elif res.hv_diag_id == '40_diag-2':
+            assert not res.diag_resltn_desc
+            assert not res.diag_meth_cd
+            assert not res.diag_meth_cd_qual
 
-                    # hvid will need to be deobfuscated
-                    if common_model[1][result_row_index][result_col_index] == common_model[1][result_row_index].hvid:
-                        if common_model[1][result_row_index].hvid:
-                            assert str(gen_helpers.slightly_deobfuscate_hvid(
-                                int(coalesced_res), 'Cardinal_MPI-0'
-                            )) == str(common_model[1][result_row_index][result_col_index])
-                        else:
-                            assert not coalesced_res
 
-                    # all other columns should be the same
-                    else:
-                        assert str(coalesced_res) == str(common_model[1][result_row_index][result_col_index])
+def test_diagnosis_cleaning():
+    """
+    Ensure diagnosis codes are cleansed in the diagnosis table
+    """
+    assert sorted([res.diag_cd for res in diagnosis_results]) \
+        == ['TESTDIAG0', 'TESTDIAG1', 'TESTDIAG2']
+
+
+def test_procedure_cardinality():
+    """
+    Ensure the correct amount of procedure records were normalized
+    """
+    assert len(procedure_results) == 6
+
+
+def test_procedure_date_cap():
+    """
+    Ensure the correct amount of procedure records were normalized
+    """
+    for res in procedure_results:
+        if res.hv_proc_id == '40_enc_pat-visit-id-0':
+            assert not res.enc_dt
+            assert not res.proc_dt
+        elif res.hv_proc_id == '40_enc_pat-visit-id-1':
+            assert res.enc_dt == '2017-01-01'
+            assert res.proc_dt == '2017-01-01'
+        elif res.hv_proc_id == '40_enc_pat-visit-id-2':
+            assert res.enc_dt == '2017-01-01'
+            assert res.proc_dt == '2017-01-01'
+        elif res.hv_proc_id == '40_ord_id-0':
+            assert res.enc_dt == '2017-02-01'
+            assert res.proc_dt == '2017-01-01'
+            assert res.data_captr_dt == '2016-01-01'
+        elif res.hv_proc_id == '40_ord_id-1':
+            assert res.enc_dt == '2017-02-01'
+            assert res.proc_dt == '2017-01-01'
+            assert res.data_captr_dt == '2016-01-01'
+        elif res.hv_proc_id == '40_ord_id-2':
+            assert res.enc_dt == '2017-02-01'
+            assert res.proc_dt == '2017-01-01'
+            assert res.data_captr_dt == '2016-01-01'
+
+
+def test_procedure_data_cleaning():
+    """
+    Ensure the procedure codes and diagnosis codes are cleaned
+    properly in the procedure results
+    """
+    for res in procedure_results:
+        if res.hv_proc_id == '40_ord_id-0':
+            assert res.proc_cd == 'MYCPT'
+            assert res.proc_diag_cd == 'ICD10'
+        elif res.hv_proc_id == '40_ord_id-1':
+            assert res.proc_cd == 'MYCPT'
+            assert res.proc_diag_cd == 'ICD10'
+        elif res.hv_proc_id == '40_ord_id-2':
+            assert res.proc_cd == 'MYCPT'
+            assert res.proc_diag_cd == 'ICD10'
+
+
+def test_provider_order_cardinality():
+    """
+    Ensure the correct amount of provider order records were normalized
+    """
+    assert len(provider_order_results) == 3
+
+
+def test_provider_order_data_cleaning():
+    """
+    Ensure the provider order codes and diagnosis codes are cleaned
+    properly in the provider_order results
+    """
+    assert sorted(set([res.prov_ord_cd for res in provider_order_results])) == ['MYCPT']
+    assert sorted(set([res.prov_ord_diag_cd for res in provider_order_results])) == ['ICD10']
+
+
+def test_provider_order_first_last_name_parsing():
+    """
+    Ensure the ordg_prov_frst_nm and last_nm are correct
+    """
+    for res in provider_order_results:
+        if res.hv_prov_ord_id == '40_id-0':
+            assert res.ordg_prov_frst_nm == 'wayne'
+            assert res.ordg_prov_last_nm == 'gretzky, phd'
+        elif res.hv_prov_ord_id == '40_id-1':
+            assert res.ordg_prov_frst_nm == 'michael'
+            assert res.ordg_prov_last_nm == 'jordan'
+        elif res.hv_prov_ord_id == '40_id-2':
+            assert not res.ordg_prov_frst_nm
+            assert res.ordg_prov_last_nm == 'prince'
+
+
+def test_lab_result_cardinality():
+    """
+    Ensure the correct amount of lab_result records were normalized
+    """
+    assert len(lab_result_results) == 3
+
+
+def test_lab_result_date_cap():
+    """
+    Ensure the correct amount of lab_result records were normalized
+    """
+    for res in lab_result_results:
+        if res.hv_lab_result_id == '40_id-0':
+            assert not res.lab_test_execd_dt
+        elif res.hv_lab_result_id == '40_id-1':
+            assert res.lab_test_execd_dt == '2017-01-01'
+        elif res.hv_lab_result_id == '40_id-2':
+            assert res.lab_test_execd_dt == '2017-01-01'
+
+
+def test_lab_result_data_cleaning():
+    """
+    Ensure the loinc codes are cleaned properly in the lab_result results
+    """
+    for res in lab_result_results:
+        if res.hv_lab_result_id == '40_id-0':
+            assert res.lab_test_loinc_cd == '20192'
+        elif res.hv_lab_result_id == '40_id-1':
+            assert res.lab_test_loinc_cd == ''
+        elif res.hv_lab_result_id == '40_id-2':
+            assert res.lab_test_loinc_cd == '92018'
+
+
+def test_medication_cardinality():
+    """
+    Ensure the correct amount of medication records were normalized
+    """
+    assert len(medication_results) == 3
+
+
+def test_medication_data_cleaning():
+    """
+    Ensure the rx nums are cleaned properly in the medication results
+    """
+    for res in medication_results:
+        if res.hv_medctn_id in ['40_id-0', '40_id-1']:
+            assert res.rx_num == '4910e8b9e3ea6bc0ef54dc914803caef'
+        elif res.hv_medctn_id in ['40_id-2']:
+            assert not res.rx_num
+
+
+def test_clinical_observation_cardinality():
+    """
+    Ensure the correct amount of clinical_observation records were normalized
+    """
+    assert len(clinical_observation_results) == 8
+
+
+def test_clinical_observation_result_cd():
+    """
+    Ensure the result codes were exploded and translated correctly
+    """
+    for res in clinical_observation_results:
+        if res.clin_obsn_result_cd == 'stg_crit_desc':
+            assert res.clin_obsn_result_cd_qual == 'CANCER_STAGE_PATHOLOGY'
+        elif res.clin_obsn_result_cd == 'stage_of_disease':
+            assert res.clin_obsn_result_cd_qual == 'DISEASE_STAGE'
+        elif res.clin_obsn_result_cd == 'cancer_stage':
+            assert res.clin_obsn_result_cd_qual == 'CANCER_STAGE'
+        elif res.clin_obsn_result_cd == 'CANCER_STAGE_T':
+            assert res.clin_obsn_result_cd_qual == 'CANCER_STAGE_T'
+        elif res.clin_obsn_result_cd == 'CANCER_STAGE_N':
+            assert res.clin_obsn_result_cd_qual == 'CANCER_STAGE_N'
+        elif res.clin_obsn_result_cd == 'CANCER_STAGE_M':
+            assert res.clin_obsn_result_cd_qual == 'CANCER_STAGE_M'
+
+        assert len(
+            [res for res in clinical_observation_results if res.clin_obsn_result_cd == 'stg_crit_desc']
+        ) == 1
+        assert len(
+            [res for res in clinical_observation_results if res.clin_obsn_result_cd == 'stage_of_disease']
+        ) == 1
+        assert len(
+            [res for res in clinical_observation_results if res.clin_obsn_result_cd == 'cancer_stage']
+        ) == 1
+        assert len(
+            [res for res in clinical_observation_results if res.clin_obsn_result_cd == 'cancer_stage_t']
+        ) == 2
+        assert len(
+            [res for res in clinical_observation_results if res.clin_obsn_result_cd == 'cancer_stage_n']
+        ) == 1
+        assert len(
+            [res for res in clinical_observation_results if res.clin_obsn_result_cd == 'cancer_stage_m']
+        ) == 2
+
+
+def test_clinical_observation_whitelist():
+    """
+    Ensure the clin_obsn_desc was whitelisted correctly
+    """
+    for res in clinical_observation_results:
+        if res.hv_clin_obsn_id == '40_diag-id-0':
+            assert res.clin_obsn_desc == 'WHiTeListed clin desc'
+        else:
+            assert not res.clin_obsn_desc
+
+
+def test_vital_sign_cardinality():
+    """
+    Ensure the correct amount of vital_sign records were normalized
+    """
+    assert len(vital_sign_results) == 16
+
+
+def test_vital_sign_type_cd():
+    """
+    Ensure the type codes were exploded and translated correctly
+    """
+    assert sorted(set([res.vit_sign_typ_cd for res in vital_sign_results])) == [
+        'CARD_FN_DEC', 'CARD_FN_RAW', 'CDAI', 'DAS28', 'NJC28', 'PAIN',
+        'PGA', 'PTGA', 'RAPID3', 'SDAI', 'SJC28', 'STANFORD_HAQ', 'TJC28'
+    ]
+
+    for res in vital_sign_results:
+        if res.vit_sign_typ_cd == 'RAPID3':
+            assert res.vit_sign_msrmt == 'rapid3'
+        elif res.vit_sign_typ_cd == 'SDAI':
+            assert res.vit_sign_msrmt == 'sdai'
+        elif res.vit_sign_typ_cd == 'CDAI':
+            assert res.vit_sign_msrmt == 'cdai'
+        elif res.vit_sign_typ_cd == 'DAS28':
+            assert res.vit_sign_msrmt == 'das28'
+        elif res.vit_sign_typ_cd == 'STANFORD_HAQ':
+            assert res.vit_sign_msrmt == 'stanford_haq'
+        elif res.vit_sign_typ_cd == 'NJC28':
+            assert res.vit_sign_msrmt == 'njc28'
+        elif res.vit_sign_typ_cd == 'TJC28':
+            assert res.vit_sign_msrmt == 'tjc28'
+        elif res.vit_sign_typ_cd == 'SJC28':
+            assert res.vit_sign_msrmt == 'sjc28'
+        elif res.vit_sign_typ_cd == 'PAIN':
+            assert res.vit_sign_msrmt == 'pain'
+        elif res.vit_sign_typ_cd == 'CARD_FN_RAW':
+            assert res.vit_sign_msrmt == 'card_fn_raw'
+        elif res.vit_sign_typ_cd == 'CARD_FN_DEC':
+            assert res.vit_sign_msrmt == 'card_fn_dec'
+        elif res.vit_sign_typ_cd == 'PGA':
+            assert res.vit_sign_msrmt == 'pga'
+        elif res.vit_sign_typ_cd == 'PTGA':
+            assert res.vit_sign_msrmt == 'ptga'
+
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'RAPID3']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'CDAI']
+    ) == 2
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'SDAI']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'DAS28']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'STANFORD_HAQ']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'NJC28']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'TJC28']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'SJC28']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'PAIN']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'CARD_FN_RAW']
+    ) == 2
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'CARD_FN_DEC']
+    ) == 2
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'PGA']
+    ) == 1
+    assert len(
+        [res for res in vital_sign_results if res.vit_sign_typ_cd == 'PTGA']
+    ) == 1
 
 
 def test_cleanup(spark):

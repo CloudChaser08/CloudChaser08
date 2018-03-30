@@ -44,7 +44,8 @@ encounter = StructType([
         'date_treatment_plan_init', 'cycle_no', 'cycle_day', 'visit_inst_id', 'sch_cmt', 'visit_start_tstamp',
         'visit_end_tstamp', 'cancel_reason_type', 'patient_instr_cmt', 'visit_financial_status_cmt', 'treatment_name',
         'treatment_description', 'cpt', 'visit_billed_amount', 'visit_unit_of_measure', 'claim_id', 'contract_amt',
-        'reimburse_amt', 'provider_npi', 'rapid_3', 'cdai', 'sdai'
+        'reimburse_amt', 'provider_npi', 'rapid_3', 'cdai', 'sdai', 'das28', 'haq_score', 'total_normal_28joint',
+        'total_tender_28joint', 'total_swollen_28joint', 'pain_scale', 'fn_raw', 'fn_dec', 'mdglobal_scale', 'ptgl_dec'
     ]
 ])
 
