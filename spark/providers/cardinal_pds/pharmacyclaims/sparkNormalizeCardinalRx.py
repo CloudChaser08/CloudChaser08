@@ -60,7 +60,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3a://salusv/matching/payload/pharmacyclaims/cardinal_pds/{}/'.format(
             date_input.replace('-', '/')
         )
-        normalized_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=cardinal_pds/'
+        normalized_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
         table_format = PARQUET_FORMAT
         deliverable_path = DELIVERABLE_LOC
 
@@ -162,7 +162,7 @@ def main(args):
         output_path      = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
         deliverable_path = 's3://salusv/deliverable/cardinal_pds-0/'
 
-    normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=cardinal_pds/'
+    normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
     curr_mo = args.date[:7]
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:

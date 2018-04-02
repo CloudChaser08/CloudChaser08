@@ -322,7 +322,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
         dag = mdag
     )
 
-    sql_template = "MSCK REPAIR TABLE pharmacyclaims_20170602"
+    sql_template = "MSCK REPAIR TABLE pharmacyclaims_20180205"
 
     update_analytics_db = SubDagOperator(
         subdag=update_analytics_db.update_analytics_db(
