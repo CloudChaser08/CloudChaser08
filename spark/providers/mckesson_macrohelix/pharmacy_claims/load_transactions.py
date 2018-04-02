@@ -65,6 +65,7 @@ TABLES = {
         'dx_22',
         'dx_23',
         'dx_24',
+        'mystery_column',  # TODO: find out what this is
         'hvJoinKey'
     ]
 }
