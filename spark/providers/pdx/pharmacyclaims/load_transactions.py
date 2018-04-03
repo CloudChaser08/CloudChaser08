@@ -99,7 +99,8 @@ TABLES = {
 	       'patient_first_name',
 	       'patient_street_address',
 	       'patient_zip',
-	       'patient_date_of_birth'
+	       'patient_date_of_birth',
+               'hvJoinKey'
     ]
 }
 

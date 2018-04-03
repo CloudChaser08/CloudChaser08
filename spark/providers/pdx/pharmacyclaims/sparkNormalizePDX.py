@@ -1,4 +1,5 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+import argparse
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.pharmacyclaims_common_model_v6 import schema
@@ -10,9 +11,10 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
+from pyspark.sql.functions import col, lit, upper
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
-    setid = 'hvfeedfile_po_record_deid_{}\d{6}.hvout'.format(date_input.replace('-', ''))
+    setid = 'hvfeedfile_po_record_deid_{}.hvout'.format(date_input.replace('-', ''))
 
     script_path = __file__
 
@@ -23,6 +25,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/pdx/pharmacyclaims/resources/matching/'
         )
+        normalized_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/pdx/pharmacyclaims/resources/normalized/'
+        )
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/out/{}/'.format(
             date_input.replace('-', '/')
@@ -30,6 +35,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/payload/{}/'.format(
             date_input.replace('-', '/')
         )
+        normalized_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/normalized/'
     else:
         input_path = 's3://salusv/incoming/pharmacyclaims/pdx/{}/'.format(
             date_input.replace('-', '/')
@@ -37,6 +43,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3://salusv/matching/payload/pharmacyclaims/pdx/{}/'.format(
             date_input.replace('-', '/')
         )
+        normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=pdx/'
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -57,12 +64,19 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     import spark.providers.pdx.pharmacyclaims.load_transactions as load_transactions
     load_transactions.load(runner, input_path)
 
+    # Dedupe the source data
+    runner.sqlContext.sql('select * from pdx_transactions') \
+          .dropDuplicates(load_transactions.TABLES['pdx_transactions'][:-1]) \
+          .createOrReplaceTempView('pdx_transactions')
+
+    # Normalize the source data
     normalized_df = runner.run_spark_script(
         'normalize.sql',
         [['date_input', date_input]],
         return_output=True
     )
 
+    # Post-processing on the normalized data
     postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),
         postprocessor.add_universal_columns(
@@ -84,6 +98,40 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )(
         normalized_df
     ).createOrReplaceTempView('pharmacyclaims_common_model')
+
+    # Run the reversal logic on the normalized source and
+    # the last 2 months of normalized data
+    current_year_month = date_input[:7]
+    prev_year_month = (datetime.strptime(date_input, '%Y-%m-%d') - timedelta(months=1)).strftime('%Y-%m')
+    spark.read.parquet(normalized_path + '/part_best_date={}'.format(current_year_month),
+                       normalized_path + '/part_best_date={}'.format(prev_year_month)
+                      ).createOrReplaceTempView('normalized_claims')
+
+    new_reversals = runner.sqlContext \
+            .sql("select * from pharmacyclaims_common_model" + \
+                 "where logical_delete_reason = 'Reversal'")
+    new_not_reversed = runner.sqlContext \
+            .sql("select * from pharmacyclaims_common_model" + \
+                 "where logical_delete_reason <> 'Reversal'")
+    old_reversals = runner.sqlContext \
+            .sql("select * from normalized_claims where logical_delete_reason = 'Reversal'")
+    old_not_reversed = runner.sqlContext \
+            .sql("select * from normalized_claims where logical_delete_reason <> 'Reversal'")
+
+    not_reversed = new_not_reversed.union(old_not_reversed)
+
+    join_conditions = [
+        upper(not_reversed.response_code_vendor) == lit('D'),
+        upper(not_reversed.payer_type) == lit('MEDICAID') | upper(not_reversed.payer_type) == lit('THIRD PARTY'),
+        not_reversed.submitted_ingredient_cost == new_reversals.submitted_ingredient_cost,
+        (not_reversed.paid_patient_pay + not_reversed.paid_gross_due) == (new_reversals.paid_patient_pay + new_reversals.paid_gross_due),
+        not_reversed.rx_number == new_reversals.rx_number,
+        not_reversed.ndc_code == new_reversals.ndc_code,
+        not_reversed.pharmacy_other_id == new_reversals.pharmacy_other_id,
+        not_reversed.date_service == new_reversals.date_service,
+        not_reversed.logical_delete_reason == lit(None)
+    ]
+    reversed_claims = not_reversed.join(new_reversals, join_conditions, 'leftsemi')
 
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
@@ -109,7 +157,7 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test = args.airflow_test)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 
