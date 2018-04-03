@@ -269,7 +269,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, month_offset=GENOA_MONTH_OFFSET)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, month_offset=GENOA_MONTH_OFFSET,
+        fixed_day=1)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
