@@ -65,7 +65,7 @@ def test_diagnosis_codes_with_prefix_a():
 
 def test_model_version_inserted_for_each_row():
     for r in results:
-        assert r.model_version == '4'
+        assert r.model_version == '06'
 
 
 def test_cleanup(spark):
