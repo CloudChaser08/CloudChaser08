@@ -76,7 +76,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             feed_id=FEED_ID,
             vendor_id=VENDOR_ID,
             filename=setid,
-            model_version_number='4'
+            model_version_number='06'
         ),
         postprocessor.nullify,
         postprocessor.apply_date_cap(
@@ -102,7 +102,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v4.sql',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
             'mckesson_macro_helix', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,
