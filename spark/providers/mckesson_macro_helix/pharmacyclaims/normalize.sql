@@ -49,7 +49,7 @@ SELECT DISTINCT
         END                                                                                    AS cob_count,
         t.gross_charge                                                                         AS submitted_gross_due,
         t.hospital_zip                                                                         AS pharmacy_postal_code
-FROM mckesson_macrohelix_transactions t
+FROM mckesson_macro_helix_transactions t
 LEFT OUTER JOIN matching_payload p ON t.hvJoinKey = p.hvJoinKey
 CROSS JOIN exploder e
 

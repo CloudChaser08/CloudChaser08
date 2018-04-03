@@ -2,14 +2,14 @@ import datetime
 import pytest
 
 from pyspark.sql import Row
-import spark.providers.mckesson_macrohelix.pharmacyclaims.sparkNormalizeMckessonMacrohelix as mmh
+import spark.providers.mckesson_macro_helix.pharmacyclaims.sparkNormalizeMckessonMacroHelix as mmh
 
 source = None
 results = None
 
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
-    spark['sqlContext'].dropTempTable('mckesson_macrohelix_transactions')
+    spark['sqlContext'].dropTempTable('mckesson_macro_helix_transactions')
     spark['sqlContext'].dropTempTable('exploder')
     spark['sqlContext'].dropTempTable('ref_gen_ref')
 
@@ -36,7 +36,7 @@ def test_init(spark):
     mmh.run(spark['spark'], spark['runner'], '2017-10-06', test = True)
     global source, results
     source = spark['sqlContext'] \
-                .sql('select * from mckesson_macrohelix_transactions') \
+                .sql('select * from mckesson_macro_helix_transactions') \
                 .collect()
     results = spark['sqlContext'] \
                 .sql('select * from pharmacyclaims_common_model') \

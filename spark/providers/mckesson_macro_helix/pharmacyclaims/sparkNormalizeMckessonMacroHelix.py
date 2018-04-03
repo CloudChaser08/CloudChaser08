@@ -23,23 +23,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/mckesson_macrohelix/pharmacyclaims/resources/input/'
+            script_path, '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/input/'
         )
         matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/mckesson_macrohelix/pharmacyclaims/resources/matching/'
+            script_path, '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/matching/'
         )
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macrohelix/out/{}/'.format(
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/out/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macrohelix/payload/{}/'.format(
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/payload/{}/'.format(
             date_input.replace('-', '/')
         )
     else:
-        input_path = 's3://salusv/incoming/pharmacyclaims/mckesson_macrohelix/{}/'.format(
+        input_path = 's3://salusv/incoming/pharmacyclaims/mckesson_macro_helix/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/matching/payload/pharmacyclaims/mckesson_macrohelix/{}/'.format(
+        matching_path = 's3://salusv/matching/payload/pharmacyclaims/mckesson_macro_helix/{}/'.format(
             date_input.replace('-', '/')
         )
 
@@ -103,7 +103,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
-            'mckesson_macrohelix', 'pharmacyclaims_common_model',
+            'mckesson_macro_helix', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,
                                          hvm_historical.month,
@@ -112,7 +112,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Mckesson_MacroHelix')
+    spark, sqlContext = init('Mckesson_Macro_Helix')
 
     runner = Runner(sqlContext)
 
@@ -121,7 +121,7 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macrohelix/spark-output/'
+        output_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/spark-output/'
     else:
         output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 

@@ -16,7 +16,7 @@ def load(runner, input_path_prefix):
 
 
 TABLES = {
-    'mckesson_macrohelix_transactions': [
+    'mckesson_macro_helix_transactions': [
         'row_id',
         'service_date',
         'mr_num',
