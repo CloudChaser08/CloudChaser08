@@ -2,7 +2,7 @@ import datetime
 import pytest
 
 from pyspark.sql import Row
-import spark.providers.mckesson_macrohelix.pharmacy_claims.sparkNormalizeMckessonMacrohelix as mmh
+import spark.providers.mckesson_macrohelix.pharmacyclaims.sparkNormalizeMckessonMacrohelix as mmh
 
 source = None
 results = None
