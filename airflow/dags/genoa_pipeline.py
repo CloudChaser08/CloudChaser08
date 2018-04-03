@@ -86,14 +86,14 @@ def get_filename(file_dir, file_name_template):
 
 def get_deid_file_urls(ds, kwargs):
     file_dir = get_tmp_unzipped_dir(ds, kwargs)
-    deid_filename = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='unzip_file', key='deid_filename')
+    deid_filename = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='save_filenames', key='deid_filename')
 
     return [file_dir + deid_filename]
 
 
 def get_transaction_file_paths(ds, kwargs):
     file_dir = get_tmp_unzipped_dir(ds, kwargs)
-    transaction_filename = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='unzip_file', key='transaction_filename')
+    transaction_filename = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='save_filenames', key='transaction_filename')
 
     return [file_dir + transaction_filename]
 
@@ -180,8 +180,8 @@ def do_unzip_file(file_name_template):
 
 def do_get_filenames():
     def out(ds, **kwargs):
-        transaction_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs,), TRANSACTION_FILE_NAME_TEMPLATE)
-        deid_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs,), DEID_FILE_NAME_TEMPLATE)
+        transaction_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs), TRANSACTION_FILE_NAME_TEMPLATE)
+        deid_filename = get_filename(get_tmp_unzipped_dir(ds, kwargs), DEID_FILE_NAME_TEMPLATE)
         kwargs['ti'].xcom_push(key='deid_filename', value=deid_filename)
         kwargs['ti'].xcom_push(key='transaction_filename', value=transaction_filename)
 
@@ -284,7 +284,7 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds, k: [
-                k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='unzip_file', key='deid_filename')
+                k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='save_filenames', key='deid_filename')
             ],
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}', month_offset=GENOA_MONTH_OFFSET, fixed_day=1
