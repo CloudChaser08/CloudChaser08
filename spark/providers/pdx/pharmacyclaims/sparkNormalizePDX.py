@@ -131,7 +131,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         not_reversed.date_service == new_reversals.date_service,
         not_reversed.logical_delete_reason == lit(None)
     ]
-    reversed_claims = not_reversed.join(new_reversals, join_conditions, 'leftsemi')
+    reversed_claims = not_reversed.join(new_reversals, join_conditions, 'leftsemi') \
+                                  .withColumn('logical_delete_reason', lit('Reversed Claim'))
+    unchanged_claims = not_reversed.join(new_reversals, join_conditions, 'leftanti')
+
+    new_reversals.union(old_reversals).union(reversed_claims).union(unchanged_claims) \
+                 .createOrReplaceTempView('pharmacyclaims_common_model_final')
 
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
@@ -144,7 +149,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
-            'pdx', 'pharmacyclaims_common_model',
+            'pdx', 'pharmacyclaims_common_model_final',
             'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,
                                          hvm_historical.month,
@@ -166,7 +171,9 @@ def main(args):
     else:
         output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
+    #TODO: move files in current and prev month partitions before unloading
     normalized_records_unloader.distcp(output_path)
+    #TODO: delete moved files after replacement
 
 
 if __name__ == '__main__':
