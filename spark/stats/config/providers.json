@@ -267,7 +267,7 @@
             "epi_calcs"         : null
         },
         {
-            "name"              : "mckesson_macrohelix",
+            "name"              : "mckesson_macro_helix",
             "datafeed_id"       : "51",
             "datatype"          : "pharmacyclaims",
             "date_field"        : "date_service",
