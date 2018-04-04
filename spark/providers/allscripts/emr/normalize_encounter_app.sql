@@ -21,8 +21,18 @@ SELECT
     END                                                         AS ptnt_gender_cd,
     ptn.state                                                   AS ptnt_state_cd,
     SUBSTRING(COALESCE(ptn.zip3, pay.threedigitzip, ''), 1, 3)  AS ptnt_zip3_cd,
-    app.startdttm                                               AS enc_start_dt,
-    app.enddttm                                                 AS enc_end_dt,
+    EXTRACT_DATE(
+        app.startdttm, '%Y-%m-%d', NULL,
+        CASE
+        WHEN TRIM(UPPER(app.status)) <> 'PENDING'
+        THEN CAST({max_cap} AS DATE)
+        END)                                                    AS enc_start_dt,
+    EXTRACT_DATE(
+        app.enddttm, '%Y-%m-%d', NULL,
+        CASE
+        WHEN TRIM(UPPER(app.status)) <> 'PENDING'
+        THEN CAST({max_cap} AS DATE)
+        END)                                                    AS enc_end_dt,
     'APPOINTMENT'                                               AS enc_vst_typ_cd,
     app.gen2providerid                                          AS enc_rndrg_prov_vdr_id,
     CASE
