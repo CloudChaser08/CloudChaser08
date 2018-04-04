@@ -21,16 +21,16 @@ SELECT
     t.dispensed_ndc_number                                                  AS ndc_code,
     t.prescription_number_filler                                            AS rx_number,
     CASE
-        WHEN t.prescription_number IS NOT NULL THEN '1'
+        WHEN t.prescription_number_filler IS NOT NULL THEN '1'
         ELSE NULL
     END                                                                     AS rx_number_qual,
     t.bank_identification_number                                            AS bin_number,
     t.processor_control_number                                              AS processor_control_number,
     t.new_refill_counter                                                    AS fill_number,
     t.number_of_refills_authorized                                          AS refill_auth_amount,
-    CONCAT(LEFT(t.quantity_dispensed, LENGTH(t.quantity_dispensed)-3),
+    CONCAT(SUBSTR(t.quantity_dispensed, 1, LENGTH(t.quantity_dispensed)-3),
            '.',
-           RIGHT(t.quantity_dispensed, 3)
+           SUBSTR(t.quantity_dispensed, LENGTH(t.quantity_dispensed)-2, 3)
     )                                                                       AS dispensed_quantity,
     t.unit_of_measure                                                       AS unit_of_measure,
     t.days_supply                                                           AS days_supply,
@@ -60,7 +60,7 @@ SELECT
     t.prescriber_npi                                                        AS prov_prescribing_npi,
     CASE
         WHEN t.level_of_service = '6' THEN NULL
-        ELSE t.state_liscense_number_for_prescriber
+        ELSE t.state_license_number_for_prescriber
     END                                                                     AS prov_prescribing_state_license,
     CASE
         WHEN t.level_of_service = '6' THEN NULL
@@ -84,52 +84,52 @@ SELECT
     END                                                                     AS prov_prescribing_zip,
     t.coordination_of_benefits_counter                                      AS cob_count,
     CONCAT(
-        LEFT(t.copay_coinsurance_amount, LENGTH(t.copay_coinsurance_amount)-2),
+        SUBSTR(t.copay_coinsurance_amount, 1, LENGTH(t.copay_coinsurance_amount)-2),
         '.',
-        RIGHT(t.copay_coinsurance_amount, 2)
+        SUBSTR(t.copay_coinsurance_amount, LENGTH(t.copay_coinsurance_amount)-1, 2)
     )                                                                       AS copay_coinsurance,
     t.basis_of_ingredient_cost_submitted                                    AS basis_of_cost_determination,
     CONCAT(
-        LEFT(t.ingredient_cost, LENGTH(t.ingredient_cost)-2),
+        SUBSTR(t.ingredient_cost, 1, LENGTH(t.ingredient_cost)-2),
         '.',
-        RIGHT(t.ingredient_cost, 2)
+        SUBSTR(t.ingredient_cost, LENGTH(t.ingredient_cost)-1, 2)
     )                                                                       AS submitted_ingredient_cost,
     CONCAT(
-        LEFT(t.dispensing_fee, LENGTH(t.dispensing_fee)-2),
+        SUBSTR(t.dispensing_fee, 1, LENGTH(t.dispensing_fee)-2),
         '.',
-        RIGHT(t.dispensing_fee, 2)
+        SUBSTR(t.dispensing_fee, LENGTH(t.dispensing_fee)-1, 2)
     )                                                                       AS submitted_dispensing_fee,
     t.basis_of_ingredient_cost_reimbursed                                   AS basis_of_reimbursement_determination,
     CONCAT(
-        LEFT(t.ingredient_cost_paid, LENGTH(t.ingredient_cost_paid)-2),
+        SUBSTR(t.ingredient_cost_paid, 1, LENGTH(t.ingredient_cost_paid)-2),
         '.',
-        RIGHT(t.ingredient_cost_paid, 2)
+        SUBSTR(t.ingredient_cost_paid, LENGTH(t.ingredient_cost_paid)-1, 2)
     )                                                                       AS paid_ingredient_cost,
     CONCAT(
-        LEFT(t.dispensing_fee_paid, LENGTH(t.dispensing_fee_paid)-2),
+        SUBSTR(t.dispensing_fee_paid, 1, LENGTH(t.dispensing_fee_paid)-2),
         '.',
-        RIGHT(t.dispensing_fee_paid, 2)
+        SUBSTR(t.dispensing_fee_paid, LENGTH(t.dispensing_fee_paid)-1, 2)
     )                                                                       AS paid_dispensing_fee,
     CONCAT(
-        LEFT(t.reimbursed_amount, LENGTH(t.reimbursed_amount)-2),
+        SUBSTR(t.reimbursed_amount, 1, LENGTH(t.reimbursed_amount)-2),
         '.',
-        RIGHT(t.reimbursed_amount, 2)
+        SUBSTR(t.reimbursed_amount, LENGTH(t.reimbursed_amount)-1, 2)
     )                                                                       AS paid_gross_due,
     CONCAT(
-        LEFT(t.total_amount_paid_by_patient, LENGTH(t.total_amount_paid_by_patient)-2),
+        SUBSTR(t.total_amount_paid_by_patient, 1, LENGTH(t.total_amount_paid_by_patient)-2),
         '.',
-        RIGHT(t.total_amount_paid_by_patient, 2)
+        SUBSTR(t.total_amount_paid_by_patient, LENGTH(t.total_amount_paid_by_patient)-1, 2)
     )                                                                       AS paid_patient_pay,
     t.indicator_for_coupon_type                                             AS coupon_type,
     t.coupon_id                                                             AS coupon_number,
     CONCAT(
-        LEFT(t.coupon_face_value, LENGTH(t.coupon_face_value)-2),
+        SUBSTR(t.coupon_face_value, 1, LENGTH(t.coupon_face_value)-2),
         '.',
-        RIGHT(t.coupon_face_value, 2)
+        SUBSTR(t.coupon_face_value, LENGTH(t.coupon_face_value)-1, 2)
     )                                                                       AS coupon_value,
     t.pharmacy_ncpdp_number                                                 AS pharmacy_other_id,
     CASE
-        WHEN t.pharmacy_ncpdp_number IS NOT NULL THEN '07',
+        WHEN t.pharmacy_ncpdp_number IS NOT NULL THEN '07'
         ELSE NULL
     END                                                                     AS pharmacy_other_qual,
     t.pharmacy_zip_code                                                     AS pharmacy_postal_code,
