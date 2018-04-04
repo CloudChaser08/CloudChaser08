@@ -276,7 +276,7 @@ CREATE VIEW default.pharmacyclaims (
     ELSE '0_PREDATES_HVM_HISTORY'
     END AS part_processdate
 FROM default.pharmacyclaims_20180205
-WHERE part_provider IN ('apothecary_by_design', 'genoa')
+WHERE part_provider IN ('apothecary_by_design', 'genoa', 'cardinal_pds')
 UNION ALL
     SELECT record_id,
     claim_id,
@@ -419,7 +419,7 @@ UNION ALL
     ELSE '0_PREDATES_HVM_HISTORY'
     END AS part_processdate
 FROM default.pharmacyclaims_20170602
-WHERE part_provider IN ('mckesson', 'mckesson_res', 'diplomat', 'cardinal_pds', 'cardinal_vitalpath')
+WHERE part_provider IN ('mckesson', 'mckesson_res', 'diplomat', 'cardinal_vitalpath')
 UNION ALL
 SELECT CAST(record_id AS bigint),
     claim_id,
