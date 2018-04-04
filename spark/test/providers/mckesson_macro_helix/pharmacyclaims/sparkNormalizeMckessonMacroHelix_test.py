@@ -2,14 +2,14 @@ import datetime
 import pytest
 
 from pyspark.sql import Row
-import spark.providers.mckesson_macrohelix.pharmacy_claims.sparkNormalizeMckessonMacrohelix as mmh
+import spark.providers.mckesson_macro_helix.pharmacyclaims.sparkNormalizeMckessonMacroHelix as mmh
 
 source = None
 results = None
 
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
-    spark['sqlContext'].dropTempTable('mckesson_macrohelix_transactions')
+    spark['sqlContext'].dropTempTable('mckesson_macro_helix_transactions')
     spark['sqlContext'].dropTempTable('exploder')
     spark['sqlContext'].dropTempTable('ref_gen_ref')
 
@@ -18,14 +18,14 @@ def cleanup(spark):
 def test_init(spark):
     spark['spark'].sparkContext.parallelize([
         Row(
-            hvm_vdr_feed_id = '48',
+            hvm_vdr_feed_id = mmh.FEED_ID,
             gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE',
             gen_ref_itm_nm = '',
             gen_ref_1_dt = datetime.date(1901, 1, 1),
             whtlst_flg = ''
         ),
         Row(
-            hvm_vdr_feed_id = '48',
+            hvm_vdr_feed_id = mmh.FEED_ID,
             gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE',
             gen_ref_itm_nm = '',
             gen_ref_1_dt = datetime.date(1901, 1, 1),
@@ -36,7 +36,7 @@ def test_init(spark):
     mmh.run(spark['spark'], spark['runner'], '2017-10-06', test = True)
     global source, results
     source = spark['sqlContext'] \
-                .sql('select * from mckesson_macrohelix_transactions') \
+                .sql('select * from mckesson_macro_helix_transactions') \
                 .collect()
     results = spark['sqlContext'] \
                 .sql('select * from pharmacyclaims_common_model') \
@@ -65,7 +65,7 @@ def test_diagnosis_codes_with_prefix_a():
 
 def test_model_version_inserted_for_each_row():
     for r in results:
-        assert r.model_version == '4'
+        assert r.model_version == '06'
 
 
 def test_cleanup(spark):

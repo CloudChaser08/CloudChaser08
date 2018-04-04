@@ -268,7 +268,7 @@
         },
         {
             "name"              : "mckesson_macro_helix",
-            "datafeed_id"       : "48",
+            "datafeed_id"       : "51",
             "datatype"          : "pharmacyclaims",
             "date_field"        : "date_service",
             "record_field"      : "claim_id",
