@@ -116,10 +116,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
     payload_loader.load(runner, matching_path, extra_cols=['personId', 'claimId'])
 
     normalized_encounter = runner.run_spark_script(
-        'normalize_encounter_app.sql', return_output=True, source_file_path=script_path
+        'normalize_encounter_app.sql', [
+            ['max_cap', max_cap]
+        ], return_output=True, source_file_path=script_path
     ).union(
         runner.run_spark_script(
-            'normalize_encounter_enc.sql', return_output=True, source_file_path=script_path
+            'normalize_encounter_enc.sql', [
+                ['max_cap', max_cap]
+            ], return_output=True, source_file_path=script_path
         )
     )
     normalized_diagnosis = runner.run_spark_script(
@@ -164,9 +168,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'model_version': '07',
             'join_key': 'hv_enc_id',
             'date_caps': [
-                ('enc_start_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('enc_end_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_start_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31'),
+                ('enc_end_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31'),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ]
         }, {
             'name': 'diagnosis',
@@ -176,11 +180,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'model_version': '07',
             'join_key': 'hv_diag_id',
             'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('diag_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE'),
-                ('diag_onset_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE'),
-                ('diag_resltn_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('diag_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('diag_onset_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('diag_resltn_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ],
             'update_whitelists': lambda whitelists: whitelists + [{
                 'column_name': 'diag_snomed_cd',
@@ -195,9 +199,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'model_version': '07',
             'join_key': 'hv_proc_id',
             'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('proc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('proc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ],
             'update_whitelists': lambda whitelists: whitelists + [{
                 'column_name': 'proc_snomed_cd',
@@ -212,10 +216,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'model_version': '07',
             'join_key': 'hv_prov_ord_id',
             'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('prov_ord_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('prov_ord_complt_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('prov_ord_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('prov_ord_complt_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ]
         }, {
             'name': 'lab_order',
@@ -225,9 +229,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'model_version': '06',
             'join_key': 'hv_lab_ord_id',
             'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('lab_ord_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('lab_ord_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ],
             'additional_transformer': priv_common.Transformer(
                 lab_ord_alt_cd=[
@@ -242,10 +246,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'model_version': '07',
             'join_key': 'hv_lab_result_id',
             'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ]
         }, {
             'name': 'medication',
@@ -255,11 +259,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'model_version': '07',
             'join_key': 'hv_medctn_id',
             'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('medctn_admin_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_admin_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ]
         }, {
             'name': 'clinical_observation',
@@ -269,10 +273,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'model_version': '07',
             'join_key': 'hv_clin_obsn_id',
             'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('clin_obsn_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('clin_obsn_onset_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('clin_obsn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('clin_obsn_onset_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ],
             'update_whitelists': lambda whitelists: whitelists + [{
                 'column_name': 'clin_obsn_snomed_cd',
@@ -287,9 +291,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             'model_version': '07',
             'join_key': 'hv_vit_sign_id',
             'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE')
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ]
         }
     ]
@@ -315,7 +319,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
             *(
                 [
                     postprocessor.apply_date_cap(runner.sqlContext, date_col, max_cap, '25', domain_name)
-                    for (date_col, domain_name) in table['date_caps']
+                    for (date_col, domain_name, max_cap_date) in table['date_caps']
                 ] + [
                     schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=['allscripts_date_partition'])
                 ]
