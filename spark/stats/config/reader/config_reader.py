@@ -118,8 +118,12 @@ def _fill_in_conf_dict(conf, feed_id, providers_conf_file):
             "max_values": 10
         }
 
+    # epi doesn't require any additional configurations
+    if conf['epi_calcs']:
+        conf['epi_calcs_conf'] = {}
+
     # configure stats whose configurations do not come from the marketplace db
-    no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year', 'epi_calcs']
+    no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year']
     for calc in no_db_stat_calcs:
         if not conf.get(calc):
             continue
