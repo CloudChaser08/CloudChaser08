@@ -106,7 +106,9 @@ SELECT
                 )) - 2
         )                                                                                        AS rec_stat_cd,
     'medications'                                                                                AS prmy_src_tbl_nm,
-    CAST(enc.encounterdttm AS DATE)                                                              AS allscripts_date_partition
+    EXTRACT_DATE(
+        SUBSTRING(enc.encounterdttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE)
+        )                                                                                        AS allscripts_date_partition
 FROM transactional_medications med
     LEFT JOIN transactional_encounters enc ON med.gen2patientid = enc.gen2patientid
     AND med.encounterid = enc.encounterid
