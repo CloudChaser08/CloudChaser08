@@ -1,4 +1,5 @@
 import argparse
+import subprocess
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from spark.runner import Runner
@@ -176,12 +177,22 @@ def main(args):
 
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/spark-output/'
+        tmp_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/temp/'
     else:
         output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
+        tmp_path = 's3://salus/tmp/pdx/{}/'.format(args.date.replace('-', '/'))
 
-    #TODO: move files in current and prev month partitions before unloading
+    current_year_month = args.date[:7]
+    prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m')
+
+    date_part = 'part_best_date={}/'
+    subprocess.check_call(
+        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(current_year_month), tmp_path + date_part.format(current_year_month)]
+    )
+    subprocess.check_call(
+        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(prev_year_month), tmp_path + date_part.format(prev_year_month)]
+    )
     normalized_records_unloader.distcp(output_path)
-    #TODO: delete moved files after replacement
 
 
 if __name__ == '__main__':
