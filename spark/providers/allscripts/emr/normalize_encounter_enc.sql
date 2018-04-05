@@ -33,7 +33,7 @@ SELECT
     UPPER(enc.type)                                             AS enc_typ_cd,
     CASE WHEN enc.type IS NOT NULL THEN 'ENCOUNTER_TYPE' END    AS enc_typ_cd_qual,
     UPPER(clt.sourcesystemcode)                                 AS data_src_cd,
-    NULL                                                        AS data_captr_dt,
+    enc.recordeddttm                                            AS data_captr_dt,
     CASE WHEN enc.auditdataflag = '0' THEN 'Current Record'
     WHEN enc.auditdataflag = '1' THEN 'Historical Record'
     END                                                         AS rec_stat_cd,

@@ -25,6 +25,7 @@ SELECT
     CASE WHEN ref.gen_ref_1_txt IS NOT NULL THEN 'VITAL_NAME' END           AS vit_sign_typ_cd_qual,
     CASE WHEN ref.gen_ref_1_txt IS NOT NULL
     THEN CONVERT_VALUE(vit.value, ref.gen_ref_itm_desc)
+    ELSE vit.value
     END                                                                     AS vit_sign_msrmt,
     ref.gen_ref_2_txt                                                       AS vit_sign_uom,
     TRIM(UPPER(vit.status))                                                 AS vit_sign_stat_cd,
