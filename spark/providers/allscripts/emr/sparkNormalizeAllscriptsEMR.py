@@ -97,7 +97,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
         if table.name in ['providers', 'patients', 'clients']:
             runner.sqlContext.read.csv(
                 input_path + table.name + '/', sep='|', schema=table.schema
-            ).cache().createOrReplaceTempView('transactional_' + table.name)
+            ).createOrReplaceTempView('transactional_' + table.name)
         else:
             # add non-skewed provider columns
             raw_table = runner.sqlContext.read.csv(
@@ -112,7 +112,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
                     ).otherwise(col(column))
                 )
 
-            raw_table.cache().createOrReplaceTempView('transactional_' + table.name)
+            raw_table.createOrReplaceTempView('transactional_' + table.name)
 
     payload_loader.load(runner, matching_path, extra_cols=['personId', 'claimId'])
 
