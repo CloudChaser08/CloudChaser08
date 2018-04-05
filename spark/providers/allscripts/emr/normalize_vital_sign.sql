@@ -52,7 +52,7 @@ SELECT
                 )) - 2
         )                                                                   AS rec_stat_cd,
     'vitals'                                                                AS prmy_src_tbl_nm,
-    enc.encounterdttm                                                       AS allscripts_date_partition
+    CAST(enc.encounterdttm AS DATE)                                         AS allscripts_date_partition
 FROM transactional_vitals vit
     LEFT JOIN transactional_encounters enc ON vit.gen2patientid = enc.gen2patientid AND vit.encounterid = enc.encounterid
     LEFT JOIN transactional_patientdemographics ptn ON vit.gen2patientid = ptn.gen2patientid

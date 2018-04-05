@@ -62,7 +62,7 @@ SELECT
     THEN 'Historical Record'
     END                                                         AS rec_stat_cd,
     'appointments'                                              AS prmy_src_tbl_nm,
-    enc.encounterdttm                                           AS allscripts_date_partition
+    CAST(enc.encounterdttm AS DATE)                             AS allscripts_date_partition
 FROM transactional_appointments app
     LEFT JOIN transactional_encounters enc ON app.gen2patientid = enc.gen2patientid AND app.encounterid = enc.encounterid
     LEFT JOIN transactional_patientdemographics ptn ON app.gen2patientid = ptn.gen2patientid

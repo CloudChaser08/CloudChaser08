@@ -59,7 +59,7 @@ SELECT
     THEN 'Historical Record'
     END                                                                     AS rec_stat_cd,
     'orders'                                                                AS prmy_src_tbl_nm,
-    enc.encounterdttm                                                       AS allscripts_date_partition
+    CAST(enc.encounterdttm AS DATE)                                         AS allscripts_date_partition
 FROM transactional_orders ord
     LEFT JOIN transactional_encounters enc ON ord.gen2patientid = enc.gen2patientid
     AND ord.encounterid = enc.encounterid

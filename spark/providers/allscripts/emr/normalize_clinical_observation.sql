@@ -67,7 +67,7 @@ SELECT
     THEN 'Historical Record'
     END                                                                       AS rec_stat_cd,
     'allergies'                                                               AS prmy_src_tbl_nm,
-    enc.encounterdttm                                                         AS allscripts_date_partition
+    CAST(enc.encounterdttm AS DATE)                                           AS allscripts_date_partition
 FROM transactional_allergies alg
     LEFT JOIN transactional_encounters enc ON alg.gen2patientid = enc.gen2patientid
     AND alg.encounterid = enc.encounterid

@@ -71,7 +71,7 @@ SELECT
     WHEN TRIM(COALESCE(enc.auditdataflag, '')) = '1' THEN 'Historical Record'
     END                                                                       AS rec_stat_cd,
     'vaccines'                                                                AS prmy_src_tbl_nm,
-    enc.encounterdttm                                                         AS allscripts_date_partition
+    CAST(enc.encounterdttm AS DATE)                                           AS allscripts_date_partition
 FROM transactional_vaccines vac
     LEFT JOIN transactional_encounters enc ON vac.gen2patientid = enc.gen2patientid
     AND vac.encounterid = enc.encounterid

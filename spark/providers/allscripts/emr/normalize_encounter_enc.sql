@@ -38,7 +38,7 @@ SELECT
     WHEN enc.auditdataflag = '1' THEN 'Historical Record'
     END                                                         AS rec_stat_cd,
     'encounters'                                                AS prmy_src_tbl_nm,
-    enc.encounterdttm                                           AS allscripts_date_partition
+    CAST(enc.encounterdttm AS DATE)                             AS allscripts_date_partition
 FROM transactional_encounters enc
     LEFT JOIN transactional_patientdemographics ptn ON enc.gen2patientid = ptn.gen2patientid
     LEFT JOIN matching_payload pay ON UPPER(ptn.gen2patientID) = UPPER(pay.personid)

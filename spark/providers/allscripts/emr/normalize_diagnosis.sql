@@ -143,7 +143,7 @@ SELECT
                 )) - 2
         )                                                                     AS rec_stat_cd,
     'problems'                                                                AS prmy_src_tbl_nm,
-    enc.encounterdttm                                                         AS allscripts_date_partition
+    CAST(enc.encounterdttm AS DATE)                                           AS allscripts_date_partition
 FROM transactional_problems prb
     LEFT JOIN transactional_encounters enc ON prb.gen2patientid = enc.gen2patientid
     AND prb.encounterid = enc.encounterid
