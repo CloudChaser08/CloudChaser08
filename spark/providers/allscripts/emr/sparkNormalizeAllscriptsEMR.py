@@ -22,6 +22,7 @@ from spark.common.emr.clinical_observation import schema_v7 as clinical_observat
 from spark.common.emr.vital_sign import schema_v7 as vital_sign_schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.explode as explode
+import spark.helpers.multithreaded_s3_transfer as multi_s3_transfer
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.external_table_loader as external_table_loader
@@ -419,10 +420,13 @@ def main(args):
                 'encounter', 'diagnosis', 'procedure', 'provider_order', 'lab_order', 'lab_result',
                 'medication', 'clinical_observation', 'vital_sign'
         ]:
-            subprocess.check_call([
-                'aws', 's3', 'mv', '--recursive', '--sse', 'AES256',
+            multi_s3_transfer.multithreaded_copy(
                 's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
                 's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
+            )
+            subprocess.check_call([
+                'aws', 's3', 'rm', '--recursive',
+                's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model)
             ])
 
     normalized_records_unloader.distcp(output_path)
