@@ -63,7 +63,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     payload_loader.load(runner, matching_path, ['claimId', 'patientId', 'hvJoinKey'])
 
     import spark.providers.pdx.pharmacyclaims.load_transactions as load_transactions
-    load_transactions.load(spark, input_path)
+    load_transactions.load(runner, input_path)
 
     # Dedupe the source data
     runner.sqlContext.sql('select * from pdx_transactions') \
@@ -120,11 +120,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                  " where logical_delete_reason = 'Reversal'")
     new_not_reversed = runner.sqlContext \
             .sql("select * from pharmacyclaims_common_model" + \
-                 " where logical_delete_reason <> 'Reversal'")
+                 " where logical_delete_reason is null or logical_delete_reason <> 'Reversal'")
     old_reversals = runner.sqlContext \
             .sql("select * from normalized_claims where logical_delete_reason = 'Reversal'")
     old_not_reversed = runner.sqlContext \
-            .sql("select * from normalized_claims where logical_delete_reason <> 'Reversal'")
+            .sql("select * from normalized_claims where logical_delete_reason is null or logical_delete_reason <> 'Reversal'")
 
     not_reversed = new_not_reversed.union(old_not_reversed)
 
@@ -137,7 +137,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         not_reversed.ndc_code == new_reversals.ndc_code,
         not_reversed.pharmacy_other_id == new_reversals.pharmacy_other_id,
         not_reversed.date_service == new_reversals.date_service,
-        not_reversed.logical_delete_reason == lit(None)
+        not_reversed.logical_delete_reason.isNull()
     ]
     reversed_claims = not_reversed.join(new_reversals, join_conditions, 'leftsemi') \
                                   .withColumn('logical_delete_reason', lit('Reversed Claim'))

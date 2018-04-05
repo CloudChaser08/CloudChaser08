@@ -10,8 +10,14 @@ SELECT
     p.yearOfBirth                                                           AS patient_year_of_birth,
     SUBSTR(TRIM(p.threeDigitZip), 1, 3)                                     AS patient_zip3,
     TRIM(UPPER(COALESCE(p.state, '')))                                      AS patient_state,
-    t.date_filled                                                           AS date_service,
-    t.date_written                                                          AS date_written,
+    extract_date(
+        t.date_filled,
+        '%Y%m%d'
+    )                                                                       AS date_service,
+    extract_date(
+        t.date_written,
+        '%Y%m%d'
+    )                                                                       AS date_written,
     TRIM(UPPER(t.claim_indicator))                                          AS response_code_vendor,
     TRIM(UPPER(t.diagnosis_code))                                           AS diagnosis_code,
     CASE

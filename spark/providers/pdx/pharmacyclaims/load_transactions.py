@@ -1,12 +1,12 @@
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
-def load(spark, input_path_prefix):
+def load(runner, input_path_prefix):
     '''
     Load in the transactions to an in memory table.
     '''
     for table, columns in TABLES.items():
-        df = spark.read.text(input_path_prefix)
+        df = runner.sqlContext.read.text(input_path_prefix)
 
         cols = []
         index = 1
