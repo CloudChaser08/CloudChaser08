@@ -128,36 +128,56 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
         )
     )
     normalized_diagnosis = runner.run_spark_script(
-        'normalize_diagnosis.sql', return_output=True, source_file_path=script_path
+        'normalize_diagnosis.sql', [
+            ['max_cap', max_cap]
+        ], return_output=True, source_file_path=script_path
     )
     normalized_procedure = runner.run_spark_script(
-        'normalize_procedure_ord.sql', return_output=True, source_file_path=script_path
+        'normalize_procedure_ord.sql', [
+            ['max_cap', max_cap]
+        ], return_output=True, source_file_path=script_path
     ).union(
         runner.run_spark_script(
-            'normalize_procedure_prb.sql', return_output=True, source_file_path=script_path
+            'normalize_procedure_prb.sql', [
+                ['max_cap', max_cap]
+            ], return_output=True, source_file_path=script_path
         )
     )
     normalized_provider_order = runner.run_spark_script(
-        'normalize_provider_order_ord.sql', return_output=True, source_file_path=script_path
+        'normalize_provider_order_ord.sql', [
+            ['max_cap', max_cap]
+        ], return_output=True, source_file_path=script_path
     ).union(
         runner.run_spark_script(
-            'normalize_provider_order_vac.sql', return_output=True, source_file_path=script_path
+            'normalize_provider_order_vac.sql', [
+                ['max_cap', max_cap]
+            ], return_output=True, source_file_path=script_path
         )
     )
     normalized_lab_order = runner.run_spark_script(
-        'normalize_lab_order.sql', return_output=True, source_file_path=script_path
+        'normalize_lab_order.sql', [
+            ['max_cap', max_cap]
+        ], return_output=True, source_file_path=script_path
     )
     normalized_lab_result = runner.run_spark_script(
-        'normalize_lab_result.sql', return_output=True, source_file_path=script_path
+        'normalize_lab_result.sql', [
+            ['max_cap', max_cap]
+        ], return_output=True, source_file_path=script_path
     )
     normalized_medication = runner.run_spark_script(
-        'normalize_medication.sql', return_output=True, source_file_path=script_path
+        'normalize_medication.sql', [
+            ['max_cap', max_cap]
+        ], return_output=True, source_file_path=script_path
     )
     normalized_clinical_observation = runner.run_spark_script(
-        'normalize_clinical_observation.sql', return_output=True, source_file_path=script_path
+        'normalize_clinical_observation.sql', [
+            ['max_cap', max_cap]
+        ], return_output=True, source_file_path=script_path
     )
     normalized_vital_sign = runner.run_spark_script(
-        'normalize_vital_sign.sql', return_output=True, source_file_path=script_path
+        'normalize_vital_sign.sql', [
+            ['max_cap', max_cap]
+        ], return_output=True, source_file_path=script_path
     )
 
     normalized_tables = [
