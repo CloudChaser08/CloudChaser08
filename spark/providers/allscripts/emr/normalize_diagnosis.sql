@@ -71,7 +71,7 @@ SELECT
                 END
                 )) - 2
         )                                                                     AS diag_alt_cd,
-    CASE WHEN SUBSTRING(
+    CASE WHEN COALESCE(TRIM(SUBSTRING(
         CONCAT(
             CASE
             WHEN prb.level1 IS NOT NULL
@@ -103,7 +103,7 @@ SELECT
                 ELSE ''
                 END
                 )) - 2
-        ) IS NOT NULL THEN 'LEVEL1_LEVEL2_LEVEL3' END                         AS diag_alt_cd_qual,
+        )), '') <> '' THEN 'LEVEL1_LEVEL2_LEVEL3' END                         AS diag_alt_cd_qual,
     prb.name                                                                  AS diag_nm,
     TRIM(prb.status)                                                          AS diag_stat_cd,
     CASE
