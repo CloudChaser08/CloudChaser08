@@ -22,12 +22,12 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/mckesson_res/pharmacyclaims/{}/'
+TMP_PATH_TEMPLATE = '/tmp/mckesson_res/pharmacyclaims/{}{}{}/'
 DAG_NAME = 'mckessonrx_res_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 6, 5, 12),
+    'start_date': datetime(2018, 2, 22, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -64,13 +64,13 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(
 
 
 def get_transaction_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) 
+    return [get_tmp_dir(ds, kwargs)
         + date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
     ]
 
 
 def get_deid_file_urls(ds, kwargs):
-    return [S3_TRANSACTION_RAW_URL 
+    return [S3_TRANSACTION_RAW_URL
         + date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
     ]
 
@@ -79,7 +79,7 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
         + date_utils.insert_date_into_template(
-            TRANSACTION_FILE_NAME_TEMPLATE, 
+            TRANSACTION_FILE_NAME_TEMPLATE,
             kwargs
         )
     return [
@@ -169,11 +169,11 @@ split_transaction = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : 
+            'file_name_pattern_func'   :
                 date_utils.generate_insert_regex_into_template_function(
                     TRANSACTION_FILE_NAME_TEMPLATE
                 ),
-            's3_prefix_func'           : 
+            's3_prefix_func'           :
                 date_utils.generate_insert_date_into_template_function(
                     S3_TRANSACTION_PROCESSED_URL_TEMPLATE
                 ),
@@ -231,12 +231,12 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda  ds, k : [
+            'expected_matching_files_func'      : lambda ds, k : [
                 date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, k)
             ],
-            'file_date_func'                    : 
+            'file_date_func'                    :
                 date_utils.generate_insert_date_into_template_function('{}/{}/{}'),
-            
+
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'f6b4eefd-988a-4ca3-9efd-0140607c8985',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/mckesson/pharmacyclaims/sparkNormalizeMcKessonRx.py',
@@ -250,7 +250,7 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 sql_template = """
-    MSCK REPAIR TABLE pharmacyclaims_20170602
+    MSCK REPAIR TABLE pharmacyclaims_20180205
 """
 
 if HVDAG.HVDAG.airflow_env != 'test':
@@ -261,7 +261,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                lambda ds, k: sql_template
+                'sql_command_func' :
+                    date_utils.generate_insert_date_into_template_function(sql_template)
             }
         ),
         task_id='update_analytics_db',
