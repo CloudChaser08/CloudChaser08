@@ -24,21 +24,93 @@ EPI_STATE_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_georeportitem WHERE dat
 EPI_STATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_georeportitem (value, state, datafeed_id) " \
                                 "values ('{}', '{}', '{}');"
 EPI_REGION_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_regionreportitem WHERE datafeed_id = '{}';"
-EPI_REGION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_regionreportitem (value, region, datafeed_id) " \
+EPI_REGION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_regionreportitem (value, division, datafeed_id) " \
                                  "values ('{}', '{}', '{}');"
 
 FILL_RATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
-                                "(datafield_id, data_feed_id, fill_rate) " \
-                                "VALUES ('{datafield_id}', '{data_feed_id}', '{fill_rate}') " \
+                                "(name, sequence, datafield_id, data_feed_id, fill_rate, unique_to_data_feed) " \
+                                "VALUES ('{name}', '{sequence}', '{datafield_id}', '{data_feed_id}', '{fill_rate}', false) " \
                                 "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                 "SET fill_rate = '{fill_rate}';"
 
 TOP_VALS_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
-                               "(datafield_id, data_feed_id, top_values) " \
-                               "VALUES ('{datafield_id}', '{data_feed_id}', '{top_values}') " \
+                               "(name, sequence, datafield_id, data_feed_id, top_values, unique_to_data_feed) " \
+                               "VALUES ('{name}', '{sequence}', '{datafield_id}', '{data_feed_id}', '{top_values}', false) " \
                                "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                "SET top_values = '{top_values}';"
 
+REGION_MAP = {
+    "CT": "NEW_ENGLAND",
+    "ME": "NEW_ENGLAND",
+    "NH": "NEW_ENGLAND",
+    "RI": "NEW_ENGLAND",
+    "VT": "NEW_ENGLAND",
+    "MA": "NEW_ENGLAND",
+
+    "NJ": "MIDDLE_ATLANTIC",
+    "NY": "MIDDLE_ATLANTIC",
+    "PA": "MIDDLE_ATLANTIC",
+
+    "IL": "EAST_NORTH_CENTRAL",
+    "IN": "EAST_NORTH_CENTRAL",
+    "MI": "EAST_NORTH_CENTRAL",
+    "OH": "EAST_NORTH_CENTRAL",
+    "WI": "EAST_NORTH_CENTRAL",
+
+    "IA": "WEST_NORTH_CENTRAL",
+    "KS": "WEST_NORTH_CENTRAL",
+    "MN": "WEST_NORTH_CENTRAL",
+    "MO": "WEST_NORTH_CENTRAL",
+    "ND": "WEST_NORTH_CENTRAL",
+    "SD": "WEST_NORTH_CENTRAL",
+    "NE": "WEST_NORTH_CENTRAL",
+
+    "DE": "SOUTH_ATLANTIC",
+    "DC": "SOUTH_ATLANTIC",
+    "FL": "SOUTH_ATLANTIC",
+    "GA": "SOUTH_ATLANTIC",
+    "MD": "SOUTH_ATLANTIC",
+    "NC": "SOUTH_ATLANTIC",
+    "SC": "SOUTH_ATLANTIC",
+    "VA": "SOUTH_ATLANTIC",
+    "WV": "SOUTH_ATLANTIC",
+
+    "AL": "EAST_SOUTH_CENTRAL",
+    "KY": "EAST_SOUTH_CENTRAL",
+    "MS": "EAST_SOUTH_CENTRAL",
+    "TN": "EAST_SOUTH_CENTRAL",
+    "AR": "WEST_SOUTH_CENTRAL",
+    "LA": "WEST_SOUTH_CENTRAL",
+    "OK": "WEST_SOUTH_CENTRAL",
+    "TX": "WEST_SOUTH_CENTRAL",
+
+    "AZ": "MOUNTAIN",
+    "CO": "MOUNTAIN",
+    "ID": "MOUNTAIN",
+    "MT": "MOUNTAIN",
+    "NV": "MOUNTAIN",
+    "NM": "MOUNTAIN",
+    "UT": "MOUNTAIN",
+    "WY": "MOUNTAIN",
+
+    "AK": "PACIFIC",
+    "CA": "PACIFIC",
+    "HI": "PACIFIC",
+    "OR": "PACIFIC",
+    "WA": "PACIFIC"
+}
+
+VALID_AGES = [
+    '0-17',
+    '18-44',
+    '45-64',
+    '65+'
+]
+
+VALID_GENDERS = [
+    'M',
+    'F',
+]
 
 def _generate_queries(stats, provider_conf):
     """
@@ -55,6 +127,7 @@ def _generate_queries(stats, provider_conf):
                 stat_queries.append(KEYSTATS_UPDATE_SQL_TEMPLATE.format(
                     key_stat['field'], key_stat['value'], provider_conf['datafeed_id']
                 ))
+
         elif stat_name == 'longitudinality' and stat_value:
             stat_queries.append(LONGITUDINALITY_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
             for longitudinality_stat in stat_value:
@@ -62,32 +135,75 @@ def _generate_queries(stats, provider_conf):
                     longitudinality_stat['duration'], longitudinality_stat['value'],
                     longitudinality_stat['average'], longitudinality_stat['std_dev'], provider_conf['datafeed_id']
                 ))
+
         elif stat_name == 'year_over_year' and stat_value:
             stat_queries.append(YOY_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
             for yoy_stat in stat_value:
                 stat_queries.append(YOY_INSERT_SQL_TEMPLATE.format(
                     yoy_stat['year'], yoy_stat['count'], provider_conf['datafeed_id']
                 ))
-        elif stat_name == 'epi' and stat_value:
-            stat_queries.append(EPI_AGE_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
-            stat_queries.append(EPI_GENDER_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
-            stat_queries.append(EPI_STATE_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
-            stat_queries.append(EPI_REGION_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
 
-            for epi_category in stat_value:
-                if epi_category['field'] == 'region':
-                    query = EPI_REGION_INSERT_SQL_TEMPLATE
-                elif epi_category['field'] == 'state':
-                    query = EPI_STATE_INSERT_SQL_TEMPLATE
-                elif epi_category['field'] == 'age':
-                    query = EPI_AGE_INSERT_SQL_TEMPLATE
-                elif epi_category['field'] == 'gender':
-                    query = EPI_GENDER_INSERT_SQL_TEMPLATE
+        elif stat_name in ['age', 'gender', 'state', 'region'] and stat_value:
+            if stat_name == 'region':
 
-                for epi_stat in epi_category:
-                    stat_queries.append(
-                        query.format(epi_stat['value'], epi_stat['field'], provider_conf['datafeed_id'])
-                    )
+                # format regions correctly, remove invalid regions
+                stat_value = [
+                    {
+                        'field': stat['field'].replace('_', ' ').title(),
+                        'value': float(stat['value'])
+                    } for stat in stat_value if stat['field'].upper() in REGION_MAP.values()
+                ]
+
+                delete_query = EPI_REGION_DELETE_SQL_TEMPLATE
+                query = EPI_REGION_INSERT_SQL_TEMPLATE
+            elif stat_name == 'state':
+
+                # format states correctly, remove invalid states
+                stat_value = [
+                    {
+                        'field': stat['field'].upper(),
+                        'value': float(stat['value'])
+                    } for stat in stat_value if stat['field'].upper() in REGION_MAP.keys()
+                ]
+
+                delete_query = EPI_STATE_DELETE_SQL_TEMPLATE
+                query = EPI_STATE_INSERT_SQL_TEMPLATE
+            elif stat_name == 'age':
+
+                # remove invalid ages
+                stat_value = [
+                    {
+                        'field': stat['field'],
+                        'value': float(stat['value'])
+                    } for stat in stat_value if stat['field'] in VALID_AGES
+                ]
+
+                delete_query = EPI_AGE_DELETE_SQL_TEMPLATE
+                query = EPI_AGE_INSERT_SQL_TEMPLATE
+            elif stat_name == 'gender':
+
+                # remove invalid genders
+                stat_value = [
+                    {
+                        'field': stat['field'],
+                        'value': float(stat['value'])
+                    } for stat in stat_value if stat['field'] in VALID_GENDERS
+                ]
+
+                delete_query = EPI_GENDER_DELETE_SQL_TEMPLATE
+                query = EPI_GENDER_INSERT_SQL_TEMPLATE
+
+            # convert stat to percentages
+            total_value = sum([stat['value'] for stat in stat_value])
+            for stat in stat_value:
+                stat['value'] = (stat['value'] / total_value) * 100
+
+            # append to queries list
+            stat_queries.append(delete_query.format(provider_conf['datafeed_id']))
+            for epi_stat in stat_value:
+                stat_queries.append(
+                    query.format(epi_stat['value'], epi_stat['field'], provider_conf['datafeed_id'])
+                )
 
         elif stat_name == 'top_values' and stat_value:
             columns = set([r['column'] for r in stat_value])
@@ -100,8 +216,8 @@ def _generate_queries(stats, provider_conf):
                 name_id_dict = provider_conf['top_values_conf']['columns']
 
                 stat_queries.append(TOP_VALS_INSERT_SQL_TEMPLATE.format(
-                    datafield_id=name_id_dict[column], data_feed_id=provider_conf['datafeed_id'],
-                    top_values=top_values_string
+                    name=column, datafield_id=name_id_dict[column]['field_id'], sequence=name_id_dict[column]['sequence'],
+                    data_feed_id=provider_conf['datafeed_id'], top_values=top_values_string
                 ))
 
         elif stat_name == 'fill_rates' and stat_value:
@@ -109,7 +225,8 @@ def _generate_queries(stats, provider_conf):
 
             for field_dict in stat_value:
                 stat_queries.append(FILL_RATE_INSERT_SQL_TEMPLATE.format(
-                    datafield_id=name_id_dict[field_dict['field']], data_feed_id=provider_conf['datafeed_id'],
+                    name=field_dict['field'], datafield_id=name_id_dict[field_dict['field']]['field_id'],
+                    sequence=name_id_dict[field_dict['field']]['sequence'], data_feed_id=provider_conf['datafeed_id'],
                     fill_rate=str(float(field_dict['fill']) * 100)
                 ))
 
@@ -132,15 +249,16 @@ def _write_queries(queries, datafeed_id, quarter, identifier):
         pass
 
     for stat_name, stat_queries in queries.items():
-        filename = '{}_{}_{}.sql'.format(datafeed_id, identifier, stat_name)
-        with open(output_dir + filename, 'w') as query_output:
-            query_output.write('BEGIN;\n')
-            query_output.writelines([(q + '\n') for q in stat_queries])
-            query_output.write('COMMIT;\n')
-        boto3.client('s3').upload_file(
-            output_dir + filename, S3_OUTPUT_DIR.split('/')[2],
-            '/'.join(S3_OUTPUT_DIR.format(quarter).split('/')[3:]) + filename
-        )
+        if len(stat_queries) > 0:
+            filename = '{}_{}_{}.sql'.format(datafeed_id, identifier, stat_name)
+            with open(output_dir + filename, 'w') as query_output:
+                query_output.write('BEGIN;\n')
+                query_output.writelines([(q + '\n') for q in stat_queries])
+                query_output.write('COMMIT;\n')
+            boto3.client('s3').upload_file(
+                output_dir + filename, S3_OUTPUT_DIR.split('/')[2],
+                '/'.join(S3_OUTPUT_DIR.format(quarter).split('/')[3:]) + filename
+            )
 
 
 def write_to_s3(stats, provider_conf, quarter):
