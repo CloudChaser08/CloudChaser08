@@ -52,7 +52,10 @@ def _get_config_from_db(query):
     with closing(conn.cursor()) as cursor:
         cursor.execute(query)
         results = cursor.fetchall()
-    return dict(results)
+    return [
+        (res[0], {'field_id': res[1], 'sequence': res[2]})
+        for res in results
+    ]
 
 
 def _extract_provider_conf(feed_id, providers_conf):
@@ -76,7 +79,7 @@ def _extract_provider_conf(feed_id, providers_conf):
 def _get_top_values_columns(datafeed_id):
 
     get_columns_sql = """
-        select f.physical_name as name, f.id as field_id
+        select f.physical_name as name, f.id as field_id, f.sequence as sequence
             from marketplace_datafield f
             join marketplace_datatable t on t.id = f.datatable_id
             join marketplace_datamodel m on m.id = t.datamodel_id
@@ -89,7 +92,7 @@ def _get_top_values_columns(datafeed_id):
 
 def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
     get_columns_sql = """
-        select f.physical_name as name, f.id as field_id
+        select f.physical_name as name, f.id as field_id, f.sequence as sequence
             from marketplace_datafield f
             join marketplace_datatable t on t.id = f.datatable_id
             join marketplace_datamodel m on m.id = t.datamodel_id
@@ -118,8 +121,12 @@ def _fill_in_conf_dict(conf, feed_id, providers_conf_file):
             "max_values": 10
         }
 
+    # epi doesn't require any additional configurations
+    if conf['epi_calcs']:
+        conf['epi_calcs_conf'] = {}
+
     # configure stats whose configurations do not come from the marketplace db
-    no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year', 'epi_calcs']
+    no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year']
     for calc in no_db_stat_calcs:
         if not conf.get(calc):
             continue

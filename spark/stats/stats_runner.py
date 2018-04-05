@@ -8,6 +8,10 @@ import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
 
 def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
+
+    # Calculate epi calcs
+    epi_calcs = processor.get_epi_calcs(provider_config)
+
     if provider_config['datatype'] == 'emr':
         marketplace_stats = dict([
             (model_conf['datatype'], processor.run_marketplace_stats(
@@ -15,22 +19,22 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
                 dict([it for it in provider_config.items() + model_conf.items()])
             )) for model_conf in provider_config['models']
         ])
-        stats = marketplace_stats
 
         for model_conf in provider_config['models']:
             stats_writer.write_to_s3(
-                stats[model_conf['datatype']],
+                marketplace_stats[model_conf['datatype']],
                 dict([it for it in provider_config.items() + model_conf.items()]),
                 quarter
             )
+        stats_writer.write_to_s3(epi_calcs, provider_config, quarter)
+
+        stats = dict(marketplace_stats, **epi_calcs)
+
     else:
         # Calculate marketplace stats
         marketplace_stats = processor.run_marketplace_stats(
             spark, sqlContext, quarter, start_date, end_date, provider_config
         )
-
-        # Calculate epi calcs
-        epi_calcs = processor.get_epi_calcs(provider_config)
 
         stats = dict(marketplace_stats, **epi_calcs)
 

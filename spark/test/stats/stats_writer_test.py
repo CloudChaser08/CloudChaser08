@@ -4,17 +4,17 @@ PROVIDER_CONF = {
     'datafeed_id': 'TEST_DF',
     'top_values_conf': {
         'columns': {
-            'test_column_1': 1,
-            'test_column_2': 2,
-            'test_column_3': 3
+            'test_column_1': {'field_id': 1, 'sequence': 0},
+            'test_column_2': {'field_id': 2, 'sequence': 0},
+            'test_column_3': {'field_id': 3, 'sequence': 0}
         },
         'max_values': 10
     },
     'fill_rate_conf': {
         'columns': {
-            'test_column_1': 1,
-            'test_column_2': 2,
-            'test_column_3': 3
+            'test_column_1': {'field_id': 1, 'sequence': 0},
+            'test_column_2': {'field_id': 2, 'sequence': 0},
+            'test_column_3': {'field_id': 3, 'sequence': 0}
         }
     }
 }
@@ -90,23 +90,23 @@ def test__generate_queries():
         "values ('myyear', 'mycount', 'TEST_DF');"
 
     assert len(top_values_queries) == 3
-    assert top_values_queries[0] == "INSERT INTO marketplace_datafeedfield (datafield_id, data_feed_id, top_values) " \
-        "VALUES ('1', 'TEST_DF', 'test_value_1 (1000), test_value_2 (2000)') " \
+    assert top_values_queries[0] == "INSERT INTO marketplace_datafeedfield (name, sequence, datafield_id, data_feed_id, top_values, unique_to_data_feed) " \
+        "VALUES ('test_column_1', '0', '1', 'TEST_DF', 'test_value_1 (1000), test_value_2 (2000)', false) " \
         "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
         "SET top_values = 'test_value_1 (1000), test_value_2 (2000)';"
-    assert top_values_queries[1] == "INSERT INTO marketplace_datafeedfield (datafield_id, data_feed_id, top_values) " \
-        "VALUES ('2', 'TEST_DF', '0 (10000)') " \
+    assert top_values_queries[1] == "INSERT INTO marketplace_datafeedfield (name, sequence, datafield_id, data_feed_id, top_values, unique_to_data_feed) " \
+        "VALUES ('test_column_2', '0', '2', 'TEST_DF', '0 (10000)', false) " \
         "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
         "SET top_values = '0 (10000)';"
-    assert top_values_queries[2] == "INSERT INTO marketplace_datafeedfield (datafield_id, data_feed_id, top_values) " \
-        "VALUES ('3', 'TEST_DF', '99 (90918)') " \
+    assert top_values_queries[2] == "INSERT INTO marketplace_datafeedfield (name, sequence, datafield_id, data_feed_id, top_values, unique_to_data_feed) " \
+        "VALUES ('test_column_3', '0', '3', 'TEST_DF', '99 (90918)', false) " \
         "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
         "SET top_values = '99 (90918)';"
 
     assert len(fill_rate_queries) == 3
-    assert fill_rate_queries[0] == "INSERT INTO marketplace_datafeedfield (datafield_id, data_feed_id, fill_rate) " \
-        "VALUES ('1', 'TEST_DF', '92.0') ON CONFLICT (datafield_id, data_feed_id) DO UPDATE SET fill_rate = '92.0';"
-    assert fill_rate_queries[1] == "INSERT INTO marketplace_datafeedfield (datafield_id, data_feed_id, fill_rate) " \
-        "VALUES ('2', 'TEST_DF', '0.0') ON CONFLICT (datafield_id, data_feed_id) DO UPDATE SET fill_rate = '0.0';"
-    assert fill_rate_queries[2] == "INSERT INTO marketplace_datafeedfield (datafield_id, data_feed_id, fill_rate) " \
-        "VALUES ('3', 'TEST_DF', '100.0') ON CONFLICT (datafield_id, data_feed_id) DO UPDATE SET fill_rate = '100.0';"
+    assert fill_rate_queries[0] == "INSERT INTO marketplace_datafeedfield (name, sequence, datafield_id, data_feed_id, fill_rate, unique_to_data_feed) " \
+        "VALUES ('test_column_1', '0', '1', 'TEST_DF', '92.0', false) ON CONFLICT (datafield_id, data_feed_id) DO UPDATE SET fill_rate = '92.0';"
+    assert fill_rate_queries[1] == "INSERT INTO marketplace_datafeedfield (name, sequence, datafield_id, data_feed_id, fill_rate, unique_to_data_feed) " \
+        "VALUES ('test_column_2', '0', '2', 'TEST_DF', '0.0', false) ON CONFLICT (datafield_id, data_feed_id) DO UPDATE SET fill_rate = '0.0';"
+    assert fill_rate_queries[2] == "INSERT INTO marketplace_datafeedfield (name, sequence, datafield_id, data_feed_id, fill_rate, unique_to_data_feed) " \
+        "VALUES ('test_column_3', '0', '3', 'TEST_DF', '100.0', false) ON CONFLICT (datafield_id, data_feed_id) DO UPDATE SET fill_rate = '100.0';"

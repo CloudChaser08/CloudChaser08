@@ -94,7 +94,8 @@ def test_emr_stats(spark):
                 'fill_rate_conf'  : {'columns': {'claim_id': 1, 'service_date': 2, 'col_3': 3}},
             }
         ],
-        'earliest_date'     : '1990-01-01'
+        'earliest_date'     : '1990-01-01',
+        'epi_calcs'         : False
     }
 
     start_date = '2015-04-01'
