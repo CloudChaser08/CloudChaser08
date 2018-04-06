@@ -45,7 +45,7 @@ script_path = __file__
 FEED_ID = '25'
 VENDOR_ID = '35'
 
-def run(spark, runner, date_input, models, test=False, airflow_test=False):
+def run(spark, runner, date_input, models=None, test=False, airflow_test=False):
     date_input = '-'.join(date_input.split('-')[:2])
     date_obj = datetime.date(*[int(el) for el in (date_input + '-01').split('-')])
 
@@ -319,7 +319,7 @@ def run(spark, runner, date_input, models, test=False, airflow_test=False):
         }
     ]
 
-    for table in [t for t in normalized_tables if t['name'] in models]:
+    for table in ([t for t in normalized_tables if t['name'] in models] if models else normalized_tables):
         postprocessor.compose(
             postprocessor.trimmify, postprocessor.nullify,
             schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=['allscripts_date_partition']),
