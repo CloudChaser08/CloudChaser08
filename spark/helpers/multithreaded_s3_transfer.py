@@ -17,6 +17,7 @@ def _copy_file(src_bucket, dest_bucket, src_prefix, dest_prefix, file_list):
             bucket.Object(s3_file.replace(src_prefix, dest_prefix)).copy_from(CopySource=source)
 
             i += THREADS
+    return out
 
 
 def multithreaded_copy(src, dest):
