@@ -110,7 +110,7 @@ def do_transform_to_parquet(ds, cluster_identifier=None, **kwargs):
               delete_steps + \
               [EMR_DISTCP_TO_S3.format(kwargs['s3_parquet_path_prefix'])]
     check_call(command)
-                
+
     emr_utils._wait_for_steps(cluster_id)
 
 
@@ -171,10 +171,6 @@ def detect_move_normalize(parent_dag_name, child_dag_name, start_date, schedule_
         op_kwargs=dag_config,
         dag=dag
     )
-
-    env = dict(os.environ)
-    env['AWS_ACCESS_KEY_ID'] = Variable.get('AWS_ACCESS_KEY_ID')
-    env['AWS_SECRET_ACCESS_KEY'] = Variable.get('AWS_SECRET_ACCESS_KEY')
 
     create_emr_cluster = PythonOperator(
         task_id='create_emr_cluster',

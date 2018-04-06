@@ -82,8 +82,8 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     file_dir = get_tmp_dir(ds, kwargs)
     encrypted_file_path = file_dir \
         + date_utils.insert_date_into_template(
-            TRANSACTION_FILE_NAME_TEMPLATE, 
-            kwargs, 
+            TRANSACTION_FILE_NAME_TEMPLATE,
+            kwargs,
             day_offset = CARDINAL_DCOA_DAY_OFFSET
         )
     return [
@@ -105,7 +105,7 @@ def generate_file_validation_task(
                     date_utils.generate_insert_date_into_template_function(
                         path_template,
                         day_offset = CARDINAL_DCOA_DAY_OFFSET
-                    
+
                 ),
                 'file_name_pattern_func'    : lambda ds, k: (
                     DEID_FILE_NAME_REGEX
@@ -208,7 +208,7 @@ run_normalization = SubDagOperator(
         mdag.schedule_interval,
         {
             'EMR_CLUSTER_NAME_FUNC': date_utils.generate_insert_date_into_template_function(
-                EMR_CLUSTER_NAME_TEMPLATE, 
+                EMR_CLUSTER_NAME_TEMPLATE,
                 day_offset = CARDINAL_DCOA_DAY_OFFSET
             ),
             'PYSPARK_SCRIPT_NAME': '/home/hadoop/spark/providers/cardinal_dcoa/pharmacyclaims/sparkNormalizeCardinalDCOA.py',
@@ -249,7 +249,7 @@ def do_fetch_normalized_data(ds, **kwargs):
         ).split('/')[-1]
     )
 
-    
+
 fetch_normalized_data = PythonOperator(
     task_id='fetch_normalized_data',
     provide_context=True,
@@ -274,19 +274,19 @@ deliver_normalized_data = SubDagOperator(
         'deliver_normalized_data',
         default_args['start_date'],
         mdag.schedule_interval,
-        {
+         {
             'file_paths_func'       : delivery_file_path_func,
-            's3_prefix_func'        : 
+            's3_prefix_func'        :
                 lambda ds, kwargs: '/'.join(
                     date_utils.insert_date_into_template(
-                        S3_DESTINATION_FILE_URL_TEMPLATE, 
+                        S3_DESTINATION_FILE_URL_TEMPLATE,
                         kwargs,
                         day_offset = CARDINAL_DCOA_DAY_OFFSET
                     ).split('/')[3:]
                 ),
             's3_bucket'             : S3_DESTINATION_FILE_URL_TEMPLATE.split('/')[2],
-            'aws_secret_key_id'     : Variable.get('AWS_ACCESS_KEY_ID') if HVDAG.HVDAG.airflow_env == 'test' else Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
-            'aws_secret_access_key' : Variable.get('AWS_SECRET_ACCESS_KEY') if HVDAG.HVDAG.airflow_env == 'test' else Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
+            'aws_secret_key_id'     : None if HVDAG.HVDAG.airflow_env == 'test' else Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
+            'aws_secret_access_key' : None if HVDAG.HVDAG.airflow_env == 'test' else Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
         }
     ),
     task_id = 'deliver_normalized_data',
@@ -305,4 +305,3 @@ run_normalization.set_upstream(split_transaction)
 fetch_normalized_data.set_upstream(run_normalization)
 deliver_normalized_data.set_upstream(fetch_normalized_data)
 clean_up_workspace.set_upstream(deliver_normalized_data)
-
