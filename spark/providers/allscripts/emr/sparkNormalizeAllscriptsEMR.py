@@ -45,7 +45,7 @@ script_path = __file__
 FEED_ID = '25'
 VENDOR_ID = '35'
 
-def run(spark, runner, date_input, test=False, airflow_test=False, first_run=False):
+def run(spark, runner, date_input, models, test=False, airflow_test=False):
     date_input = '-'.join(date_input.split('-')[:2])
     date_obj = datetime.date(*[int(el) for el in (date_input + '-01').split('-')])
 
@@ -319,7 +319,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False, first_run=Fal
         }
     ]
 
-    for table in normalized_tables:
+    for table in [t for t in normalized_tables if t['name'] in models]:
         postprocessor.compose(
             postprocessor.trimmify, postprocessor.nullify,
             schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=['allscripts_date_partition']),
@@ -403,7 +403,12 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test=args.airflow_test, first_run=args.first_run)
+    models = args.models.split(',') if args.models else [
+        'encounter', 'diagnosis', 'procedure', 'provider_order', 'lab_order', 'lab_result',
+        'medication', 'clinical_observation', 'vital_sign'
+    ]
+
+    run(spark, runner, args.date, models=models, airflow_test=args.airflow_test)
 
     spark.stop()
 
@@ -414,7 +419,9 @@ def main(args):
 
     # backup allscripts normalized data before distcp
     try:
-        subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2018-03-23/diagnosis/part_hvm_vdr_feed_id=25/'])
+        subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(
+            models[0]
+        )])
         files_exist = True
     except subprocess.CalledProcessError as e:
         if str(e).endswith('status 1'):
@@ -423,14 +430,10 @@ def main(args):
             raise
 
     if files_exist:
-        subprocess.check_call([
-            'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}'.format(args.date)
-        ])
-
-        for model in [
-                'encounter', 'diagnosis', 'procedure', 'provider_order', 'lab_order', 'lab_result',
-                'medication', 'clinical_observation', 'vital_sign'
-        ]:
+        for model in models:
+            subprocess.check_call([
+                'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
+            ])
             multi_s3_transfer.multithreaded_copy(
                 's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
                 's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
@@ -447,6 +450,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
-    parser.add_argument('--first_run', default=False, action='store_true')
+    parser.add_argument('--models', type=str, default=None)
     args = parser.parse_args()
     main(args)
