@@ -22,15 +22,16 @@ class EMRStep:
 #
 # EMR
 #
-def get_aws_env(suffix=""):
+def get_aws_env(suffix=None):
     """Get an environ instance with aws perms attached"""
     aws_env = os.environ
-    aws_env['AWS_ACCESS_KEY_ID'] = Variable.get(
-        'AWS_ACCESS_KEY_ID' + suffix
-    )
-    aws_env['AWS_SECRET_ACCESS_KEY'] = Variable.get(
-        'AWS_SECRET_ACCESS_KEY' + suffix
-    )
+    if suffix:
+        aws_env['AWS_ACCESS_KEY_ID'] = Variable.get(
+            'AWS_ACCESS_KEY_ID' + suffix
+        )
+        aws_env['AWS_SECRET_ACCESS_KEY'] = Variable.get(
+            'AWS_SECRET_ACCESS_KEY' + suffix
+        )
     return aws_env
 
 
