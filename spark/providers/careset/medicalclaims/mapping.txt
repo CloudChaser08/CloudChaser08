@@ -1,0 +1,20 @@
+Source Columns
+---
+npi_class - If the provider was listed under the organizational or individual field in the claim file (1 - Individual, 2 - Organizational)
+npi - National Provider Identifier
+hcpcs_cd - HCPCS Code
+patient_count - Number of distinct patients the provider billed with the listed hcpcs code
+claim_count - Number of distinct claims the provider billed with the hcpcs code
+
+Pre-Processing
+---
+Drop any rows from the source where both patient_count and claim_count are 0
+
+Mapping
+---
+npi_class                 => ???
+npi                       => prov_rendering_npi
+hcpcs_cd (acutaly cpt...) => procedure_code
+????                      => procedure_code_qual
+patient_count             => N/A
+claim_count               => N/A
