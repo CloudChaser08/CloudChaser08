@@ -180,7 +180,7 @@ def main(args):
         tmp_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/temp/'
     else:
         output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
-        tmp_path = 's3://salus/tmp/pdx/{}/'.format(args.date.replace('-', '/'))
+        tmp_path = 's3://salus/backup/pdx/{}/'.format(args.date.replace('-', '/'))
 
     current_year_month = args.date[:7]
     prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m')
