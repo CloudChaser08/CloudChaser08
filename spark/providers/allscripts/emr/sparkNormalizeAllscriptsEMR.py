@@ -391,7 +391,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             ), staging_subdir=table['name'], test_dir=(file_utils.get_abs_path(
                 script_path, '../../../test/providers/allscripts/emr/resources/output/'
-            ) if test else None), unload_partition_count=100, skip_rename=True,
+            ) if test else None), unload_partition_count=500, skip_rename=True,
             distribution_key='row_id'
         )
 
