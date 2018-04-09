@@ -11,7 +11,7 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.privacy.pharmacyclaims as pharm_priv
+import spark.helpers.privacy.medicalclaims as medical_priv
 
 FEED_ID = '57'
 VENDOR_ID = '244'
@@ -74,7 +74,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             None,
             min_date
         ),
-        pharm_priv.filter
+        medical_priv.filter
     )(
         normalized_df
     ).createOrReplaceTempView('medicalclaims_common_model')
