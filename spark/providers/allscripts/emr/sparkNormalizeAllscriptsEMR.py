@@ -45,7 +45,7 @@ script_path = __file__
 FEED_ID = '25'
 VENDOR_ID = '35'
 
-def run(spark, runner, date_input, models=None, test=False, airflow_test=False):
+def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     date_input = '-'.join(date_input.split('-')[:2])
     date_obj = datetime.date(*[int(el) for el in (date_input + '-01').split('-')])
 
@@ -182,6 +182,33 @@ def run(spark, runner, date_input, models=None, test=False, airflow_test=False):
 
     normalized_tables = [
         {
+            'name': 'medication',
+            'data': normalized_medication,
+            'privacy': medication_priv,
+            'schema': medication_schema,
+            'model_version': '07',
+            'join_key': 'hv_medctn_id',
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_admin_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ]
+        }, {
+            'name': 'lab_result',
+            'data': normalized_lab_result,
+            'privacy': lab_result_priv,
+            'schema': lab_result_schema,
+            'model_version': '07',
+            'join_key': 'hv_lab_result_id',
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ]
+        }, {
             'name': 'encounter',
             'data': normalized_encounter,
             'privacy': encounter_priv,
@@ -260,33 +287,6 @@ def run(spark, runner, date_input, models=None, test=False, airflow_test=False):
                 ]
             )
         }, {
-            'name': 'lab_result',
-            'data': normalized_lab_result,
-            'privacy': lab_result_priv,
-            'schema': lab_result_schema,
-            'model_version': '07',
-            'join_key': 'hv_lab_result_id',
-            'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-            ]
-        }, {
-            'name': 'medication',
-            'data': normalized_medication,
-            'privacy': medication_priv,
-            'schema': medication_schema,
-            'model_version': '07',
-            'join_key': 'hv_medctn_id',
-            'date_caps': [
-                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('medctn_admin_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-            ]
-        }, {
             'name': 'clinical_observation',
             'data': normalized_clinical_observation,
             'privacy': clinical_observation_priv,
@@ -319,7 +319,7 @@ def run(spark, runner, date_input, models=None, test=False, airflow_test=False):
         }
     ]
 
-    for table in ([t for t in normalized_tables if t['name'] in models] if models else normalized_tables):
+    for table in ([t for t in normalized_tables if t['name'] == model] if model else normalized_tables):
         postprocessor.compose(
             postprocessor.trimmify, postprocessor.nullify,
             schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=['allscripts_date_partition']),
@@ -398,52 +398,53 @@ def run(spark, runner, date_input, models=None, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Allscripts EMR")
-
-    # initialize runner
-    runner = Runner(sqlContext)
-
     models = args.models.split(',') if args.models else [
-        'encounter', 'diagnosis', 'procedure', 'provider_order', 'lab_order', 'lab_result',
-        'medication', 'clinical_observation', 'vital_sign'
+        'medication', 'lab_result', 'provider_order', 'lab_order', 'encounter',
+        'diagnosis', 'procedure', 'clinical_observation', 'vital_sign'
     ]
 
-    run(spark, runner, args.date, models=models, airflow_test=args.airflow_test)
+    for model in models:
 
-    spark.stop()
+        spark, sqlContext = init("Allscripts EMR {}".format(model.title()))
 
-    if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/spark-output/'
-    else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2018-03-23/'
+        # initialize runner
+        runner = Runner(sqlContext)
 
-    # backup allscripts normalized data before distcp
-    try:
-        subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(
-            models[0]
-        )])
-        files_exist = True
-    except subprocess.CalledProcessError as e:
-        if str(e).endswith('status 1'):
-            files_exist = False
+        run(spark, runner, args.date, model=model, airflow_test=args.airflow_test)
+
+        spark.stop()
+
+        if args.airflow_test:
+            output_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/spark-output/'
         else:
-            raise
+            output_path = 's3://salusv/warehouse/parquet/emr/2018-03-23/'
 
-    if files_exist:
-        for model in models:
-            subprocess.check_call([
-                'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
-            ])
-            multi_s3_transfer.multithreaded_copy(
-                's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
-                's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
-            )
+        # backup allscripts normalized data before distcp
+        try:
+            subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(
+                model
+            )])
+            files_exist = True
+        except subprocess.CalledProcessError as e:
+            if str(e).endswith('status 1'):
+                files_exist = False
+            else:
+                raise
+
+        if files_exist:
+            # subprocess.check_call([
+            #     'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
+            # ])
+            # multi_s3_transfer.multithreaded_copy(
+            #     's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
+            #     's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
+            # )
             subprocess.check_call([
                 'aws', 's3', 'rm', '--recursive',
                 's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model)
             ])
 
-    normalized_records_unloader.distcp(output_path)
+        normalized_records_unloader.distcp(output_path)
 
 
 if __name__ == "__main__":
