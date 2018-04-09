@@ -6,16 +6,15 @@ from subprocess import check_call, Popen
 from airflow.models import Variable
 
 
-def get_aws_env(suffix=None):
+def get_aws_env(suffix=""):
     """Get an environ instance with aws perms attached"""
     aws_env = dict(os.environ)
-    if suffix:
-        aws_env['AWS_ACCESS_KEY_ID'] = Variable.get(
-            'AWS_ACCESS_KEY_ID' + suffix
-        )
-        aws_env['AWS_SECRET_ACCESS_KEY'] = Variable.get(
-            'AWS_SECRET_ACCESS_KEY' + suffix
-        )
+    aws_env['AWS_ACCESS_KEY_ID'] = Variable.get(
+        'AWS_ACCESS_KEY_ID' + suffix
+    )
+    aws_env['AWS_SECRET_ACCESS_KEY'] = Variable.get(
+        'AWS_SECRET_ACCESS_KEY' + suffix
+    )
     return aws_env
 
 REDSHIFT_HOST_URL_TEMPLATE = '{}.cz8slgfda3sg.us-east-1.redshift.amazonaws.com'
@@ -36,6 +35,15 @@ def get_rs_env(cluster_name):
     aws_env['PGPORT'] = REDSHIFT_PORT
     aws_env['PGPASSWORD'] = Variable.get('rs_norm_password')
     return aws_env
+
+
+def get_rs_s3_credentials_str():
+    return (
+        'aws_access_key_id={};aws_secret_access_key={}'
+    ).format(
+        Variable.get('AWS_ACCESS_KEY_ID'),
+        Variable.get('AWS_SECRET_ACCESS_KEY')
+    )
 
 
 def create_redshift_cluster(cluster_name, num_nodes):
