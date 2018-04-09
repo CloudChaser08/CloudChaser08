@@ -29,7 +29,7 @@ def calculate_fill_rate(df):
     '''
     row_count = df.count()
 
-    # Imperical data shows that 16 columns leads to optimal performance 
+    # Empirical data shows that 16 columns leads to optimal performance
     BATCH_SIZE = 16
 
     i = 0
@@ -40,6 +40,7 @@ def calculate_fill_rate(df):
             lambda df1, df2: df1.union(df2),
             [df_tmp.select(lit(c).alias('field'), col(c).alias('fill')) for c in df_tmp.columns]
         ).collect()
+        df_tmp.unpersist()
         i += BATCH_SIZE
 
     stats = map(lambda r: {'field': r.field, 'fill': r.fill}, res)
