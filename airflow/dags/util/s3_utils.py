@@ -9,15 +9,18 @@ import airflow.hooks.S3_hook
 DEFAULT_CONNECTION_ID = 'my_conn_s3'
 
 
-def get_aws_env(suffix="", prefix=""):
+def get_aws_env(suffix=None, prefix=None):
     """Get an environ instance with aws perms attached"""
     aws_env = dict(os.environ)
-    aws_env['AWS_ACCESS_KEY_ID'] = Variable.get(
-        prefix + 'AWS_ACCESS_KEY_ID' + suffix
-    )
-    aws_env['AWS_SECRET_ACCESS_KEY'] = Variable.get(
-        prefix + 'AWS_SECRET_ACCESS_KEY' + suffix
-    )
+    if suffix or prefix:
+        suffix = suffix or ""
+        prefix = prefix or ""
+        aws_env['AWS_ACCESS_KEY_ID'] = Variable.get(
+            prefix + 'AWS_ACCESS_KEY_ID' + suffix
+        )
+        aws_env['AWS_SECRET_ACCESS_KEY'] = Variable.get(
+            prefix + 'AWS_SECRET_ACCESS_KEY' + suffix
+        )
     return aws_env
 
 
