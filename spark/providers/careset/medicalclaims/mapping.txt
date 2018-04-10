@@ -12,9 +12,9 @@ Drop any rows from the source where both patient_count and claim_count are 0
 
 Mapping
 ---
-npi_class                 => ???
+npi_class                 => N/A
 npi                       => prov_rendering_npi
 hcpcs_cd (acutaly cpt...) => procedure_code
-????                      => procedure_code_qual
+N/A                       => procedure_code_qual
 patient_count             => N/A
 claim_count               => N/A

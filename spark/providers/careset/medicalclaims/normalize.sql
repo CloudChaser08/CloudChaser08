@@ -1,5 +1,4 @@
 SELECT
     npi                         AS prov_rendering_npi,
-    cpt_code                    AS procedure_code,
-    '0_'                        AS procedure_code_qual
+    cpt_code                    AS procedure_code
 FROM careset_transactions

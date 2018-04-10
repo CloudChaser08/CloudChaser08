@@ -42,9 +42,18 @@ def test_init(spark):
                 .collect()
 
 
-def test_something():
-    print source
-    print results
+# 10 rows in the source
+# 1 row with both patient and claim counts as 0
+# 1 row with patient count 0
+# 1 row with claim count 0
+# Expected: 9 rows in target
+def test_rows_with_zero_claims_and_patients_are_dropped():
+    assert len(results) == 9
+
+
+def test_procedure_code_is_not_null():
+    for r in results:
+        assert r.procedure_code is not None
 
 
 def test_cleanup(spark):
