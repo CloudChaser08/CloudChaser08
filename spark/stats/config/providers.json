@@ -72,20 +72,6 @@
             "earliest_date"     : "2009-08-01"
         },
         {
-            "name"              : "medisafe",
-            "datafeed_id"       : "17",
-            "datatype"          : "consumer",
-            "date_field"        : "event_date",
-            "record_field"      : null,
-            "fill_rate"         : false,
-            "key_stats"         : false,
-            "top_values"        : false,
-            "longitudinality"   : false,
-            "year_over_year"    : false,
-            "epi_calcs"         : true,
-            "earliest_date"     : "1901-01-01"
-        },
-        {
             "name"              : "quest",
             "datafeed_id"       : "18",
             "datatype"          : "labtests",
@@ -156,30 +142,76 @@
             "earliest_date"     : "2012-01-01"
         },
         {
-            "name"              : "visonex",
-            "datafeed_id"       : "23",
-            "datatype"          : "emr",
-            "date_field"        : "date_service",
-            "record_field"      : "claim_id",
-            "fill_rate"         : false,
-            "key_stats"         : true,
-            "top_values"        : false,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : true,
-            "earliest_date"     : "2014-11-01"
-        },
-        {
             "name"              : "allscripts",
             "datafeed_id"       : "25",
             "datatype"          : "emr",
-            "date_field"        : "date_service",
-            "record_field"      : "claim_id",
-            "fill_rate"         : false,
-            "key_stats"         : true,
-            "top_values"        : false,
-            "longitudinality"   : false,
-            "year_over_year"    : false,
+            "models"            : [
+              {
+                "datatype"        : "emr_clin_obsn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_medctn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_vit_sign",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_prov_ord",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_lab_result",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_lab_ord",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_proc",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_diag",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }
+            ],
             "epi_calcs"         : true,
             "earliest_date"     : "2014-01-01"
         },
@@ -384,64 +416,64 @@
                 "datatype"        : "emr_clin_obsn",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_medctn",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_vit_sign",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_prov_ord",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_lab_result",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_lab_ord",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_proc",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_diag",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }

@@ -50,6 +50,8 @@ generate_stats -f 14        # Caris
 generate_stats -f 28        # Courtagen
 generate_stats -f 18        # Quest
 generate_stats -f 46        # LabCorp
+generate_stats -f 58        # Guardant Health
+generate_stats -f 43        # Ambry
 
 # Events
 generate_stats -f 27        # Obit Data
@@ -66,8 +68,17 @@ generate_stats -f 16        # ESI
 # Pharmacy Claims
 generate_stats -f 33        # McKesson Rx
 generate_stats -f 36        # McKesson Rx Restricted
+generate_stats -f 51        # McKesson Rx Macro Helix
+generate_stats -f 65        # PDX
 generate_stats -f 34        # Diplomat
 generate_stats -f 45        # Apothecary By Design
 generate_stats -f 30        # Cardinal Vitalpath
 generate_stats -f 39        # Cardinal PDS
 
+# EMR
+generate_stats -f 25        # Allscripts EMR
+generate_stats -f 35        # Nextgen
+generate_stats -f 47        # Healthjump
+generate_stats -f 40        # Cardinal Raintree EMR
+generate_stats -f 54        # Transmed
+generate_stats -f 31        # Cardinal TSI
