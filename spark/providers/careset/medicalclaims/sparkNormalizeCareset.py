@@ -12,6 +12,8 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.medicalclaims as medical_priv
+import spark.helpers.privacy.common as priv_common
+import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
 FEED_ID = '57'
 VENDOR_ID = '244'
@@ -57,6 +59,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         return_output=True
     )
 
+    # Overwrite the medical_transformer to ignore place of service filtering.
+    # Only focus on prov_rendering_npi.
+    # procedure_code is handled in common privacy filter.
+    medical_priv.medical_transformer = priv_common.Transformer(
+        prov_rendering_npi=[
+            priv_common.TransformFunction(post_norm_cleanup.clean_up_npi_code, ['prov_rendering_npi'])
+        ]
+    )
     postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),
         postprocessor.add_universal_columns(
