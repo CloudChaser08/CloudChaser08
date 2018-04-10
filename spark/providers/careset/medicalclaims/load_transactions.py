@@ -13,5 +13,5 @@ def load(runner, input_path_prefix):
     postprocessor.compose(
         postprocessor.trimmify,
         postprocessor.nullify
-        )(df).where(col('patient_count') != lit('0') ^ col('claim_count') != lit('0')) \
+        )(df).where((col('patient_count') != lit('0')) & (col('claim_count') != lit('0'))) \
              .createOrReplaceTempView(table)
