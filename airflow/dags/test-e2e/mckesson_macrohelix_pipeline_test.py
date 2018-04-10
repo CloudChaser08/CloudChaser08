@@ -24,21 +24,21 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'mckesson_macro_helix_pipeline',
-        '-s', '2018-04-02T12:00:00',
-        '-e', '2018-04-02T12:00:00',
+        '-s', '2017-09-30T12:00:00',
+        '-e', '2017-09-30T12:00:00',
         '-I'
     ])
 
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', MCKESSON_MACRO_HELIX_TEST_DIR + '/out/2018/04/02/'
+        'aws', 's3', 'ls', MCKESSON_MACRO_HELIX_TEST_DIR + '/out/2017/09/30/'
     ])) > 0
 
 
 def test_matching_payload_moved():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', MCKESSON_MACRO_HELIX_TEST_DIR + '/payload/2018/04/02/'
+        'aws', 's3', 'ls', MCKESSON_MACRO_HELIX_TEST_DIR + '/payload/2017/09/30/'
     ])) > 0
 
 
