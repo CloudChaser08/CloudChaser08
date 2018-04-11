@@ -2,8 +2,12 @@ import pytest
 
 from pyspark.sql import Row
 from pyspark.sql.functions import col
+from pyspark.sql.types import StructType, StringType, StructField
 
-from spark.helpers.stats.utils import select_data_in_date_range
+import spark.helpers.stats.utils as stats_utils
+import spark.helpers.file_utils as file_utils
+
+script_path = __file__
 
 df = None
 results = None
@@ -30,7 +34,7 @@ def test_init(spark):
     start_date = '1999-07-11'
     end_date = '2013-03-15'
     date_column_name = 'date'
-    results = select_data_in_date_range(start_date, end_date, date_column_name)(df)
+    results = stats_utils.select_data_in_date_range(start_date, end_date, date_column_name)(df)
     expected_df = spark['spark'].sparkContext.parallelize([
         data_row('2011-01-01', 'hey'),
         data_row('1999-07-11', 'cool')
@@ -53,8 +57,23 @@ def test_column_names_equal():
     assert df_cols == results_cols
 
 
+def test_limit_date_range_sample(spark):
+    df = spark['spark'].read.csv(
+        file_utils.get_abs_path(script_path, './resources/full_sample/'), sep='|', schema=StructType([
+            StructField('date', StringType(), True),
+            StructField('val', StringType(), True)
+        ])
+    )
+
+    multiplier, sample = stats_utils.select_data_sample_in_date_range(
+        '1990-01-01', '2018-01-01', 'date', max_sample_size=300
+    )(df)
+    assert multiplier == 1.0 / (300.0 / 5000.0)
+    assert sample.count() > 250 and sample.count() < 350
+
+
 def test_null_dates(spark):
-    null_results = select_data_in_date_range('1999-07-11', '2013-03-15', 'date', True)(df)
+    null_results = stats_utils.select_data_in_date_range('1999-07-11', '2013-03-15', 'date', True)(df)
     null_expected_df = spark['spark'].sparkContext.parallelize([
         data_row('2011-01-01', 'hey'),
         data_row('1999-07-11', 'cool'),
