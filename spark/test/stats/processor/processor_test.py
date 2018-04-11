@@ -131,11 +131,11 @@ def test_fill_rate_calculated():
 
 
 def test_fill_rate_values():
-    assert results_distinct_column['fill_rates'] == [{'field': 'col_2', 'fill': 1.0}, {'field': 'hvid', 'fill': 1.0}]
+    assert results_distinct_column['fill_rates'] == [{'field': 'col_2', 'fill': 1.0}, {'field': 'hvid', 'fill': 1.0}, {'field': 'claim_id', 'fill': 1.0}]
 
 
 def test_fill_rate_dataframe_count():
-    assert len(results_distinct_column['fill_rates']) == 2
+    assert len(results_distinct_column['fill_rates']) == 3
     assert len(results_no_distinct_column['fill_rates']) == 2
 
 

@@ -44,7 +44,7 @@ def _col_top_values(df, c, num, distinct_column=None):
                     .limit(num)
 
 
-def calculate_top_values(df, max_top_values, distinct_column=None):
+def calculate_top_values(df, max_top_values, distinct_column=None, threshold=0.01):
     '''
     Calculate the top values of a dataframe
     Input:
@@ -53,6 +53,8 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
                           store for each column
         - distinct_column: if not None, consider COUNT(DISTINCT distinct_column)
                            as the count for top values
+        - threshold: if set, top values whose count falls below <threshold * 100>%
+                     of the total sample size will not be returned in the result.
     Output:
         - tv_df: a pyspark.sql.DataFrame of each columns top values
                  and its associated counts
@@ -75,5 +77,9 @@ def calculate_top_values(df, max_top_values, distinct_column=None):
         i = i + BATCH_SIZE
 
     stats = map(lambda r: {'column': r.name, 'value': r.col, 'count': r['count']}, top_values_res)
+
+    if threshold:
+        total = df.select(distinct_column).distinct().count() if distinct_column else df.count()
+        stats = [stat for stat in stats if float(stat['count']) / float(total) >= threshold]
 
     return stats

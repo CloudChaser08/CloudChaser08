@@ -15,7 +15,7 @@ quarter = 'Q12017'
 expected_results_dict = {
     'fill_rates': [{'field': u'claim_id', 'fill': 1.0},
                    {'field': u'service_date', 'fill': 1.0},
-                   {'field': u'col_3', 'fill': 0.3333333333333333}],
+                   {'field': u'col_3', 'fill': 0.5}],
     'key_stats': None,
     'longitudinality': None,
     'top_values': None,

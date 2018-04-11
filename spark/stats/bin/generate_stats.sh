@@ -30,7 +30,7 @@ function generate_stats()
 
     echo "Generating stats for feed $feed_id"
 
-    spark-submit --py-files ../../target/dewey.zip --conf spark.executor.instances=15 --conf spark.executor.cores=2 --conf spark.executor.memory=10G --conf spark.driver.memory=13G --conf spark.yarn.executor.memoryOverhead=1024 --conf spark.scheduler.minRegisteredResourcesRatio=1 --conf spark.scheduler.maxRegisteredResourcesWaitingTime=60s ../stats_runner.py --feed_id $feed_id --quarter $QUARTER --start_date $START_DATE --end_date $END_DATE --output_dir output/$feed_id
+    spark-submit --py-files ../../target/dewey.zip --conf spark.executor.instances=80 --conf spark.executor.cores=4 --conf spark.executor.memory=13G --conf spark.driver.memory=13G --conf spark.yarn.executor.memoryOverhead=1024 --conf spark.scheduler.minRegisteredResourcesRatio=1 --conf spark.scheduler.maxRegisteredResourcesWaitingTime=60s --conf spark.hadoop.fs.s3.connection.maximum=500 --conf spark.files.useFileCache=false ../stats_runner.py --feed_id $feed_id --quarter $QUARTER --start_date $START_DATE --end_date $END_DATE
 }
 
 # Medical Claims (Old Model)
@@ -50,6 +50,8 @@ generate_stats -f 14        # Caris
 generate_stats -f 28        # Courtagen
 generate_stats -f 18        # Quest
 generate_stats -f 46        # LabCorp
+generate_stats -f 58        # Guardant Health
+generate_stats -f 43        # Ambry
 
 # Events
 generate_stats -f 27        # Obit Data
@@ -66,8 +68,17 @@ generate_stats -f 16        # ESI
 # Pharmacy Claims
 generate_stats -f 33        # McKesson Rx
 generate_stats -f 36        # McKesson Rx Restricted
+generate_stats -f 51        # McKesson Rx Macro Helix
+generate_stats -f 65        # PDX
 generate_stats -f 34        # Diplomat
 generate_stats -f 45        # Apothecary By Design
 generate_stats -f 30        # Cardinal Vitalpath
 generate_stats -f 39        # Cardinal PDS
 
+# EMR
+generate_stats -f 25        # Allscripts EMR
+generate_stats -f 35        # Nextgen
+generate_stats -f 47        # Healthjump
+generate_stats -f 40        # Cardinal Raintree EMR
+generate_stats -f 54        # Transmed
+generate_stats -f 31        # Cardinal TSI

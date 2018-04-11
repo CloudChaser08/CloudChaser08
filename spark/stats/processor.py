@@ -20,6 +20,10 @@ def _run_fill_rates(df, conf):
     if conf.get('fill_rate_conf'):
         # Get only the columns needed to calculate fill rates on
         cols = [c for c in df.columns if c in conf['fill_rate_conf']['columns'].keys()]
+        if conf.get('record_field'):
+            if conf.get('record_field') not in cols:
+                cols.append(conf.get('record_field'))
+            df = utils.select_distinct_values_from_column(conf.get('record_field'))(df)
         fill_rate_cols_df = df.select(*cols)
         return fill_rate.calculate_fill_rate(fill_rate_cols_df)
 
@@ -39,9 +43,11 @@ def _run_top_values(df, provider_conf):
     if provider_conf.get('top_values_conf'):
         # Get only the columns needed to calculate fill rates on
         cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns'].keys()]
+        if provider_conf.get('record_field') and conf.get('record_field') not in cols:
+            cols.append(provider_conf['record_field'])
         max_num_values = provider_conf['top_values_conf']['max_values']
         top_values_cols_df = df.select(*cols)
-        return top_values.calculate_top_values(top_values_cols_df, max_num_values)
+        return top_values.calculate_top_values(top_values_cols_df, max_num_values, distinct_column=provider_conf.get('record_field'))
 
     return None
 
