@@ -22,7 +22,7 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files,
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/mckesson/pharmacyclaims/{}{}{}/'
+TMP_PATH_TEMPLATE = '/tmp/mckesson_macro_helix/pharmacyclaims/{}{}{}/'
 DAG_NAME = 'mckesson_macro_helix_pipeline'
 
 default_args = {
