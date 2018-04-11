@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import subprocess
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -128,6 +129,8 @@ def main(args):
         output_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
     else:
         output_path = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
+
+    subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_provider=neogenomics/'.format(output_path)])
 
     normalized_records_unloader.distcp(output_path)
 
