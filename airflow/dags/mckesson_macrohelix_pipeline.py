@@ -27,7 +27,7 @@ DAG_NAME = 'mckesson_macro_helix_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 2, 22, 12),
+    'start_date': datetime(2018, 3, 26, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
