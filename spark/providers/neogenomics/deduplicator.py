@@ -104,9 +104,12 @@ def load_and_deduplicate_transaction_table(
         date for date in get_previous_dates(input_path)
         if not is_results or (is_results and date >= RESULTS_START_DATE)
     ]
-    most_recent_date_path = input_path.replace(
-        date_input.replace('-', '/'), sorted(previous_dates)[-1].replace('-', '/')
-    )
+    if previous_dates:
+        most_recent_date_path = input_path.replace(
+            date_input.replace('-', '/'), sorted(previous_dates)[-1].replace('-', '/')
+        )
+    else:
+        most_recent_date_path = None
 
     # see if we already deduplicated data for this date_input. if so,
     # just read it in and return.
@@ -127,7 +130,7 @@ def load_and_deduplicate_transaction_table(
             )
         ]
 
-    except AnalysisException:
+    except:
         # no saved deduplicated data from the current date or the
         # preceding date, just add all previous data for this entity,
         # dropping duplicates that exist within the same file
@@ -151,7 +154,7 @@ def load_and_deduplicate_transaction_table(
     deduplicated_data = reduce(DataFrame.unionAll, previous_data + [
         postprocessor.add_input_filename('source_file_name', persisted_df_id='{}_{}'.format(entity, date_input))(
             runner.sqlContext.read.csv(
-                path=input_path + '{}/'.format(entity), schema=entity_schema, sep='|'
+                path=input_path + ('{}/'.format(entity) if date_input >= RESULTS_START_DATE else ''), schema=entity_schema, sep='|'
             )
         ).dropDuplicates(primary_key).withColumn(
             'vendor_date', lit(date_input)
