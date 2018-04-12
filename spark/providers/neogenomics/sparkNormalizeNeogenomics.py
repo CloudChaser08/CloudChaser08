@@ -130,9 +130,18 @@ def main(args):
     else:
         output_path = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
 
-    subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_provider=neogenomics/'.format(output_path)])
+    backup_path = output_path.replace('salusv', 'salusv/backup')
+
+    subprocess.check_call([
+        'aws', 's3', 'mv', '--recursive', '{}part_provider=neogenomics/'.format(output_path),
+        '{}part_provider=neogenomics/'.format(backup_path)
+    ])
 
     normalized_records_unloader.distcp(output_path)
+
+    subprocess.check_call(
+        ['aws', 's3', 'rm', '--recursive', '{}part_provider=neogenomics/'.format(backup_path)]
+    )
 
 
 if __name__ == "__main__":
