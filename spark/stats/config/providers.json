@@ -12,7 +12,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2013-01-01"
         },
         {
@@ -26,7 +26,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2012-01-01"
         },
         {
@@ -40,7 +40,7 @@
             "top_values"        : true,
             "longitudinality"   : false,
             "year_over_year"    : false,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2010-01-01"
         },
         {
@@ -54,7 +54,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2014-01-01"
         },
         {
@@ -68,22 +68,8 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2009-08-01"
-        },
-        {
-            "name"              : "medisafe",
-            "datafeed_id"       : "17",
-            "datatype"          : "consumer",
-            "date_field"        : "event_date",
-            "record_field"      : null,
-            "fill_rate"         : false,
-            "key_stats"         : false,
-            "top_values"        : false,
-            "longitudinality"   : false,
-            "year_over_year"    : false,
-            "epi_calcs"         : null,
-            "earliest_date"     : "1901-01-01"
         },
         {
             "name"              : "quest",
@@ -96,8 +82,22 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2014-08-01"
+        },
+        {
+            "name"              : "guardant_health",
+            "datafeed_id"       : "58",
+            "datatype"          : "labtests",
+            "date_field"        : "date_service",
+            "record_field"      : null,
+            "fill_rate"         : true,
+            "key_stats"         : true,
+            "top_values"        : true,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
+            "epi_calcs"         : true,
+            "earliest_date"     : "2015-05-01"
         },
         {
             "name"              : "corrona",
@@ -110,7 +110,7 @@
             "top_values"        : false,
             "longitudinality"   : false,
             "year_over_year"    : false,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2015-08-01"
         },
         {
@@ -124,7 +124,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2011-01-01"
         },
         {
@@ -138,35 +138,81 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2012-01-01"
-        },
-        {
-            "name"              : "visonex",
-            "datafeed_id"       : "23",
-            "datatype"          : "emr",
-            "date_field"        : "date_service",
-            "record_field"      : "claim_id",
-            "fill_rate"         : false,
-            "key_stats"         : true,
-            "top_values"        : false,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : null,
-            "earliest_date"     : "2014-11-01"
         },
         {
             "name"              : "allscripts",
             "datafeed_id"       : "25",
             "datatype"          : "emr",
-            "date_field"        : "date_service",
-            "record_field"      : "claim_id",
-            "fill_rate"         : false,
-            "key_stats"         : true,
-            "top_values"        : false,
-            "longitudinality"   : false,
-            "year_over_year"    : false,
-            "epi_calcs"         : null,
+            "models"            : [
+              {
+                "datatype"        : "emr_clin_obsn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_medctn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_vit_sign",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_prov_ord",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_lab_result",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_lab_ord",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_proc",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_diag",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }
+            ],
+            "epi_calcs"         : true,
             "earliest_date"     : "2014-01-01"
         },
         {
@@ -180,7 +226,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2015-01-01"
         },
         {
@@ -194,7 +240,7 @@
             "top_values"        : false,
             "longitudinality"   : false,
             "year_over_year"    : false,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "1994-12-01"
         },
         {
@@ -208,7 +254,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2015-01-01"
         },
         {
@@ -222,8 +268,22 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "1901-01-01"
+        },
+        {
+            "name"              : "ambry",
+            "datafeed_id"       : "43",
+            "datatype"          : "labtests",
+            "date_field"        : "date_service",
+            "record_field"      : null,
+            "fill_rate"         : true,
+            "key_stats"         : true,
+            "top_values"        : true,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
+            "epi_calcs"         : true,
+            "earliest_date"     : "2016-06-01"
         },
         {
             "name"              : "neogenomics",
@@ -236,7 +296,7 @@
             "top_values"        : true,
             "longitudinality"   : false,
             "year_over_year"    : false,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2014-01-01",
             "index_all_dates"   : true
         },
@@ -330,7 +390,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2011-01-01"
         },
         {
@@ -344,7 +404,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2011-01-01"
         },
         {
@@ -356,64 +416,64 @@
                 "datatype"        : "emr_clin_obsn",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_medctn",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_vit_sign",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_prov_ord",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_lab_result",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_lab_ord",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_proc",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_diag",
                 "date_field"      : "enc_dt",
                 "record_field"    : null,
-                "fill_rate"       : null,
-                "top_values"      : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }
@@ -421,6 +481,50 @@
             "epi_calcs"         : true,
             "earliest_date"     : "2003-01-01",
             "index_all_dates"   : true,
+            "index_null_dates"  : true
+        },
+        {
+            "name"              : "healthjump",
+            "datafeed_id"       : "47",
+            "datatype"          : "emr",
+            "models"            : [
+              {
+                "datatype"        : "emr_medctn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_lab_ord",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_proc",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_diag",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }
+            ],
+            "epi_calcs"         : true,
+            "earliest_date"     : "2008-01-01",
+            "index_all_dates"   : false,
             "index_null_dates"  : true
         },
         {
@@ -434,7 +538,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2012-01-01"
         },
         {
@@ -500,7 +604,7 @@
             "top_values"        : false,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2015-04-01"
         },
         {
@@ -514,7 +618,21 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
+            "earliest_date"     : "2015-01-01"
+        },
+        {
+            "name"              : "pdx",
+            "datafeed_id"       : "65",
+            "datatype"          : "pharmacyclaims",
+            "date_field"        : "date_service",
+            "record_field"      : null,
+            "fill_rate"         : true,
+            "key_stats"         : true,
+            "top_values"        : true,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
+            "epi_calcs"         : true,
             "earliest_date"     : "2015-01-01"
         },
         {
@@ -528,7 +646,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2017-01-01"
         },
         {
@@ -542,7 +660,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2013-01-01"
         },
         {
@@ -556,7 +674,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2011-02-01"
         },
         {
@@ -570,7 +688,7 @@
             "top_values"        : false,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2015-09-01"
         },
         {
@@ -584,7 +702,7 @@
             "top_values"        : false,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "1990-01-01"
         },
         {
@@ -598,7 +716,7 @@
             "top_values"        : false,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "1900-01-01"
         },
         {
@@ -674,6 +792,78 @@
             ],
           "epi_calcs"         : true,
           "earliest_date"     : "1900-01-01",
+          "index_all_dates"   : true,
+          "index_null_dates"  : true
+        },
+        {
+            "name"              : "transmed",
+            "datafeed_id"       : "54",
+            "datatype"          : "emr",
+            "models"            : [
+              {
+                "datatype"        : "emr_clin_obsn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_lab_result",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_proc",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_diag",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : null,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }
+            ],
+          "epi_calcs"         : true,
+          "earliest_date"     : "2017-01-01",
+          "index_all_dates"   : true,
+          "index_null_dates"  : true
+        },
+        {
+            "name"              : "cardinal_tsi",
+            "datafeed_id"       : "31",
+            "datatype"          : "emr",
+            "models"            : [
+              {
+                "datatype"        : "emr_medctn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_diag",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }
+            ],
+          "epi_calcs"         : true,
+          "earliest_date"     : "2012-01-01",
           "index_all_dates"   : true,
           "index_null_dates"  : true
         }

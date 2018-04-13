@@ -9,6 +9,8 @@ df = None
 max_top_values = 2
 results_no_distinct = None
 results_distinct = None
+results_threshold = None
+results_distinct_threshold = None
 expected_df = None
 no_top_value_columns_df = None
 
@@ -16,7 +18,7 @@ no_top_value_columns_df = None
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     global df, results_no_distinct, results_distinct, expected_df, \
-           no_top_value_columns_df
+           no_top_value_columns_df, results_threshold, results_distinct_threshold
     data_row = Row('a', 'b', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
         data_row('a', 'b', 'c', 'd', 'e'),
@@ -26,6 +28,8 @@ def test_init(spark):
     ]).toDF()
     results_no_distinct = top_values.calculate_top_values(df, max_top_values)
     results_distinct = top_values.calculate_top_values(df, max_top_values, 'b')
+    results_threshold = top_values.calculate_top_values(df, max_top_values, threshold=0.5)
+    results_distinct_threshold = top_values.calculate_top_values(df, max_top_values, distinct_column='b', threshold=0.5)
 
     data_row = Row('a')
     no_top_value_columns_df = spark['spark'].sparkContext.parallelize([
@@ -39,7 +43,20 @@ def test_init(spark):
 def test_top_values_created_for_each_column():
     # expected = num_cols * max_top_values
     assert len(results_no_distinct) == 5 * max_top_values
-    assert len(results_distinct) == 4 * max_top_values 
+    assert len(results_distinct) == 4 * max_top_values
+
+
+def test_threshold():
+
+    assert sorted(results_threshold) == [
+        {'column': 'a', 'count': 2, 'value': 'a'},
+        {'column': 'b', 'count': 2, 'value': 'b'},
+        {'column': 'c', 'count': 2, 'value': 's'}
+    ]
+
+    assert results_distinct_threshold == [
+        {'column': 'c', 'count': 2, 'value': 's'}
+    ]
 
 
 def test_duplicate_values_not_counted_twice_when_distinct_column_is_not_none():
@@ -53,5 +70,3 @@ def test_exception_thrown_when_no_columns_have_top_values_to_calculate():
 
     exception = e_info.value
     assert exception.message.startswith('Dataframe with no columns passed in for top values calculation')
-
-
