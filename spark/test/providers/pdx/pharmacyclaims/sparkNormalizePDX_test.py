@@ -18,11 +18,11 @@ def cleanup(spark):
 def test_init(spark):
     spark['spark'].sparkContext.parallelize([
         Row(
-            hvm_vdr_feed_id = '65',
-            gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE',
-            gen_ref_itm_nm = '',
-            gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = ''
+            hvm_vdr_feed_id='65',
+            gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
@@ -32,5 +32,17 @@ def test_init(spark):
     results = spark['sqlContext'].sql('select * from pharmacyclaims_common_model_final').collect()
 
 
-def test_something():
-    print results
+def test_row_count():
+    assert len(results) == 11
+
+
+def test_reversals_are_tagged_properly():
+    assert len(filter(lambda x: x.logical_delete_reason == 'Reversal', results)) == 1
+
+
+def test_only_one_claim_is_reversed_for_the_reversal():
+    assert len(filter(lambda x: x.logical_delete_reason == 'Reversed Claim', results)) == 1
+
+
+def test_cleanup(spark):
+    cleanup(spark)
