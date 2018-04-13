@@ -1,4 +1,5 @@
 import subprocess
+import os
 import spark.helpers.constants as constants
 
 from pyspark.sql.functions import when, col, lit
@@ -258,7 +259,7 @@ def distcp(dest, src=constants.hdfs_staging_dir):
     ])
 
 
-def unload_delimited_file(spark, runner, output_path, table_name, test=False, num_files=1, delimiter='|'):
+def unload_delimited_file(spark, runner, output_path, table_name, test=False, num_files=1, delimiter='|', file_name_prefix='part-'):
     "Unload a table to a delimited file at the specified location"
     old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
 
@@ -278,3 +279,9 @@ def unload_delimited_file(spark, runner, output_path, table_name, test=False, nu
         ['table_name', table_name, False],
         ['original_partition_count', old_partition_count, False]
     ])
+
+    # rename output files to desired name
+    # this step removes the spark hash added to the name by default
+    for filename in [f for f in os.listdir(output_path) if f[0] != '.']:
+        new_name = file_name_prefix + filename.split('-')[1].split('.')[0] + '.' + filename.split('.')[-1]
+        os.rename(output_path + filename, output_path + new_name)
