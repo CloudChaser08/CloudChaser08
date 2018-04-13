@@ -213,7 +213,7 @@ def _generate_queries(stats, provider_conf):
                     '{} ({})'.format(r['value'], r['count'])
                     for r in stat_value if r['column'] == column
                 ])
-                name_id_dict = dict(provider_conf['top_values_conf']['columns'])
+                name_id_dict = provider_conf['top_values_conf']['columns']
 
                 stat_queries.append(TOP_VALS_INSERT_SQL_TEMPLATE.format(
                     name=column, datafield_id=name_id_dict[column]['field_id'], sequence=name_id_dict[column]['sequence'],
@@ -221,7 +221,7 @@ def _generate_queries(stats, provider_conf):
                 ))
 
         elif stat_name == 'fill_rates' and stat_value:
-            name_id_dict = dict(provider_conf['fill_rate_conf']['columns'])
+            name_id_dict = provider_conf['fill_rate_conf']['columns']
 
             for field_dict in stat_value:
                 stat_queries.append(FILL_RATE_INSERT_SQL_TEMPLATE.format(
