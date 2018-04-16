@@ -1,5 +1,6 @@
 import subprocess
 import os
+import re
 import spark.helpers.constants as constants
 
 from pyspark.sql.functions import when, col, lit
@@ -283,5 +284,5 @@ def unload_delimited_file(spark, runner, output_path, table_name, test=False, nu
     # rename output files to desired name
     # this step removes the spark hash added to the name by default
     for filename in [f for f in os.listdir(output_path) if f[0] != '.']:
-        new_name = file_name_prefix + filename.split('-')[1].split('.')[0] + '.' + filename.split('.')[-1]
+        new_name = file_name_prefix + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.gz'
         os.rename(output_path + filename, output_path + new_name)
