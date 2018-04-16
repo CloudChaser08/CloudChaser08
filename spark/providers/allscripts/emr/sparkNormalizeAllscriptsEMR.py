@@ -432,13 +432,13 @@ def main(args):
                 raise
 
         if files_exist:
-            # subprocess.check_call([
-            #     'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
-            # ])
-            # multi_s3_transfer.multithreaded_copy(
-            #     's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
-            #     's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
-            # )
+            subprocess.check_call([
+                'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
+            ])
+            multi_s3_transfer.multithreaded_copy(
+                's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
+                's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
+            )
             subprocess.check_call([
                 'aws', 's3', 'rm', '--recursive',
                 's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model)
