@@ -31,19 +31,21 @@ class HVDAG(DAG):
 
     def _on_failure(self, context):
         ti = context['task_instance']
-        message = "Failed task\nDAG: {}\nTASK: {}\nEXECUTION DATE: {}\nFAILURE TIMESTAMP:{}\n<{}|Task log>".format(
-            ti.dag_id, ti.task_id, ti.execution_date, ti.start_date, ti.log_url
-        )
-        attachment = {
-            "fallback"   : message,
-            "color"      : '#D50200',
-            "pretext"    : "Airflow task failure",
-            "title"      : 'DAG "{}", Task "{}" FAILED!'.format(ti.dag_id, ti.task_id),
-            "title_link" : ti.log_url,
-            "text"       : "Execution date: {}\nFailure timestamp {}".format(ti.execution_date, ti.start_date)
-        }
 
-        slack.send_message(config.AIRFLOW_ALERTS_CHANNEL, attachment=attachment)
+        # don't send alerts if this task is part of a subdag, the parent dag will also fail
+        if not DagBag().get_dag(ti.dag_id).is_subdag:
+            message = "Failed task\nDAG: {}\nTASK: {}\nEXECUTION DATE: {}\nFAILURE TIMESTAMP:{}\n<{}|Task log>".format(
+                ti.dag_id, ti.task_id, ti.execution_date, ti.start_date, ti.log_url
+            )
+            attachment = {
+                "fallback"   : message,
+                "color"      : '#D50200',
+                "pretext"    : "Airflow task failure",
+                "title"      : 'DAG "{}", Task "{}" FAILED!'.format(ti.dag_id, ti.task_id),
+                "title_link" : ti.log_url,
+                "text"       : "Execution date: {}\nFailure timestamp {}".format(ti.execution_date, ti.start_date)
+            }
+            slack.send_message(config.AIRFLOW_ALERTS_CHANNEL, attachment=attachment)
 
     def _on_retry(self, context):
         dag_id = "{}.{}".format(
