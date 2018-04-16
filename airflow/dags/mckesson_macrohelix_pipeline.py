@@ -27,7 +27,7 @@ DAG_NAME = 'mckesson_macro_helix_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 3, 26, 12),
+    'start_date': datetime(2018, 4, 11, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -38,6 +38,8 @@ mdag = HVDAG.HVDAG(
     schedule_interval="0 12 * * *",
     default_args=default_args
 )
+
+MACRO_HELIX_DAY_OFFSET = -7
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
@@ -65,13 +67,15 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(
 
 def get_transaction_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) +
-            date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs)
+            date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE, kwargs,
+                day_offset = MACRO_HELIX_DAY_OFFSET)
             ]
 
 
 def get_deid_file_urls(ds, kwargs):
     return [S3_TRANSACTION_RAW_URL +
-            date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs)
+            date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs,
+                day_offset = MACRO_HELIX_DAY_OFFSET)
             ]
 
 
@@ -80,7 +84,8 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     encrypted_file_path = file_dir \
         + date_utils.insert_date_into_template(
             TRANSACTION_FILE_NAME_TEMPLATE,
-            kwargs
+            kwargs,
+            day_offset = MACRO_HELIX_DAY_OFFSET
         )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
@@ -98,7 +103,7 @@ def generate_file_validation_task(
             mdag.schedule_interval,
             {
                 'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
-                    path_template
+                    path_template, day_offset = MACRO_HELIX_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
                     path_template
@@ -133,7 +138,7 @@ fetch_transaction = SubDagOperator(
         {
             'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
+                TRANSACTION_FILE_NAME_TEMPLATE, day_offset = MACRO_HELIX_DAY_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
@@ -175,7 +180,7 @@ split_transaction = SubDagOperator(
                 ),
             's3_prefix_func'           :
                 date_utils.generate_insert_date_into_template_function(
-                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE
+                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE, day_offset = MACRO_HELIX_DAY_OFFSET
                 ),
             'num_splits'               : 20
         }
@@ -219,7 +224,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
 
 
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset = MACRO_HELIX_DAY_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -234,10 +239,11 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds, k: [
-                date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, k)
+                date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, k,
+                    day_offset = MACRO_HELIX_DAY_OFFSET)
             ],
             'file_date_func'                    :
-                date_utils.generate_insert_date_into_template_function('{}/{}/{}'),
+                date_utils.generate_insert_date_into_template_function('{}/{}/{}', day_offset = MACRO_HELIX_DAY_OFFSET),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '85bcab48-f32c-447f-ae2e-414182afddd0',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/mckesson_macro_helix/pharmacyclaims/sparkNormalizeMckessonMacroHelix.py',
@@ -261,8 +267,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' :
-                    date_utils.generate_insert_date_into_template_function(sql_template)
+                'sql_command_func' :  date_utils.generate_insert_date_into_template_function(sql_template, DAY_OFFSET = MACRO_HELIX_DAY_OFFSET)
             }
         ),
         task_id='update_analytics_db',
