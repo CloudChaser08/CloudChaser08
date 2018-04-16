@@ -434,12 +434,14 @@ def test_lab_result_date_cap():
     Ensure the correct amount of lab_result records were normalized
     """
     for res in lab_result_results:
-        if res.hv_lab_result_id == '40_id-0':
+        if res.hv_lab_result_id == '40_000878FC-CE79-4E90-AE5B-4C9742F5374A-2':
             assert not res.lab_test_execd_dt
-        elif res.hv_lab_result_id == '40_id-1':
+        elif res.hv_lab_result_id == '40_0004B13F-0CC3-4D7B-B63C-EB2FDEEC3DCE-1':
             assert res.lab_test_execd_dt == '2017-01-01'
-        elif res.hv_lab_result_id == '40_id-2':
+        elif res.hv_lab_result_id is None:
             assert res.lab_test_execd_dt == '2017-01-01'
+        else:
+            raise AssertionError("Unexpected result id: {}".format(res.hv_lab_result_id))
 
 
 def test_lab_result_data_cleaning():
@@ -447,12 +449,14 @@ def test_lab_result_data_cleaning():
     Ensure the loinc codes are cleaned properly in the lab_result results
     """
     for res in lab_result_results:
-        if res.hv_lab_result_id == '40_id-0':
+        if res.hv_lab_result_id == '40_000878FC-CE79-4E90-AE5B-4C9742F5374A-2':
             assert res.lab_test_loinc_cd == '20192'
-        elif res.hv_lab_result_id == '40_id-1':
+        elif res.hv_lab_result_id == '40_0004B13F-0CC3-4D7B-B63C-EB2FDEEC3DCE-1':
             assert res.lab_test_loinc_cd == ''
-        elif res.hv_lab_result_id == '40_id-2':
+        elif res.hv_lab_result_id is None:
             assert res.lab_test_loinc_cd == '92018'
+        else:
+            raise AssertionError("Unexpected result id: {}".format(res.hv_lab_result_id))
 
 
 def test_medication_cardinality():
@@ -533,7 +537,7 @@ def test_vital_sign_cardinality():
     """
     Ensure the correct amount of vital_sign records were normalized
     """
-    assert len(vital_sign_results) == 16
+    assert len(vital_sign_results) == 18
 
 
 def test_vital_sign_type_cd():
@@ -541,8 +545,8 @@ def test_vital_sign_type_cd():
     Ensure the type codes were exploded and translated correctly
     """
     assert sorted(set([res.vit_sign_typ_cd for res in vital_sign_results])) == [
-        'CARD_FN_DEC', 'CARD_FN_RAW', 'CDAI', 'DAS28', 'NJC28', 'PAIN',
-        'PGA', 'PTGA', 'RAPID3', 'SDAI', 'SJC28', 'STANFORD_HAQ', 'TJC28'
+        'CARD_FN_DEC', 'CARD_FN_RAW', 'CDAI', 'DAS28', 'HEIGHT', 'NJC28', 'PAIN',
+        'PGA', 'PTGA', 'RAPID3', 'SDAI', 'SJC28', 'STANFORD_HAQ', 'TJC28', 'WEIGHT'
     ]
 
     for res in vital_sign_results:
@@ -572,6 +576,8 @@ def test_vital_sign_type_cd():
             assert res.vit_sign_msrmt == 'pga'
         elif res.vit_sign_typ_cd == 'PTGA':
             assert res.vit_sign_msrmt == 'ptga'
+        elif res.vit_sign_typ_cd == 'HEIGHT':
+            res.vit_sign_msrmt is None
 
     assert len(
         [res for res in vital_sign_results if res.vit_sign_typ_cd == 'RAPID3']
