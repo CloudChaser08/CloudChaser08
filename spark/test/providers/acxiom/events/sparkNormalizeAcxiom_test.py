@@ -34,7 +34,7 @@ def test_init(spark):
     ac.run(spark['spark'], spark['runner'], '2017-10-06', test = True)
     global results
     results = spark['sqlContext'] \
-                .sql('select * from event_common_model') \
+                .sql('select * from event_common_model_final') \
                 .collect()
 
 

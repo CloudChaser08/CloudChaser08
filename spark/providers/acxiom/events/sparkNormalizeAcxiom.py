@@ -1,5 +1,6 @@
-from datetime import datetime, date
 import argparse
+from datetime import datetime, date
+from pyspark.sql.functions import lit
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -25,14 +26,19 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/acxiom/events/resources/matching/'
         )
+        ids_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/acxiom/events/resources/ids/'
+        )
     elif airflow_test:
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/acxiom/payload/{}/'.format(
             date_input.replace('-', '/')
         )
+        ids_path = 's3://salusv/testing/dewey/airflow/e2e/acxiom/ids/'
     else:
         matching_path = 's3://salusv/matching/payload/consumer/acxiom/{}/'.format(
             date_input.replace('-', '/')
         )
+        ids_path = 's3://salusv/reference/acxiom/ids/'
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -56,7 +62,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         return_output=True
     )
 
-    postprocessor.compose(
+    events_df = postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),
         postprocessor.add_universal_columns(
             feed_id=FEED_ID,
@@ -68,7 +74,20 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         event_priv.filter
     )(
         normalized_df
-    ).createOrReplaceTempView('event_common_model')
+    )
+
+    # Remove any source ids that are not in the acxiom ids table
+    if test:
+        from pyspark.sql.types import *
+        acxiom_ids = runner.sqlContext.read.csv(ids_path, StructType([StructField('aid', StringType(), True)]), sep='|')
+    else:
+        acxiom_ids = runner.sqlContext.read.parquet(ids_path)
+
+    valid_aid = events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftsemi')
+    non_valid_aid = events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftanti') \
+                                 .withColumn('logical_delete_reason', lit('DELETE'))
+
+    validated_data = valid_aid.union(non_valid_aid).createOrReplaceView('event_common_model')
 
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
