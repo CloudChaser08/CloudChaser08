@@ -73,7 +73,7 @@ SELECT
     event_val,
     event_val_uom,
     event_date,
-    NULL as logical_delete_reason,
+    logical_delete_reason,
     part_provider,
     CASE WHEN part_best_date IN ('NULL', '0_PREDATES_HVM_HISTORY')
     THEN '0_PREDATES_HVM_HISTORY'
@@ -102,6 +102,7 @@ SELECT
     event_val,
     NULL as event_val_uom,
     event_date,
+    logical_delete_reason,
     part_provider,
     CASE WHEN part_best_date IN ('NULL', '0_PREDATES_HVM_HISTORY')
     THEN '0_PREDATES_HVM_HISTORY'
