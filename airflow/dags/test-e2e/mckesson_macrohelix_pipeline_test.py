@@ -24,8 +24,8 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'mckesson_macro_helix_pipeline',
-        '-s', '2018-03-24T12:00:00',
-        '-e', '2018-03-24T12:00:00',
+        '-s', '2018-03-31T12:00:00',
+        '-e', '2018-03-31T12:00:00',
         '-I'
     ])
 
