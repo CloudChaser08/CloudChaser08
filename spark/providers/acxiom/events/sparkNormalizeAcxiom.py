@@ -4,7 +4,7 @@ from pyspark.sql.functions import lit
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.event_common_model_v4 import schema
+from spark.common.event_common_model_v6 import schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
