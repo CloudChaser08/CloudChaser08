@@ -20,6 +20,7 @@ CREATE VIEW default.events (
     event_val,
     event_val_uom,
     event_date,
+    logical_delete_reason,
     part_provider,
     part_best_date
 ) AS SELECT 
@@ -43,11 +44,12 @@ CREATE VIEW default.events (
     event_val,
     event_val_uom,
     event_date,
+    logical_delete_reason,
     part_provider,
     CASE WHEN part_best_date IN ('NULL', '0_PREDATES_HVM_HISTORY')
     THEN '0_PREDATES_HVM_HISTORY'
     ELSE part_best_date
-    END as part_best_date
+    END AS part_best_date
 FROM events_v4
 UNION ALL
 SELECT 
@@ -69,11 +71,12 @@ SELECT
     source_record_date, 
     event,
     event_val,
-    NULL as event_val_uom,
+    NULL AS event_val_uom,
     event_date,
+    NULL AS logical_delete_reason,
     part_provider,
     CASE WHEN part_best_date IN ('NULL', '0_PREDATES_HVM_HISTORY')
     THEN '0_PREDATES_HVM_HISTORY'
     ELSE part_best_date
-    END as part_best_date
+    END AS part_best_date
 FROM events_old;
