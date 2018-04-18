@@ -68,7 +68,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             feed_id=FEED_ID,
             vendor_id=VENDOR_ID,
             filename=setid,
-            model_version_number='04'
+            model_version_number='06'
         ),
         postprocessor.nullify,
         event_priv.filter
@@ -87,7 +87,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     non_valid_aid = events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftanti') \
                                  .withColumn('logical_delete_reason', lit('DELETE'))
 
-    validated_data = valid_aid.union(non_valid_aid).createOrReplaceView('event_common_model')
+    validated_data = valid_aid.union(non_valid_aid).createOrReplaceTempView('event_common_model')
 
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
