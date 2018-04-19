@@ -43,12 +43,12 @@ class SFTPConnectionConfig:
     def __init__(self, path, host, user, password):
         self.path = path
         self.host = host
-        self.user = user
+        self.username = user
         self.password = password
 
     def asdict(self):
         return {
-            'path': self.path, 'host': self.host, 'user': self.user, 'password': self.password
+            'path': self.path, 'host': self.host, 'username': self.username, 'password': self.password
         }
 
 
