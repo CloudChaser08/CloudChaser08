@@ -100,20 +100,6 @@
             "earliest_date"     : "2015-05-01"
         },
         {
-            "name"              : "corrona",
-            "datafeed_id"       : "19",
-            "datatype"          : "medicalclaims",
-            "date_field"        : "date_service",
-            "record_field"      : "claim_id",
-            "fill_rate"         : false,
-            "key_stats"         : false,
-            "top_values"        : false,
-            "longitudinality"   : false,
-            "year_over_year"    : false,
-            "epi_calcs"         : true,
-            "earliest_date"     : "2015-08-01"
-        },
-        {
             "name"              : "genoa",
             "datafeed_id"       : "21",
             "datatype"          : "pharmacyclaims",

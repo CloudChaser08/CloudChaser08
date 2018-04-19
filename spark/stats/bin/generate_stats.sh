@@ -36,7 +36,6 @@ function generate_stats()
 # Medical Claims (Old Model)
 generate_stats -f 24        # Private Source 34 (Navicure)
 generate_stats -f 26        # Allscripts Medical Claims
-generate_stats -f 19        # Corrona
 generate_stats -f 15        # Private Source 14 (Ability)
 
 # Medical Claims
