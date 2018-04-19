@@ -22,9 +22,9 @@ def clean_up_tmp_dir(parent_dag_name, child_dag_name, start_date, schedule_inter
     )
 
     if dag_config['tmp_path_template'].count('{}') == 3:
-        bash_string = 'rm -r {};'.format(dag_config['tmp_path_template'].format('{{ ts_nodash }}', '', ''))
+        bash_string = 'rm -r {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}', '', ''))
     else:
-        bash_string = 'rm -r {};'.format(dag_config['tmp_path_template'].format('{{ ts_nodash }}'))
+        bash_string = 'rm -r {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}'))
 
     remove_tmp_dir = BashOperator(
         task_id='remove_tmp_dir',
