@@ -52,10 +52,10 @@ def _get_config_from_db(query):
     with closing(conn.cursor()) as cursor:
         cursor.execute(query)
         results = cursor.fetchall()
-    return [
+    return dict([
         (res[0], {'field_id': res[1], 'sequence': res[2]})
         for res in results
-    ]
+    ])
 
 
 def _extract_provider_conf(feed_id, providers_conf):
