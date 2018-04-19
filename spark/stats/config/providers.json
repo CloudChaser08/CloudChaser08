@@ -44,7 +44,7 @@
             "earliest_date"     : "2010-01-01"
         },
         {
-            "name"              : "ablility",
+            "name"              : "ability",
             "datafeed_id"       : "15",
             "datatype"          : "medicalclaims",
             "date_field"        : "date_service",
