@@ -43,7 +43,7 @@ def _run_top_values(df, provider_conf):
     if provider_conf.get('top_values_conf'):
         # Get only the columns needed to calculate fill rates on
         cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns'].keys()]
-        if provider_conf.get('record_field') and conf.get('record_field') not in cols:
+        if provider_conf.get('record_field') and provider_conf.get('record_field') not in cols:
             cols.append(provider_conf['record_field'])
         max_num_values = provider_conf['top_values_conf']['max_values']
         top_values_cols_df = df.select(*cols)
