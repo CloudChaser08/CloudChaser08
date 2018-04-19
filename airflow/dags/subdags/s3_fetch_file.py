@@ -22,7 +22,7 @@ def do_fetch_file(ds, **kwargs):
     if kwargs['tmp_path_template'].count('{}') >= 3:
         tmp_path = date_utils.insert_date_into_template(kwargs['tmp_path_template'],kwargs)
     else:
-        tmp_path = kwargs['tmp_path_template'].format(kwargs['ts_nodash'])
+        tmp_path = kwargs['tmp_path_template'].format(kwargs['ds_nodash'])
 
     if 'regex_name_match' in kwargs and kwargs['regex_name_match']:
         s3_keys = s3_utils.list_s3_bucket_files(
@@ -64,7 +64,7 @@ def s3_fetch_file(parent_dag_name, child_dag_name, start_date, schedule_interval
 
     create_tmp_dir = BashOperator(
         task_id='create_tmp_dir',
-        bash_command='mkdir -p {};'.format(dag_config['tmp_path_template'].format('{{ ts_nodash }}','','')),
+        bash_command='mkdir -p {};'.format(dag_config['tmp_path_template'].format('{{ ds_nodash }}','','')),
         dag=dag
     )
 
