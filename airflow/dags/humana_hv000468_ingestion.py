@@ -33,11 +33,9 @@ mdag = HVDAG.HVDAG(
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/humana/hv000468/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/humana/hv000468/out/{}/'
-    S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/humana/hv000468/payload/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/humana/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/data_requests/humana/hv000468/{}/'
-    S3_PAYLOAD_DEST = 's3://salusv/matching/payload/custom/humana/hv000468/{}/'
 
 # Transaction Addon file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
