@@ -46,7 +46,6 @@ generate_stats -f 29        # Cardinal RCM
 # Labs
 generate_stats -f 32        # NeoGenomics
 generate_stats -f 14        # Caris
-generate_stats -f 28        # Courtagen
 generate_stats -f 18        # Quest
 generate_stats -f 46        # LabCorp
 generate_stats -f 58        # Guardant Health
