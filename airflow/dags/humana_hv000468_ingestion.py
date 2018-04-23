@@ -25,7 +25,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="*/15 * * * *",
+    schedule_interval="*/15 * * * *" if HVDAG.HVDAG.airflow_env == 'prod' else None,
     default_args=default_args
 )
 
