@@ -356,11 +356,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             ]
         )(
             table['normalized_data']
-        ).createOrReplaceTempView(table['table_name'])
+        ).repartition(2001).createOrReplaceTempView(table['table_name'])
 
         # unload delivery file for cardinal
         normalized_records_unloader.unload_delimited_file(
-            spark, runner, '{}{}/'.format(DELIVERABLE_LOC, table['data_type']), table['table_name'], test=test
+            spark, runner, '{}{}/'.format(DELIVERABLE_LOC, table['data_type']), table['table_name'], test=test,
+            num_files=50
         )
 
         # deobfuscate hvid

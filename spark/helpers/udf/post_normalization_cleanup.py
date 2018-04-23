@@ -392,6 +392,11 @@ def clean_up_vital_sign(sign_type, sign_measurement, sign_units, gender, age, ye
         gender_age_vital_sign_caps[gender][age][cap_idxs[1]]
     ]
 
+    try:
+        float(sign_measurement)
+    except TypeError:
+        return None
+
     if float(sign_measurement) > caps[0] and float(sign_measurement) < caps[1]:
         return sign_measurement
     else:
