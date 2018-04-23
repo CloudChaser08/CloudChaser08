@@ -193,7 +193,7 @@ def add_universal_columns(feed_id, vendor_id, filename,
                  .withColumn(model_version,
                              coalesce(lit(model_version_number), col(model_version)))    \
                  .alias(model_version)                                                   \
-                 .cache()
+                 .cache_and_track('df_with_universal_columns')
 
     return add
 

@@ -1,7 +1,5 @@
 import pytest
 
-import datetime
-
 import spark.providers.nextgen.emr.sparkNormalizeNextgenEMR as nextgen
 
 results = {}
@@ -96,7 +94,7 @@ def test_medication_ndc():
 
     global results
     assert len(filter(lambda r: r.medctn_ndc == '00378395105', results['medication'])) == 3
-    assert len(filter(lambda r: r.medctn_ndc == '0037839510512', results['medication'])) == 0
+    assert len(filter(lambda r: r.medctn_ndc == '003783', results['medication'])) == 0
 
 def test_procedure_cpt():
     """Ensure that cpt codes are properly mapped and transformed"""
