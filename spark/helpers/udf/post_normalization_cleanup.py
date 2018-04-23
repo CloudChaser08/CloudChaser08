@@ -375,6 +375,11 @@ def clean_up_vital_sign(sign_type, sign_measurement, sign_units, gender, age, ye
     else:
         age = int(cap_age(age))
 
+    try:
+        float(sign_measurement)
+    except:
+        return None
+
     if sign_units == 'PERCENT':
         if float(sign_measurement) > 1.0 and float(sign_measurement) < 99.0:
             return sign_measurement

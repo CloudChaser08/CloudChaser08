@@ -2,7 +2,8 @@
 
 import spark.helpers.udf.general_helpers as gen_helpers
 from pyspark.sql.types import StringType
-from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, upper, \
+from pyspark.storagelevel import StorageLevel
+from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, \
     coalesce, input_file_name
 import functools
 import logging

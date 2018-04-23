@@ -69,6 +69,37 @@ def extract_currency(text):
         return None
 
 
+def convert_value(value, conversion):
+    if value is not None:
+        if conversion == 'KILOGRAMS_TO_POUNDS':
+            return convert_kg_to_lb(value)
+        elif conversion == 'CENTIMETERS_TO_INCHES':
+            return convert_cm_to_in(value)
+        elif conversion == 'CENTIGRADE_TO_FAHRENHEIT':
+            return convert_celsius_to_fahrenheit(value)
+
+
+def convert_kg_to_lb(value):
+    try:
+        return round(float(value) * 2.2046, 2)
+    except:
+        return None
+
+
+def convert_cm_to_in(value):
+    try:
+        return round(float(value) * 0.3937, 2)
+    except:
+        return None
+
+
+def convert_celsius_to_fahrenheit(value):
+    try:
+        return round((float(value) * 9 / 5) + 32, 2)
+    except:
+        return None
+
+
 def create_range(max):
     try:
         return ','.join(map(lambda i: str(i), range(max)))

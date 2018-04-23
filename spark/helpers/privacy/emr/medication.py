@@ -16,6 +16,12 @@ medication_transformer = Transformer(
     ],
     medctn_ordg_prov_npi=[
         TransformFunction(post_norm_cleanup.clean_up_npi_code, ['medctn_ordg_prov_npi'])
+    ],
+    medctn_ordg_prov_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['medctn_ordg_prov_state_cd'])
+    ],
+    medctn_adminrg_fclty_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['medctn_adminrg_fclty_state_cd'])
     ]
 )
 

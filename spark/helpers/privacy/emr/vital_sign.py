@@ -9,6 +9,9 @@ vital_sign_transformer = Transformer(
             'vit_sign_typ_cd', 'vit_sign_msrmt', 'vit_sign_uom', 'ptnt_gender_cd',
             'ptnt_age_num', 'ptnt_birth_yr', 'data_captr_dt', 'enc_dt'
         ])
+    ],
+    vit_sign_rndrg_prov_state_cd=[
+        TransformFunction(post_norm_cleanup.validate_state_code, ['vit_sign_rndrg_prov_state_cd'])
     ]
 )
 

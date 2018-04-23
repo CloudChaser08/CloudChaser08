@@ -35,8 +35,8 @@ def test_filter(spark):
 
     # assertion with no additional transforms
     assert lab_order_priv.filter(spark['sqlContext'])(test_df).collect() \
-        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', None, None, None),
-            Row('90', '1927', '2017-01-01', 'dummyval2', None, 'GOODVAL', None, None)]
+        == [Row('90', '1927', '2017-01-01', 'dummyval', 'GOODVAL', 'badval', None, None),
+            Row('90', '1927', '2017-01-01', 'dummyval2', 'badval', 'goodval', None, None)]
 
     # save original state of built-in transformer
     old_whitelists = list(lab_order_priv.whitelists)
@@ -45,7 +45,13 @@ def test_filter(spark):
         return whitelist + [{
             'column_name': 'notransform',
             'domain_name': 'emr_lab_ord_test.notransform'
-        }]
+        }, {
+            'column_name': 'lab_ord_alt_cd',
+            'domain_name': 'emr_lab_ord.lab_ord_alt_cd'
+        }, {
+            'column_name': 'lab_ord_test_nm',
+            'domain_name': 'emr_lab_ord.lab_ord_test_nm'
+        }, ]
 
     # assertion including additional transforms
     assert lab_order_priv.filter(

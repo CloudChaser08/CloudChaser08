@@ -85,6 +85,9 @@ def init(provider, local=False):
         'extract_number', extract_number
     )
     sqlContext.registerFunction(
+        'convert_value', convert_value
+    )
+    sqlContext.registerFunction(
         'cap_date', cap_date
     )
     sqlContext.registerFunction(

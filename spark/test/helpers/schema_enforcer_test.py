@@ -48,6 +48,7 @@ def test_apply_schema_aliased_subset(spark):
     assert master_schema.names == new_df.columns
     assert new_df.where('procedure_code IS NULL').count() == 1
 
+
 @pytest.mark.usefixtures("spark")
 def test_apply_schema_explicit_subset(spark):
     '''
@@ -112,6 +113,27 @@ def test_apply_schema_fails_extra_column(spark):
         new_df = schema_enforcer.apply_schema(org_df, master_schema)
 
     assert str(err.value) == 'Column pharmacy_npi is not part of the schema'
+
+
+def test_apply_schema_cols_to_keep(spark):
+    '''
+        Check that when the original DataFrame has a different number of
+        columns than the schema, there is no explicit list of columns
+        to use, and at least one of the columns is not in the schema,
+        but that column exists in cols_to_keep, the column is in the
+        resulting df
+    '''
+    global master_schema
+
+    org_df = spark['sqlContext'].sql("""
+        SELECT '49999' AS procedure_code, '1231232123' AS rendering_npi,
+        '1056813579' as pharmacy_npi
+    """)
+
+    new_df = schema_enforcer.apply_schema(org_df, master_schema, columns_to_keep=['pharmacy_npi'])
+
+    assert 'pharmacy_npi' in new_df.columns
+
 
 @pytest.mark.usefixtures("spark")
 def test_apply_schema_type_casting(spark):

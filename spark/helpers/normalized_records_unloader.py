@@ -37,7 +37,8 @@ def mk_move_file(prefix, test=False):
 def unload(
         spark, runner, df, date_column, partition_name_prefix, provider_partition_value,
         provider_partition_name='part_provider', date_partition_value=None, date_partition_name='part_best_date',
-        hvm_historical_date=None, staging_subdir='', columns=None, unload_partition_count=20, test_dir=None
+        hvm_historical_date=None, staging_subdir='', columns=None, unload_partition_count=20, test_dir=None,
+        skip_rename=False, distribution_key='record_id'
 ):
     """
     Unload normalized data into partitions based on a date column
@@ -47,7 +48,14 @@ def unload(
     if columns is None:
         columns = df.columns
 
+    if staging_subdir and staging_subdir[-1] != '/':
+        staging_subdir = staging_subdir + '/'
+
     if test_dir:
+
+        if test_dir[-1] != '/':
+            test_dir = test_dir + '/'
+
         staging_dir = test_dir + staging_subdir
         part_files_cmd = [
             'find', staging_dir + provider_partition_name + '=' + provider_partition_value + '/', '-type', 'f'
@@ -73,18 +81,19 @@ def unload(
     ])
 
     # repartition and unload
-    df.select(*columns).repartition(unload_partition_count).write.parquet(
+    df.select(*columns).repartition(unload_partition_count, distribution_key).write.parquet(
         staging_dir, partitionBy=[provider_partition_name, date_partition_name], compression='gzip', mode='append'
     )
 
-    # add a prefix to part file names
-    try:
-        part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
-    except:
-        part_files = []
-    spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
-        mk_move_file(partition_name_prefix, test_dir is not None)
-    )
+    if not skip_rename:
+        # add a prefix to part file names
+        try:
+            part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
+        except:
+            part_files = []
+        spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
+            mk_move_file(partition_name_prefix, test_dir is not None)
+        )
 
 
 def partition_and_rename(

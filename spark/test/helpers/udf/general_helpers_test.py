@@ -33,6 +33,35 @@ def test_extract_currency():
     assert gh.extract_currency(None) == None
 
 
+def test_convert_celsius_to_fahrenheit():
+    assert gh.convert_celsius_to_fahrenheit(None) is None
+
+    assert gh.convert_celsius_to_fahrenheit(0) == 32
+    assert gh.convert_celsius_to_fahrenheit(-40) == -40
+    assert gh.convert_celsius_to_fahrenheit(100) == 212
+
+    assert gh.convert_celsius_to_fahrenheit(34) == 93.2
+
+
+def test_convert_cm_to_in():
+    assert gh.convert_cm_to_in(None) is None
+
+    assert gh.convert_cm_to_in(0) == 0
+    assert gh.convert_cm_to_in(0.1) == 0.04
+    assert gh.convert_cm_to_in(2) == 0.79
+    assert gh.convert_cm_to_in(100) == 39.37
+
+
+def test_convert_kg_to_lb():
+    assert gh.convert_kg_to_lb(None) is None
+
+    assert gh.convert_kg_to_lb(0) == 0
+    assert gh.convert_kg_to_lb(0.5) == 1.1
+    assert gh.convert_kg_to_lb(5) == 11.02
+    assert gh.convert_kg_to_lb(10) == 22.05
+    assert gh.convert_kg_to_lb(59) == 130.07
+
+
 def test_create_range():
     assert gh.create_range(10) == '0,1,2,3,4,5,6,7,8,9'
 
