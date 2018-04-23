@@ -102,7 +102,8 @@ detect_move_extract_dag = SubDagOperator(
             'vendor_uuid'                       : '53769d77-189e-4d79-a5d4-d2d22d09331e',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/delivery/humana/hv000468/sparkGenerateExtract.py',
             'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'connected_to_metastore'            : True
         }
     ),
     task_id='detect_move_extract',

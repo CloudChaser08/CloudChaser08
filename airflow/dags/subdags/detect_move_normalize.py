@@ -122,9 +122,12 @@ def do_create_emr_cluster(ds, cluster_identifier=None, **kwargs):
     EMR_NODE_TYPE = kwargs.get('emr_node_type', EMR_NODE_TYPE)
     EMR_EBS_VOLUME_SIZE = kwargs.get('emr_ebs_volume_size', EMR_EBS_VOLUME_SIZE)
 
+    kw = {}
+    kw['connected_to_metastore'] = True if 'connected_to_metastore' in kwargs and kwargs['connected_to_metastore'] else False,
+
     emr_utils.create_emr_cluster(
         cluster_name, EMR_NUM_NODES, EMR_NODE_TYPE,
-        EMR_EBS_VOLUME_SIZE, 'normalization'
+        EMR_EBS_VOLUME_SIZE, 'normalization', **kw
     )
 
 def do_delete_emr_cluster(ds, cluster_identifier=None, **kwargs):
