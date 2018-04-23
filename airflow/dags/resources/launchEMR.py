@@ -41,7 +41,8 @@ def get_on_demand_price(instance_type):
             and offers['products'][product]['attributes']['location'] == 'US East (N. Virginia)' \
             and offers['products'][product]['attributes']['operatingSystem'] == 'Linux' \
             and offers['products'][product]['attributes']['instanceType'] == instance_type \
-            and offers['products'][product]['attributes']['tenancy'] == 'Shared':
+            and offers['products'][product]['attributes']['tenancy'] == 'Shared' \
+            and offers['products'][product]['attributes']['preInstalledSw'] == 'NA':
                 return float(offers['terms']['OnDemand'][product] \
                         .values()[0]['priceDimensions'].values()[0]['pricePerUnit']['USD'])
 
