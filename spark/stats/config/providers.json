@@ -298,6 +298,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : null
+            "earliest_date"     : "2011-01-01"
         },
         {
             "name"              : "mckesson_res",
@@ -310,7 +311,8 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null
+            "epi_calcs"         : null,
+            "earliest_date"     : "2011-01-01"
         },
         {
             "name"              : "mckesson_macro_helix",
@@ -324,7 +326,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : true,
-            "earliest_date"     : "1901-01-01"
+            "earliest_date"     : "2016-01-01"
         },
         {
             "name"              : "diplomat",
