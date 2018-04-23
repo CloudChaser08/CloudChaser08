@@ -140,7 +140,7 @@ emr_tags = "EMRCluster=" + args.cluster_name + "_" + datetime.datetime.now().str
         " Service=" + args.cluster_purpose
 
 print subprocess.check_output(['aws', 'emr', 'create-cluster',
-    '--release-label', 'emr-5.4.0',
+    '--release-label', 'emr-5.12.1',
     '--applications'] + args.applications.split(' ') + \
     emr_config_options + \
     ['--service-role', 'EMR_DefaultRole',
