@@ -42,9 +42,9 @@ def sftp_fetch_files(ds, **kwargs):
     for filename in FILES_OF_INTEREST:
         sftp_utils.fetch_file(sftp_config['path'] + filename,
                               file_path + filename,
-                              sftp_config['host'],
-                              sftp_config['user'],
-                              sftp_config['password'],
+                              host=sftp_config['host'],
+                              username=sftp_config['user'],
+                              password=sftp_config['password'],
                               )
 
 
