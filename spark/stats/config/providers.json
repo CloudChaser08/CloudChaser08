@@ -218,7 +218,7 @@
         {
             "name"              : "obituarydata",
             "datafeed_id"       : "27",
-            "datatype"          : "consumer",
+            "datatype"          : "events",
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : false,
@@ -339,7 +339,8 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null
+            "epi_calcs"         : null,
+            "earliest_date"     : "2015-01-01"
         },
         {
             "name"              : "apothecary_by_design",
@@ -352,7 +353,8 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null
+            "epi_calcs"         : null,
+            "earliest_date"     : "2017-01-01"
         },
         {
             "name"              : "cardinal_vitalpath",
@@ -365,7 +367,8 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null
+            "epi_calcs"         : null,
+            "earliest_date"     : "2012-02-02"
         },
         {
             "name"              : "cardinal_pds",
@@ -532,7 +535,7 @@
         {
             "name"              : "mindbody",
             "datafeed_id"       : "38",
-            "datatype"          : "consumer",
+            "datatype"          : "events",
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : false,
@@ -558,7 +561,7 @@
         {
             "name"              : "epsilon",
             "datafeed_id"       : "42",
-            "datatype"          : "consumer",
+            "datatype"          : "events",
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : false,
@@ -571,7 +574,7 @@
         {
             "name"              : "acxiom",
             "datafeed_id"       : "50",
-            "datatype"          : "consumer",
+            "datatype"          : "events",
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : false,
@@ -584,7 +587,7 @@
         {
             "name"              : "alliance",
             "datafeed_id"       : "56",
-            "datatype"          : "consumer",
+            "datatype"          : "events",
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : false,
@@ -668,7 +671,7 @@
         {
             "name"              : "epsilon",
             "datafeed_id"       : "42",
-            "datatype"          : "consumer",
+            "datatype"          : "events",
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : true,
@@ -682,7 +685,7 @@
         {
             "name"              : "acxiom",
             "datafeed_id"       : "50",
-            "datatype"          : "consumer",
+            "datatype"          : "events",
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : true,
@@ -696,7 +699,7 @@
         {
             "name"              : "alliance",
             "datafeed_id"       : "56",
-            "datatype"          : "consumer",
+            "datatype"          : "events",
             "date_field"        : "event_date",
             "record_field"      : null,
             "fill_rate"         : true,
