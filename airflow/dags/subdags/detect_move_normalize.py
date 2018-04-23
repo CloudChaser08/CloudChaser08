@@ -55,7 +55,7 @@ def do_move_matching_payload(ds, **kwargs):
             s3_utils.copy_file(payload_file, kwargs['s3_payload_loc_url'] + date + '/' + payload_file.split('/')[-1])
 
 def do_run_pyspark_normalization_routine(ds, cluster_identifier=None, **kwargs):
-    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
+    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], kwargs['ts'])
     emr_utils.normalize(
         cluster_name,
         kwargs['pyspark_normalization_script_name'],
@@ -96,7 +96,7 @@ def get_emr_cluster_id(cluster_name):
 
 def do_transform_to_parquet(ds, cluster_identifier=None, **kwargs):
     file_date = ds
-    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
+    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], kwargs['ts'])
     cluster_id = get_emr_cluster_id(cluster_name)
     transform_steps = []
     delete_steps = []
@@ -115,7 +115,7 @@ def do_transform_to_parquet(ds, cluster_identifier=None, **kwargs):
 
 
 def do_create_emr_cluster(ds, cluster_identifier=None, **kwargs):
-    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
+    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], kwargs['ts'])
 
     global EMR_NUM_NODES, EMR_NODE_TYPE, EMR_EBS_VOLUME_SIZE
     EMR_NUM_NODES = kwargs.get('emr_num_nodes', EMR_NUM_NODES)
@@ -128,7 +128,7 @@ def do_create_emr_cluster(ds, cluster_identifier=None, **kwargs):
     )
 
 def do_delete_emr_cluster(ds, cluster_identifier=None, **kwargs):
-    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], ds)
+    cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], kwargs['ts'])
 
     cluster_steps = emr_utils.get_cluster_steps(cluster_name)
 
