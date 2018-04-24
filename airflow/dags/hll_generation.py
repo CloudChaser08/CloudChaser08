@@ -18,6 +18,10 @@ NUM_NODES=5
 NODE_TYPE='m4.16xlarge'
 EBS_VOLUME_SIZE='500'
 
+# modify for quarterly refresh
+MIN_DATE = '2016-01-01'
+MAX_DATE = '2018-01-01'
+
 HDFS_STAGING = 'hdfs:///hlls_out/'
 HLL_STEP_TEMPLATE = ('Type=Spark,Name="{} HLLs",ActionOnFailure=TERMINATE_JOB_FLOW, '
         'Args=[--class, com.healthverity.aggregate.Main, --conf,'
@@ -72,10 +76,10 @@ mdag = HVDAG.HVDAG(
 def get_ref_db_connection():
     db_config = json.loads(Variable.get('reference_db_user_airflow'))
     return psycopg2.connect(dbname=HLL_CONFIG_DB, user=db_config['user'],
-            password=db_config['password'], host=db_config['db_host'], 
+            password=db_config['password'], host=db_config['db_host'],
             port=db_config['db_port'],
             cursor_factory=psycopg2.extras.NamedTupleCursor)
-    
+
 def get_feeds_to_generate_configs():
     all_configs = None
     with get_ref_db_connection() as conn:
@@ -133,8 +137,8 @@ def do_generate_hlls(ds, **kwargs):
         args += '--modelName, {},'.format(entry.model)
         args += "--inpath, '{}',".format(entry.s3a_url)
         args += '--format, {},'.format(entry.file_format or 'parquet')
-        args += '--start, 2015-10-01,' if not entry.no_min_cap else ''
-        args += '--end, 2017-10-01,' if not entry.no_max_cap else ''
+        args += '--start, {},'.format(MIN_DATE) if not entry.no_min_cap else ''
+        args += '--end, {},'.format(MAX_DATE) if not entry.no_max_cap else ''
         args += "--models, '{}',".format(entry.emr_models) if entry.emr_models else ''
         args += ', '.join((entry.flags or '').split())
 
