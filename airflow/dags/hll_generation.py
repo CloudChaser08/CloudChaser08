@@ -18,6 +18,10 @@ NUM_NODES=5
 NODE_TYPE='m4.16xlarge'
 EBS_VOLUME_SIZE='500'
 
+# modify for quarterly refresh
+MIN_DATE = '2016-01-01'
+MAX_DATE = '2018-01-01'
+
 HDFS_STAGING = 'hdfs:///hlls_out/'
 HLL_STEP_TEMPLATE = ('Type=Spark,Name="{} HLLs",ActionOnFailure=TERMINATE_JOB_FLOW, '
         'Args=[--class, com.healthverity.aggregate.Main, --conf,'
@@ -72,10 +76,10 @@ mdag = HVDAG.HVDAG(
 def get_ref_db_connection():
     db_config = json.loads(Variable.get('reference_db_user_airflow'))
     return psycopg2.connect(dbname=HLL_CONFIG_DB, user=db_config['user'],
-            password=db_config['password'], host=db_config['db_host'], 
+            password=db_config['password'], host=db_config['db_host'],
             port=db_config['db_port'],
             cursor_factory=psycopg2.extras.NamedTupleCursor)
-    
+
 def get_feeds_to_generate_configs():
     all_configs = None
     with get_ref_db_connection() as conn:
@@ -86,9 +90,9 @@ def get_feeds_to_generate_configs():
     to_generate_configs = []
     for entry in all_configs:
         # TODO: Let Airflow figure out the current quarter programatically
-        # For now, hardcode to 2017Q3, with an HLL generation date of 01/03/2018
+        # For now, hardcode to 2017Q3, with an HLL generation date of 04/24/2018
         if not entry.generated or entry.is_stale or (not entry.once_only and \
-                entry.generated.replace(tzinfo=None) < datetime(2018, 1, 3, 12)):
+                entry.generated.replace(tzinfo=None) < datetime(2018, 4, 24, 12)):
             to_generate_configs.append(entry)
 
     return to_generate_configs
@@ -133,8 +137,8 @@ def do_generate_hlls(ds, **kwargs):
         args += '--modelName, {},'.format(entry.model)
         args += "--inpath, '{}',".format(entry.s3a_url)
         args += '--format, {},'.format(entry.file_format or 'parquet')
-        args += '--start, 2015-10-01,' if not entry.no_min_cap else ''
-        args += '--end, 2017-10-01,' if not entry.no_max_cap else ''
+        args += '--start, {},'.format(MIN_DATE) if not entry.no_min_cap else ''
+        args += '--end, {},'.format(MAX_DATE) if not entry.no_max_cap else ''
         args += "--models, '{}',".format(entry.emr_models) if entry.emr_models else ''
         args += ', '.join((entry.flags or '').split())
 
