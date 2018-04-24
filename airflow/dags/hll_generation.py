@@ -90,9 +90,9 @@ def get_feeds_to_generate_configs():
     to_generate_configs = []
     for entry in all_configs:
         # TODO: Let Airflow figure out the current quarter programatically
-        # For now, hardcode to 2017Q3, with an HLL generation date of 01/03/2018
+        # For now, hardcode to 2017Q3, with an HLL generation date of 04/24/2018
         if not entry.generated or entry.is_stale or (not entry.once_only and \
-                entry.generated.replace(tzinfo=None) < datetime(2018, 1, 3, 12)):
+                entry.generated.replace(tzinfo=None) < datetime(2018, 4, 24, 12)):
             to_generate_configs.append(entry)
 
     return to_generate_configs
