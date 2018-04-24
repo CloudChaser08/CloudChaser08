@@ -50,7 +50,7 @@ else:
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/pharmacyclaims/cardinal_pds/{}/{}/{}/'
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/pharmacyclaims/cardinal_pds/'
 
-S3_NORMALIZED_FILE_URL_TEMPLATE='s3://salusv/deliverable/cardinal_pds-0/{}/{}/{}/part-00000.gz'
+S3_NORMALIZED_FILE_DIR_TEMPLATE='s3://salusv/deliverable/cardinal_pds-0/{}/{}/{}/'
 S3_DESTINATION_FILE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/pds/cardinal_pds_normalized_{}{}{}.psv.gz'
 
 # Transaction Addon file
@@ -288,15 +288,28 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+def get_normalized_file_name(ds, kwargs):
+    files = s3_utils.list_s3_bucket_files(
+        date_utils.insert_date_into_template(
+            S3_NORMALIZED_FILE_DIR_TEMPLATE,
+            kwargs,
+            day_offset = CARDINAL_DAY_OFFSET
+        )
+    )
+    return [f for f in files if f.startswith('part-00000')][0]
+
+def do_fetch_normalized_data(ds, **kwargs):
+    filename = get_normalized_file_name(ds, kwargs)
+    s3_utils.fetch_file_from_s3(
+        date_utils.insert_date_into_template(S3_NORMALIZED_FILE_DIR_TEMPLATE, kwargs, day_offset = CARDINAL_DAY_OFFSET) + filename,
+        get_tmp_dir(ds, kwargs) + filename
+    )
+
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_normalized_data = PythonOperator(
         task_id='fetch_normalized_data',
         provide_context=True,
-        python_callable=lambda ds, **kwargs: \
-            s3_utils.fetch_file_from_s3(
-                date_utils.insert_date_into_template(S3_NORMALIZED_FILE_URL_TEMPLATE, kwargs, day_offset = CARDINAL_DAY_OFFSET),
-                get_tmp_dir(ds, kwargs) + date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs, day_offset = CARDINAL_DAY_OFFSET).split('/')[-1]
-        ),
+        python_callable=do_fetch_normalized_data,
         dag=mdag
     )
 
@@ -308,8 +321,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             mdag.schedule_interval,
             {
                 'file_paths_func'       : lambda ds, kwargs: [
-                    get_tmp_dir(ds, kwargs) + \
-                        date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs, day_offset = CARDINAL_DAY_OFFSET).split('/')[-1]
+                    get_tmp_dir(ds, kwargs) + get_normalized_file_name(ds, kwargs)
                 ],
                 's3_prefix_func'        : lambda ds, kwargs: \
                     '/'.join(date_utils.insert_date_into_template(S3_DESTINATION_FILE_URL_TEMPLATE, kwargs, day_offset = CARDINAL_DAY_OFFSET).split('/')[3:-1]) + '/',
