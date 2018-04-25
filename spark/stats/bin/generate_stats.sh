@@ -30,13 +30,12 @@ function generate_stats()
 
     echo "Generating stats for feed $feed_id"
 
-    spark-submit --py-files ../../target/dewey.zip --conf spark.executor.instances=80 --conf spark.executor.cores=4 --conf spark.executor.memory=13G --conf spark.driver.memory=13G --conf spark.yarn.executor.memoryOverhead=1024 --conf spark.scheduler.minRegisteredResourcesRatio=1 --conf spark.scheduler.maxRegisteredResourcesWaitingTime=60s --conf spark.hadoop.fs.s3.connection.maximum=500 --conf spark.files.useFileCache=false ../stats_runner.py --feed_id $feed_id --quarter $QUARTER --start_date $START_DATE --end_date $END_DATE
+    spark-submit --py-files ../../target/dewey.zip --conf spark.executor.instances=80 --conf spark.executor.cores=4 --conf spark.executor.memory=13G --conf spark.sql.shuffle.partitions=2001 --conf spark.driver.memory=13G --conf spark.yarn.executor.memoryOverhead=1024 --conf spark.scheduler.minRegisteredResourcesRatio=1 --conf spark.scheduler.maxRegisteredResourcesWaitingTime=60s --conf spark.hadoop.fs.s3.connection.maximum=500 --conf spark.files.useFileCache=false ../stats_runner.py --feed_id $feed_id --quarter $QUARTER --start_date $START_DATE --end_date $END_DATE
 }
 
 # Medical Claims (Old Model)
 generate_stats -f 24        # Private Source 34 (Navicure)
 generate_stats -f 26        # Allscripts Medical Claims
-generate_stats -f 19        # Corrona
 generate_stats -f 15        # Private Source 14 (Ability)
 
 # Medical Claims
@@ -47,7 +46,6 @@ generate_stats -f 29        # Cardinal RCM
 # Labs
 generate_stats -f 32        # NeoGenomics
 generate_stats -f 14        # Caris
-generate_stats -f 28        # Courtagen
 generate_stats -f 18        # Quest
 generate_stats -f 46        # LabCorp
 generate_stats -f 58        # Guardant Health
