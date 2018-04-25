@@ -25,6 +25,13 @@ spark = SparkSession.builder.master("yarn").appName("marketplace-ndc-pull").conf
 
 
 def pull_ndc():
+
+    # Prepare tables
+    with open('pull_ndc_ref.sql') as sql_fo:
+        sqls = sql_fo.read().split(';')
+        for statement in sqls[:-1]:  # skip last line containing \n
+            spark.sql(statement)
+
     with open('marketplace_ndc.psv', 'w') as ndc_out:
         csv_writer = csv.writer(ndc_out, delimiter='|')
         ndc_table = spark.sql("select * from marketplace_ndc").collect()
