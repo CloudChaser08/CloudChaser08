@@ -9,8 +9,15 @@ import gzip
 import shutil
 import sys
 
+import boto3
 from pyspark.sql import SparkSession
 
+s3 = boto3.resource('s3')
+
+S3_CONF = {
+    'Bucket': 'salusv',
+    'Key': 'marketplace/search/diagnosis/diag.psv.gz'
+}
 
 sql = """
 select distinct trim(a.code) as icd10code, trim(upper(a.long_description)) as icd10desc,
@@ -46,6 +53,8 @@ def pull_diagnosis():
 
     with open('marketplace_diag.psv', 'rb') as f_in, gzip.open('diag.psv.gz', 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
+
+    s3.meta.client.upload_file('diag.psv.gz', **S3_CONF)
 
 if __name__ == "__main__":
     sys.exit(pull_diagnosis())

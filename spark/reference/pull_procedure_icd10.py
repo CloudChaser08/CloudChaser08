@@ -9,8 +9,15 @@ import gzip
 import shutil
 import sys
 
+import boto3
 from pyspark.sql import SparkSession
 
+s3 = boto3.resource('s3')
+
+S3_CONF = {
+    'Bucket': 'salusv',
+    'Key': 'marketplace/search/procedure_icd10/proc_icd10.psv.gz'
+}
 
 sql = """
 select distinct trim(a.icd10order), trim(a.icd10code), trim(a.icd10desc), trim(b.section_desc) as level1_desc, trim(c.position_description) as level2_desc, trim(d.position_description) as level3_desc, trim(e.position_description) as level4_desc, trim(f.position_description) as level5_desc, trim(g.position_description) as level6_desc,
@@ -48,6 +55,8 @@ def pull_procedure_icd10():
 
     with open('marketplace_proc_icd10.psv', 'rb') as f_in, gzip.open('proc_icd10.psv.gz', 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
+
+    s3.meta.client.upload_file('proc_icd10.psv.gz', **S3_CONF)
 
 if __name__ == "__main__":
     sys.exit(pull_procedure_icd10())

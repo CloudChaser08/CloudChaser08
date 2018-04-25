@@ -10,7 +10,15 @@ import gzip
 import shutil
 import sys
 
+import boto3
 from pyspark.sql import SparkSession
+
+s3 = boto3.resource('s3')
+
+S3_CONF = {
+    'Bucket': 'salusv',
+    'Key': 'marketplace/search/ndc/ndc.psv.gz'
+}
 
 
 spark = SparkSession.builder.master("yarn").appName("marketplace-ndc-pull").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
@@ -25,6 +33,8 @@ def pull_ndc():
 
     with open('marketplace_ndc.psv', 'rb') as f_in, gzip.open('ndc.psv.gz', 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
+
+    s3.meta.client.upload_file('ndc.psv.gz', **S3_CONF)
 
 if __name__ == "__main__":
     sys.exit(pull_ndc())

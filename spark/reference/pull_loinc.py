@@ -9,7 +9,15 @@ import gzip
 import shutil
 import sys
 
+import boto3
 from pyspark.sql import SparkSession
+
+s3 = boto3.resource('s3')
+
+S3_CONF = {
+    'Bucket': 'salusv',
+    'Key': 'marketplace/search/lab/lab.psv.gz'
+}
 
 
 sql = """
@@ -46,6 +54,8 @@ def pull_loinc():
 
     with open('marketplace_lab.psv', 'rb') as f_in, gzip.open('lab.psv.gz', 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
+
+    s3.meta.client.upload_file('lab.psv.gz', **S3_CONF)
 
 if __name__ == "__main__":
     sys.exit(pull_loinc())
