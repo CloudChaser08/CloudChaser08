@@ -562,7 +562,10 @@ SELECT CAST(record_id AS bigint),
     CAST(other_payer_date AS date),
     other_payer_coverage_code,
     CASE WHEN TRIM(logical_delete_reason) = '' THEN NULL ELSE logical_delete_reason END,
-    part_provider,
+    CASE
+    WHEN part_provider = 'accredo' THEN 'express_scripts'
+    ELSE part_provider
+    END AS part_provider,
     CASE WHEN part_processdate IN ('NULL', '0_PREDATES_HVM_HISTORY')
       THEN '0_PREDATES_HVM_HISTORY'
       WHEN LENGTH(part_processdate) = 4
