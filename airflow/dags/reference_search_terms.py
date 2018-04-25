@@ -23,7 +23,7 @@ EBS_VOLUME_SIZE = '100'
 
 def do_create_cluster(ds, **kwargs):
     emr_utils.create_emr_cluster(
-        DAG_NAME, NUM_NODES, NODE_TYPE, EBS_VOLUME_SIZE, 'delivery', connected_to_metastore=True)
+        DAG_NAME, NUM_NODES, NODE_TYPE, EBS_VOLUME_SIZE, 'reference_search_terms_update', connected_to_metastore=True)
 
 
 def do_delete_cluster(ds, **kwargs):
@@ -32,14 +32,14 @@ def do_delete_cluster(ds, **kwargs):
 
 def do_run_pyspark_routine(ds, **kwargs):
     emr_utils.run_script(
-        DAG_NAME, kwargs['pyspark_script_name'], kwargs['pyspark_args_func'](ds, kwargs)
+        DAG_NAME, kwargs['pyspark_script_name'], kwargs['pyspark_args_func']
     )
 
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 04, 21),
-    'end_date': datetime(2018, 8, 1),
+    'start_date': datetime(2018, 4, 21),
+    'end_date': datetime(2019, 8, 1),
     'retries': 3,
     'retry_delay': timedelta(minutes=2),
     'priority_weight': 5
@@ -47,7 +47,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval='@once',
+    schedule_interval=None,
     default_args=default_args
 )
 
