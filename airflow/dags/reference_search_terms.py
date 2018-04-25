@@ -32,7 +32,7 @@ def do_delete_cluster(ds, **kwargs):
 
 def do_run_pyspark_routine(ds, **kwargs):
     emr_utils.run_script(
-        DAG_NAME, kwargs['pyspark_script_name'], kwargs['pyspark_args_func']
+        DAG_NAME, kwargs['pyspark_script_name'], [], None
     )
 
 
