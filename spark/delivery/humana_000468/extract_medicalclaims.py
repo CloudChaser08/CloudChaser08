@@ -8,7 +8,7 @@ def extract(runner, hvids, timestamp, start_dt, end_dt):
     # Extract conditions
     ext = t1.join(t2, t1['data_feed'] == t2['hvm_vdr_feed_id'], 'inner') \
         .join(hvids, t1['hvid'] == hvids['hvid'], 'left_semi') \
-        .where(t1['date_service'] < end_dt and t1['date_service'] > start_dt)
+        .where((t1['date_service'] < end_dt) & (t1['date_service'] > start_dt))
 
     # Hashing
     ext = ext.withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(str(timestamp))))) \

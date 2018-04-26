@@ -3,12 +3,12 @@ import pyspark.sql.functions as F
 def extract(runner, hvids, timestamp, start_dt, end_dt):
     t1 = runner.sqlContext.table('pharmacyclaims')
     t2 = runner.sqlContext.table('dw.ref_vdr_feed')
-    t2 = t2[t2.hvm_tile_nm.isin()]
+    t2 = t2[t2.hvm_tile_nm.isin(*SUPPLIERS)]
     
     # Extract conditions
     ext = t1.join(t2, t1['data_feed'] == t2['hvm_vdr_feed_id'], 'inner') \
         .join(hvids, t1['hvid'] == hvids['hvid'], 'left_semi') \
-        .where(t1['date_service'] < end_dt and t1['date_service'] > start_dt)
+        .where((t1['date_service'] < end_dt) & (t1['date_service'] > start_dt))
 
     # Hashing
     ext = ext.withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(str(timestamp))))) \
@@ -153,6 +153,11 @@ SUPPLIERS = [
 ]
 
 NULL_COLUMNS = [
+    'patient_gender',
+    'patient_age',
+    'patient_year_of_birth',
+    'patient_zip3',
+    'patient_state',
     'bin_number',
     'processor_control_number',
     'payer_id_qual',

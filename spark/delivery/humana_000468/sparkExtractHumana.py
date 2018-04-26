@@ -24,11 +24,11 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
         list_cmd      = ['aws', 's3', 'ls']
         move_cmd      = ['aws', 's3', 'mv']
     elif test:
-        input_path = file_utils.get_abs_path(
-            script_path, '../../test/delivery/humana/hv000468/out/test1234/'
+        output_path = file_utils.get_abs_path(
+            __file__, '../../test/delivery/humana/hv000468/out/test1234/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../test/delivery/humana/hv000468/resources/matching/test1234/'
+            __file__, '../../test/delivery/humana/hv000468/resources/matching/test1234/'
         ) + '/'
         list_cmd      = ['ls', '-la']
         move_cmd      = ['mv']
@@ -42,8 +42,8 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
         list_cmd      = ['aws', 's3', 'ls']
         move_cmd      = ['aws', 's3', 'mv']
 
-    payload_loader.load(runner, matching_path, ['matchStatus'], return_output=True)
-    matched_patients = payload_loader.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'")
+    matched_patients = payload_loader.load(runner, matching_path, ['matchStatus'], return_output=True)
+    matched_patients = matched_patients.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'")
 
     if today.day > 15:
         end   = (today.replace(day=15) - timedelta(days=30)).replace(day=1) # The 1st about 1.5 months back
@@ -66,6 +66,10 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
         pharmacy_extract  = extract_pharmacyclaims.extract(
                 runner, matched_patients, ts,
                 start, end)
+
+    # for each testing
+    medical_extract.createOrReplaceTempView('medical_extract')
+    pharmacy_extract.createOrReplaceTempView('pharmacy_extract')
 
     medical_extract.repartition(1).write \
             .csv(output_path.replace('s3://', 's3a://'), sep='|', compression='gzip', mode='append')
