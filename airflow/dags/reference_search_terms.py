@@ -17,7 +17,7 @@ for m in [
 DAG_NAME = 'reference_search_terms_mapping'
 
 NUM_NODES = 5
-NODE_TYPE = 'm4.2xlarge'
+NODE_TYPE = 'm4.4xlarge'
 EBS_VOLUME_SIZE = '100'
 
 INSTALL_BOTO3_STEP = (
