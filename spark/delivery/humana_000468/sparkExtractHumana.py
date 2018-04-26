@@ -2,63 +2,83 @@
 import argparse
 import time
 import subprocess
-from datetime import timedelta, datetime
+from datetime import timedelta, date
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.payload_loader as payload_loader
-from pyspark.sql.types import StructType, IntegerType
+from pyspark.sql.types import StructType
 import pyspark.sql.functions as F
 
 import extract_medicalclaims
 import extract_pharmacyclaims
 
 def run(spark, runner, group_id, test=False, airflow_test=False):
-    matching_path = 's3://salusv/matching/payload/custom/humana/hv000468/{}/'.format(group_id)
+    ts = time.time()
+    today = date.today()
+
+    if airflow_test:
+        output_path   = 's3://salusv/testing/dewey/airflow/e2e/humana/hv000468/deliverable/{}/'.format(group_id)
+        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/humana/hv000468/payload/{}/'.format(group_id)
+        list_cmd      = ['aws', 's3', 'ls']
+        move_cmd      = ['aws', 's3', 'mv']
+    elif test:
+        input_path = file_utils.get_abs_path(
+            script_path, '../../test/delivery/humana/hv000468/out/test1234/'
+        ) + '/'
+        matching_path = file_utils.get_abs_path(
+            script_path, '../../test/delivery/humana/hv000468/resources/matching/test1234/'
+        ) + '/'
+        list_cmd      = ['ls', '-la']
+        move_cmd      = ['mv']
+
+        # Need to be able to test consistantly
+        today = date(2018, 4, 26)
+        ts = 1524690702.12345
+    else:
+        output_path   = 's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id)
+        matching_path = 's3a://salusv/matching/payload/custom/humana/hv000468/{}/'.format(group_id)
+        list_cmd      = ['aws', 's3', 'ls']
+        move_cmd      = ['aws', 's3', 'mv']
 
     payload_loader.load(runner, matching_path, ['matchStatus'], return_output=True)
     matched_patients = payload_loader.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'")
 
-    ts = time.time()
-    start = '2016-12-01'
-    end = '2018-03-01'
+    if today.day > 15:
+        end   = (today.replace(day=15) - timedelta(days=30)).replace(day=1) # The 1st about 1.5 months back
+        start = (end - timedelta(days=455)).replace(day=1) # 15 months before end
+    else:
+        end   = (today.replace(day=15) - timedelta(days=60)).replace(day=15) # The 15th about 1.5 months back
+        start = (end - timedelta(days=455)).replace(day=15) # 15 months before end
+    start = start.isoformat()
+    end   = end.isoformat()
 
-    if matching_patients.select('hvid').distinct().count() < 10:
+    matched_patients = matched_patients.select('hvid').distinct()
+
+    if matched_patients.count() < 10:
         medical_extract    = spark.createDataFrame([], StructType([]))
         pharmacy_extract   = spark.createDataFrame([], StructType([]))
     else:
         medical_extract    = extract_medicalclaims.extract(
-                runner, matching_patients.select('hvid').distinct(), ts,
+                runner, matched_patients, ts,
                 start, end)
         pharmacy_extract  = extract_pharmacyclaims.extract(
-                runner, matching_patients.select('hvid').distinct(), ts,
+                runner, matched_patients, ts,
                 start, end)
 
-    medical_extract.repartition(1).write.csv('s3a://salusv/deliverable/humana/hv000468/{}/'.format(group_id), sep='|', compression='gzip', mode='append')
-    fn = [w for w in
-            [r for r in subprocess.check_output(['aws', 's3', 'ls', 's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id)]).split('\n')]
-            if w.startswith('part-00000')][0]
-    subprocess.check_call(['aws', 's3', 'mv', 's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id) + fn,
-        's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id) + 'billing_medical_claims_{}.psv.gz'.format(group_id)]
-    medical_extract.drop('hvm_tile_name').repartition(1).write.csv('s3a://salusv/deliverable/humana/hv000468/{}/'.format(group_id), sep='|', compression='gzip', mode='append')
-    fn = [w for w in
-            [r for r in subprocess.check_output(['aws', 's3', 'ls', 's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id)]).split('\n')]
-            if w.startswith('part-00000')][0]
-    subprocess.check_call(['aws', 's3', 'mv', 's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id) + fn,
-        's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id) + 'medical_claims_{}.psv.gz'.format(group_id)]
-    pharmacy_extract.repartition(1).write.csv('s3a://salusv/deliverable/humana/hv000468/{}/'.format(group_id), sep='|', compression='gzip', mode='append')
-    fn = [w for w in
-            [r for r in subprocess.check_output(['aws', 's3', 'ls', 's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id)]).split('\n')]
-            if w.startswith('part-00000')][0]
-    subprocess.check_call(['aws', 's3', 'mv', 's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id) + fn,
-        's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id) + 'billing_pharmacy_claims_{}.psv.gz'.format(group_id))
-    pharmacy_extract.drop('hvm_time_name').repartition(1).write.csv('s3a://salusv/deliverable/humana/hv000468/{}/'.format(group_id), sep='|', compression='gzip', mode='append')
-    fn = [w for w in
-            [r for r in subprocess.check_output(['aws', 's3', 'ls', 's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id)]).split('\n')]
-            if w.startswith('part-00000')][0]
-    subprocess.check_call(['aws', 's3', 'mv', 's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id) + fn,
-        's3://salusv/deliverable/humana/hv000468/{}/'.format(group_id) + 'pharmacy_claims_{}.psv.gz'.format(group_id)]
+    medical_extract.repartition(1).write \
+            .csv(output_path.replace('s3://', 's3a://'), sep='|', compression='gzip', mode='append')
+    fn = [w for r in
+            subprocess.check_output(list_cmd + [output_path]).split('\n')
+            for w in r.split(' ') if w.startswith('part-00000')][0]
+    subprocess.check_call(move_cmd + [output_path + fn, output_path + 'medical_claims_{}.psv.gz'.format(group_id)])
+    pharmacy_extract.repartition(1).write \
+            .csv(output_path, sep='|', compression='gzip', mode='append')
+    fn = [w for r in
+            subprocess.check_output(list_cmd + [output_path]).split('\n')
+            for w in r.split(' ') if w.startswith('part-00000')][0]
+    subprocess.check_call(move_cmd + [output_path + fn, output_path + 'pharmacy_claims_{}.psv.gz'.format(group_id)])
 
 def main(args):
     # init
