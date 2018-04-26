@@ -83,7 +83,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
         matching_path = 's3a://salusv/matching/payload/emr/allscripts/{}/'.format(
             matching_date.replace('-', '/')
         )
-        warehouse_path_template = 's3a://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/*'
+        warehouse_path_template = 's3a://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/*'
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -417,11 +417,11 @@ def main(args):
         if args.airflow_test:
             output_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/spark-output/'
         else:
-            output_path = 's3://salusv/warehouse/parquet/emr/2018-03-23/'
+            output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 
         # backup allscripts normalized data before distcp
         try:
-            subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(
+            subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(
                 model
             )])
             files_exist = True
@@ -436,12 +436,12 @@ def main(args):
                 'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
             ])
             multi_s3_transfer.multithreaded_copy(
-                's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
+                's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
                 's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
             )
             subprocess.check_call([
                 'aws', 's3', 'rm', '--recursive',
-                's3://salusv/warehouse/parquet/emr/2018-03-23/{}/part_hvm_vdr_feed_id=25/'.format(model)
+                's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model)
             ])
 
         normalized_records_unloader.distcp(output_path)
