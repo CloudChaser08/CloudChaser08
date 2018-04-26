@@ -20,10 +20,16 @@ NUM_NODES = 5
 NODE_TYPE = 'm4.2xlarge'
 EBS_VOLUME_SIZE = '100'
 
+INSTALL_BOTO3_STEP = (
+    'Type=CUSTOM_JAR,Name="Install boto3",Jar="command-runner.jar",'
+    'ActionOnFailure=CONTINUE,Args=[sudo,pip,install,boto3]')
+
 
 def do_create_cluster(ds, **kwargs):
     emr_utils.create_emr_cluster(
         DAG_NAME, NUM_NODES, NODE_TYPE, EBS_VOLUME_SIZE, 'reference_search_terms_update', connected_to_metastore=True)
+
+    emr_utils.run_steps(DAG_NAME, [INSTALL_BOTO3_STEP])
 
 
 def do_delete_cluster(ds, **kwargs):
@@ -39,7 +45,7 @@ def do_run_pyspark_routine(ds, **kwargs):
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2018, 4, 21),
-    'end_date': datetime(2019, 8, 1),
+    'end_date': None,
     'retries': 3,
     'retry_delay': timedelta(minutes=2),
     'priority_weight': 5
