@@ -18,7 +18,7 @@ DAG_NAME = 'humana_hv000468_ingestion'
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2018, 4, 23, 12),
-    'depends_on_past': True,
+    'depends_on_past': True if HVDAG.HVDAG.airflow_env == 'prod' else False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
@@ -95,7 +95,7 @@ fetch_transaction_files = PythonOperator(
 )
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
-    group_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'persist_groups_ready', key = 'groups_ready')
+    group_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
     pairs = []
     for gid in groups_ready:
         fn = get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(gid)
