@@ -53,7 +53,6 @@ DEID_FILE_NAME_TEMPLATE = 'deid_data_{}'
 # Return files
 MEDICAL_CLAIMS_EXTRACT_TEMPLATE = 'medical_claims_{}.psv.gz'
 PHARMACY_CLAIMS_EXTRACT_TEMPLATE = 'pharmacy_claims_{}.psv.gz'
-ENROLLMENT_EXTRACT_TEMPLATE = 'enrollment_{}.psv.gz'
 
 # Execution date propagates from root DAG to subdags, but DagRun information
 # does not. Identify the root DAG, and get its DagRun information
@@ -126,8 +125,7 @@ create_tmp_dir = PythonOperator(
 
 def do_fetch_extracted_data(ds, **kwargs):
     gid = get_root_dag_run(kwargs).conf['group_id']
-    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE,
-            ENROLLMENT_EXTRACT_TEMPLATE]:
+    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
 
         s3_utils.fetch_file_from_s3(
             S3_NORMALIZED_FILE_URL_TEMPLATE.format(gid) + \
@@ -145,8 +143,7 @@ fetch_extracted_data = PythonOperator(
 def do_deliver_extracted_data(ds, **kwargs):
     sftp_config = json.loads(Variable.get('humana_sftp_configuration'))
     gid = get_root_dag_run(kwargs).conf['group_id']
-    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE,
-            ENROLLMENT_EXTRACT_TEMPLATE]:
+    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
 
         sftp_utils.upload_file(
             get_tmp_dir(ds, kwargs) + t.format(gid), **sftp_config
@@ -160,8 +157,7 @@ deliver_extracted_data = PythonOperator(
 )
 
 def do_clean_up_workspace(ds, **kwargs):
-    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE,
-            ENROLLMENT_EXTRACT_TEMPLATE]:
+    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
 
         os.remove(TMP_PATH_TEMPLATE.format(get_root_dag_run(kwargs).conf['group_id']) + \
             t.format(get_root_dag_run(kwargs).conf['group_id']))
