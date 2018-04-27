@@ -42,8 +42,8 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
         list_cmd      = ['aws', 's3', 'ls']
         move_cmd      = ['aws', 's3', 'mv']
 
-    matched_patients = payload_loader.load(runner, matching_path, ['matchStatus'], return_output=True)
-    matched_patients = matched_patients.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'")
+    all_patients = payload_loader.load(runner, matching_path, ['matchStatus'], return_output=True)
+    matched_patients = all_patients.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'")
 
     if today.day > 15:
         end   = (today.replace(day=15) - timedelta(days=30)).replace(day=1) # The 1st about 1.5 months back
@@ -55,6 +55,8 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
     end   = end.isoformat()
 
     matched_patients = matched_patients.select('hvid').distinct()
+    all_patient_count = all_patients.count()
+    matched_patient_count = matched_patients.count()
 
     if matched_patients.count() < 10:
         medical_extract    = spark.createDataFrame([], StructType([]))
@@ -70,6 +72,19 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
     # for each testing
     medical_extract.createOrReplaceTempView('medical_extract')
     pharmacy_extract.createOrReplaceTempView('pharmacy_extract')
+
+    # summary
+    summary =  medical_extract.groupBy('data_vendor').count().collect()
+    summary += pharmacy_extract.groupBy('data_vendor').count().collect()
+
+    summary_report = '\n'.join(['|'.join([
+            group_id, str(all_patient_count), str(matched_patient_count),
+            r['data_vendor'], str(r['count'])
+        ]) for r in summary])
+
+    with open('/tmp/summary_report_{}.txt'.format(group_id), 'w') as outf:
+        outf.write(summary_report)
+        subprocess.check_call(move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path])
 
     medical_extract.repartition(1).write \
             .csv(output_path.replace('s3://', 's3a://'), sep='|', compression='gzip', mode='append')
