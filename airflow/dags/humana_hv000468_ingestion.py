@@ -37,11 +37,6 @@ else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/humana/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/data_requests/humana/hv000468/{}/'
 
-# Transaction Addon file
-TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
-TRANSACTION_FILE_DESCRIPTION = 'Humana hv000468 file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'record_data_{}'
-
 # Deid file
 DEID_FILE_DESCRIPTION = 'Humana hv000468 deid file'
 DEID_FILE_NAME_TEMPLATE = 'deid_data_{}'
@@ -56,9 +51,7 @@ def do_get_groups_ready(**kwargs):
     groups_ready = set()
     for f in new_files:
         gid = f.split('_')[-1]
-        if TRANSACTION_FILE_NAME_TEMPLATE.format(f.split('_')[2]) in new_files \
-                and DEID_FILE_NAME_TEMPLATE.format(f.split('_')[2]) in new_files:
-            groups_ready.add(gid)
+        groups_ready.add(gid)
 
     kwargs['ti'].xcom_push(key = 'groups_ready', value = groups_ready)
 
@@ -69,66 +62,19 @@ get_groups_ready = PythonOperator(
     dag = mdag
 )
 
-def get_tmp_dir(ds, kwargs):
-    return TRANSACTION_TMP_PATH_TEMPLATE.format(kwargs['ts_nodash'])
-
-# Fetch, decrypt, push up transactions file
-create_tmp_dir = BashOperator(
-    task_id='create_tmp_dir',
-    bash_command='mkdir -p {};'.format(TRANSACTION_TMP_PATH_TEMPLATE.format('{{ ts_nodash }}',)),
-    dag=mdag
-)
-
-def do_fetch_transaction_files(ds, **kwargs):
+# copy deid file (to keep track of ingested files)
+def do_copy_deid_files(ds, **kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
     for gid in groups_ready:
-        s3_utils.fetch_file_from_s3(
-            S3_TRANSACTION_RAW_URL + TRANSACTION_FILE_NAME_TEMPLATE.format(gid),
-            get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(gid)
+        fn = DEID_FILE_NAME_TEMPLATE.format(gid)
+        s3_utils.copy_file(
+            S3_TRANSACTION_RAW_URL + fn,
+            S3_TRANSACTION_PROCESSED_URL_TEMPLATE.format(gid) + fn
         )
 
-fetch_transaction_files = PythonOperator(
-    task_id = 'fetch_transaction_files',
-    python_callable = do_fetch_transaction_files,
-    provide_context = True,
-    dag = mdag
-)
-
-def encrypted_decrypted_file_paths_function(ds, kwargs):
-    group_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
-    pairs = []
-    for gid in groups_ready:
-        fn = get_tmp_dir(ds, kwargs) + TRANSACTION_FILE_NAME_TEMPLATE.format(gid)
-        pairs.append([fn, fn + '.gz'])
-
-    return pairs
-
-decrypt_transaction_files = SubDagOperator(
-    subdag=decrypt_files.decrypt_files(
-        DAG_NAME,
-        'decrypt_transaction_files',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_dir_func'                        : get_tmp_dir,
-            'encrypted_decrypted_file_paths_func' : encrypted_decrypted_file_paths_function
-        }
-    ),
-    task_id='decrypt_transaction_files',
-    dag=mdag
-)
-
-def do_push_transaction_files(ds, **kwargs):
-    groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
-
-    for gid in groups_ready:
-        fn = TRANSACTION_FILE_NAME_TEMPLATE.format(gid)
-        s3_utils.copy_file(get_tmp_dir(ds, kwargs) + fn + '.gz',
-            S3_TRANSACTION_PROCESSED_URL_TEMPLATE.format(gid) + fn)
-
-push_transaction_files = PythonOperator(
-    task_id = 'push_transaction_files',
-    python_callable = do_push_transaction_files,
+copy_deid_files = PythonOperator(
+    task_id = 'copy_deid_files',
+    python_callable = do_copy_deid_files,
     provide_context = True,
     dag = mdag
 )
@@ -186,8 +132,7 @@ clean_up_workspace = BashOperator(
 )
 
 if HVDAG.HVDAG.airflow_env == 'test':
-    for t in ['push_transaction_files', 'queue_up_for_matching',
-            'decrypt_transaction_files']:
+    for t in ['copy_deid_files', 'queue_up_for_matching']:
         del mdag.task_dict[t]
         globals()[t] = DummyOperator(
             task_id = t,
@@ -195,12 +140,6 @@ if HVDAG.HVDAG.airflow_env == 'test':
         )
 
 # Dependencies
-create_tmp_dir.set_upstream(get_groups_ready)
-fetch_transaction_files.set_upstream(create_tmp_dir)
-decrypt_transaction_files.set_upstream(fetch_transaction_files)
-push_transaction_files.set_upstream(decrypt_transaction_files)
-clean_up_workspace.set_upstream(push_transaction_files)
-
-queue_up_for_matching.set_upstream(get_groups_ready)
-
-trigger_deliveries.set_upstream([push_transaction_files, queue_up_for_matching])
+copy_deid_files.set_upstream(get_groups_ready)
+queue_up_for_matching.set_upstream(copy_deid_files)
+trigger_deliveries.set_upstream(queue_up_for_matching)
