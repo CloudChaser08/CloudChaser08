@@ -74,13 +74,23 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
     pharmacy_extract.createOrReplaceTempView('pharmacy_extract')
 
     # summary
-    summary =  medical_extract.groupBy('data_vendor').count().collect()
-    summary += pharmacy_extract.groupBy('data_vendor').count().collect()
+    med_summary    =  medical_extract \
+            .withColumn('claim', F.when(F.length(F.trim(F.col('claim_id'))) > 0, F.col('claim_id')).otherwise(F.col('record_id'))) \
+            .select('data_vendor', 'claim').distinct() \
+            .groupBy('data_vendor').count()
+    pharma_summary = pharmacy_extract \
+            .withColumn('claim', F.when(F.length(F.trim(F.col('claim_id'))) > 0, F.col('claim_id')).otherwise(F.col('record_id'))) \
+            .select('data_vendor', 'claim').distinct() \
+            .groupBy('data_vendor').count()
+
+    summary = med_summary.union(pharma_summary)
+
+    summary.createOrReplaceTempView('summary')
 
     summary_report = '\n'.join(['|'.join([
             group_id, str(all_patient_count), str(matched_patient_count),
             r['data_vendor'], str(r['count'])
-        ]) for r in summary])
+        ]) for r in summary.collect()])
 
     with open('/tmp/summary_report_{}.txt'.format(group_id), 'w') as outf:
         outf.write(summary_report)
