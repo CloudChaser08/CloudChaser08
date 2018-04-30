@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime, date
 import hashlib
 import spark.delivery.humana_000468.sparkExtractHumana as humana_extract
+import spark.helpers.file_utils as file_utils
 import os
 
 today = date(2018, 4, 26)
@@ -12,11 +13,12 @@ medical_extract = None
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     test_cleanup(spark)
-    spark['spark'].read.json('spark/test/delivery/humana/hv000468/resources/ref_vdr_feed.json').createOrReplaceTempView('ref_vdr_feed')
+    
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/ref_vdr_feed.json')).createOrReplaceTempView('ref_vdr_feed')
     spark['spark'].sql('CREATE SCHEMA dw')
     spark['spark'].sql('CREATE TABLE dw.ref_vdr_feed AS SELECT * FROM ref_vdr_feed')
-    spark['spark'].read.json('spark/test/delivery/humana/hv000468/resources/pharma_sample.json').createOrReplaceTempView('pharmacyclaims')
-    spark['spark'].read.json('spark/test/delivery/humana/hv000468/resources/med_sample.json').createOrReplaceTempView('medicalclaims')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('pharmacyclaims')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('medicalclaims')
     humana_extract.run(spark['spark'], spark['runner'], group_id, test=True)
 
     global pharmacy_extract, medical_extract
