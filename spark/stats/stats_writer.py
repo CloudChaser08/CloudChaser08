@@ -14,18 +14,23 @@ YOY_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_yearoveryearreportitem WHERE 
 YOY_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_yearoveryearreportitem " \
                           "(startyear, value, datafeed_id) values ('{}', '{}', '{}');"
 
-EPI_AGE_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_agereportitem WHERE datafeed_id = '{}';"
 EPI_AGE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_agereportitem (value, age, datafeed_id) " \
-                              "values ('{}', '{}', '{}');"
-EPI_GENDER_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_genderreportitem WHERE datafeed_id = '{}';"
+                              "VALUES ('{value}', '{field}', '{datafeed_id}') ON CONFLICT (age, datafeed_id) " \
+                              "DO UPDATE SET value = '{value}';"
+
 EPI_GENDER_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_genderreportitem (value, gender, datafeed_id) " \
-                                 "values ('{}', '{}', '{}');"
-EPI_STATE_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_georeportitem WHERE datafeed_id = '{}';"
+                                 "VALUES ('{value}', '{field}', '{datafeed_id}') ON CONFLICT (gender, datafeed_id) " \
+                                 "DO UPDATE SET value = '{value}';"
+
+
 EPI_STATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_georeportitem (value, state, datafeed_id) " \
-                                "values ('{}', '{}', '{}');"
-EPI_REGION_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_regionreportitem WHERE datafeed_id = '{}';"
+                                "VALUES ('{value}', '{field}', '{datafeed_id}') ON CONFLICT (state, datafeed_id) " \
+                                "DO UPDATE SET value = '{value}';"
+
+
 EPI_REGION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_regionreportitem (value, division, datafeed_id) " \
-                                 "values ('{}', '{}', '{}');"
+                                 "VALUES ('{value}', '{field}', '{datafeed_id}') ON CONFLICT (division, datafeed_id) " \
+                                 "DO UPDATE SET value = '{value}';"
 
 FILL_RATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
                                 "(name, sequence, datafield_id, data_feed_id, fill_rate, unique_to_data_feed) " \
@@ -112,6 +117,7 @@ VALID_GENDERS = [
     'F',
 ]
 
+
 def _generate_queries(stats, provider_conf):
     """
     Generate queries based on given stats
@@ -154,7 +160,6 @@ def _generate_queries(stats, provider_conf):
                     } for stat in stat_value if stat['field'].upper() in REGION_MAP.values()
                 ]
 
-                delete_query = EPI_REGION_DELETE_SQL_TEMPLATE
                 query = EPI_REGION_INSERT_SQL_TEMPLATE
             elif stat_name == 'state':
 
@@ -166,7 +171,6 @@ def _generate_queries(stats, provider_conf):
                     } for stat in stat_value if stat['field'].upper() in REGION_MAP.keys()
                 ]
 
-                delete_query = EPI_STATE_DELETE_SQL_TEMPLATE
                 query = EPI_STATE_INSERT_SQL_TEMPLATE
             elif stat_name == 'age':
 
@@ -178,7 +182,6 @@ def _generate_queries(stats, provider_conf):
                     } for stat in stat_value if stat['field'] in VALID_AGES
                 ]
 
-                delete_query = EPI_AGE_DELETE_SQL_TEMPLATE
                 query = EPI_AGE_INSERT_SQL_TEMPLATE
             elif stat_name == 'gender':
 
@@ -190,7 +193,6 @@ def _generate_queries(stats, provider_conf):
                     } for stat in stat_value if stat['field'] in VALID_GENDERS
                 ]
 
-                delete_query = EPI_GENDER_DELETE_SQL_TEMPLATE
                 query = EPI_GENDER_INSERT_SQL_TEMPLATE
 
             # convert stat to percentages
@@ -199,10 +201,9 @@ def _generate_queries(stats, provider_conf):
                 stat['value'] = (stat['value'] / total_value) * 100
 
             # append to queries list
-            stat_queries.append(delete_query.format(provider_conf['datafeed_id']))
             for epi_stat in stat_value:
                 stat_queries.append(
-                    query.format(epi_stat['value'], epi_stat['field'], provider_conf['datafeed_id'])
+                    query.format(**epi_stat)
                 )
 
         elif stat_name == 'top_values' and stat_value:
