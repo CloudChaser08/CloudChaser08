@@ -5,6 +5,7 @@ import os
 from subprocess import check_call, Popen
 from airflow.models import Variable
 import airflow.hooks.S3_hook
+from datetime import datetime
 
 DEFAULT_CONNECTION_ID = 'my_conn_s3'
 
@@ -143,3 +144,14 @@ def s3_key_exists(path, s3_connection_id=DEFAULT_CONNECTION_ID):
     This function expects a full url: s3://bucket/key/
     """
     return _get_s3_hook(s3_connection_id).check_for_wildcard_key(path, None)
+
+def get_file_modified_date(path, s3_connection_id=DEFAULT_CONNECTION_ID):
+    """
+    Get the size of a file on s3
+    """
+    bucket_key = _transform_path_to_bucket_key(path)
+    raw_date = _get_s3_hook(s3_connection_id).get_key(
+        bucket_key['key'], bucket_key['bucket']
+    ).last_modified
+
+    return datetime.strptime(raw_date, '%a, %d %b %Y %H:%M:%S %Z')
