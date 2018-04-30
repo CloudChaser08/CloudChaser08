@@ -10,6 +10,7 @@ ts = 1524690702.12345
 group_id = '87654321'
 pharmacy_extract = None
 medical_extract = None
+summary = None
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     test_cleanup(spark)
@@ -21,9 +22,10 @@ def test_init(spark):
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('medicalclaims')
     humana_extract.run(spark['spark'], spark['runner'], group_id, test=True)
 
-    global pharmacy_extract, medical_extract
+    global pharmacy_extract, medical_extract, summary
     pharmacy_extract = spark['spark'].table('pharmacy_extract').collect()
     medical_extract = spark['spark'].table('medical_extract').collect()
+    summary = spark['spark'].table('summary').collect()
 
 def test_hashing():
     med_row = [r for r in medical_extract if r['claim_id'] == '365255892'][0]
@@ -41,6 +43,10 @@ def test_hashing():
 def test_nulling():
     for r in pharmacy_extract + medical_extract:
         assert len(r['patient_year_of_birth'] or '') == 0
+
+def test_record_count():
+    assert [r['count'] for r in summary if r['data_vendor'] == 'Private Source 14'][0] == 26
+    assert [r['count'] for r in summary if r['data_vendor'] == 'Private Source 22'][0] == 29
 
 def test_cleanup(spark):
     try:
