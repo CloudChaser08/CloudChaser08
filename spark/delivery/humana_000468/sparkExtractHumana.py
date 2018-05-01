@@ -27,6 +27,7 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
         output_path = file_utils.get_abs_path(
             __file__, '../../test/delivery/humana/hv000468/out/test1234/'
         ) + '/'
+        subprocess.check_call(['mkdir', '-p', output_path])
         matching_path = file_utils.get_abs_path(
             __file__, '../../test/delivery/humana/hv000468/resources/matching/test1234/'
         ) + '/'
