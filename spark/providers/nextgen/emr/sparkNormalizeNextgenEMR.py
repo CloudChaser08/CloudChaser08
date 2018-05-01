@@ -10,6 +10,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
+import load_transactions
 from spark.helpers.privacy.emr import                   \
     encounter as priv_encounter,                        \
     clinical_observation as priv_clinical_observation,  \
@@ -160,12 +161,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 # NOTE: No matching data yet
 #    payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
-    runner.run_spark_script('load_transactions.sql', [
-        ['input_root_path', input_root_path],
-        ['input_path', input_path],
-        ['s3_encounter_reference', enc_reference_path],
-        ['s3_demographics_reference', demo_reference_path],
-    ])
+    load_transactions.load(runner, input_path, enc_reference_path, demo_reference_path)
     logging.debug("Loaded transactions data")
 
     runner.run_spark_script('deduplicate_transactions.sql')
@@ -180,7 +176,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     for table in transaction_tables:
         postprocessor.compose(
             postprocessor.trimmify, postprocessor.nullify
-        )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
+        )(runner.sqlContext.sql('select * from {}'.format(table))).createOrReplaceTempView(table)
 
     runner.run_spark_script('normalize_encounter.sql', [
         ['min_date', min_date],
