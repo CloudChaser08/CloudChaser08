@@ -94,7 +94,7 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
 
     with open('/tmp/summary_report_{}.txt'.format(group_id), 'w') as outf:
         outf.write(summary_report)
-        subprocess.check_call(move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path])
+    subprocess.check_call(move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path])
 
     medical_extract.repartition(1).write \
             .csv(output_path.replace('s3://', 's3a://'), sep='|', compression='gzip', mode='append')
