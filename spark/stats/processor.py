@@ -71,8 +71,11 @@ def _run_year_over_year(df, earliest_date, end_date, provider_conf):
     return None
 
 
-def run_marketplace_stats(spark, sqlContext, quarter, \
-                          start_date, end_date, provider_conf):
+def run_marketplace_stats(
+        spark, sqlContext, quarter, start_date, end_date, provider_conf, stats_to_calculate=[
+            'key_stats', 'longitudinality', 'year_over_year', 'fill_rates', 'top_values', 'epi'
+        ]
+):
     '''
     Runs all the relevant marketplace stats for a provider in a given
     date range / quarter
@@ -141,13 +144,18 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
     year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
 
     # Return all the dfs
-    all_stats = {
-        'fill_rates': fill_rates,
-        'key_stats': key_stats,
-        'top_values': top_values,
-        'longitudinality': longitudinality,
-        'year_over_year': year_over_year
-    }
+    all_stats = {}
+    for stat in stats_to_calculate:
+        if stat == 'fill_rates':
+            all_stats[stat] = fill_rates
+        elif stat == 'key_stats':
+            all_stats[stat] = key_stats
+        elif stat == 'top_values':
+            all_stats[stat] = top_values
+        elif stat == 'longitudinality':
+            all_stats[stat] = longitudinality
+        elif stat == 'year_over_year':
+            all_stats[stat] = year_over_year
     return all_stats
 
 

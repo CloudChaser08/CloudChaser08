@@ -7,16 +7,17 @@ import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
 
-def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
+def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats):
 
     # Calculate epi calcs
-    epi_calcs = processor.get_epi_calcs(provider_config)
+    epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats else {}
 
     if provider_config['datatype'] == 'emr':
         marketplace_stats = dict([
             (model_conf['datatype'], processor.run_marketplace_stats(
                 spark, sqlContext, quarter, start_date, end_date,
-                dict([it for it in provider_config.items() + model_conf.items()])
+                dict([it for it in provider_config.items() + model_conf.items()]),
+                stats
             )) for model_conf in provider_config['models']
         ])
 
@@ -33,7 +34,7 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config):
     else:
         # Calculate marketplace stats
         marketplace_stats = processor.run_marketplace_stats(
-            spark, sqlContext, quarter, start_date, end_date, provider_config
+            spark, sqlContext, quarter, start_date, end_date, provider_config, stats
         )
 
         stats = dict(marketplace_stats, **epi_calcs)
@@ -49,6 +50,7 @@ def main(args):
     quarter = args.quarter
     start_date = args.start_date
     end_date = args.end_date
+    stats = args.stats
 
     # Get the providers config
     this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
@@ -60,7 +62,7 @@ def main(args):
                         .init('Feed {} marketplace stats'.format(feed_id))
 
     # Calculate stats
-    run(spark, sqlContext, quarter, start_date, end_date, provider_conf)
+    run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -68,5 +70,6 @@ if __name__ == '__main__':
     parser.add_argument('--quarter', type = str)
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)
+    parser.add_argument('--stats', nargs = '+', default = [])
     args = parser.parse_args()
     main(args)
