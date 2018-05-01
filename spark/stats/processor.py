@@ -96,6 +96,10 @@ def run_marketplace_stats(
     earliest_date = provider_conf['earliest_date']
     index_all_dates = provider_conf.get('index_all_dates', False)
 
+    # if earliest_date is greater than start_date, use earliest_date as start_date
+    if earliest_date > start_date:
+        start_date = earliest_date
+
     # Get data
     all_data_df = utils.get_provider_data(
         sqlContext, datatype,
