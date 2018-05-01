@@ -20,7 +20,7 @@ SELECT
     NULL,                                       -- date_received
     extract_date(
         t.dateservicestart,
-        '%Y-%m-%d'
+        '%Y%m%d'
     ),                                          -- date_service
     NULL,                                       -- date_service_end
     NULL,                                       -- inst_date_admitted
