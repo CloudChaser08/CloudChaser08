@@ -9,5 +9,10 @@ def load(runner, location, columns, file_type, delimiter=',', header=False):
 
     if file_type == 'csv':
         df = runner.sqlContext.read.csv(location, schema=schema, sep=delimiter, header=header)
-        df = df or runner.sqlContext([], schema=schema)
-        return df
+    elif file_type == 'orc':
+        df = runner.sqlContext.read.schema(schema).orc(location)
+    else:
+        return
+
+    df = df or runner.sqlContext([], schema=schema)
+    return df
