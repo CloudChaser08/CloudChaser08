@@ -247,7 +247,7 @@
             "name"              : "labcorp",
             "datafeed_id"       : "46",
             "datatype"          : "labtests",
-            "date_field"        : "date_service",
+            "date_field"        : "date_specimen",
             "record_field"      : null,
             "fill_rate"         : true,
             "key_stats"         : true,
