@@ -113,11 +113,13 @@ def run_marketplace_stats(
     # used for fill rate, top values, and key stats
     if index_all_dates:
         multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
-            '1900-01-01', end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates')
+            '1900-01-01', end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates'),
+            record_field=provider_conf.get('record_field')
         )(all_data_df)
     else:
         multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
-            start_date, end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates')
+            start_date, end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates'),
+            record_field=provider_conf.get('record_field')
         )(all_data_df)
 
     sampled_gen_stats_df = sampled_gen_stats_df.coalesce(partitions).cache()
