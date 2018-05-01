@@ -82,15 +82,24 @@ def select_data_sample_in_date_range(start_date, end_date, date_column_name, inc
         if record_field:
             distinct_records = limited_date_df.select(record_field).distinct()
             total_count = distinct_records.count()
-            fraction = float(min(max_sample_size, total_count)) / float(total_count)
+            if total_count:
+                fraction = float(min(max_sample_size, total_count)) / float(total_count)
+            else:
+                fraction = 0.0
             records_sample = distinct_records.sample(False, fraction)
             res = limited_date_df.join(records_sample, records_sample[record_field] == limited_date_df[record_field], 'leftsemi')
         else:
             total_count = limited_date_df.count()
-            fraction = float(min(max_sample_size, total_count)) / float(total_count)
+            if total_count:
+                fraction = float(min(max_sample_size, total_count)) / float(total_count)
+            else:
+                fraction = 0.0
             res = limited_date_df.sample(False, fraction)
 
-        return 1.0 / fraction, res
+        if fraction:
+            return 1.0 / fraction, res
+        else:
+            return 0.0, res
 
     return out
 

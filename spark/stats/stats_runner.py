@@ -7,17 +7,17 @@ import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
 
-def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats):
+def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate):
 
     # Calculate epi calcs
-    epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats else {}
+    epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats_to_calculate else {}
 
     if provider_config['datatype'] == 'emr':
         marketplace_stats = dict([
             (model_conf['datatype'], processor.run_marketplace_stats(
                 spark, sqlContext, quarter, start_date, end_date,
                 dict([it for it in provider_config.items() + model_conf.items()]),
-                stats
+                stats_to_calculate
             )) for model_conf in provider_config['models']
         ])
 
@@ -34,7 +34,7 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats
     else:
         # Calculate marketplace stats
         marketplace_stats = processor.run_marketplace_stats(
-            spark, sqlContext, quarter, start_date, end_date, provider_config, stats
+            spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate
         )
 
         stats = dict(marketplace_stats, **epi_calcs)
@@ -51,6 +51,11 @@ def main(args):
     start_date = args.start_date
     end_date = args.end_date
     stats = args.stats
+
+    if not stats:
+        stats = [
+            'key_stats', 'longitudinality', 'year_over_year', 'fill_rate', 'top_values', 'epi'
+        ]
 
     # Get the providers config
     this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
@@ -70,6 +75,6 @@ if __name__ == '__main__':
     parser.add_argument('--quarter', type = str)
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)
-    parser.add_argument('--stats', nargs = '+', default = [])
+    parser.add_argument('--stats', nargs = '+', default = None)
     args = parser.parse_args()
     main(args)

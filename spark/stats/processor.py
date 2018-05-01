@@ -123,29 +123,34 @@ def run_marketplace_stats(
     sampled_gen_stats_df = sampled_gen_stats_df.coalesce(partitions).cache()
 
     # Generate fill rates
-    fill_rates = _run_fill_rates(sampled_gen_stats_df, provider_conf)
+    if 'fill_rate' in stats_to_calculate:
+        fill_rates = _run_fill_rates(sampled_gen_stats_df, provider_conf)
 
     # Generate top values
-    top_values = _run_top_values(sampled_gen_stats_df, provider_conf)
+    if 'top_values' in stats_to_calculate:
+        top_values = _run_top_values(sampled_gen_stats_df, provider_conf)
 
-    if top_values:
-        for top_value_stat in top_values:
-            top_value_stat['count'] = int(top_value_stat['count'] * multiplier)
+        if top_values:
+            for top_value_stat in top_values:
+                top_value_stat['count'] = int(top_value_stat['count'] * multiplier)
 
-    # Generate key stats
-    key_stats = _run_key_stats(
-        all_data_df, earliest_date, start_date, end_date, provider_conf
-    )
+    if 'key_stats' in stats_to_calculate:
+        # Generate key stats
+        key_stats = _run_key_stats(
+            all_data_df, earliest_date, start_date, end_date, provider_conf
+        )
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year
     date_stats_df = all_data_df.select("hvid", provider_conf['date_field']).coalesce(partitions)
 
-    # Generate Longitudinality
-    longitudinality = _run_longitudinality(date_stats_df, provider_conf)
+    if 'longitudinality' in stats_to_calculate:
+        # Generate Longitudinality
+        longitudinality = _run_longitudinality(date_stats_df, provider_conf)
 
-    # Generate year over year
-    year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
+    if 'year_over_year' in stats_to_calculate:
+        # Generate year over year
+        year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
 
     # Return all the dfs
     all_stats = {}

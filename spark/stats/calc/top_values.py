@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col, countDistinct, lit
+from pyspark.sql.functions import col, countDistinct, lit, trim
 
 def _col_top_values(df, c, num, distinct_column=None):
     '''
@@ -29,6 +29,7 @@ def _col_top_values(df, c, num, distinct_column=None):
     # Group the DataFrame by the column we want to calculate
     # top values for.
     result_df = df.withColumnRenamed(c, 'col') \
+                  .where(col('col').isNotNull() & (trim(col('col')) != '')) \
                   .groupBy('col')
     # Aggregate the DataFrame based on whether or not
     # to count based on a distinct value or not
@@ -39,7 +40,6 @@ def _col_top_values(df, c, num, distinct_column=None):
     # Build the output from the aggregation
     return result_df.withColumn('name', lit(c)) \
                     .select('name', 'col', 'count') \
-                    .dropna(subset=['col']) \
                     .sort(col('count').desc()) \
                     .limit(num)
 
