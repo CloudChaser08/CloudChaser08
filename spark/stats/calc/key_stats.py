@@ -39,7 +39,7 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
     index_all_dates = provider_conf.get('index_all_dates', False)
     index_null_dates = provider_conf.get('index_null_dates')
     patient_attribute = 'hvid'
-    record_attribute = provider_conf.get('record_attribute', '*')
+    record_attribute = provider_conf.get('record_field', '*')
     row_attribute = '*'
 
     # If we are indexing all dates, then we want to ignore

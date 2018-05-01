@@ -12,7 +12,7 @@ results = None
 def test_init(spark):
     global df, results
     conf = { 'date_field'       : 'date',
-             'record_attribute' : 'c',
+             'record_field' : 'c',
              'index_all_dates'  : False
             }
     data_row = Row('date', 'hvid', 'c', 'd', 'e')
@@ -36,5 +36,3 @@ def test_counts_are_correct_for_date_range():
     assert filter(lambda x: x['field'] == 'total_24_month_record', results)[0]['value'] == 2
     assert filter(lambda x: x['field'] == 'total_row', results)[0]['value'] == 4
     assert filter(lambda x: x['field'] == 'total_24_month_row', results)[0]['value'] == 3
-
-
