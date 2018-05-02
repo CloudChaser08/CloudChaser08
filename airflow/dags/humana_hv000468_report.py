@@ -5,20 +5,15 @@ from datetime import datetime, timedelta
 
 # hv-specific modules
 import common.HVDAG as HVDAG
-import subdags.detect_move_normalize as detect_move_normalize
-import subdags.s3_push_files as s3_push_files
 
 import util.s3_utils as s3_utils
-import util.sftp_utils as sftp_utils
+import util.ses_utils as ses_utils
 
-import logging
-import json
 import os
 import csv
 import shutil
 
-for m in [s3_push_files, detect_move_normalize, HVDAG,
-        s3_utils, sftp_utils]:
+for m in [HVDAG, s3_utils, ses_utils]:
     reload(m)
 
 # Applies to all files
@@ -142,7 +137,6 @@ def do_generate_daily_report(ds, **kwargs):
             total['patients'], total['matched'], '-', 0])
 
     daily_report_file.close()
-    shutil.copy2(get_tmp_dir(ds, kwargs) + 'daily_report_' + kwargs['ds_nodash'] + '.csv', '/tmp/humana/daily_report.csv')
 
 generate_daily_report = PythonOperator(
     task_id='generate_daily_report',
@@ -151,12 +145,19 @@ generate_daily_report = PythonOperator(
     dag=mdag
 )
 
-email_daily_report = EmailOperator(
+def do_email_daily_report(ds, **kwargs):
+    ses_utils.send_email(
+        'delivery-receipts@healthverity.com',
+        ['agoldberg@healthverity.com', 'jcappiello@healthverity.com', 'ifishbein@healthverity.com'],
+        'TEST - Humana Delivery Report for ' + ds,
+        '',
+        [get_tmp_dir(ds, kwargs) + 'daily_report_' + kwargs['ds_nodash'] + '.csv']
+    )
+
+email_daily_report = PythonOperator(
     task_id='email_daily_report',
-    to=['ifishbein@healthverity.com'], # PLACEHOLDER
-    subject='Humana Delivery Report for {{ ds }}',
-    files=['/tmp/humana/daily_report.csv'],
-    html_content='',
+    provide_context=True,
+    python_callable=do_email_daily_report,
     dag=mdag
 )
 
