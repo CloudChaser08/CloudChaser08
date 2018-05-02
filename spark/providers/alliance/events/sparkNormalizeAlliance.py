@@ -88,6 +88,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             None,
             min_date
         ),
+        postprocessor.apply_whitelist(
+            runner.sqlContext,
+            'event_category_code',
+            'transaction.naics_code',
+            [
+                'event_category_code_qual',
+                'event_category_name'
+            ],
+            whitelist_col_name='gen_ref_cd',
+            feed_id=FEED_ID
+        ),
         events_priv.filter
     )(
         normalized_df
