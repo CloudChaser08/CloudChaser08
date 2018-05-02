@@ -4,7 +4,7 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model_v6 import schema
+from spark.common.event_common_model_v7 import schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -12,8 +12,10 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.privacy.pharmacyclaims as pharm_priv
+import spark.helpers.privacy.events as events_priv
 from pyspark.sql.functions import col, lit, upper
+
+FEED_ID = '56'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     setid = 'hvfeedfile_po_record_deid_{}.hvout'.format(date_input.replace('-', ''))
@@ -25,7 +27,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/alliance/events/resources/input/'
         )
         matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/alliance/events/resources/matching/'
+            script_path, '../../../test/providers/alliance/events/resources/payload/'
         )
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/alliance/out/{}/'.format(
@@ -47,7 +49,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     min_date = postprocessor.coalesce_dates(
         runner.sqlContext,
-        '56',
+        FEED_ID,
         None,
         'EARLIEST_VALID_SERVICE_DATE'
     )
@@ -56,7 +58,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     max_date = date_input
 
-    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'hvJoinKey'])
+    payload_loader.load(runner, matching_path, ['claimId', 'personid', 'hvJoinKey'])
 
     import spark.providers.alliance.events.load_transactions as load_transactions
     load_transactions.load(runner, input_path)
@@ -72,7 +74,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     alliance_data_final = postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),
         postprocessor.add_universal_columns(
-            feed_id='56',
+            feed_id=FEED_ID,
             vendor_id='243',
             filename=setid,
             model_version_number='07'
@@ -80,13 +82,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.nullify,
         postprocessor.apply_date_cap(
             runner.sqlContext,
-            'date_service',
+            'event_date',
             max_date,
-            '56',
+            FEED_ID,
             None,
             min_date
         ),
-        pharm_priv.filter
+        events_priv.filter
     )(
         normalized_df
     )
@@ -94,7 +96,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
             runner.sqlContext,
-            '56',
+            FEED_ID,
             date(1900, 1, 1),
             'HVM_AVAILABLE_HISTORY_START_DATE',
             'EARLIST_VALID_SERVICE_DATE'
@@ -106,7 +108,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
 
     else:
-        alliance_data_final.createOrReplaceTempView('events_common_model')
+        alliance_data_final.createOrReplaceTempView('event_common_model')
 
 
 def main(args):

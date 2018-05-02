@@ -5,7 +5,7 @@ def load(runner, input_path_prefix):
     '''
     Load in the transactions to an in memory table.
     '''
-    df = records_loader.load(runner, input_path_prefix, TABLES['alliance_transactions'])
+    df = records_loader.load(runner, input_path_prefix, TABLES['alliance_transactions'], 'csv')
 
     postprocessor.compose(
         postprocessor.trimmify,
