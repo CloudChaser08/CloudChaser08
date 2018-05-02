@@ -149,7 +149,7 @@ def do_email_daily_report(ds, **kwargs):
     ses_utils.send_email(
         'delivery-receipts@healthverity.com',
         ['agoldberg@healthverity.com', 'jcappiello@healthverity.com', 'ifishbein@healthverity.com'],
-        'TEST - Humana Delivery Report for ' + ds,
+        'Humana Delivery Report for ' + ds,
         '',
         [get_tmp_dir(ds, kwargs) + 'daily_report_' + kwargs['ds_nodash'] + '.csv']
     )
