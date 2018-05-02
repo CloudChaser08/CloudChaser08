@@ -125,7 +125,7 @@ def run_marketplace_stats(
     sampled_gen_stats_df = sampled_gen_stats_df.coalesce(partitions).cache()
 
     # Generate fill rates
-    if 'fill_rate' in stats_to_calculate:
+    if 'fill_rates' in stats_to_calculate:
         fill_rates = _run_fill_rates(sampled_gen_stats_df, provider_conf)
 
     # Generate top values

@@ -7,7 +7,11 @@ import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
 
-def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate):
+ALL_STATS = [
+    'key_stats', 'longitudinality', 'year_over_year', 'fill_rates', 'top_values', 'epi'
+]
+
+def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate=ALL_STATS):
 
     # Calculate epi calcs
     epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats_to_calculate else {}
@@ -53,9 +57,7 @@ def main(args):
     stats = args.stats
 
     if not stats:
-        stats = [
-            'key_stats', 'longitudinality', 'year_over_year', 'fill_rate', 'top_values', 'epi'
-        ]
+        stats = ALL_STATS
 
     # Get the providers config
     this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
