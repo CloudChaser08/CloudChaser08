@@ -1,4 +1,5 @@
 from pyspark.sql.functions import col, countDistinct, lit, trim
+import logging
 
 def _col_top_values(df, c, num, distinct_column=None):
     '''
@@ -64,7 +65,8 @@ def calculate_top_values(df, max_top_values, distinct_column=None, threshold=0.0
     else:
         columns = df.columns
     if len(columns) == 0:
-        raise ValueError('Dataframe with no columns passed in for top values calculation')
+        logging.error("Dataframe with no columns passed in for top values calculation")
+        return []
 
     BATCH_SIZE = 10
     i = 0
