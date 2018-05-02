@@ -252,7 +252,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : true,
-            "earliest_date"     : "1901-01-01"
+            "earliest_date"     : "2017-04-01"
         },
         {
             "name"              : "ambry",
@@ -755,7 +755,7 @@
               }
             ],
           "epi_calcs"         : true,
-          "earliest_date"     : "1900-01-01",
+          "earliest_date"     : "2011-02-01",
           "index_all_dates"   : true,
           "index_null_dates"  : true
         },

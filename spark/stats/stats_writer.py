@@ -211,7 +211,7 @@ def _generate_queries(stats, provider_conf):
 
             for column in columns:
                 top_values_string = reduce(lambda x1, x2: x1 + ', ' + x2, [
-                    '{} ({})'.format(r['value'], r['count'])
+                    '{} ({})'.format(r['value'].encode('utf-8'), r['count'])
                     for r in stat_value if r['column'] == column
                 ])
                 name_id_dict = provider_conf['top_values_conf']['columns']
