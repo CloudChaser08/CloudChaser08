@@ -87,7 +87,10 @@ def select_data_sample_in_date_range(start_date, end_date, date_column_name, inc
             else:
                 fraction = 0.0
             records_sample = distinct_records.sample(False, fraction)
-            res = limited_date_df.join(records_sample, records_sample[record_field] == limited_date_df[record_field], 'leftsemi')
+
+            sample = records_sample.alias('sample')
+            full = limited_date_df.alias('full')
+            res = full.join(sample, col('full.{}'.format(record_field)) == col('sample.{}'.format(record_field)), 'leftsemi')
         else:
             total_count = limited_date_df.count()
             if total_count:
