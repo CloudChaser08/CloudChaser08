@@ -8,6 +8,7 @@ from airflow.operators import PythonOperator, SubDagOperator
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.run_pyspark_routine as run_pyspark_routine
 import subdags.split_push_files as split_push_files
+import subdags.update_analytics_db as update_analytics_db
 
 import util.date_utils as date_utils 
 import util.decompression as decompression
@@ -21,25 +22,31 @@ for m in [clean_up_tmp_dir, run_pyspark_routine,
 TMP_PATH_TEMPLATE = '/tmp/reference/nppes/{}{}{}/'
 DAG_NAME = 'reference_nppes'
 
-EMR_CLUSTER_NAME = 'reference_nppes'
+NPPES_URL = 'http://download.cms.gov/nppes/'
+NPPES_FILENAME_TEMPLATE = 'NPPES_Data_Dissemination_{}_{}.zip'
+NPPES_CSV_TEMPLATE = "npidata_pfile_date_{}{}{}"
+
+EMR_CLUSTER_NAME_TEMPLATE = 'ref_nppes_{}'
 NUM_NODES = 5
 NODE_TYPE = 'm4.xlarge'
 EBS_VOLUME_SIZE = '100'
 
 if HVDAG.HVDAG.airflow_env == 'test':
+    DESTINATION = 's3://salusv/testing/dewey/airflow/e2e/reference/gsdd/'
+else:
+    DESTINATION = 's3://salusv/reference/gsdd/'
+
+if HVDAG.HVDAG.airflow_env == 'test':
     DESTINATION = 's3://salusv/testing/dewey/airflow/e2e/reference/nppes/'
-    NPPES_TEXT_LOCATION = 's3://salusv/testing/'
+    NPPES_TEXT_LOCATION = 's3://salusv/testing/reference/nppes/{}/{}/{}/'
 else:
     DESTINATION = 's3://salusv/reference/nppes/'
     NPPES_TEXT_LOCATION = 's3://salusv/warehouse/text/nppes/{}/{}/{}/'
-
-NPPES_URL = 'http://download.cms.gov/nppes/'
-NPPES_FILENAME_TEMPLATE = 'NPPES_Data_Dissemination_{}_{}.zip'
-
+    PARQUET_S3_LOCATION = 's3://salusv/reference/parquet/nppes/'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 4, 20),
+    'start_date': datetime(2018, 4, 21),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -48,7 +55,7 @@ default_args = {
 mdag = HVDAG.HVDAG(
     'reference_nppes',
     default_args=default_args,
-    schedule_interval='0 0 20 * *',
+    schedule_interval='0 0 21 * *',
 )
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
@@ -57,40 +64,64 @@ get_tmp_unzipped_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE + 'npi_unzipped/')
 
 
-def get_nppes_filename(ds, kwargs):
+def get_nppes_zipped_filename(ds, kwargs):
     date = datetime.strptime(ds, '%Y-%m-%d')
     return NPPES_FILENAME_TEMPLATE.format(date.strftime("%B"), date.year)
 
 
-def get_file_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs) + get_nppes_filename(ds)]
+def get_zip_file_path(ds, kwargs):
+    return [get_tmp_dir(ds, kwargs) + get_nppes_zipped_filename(ds)]
 
+def get_csv_file_path(ds, kwargs):
+    for f in os.listdir(get_tmp_unzipped_dir(ds, kwargs)):
+        if f.startswith('npidata_pfile') and 'FileHeader' not in f:
+            file_name = f
+    return [get_tmp_unzipped_dir(ds, kwargs) + file_name]
 
 def fetch_monthly_npi_file(ds, kwargs):
     subprocess.check_call([
-        'curl', NPPES_URL + get_nppes_filename(ds,kwargs), '-o', get_tmp_dir(ds,kwargs) + get_nppes_filename(ds,kwargs)
+        'curl', NPPES_URL + get_nppes_zipped_filename(ds,kwargs), '-o', get_tmp_dir(ds,kwargs) + get_nppes_zipped_filename(ds,kwargs)
     ])
 
 
 def do_unzip_file(ds, kwargs):
-    zip_file_path = get_tmp_dir(ds, kwargs) + get_nppes_filename(ds)
+    zip_file_path = get_tmp_dir(ds, kwargs) + get_nppes_zipped_filename(ds)
     decompression.decompress_zip_file(zip_file_path, get_tmp_unzipped_dir(ds, kwargs))
     os.remove(zip_file_path)
 
-def do_run_pyspark_routine(ds, **kwargs):
-    emr_utils.run_script(
-        DAG_NAME, kwargs['pyspark_script_name'], [], None
-    )
 
-def do_create_cluster(ds, **kwargs):
-    emr_utils.create_emr_cluster(
-        DAG_NAME, NUM_NODES, NODE_TYPE, EBS_VOLUME_SIZE, 'reference_search_terms_update', connected_to_metastore=True)
+def norm_args(ds, k):
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k),
+            # '--nppes_csv', date_utils.insert_date_into_template(NPPES_CSV_TEMPLATE, k),
+            '--num_output_files', '20']
+    if HVDAG.HVDAG.airflow_env == 'test':
+        base += ['--airflow_test']
 
-    emr_utils.run_steps(DAG_NAME, [INSTALL_BOTO3_STEP])
+    return base
 
 
-def do_delete_cluster(ds, **kwargs):
-    emr_utils.delete_emr_cluster(DAG_NAME)
+run_pyspark_routine = SubDagOperator(
+    subdag = run_pyspark_routine.run_pyspark_routine(
+        DAG_NAME,
+        'run_nppes_script',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'EMR_CLUSTER_NAME_FUNC': date_utils.generate_insert_date_into_template_function(
+                EMR_CLUSTER_NAME_TEMPLATE
+            ),
+            'PYSPARK_SCRIPT_NAME': '/home/hadoop/spark/reference/nppes/sparkNPPES.py',
+            'PYSPARK_ARGS_FUNC': norm_args,
+            'NUM_NODES': NUM_NODES,
+            'NODE_TYPE': NODE_TYPE,
+            'EBS_VOLUME_SIZE': EBS_VOLUME_SIZE,
+            'PURPOSE': 'reference_data_update',
+            'CONNECT_TO_METASTORE': False,
+        }
+    ),
+    task_id = 'run_nppes_script',
+    dag = mdag
+)
 
 
 fetch_NPI_file = PythonOperator(
@@ -116,8 +147,10 @@ split_push_to_s3 = SubDagOperator(
         mdag.schedule_interval,
         {
             'tmp_dir_func'             : get_tmp_unzipped_dir,
-            'file_paths_to_split_func' : get_file_paths,
-            'file_name_pattern_func'   : get_nppes_filename,
+            'file_paths_to_split_func' : get_csv_file_path,
+            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
+                NPPES_CSV_TEMPLATE + '_\d{8}.csv'
+            ),
             's3_prefix_func'           :
                 date_utils.generate_insert_date_into_template_function(
                     NPPES_TEXT_LOCATION
@@ -129,21 +162,6 @@ split_push_to_s3 = SubDagOperator(
     dag=mdag
 )
 
-run_pyspark_routine = PythonOperator(
-    task_id='run_pyspark',
-    provide_context=True,
-    python_callable=do_run_pyspark_routine,
-    dag=mdag
-)
-
-delete_cluster = PythonOperator(
-    task_id='delete_cluster',
-    provide_context=True,
-    python_callable=do_delete_cluster,
-    dag=mdag
-)
-
-# MSCK REPAIR TABLE <table_name>
 
 clean_up_workspace = SubDagOperator(
     subdag=clean_up_tmp_dir.clean_up_tmp_dir(
@@ -158,6 +176,25 @@ clean_up_workspace = SubDagOperator(
     task_id='clean_up_workspace',
     dag=mdag
 )
+
+repair_table = "MSCK REPAIR TABLE ref_nppes"
+
+if HVDAG.HVDAG.airflow_env != 'test':
+    update_analytics_db = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_analytics_db',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func' : lambda ds, k: repair_table
+            }
+        ),
+        task_id='update_analytics_db',
+        dag=mdag
+    )
+
+    update_analytics_db.set_upstream(run_pyspark_routine)
 
 unzip_file.set_upstream(fetch_NPI_file)
 split_push_to_s3.set_upstream(unzip_file)
