@@ -100,7 +100,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             whitelist_col_name='gen_ref_cd',
             feed_id=FEED_ID
         ),
-        events_priv.filter
+        events_priv.filter,
+        schema_enforcer.apply_schema_func(schema)
     )(
         normalized_df
     )
