@@ -18,7 +18,8 @@ from pyspark.sql.functions import col, lit, upper
 FEED_ID = '56'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
-    setid = 'hvfeedfile_po_record_deid_{}.hvout'.format(date_input.replace('-', ''))
+    # TODO: change when known
+    setid = 'transaction_sample_{}'.format(date_input.replace('-', ''))
 
     script_path = __file__
 
@@ -113,7 +114,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'EARLIST_VALID_SERVICE_DATE'
         )
 
-        # TODO: use new normalized records unloader here
         normalized_records_unloader.unload(
             spark, runner, alliance_data_final, 'event_date', max_date, 'alliance',
             hvm_historical_date=datetime(
