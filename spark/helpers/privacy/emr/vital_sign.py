@@ -7,7 +7,7 @@ vital_sign_transformer = Transformer(
     vit_sign_msrmt=[
         TransformFunction(post_norm_cleanup.clean_up_vital_sign,[
             'vit_sign_typ_cd', 'vit_sign_msrmt', 'vit_sign_uom', 'ptnt_gender_cd',
-            'ptnt_age_num', 'ptnt_birth_yr', 'data_captr_dt', 'enc_dt'
+            'ptnt_age_num', 'ptnt_birth_yr', 'vit_sign_dt', 'enc_dt'
         ])
     ],
     vit_sign_rndrg_prov_state_cd=[
