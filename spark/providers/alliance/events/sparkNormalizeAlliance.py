@@ -59,7 +59,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     max_date = date_input
 
-    payload_loader.load(runner, matching_path, ['claimId', 'personid', 'hvJoinKey'])
+    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'hvJoinKey'])
 
     import spark.providers.alliance.events.load_transactions as load_transactions
     load_transactions.load(runner, input_path)

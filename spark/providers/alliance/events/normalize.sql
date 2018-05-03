@@ -43,4 +43,4 @@ SELECT
         ELSE NULL
     END                                     AS event_category_flag_qual
 FROM alliance_transactions t
-INNER JOIN matching_payload p ON t.agility_id = p.personid
+INNER JOIN matching_payload p ON t.agility_id = p.personId
