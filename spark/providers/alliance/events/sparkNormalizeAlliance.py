@@ -115,7 +115,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         # TODO: use new normalized records unloader here
         normalized_records_unloader.unload(
-            spark, runner, alliance_data_final, 'event_date', 
+            spark, runner, alliance_data_final, 'event_date', max_date, 'alliance',
+            hvm_historical_date=datetime(
+                hvm_historical.year,
+                hvm_historical.month,
+                hvm_historical.day
+            )   
         )
 
     else:
