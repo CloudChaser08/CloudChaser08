@@ -3,8 +3,8 @@ SELECT
     proc.input_file_name                                 AS data_set,
     demo_pay.hvid                                        AS hvid,
     CASE
-    WHEN COALESCE(demo_pay.gender, demo.sex) IN ('M', 'F')
-    THEN COALESCE(demo_pay.gender, demo.sex) ELSE 'U'
+    WHEN SUBSTRING(COALESCE(demo_pay.gender, demo.sex), 1, 1) IN ('M', 'F')
+    THEN SUBSTRING(COALESCE(demo_pay.gender, demo.sex), 1, 1) ELSE 'U'
     END                                                  AS patient_gender,
     demo_pay.yearOfBirth                                 AS patient_year_of_birth,
     demo_pay.threeDigitZip                               AS patient_zip3,

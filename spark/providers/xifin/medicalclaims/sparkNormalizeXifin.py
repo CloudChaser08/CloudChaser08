@@ -14,8 +14,8 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.medicalclaims as med_priv
 import spark.providers.xifin.medicalclaims.transactions_loader as transactions_loader
 
-FEED_ID = '51'
-VENDOR_ID = '86'
+FEED_ID = '55'
+VENDOR_ID = '239'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
@@ -51,7 +51,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                     runner.sqlContext,
                     FEED_ID,
                     None,
-                    'HVM_AVAILABLE_HISTORY_START_DATE'
+                    'EARLIEST_VALID_SERVICE_DATE'
                 )
     if min_date:
         min_date = min_date.isoformat()
@@ -123,7 +123,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/xifin/spark-output/'
     else:
-        output_path = 's3://healthveritydev/musifer//'
+        output_path = 's3://healthveritydev/musifer/scratch/20180504-xifin-minimap/'
 
     normalized_records_unloader.distcp(output_path)
 
