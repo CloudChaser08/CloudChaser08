@@ -42,19 +42,20 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    if not test:
-        external_table_loader.load_ref_gen_ref(runner.sqlContext)
+    # if not test:
+    #     external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     explode.generate_exploder_table(spark, 4, 'diag_exploder')
 
-    min_date = postprocessor.coalesce_dates(
-                    runner.sqlContext,
-                    FEED_ID,
-                    None,
-                    'EARLIEST_VALID_SERVICE_DATE'
-                )
-    if min_date:
-        min_date = min_date.isoformat()
+    # min_date = postprocessor.coalesce_dates(
+    #                 runner.sqlContext,
+    #                 FEED_ID,
+    #                 None,
+    #                 'EARLIEST_VALID_SERVICE_DATE'
+    #             )
+    # if min_date:
+    #     min_date = min_date.isoformat()
+    min_date = None
 
     max_date = date_input
 
@@ -80,14 +81,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             model_version_number='03'
         ),
         postprocessor.nullify,
-        postprocessor.apply_date_cap(
-            runner.sqlContext,
-            'date_service',
-            max_date,
-            FEED_ID,
-            None,
-            min_date
-        ),
+        # postprocessor.apply_date_cap(
+        #     runner.sqlContext,
+        #     'date_service',
+        #     max_date,
+        #     FEED_ID,
+        #     None,
+        #     min_date
+        # ),
         med_priv.filter,
         schema_enforcer.apply_schema_func(schema)
     )(
@@ -95,19 +96,19 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
 
     if not test:
-        hvm_historical = postprocessor.coalesce_dates(
-            runner.sqlContext,
-            FEED_ID,
-            date(1900, 1, 1),
-            'HVM_AVAILABLE_HISTORY_START_DATE',
-            'EARLIST_VALID_SERVICE_DATE'
-        )
+        # hvm_historical = postprocessor.coalesce_dates(
+        #     runner.sqlContext,
+        #     FEED_ID,
+        #     date(1900, 1, 1),
+        #     'HVM_AVAILABLE_HISTORY_START_DATE',
+        #     'EARLIST_VALID_SERVICE_DATE'
+        # )
 
         normalized_records_unloader.unload(
             spark, runner, postprocessed, 'date_service', date_input, 'xifin',
-            hvm_historical_date=datetime(hvm_historical.year,
-                                         hvm_historical.month,
-                                         hvm_historical.day)
+            # hvm_historical_date=datetime(hvm_historical.year,
+            #                              hvm_historical.month,
+            #                              hvm_historical.day)
         )
 
 

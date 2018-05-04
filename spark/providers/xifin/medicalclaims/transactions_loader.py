@@ -5,7 +5,7 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 
 TABLES = {
-    'account_billed_procedures': [
+    'billed_procedures': [
         'accn_id',
         'proc_code',
         'test_id',
@@ -22,7 +22,7 @@ TABLES = {
         'units_paid',
         'place_of_svc',
         'billing_facility_id',
-        'hvjoinkey'
+        'hvJoinKey'
     ],
     'demographics': [
         'accn_id',
@@ -102,17 +102,17 @@ TABLES = {
         'tax_amount',
         'retro_tax_amount',
         'statement_status',
-        'hvjoinkey'
+        'hvJoinKey'
     ],
-    'account_diagnosis': [
+    'diagnosis': [
         'accn_id',
         'diag_sequence',
         'diag_code',
         'test_id',
         'diagnosis_code_table',
-        'hvjoinkey'
+        'hvJoinKey'
     ],
-    'account_ordered_tests': [
+    'ordered_tests': [
         'accn_id',
         'test_id',
         'test_name',
@@ -122,46 +122,37 @@ TABLES = {
         'modifier_3',
         'modifier_4',
         'place_of_svc',
-        'hvjoinkey'
+        'hvJoinKey'
     ],
-    'account_payors': [
+    'payors': [
         'accn_id',
         'payor_priority',
         'payor_id',
         'payor_name',
-        'hvjoinkey'
+        'hvJoinKey'
     ]
 }
 
 MATCHING_TABLES = {
-    'account_billed_procedures_payload': [
-        'accn_id',
-        'hvjoinkey'
+    'billed_procedures': [
+        'patientId',
+        'hvJoinKey'
     ],
-    'demographics_payload': [
-        'hvid',
-        'claimid',
-        'accn_id',
-        'req_id',
-        'pat_id',
-        'threedigitzip',
-        'yearofbirth',
-        'gender',
-        'age',
-        'state',
-        'hvjoinkey'
+    'demographics': [
+        'patientId',
+        'hvJoinKey'
     ],
-    'account_diagnosis_payload': [
-        'accn_id',
-        'hvjoinkey'
+    'diagnosis': [
+        'patientId',
+        'hvJoinKey'
     ],
-    'account_ordered_tests_payload': [
-        'accn_id',
-        'hvjoinkey'
+    'ordered_tests': [
+        'patientId',
+        'hvJoinKey'
     ],
-    'account_payors_payload': [
-        'accn_id',
-        'hvjoinkey'
+    'payors': [
+        'patientId',
+        'hvJoinKey'
     ]
 }
 
