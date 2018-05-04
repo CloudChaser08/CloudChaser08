@@ -150,7 +150,7 @@ fetch_extracted_data = PythonOperator(
 )
 
 def do_deliver_extracted_data(ds, **kwargs):
-    sftp_config = json.loads(Variable.get('humana_sftp_configuration'))
+    sftp_config = json.loads(Variable.get('humana_prod_sftp_configuration'))
     gid = get_root_dag_run(kwargs).conf['group_id']
     for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
 
