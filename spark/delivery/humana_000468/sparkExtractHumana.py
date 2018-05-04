@@ -65,10 +65,10 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
     else:
         medical_extract    = extract_medicalclaims.extract(
                 runner, matched_patients, ts,
-                start, end)
+                start, end).cache_and_track('medical_extract')
         pharmacy_extract  = extract_pharmacyclaims.extract(
                 runner, matched_patients, ts,
-                start, end)
+                start, end).cache_and_track('pharmacy_extract')
 
     # for each testing
     medical_extract.createOrReplaceTempView('medical_extract')
