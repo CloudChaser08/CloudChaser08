@@ -183,6 +183,5 @@ def load_matching_payloads(runner, matching_path_prefix):
     '''
     for table, columns in MATCHING_TABLES.items():
         payload_loader.load(
-            runner, matching_path_prefix + table, extra_cols=columns, table_name=table,
-            return_output=True
+            runner, matching_path_prefix + table, extra_cols=columns, table_name=table
         )
