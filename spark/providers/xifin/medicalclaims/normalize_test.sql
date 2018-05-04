@@ -1,5 +1,5 @@
 SELECT
-    CONCAT(test.input_file_name, '_', test_pay.accn_id)  AS claim_id,
+    CONCAT(test.client_id, '_', test_pay.accn_id)        AS claim_id,
     test.input_file_name                                 AS data_set,
     demo_pay.hvid                                        AS hvid,
     CASE

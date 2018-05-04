@@ -1,3 +1,5 @@
+from pyspark.sql.functions import regexp_extract, col
+
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
@@ -179,7 +181,9 @@ def load(runner, input_path_prefix):
             ),
             postprocessor.trimmify,
             postprocessor.nullify
-        )(df).createOrReplaceTempView(table)
+        )(df).withColumn(
+            'client_id', regexp_extract(col('input_file_name'), '_([^.]*)\.pout', 1)
+        ).createOrReplaceTempView(table)
 
 
 def load_matching_payloads(runner, matching_path_prefix):
