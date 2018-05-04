@@ -102,7 +102,16 @@ detect_move_extract_dag = SubDagOperator(
             'pyspark_normalization_script_name' : '/home/hadoop/spark/delivery/humana/hv000468/sparkGenerateExtract.py',
             'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True,
-            'connected_to_metastore'            : True
+            'connected_to_metastore'            : True,
+            'emr_num_nodes'                     : 5,
+            'emr_node_type'                     : 'm4.16xlarge',
+            'emr_ebs_volume_size'               : 100,
+            'spark_conf_args'                   : [
+                '--conf', 'spark.sql.shuffle.partitions=5000',
+                '--conf', 'spark.executor.cores=4', '--conf', 'spark.executor.memory=13G',
+                '--conf', 'spark.hadoop.fs.s3a.maximum.connections=1000',
+                '--conf', 'spark.files.useFetchCache=false'
+            ]
         }
     ),
     task_id='detect_move_extract',
