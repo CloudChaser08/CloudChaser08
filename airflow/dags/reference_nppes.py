@@ -91,8 +91,7 @@ def do_unzip_file(ds, kwargs):
 
 
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k),
-            # '--nppes_csv', date_utils.insert_date_into_template(NPPES_CSV_TEMPLATE, k),
+    base = ['--nppes_csv', date_utils.insert_date_into_template(NPPES_CSV_TEMPLATE, k),
             '--num_output_files', '20']
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
@@ -177,7 +176,7 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
-repair_table = "MSCK REPAIR TABLE ref_nppes"
+sql_func = """ ALTER TABLE ref_nppes set location """ + PARQUET_S3_LOCATION
 
 if HVDAG.HVDAG.airflow_env != 'test':
     update_analytics_db = SubDagOperator(
@@ -187,7 +186,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: repair_table
+                'sql_command_func' : lambda ds, k: sql_func
             }
         ),
         task_id='update_analytics_db',
