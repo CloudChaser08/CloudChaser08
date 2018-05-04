@@ -1,3 +1,7 @@
+import logging
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+
 import spark.stats.calc.fill_rate as fill_rate
 import spark.stats.calc.top_values as top_values
 import spark.stats.calc.key_stats as key_stats
@@ -100,6 +104,10 @@ def run_marketplace_stats(
     if earliest_date > start_date:
         start_date = earliest_date
 
+    available_years = relativedelta(
+        datetime.strptime(end_date, '%Y-%m-%d'), datetime.strptime(earliest_date, '%Y-%m-%d')
+    ).years
+
     # Get data
     all_data_df = utils.get_provider_data(
         sqlContext, datatype,
@@ -147,12 +155,26 @@ def run_marketplace_stats(
     date_stats_df = all_data_df.select("hvid", provider_conf['date_field']).coalesce(partitions)
 
     if 'longitudinality' in stats_to_calculate:
-        # Generate Longitudinality
-        longitudinality = _run_longitudinality(date_stats_df, provider_conf)
+
+        if available_years < 2:
+            logging.error("Cannot calculate longitudinality for {}, this feed has less than 2 years available.".format(
+                provider_conf['datafeed_id']
+            ))
+            longitudinality = None
+        else:
+            # Generate Longitudinality
+            longitudinality = _run_longitudinality(date_stats_df, provider_conf)
 
     if 'year_over_year' in stats_to_calculate:
-        # Generate year over year
-        year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
+
+        if available_years < 2:
+            logging.error("Cannot calculate year_over_year for {}, this feed has less than 2 years available.".format(
+                provider_conf['datafeed_id']
+            ))
+            year_over_year = None
+        else:
+            # Generate year over year
+            year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
 
     # Return all the dfs
     all_stats = {}

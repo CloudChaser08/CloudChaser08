@@ -357,7 +357,6 @@
             "datafeed_id"       : "30",
             "datatype"          : "pharmacyclaims",
             "date_field"        : "date_service",
-            "record_field"      : "claim_id",
             "fill_rate"         : true,
             "key_stats"         : true,
             "top_values"        : true,
