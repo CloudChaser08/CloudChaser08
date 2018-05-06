@@ -31,7 +31,7 @@ TABLES = {
         'dos',
         'sex',
         'pt_id',
-        'ordering upin',
+        'ordering_upin',
         'pt_l_name',
         'pt_f_name',
         'pt_age',
