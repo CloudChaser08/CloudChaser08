@@ -2,16 +2,16 @@ from spark.runner import Runner
 from spark.spark_setup import init
 from nppes_schema import *
 
-def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=False):
-    
-    PARQUET_S3_LOCATION = args.s3_parquet_loc
+
+def run(spark, runner, date_input, num_output_files, test=False, airflow_test=False):
+    file_path = args.nppes_csv_path
+    S3_PARQUET_LOCATION = args.s3_parquet_loc
 
     # Load monthly replacement file into dataframe with schema
     df = runner.sqlContext.read.csv(file_path, header=True, schema=nppes_schema)
 
     # write parquet files to s3 location
-    df.repartition(num_output_files).write.mode('overwrite').parquet(PARQUET_S3_LOCATION)
-
+    df.repartition(num_output_files).write.mode('overwrite').parquet(S3_PARQUET_LOCATION)
 
 
 def main(args):
@@ -22,11 +22,12 @@ def main(args):
     runner = Runner(sqlContext)
 
     # Run the spark routine
-    run(spark, runner, args.date, airflow_test=args.airflow_test, \
-            num_output_files=args.num_output_files)
+    run(spark, runner, args.date, airflow_test=args.airflow_test,
+        num_output_files=args.num_output_files)
 
     # Tell spark to shutdown
     spark.stop()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
