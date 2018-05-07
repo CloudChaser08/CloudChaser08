@@ -1,4 +1,4 @@
-from pyspark.sql.functions import regexp_extract, col
+import pyspark.sql.functions as F
 
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
@@ -173,7 +173,7 @@ def load(runner, input_path_prefix):
             postprocessor.trimmify,
             postprocessor.nullify
         )(df).withColumn(
-            'client_id', regexp_extract(col('input_file_name'), '_([^.]*)\.pout', 1)
+            'client_id', F.regexp_extract(F.col('input_file_name'), '_([^_.]*)\.pout', 1)
         ).createOrReplaceTempView(table)
 
 
@@ -185,3 +185,17 @@ def load_matching_payloads(runner, matching_path_prefix):
         payload_loader.load(
             runner, matching_path_prefix + table, extra_cols=columns, table_name='{}_payload'.format(table)
         )
+
+def reconstruct_records(runner):
+    '''
+    Combine the transactional and payload data back into complete records
+    '''
+    for table in TABLES:
+        df1 = runner.sqlContext.table(table)
+        df2 = runner.sqlContext.table(table + '_payload')
+        df3 = df1.join(df2, 'hvJoinKey', 'inner') \
+                .withColumn('full_accn_id', F.concat(df1['client_id'], F.lit('_'), df2['patientId'])) \
+                .repartition(2500, F.col('full_accn_id')) \
+                .cache_and_track(table + '_complete')
+        df3.createOrReplaceTempView(table + '_complete')
+        df3.count()
