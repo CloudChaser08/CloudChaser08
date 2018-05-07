@@ -17,10 +17,7 @@ from pyspark.sql.functions import col, lit, upper
 
 FEED_ID = '56'
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
-    # TODO: change when known
-    setid = 'transaction_sample_{}'.format(date_input.replace('-', ''))
-
+def run(spark, runner, date_input, setid, test=False, airflow_test=False):
     script_path = __file__
 
     if test:
@@ -133,14 +130,14 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, args.set_id, airflow_test=args.airflow_test)
 
     spark.stop()
 
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/alliance/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/consumer/2018-08-02/'
+        output_path = args.output_path
 
     normalized_records_unloader.distcp(output_path)
 
@@ -149,5 +146,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--output_path', type=str)
+    parser.add_argument('--set_id', type=str)
     args = parser.parse_args()
     main(args)
