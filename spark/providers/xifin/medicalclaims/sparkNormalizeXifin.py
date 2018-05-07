@@ -35,10 +35,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
     else:
-        input_path = 's3://salusv/incoming/medicalclaims/xifin/{}/'.format(
+        input_path = 's3a://salusv/incoming/medicalclaims/xifin/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/matching/payload/medicalclaims/xifin/{}/'.format(
+        matching_path = 's3a://salusv/matching/payload/medicalclaims/xifin/{}/'.format(
             date_input.replace('-', '/')
         )
 
@@ -61,6 +61,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     transactions_loader.load(runner, input_path)
     transactions_loader.load_matching_payloads(runner, matching_path)
+    transactions_loader.reconstruct_records(runner)
 
     normalized = reduce(
         lambda df1, df2: df1.union(df2), [
@@ -124,7 +125,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/xifin/spark-output/'
     else:
-        output_path = 's3://healthveritydev/musifer/scratch/20180504-xifin-minimap/'
+        output_path = 's3://healthveritydev/ifishbein/scratch/20180504-xifin-minimap/'
 
     normalized_records_unloader.distcp(output_path)
 
