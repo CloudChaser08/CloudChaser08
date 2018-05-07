@@ -1,7 +1,7 @@
 import common.HVDAG as HVDAG
 from datetime import datetime, timedelta
 import os
-import subprocess
+import urllib
 
 from airflow.operators import PythonOperator, SubDagOperator
 
@@ -39,11 +39,11 @@ else:
 if HVDAG.HVDAG.airflow_env == 'test':
     DESTINATION = 's3://salusv/testing/dewey/airflow/e2e/reference/nppes/'
     NPPES_TEXT_LOCATION = 's3://salusv/testing/reference/nppes/{}/{}/'
-    S3_PARQUET_LOCATION = 's3://salusv/testing/reference/nppes/parquet/'
+    S3_PARQUET_LOCATION = 's3://salusv/testing/reference/nppes/parquet/{}/{}/{}/'
 else:
     DESTINATION = 's3://salusv/reference/nppes/'
     NPPES_TEXT_LOCATION = 's3://salusv/warehouse/text/nppes/{}/{}/'
-    S3_PARQUET_LOCATION = 's3://salusv/reference/parquet/nppes/'
+    S3_PARQUET_LOCATION = 's3://salusv/reference/parquet/nppes/{}/{}/{}/'
 
 default_args = {
     'owner': 'airflow',
@@ -82,9 +82,10 @@ def get_csv_file_path(ds, kwargs):
 
 
 def fetch_monthly_npi_file(ds, kwargs):
-    subprocess.check_call([
-        'curl', NPPES_URL + get_nppes_zipped_filename(ds, kwargs), '-o', get_tmp_dir(ds, kwargs) + get_nppes_zipped_filename(ds, kwargs)
-    ])
+    urllib.urlretrieve(
+        NPPES_URL + get_nppes_zipped_filename(ds, kwargs),
+        get_tmp_dir(ds, kwargs) + get_nppes_zipped_filename(ds, kwargs)
+    )
 
 
 def do_unzip_file(ds, kwargs):
@@ -95,7 +96,7 @@ def do_unzip_file(ds, kwargs):
 
 def norm_args(ds, k):
     base = ['--nppes_csv_path', date_utils.insert_date_into_template(NPPES_CSV_TEMPLATE, k),
-            '--s3_parquet_loc', S3_PARQUET_LOCATION,
+            '--s3_parquet_loc', date_utils.insert_date_into_template(S3_PARQUET_LOCATION, k),
             '--num_output_files', '20']
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
@@ -180,7 +181,6 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
-sql_func = """ ALTER TABLE ref_nppes set location """ + S3_PARQUET_LOCATION
 
 if HVDAG.HVDAG.airflow_env != 'test':
     update_analytics_db = SubDagOperator(
@@ -190,7 +190,8 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: sql_func
+                'sql_command_func' : lambda ds, k:
+                """ ALTER TABLE ref_nppes set location """ + date_utils.insert_date_into_template(S3_PARQUET_LOCATION, k)
             }
         ),
         task_id='update_analytics_db',
