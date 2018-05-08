@@ -168,12 +168,12 @@ def load(runner, input_path_prefix):
 
         postprocessor.compose(
             postprocessor.add_input_filename(
-                'input_file_name', persisted_df_id='raw_{}'.format(table)
+                'xifin_input_file_name', persisted_df_id='raw_{}'.format(table)
             ),
             postprocessor.trimmify,
             postprocessor.nullify
         )(df).withColumn(
-            'client_id', F.regexp_extract(F.col('input_file_name'), '_([^_.]*)\.pout', 1)
+            'client_id', F.regexp_extract(F.col('xifin_input_file_name'), '_([^_.]*)\.pout', 1)
         ).createOrReplaceTempView(table)
 
 
@@ -186,7 +186,8 @@ def load_matching_payloads(runner, matching_path_prefix):
             runner, matching_path_prefix + table, extra_cols=columns, table_name='{}_payload'.format(table)
         )
 
-def reconstruct_records(runner):
+
+def reconstruct_records(runner, partitions):
     '''
     Combine the transactional and payload data back into complete records
     '''
@@ -195,7 +196,7 @@ def reconstruct_records(runner):
         df2 = runner.sqlContext.table(table + '_payload')
         df3 = df1.join(df2, 'hvJoinKey', 'inner') \
                 .withColumn('full_accn_id', F.concat(df1['client_id'], F.lit('_'), df2['patientId'])) \
-                .repartition(2500, F.col('full_accn_id')) \
+                .repartition(partitions, F.col('full_accn_id')) \
                 .cache_and_track(table + '_complete')
         df3.createOrReplaceTempView(table + '_complete')
         df3.count()

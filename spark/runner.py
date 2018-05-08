@@ -77,8 +77,10 @@ class Runner:
         self._persisted_dfs[df_identifier] = persisted_df
 
         if old_df is not None:
-            logging.warning("Persisted DataFrame with identifier {} already \
-                    existed. The old DataFrame will be unpersisted".format(df_identifier))
+            logging.warning(
+                "Persisted DataFrame with identifier {} already "
+                "existed. The old DataFrame will be unpersisted".format(df_identifier)
+            )
             old_df.unpersist()
 
     def unpersist(self, df_identifier):
@@ -89,4 +91,3 @@ class Runner:
         else:
             df.unpersist()
             del self._persisted_dfs[df_identifier]
-
