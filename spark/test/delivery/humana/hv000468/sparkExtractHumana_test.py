@@ -20,6 +20,7 @@ def test_init(spark):
     spark['spark'].sql('CREATE TABLE dw.ref_vdr_feed AS SELECT * FROM ref_vdr_feed')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('pharmacyclaims')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('medicalclaims')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/enroll_sample.json')).createOrReplaceTempView('enrollmentrecords')
     humana_extract.run(spark['spark'], spark['runner'], group_id, test=True)
 
     global pharmacy_extract, medical_extract, summary

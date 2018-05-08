@@ -13,6 +13,7 @@ import pyspark.sql.functions as F
 
 import extract_medicalclaims
 import extract_pharmacyclaims
+import extract_enrollmentrecords
 
 def run(spark, runner, group_id, test=False, airflow_test=False):
     ts = time.time()
@@ -52,8 +53,6 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
     else:
         end   = (today.replace(day=15) - timedelta(days=60)).replace(day=15) # The 15th about 1.5 months back
         start = (end - timedelta(days=455)).replace(day=15) # 15 months before end
-    start = start.isoformat()
-    end   = end.isoformat()
 
     matched_patients = matched_patients.select('hvid').distinct()
     all_patient_count = all_patients.count()
@@ -62,15 +61,20 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
     if matched_patients.count() < 10:
         medical_extract    = spark.createDataFrame([], StructType([]))
         pharmacy_extract   = spark.createDataFrame([], StructType([]))
+        enrollment_extract = spark.createDataFrame([], StructType([]))
     else:
         medical_extract    = extract_medicalclaims.extract(
                 runner, matched_patients, ts,
                 start, end).cache_and_track('medical_extract')
-        pharmacy_extract  = extract_pharmacyclaims.extract(
+        pharmacy_extract   = extract_pharmacyclaims.extract(
                 runner, matched_patients, ts,
                 start, end).cache_and_track('pharmacy_extract')
+        enrollment_extract = extract_enrollmentrecords.extract(
+                spark, runner, matched_patients, ts,
+                start, end, pharmacy_extract) \
+                    .cache_and_track('enrollment_extract')
 
-    # for each testing
+    # for easy testing
     medical_extract.createOrReplaceTempView('medical_extract')
     pharmacy_extract.createOrReplaceTempView('pharmacy_extract')
 
@@ -98,17 +102,23 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
     subprocess.check_call(move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path])
 
     medical_extract.repartition(1).write \
-            .csv(output_path.replace('s3://', 's3a://'), sep='|', compression='gzip', mode='append')
+            .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
     fn = [w for r in
             subprocess.check_output(list_cmd + [output_path]).split('\n')
             for w in r.split(' ') if w.startswith('part-00000')][0]
-    subprocess.check_call(move_cmd + [output_path + fn, output_path + 'medical_claims_{}.psv.gz'.format(group_id)])
+    subprocess.check_call(move_cmd + [output_path + fn, output_path + 'medical_claims_{}.psv'.format(group_id)])
     pharmacy_extract.repartition(1).write \
-            .csv(output_path, sep='|', compression='gzip', mode='append')
+            .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
     fn = [w for r in
             subprocess.check_output(list_cmd + [output_path]).split('\n')
             for w in r.split(' ') if w.startswith('part-00000')][0]
-    subprocess.check_call(move_cmd + [output_path + fn, output_path + 'pharmacy_claims_{}.psv.gz'.format(group_id)])
+    subprocess.check_call(move_cmd + [output_path + fn, output_path + 'pharmacy_claims_{}.psv'.format(group_id)])
+    enrollment_extract.repartition(1).write \
+            .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
+    fn = [w for r in
+            subprocess.check_output(list_cmd + [output_path]).split('\n')
+            for w in r.split(' ') if w.startswith('part-00000')][0]
+    subprocess.check_call(move_cmd + [output_path + fn, output_path + 'enrollment_{}.psv'.format(group_id)])
 
 def main(args):
     # init
