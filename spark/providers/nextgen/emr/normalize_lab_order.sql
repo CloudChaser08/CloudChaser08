@@ -33,7 +33,7 @@ SELECT
     clean_up_freetext(ord.testcodeid, false)
                                             AS lab_ord_alt_cd
     clean_up_freetext(ord.emrcode, false)   AS lab_ord_test_nm,
-    trim(split(ord.diagnoses, ',')[explode_idx])
+    trim(split(ord.diagnoses, ',')[x.n])
 					    AS lab_ord_diag_cd,
     extract_date(
         substring(ord.datadate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
@@ -56,7 +56,7 @@ FROM laborder ord
                 substring(ord.referencedatetime, 1, 8)
             ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
-    CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) as explode_idx) x
-WHERE ((trim(split(ord.diagnoses, ',')[explode_idx]) IS NOT NULL AND trim(split(ord.diagnoses, ',')[explode_idx]) != '')
-    	OR (explode_idx = 0 AND regexp_extract(ord.diagnoses, '([^,\\s])') IS NULL))
+    CROSS JOIN lab_order_exploder x
+WHERE ((trim(split(ord.diagnoses, ',')[x.n]) IS NOT NULL AND trim(split(ord.diagnoses, ',')[x.n]) != '')
+    	OR (x.n = 0 AND regexp_extract(ord.diagnoses, '([^,\\s])') IS NULL))
 DISTRIBUTE BY hvid

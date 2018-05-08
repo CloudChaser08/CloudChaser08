@@ -28,7 +28,7 @@ SELECT
     extract_date(
         substring(med.datestopped, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS medctn_end_dt,
-    clean_up_freetext(trim(split(med.diagnosis_code_id, ',')[explode_idx]), true)
+    clean_up_freetext(trim(split(med.diagnosis_code_id, ',')[x.n]), true)
                                             AS medctn_diag_cd
     med.emrcode                             AS medctn_ndc,
     med.hiclsqno                            AS medctn_hicl_thrptc_cls_cd,
@@ -51,7 +51,7 @@ SELECT
     extract_date(
         substring(med.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS part_mth,
-    monotonically_increasing_id()           AS row_num
+    row_num                                 AS row_num
 FROM medicationorder med
     LEFT JOIN demographics_local dem ON med.ReportingEnterpriseID = dem.ReportingEnterpriseID
         AND med.NextGenGroupID = dem.NextGenGroupID
@@ -64,8 +64,8 @@ FROM medicationorder med
                 substring(med.referencedatetime, 1, 8)
             ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
-    CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4)) as explode_idx) x
-WHERE ((split(med.diagnosis_code_id, ',')[explode_idx] IS NOT NULL
-            AND trim(split(med.diagnosis_code_id, ',')[explode_idx]) != '')
-        OR (explode_idx = 0 AND regexp_extract(med.diagnosis_code_id, '([^,\\s])') IS NULL))
+    CROSS JOIN medication_exploder x
+WHERE ((split(med.diagnosis_code_id, ',')[x.n] IS NOT NULL
+            AND trim(split(med.diagnosis_code_id, ',')[x.n]) != '')
+        OR (x.n = 0 AND regexp_extract(med.diagnosis_code_id, '([^,\\s])') IS NULL))
 DISTRIBUTE BY hvid

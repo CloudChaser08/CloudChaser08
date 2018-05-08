@@ -20,16 +20,16 @@ SELECT
         substring(vsn.datadate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS vit_sign_dt,
     extract_date(
-        substring(split(vsn.vit_sign_last_msrmt_dt, ':')[explode_idx], 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        substring(split(vsn.vit_sign_last_msrmt_dt, ':')[x.n], 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS vit_sign_last_msrmt_dt,
-    CASE WHEN split(vsn.vit_sign_typ_cd, ':')[explode_idx] = '' THEN NULL
-        ELSE split(vsn.vit_sign_typ_cd, ':')[explode_idx]
+    CASE WHEN split(vsn.vit_sign_typ_cd, ':')[x.n] = '' THEN NULL
+        ELSE split(vsn.vit_sign_typ_cd, ':')[x.n]
         END                                 AS vit_sign_typ_cd,
-    CASE WHEN vsn.vit_sign_msrmt[explode_idx] = '' THEN NULL
-        ELSE vsn.vit_sign_msrmt[explode_idx]
+    CASE WHEN vsn.vit_sign_msrmt[x.n] = '' THEN NULL
+        ELSE vsn.vit_sign_msrmt[x.n]
         END                                 AS vit_sign_msrmt,
-    CASE WHEN split(vsn.vit_sign_uom, ':')[explode_idx] = '' THEN NULL
-        ELSE split(vsn.vit_sign_uom, ':')[explode_idx]
+    CASE WHEN split(vsn.vit_sign_uom, ':')[x.n] = '' THEN NULL
+        ELSE split(vsn.vit_sign_uom, ':')[x.n]
         END                                 AS vit_sign_uom,
     'vitalsigns'                            AS prmy_src_tbl_nm,
     extract_date(
@@ -47,6 +47,6 @@ FROM vitalsigns_w_msrmt vsn
                 substring(vsn.referencedatetime, 1, 8)
             ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
-    CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)) as explode_idx) x
-WHERE (vsn.vit_sign_msrmt[explode_idx] IS NOT NULL AND vsn.vit_sign_msrmt[explode_idx] != '')
+    CROSS JOIN vital_signs_exploder x
+WHERE (vsn.vit_sign_msrmt[x.n] IS NOT NULL AND vsn.vit_sign_msrmt[x.n] != '')
 DISTRIBUTE BY hvid

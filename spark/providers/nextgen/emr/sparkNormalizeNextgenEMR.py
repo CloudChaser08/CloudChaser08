@@ -21,6 +21,17 @@ from spark.helpers.privacy.emr import                   \
     lab_order as priv_lab_order,                        \
     provider_order as priv_provider_order,              \
     vital_sign as priv_vital_sign
+from spark.common.emr.clinical_observation import schema_v4 as clinical_observation_schema
+from spark.common.emr.diagnosis import schema_v5 as diagnosis_schema
+from spark.common.emr.encounter import schema_v4 as encounter_schema
+from spark.common.emr.lab_order import schema_v3 as lab_order_schema
+from spark.common.emr.lab_result import schema_v4 as lab_result_schema
+from spark.common.emr.medication import schema_v4 as medication_schema
+from spark.common.emr.procedure import schema_v4 as procedure_schema
+from spark.common.emr.provider_order import schema_v4 as provider_order_schema
+from spark.common.emr.vital_sign import schema_v4 as vital_sign_schema
+
+import pyspark.sql.functions as F
 
 import logging
 
@@ -85,72 +96,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     external_table_loader.load_ref_gen_ref(runner.sqlContext)
     logging.debug("Loaded external tables")
 
-    min_date = runner.sqlContext.sql("SELECT gen_ref_1_dt FROM ref_gen_ref WHERE hvm_vdr_feed_id = 35 AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'").take(1)
-    min_date = min_date[0].gen_ref_1_dt.isoformat().split("T")[0] if len(min_date) > 0 else None
+    min_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'EARLIEST_VALID_SERVICE_DATE')
+    min_date = min_date.gen_ref_1_dt.isoformat().split("T")[0] if len(min_date) > 0 else None
     max_date = date_input
-    min_diag_date = runner.sqlContext.sql("SELECT gen_ref_1_dt FROM ref_gen_ref WHERE hvm_vdr_feed_id = 35 AND gen_ref_domn_nm = 'EARLIEST_VALID_DIAGNOSIS_DATE'").take(1)
-    min_diag_date = min_diag_date[0].gen_ref_1_dt.isoformat().split("T")[0] if len(min_diag_date) > 0 else None
+    min_diag_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'EARLIEST_VALID_DIAGNOSIS_DATE')
+    min_diag_date = min_diag_date.gen_ref_1_dt.isoformat().split("T")[0] if len(min_diag_date) > 0 else None
     logging.debug("Loaded min dates")
-
-    runner.run_spark_script('../../../common/emr/clinical_observation_common_model_v4.sql', [
-        ['table_name', 'clinical_observation_common_model', False],
-        ['additional_columns', [
-            ['part_mth', 'string']
-        ]],
-        ['properties', '', False]
-    ])
-    runner.run_spark_script('../../../common/emr/diagnosis_common_model_v5.sql', [
-        ['table_name', 'diagnosis_common_model', False],
-        ['additional_columns', []],
-        ['properties', '', False]
-    ])
-    runner.run_spark_script('../../../common/emr/encounter_common_model_v4.sql', [
-        ['table_name', 'encounter_common_model', False],
-        ['additional_columns', []],
-        ['properties', '', False]
-    ])
-    runner.run_spark_script('../../../common/emr/lab_order_common_model_v3.sql', [
-        ['table_name', 'lab_order_common_model', False],
-        ['additional_columns', [
-            ['part_mth', 'string']
-        ]],
-        ['properties', '', False]
-    ])
-    runner.run_spark_script('../../../common/emr/lab_result_common_model_v4.sql', [
-        ['table_name', 'lab_result_common_model', False],
-        ['additional_columns', [
-            ['part_mth', 'string']
-        ]],
-        ['properties', '', False]
-    ])
-    runner.run_spark_script('../../../common/emr/medication_common_model_v4.sql', [
-        ['table_name', 'medication_common_model', False],
-        ['additional_columns', [
-            ['part_mth', 'string'],
-            ['row_num',  'string']
-        ]],
-        ['properties', '', False]
-    ])
-    runner.run_spark_script('../../../common/emr/procedure_common_model_v4.sql', [
-        ['table_name', 'procedure_common_model', False],
-        ['additional_columns', []],
-        ['properties', '', False]
-    ])
-    runner.run_spark_script('../../../common/emr/provider_order_common_model_v4.sql', [
-        ['table_name', 'provider_order_common_model', False],
-        ['additional_columns', [
-            ['part_mth', 'string']
-        ]],
-        ['properties', '', False]
-    ])
-    runner.run_spark_script('../../../common/emr/vital_sign_common_model_v4.sql', [
-        ['table_name', 'vital_sign_common_model', False],
-        ['additional_columns', [
-            ['part_mth', 'string']
-        ]],
-        ['properties', '', False]
-    ])
-    logging.debug("Created common model tables")
 
     explode.generate_exploder_table(spark, 20, 'lab_order_exploder')
     explode.generate_exploder_table(spark, 4, 'lipid_exploder')
@@ -176,58 +127,95 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     for table in transaction_tables:
         postprocessor.compose(
             postprocessor.trimmify, postprocessor.nullify
-        )(runner.sqlContext.sql('select * from {}'.format(table))).createOrReplaceTempView(table)
+        )(runner.sqlContext.table(table)).createOrReplaceTempView(table)
 
-    runner.run_spark_script('normalize_encounter.sql', [
+    normalized = {}
+    normalized['encounter'] = runner.run_spark_script('normalize_encounter.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ])
+    ], return_output=True)
     logging.debug("Normalized encounter")
-    runner.run_spark_script('normalize_diagnosis.sql', [
+
+    normalized['diagnosis'] = runner.run_spark_script('normalize_diagnosis.sql', [
         ['min_date', min_date],
         ['max_date', max_date],
         ['diag_min_date', min_diag_date]
-    ])
+    ], return_output=True)
     logging.debug("Normalized diagnosis")
-    runner.run_spark_script('normalize_procedure.sql', [
+
+    normalized['procedure'] = runner.run_spark_script('normalize_procedure.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ])
+    ], return_output=True)
     logging.debug("Normalized procedure")
-    runner.run_spark_script('normalize_lab_order.sql', [
+
+    normalized['lab_order'] = runner.run_spark_script('normalize_lab_order.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ])
+    ], return_output=True)
     logging.debug("Normalized lab order")
-    runner.run_spark_script('normalize_lab_result.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ])
+
+    normalized['lab_results'] = runner.run_spark_script('normalize_lab_result_1.sql', [
+                ['min_date', min_date],
+                ['max_date', max_date]
+            ], return_output=True) \
+        .union(runner.run_spark_script('normalize_lab_result_1.sql', [
+                ['min_date', min_date],
+                ['max_date', max_date]
+            ], return_output=True))
     logging.debug("Normalized lab result")
-    runner.run_spark_script('normalize_medication.sql', [
+
+    runner.sqlContext.table('medicationorder') \
+        .withColumn('row_num', F.monotonically_increasing_id()) \
+        .createOrReplaceTempView('medicationorder')
+    icd_diag_codes = runner.sqlContext.table('icd_diag_codes')
+    tmp_medicaiton = runner.run_spark_script('normalize_medication.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ])
+    ], return_output=True)
+    p1 = tmp_medication.where('medctn_diag_cd IS NULL')
+    p2 = tmp_medication.where('medctn_diag_cd IS NOT NULL') \
+        .join(icd_diag_codes, tmp_medication.medctn_diag_cd == icd_diag_codes.code, 'left_outer') \
+        .select(*(
+            [tmp_medication[c] for c in tmp_medication.columns if c != 'medctn_diag_cd'] + 
+            [icd_diag_codes.code.alias('medctn_diag_cd')]
+        ))
     # The row_num column is generated inside the normalize_medication.sql
     # script in order to ensure that when we run a distinct to remove
     # duplicates, we maintain  at least 1 normalized row per source row
-    runner.sqlContext.sql('SELECT * FROM medication_common_model_bak').drop('row_num').createOrReplaceTempView('medication_common_model')
+    normalized['medication'] = p1.union(p2).distinct().drop('row_num')
     logging.debug("Normalized medication")
-    runner.run_spark_script('normalize_provider_order.sql', [
+
+    runner.run_spark_script('normalize_provider_order_prenorm.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ])
+    ], return_output=True).createOrReplaceTempView('ord_clean_actcodes')
+    normalized['provider_order'] = runner.run_spark_script('normalize_provider_order.sql', [
+        ['min_date', min_date],
+        ['max_date', max_date]
+    ], return_output=True)
     logging.debug("Normalized provider order")
-    runner.run_spark_script('normalize_clinical_observation.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date],
-        ['partitions', org_num_partitions, False]
-    ])
+
+    normalized['clinical_observation'] = runner.run_spark_script('normalize_clinical_observation_1.sql', [
+                ['min_date', min_date],
+                ['max_date', max_date],
+                ['partitions', org_num_partitions, False]
+            ], return_output=True) \
+        .union(runner.run_spark_script('normalize_clinical_observation_3.sql', [
+                ['min_date', min_date],
+                ['max_date', max_date],
+                ['partitions', org_num_partitions, False]
+            ], return_output=True))
     logging.debug("Normalized clinical observation")
-    runner.run_spark_script('normalize_vital_sign.sql', [
+
+    runner.run_spark_script('normalize_vital_sign_prenorm.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ])
+    ], return_output=True).createOrReplaceTempView('vitalsigns_w_msrmt')
+    normalized['vital_sign'] = runner.run_spark_script('normalize_vital_sign.sql', [
+        ['min_date', min_date],
+        ['max_date', max_date]
+    ], return_output=True)
     logging.debug("Normalized vital sign")
 
     def update_encounter_whitelists(whitelists):
@@ -318,80 +306,71 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     normalized_tables = [
         {
-            'table_name'    : 'clinical_observation_common_model',
-            'script_name'   : 'emr/clinical_observation_common_model_v4.sql',
+            'schema'        : clinical_observation_schema,
             'data_type'     : 'clinical_observation',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_clinical_observation,
             'filter_args'   : [update_clinical_observation_whitelists]
         },
         {
-            'table_name'    : 'diagnosis_common_model',
-            'script_name'   : 'emr/diagnosis_common_model_v5.sql',
+            'schema'        : diagnosis_schema,
             'data_type'     : 'diagnosis',
             'date_column'   : 'enc_dt',
             'privacy_filter': priv_diagnosis,
             'filter_args'   : [update_diagnosis_whitelists]
         },
         {
-            'table_name'    : 'encounter_common_model',
-            'script_name'   : 'emr/encounter_common_model_v4.sql',
+            'schema'        : encounter_schema,
             'data_type'     : 'encounter',
             'date_column'   : 'enc_start_dt',
             'privacy_filter': priv_encounter,
             'filter_args'   : [update_encounter_whitelists]
         },
         {
-            'table_name'    : 'medication_common_model',
-            'script_name'   : 'emr/medication_common_model_v4.sql',
+            'schema'        : medication_schema,
             'data_type'     : 'medication',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_medication,
             'filter_args'   : [update_medication_whitelists]
         },
         {
-            'table_name'    : 'procedure_common_model',
-            'script_name'   : 'emr/procedure_common_model_v4.sql',
+            'schema'        : procedure_schema,
             'data_type'     : 'procedure',
             'date_column'   : 'proc_dt',
             'privacy_filter': priv_procedure
         },
         {
-            'table_name'    : 'lab_result_common_model',
-            'script_name'   : 'emr/lab_result_common_model_v4.sql',
+            'schema'        : lab_result_schema,
             'data_type'     : 'lab_result',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_lab_result,
             'filter_args'   : [update_lab_result_whitelists]
         },
         {
-            'table_name'    : 'lab_order_common_model',
-            'script_name'   : 'emr/lab_order_common_model_v3.sql',
+            'schema'        : lab_order_schema,
             'data_type'     : 'lab_order',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_lab_order,
             'filter_args'   : [update_lab_order_whitelists]
         },
         {
-            'table_name'    : 'provider_order_common_model',
-            'script_name'   : 'emr/provider_order_common_model_v4.sql',
+            'schema'        : provider_order_schema,
             'data_type'     : 'provider_order',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_provider_order
         },
         {
-            'table_name'    : 'vital_sign_common_model',
-            'script_name'   : 'emr/vital_sign_common_model_v4.sql',
+            'schema'        : vital_sign_schema,
             'data_type'     : 'vital_sign',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_vital_sign
         }
     ]
 
-    min_hvm_date = runner.sqlContext.sql("SELECT gen_ref_1_dt FROM ref_gen_ref WHERE hvm_vdr_feed_id = 35 AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'").take(1)
+    min_hvm_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'HVM_AVAILABLE_HISTORY_START_DATE')
 
-    if len(min_hvm_date) > 0:
-        historical_date = datetime.combine(min_hvm_date[0].gen_ref_1_dt, time(0))
+    if min_hvm_date is not None:
+        historical_date = datetime.combine(min_hvm_date.gen_ref_1_dt, time(0))
     elif min_date is not None:
         historical_date = datetime.strptime(min_date, '%Y-%m-%d')
     else:
@@ -399,7 +378,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     for table in normalized_tables:
         filter_args = [runner.sqlContext] + table.get('filter_args', [])
-        postprocessor.compose(
+        cols_to_keep = ['part_mth'] if table['date_column'] = 'part_mth' else []
+        df = postprocessor.compose(
             postprocessor.add_universal_columns(
                 feed_id='35', vendor_id='118', filename=None,
 
@@ -408,21 +388,21 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id',
                 model_version='mdl_vrsn_num'
             ),
-
+            schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=cols_to_keep)
             table['privacy_filter'].filter(*filter_args)
         )(
-            runner.sqlContext.sql('select * from {}'.format(table['table_name']))
-        ).createOrReplaceTempView(table['table_name'])
+            normalized[table['data_type']]
+        )
 
-        columns = filter(lambda x: x != 'part_mth', map(lambda x: x.name, \
-                      runner.sqlContext.sql('SELECT * FROM {}'.format(table['table_name'])).schema.fields))
         if not test:
-            normalized_records_unloader.partition_and_rename(
-                spark, runner, 'emr', table['script_name'], '35',
-                table['table_name'], table['date_column'], date_input,
+            normalized_records_unloader.unload(
+                spark, runner, df, table['date_column'], data_input,
+                provider_partition_value='35',
+                provider_partition_name='part_hvm_vdr_feed_id',
+                date_partition_name = 'part_mth', 
+                hvm_historical_date=historical_date,
                 staging_subdir='{}/'.format(table['data_type']),
-                distribution_key='row_id', provider_partition='part_hvm_vdr_feed_id',
-                date_partition='part_mth', columns=columns, hvm_historical_date=historical_date
+                columns = table['schema'].fieldNames()
             )
         logging.debug("Cleaned up {}".format(table['table_name']))
 

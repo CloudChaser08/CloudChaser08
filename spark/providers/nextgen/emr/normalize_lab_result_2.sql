@@ -23,13 +23,13 @@ SELECT
         substring(lip.datadatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS lab_result_dt,
     'LIPID_PANEL'                           AS lab_test_panel_nm,
-    ARRAY('134577', '20859', '25718', '20933')[explode_idx]
+    ARRAY('134577', '20859', '25718', '20933')[x.n]
                                             AS lab_test_loinc_cd,
-    ARRAY(lip.ldl, lip.hdl, lip.triglycerides, lip.totalcholesterol)[explode_idx]
+    ARRAY(lip.ldl, lip.hdl, lip.triglycerides, lip.totalcholesterol)[x.n]
                                             AS lab_result_msrmt,
-    ARRAY('mg/dl', 'mg/dl or mg/mL', 'mg/dl', 'mg/dl')[explode_idx]
+    ARRAY('mg/dl', 'mg/dl or mg/mL', 'mg/dl', 'mg/dl')[x.n]
                                             AS lab_result_uom,
-    ARRAY('LDL_CHOLESTEROL', 'HDL_CHOLESTEROL', 'TRIGLYCERIDES', 'TOTAL_CHOLESTEROL')[explode_idx]
+    ARRAY('LDL_CHOLESTEROL', 'HDL_CHOLESTEROL', 'TRIGLYCERIDES', 'TOTAL_CHOLESTEROL')[x.n]
                                             AS lab_result_qual,
     'lipidpanel'                            AS prmy_src_tbl_nm,
     extract_date(
@@ -47,8 +47,8 @@ FROM lipidpanel lip
                 substring(lip.referencedatetime, 1, 8)
             ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
-    CROSS JOIN (SELECT explode(array(0, 1, 2, 3)) as explode_idx) x
+    CROSS JOIN lipid_exploder x
 WHERE
     ARRAY(lip.ldl, lip.hdl, lip.triglycerides,
-            lip.totalcholesterol)[explode_idx]  IS NOT NULL
+            lip.totalcholesterol)[x.n]  IS NOT NULL
 DISTRIBUTE BY hvid
