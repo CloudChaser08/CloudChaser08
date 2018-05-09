@@ -1,12 +1,12 @@
+import argparse
 from spark.helpers import external_table_loader
 from spark.runner import Runner
 from spark.spark_setup import init
-from nppes_schema import *
 
 
 def run(spark, runner, input_file_path, output_location, num_output_files, test=False, airflow_test=False):
     # Load current warehouse table into dataframe
-    nppes_warehouse = external_table_loader._get_table_as_df(sqlContext, 'default', 'ref_nppes')
+    nppes_warehouse = external_table_loader._get_table_as_df(runner.sqlContext, 'default', 'ref_nppes')
 
     # get current table schema
     nppes_schema = nppes_warehouse.schema
@@ -15,7 +15,7 @@ def run(spark, runner, input_file_path, output_location, num_output_files, test=
     df = runner.sqlContext.read.csv(input_file_path, schema=nppes_schema)
     df = df.filter(df['npi']!='NPI')  # ignore file header
 
-    # Get rows with npi not in monthly replacement file
+    # Get rows with npi that are not in monthly replacement file
     warehouse_diff = nppes_warehouse.join(df, ["npi"], "leftanti")
 
     # Add missing npi rows to new dataset
