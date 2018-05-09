@@ -4,6 +4,7 @@ import shutil
 import datetime
 
 import spark.providers.allscripts.emr.sparkNormalizeAllscriptsEMR as allscripts_emr
+import spark.providers.allscripts.emr.udf as allscripts_emr_udf
 import spark.helpers.file_utils as file_utils
 
 from pyspark.sql import Row
@@ -75,6 +76,15 @@ def test_init(spark):
     vital_sign_results = spark['sqlContext'].read.parquet(
         file_utils.get_abs_path(script_path, './resources/output/vital_sign/*/*')
     ).collect()
+
+
+def test_remove_last_chars_udf():
+    assert allscripts_emr_udf.remove_last_chars(None, 2) is None
+    assert allscripts_emr_udf.remove_last_chars('', 2) is None
+    assert allscripts_emr_udf.remove_last_chars('1', 2) is None
+    assert allscripts_emr_udf.remove_last_chars('12', 2) is None
+    assert allscripts_emr_udf.remove_last_chars('123', 2) == '1'
+    assert allscripts_emr_udf.remove_last_chars('1234', 2) == '12'
 
 
 def test_deduplication():
