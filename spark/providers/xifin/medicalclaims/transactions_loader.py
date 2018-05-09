@@ -196,6 +196,7 @@ def reconstruct_records(runner, partitions):
         df2 = runner.sqlContext.table(table + '_payload')
         df3 = df1.join(df2, 'hvJoinKey', 'inner') \
                 .withColumn('full_accn_id', F.concat(df1['client_id'], F.lit('_'), df2['patientId'])) \
+                .withColumn('accn_id', df2['patientId']) \
                 .repartition(partitions, F.col('full_accn_id')) \
                 .cache_and_track(table + '_complete')
         df3.createOrReplaceTempView(table + '_complete')
