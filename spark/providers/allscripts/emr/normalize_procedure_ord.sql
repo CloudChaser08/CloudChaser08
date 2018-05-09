@@ -39,7 +39,6 @@ SELECT
     ELSE 'HCPCS'
     END                                                                        AS proc_cd_qual,
     ord.cptmod                                                                 AS proc_cd_1_modfr,
-    NULL                                                                       AS proc_snomed_cd,
     REMOVE_LAST_CHARS(
         CONCAT(
             CASE

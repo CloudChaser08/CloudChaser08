@@ -122,44 +122,50 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, extra_cols=['personId', 'claimId'])
 
-    normalized_encounter = runner.run_spark_script(
-        'normalize_encounter_app.sql', [
-            ['max_cap', max_cap]
-        ], return_output=True, source_file_path=script_path
-    ).union(
+    normalized_encounter = schema_enforcer.apply_schema(
+        runner.run_spark_script(
+            'normalize_encounter_app.sql', [
+                ['max_cap', max_cap]
+            ], return_output=True, source_file_path=script_path
+        ), encounter_schema, columns_to_keep=['allscripts_date_partition']
+    ).union(schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_encounter_enc.sql', [
                 ['max_cap', max_cap]
             ], return_output=True, source_file_path=script_path
-        )
-    )
+        ), encounter_schema, columns_to_keep=['allscripts_date_partition']
+    ))
     normalized_diagnosis = runner.run_spark_script(
         'normalize_diagnosis.sql', [
             ['max_cap', max_cap]
         ], return_output=True, source_file_path=script_path
     )
-    normalized_procedure = runner.run_spark_script(
-        'normalize_procedure_ord.sql', [
-            ['max_cap', max_cap]
-        ], return_output=True, source_file_path=script_path
-    ).union(
+    normalized_procedure = schema_enforcer.apply_schema(
+        runner.run_spark_script(
+            'normalize_procedure_ord.sql', [
+                ['max_cap', max_cap]
+            ], return_output=True, source_file_path=script_path
+        ), procedure_schema, columns_to_keep=['allscripts_date_partition']
+    ).union(schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_procedure_prb.sql', [
                 ['max_cap', max_cap]
             ], return_output=True, source_file_path=script_path
-        )
-    )
-    normalized_provider_order = runner.run_spark_script(
-        'normalize_provider_order_ord.sql', [
-            ['max_cap', max_cap]
-        ], return_output=True, source_file_path=script_path
-    ).union(
+        ), procedure_schema, columns_to_keep=['allscripts_date_partition']
+    ))
+    normalized_provider_order = schema_enforcer.apply_schema(
+        runner.run_spark_script(
+            'normalize_provider_order_ord.sql', [
+                ['max_cap', max_cap]
+            ], return_output=True, source_file_path=script_path
+        ), provider_order_schema, columns_to_keep=['allscripts_date_partition']
+    ).union(schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_provider_order_vac.sql', [
                 ['max_cap', max_cap]
             ], return_output=True, source_file_path=script_path
-        )
-    )
+        ), provider_order_schema, columns_to_keep=['allscripts_date_partition']
+    ))
     normalized_lab_order = runner.run_spark_script(
         'normalize_lab_order.sql', [
             ['max_cap', max_cap]
