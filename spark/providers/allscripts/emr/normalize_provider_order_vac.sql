@@ -25,7 +25,7 @@ SELECT
     NULL                                                                       AS prov_ord_ctgy_cd_qual,
     NULL                                                                       AS prov_ord_typ_cd,
     NULL                                                                       AS prov_ord_typ_cd_qual,
-    SUBSTRING(
+    REMOVE_LAST_CHARS(
         CONCAT(
             CASE
             WHEN 0 <> LENGTH(TRIM(vac.routeofadmin))
@@ -40,21 +40,7 @@ SELECT
             WHEN 0 <> LENGTH(TRIM(vac.dose))
             THEN CONCAT('Dose: ', TRIM(vac.dose), ' | ') ELSE ''
             END
-            ), 1, LENGTH(CONCAT(
-                CASE
-                WHEN 0 <> LENGTH(TRIM(vac.routeofadmin))
-                THEN CONCAT('Route: ', TRIM(vac.routeofadmin), ' | ')
-                ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(vac.bodysite))
-                THEN CONCAT('Site: ', TRIM(vac.bodysite), ' | ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(vac.dose))
-                THEN CONCAT('Dose: ', TRIM(vac.dose), ' | ') ELSE ''
-                END
-                )) - 3
+            ), 3
         )                                                                      AS prov_ord_nm,
     vac.ndc                                                                    AS prov_ord_ndc,
     vac.cvx                                                                    AS prov_ord_vcx_cd,

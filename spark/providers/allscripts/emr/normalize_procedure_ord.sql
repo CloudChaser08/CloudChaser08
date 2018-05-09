@@ -40,7 +40,7 @@ SELECT
     END                                                                        AS proc_cd_qual,
     ord.cptmod                                                                 AS proc_cd_1_modfr,
     NULL                                                                       AS proc_snomed_cd,
-    SUBSTRING(
+    REMOVE_LAST_CHARS(
         CONCAT(
             CASE
             WHEN 0 <> LENGTH(TRIM(COALESCE(ord.type, '')))
@@ -56,24 +56,9 @@ SELECT
             THEN CONCAT(ord.source, ': ')
             ELSE ''
             END
-            ), 1, LENGTH(CONCAT(
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(ord.type, '')))
-                THEN CONCAT(ord.type, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(ord.name, '')))
-                THEN CONCAT(ord.name, ': ')
-                ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(ord.source, '')))
-                THEN CONCAT(ord.source, ': ')
-                ELSE ''
-                END
-                )) - 2
+            ), 2
         )                                                                      AS proc_alt_cd,
-    CASE WHEN SUBSTRING(
+    CASE WHEN REMOVE_LAST_CHARS(
         CONCAT(
             CASE
             WHEN 0 <> LENGTH(TRIM(COALESCE(ord.type, '')))
@@ -89,22 +74,7 @@ SELECT
             THEN CONCAT(ord.source, ': ')
             ELSE ''
             END
-            ), 1, LENGTH(CONCAT(
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(ord.type, '')))
-                THEN CONCAT(ord.type, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(ord.name, '')))
-                THEN CONCAT(ord.name, ': ')
-                ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(ord.source, '')))
-                THEN CONCAT(ord.source, ': ')
-                ELSE ''
-                END
-                )) - 2
+            ), 2
         ) IS NOT NULL
     THEN 'STATUS_TYPE_CATEGORY_LEVEL1_LEVEL2_LEVEL3' END                       AS proc_alt_cd_qual,
     ARRAY(ord.billingicd9code, ord.billingicd10code)[n2.n]                     AS proc_diag_cd,

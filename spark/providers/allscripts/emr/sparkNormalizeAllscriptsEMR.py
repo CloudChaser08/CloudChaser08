@@ -40,6 +40,8 @@ import spark.helpers.privacy.emr.medication as medication_priv
 import spark.helpers.privacy.emr.clinical_observation as clinical_observation_priv
 import spark.helpers.privacy.emr.vital_sign as vital_sign_priv
 
+import spark.providers.allscripts.emr.udf as allscripts_udf
+
 script_path = __file__
 
 FEED_ID = '25'
@@ -84,6 +86,10 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             matching_date.replace('-', '/')
         )
         warehouse_path_template = 's3a://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/*'
+
+    runner.sqlContext.registerFunction(
+        'remove_last_chars', allscripts_udf.remove_last_chars
+    )
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
