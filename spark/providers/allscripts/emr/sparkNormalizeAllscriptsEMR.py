@@ -432,29 +432,30 @@ def main(args):
             output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 
         # backup allscripts normalized data before distcp
-        try:
-            subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(
-                model
-            )])
-            files_exist = True
-        except subprocess.CalledProcessError as e:
-            if str(e).endswith('status 1'):
-                files_exist = False
-            else:
-                raise
+        if not args.airflow_test:
+            try:
+                subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(
+                    model
+                )])
+                files_exist = True
+            except subprocess.CalledProcessError as e:
+                if str(e).endswith('status 1'):
+                    files_exist = False
+                else:
+                    raise
 
-        if files_exist:
-            subprocess.check_call([
-                'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
-            ])
-            multi_s3_transfer.multithreaded_copy(
-                's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
-                's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
-            )
-            subprocess.check_call([
-                'aws', 's3', 'rm', '--recursive',
-                's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model)
-            ])
+            if files_exist:
+                subprocess.check_call([
+                    'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
+                ])
+                multi_s3_transfer.multithreaded_copy(
+                    's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
+                    's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
+                )
+                subprocess.check_call([
+                    'aws', 's3', 'rm', '--recursive',
+                    's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model)
+                ])
 
         normalized_records_unloader.distcp(output_path)
 
