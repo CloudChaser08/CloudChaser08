@@ -13,10 +13,13 @@ def run(spark, runner, input_file_path, output_location, num_output_files, test=
 
     # Load monthly replacement file into dataframe with schema
     df = runner.sqlContext.read.csv(input_file_path, schema=nppes_schema)
-    df = df.filter(df['npi']!='NPI')
+    df = df.filter(df['npi']!='NPI')  # ignore file header
 
-    # join nppes warehouse table and monthy replacement to ensure no missing npi
-    nppes_total = nppes_warehouse.join(df, ['npi'])
+    # Get rows with npi not in monthly replacement file
+    warehouse_diff = nppes_warehouse.join(df, ["npi"], "leftanti")
+
+    # Add missing npi rows to new dataset
+    nppes_total = df.union(warehouse_diff)
 
     # write parquet files to s3 location
     nppes_total.repartition(num_output_files).write.parquet(output_location)
