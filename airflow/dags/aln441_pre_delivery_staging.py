@@ -147,6 +147,7 @@ push_file_dag = SubDagOperator(
 def do_create_table(ds, **kwargs):
     create_table_statement_template = '''
     CREATE EXTERNAL TABLE {}.{} (
+        VENTURE_ID              string,
         ACCN_ID                 string,
         DOS                     string,
         DOS_ID                  string,
