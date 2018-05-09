@@ -1,16 +1,25 @@
+from spark.helpers import external_table_loader
 from spark.runner import Runner
 from spark.spark_setup import init
 from nppes_schema import *
 
 
-def run(spark, runner, input_file_path, output_location, table_schema, num_output_files, test=False, airflow_test=False):
+def run(spark, runner, input_file_path, output_location, num_output_files, test=False, airflow_test=False):
+    # Load current warehouse table into dataframe
+    nppes_warehouse = external_table_loader._get_table_as_df(sqlContext, 'default', 'ref_nppes')
+
     # get current table schema
-    ref_nppes_df = spark.sqlContext.sql("SELECT * FROM ref_nppes")
+    nppes_schema = nppes_warehouse.schema
+
     # Load monthly replacement file into dataframe with schema
-    df = runner.sqlContext.read.csv(input_file_path, schema=table_schema)
+    df = runner.sqlContext.read.csv(input_file_path, schema=nppes_schema)
+    df = df.filter(df['npi']!='NPI')
+
+    # join nppes warehouse table and monthy replacement to ensure no missing npi
+    nppes_total = nppes_warehouse.join(df, ['npi'])
 
     # write parquet files to s3 location
-    df.repartition(num_output_files).write.parquet(output_location)
+    nppes_total.repartition(num_output_files).write.parquet(output_location)
 
 
 def main(args):
