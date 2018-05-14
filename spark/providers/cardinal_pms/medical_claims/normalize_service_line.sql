@@ -1,49 +1,18 @@
-INSERT INTO medicalclaims_common_model
 SELECT
-    NULL,                                       -- record_id
-    t.ediclaim_id,                              -- claim_id
-    t.hvid,                                     -- hvid
-    NULL,                                       -- created
-    '2',                                        -- model_version
-    NULL,                                       -- data_set
-    NULL,                                       -- data_feed
-    NULL,                                       -- data_vendor
-    NULL,                                       -- source_version
-    COALESCE(p.gender, t.patientgender),        -- patient_gender
-    NULL,                                       -- patient_age
+    t.ediclaim_id                              AS claim_id,
+    t.hvid                                     AS hvid,
+    '05'                                       AS model_version,
+    COALESCE(p.gender, t.patientgender)        AS patient_gender,
     COALESCE(p.yearOfBirth,
              YEAR(t.patientdob)
-    ),                                          -- patient_year_of_birth
-    NULL,                                       -- patient_zip3
-    NULL,                                       -- patient_state
-    'P',                                        -- claim_type
-    NULL,                                       -- date_received
+    )                                          AS patient_year_of_birth,
+    'P'                                        AS claim_type,
     extract_date(
         t.dateservicestart,
         '%Y%m%d'
-    ),                                          -- date_service
-    NULL,                                       -- date_service_end
-    NULL,                                       -- inst_date_admitted
-    NULL,                                       -- inst_date_discharged
-    NULL,                                       -- inst_admit_type_std_id
-    NULL,                                       -- inst_admit_type_vendor_id
-    NULL,                                       -- inst_admit_type_vendor_desc
-    NULL,                                       -- inst_admit_source_std_id
-    NULL,                                       -- inst_admit_source_vendor_id
-    NULL,                                       -- inst_admit_source_vendor_desc
-    NULL,                                       -- inst_discharge_status_std_id
-    NULL,                                       -- inst_discharge_status_vendor_id
-    NULL,                                       -- inst_discharge_status_vendor_desc
-    NULL,                                       -- inst_type_of_bill_std_id
-    NULL,                                       -- inst_type_of_bill_vendor_id
-    NULL,                                       -- inst_type_of_bill_vendor_desc
-    NULL,                                       -- inst_drg_std_id
-    NULL,                                       -- inst_drg_vendor_id
-    NULL,                                       -- inst_drg_vendor_desc
-    t.facilitycode,                             -- place_of_service_std_id
-    NULL,                                       -- place_of_service_vendor_id
-    NULL,                                       -- place_of_service_vendor_desc
-    t.linesequencenumber,                       -- service_line_number
+    )                                          AS date_service,
+    t.facilitycode                             AS place_of_service_std_id,
+    t.linesequencenumber                       AS service_line_number,
     ARRAY(t.principaldiagnosis, t.diagnosistwo,
         t.diagnosisthree, t.diagnosisfour, t.diagnosisfive,
         t.diagnosissix, t.diagnosisseven, t.diagnosiseight
@@ -56,31 +25,23 @@ SELECT
                 NULL)[sl_explode.n]
                 AS INTEGER
             ) - 1
-        ],                                      -- diagnosis_code
-    NULL,                                       -- diagnosis_code_qual
+        ]                                      AS diagnosis_code,
     CASE
         WHEN ARRAY(t.linkeddiagnosisone, t.linkeddiagnosistwo,
             t.linkeddiagnosisthree, t.linkeddiagnosisfour,
             NULL)[sl_explode.n] IS NOT NULL
             THEN sl_explode.n + 1
         ELSE NULL 
-    END,                                        -- diagnosis_priority
-    NULL,                                       -- admit_diagnosis_ind
-    t.procedurecode,                            -- procedure_code
-    t.procedurecodequalifier,                   -- procedure_code_qual
-    NULL,                                       -- principal_proc_ind
-    t.submittedunits,                           -- procedure_units
-    t.proceduremodifierone,                     -- procedure_modifier_1
-    t.proceduremodifiertwo,                     -- procedure_modifier_2
-    t.proceduremodifierthree,                   -- procedure_modifier_3
-    t.proceduremodifierfour,                    -- procedure_modifier_4
-    NULL,                                       -- revenue_code
-    NULL,                                       -- ndc_code
-    NULL,                                       -- medical_coverage_type
-    t.submittedcharge,                          -- line_charge
-    NULL,                                       -- line_allowed
-    t.submittedchargetotal,                     -- total_charge
-    NULL,                                       -- total_allowed
+    END                                        AS diagnosis_priority,
+    t.procedurecode                            AS procedure_code,
+    t.procedurecodequalifier                   AS procedure_code_qual,
+    t.submittedunits                           AS procedure_units_billed,
+    t.proceduremodifierone                     AS procedure_modifier_1,
+    t.proceduremodifiertwo                     AS procedure_modifier_2,
+    t.proceduremodifierthree                   AS procedure_modifier_3,
+    t.proceduremodifierfour                    AS procedure_modifier_4,
+    t.submittedcharge                          AS line_charge,
+    t.submittedchargetotal                     AS total_charge,
     CASE
         WHEN t.renderingprovideridqualifier = 'XX' AND
              11 = LENGTH(TRIM(COALESCE(t.renderingprovidernpid, '')))
@@ -88,7 +49,7 @@ SELECT
         WHEN t.renderingprovideridqualifier = 'XX' 
              THEN t.renderingproviderid
         ELSE NULL
-    END,                                        -- prov_rendering_npi
+    END                                        AS prov_rendering_npi,
     CASE
         WHEN t.billprovideridqualifier = 'XX' AND
              11 = LENGTH(TRIM(COALESCE(t.billprovidernpid, '')))
@@ -96,118 +57,53 @@ SELECT
         WHEN t.billprovideridqualifier = 'XX'
              THEN t.billproviderid
         ELSE NULL
-    END,                                        -- prov_billing_npi
+    END                                        AS prov_billing_npi,
     CASE
         WHEN t.referringprovideridqualifier = 'XX'
              THEN t.referringproviderid
         ELSE NULL
-    END,                                        -- prov_referring_npi
+    END                                        AS prov_referring_npi,
     CASE
         WHEN t.servicefacilityidqualifier = 'XX'
              THEN t.servicefacilityid
         ELSE NULL
-    END,                                        -- prov_facility_npi
-    t.payerid,                                  -- payer_vendor_id
-    t.payername,                                -- payer_name
-    NULL,                                       -- payer_parent_name
-    NULL,                                       -- payer_org_name
-    NULL,                                       -- payer_plan_id
-    NULL,                                       -- payer_plan_name
-    NULL,                                       -- payer_type
+    END                                        AS prov_facility_npi,
+    t.payerid                                  AS payer_vendor_id,
+    t.payername                                AS payer_name,
     CASE
         WHEN t.renderingprovideridqualifier <> 'XX'
              AND 0 <> LENGTH(TRIM(COALESCE(t.renderingproviderid, '')))
              THEN t.renderingproviderid
         ELSE NULL
-    END,                                        -- prov_rendering_vendor_id
-    NULL,                                       -- prov_rendering_tax_id
-    NULL,                                       -- prov_rendering_dea_id
-    NULL,                                       -- prov_rendering_ssn
-    NULL,                                       -- prov_rendering_state_license
-    NULL,                                       -- prov_rendering_upin
-    NULL,                                       -- prov_rendering_commercial_id
-    t.renderingprovidername,                    -- prov_rendering_name_1
-    NULL,                                       -- prov_rendering_name_2
-    NULL,                                       -- prov_rendering_address_1
-    NULL,                                       -- prov_rendering_address_2
-    NULL,                                       -- prov_rendering_city
-    NULL,                                       -- prov_rendering_state
-    NULL,                                       -- prov_rendering_zip
-    t.renderingprovidertaxonomycode,            -- prov_rendering_std_taxonomy
-    NULL,                                       -- prov_rendering_vendor_specialty
+    END                                        AS prov_rendering_vendor_id,
+    t.renderingprovidername                    AS prov_rendering_name_1,
+    t.renderingprovidertaxonomycode            AS prov_rendering_std_taxonomy,
     CASE
         WHEN t.billprovideridqualifier <> 'XX'
              AND 0 <> LENGTH(TRIM(COALESCE(t.billproviderid, '')))
              THEN t.billproviderid
         ELSE NULL
-    END,                                        -- prov_billing_vendor_id
-    NULL,                                       -- prov_billing_tax_id
-    NULL,                                       -- prov_billing_dea_id
-    NULL,                                       -- prov_billing_ssn
-    NULL,                                       -- prov_billing_state_license
-    NULL,                                       -- prov_billing_upin
-    NULL,                                       -- prov_billing_commercial_id
-    t.billprovidername,                         -- prov_billing_name_1
-    NULL,                                       -- prov_billing_name_2
-    NULL,                                       -- prov_billing_address_1
-    NULL,                                       -- prov_billing_address_2
-    NULL,                                       -- prov_billing_city
-    NULL,                                       -- prov_billing_state
-    NULL,                                       -- prov_billing_zip
-    t.billprovidertaxonomycode,                 -- prov_billing_std_taxonomy
-    NULL,                                       -- prov_billing_vendor_specialty
+    END                                        AS prov_billing_vendor_id,
+    t.billprovidername                         AS prov_billing_name_1,
+    t.billprovidertaxonomycode                 AS prov_billing_std_taxonomy,
     CASE
         WHEN t.referringprovideridqualifier <> 'XX'
              AND 0 <> LENGTH(TRIM(COALESCE(t.referringproviderid, '')))
              THEN referringproviderid
         ELSE NULL
-    END,                                        -- prov_referring_vendor_id
-    NULL,                                       -- prov_referring_tax_id
-    NULL,                                       -- prov_referring_dea_id
-    NULL,                                       -- prov_referring_ssn
-    NULL,                                       -- prov_referring_state_license
-    NULL,                                       -- prov_referring_upin
-    NULL,                                       -- prov_referring_commercial_id
-    t.referringprovidername,                    -- prov_referring_name_1
-    NULL,                                       -- prov_referring_name_2
-    NULL,                                       -- prov_referring_address_1
-    NULL,                                       -- prov_referring_address_2
-    NULL,                                       -- prov_referring_city
-    NULL,                                       -- prov_referring_state
-    NULL,                                       -- prov_referring_zip
-    NULL,                                       -- prov_referring_std_taxonomy
-    NULL,                                       -- prov_referring_vendor_specialty
+    END                                        AS prov_referring_vendor_id,
+    t.referringprovidername                    AS prov_referring_name_1,
     CASE
         WHEN t.servicefacilityidqualifier <> 'XX'
              AND 0 <> LENGTH(TRIM(COALESCE(t.servicefacilityid, '')))
              THEN t.servicefacilityid
         ELSE NULL
-    END,                                        -- prov_facility_vendor_id
-    NULL,                                       -- prov_facility_tax_id
-    NULL,                                       -- prov_facility_dea_id
-    NULL,                                       -- prov_facility_ssn
-    NULL,                                       -- prov_facility_state_license
-    NULL,                                       -- prov_facility_upin
-    NULL,                                       -- prov_facility_commercial_id
-    t.servicefacilityname,                      -- prov_facility_name_1
-    NULL,                                       -- prov_facility_name_2
-    t.servicefacilityaddress,                   -- prov_facility_address_1
-    NULL,                                       -- prov_facility_address_2
-    t.servicefacilitycity,                      -- prov_facility_city
-    t.servicefacilitystate,                     -- prov_facility_state
-    t.servicefacilityzip,                       -- prov_facility_zip
-    NULL,                                       -- prov_facility_std_taxonomy
-    NULL,                                       -- prov_facility_vendor_specialty
-    NULL,                                       -- cob_payer_vendor_id_1
-    NULL,                                       -- cob_payer_seq_code_1
-    NULL,                                       -- cob_payer_hpid_1
-    NULL,                                       -- cob_payer_claim_filing_ind_code_1
-    NULL,                                       -- cob_ins_type_code_1
-    NULL,                                       -- cob_payer_vendor_id_2
-    NULL,                                       -- cob_payer_seq_code_2
-    NULL,                                       -- cob_payer_hpid_2
-    NULL,                                       -- cob_payer_claim_filing_ind_code_2
-    NULL                                        -- cob_ins_type_code_2
+    END                                        AS prov_facility_vendor_id,
+    t.servicefacilityname                      AS prov_facility_name_1,
+    t.servicefacilityaddress                   AS prov_facility_address_1,
+    t.servicefacilitycity                      AS prov_facility_city,
+    t.servicefacilitystate                     AS prov_facility_state,
+    t.servicefacilityzip                       AS prov_facility_zip
 FROM transactional_cardinal_pms t
     LEFT OUTER JOIN matching_payload p
     ON t.hvJoinKey = p.hvJoinKey
@@ -227,4 +123,3 @@ WHERE
         AND
         sl_explode.n = 0
     )
-;

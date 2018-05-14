@@ -89,7 +89,8 @@ CREATE EXTERNAL TABLE transactional_cardinal_pms (
     submittedcharge                 string,
     submittedunits                  string,
     hvid                            string,
-    hvJoinKey                       string
+    hvJoinKey                       string,
+    tenantid                        string
 )
 ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 WITH SERDEPROPERTIES (

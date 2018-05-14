@@ -8,8 +8,11 @@ from pyspark.sql.functions import col, collect_set, explode, first
 from spark.runner import Runner
 from spark.spark_setup import init
 
+from spark.common.medicalclaims_common_model_v5 import schema
+
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.explode as exploder
 import spark.helpers.postprocessor as postprocessor
@@ -35,19 +38,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     else:
         input_path = 's3://salusv/incoming/medicalclaims/cardinal_pms/{}/'\
                         .format(date_input.replace('-', '/'))
-        input_path = 's3://salusv/matching/payload/medicalclaims/cardinal_pms/{}/'\
+        matching_path = 's3://salusv/matching/payload/medicalclaims/cardinal_pms/{}/'\
                         .format(date_input.replace('-', '/'))
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
-
-    # Create the medical claims table to store the results in
-    runner.run_spark_script('../../../common/medicalclaims_common_model.sql', [
-        ['table_name', 'medicalclaims_common_model', False],
-        ['properties', '', False]
-    ])
-    logging.debug('Created medicalclaims_common_model_table')
 
     # Load the transactions into raw, un-normalized tables
     runner.run_spark_script('load_transactions.sql', [
@@ -67,7 +63,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     logging.debug('Created exploder table for service-line')
 
     # Normalize service-line
-    runner.run_spark_script('normalize_service_line.sql', [])
+    service_lines = runner.run_spark_script('normalize_service_line.sql', [], return_output=True)
     logging.debug('Finished normalizing for service-line')
 
     # Create a table that contains one row for each claim
@@ -81,7 +77,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Create a table that contains a each unique
     # diagnosis code and claim id
-    runner.sqlContext.sql('select * from medicalclaims_common_model')           \
+    service_lines                                                               \
           .groupby(col('claim_id'))                                             \
           .agg(collect_set(col('diagnosis_code')).alias('diagnosis_codes'))     \
           .withColumn('diagnosis_code', explode(col('diagnosis_codes')))        \
@@ -93,28 +89,47 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     logging.debug('Created exploder for claim')
 
     # Normalize claim
-    runner.run_spark_script('normalize_claim.sql', [])
+    claim_lines = runner.run_spark_script('normalize_claim.sql', [], return_output=True)
     logging.debug('Finished normalizing for claim')
 
     # Postprocessing
-    postprocessor.compose(
+    service_lines_final = postprocessor.compose(
+        schema_enforcer.apply_schema_func(schema),
         postprocessor.nullify,
         postprocessor.add_universal_columns(
             feed_id='41',
             vendor_id='188',
             filename='PMS_record_data_{}'.format(date_obj.strftime('%Y%m%d'))
         ),
-        medical_priv.filter
+        medical_priv.filter,
+        schema_enforcer.apply_schema_func(schema)
     )(
-        runner.sqlContext.sql('select * from medicalclaims_common_model')
-    ).createTempView('medicalclaims_common_model')
+       service_lines
+    )
+
+    claim_lines_final = postprocessor.compose(
+        schema_enforcer.apply_schema_func(schema),
+        postprocessor.nullify,
+        postprocessor.add_universal_columns(
+            feed_id='41',
+            vendor_id='188',
+            filename='PMS_record_data_{}'.format(date_obj.strftime('%Y%m%d'))
+        ),
+        medical_priv.filter,
+        schema_enforcer.apply_schema_func(schema)
+    )(
+        claim_lines
+    )
+
+    pms_data_final = service_lines_final.union(claim_lines_final)
     logging.debug('Finished post-processing')
     
     if not test:
-        normalized_records_unloader.partition_and_rename(
-            spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'cardinal_pms',
-            'medicalclaims_common_model', 'date_service', date_input
+        normalized_records_unloader.unload(
+            spark, runner, pms_data_final, 'date_service', date_input, 'cardinal_pms'
         )
+    else:
+        pms_data_final.createOrReplaceTempView('medicalclaims_common_model')
 
 
 def main(args):
