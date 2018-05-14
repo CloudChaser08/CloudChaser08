@@ -10,6 +10,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
+import spark.helpers.schema_enforcer as schema_enforcer
 import load_transactions
 from spark.helpers.privacy.emr import                   \
     encounter as priv_encounter,                        \
@@ -97,10 +98,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     logging.debug("Loaded external tables")
 
     min_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'EARLIEST_VALID_SERVICE_DATE')
-    min_date = min_date.gen_ref_1_dt.isoformat().split("T")[0] if len(min_date) > 0 else None
+    min_date = min_date.isoformat().split("T")[0] if min_date is not None else None
     max_date = date_input
     min_diag_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'EARLIEST_VALID_DIAGNOSIS_DATE')
-    min_diag_date = min_diag_date.gen_ref_1_dt.isoformat().split("T")[0] if len(min_diag_date) > 0 else None
+    min_diag_date = min_diag_date.isoformat().split("T")[0] if min_diag_date is not None else None
     logging.debug("Loaded min dates")
 
     explode.generate_exploder_table(spark, 20, 'lab_order_exploder')
@@ -155,21 +156,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ], return_output=True)
     logging.debug("Normalized lab order")
 
-    normalized['lab_results'] = runner.run_spark_script('normalize_lab_result_1.sql', [
+    normalized['lab_result'] = schema_enforcer.apply_schema(
+            runner.run_spark_script('normalize_lab_result_1.sql', [
                 ['min_date', min_date],
                 ['max_date', max_date]
-            ], return_output=True) \
-        .union(runner.run_spark_script('normalize_lab_result_1.sql', [
+            ], return_output=True), lab_result_schema, columns_to_keep=['part_mth']) \
+        .union(schema_enforcer.apply_schema(
+            runner.run_spark_script('normalize_lab_result_2.sql', [
                 ['min_date', min_date],
                 ['max_date', max_date]
-            ], return_output=True))
+            ], return_output=True), lab_result_schema, columns_to_keep=['part_mth']))
     logging.debug("Normalized lab result")
 
     runner.sqlContext.table('medicationorder') \
         .withColumn('row_num', F.monotonically_increasing_id()) \
         .createOrReplaceTempView('medicationorder')
     icd_diag_codes = runner.sqlContext.table('icd_diag_codes')
-    tmp_medicaiton = runner.run_spark_script('normalize_medication.sql', [
+    tmp_medication = runner.run_spark_script('normalize_medication.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
     ], return_output=True)
@@ -179,10 +182,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         .select(*(
             [tmp_medication[c] for c in tmp_medication.columns if c != 'medctn_diag_cd'] + 
             [icd_diag_codes.code.alias('medctn_diag_cd')]
-        ))
+        )).select(*p1.columns) # Re-order or else the union will not work correctly
+
     # The row_num column is generated inside the normalize_medication.sql
     # script in order to ensure that when we run a distinct to remove
-    # duplicates, we maintain  at least 1 normalized row per source row
+    # duplicates, we maintain at least 1 normalized row per source row
     normalized['medication'] = p1.union(p2).distinct().drop('row_num')
     logging.debug("Normalized medication")
 
@@ -196,16 +200,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ], return_output=True)
     logging.debug("Normalized provider order")
 
-    normalized['clinical_observation'] = runner.run_spark_script('normalize_clinical_observation_1.sql', [
+    normalized['clinical_observation'] = schema_enforcer.apply_schema(
+            runner.run_spark_script('normalize_clinical_observation_1.sql', [
                 ['min_date', min_date],
                 ['max_date', max_date],
                 ['partitions', org_num_partitions, False]
-            ], return_output=True) \
-        .union(runner.run_spark_script('normalize_clinical_observation_3.sql', [
+            ], return_output=True), clinical_observation_schema, columns_to_keep=['part_mth']) \
+        .union(schema_enforcer.apply_schema(
+            runner.run_spark_script('normalize_clinical_observation_3.sql', [
                 ['min_date', min_date],
                 ['max_date', max_date],
                 ['partitions', org_num_partitions, False]
-            ], return_output=True))
+            ], return_output=True), clinical_observation_schema, columns_to_keep=['part_mth']))
     logging.debug("Normalized clinical observation")
 
     runner.run_spark_script('normalize_vital_sign_prenorm.sql', [
@@ -367,10 +373,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         }
     ]
 
-    min_hvm_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'HVM_AVAILABLE_HISTORY_START_DATE')
+    min_hvm_date = None#postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'HVM_AVAILABLE_HISTORY_START_DATE')
 
     if min_hvm_date is not None:
-        historical_date = datetime.combine(min_hvm_date.gen_ref_1_dt, time(0))
+        historical_date = datetime.combine(min_hvm_date, time(0))
     elif min_date is not None:
         historical_date = datetime.strptime(min_date, '%Y-%m-%d')
     else:
@@ -378,7 +384,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     for table in normalized_tables:
         filter_args = [runner.sqlContext] + table.get('filter_args', [])
-        cols_to_keep = ['part_mth'] if table['date_column'] = 'part_mth' else []
+        cols_to_keep = ['part_mth'] if table['date_column'] == 'part_mth' else []
         df = postprocessor.compose(
             postprocessor.add_universal_columns(
                 feed_id='35', vendor_id='118', filename=None,
@@ -388,11 +394,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id',
                 model_version='mdl_vrsn_num'
             ),
-            schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=cols_to_keep)
+            schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=cols_to_keep),
             table['privacy_filter'].filter(*filter_args)
         )(
             normalized[table['data_type']]
         )
+
+        df.createOrReplaceTempView(table['data_type'] + '_common_model')
 
         if not test:
             normalized_records_unloader.unload(
@@ -404,7 +412,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 staging_subdir='{}/'.format(table['data_type']),
                 columns = table['schema'].fieldNames()
             )
-        logging.debug("Cleaned up {}".format(table['table_name']))
+        logging.debug("Cleaned up {}".format(table['data_type']))
 
 
 def main(args):
