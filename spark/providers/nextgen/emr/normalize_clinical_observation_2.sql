@@ -3,7 +3,7 @@
 --    '04'                                    AS mdl_vrsn_num,
 --    agy.dataset                             AS data_set_nm,
 --    agy.reportingenterpriseid               AS vdr_org_id,
---    concat_ws('_', 'NG',
+--    concat_ws('_', '118',
 --        agy.reportingenterpriseid,
 --        agy.nextgengroupid)                 AS hvid,
 --    dem.birthyear                           AS ptnt_birth_yr,

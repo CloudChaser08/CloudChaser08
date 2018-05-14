@@ -8,7 +8,7 @@ SELECT
     enc.encounterid                         AS vdr_enc_id,
     CASE WHEN enc.encounterid IS NOT NULL THEN 'VENDOR'
         END                                 AS vdr_enc_id_qual,
-    concat_ws('_', 'NG',
+    concat_ws('_', '118',
         enc.reportingenterpriseid,
         enc.nextgengroupid)                 AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,

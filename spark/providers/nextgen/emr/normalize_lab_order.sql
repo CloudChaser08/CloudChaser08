@@ -6,7 +6,7 @@ SELECT
     ord.reportingenterpriseid               AS vdr_org_id,
     ord.ordernum                            AS vdr_lab_ord_id,
     'reportingenterpriseid'                 AS vdr_lab_ord_id_qual,
-    concat_ws('_', 'NG',
+    concat_ws('_', '118',
         ord.reportingenterpriseid,
         ord.nextgengroupid)                 AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
