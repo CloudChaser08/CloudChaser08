@@ -92,9 +92,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     claim_lines = runner.run_spark_script('normalize_claim.sql', [], return_output=True)
     logging.debug('Finished normalizing for claim')
 
+    service_lines_schema = schema_enforcer.apply_schema_func(schema)(service_lines)
+    claim_lines_schema = schema_enforcer.apply_schema_func(schema)(claim_lines)
+
+    pms_data = service_lines_schema.union(claim_lines_schema)
+
     # Postprocessing
-    service_lines_final = postprocessor.compose(
-        schema_enforcer.apply_schema_func(schema),
+    pms_data_final = postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(
             feed_id='41',
@@ -104,24 +108,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         medical_priv.filter,
         schema_enforcer.apply_schema_func(schema)
     )(
-       service_lines
+       pms_data
     )
-
-    claim_lines_final = postprocessor.compose(
-        schema_enforcer.apply_schema_func(schema),
-        postprocessor.nullify,
-        postprocessor.add_universal_columns(
-            feed_id='41',
-            vendor_id='188',
-            filename='PMS_record_data_{}'.format(date_obj.strftime('%Y%m%d'))
-        ),
-        medical_priv.filter,
-        schema_enforcer.apply_schema_func(schema)
-    )(
-        claim_lines
-    )
-
-    pms_data_final = service_lines_final.union(claim_lines_final)
     logging.debug('Finished post-processing')
     
     if not test:
