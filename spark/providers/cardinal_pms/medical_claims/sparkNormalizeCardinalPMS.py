@@ -92,8 +92,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     claim_lines = runner.run_spark_script('normalize_claim.sql', [], return_output=True)
     logging.debug('Finished normalizing for claim')
 
-    service_lines_schema = schema_enforcer.apply_schema_func(schema)(service_lines)
-    claim_lines_schema = schema_enforcer.apply_schema_func(schema)(claim_lines)
+    service_lines_schema = schema_enforcer.apply_schema(service_lines, schema)
+    claim_lines_schema = schema_enforcer.apply_schema(claim_lines, schema)
 
     pms_data = service_lines_schema.union(claim_lines_schema)
 
