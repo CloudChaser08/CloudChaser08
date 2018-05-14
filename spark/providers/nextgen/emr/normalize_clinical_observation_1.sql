@@ -68,4 +68,4 @@ FROM substanceusage sub
         WHERE gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
             AND whtlst_flg = 'Y'
         ) ref4
-        ON TRIM(UPPER(sub.emrcode)) = ref4.gen_ref_itm_nm
+        ON UPPER(sub.emrcode) = ref4.gen_ref_itm_nm

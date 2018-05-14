@@ -1,5 +1,5 @@
 SELECT *,
-    concat_ws(':',
+    ARRAY(
         'SYSTOLIC',
         'DIASTOLIC',
         'PULSE',
@@ -16,7 +16,7 @@ SELECT *,
         'HEIGHT',
         'WEIGHT'
     ) as vit_sign_typ_cd,
-    concat_ws(':',
+    ARRAY(
         'mmHg',
         'mmHg',
         'BEATS_PER_MINUTE',
@@ -33,8 +33,24 @@ SELECT *,
         'INCHES',
         'POUNDS'
     ) as vit_sign_uom,
-    concat('::::::::::::', COALESCE(vsn.heightdate, ''), ':') as vit_sign_last_msrmt_dt,
-    array(
+    ARRAY(
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        'INCHES',
+        NULL
+    ) as vit_sign_last_msrmt_dt,
+    ARRAY(
         vsn.systolic,
         vsn.diastolic,
         vsn.pulserate,

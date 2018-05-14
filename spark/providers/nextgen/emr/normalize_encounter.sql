@@ -21,7 +21,7 @@ SELECT
         )                                   AS enc_start_dt,
     enc.hcpprimarytaxonomy                  AS enc_rndrg_prov_nucc_taxnmy_cd,
     enc.hcpzipcode                          AS enc_rndrg_prov_zip_cd,
-    clean_up_freetext(enc.encounterdescription)
+    UPPER(clean_up_freetext(enc.encounterdescription))
                                             AS enc_typ_nm,
     'encounter'                             AS prmy_src_tbl_nm
 FROM encounter_dedup enc

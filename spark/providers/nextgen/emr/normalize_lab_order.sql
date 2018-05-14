@@ -20,7 +20,6 @@ SELECT
     extract_date(
         substring(ord.encounterdate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS enc_dt,
-    NULL                                    AS prov_ord_dt,
     extract_date(
         substring(ord.scheduledtime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS lab_ord_test_schedd_dt,
