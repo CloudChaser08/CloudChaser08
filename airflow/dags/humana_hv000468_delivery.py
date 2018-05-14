@@ -53,6 +53,8 @@ DEID_FILE_NAME_TEMPLATE = 'deid_data_{}'
 # Return files
 MEDICAL_CLAIMS_EXTRACT_TEMPLATE = 'medical_claims_{}.psv.gz'
 PHARMACY_CLAIMS_EXTRACT_TEMPLATE = 'pharmacy_claims_{}.psv.gz'
+ENROLLMENT_EXTRACT_TEMPLATE = 'enrollment_{}.psv.gz'
+RETURN_FILE_TEMPLATE = 'results_{}.tar.gz'
 
 # Identify the group_id passed into this DagRun and push it to xcom
 def do_get_group_id(ds, **kwargs):
@@ -143,7 +145,8 @@ create_tmp_dir = PythonOperator(
 
 def do_fetch_extracted_data(ds, **kwargs):
     gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
-    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
+    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE,
+        ENROLLMENT_EXTRACT_TEMPLATE]:
 
         s3_utils.fetch_file_from_s3(
             S3_NORMALIZED_FILE_URL_TEMPLATE.format(gid) + \
@@ -158,14 +161,31 @@ fetch_extracted_data = PythonOperator(
     dag=mdag
 )
 
-def do_deliver_extracted_data(ds, **kwargs):
-    sftp_config = json.loads(Variable.get('humana_prod_sftp_configuration'))
+def do_create_return_file(ds, **kwargs):
     gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
-    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
+    tmp_dir = get_tmp_dir(ds, kwargs)
+    extracted_files = [t.format(gid) for t in [
+        MEDICAL_CLAIMS_EXTRACT_TEMPLATE,
+        PHARMACY_CLAIMS_EXTRACT_TEMPLATE,
+        ENROLLMENT_EXTRACT_TEMPLATE]
+    ]
+    subprocess.check_call(['tar', '-C', tmp_dir, '-zcf',
+        tmp_dir + RETURN_FILE_TEMPLATE.format(gid), *extracted_files])
 
-        sftp_utils.upload_file(
-            get_tmp_dir(ds, kwargs) + t.format(gid), **sftp_config
-        )
+create_return_file = PythonOperator(
+    task_id='create_return_file',
+    provide_context=True,
+    python_callable=do_create_return_file,
+    dag=mdag
+)
+
+def do_deliver_extracted_data(ds, **kwargs):
+    sftp_config = json.loads(Variable.get('humana_test_sftp_configuration'))
+    gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+
+    sftp_utils.upload_file(
+        get_tmp_dir(ds, kwargs) + RETURN_FILE_TEMPLATE.format(gid), **sftp_config
+    )
 
 deliver_extracted_data = PythonOperator(
     task_id='deliver_extracted_data',
@@ -176,7 +196,9 @@ deliver_extracted_data = PythonOperator(
 
 def do_clean_up_workspace(ds, **kwargs):
     gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
-    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
+    for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE,
+        ENROLLMENT_EXTRACT_TEMPLATE, RETURN_FILE_TEMPLATE]:
+
         os.remove(TMP_PATH_TEMPLATE.format(gid) + t.format(gid))
 
     os.rmdir(TMP_PATH_TEMPLATE.format(gid))
@@ -200,5 +222,6 @@ if HVDAG.HVDAG.airflow_env == 'test':
 detect_move_extract_dag.set_upstream(get_group_id)
 create_tmp_dir.set_upstream(detect_move_extract_dag)
 fetch_extracted_data.set_upstream(create_tmp_dir)
-deliver_extracted_data.set_upstream(fetch_extracted_data)
+create_return_file.set_upstream(fetch_extracted_data)
+deliver_extracted_data.set_upstream(create_return_file)
 clean_up_workspace.set_upstream(deliver_extracted_data)
