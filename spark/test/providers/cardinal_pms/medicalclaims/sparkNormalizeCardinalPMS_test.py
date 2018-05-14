@@ -35,6 +35,12 @@ def test_claim_levels_are_unique():
 
     assert len(claim_diags) == len(unique_claim_diags)
 
+
+def test_vendor_org_id_is_populated():
+    for row in results:
+        assert row.vendor_org_id == 'z'
+
+
 def test_cleanup(spark):
     cleanup(spark)
 
