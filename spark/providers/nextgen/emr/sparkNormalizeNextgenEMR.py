@@ -283,10 +283,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'column_name': 'medctn_admin_sig_cd',
             'domain_name': 'emr_medctn.medctn_admin_sig_cd',
             'whitelist_col_name': 'gen_ref_cd'
-        }, {
-            'column_name': 'medctn_admin_sig_txt',
-            'domain_name': 'emr_medctn.medctn_admin_sig_txt',
-            'whitelist_col_name': 'gen_ref_itm_desc'
         }]
 
     def update_clinical_observation_whitelists(whitelists):

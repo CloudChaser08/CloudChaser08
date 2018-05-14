@@ -40,7 +40,6 @@ SELECT
         ELSE NULL END                       AS medctn_rx_flg,
     med.rxquantity                          AS medctn_rx_qty,
     clean_up_freetext(med.sigcodes, false)  AS medctn_admin_sig_cd,
-    clean_up_freetext(med.sigdesc, false)   AS medctn_admin_sig_txt,
     med.dose                                AS medctn_dose_txt,
     med.orgrefills                          AS medctn_orig_rfll_qty,
     med.rxrefills                           AS medctn_remng_rfll_qty,
