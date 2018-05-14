@@ -2,6 +2,7 @@ SELECT
     t.ediclaim_id                              AS claim_id,
     t.hvid                                     AS hvid,
     '05'                                       AS model_version,
+    t.tenant_id                                AS vendor_org_id,
     COALESCE(p.gender, t.patientgender)        AS patient_gender,
     COALESCE(p.yearOfBirth,
              YEAR(t.patientdob)
