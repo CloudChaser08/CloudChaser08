@@ -1,4 +1,3 @@
-INSERT INTO procedure_common_model
 SELECT
     '04'                                    AS mdl_vrsn_num,
     proc.dataset                            AS data_set_nm,

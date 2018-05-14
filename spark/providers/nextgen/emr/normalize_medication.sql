@@ -4,7 +4,7 @@ SELECT
     med.reportingenterpriseid               AS vdr_org_id,
     concat_ws('_', 'NG',
         med.reportingenterpriseid,
-        med.nextgengroupid) as hvid         AS hvid,
+        med.nextgengroupid)                 AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
     CASE WHEN dem.gender = 'M' THEN 'M'
         WHEN dem.gender = 'F' THEN 'F'
@@ -29,7 +29,7 @@ SELECT
         substring(med.datestopped, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS medctn_end_dt,
     clean_up_freetext(trim(split(med.diagnosis_code_id, ',')[x.n]), true)
-                                            AS medctn_diag_cd
+                                            AS medctn_diag_cd,
     med.emrcode                             AS medctn_ndc,
     med.hiclsqno                            AS medctn_hicl_thrptc_cls_cd,
     med.hic3                                AS medctn_hicl_cd,

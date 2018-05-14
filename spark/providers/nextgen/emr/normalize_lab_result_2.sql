@@ -4,7 +4,7 @@ SELECT
     lip.reportingenterpriseid               AS vdr_org_id,
     concat_ws('_', 'NG',
         lip.reportingenterpriseid,
-        lip.nextgengroupid) as hvid         AS hvid,
+        lip.nextgengroupid)                 AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
     CASE WHEN dem.gender = 'M' THEN 'M'
         WHEN dem.gender = 'F' THEN 'F'

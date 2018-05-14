@@ -8,7 +8,7 @@ SELECT
     'reportingenterpriseid'                 AS vdr_lab_ord_id_qual,
     concat_ws('_', 'NG',
         ord.reportingenterpriseid,
-        ord.nextgengroupid) as hvid         AS hvid,
+        ord.nextgengroupid)                 AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
     CASE WHEN dem.gender = 'M' THEN 'M'
         WHEN dem.gender = 'F' THEN 'F'
@@ -29,9 +29,9 @@ SELECT
         )                                   AS lab_ord_smpl_collctn_dt,
     translate(ord.loinccode, '-', '')       AS lab_ord_loinc_cd,
     clean_up_freetext(ord.snomedcode, false)
-                                            AS lab_ord_snomed_cd
+                                            AS lab_ord_snomed_cd,
     clean_up_freetext(ord.testcodeid, false)
-                                            AS lab_ord_alt_cd
+                                            AS lab_ord_alt_cd,
     clean_up_freetext(ord.emrcode, false)   AS lab_ord_test_nm,
     trim(split(ord.diagnoses, ',')[x.n])
 					    AS lab_ord_diag_cd,
