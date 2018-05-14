@@ -54,25 +54,28 @@ DEID_FILE_NAME_TEMPLATE = 'deid_data_{}'
 MEDICAL_CLAIMS_EXTRACT_TEMPLATE = 'medical_claims_{}.psv.gz'
 PHARMACY_CLAIMS_EXTRACT_TEMPLATE = 'pharmacy_claims_{}.psv.gz'
 
-# Execution date propagates from root DAG to subdags, but DagRun information
-# does not. Identify the root DAG, and get its DagRun information
-def get_root_dag_run(kwargs):
-    curr_dag = kwargs['dag']
-    while curr_dag.parent_dag is not None:
-        curr_dag = curr_dag.parent_dag
-    session = settings.Session()
-    return session.query(DagRun) \
-	  .filter(DagRun.dag_id == curr_dag.dag_id, DagRun.execution_date == kwargs['execution_date'])[0]
+# Identify the group_id passed into this DagRun and push it to xcom
+def do_get_group_id(ds, **kwargs):
+    group_id = kwargs['dag_run'].conf['group_id']
+
+    kwargs['ti'].xcom_push(key='group_id', value=group_id)
+
+get_group_id = PythonOperator(
+    task_id='get_group_id',
+    provide_context=True,
+    python_callable=do_get_group_id,
+    dag=mdag
+)
 
 #
 # Post-Matching
 #
 
 def get_expected_matching_files(ds, kwargs):
-    root_dag_run = get_root_dag_run(kwargs)
+    group_id = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
 
     expected_files = [
-        DEID_FILE_NAME_TEMPLATE.format(root_dag_run.conf['group_id'])
+        DEID_FILE_NAME_TEMPLATE.format(group_id)
     ]
     if HVDAG.HVDAG.airflow_env != 'prod':
         logging.info(expected_files)
@@ -81,7 +84,7 @@ def get_expected_matching_files(ds, kwargs):
 
 def norm_args(ds, k):
     root_dag_run = get_root_dag_run(k)
-    base = ['--group_id', root_dag_run.conf['group_id']]
+    base = ['--group_id', group_id]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -96,7 +99,8 @@ detect_move_extract_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : get_expected_matching_files,
-            'file_date_func'                    : lambda ds, k: get_root_dag_run(k).conf['group_id'],
+            'file_date_func'                    : lambda ds, k:
+                k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '53769d77-189e-4d79-a5d4-d2d22d09331e',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/delivery/humana/hv000468/sparkGenerateExtract.py',
@@ -119,10 +123,15 @@ detect_move_extract_dag = SubDagOperator(
 )
 
 def get_tmp_dir(ds, kwargs):
-    return TMP_PATH_TEMPLATE.format(get_root_dag_run(kwargs).conf['group_id'])
+    return TMP_PATH_TEMPLATE.format(
+        kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+    )
+
 
 def do_create_tmp_dir(ds, **kwargs):
-    os.makedirs(TMP_PATH_TEMPLATE.format(get_root_dag_run(kwargs).conf['group_id']))
+    os.makedirs(TMP_PATH_TEMPLATE.format(
+        kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+    )
 
 # Fetch, decrypt, push up transactions file
 create_tmp_dir = PythonOperator(
@@ -133,7 +142,7 @@ create_tmp_dir = PythonOperator(
 )
 
 def do_fetch_extracted_data(ds, **kwargs):
-    gid = get_root_dag_run(kwargs).conf['group_id']
+    gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
     for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
 
         s3_utils.fetch_file_from_s3(
@@ -151,7 +160,7 @@ fetch_extracted_data = PythonOperator(
 
 def do_deliver_extracted_data(ds, **kwargs):
     sftp_config = json.loads(Variable.get('humana_prod_sftp_configuration'))
-    gid = get_root_dag_run(kwargs).conf['group_id']
+    gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
     for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
 
         sftp_utils.upload_file(
@@ -166,12 +175,11 @@ deliver_extracted_data = PythonOperator(
 )
 
 def do_clean_up_workspace(ds, **kwargs):
+    gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
     for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE]:
+        os.remove(TMP_PATH_TEMPLATE.format(gid) + t.format(gid))
 
-        os.remove(TMP_PATH_TEMPLATE.format(get_root_dag_run(kwargs).conf['group_id']) + \
-            t.format(get_root_dag_run(kwargs).conf['group_id']))
-
-    os.rmdir(TMP_PATH_TEMPLATE.format(get_root_dag_run(kwargs).conf['group_id']))
+    os.rmdir(TMP_PATH_TEMPLATE.format(gid))
 
 clean_up_workspace = PythonOperator(
     task_id='clean_up_workspace',
@@ -189,6 +197,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
             dag = mdag
         )
 
+detect_move_extract_dag.set_upstream(get_group_id)
 create_tmp_dir.set_upstream(detect_move_extract_dag)
 fetch_extracted_data.set_upstream(create_tmp_dir)
 deliver_extracted_data.set_upstream(fetch_extracted_data)
