@@ -40,7 +40,7 @@ def apply_schema_func(schema, cols_to_fill=None, cols_to_keep=None):
             if not c in schema.names:
                 raise ValueError("Column {} is not part of the schema".format(c))
 
-        if len(df.columns) != len(schema) and not columns_to_fill:
+        if len(df.columns) - len(columns_to_keep) != len(schema) and not columns_to_fill:
             for c in df.columns:
                 if c not in schema.names and not columns_to_keep and c not in columns_to_keep:
                         raise ValueError("Column {} is not part of the schema".format(c))
