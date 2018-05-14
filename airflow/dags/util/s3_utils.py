@@ -113,7 +113,7 @@ def list_s3_bucket(path, s3_connection_id=DEFAULT_CONNECTION_ID):
         lambda k: 's3://' + bucket_key['bucket'] + '/' + k,
         _get_s3_hook(s3_connection_id).list_keys(
             bucket_key['bucket'], bucket_key['key']
-        )
+        ) or []
     )
 
 
