@@ -8,16 +8,17 @@ import subdags.queue_up_for_matching as queue_up_for_matching
 
 import util.s3_utils as s3_utils
 
+import re
+
 for m in [decrypt_files, queue_up_for_matching, HVDAG, s3_utils]:
     reload(m)
 
 # Applies to all files
-TMP_PATH_TEMPLATE = '/tmp/humana/hv000468/{}/'
 DAG_NAME = 'humana_hv000468_ingestion'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 4, 23, 12),
+    'start_date': datetime(2018, 5, 15, 12),
     'depends_on_past': True if HVDAG.HVDAG.airflow_env == 'prod' else False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -38,18 +39,19 @@ else:
     S3_RECEIVED_LOCATION_TEMPLATE = 's3://salusv/data_requests/humana/hv000468/{}/'
 
 # Deid file
-DEID_FILE_NAME_TEMPLATE = 'deid_data_{}'
+DEID_FILE_NAME_TEMPLATE = '{}_deid.txt'
 
 # Determine groups that are ready for processing
 def do_get_groups_ready(**kwargs):
     received_files  = s3_utils.list_s3_bucket_files(S3_INCOMING_LOCATION)
+    received_files  = [f for f in received_files if re.match(DEID_FILE_NAME_TEMPLATE.format('.*'), f)]
     processed_files = s3_utils.list_s3_bucket_files(S3_RECEIVED_LOCATION_TEMPLATE.format('')[:-1])
     # processed_files are in the format <gid>/<filename>
     processed_files = [f.split('/')[-1] for f in processed_files]
     new_files = set(received_files).difference(set(processed_files))
     groups_ready = set()
     for f in new_files:
-        gid = f.split('_')[-1]
+        gid = f.split('_')[0]
         groups_ready.add(gid)
 
     kwargs['ti'].xcom_push(key = 'groups_ready', value = groups_ready)
@@ -80,6 +82,7 @@ copy_deid_files = PythonOperator(
 
 # Queue up DeID file for matching
 def get_deid_file_urls(ds, kwargs):
+    groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
     return [S3_INCOMING_LOCATION + DEID_FILE_NAME_TEMPLATE.format(gid) for gid in groups_ready]
 
 queue_up_for_matching = SubDagOperator(
@@ -89,7 +92,8 @@ queue_up_for_matching = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'source_files_func' : get_deid_file_urls
+            'source_files_func' : get_deid_file_urls,
+            'priority'          : 'priority1'
         }
     ),
     task_id='queue_up_for_matching',
@@ -121,13 +125,6 @@ trigger_deliveries = PythonOperator(
     python_callable = do_trigger_deliveries,
     provide_context = True,
     dag = mdag
-)
-
-clean_up_workspace = BashOperator(
-    task_id='clean_up_workspace',
-    bash_command='rm -rf {};'.format(TMP_PATH_TEMPLATE.format('{{ ts_nodash }}')),
-    trigger_rule='all_done',
-    dag=mdag
 )
 
 if HVDAG.HVDAG.airflow_env == 'test':
