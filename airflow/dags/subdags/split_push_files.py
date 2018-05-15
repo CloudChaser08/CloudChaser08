@@ -2,7 +2,6 @@ from airflow.operators import PythonOperator
 from subprocess import check_call
 import util.s3_utils as s3_utils
 import os
-import io
 import logging
 
 import common.HVDAG as HVDAG
