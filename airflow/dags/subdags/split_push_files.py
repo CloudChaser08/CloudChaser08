@@ -49,7 +49,6 @@ def do_create_parts_dir(ds, **kwargs):
 
 
 def do_convert_file_encoding(ds, **kwargs):
-    tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
     file_paths_to_split = kwargs['file_paths_to_split_func'](ds, kwargs)
     source_encoding = kwargs['source_encoding']
     for fp in file_paths_to_split:
