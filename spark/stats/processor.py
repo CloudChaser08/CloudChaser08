@@ -138,7 +138,14 @@ def run_marketplace_stats(
 
     # Generate top values
     if 'top_values' in stats_to_calculate:
-        top_values = _run_top_values(sampled_gen_stats_df, provider_conf)
+        if available_years < 2:
+            logging.error("Cannot calculate year over year for {}, this feed has less than 2 years available.".format(
+                provider_conf['datafeed_id']
+            ))
+            top_values = None
+        else:
+            # Generate top values
+            top_values = _run_top_values(sampled_gen_stats_df, provider_conf)
 
         if top_values:
             for top_value_stat in top_values:

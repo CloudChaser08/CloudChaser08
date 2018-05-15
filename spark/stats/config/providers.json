@@ -93,8 +93,8 @@
             "fill_rate"         : true,
             "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
             "epi_calcs"         : true,
             "earliest_date"     : "2015-05-01"
         },
@@ -249,7 +249,7 @@
             "fill_rate"         : true,
             "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : true,
+            "longitudinality"   : false,
             "year_over_year"    : true,
             "epi_calcs"         : true,
             "earliest_date"     : "2017-04-01"
@@ -262,8 +262,8 @@
             "fill_rate"         : true,
             "key_stats"         : true,
             "top_values"        : true,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
             "epi_calcs"         : true,
             "earliest_date"     : "2016-06-01"
         },
