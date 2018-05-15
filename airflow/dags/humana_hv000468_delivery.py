@@ -14,6 +14,7 @@ import util.sftp_utils as sftp_utils
 import logging
 import json
 import os
+import subprocess
 
 for m in [s3_push_files, detect_move_normalize, HVDAG,
         s3_utils, sftp_utils]:
@@ -47,13 +48,12 @@ else:
     S3_NORMALIZED_FILE_URL_TEMPLATE = 's3://salusv/deliverable/humana/hv000468/{}/'
 
 # Deid file
-DEID_FILE_DESCRIPTION = 'Humana hv000468 deid file'
-DEID_FILE_NAME_TEMPLATE = 'deid_data_{}'
+DEID_FILE_NAME_TEMPLATE = '{}_deid.txt'
 
 # Return files
-MEDICAL_CLAIMS_EXTRACT_TEMPLATE = 'medical_claims_{}.psv.gz'
-PHARMACY_CLAIMS_EXTRACT_TEMPLATE = 'pharmacy_claims_{}.psv.gz'
-ENROLLMENT_EXTRACT_TEMPLATE = 'enrollment_{}.psv.gz'
+MEDICAL_CLAIMS_EXTRACT_TEMPLATE = 'medical_claims_{}.psv'
+PHARMACY_CLAIMS_EXTRACT_TEMPLATE = 'pharmacy_claims_{}.psv'
+ENROLLMENT_EXTRACT_TEMPLATE = 'enrollment_{}.psv'
 RETURN_FILE_TEMPLATE = 'results_{}.tar.gz'
 
 # Identify the group_id passed into this DagRun and push it to xcom
@@ -85,7 +85,7 @@ def get_expected_matching_files(ds, kwargs):
     return expected_files
 
 def norm_args(ds, k):
-    root_dag_run = get_root_dag_run(k)
+    group_id = k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
     base = ['--group_id', group_id]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
@@ -102,10 +102,10 @@ detect_move_extract_dag = SubDagOperator(
         {
             'expected_matching_files_func'      : get_expected_matching_files,
             'file_date_func'                    : lambda ds, k:
-                k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+                k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id'),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '53769d77-189e-4d79-a5d4-d2d22d09331e',
-            'pyspark_normalization_script_name' : '/home/hadoop/spark/delivery/humana/hv000468/sparkGenerateExtract.py',
+            'pyspark_normalization_script_name' : '/home/hadoop/spark/delivery/humana_000468/sparkExtractHumana.py',
             'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True,
             'connected_to_metastore'            : True,
@@ -133,7 +133,7 @@ def get_tmp_dir(ds, kwargs):
 def do_create_tmp_dir(ds, **kwargs):
     os.makedirs(TMP_PATH_TEMPLATE.format(
         kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
-    )
+    ))
 
 # Fetch, decrypt, push up transactions file
 create_tmp_dir = PythonOperator(
@@ -170,7 +170,7 @@ def do_create_return_file(ds, **kwargs):
         ENROLLMENT_EXTRACT_TEMPLATE]
     ]
     subprocess.check_call(['tar', '-C', tmp_dir, '-zcf',
-        tmp_dir + RETURN_FILE_TEMPLATE.format(gid), *extracted_files])
+        tmp_dir + RETURN_FILE_TEMPLATE.format(gid)] + extracted_files)
 
 create_return_file = PythonOperator(
     task_id='create_return_file',
@@ -181,10 +181,15 @@ create_return_file = PythonOperator(
 
 def do_deliver_extracted_data(ds, **kwargs):
     sftp_config = json.loads(Variable.get('humana_test_sftp_configuration'))
+    path = sftp_config['path']
+    del sftp_config['path']
     gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
 
     sftp_utils.upload_file(
-        get_tmp_dir(ds, kwargs) + RETURN_FILE_TEMPLATE.format(gid), **sftp_config
+        get_tmp_dir(ds, kwargs) + RETURN_FILE_TEMPLATE.format(gid),
+        path,
+        ignore_host_key=True,
+         **sftp_config
     )
 
 deliver_extracted_data = PythonOperator(
