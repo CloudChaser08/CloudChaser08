@@ -47,6 +47,20 @@ def do_create_parts_dir(ds, **kwargs):
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs) + get_parts_dir(ds, kwargs) + '/'
     check_call(['mkdir', '-p', tmp_dir])
 
+
+def do_convert_file_encoding(ds, **kwargs):
+    file_paths_to_split = kwargs['file_paths_to_split_func'](ds, kwargs)
+    source_encoding = kwargs['source_encoding']
+    for fp in file_paths_to_split:
+        out = open(fp + '.utf8', 'w')
+        check_call([
+            'iconv', '-f', source_encoding, '-t', 'UTF-8', fp
+        ], stdout=out)
+        out.close()
+        os.remove(fp)
+        os.rename(fp + '.utf8', fp)
+
+
 def do_split_files(ds, **kwargs):
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
     file_paths_to_split = kwargs['file_paths_to_split_func'](ds, kwargs)
@@ -117,6 +131,14 @@ def split_push_files(parent_dag_name, child_dag_name, start_date, schedule_inter
         dag=dag
     )
 
+    convert_file_encoding = PythonOperator(
+        task_id='convert_file_encoding',
+        provide_context=True,
+        python_callable=do_convert_file_encoding,
+        op_kwargs=dag_config,
+        dag=dag
+    )
+
     split_files = PythonOperator(
         task_id='split_files',
         provide_context=True,
@@ -150,7 +172,11 @@ def split_push_files(parent_dag_name, child_dag_name, start_date, schedule_inter
     )
 
     create_parts_dir.set_upstream(log_file_volume)
-    split_files.set_upstream(create_parts_dir)
+    if 'source_encoding' in dag_config:
+        convert_file_encoding.set_upstream(create_parts_dir)
+        split_files.set_upstream(convert_file_encoding)
+    else:
+        split_files.set_upstream(create_parts_dir)
     bzip_part_files.set_upstream(split_files)
     push_part_files.set_upstream(bzip_part_files)
     clean_up.set_upstream(push_part_files)
