@@ -8,7 +8,7 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.privacy.events as events_priv
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-from spark.common.event_common_model import schema_v4 as event_v4
+from spark.common.event_common_model_v4 import schema
 from spark.runner import Runner
 
 date_input = sys.argv[1]
@@ -22,7 +22,7 @@ runner = Runner(sqlContext)
 payload = payload_loader.load(runner, payload_dir, extra_cols=['personId'], return_output=True)
 
 postprocessed = postprocessor.compose(
-    lambda df: schema_enforcer.apply_schema(df, event_v4),
+    lambda df: schema_enforcer.apply_schema(df, schema),
     postprocessor.add_universal_columns(
         '56', '243', 'alliance', '4'
     ),
