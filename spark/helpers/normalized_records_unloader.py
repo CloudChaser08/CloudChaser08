@@ -71,7 +71,7 @@ def unload(
     else:
         when_clause = col(date_column).isNull()
         if hvm_historical_date:
-            when_clause = (when_clause | (col(date_column) <= hvm_historical_date))
+            when_clause = (when_clause | (col(date_column) < hvm_historical_date))
         date_partition_val = when(when_clause, lit(NULL_PARTITION_NAME)).otherwise(col(date_column).substr(0, 7))
 
     # add partition columns to the total column list
