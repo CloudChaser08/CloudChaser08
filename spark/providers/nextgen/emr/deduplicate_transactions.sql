@@ -41,6 +41,6 @@ FROM (
     SELECT preambleformatcode, nextgengroupid, referencedatetime,
         postamblecategoryformat, datacapturedate, birthyear, birthmonth,
         gender, race, zip3, coveredbymedicarepartbflag,
-        patientpseudonym, reportingenterpriseid, recorddate, dataset
+        patientpseudonym, reportingenterpriseid, recorddate, dataset, hvid
     FROM old_demographics
 ) demogpraphics_union;

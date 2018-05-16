@@ -16,7 +16,7 @@ def prepare(spark, runner, s3_crosswalk_reference):
     dem_w_hvid = dem_merged.where("hvid is NOT NULL")
     dem_wo_hvid = dem_merged.where("hvid is NULL")
     dem_xwalked = dem_wo_hvid.join(cross, ['nextgengroupid', 'reportingenterpriseid'], 'left_outer') \
-        .select(*([demo_wo_hvid[c] for c in dem_wo_hvid.columns if c != 'hvid'] + [cross['hvid']]))
+        .select(*([dem_wo_hvid[c] for c in dem_wo_hvid.columns if c != 'hvid'] + [cross['hvid']]))
 
     dem_w_hvid.union(dem_xwalked).createOrReplaceTempView('new_demographics')
 

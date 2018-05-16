@@ -309,6 +309,7 @@ TABLE_COLUMNS = {
         'reportingenterpriseid',
         'recorddate',
         'dataset',
+        'hvid',
         'nextrecorddate'
     ]
 }

@@ -68,7 +68,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/nextgen/emr/resources/matching/'
         ) + '/'
         crosswalk_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/nextgen/emr/resources/crosswalk/'
+            script_path, '../../../test/providers/nextgen/emr/resources/reference/crosswalk/'
         ) + '/'
     elif airflow_test:
         input_root_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/input/'
@@ -114,7 +114,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     explode.generate_exploder_table(spark, 5, 'medication_exploder')
     logging.debug("Created exploder tables")
 
-    payload_loader.load(runner, matching_path, ['hvJoinKey'])
+    payload_loader.load(runner, matching_path, ['hvJoinKey'], load_file_name=True)
 
     load_transactions.load(runner, input_path, enc_reference_path, demo_reference_path)
     logging.debug("Loaded transactions data")
