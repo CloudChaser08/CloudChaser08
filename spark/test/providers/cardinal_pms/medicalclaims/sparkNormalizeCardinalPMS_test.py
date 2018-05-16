@@ -1,10 +1,12 @@
 import pytest
+import shutil
 
-import logging
-
+import spark.helpers.file_utils as file_utils
 import spark.providers.cardinal_pms.medical_claims.sparkNormalizeCardinalPMS as cardinal_pms
 
+script_path = __file__
 results = []
+
 
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('medicalclaims_common_model')
@@ -12,12 +14,18 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('service_line_exploder')
     spark['sqlContext'].dropTempTable('claim_exploder')
 
+    try:
+        shutil.rmtree(file_utils.get_abs_path(script_path, './resources/delivery'))
+    except:
+        pass
+
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
+    cleanup(spark)
     cardinal_pms.run(spark['spark'], spark['runner'], '1990-01-01', test=True)
     global results
-    results = spark['sqlContext'].sql('select * from medicalclaims_common_model') \
+    results = spark['sqlContext'].sql('select * from medicalclaims_cardinalized') \
                                  .collect()
 
 
@@ -43,5 +51,3 @@ def test_vendor_org_id_is_populated():
 
 def test_cleanup(spark):
     cleanup(spark)
-
-

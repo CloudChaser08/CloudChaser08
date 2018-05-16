@@ -8,7 +8,8 @@ from pyspark.sql.functions import col, collect_set, explode, first
 from spark.runner import Runner
 from spark.spark_setup import init
 
-from spark.common.medicalclaims_common_model_v5 import schema
+from spark.common.medicalclaims_common_model import schema_v5 as schema
+from spark.common.medicalclaims_common_model import schema_v2 as schema_v2
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
@@ -20,7 +21,25 @@ import spark.helpers.privacy.medicalclaims as medical_priv
 
 import logging
 
+# staging for deliverable
+DELIVERABLE_LOC = 'hdfs:///deliverable/'
+
+DEOBFUSCATION_KEY = 'Cardinal_MPI-0'
+
+
+def cardinalize(df):
+    """
+    Transform df schema (medicalclaims common model) to the schema that cardinal wants
+    """
+    return schema_enforcer.apply_schema(
+        df, schema_v2, columns_to_keep=['vendor_org_id']
+    ).withColumnRenamed(
+        'procedure_units_billed', 'procedure_units'
+    )
+
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
+    global DELIVERABLE_LOC
     script_path = __file__
 
     if test:
@@ -29,6 +48,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ) + '/'
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/cardinal_pms/medicalclaims/resources/payload/'
+        ) + '/'
+        DELIVERABLE_LOC = file_utils.get_abs_path(
+            script_path, '../../../test/providers/cardinal_pms/medicalclaims/resources/delivery/'
         ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}'\
@@ -103,7 +125,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.add_universal_columns(
             feed_id='41',
             vendor_id='188',
-            filename='PMS_record_data_{}'.format(date_obj.strftime('%Y%m%d'))
+            filename='pms_record.{}'.format(date_obj.strftime('%Y%m%d'))
         ),
         medical_priv.filter,
         schema_enforcer.apply_schema_func(schema)
@@ -112,12 +134,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
     logging.debug('Finished post-processing')
 
-    if not test:
-        normalized_records_unloader.unload(
-            spark, runner, pms_data_final, 'date_service', date_input, 'cardinal_pms'
-        )
-    else:
-        pms_data_final.createOrReplaceTempView('medicalclaims_common_model')
+    cardinalize(pms_data_final).createOrReplaceTempView('medicalclaims_cardinalized')
+
+    # unload delivery file for cardinal
+    normalized_records_unloader.unload_delimited_file(
+        spark, runner, DELIVERABLE_LOC, 'medicalclaims_cardinalized', test=test
+    )
+
+    # NOTE: Uncomment or add a flag to run this if/when we start adding their data to the warehouse
+    # # deobfuscate hvid
+    # postprocessor.deobfuscate_hvid(DEOBFUSCATION_KEY, nullify_non_integers=True)(
+    #     pms_data_final
+    # ).createOrReplaceTempView('medicalclaims_common_model')
+
+    # if not test:
+    #     normalized_records_unloader.unload(
+    #         spark, runner, pms_data_final, 'date_service', date_input, 'cardinal_pms'
+    #     )
 
 
 def main(args):
@@ -132,11 +165,18 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medical_claims/spark-output/'
+        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medicalclaims/spark-output/'
+        deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medicalclaims/delivery/{}/'.format(
+            args.date.replace('-', '/')
+        )
     else:
-        output_path = 's3://salusv/warehouse/text/medical_claims/cardinal_pms/'
+        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2018-05-16/'
+        deliverable_path = 's3://salusv/deliverable/cardinal_pms-0/{}/'.format(
+            args.date.replace('-', '/')
+        )
 
-    normalized_records_unloader.distcp(output_path)
+    # normalized_records_unloader.distcp(output_path)
+    normalized_records_unloader.distcp(deliverable_path, DELIVERABLE_LOC)
 
 
 if __name__ == '__main__':
