@@ -81,3 +81,15 @@ def test_custom_table_created(spark):
         if table.tableName == "test":
             table_created = True
     assert table_created
+
+def test_file_name_loaded(spark):
+    """
+    Test that the file name(s) appear in an 'input_file_name' column in the
+    dataframe
+    """
+    extra_cols = ['claimId', 'hvJoinKey']
+
+    payload_loader.load(spark['runner'], std_location, extra_cols, table_name='test', load_file_name=True)
+
+    assert 'input_file_name' in spark['sqlContext'].table('test').columns
+    assert spark['sqlContext'].table('test').collect()[0].input_file_name.endswith('parentId_test_payload.json')

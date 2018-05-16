@@ -1,5 +1,5 @@
 import logging
-from pyspark.sql.functions import coalesce, col
+from pyspark.sql.functions import coalesce, col, input_file_name
 import spark.helpers.postprocessor as postprocessor
 
 HVID = [
@@ -17,7 +17,8 @@ DEFAULT_ATTRS = [
 ]
 
 
-def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False, partitions=200, cache=False):
+def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False, partitions=200, cache=False,
+        load_file_name=False):
     """
     Load matching data for a provider
     """
@@ -46,6 +47,9 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
         final_payload = raw_payload.select([
             coalesce(*map(lambda x: col(x), relevant_hvid_columns)).alias('hvid')
         ] + map(lambda x: col(x), total_attrs))
+
+    if load_file_name:
+        final_payload = final_payload.withColumn('input_file_name', input_file_name())
 
     final_payload = final_payload.repartition(partitions)
     if cache:
