@@ -3,9 +3,9 @@
 --    '04'                                    AS mdl_vrsn_num,
 --    agy.dataset                             AS data_set_nm,
 --    agy.reportingenterpriseid               AS vdr_org_id,
---    concat_ws('_', '118',
+--    COALESCE(dem.hvid, concat_ws('_', '118',
 --        agy.reportingenterpriseid,
---        agy.nextgengroupid)                 AS hvid,
+--        agy.nextgengroupid))                AS hvid,
 --    dem.birthyear                           AS ptnt_birth_yr,
 --    CASE WHEN dem.gender = 'M' THEN 'M'
 --        WHEN dem.gender = 'F' THEN 'F'
