@@ -21,7 +21,7 @@ DAG_NAME = 'humana_hv000468_report'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 4, 26, 12),
+    'start_date': datetime(2018, 5, 15),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -29,7 +29,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval='21 7 * * *',
+    schedule_interval='0 0 * * *',
     default_args=default_args
 )
 
@@ -43,13 +43,21 @@ else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/humana/'
     S3_NORMALIZED_FILE_URL_TEMPLATE = 's3://salusv/deliverable/humana/hv000468/{}/'
 
-DEID_FILE_NAME_TEMPLATE = 'deid_data_{}'
+DEID_FILE_NAME_TEMPLATE = '{}_deid.txt'
 
 # Return files
 MEDICAL_CLAIMS_EXTRACT_TEMPLATE = 'medical_claims_{}.psv.gz'
 PHARMACY_CLAIMS_EXTRACT_TEMPLATE = 'pharmacy_claims_{}.psv.gz'
 ENROLLMENT_EXTRACT_TEMPLATE = 'enrollment_{}.psv.gz'
 EXTRACT_SUMMARY_TEMPLATE = 'summary_report_{}.txt'
+RECIPIENTS = [
+    'Andrew Goldberg<agoldberg@healthverity.com>',
+    'John Cappiello<jcappiello@healthverity.com>',
+    'Ilia Fishbein<ifishbein@healthverity.com>', 
+    'Justin Newton<jnewton@humana.com>',
+    'Evan Neises<eneises1@humana.com>',
+    'Brandon Schoenfeldt<bschoenfeldt@humana.com>'
+]
 
 def get_delivered_groups(exec_date):
     session = settings.Session()
@@ -91,7 +99,7 @@ def do_fetch_extract_summaries(ds, **kwargs):
         src  = S3_NORMALIZED_FILE_URL_TEMPLATE.format(group['id']) + fn
         dest = get_tmp_dir(ds, kwargs) + fn
 
-        s3_utils.copy_file(src, dest)
+        s3_utils.fetch_file_from_s3(src, dest)
 
 fetch_extract_summaries = PythonOperator(
     task_id='fetch_extract_summaries',
@@ -148,7 +156,7 @@ generate_daily_report = PythonOperator(
 def do_email_daily_report(ds, **kwargs):
     ses_utils.send_email(
         'delivery-receipts@healthverity.com',
-        ['agoldberg@healthverity.com', 'jcappiello@healthverity.com', 'ifishbein@healthverity.com'],
+        RECIPIENTS,
         'Humana Delivery Report for ' + ds,
         '',
         [get_tmp_dir(ds, kwargs) + 'daily_report_' + kwargs['ds_nodash'] + '.csv']
