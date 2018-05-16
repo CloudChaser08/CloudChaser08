@@ -1,7 +1,5 @@
 import argparse
-import subprocess
 from datetime import date, datetime
-from dateutil.relativedelta import relativedelta
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.event_common_model_v7 import schema
@@ -10,15 +8,15 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
-import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.events as events_priv
-from pyspark.sql.functions import col, lit, upper
 
 FEED_ID = '56'
 
-def run(spark, runner, date_input, setid, test=False, airflow_test=False):
+def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
     script_path = __file__
+
+    setid = 'HVRequest_{}_return.csv'.format(project_id)
 
     if test:
         input_path = file_utils.get_abs_path(
@@ -35,12 +33,10 @@ def run(spark, runner, date_input, setid, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
     else:
-        input_path = 's3://salusv/incoming/consumer/alliance/{}/'.format(
-            date_input.replace('-', '/')
+        input_path = 's3://salusv/incoming/consumer/alliance/projects/{}/{}/'.format(
+            project_id, date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/matching/payload/consumer/alliance/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        matching_path = 's3://salusv/matching/payload/consumer/alliance/*/*/*'
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -56,7 +52,9 @@ def run(spark, runner, date_input, setid, test=False, airflow_test=False):
 
     max_date = date_input
 
-    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'hvJoinKey'])
+    payload_loader.load(
+        runner, matching_path, ['claimId', 'personId', 'hvJoinKey'], partitions=10 if test else 1000
+    )
 
     import spark.providers.alliance.events.load_transactions as load_transactions
     load_transactions.load(runner, input_path)
@@ -118,7 +116,7 @@ def run(spark, runner, date_input, setid, test=False, airflow_test=False):
                 hvm_historical.year,
                 hvm_historical.month,
                 hvm_historical.day
-            )   
+            )
         )
 
     else:
@@ -130,7 +128,7 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, args.set_id, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, args.project_id, airflow_test=args.airflow_test)
 
     spark.stop()
 
@@ -147,6 +145,6 @@ if __name__ == '__main__':
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     parser.add_argument('--output_path', type=str)
-    parser.add_argument('--set_id', type=str)
+    parser.add_argument('--project_id', type=str)
     args = parser.parse_args()
     main(args)
