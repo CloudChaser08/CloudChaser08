@@ -27,7 +27,12 @@ def load(runner, input_path, s3_encounter_reference, s3_demographics_reference):
             .createOrReplaceTempView(t)
 
     records_loader \
-        .load(runner, s3_encounter_reference, TABLE_COLUMNS['old_encounter'], 'orc')
+        .load(runner, s3_encounter_reference, TABLE_COLUMNS['old_encounter'], 'orc') \
+        .createOrReplaceTempView('old_encounter')
+
+    records_loader \
+        .load(runner, s3_encounter_reference, TABLE_COLUMNS['old_demographics'], 'orc') \
+        .createOrReplaceTempView('old_demographics')
 
 TABLES = ['new_encounter', 'new_demographics', 'vitalsigns', 'lipidpanel',
         'allergy', 'substanceusage', 'diagnosis', 'order', 'laborder',

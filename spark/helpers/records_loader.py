@@ -12,7 +12,6 @@ def load(runner, location, columns, file_type, delimiter=',', header=False):
     elif file_type == 'orc':
         df = runner.sqlContext.read.schema(schema).orc(location)
     else:
-        return
+        raise ValueError("Unsupported file type: {}".format(file_type))
 
-    df = df or runner.sqlContext([], schema=schema)
     return df
