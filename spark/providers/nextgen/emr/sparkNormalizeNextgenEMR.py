@@ -12,6 +12,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import load_transactions
+import prepare_demographics
 from spark.helpers.privacy.emr import                   \
     encounter as priv_encounter,                        \
     clinical_observation as priv_clinical_observation,  \
@@ -39,6 +40,7 @@ import logging
 LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
 S3_ENCOUNTER_REFERENCE    = 's3a://salusv/reference/nextgen/encounter_deduped/'
 S3_DEMOGRAPHICS_REFERENCE = 's3a://salusv/reference/nextgen/demographics_orc/'
+S3_CROSSWALK_REFERENCE = 's3a://salusv/reference/nextgen/crosswalk/'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
@@ -62,10 +64,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         enc_reference_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/nextgen/emr/resources/reference/enc/'
         ) + '/'
-# NOTE: No matching data yet
-#        matching_path = file_utils.get_abs_path(
-#            script_path, '../../../test/providers/nextgen/emr/resources/matching/'
-#        ) + '/'
+        matching_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/nextgen/emr/resources/matching/'
+        ) + '/'
+        crosswalk_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/nextgen/emr/resources/crosswalk/'
+        ) + '/'
     elif airflow_test:
         input_root_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/input/'
         input_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/input/{}/'.format(
@@ -73,10 +77,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         demo_reference_path = S3_DEMOGRAPHICS_REFERENCE
         enc_reference_path  = S3_ENCOUNTER_REFERENCE
-# NOTE: No matching data yet
-#        matching_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/payload/{}/'.format(
-#            date_input.replace('-', '/')
-#        )
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/payload/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        crosswalk_path = S3_CROSSWALK_REFERENCE
     else:
         input_root_path = 's3a://salusv/incoming/emr/nextgen/'
         input_path = 's3a://salusv/incoming/emr/nextgen/{}/'.format(
@@ -84,10 +88,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         demo_reference_path = S3_DEMOGRAPHICS_REFERENCE
         enc_reference_path  = S3_ENCOUNTER_REFERENCE
-# NOTE: No matching data yet
-#        matching_path = 's3a://salusv/matching/payload/emr/nextgen/{}/'.format(
-#            date_input.replace('-', '/')
-#        )
+        matching_path = 's3a://salusv/matching/payload/emr/nextgen/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        crosswalk_path = S3_CROSSWALK_REFERENCE
 
     external_table_loader.load_icd_diag_codes(runner.sqlContext)
     external_table_loader.load_icd_proc_codes(runner.sqlContext)
@@ -110,12 +114,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     explode.generate_exploder_table(spark, 5, 'medication_exploder')
     logging.debug("Created exploder tables")
 
-# NOTE: No matching data yet
-#    payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
+    payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
     load_transactions.load(runner, input_path, enc_reference_path, demo_reference_path)
     logging.debug("Loaded transactions data")
 
+    # Append HVIDs to the demographics table
+    prepare_demographics.prepare(spark, runner, crosswalk_path)
     runner.run_spark_script('deduplicate_transactions.sql')
 
     transaction_tables = [
