@@ -1,20 +1,42 @@
 import os
 import logging
+import re
 from airflow.models import Variable
 from airflow.operators import PythonOperator
 from subprocess import check_call
 
 import common.HVDAG as HVDAG
+import utils.s3_utils as s3_utils
 
-for m in [HVDAG]:
+for m in [HVDAG, s3_utils]:
     reload(m)
 
 def do_queue_up_for_matching(ds, **kwargs):
     source_files = kwargs['source_files_func'](ds, kwargs)
+
     environ = {
         'AWS_ACCESS_KEY_ID' : Variable.get('AWS_ACCESS_KEY_ID_MATCH_PUSHER'),
         'AWS_SECRET_ACCESS_KEY' : Variable.get('AWS_SECRET_ACCESS_KEY_MATCH_PUSHER')
     }
+
+    if kwargs.get('regex_name_match'):
+        source_file_regexes = source_files
+        source_files = []
+        for regex in source_file_regexes:
+            path = '/'.join(regex.split('/')[:-1]) + '/'
+            name_reg = regex.split('/')[-1]
+
+            keys = [
+                k for k in s3_utils.list_s3_bucket_files(path) if re.search(name_reg, k)
+            ]
+            if not keys:
+                logging.warn("No files found for regex: {}".format(name_reg))
+            else:
+                source_files.extend(keys)
+
+    if not source_files:
+        logging.warn("Source files func returned no files. No files queued.")
+        return
 
     queue_up_cmd = [
             os.getenv('AIRFLOW_HOME')
@@ -32,9 +54,6 @@ def do_queue_up_for_matching(ds, **kwargs):
 
     if 'priority' in kwargs:
         queue_up_cmd[4] = kwargs['priority']
-
-    if not source_files:
-        logging.warn("Source files func returned no files. No files queued.")
 
     for f in source_files:
         logging.info("Queueing up {}".format(f))

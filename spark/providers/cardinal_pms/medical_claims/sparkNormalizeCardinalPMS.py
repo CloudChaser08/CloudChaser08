@@ -25,10 +25,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path,  '../../../test/providers/cardinal_pms/medicalclaims/resources/input/'
+            script_path, '../../../test/providers/cardinal_pms/medicalclaims/resources/input/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path,  '../../../test/providers/cardinal_pms/medicalclaims/resources/payload/'
+            script_path, '../../../test/providers/cardinal_pms/medicalclaims/resources/payload/'
         ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}'\
@@ -108,10 +108,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         medical_priv.filter,
         schema_enforcer.apply_schema_func(schema)
     )(
-       pms_data
+        pms_data
     )
     logging.debug('Finished post-processing')
-    
+
     if not test:
         normalized_records_unloader.unload(
             spark, runner, pms_data_final, 'date_service', date_input, 'cardinal_pms'
