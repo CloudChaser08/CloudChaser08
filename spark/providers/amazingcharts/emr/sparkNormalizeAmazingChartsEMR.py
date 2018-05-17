@@ -2,20 +2,40 @@ import argparse
 from datetime import date, datetime
 from spark.runner import Runner
 from spark.spark_setup import init
+from spark.common.emr.encounter import schema_v7 as encounter_schema
+from spark.common.emr.diagnosis import schema_v7 as diagnosis_schema
+from spark.common.emr.procedure import schema_v8 as procedure_schema
+from spark.common.emr.provider_order import schema_v7 as provider_order_schema
+from spark.common.emr.lab_result import schema_v7 as lab_result_schema
+from spark.common.emr.medication import schema_v7 as medication_schema
+from spark.common.emr.clinical_observation import schema_v7 as clinical_observation_schema
+from spark.common.emr.vital_sign import schema_v7 as vital_sign_schema
 import spark.helpers.file_utils as file_utils
+import spark.helpers.explode as explode
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.privacy.common as priv_common
+import spark.helpers.privacy.emr.encounter as encounter_priv
+import spark.helpers.privacy.emr.diagnosis as diagnosis_priv
+import spark.helpers.privacy.emr.procedure as procedure_priv
+import spark.helpers.privacy.emr.provider_order as provider_order_priv
+import spark.helpers.privacy.emr.lab_result as lab_result_priv
+import spark.helpers.privacy.emr.medication as medication_priv
+import spark.helpers.privacy.emr.clinical_observation as clinical_observation_priv
+import spark.helpers.privacy.emr.vital_sign as vital_sign_priv
 
 from pyspark.sql.window import Window
 from pyspark.sql.functions import col, lit, rank
 
 FEED_ID = '5'
+VENDOR_ID = '5'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
+    max_cap = datetime.strptime(date_input, '%Y-%m-%d')
 
     input_tables = [
         'd_costar',
@@ -87,6 +107,142 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
           .where(col('rank') == lit(1))                         \
           .dropColumn('rank')                                   \
           .createOrReplaceTempView('matching_payload_deduped')
+
+    explode.generate_exploder_table(spark, 2, 'proc_2_exploder')
+    explode.generate_exploder_table(spark, 5, 'clin_obsn_exploder')
+    explode.generate_exploder_table(spark, 18, 'vital_sign_exploder')
+
+    normalized_encounter = runner.run_spark_script(
+        'normalize_encounter.sql',
+        [], return_output=True
+    )
+    normalized_diagnosis = runner.run_spark_script(
+        'normalize_diagnosis.sql',
+        [], return_output=True
+    )
+    normalized_procedure_1 = runner.run_spark_script(
+        'normalize_procedure_1.sql',
+        [], return_output=True
+    )
+    normalized_procedure_2 = runner.run_spark_script(
+        'normalize_procedure_2.sql',
+        [], return_output=True
+    )
+    normalized_procedure_3 = runner.run_spark_script(
+        'normalize_procedure_3.sql',
+        [], return_output=True
+    )
+    normalized_lab_result = runner.run_spark_script(
+        'normalize_lab_result.sql',
+        [], return_output=True
+    )
+    normalized_medication = runner.run_spark_script(
+        'normalize_medication.sql',
+        [], return_output=True
+    )
+    normalized_clinical_observation = runner.run_spark_script(
+        'normalize_clinical_observation.sql',
+        [], return_output=True
+    )
+    normalized_vital_sign = runner.run_spark_script(
+        'normalize_vital_sign.sql',
+        [], return_output=True
+    )
+
+    normalized_tables = [
+        {
+            'name': 'medication',
+            'data': normalized_medication,
+            'privacy': medication_priv,
+            'schema': medication_schema,
+            'model_version': '07',
+            'join_key': 'hv_medctn_id',
+            'date_caps': [
+                ('medctn_ord_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_admin_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('medctn_last_rfll_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ]
+        }, {
+            'name': 'lab_result',
+            'data': normalized_lab_result,
+            'privacy': lab_result_priv,
+            'schema': lab_result_schema,
+            'model_version': '07',
+            'join_key': 'hv_lab_result_id',
+            'date_caps': [
+                ('lab_test_smpl_collctn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ]
+        }, {
+            'name': 'encounter',
+            'data': normalized_encounter,
+            'privacy': encounter_priv,
+            'schema': encounter_schema,
+            'model_version': '07',
+            'join_key': 'hv_enc_id',
+            'date_caps': [
+                ('enc_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ]
+        }, {
+            'name': 'diagnosis',
+            'data': normalized_diagnosis,
+            'privacy': diagnosis_priv,
+            'schema': diagnosis_schema,
+            'model_version': '07',
+            'join_key': 'hv_diag_id',
+            'date_caps': [
+                ('diag_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('diag_onset_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('diag_resltn_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ],
+            'update_whitelists': lambda whitelists: whitelists + [{
+                'column_name': 'diag_snomed_cd',
+                'domain_name': 'SNOMED',
+                'whitelist_col_name': 'gen_ref_cd'
+            }]
+        }, {
+            'name': 'procedure',
+            'data': normalized_procedure,
+            'privacy': procedure_priv,
+            'schema': procedure_schema,
+            'model_version': '08',
+            'join_key': 'hv_proc_id',
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('proc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ]
+        }, {
+            'name': 'clinical_observation',
+            'data': normalized_clinical_observation,
+            'privacy': clinical_observation_priv,
+            'schema': clinical_observation_schema,
+            'model_version': '07',
+            'join_key': 'hv_clin_obsn_id',
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('clin_obsn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ]
+        }, {
+            'name': 'vital_sign',
+            'data': normalized_vital_sign,
+            'privacy': vital_sign_priv,
+            'schema': vital_sign_schema,
+            'model_version': '07',
+            'join_key': 'hv_vit_sign_id',
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ]
+        }
+    ]
 
 
 def main(args):
