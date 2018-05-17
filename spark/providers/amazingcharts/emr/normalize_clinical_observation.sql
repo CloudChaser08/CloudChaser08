@@ -1,7 +1,14 @@
 SELECT
     CONCAT(
         '5_',
-        SUBSTR(enc.encounter_date, 1, 10),
+        SUBSTR(
+            COALESCE(
+                enc.encounter_date,
+                enc.date_row_added
+            ),
+            1,
+            10
+        ),
         '_',
         enc.practice_key,
         '_',
@@ -35,7 +42,14 @@ SELECT
     )                                       AS ptnt_zip3_cd,
     CONCAT(
         '5_',
-        SUBSTR(enc.encounter_date, 1, 10),
+        SUBSTR(
+            COALESCE(
+                enc.encounter_date,
+                enc.date_row_added
+            ),
+            1,
+            10
+        ),
         '_',
         enc.practice_key,
         '_',
