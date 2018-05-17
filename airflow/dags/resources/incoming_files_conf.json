@@ -42,8 +42,8 @@
     },
     "dest_path": "s3://healthverity/incoming/cardinal/pms/",
     "file_name_regexes": [
-      "pms_record.\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}\\d{2}.dat",
-      "pms_deid.\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}\\d{2}.dat"
+      "pms-record.\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}\\d{2}.dat",
+      "pms-deid.\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}\\d{2}.dat"
     ]
   },
   {
