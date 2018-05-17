@@ -7,10 +7,12 @@ import os
 
 today = date(2018, 4, 26)
 ts = 1524690702.12345
-group_id = '87654321'
+GROUP1 = 'test1234'
+GROUP2 = 'test0000'
 pharmacy_extract = None
 medical_extract = None
 summary = None
+summary2 = None
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     test_cleanup(spark)
@@ -21,12 +23,16 @@ def test_init(spark):
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('pharmacyclaims')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('medicalclaims')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/enroll_sample.json')).createOrReplaceTempView('enrollmentrecords')
-    humana_extract.run(spark['spark'], spark['runner'], group_id, test=True)
+    humana_extract.run(spark['spark'], spark['runner'], GROUP1, test=True)
 
-    global pharmacy_extract, medical_extract, summary
+    global pharmacy_extract, medical_extract, summary, summary2
     pharmacy_extract = spark['spark'].table('pharmacy_extract').collect()
     medical_extract = spark['spark'].table('medical_extract').collect()
     summary = spark['spark'].table('summary').collect()
+
+    humana_extract.run(spark['spark'], spark['runner'], GROUP2, test=True)
+
+    summary2 = spark['spark'].table('summary').collect()
 
 def test_hashing():
     med_row = [r for r in medical_extract if r['claim_id'] == '365255892'][0]
@@ -48,6 +54,9 @@ def test_nulling():
 def test_record_count():
     assert [r['count'] for r in summary if r['data_vendor'] == 'Private Source 14'][0] == 26
     assert [r['count'] for r in summary if r['data_vendor'] == 'Private Source 22'][0] == 29
+
+def test_few_patients():
+    assert [r['count'] for r in summary2 if r['data_vendor'] == '-'][0] == 0
 
 def test_cleanup(spark):
     try:

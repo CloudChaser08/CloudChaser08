@@ -26,11 +26,11 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
         move_cmd      = ['aws', 's3', 'mv']
     elif test:
         output_path = file_utils.get_abs_path(
-            __file__, '../../test/delivery/humana/hv000468/out/test1234/'
+            __file__, '../../test/delivery/humana/hv000468/out/{}/'.format(group_id)
         ) + '/'
         subprocess.check_call(['mkdir', '-p', output_path])
         matching_path = file_utils.get_abs_path(
-            __file__, '../../test/delivery/humana/hv000468/resources/matching/test1234/'
+            __file__, '../../test/delivery/humana/hv000468/resources/matching/{}/'.format(group_id)
         ) + '/'
         list_cmd      = ['ls', '-la']
         move_cmd      = ['mv']
@@ -62,6 +62,7 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
         medical_extract    = spark.createDataFrame([], StructType([]))
         pharmacy_extract   = spark.createDataFrame([], StructType([]))
         enrollment_extract = spark.createDataFrame([], StructType([]))
+        summary            = spark.createDataFrame([('-', 0)], ['data_vendor', 'count'])
     else:
         medical_extract    = extract_medicalclaims.extract(
                 runner, matched_patients, ts,
@@ -74,21 +75,21 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
                 start, end, pharmacy_extract) \
                     .cache_and_track('enrollment_extract')
 
+        # summary
+        med_summary    =  medical_extract \
+                .withColumn('claim', F.when(F.length(F.trim(F.col('claim_id'))) > 0, F.col('claim_id')).otherwise(F.col('record_id'))) \
+                .select('data_vendor', 'claim').distinct() \
+                .groupBy('data_vendor').count()
+        pharma_summary = pharmacy_extract \
+                .withColumn('claim', F.when(F.length(F.trim(F.col('claim_id'))) > 0, F.col('claim_id')).otherwise(F.col('record_id'))) \
+                .select('data_vendor', 'claim').distinct() \
+                .groupBy('data_vendor').count()
+
+        summary = med_summary.union(pharma_summary)
+
     # for easy testing
     medical_extract.createOrReplaceTempView('medical_extract')
     pharmacy_extract.createOrReplaceTempView('pharmacy_extract')
-
-    # summary
-    med_summary    =  medical_extract \
-            .withColumn('claim', F.when(F.length(F.trim(F.col('claim_id'))) > 0, F.col('claim_id')).otherwise(F.col('record_id'))) \
-            .select('data_vendor', 'claim').distinct() \
-            .groupBy('data_vendor').count()
-    pharma_summary = pharmacy_extract \
-            .withColumn('claim', F.when(F.length(F.trim(F.col('claim_id'))) > 0, F.col('claim_id')).otherwise(F.col('record_id'))) \
-            .select('data_vendor', 'claim').distinct() \
-            .groupBy('data_vendor').count()
-
-    summary = med_summary.union(pharma_summary)
 
     summary.createOrReplaceTempView('summary')
 
