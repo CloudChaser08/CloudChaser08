@@ -107,7 +107,7 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
             FEED_ID,
             date(1900, 1, 1),
             'HVM_AVAILABLE_HISTORY_START_DATE',
-            'EARLIST_VALID_SERVICE_DATE'
+            'EARLIEST_VALID_SERVICE_DATE'
         )
 
         normalized_records_unloader.unload(
