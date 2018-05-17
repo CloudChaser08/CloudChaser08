@@ -84,17 +84,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    min_date = postprocessor.coalesce_dates(
-        runner.sqlContext,
-        FEED_ID,
-        None,
-        'EARLIEST_VALID_SERVICE_DATE'
-    )
-    if min_date:
-        min_date = min_date.isoformat()
-
-    max_date = date_input
-
     import spark.providers.amazingcharts.emr.load_transactions as load_transactions
     load_transactions.load(runner, input_paths)
 
@@ -148,6 +137,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         'normalize_vital_sign.sql',
         [], return_output=True
     )
+
+    join_keys = [
+        normalized_procedure_1.proc_dt == normalized_procedure_3.proc_dt,
+        normalized_procedure_1.hvid == normalized_procedure_3.hvid,
+        normalized_procedure_1.proc_cd == normalized_procedure_3.proc_cd
+    ]
+    unique_proc_1 = normalized_procedure_1.join(normalized_procedure_3, join_keys, 'left_anti')
+
+    normalized_procedure = schema_enforcer.apply_schema(unique_proc_1, procedure_schema).union(
+        schema_enforcer.apply_schema(normalized_procedure_2, procedure_schema).union(
+            schema_enforcer.apply_schema(normalized_procedure_3, procedure_schema)))
 
     normalized_tables = [
         {
