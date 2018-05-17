@@ -80,10 +80,6 @@ def test_init(spark):
                 .collect()
 
 
-def test_something():
-    print results
-
-
 def test_that_event_category_fields_are_nullified_when_naisc_code_starts_with_813():
     row_of_interest = filter(lambda x: x.hvid == '7', results)[0]
     assert row_of_interest.event_category_code is None
@@ -120,4 +116,3 @@ def test_that_naics_codes_not_on_whitelist_are_nullified():
 
 def test_cleanup(spark):
     cleanup(spark)
-
