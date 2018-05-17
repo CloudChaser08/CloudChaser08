@@ -6,7 +6,7 @@ from airflow.operators import PythonOperator
 from subprocess import check_call
 
 import common.HVDAG as HVDAG
-import utils.s3_utils as s3_utils
+import util.s3_utils as s3_utils
 
 for m in [HVDAG, s3_utils]:
     reload(m)

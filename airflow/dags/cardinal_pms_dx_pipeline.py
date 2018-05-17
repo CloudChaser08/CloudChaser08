@@ -60,18 +60,18 @@ S3_CARDINAL_DELIVERABLE_URL_TEMPLATE='s3://fuse-file-drop/healthverity/pms/'
 # Transaction file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 TRANSACTION_FILE_DESCRIPTION = 'Cardinal PMS DX transaction file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'pms_record.{}{}{}T[0-9]{{6}}.dat'
+TRANSACTION_FILE_NAME_TEMPLATE = 'pms-record.{}{}{}T[0-9]{{6}}.dat'
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Cardinal PMS DX deid file'
-DEID_FILE_NAME_TEMPLATE = 'pms_deid.{}{}{}T[0-9]{{6}}.dat'
+DEID_FILE_NAME_TEMPLATE = 'pms-deid.{}{}{}T[0-9]{{6}}.dat'
 
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/medicalclaims/cardinal_pms/'
 
 CARDINAL_PMS_DAY_OFFSET = 1
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
-    TRANSACTION_TMP_PATH_TEMPLATE, day_offset=CARDINAL_PMS_DAY_OFFSET
+    TRANSACTION_TMP_PATH_TEMPLATE
 )
 
 
@@ -92,7 +92,7 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
 
     expected_file_name_regex = date_utils.insert_date_into_template(
         TRANSACTION_FILE_NAME_TEMPLATE, kwargs, day_offset=CARDINAL_PMS_DAY_OFFSET
-    )
+    ) + "$"
 
     return [
         (file_dir + f, file_dir + f + '.gz') for f in os.listdir(file_dir)
@@ -254,96 +254,97 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
-if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_deliverable = SubDagOperator(
-        subdag=s3_fetch_file.s3_fetch_file(
-            DAG_NAME,
-            'fetch_delivery_file',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE + 'deliverable/',
-                'expected_file_name_func': lambda ds, k: 'part-00000.gz',
-                's3_prefix_func'         : date_utils.generate_insert_date_into_template_function(
-                    '/'.join(S3_HV_DELIVERABLE_URL_TEMPLATE.split('/')[3:]) + '/',
-                    day_offset=CARDINAL_PMS_DAY_OFFSET
-                ),
-                's3_bucket'              : S3_HV_DELIVERABLE_URL_TEMPLATE.split('/')[2]
-            }
-        ),
-        task_id='fetch_delivery_file',
-        dag=mdag
-    )
-
-    def generate_rename_deliverable_dag():
-        def do_rename(ds, **kwargs):
-            current_path = get_tmp_dir(ds, kwargs) + 'deliverable/part-00000.gz'
-            new_path = current_path.replace('part-00000.gz', date_utils.insert_date_into_template(
-                DELIVERABLE_FILE_NAME_TEMPLATE, kwargs, day_offset=CARDINAL_PMS_DAY_OFFSET
-            ))
-            os.rename(current_path, new_path)
-
-        return PythonOperator(
-            task_id='rename_delivery_file',
-            provide_context=True,
-            python_callable=do_rename,
-            dag=mdag
-        )
-    rename_deliverable = generate_rename_deliverable_dag()
-
-    push_deliverable = SubDagOperator(
-        subdag=s3_push_files.s3_push_files(
-            DAG_NAME,
-            'push_delivery_file',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'file_paths_func'       : lambda ds, k: [
-                    get_tmp_dir(ds, k) + 'delivery/' + f for f in
-                    os.listdir(get_tmp_dir(ds, k) + 'delivery/')
-                ],
-                's3_prefix_func'        : lambda ds, k: '/'.join(S3_CARDINAL_DELIVERABLE_URL_TEMPLATE.split('/')[3:]),
-                's3_bucket'             : S3_CARDINAL_DELIVERABLE_URL_TEMPLATE.split('/')[2],
-                'aws_access_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
-                'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
-            }
-        ),
-        task_id='push_delivery_file',
-        dag=mdag
-    )
-
-    clean_up_workspace_post_delivery = SubDagOperator(
-        subdag=clean_up_tmp_dir.clean_up_tmp_dir(
-            DAG_NAME,
-            'clean_up_workspace_post_delivery',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'tmp_path_template': TMP_PATH_TEMPLATE
-            }
-        ),
-        task_id='clean_up_workspace_post_delivery',
-        dag=mdag
-    )
-
-sql_template = """
-    MSCK REPAIR TABLE medicalclaims_new
-"""
-
-update_analytics_db = SubDagOperator(
-    subdag=update_analytics_db.update_analytics_db(
+fetch_deliverable = SubDagOperator(
+    subdag=s3_fetch_file.s3_fetch_file(
         DAG_NAME,
-        'update_analytics_db',
+        'fetch_delivery_file',
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : lambda ds, k: sql_template
+            'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE + 'deliverable/',
+            'expected_file_name_func': lambda ds, k: 'part-00000.gz',
+            's3_prefix_func'         : date_utils.generate_insert_date_into_template_function(
+                '/'.join(S3_HV_DELIVERABLE_URL_TEMPLATE.split('/')[3:]) + '/',
+                day_offset=CARDINAL_PMS_DAY_OFFSET
+            ),
+            's3_bucket'              : S3_HV_DELIVERABLE_URL_TEMPLATE.split('/')[2]
         }
     ),
-    task_id='update_analytics_db',
+    task_id='fetch_delivery_file',
     dag=mdag
 )
 
+def generate_rename_deliverable_dag():
+    def do_rename(ds, **kwargs):
+        current_path = get_tmp_dir(ds, kwargs) + 'deliverable/part-00000.gz'
+        new_path = current_path.replace('part-00000.gz', date_utils.insert_date_into_template(
+            DELIVERABLE_FILE_NAME_TEMPLATE, kwargs, day_offset=CARDINAL_PMS_DAY_OFFSET
+        ))
+        os.rename(current_path, new_path)
+
+    return PythonOperator(
+        task_id='rename_delivery_file',
+        provide_context=True,
+        python_callable=do_rename,
+        dag=mdag
+    )
+rename_deliverable = generate_rename_deliverable_dag()
+
+push_deliverable = SubDagOperator(
+    subdag=s3_push_files.s3_push_files(
+        DAG_NAME,
+        'push_delivery_file',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'file_paths_func'       : lambda ds, k: [
+                get_tmp_dir(ds, k) + 'delivery/' + f for f in
+                os.listdir(get_tmp_dir(ds, k) + 'delivery/')
+            ],
+            's3_prefix_func'        : lambda ds, k: '/'.join(S3_CARDINAL_DELIVERABLE_URL_TEMPLATE.split('/')[3:]),
+            's3_bucket'             : S3_CARDINAL_DELIVERABLE_URL_TEMPLATE.split('/')[2],
+            'aws_access_key_id'     : Variable.get('CardinalRaintree_AWS_ACCESS_KEY_ID'),
+            'aws_secret_access_key' : Variable.get('CardinalRaintree_AWS_SECRET_ACCESS_KEY')
+        }
+    ),
+    task_id='push_delivery_file',
+    dag=mdag
+)
+
+clean_up_workspace_post_delivery = SubDagOperator(
+    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
+        DAG_NAME,
+        'clean_up_workspace_post_delivery',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'tmp_path_template': TMP_PATH_TEMPLATE
+        }
+    ),
+    task_id='clean_up_workspace_post_delivery',
+    dag=mdag
+)
+
+if HVDAG.HVDAG.airflow_env != 'test':
+
+
+    sql_template = """
+        MSCK REPAIR TABLE medicalclaims_new
+    """
+
+    update_analytics_db = SubDagOperator(
+        subdag=update_analytics_db.update_analytics_db(
+            DAG_NAME,
+            'update_analytics_db',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'sql_command_func' : lambda ds, k: sql_template
+            }
+        ),
+        task_id='update_analytics_db',
+        dag=mdag
+    )
 
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction.set_upstream(validate_transaction)
@@ -351,16 +352,16 @@ if HVDAG.HVDAG.airflow_env != 'test':
     queue_up_for_matching.set_downstream(
         [clean_up_workspace, detect_move_normalize]
     )
-
-    detect_move_normalize.set_downstream([fetch_deliverable, update_analytics_db])
-    rename_deliverable.set_upstream(fetch_deliverable)
-    push_deliverable.set_upstream(rename_deliverable)
-    clean_up_workspace_post_delivery.set_upstream(push_deliverable)
-
+    detect_move_normalize_dag.set_downstream(update_analytics_db)
 
 decrypt_transaction.set_upstream(fetch_transaction)
 split_transaction.set_upstream(decrypt_transaction)
 detect_move_normalize_dag.set_upstream(split_transaction)
+
+fetch_deliverable.set_upstream(detect_move_normalize_dag)
+rename_deliverable.set_upstream(fetch_deliverable)
+push_deliverable.set_upstream(rename_deliverable)
+clean_up_workspace_post_delivery.set_upstream(push_deliverable)
 
 # cleanup
 clean_up_workspace.set_upstream(split_transaction)
