@@ -22,6 +22,11 @@ def do_queue_up_for_matching(ds, **kwargs):
             None, '0', 'prod-matching-engine', 'priority3'
         ]
 
+    if 'write_lock' in kwargs and kwargs['write_lock']:
+        queue_up_cmd.append("true")
+    else:
+        queue_up_cmd.append("false")
+
     if 'passthrough_only' in kwargs and kwargs['passthrough_only']:
         queue_up_cmd.append("true")
 
