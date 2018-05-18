@@ -174,7 +174,8 @@ CREATE VIEW dw.hvm_emr_prov_ord (
     prov_ord_cxld_dt,
     prov_ord_result_cd,
     prov_ord_result_cd_qual,
-    prov_ord_result_nm,
+    CASE WHEN part_hvm_vdr_feed_id = '35' AND prmy_src_tbl_nm = 'order' THEN NULL
+        ELSE prov_ord_result_nm END AS prov_ord_result_nm, -- Per Nextgen's instructions (05/18/2018)
     prov_ord_result_desc,
     prov_ord_result_rcvd_dt,
     prov_ord_trtmt_typ_cd,
