@@ -11,6 +11,8 @@ import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
+from spark.helpers.privacy.common import Transformer, TransformFunction
+import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import load_transactions
 import prepare_demographics
 from spark.helpers.privacy.emr import                   \
@@ -192,7 +194,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # The row_num column is generated inside the normalize_medication.sql
     # script in order to ensure that when we run a distinct to remove
     # duplicates, we maintain at least 1 normalized row per source row
-    normalized['medication'] = p1.union(p2).distinct().drop('row_num')
+    normalized['medication'] = p1.union(p2).distinct().drop('row_num') \
+        .withColumn('medctn_diag_dt', F.coalesce(F.col('medctn_ord_dt'), F.col('enc_dt'))) # For whitelisting purposes
     logging.debug("Normalized medication")
 
     runner.run_spark_script('normalize_provider_order_prenorm.sql', [
@@ -202,7 +205,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized['provider_order'] = runner.run_spark_script('normalize_provider_order.sql', [
         ['min_date', min_date],
         ['max_date', max_date]
-    ], return_output=True)
+    ], return_output=True) \
+        .withColumn('prov_ord_diag_dt', F.coalesce(F.col('prov_ord_dt'), F.col('enc_dt'))) # For whitelisting purposes
     logging.debug("Normalized provider order")
 
     normalized['clinical_observation'] = schema_enforcer.apply_schema(
@@ -242,6 +246,71 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'whitelist_col_name': 'gen_ref_itm_desc'
         }]
 
+    def update_provider_order_whitelists(whitelists):
+        return whitelists + [{
+            'column_name': 'prov_ord_alt_cd',
+            'domain_name': 'emr_prov_ord.prov_ord_alt_cd',
+            'whitelist_col_name': 'gen_ref_cd'
+        }, {
+            'column_name': 'prov_ord_alt_nm',
+            'domain_name': 'emr_prov_ord.prov_ord_alt_nm',
+            'whitelist_col_name': 'gen_ref_itm_nm'
+        }, {
+            'column_name': 'prov_ord_alt_desc',
+            'domain_name': 'emr_prov_ord.prov_ord_alt_desc',
+            'whitelist_col_name': 'gen_ref_itm_desc'
+        }, {
+            'column_name': 'prov_ord_diag_nm',
+            'domain_name': 'emr_prov_ord.prov_ord_diag_nm',
+            'whitelist_col_name': 'gen_ref_itm_nm'
+        }, {
+            'column_name': 'prov_ord_rsn_cd',
+            'domain_name': 'emr_prov_ord.prov_ord_rsn_cd',
+            'whitelist_col_name': 'gen_ref_cd',
+            'comp_col_names' : ['prov_ord_rsn_cd_qual']
+        }, {
+            'column_name': 'prov_ord_rsn_nm',
+            'domain_name': 'emr_prov_ord.prov_ord_rsn_nm',
+            'whitelist_col_name': 'gen_ref_itm_nm',
+        }, {
+            'column_name': 'prov_ord_stat_cd',
+            'domain_name': 'emr_prov_ord.prov_ord_stat_cd',
+            'whitelist_col_name': 'gen_ref_cd',
+            'comp_col_names' : ['prov_ord_stat_cd_qual']
+        }, {
+            'column_name': 'prov_ord_complt_rsn_cd',
+            'domain_name': 'emr_prov_ord.prov_ord_complt_rsn_cd',
+            'whitelist_col_name': 'gen_ref_cd'
+        }, {
+            'column_name': 'prov_ord_cxld_rsn_cd',
+            'domain_name': 'emr_prov_ord.prov_ord_cxld_rsn_cd',
+            'whitelist_col_name': 'gen_ref_cd'
+        }, {
+            'column_name': 'prov_ord_result_desc',
+            'domain_name': 'emr_prov_ord.prov_ord_result_desc',
+            'whitelist_col_name': 'gen_ref_itm_desc'
+        }, {
+            'column_name': 'prov_ord_trtmt_typ_cd',
+            'domain_name': 'emr_prov_ord.prov_ord_trtmt_typ_cd',
+            'whitelist_col_name': 'gen_ref_cd',
+            'comp_col_names' : ['prov_ord_trtmt_typ_cd_qual']
+        }, {
+            'column_name': 'prov_ord_rfrd_speclty_cd',
+            'domain_name': 'emr_prov_ord.prov_ord_rfrd_speclty_cd',
+            'whitelist_col_name': 'gen_ref_cd',
+            'comp_col_names' : ['prov_ord_rfrd_speclty_cd_qual']
+        }, {
+            'column_name': 'prov_ord_specl_instrs_desc',
+            'domain_name': 'emr_prov_ord.prov_ord_specl_instrs_desc',
+            'whitelist_col_name': 'gen_ref_itm_desc'
+        }]
+
+    provider_order_transformer = Transformer(
+        prov_ord_diag_cd=[
+            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['prov_ord_diag_cd', 'prov_ord_diag_cd_qual', 'prov_ord_diag_dt'])
+        ]
+    )
+
     def update_lab_order_whitelists(whitelists):
         return whitelists + [{
             'column_name': 'lab_ord_snomed_cd',
@@ -262,14 +331,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     def update_lab_result_whitelists(whitelists):
         return whitelists + [{
-            'column_name': 'lab_test_nm',
-            'domain_name': 'emr_lab_result.lab_test_nm',
-            'clean_up_freetext_fn': lambda x: x.upper() if x else None
-        }, {
-            'column_name': 'lab_result_nm',
-            'domain_name': 'emr_lab_result.lab_result_nm',
-            'clean_up_freetext_fn': lambda x: x.upper() if x else None
-        }, {
             'column_name': 'lab_test_snomed_cd',
             'domain_name': 'SNOMED',
             'whitelist_col_name': 'gen_ref_cd'
@@ -290,6 +351,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'whitelist_col_name': 'gen_ref_cd'
         }]
 
+    medication_transformer = Transformer(
+        medctn_diag_cd=[
+            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['medctn_diag_cd', 'medctn_diag_cd_qual', 'medctn_diag_dt'])
+        ]
+    )
+
     def update_clinical_observation_whitelists(whitelists):
         return whitelists + [{
             'column_name': 'clin_obsn_typ_cd',
@@ -301,14 +368,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'column_name': 'clin_obsn_typ_nm',
             'domain_name': 'substanceusage.clinicalrecorddescription',
             'feed_id': '35'
-        }, {
-            'column_name': 'clin_obsn_nm',
-            'domain_name': 'emr_clin_obsn.clin_obsn_nm',
-            'clean_up_freetext_fn': lambda x: x.upper() if x else None
-        }, {
-            'column_name': 'clin_obsn_result_desc',
-            'domain_name': 'emr_clin_obsn.clin_obsn_desc',
-            'clean_up_freetext_fn': lambda x: x.upper() if x else None
         }]
 
     normalized_tables = [
@@ -338,7 +397,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'data_type'     : 'medication',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_medication,
-            'filter_args'   : [update_medication_whitelists]
+            'filter_args'   : [update_medication_whitelists, medication_transformer],
+            'cols_to_keep'  : ['medctn_diag_dt'],
+            'cols_to_drop'  : 'medctn_diag_dt'
         },
         {
             'schema'        : procedure_schema,
@@ -364,7 +425,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'schema'        : provider_order_schema,
             'data_type'     : 'provider_order',
             'date_column'   : 'part_mth',
-            'privacy_filter': priv_provider_order
+            'privacy_filter': priv_provider_order,
+            'filter_args'   : [update_provider_order_whitelists, provider_order_transformer],
+            'cols_to_keep'  : ['prov_ord_diag_dt'],
+            'cols_to_drop'  : 'prov_ord_diag_dt'
         },
         {
             'schema'        : vital_sign_schema,
@@ -374,7 +438,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         }
     ]
 
-    min_hvm_date = None#postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'HVM_AVAILABLE_HISTORY_START_DATE')
+    min_hvm_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'HVM_AVAILABLE_HISTORY_START_DATE')
 
     if min_hvm_date is not None:
         historical_date = datetime.combine(min_hvm_date, time(0))
@@ -385,7 +449,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     for table in normalized_tables:
         filter_args = [runner.sqlContext] + table.get('filter_args', [])
-        cols_to_keep = ['part_mth'] if table['date_column'] == 'part_mth' else []
+        cols_to_keep = table.get('cols_to_keep', []) + (['part_mth'] if table['date_column'] == 'part_mth' else [])
         df = postprocessor.compose(
             postprocessor.add_universal_columns(
                 feed_id='35', vendor_id='118', filename=None,
@@ -400,6 +464,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )(
             normalized[table['data_type']]
         )
+
+        df = df.drop(*table.get('cols_to_drop', []))
 
         df.createOrReplaceTempView(table['data_type'] + '_common_model')
 

@@ -82,7 +82,7 @@ SELECT
     extract_date(
         substring(ord.CancelledDate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS prov_ord_cxld_dt,
-    ord.obsvalue                            AS prov_ord_result_nm,
+    UPPER(ord.obsvalue)                     AS prov_ord_result_nm,
     clean_up_freetext(ord.obsinterpretation, false)
                                             AS prov_ord_result_desc,
     extract_date(
