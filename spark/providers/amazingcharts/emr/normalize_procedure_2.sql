@@ -75,7 +75,7 @@ SELECT
         ''
     )                                       AS proc_uom,
     CASE
-        WHEN inj.patient_refused = '1' THEN 'Patient Refused',
+        WHEN inj.patient_refused = '1' THEN 'Patient Refused'
         WHEN inj.patient_parent_refused = '1' THEN 'Patient Parent Refused'
         ELSE NULL
     END                                     AS proc_stat_cd,

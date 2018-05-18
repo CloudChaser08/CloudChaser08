@@ -50,15 +50,15 @@ SELECT
         ELSE 'SPECIALTY'
     END                                     AS proc_rndrg_prov_alt_speclty_id_qual,
     UPPER(COALESCE(prv.state, ''))          AS proc_rndrg_prov_state_cd,
-    UPPER(d_cpt.cpt_code)                   AS proc_cd,
+    UPPER(cpt.cpt_code)                     AS proc_cd,
     CASE
-        WHEN d_cpt.cpt_code IS NULL THEN NULL
+        WHEN cpt.cpt_code IS NULL THEN NULL
         ELSE 'CPT_CODE'
     END                                     AS proc_cd_qual,
     prc.units                               AS proc_unit_qty,
     'f_procedure'                           AS prmy_src_tbl_nm
 FROM f_procedure prc
 LEFT OUTER JOIN d_patient ptn ON prc.patient_key = ptn.patient_key
-LEFT OUTER JOIN matching_payload_deduped ON ptn.patient_key = pay.personid
-LEFT OUTER JOIN d_provider ON prc.provider_key = prv.provider_key
+LEFT OUTER JOIN matching_payload_deduped pay ON ptn.patient_key = pay.personid
+LEFT OUTER JOIN d_provider prv ON prc.provider_key = prv.provider_key
 LEFT OUTER JOIN d_cpt cpt ON prc.cpt_key = cpt.cpt_key

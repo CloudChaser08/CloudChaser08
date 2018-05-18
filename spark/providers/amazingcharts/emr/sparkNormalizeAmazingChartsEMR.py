@@ -94,7 +94,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.sqlContext.sql('select * from matching_payload')     \
           .withColumn('rank', rank().over(window))              \
           .where(col('rank') == lit(1))                         \
-          .dropColumn('rank')                                   \
+          .drop('rank')                                         \
           .createOrReplaceTempView('matching_payload_deduped')
 
     explode.generate_exploder_table(spark, 2, 'proc_2_exploder')
@@ -243,7 +243,51 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             ]
         }
     ]
+    for table in normalized_tables:
+        normalized_table = postprocessor.compose(
+            postprocessor.trimmify, postprocessor.nullify,
+            schema_enforcer.apply_schema_func(table['schema']),
+            postprocessor.add_universal_columns(
+                feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=max_cap.strftime(
+                    'AmazingCharts_HV_%b%y'
+                ), model_version_number=table['model_version'],
 
+                # rename defaults
+                record_id='row_id', created='crt_dt', data_set='data_set_nm',
+                data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id',
+                model_version = 'mdl_vrsn_num'
+            ),
+            table['privacy'].filter(
+                runner.sqlContext, update_whitelists=table.get('update_whitelists', lambda x: x),
+                additional_transformer=table.get('additional_transformer')
+            ),
+            *(
+                [
+                    postprocessor.apply_date_cap(
+                        runner.sqlContext, date_col, max_cap_date, '25', domain_name
+                    ) for (date_col, domain_name, max_cap_date) in table['date_caps']
+                ] + [
+                    schema_enforcer.apply_schema_func(table['schema'])
+                ]
+            )
+        )(table['data']).createOrReplaceTempView('normalized_{}'.format(table['name']))
+
+        hvm_historical_date = postprocessor.coalesce_dates(
+            runner.sqlContext, FEED_ID, datetime.date(1901, 1, 1),
+            'HVM_AVAILABLE_HISTORY_START_DATE',
+            'EARLIEST_VALID_SERVICE_DATE'
+        )
+
+        normalized_records_unloader.unload(
+            spark, runner, normalized_table, 'allscripts_date_partition', max_cap,
+            FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
+            date_partition_name='part_mth', hvm_historical_date=datetime(
+                hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
+            ), staging_subdir=table['name'], test_dir=(file_utils.get_abs_path(
+                script_path, '../../../test/providers/amazingcharts/emr/resources/output/'
+            ) if test else None), unload_partition_count=500, skip_rename=True,
+            distribution_key='row_id'
+        )
 
 def main(args):
     spark, sqlContext = init('AmazingCharts EMR Normalization')

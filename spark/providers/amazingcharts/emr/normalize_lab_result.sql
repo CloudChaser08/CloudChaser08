@@ -31,7 +31,7 @@ SELECT
     SUBSTR(
         COALESCE(
             ptn.zip,
-            payload.threeDigitZip
+            pay.threeDigitZip
         ),
         1,
         3
@@ -84,7 +84,7 @@ SELECT
     END                                     AS lab_test_fstg_stat_flg,
     lbd.test_name                           AS lab_test_nm,
     regexp_replace(
-        lab.loinc_tets_code,
+        lab.loinc_test_code,
         '[^0-9]',
         ''
     )                                       AS lab_test_loinc_cd,
@@ -125,7 +125,7 @@ SELECT
         WHEN lab.lab_test_status_lrd = 'P' THEN 'Preliminary'
         WHEN lab.lab_test_status_lrd = 'C' THEN 'Correction'
         WHEN lab.lab_test_status_lrd = 'X' THEN 'Cancelled'
-        WHEN lab.lab_tets_status_lrd = 'I' THEN 'Pending'
+        WHEN lab.lab_test_status_lrd = 'I' THEN 'Pending'
         ELSE NULL
     END                                     AS lab_result_stat_cd,
     CASE

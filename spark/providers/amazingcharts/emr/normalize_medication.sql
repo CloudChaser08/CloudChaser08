@@ -13,7 +13,7 @@ SELECT
         SUBSTR(ptn.birth_date, 1, 4),
         pay.yearOfBirth
     )                                       AS ptnt_birth_yr,
-    payload.age                             AS ptnt_age_num,
+    pay.age                                 AS ptnt_age_num,
     COALESCE(
         ptn.gender,
         pay.gender
@@ -28,7 +28,7 @@ SELECT
     SUBSTR(
         COALESCE(
             ptn.zip,
-            payload.threeDigitZip
+            pay.threeDigitZip
         ),
         1,
         3

@@ -105,7 +105,7 @@ SELECT
         'BODY_TEMPERATURE',
         'VISION_OD',
         'VISION_OS',
-        'WEIGHT',
+        'WEIGHT'
     )[e.n]                                  AS vit_sign_typ_cd,
     ARRAY(
         enc.body_mass_index,
@@ -138,7 +138,7 @@ SELECT
         enc.vision_od,
         enc.vision_os,
         enc.weight_in_pounds
-    )[e.n]                                  AS vit_sign_typ_msrmt
+    )[e.n]                                  AS vit_sign_typ_msrmt,
     ARRAY(
         'INDEX',
         'mmHg',
@@ -162,7 +162,7 @@ SELECT
         'SNELLEN_CHART',
         'SNELLEL_CHART',
         'POUNDS'
-    )[e.n]                                  AS vit_sign_type_uom
+    )[e.n]                                  AS vit_sign_type_uom,
     extract_date(
         SUBSTR(enc.date_row_added, 1, 10),
         '%Y-%m-%d'
@@ -179,7 +179,7 @@ WHERE
     ARRAY(
         enc.body_mass_index,
         enc.diastolic,
-        enc.head_circumference
+        enc.head_circumference,
         enc.hearing,
         enc.height_in_inches,
         enc.oxygen_saturation,

@@ -65,9 +65,9 @@ SELECT
             enc.date_row_added,
             1,
             10
-        )
+        ),
         '%Y-%m-%d'
-    )
+    )                                       AS data_captr_dt,
     'f_encounter'                           AS prmy_src_tbl_nm
 FROM f_encounter enc
 LEFT OUTER JOIN d_patient ptn ON enc.patient_key = ptn.patient_key

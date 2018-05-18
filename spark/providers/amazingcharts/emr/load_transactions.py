@@ -77,7 +77,7 @@ TABLE_COLS = {
         'lab_company',
         'test_name'
     ],
-    'd_multnum_to_ndc': [
+    'd_multum_to_ndc': [
         'ndc',
         'drug_name',
         'multum_id',

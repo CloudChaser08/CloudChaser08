@@ -94,5 +94,5 @@ SELECT
     'f_encounter'                           AS prmy_src_tbl_nm
 FROM f_encounter enc
 LEFT OUTER JOIN d_patient ptn ON enc.patient_key = ptn.patient_key
-LEFT OUTER JOIN matching_payload_deduped ON ptn.patient_key = pay.personid
+LEFT OUTER JOIN matching_payload_deduped pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv ON enc.provider_key = prv.provider_key
