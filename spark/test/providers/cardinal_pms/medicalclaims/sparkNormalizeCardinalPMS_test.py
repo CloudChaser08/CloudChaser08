@@ -23,7 +23,7 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
-    cardinal_pms.run(spark['spark'], spark['runner'], '1990-01-01', test=True)
+    cardinal_pms.run(spark['spark'], spark['runner'], '1990-01-01', None, test=True)
     global results
     results = spark['sqlContext'].sql('select * from medicalclaims_cardinalized') \
                                  .collect()
