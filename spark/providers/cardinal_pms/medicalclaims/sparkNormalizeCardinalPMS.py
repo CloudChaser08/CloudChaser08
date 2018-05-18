@@ -38,7 +38,7 @@ def cardinalize(df):
     )
 
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
+def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
     global DELIVERABLE_LOC
     script_path = __file__
 
@@ -53,15 +53,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/cardinal_pms/medicalclaims/resources/delivery/'
         ) + '/'
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}'\
-                        .format(date_input.replace('-', '/'))
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/payload/{}'\
-                        .format(date_input.replace('-', '/'))
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}/'\
+                        .format(batch_path if batch_path else date_input.replace('-', '/'))
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/payload/{}/'\
+                        .format(batch_path if batch_path else date_input.replace('-', '/'))
     else:
         input_path = 's3://salusv/incoming/medicalclaims/cardinal_pms/{}/'\
-                        .format(date_input.replace('-', '/'))
+                        .format(batch_path if batch_path else date_input.replace('-', '/'))
         matching_path = 's3://salusv/matching/payload/medicalclaims/cardinal_pms/{}/'\
-                        .format(date_input.replace('-', '/'))
+                        .format(batch_path if batch_path else date_input.replace('-', '/'))
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
@@ -160,19 +160,19 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, args.batch_path, airflow_test=args.airflow_test)
 
     spark.stop()
 
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medicalclaims/spark-output/'
         deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medicalclaims/delivery/{}/'.format(
-            args.date.replace('-', '/')
+            args.batch_path if args.batch_path else args.date.replace('-', '/')
         )
     else:
         output_path = 's3://salusv/warehouse/parquet/medicalclaims/2018-05-16/'
         deliverable_path = 's3://salusv/deliverable/cardinal_pms-0/{}/'.format(
-            args.date.replace('-', '/')
+            args.batch_path if args.batch_path else args.date.replace('-', '/')
         )
 
     # normalized_records_unloader.distcp(output_path)
@@ -182,6 +182,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
+    parser.add_argument('--batch_path', type=str, default=None)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)

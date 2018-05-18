@@ -2,7 +2,7 @@ import pytest
 import shutil
 
 import spark.helpers.file_utils as file_utils
-import spark.providers.cardinal_pms.medical_claims.sparkNormalizeCardinalPMS as cardinal_pms
+import spark.providers.cardinal_pms.medicalclaims.sparkNormalizeCardinalPMS as cardinal_pms
 
 script_path = __file__
 results = []
