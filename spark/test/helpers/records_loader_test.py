@@ -79,3 +79,14 @@ def test_incomplete_csv(spark):
 
     assert df.count() == 0
     assert df.columns == columns
+
+def test_unsupported_file_type(spark):
+    """
+    Test that the loader throws an error when an unsupported file type is passed
+    in for loading
+    """
+    with pytest.raises(ValueError) as e:
+        records_loader.load(spark['runner'], empty_csv_location, columns, 'tsv')
+
+    assert e.value.message == 'Unsupported file type: tsv'
+
