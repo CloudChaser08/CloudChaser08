@@ -15,6 +15,7 @@ from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import load_transactions
 import prepare_demographics
+import deduplicate_transactions
 from spark.helpers.privacy.emr import                   \
     encounter as priv_encounter,                        \
     clinical_observation as priv_clinical_observation,  \
@@ -42,7 +43,10 @@ import logging
 LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
 S3_ENCOUNTER_REFERENCE    = 's3a://salusv/reference/nextgen/encounter_deduped/'
 S3_DEMOGRAPHICS_REFERENCE = 's3a://salusv/reference/nextgen/demographics_orc/'
-S3_CROSSWALK_REFERENCE = 's3a://salusv/reference/nextgen/crosswalk/'
+S3_CROSSWALK_REFERENCE    = 's3a://salusv/reference/nextgen/crosswalk/'
+
+HDFS_ENCOUNTER_REFERECE     = '/user/hive/warehouse/encounter_dedup'
+HDFS_DEMOGRAPHICS_REFERENCE = '/user/hive/warehouse/demographics_local'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
@@ -123,7 +127,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Append HVIDs to the demographics table
     prepare_demographics.prepare(spark, runner, crosswalk_path)
-    runner.run_spark_script('deduplicate_transactions.sql')
+    deduplicate_transactions.deduplicate(runner)
 
     transaction_tables = [
         'demographics_local', 'encounter_dedup', 'vitalsigns', 'lipidpanel',
@@ -481,6 +485,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             )
         logging.debug("Cleaned up {}".format(table['data_type']))
 
+    if not test:
+        runner.sqlContext.table('encounter_dedup').coalesce(100).write \
+                .orc(HDFS_ENCOUNTER_REFERENCE, compression='zlib')
+        runner.sqlContext.table('demographics_local').coalesce(100).write \
+                .orc(HDFS_DEMOGRAPHICS_REFERENCE, compression='zlib')
+
 
 def main(args):
     # init
@@ -498,19 +508,19 @@ def main(args):
     else:
         output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
         try:
-            check_output(['hadoop', 'fs', '-ls', '/user/hive/warehouse/encounter_dedup'])
+            check_output(['hadoop', 'fs', '-ls', HDFS_ENCOUNTER_REFERENCE])
             check_output(['aws', 's3', 'rm', '--recursive',
                         S3_ENCOUNTER_REFERENCE.replace("s3a://", "s3://")])
-            check_output(['s3-dist-cp', '--src', '/user/hive/warehouse/encounter_dedup',
+            check_output(['s3-dist-cp', '--src', HDFS_ENCOUNTER_REFERENCE,
                         '--dest', S3_ENCOUNTER_REFERENCE])
         except:
             logging.warn("Something went wrong in persisting the new distinct encounter data")
 
         try:
-            check_output(['hadoop', 'fs', '-ls', '/user/hive/warehouse/demographics_local'])
+            check_output(['hadoop', 'fs', '-ls', HDFS_DEMOGRAPHICS_REFERENCE])
             check_output(['aws', 's3', 'rm', '--recursive',
                         S3_DEMOGRAPHICS_REFERENCE.replace("s3a://", "s3://")])
-            check_output(['s3-dist-cp', '--src', '/user/hive/warehouse/demographics_local',
+            check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
                         '--dest', S3_DEMOGRAPHICS_REFERENCE])
         except:
             logging.warn("Something went wrong in persisting the new demographics data")
