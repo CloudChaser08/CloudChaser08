@@ -35,7 +35,8 @@ VENDOR_ID = '5'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
-    max_cap = datetime.strptime(date_input, '%Y-%m-%d')
+    max_cap = date_input
+    max_cap_obj = datetime.strptime(max_cap, '%Y-%m-%d')
 
     input_tables = [
         'd_costar',
@@ -163,7 +164,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('medctn_last_rfll_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-            ]
+            ],
+            'partition_date_col': 'medctn_ord_dt'
         }, {
             'name': 'lab_result',
             'data': normalized_lab_result,
@@ -175,7 +177,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 ('lab_test_smpl_collctn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-            ]
+            ],
+            'partition_date_col': 'lab_result_dt'
         }, {
             'name': 'encounter',
             'data': normalized_encounter,
@@ -186,7 +189,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'date_caps': [
                 ('enc_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-            ]
+            ],
+            'partition_date_col': 'enc_start_dt'
         }, {
             'name': 'diagnosis',
             'data': normalized_diagnosis,
@@ -200,6 +204,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 ('diag_resltn_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
                 ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ],
+            'partition_date_col': 'diag_dt',
             'update_whitelists': lambda whitelists: whitelists + [{
                 'column_name': 'diag_snomed_cd',
                 'domain_name': 'SNOMED',
@@ -216,7 +221,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('proc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-            ]
+            ],
+            'partition_date_col': 'proc_dt'
         }, {
             'name': 'clinical_observation',
             'data': normalized_clinical_observation,
@@ -228,7 +234,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('clin_obsn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-            ]
+            ],
+            'partition_date_col': 'clin_obsn_dt'
         }, {
             'name': 'vital_sign',
             'data': normalized_vital_sign,
@@ -240,7 +247,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-            ]
+            ],
+            'partition_date_col': 'vit_sign_dt'
         }
     ]
     for table in normalized_tables:
@@ -248,7 +256,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             postprocessor.trimmify, postprocessor.nullify,
             schema_enforcer.apply_schema_func(table['schema']),
             postprocessor.add_universal_columns(
-                feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=max_cap.strftime(
+                feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=max_cap_obj.strftime(
                     'AmazingCharts_HV_%b%y'
                 ), model_version_number=table['model_version'],
 
@@ -264,22 +272,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             *(
                 [
                     postprocessor.apply_date_cap(
-                        runner.sqlContext, date_col, max_cap_date, '25', domain_name
+                        runner.sqlContext, date_col, max_cap_date, FEED_ID, domain_name
                     ) for (date_col, domain_name, max_cap_date) in table['date_caps']
                 ] + [
                     schema_enforcer.apply_schema_func(table['schema'])
                 ]
             )
-        )(table['data']).createOrReplaceTempView('normalized_{}'.format(table['name']))
+        )(table['data'])
+        normalized_table.createOrReplaceTempView('normalized_{}'.format(table['name']))
 
         hvm_historical_date = postprocessor.coalesce_dates(
-            runner.sqlContext, FEED_ID, datetime.date(1901, 1, 1),
+            runner.sqlContext, FEED_ID, date(1901, 1, 1),
             'HVM_AVAILABLE_HISTORY_START_DATE',
             'EARLIEST_VALID_SERVICE_DATE'
         )
 
         normalized_records_unloader.unload(
-            spark, runner, normalized_table, 'allscripts_date_partition', max_cap,
+            spark, runner, normalized_table, table['partition_date_col'], max_cap,
             FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
             date_partition_name='part_mth', hvm_historical_date=datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day

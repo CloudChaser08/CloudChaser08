@@ -16,7 +16,7 @@ SELECT
     COALESCE(
         SUBSTR(ptn.birth_date, 1, 4),
         pay.yearOfBirth
-    )                                       AS ptnt_birth_year,
+    )                                       AS ptnt_birth_yr,
     pay.age                                 AS ptnt_age_num,
     COALESCE(
         ptn.gender,

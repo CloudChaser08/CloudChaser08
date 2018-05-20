@@ -111,8 +111,8 @@ SELECT
         enc.body_mass_index,
         enc.diastolic,
         CASE
-            WHEN UPPER(RIGHT(enc.head_circumference, 2)) = 'IN' THEN REGEXP_REPLACE(enc.head_circumference, '[^0-9|\.]', '')
-            WHEN UPPER(RIGHT(enc.head_circumference, 2)) = 'CM' THEN CONVERT_VALUE(REGEXP_REPLACE(enc.head_circumference, '[^0-9|\.]', ''), 'CENTIMETERS_TO_INCHES')
+            WHEN UPPER(SUBSTR(enc.head_circumference, -2)) = 'IN' THEN REGEXP_REPLACE(enc.head_circumference, '[^0-9|\.]', '')
+            WHEN UPPER(SUBSTR(enc.head_circumference, -2)) = 'CM' THEN CONVERT_VALUE(REGEXP_REPLACE(enc.head_circumference, '[^0-9|\.]', ''), 'CENTIMETERS_TO_INCHES')
             ELSE NULL
         END,
         enc.hearing,
@@ -131,14 +131,14 @@ SELECT
         enc.supplemental_o2_amount,
         enc.systolic,
         CASE
-            WHEN UPPER(RIGHT(enc.temperature, 1)) = 'F' THEN REGEXP_REPLACE(enc.temperature, '[^0-9|\.]', '')
-            WHEN UPPER(RIGHT(enc.temperature, 1)) = 'C' THEN CONVERT_VALUE(REGEXP_REPLACE(enc.temperature, '[^0-9|\.]', ''), 'CENTIGRADE_TO_FAHRENHEIT')
+            WHEN UPPER(SUBSTR(enc.temperature, -1)) = 'F' THEN REGEXP_REPLACE(enc.temperature, '[^0-9|\.]', '')
+            WHEN UPPER(SUBSTR(enc.temperature, -1)) = 'C' THEN CONVERT_VALUE(REGEXP_REPLACE(enc.temperature, '[^0-9|\.]', ''), 'CENTIGRADE_TO_FAHRENHEIT')
             ELSE NULL
         END,
         enc.vision_od,
         enc.vision_os,
         enc.weight_in_pounds
-    )[e.n]                                  AS vit_sign_typ_msrmt,
+    )[e.n]                                  AS vit_sign_msrmt,
     ARRAY(
         'INDEX',
         'mmHg',
@@ -162,7 +162,7 @@ SELECT
         'SNELLEN_CHART',
         'SNELLEL_CHART',
         'POUNDS'
-    )[e.n]                                  AS vit_sign_type_uom,
+    )[e.n]                                  AS vit_sign_uom,
     extract_date(
         SUBSTR(enc.date_row_added, 1, 10),
         '%Y-%m-%d'

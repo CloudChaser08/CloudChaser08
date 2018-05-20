@@ -1,0 +1,10 @@
+183475|1|A00|False|Cholera|Cholera|False
+183476|2|A00.0|True|Cholera due to Vibrio cholerae 01, biovar cholerae|Cholera due to Vibrio cholerae 01, biovar cholerae|True
+183477|3|A00.1|True|Cholera due to Vibrio cholerae 01, biovar eltor|Cholera due to Vibrio cholerae 01, biovar eltor|True
+183478|4|A00.9|True|Cholera, unspecified|Cholera, unspecified|True
+183479|5|A01|False|Typhoid and paratyphoid fevers|Typhoid and paratyphoid fevers|False
+183480|6|A01.0|False|Typhoid fever|Typhoid fever|False
+183481|7|A01.00|True|Typhoid fever, unspecified|Typhoid fever, unspecified|True
+183482|8|A01.01|True|Typhoid meningitis|Typhoid meningitis|True
+183483|9|A01.02|True|Typhoid fever with heart involvement|Typhoid fever with heart involvement|True
+183484|10|A01.03|True|Typhoid pneumonia|Typhoid pneumonia|True

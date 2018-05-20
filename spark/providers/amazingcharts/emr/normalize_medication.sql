@@ -50,7 +50,7 @@ SELECT
     CASE
         WHEN med.practice_key IS NULL THEN NULL
         ELSE 'PRACTICE_KEY'
-    END                                     AS medctn_ord_prov_alt_id_qual,
+    END                                     AS medctn_ordg_prov_alt_id_qual,
     prv.specialty                           AS medctn_ordg_prov_alt_speclty_id,
     CASE
         WHEN prv.specialty IS NULL THEN NULL

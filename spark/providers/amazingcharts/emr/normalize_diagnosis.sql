@@ -65,11 +65,11 @@ SELECT
         WHEN prv.practice_key IS NULL THEN NULL
         ELSE 'PRACTICE_KEY'
     END                                                 AS diag_rndrg_prov_alt_id_qual,
-    prv.specialty                                       AS diag_rndrg_prov_alt_specialty_id,
+    prv.specialty                                       AS diag_rndrg_prov_alt_speclty_id,
     CASE
         WHEN prv.specialty IS NULL THEN NULL
         ELSE 'SPECIALTY'
-    END                                                 AS diag_rndrg_prov_alt_specialty_id_qual,
+    END                                                 AS diag_rndrg_prov_alt_speclty_id_qual,
     UPPER(COALESCE(prv.state, ''))                      AS diag_rndrg_prov_state_cd,
     extract_date(
         SUBSTR(dig.date_active, 1, 10),
