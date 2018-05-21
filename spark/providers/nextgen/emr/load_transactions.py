@@ -9,6 +9,7 @@ def load(runner, input_path, s3_encounter_reference, s3_demographics_reference):
         .load(runner, input_path, ['_c' + str(i) for i in xrange(RAW_COLUMN_COUNT)], 'csv', '|') \
         .withColumn('tbl_type', F.col('_c3')) \
         .withColumn('input_file_name', F.input_file_name()) \
+        .repartition(5000, '_c1') \
         .cache_and_track('raw_data') \
         .where("_c0 = '5'")
 
