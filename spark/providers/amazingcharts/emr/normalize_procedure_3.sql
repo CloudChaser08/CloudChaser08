@@ -50,7 +50,7 @@ SELECT
         ELSE 'SPECIALTY'
     END                                     AS proc_rndrg_prov_alt_speclty_id_qual,
     UPPER(COALESCE(prv.state, ''))          AS proc_rndrg_prov_state_cd,
-    UPPER(cpt.cpt_code)                     AS proc_cd,
+    TRIM(UPPER(cpt.cpt_code))               AS proc_cd,
     CASE
         WHEN cpt.cpt_code IS NULL THEN NULL
         ELSE 'CPT_CODE'

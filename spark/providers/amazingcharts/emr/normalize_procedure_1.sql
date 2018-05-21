@@ -82,7 +82,17 @@ SELECT
         ELSE 'SPECIALTY'
     END                                     AS proc_rndrg_prov_alt_speclty_id_qual,
     UPPER(COALESCE(prv.state, ''))          AS proc_rndrg_prov_state_cd,
-    UPPER(enc.cpt_code)                     AS proc_cd,
+    TRIM(
+        REGEXP_REPLACE(
+            REGEXP_REPLACE(
+                UPPER(cpt_code),
+                '(\\([^)]*\\))|(LOW)|(MEDIUM)|(HIGH)|(COMPLEXITY)|\\<|\\>',
+                ''
+            ),
+            '[^A-Z0-9]',
+            ' '    
+        )
+    )                                      AS proc_cd,
     CASE
         WHEN enc.cpt_code IS NULL THEN NULL
         ELSE 'CPT_CODE'

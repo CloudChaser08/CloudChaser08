@@ -11,7 +11,7 @@ from spark.common.emr.medication import schema_v7 as medication_schema
 from spark.common.emr.clinical_observation import schema_v7 as clinical_observation_schema
 from spark.common.emr.vital_sign import schema_v7 as vital_sign_schema
 import spark.helpers.file_utils as file_utils
-import spark.helpers.explode as explode
+import spark.helpers.explode as exploder
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
@@ -28,7 +28,7 @@ import spark.helpers.privacy.emr.clinical_observation as clinical_observation_pr
 import spark.helpers.privacy.emr.vital_sign as vital_sign_priv
 
 from pyspark.sql.window import Window
-from pyspark.sql.functions import col, lit, rank
+from pyspark.sql.functions import col, lit, rank, split, explode
 
 FEED_ID = '5'
 VENDOR_ID = '5'
@@ -75,11 +75,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
     else:
         for t in input_tables:
-            input_paths[t] = 's3://salusv/incoming/consumer/alliance/{}/{}/'.format(
-                date_input.replace('-', '/'), t
+            input_paths[t] = 's3://salusv/incoming/emr/amazingcharts/{}/{}/'.format(
+                date_input.replace('-', '/')[:-3], t
             )
-        matching_path = 's3://salusv/matching/payload/consumer/alliance/{}/'.format(
-            date_input.replace('-', '/')
+        matching_path = 's3://salusv/matching/payload/emr/amazingcharts/{}/'.format(
+            date_input.replace('-', '/')[:-3]
         )
 
     if not test:
@@ -98,9 +98,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
           .drop('rank')                                         \
           .createOrReplaceTempView('matching_payload_deduped')
 
-    explode.generate_exploder_table(spark, 2, 'proc_2_exploder')
-    explode.generate_exploder_table(spark, 5, 'clin_obsn_exploder')
-    explode.generate_exploder_table(spark, 18, 'vital_sign_exploder')
+    exploder.generate_exploder_table(spark, 2, 'proc_2_exploder')
+    exploder.generate_exploder_table(spark, 5, 'clin_obsn_exploder')
+    exploder.generate_exploder_table(spark, 18, 'vital_sign_exploder')
 
     normalized_encounter = runner.run_spark_script(
         'normalize_encounter.sql',
@@ -138,6 +138,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         'normalize_vital_sign.sql',
         [], return_output=True
     )
+
+    normalized_procedure_1 = normalized_procedure_1.withColumn('proc_cd', explode(split(col('proc_cd'), '\s+')))
 
     join_keys = [
         normalized_procedure_1.proc_dt == normalized_procedure_3.proc_dt,
@@ -308,13 +310,11 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        #TODO: output each normalized table
         pass
     else:
-        #TODO: output each normalized table
-        pass
-
-    #normalized_records_unloader.distcp(output_path)
+        output_path = 's3://salusv/warehouse/parquet/emr/2018-05-21/'
+    
+    normalized_records_unloader.distcp(output_path)
 
 
 if __name__ == '__main__':
