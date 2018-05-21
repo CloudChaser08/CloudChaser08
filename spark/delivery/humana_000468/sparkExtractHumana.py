@@ -57,6 +57,7 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
     matched_patients = matched_patients.select('hvid').distinct()
     all_patient_count = all_patients.count()
     matched_patient_count = matched_patients.count()
+    patient_w_records_count = 0
 
     if matched_patients.count() < 10:
         medical_extract    = spark.createDataFrame([], StructType([]))
@@ -86,6 +87,7 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
                 .groupBy('data_vendor').count()
 
         summary = med_summary.union(pharma_summary)
+        patient_w_records_count = medical_extract.select('hvid').union(pharmacy_extract.select('hvid')).distinct().count()
 
     # for easy testing
     medical_extract.createOrReplaceTempView('medical_extract')
@@ -95,7 +97,7 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
 
     summary_report = '\n'.join(['|'.join([
             group_id, str(all_patient_count), str(matched_patient_count),
-            r['data_vendor'], str(r['count'])
+            str(patient_w_records_count), r['data_vendor'], str(r['count'])
         ]) for r in summary.collect()])
 
     with open('/tmp/summary_report_{}.txt'.format(group_id), 'w') as outf:
