@@ -23,6 +23,9 @@ SELECT
     extract_date(
         substring(rslt.collectiontime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS lab_test_smpl_collctn_dt,
+    NULL                                    AS lab_test_execd_dt,
+    NULL                                    AS lab_result_dt,
+    NULL                                    AS lab_test_panel_nm,
     CASE WHEN translate(rslt.emrcode, '-', '') = clean_up_numeric_code(rslt.emrcode)
             THEN translate(rslt.emrcode, '-', '')
         ELSE ref.gen_ref_itm_nm END         AS lab_test_nm,
@@ -34,6 +37,9 @@ SELECT
     CASE WHEN CAST(rslt.result as float) IS NOT NULL
             THEN rslt.result
         ELSE ref2.gen_ref_itm_nm END        AS lab_result_nm,
+    NULL                                    AS lab_result_msrmt,
+    NULL                                    AS lab_result_uom,
+    NULL                                    AS lab_result_qual,
     extract_date(
         substring(rslt.datadate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS data_captr_dt,

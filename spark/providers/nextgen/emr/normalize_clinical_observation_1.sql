@@ -19,6 +19,9 @@ SELECT
     extract_date(
         substring(sub.datadate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS clin_obsn_dt,
+    NULL                                    AS clin_obsn_data_ctgy_cd, -- included for easy unioning
+    NULL                                    AS clin_obsn_data_ctgy_cd_qual,
+    NULL                                    AS clin_obsn_data_ctgy_nm,
     clean_up_freetext(sub.clinicalrecordtypecode, false)
                                             AS clin_obsn_typ_cd,
     'VENDOR'                                AS clin_obsn_typ_cd_qual,
@@ -30,6 +33,7 @@ SELECT
     ref1.gen_ref_itm_nm                     AS clin_obsn_substc_nm,
     CASE WHEN CAST(sub.emrcode AS DOUBLE) IS NOT NULL THEN sub.emrcode
         ELSE ref2.gen_ref_itm_nm END        AS clin_obsn_nm,
+    NULL                                    AS clin_obsn_result_desc,
     'substanceusage'                        AS prmy_src_tbl_nm,
     extract_date(
         substring(sub.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)

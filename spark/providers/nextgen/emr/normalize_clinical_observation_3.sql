@@ -28,6 +28,9 @@ SELECT
     'VENDOR'                                AS clin_obsn_typ_cd_qual,
     clean_up_freetext(ext.clinicalrecorddescription, false)
                                             AS clin_obsn_typ_nm,
+    NULL                                    AS clin_obsn_substc_cd,
+    NULL                                    AS clin_obsn_substc_cd_qual,
+    NULL                                    AS clin_obsn_substc_nm,
     CASE WHEN CAST(ext.emrcode AS DOUBLE) IS NOT NULL THEN ext.emrcode
         ELSE ref3.gen_ref_itm_nm END        AS clin_obsn_nm,
     CASE WHEN CAST(ext.result AS DOUBLE) IS NOT NULL THEN ext.result
