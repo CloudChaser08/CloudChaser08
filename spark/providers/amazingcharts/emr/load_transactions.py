@@ -1,13 +1,21 @@
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
-def load(runner, table_locs):
+from pyspark.sql.types import *
+
+def load(spark, runner, table_locs):
     for table, input_path in table_locs.items():
-        df = records_loader.load(runner, input_path, TABLE_COLS[table], 'csv', '|')
-        postprocessor.compose(
-            postprocessor.trimmify,
-            postprocessor.nullify
-        )(df).createOrReplaceTempView(table)
+        try:
+            df = records_loader.load(runner, input_path, TABLE_COLS[table], 'csv', '|')
+            postprocessor.compose(
+                postprocessor.trimmify,
+                postprocessor.nullify
+            )(df).createOrReplaceTempView(table)
+        except:
+            df = spark.createDataFrame(
+                spark.sparkContext.emptyRDD(),
+                schema=StructType(map(lambda x: StructField(x, StringType()), TABLE_COLS[table]))
+            ).createOrReplaceTempView(table)
 
 
 TABLE_COLS = {

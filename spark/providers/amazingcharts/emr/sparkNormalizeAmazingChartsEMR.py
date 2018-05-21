@@ -78,15 +78,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             input_paths[t] = 's3://salusv/incoming/emr/amazingcharts/{}/{}/'.format(
                 date_input.replace('-', '/')[:-3], t
             )
+        input_paths['d_multum_to_ndc'] = 's3://salusv/incoming/emr/amazingcharts/{}/{}/'.format(
+            date_input[:-6], 'd_multum_to_ndc'
+        )
         matching_path = 's3://salusv/matching/payload/emr/amazingcharts/{}/'.format(
-            date_input.replace('-', '/')[:-3]
+            date_input.replace('-', '/')
         )
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     import spark.providers.amazingcharts.emr.load_transactions as load_transactions
-    load_transactions.load(runner, input_paths)
+    load_transactions.load(spark, runner, input_paths)
 
     payload_loader.load(runner, matching_path, ['personid'])
     # De-duplicate the payloads so that there is only one
