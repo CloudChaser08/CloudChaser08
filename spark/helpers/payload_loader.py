@@ -18,7 +18,7 @@ DEFAULT_ATTRS = [
 
 
 def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False, partitions=200, cache=False,
-        load_file_name=False):
+        load_file_name=False, allow_empty=False):
     """
     Load matching data for a provider
     """
@@ -29,7 +29,13 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
     # all keys needed from the payload
     total_attrs = set(DEFAULT_ATTRS + extra_cols)
 
-    raw_payload = runner.sqlContext.read.json(location)
+    try:
+        raw_payload = runner.sqlContext.read.json(location)
+    except Exception as e:
+        if allow_empty:
+            raw_payload = runner.sqlContext.createDataFrame([()], [])
+        else:
+            raise(e)
 
     # log any requested column that is missing from the payload
     for k in total_attrs:
