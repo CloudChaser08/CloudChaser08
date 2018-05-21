@@ -9,7 +9,7 @@ def deduplicate(runner):
 
     encounter_union.withColumn('nextrecorddate', F.lead(F.col('recorddate')).over(window)) \
             .where('nextrecorddate IS NULL').drop('nextrecorddate') \
-            .repartition(5000).cache_and_track('encounter_dedup') \
+            .repartition(5000, 'nextgengroupid').cache_and_track('encounter_dedup') \
             .createOrReplaceTempView('encounter_dedup')
 
     old_demographics = runner.sqlContext.table('old_demographics').drop('nextrecorddate')
@@ -18,7 +18,5 @@ def deduplicate(runner):
     window = Window.orderBy('recorddate').partitionBy('nextgengroupid', 'reportingenterpriseid')
 
     demographics_union.withColumn('nextrecorddate', F.lead(F.col('recorddate')).over(window)) \
-            .repartition(5000).cache_and_track('demographics_local') \
+            .repartition(5000, 'nextgengroupid') \
             .createOrReplaceTempView('demographics_local')
-
-    runner.sqlContext.table('demographics_local').count()

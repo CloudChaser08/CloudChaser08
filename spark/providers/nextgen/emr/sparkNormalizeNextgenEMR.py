@@ -141,6 +141,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             postprocessor.trimmify, postprocessor.nullify
         )(runner.sqlContext.table(table)).createOrReplaceTempView(table)
 
+    runner.sqlContext.table('demographics_local').cache_and_track('demographics_local').createOrReplaceTempView('demographics_local')
+
+    runner.sqlContext.table('demographics_local').count()
+
     normalized = {}
     normalized['encounter'] = runner.run_spark_script('normalize_encounter.sql', [
         ['min_date', min_date],
