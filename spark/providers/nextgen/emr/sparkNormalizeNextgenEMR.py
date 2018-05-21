@@ -45,12 +45,10 @@ S3_ENCOUNTER_REFERENCE    = 's3a://salusv/reference/nextgen/encounter_deduped/'
 S3_DEMOGRAPHICS_REFERENCE = 's3a://salusv/reference/nextgen/demographics_orc/'
 S3_CROSSWALK_REFERENCE    = 's3a://salusv/reference/nextgen/crosswalk/'
 
-HDFS_ENCOUNTER_REFERECE     = '/user/hive/warehouse/encounter_dedup'
+HDFS_ENCOUNTER_REFERENCE    = '/user/hive/warehouse/encounter_dedup'
 HDFS_DEMOGRAPHICS_REFERENCE = '/user/hive/warehouse/demographics_local'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
-    org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
-
     runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
     runner.sqlContext.sql('SET hive.exec.compress.output=true')
     runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress=true')
