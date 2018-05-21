@@ -217,18 +217,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         .withColumn('prov_ord_diag_dt', F.coalesce(F.col('prov_ord_dt'), F.col('enc_dt'))) # For whitelisting purposes
     logging.debug("Normalized provider order")
 
-    normalized['clinical_observation'] = schema_enforcer.apply_schema(
-            runner.run_spark_script('normalize_clinical_observation_1.sql', [
+    cln_obs1 = runner.run_spark_script('normalize_clinical_observation_1.sql', [
                 ['min_date', min_date],
-                ['max_date', max_date],
-                ['partitions', org_num_partitions, False]
-            ], return_output=True), clinical_observation_schema, columns_to_keep=['part_mth']) \
-        .union(schema_enforcer.apply_schema(
-            runner.run_spark_script('normalize_clinical_observation_3.sql', [
+                ['max_date', max_date]
+            ], return_output=True)
+    cln_obs3 = runner.run_spark_script('normalize_clinical_observation_3.sql', [
                 ['min_date', min_date],
-                ['max_date', max_date],
-                ['partitions', org_num_partitions, False]
-            ], return_output=True), clinical_observation_schema, columns_to_keep=['part_mth']))
+                ['max_date', max_date]
+            ], return_output=True)
+    normalized['clinical_observation'] = clean_and_union_cln_obs(runner.sqlContext, cln_obs1, cln_obs3)
     logging.debug("Normalized clinical observation")
 
     runner.run_spark_script('normalize_vital_sign_prenorm.sql', [
@@ -365,26 +362,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ]
     )
 
-    def update_clinical_observation_whitelists(whitelists):
-        return whitelists + [{
-            'column_name': 'clin_obsn_typ_cd',
-            'domain_name': 'substanceusage.clinicalrecordtypecode',
-            'whitelist_col_name': 'gen_ref_cd',
-            'feed_id': '35',
-            'comp_col_names': ['clin_obsn_typ_cd_qual']
-        }, {
-            'column_name': 'clin_obsn_typ_nm',
-            'domain_name': 'substanceusage.clinicalrecorddescription',
-            'feed_id': '35'
-        }]
-
     normalized_tables = [
         {
             'schema'        : clinical_observation_schema,
             'data_type'     : 'clinical_observation',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_clinical_observation,
-            'filter_args'   : [update_clinical_observation_whitelists]
+            'partitions'    : 40
         },
         {
             'schema'        : diagnosis_schema,
@@ -436,7 +420,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'privacy_filter': priv_provider_order,
             'filter_args'   : [update_provider_order_whitelists, provider_order_transformer],
             'cols_to_keep'  : ['prov_ord_diag_dt'],
-            'cols_to_drop'  : 'prov_ord_diag_dt'
+            'cols_to_drop'  : 'prov_ord_diag_dt',
+            'partitions'    : 40
         },
         {
             'schema'        : vital_sign_schema,
@@ -479,22 +464,73 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         if not test:
             normalized_records_unloader.unload(
-                spark, runner, df, table['date_column'], data_input,
+                spark, runner, df, table['date_column'], date_input,
                 provider_partition_value='35',
                 provider_partition_name='part_hvm_vdr_feed_id',
                 date_partition_name = 'part_mth', 
                 hvm_historical_date=historical_date,
                 staging_subdir='{}/'.format(table['data_type']),
-                columns = table['schema'].fieldNames()
+                columns = table['schema'].names, distribution_key='row_id',
+                unload_partition_count=table.get('partitions', 20)
             )
         logging.debug("Cleaned up {}".format(table['data_type']))
 
     if not test:
-        runner.sqlContext.table('encounter_dedup').coalesce(100).write \
-                .orc(HDFS_ENCOUNTER_REFERENCE, compression='zlib')
-        runner.sqlContext.table('demographics_local').coalesce(100).write \
-                .orc(HDFS_DEMOGRAPHICS_REFERENCE, compression='zlib')
+        runner.sqlContext.table('encounter_dedup').coalesce(1000).write \
+                .orc(HDFS_ENCOUNTER_REFERENCE, compression='zlib', mode='overwrite')
+        runner.sqlContext.table('demographics_local').coalesce(1000).write \
+                .orc(HDFS_DEMOGRAPHICS_REFERENCE, compression='zlib', mode='overwrite')
 
+def clean_and_union_cln_obs(sqlc, cln_obs1, cln_obs3):
+    substanceusage_whitelists = [{
+        'column_name': 'clin_obsn_typ_cd',
+        'domain_name': 'substanceusage.clinicalrecordtypecode',
+        'whitelist_col_name': 'gen_ref_cd',
+        'feed_id': '35',
+        'comp_col_names': ['clin_obsn_typ_cd_qual']
+    }, {
+        'column_name': 'clin_obsn_typ_nm',
+        'domain_name': 'substanceusage.clinicalrecorddescription',
+        'feed_id': '35'
+    }]
+
+    extendeddata_whitelists = [{
+        'column_name': 'clin_obsn_typ_cd',
+        'domain_name': 'extendeddata.clinicalrecordtypecode',
+        'whitelist_col_name': 'gen_ref_cd',
+        'feed_id': '35',
+        'comp_col_names': ['clin_obsn_typ_cd_qual']
+    }, {
+        'column_name': 'clin_obsn_typ_nm',
+        'domain_name': 'extendeddata.clinicalrecorddescription',
+        'feed_id': '35'
+    }]
+
+    p1 = postprocessor.compose(
+        *[
+            postprocessor.apply_whitelist(
+                sqlc, whitelist['column_name'], whitelist['domain_name'],
+                comp_col_names=whitelist.get('comp_col_names'),
+                whitelist_col_name=whitelist.get('whitelist_col_name'),
+                clean_up_freetext_fn=whitelist.get('clean_up_freetext_fn')
+            )
+            for whitelist in substanceusage_whitelists
+        ]
+    )(cln_obs1)
+
+    p2 = postprocessor.compose(
+        *[
+            postprocessor.apply_whitelist(
+                sqlc, whitelist['column_name'], whitelist['domain_name'],
+                comp_col_names=whitelist.get('comp_col_names'),
+                whitelist_col_name=whitelist.get('whitelist_col_name'),
+                clean_up_freetext_fn=whitelist.get('clean_up_freetext_fn')
+            )
+            for whitelist in extendeddata_whitelists
+        ]
+    )(cln_obs3)
+
+    return p2.union(p1.select(*[p1[c] for c in p2.columns])) # Reorder before unioning
 
 def main(args):
     # init
