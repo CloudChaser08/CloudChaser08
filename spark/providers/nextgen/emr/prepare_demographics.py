@@ -1,9 +1,10 @@
 import spark.helpers.records_loader as records_loader
-from pyspark.sql.functions import regexp_extract
+from pyspark.sql.functions import regexp_extract, lit
 
 # Append HVIDs to the demographics table
 def prepare(spark, runner, s3_crosswalk_reference):
-    dem = spark.table('new_demographics')
+    dem = spark.table('new_demographics') \
+            .withColumn('patientpseudonym', lit(None).cast('string')) # NULL out this column. It can contain DeID data
     mat = spark.table('matching_payload') \
             .withColumn('reportingenterpriseid', regexp_extract('input_file_name', 'NG_LSSA_([^_]*)_[^\.]*.txt', 1))
     dem_merged = dem.join(mat, ((dem.nextgengroupid == mat.hvJoinKey)
