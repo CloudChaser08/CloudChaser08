@@ -1,4 +1,5 @@
 accn_id-0|1|diagcodediag0|test_id-0|ICD-9-|hvJoinKey-0
+accn_id-0|2|diagcodeproc01|test_id-5|ICD-10|hvJoinKey-5
 accn_id-1|1|diagcodediag1|test_id-1|ICD-10|hvJoinKey-1
 accn_id-2|3|diagcodeproc2_3|test_id-2|ICD-9-|hvJoinKey-2
 accn_id-2|3|diagcodediag23|test_id-3|ICD-9-|hvJoinKey-3

@@ -59,7 +59,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 )
     if min_date:
         min_date = min_date.isoformat()
-    min_date = None
 
     max_date = date_input
 
@@ -72,8 +71,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized = reduce(
         lambda df1, df2: df1.union(df2), [
             schema_enforcer.apply_schema(
-                runner.run_spark_script(script, return_output=True), schema,
-                columns_to_keep=['diagnosis_priority_unranked']
+                runner.run_spark_script(
+                    file_utils.get_abs_path(script_path, script),
+                    return_output=True
+                ), schema, columns_to_keep=['diagnosis_priority_unranked']
             ) for script in [
                 'normalize_1.sql', 'normalize_2.sql', 'normalize_3.sql'
             ]

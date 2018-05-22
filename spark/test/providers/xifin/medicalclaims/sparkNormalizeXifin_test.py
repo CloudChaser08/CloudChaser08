@@ -50,7 +50,7 @@ def test_place_of_service_id():
           ('0_accn_id-2', '95d54e70718889763960b6b6565a24d0')}
 
 
-def test_diagnosis():
+def test_diagnosis_distinct_values():
     assert sorted(set([
         (res.claim_id, res.vendor_test_id, res.diagnosis_priority, res.diagnosis_code, res.diagnosis_code_qual)
         for res in results

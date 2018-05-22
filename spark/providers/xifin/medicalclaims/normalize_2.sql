@@ -42,6 +42,8 @@ SELECT
     test.modifier_2                                                           AS procedure_modifier_2,
     test.modifier_3                                                           AS procedure_modifier_3,
     test.modifier_4                                                           AS procedure_modifier_4,
+    demo.gross_price                                                          AS total_charge,
+    demo.bill_price                                                           AS total_allowed,
     demo.ordering_npi                                                         AS prov_referring_npi,
     CASE
     WHEN payor.payor_priority = 1 THEN payor.payor_id
