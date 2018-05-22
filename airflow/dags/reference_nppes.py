@@ -32,18 +32,11 @@ NODE_TYPE = 'm4.xlarge'
 EBS_VOLUME_SIZE = '100'
 
 if HVDAG.HVDAG.airflow_env == 'test':
-    DESTINATION = 's3://salusv/testing/dewey/airflow/e2e/reference/gsdd/'
+    NPPES_TEXT_LOCATION = 's3://salusv/testing/dewey/airflow/e2e/reference/nppes/{}-{}-{}/'
+    S3_PARQUET_LOCATION = 's3://salusv/testing/dewey/airflow/e2e/reference/nppes/parquet/{}-{}-{}/'
 else:
-    DESTINATION = 's3://salusv/reference/gsdd/'
-
-if HVDAG.HVDAG.airflow_env == 'test':
-    DESTINATION = 's3://salusv/testing/dewey/airflow/e2e/reference/nppes/'
-    NPPES_TEXT_LOCATION = 's3://salusv/testing/reference/nppes/{}/{}/'
-    S3_PARQUET_LOCATION = 's3://salusv/testing/reference/nppes/parquet/{}/{}/{}/'
-else:
-    DESTINATION = 's3://salusv/reference/nppes/'
-    NPPES_TEXT_LOCATION = 's3://salusv/warehouse/text/nppes/{}/{}/'
-    S3_PARQUET_LOCATION = 's3://salusv/reference/parquet/nppes/{}/{}/{}/'
+    NPPES_TEXT_LOCATION = 's3://salusv/reference/nppes/{}-{}-{}/'
+    S3_PARQUET_LOCATION = 's3://salusv/reference/parquet/nppes/{}-{}-{}/'
 
 default_args = {
     'owner': 'airflow',
