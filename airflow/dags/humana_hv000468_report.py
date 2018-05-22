@@ -114,12 +114,13 @@ def get_group_received_ts(group_id):
 
 def do_generate_daily_report(ds, **kwargs):
     groups = get_delivered_groups(kwargs['execution_date'])
-    total = {'records': {}, 'patients': 0, 'matched': 0}
+    total = {'records': {}, 'patients': 0, 'matched': 0, 'w_records': 0}
 
     daily_report_file = open(get_tmp_dir(ds, kwargs) + 'daily_report_' + kwargs['ds_nodash'] + '.csv', 'w')
     report_writer = csv.writer(daily_report_file, quoting=csv.QUOTE_MINIMAL)
     report_writer.writerow(['Group ID', 'Date Received', 'Date Delivered',
-        'Patients Sent', 'Patients Matched', 'Source', 'Source Record Count'])
+        'Patients Sent', 'Patients Matched', 'Patients with Records', 'Source',
+        'Source Record Count'])
     for group in groups:
         fn = EXTRACT_SUMMARY_TEMPLATE.format(group['id'])
         f  = get_tmp_dir(ds, kwargs) + fn
@@ -128,18 +129,23 @@ def do_generate_daily_report(ds, **kwargs):
         with open(f) as fin:
             for line in fin:
                 fields = line.strip().split('|')
-                patients = int(fields[1])
-                matched  = int(fields[2])
-                total['records'][fields[3]] = total['records'].get(fields[3], 0) + int(fields[4])
+                patients  = int(fields[1])
+                matched   = int(fields[2])
+                w_records = int(fields[3])
+                total['records'][fields[4]] = total['records'].get(fields[4], 0) + int(fields[5])
                 report_writer.writerow([group['id'], received_ts.isoformat(), delivered_ts.isoformat()] + fields[1:])
-        total['patients'] += patients
-        total['matched']  += matched
+        total['patients']  += patients
+        total['matched']   += matched
+        total['w_records'] += w_records
+
+    if len(total['records'].keys()) > 1 and '-' in total['records']:
+        del total['records']['-']
 
     report_writer.writerow([])
     report_writer.writerow([])
     for source in total['records'].keys():
         report_writer.writerow(['TOTAL', received_ts.isoformat(), delivered_ts.isoformat(),
-            total['patients'], total['matched'], source, total['records'][source]])
+            total['patients'], total['matched'], total['w_records'], source, total['records'][source]])
     if not total['records'].keys():
         report_writer.writerow(['TOTAL', '-', '-',
             total['patients'], total['matched'], '-', 0])
