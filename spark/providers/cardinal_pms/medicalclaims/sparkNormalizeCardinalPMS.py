@@ -9,7 +9,8 @@ from spark.runner import Runner
 from spark.spark_setup import init
 
 from spark.common.medicalclaims_common_model import schema_v5 as schema
-from spark.common.medicalclaims_common_model import schema_v2 as schema_v2
+from spark.providers.cardinal_pms.medicalclaims.interim_medicalclaims_model \
+    import schema as cardinal_schema
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
@@ -32,9 +33,9 @@ def cardinalize(df):
     Transform df schema (medicalclaims common model) to the schema that cardinal wants
     """
     return schema_enforcer.apply_schema(
-        df, schema_v2, columns_to_keep=['vendor_org_id']
-    ).withColumnRenamed(
-        'procedure_units_billed', 'procedure_units'
+        df.withColumnRenamed(
+            'procedure_units_billed', 'procedure_units'
+        ), cardinal_schema
     )
 
 
