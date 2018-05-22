@@ -104,35 +104,31 @@ FROM diagnosis_complete diag
     LEFT OUTER JOIN payors_complete payor ON diag.accn_id = payor.accn_id
     AND diag.client_id = payor.client_id
     CROSS JOIN claim_transaction_amount_exploder
-WHERE (((NOT EXISTS (
-                SELECT 1 FROM billed_procedures_complete pr
-                WHERE  diag.accn_id = pr.accn_id
-                    AND  diag.client_id = pr.client_id
-                    AND  diag.test_id = pr.test_id
-                    AND 0 <>  LENGTH(TRIM(COALESCE(diag.test_id,'')))
-                    AND 0 <> LENGTH(TRIM(COALESCE(pr.test_id, '')))
-                    )
-                AND NOT EXISTS (
-                SELECT 1 FROM ordered_tests_complete t
-                WHERE  diag.accn_id = t.accn_id
-                    AND  diag.client_id = t.client_id
-                    AND  diag.test_id = t.test_id
-                    AND 0 <>  LENGTH(TRIM(COALESCE(diag.test_id,'')))
-                    AND 0 <> LENGTH(TRIM(COALESCE(t.test_id, '')))
-                    )
-                )
-            OR (NOT EXISTS (
-                SELECT 1 FROM billed_procedures_complete pr
-                WHERE  diag.accn_id = pr.accn_id
-                    AND  diag.client_id = pr.client_id
-                    AND 0 = LENGTH(TRIM(COALESCE(diag.test_id,'')))
-                    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_1, 'dummy2')
-                    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_2, 'dummy2')
-                    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_3, 'dummy2')
-                    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_4, 'dummy2')
-                    )
-                )
-            )
+WHERE NOT EXISTS (
+    SELECT 1 FROM billed_procedures_complete pr
+    WHERE  diag.accn_id = pr.accn_id
+        AND  diag.client_id = pr.client_id
+        AND  diag.test_id = pr.test_id
+        AND 0 <>  LENGTH(TRIM(COALESCE(diag.test_id,'')))
+        AND 0 <> LENGTH(TRIM(COALESCE(pr.test_id, '')))
+        )
+    AND NOT EXISTS (
+    SELECT 1 FROM ordered_tests_complete t
+    WHERE  diag.accn_id = t.accn_id
+        AND  diag.client_id = t.client_id
+        AND  diag.test_id = t.test_id
+        AND 0 <>  LENGTH(TRIM(COALESCE(diag.test_id,'')))
+        AND 0 <> LENGTH(TRIM(COALESCE(t.test_id, '')))
+        )
+    AND NOT EXISTS (
+    SELECT 1 FROM billed_procedures_complete pr
+    WHERE  diag.accn_id = pr.accn_id
+        AND  diag.client_id = pr.client_id
+        AND 0 = LENGTH(TRIM(COALESCE(diag.test_id,'')))
+        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_1, 'dummy2')
+        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_2, 'dummy2')
+        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_3, 'dummy2')
+        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_4, 'dummy2')
         )
     AND demo.pt_country ='USA'
     AND (

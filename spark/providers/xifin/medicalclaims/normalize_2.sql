@@ -117,22 +117,20 @@ FROM ordered_tests_complete test
     LEFT OUTER JOIN payors_complete payor ON test.accn_id = payor.accn_id
     AND test.client_id = payor.client_id
     CROSS JOIN claim_transaction_amount_exploder
-WHERE (
-        NOT EXISTS (
-        SELECT 1 FROM billed_procedures_complete pr
-        WHERE test.accn_id = pr.accn_id
-            AND  test.client_id = pr.client_id
-            AND  test.test_id = pr.test_id
-            AND 0 <> LENGTH(TRIM(COALESCE(pr.test_id, '')))
-            AND 0 <> LENGTH(TRIM(COALESCE(test.test_id, '')))
-            )
-        OR NOT EXISTS (
-        SELECT 1 FROM billed_procedures_complete pr
-        WHERE  test.accn_id = pr.accn_id
-            AND  test.client_id = pr.client_id
-            AND test.proc_code = proc.proc_code
-            AND 0 =  LENGTH(TRIM(COALESCE(test.test_id,'')))
-            )
+WHERE NOT EXISTS (
+    SELECT 1 FROM billed_procedures_complete pr
+    WHERE test.accn_id = pr.accn_id
+        AND  test.client_id = pr.client_id
+        AND  test.test_id = pr.test_id
+        AND 0 <> LENGTH(TRIM(COALESCE(pr.test_id, '')))
+        AND 0 <> LENGTH(TRIM(COALESCE(test.test_id, '')))
+        )
+    AND NOT EXISTS (
+    SELECT 1 FROM billed_procedures_complete pr
+    WHERE  test.accn_id = pr.accn_id
+        AND  test.client_id = pr.client_id
+        AND test.proc_code = proc.proc_code
+        AND 0 =  LENGTH(TRIM(COALESCE(test.test_id,'')))
         )
     AND demo.pt_country ='USA'
     AND (
