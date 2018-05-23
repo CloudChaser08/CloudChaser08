@@ -3,7 +3,7 @@ import argparse
 from datetime import datetime
 
 from pyspark.sql import Window
-from pyspark.sql.functions import col, collect_set, explode, first
+import pyspark.sql.functions as F
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -93,20 +93,20 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
 
     # Create a table that contains one row for each claim
     # where the service line is the lowest number
-    window = Window.partitionBy(col('ediclaim_id')).orderBy(col('linesequencenumber').desc())
+    window = Window.partitionBy(F.col('ediclaim_id')).orderBy(F.col('linesequencenumber').desc())
     runner.sqlContext.sql('select * from transactional_cardinal_pms')           \
-          .withColumn('first', first(col('linesequencenumber')).over(window))   \
-          .where(col('linesequencenumber') == col('first'))                     \
-          .drop(col('first'))                                                   \
+          .withColumn('first', F.first(F.col('linesequencenumber')).over(window))   \
+          .where(F.col('linesequencenumber') == F.col('first'))                     \
+          .drop(F.col('first'))                                                   \
           .createOrReplaceTempView('limited_transactional_cardinal_pms')
 
     # Create a table that contains a each unique
     # diagnosis code and claim id
     service_lines                                                               \
-          .groupby(col('claim_id'))                                             \
-          .agg(collect_set(col('diagnosis_code')).alias('diagnosis_codes'))     \
-          .withColumn('diagnosis_code', explode(col('diagnosis_codes')))        \
-          .select(col('claim_id'), col('diagnosis_code'))                       \
+          .groupby(F.col('claim_id'))                                             \
+          .agg(F.collect_set(F.col('diagnosis_code')).alias('diagnosis_codes'))     \
+          .withColumn('diagnosis_code', F.explode(F.col('diagnosis_codes')))        \
+          .select(F.col('claim_id'), F.col('diagnosis_code'))                       \
           .createOrReplaceTempView('service_line_diags')
 
     # Create exploder table for claim
@@ -122,7 +122,22 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
     service_lines_schema = schema_enforcer.apply_schema(service_lines, schema)
     claim_lines_schema = schema_enforcer.apply_schema(claim_lines, schema)
 
+    claim_window = Window.partitionBy(F.col('claim_id'))
     pms_data = service_lines_schema.union(claim_lines_schema)
+
+    # modify date_service and date_service_end columns to use the
+    # min(date_service) or max(date_service), respectively, over the
+    # entire claim for claim-level rows
+    pms_data = pms_data.withColumn(
+        'date_service', F.when(
+            F.col('service_line_number').isNull(), F.min('date_service').over(claim_window)
+        ).otherwise(F.col('date_service'))
+    ).withColumn(
+        'date_service_end', F.when(
+            F.col('service_line_number').isNull(), F.max('date_service').over(claim_window)
+        ).otherwise(F.col('date_service_end'))
+    )
+
 
     # Postprocessing
     pms_data_final = postprocessor.compose(

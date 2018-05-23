@@ -1,6 +1,8 @@
 import pytest
 import shutil
 
+from datetime import date
+
 import spark.helpers.file_utils as file_utils
 import spark.providers.cardinal_pms.medicalclaims.sparkNormalizeCardinalPMS as cardinal_pms
 
@@ -47,6 +49,17 @@ def test_claim_levels_are_unique():
 def test_vendor_org_id_is_populated():
     for row in results:
         assert row.vendor_org_id == 'z'
+
+
+def test_claim_level_date_service():
+    assert sorted(set(
+        [(res.claim_id, res.date_service, res.date_service_end) for res in results if res.service_line_number is None]
+    )) == [
+        ('4b9a18a8-9c20-44a2-a5bb-a5c9a2635888',
+         date(2017, 8, 5), date(2017, 8, 11)),
+        ('58b382b1-f366-405a-ab5d-81a5056890cd',
+         date(2017, 8, 1), date(2017, 8, 8))
+    ]
 
 
 def test_cleanup(spark):
