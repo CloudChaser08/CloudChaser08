@@ -7,19 +7,22 @@ def load(spark, runner, table_locs):
     for table, input_path in table_locs.items():
         try:
             df = records_loader.load(runner, input_path, TABLE_COLS[table], 'csv', '|')
-            postprocessor.compose(
-                postprocessor.trimmify,
-                postprocessor.nullify
-            )(df).cache().createOrReplaceTempView(table)
             if table in ['d_costar', 'd_patient', 'd_cpt', 'd_drug', 'd_icd10', 'd_icd9', 'd_lab_directory', 'd_multum_to_ndc', 'd_provider', 'd_vaccine_cpt']:
+                postprocessor.compose(
+                    postprocessor.trimmify,
+                    postprocessor.nullify
+                )(df).cache().createOrReplaceTempView(table)
                 runner.sqlContext.table(table).count()
+            else:
+                postprocessor.compose(
+                    postprocessor.trimmify,
+                    postprocessor.nullify
+                )(df).createOrReplaceTempView(table)
         except:
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),
                 schema=StructType(map(lambda x: StructField(x, StringType()), TABLE_COLS[table]))
-            ).cache().createOrReplaceTempView(table)
-            if table in ['d_costar', 'd_patient', 'd_cpt', 'd_drug', 'd_icd10', 'd_icd9', 'd_lab_directory', 'd_multum_to_ndc', 'd_provider', 'd_vaccine_cpt']:
-                runner.sqlContext.table(table).count()
+            ).createOrReplaceTempView(table)
 
 
 TABLE_COLS = {
