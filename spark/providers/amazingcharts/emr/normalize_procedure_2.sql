@@ -1,4 +1,4 @@
-SELECT
+SELECT /*+ BROADCAST (prv) */
     CONCAT(
         '5_',
         SUBSTR(inj.date_given, 1, 10),

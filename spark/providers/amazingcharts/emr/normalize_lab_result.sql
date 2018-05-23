@@ -1,4 +1,4 @@
-SELECT
+SELECT /*+ BROADCAST (prv1) */ /*+ BROADCAST (prv2) */
     CONCAT(
         '5_',
         SUBSTR(lab.sign_off_date, 1, 10),

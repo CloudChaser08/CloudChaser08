@@ -10,12 +10,16 @@ def load(spark, runner, table_locs):
             postprocessor.compose(
                 postprocessor.trimmify,
                 postprocessor.nullify
-            )(df).createOrReplaceTempView(table)
+            )(df).cache().createOrReplaceTempView(table)
+            if table in ['d_costar', 'd_patient', 'd_cpt', 'd_drug', 'd_icd10', 'd_icd9', 'd_lab_directory', 'd_multum_to_ndc', 'd_provider', 'd_vaccine_cpt']:
+                runner.sqlContext.table(table).count()
         except:
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),
                 schema=StructType(map(lambda x: StructField(x, StringType()), TABLE_COLS[table]))
-            ).createOrReplaceTempView(table)
+            ).cache().createOrReplaceTempView(table)
+            if table in ['d_costar', 'd_patient', 'd_cpt', 'd_drug', 'd_icd10', 'd_icd9', 'd_lab_directory', 'd_multum_to_ndc', 'd_provider', 'd_vaccine_cpt']:
+                runner.sqlContext.table(table).count()
 
 
 TABLE_COLS = {

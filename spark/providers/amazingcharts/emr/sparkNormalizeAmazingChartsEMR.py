@@ -91,10 +91,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     import spark.providers.amazingcharts.emr.load_transactions as load_transactions
     load_transactions.load(spark, runner, input_paths)
 
-    payload_loader.load(runner, matching_path, ['personid'])
+    payload_loader.load(runner, matching_path, ['personId'])
     # De-duplicate the payloads so that there is only one
     # personid (we use personid as our join key, not hvJoinKey)
-    window = Window.partitionBy(col('personid')).orderBy(col('age'))
+    window = Window.partitionBy(col('personId')).orderBy(col('age'))
     runner.sqlContext.sql('select * from matching_payload')     \
           .withColumn('rank', rank().over(window))              \
           .where(col('rank') == lit(1))                         \
@@ -299,7 +299,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             ), staging_subdir=table['name'], test_dir=(file_utils.get_abs_path(
                 script_path, '../../../test/providers/amazingcharts/emr/resources/output/'
-            ) if test else None), unload_partition_count=500, skip_rename=True,
+            ) if test else None), unload_partition_count=20, skip_rename=True,
             distribution_key='row_id'
         )
 

@@ -1,4 +1,4 @@
-SELECT
+SELECT /*+ BROADCAST (prv) */
     CONCAT(
         '5_',
         SUBSTR(med.date_initiated, 1, 10),

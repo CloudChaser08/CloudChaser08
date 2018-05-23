@@ -1,4 +1,4 @@
-SELECT
+SELECT /*+ BROADCAST (prv) */
     CONCAT(
         '5_',
         COALESCE(
