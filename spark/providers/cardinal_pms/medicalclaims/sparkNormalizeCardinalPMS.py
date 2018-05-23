@@ -86,7 +86,9 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
     logging.debug('Created exploder table for service-line')
 
     # Normalize service-line
-    service_lines = runner.run_spark_script('normalize_service_line.sql', [], return_output=True)
+    service_lines = runner.run_spark_script(
+        'normalize_service_line.sql', [], return_output=True, source_file_path=script_path
+    )
     logging.debug('Finished normalizing for service-line')
 
     # Create a table that contains one row for each claim
@@ -96,7 +98,7 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
           .withColumn('first', first(col('linesequencenumber')).over(window))   \
           .where(col('linesequencenumber') == col('first'))                     \
           .drop(col('first'))                                                   \
-          .createTempView('limited_transactional_cardinal_pms')
+          .createOrReplaceTempView('limited_transactional_cardinal_pms')
 
     # Create a table that contains a each unique
     # diagnosis code and claim id
@@ -105,14 +107,16 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
           .agg(collect_set(col('diagnosis_code')).alias('diagnosis_codes'))     \
           .withColumn('diagnosis_code', explode(col('diagnosis_codes')))        \
           .select(col('claim_id'), col('diagnosis_code'))                       \
-          .createTempView('service_line_diags')
+          .createOrReplaceTempView('service_line_diags')
 
     # Create exploder table for claim
     exploder.generate_exploder_table(spark, 8, 'claim_exploder')
     logging.debug('Created exploder for claim')
 
     # Normalize claim
-    claim_lines = runner.run_spark_script('normalize_claim.sql', [], return_output=True)
+    claim_lines = runner.run_spark_script(
+        'normalize_claim.sql', [], return_output=True, source_file_path=script_path
+    )
     logging.debug('Finished normalizing for claim')
 
     service_lines_schema = schema_enforcer.apply_schema(service_lines, schema)
