@@ -98,7 +98,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             None,
             min_date
         ),
-        med_priv.filter,
+        lambda df: med_priv.filter(df, skip_pos_filter=True),
         schema_enforcer.apply_schema_func(schema)
     )(
         normalized.withColumn(

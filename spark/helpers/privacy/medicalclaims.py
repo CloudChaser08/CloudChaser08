@@ -80,17 +80,27 @@ medical_transformer = priv_common.Transformer(
     prov_facility_state=[
         priv_common.TransformFunction(post_norm_cleanup.validate_state_code, ['prov_facility_state'])
     ]
-).append(
-    priv_common.Transformer(**dict(map(
-        lambda c: (c, [
-            priv_common.TransformFunction(
-                filter_due_to_pos_itb, [c, 'place_of_service_std_id', 'inst_type_of_bill_std_id', 'claim_type']
-            )
-        ]),
-        columns_to_nullify
-    )))
 )
 
 
-def filter(df):
-    return priv_common.filter(df, medical_transformer)
+def filter(df, skip_pos_filter = False):
+    if skip_pos_filter:
+        transformer = medical_transformer.overwrite(
+            priv_common.Transformer(
+                place_of_service_std_id=[], inst_type_of_bill_std_id=[]
+            )
+        )
+    else:
+        transformer = medical_transformer.append(
+            priv_common.Transformer(**dict(map(
+                lambda c: (c, [
+                    priv_common.TransformFunction(
+                        filter_due_to_pos_itb, [c, 'place_of_service_std_id', 'inst_type_of_bill_std_id', 'claim_type']
+                    )
+                ]),
+
+                columns_to_nullify
+            )))
+        )
+
+    return priv_common.filter(df, transformer)
