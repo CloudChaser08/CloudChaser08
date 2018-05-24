@@ -51,8 +51,11 @@ def do_move_matching_payload(ds, **kwargs):
     for deid_file in deid_files:
         s3_prefix = S3_PREFIX + vendor_uuid + '/' + deid_file
         for payload_file in s3_utils.list_s3_bucket('s3://salusv/' + s3_prefix):
-            date = kwargs['file_date_func'](ds, kwargs).replace('-', '/')
-            s3_utils.copy_file(payload_file, kwargs['s3_payload_loc_url'] + date + '/' + payload_file.split('/')[-1])
+            if 'dest_dir_func' in kwargs:
+                directory = kwargs['dest_dir_func'](ds, kwargs)
+            else:
+                directory = kwargs['file_date_func'](ds, kwargs).replace('-', '/')
+            s3_utils.copy_file(payload_file, kwargs['s3_payload_loc_url'] + directory + '/' + payload_file.split('/')[-1])
 
 def do_run_pyspark_normalization_routine(ds, cluster_identifier=None, **kwargs):
     cluster_name = EMR_CLUSTER_NAME + '-{}-{}'.format(cluster_identifier if cluster_identifier else kwargs['vendor_uuid'], kwargs['ts_nodash'])
