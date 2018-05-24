@@ -101,7 +101,7 @@ detect_move_extract_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : get_expected_matching_files,
-            'file_date_func'                    : lambda ds, k:
+            'dest_dir_func'                     : lambda ds, k:
                 k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id'),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '53769d77-189e-4d79-a5d4-d2d22d09331e',
