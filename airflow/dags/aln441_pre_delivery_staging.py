@@ -136,7 +136,12 @@ push_file_dag = SubDagOperator(
         {
             'file_paths_func'   : lambda ds, k: [get_tmp_dir(ds, k) + \
                                     k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='check_for_file', key='filename')[:-7]],
-            's3_prefix_func'    : lambda ds, k: '/'.join(S3_DATA_STAGED_URL_TEMPLATE.split('/')[3:]),
+            's3_prefix_func'    : lambda ds, k: '/'.join(
+                    date_utils.insert_date_into_template(
+                       S3_DATA_STAGED_URL_TEMPLATE, k,
+                       day_offset=ALN441_PRE_DELIVERY_DAY_OFFSET
+                    ).split('/')[3:]
+                ),
             's3_bucket'         : S3_DATA_STAGED_URL_TEMPLATE.split('/')[2]
         }
     ),
