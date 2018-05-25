@@ -366,7 +366,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'data_type'     : 'clinical_observation',
             'date_column'   : 'part_mth',
             'privacy_filter': priv_clinical_observation,
-            'partitions'    : 40
+            'partitions'    : 100
         },
         {
             'schema'        : diagnosis_schema,
