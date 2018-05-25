@@ -15,6 +15,20 @@ def deduplicate(runner):
     old_demographics = runner.sqlContext.table('old_demographics').drop('nextrecorddate')
     new_demographics = runner.sqlContext.table('new_demographics')
     demographics_union = old_demographics.union(new_demographics)
+
+    # Remove duplicate demographics information that only differs in the date
+    # on which the file was sent to us
+    cols1 = demographics_union.columns
+    cols1.remove('referencedatetime')
+    demographics_union = demographics_union.groupBy(*cols1).agg(F.max('referencedatetime').alias('referencedatetime'))
+    cols1.remove('recorddate')
+    cols1.remove('dataset')
+    wnd = Window.orderBy('recorddate').partitionBy('nextgengroupid', 'reportingenterpriseid')
+    demographics_union = demographics_union.withColumn('md5', F.md5(F.concat_ws('|', *[F.coalesce(F.col(c), F.lit('')) for c in cols1]))) \
+        .withColumn('prevmd5', F.lag(F.col('md5')).over(wnd)) \
+        .where("md5 != prevmd5 OR prevmd5 IS NULL") \
+        .select(*[c for c in new_demographics.columns])
+
     window = Window.orderBy('recorddate').partitionBy('nextgengroupid', 'reportingenterpriseid')
 
     demographics_union.withColumn('nextrecorddate', F.lead(F.col('recorddate')).over(window)) \
