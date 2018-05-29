@@ -1,13 +1,15 @@
 import common.HVDAG as HVDAG
 from datetime import datetime, timedelta
 import os
+import subprocess
 import urllib
 
-from airflow.operators import PythonOperator, SubDagOperator
+from airflow.operators import PythonOperator, SubDagOperator, BashOperator
 
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import subdags.run_pyspark_routine as run_pyspark_routine
 import subdags.split_push_files as split_push_files
+import subdags.s3_push_files as s3_push_files
 import subdags.update_analytics_db as update_analytics_db
 
 import util.date_utils as date_utils
@@ -15,7 +17,7 @@ import util.decompression as decompression
 import util.emr_utils as emr_utils
 
 for m in [clean_up_tmp_dir, run_pyspark_routine,
-          split_push_files, date_utils, decompression,
+          s3_push_files, date_utils, decompression,
           emr_utils, HVDAG]:
     reload(m)
 
@@ -59,11 +61,11 @@ get_tmp_unzipped_dir = date_utils.generate_insert_date_into_template_function(
 
 
 def get_nppes_zipped_filename(ds, kwargs):
-    date = datetime.strptime(ds, '%Y-%m-%d')
-    return NPPES_FILENAME_TEMPLATE.format(date.strftime("%B"), date.year)
+    month_name = kwargs['execution_date'].strftime("%B")
+    return NPPES_FILENAME_TEMPLATE.format(month_name, kwargs['execution_date'].year)
 
 
-def get_zip_file_path(ds, kwargs):
+def get_zip_file_path(ds, **kwargs):
     return [get_tmp_dir(ds, kwargs) + get_nppes_zipped_filename(ds)]
 
 
@@ -74,23 +76,23 @@ def get_csv_file_path(ds, kwargs):
     return [get_tmp_unzipped_dir(ds, kwargs) + file_name]
 
 
-def fetch_monthly_npi_file(ds, kwargs):
+def fetch_monthly_npi_file(ds, **kwargs):
     urllib.urlretrieve(
         NPPES_URL + get_nppes_zipped_filename(ds, kwargs),
         get_tmp_dir(ds, kwargs) + get_nppes_zipped_filename(ds, kwargs)
     )
 
 
-def do_unzip_file(ds, kwargs):
-    zip_file_path = get_tmp_dir(ds, kwargs) + get_nppes_zipped_filename(ds)
+def do_unzip_file(ds, **kwargs):
+    zip_file_path = get_tmp_dir(ds, kwargs) + get_nppes_zipped_filename(ds, kwargs)
     decompression.decompress_zip_file(zip_file_path, get_tmp_unzipped_dir(ds, kwargs))
     os.remove(zip_file_path)
 
 
 def norm_args(ds, k):
-    base = ['--nppes_csv_path', date_utils.insert_date_into_template(NPPES_CSV_TEMPLATE, k),
+    base = ['--nppes_csv_path', date_utils.insert_date_into_template(NPPES_TEXT_LOCATION, k),
             '--s3_parquet_loc', date_utils.insert_date_into_template(S3_PARQUET_LOCATION, k),
-            '--num_output_files', '20']
+            '--partitions', '20']
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -120,6 +122,11 @@ run_pyspark_routine = SubDagOperator(
     dag=mdag
 )
 
+create_tmp_dir = BashOperator(
+    task_id='create_tmp_directory',
+    bash_command='mkdir -p ' + TMP_PATH_TEMPLATE.format('{{ ds_nodash }}', '', '') + ';',
+    dag=mdag
+)
 
 fetch_NPI_file = PythonOperator(
     task_id='fetch_monthly_file',
@@ -136,33 +143,53 @@ unzip_file = PythonOperator(
 )
 
 
-split_push_to_s3 = SubDagOperator(
-    subdag=split_push_files.split_push_files(
+#split_push_to_s3 = SubDagOperator(
+#    subdag=split_push_files.split_push_files(
+#        DAG_NAME,
+#        'split_transaction_file',
+#        default_args['start_date'],
+#        mdag.schedule_interval,
+#        {
+#            'tmp_dir_func'             : get_tmp_unzipped_dir,
+#            'file_paths_to_split_func' : get_csv_file_path,
+#            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
+#                NPPES_CSV_TEMPLATE, custom_pattern='\d{8}_\d{8}.csv'
+#            ),
+#            's3_prefix_func'           :
+#                date_utils.generate_insert_date_into_template_function(
+#                    NPPES_TEXT_LOCATION
+#            ),
+#            'num_splits'               : 20
+#        }
+#    ),
+#    task_id='split_transaction_file',
+#    dag=mdag
+#)
+push_file_to_s3 = SubDagOperator(
+    subdag = s3_push_files.s3_push_files(
         DAG_NAME,
-        'split_transaction_file',
+        'push_text_file_to_s3',
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'tmp_dir_func'             : get_tmp_unzipped_dir,
-            'file_paths_to_split_func' : get_csv_file_path,
-            'file_name_pattern_func'   : date_utils.generate_insert_regex_into_template_function(
-                NPPES_CSV_TEMPLATE + '_\d{8}.csv'
-            ),
-            's3_prefix_func'           :
-                date_utils.generate_insert_date_into_template_function(
-                    NPPES_TEXT_LOCATION
-            ),
-            'num_splits'               : 20
+            'file_paths_func'       : get_csv_file_path,
+            's3_prefix_func'        :
+                lambda ds, kwargs: '/'.join(
+                    date_utils.insert_date_into_template(
+                        NPPES_TEXT_LOCATION,
+                        kwargs
+                    ).split('/')[3:]
+                ),
+            's3_bucket'             : NPPES_TEXT_LOCATION.split('/')[2],
         }
     ),
-    task_id='split_transaction_file',
-    dag=mdag
+    task_id = 'push_text_file_to_s3',
+    dag = mdag
 )
-
 
 clean_up_workspace = SubDagOperator(
     subdag=clean_up_tmp_dir.clean_up_tmp_dir(
-        'reference_gsdd',
+        'reference_nppes',
         'clean_up_workspace',
         default_args['start_date'],
         mdag.schedule_interval,
@@ -208,8 +235,11 @@ if HVDAG.HVDAG.airflow_env != 'test':
     update_analytics_db.set_upstream(run_pyspark_routine)
     update_analytics_db_repair_table.set_upstream(update_analytics_db)
 
+fetch_NPI_file.set_upstream(create_tmp_dir)
 unzip_file.set_upstream(fetch_NPI_file)
-split_push_to_s3.set_upstream(unzip_file)
-run_pyspark_routine.set_upstream(split_push_to_s3)
+#split_push_to_s3.set_upstream(unzip_file)
+#run_pyspark_routine.set_upstream(split_push_to_s3)
+push_file_to_s3.set_upstream(unzip_file)
+run_pyspark_routine.set_upstream(push_file_to_s3)
 # cleanup
 clean_up_workspace.set_upstream(run_pyspark_routine)

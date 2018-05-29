@@ -4,7 +4,7 @@ from spark.runner import Runner
 from spark.spark_setup import init
 
 
-def run(spark, runner, input_file_path, output_location, num_output_files, test=False, airflow_test=False):
+def run(spark, runner, input_file_path, output_location, partitions, test=False, airflow_test=False):
     # Load current warehouse table into dataframe
     nppes_warehouse = external_table_loader._get_table_as_df(runner.sqlContext, 'default', 'ref_nppes')
 
@@ -22,7 +22,7 @@ def run(spark, runner, input_file_path, output_location, num_output_files, test=
     nppes_total = df.union(warehouse_diff)
 
     # write parquet files to s3 location
-    nppes_total.repartition(num_output_files).write.parquet(output_location)
+    nppes_total.repartition(partitions).write.parquet(output_location)
 
 
 def main(args):
@@ -35,7 +35,7 @@ def main(args):
     # Run the spark routine
     run(spark, runner, input_file_path=args.nppes_csv_path,
         output_location=args.s3_parquet_loc, airflow_test=args.airflow_test,
-        num_output_files=args.num_output_files)
+        partitions=args.partitions)
 
     # Tell spark to shutdown
     spark.stop()
@@ -46,6 +46,6 @@ if __name__ == '__main__':
     parser.add_argument('--nppes_csv_path', type=str)
     parser.add_argument('--s3_parquet_loc', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
-    parser.add_argument('--num_output_files', default=20, type=int)
+    parser.add_argument('--partitions', default=20, type=int)
     args = parser.parse_args()
     main(args)
