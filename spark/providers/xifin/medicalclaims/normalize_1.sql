@@ -54,24 +54,32 @@ SELECT
     proc.units_billed                                                         AS procedure_units_billed,
     proc.units_paid                                                           AS procedure_units_paid,
     CASE
+    WHEN proc.proc_code = test.proc_code
+    THEN COALESCE(proc.modifier_1, test.modifier_1)
     WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN proc.modifier_1
     WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN test.modifier_1
     END                                                                       AS procedure_modifier_1,
     CASE
+    WHEN proc.proc_code = test.proc_code
+    THEN COALESCE(proc.modifier_1, test.modifier_1)
     WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN proc.modifier_2
     WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN test.modifier_2
     END                                                                       AS procedure_modifier_2,
     CASE
+    WHEN proc.proc_code = test.proc_code
+    THEN COALESCE(proc.modifier_1, test.modifier_1)
     WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN proc.modifier_3
     WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN test.modifier_3
     END                                                                       AS procedure_modifier_3,
     CASE
+    WHEN proc.proc_code = test.proc_code
+    THEN COALESCE(proc.modifier_1, test.modifier_1)
     WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN proc.modifier_4
     WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
@@ -172,6 +180,9 @@ WHERE COALESCE(demo.pt_country, 'dummy') = 'USA' AND (
                 proc.diag_code_1, proc.diag_code_2, proc.diag_code_3, proc.diag_code_4, diag.diag_code
                 ) IS NULL AND proc_diag_exploder.n = 0
             )
+        ) AND ((
+            proc.proc_code = test.proc_code AND proc_explode.n = 0
+            ) OR proc.proc_code != test.proc_code OR proc.proc_code IS NULL OR test.proc_code IS NULL
         ) AND (
         ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
         OR (

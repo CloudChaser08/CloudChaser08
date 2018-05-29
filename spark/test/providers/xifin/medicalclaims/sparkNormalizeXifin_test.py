@@ -37,7 +37,7 @@ def test_init(spark):
 
 
 def test_cardinality():
-    assert len(results) == 57
+    assert len(results) == 33
 
 
 def test_place_of_service_id():
@@ -58,26 +58,28 @@ def test_diagnosis_distinct_values():
             ('0_accn_id-0', 'test_id-0', '2', 'DIAGCODEPROC02', None),
             ('0_accn_id-0', 'test_id-0', '3', 'DIAGCODEPROC03', None),
             ('0_accn_id-0', 'test_id-0', '4', 'DIAGCODEDIAG0', '01'),
+            ('0_accn_id-0', 'test_id-5', '1', 'DIAGCODEPROC01', '02'),
             ('0_accn_id-1', 'test_id-1', '1', 'DIAGCODEDIAG1', '02'),
             ('0_accn_id-2', 'test_id-2', '1', 'DIAGCODEPROC21', None),
             ('0_accn_id-2', 'test_id-2', '2', 'DIAGCODEPROC22', None),
             ('0_accn_id-2', 'test_id-2', '3', 'DIAGCODEPROC23', None),
             ('0_accn_id-2', 'test_id-2', '4', 'DIAGCODEPROC24', None),
-            ('0_accn_id-2', 'test_id-2', '5', 'DIAGCODEPROC23', '01'),
             ('0_accn_id-2', 'test_id-3', '1', 'DIAGCODEDIAG23', '01'),
             ('0_accn_id-2', 'test_id-4', '1', 'DIAGCODEDIAG24', '02')]
 
 
 def test_procedure_code():
     assert sorted(set([
-        (res.claim_id, res.procedure_code, res.procedure_code_qual) for res in results
-    ])) == [('0_accn_id-0', None, None),
-            ('0_accn_id-0', 'PROC', 'PROC.PROC_CODE'),
-            ('0_accn_id-0', 'PROC', 'TEST.PROC_CODE'),
-            ('0_accn_id-1', None, None),
-            ('0_accn_id-2', None, None),
-            ('0_accn_id-2', 'PROC', 'PROC.PROC_CODE'),
-            ('0_accn_id-2', 'PROC', 'TEST.PROC_CODE')]
+        (
+            res.claim_id, res.vendor_test_id, res.procedure_code, res.procedure_code_qual, res.procedure_modifier_1,
+            res.procedure_modifier_2, res.procedure_modifier_3, res.procedure_modifier_4
+        ) for res in results
+    ])) == [('0_accn_id-0', 'test_id-0', 'PROC', 'PROC.PROC_CODE', 'mo', 'mo', 'mo', 'mo'),
+            ('0_accn_id-0', 'test_id-5', None, None, None, None, None, None),
+            ('0_accn_id-1', 'test_id-1', None, None, None, None, None, None),
+            ('0_accn_id-2', 'test_id-2', 'PROC', 'PROC.PROC_CODE', 'mo', 'mo', 'mo', 'mo'),
+            ('0_accn_id-2', 'test_id-3', 'PROC', 'TEST.PROC_CODE', 'mo', 'mo', 'mo', 'mo'),
+            ('0_accn_id-2', 'test_id-4', None, None, None, None, None, None)]
 
 
 def test_claim_transaction_amt():

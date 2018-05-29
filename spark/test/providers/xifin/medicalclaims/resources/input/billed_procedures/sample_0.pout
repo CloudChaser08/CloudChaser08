@@ -1,3 +1,3 @@
-accn_id-0|proc_code|test_id-0|diagcodeproc0_1|diagcodeproc0_2|diagcodeproc0_3||modifier_1|modifier_2|modifier_3|modifier_4|bill_price|units_billed|units_paid||billing_facility_id|hvJoinKey-0
+accn_id-0|proc_code|test_id-0|diagcodeproc0_1|diagcodeproc0_2|diagcodeproc0_3||||||bill_price|units_billed|units_paid||billing_facility_id|hvJoinKey-0
 accn_id-1||test_id-1|||||modifier_1|modifier_2|modifier_3|modifier_4|bill_price|units_billed|units_paid|place_of_svc_proc1|billing_facility_id|hvJoinKey-1
 accn_id-2|proc_code|test_id-2|diagcodeproc2_1|diagcodeproc2_2|diagcodeproc2_3|diagcodeproc2_4|modifier_1|modifier_2|modifier_3|modifier_4|bill_price|units_billed|units_paid|place_of_svc_proc2|billing_facility_id|hvJoinKey-2

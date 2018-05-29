@@ -1,4 +1,5 @@
 import pyspark.sql.functions as F
+from pyspark.sql import Window
 
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
@@ -192,7 +193,18 @@ def reconstruct_records(runner, partitions):
     Combine the transactional and payload data back into complete records
     '''
     for table in TABLES:
+        # deduplicate transactional table
+
         df1 = runner.sqlContext.table(table)
+
+        deduplication_window = Window.partitionBy(
+            *[field for field in df1.columns if field != 'hvJoinKey']
+        ).orderBy('accn_id', 'client_id')
+
+        df1 = df1.select(
+            df1.columns + [F.row_number().over(deduplication_window).alias('row_num')]
+        ).where(F.col('row_num') == 1).drop('row_num')
+
         df2 = runner.sqlContext.table(table + '_payload')
         df3 = df1.join(df2, 'hvJoinKey', 'inner') \
                 .withColumn('full_accn_id', F.concat(df1['client_id'], F.lit('_'), df2['patientId'])) \

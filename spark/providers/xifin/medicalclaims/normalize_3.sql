@@ -124,11 +124,12 @@ WHERE NOT EXISTS (
     SELECT 1 FROM billed_procedures_complete pr
     WHERE  diag.accn_id = pr.accn_id
         AND  diag.client_id = pr.client_id
-        AND 0 = LENGTH(TRIM(COALESCE(diag.test_id,'')))
-        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_1, 'dummy2')
-        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_2, 'dummy2')
-        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_3, 'dummy2')
-        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_4, 'dummy2')
+        AND 0 = LENGTH(TRIM(COALESCE(diag.test_id,''))) AND (
+            COALESCE(diag.diag_code,'') = COALESCE(pr.diag_code_1,'')
+            OR COALESCE(diag.diag_code,'') = COALESCE(pr.diag_code_2,'')
+            OR COALESCE(diag.diag_code,'') = COALESCE(pr.diag_code_3,'')
+            OR COALESCE(diag.diag_code,'') = COALESCE(pr.diag_code_4,'')
+            )
         )
     AND demo.pt_country ='USA'
     AND (
