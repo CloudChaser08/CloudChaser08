@@ -1,4 +1,5 @@
 from pyspark.sql.types import StructType, StructField, StringType
+import spark.helpers.postprocessor as postprocessor
 
 def load(runner, location, columns, file_type, delimiter=',', header=False):
     """
@@ -15,3 +16,15 @@ def load(runner, location, columns, file_type, delimiter=',', header=False):
         raise ValueError("Unsupported file type: {}".format(file_type))
 
     return df
+
+# Simple way to load all transaction tables without writing any additional code
+# so long as the follow all our conventions
+def load_and_clean_all(runner, location_prefix, transactions_module, file_type, delimiter=',', header=False):
+    for table in transactions_module.TABLES:
+        loc = location_prefix if len(transactions_module.TABLES) == 1 else location_prefix + table
+        df = load(runner, loc, transactions_module.TABLE_COLUMNS[table], file_type, delimiter, header)
+
+        postprocessor \
+            .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
+            .cache_and_track(table) \
+            .createOrReplaceTempView(table)
