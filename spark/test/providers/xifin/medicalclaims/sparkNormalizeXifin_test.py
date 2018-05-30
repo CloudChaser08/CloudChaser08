@@ -95,5 +95,15 @@ def test_claim_transaction_amt():
             ('0_accn_id-2', None, None)]
 
 
+def test_phys_info():
+    assert sorted(set(
+        [(res.prov_referring_npi, res.prov_referring_name_1, res.prov_referring_name_2) for res in results]
+    )) == [
+        ('0000000000', 'GRETZKY', 'WAYNE'),
+        ('0000000000', 'JOHN', 'ELTON'),
+        ('0000000000', 'JORDAN', 'MICHAEL')
+    ]
+
+
 def test_cleanup(spark):
     cleanup(spark)

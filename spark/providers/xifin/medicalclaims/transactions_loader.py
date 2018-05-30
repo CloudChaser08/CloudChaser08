@@ -195,21 +195,22 @@ def reconstruct_records(runner, partitions):
     for table in TABLES:
         # deduplicate transactional table
 
-        df1 = runner.sqlContext.table(table)
+        transactional = runner.sqlContext.table(table)
+        payload = runner.sqlContext.table(table + '_payload')
 
-        deduplication_window = Window.partitionBy(
-            *[field for field in df1.columns if field != 'hvJoinKey']
-        ).orderBy('accn_id', 'client_id')
-
-        df1 = df1.select(
-            df1.columns + [F.row_number().over(deduplication_window).alias('row_num')]
-        ).where(F.col('row_num') == 1).drop('row_num')
-
-        df2 = runner.sqlContext.table(table + '_payload')
-        df3 = df1.join(df2, 'hvJoinKey', 'inner') \
-                .withColumn('full_accn_id', F.concat(df1['client_id'], F.lit('_'), df2['patientId'])) \
-                .withColumn('accn_id', df2['patientId']) \
+        combined = transactional.join(payload, 'hvJoinKey', 'inner') \
+                .withColumn('full_accn_id', F.concat(transactional['client_id'], F.lit('_'), payload['patientId'])) \
+                .withColumn('accn_id', payload['patientId']) \
                 .repartition(partitions, F.col('full_accn_id')) \
                 .cache_and_track(table + '_complete')
-        df3.createOrReplaceTempView(table + '_complete')
-        df3.count()
+
+        deduplication_window = Window.partitionBy(
+            *[field for field in combined.columns if field != 'hvJoinKey']
+        ).orderBy('accn_id', 'client_id')
+
+        deduplicated = combined.select(
+            combined.columns + [F.row_number().over(deduplication_window).alias('row_num')]
+        ).where(F.col('row_num') == 1).drop('row_num')
+
+        deduplicated.createOrReplaceTempView(table + '_complete')
+        deduplicated.count()

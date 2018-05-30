@@ -98,10 +98,10 @@ SELECT
     demo.primary_upin                                                         AS prov_rendering_upin,
     COALESCE(demo.ordering_upin, demo.referring_upin)                         AS prov_referring_upin,
     SUBSTRING(
-        demo.ordering_phys_name, 1, LOCATE(', ', demo.ordering_phys_name) - 1
+        demo.ordering_phys_name, 1, LOCATE(',', demo.ordering_phys_name) - 1
         )                                                                     AS prov_referring_name_1,
     SUBSTRING(
-        demo.ordering_phys_name, LOCATE(', ', demo.ordering_phys_name) + 1, 999
+        demo.ordering_phys_name, LOCATE(',', demo.ordering_phys_name) + 1, 999
         )                                                                     AS prov_referring_name_2,
     proc.billing_facility_id                                                  AS prov_facility_vendor_id,
     CASE
