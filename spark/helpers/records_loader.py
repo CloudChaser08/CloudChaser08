@@ -19,10 +19,13 @@ def load(runner, location, columns, file_type, delimiter=',', header=False):
 
 # Simple way to load all transaction tables without writing any additional code
 # so long as the follow all our conventions
-def load_and_clean_all(runner, location_prefix, transactions_module, file_type, delimiter=',', header=False):
+def load_and_clean_all(runner, location_prefix, transactions_module, file_type, delimiter=',', header=False, partitions=0):
     for table in transactions_module.TABLES:
         loc = location_prefix if len(transactions_module.TABLES) == 1 else location_prefix + table
         df = load(runner, loc, transactions_module.TABLE_COLUMNS[table], file_type, delimiter, header)
+
+        if partititons > 0:
+            df = df.repartition(partitions)
 
         postprocessor \
             .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
