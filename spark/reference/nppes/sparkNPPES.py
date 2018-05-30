@@ -13,7 +13,7 @@ def run(spark, runner, input_file_path, output_location, partitions, test=False,
 
     # Load monthly replacement file into dataframe with schema
     df = runner.sqlContext.read.csv(input_file_path, schema=nppes_schema)
-    df = df.filter(df['npi']!='NPI')  # ignore file header
+    df = df.filter(df['npi'] != 'NPI')  # ignore file header
 
     # Get rows with npi that are not in monthly replacement file
     warehouse_diff = nppes_warehouse.join(df, ["npi"], "leftanti")

@@ -1,11 +1,13 @@
 import subprocess
 
-NPPES_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/reference/nppes'
+NPPES_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/reference/nppes/2018-03-01/'
+
 
 def cleanup():
     subprocess.check_call([
         'aws', 's3', 'rm', '--recursive', NPPES_TEST_DIR
     ])
+
 
 def test_run():
     cleanup()
@@ -22,13 +24,13 @@ def test_run():
 
 def test_transactionals_pushed():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', NPPES_TEST_DIR + '/2018-03-01/'
+        'aws', 's3', 'ls', NPPES_TEST_DIR + 'text/'
     ])) > 0
 
 
 def test_matching_payload_moved():
     assert len(subprocess.check_output([
-        'aws', 's3', 'ls', NPPES_TEST_DIR + '/parquet/2018-03-01/'
+        'aws', 's3', 'ls', NPPES_TEST_DIR + 'parquet/'
     ])) > 0
 
 
