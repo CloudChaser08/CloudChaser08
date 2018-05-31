@@ -46,9 +46,6 @@ else:
 DEID_FILE_NAME_TEMPLATE = '{}_deid.txt'
 
 # Return files
-MEDICAL_CLAIMS_EXTRACT_TEMPLATE = 'medical_claims_{}.psv.gz'
-PHARMACY_CLAIMS_EXTRACT_TEMPLATE = 'pharmacy_claims_{}.psv.gz'
-ENROLLMENT_EXTRACT_TEMPLATE = 'enrollment_{}.psv.gz'
 EXTRACT_SUMMARY_TEMPLATE = 'summary_report_{}.txt'
 RECIPIENTS = [
     'Andrew Goldberg<agoldberg@healthverity.com>',
