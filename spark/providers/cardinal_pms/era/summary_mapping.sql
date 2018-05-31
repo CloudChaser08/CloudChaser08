@@ -111,47 +111,50 @@ SELECT
     claim.ppscapitalexceptionamount             AS pps_captl_excptn_amt,
     x2.explode_idx + 1                          AS clm_amt_seq_num,
     CASE WHEN densify_2d_array(ARRAY(
-        ARRAY(claim.coverageamount, claim.coverageamountqualifiercode),
-        ARRAY(claim.discountamount, claim.discountamountqualifiercode),
-        ARRAY(claim.fedmedcat1amount, claim.fedmedcat1amountqualifiercode),
-        ARRAY(claim.fedmedcat2amount, claim.fedmedcat2amountqualifiercode),
-        ARRAY(claim.fedmedcat3amount, claim.fedmedcat3amountqualifiercode),
-        ARRAY(claim.fedmedcat4amount, claim.fedmedcat4amountqualifiercode),
-        ARRAY(claim.fedmedcat5amount, claim.fedmedcat5amountqualifiercode),
-        ARRAY(claim.interestamount, claim.interestamountqualifiercode),
-        ARRAY(claim.negativeledgeramount, claim.negativeledgeramountqualifiercode),
+        ARRAY(claim.coverageamount, COALESCE(claim.coverageamountqualifiercode, 'AU')),
+        ARRAY(claim.discountamount, COALESCE(claim.discountamountqualifiercode, 'D8')),
+        ARRAY(claim.fedmedcat1amount, COALESCE(claim.fedmedcat1amountqualifiercode, 'ZK')),
+        ARRAY(claim.fedmedcat2amount, COALESCE(claim.fedmedcat2amountqualifiercode, 'ZL')),
+        ARRAY(claim.fedmedcat3amount, COALESCE(claim.fedmedcat3amountqualifiercode, 'ZM')),
+        ARRAY(claim.fedmedcat4amount, COALESCE(claim.fedmedcat4amountqualifiercode, 'ZN')),
+        ARRAY(claim.fedmedcat5amount, COALESCE(claim.fedmedcat5amountqualifiercode, 'ZO')),
+        ARRAY(claim.interestamount, COALESCE(claim.interestamountqualifiercode, 'I')),
+        ARRAY(claim.negativeledgeramount, COALESCE(claim.negativeledgeramountqualifiercode, 'NL')),
         ARRAY(claim.nonpayableprofessionalcomponentamount, NULL),
-        ARRAY(claim.perdiemamount, claim.perdiemamountqualifiercode),
-        ARRAY(claim.totalclaimbeforetaxesamount, claim.totalclaimbeforetaxesamountqualifiercode)
+        ARRAY(claim.perdiemamount, COALESCE(claim.perdiemamountqualifiercode, 'DY')),
+        ARRAY(claim.totalclaimbeforetaxesamount, COALESCE(claim.totalclaimbeforetaxesamountqualifiercode, 'T2')),
+        ARRAY(claim.patientpaidamount, COALESCE(claim.patientpaidamountqualifiercode, 'F5'))
     ))[x2.explode_idx][1] != 'T'
         THEN densify_2d_array(ARRAY(
-            ARRAY(claim.coverageamount, claim.coverageamountqualifiercode),
-            ARRAY(claim.discountamount, claim.discountamountqualifiercode),
-            ARRAY(claim.fedmedcat1amount, claim.fedmedcat1amountqualifiercode),
-            ARRAY(claim.fedmedcat2amount, claim.fedmedcat2amountqualifiercode),
-            ARRAY(claim.fedmedcat3amount, claim.fedmedcat3amountqualifiercode),
-            ARRAY(claim.fedmedcat4amount, claim.fedmedcat4amountqualifiercode),
-            ARRAY(claim.fedmedcat5amount, claim.fedmedcat5amountqualifiercode),
-            ARRAY(claim.interestamount, claim.interestamountqualifiercode),
-            ARRAY(claim.negativeledgeramount, claim.negativeledgeramountqualifiercode),
+            ARRAY(claim.coverageamount, COALESCE(claim.coverageamountqualifiercode, 'AU')),
+            ARRAY(claim.discountamount, COALESCE(claim.discountamountqualifiercode, 'D8')),
+            ARRAY(claim.fedmedcat1amount, COALESCE(claim.fedmedcat1amountqualifiercode, 'ZK')),
+            ARRAY(claim.fedmedcat2amount, COALESCE(claim.fedmedcat2amountqualifiercode, 'ZL')),
+            ARRAY(claim.fedmedcat3amount, COALESCE(claim.fedmedcat3amountqualifiercode, 'ZM')),
+            ARRAY(claim.fedmedcat4amount, COALESCE(claim.fedmedcat4amountqualifiercode, 'ZN')),
+            ARRAY(claim.fedmedcat5amount, COALESCE(claim.fedmedcat5amountqualifiercode, 'ZO')),
+            ARRAY(claim.interestamount, COALESCE(claim.interestamountqualifiercode, 'I')),
+            ARRAY(claim.negativeledgeramount, COALESCE(claim.negativeledgeramountqualifiercode, 'NL')),
             ARRAY(claim.nonpayableprofessionalcomponentamount, NULL),
-            ARRAY(claim.perdiemamount, claim.perdiemamountqualifiercode),
-            ARRAY(claim.totalclaimbeforetaxesamount, claim.totalclaimbeforetaxesamountqualifiercode)
+            ARRAY(claim.perdiemamount, COALESCE(claim.perdiemamountqualifiercode, 'DY')),
+            ARRAY(claim.totalclaimbeforetaxesamount, COALESCE(claim.totalclaimbeforetaxesamountqualifiercode, 'T2')),
+            ARRAY(claim.patientpaidamount, COALESCE(claim.patientpaidamountqualifiercode, 'F5'))
         ))[x2.explode_idx][0]
     END                                         AS clm_amt,
     densify_2d_array(ARRAY(
-        ARRAY(claim.coverageamount, claim.coverageamountqualifiercode),
-        ARRAY(claim.discountamount, claim.discountamountqualifiercode),
-        ARRAY(claim.fedmedcat1amount, claim.fedmedcat1amountqualifiercode),
-        ARRAY(claim.fedmedcat2amount, claim.fedmedcat2amountqualifiercode),
-        ARRAY(claim.fedmedcat3amount, claim.fedmedcat3amountqualifiercode),
-        ARRAY(claim.fedmedcat4amount, claim.fedmedcat4amountqualifiercode),
-        ARRAY(claim.fedmedcat5amount, claim.fedmedcat5amountqualifiercode),
-        ARRAY(claim.interestamount, claim.interestamountqualifiercode),
-        ARRAY(claim.negativeledgeramount, claim.negativeledgeramountqualifiercode),
+        ARRAY(claim.coverageamount, COALESCE(claim.coverageamountqualifiercode, 'AU')),
+        ARRAY(claim.discountamount, COALESCE(claim.discountamountqualifiercode, 'D8')),
+        ARRAY(claim.fedmedcat1amount, COALESCE(claim.fedmedcat1amountqualifiercode, 'ZK')),
+        ARRAY(claim.fedmedcat2amount, COALESCE(claim.fedmedcat2amountqualifiercode, 'ZL')),
+        ARRAY(claim.fedmedcat3amount, COALESCE(claim.fedmedcat3amountqualifiercode, 'ZM')),
+        ARRAY(claim.fedmedcat4amount, COALESCE(claim.fedmedcat4amountqualifiercode, 'ZN')),
+        ARRAY(claim.fedmedcat5amount, COALESCE(claim.fedmedcat5amountqualifiercode, 'ZO')),
+        ARRAY(claim.interestamount, COALESCE(claim.interestamountqualifiercode, 'I')),
+        ARRAY(claim.negativeledgeramount, COALESCE(claim.negativeledgeramountqualifiercode, 'NL')),
         ARRAY(claim.nonpayableprofessionalcomponentamount, NULL),
-        ARRAY(claim.perdiemamount, claim.perdiemamountqualifiercode),
-        ARRAY(claim.totalclaimbeforetaxesamount, claim.totalclaimbeforetaxesamountqualifiercode)
+        ARRAY(claim.perdiemamount, COALESCE(claim.perdiemamountqualifiercode, 'DY')),
+        ARRAY(claim.totalclaimbeforetaxesamount, COALESCE(claim.totalclaimbeforetaxesamountqualifiercode, 'T2')),
+        ARRAY(claim.patientpaidamount, COALESCE(claim.patientpaidamountqualifiercode, 'F5'))
     ))[x2.explode_idx][1]                       AS clm_amt_qual,
     x3.explode_idx + 1                          AS clm_qty_seq_num,
     densify_2d_array(ARRAY(
@@ -220,7 +223,7 @@ FROM
         serviceline service
             ON claim.id = service.remitclaim_id
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4)) as explode_idx) x
-    CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) as explode_idx) x2
+    CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) as explode_idx) x2
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) as explode_idx) x3
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5)) as explode_idx) x4
     WHERE 
@@ -233,18 +236,19 @@ FROM
         ))[x.explode_idx] != NULL OR x.explode_idx = 0)
         AND
         (densify_2d_array(ARRAY(
-            ARRAY(claim.coverageamount, claim.coverageamountqualifiercode),
-            ARRAY(claim.discountamount, claim.discountamountqualifiercode),
-            ARRAY(claim.fedmedcat1amount, claim.fedmedcat1amountqualifiercode),
-            ARRAY(claim.fedmedcat2amount, claim.fedmedcat2amountqualifiercode),
-            ARRAY(claim.fedmedcat3amount, claim.fedmedcat3amountqualifiercode),
-            ARRAY(claim.fedmedcat4amount, claim.fedmedcat4amountqualifiercode),
-            ARRAY(claim.fedmedcat5amount, claim.fedmedcat5amountqualifiercode),
-            ARRAY(claim.interestamount, claim.interestamountqualifiercode),
-            ARRAY(claim.negativeledgeramount, claim.negativeledgeramountqualifiercode),
+            ARRAY(claim.coverageamount, COALESCE(claim.coverageamountqualifiercode, 'AU')),
+            ARRAY(claim.discountamount, COALESCE(claim.discountamountqualifiercode, 'D8')),
+            ARRAY(claim.fedmedcat1amount, COALESCE(claim.fedmedcat1amountqualifiercode, 'ZK')),
+            ARRAY(claim.fedmedcat2amount, COALESCE(claim.fedmedcat2amountqualifiercode, 'ZL')),
+            ARRAY(claim.fedmedcat3amount, COALESCE(claim.fedmedcat3amountqualifiercode, 'ZM')),
+            ARRAY(claim.fedmedcat4amount, COALESCE(claim.fedmedcat4amountqualifiercode, 'ZN')),
+            ARRAY(claim.fedmedcat5amount, COALESCE(claim.fedmedcat5amountqualifiercode, 'ZO')),
+            ARRAY(claim.interestamount, COALESCE(claim.interestamountqualifiercode, 'I')),
+            ARRAY(claim.negativeledgeramount, COALESCE(claim.negativeledgeramountqualifiercode, 'NL')),
             ARRAY(claim.nonpayableprofessionalcomponentamount, NULL),
-            ARRAY(claim.perdiemamount, claim.perdiemamountqualifiercode),
-            ARRAY(claim.totalclaimbeforetaxesamount, claim.totalclaimbeforetaxesamountqualifiercode)
+            ARRAY(claim.perdiemamount, COALESCE(claim.perdiemamountqualifiercode, 'DY')),
+            ARRAY(claim.totalclaimbeforetaxesamount, COALESCE(claim.totalclaimbeforetaxesamountqualifiercode, 'T2')),
+            ARRAY(claim.patientpaidamount, COALESCE(claim.patientpaidamountqualifiercode, 'F5'))
         ))[x2.explode_idx] != CAST(ARRAY(NULL, NULL) AS ARRAY<STRING>) OR x2.explode_idx = 0)
         AND
         (densify_2d_array(ARRAY(
