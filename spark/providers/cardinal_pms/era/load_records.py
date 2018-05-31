@@ -9,6 +9,8 @@ def load(runner, input_path_prefix):
             .repartition(500)
         postprocessor \
             .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
+            .repartition(5000) \
+            .cache_and_track(t) \
             .createOrReplaceTempView(t)
 
 TABLES = ['remit_claim', 'remit_claim_adjustment', 'serviceline', 'serviceline_adjustment']
