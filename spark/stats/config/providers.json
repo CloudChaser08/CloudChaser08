@@ -429,6 +429,82 @@
             "index_null_dates"  : true
         },
         {
+            "name"              : "amazingcharts",
+            "datafeed_id"       : "5",
+            "datatype"          : "emr",
+            "models"            : [
+              {
+                "datatype"        : "emr_enc",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_clin_obsn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_medctn",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_vit_sign",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_prov_ord",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_lab_result",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_proc",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_diag",
+                "date_field"      : "enc_dt",
+                "record_field"    : null,
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }
+            ],
+            "epi_calcs"         : true,
+            "earliest_date"     : "2015-10-01",
+            "index_all_dates"   : false,
+            "index_null_dates"  : false
+        },
+        {
             "name"              : "healthjump",
             "datafeed_id"       : "47",
             "datatype"          : "emr",
