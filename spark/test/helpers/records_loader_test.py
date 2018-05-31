@@ -3,6 +3,7 @@ import pytest
 from pyspark.sql.types import StructType, StructField, LongType, FloatType, IntegerType, StringType, DateType
 import spark.helpers.records_loader as records_loader
 import spark.helpers.file_utils as file_utils
+import spark.test.resources.transactions as transactions
 
 csv_location = file_utils.get_abs_path(
     __file__, '../resources/records.csv'
@@ -90,3 +91,12 @@ def test_unsupported_file_type(spark):
 
     assert e.value.message == 'Unsupported file type: tsv'
 
+def test_load_and_clean_all(spark):
+    records_loader.load_and_clean_all(spark['runner'], csv_location, transactions, 'csv', ',')
+    record = spark['runner'].sqlContext.table('raw').collect()[0]
+
+    assert record.id == '1234567'
+    assert record.diagnosis_code == 'I2150'
+    assert record.diagnosis_code_qual == '02'
+    assert record.prescribing_npi == '1032368193'
+    assert record.notes == 'cookie'
