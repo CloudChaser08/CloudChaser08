@@ -27,11 +27,11 @@ era_summary_transformer = priv_common.Transformer(
         priv_common.TransformFunction(post_norm_cleanup.obscure_inst_type_of_bill, ['instnl_typ_of_bll_cd'])
     ]
 ).append(
-    priv_common.Transformer(**dict(map(
-        lambda c: (c, [priv_common.TransformFunction(filter_due_to_pos_itb,
-                        [c, 'pos_cd', 'instnl_typ_of_bll_cd'])]),
-        columns_to_nullify
-    )))
+    priv_common.Transformer(**dict([
+        (c, priv_common.TransformFunction(filter_due_to_pos_itb,
+                        [c, 'pos_cd', 'instnl_typ_of_bll_cd'])),
+        for c in columns_to_nullify
+    ]))
 )
 
 def apply_privacy(df, additional_transforms=None):
