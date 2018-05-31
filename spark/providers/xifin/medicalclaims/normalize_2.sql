@@ -32,7 +32,10 @@ SELECT
 
 -- offset diagnosis sequence to ensure any existing procedure sequence
 -- number comes first when ranked
-    diag.diag_sequence + 4                                                    AS diagnosis_priority_unranked,
+    CASE
+    WHEN diag.diag_code IS NOT NULL
+    THEN diag.diag_sequence + 4
+    END                                                                       AS diagnosis_priority_unranked,
     test.proc_code                                                            AS procedure_code,
     CASE
     WHEN test.proc_code IS NOT NULL

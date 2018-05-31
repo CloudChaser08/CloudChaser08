@@ -34,6 +34,9 @@ SELECT
 
 -- use procedure proiority if it exists and is relevant to this row
     CASE
+    WHEN ARRAY(
+        proc.diag_code_1, proc.diag_code_2, proc.diag_code_3, proc.diag_code_4, diag.diag_code
+        )[proc_diag_exploder.n] IS NULL THEN NULL
     WHEN proc_diag_exploder.n <= 3 AND ARRAY(
         proc.diag_code_1, proc.diag_code_2, proc.diag_code_3, proc.diag_code_4, diag.diag_code
         )[proc_diag_exploder.n] IS NOT NULL
@@ -63,7 +66,7 @@ SELECT
     END                                                                       AS procedure_modifier_1,
     CASE
     WHEN proc.proc_code = test.proc_code
-    THEN COALESCE(proc.modifier_1, test.modifier_1)
+    THEN COALESCE(proc.modifier_2, test.modifier_2)
     WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN proc.modifier_2
     WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
@@ -71,7 +74,7 @@ SELECT
     END                                                                       AS procedure_modifier_2,
     CASE
     WHEN proc.proc_code = test.proc_code
-    THEN COALESCE(proc.modifier_1, test.modifier_1)
+    THEN COALESCE(proc.modifier_3, test.modifier_3)
     WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN proc.modifier_3
     WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
@@ -79,7 +82,7 @@ SELECT
     END                                                                       AS procedure_modifier_3,
     CASE
     WHEN proc.proc_code = test.proc_code
-    THEN COALESCE(proc.modifier_1, test.modifier_1)
+    THEN COALESCE(proc.modifier_4, test.modifier_4)
     WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
     THEN proc.modifier_4
     WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL

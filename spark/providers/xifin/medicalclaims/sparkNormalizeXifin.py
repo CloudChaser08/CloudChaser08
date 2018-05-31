@@ -81,6 +81,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ]
     ).distinct()
 
+    normalized_with_priority_rank = normalized.where(F.col("diagnosis_priority_unranked").isNotNull()).withColumn(
+        'diagnosis_priority', F.dense_rank().over(
+            Window.partitionBy("vendor_test_id", "claim_id").orderBy("diagnosis_priority_unranked")
+        )
+    ).unionAll(
+        normalized.where(F.col("diagnosis_priority_unranked").isNull()).withColumn(
+            'diagnosis_priority', F.lit(None)
+        )
+    ).drop("diagnosis_priority_unranked")
+
     postprocessed = postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),
         postprocessor.add_universal_columns(
@@ -100,13 +110,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ),
         lambda df: med_priv.filter(df, skip_pos_filter=True),
         schema_enforcer.apply_schema_func(schema)
-    )(
-        normalized.withColumn(
-            'diagnosis_priority', F.dense_rank().over(
-                Window.partitionBy("vendor_test_id", "claim_id").orderBy("diagnosis_priority_unranked")
-            )
-        ).drop("diagnosis_priority_unranked")
-    )
+    )(normalized_with_priority_rank)
 
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
