@@ -130,6 +130,7 @@
             "name"              : "allscripts",
             "datafeed_id"       : "25",
             "datatype"          : "emr",
+            "date_field"        : "emr_date",
             "models"            : [
               {
                 "datatype"        : "emr_clin_obsn",
@@ -198,6 +199,7 @@
               }
             ],
             "epi_calcs"         : true,
+            "key_stats"         : true,
             "earliest_date"     : "2014-01-01"
         },
         {
@@ -396,6 +398,7 @@
             "name"              : "nextgen",
             "datafeed_id"       : "35",
             "datatype"          : "emr",
+            "date_field"        : "emr_date",
             "models"            : [
               {
                 "datatype"        : "emr_clin_obsn",
@@ -464,6 +467,7 @@
               }
             ],
             "epi_calcs"         : true,
+            "key_stats"         : true,
             "earliest_date"     : "2003-01-01",
             "index_all_dates"   : true,
             "index_null_dates"  : true
@@ -472,6 +476,7 @@
             "name"              : "healthjump",
             "datafeed_id"       : "47",
             "datatype"          : "emr",
+            "date_field"        : "emr_date",
             "models"            : [
               {
                 "datatype"        : "emr_medctn",
@@ -508,6 +513,7 @@
               }
             ],
             "epi_calcs"         : true,
+            "key_stats"         : true,
             "earliest_date"     : "2008-01-01",
             "index_all_dates"   : false,
             "index_null_dates"  : true
@@ -686,6 +692,7 @@
             "name"              : "cardinal_raintree_emr",
             "datafeed_id"       : "40",
             "datatype"          : "emr",
+            "date_field"        : "emr_date",
             "models"            : [
               {
                 "datatype"        : "emr_clin_obsn",
@@ -754,6 +761,7 @@
               }
             ],
           "epi_calcs"         : true,
+          "key_stats"         : true,
           "earliest_date"     : "2011-02-01",
           "index_all_dates"   : true,
           "index_null_dates"  : true
@@ -762,6 +770,7 @@
             "name"              : "transmed",
             "datafeed_id"       : "54",
             "datatype"          : "emr",
+            "date_field"        : "emr_date",
             "models"            : [
               {
                 "datatype"        : "emr_clin_obsn",
@@ -798,6 +807,7 @@
               }
             ],
           "epi_calcs"         : true,
+          "key_stats"         : true,
           "earliest_date"     : "2017-01-01",
           "index_all_dates"   : true,
           "index_null_dates"  : true
@@ -806,6 +816,7 @@
             "name"              : "cardinal_tsi",
             "datafeed_id"       : "31",
             "datatype"          : "emr",
+            "date_field"        : "emr_date",
             "models"            : [
               {
                 "datatype"        : "emr_medctn",
@@ -826,6 +837,7 @@
               }
             ],
           "epi_calcs"         : true,
+          "key_stats"         : true,
           "earliest_date"     : "2012-01-01",
           "index_all_dates"   : true,
           "index_null_dates"  : true
