@@ -24,7 +24,7 @@ def load_and_clean_all(runner, location_prefix, transactions_module, file_type, 
         loc = location_prefix if len(transactions_module.TABLES) == 1 else location_prefix + table
         df = load(runner, loc, transactions_module.TABLE_COLUMNS[table], file_type, delimiter, header)
 
-        if partititons > 0:
+        if partitions > 0:
             df = df.repartition(partitions)
 
         postprocessor \
