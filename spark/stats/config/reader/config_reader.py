@@ -108,21 +108,21 @@ def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
 
 def _fill_in_conf_dict(conf, feed_id, providers_conf_file):
     # configure stats whose configurations come from the marketplace db
-    if conf['fill_rate']:
+    if conf.get('fill_rate'):
         conf['fill_rate_conf'] = {
             "columns": _get_fill_rate_columns(
                 conf['datafeed_id'], conf['datatype'] if conf['datatype'].startswith('emr') else None
             )
         }
 
-    if conf['top_values']:
+    if conf.get('top_values'):
         conf['top_values_conf'] = {
             "columns": _get_top_values_columns(conf['datafeed_id']),
             "max_values": 10
         }
 
     # epi doesn't require any additional configurations
-    if conf['epi_calcs']:
+    if conf.get('epi_calcs'):
         conf['epi_calcs_conf'] = {}
 
     # configure stats whose configurations do not come from the marketplace db
@@ -167,9 +167,10 @@ def get_provider_config(providers_conf_file, feed_id):
         raise Exception('datatype is not specified for feed {}'.format(feed_id))
     elif provider_conf['datatype'] == 'emr':
         provider_conf['models'] = [
-            _fill_in_conf_dict(
-                dict(provider_conf.items() + model_conf.items()), feed_id, providers_conf_file
-            ) for model_conf in provider_conf['models']
+            _fill_in_conf_dict(dict(
+                model_conf.items() + [('datafeed_id', provider_conf['datafeed_id'])]
+            ), feed_id, providers_conf_file)
+            for model_conf in provider_conf['models']
         ]
         return provider_conf
     else:

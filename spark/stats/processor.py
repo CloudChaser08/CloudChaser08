@@ -94,6 +94,9 @@ def run_marketplace_stats(
         - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
 
+    if not stats_to_calculate:
+        return {}
+
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
     date_column_field = provider_conf['date_field']

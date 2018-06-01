@@ -13,33 +13,43 @@ ALL_STATS = [
 
 def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate=ALL_STATS):
 
-    # Calculate epi calcs
-    epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats_to_calculate else {}
-
     if provider_config['datatype'] == 'emr':
-        marketplace_stats = dict([
+        union_level_stats = [stat for stat in stats_to_calculate if stat in provider_config]
+        model_level_stats = [
+            stat for stat in stats_to_calculate
+            for model_conf in provider_config['models']
+            if stat in model_conf
+        ]
+
+        model_level_marketplace_stats = dict([
             (model_conf['datatype'], processor.run_marketplace_stats(
                 spark, sqlContext, quarter, start_date, end_date,
                 dict([it for it in provider_config.items() + model_conf.items()]),
-                stats_to_calculate
+                model_level_stats
             )) for model_conf in provider_config['models']
         ])
+        union_level_marketplace_stats = processor.run_marketplace_stats(
+            spark, sqlContext, quarter, start_date, end_date, provider_config, union_level_stats
+        )
 
         for model_conf in provider_config['models']:
             stats_writer.write_to_s3(
-                marketplace_stats[model_conf['datatype']],
+                model_level_marketplace_stats[model_conf['datatype']],
                 dict([it for it in provider_config.items() + model_conf.items()]),
                 quarter
             )
-        stats_writer.write_to_s3(epi_calcs, provider_config, quarter)
+        stats_writer.write_to_s3(union_level_marketplace_stats, provider_config, quarter)
 
-        stats = dict(marketplace_stats, **epi_calcs)
+        stats = dict(
+            model_level_marketplace_stats, **union_level_marketplace_stats
+        )
 
     else:
         # Calculate marketplace stats
         marketplace_stats = processor.run_marketplace_stats(
             spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate
         )
+        epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats_to_calculate else {}
 
         stats = dict(marketplace_stats, **epi_calcs)
 
