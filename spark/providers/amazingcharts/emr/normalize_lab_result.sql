@@ -146,4 +146,4 @@ LEFT OUTER JOIN d_patient ptn ON lab.patient_key = ptn.patient_key
 LEFT OUTER JOIN matching_payload_deduped pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv1 ON lab.ordering_provider_id = prv1.provider_key
 LEFT OUTER JOIN d_provider prv2 ON lab.sign_off_id = prv2.provider_key
-LEFT OUTER JOIN d_lab_directory lbd ON lab.lab_directory_key = lbd.lab_directory_key
+LEFT OUTER JOIN d_lab_directory lbd ON lab.lab_directory_key = lbd.lab_directory_key AND lab.practice_key = lbd.practice_key

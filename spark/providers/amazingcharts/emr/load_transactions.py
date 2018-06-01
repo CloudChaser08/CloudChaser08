@@ -17,7 +17,7 @@ def load(spark, runner, table_locs):
                 postprocessor.compose(
                     postprocessor.trimmify,
                     postprocessor.nullify
-                )(df).createOrReplaceTempView(table)
+                )(df).repartition(5000).cache().createOrReplaceTempView(table)
         except:
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),
