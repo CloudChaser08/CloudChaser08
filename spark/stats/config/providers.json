@@ -432,6 +432,7 @@
             "name"              : "amazingcharts",
             "datafeed_id"       : "5",
             "datatype"          : "emr",
+            "date_field"        : "emr_date",
             "models"            : [
               {
                 "datatype"        : "emr_enc",
@@ -491,7 +492,8 @@
                 "year_over_year"  : null
               }
             ],
-            "epi_calcs"         : false,
+            "epi_calcs"         : true,
+            "key_stats"         : true,
             "earliest_date"     : "2015-10-01",
             "index_all_dates"   : false,
             "index_null_dates"  : false
