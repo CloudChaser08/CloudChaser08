@@ -432,60 +432,45 @@
             "name"              : "amazingcharts",
             "datafeed_id"       : "5",
             "datatype"          : "emr",
-            "date_field"        : "emr_date",
             "models"            : [
               {
                 "datatype"        : "emr_enc",
-                "date_field"      : "enc_start_dt",
-                "record_field"    : null,
                 "fill_rate"       : true,
                 "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_clin_obsn",
-                "date_field"      : "clin_obsn_dt",
-                "record_field"    : null,
                 "fill_rate"       : true,
                 "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_medctn",
-                "date_field"      : "medctn_start_dt",
-                "record_field"    : null,
                 "fill_rate"       : true,
                 "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_vit_sign",
-                "date_field"      : "vit_sign_dt",
-                "record_field"    : null,
                 "fill_rate"       : true,
                 "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_lab_result",
-                "date_field"      : "lab_result_dt",
-                "record_field"    : null,
                 "fill_rate"       : true,
                 "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_proc",
-                "date_field"      : "proc_dt",
-                "record_field"    : null,
                 "fill_rate"       : true,
                 "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_diag",
-                "date_field"      : "diag_dt",
-                "record_field"    : null,
                 "fill_rate"       : true,
                 "top_values"      : true,
                 "longitudinality" : null,
