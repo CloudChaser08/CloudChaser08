@@ -481,7 +481,7 @@
             "key_stats"         : true,
             "earliest_date"     : "2015-10-01",
             "index_all_dates"   : false,
-            "index_null_dates"  : false
+            "index_null_dates"  : true
         },
         {
             "name"              : "healthjump",
