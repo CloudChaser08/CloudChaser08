@@ -10,8 +10,8 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
-from spark.common.era.summary_v1 import schema as summary_schema
-from spark.common.era.detail_v1 import schema as detail_schema
+from spark.common.era.summary import schema_v1 as summary_schema
+from spark.common.era.detail import schema_v1 as detail_schema
 import spark.helpers.schema_enforcer as schema_enforcer
 
 import logging
@@ -55,6 +55,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     load_records.load(runner, input_path_prefix)
 
     # Normalize claim summary
+    runner.run_spark_script('pre_summary_mapping.sql', return_output=True) \
+        .createOrReplaceTempView('summary_tmp')
     summary = runner.run_spark_script('summary_mapping.sql', return_output=True)
     logging.debug('Finished normalizing claim summary')
 
@@ -126,14 +128,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         logging.debug('Finished post-processing')
         
         if not test:
-            normalized_records_unloader.partition_and_rename(
-                spark, runner, 'era', conf['model_script'], '66',
-                conf['table'], conf['date_column'], date_input,
-                staging_subdir='{}/'.format(conf['data_type']),
-                distribution_key='row_id', provider_partition='part_hvm_vdr_feed_id',
-                date_partition='part_mth', hvm_historical_date = hvm_historical
-            )
-
+            normalized_records_unloader.unload_delimited_file(
+                spark, runner, '/staging/' + conf['data_type'] + '/', conf['table'])
 
 def main(args):
     # init
