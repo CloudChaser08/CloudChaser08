@@ -4,6 +4,7 @@ import os
 from contextlib import closing
 import psycopg2
 from spark.helpers.file_utils import get_abs_path
+from spark.stats.config.dates import dates as provider_dates
 
 # map from emr datatype (table) name to the name of each datatype in
 # the marketplace db
@@ -108,9 +109,7 @@ def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
 
 def _fill_in_dates(conf):
     if not conf.get('date_field'):
-        dates_by_type = json.load(get_abs_path(__file__, './dates.json'))
-
-        conf['date_field'] = dates_by_type[conf['datatype']]
+        conf['date_field'] = provider_dates[conf['datatype']]
 
     return conf
 
@@ -166,8 +165,6 @@ def get_provider_config(providers_conf_file, feed_id):
     '''
     providers_conf = _get_config_from_json(providers_conf_file)
 
-    _fill_in_dates(providers_conf)
-
     if 'providers' not in providers_conf:
         raise Exception('{} does not contain providers list'.format(providers_conf))
 
@@ -178,11 +175,12 @@ def get_provider_config(providers_conf_file, feed_id):
         raise Exception('datatype is not specified for feed {}'.format(feed_id))
     elif provider_conf['datatype'] == 'emr':
         provider_conf['models'] = [
-            _fill_in_conf_dict(dict(
+            _fill_in_dates(_fill_in_conf_dict(dict(
                 model_conf.items() + [('datafeed_id', provider_conf['datafeed_id'])]
-            ), feed_id, providers_conf_file)
+            ), feed_id, providers_conf_file))
             for model_conf in provider_conf['models']
         ]
-        return provider_conf
     else:
-        return _fill_in_conf_dict(provider_conf, feed_id, providers_conf_file)
+        provider_conf = _fill_in_conf_dict(provider_conf, feed_id, providers_conf_file)
+
+    return _fill_in_dates(provider_conf)
