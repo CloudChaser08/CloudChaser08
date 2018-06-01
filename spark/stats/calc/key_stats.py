@@ -35,7 +35,7 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
         - key_stats: a Dictionary of the key stats for
                      patient, record, and row
     '''
-    date_col = provider_conf['date_field']
+    date_col = 'coalesced_date'
     index_all_dates = provider_conf.get('index_all_dates', False)
     index_null_dates = provider_conf.get('index_null_dates')
     patient_attribute = 'hvid'

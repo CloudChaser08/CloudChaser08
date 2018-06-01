@@ -106,6 +106,15 @@ def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
     return _get_config_from_db(get_columns_sql)
 
 
+def _fill_in_dates(conf):
+    if not conf.get('date_field'):
+        dates_by_type = json.load(get_abs_path(__file__, './dates.json'))
+
+        conf['date_field'] = dates_by_type[conf['datatype']]
+
+    return conf
+
+
 def _fill_in_conf_dict(conf, feed_id, providers_conf_file):
     # configure stats whose configurations come from the marketplace db
     if conf.get('fill_rate'):
@@ -156,6 +165,8 @@ def get_provider_config(providers_conf_file, feed_id):
                          each associated stat calcs config embedded
     '''
     providers_conf = _get_config_from_json(providers_conf_file)
+
+    _fill_in_dates(providers_conf)
 
     if 'providers' not in providers_conf:
         raise Exception('{} does not contain providers list'.format(providers_conf))

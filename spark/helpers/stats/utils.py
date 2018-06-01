@@ -134,11 +134,11 @@ def get_emr_union(sqlContext, model_confs, provider_id):
         lambda df1, df2: df1.union(df2),
         [
             sqlContext.sql('''
-                SELECT hvid, hv_enc_id, {} as emr_date
+                SELECT hvid, hv_enc_id, coalesce({}) as coalesced_emr_date
                 FROM dw.{}
                 WHERE part_hvm_vdr_feed_id='{}'
             '''.format(
-                model_conf['date_field'], model_conf['datatype'], provider_id
+                ','.join(model_conf['date_field']), model_conf['datatype'], provider_id
             )) for model_conf in model_confs
         ]
     )
