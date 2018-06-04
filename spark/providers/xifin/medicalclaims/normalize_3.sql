@@ -39,12 +39,8 @@ SELECT
     demo.gross_price                                                          AS total_charge,
     demo.bill_price                                                           AS total_allowed,
     demo.ordering_npi                                                         AS prov_referring_npi,
-    CASE
-    WHEN payor.payor_priority = 1 THEN payor.payor_id
-    END                                                                       AS payer_vendor_id,
-    CASE
-    WHEN payor.payor_priority = 1 THEN payor.payor_name
-    END                                                                       AS payer_name,
+    payor1.payor_id                                                           AS payer_vendor_id,
+    payor1.payor_name                                                         AS payer_name,
     demo.primary_upin                                                         AS prov_rendering_upin,
     COALESCE(demo.ordering_upin, demo.referring_upin)                         AS prov_referring_upin,
     SUBSTRING(
@@ -54,18 +50,10 @@ SELECT
         demo.ordering_phys_name, LOCATE(',', demo.ordering_phys_name) + 1, 999
         )                                                                     AS prov_referring_name_2,
     proc.billing_facility_id                                                  AS prov_facility_vendor_id,
-    CASE
-    WHEN payor.payor_priority = 2 THEN payor.payor_id
-    END                                                                       AS cob_payer_vendor_id_1,
-    CASE
-    WHEN payor.payor_priority = 2 THEN payor.payor_priority
-    END                                                                       AS cob_payer_seq_code_1,
-    CASE
-    WHEN payor.payor_priority = 3 THEN payor.payor_id
-    END                                                                       AS cob_payer_vendor_id_2,
-    CASE
-    WHEN payor.payor_priority = 3 THEN payor.payor_priority
-    END                                                                       AS cob_payer_seq_code_2,
+    payor2.payor_id                                                           AS cob_payer_vendor_id_1,
+    payor2.payor_priority                                                     AS cob_payer_seq_code_1,
+    payor3.payor_id                                                           AS cob_payer_vendor_id_2,
+    payor3.payor_priority                                                     AS cob_payer_seq_code_2,
     diag.test_id                                                              AS vendor_test_id,
     EXTRACT_DATE(demo.accounting_date, '%m/%d/%Y')                            AS claim_transaction_date,
     ARRAY(
@@ -104,8 +92,15 @@ FROM diagnosis_complete diag
     AND proc.row_num = 1
     LEFT OUTER JOIN demographics_complete demo ON diag.accn_id = demo.accn_id
     AND diag.client_id = demo.client_id
-    LEFT OUTER JOIN payors_complete payor ON diag.accn_id = payor.accn_id
-    AND diag.client_id = payor.client_id
+    LEFT OUTER JOIN payors_complete payor1 ON diag.accn_id = payor1.accn_id
+    AND diag.client_id = payor1.client_id
+    AND payor1.payor_priority = 1
+    LEFT OUTER JOIN payors_complete payor2 ON diag.accn_id = payor2.accn_id
+    AND diag.client_id = payor2.client_id
+    AND payor2.payor_priority = 2
+    LEFT OUTER JOIN payors_complete payor3 ON diag.accn_id = payor3.accn_id
+    AND diag.client_id = payor3.client_id
+    AND payor3.payor_priority = 3
     CROSS JOIN claim_transaction_amount_exploder
 WHERE NOT EXISTS (
     SELECT 1 FROM billed_procedures_complete pr

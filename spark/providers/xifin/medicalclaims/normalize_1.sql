@@ -92,12 +92,8 @@ SELECT
     demo.gross_price                                                          AS total_charge,
     demo.bill_price                                                           AS total_allowed,
     demo.ordering_npi                                                         AS prov_referring_npi,
-    CASE
-    WHEN payor.payor_priority = 1 THEN payor.payor_id
-    END                                                                       AS payer_vendor_id,
-    CASE
-    WHEN payor.payor_priority = 1 THEN payor.payor_name
-    END                                                                       AS payer_name,
+    payor1.payor_id                                                           AS payer_vendor_id,
+    payor1.payor_name                                                         AS payer_name,
     demo.primary_upin                                                         AS prov_rendering_upin,
     COALESCE(demo.ordering_upin, demo.referring_upin)                         AS prov_referring_upin,
     SUBSTRING(
@@ -107,19 +103,11 @@ SELECT
         demo.ordering_phys_name, LOCATE(',', demo.ordering_phys_name) + 1, 999
         )                                                                     AS prov_referring_name_2,
     proc.billing_facility_id                                                  AS prov_facility_vendor_id,
-    CASE
-    WHEN payor.payor_priority = 2 THEN payor.payor_id
-    END                                                                       AS cob_payer_vendor_id_1,
-    CASE
-    WHEN payor.payor_priority = 2 THEN payor.payor_priority
-    END                                                                       AS cob_payer_seq_code_1,
-    CASE
-    WHEN payor.payor_priority = 3 THEN payor.payor_id
-    END                                                                       AS cob_payer_vendor_id_2,
-    CASE
-    WHEN payor.payor_priority = 3 THEN payor.payor_priority
-    END                                                                       AS cob_payer_seq_code_2,
-    proc.test_id                                                              AS vendor_test_id,
+    payor2.payor_id                                                           AS cob_payer_vendor_id_1,
+    payor2.payor_priority                                                     AS cob_payer_seq_code_1,
+    payor3.payor_id                                                           AS cob_payer_vendor_id_2,
+    payor3.payor_priority                                                     AS cob_payer_seq_code_2,
+    test.test_id                                                              AS vendor_test_id,
     test.test_name                                                            AS vendor_test_name,
     EXTRACT_DATE(demo.accounting_date, '%m/%d/%Y')                            AS claim_transaction_date,
     ARRAY(
@@ -163,8 +151,15 @@ FROM billed_procedures_complete proc
     AND  0 <> LENGTH(TRIM(COALESCE(test.test_id, '')))
     LEFT OUTER JOIN demographics_complete demo on proc.accn_id = demo.accn_id
     AND proc.client_id = demo.client_id
-    LEFT OUTER JOIN payors_complete payor ON proc.accn_id = payor.accn_id
-    AND proc.client_id = payor.client_id
+    LEFT OUTER JOIN payors_complete payor1 ON proc.accn_id = payor1.accn_id
+    AND proc.client_id = payor1.client_id
+    AND payor1.payor_priority = 1
+    LEFT OUTER JOIN payors_complete payor2 ON proc.accn_id = payor2.accn_id
+    AND proc.client_id = payor2.client_id
+    AND payor2.payor_priority = 2
+    LEFT OUTER JOIN payors_complete payor3 ON proc.accn_id = payor3.accn_id
+    AND proc.client_id = payor3.client_id
+    AND payor3.payor_priority = 3
     CROSS JOIN proc_test_exploder pos_explode
     CROSS JOIN proc_test_exploder proc_explode
     CROSS JOIN proc_diag_exploder
@@ -174,6 +169,9 @@ WHERE COALESCE(demo.pt_country, 'dummy') = 'USA' AND (
         OR (
             COALESCE(proc.place_of_svc, test.place_of_svc) IS NULL AND pos_explode.n = 0
             )
+        ) AND ((
+            proc.place_of_svc = test.place_of_svc AND pos_explode.n = 0
+            ) OR proc.place_of_svc != test.place_of_svc OR proc.place_of_svc IS NULL OR test.place_of_svc IS NULL
         ) AND (
         ARRAY(
             proc.diag_code_1, proc.diag_code_2, proc.diag_code_3, proc.diag_code_4, diag.diag_code
