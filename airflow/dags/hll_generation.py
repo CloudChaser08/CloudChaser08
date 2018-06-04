@@ -182,7 +182,7 @@ def do_update_log(ds, **kwargs):
     else:
         msg += ' ' + feeds_generated[0]
 
-    slack.send_message('#data-automation', text=msg)
+    slack.send_message('#eng-logistics', text=msg)
 
 update_log = PythonOperator(
     task_id='update_log',
