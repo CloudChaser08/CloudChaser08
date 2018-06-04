@@ -13,7 +13,7 @@ def _get_row_count(df, start_date, end_date, attribute, date_col, index_null_dat
     '''
     filter_by_date = ((col(date_col) >= start_date) & (col(date_col) <= end_date))
     if index_null_dates:
-        filter_by_date = filter_by_date | (col(date_col).isNull() | trim(col(date_col)) == '')
+        filter_by_date = filter_by_date | (col(date_col).isNull() | (trim(col(date_col)) == ''))
     date_range_df = df.where(filter_by_date)
     if attribute == '*':
         count = date_range_df.count()
