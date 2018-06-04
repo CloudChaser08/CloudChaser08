@@ -419,6 +419,18 @@ def test_unload_delimited_file(spark):
         assert [line.split('|') for line in decompressed.read().splitlines()] \
             == [['"val1"', '"val2"'], ['"val3"', '"val4"']]
 
+    normalized_records_unloader.unload_delimited_file(
+        spark['spark'], spark['runner'], test_staging_dir4, 'test_table', test=True, file_name='my_file.gz'
+    )
+
+    filename = [f for f in os.listdir(test_staging_dir4) if f.endswith('.gz')][0]
+
+    assert filename == 'my_file.gz'
+
+    with gzip.open(test_staging_dir4 + filename) as decompressed:
+        assert [line.split('|') for line in decompressed.read().splitlines()] \
+            == [['"val1"', '"val2"'], ['"val3"', '"val4"']]
+
 
 def test_cleanup():
     cleanup()

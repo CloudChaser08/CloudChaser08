@@ -269,13 +269,18 @@ def distcp(dest, src=constants.hdfs_staging_dir):
     ])
 
 
-def unload_delimited_file(spark, runner, output_path, table_name, test=False, num_files=1, delimiter='|', file_name_prefix='part-'):
+def unload_delimited_file(
+        spark, runner, output_path, table_name, test=False, num_files=1, delimiter='|',
+        file_name_prefix='part-', file_name=None
+    ):
     "Unload a table to a delimited file at the specified location"
     old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
 
     if test:
-        cleanup_cmd = ['rm', '-rf', output_path]
         common_dirpath = '../common/'
+
+        def cleanup_output():
+            subprocess.check_call(['rm', '-rf', output_path])
 
         def list_dir(path):
             return os.listdir(output_path)
@@ -284,8 +289,10 @@ def unload_delimited_file(spark, runner, output_path, table_name, test=False, nu
             os.rename(old, new)
 
     else:
-        cleanup_cmd = ['hadoop', 'fs', '-rm', '-f', '-R', output_path]
         common_dirpath = '../../../../common/'
+
+        def cleanup_output():
+            subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
 
         def list_dir(path):
             return [
@@ -310,5 +317,8 @@ def unload_delimited_file(spark, runner, output_path, table_name, test=False, nu
     # rename output files to desired name
     # this step removes the spark hash added to the name by default
     for filename in [f for f in list_dir(output_path) if f[0] != '.']:
-        new_name = file_name_prefix + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.gz'
-        rename_file(output_path + filename, output_path + new_name)
+        if num_files == 1 and file_name is not None:
+            rename_file(output_path + filename, output_path + file_name)
+        else:
+            new_name = file_name_prefix + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.gz'
+            rename_file(output_path + filename, output_path + new_name)
