@@ -129,15 +129,14 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
     # min(date_service) or max(date_service), respectively, over the
     # entire claim for claim-level rows
     pms_data = pms_data.withColumn(
-        'date_service', F.when(
-            F.col('service_line_number').isNull(), F.min('date_service').over(claim_window)
-        ).otherwise(F.col('date_service'))
-    ).withColumn(
         'date_service_end', F.when(
             F.col('service_line_number').isNull(), F.max('date_service').over(claim_window)
         ).otherwise(F.col('date_service_end'))
+    ).withColumn(
+        'date_service', F.when(
+            F.col('service_line_number').isNull(), F.min('date_service').over(claim_window)
+        ).otherwise(F.col('date_service'))
     )
-
 
     # Postprocessing
     pms_data_final = postprocessor.compose(
