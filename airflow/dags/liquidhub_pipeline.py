@@ -326,14 +326,15 @@ if HVDAG.HVDAG.airflow_env == 'test':
         )
 
 fetch_transaction.set_upstream(validate_transaction)
+decrypt_transaction.set_upstream(fetch_transaction)
+split_transaction.set_upstream(decrypt_transaction)
 queue_up_for_matching.set_upstream(validate_deid)
 
 detect_move_normalize_dag.set_upstream(
     [queue_up_for_matching, split_transaction]
 )
-
-decrypt_transaction.set_upstream(fetch_transaction)
-split_transaction.set_upstream(decrypt_transaction)
+fetch_return_file.set_upstream(detect_move_normalize_dag)
+deliver_return_file.set_upstream(fetch_return_file)
 
 # cleanup
-clean_up_workspace.set_upstream(split_transaction)
+clean_up_workspace.set_upstream(deliver_return_file)
