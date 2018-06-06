@@ -54,7 +54,7 @@ def test_standard_stats(spark):
             'name'              : 'test',
             'datafeed_id'       : '27',
             'datatype'          : 'medicalclaims',
-            'date_field'        : 'service_date',
+            'date_field'        : ['service_date'],
             'record_field'      : 'claim_id',
             'fill_rates'        : True,
             'fill_rate_conf'    : {'columns': {'claim_id': 1, 'service_date': 2, 'col_3': 3}},
@@ -79,16 +79,17 @@ def test_emr_stats(spark):
         'name'         : 'test_emr',
         'datafeed_id'  : '48',
         'datatype'     : 'emr',
+        'date_field'   : ['emr_date'],
         'models'       : [
             {
                 'datatype'        : 'emr_diag',
-                'date_field'      : 'service_date',
+                'date_field'      : ['service_date'],
                 'record_field'    : 'claim_id',
                 'fill_rates'      : True,
                 'fill_rate_conf'  : {'columns': {'claim_id': 1, 'service_date': 2, 'col_3': 3}},
             }, {
                 'datatype'        : 'emr_clin_obsn',
-                'date_field'      : 'service_date',
+                'date_field'      : ['service_date'],
                 'record_field'    : 'claim_id',
                 'fill_rates'      : True,
                 'fill_rate_conf'  : {'columns': {'claim_id': 1, 'service_date': 2, 'col_3': 3}},
@@ -103,7 +104,7 @@ def test_emr_stats(spark):
     results = stats_runner.run(spark['spark'], spark['sqlContext'],
                                quarter, start_date, end_date, provider_config)
 
-    assert results == {
+    assert sorted(results) == sorted({
         'emr_diag': expected_results_dict,
         'emr_clin_obsn': expected_results_dict
-    }
+    })

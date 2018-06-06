@@ -11,11 +11,11 @@ results = None
 def test_init(spark):
     global df, results
     conf = {
-        'date_field': 'date',
+        'date_field': ['date'],
         'longitudinality': True,
         'earliest_date': '1975-12-01'
     }
-    data_row = Row('date', 'hvid', 'c', 'd', 'e')
+    data_row = Row('coalesced_date', 'hvid', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
         data_row('1974-12-11', 'b', 'c', 'd', 'e'),
         data_row('1975-12-11', 'b', 'c', 'd', 'e'),

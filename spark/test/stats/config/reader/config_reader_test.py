@@ -3,18 +3,25 @@ from mock import Mock
 
 import spark.stats.config.reader.config_reader as config_reader
 from spark.helpers.file_utils import get_abs_path
+import spark.stats.config.dates as dates
 
 @pytest.fixture(autouse=True)
 def setup_teardown():
     old_get_fill_rate_cols_fn = config_reader._get_fill_rate_columns
+    old_provider_dates = dates.dates
+
+    dates.dates = {
+        'sub_conf': ['date_service']
+    }
+    reload(config_reader)
 
     yield
 
     config_reader._get_fill_rate_columns = old_get_fill_rate_cols_fn
+    dates.dates = old_provider_dates
 
 
 def test_fill_rate_get_columns():
-
     config_reader._get_fill_rate_columns = Mock(return_value=["one", "two"])
 
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
