@@ -162,7 +162,8 @@ fetch_transaction = SubDagOperator(
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : S3_TRANSACTION_RAW_URL.split('/')[2],
-            'regex_name_match'       : True
+            'regex_name_match'       : True,
+            'multi_match'            : True
         }
     ),
     task_id='fetch_transaction_file',
@@ -222,7 +223,7 @@ clean_up_workspace = SubDagOperator(
 # Post-Matching
 #
 def norm_args(ds, k):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k)]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset=CARDINAL_PMS_DAY_OFFSET)]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -298,8 +299,8 @@ push_deliverable = SubDagOperator(
         mdag.schedule_interval,
         {
             'file_paths_func'       : lambda ds, k: [
-                get_tmp_dir(ds, k) + 'delivery/' + f for f in
-                os.listdir(get_tmp_dir(ds, k) + 'delivery/')
+                get_tmp_dir(ds, k) + 'deliverable/' + f for f in
+                os.listdir(get_tmp_dir(ds, k) + 'deliverable/')
             ],
             's3_prefix_func'        : lambda ds, k: '/'.join(S3_CARDINAL_DELIVERABLE_URL_TEMPLATE.split('/')[3:]),
             's3_bucket'             : S3_CARDINAL_DELIVERABLE_URL_TEMPLATE.split('/')[2],

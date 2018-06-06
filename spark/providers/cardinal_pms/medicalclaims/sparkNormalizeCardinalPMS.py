@@ -7,10 +7,7 @@ import pyspark.sql.functions as F
 
 from spark.runner import Runner
 from spark.spark_setup import init
-
 from spark.common.medicalclaims_common_model import schema_v5 as schema
-from spark.providers.cardinal_pms.medicalclaims.interim_medicalclaims_model \
-    import schema as cardinal_schema
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
@@ -26,17 +23,6 @@ import logging
 DELIVERABLE_LOC = 'hdfs:///deliverable/'
 
 DEOBFUSCATION_KEY = 'Cardinal_MPI-0'
-
-
-def cardinalize(df):
-    """
-    Transform df schema (medicalclaims common model) to the schema that cardinal wants
-    """
-    return schema_enforcer.apply_schema(
-        df.withColumnRenamed(
-            'procedure_units_billed', 'procedure_units'
-        ), cardinal_schema
-    )
 
 
 def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
@@ -139,7 +125,7 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
     )
 
     # Postprocessing
-    pms_data_final = postprocessor.compose(
+    postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(
             feed_id='41',
@@ -150,14 +136,12 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
         schema_enforcer.apply_schema_func(schema)
     )(
         pms_data
-    )
+    ).createOrReplaceTempView('medicalclaims')
     logging.debug('Finished post-processing')
-
-    cardinalize(pms_data_final).createOrReplaceTempView('medicalclaims_cardinalized')
 
     # unload delivery file for cardinal
     normalized_records_unloader.unload_delimited_file(
-        spark, runner, DELIVERABLE_LOC, 'medicalclaims_cardinalized', test=test
+        spark, runner, DELIVERABLE_LOC, 'medicalclaims', test=test
     )
 
     # NOTE: Uncomment or add a flag to run this if/when we start adding their data to the warehouse

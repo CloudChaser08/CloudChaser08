@@ -27,7 +27,7 @@ def test_init(spark):
     cleanup(spark)
     cardinal_pms.run(spark['spark'], spark['runner'], '1990-01-01', None, test=True)
     global results
-    results = spark['sqlContext'].sql('select * from medicalclaims_cardinalized') \
+    results = spark['sqlContext'].sql('select * from medicalclaims') \
                                  .collect()
 
 
@@ -36,7 +36,7 @@ def test_claim_levels_all_populated():
 
 
 def test_service_line_levels_all_populated():
-    assert len(filter(lambda r: r.service_line_number is not None, results)) == 27
+    assert len(filter(lambda r: r.service_line_number is not None, results)) == 31
 
 
 def test_claim_levels_are_unique():
