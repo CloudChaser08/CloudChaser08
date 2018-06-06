@@ -297,7 +297,7 @@ fetch_return_file = PythonOperator(
 )
 
 def do_deliver_return_file(ds, **kwargs):
-    sftp_config = json.loads(Variable.get('_sftp_configuration'))
+    sftp_config = json.loads(Variable.get('lh_amgen_hv_sftp_configuration'))
     path = sftp_config['path']
     del sftp_config['path']
     pid = get_pharmacy_id(ds, kwargs)
