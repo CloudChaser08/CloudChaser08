@@ -107,7 +107,7 @@ SELECT
     payor2.payor_priority                                                     AS cob_payer_seq_code_1,
     payor3.payor_id                                                           AS cob_payer_vendor_id_2,
     payor3.payor_priority                                                     AS cob_payer_seq_code_2,
-    test.test_id                                                              AS vendor_test_id,
+    proc.test_id                                                              AS vendor_test_id,
     test.test_name                                                            AS vendor_test_name,
     EXTRACT_DATE(demo.accounting_date, '%m/%d/%Y')                            AS claim_transaction_date,
     ARRAY(
