@@ -380,8 +380,7 @@ detect_move_normalize_dag = SubDagOperator(
 )
 
 sql_new_template = """
-    ALTER TABLE labtests_20170216 ADD PARTITION (part_provider='quest', part_best_date='{0}-{1}')
-    LOCATION 's3a://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/part_best_date={0}-{1}/'
+    MSCK REPAIR TABLE labtests_20170216
 """
 
 if HVDAG.HVDAG.airflow_env != 'test':
@@ -392,10 +391,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
             default_args['start_date'],
             mdag.schedule_interval,
             {
-                'sql_command_func' : lambda ds, k: date_utils.insert_date_into_template(sql_new_template, k,
-         day_offset = QUEST_DAY_OFFSET) \
-                    if date_utils.insert_date_into_template('{}-{}-{}', k,
-         day_offset = QUEST_DAY_OFFSET).find('-01') == 7 else ''
+                'sql_command_func' : lambda ds, k: sql_new_template
             }
         ),
         task_id='update_analytics_db',
