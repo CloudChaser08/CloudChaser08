@@ -39,7 +39,7 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
         )
         output_dir = constants.hdfs_staging_dir + date_input.replace('-', '/') + '/'
 
-    payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey'])
+    payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
     records_loader.load_and_clean_all(runner, incoming_path, transactions, 'csv', '|')
 
     content = runner.run_spark_script('normalize.sql', [
@@ -60,7 +60,10 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
 
     content = schema_enforcer.apply_schema(content, schema)
     header = spark.createDataFrame(
-        [tuple(['HVID', 'LHID', 'Pharmacy Name', 'Brand'] + ['filler_' + str(i) for i in xrange(1, 12)] + ['Matching Meta Data'])],
+        [tuple(
+            ['HVID', 'LHID', 'Pharmacy Name', 'Brand'] +
+            ['filler_' + str(i) for i in xrange(1, 12)] +
+            ['Weak Match', 'Provider Specific ID', 'Provider Meta', 'Matching Meta Data'])],
         schema=schema
     )
     deliverable = header.union(content).coalesce(1)
