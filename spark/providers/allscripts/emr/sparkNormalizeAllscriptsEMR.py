@@ -352,7 +352,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             *(
                 [
                     postprocessor.apply_date_cap(
-                        runner.sqlContext, date_col, max_cap_date, '25', domain_name
+                        runner.sqlContext, date_col, max_cap_date, FEED_ID, domain_name
                     ) for (date_col, domain_name, max_cap_date) in table['date_caps']
                 ] + [
                     schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=['allscripts_date_partition'])
