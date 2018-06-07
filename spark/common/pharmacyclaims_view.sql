@@ -233,7 +233,10 @@ CREATE VIEW default.pharmacyclaims (
     remaining_deductible,
     remaining_benefit,
     copay_coinsurance,
-    basis_of_cost_determination,
+    SUBSTRING(
+        CONCAT('0', CAST(basis_of_cost_determination AS int)),
+        LENGTH(CONCAT('0', CAST(basis_of_cost_determination AS int))) - 1
+        ) AS basis_of_cost_determination,
     submitted_ingredient_cost,
     submitted_dispensing_fee,
     submitted_incentive,
@@ -242,7 +245,9 @@ CREATE VIEW default.pharmacyclaims (
     submitted_patient_pay,
     submitted_other_claimed_qual,
     submitted_other_claimed,
-    basis_of_reimbursement_determination,
+    CAST(
+        CAST(basis_of_reimbursement_determination AS int) AS string
+        ) AS basis_of_reimbursement_determination,
     paid_ingredient_cost,
     paid_dispensing_fee,
     paid_incentive,
@@ -376,7 +381,10 @@ UNION ALL
     remaining_deductible,
     remaining_benefit,
     copay_coinsurance,
-    basis_of_cost_determination,
+    SUBSTRING(
+        CONCAT('0', CAST(basis_of_cost_determination AS int)),
+        LENGTH(CONCAT('0', CAST(basis_of_cost_determination AS int))) - 1
+        ) AS basis_of_cost_determination,
     submitted_ingredient_cost,
     submitted_dispensing_fee,
     submitted_incentive,
@@ -385,7 +393,9 @@ UNION ALL
     submitted_patient_pay,
     submitted_other_claimed_qual,
     submitted_other_claimed,
-    basis_of_reimbursement_determination,
+    CAST(
+        CAST(basis_of_reimbursement_determination AS int) AS string
+        ) AS basis_of_reimbursement_determination,
     paid_ingredient_cost,
     paid_dispensing_fee,
     paid_incentive,
@@ -525,7 +535,10 @@ SELECT CAST(record_id AS bigint),
     CAST(remaining_deductible AS double),
     CAST(remaining_benefit AS double),
     CAST(copay_coinsurance AS double),
-    CAST(basis_of_cost_determination AS double),
+    SUBSTRING(
+        CONCAT('0', CAST(basis_of_cost_determination AS int)),
+        LENGTH(CONCAT('0', CAST(basis_of_cost_determination AS int))) - 1
+        ) AS basis_of_cost_determination,
     CAST(submitted_ingredient_cost AS double),
     CAST(submitted_dispensing_fee AS double),
     CAST(submitted_incentive AS double),
@@ -534,7 +547,7 @@ SELECT CAST(record_id AS bigint),
     CAST(submitted_patient_pay AS double),
     CAST(submitted_other_claimed_qual AS double),
     CAST(submitted_other_claimed AS double),
-    CAST(basis_of_reimbursement_determination AS double),
+    basis_of_reimbursement_determination,
     CAST(paid_ingredient_cost AS double),
     CAST(paid_dispensing_fee AS double),
     CAST(paid_incentive AS double),
