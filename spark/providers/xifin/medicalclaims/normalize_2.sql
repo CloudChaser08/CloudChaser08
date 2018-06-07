@@ -11,11 +11,11 @@ SELECT
     COALESCE(YEAR(demo.dob), demo.yearOfBirth)                                AS patient_year_of_birth,
     SUBSTRING(TRIM(COALESCE(demo.pt_zipcode, demo.threedigitzip, '')), 1, 3)  AS patient_zip3,
     UPPER(TRIM(COALESCE(demo.pt_st_id, demo.state, '')))                      AS patient_state,
-    EXTRACT_DATE(demo.load_date, '%m/%d/%Y')                                  AS date_received,
-    EXTRACT_DATE(demo.dos, '%m/%d/%Y')                                        AS date_service,
-    EXTRACT_DATE(demo.final_rpt_date, '%m/%d/%Y')                             AS date_service_end,
-    EXTRACT_DATE(demo.admission_date, '%m/%d/%Y')                             AS inst_date_admitted,
-    EXTRACT_DATE(demo.discharge_dt, '%m/%d/%Y')                               AS inst_date_discharged,
+    EXTRACT_DATE(demo.load_date, '%m/%d/%Y', CAST({min_date} AS DATE))        AS date_received,
+    EXTRACT_DATE(demo.dos, '%m/%d/%Y', CAST({min_date} AS DATE))              AS date_service,
+    EXTRACT_DATE(demo.final_rpt_date, '%m/%d/%Y', CAST({min_date} AS DATE))   AS date_service_end,
+    EXTRACT_DATE(demo.admission_date, '%m/%d/%Y', CAST({min_date} AS DATE))   AS inst_date_admitted,
+    EXTRACT_DATE(demo.discharge_dt, '%m/%d/%Y', CAST({min_date} AS DATE))     AS inst_date_discharged,
     MD5(test.place_of_svc)                                                    AS place_of_service_vendor_id,
     diag.diag_code                                                            AS diagnosis_code,
     CASE
@@ -65,7 +65,7 @@ SELECT
     payor3.payor_priority                                                     AS cob_payer_seq_code_2,
     test.test_id                                                              AS vendor_test_id,
     test.test_name                                                            AS vendor_test_name,
-    EXTRACT_DATE(demo.accounting_date, '%m/%d/%Y')                            AS claim_transaction_date,
+    EXTRACT_DATE(demo.accounting_date, '%m/%d/%Y', CAST({min_date} AS DATE))  AS claim_transaction_date,
     ARRAY(
         demo.retro_bill_price, demo.retro_trade_discount_amount, demo.trade_discount_amount, demo.due_amt, demo.expect_price
         )[claim_transaction_amount_exploder.n]                                AS claim_transaction_amount,

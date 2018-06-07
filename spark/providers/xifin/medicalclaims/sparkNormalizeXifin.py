@@ -72,8 +72,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         lambda df1, df2: df1.union(df2), [
             schema_enforcer.apply_schema(
                 runner.run_spark_script(
-                    file_utils.get_abs_path(script_path, script),
-                    return_output=True
+                    file_utils.get_abs_path(script_path, script), [
+                        ['min_date', '1900-01-01']
+                    ], return_output=True
                 ), schema, columns_to_keep=['diagnosis_priority_unranked']
             ) for script in [
                 'normalize_1.sql', 'normalize_2.sql', 'normalize_3.sql'
