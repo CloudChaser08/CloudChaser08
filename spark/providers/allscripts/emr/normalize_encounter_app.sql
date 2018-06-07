@@ -51,8 +51,6 @@ SELECT
     WHEN app.status IS NOT NULL
     THEN 'APPOINTMENT_STATUS'
     END                                                                        AS enc_stat_cd_qual,
-    NULL                                                                       AS enc_typ_cd,
-    NULL                                                                       AS enc_typ_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     app.recordeddttm                                                           AS data_captr_dt,
     CASE

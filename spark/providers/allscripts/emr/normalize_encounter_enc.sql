@@ -4,8 +4,6 @@ SELECT
     enc.genclientid                                                            AS vdr_org_id,
     enc.primarykey                                                             AS vdr_enc_id,
     CASE WHEN enc.primarykey IS NOT NULL THEN 'PRIMARYKEY' END                 AS vdr_enc_id_qual,
-    NULL                                                                       AS vdr_alt_enc_id,
-    NULL                                                                       AS vdr_alt_enc_id_qual,
     pay.hvid                                                                   AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                                     AS ptnt_birth_yr,
     CASE
@@ -17,8 +15,6 @@ SELECT
     EXTRACT_DATE(
         enc.encounterdttm, '%Y-%m-%d', NULL, CAST({max_cap}                    AS DATE)
         )                                                                      AS enc_start_dt,
-    NULL                                                                       AS enc_end_dt,
-    NULL                                                                       AS enc_vst_typ_cd,
     COALESCE(enc.renderinggen2providerID, enc.gen2providerID)                  AS enc_rndrg_prov_vdr_id,
     CASE
     WHEN COALESCE(enc.renderinggen2providerID, enc.gen2providerID) IS NOT NULL
@@ -28,8 +24,6 @@ SELECT
     UPPER(prv.specialty)                                                       AS enc_rndrg_prov_alt_speclty_id,
     CASE WHEN prv.specialty IS NOT NULL THEN 'SPECIALTY' END                   AS enc_rndrg_prov_alt_speclty_id_qual,
     UPPER(prv.state)                                                           AS enc_rndrg_prov_state_cd,
-    NULL                                                                       AS enc_stat_cd,
-    NULL                                                                       AS enc_stat_cd_qual,
     UPPER(enc.type)                                                            AS enc_typ_cd,
     CASE WHEN enc.type IS NOT NULL THEN 'ENCOUNTER_TYPE' END                   AS enc_typ_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,

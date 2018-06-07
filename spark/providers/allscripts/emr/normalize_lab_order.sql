@@ -42,7 +42,7 @@ SELECT
     THEN 'CPTCODE'
     ELSE 'HCPCS'
     END                                                                        AS lab_ord_alt_cd_qual,
-    SUBSTRING(
+    REMOVE_LAST_CHARS(
         CONCAT(
             CASE
             WHEN 0 <> LENGTH(TRIM(COALESCE(ord.type, ''))) THEN CONCAT(ord.type, ': ') ELSE ''
@@ -53,17 +53,7 @@ SELECT
             CASE
             WHEN 0 <> LENGTH(TRIM(COALESCE(ord.source, ''))) THEN CONCAT(ord.source, ': ') ELSE ''
             END
-            ), 1, LENGTH(CONCAT(
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(ord.type, ''))) THEN CONCAT(ord.type, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(ord.name, ''))) THEN CONCAT(ord.name, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(ord.source, ''))) THEN CONCAT(ord.source, ': ') ELSE ''
-                END
-                )) - 2
+            ), 2
         )                                                                      AS lab_ord_test_nm,
     ARRAY(ord.billingicd9code, ord.billingicd10code)[n2.n]                     AS lab_ord_diag_cd,
     CASE

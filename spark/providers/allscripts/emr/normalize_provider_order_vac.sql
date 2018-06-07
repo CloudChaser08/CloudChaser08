@@ -21,11 +21,7 @@ SELECT
     UPPER(prv.specialty)                                                       AS ordg_prov_alt_speclty_id,
     CASE WHEN prv.specialty IS NOT NULL THEN 'SPECIALTY' END                   AS ordg_prov_alt_speclty_id_qual,
     UPPER(prv.state)                                                           AS ordg_prov_state_cd,
-    NULL                                                                       AS prov_ord_ctgy_cd,
-    NULL                                                                       AS prov_ord_ctgy_cd_qual,
-    NULL                                                                       AS prov_ord_typ_cd,
-    NULL                                                                       AS prov_ord_typ_cd_qual,
-    SUBSTRING(
+    REMOVE_LAST_CHARS(
         CONCAT(
             CASE
             WHEN 0 <> LENGTH(TRIM(vac.routeofadmin))
@@ -40,27 +36,11 @@ SELECT
             WHEN 0 <> LENGTH(TRIM(vac.dose))
             THEN CONCAT('Dose: ', TRIM(vac.dose), ' | ') ELSE ''
             END
-            ), 1, LENGTH(CONCAT(
-                CASE
-                WHEN 0 <> LENGTH(TRIM(vac.routeofadmin))
-                THEN CONCAT('Route: ', TRIM(vac.routeofadmin), ' | ')
-                ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(vac.bodysite))
-                THEN CONCAT('Site: ', TRIM(vac.bodysite), ' | ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(vac.dose))
-                THEN CONCAT('Dose: ', TRIM(vac.dose), ' | ') ELSE ''
-                END
-                )) - 3
+            ), 3
         )                                                                      AS prov_ord_nm,
     vac.ndc                                                                    AS prov_ord_ndc,
     vac.cvx                                                                    AS prov_ord_vcx_cd,
     vac.name                                                                   AS prov_ord_vcx_nm,
-    NULL                                                                       AS prov_ord_diag_cd,
-    NULL                                                                       AS prov_ord_diag_cd_qual,
     TRIM(UPPER(vac.status))                                                    AS prov_ord_stat_cd,
     CASE WHEN vac.status IS NOT NULL THEN 'VACCINE_STATUS' END                 AS prov_ord_stat_cd_qual,
     vac.administereddttm                                                       AS prov_ord_complt_dt,

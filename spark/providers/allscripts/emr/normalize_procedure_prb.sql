@@ -26,9 +26,8 @@ SELECT
     UPPER(prv.state)                                                           AS proc_rndrg_prov_state_cd,
     prb.cptcode                                                                AS proc_cd,
     CASE WHEN prb.cptcode IS NOT NULL THEN 'CPTCODE' END                       AS proc_cd_qual,
-    NULL                                                                       AS proc_cd_1_modfr,
     UPPER(prb.snomed)                                                          AS proc_snomed_cd,
-    SUBSTRING(
+    REMOVE_LAST_CHARS(
         CONCAT(
             CASE
             WHEN 0 <> LENGTH(TRIM(COALESCE(prb.type, '')))
@@ -50,30 +49,9 @@ SELECT
             WHEN 0 <> LENGTH(TRIM(COALESCE(prb.level3, '')))
             THEN CONCAT(prb.level3, ': ') ELSE ''
             END
-            ), 1, LENGTH(CONCAT(
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.type, '')))
-                THEN CONCAT(prb.type, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.category, '')))
-                THEN CONCAT(prb.category, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.level1, '')))
-                THEN CONCAT(prb.level1, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.level2, '')))
-                THEN CONCAT(prb.level2, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.level3, '')))
-                THEN CONCAT(prb.level3, ': ') ELSE ''
-                END
-                )) - 2
+            ), 2
         )                                                                      AS proc_alt_cd,
-    CASE WHEN SUBSTRING(
+    CASE WHEN REMOVE_LAST_CHARS(
         CONCAT(
             CASE
             WHEN 0 <> LENGTH(TRIM(COALESCE(prb.type, '')))
@@ -95,28 +73,7 @@ SELECT
             WHEN 0 <> LENGTH(TRIM(COALESCE(prb.level3, '')))
             THEN CONCAT(prb.level3, ': ') ELSE ''
             END
-            ), 1, LENGTH(CONCAT(
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.type, '')))
-                THEN CONCAT(prb.type, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.category, '')))
-                THEN CONCAT(prb.category, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.level1, '')))
-                THEN CONCAT(prb.level1, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.level2, '')))
-                THEN CONCAT(prb.level2, ': ') ELSE ''
-                END,
-                CASE
-                WHEN 0 <> LENGTH(TRIM(COALESCE(prb.level3, '')))
-                THEN CONCAT(prb.level3, ': ') ELSE ''
-                END
-                )) - 2
+            ), 2
         ) IS NOT NULL THEN 'TYPE_CATEGORY_LEVEL1_LEVEL2_LEVEL3'
     END                                                                        AS proc_alt_cd_qual,
     ARRAY(prb.icd9, prb.icd10)[n.n]                                            AS proc_diag_cd,
@@ -131,7 +88,7 @@ SELECT
     END                                                                        AS proc_stat_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     prb.recordeddttm                                                           AS data_captr_dt,
-    SUBSTRING(
+    REMOVE_LAST_CHARS(
         CONCAT(
             CASE
             WHEN TRIM(COALESCE(prb.auditdataflag, '')) = '0'
@@ -144,19 +101,7 @@ SELECT
             THEN 'Entered in Error: '
             ELSE ''
             END
-            ), 1, LENGTH(CONCAT(
-                CASE
-                WHEN TRIM(COALESCE(prb.auditdataflag, '')) = '0'
-                THEN 'Current Record: '
-                WHEN TRIM(COALESCE(prb.auditdataflag, '')) = '1'
-                THEN 'Historical Record: ' ELSE ''
-                END,
-                CASE
-                WHEN TRIM(UPPER(prb.errorflag)) = 'Y'
-                THEN 'Entered in Error: '
-                ELSE ''
-                END
-                )) - 2
+            ), 2
         )                                                                      AS rec_stat_cd,
     'problems'                                                                 AS prmy_src_tbl_nm,
     EXTRACT_DATE(

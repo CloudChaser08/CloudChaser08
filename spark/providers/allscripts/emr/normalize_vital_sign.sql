@@ -32,7 +32,7 @@ SELECT
     CASE WHEN vit.status IS NOT NULL THEN 'VITAL_STATUS' END                   AS vit_sign_stat_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     vit.recordeddttm                                                           AS data_captr_dt,
-    SUBSTRING(
+    REMOVE_LAST_CHARS(
         CONCAT(
             CASE
             WHEN TRIM(COALESCE(vit.auditdataflag, '')) = '0' THEN 'Current Record: '
@@ -41,15 +41,7 @@ SELECT
             CASE
             WHEN TRIM(UPPER(vit.errorflag)) = 'Y' THEN 'Entered in Error: ' ELSE ''
             END
-            ), 1, LENGTH(CONCAT(
-                CASE
-                WHEN TRIM(COALESCE(vit.auditdataflag, '')) = '0' THEN 'Current Record: '
-                WHEN TRIM(COALESCE(vit.auditdataflag, '')) = '1' THEN 'Historical Record: ' ELSE ''
-                END,
-                CASE
-                WHEN TRIM(UPPER(vit.errorflag)) = 'Y' THEN 'Entered in Error: ' ELSE ''
-                END
-                )) - 2
+            ), 2
         )                                                                      AS rec_stat_cd,
     'vitals'                                                                   AS prmy_src_tbl_nm,
     EXTRACT_DATE(
