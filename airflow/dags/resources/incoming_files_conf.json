@@ -3,11 +3,12 @@
     "name": "amgen-liquidhub_consent",
     "src_system": "sftp",
     "src_conf": {
-      "airflow_conf_variable": "Amgen-LiquidHub SFTP Configuration"
+      "airflow_conf_variable": "liquidhub_consent_sftp"
     },
     "dest_path": "s3://healthverityconsent/incoming/amgen-liquidhub/",
     "file_name_regexes": [
-      "TODO: figure out"
+      "HV_LH_AIMOVIG_PATID_CROSSWALK_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}.txt",
+      "HV_LH_AIMOVIG_CONSENTDATA_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}.txt"
     ]
   },
   {
