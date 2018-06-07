@@ -1,5 +1,16 @@
 [
   {
+    "name": "amgen-liquidhub_consent",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "Amgen-LiquidHub SFTP Configuration"
+    },
+    "dest_path": "s3://healthverityconsent/incoming/amgen-liquidhub/",
+    "file_name_regexes": [
+      "TODO: figure out"
+    ]
+  },
+  {
     "name": "cardinal_mpi",
     "src_system": "s3",
     "src_conf": {
