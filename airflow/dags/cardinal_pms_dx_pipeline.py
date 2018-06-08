@@ -112,9 +112,9 @@ def generate_file_validation_dag(task_id, file_name_template, file_description):
                     file_name_template, day_offset=CARDINAL_PMS_DAY_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
-                    file_name_template, day_offset=CARDINAL_PMS_DAY_OFFSET
+                    file_name_template
                 ),
-                'minimum_file_size'       : 1000000,
+                'minimum_file_size'       : 100,
                 's3_prefix'               : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
                 's3_bucket'               : S3_TRANSACTION_RAW_URL.split('/')[2],
                 'file_description'        : file_description,
@@ -363,7 +363,7 @@ detect_move_normalize_dag.set_upstream(
     [split_transaction, queue_up_for_matching]
 )
 
-update_analytics_db.set_upstream(detect_move_normalize)
+update_analytics_db.set_upstream(detect_move_normalize_dag)
 
 fetch_deliverable.set_upstream(detect_move_normalize_dag)
 rename_deliverable.set_upstream(fetch_deliverable)
