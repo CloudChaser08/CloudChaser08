@@ -40,16 +40,24 @@ CONFIG_FILE = '/home/airflow/airflow/dags/test-e2e/resources/incoming_files_conf
 
 
 class SFTPConnectionConfig:
-    def __init__(self, path, host, user, password, **unused_kwargs):
+    def __init__(self, path, host, username, password=None, private_key=None, port=None, **unused_kwargs):
         self.path = path
         self.host = host
-        self.username = user
+        self.username = username
         self.password = password
+        self.private_key = private_key
+        self.port = port
 
     def asdict(self):
-        return {
-            'path': self.path, 'host': self.host, 'username': self.username, 'password': self.password
+        d = {
+            'path': self.path, 'host': self.host, 'username': self.username
         }
+        if self.password is not None:
+            d['password'] = self.password
+        if self.private_key is not None:
+            d['private_key'] = self.private_key
+        if self.port is not None:
+            d['port'] = self.port
 
 
 class S3ConnectionConfig:
