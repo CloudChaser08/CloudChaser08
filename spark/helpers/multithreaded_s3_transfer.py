@@ -7,18 +7,16 @@ src_bucket = dest_bucket = src_prefix = dest_prefix = file_list = None
 
 
 def _copy_file(thread_id):
-    i = thread_id
     s3 = boto3.resource('s3')
     bucket = s3.Bucket(dest_bucket)
     source = {
         'Bucket': src_bucket
     }
-    while i < len(file_list):
+
+    for i in xrange(thread_id, len(file_list), THREADS):
         s3_file = file_list[i]
         source['Key'] = s3_file
         bucket.Object(s3_file.replace(src_prefix, dest_prefix)).copy_from(CopySource=source)
-
-        i += THREADS
 
 
 def multithreaded_copy(src, dest):
