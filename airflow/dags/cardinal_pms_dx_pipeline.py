@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import os
 import re
 
-from airflow.operators import SubDagOperator, PythonOperator
+from airflow.operators import SubDagOperator, PythonOperator, DummyOperator
 from airflow.models import Variable
 
 # hv-specific modules
@@ -126,28 +126,27 @@ def generate_file_validation_dag(task_id, file_name_template, file_description):
     )
 
 
-if HVDAG.HVDAG.airflow_env != 'test':
-    validate_transaction = generate_file_validation_dag('transaction', TRANSACTION_FILE_NAME_TEMPLATE, TRANSACTION_FILE_DESCRIPTION)
-    validate_deid = generate_file_validation_dag('deid', DEID_FILE_NAME_TEMPLATE, DEID_FILE_DESCRIPTION)
+validate_transaction = generate_file_validation_dag('transaction', TRANSACTION_FILE_NAME_TEMPLATE, TRANSACTION_FILE_DESCRIPTION)
+validate_deid = generate_file_validation_dag('deid', DEID_FILE_NAME_TEMPLATE, DEID_FILE_DESCRIPTION)
 
-    queue_up_for_matching = SubDagOperator(
-        subdag=queue_up_for_matching.queue_up_for_matching(
-            DAG_NAME,
-            'queue_up_for_matching',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'source_files_func' : lambda ds, k: [
-                    S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
-                        DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_PMS_DAY_OFFSET
-                    )
-                ],
-                'regex_name_match'  : True
-            }
-        ),
-        task_id='queue_up_for_matching',
-        dag=mdag
-    )
+queue_up_for_matching = SubDagOperator(
+    subdag=queue_up_for_matching.queue_up_for_matching(
+        DAG_NAME,
+        'queue_up_for_matching',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'source_files_func' : lambda ds, k: [
+                S3_TRANSACTION_RAW_URL + date_utils.insert_date_into_template(
+                    DEID_FILE_NAME_TEMPLATE, k, day_offset=CARDINAL_PMS_DAY_OFFSET
+                )
+            ],
+            'regex_name_match'  : True
+        }
+    ),
+    task_id='queue_up_for_matching',
+    dag=mdag
+)
 
 fetch_transaction = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
@@ -326,38 +325,45 @@ clean_up_workspace_post_delivery = SubDagOperator(
     dag=mdag
 )
 
-if HVDAG.HVDAG.airflow_env != 'test':
+sql_template = """
+MSCK REPAIR TABLE medicalclaims_new
+"""
+
+update_analytics_db = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k: sql_template
+        }
+    ),
+    task_id='update_analytics_db',
+    dag=mdag
+)
+
+if HVDAG.HVDAG.airflow_env == 'test':
+    for t in [
+            'validate_transaction_file', 'validate_deid_file', 'queue_up_for_matching', 'update_analytics_db'
+    ]:
+        del mdag.task_dict[t]
+        globals()[t] = DummyOperator(
+            task_id = t,
+            dag = mdag
+        )
 
 
-    sql_template = """
-        MSCK REPAIR TABLE medicalclaims_new
-    """
-
-    update_analytics_db = SubDagOperator(
-        subdag=update_analytics_db.update_analytics_db(
-            DAG_NAME,
-            'update_analytics_db',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'sql_command_func' : lambda ds, k: sql_template
-            }
-        ),
-        task_id='update_analytics_db',
-        dag=mdag
-    )
-
-if HVDAG.HVDAG.airflow_env != 'test':
-    fetch_transaction.set_upstream(validate_transaction)
-    queue_up_for_matching.set_upstream(validate_deid)
-    queue_up_for_matching.set_downstream(
-        [clean_up_workspace, detect_move_normalize]
-    )
-    detect_move_normalize_dag.set_downstream(update_analytics_db)
+fetch_transaction.set_upstream(validate_transaction)
+queue_up_for_matching.set_upstream(validate_deid)
 
 decrypt_transaction.set_upstream(fetch_transaction)
 split_transaction.set_upstream(decrypt_transaction)
-detect_move_normalize_dag.set_upstream(split_transaction)
+detect_move_normalize_dag.set_upstream(
+    [split_transaction, queue_up_for_matching]
+)
+
+update_analytics_db.set_upstream(detect_move_normalize)
 
 fetch_deliverable.set_upstream(detect_move_normalize_dag)
 rename_deliverable.set_upstream(fetch_deliverable)
