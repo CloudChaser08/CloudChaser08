@@ -279,7 +279,7 @@ def unload_delimited_file(
     if test:
         common_dirpath = '../common/'
 
-        def cleanup_output():
+        def clean_up_output():
             subprocess.check_call(['rm', '-rf', output_path])
 
         def list_dir(path):
@@ -291,7 +291,7 @@ def unload_delimited_file(
     else:
         common_dirpath = '../../../../common/'
 
-        def cleanup_output():
+        def clean_up_output():
             subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
 
         def list_dir(path):
@@ -304,7 +304,7 @@ def unload_delimited_file(
         def rename_file(old, new):
             subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
 
-    subprocess.check_call(cleanup_cmd)
+    clean_up_output()
 
     runner.run_spark_script(common_dirpath + 'unload_common_model_dsv.sql', [
         ['num_files', str(num_files), False],
