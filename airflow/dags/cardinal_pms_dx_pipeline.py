@@ -30,7 +30,7 @@ DAG_NAME = 'cardinal_pms_dx_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 6, 5, 14),
+    'start_date': datetime(2018, 6, 7, 8),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -38,7 +38,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 14 * * *',
+    schedule_interval = '0 8 * * *',
     default_args = default_args
 )
 
@@ -68,7 +68,7 @@ DEID_FILE_NAME_TEMPLATE = 'pms-deid.{}{}{}T[0-9]{{6}}.dat'
 
 S3_PAYLOAD_DEST = 's3://salusv/matching/payload/medicalclaims/cardinal_pms/'
 
-CARDINAL_PMS_DAY_OFFSET = 1
+CARDINAL_PMS_DAY_OFFSET = 0
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TMP_PATH_TEMPLATE
