@@ -27,7 +27,7 @@ def do_queue_up_for_matching(ds, **kwargs):
             name_reg = regex.split('/')[-1]
 
             keys = [
-                k for k in s3_utils.list_s3_bucket_files(path) if re.search(name_reg, k)
+                k for k in s3_utils.list_s3_bucket(path) if re.search(name_reg, k)
             ]
             if not keys:
                 logging.warn("No files found for regex: {}".format(name_reg))
