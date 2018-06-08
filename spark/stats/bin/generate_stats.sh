@@ -42,6 +42,7 @@ generate_stats -f 15        # Private Source 14 (Ability)
 generate_stats -f 22        # Practice Insight
 generate_stats -f 10        # Emdeon DX
 generate_stats -f 29        # Cardinal RCM
+generate_stats -f 55        # Xifin
 
 # Labs
 generate_stats -f 32        # NeoGenomics

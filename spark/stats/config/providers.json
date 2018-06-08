@@ -127,6 +127,20 @@
             "earliest_date"     : "2012-01-01"
         },
         {
+            "name"              : "xifin",
+            "datafeed_id"       : "55",
+            "datatype"          : "medicalclaims",
+            "date_field"        : "date_service",
+            "record_field"      : "claim_id",
+            "fill_rate"         : true,
+            "key_stats"         : true,
+            "top_values"        : true,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
+            "epi_calcs"         : true,
+            "earliest_date"     : "2017-01-01"
+        },
+        {
             "name"              : "allscripts",
             "datafeed_id"       : "25",
             "datatype"          : "emr",
