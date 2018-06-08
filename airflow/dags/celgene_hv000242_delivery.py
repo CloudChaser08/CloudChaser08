@@ -151,7 +151,7 @@ def generate_sftp_upload_task(task_id, temp_path_template, file_name_template):
         sftp_utils.upload_file(
             date_utils.insert_date_into_template(temp_path_template, kwargs)
             + date_utils.insert_date_into_template(file_name_template, kwargs, day_offset=CELGENE_DAY_OFFSET),
-            sftp_config['source_path'], host=sftp_config['source_host'], username=sftp_config['user'],
+            sftp_config['path'], host=sftp_config['host'], username=sftp_config['username'],
             password=sftp_config['password']
         )
 
