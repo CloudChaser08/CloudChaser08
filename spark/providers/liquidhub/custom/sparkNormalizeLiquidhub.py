@@ -54,6 +54,9 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
         ] + [
             StructField('filler_' + str(i), StringType(), True) for i in xrange(1, 12)
         ] + [
+            StructField('weak_match', StringType(), True),
+            StructField('provider_specific_id', StringType(), True),
+            StructField('provider_meta', StringType(), True),
             StructField('matching_meta_data', StringType(), True)
         ]
     )
@@ -68,11 +71,12 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
     )
     deliverable = header.union(content).coalesce(1)
 
+    deliverable.createOrReplaceTempView('liquidhub_deliverable')
     if test:
         deliverable.createOrReplaceTempView('liquidhub_deliverable')
     else:
         normalized_records_unloader.unload_delimited_file(
-            spark, runner, '/staging/' + pharmacy_name + '/', date_input.replace('-', '/'),
+            spark, runner, '/staging/' + pharmacy_name + '/' + date_input.replace('-', '/') + '/', 'liquidhub_deliverable',
             file_name='LH_Amgen_' + pharmacy_name + '_' + date_input.replace('-', '') + '_FILEID.txt.gz')
 
 def main(args):
