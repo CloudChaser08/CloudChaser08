@@ -71,11 +71,11 @@ def get_encrypted_decrypted_file_paths(ds, kwargs):
 
 def get_decrypted_transaction_files_paths(ds, kwargs):
     return [ get_tmp_dir(ds, kwargs)
-        + date_utils.generate_insert_date_into_template_function(
+        + date_utils.insert_date_into_template(
             TRANSACTION_FILE_NAME_TEMPLATE_DECRYPTED,
+            kwargs,
             day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
         )
-        + '.decrypted'
     ]
 
 def get_s3_transaction_prefix(ds, kwargs):
