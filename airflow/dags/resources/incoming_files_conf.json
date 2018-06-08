@@ -35,6 +35,18 @@
     ]
   },
   {
+    "name": "cardinal_pms",
+    "src_system": "s3",
+    "src_conf": {
+      "path": "s3://hvincoming/cardinal_raintree/pms/"
+    },
+    "dest_path": "s3://healthverity/incoming/cardinal/pms/",
+    "file_name_regexes": [
+      "pms-record.\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}\\d{2}.dat",
+      "pms-deid.\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}\\d{2}.dat"
+    ]
+  },
+  {
     "name": "cardinal_raintree_emr",
     "src_system": "s3",
     "src_conf": {

@@ -276,9 +276,26 @@ def unload_delimited_file(spark, runner, output_path, table_name, test=False, nu
     if test:
         cleanup_cmd = ['rm', '-rf', output_path]
         common_dirpath = '../common/'
+
+        def list_dir(path):
+            return os.listdir(output_path)
+
+        def rename_file(old, new):
+            os.rename(old, new)
+
     else:
         cleanup_cmd = ['hadoop', 'fs', '-rm', '-f', '-R', output_path]
         common_dirpath = '../../../../common/'
+
+        def list_dir(path):
+            return [
+                f.split(' ')[-1].strip().split('/')[-1]
+                for f in subprocess.check_output(['hdfs', 'dfs', '-ls', path]).split('\n')
+                if f.split(' ')[-1].startswith('hdfs')
+            ]
+
+        def rename_file(old, new):
+            subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
 
     subprocess.check_call(cleanup_cmd)
 
@@ -292,6 +309,6 @@ def unload_delimited_file(spark, runner, output_path, table_name, test=False, nu
 
     # rename output files to desired name
     # this step removes the spark hash added to the name by default
-    for filename in [f for f in os.listdir(output_path) if f[0] != '.']:
+    for filename in [f for f in list_dir(output_path) if f[0] != '.']:
         new_name = file_name_prefix + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.gz'
-        os.rename(output_path + filename, output_path + new_name)
+        rename_file(output_path + filename, output_path + new_name)

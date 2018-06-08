@@ -50,15 +50,17 @@ def do_create_parts_dir(ds, **kwargs):
 
 def do_convert_file_encoding(ds, **kwargs):
     file_paths_to_split = kwargs['file_paths_to_split_func'](ds, kwargs)
-    source_encoding = kwargs['source_encoding']
-    for fp in file_paths_to_split:
-        out = open(fp + '.utf8', 'w')
-        check_call([
-            'iconv', '-f', source_encoding, '-t', 'UTF-8', fp
-        ], stdout=out)
-        out.close()
-        os.remove(fp)
-        os.rename(fp + '.utf8', fp)
+    source_encoding = kwargs.get('source_encoding')
+
+    if source_encoding:
+        for fp in file_paths_to_split:
+            out = open(fp + '.utf8', 'w')
+            check_call([
+                'iconv', '-f', source_encoding, '-t', 'UTF-8', fp
+            ], stdout=out)
+            out.close()
+            os.remove(fp)
+            os.rename(fp + '.utf8', fp)
 
 
 def do_split_files(ds, **kwargs):
