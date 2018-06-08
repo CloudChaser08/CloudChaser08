@@ -40,7 +40,7 @@ CONFIG_FILE = '/home/airflow/airflow/dags/test-e2e/resources/incoming_files_conf
 
 
 class SFTPConnectionConfig:
-    def __init__(self, path, host, user, password):
+    def __init__(self, path, host, user, password, **unused_kwargs):
         self.path = path
         self.host = host
         self.username = user
