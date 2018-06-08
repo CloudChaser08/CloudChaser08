@@ -217,6 +217,9 @@ def densify_2d_array(arr):
     return res
 
 def obfuscate_candidate_hvids(arr, salt):
+    if arr is None:
+        return None
+
     for i in xrange(len(arr)):
         arr[i][0] = obfuscate_hvid(str(int(arr[i][0])), salt)
 
