@@ -59,6 +59,8 @@ class SFTPConnectionConfig:
         if self.port is not None:
             d['port'] = self.port
 
+        return d
+
 
 class S3ConnectionConfig:
     def __init__(self, path, **other_configurations):
