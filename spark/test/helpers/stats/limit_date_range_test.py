@@ -61,7 +61,8 @@ def test_limit_date_range_sample(spark):
     df = spark['spark'].read.csv(
         file_utils.get_abs_path(script_path, './resources/full_sample/'), sep='|', schema=StructType([
             StructField('date', StringType(), True),
-            StructField('val', StringType(), True)
+            StructField('val', StringType(), True),
+            StructField('rec', StringType(), True)
         ])
     )
 
@@ -70,6 +71,25 @@ def test_limit_date_range_sample(spark):
     )(df)
     assert multiplier == 1.0 / (300.0 / 5000.0)
     assert sample.count() > 250 and sample.count() < 350
+
+
+def test_limit_date_range_sample_records(spark):
+    rec_df = spark['spark'].read.csv(
+        file_utils.get_abs_path(script_path, './resources/full_sample/'), sep='|', schema=StructType([
+            StructField('date', StringType(), True),
+            StructField('val', StringType(), True),
+            StructField('rec', StringType(), True)
+        ])
+    )
+
+    multiplier, sample = stats_utils.select_data_sample_in_date_range(
+        '1990-01-01', '2018-01-01', 'date', max_sample_size=300, record_field='rec'
+    )(rec_df)
+    assert multiplier == 1.0 / (1500.0 / 5000.0)
+
+    # sample target size is around 1500, but the actual size will not
+    # be exactly this number. Just assert that it's in the ballpark.
+    assert sample.count() > 1000 and sample.count() < 2000
 
 
 def test_null_dates(spark):

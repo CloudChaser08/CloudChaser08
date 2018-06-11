@@ -64,9 +64,5 @@ def test_duplicate_values_not_counted_twice_when_distinct_column_is_not_none():
     assert filter(lambda x: x['column'] == 'a' and x['value'] == 'a', results_distinct)[0]['count'] == 1
 
 
-def test_exception_thrown_when_no_columns_have_top_values_to_calculate():
-    with pytest.raises(Exception) as e_info:
-        tv_df = top_values.calculate_top_values(no_top_value_columns_df, 10, 'a')
-
-    exception = e_info.value
-    assert exception.message.startswith('Dataframe with no columns passed in for top values calculation')
+def test_no_top_values_to_calculate():
+    assert top_values.calculate_top_values(no_top_value_columns_df, 10, 'a') == []

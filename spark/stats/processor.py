@@ -1,3 +1,7 @@
+import logging
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+
 import spark.stats.calc.fill_rate as fill_rate
 import spark.stats.calc.top_values as top_values
 import spark.stats.calc.key_stats as key_stats
@@ -71,8 +75,11 @@ def _run_year_over_year(df, earliest_date, end_date, provider_conf):
     return None
 
 
-def run_marketplace_stats(spark, sqlContext, quarter, \
-                          start_date, end_date, provider_conf):
+def run_marketplace_stats(
+        spark, sqlContext, quarter, start_date, end_date, provider_conf, stats_to_calculate=[
+            'key_stats', 'longitudinality', 'year_over_year', 'fill_rates', 'top_values', 'epi'
+        ]
+):
     '''
     Runs all the relevant marketplace stats for a provider in a given
     date range / quarter
@@ -93,6 +100,14 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
     earliest_date = provider_conf['earliest_date']
     index_all_dates = provider_conf.get('index_all_dates', False)
 
+    # if earliest_date is greater than start_date, use earliest_date as start_date
+    if earliest_date > start_date:
+        start_date = earliest_date
+
+    available_years = relativedelta(
+        datetime.strptime(end_date, '%Y-%m-%d'), datetime.strptime(earliest_date, '%Y-%m-%d')
+    ).years
+
     # Get data
     all_data_df = utils.get_provider_data(
         sqlContext, datatype,
@@ -106,48 +121,81 @@ def run_marketplace_stats(spark, sqlContext, quarter, \
     # used for fill rate, top values, and key stats
     if index_all_dates:
         multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
-            '1900-01-01', end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates')
+            '1900-01-01', end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates'),
+            record_field=provider_conf.get('record_field')
         )(all_data_df)
     else:
         multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
-            start_date, end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates')
+            start_date, end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates'),
+            record_field=provider_conf.get('record_field')
         )(all_data_df)
 
     sampled_gen_stats_df = sampled_gen_stats_df.coalesce(partitions).cache()
 
     # Generate fill rates
-    fill_rates = _run_fill_rates(sampled_gen_stats_df, provider_conf)
+    if 'fill_rates' in stats_to_calculate:
+        fill_rates = _run_fill_rates(sampled_gen_stats_df, provider_conf)
 
     # Generate top values
-    top_values = _run_top_values(sampled_gen_stats_df, provider_conf)
+    if 'top_values' in stats_to_calculate:
+        if available_years < 2:
+            logging.error("Cannot calculate year over year for {}, this feed has less than 2 years available.".format(
+                provider_conf['datafeed_id']
+            ))
+            top_values = None
+        else:
+            # Generate top values
+            top_values = _run_top_values(sampled_gen_stats_df, provider_conf)
 
-    if top_values:
-        for top_value_stat in top_values:
-            top_value_stat['count'] = int(top_value_stat['count'] * multiplier)
+        if top_values:
+            for top_value_stat in top_values:
+                top_value_stat['count'] = int(top_value_stat['count'] * multiplier)
 
-    # Generate key stats
-    key_stats = _run_key_stats(
-        all_data_df, earliest_date, start_date, end_date, provider_conf
-    )
+    if 'key_stats' in stats_to_calculate:
+        # Generate key stats
+        key_stats = _run_key_stats(
+            all_data_df, earliest_date, start_date, end_date, provider_conf
+        )
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year
     date_stats_df = all_data_df.select("hvid", provider_conf['date_field']).coalesce(partitions)
 
-    # Generate Longitudinality
-    longitudinality = _run_longitudinality(date_stats_df, provider_conf)
+    if 'longitudinality' in stats_to_calculate:
 
-    # Generate year over year
-    year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
+        if available_years < 2:
+            logging.error("Cannot calculate longitudinality for {}, this feed has less than 2 years available.".format(
+                provider_conf['datafeed_id']
+            ))
+            longitudinality = None
+        else:
+            # Generate Longitudinality
+            longitudinality = _run_longitudinality(date_stats_df, provider_conf)
+
+    if 'year_over_year' in stats_to_calculate:
+
+        if available_years < 2:
+            logging.error("Cannot calculate year_over_year for {}, this feed has less than 2 years available.".format(
+                provider_conf['datafeed_id']
+            ))
+            year_over_year = None
+        else:
+            # Generate year over year
+            year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
 
     # Return all the dfs
-    all_stats = {
-        'fill_rates': fill_rates,
-        'key_stats': key_stats,
-        'top_values': top_values,
-        'longitudinality': longitudinality,
-        'year_over_year': year_over_year
-    }
+    all_stats = {}
+    for stat in stats_to_calculate:
+        if stat == 'fill_rates':
+            all_stats[stat] = fill_rates
+        elif stat == 'key_stats':
+            all_stats[stat] = key_stats
+        elif stat == 'top_values':
+            all_stats[stat] = top_values
+        elif stat == 'longitudinality':
+            all_stats[stat] = longitudinality
+        elif stat == 'year_over_year':
+            all_stats[stat] = year_over_year
     return all_stats
 
 

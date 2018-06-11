@@ -1,7 +1,12 @@
-from pyspark.sql.functions import col, min, max, countDistinct, mean, stddev, count, months_between
+from pyspark.sql.functions import col, min, max, countDistinct, mean, stddev, count, months_between, \
+    when, lit
 from pyspark.sql.types import IntegerType
 
 PATIENT_IDENTIFIER = 'hvid'
+
+# date field to ensure that we never drop below the provider's
+# earliest date
+MINIMIZED_DATE_FIELD = 'minimized_date'
 
 def _years(s):
     return s / 12
@@ -20,14 +25,19 @@ def calculate_longitudinality(df, provider_conf):
     patient_identifier = PATIENT_IDENTIFIER
     date_field = provider_conf['date_field']
 
+    df = df.withColumn(MINIMIZED_DATE_FIELD, when(
+        col(date_field) > lit(provider_conf['earliest_date']), col(date_field)
+    ).otherwise(lit(provider_conf['earliest_date'])))
+
     # Select the columns we care about
-    patient_dates = df.select(col(patient_identifier), col(date_field)).distinct()
+    patient_dates = df.select(col(patient_identifier), col(MINIMIZED_DATE_FIELD)).distinct()
     # Calculate the min_date, max_date, and num_visits for each patient
     patient_visits = patient_dates.groupby(col(patient_identifier)) \
-                                      .agg(min(col(date_field)).alias('min_date'),
-                                           max((date_field)).alias('max_date'),
-                                           countDistinct(date_field).alias('visits')
-                                        )
+                                      .agg(
+                                          min(col(MINIMIZED_DATE_FIELD)).alias('min_date'),
+                                          max((MINIMIZED_DATE_FIELD)).alias('max_date'),
+                                          countDistinct(MINIMIZED_DATE_FIELD).alias('visits')
+                                      )
     # Calculate the stats
     dates = patient_visits.withColumn('months',                             \
                                     months_between(                         \
