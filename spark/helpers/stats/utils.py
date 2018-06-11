@@ -109,19 +109,23 @@ def select_data_sample_in_date_range(start_date, end_date, date_column_name, inc
     return out
 
 
-def get_provider_data(sqlContext, table_name, provider_partition):
+def get_provider_data(sqlContext, table_name, provider_partition, custom_schema=None, custom_table=None):
     '''
     Fetch all the provider data for a provider from the warehouse.
     Input:
-        - sqlContext:          Spark SqlContext for accessing warehouse
-        - table_name:          The table_name for the data (i.e. pharmacyclaims, events, etc...)
-        - provider_partition:  The name of the provider partition
+        - sqlContext:                   Spark SqlContext for accessing warehouse
+        - table_name:                   The table_name for the data (i.e. pharmacyclaims, events, etc...)
+        - provider_partition:           The name of the provider partition
+        - custom_schema (Optional):     The custom schema where the data can be found
+        - custom_table (Optional):      The custom table where the data can be found
     Output:
         - df:   pyspark.sql.DataFrame of the data
     '''
+    data_schema = custom_schema if custom_schema else ('dw' if table_name.startswith('emr') else 'default')
+    data_table = custom_table if custom_table else table_name
     df = sqlContext.sql(
         "SELECT * FROM {}.{} WHERE {}='{}'".format(
-            'dw' if table_name.startswith('emr') else 'default', table_name,
+            data_schema, data_table,
             'part_hvm_vdr_feed_id' if table_name.startswith('emr') else 'part_provider',
             provider_partition
         )
