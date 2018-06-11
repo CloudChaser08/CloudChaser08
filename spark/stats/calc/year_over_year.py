@@ -22,7 +22,7 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
     '''
 
     patient_identifier = PATIENT_IDENTIFIER
-    date_field = provider_conf['date_field']
+    date_field = 'coalesced_date'
 
     end_year = _parse_year(end_date)
 
@@ -31,7 +31,7 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
     # (2) Only care about unique paitent visits per year
     # (3) Window on patient id and sort by visit year,
     #     then add index within each window
-    # (4) If a rows rank + 1 subtracted from the end year 
+    # (4) If a rows rank + 1 subtracted from the end year
     #     does not equal the year for that row,
     #     then it is not sequential and we exclude it
     # (5) Get unique patient visits for each year
@@ -47,5 +47,3 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
     stats = map(lambda r: {'year': r.year, 'count': r['count']}, yoy_stats)
 
     return stats
-
-

@@ -4,6 +4,7 @@ import os
 from contextlib import closing
 import psycopg2
 from spark.helpers.file_utils import get_abs_path
+from spark.stats.config.dates import dates as provider_dates
 
 # map from emr datatype (table) name to the name of each datatype in
 # the marketplace db
@@ -106,23 +107,30 @@ def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
     return _get_config_from_db(get_columns_sql)
 
 
+def _fill_in_dates(conf):
+    if not conf.get('date_field'):
+        conf['date_field'] = provider_dates[conf['datatype']]
+
+    return conf
+
+
 def _fill_in_conf_dict(conf, feed_id, providers_conf_file):
     # configure stats whose configurations come from the marketplace db
-    if conf['fill_rate']:
+    if conf.get('fill_rate'):
         conf['fill_rate_conf'] = {
             "columns": _get_fill_rate_columns(
                 conf['datafeed_id'], conf['datatype'] if conf['datatype'].startswith('emr') else None
             )
         }
 
-    if conf['top_values']:
+    if conf.get('top_values'):
         conf['top_values_conf'] = {
             "columns": _get_top_values_columns(conf['datafeed_id']),
             "max_values": 10
         }
 
     # epi doesn't require any additional configurations
-    if conf['epi_calcs']:
+    if conf.get('epi_calcs'):
         conf['epi_calcs_conf'] = {}
 
     # configure stats whose configurations do not come from the marketplace db
@@ -167,10 +175,12 @@ def get_provider_config(providers_conf_file, feed_id):
         raise Exception('datatype is not specified for feed {}'.format(feed_id))
     elif provider_conf['datatype'] == 'emr':
         provider_conf['models'] = [
-            _fill_in_conf_dict(
-                dict(provider_conf.items() + model_conf.items()), feed_id, providers_conf_file
-            ) for model_conf in provider_conf['models']
+            _fill_in_dates(_fill_in_conf_dict(dict(
+                model_conf.items() + [('datafeed_id', provider_conf['datafeed_id'])]
+            ), feed_id, providers_conf_file))
+            for model_conf in provider_conf['models']
         ]
-        return provider_conf
     else:
-        return _fill_in_conf_dict(provider_conf, feed_id, providers_conf_file)
+        provider_conf = _fill_in_conf_dict(provider_conf, feed_id, providers_conf_file)
+
+    return _fill_in_dates(provider_conf)

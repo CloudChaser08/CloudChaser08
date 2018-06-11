@@ -7,16 +7,13 @@ import spark.stats.calc.year_over_year as year_over_year
 df = None
 results = None
 
-df = None
-results = None
-
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     global df, results
-    conf = { 'date_field': 'date',
+    conf = { 'date_field': ['date'],
              'year_over_year': True
             }
-    data_row = Row('date', 'hvid', 'c', 'd', 'e')
+    data_row = Row('coalesced_date', 'hvid', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
         data_row('1975-12-11', 'b', 'c', 'd', 'e'),
         data_row('2017-11-08', 'b', 'e', 'f', 'g'),
@@ -39,9 +36,6 @@ def test_number_of_years_calculated_correct():
 
 
 def test_stat_calc_counts_are_correct():
-    print results
     assert [r for r in results if r['year'] == 2017][0]['count'] == 4
     assert [r for r in results if r['year'] == 2016][0]['count'] == 2
     assert [r for r in results if r['year'] == 2015][0]['count'] == 1
-
-

@@ -11,11 +11,11 @@ results = None
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     global df, results
-    conf = { 'date_field'       : 'date',
-             'record_field' : 'c',
+    conf = { 'date_field'       : ['date'],
+             'record_field'     : 'c',
              'index_all_dates'  : False
             }
-    data_row = Row('date', 'hvid', 'c', 'd', 'e')
+    data_row = Row('coalesced_date', 'hvid', 'c', 'd', 'e')
     df = spark['spark'].sparkContext.parallelize([
         data_row('1975-12-11', 'b', 'c', 'd', 'e'),
         data_row('2017-11-08', 'b', 'e', 'f', 'g'),

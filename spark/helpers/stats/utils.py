@@ -1,4 +1,6 @@
 from pyspark.sql.functions import col, trim, udf, collect_list, when
+from functools import reduce
+
 
 def select_distinct_values_from_column(column_name):
     '''
@@ -125,3 +127,18 @@ def get_provider_data(sqlContext, table_name, provider_partition):
         )
     )
     return df
+
+
+def get_emr_union(sqlContext, model_confs, provider_id):
+    return reduce(
+        lambda df1, df2: df1.union(df2),
+        [
+            sqlContext.sql('''
+                SELECT hvid, hv_enc_id, coalesce({}) as coalesced_emr_date
+                FROM dw.{}
+                WHERE part_hvm_vdr_feed_id='{}'
+            '''.format(
+                ','.join(model_conf['date_field']), model_conf['datatype'], provider_id
+            )) for model_conf in model_confs
+        ]
+    )

@@ -2,6 +2,8 @@ import logging
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 
+from pyspark.sql.functions import coalesce
+
 import spark.stats.calc.fill_rate as fill_rate
 import spark.stats.calc.top_values as top_values
 import spark.stats.calc.key_stats as key_stats
@@ -94,13 +96,16 @@ def run_marketplace_stats(
         - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
 
+    if not stats_to_calculate:
+        return {}
+
     # pull out some variables from provider_conf
     datatype = provider_conf['datatype']
-    date_column_field = provider_conf['date_field']
+    date_columns = provider_conf['date_field']
     earliest_date = provider_conf['earliest_date']
     index_all_dates = provider_conf.get('index_all_dates', False)
 
-    # if earliest_date is greater than start_date, use earliest_date as start_date
+     # if earliest_date is greater than start_date, use earliest_date as start_date
     if earliest_date > start_date:
         start_date = earliest_date
 
@@ -109,9 +114,18 @@ def run_marketplace_stats(
     ).years
 
     # Get data
-    all_data_df = utils.get_provider_data(
-        sqlContext, datatype,
-        provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name']
+    if datatype == 'emr':
+        all_data_df = utils.get_emr_union(
+            sqlContext, provider_conf['models'], provider_conf['datafeed_id']
+        )
+    else:
+        all_data_df = utils.get_provider_data(
+            sqlContext, datatype,
+            provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name']
+        )
+
+    all_data_df = all_data_df.withColumn(
+        'coalesced_date', coalesce(*date_columns)
     )
 
     # Desired number of partitions when calculating
@@ -121,12 +135,12 @@ def run_marketplace_stats(
     # used for fill rate, top values, and key stats
     if index_all_dates:
         multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
-            '1900-01-01', end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates'),
+            '1900-01-01', end_date, 'coalesced_date', include_nulls=provider_conf.get('index_null_dates'),
             record_field=provider_conf.get('record_field')
         )(all_data_df)
     else:
         multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
-            start_date, end_date, date_column_field, include_nulls=provider_conf.get('index_null_dates'),
+            start_date, end_date, 'coalesced_date', include_nulls=provider_conf.get('index_null_dates'),
             record_field=provider_conf.get('record_field')
         )(all_data_df)
 
@@ -159,7 +173,7 @@ def run_marketplace_stats(
 
     # datatype, provider, earliest_date, end_date df cache
     # used for longitudinality and year over year
-    date_stats_df = all_data_df.select("hvid", provider_conf['date_field']).coalesce(partitions)
+    date_stats_df = all_data_df.select("hvid", "coalesced_date").coalesce(partitions)
 
     if 'longitudinality' in stats_to_calculate:
 
