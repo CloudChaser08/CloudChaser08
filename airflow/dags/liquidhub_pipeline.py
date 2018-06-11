@@ -28,7 +28,7 @@ DAG_NAME = 'liquidhub_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 6, 5, 16),
+    'start_date': datetime(2018, 6, 10, 12, 42),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -36,7 +36,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval="0 16 * * *",
+    schedule_interval="42 12 * * *",
     default_args=default_args
 )
 
@@ -55,11 +55,11 @@ else:
 # Transaction Addon file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 TRANSACTION_FILE_DESCRIPTION = 'Liquidhub transaction file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'LH_{}_LiquidHub_{{}}{{}}{{}}_plainoutput.txt'
+TRANSACTION_FILE_NAME_TEMPLATE = 'LH_{}_LiquidHub_{{}}{{}}{{}}_V1_plainoutput.txt'
 
 # Deid file
 DEID_FILE_DESCRIPTION = 'Liquidhub deid file'
-DEID_FILE_NAME_TEMPLATE = 'LH_{}_LiquidHub_{{}}{{}}{{}}_output.txt'
+DEID_FILE_NAME_TEMPLATE = 'LH_{}_LiquidHub_{{}}{{}}{{}}_V1_output.txt'
 
 # Return file
 RETURN_FILE_NAME_TEMPLATE = 'LH_Amgen_{}_{{}}{{}}{{}}_FILEID.txt.gz'
@@ -68,20 +68,22 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TMP_PATH_TEMPLATE
 )
 
+LIQUIDHUB_OFFSET = 1
+
 def get_pharmacy_id(ds, kwargs):
     return kwargs['ti'].xcom_pull(key='pharmacy_id', dag_id=DAG_NAME, task_ids='parse_pharmacy_id')
 
 def get_transaction_file_paths(ds, kwargs):
     pharmacy_id = get_pharmacy_id(ds, kwargs)
     return [get_tmp_dir(ds, kwargs) +\
-        date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE.format(pharmacy_id), kwargs)
+        date_utils.insert_date_into_template(TRANSACTION_FILE_NAME_TEMPLATE.format(pharmacy_id), kwargs, day_offset=LIQUIDHUB_OFFSET)
     ]
 
 
 def get_deid_file_urls(ds, kwargs):
     pharmacy_id = get_pharmacy_id(ds, kwargs)
     return [S3_TRANSACTION_RAW_URL +\
-        date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE.format(pharmacy_id), kwargs)
+        date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE.format(pharmacy_id), kwargs, day_offset=LIQUIDHUB_OFFSET)
     ]
 
 
@@ -91,7 +93,7 @@ def encrypted_decrypted_file_paths_function(ds, kwargs):
     encrypted_file_path = file_dir \
         + date_utils.insert_date_into_template(
             TRANSACTION_FILE_NAME_TEMPLATE.format(pharmacy_id),
-            kwargs
+            kwargs, day_offset=LIQUIDHUB_OFFSET
         )
     return [
         [encrypted_file_path, encrypted_file_path + '.gz']
@@ -109,7 +111,7 @@ def generate_file_validation_task(
             mdag.schedule_interval,
             {
                 'expected_file_name_func' : date_utils.generate_insert_date_into_template_function(
-                    path_template
+                    path_template, day_offset=LIQUIDHUB_OFFSET
                 ),
                 'file_name_pattern_func'  : date_utils.generate_insert_regex_into_template_function(
                     path_template
@@ -128,11 +130,11 @@ def generate_file_validation_task(
 
 validate_transaction = generate_file_validation_task(
     'transaction', TRANSACTION_FILE_NAME_TEMPLATE.format('.*'),
-    1000000
+    1000
 )
 validate_deid = generate_file_validation_task(
     'deid', DEID_FILE_NAME_TEMPLATE.format('.*'),
-    10000000
+    1000
 )
 
 fetch_transaction = SubDagOperator(
@@ -144,7 +146,7 @@ fetch_transaction = SubDagOperator(
         {
             'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
             'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE.format('.*')
+                TRANSACTION_FILE_NAME_TEMPLATE.format('.*'), day_offset=LIQUIDHUB_OFFSET
             ),
             's3_prefix'              : '/'.join(S3_TRANSACTION_RAW_URL.split('/')[3:]),
             's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity',
@@ -161,7 +163,7 @@ def do_parse_pharmacy_id(ds, **kwargs):
     files = os.listdir(file_dir)
     transactions_file = [f for f in files if 'plainoutput.txt' in f][0]
     
-    pharmacy_id = '_'.join(transactions_file.split('_')[1:-3])
+    pharmacy_id = '_'.join(transactions_file.split('_')[1:-4])
     kwargs['ti'].xcom_push(key='pharmacy_id', value=pharmacy_id)
 
 parse_pharmacy_id = PythonOperator(
@@ -203,7 +205,7 @@ split_transaction = SubDagOperator(
                 ),
             's3_prefix_func'           : lambda ds, k:
                 date_utils.insert_date_into_template(
-                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE.format(get_pharmacy_id(ds, k)), k
+                    S3_TRANSACTION_PROCESSED_URL_TEMPLATE.format(get_pharmacy_id(ds, k)), k, day_offset=LIQUIDHUB_OFFSET
                 ),
             'num_splits'               : 20
         }
@@ -245,7 +247,7 @@ queue_up_for_matching = SubDagOperator(
 #
 def norm_args(ds, k):
     pharmacy_id = get_pharmacy_id(d, k)
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k), '--pharmacy_id', pharmacy_id]
+    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', k, day_offset=LIQUIDHUB_OFFSET), '--pharmacy_id', pharmacy_id]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -260,10 +262,10 @@ detect_move_normalize_dag = SubDagOperator(
         mdag.schedule_interval,
         {
             'expected_matching_files_func'      : lambda ds, k: [
-                date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE.format(get_pharmacy_id(d, k)), k)
+                date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE.format(get_pharmacy_id(d, k)), k, day_offset=LIQUIDHUB_OFFSET)
             ],
             'dest_dir_func'                     : lambda ds, k:
-                get_pharmacy_id(ds, k) + date_utils.insert_date_into_template('/{}/{}/{}', k),
+                get_pharmacy_id(ds, k) + date_utils.insert_date_into_template('/{}/{}/{}', k, day_offset=LIQUIDHUB_OFFSET),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'e46667a2-27d7-4014-9382-2f91661999aa',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/liquidhub/custom/sparkNormalizeLiquidhub.py',
@@ -279,12 +281,12 @@ def do_fetch_return_file(ds, **kwargs):
     pid = get_pharmacy_id(ds, kwargs)
 
     return_file = date_utils.insert_date_into_template(
-        RETURN_FILE_NAME_TEMPLATE.format(pid), kwargs
+        RETURN_FILE_NAME_TEMPLATE.format(pid), kwargs, day_offset=LIQUIDHUB_OFFSET
     )
 
     s3_utils.fetch_file_from_s3(
         date_utils.insert_date_into_template(
-                S3_NORMALIZED_FILE_URL_TEMPLATE.format(pid), kwargs
+                S3_NORMALIZED_FILE_URL_TEMPLATE.format(pid), kwargs, day_offset=LIQUIDHUB_OFFSET
             ) + return_file,
         get_tmp_dir(ds, kwargs) + return_file
     )
@@ -326,9 +328,10 @@ if HVDAG.HVDAG.airflow_env == 'test':
         )
 
 fetch_transaction.set_upstream(validate_transaction)
-decrypt_transaction.set_upstream(fetch_transaction)
+parse_pharmacy_id.set_upstream(fetch_transaction)
+decrypt_transaction.set_upstream(parse_pharmacy_id)
 split_transaction.set_upstream(decrypt_transaction)
-queue_up_for_matching.set_upstream(validate_deid)
+queue_up_for_matching.set_upstream([validate_deid, parse_pharmacy_id])
 
 detect_move_normalize_dag.set_upstream(
     [queue_up_for_matching, split_transaction]
