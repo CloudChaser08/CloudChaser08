@@ -52,7 +52,7 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
             StructField('pharmacy_name', StringType(), True),
             StructField('brand', StringType(), True),
         ] + [
-            StructField('filler_' + str(i), StringType(), True) for i in xrange(1, 12)
+            StructField('filler_' + str(i), StringType(), True) for i in xrange(1, 9)
         ] + [
             StructField('weak_match', StringType(), True),
             StructField('provider_specific_id', StringType(), True),
@@ -65,7 +65,7 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
     header = spark.createDataFrame(
         [tuple(
             ['HVID', 'LHID', 'Pharmacy Name', 'Brand'] +
-            ['filler_' + str(i) for i in xrange(1, 12)] +
+            ['filler_' + str(i) for i in xrange(1, 9)] +
             ['Weak Match', 'Provider Specific ID', 'Provider Meta', 'Matching Meta Data'])],
         schema=schema
     )
