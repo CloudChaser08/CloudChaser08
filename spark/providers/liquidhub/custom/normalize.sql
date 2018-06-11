@@ -4,7 +4,7 @@ SELECT
     claimId                                     AS lhid,
     pharmacy_name                               AS pharmacy_name,
     brand                                       AS brand,
-    CASE WHEN isWeak THEN 'true'
+    CASE WHEN isWeak IS NOT NULL AND CAST(isWeak as boolean) THEN 'true'
     ELSE 'false' END                            AS weak_match,
     CASE WHEN providerMatchId IS NOT NULL THEN  LOWER(obfuscate_hvid(providerMatchId, 'LHv2'))
     END                                         AS provider_specific_id,
