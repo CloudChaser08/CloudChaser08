@@ -123,6 +123,7 @@ def run_marketplace_stats(
     )
     all_data_df = all_data_df.withColumn(
         'coalesced_date', coalesce(*date_columns)
+    )
 
     # Desired number of partitions when calculating
     partitions = int(spark.conf.get('spark.sql.shuffle.partitions'))
