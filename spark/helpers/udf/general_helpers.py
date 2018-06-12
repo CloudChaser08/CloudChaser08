@@ -77,6 +77,8 @@ def convert_value(value, conversion):
             return convert_cm_to_in(value)
         elif conversion == 'CENTIGRADE_TO_FAHRENHEIT':
             return convert_celsius_to_fahrenheit(value)
+        elif conversion == '' or conversion is None:
+            return value
 
 
 def convert_kg_to_lb(value):
