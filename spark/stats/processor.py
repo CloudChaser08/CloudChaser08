@@ -116,21 +116,13 @@ def run_marketplace_stats(
     ).years
 
     # Get data
-    if custom_schema is not None:
-        all_data_df = utils.get_provider_data(
-            sqlContext, datatype,
-            provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name'],
-            custom_schema=custom_schema, custom_table=custom_table
-        )
-    else:
-        all_data_df = utils.get_provider_data(
-            sqlContext, datatype,
-            provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name']
-        )
-
+    all_data_df = utils.get_provider_data(
+        sqlContext, datatype,
+        provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name'],
+        custom_schema=custom_schema, custom_table=custom_table
+    )
     all_data_df = all_data_df.withColumn(
         'coalesced_date', coalesce(*date_columns)
-    )
 
     # Desired number of partitions when calculating
     partitions = int(spark.conf.get('spark.sql.shuffle.partitions'))
