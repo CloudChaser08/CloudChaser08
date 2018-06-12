@@ -104,6 +104,8 @@ def run_marketplace_stats(
     date_columns = provider_conf['date_field']
     earliest_date = provider_conf['earliest_date']
     index_all_dates = provider_conf.get('index_all_dates', False)
+    custom_schema = provider_conf.get('custom_schema', None)
+    custom_table = provider_conf.get('custom_table', None)
 
      # if earliest_date is greater than start_date, use earliest_date as start_date
     if earliest_date > start_date:
@@ -114,16 +116,11 @@ def run_marketplace_stats(
     ).years
 
     # Get data
-    if datatype == 'emr':
-        all_data_df = utils.get_emr_union(
-            sqlContext, provider_conf['models'], provider_conf['datafeed_id']
-        )
-    else:
-        all_data_df = utils.get_provider_data(
-            sqlContext, datatype,
-            provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name']
-        )
-
+    all_data_df = utils.get_provider_data(
+        sqlContext, datatype,
+        provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name'],
+        custom_schema=custom_schema, custom_table=custom_table
+    )
     all_data_df = all_data_df.withColumn(
         'coalesced_date', coalesce(*date_columns)
     )
