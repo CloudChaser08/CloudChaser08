@@ -76,7 +76,7 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
         deliverable.createOrReplaceTempView('liquidhub_deliverable')
     else:
         normalized_records_unloader.unload_delimited_file(
-            spark, runner, '/staging/' + pharmacy_name + '/' + date_input.replace('-', '/') + '/', 'liquidhub_deliverable',
+            spark, runner, 'hdfs:///staging/' + pharmacy_name + '/' + date_input.replace('-', '/') + '/', 'liquidhub_deliverable',
             file_name='LH_Amgen_' + pharmacy_name + '_' + date_input.replace('-', '') + '_FILEID.txt.gz')
 
 def main(args):
