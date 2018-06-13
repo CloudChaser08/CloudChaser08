@@ -75,7 +75,7 @@ EXTRACT_COLUMNS = [
     'procedure_code',
     'procedure_code_qual',
     'principal_proc_ind',
-    'procedure_units',
+    'procedure_units_billed',   # Renamed from "procedure_units" in model v3
     'procedure_modifier_1',
     'procedure_modifier_2',
     'procedure_modifier_3',
