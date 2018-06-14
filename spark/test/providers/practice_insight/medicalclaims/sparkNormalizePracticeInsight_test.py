@@ -6,6 +6,7 @@ import spark.providers.practice_insight.medicalclaims.sparkNormalizePracticeInsi
     as practice_insight
 
 results = []
+res2 = []
 
 
 def get_rows_for_test(claim_id):
@@ -48,10 +49,11 @@ def test_init(spark):
         spark['spark'], spark['runner'], '1', '2016-12-31', 40, True
     )
 
-    global results
+    global results, res2
     results = spark['sqlContext'].sql(
         'select * from medicalclaims_common_model'
     ).collect()
+    res2 = spark['sqlContext'].sql("select * from tmp where claim_id = 'no_diag_cds'").collect()
 
 
 def test_diag_code_explosion_p_all_present():
@@ -188,6 +190,9 @@ def test_service_date_p_use_stmnt():
     )
     assert svc_date == [datetime.date(2016, 2, 1)]
 
+def test_row_count_no_diagnosis_priority():
+    "Ensure that with diagnosis codes but no diagnosis pointers are populated"
+    assert len(get_rows_for_test('no_diag_cds')) == 4
 
 def test_clean_up(spark):
     clean_up(spark)
