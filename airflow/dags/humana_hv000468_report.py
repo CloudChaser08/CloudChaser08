@@ -251,5 +251,5 @@ if HVDAG.HVDAG.airflow_env == 'test':
 fetch_extract_summaries.set_upstream(create_tmp_dir)
 generate_daily_report.set_upstream(fetch_extract_summaries)
 generate_monthly_report.set_upstream(fetch_extract_summaries)
-email_daily_report.set_upstream(generate_daily_report)
-clean_up_workspace.set_upstream(email_daily_report)
+email_report.set_upstream(generate_daily_report)
+clean_up_workspace.set_upstream(email_report)
