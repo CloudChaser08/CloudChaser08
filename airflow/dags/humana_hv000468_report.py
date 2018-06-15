@@ -79,11 +79,12 @@ def get_delivered_groups(exec_date):
 
 def get_delivered_groups_past_month(exec_date):
     groups = []
-    if in_past_month_too and exec_date.day == 1:
+    if exec_date.day == 1:
         last_month_start = (exec_date - timedelta(days=1)).replace(day=1)
         days = 0
-        while last_month_start + days < exec_date:
-            groups.extend(get_delivered_groups(last_month_start + days))
+        while last_month_start + timedelta(days=days) < exec_date:
+            groups.extend(get_delivered_groups(last_month_start + timedelta(days)))
+            days += 1
     return groups
 
 def get_tmp_dir(ds, kwargs):
@@ -136,6 +137,8 @@ def do_generate_daily_report(ds, **kwargs):
         with open(f) as fin:
             for line in fin:
                 fields = line.strip().split('|')
+                # Early versions of the delivery summary did not include the "w/records" count
+                fields.insert(3, 0) if len(fields) == 5 else None
                 patients  = int(fields[1])
                 matched   = int(fields[2])
                 w_records = int(fields[3])
@@ -173,7 +176,7 @@ def do_generate_monthly_report(ds, **kwargs):
     month = (kwargs['execution_date'] - timedelta(days=1)).strftime('%B')
 
     monthly_report_file = open(get_tmp_dir(ds, kwargs) + month +'_monthly_report.csv', 'w')
-    report_writer = csv.writer(monly_report_file, quoting=csv.QUOTE_MINIMAL)
+    report_writer = csv.writer(monthly_report_file, quoting=csv.QUOTE_MINIMAL)
     report_writer.writerow(['', 'Patients Sent', 'Patients Matched',
         'Patients with Records', 'Source', 'Source Record Count'])
     for group in groups:
@@ -182,6 +185,8 @@ def do_generate_monthly_report(ds, **kwargs):
         with open(f) as fin:
             for line in fin:
                 fields = line.strip().split('|')
+                # Early versions of the delivery summary did not include the "w/records" count
+                fields.insert(3, 0) if len(fields) == 5 else None
                 patients  = int(fields[1])
                 matched   = int(fields[2])
                 w_records = int(fields[3])
@@ -251,5 +256,5 @@ if HVDAG.HVDAG.airflow_env == 'test':
 fetch_extract_summaries.set_upstream(create_tmp_dir)
 generate_daily_report.set_upstream(fetch_extract_summaries)
 generate_monthly_report.set_upstream(fetch_extract_summaries)
-email_report.set_upstream(generate_daily_report)
+email_report.set_upstream([generate_daily_report, generate_monthly_report])
 clean_up_workspace.set_upstream(email_report)
