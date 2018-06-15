@@ -151,7 +151,7 @@ def do_generate_daily_report(ds, **kwargs):
     report_writer.writerow([])
     report_writer.writerow([])
     for source in total['records'].keys():
-        report_writer.writerow(['TOTAL', received_ts.isoformat(), delivered_ts.isoformat(),
+        report_writer.writerow(['TOTAL', '-', '-',
             total['patients'], total['matched'], total['w_records'], source, total['records'][source]])
     if not total['records'].keys():
         report_writer.writerow(['TOTAL', '-', '-',
@@ -179,8 +179,6 @@ def do_generate_monthly_report(ds, **kwargs):
     for group in groups:
         fn = EXTRACT_SUMMARY_TEMPLATE.format(group['id'])
         f  = get_tmp_dir(ds, kwargs) + fn
-        received_ts  = get_group_received_ts(group['id'])
-        delivered_ts = group['delivery_ts']
         with open(f) as fin:
             for line in fin:
                 fields = line.strip().split('|')
