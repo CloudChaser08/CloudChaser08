@@ -25,6 +25,9 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/alliance/events/resources/payload/'
         )
+        actives_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/alliance/events/resources/actives/'
+        )
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/alliance/out/{}/'.format(
             date_input.replace('-', '/')
@@ -32,11 +35,15 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/alliance/payload/{}/'.format(
             date_input.replace('-', '/')
         )
+        actives_path = 's3://salusv/testing/dewey/airflow/e2e/alliance/actives/{}/'.format(
+            date_input.replace('-', '/')
+        )
     else:
         input_path = 's3://salusv/incoming/consumer/alliance/projects/{}/{}/'.format(
             project_id, date_input.replace('-', '/')
         )
         matching_path = 's3://salusv/matching/payload/consumer/alliance/*/*/*'
+        actives_path = 's3://salusv/incoming/consumer/alliance/actives/*/*/*'
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -57,7 +64,7 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
     )
 
     import spark.providers.alliance.events.load_transactions as load_transactions
-    load_transactions.load(runner, input_path)
+    load_transactions.load(runner, input_path, actives_path)
 
     # Normalize the source data
     normalized_df = runner.run_spark_script(

@@ -114,5 +114,20 @@ def test_that_naics_codes_not_on_whitelist_are_nullified():
     assert row_of_interest.event_category_code is None
 
 
+def test_actives():
+    assert sorted([(r.hvid, r.event_date, r.logical_delete_reason) for r in results]) == [
+        ('1', datetime.date(2016, 1, 1), None),
+        ('10', None, None),
+        ('2', datetime.date(2016, 1, 15), None),
+        ('3', datetime.date(2016, 1, 13), None),
+        ('4', datetime.date(2016, 1, 13), None),
+        ('5', datetime.date(2016, 1, 5), None),
+        ('6', datetime.date(2016, 1, 30), None),
+        ('7', datetime.date(2016, 1, 10), None),
+        ('8', datetime.date(2016, 1, 8), None),
+        ('9', datetime.date(2016, 1, 31), 'INACTIVE')
+    ]
+
+
 def test_cleanup(spark):
     cleanup(spark)
