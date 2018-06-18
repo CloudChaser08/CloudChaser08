@@ -12,6 +12,8 @@ def load(runner, location, columns, file_type, delimiter=',', header=False):
         df = runner.sqlContext.read.csv(location, schema=schema, sep=delimiter, header=header)
     elif file_type == 'orc':
         df = runner.sqlContext.read.schema(schema).orc(location)
+    elif file_type == 'json':
+        df = runner.sqlContext.read.schema(schema).json(location)
     else:
         raise ValueError("Unsupported file type: {}".format(file_type))
 
