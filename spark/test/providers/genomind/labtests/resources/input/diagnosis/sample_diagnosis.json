@@ -1,0 +1,72 @@
+[
+  {
+    "UID": 1,
+    "patientKey": 9,
+    "ICDCodeType": "10",
+    "ICDCode": "F39",
+    "Diagnosis": "Unspecified mood [affective] disorder"
+  },
+  {
+    "UID": 2,
+    "patientKey": 9,
+    "ICDCodeType": "10",
+    "ICDCode": "F90.9",
+    "Diagnosis": "Attention-deficit hyperactivity disorder, unspecified type"
+  },
+  {
+    "UID": 3,
+    "patientKey": 10,
+    "ICDCodeType": "10",
+    "ICDCode": "F41.1",
+    "Diagnosis": "Generalized anxiety disorder"
+  },
+  {
+    "UID": 4,
+    "patientKey": 21,
+    "ICDCodeType": "10",
+    "ICDCode": "E66.9",
+    "Diagnosis": "Obesity, unspecified"
+  },
+  {
+    "UID": 5,
+    "patientKey": 21,
+    "ICDCodeType": "10",
+    "ICDCode": "F19.10",
+    "Diagnosis": "Other psychoactive substance abuse, uncomplicated"
+  },
+  {
+    "UID": 6,
+    "patientKey": 58,
+    "ICDCodeType": "10",
+    "ICDCode": "F19.10",
+    "Diagnosis": "Other psychoactive substance abuse, uncomplicated"
+  },
+  {
+    "UID": 7,
+    "patientKey": 66,
+    "ICDCodeType": "10",
+    "ICDCode": "E66.9",
+    "Diagnosis": "Obesity, unspecified"
+  },
+  {
+    "UID": 8,
+    "patientKey": 66,
+    "ICDCodeType": "10",
+    "ICDCode": "Z91.49",
+    "Diagnosis": "Other personal history of psychological trauma, not elsewhere classified"
+  },
+  {
+    "UID": 9,
+    "patientKey": 122,
+    "ICDCodeType": "10",
+    "ICDCode": "E66.9",
+    "Diagnosis": "Obesity, unspecified"
+  },
+  {
+    "UID": 10,
+    "patientKey": 144,
+    "ICDCodeType": "10",
+    "ICDCode": "F31.30",
+    "Diagnosis": "Bipolar disorder, current episode depressed, mild or moderate severity, unspecified"
+  }
+]

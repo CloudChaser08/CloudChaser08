@@ -1,0 +1,55 @@
+[
+  {
+    "UID": 1,
+    "PatientKey": 1,
+    "GeneName": "5HT2C"
+  },
+  {
+    "UID": 2,
+    "PatientKey": 1,
+    "GeneName": "ANK3"
+  },
+  {
+    "UID": 3,
+    "PatientKey": 1,
+    "GeneName": "CACNA1C"
+  },
+  {
+    "UID": 4,
+    "PatientKey": 1,
+    "GeneName": "COMT"
+  },
+  {
+    "UID": 5,
+    "PatientKey": 1,
+    "GeneName": "CYP2C19",
+    "PKPhenotype": "IM"
+  },
+  {
+    "UID": 6,
+    "PatientKey": 1,
+    "GeneName": "CYP2D6",
+    "PKPhenotype": "EM"
+  },
+  {
+    "UID": 7,
+    "PatientKey": 1,
+    "GeneName": "CYP3A4",
+    "PKPhenotype": "PM"
+  },
+  {
+    "UID": 8,
+    "PatientKey": 1,
+    "GeneName": "DRD2"
+  },
+  {
+    "UID": 9,
+    "PatientKey": 1,
+    "GeneName": "MTHFR"
+  },
+  {
+    "UID": 10,
+    "PatientKey": 1,
+    "GeneName": "SLC6A4"
+  }
+]
