@@ -125,7 +125,7 @@ def test_actives():
         ('6', datetime.date(2016, 1, 30), None),
         ('7', datetime.date(2016, 1, 10), None),
         ('8', datetime.date(2016, 1, 8), None),
-        ('9', datetime.date(2016, 1, 31), 'INACTIVE')
+        ('9', datetime.date(2016, 1, 31), 'Inactive')
     ]
 
 

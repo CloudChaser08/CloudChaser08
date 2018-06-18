@@ -43,7 +43,7 @@ SELECT
         ELSE NULL
     END                                     AS event_category_flag_qual,
     CASE
-    WHEN a.agility_id IS NULL THEN 'INACTIVE'
+    WHEN a.agility_id IS NULL THEN 'Inactive'
     END                                     AS logical_delete_reason
 FROM alliance_transactions t
     RIGHT JOIN matching_payload p ON t.agility_id = p.personId
