@@ -1,6 +1,6 @@
 drop table if exists ndc_temp0;
 
-create table ndc_temp0 as 
+create temporary view ndc_temp0 as
 select distinct d.ndc11, a.name, a.consumerdefinition, regexp_replace(e.icd10_code,'.','') as icd10_code
 from ref_gsdd_gsterms a
     inner join ref_gsdd_product_indications b on a.gstermid=b.gstermid
@@ -12,14 +12,14 @@ where d.ndc11 is not null and d.ndc11<>' ';
 
 drop table if exists marketplace_ndc_icd10_xwalk;
 
-create table marketplace_ndc_icd10_xwalk as
+create temporary view marketplace_ndc_icd10_xwalk as
 select distinct ndc11, icd10_code
 from ndc_temp0;
 
 
 drop table if exists ndc_temp1;
 
-create table ndc_temp1 as
+create temporary view ndc_temp1 as
 select distinct a.*, d.conceptname as level2, 
     CASE WHEN maxlev=2 then b.conceptname ELSE e.conceptname end as level3,
     CASE WHEN maxlev=2 then NULL
@@ -51,7 +51,7 @@ from
 
 drop table if exists ndc_temp2;
 
-create table ndc_temp2 as 
+create temporary view ndc_temp2 as
 select distinct b.productid, d.cp_num, c.level2, level3, level4, level5, level6, upper(i.genericnamelong) as genericnamelong
 from ref_gsdd_therapeutic_concept_tree_specific_product a
     left join ref_gsdd_product_ssms b on a.specificproductid=b.specificproductid
@@ -62,7 +62,7 @@ from ref_gsdd_therapeutic_concept_tree_specific_product a
 
 drop table if exists ndc_temp3;
 
-create table ndc_temp3 as
+create temporary view ndc_temp3 as
 select distinct a.productid, a.cp_num, b.ndc11
 from ref_gsdd_product a
     left join ref_gsdd_package b on a.productid=b.productid
@@ -71,7 +71,7 @@ from ref_gsdd_product a
 
 drop table if exists ndc_temp4;
 
-create table ndc_temp4 as
+create temporary view ndc_temp4 as
 select distinct a.ndc_code, 
     CASE WHEN a.substance_name<>'' and a.substance_name<>' ' and a.substance_name is not null then upper(a.substance_name) 
         WHEN a.nonproprietary_name<>'' and a.nonproprietary_name<>' ' and a.nonproprietary_name is not null then upper(a.nonproprietary_name) 
@@ -92,14 +92,14 @@ from default.ref_ndc_code a
 
 drop table if exists ndc_temp5;
 
-create table ndc_temp5
+create temporary view ndc_temp5 as
 select distinct drug, route_name, level1, level2, level3, level4, level5, level6
 from ndc_temp4
 where drug<>'' and drug<>' ' and drug is not null and level2 is not null;
 
 drop table if exists ndc_temp6;
 
-create table ndc_temp6 as
+create temporary view ndc_temp6 as
 select distinct a.ndc_code, a.drug, a.genericnamelong, a.level1,
     CASE WHEN a.level2 is null then c.level2 ELSE a.level2 end as level2,
     CASE WHEN a.level3 is null then c.level3 ELSE a.level3 end as level3,
@@ -111,13 +111,13 @@ from ndc_temp4 a
 
 drop table if exists ndc_temp7;
 
-create table ndc_temp7 as
+create temporary view ndc_temp7 as
 select distinct z.ndc_code, trim(concat(upper(z.proprietary_name), ' ', upper(z.proprietary_name_suffix))) as proprietary_name, upper(z.nonproprietary_name) as nonproprietary_name, upper(z.substance_name) as substance_name, upper(z.dosage_form_name) as dosage_form_name, upper(z.route_name) as route_name,     upper(z.pharm_classes) as pharm_class, x.level1, x.level2, x.level3, x.level4, x.level5, x.level6, x.genericnamelong
 from default.ref_ndc_code z
     left join ndc_temp6 x on z.ndc_code=x.ndc_code;
 
 drop table if exists ndc_temp8;
-create table ndc_temp8 as
+create temporary view ndc_temp8 as
 select ndc_code, level3 as level1, level4 as level2,
     CASE WHEN substance_name is not null and substance_name<>'' and substance_name<>' ' then substance_name
         WHEN nonproprietary_name is not null and nonproprietary_name<>'' and nonproprietary_name<>' ' then nonproprietary_name
@@ -127,5 +127,5 @@ from ndc_temp7 where level1<>'HUMAN OTC DRUG';
 
 
 drop table if exists marketplace_ndc;
-create table marketplace_ndc as
+create temporary view marketplace_ndc as
 select * from ndc_temp8;

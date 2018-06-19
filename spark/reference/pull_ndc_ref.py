@@ -27,7 +27,7 @@ spark = SparkSession.builder.master("yarn").appName("marketplace-ndc-pull").conf
 def pull_ndc():
 
     # Prepare tables
-    with open('pull_ndc_ref.sql') as sql_fo:
+    with open('/home/hadoop/spark/reference/pull_ndc_ref.sql') as sql_fo:
         sqls = sql_fo.read().split(';')
         for statement in sqls[:-1]:  # skip last line containing \n
             spark.sql(statement)

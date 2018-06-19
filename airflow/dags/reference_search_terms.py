@@ -44,7 +44,7 @@ def do_run_pyspark_routine(ds, **kwargs):
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 4, 21),
+    'start_date': datetime(2018, 1, 1),
     'end_date': None,
     'retries': 3,
     'retry_delay': timedelta(minutes=2),
@@ -53,7 +53,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval=None,
+    schedule_interval='0 0 1 1,4,7,10 *',
     default_args=default_args
 )
 
