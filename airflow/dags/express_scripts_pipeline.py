@@ -1,12 +1,6 @@
 from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
-from subprocess import check_output, check_call, STDOUT
-from json import loads as json_loads
-import logging
-import os
-import pysftp
-import re
 import sys
 
 import common.HVDAG as HVDAG
@@ -29,55 +23,78 @@ for m in [s3_validate_file, s3_fetch_file, decrypt_files, split_push_files,
 TMP_PATH_TEMPLATE='/tmp/express_scripts/pharmacyclaims/{}{}{}/'
 DAG_NAME='express_scripts_pipeline'
 
+if HVDAG.HVDAG.airflow_env == 'test':
+    S3_TRANSACTION_PREFIX='testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/incoming/'
+    S3_PAYLOAD_LOC_URL = 's3://salusv/testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/matching/'
+    S3_TRANSACTION_RAW_PATH = 'testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/raw/'
+    S3_DEID_RAW_PATH = 'testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/raw/'
+    S3_ORIGIN_BUCKET = 'salusv'
+else:
+    S3_TRANSACTION_PREFIX='incoming/pharmacyclaims/esi/'
+    S3_PAYLOAD_LOC_URL = 's3://salusv/matching/payload/pharmacyclaims/esi/'
+    S3_TRANSACTION_RAW_PATH='incoming/esi/'
+    S3_DEID_RAW_PATH='incoming/esi/'
+    S3_ORIGIN_BUCKET = 'healthverity'
+
 # Transaction file
 TRANSACTION_FILE_DESCRIPTION='Express Scripts transaction file'
-S3_TRANSACTION_PREFIX='incoming/pharmacyclaims/esi/'
+TRANSACTION_FILE_DESCRIPTION='Accredo transaction file'
 S3_TRANSACTION_SPLIT_PATH='s3://salusv/' + S3_TRANSACTION_PREFIX
-S3_TRANSACTION_RAW_PATH='incoming/esi/'
 TRANSACTION_FILE_NAME_TEMPLATE='10130X001_HV_RX_Claims_D{}{}{}.txt'
+ACCREDO_TRANSACTION_FILE_NAME_TEMPLATE='10130X001_HV_ODS_Claims_D{}{}{}.txt'
 MINIMUM_TRANSACTION_FILE_SIZE=500
 
 # Deid file
 DEID_FILE_DESCRIPTION='Express Scripts deid file'
-S3_DEID_RAW_PATH='incoming/esi/'
+ACCREDO_DEID_FILE_DESCRIPTION='Accredo deid file'
 DEID_FILE_NAME_TEMPLATE='10130X001_HV_RX_Claims_D{}{}{}_key.txt'
+ACCREDO_DEID_FILE_NAME_TEMPLATE='10130X001_HV_ODS_Claims_D{}{}{}_key.txt'
 MINIMUM_DEID_FILE_SIZE=500
-
-S3_TEXT_EXPRESS_SCRIPTS_PREFIX = 'warehouse/text/pharmacyclaims/express_scripts/'
-S3_PARQUET_EXPRESS_SCRIPTS_PREFIX = 'warehouse/parquet/pharmacyclaims/express_scripts/'
-S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_TEXT_EXPRESS_SCRIPTS_PREFIX
-
-S3_PAYLOAD_LOC_URL = 's3://salusv/matching/payload/pharmacyclaims/esi/'
-
-S3_ORIGIN_BUCKET = 'healthverity'
 
 EXPRESS_SCRIPTS_DAY_OFFSET = 6
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
 
+get_expected_transaction_file_name = date_utils.generate_insert_date_into_template_function(
+        TRANSACTION_FILE_NAME_TEMPLATE, day_offset=EXPRESS_SCRIPTS_DAY_OFFSET
+)
+get_expected_accredo_transaction_file_name = date_utils.generate_insert_date_into_template_function(
+        ACCREDO_TRANSACTION_FILE_NAME_TEMPLATE, day_offset=EXPRESS_SCRIPTS_DAY_OFFSET
+)
+get_expected_transaction_file_regex = date_utils.generate_insert_regex_into_template_function(
+        TRANSACTION_FILE_NAME_TEMPLATE
+)
+get_expected_accredo_transaction_file_name = date_utils.generate_insert_regex_into_template_function(
+        ACCREDO_TRANSACTION_FILE_NAME_TEMPLATE
+)
+get_expected_deid_file_name = date_utils.generate_insert_date_into_template_function(
+        DEID_FILE_NAME_TEMPLATE, day_offset=EXPRESS_SCRIPTS_DAY_OFFSET
+)
+get_expected_accredo_deid_file_name = date_utils.generate_insert_date_into_template_function(
+        ACCREDO_DEID_FILE_NAME_TEMPLATE, day_offset=EXPRESS_SCRIPTS_DAY_OFFSET
+)
+get_expected_deid_file_regex = date_utils.generate_insert_regex_into_template_function(
+        DEID_FILE_NAME_TEMPLATE
+)
+get_expected_accredo_deid_file_name = date_utils.generate_insert_regex_into_template_function(
+        ACCREDO_DEID_FILE_NAME_TEMPLATE
+)
+
 def get_encrypted_decrypted_file_paths(ds, kwargs):
     tmp_dir = get_tmp_dir(ds, kwargs)
-    expected_input = date_utils.insert_date_into_template(
-        TRANSACTION_FILE_NAME_TEMPLATE,
-        kwargs,
-        day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
-    )
-    expected_output = date_utils.insert_date_into_template(
-        TRANSACTION_FILE_NAME_TEMPLATE + '.gz',
-        kwargs,
-        day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
-    )
+    in1 = get_expected_transaction_file_name(ds, kwargs)
+    in2 = get_expected_accredo_transaction_file_name(ds, kwargs)
     return [
-        [tmp_dir + expected_input, tmp_dir + expected_output]
+        [in1, in1 + '.gz'],
+        [in2, in2 + '.gz']
     ]
 
 def get_transaction_files_paths(ds, kwargs):
-    return [get_tmp_dir(ds, kwargs)
-        + date_utils.insert_date_into_template(
-            TRANSACTION_FILE_NAME_TEMPLATE,
-            kwargs, 
-            day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
-        )
+    return [
+        get_tmp_dir(ds, kwargs)
+            + get_expected_transaction_file_name(ds, kwargs),
+        get_tmp_dir(ds, kwargs)
+            + get_expected_accredo_transaction_file_name(ds, kwargs)
     ]
 
 def get_parquet_dates(ds, kwargs):
@@ -94,21 +111,14 @@ def get_parquet_dates(ds, kwargs):
 
 def get_deid_file_urls(ds, kwargs):
     return [
-        's3://healthverity/' + S3_DEID_RAW_PATH 
-            + date_utils.insert_date_into_template(
-                DEID_FILE_NAME_TEMPLATE,
-                kwargs, 
-                day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
-            )
+        's3://healthverity/' + S3_DEID_RAW_PATH + f
+        for f in get_expected_matching_files(ds, kwargs)
     ]
 
 def get_expected_matching_files(ds, kwargs):
     return [
-        date_utils.insert_date_into_template(
-            DEID_FILE_NAME_TEMPLATE,
-            kwargs,
-            day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
-        )
+        get_expected_deid_file_name(ds, kwargs),
+        get_expected_accredo_deid_file_name(ds, kwargs)
     ]
 
 default_args = {
@@ -122,80 +132,83 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id=DAG_NAME,
-    schedule_interval='0 0 * * 0' if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1 else None,
+    schedule_interval='0 0 * * 0',
     default_args=default_args
 )
 
-validate_transaction_file_dag = SubDagOperator(
-    subdag=s3_validate_file.s3_validate_file(
-        DAG_NAME,
-        'validate_transaction_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
-            ),
-            'file_name_pattern_func' : date_utils.generate_insert_regex_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
-            ),
-            'minimum_file_size'      : MINIMUM_TRANSACTION_FILE_SIZE,
-            's3_prefix'              : S3_TRANSACTION_RAW_PATH,
-            's3_bucket'              : S3_ORIGIN_BUCKET,
-            'file_description'       : TRANSACTION_FILE_DESCRIPTION
-        }
-    ),
-    task_id='validate_transaction_file',
-    dag=mdag
+def generate_file_validation_dag(
+        task_id, expected_file_name_func, file_name_pattern_func,
+        minimum_file_size, s3_prefix, file_description
+):
+    return SubDagOperator(
+        subdag=s3_validate_file.s3_validate_file(
+            DAG_NAME,
+            'validate_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'expected_file_name_func': expected_file_name_func,
+                'file_name_pattern_func' : file_name_pattern_func,
+                'minimum_file_size'      : minimum_file_size,
+                's3_prefix'              : s3_prefix,
+                's3_bucket'              : S3_ORIGIN_BUCKET,
+                'file_description'       : file_description
+            }
+        ),
+        task_id='validate_' + task_id + '_file',
+        dag=mdag
+    )
+
+validate_transaction_file_dag = generate_file_validation_dag(
+    'transaction', get_expected_transaction_file_name, get_expected_transaction_file_regex,
+    MINIMUM_TRANSACTION_FILE_SIZE, S3_TRANSACTION_RAW_PATH, TRANSACTION_FILE_DESCRIPTION
 )
 
-validate_deid_file_dag = SubDagOperator(
-    subdag=s3_validate_file.s3_validate_file(
-        DAG_NAME,
-        'validate_deid_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'expected_file_name_func': date_utils.generate_insert_date_into_template_function(
-                DEID_FILE_NAME_TEMPLATE, 
-                day_offset = EXPRESS_SCRIPTS_DAY_OFFSET
-            ),
-            'file_name_pattern_func' : date_utils.generate_insert_regex_into_template_function(
-                DEID_FILE_NAME_TEMPLATE
-            ),
-            'minimum_file_size'      : MINIMUM_DEID_FILE_SIZE,
-            's3_prefix'              : S3_DEID_RAW_PATH,
-            's3_bucket'              : S3_ORIGIN_BUCKET,
-            'file_description'       : DEID_FILE_DESCRIPTION
-        }
-    ),
-    task_id='validate_deid_file',
-    dag=mdag
+validate_accredo_file_dag = generate_file_validation_dag(
+    'accredo_transaction', get_expected_accredo_transaction_file_name, get_expected_accredo_transaction_file_regex,
+    MINIMUM_TRANSACTION_FILE_SIZE, S3_TRANSACTION_RAW_PATH, ACCREDO_TRANSACTION_FILE_DESCRIPTION
 )
 
-fetch_transaction_file_dag = SubDagOperator(
-    subdag=s3_fetch_file.s3_fetch_file(
-        DAG_NAME,
-        'fetch_transaction_file',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_path_template'      : TMP_PATH_TEMPLATE,
-            'expected_file_name_func': date_utils.generate_insert_regex_into_template_function(
-                TRANSACTION_FILE_NAME_TEMPLATE
-            ),
-            's3_prefix'              : S3_DEID_RAW_PATH,
-            's3_bucket'              : S3_ORIGIN_BUCKET
-        }
-    ),
-    task_id='fetch_transaction_file',
-    dag=mdag
+validate_deid_file_dag = generate_file_validation_dag(
+    'deid', get_expected_deid_file_name, get_expected_deid_file_regex,
+    MINIMUM_DEID_FILE_SIZE, S3_DEID_RAW_PATH, DEID_FILE_DESCRIPTION
 )
 
-decrypt_transaction_file_dag = SubDagOperator(
+validate_accredo_deid_file_dag = generate_file_validation_dag(
+    'accredo_deid', get_expected_accredo_deid_file_name, get_expected_accredo_deid_file_regex,
+    MINIMUM_DEID_FILE_SIZE, S3_DEID_RAW_PATH, DEID_FILE_DESCRIPTION
+)
+
+def generate_fetch_file_dag(task_id, expected_file_name_func, s3_prefix):
+    return SubDagOperator(
+        subdag=s3_fetch_file.s3_fetch_file(
+            DAG_NAME,
+            'fetch_' + task_id + '_file',
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'tmp_path_template'      : TMP_PATH_TEMPLATE,
+                'expected_file_name_func': expected_file_name_func,
+                's3_prefix'              : s3_prefix,
+                's3_bucket'              : S3_ORIGIN_BUCKET
+            }
+        ),
+        task_id='fetch_' + task_id + '_file',
+        dag=mdag
+    )
+
+fetch_transaction_file_dag = generate_fetch_file_dag(
+    'transaction', get_expected_transaction_file_name, S3_TRANSACTION_RAW_PATH
+)
+
+fetch_accredo_transaction_file_dag = generate_fetch_file_dag(
+    'accredo_transaction', get_expected_accredo_transaction_file_name, S3_TRANSACTION_RAW_PATH
+)
+
+decrypt_transaction_files_dag = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
         DAG_NAME,
-        'decrypt_transaction_file',
+        'decrypt_transaction_files',
         default_args['start_date'],
         mdag.schedule_interval,
         {
@@ -203,7 +216,7 @@ decrypt_transaction_file_dag = SubDagOperator(
             'encrypted_decrypted_file_paths_func' : get_encrypted_decrypted_file_paths
         }
     ),
-    task_id='decrypt_transaction_file',
+    task_id='decrypt_transaction_files',
     dag=mdag
 )
 
@@ -309,10 +322,21 @@ update_analytics_db_old = SubDagOperator(
     dag=mdag
 )
 
+if HVDAG.HVDAG.airflow_env == 'test':
+    for t in ['validate_transaction_file_dag', 'validate_accredo_file_dag',
+            'validate_deid_file_dag', 'validate_accredo_deid_file_dag',
+            'queue_up_for_matching_dag', 'update_analytics_db_old']:
+        del mdag.task_dict[t]
+        globals()[t] = DummyOperator(
+            task_id = t,
+            dag = mdag
+        )
+
 fetch_transaction_file_dag.set_upstream(validate_transaction_file_dag)
-decrypt_transaction_file_dag.set_upstream(fetch_transaction_file_dag)
+fetch_accredo_transaction_file_dag.set_upstream(validate_accredo_transaction_file_dag)
+decrypt_transaction_file_dag.set_upstream([fetch_transaction_file_dag, fetch_accredo_transaction_file_dag])
 split_push_transaction_files_dag.set_upstream(decrypt_transaction_file_dag)
-queue_up_for_matching_dag.set_upstream(validate_deid_file_dag)
+queue_up_for_matching_dag.set_upstream([validate_deid_file_dag, validate_accredo_deid_file_dag])
 detect_move_normalize_dag.set_upstream([queue_up_for_matching_dag, split_push_transaction_files_dag])
 update_analytics_db_old.set_upstream(detect_move_normalize_dag)
 clean_up_tmp_dir_dag.set_upstream(split_push_transaction_files_dag)
