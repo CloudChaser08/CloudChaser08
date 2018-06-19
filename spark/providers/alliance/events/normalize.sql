@@ -5,6 +5,7 @@ SELECT
     SUBSTR(TRIM(p.threeDigitZip), 1, 3)     AS patient_zip3,
     TRIM(UPPER(p.state))                    AS patient_state,
     p.gender                                AS patient_gender,
+    p.personId                              AS source_record_id,
     CASE
         WHEN SUBSTR(TRIM(t.naics_code), 1, 3) = '813' THEN NULL
         ELSE t.merchant_name
