@@ -14,6 +14,7 @@ S3_EXPRESS_SCRIPTS_MATCHING = 's3://salusv/matching/payload/pharmacyclaims/esi/'
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--setid', type=str)
+parser.add_argument('--accredo_setid', type=str)
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
@@ -79,7 +80,7 @@ file_date = datetime.strptime(args.date, '%Y-%m-%d')
 run_psql_script('create_normalized_data_table.sql', [
     ['table', 'normalized_claims', False]
 ])
-setid_path_to_unload = {}
+date_path_to_unload = {}
 for i in xrange(1, 3):
     # Provide some flexibility in case the previous batch came in a day early or late
     for j in xrange(-1, 2):
@@ -94,14 +95,11 @@ for i in xrange(1, 3):
             ['input_path', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'],
             ['credentials', args.s3_credentials]
         ])
-        res = run_psql_query('SELECT DISTINCT data_set FROM normalized_claims', True)
-        setids = map(lambda x: x.replace(' ',''), res.split("\n")[2:-3])
-        for setid in setids:
-            if setid not in setid_path_to_unload:
-                setid_path_to_unload[setid] = S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'
+        date_path_to_unload[d_path] = S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'
 
-setid_path_to_unload[args.setid] = S3_EXPRESS_SCRIPTS_WAREHOUSE + date_path + '/'
+date_path_to_unload[date_path] = S3_EXPRESS_SCRIPTS_WAREHOUSE + date_path + '/'
 
+# Non-accredo claims
 enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
     ['filename', args.setid],
     ['today', TODAY],
@@ -109,14 +107,37 @@ enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql'
     ['vendor', 'express scripts']
 ])
 enqueue_psql_script('load_transactions.sql', [
-    ['input_path', S3_EXPRESS_SCRIPTS_IN + date_path + '/'],
+    ['input_path', S3_EXPRESS_SCRIPTS_IN + date_path + '/10130X001_HV_RX_Claims'],
     ['credentials', args.s3_credentials]
 ])
 enqueue_psql_script('load_matching_payload.sql', [
-    ['matching_path', S3_EXPRESS_SCRIPTS_MATCHING + date_path + '/'],
+    ['matching_path', S3_EXPRESS_SCRIPTS_MATCHING + date_path + '/10130X001_HV_RX_Claims'],
     ['credentials', args.s3_credentials]
 ])
-enqueue_psql_script('normalize_pharmacy_claims.sql')
+enqueue_psql_script('normalize_pharmacy_claims.sql', [
+    ['tmp_table', 'non_accredo_claims']
+])
+
+# Accredo claims, which are delivered in a separate file
+enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
+    ['filename', args.accredo_setid],
+    ['today', TODAY],
+    ['feedname', 'express scripts pharmacy claims'],
+    ['vendor', 'express scripts']
+])
+enqueue_psql_script('load_transactions.sql', [
+    ['input_path', S3_EXPRESS_SCRIPTS_IN + date_path + '/10130X001_HV_ODS_Claims'],
+    ['credentials', args.s3_credentials]
+])
+enqueue_psql_script('load_matching_payload.sql', [
+    ['matching_path', S3_EXPRESS_SCRIPTS_MATCHING + date_path + '/10130X001_HV_ODS_Claims'],
+    ['credentials', args.s3_credentials]
+])
+enqueue_psql_script('normalize_pharmacy_claims.sql', [
+    ['tmp_table', 'accredo_claims']
+])
+
+enqueue_psql_script('merge_pharmacy_claims.sql')
 
 # Privacy filtering
 enqueue_psql_script('../../redshift_norm_common/nullify_icd9_blacklist.sql', [
