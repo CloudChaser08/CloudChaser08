@@ -4,6 +4,10 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
 encounter_transformer = Transformer(
+    ptnt_age_num=[
+        TransformFunction(post_norm_cleanup.cap_age, ['ptnt_age_num']),
+        TransformFunction(post_norm_cleanup.validate_age, ['ptnt_age_num', 'enc_start_dt', 'ptnt_birth_yr'])
+    ],
     ptnt_birth_yr=[
         TransformFunction(post_norm_cleanup.cap_year_of_birth, ['ptnt_age_num', 'enc_start_dt', 'ptnt_birth_yr'])
     ],
