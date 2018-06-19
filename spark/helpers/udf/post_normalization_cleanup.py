@@ -227,16 +227,26 @@ def validate_age(age, date_service, year_of_birth):
     If the age is 0 and either date_service of year_of_birth is none,
     consider '0' a null value and nullify the age.
     """
-    if age is None:
+    try:
+        int(age)
+    except TypeError:
         return
-    elif date_service is None or year_of_birth is None:
+
+    if date_service is None or year_of_birth is None:
         if age == 0:
             return None
         else:
             return age
-    elif isinstance(date_service, datetime.date) \
-         and abs(age - (date_service.year - year_of_birth)) > 2:
-        return None
+    elif isinstance(date_service, datetime.date):
+        try:
+            int(year_of_birth)
+        except TypeError:
+            return age
+
+        if abs(int(age) - (date_service.year - int(year_of_birth))) > 2:
+            return None
+        else:
+            return age
     else:
         return age
 
