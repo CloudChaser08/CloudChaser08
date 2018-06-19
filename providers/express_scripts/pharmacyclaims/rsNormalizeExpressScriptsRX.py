@@ -17,7 +17,6 @@ NON_ACCREDO_PREFIX = '10130X001_HV_RX_Claims'
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--setid', type=str)
-parser.add_argument('--accredo_setid', type=str)
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
@@ -102,59 +101,35 @@ for i in xrange(1, 3):
 
 date_path_to_unload[date_path] = S3_EXPRESS_SCRIPTS_WAREHOUSE + date_path + '/'
 
-# Non-accredo claims
-enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
-    ['filename', args.setid],
-    ['today', TODAY],
-    ['feedname', 'express scripts pharmacy claims'],
-    ['vendor', 'express scripts']
-])
-
-# A particular day may not have both Accredo and non-Accredo data
-has_data = True
-try:
-    subprocess.check_call(['aws', 's3', 'ls', S3_EXPRESS_SCRIPTS_IN + date_path + '/' + ACCREDO_PREFIX])
-except:
-    has_data = False
-
-if has_data:
-    enqueue_psql_script('load_transactions.sql', [
-        ['input_path', S3_EXPRESS_SCRIPTS_IN + date_path + '/' + ACCREDO_PREFIX],
-        ['credentials', args.s3_credentials]
-    ])
-    enqueue_psql_script('load_matching_payload.sql', [
-        ['matching_path', S3_EXPRESS_SCRIPTS_MATCHING + date_path + '/' + ACCREDO_PREFIX],
-        ['credentials', args.s3_credentials]
-    ])
-    enqueue_psql_script('normalize_pharmacy_claims.sql', [
-        ['tmp_table', 'non_accredo_claims']
+# We need to be able to keep track of the source file, so run this once
+# for accredo files and once for non-accredo files then merge
+for file_prefix in [NON_ACCREDO_PREFIX, ACCREDO_PREFIX]:
+    enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
+        ['filename', args.setid.replace(NON_ACCREDO_PREFIX, file_prefix)],
+        ['today', TODAY],
+        ['feedname', 'express scripts pharmacy claims'],
+        ['vendor', 'express scripts']
     ])
 
-# Accredo claims, which are delivered in a separate file
-enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
-    ['filename', args.accredo_setid],
-    ['today', TODAY],
-    ['feedname', 'express scripts pharmacy claims'],
-    ['vendor', 'express scripts']
-])
-has_data = True
-try:
-    subprocess.check_call(['aws', 's3', 'ls', S3_EXPRESS_SCRIPTS_IN + date_path + '/' + ACCREDO_PREFIX])
-except:
-    has_data = False
+    # A particular day may not have both Accredo and non-Accredo data
+    has_data = True
+    try:
+        subprocess.check_call(['aws', 's3', 'ls', S3_EXPRESS_SCRIPTS_IN + date_path + '/' + file_prefix])
+    except:
+        has_data = False
 
-if has_data:
-    enqueue_psql_script('load_transactions.sql', [
-        ['input_path', S3_EXPRESS_SCRIPTS_IN + date_path + '/' + ACCREDO_PREFIX],
-        ['credentials', args.s3_credentials]
-    ])
-    enqueue_psql_script('load_matching_payload.sql', [
-        ['matching_path', S3_EXPRESS_SCRIPTS_MATCHING + date_path + '/' + ACCREDO_PREFIX],
-        ['credentials', args.s3_credentials]
-    ])
-    enqueue_psql_script('normalize_pharmacy_claims.sql', [
-        ['tmp_table', 'accredo_claims']
-    ])
+    if has_data:
+        enqueue_psql_script('load_transactions.sql', [
+            ['input_path', S3_EXPRESS_SCRIPTS_IN + date_path + '/' + file_prefix],
+            ['credentials', args.s3_credentials]
+        ])
+        enqueue_psql_script('load_matching_payload.sql', [
+            ['matching_path', S3_EXPRESS_SCRIPTS_MATCHING + date_path + '/' + file_prefix],
+            ['credentials', args.s3_credentials]
+        ])
+        enqueue_psql_script('normalize_pharmacy_claims.sql', [
+            ['tmp_table', 'non_accredo_claims']
+        ])
 
 enqueue_psql_script('merge_pharmacy_claims.sql')
 
