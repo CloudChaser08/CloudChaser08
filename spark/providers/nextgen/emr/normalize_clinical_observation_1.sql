@@ -2,7 +2,7 @@ SELECT
     '04'                                    AS mdl_vrsn_num,
     sub.dataset                             AS data_set_nm,
     sub.reportingenterpriseid               AS vdr_org_id,
-    concat_ws('_', 'NG',
+    concat_ws('_', '118',
         sub.reportingenterpriseid,
         sub.nextgengroupid)                 AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
@@ -68,4 +68,4 @@ FROM substanceusage sub
         WHERE gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
             AND whtlst_flg = 'Y'
         ) ref4
-        ON TRIM(UPPER(sub.emrcode)) = ref4.gen_ref_itm_nm
+        ON UPPER(sub.emrcode) = ref4.gen_ref_itm_nm

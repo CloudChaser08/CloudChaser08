@@ -2,7 +2,7 @@ SELECT
     '04'                                    AS mdl_vrsn_num,
     lip.dataset                             AS data_set_nm,
     lip.reportingenterpriseid               AS vdr_org_id,
-    concat_ws('_', 'NG',
+    concat_ws('_', '118',
         lip.reportingenterpriseid,
         lip.nextgengroupid)                 AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,

@@ -2,7 +2,7 @@ SELECT
     '04'                                    AS mdl_vrsn_num,
     ord.dataset                             AS data_set_nm,
     ord.reportingenterpriseid               AS vdr_org_id,
-    concat_ws('_', 'NG',
+    concat_ws('_', '118',
         ord.reportingenterpriseid,
         ord.nextgengroupid)                 AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
@@ -50,9 +50,9 @@ SELECT
     UPPER(COALESCE(ord.acttext, ord.acttextdisplay, ord.actdescription))
                                             AS prov_ord_alt_cd,
     'VENDOR'                                AS prov_ord_alt_cd_qual,
-    UPPER(COALESCE(ord.acttext, ord.acttextdisplay, ord.actdescription))
+    UPPER(COALESCE(ord.acttextdisplay, ord.actdescription, ord.acttext))
                                             AS prov_ord_alt_nm,
-    UPPER(COALESCE(ord.acttext, ord.acttextdisplay, ord.actdescription))
+    UPPER(COALESCE(ord.actdescription, ord.acttextdisplay, ord.acttext))
                                             AS prov_ord_alt_desc,
     CASE WHEN diag2.code IS NOT NULL
             THEN clean_up_diagnosis_code(diag2.code, NULL,

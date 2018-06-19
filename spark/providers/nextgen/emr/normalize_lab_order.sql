@@ -6,7 +6,7 @@ SELECT
     ord.reportingenterpriseid               AS vdr_org_id,
     ord.ordernum                            AS vdr_lab_ord_id,
     'reportingenterpriseid'                 AS vdr_lab_ord_id_qual,
-    concat_ws('_', 'NG',
+    concat_ws('_', '118',
         ord.reportingenterpriseid,
         ord.nextgengroupid)                 AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
@@ -20,7 +20,6 @@ SELECT
     extract_date(
         substring(ord.encounterdate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS enc_dt,
-    NULL                                    AS prov_ord_dt,
     extract_date(
         substring(ord.scheduledtime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS lab_ord_test_schedd_dt,

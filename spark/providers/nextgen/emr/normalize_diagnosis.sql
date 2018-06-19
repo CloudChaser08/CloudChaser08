@@ -2,7 +2,7 @@ SELECT
     '05'                                    AS mdl_vrsn_num,
     diag.dataset                            AS data_set_nm,
     diag.reportingenterpriseid              AS vdr_org_id,
-    concat_ws('_', 'NG',
+    concat_ws('_', '118',
         diag.reportingenterpriseid,
         diag.nextgengroupid)                AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
