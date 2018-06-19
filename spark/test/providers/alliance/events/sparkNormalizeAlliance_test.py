@@ -73,7 +73,7 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    al.run(spark['spark'], spark['runner'], '2017-10-06', "sample.psv", test=True)
+    al.run(spark['spark'], spark['runner'], '2017-10-06', None, test=True)
     global results
     results = spark['sqlContext'] \
                 .sql('select * from event_common_model') \
@@ -112,6 +112,21 @@ def test_that_event_category_flag_fields_are_populated_properly():
 def test_that_naics_codes_not_on_whitelist_are_nullified():
     row_of_interest = filter(lambda x: x.hvid == '8', results)[0]
     assert row_of_interest.event_category_code is None
+
+
+def test_actives():
+    assert sorted([(r.hvid, r.event_date, r.logical_delete_reason) for r in results]) == [
+        ('1', datetime.date(2016, 1, 1), None),
+        ('10', None, None),
+        ('2', datetime.date(2016, 1, 15), None),
+        ('3', datetime.date(2016, 1, 13), None),
+        ('4', datetime.date(2016, 1, 13), None),
+        ('5', datetime.date(2016, 1, 5), None),
+        ('6', datetime.date(2016, 1, 30), None),
+        ('7', datetime.date(2016, 1, 10), None),
+        ('8', datetime.date(2016, 1, 8), None),
+        ('9', datetime.date(2016, 1, 31), 'Inactive')
+    ]
 
 
 def test_cleanup(spark):

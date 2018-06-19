@@ -16,7 +16,10 @@ FEED_ID = '56'
 def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
     script_path = __file__
 
-    setid = 'HVRequest_{}_return.csv'.format(project_id)
+    normalize_full_set = False if project_id else True
+
+    setid = 'HVRequest_{}_return.csv'.format(project_id) if project_id \
+            else 'healthverity_sample_1MM_20180309.txt'
 
     if test:
         input_path = file_utils.get_abs_path(
@@ -25,6 +28,9 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/alliance/events/resources/payload/'
         )
+        actives_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/alliance/events/resources/actives/'
+        )
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/alliance/out/{}/'.format(
             date_input.replace('-', '/')
@@ -32,11 +38,15 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/alliance/payload/{}/'.format(
             date_input.replace('-', '/')
         )
+        actives_path = 's3://salusv/testing/dewey/airflow/e2e/alliance/actives/{}/'.format(
+            date_input.replace('-', '/')
+        )
     else:
         input_path = 's3://salusv/incoming/consumer/alliance/projects/{}/{}/'.format(
             project_id, date_input.replace('-', '/')
-        )
+        ) if project_id else 's3://salusv/incoming/consumer/alliance/2018/03/12/onemillion/'
         matching_path = 's3://salusv/matching/payload/consumer/alliance/*/*/*'
+        actives_path = 's3://salusv/incoming/consumer/alliance/actives/*/*/*'
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -57,13 +67,13 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
     )
 
     import spark.providers.alliance.events.load_transactions as load_transactions
-    load_transactions.load(runner, input_path)
+    load_transactions.load(runner, input_path, actives_path)
 
     # Normalize the source data
     normalized_df = runner.run_spark_script(
-        'normalize.sql',
-        [],
-        return_output=True
+        'normalize.sql', [
+            ['join_type', 'RIGHT' if normalize_full_set else 'INNER', False]
+        ], return_output=True
     )
 
     # Post-processing on the normalized data
@@ -145,6 +155,6 @@ if __name__ == '__main__':
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     parser.add_argument('--output_path', type=str)
-    parser.add_argument('--project_id', type=str)
+    parser.add_argument('--project_id', type=str, default=None)
     args = parser.parse_args()
     main(args)
