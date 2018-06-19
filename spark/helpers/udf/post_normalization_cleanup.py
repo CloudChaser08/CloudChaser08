@@ -207,6 +207,9 @@ def nullify_drg_blacklist(drg_code):
 
 # Age caps
 def cap_age(age):
+    """
+    Convert age values >= 85 to 90
+    """
     if age is None or age == '':
         return
     try:
@@ -214,6 +217,29 @@ def cap_age(age):
             None if int(age) < 0 else age
     except:
         return None
+
+
+def validate_age(age, date_service, year_of_birth):
+    """
+    Ensure that the age is within 2 years of its derivation from
+    date_service and year_of_birth.
+
+    If the age is 0 and either date_service of year_of_birth is none,
+    consider '0' a null value and nullify the age.
+    """
+    if age is None:
+        return
+    elif date_service is None or year_of_birth is None:
+        if age == 0:
+            return None
+        else:
+            return age
+    elif isinstance(date_service, datetime.date) \
+         and abs(age - (date_service.year - year_of_birth)) > 2:
+        return None
+    else:
+        return age
+
 
 def cap_year_of_birth(age, date_service, year_of_birth):
     """ Cap year of birth if age is 85 and over """

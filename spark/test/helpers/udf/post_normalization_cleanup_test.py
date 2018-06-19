@@ -14,6 +14,31 @@ def test_age_cap():
     assert cleanup.cap_age('') is None
 
 
+def test_age_validation():
+    # null cases
+    assert cleanup.validate_age(None, None, None) is None
+    assert cleanup.validate_age(0, None, None) is None
+
+    # 0 cases
+    assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2014) is None
+    assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2015) == 0
+    assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2016) == 0
+    assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2017) == 0
+    assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2018) == 0
+    assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2019) == 0
+    assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2020) is None
+
+    # misc other cases
+    assert cleanup.validate_age(40, datetime.date(2014, 1, 1), 1974) == 40
+    assert cleanup.validate_age(40, None, 1940) == 40
+    assert cleanup.validate_age(40, datetime.date(2014, 1, 1), None) == 40
+    assert cleanup.validate_age(40, None, None) == 40
+    assert cleanup.validate_age(40, datetime.date(2014, 1, 1), 1977) is None
+
+    assert cleanup.validate_age(20, datetime.date(2000, 1, 1), 1980) == 20
+    assert cleanup.validate_age(20, datetime.date(2000, 1, 1), 1977) is None
+
+
 def test_year_of_birth_cap():
     # should get capped
     assert cleanup.cap_year_of_birth(None, None, 1800) == 1927
