@@ -1011,7 +1011,7 @@ WHERE base.service_line_number IS NOT NULL
 INSERT INTO medicalclaims_common_model
 SELECT base.*
 FROM tmp base
-    INNER JOIN (
+    LEFT JOIN (
     SELECT claim_id,
         COLLECT_SET(COALESCE(diagnosis_code, '<NULL>')) as codes
     FROM tmp
@@ -1019,10 +1019,11 @@ FROM tmp base
     GROUP BY claim_id
         ) claim_code ON base.claim_id = claim_code.claim_id
 WHERE base.service_line_number IS NULL
-    AND NOT ARRAY_CONTAINS(
+    AND base.diagnosis_code IS NOT NULL
+    AND (NOT ARRAY_CONTAINS(
         claim_code.codes,
         COALESCE(base.diagnosis_code, '<NULL>')
-        )
+        ) OR claim_code.codes IS NULL)
     ;
 
 -- we will still need to add in rows where there are no diagnosis
