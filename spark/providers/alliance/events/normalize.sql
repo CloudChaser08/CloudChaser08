@@ -46,5 +46,5 @@ SELECT
     WHEN a.agility_id IS NULL THEN 'Inactive'
     END                                     AS logical_delete_reason
 FROM alliance_transactions t
-    RIGHT JOIN matching_payload p ON t.agility_id = p.personId
+    {join_type} JOIN matching_payload p ON t.agility_id = p.personId
     LEFT JOIN actives a ON p.personId = a.agility_id

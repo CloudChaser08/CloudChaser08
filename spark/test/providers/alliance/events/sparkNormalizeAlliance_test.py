@@ -73,7 +73,7 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    al.run(spark['spark'], spark['runner'], '2017-10-06', "sample.psv", test=True)
+    al.run(spark['spark'], spark['runner'], '2017-10-06', None, test=True)
     global results
     results = spark['sqlContext'] \
                 .sql('select * from event_common_model') \
