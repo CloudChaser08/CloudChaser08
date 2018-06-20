@@ -151,6 +151,7 @@ CREATE VIEW default.medicalclaims (
         claim_transaction_date_qual,
         claim_transaction_amount,
         claim_transaction_amount_qual,
+        medical_claim_link_text,
         logical_delete_reason,
         part_provider,
         part_processdate
@@ -306,6 +307,7 @@ CREATE VIEW default.medicalclaims (
     claim_transaction_date_qual,
     claim_transaction_amount,
     claim_transaction_amount_qual,
+    medical_claim_link_text,
     logical_delete_reason,
     part_provider,
     CASE WHEN part_best_date NOT IN ('NULL', '0_PREDATES_HVM_HISTORY')
@@ -733,6 +735,7 @@ SELECT record_id,
     NULL AS claim_transaction_date_qual,
     NULL AS claim_transaction_amount,
     NULL AS claim_transaction_amount_qual,
+    NULL AS medical_claim_link_text,
     NULL AS logical_delete_reason,
     part_provider,
     CASE WHEN part_best_date NOT IN ('NULL', '0_PREDATES_HVM_HISTORY')
@@ -1148,6 +1151,7 @@ SELECT CAST(record_id AS bigint),
     NULL AS claim_transaction_date_qual,
     NULL AS claim_transaction_amount,
     NULL AS claim_transaction_amount_qual,
+    NULL AS medical_claim_link_text,
     NULL AS logical_delete_reason,
     part_provider,
     CASE
