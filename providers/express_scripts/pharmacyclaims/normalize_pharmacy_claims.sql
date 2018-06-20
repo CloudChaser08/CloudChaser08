@@ -85,4 +85,5 @@ WHERE
 -- 32873 is roughly 90 years, Redshift doesn't support year intervals
 date_service IS NULL OR (patient_year_of_birth < (extract('year' from date_service::date - '32873 days'::interval)::text)) OR patient_year_of_birth > (extract('year' from getdate())::text);
 
+DROP TABLE IF EXISTS :tmp_table;
 ALTER TABLE pharmacyclaims_common_model RENAME TO :tmp_table;

@@ -97,13 +97,13 @@ for i in xrange(1, 3):
             ['input_path', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'],
             ['credentials', args.s3_credentials]
         ])
-        date_path_to_unload[d_path] = S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'
+        date_path_to_unload[d_path.replace('/', '')] = S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'
 
-date_path_to_unload[date_path] = S3_EXPRESS_SCRIPTS_WAREHOUSE + date_path + '/'
+date_path_to_unload[date_path.replace('/', '')] = S3_EXPRESS_SCRIPTS_WAREHOUSE + date_path + '/'
 
 # We need to be able to keep track of the source file, so run this once
 # for accredo files and once for non-accredo files then merge
-for file_prefix in [NON_ACCREDO_PREFIX, ACCREDO_PREFIX]:
+for file_prefix, table_name in [(NON_ACCREDO_PREFIX, 'non_accredo_claims'), (ACCREDO_PREFIX, 'accredo_claims')]:
     enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
         ['filename', args.setid.replace(NON_ACCREDO_PREFIX, file_prefix)],
         ['today', TODAY],
@@ -128,7 +128,7 @@ for file_prefix in [NON_ACCREDO_PREFIX, ACCREDO_PREFIX]:
             ['credentials', args.s3_credentials]
         ])
         enqueue_psql_script('normalize_pharmacy_claims.sql', [
-            ['tmp_table', 'non_accredo_claims']
+            ['tmp_table', table_name]
         ])
 
 enqueue_psql_script('merge_pharmacy_claims.sql')
@@ -184,11 +184,11 @@ for i in xrange(1, 3):
 enqueue_psql_script('clean_out_reversed_claims.sql')
 enqueue_psql_script('clean_out_reversals.sql')
 
-for setid, s3_path in setid_path_to_unload.iteritems():
+for date, s3_path in date_path_to_unload.iteritems():
     enqueue_psql_script('../../redshift_norm_common/unload_common_model.sql', [
         ['output_path', s3_path],
         ['credentials', args.s3_credentials],
-        ['select_from_common_model_table', "SELECT * FROM normalized_claims WHERE data_set=\\\'" + setid + "\\\'"]
+        ['select_from_common_model_table', "SELECT * FROM normalized_claims WHERE data_set=\\\'%" + date + "%\\\'"]
     ])
 
 execute_queue(args.debug)
