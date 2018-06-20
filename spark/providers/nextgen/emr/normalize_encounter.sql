@@ -8,9 +8,9 @@ SELECT
     enc.encounterid                         AS vdr_enc_id,
     CASE WHEN enc.encounterid IS NOT NULL THEN 'VENDOR'
         END                                 AS vdr_enc_id_qual,
-    concat_ws('_', '118',
+    COALESCE(dem.hvid, concat_ws('_', '118',
         enc.reportingenterpriseid,
-        enc.nextgengroupid)                 AS hvid,
+        enc.nextgengroupid))                AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
     CASE WHEN dem.gender = 'M' THEN 'M'
         WHEN dem.gender = 'F' THEN 'F'

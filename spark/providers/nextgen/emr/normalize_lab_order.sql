@@ -6,9 +6,9 @@ SELECT
     ord.reportingenterpriseid               AS vdr_org_id,
     ord.ordernum                            AS vdr_lab_ord_id,
     'reportingenterpriseid'                 AS vdr_lab_ord_id_qual,
-    concat_ws('_', '118',
+    COALESCE(dem.hvid, concat_ws('_', '118',
         ord.reportingenterpriseid,
-        ord.nextgengroupid)                 AS hvid,
+        ord.nextgengroupid))                AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
     CASE WHEN dem.gender = 'M' THEN 'M'
         WHEN dem.gender = 'F' THEN 'F'

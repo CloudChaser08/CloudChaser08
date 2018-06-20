@@ -36,6 +36,7 @@ def load_icd_diag_codes(sqlContext):
         .distinct() \
         .cache() \
         .createOrReplaceTempView('icd_diag_codes')
+    sqlContext.table('icd_diag_codes').count()
 
 def load_icd_proc_codes(sqlContext):
     _get_table_as_df(sqlContext, 'default', 'ref_icd9_procedure') \
@@ -43,6 +44,7 @@ def load_icd_proc_codes(sqlContext):
         .union(_get_table_as_df(sqlContext, 'default', 'ref_icd10_procedure').select('code')) \
         .cache() \
         .createOrReplaceTempView('icd_proc_codes')
+    sqlContext.table('icd_proc_codes').count()
 
 def load_hcpcs_codes(sqlContext):
     _get_table_as_df(sqlContext, 'default', 'ref_hcpcs') \
@@ -50,20 +52,24 @@ def load_hcpcs_codes(sqlContext):
         .distinct() \
         .cache() \
         .createOrReplaceTempView('hcpcs_codes')
+    sqlContext.table('hcpcs_codes').count()
 
 def load_cpt_codes(sqlContext):
     _get_table_as_df(sqlContext, 'default', 'ref_cpt') \
         .select('code') \
         .cache() \
         .createOrReplaceTempView('cpt_codes')
+    sqlContext.table('cpt_codes').count()
 
 def load_loinc_codes(sqlContext):
     _get_table_as_df(sqlContext, 'default', 'ref_loinc') \
         .select('loinc_num') \
         .cache() \
         .createOrReplaceTempView('loinc_codes')
+    sqlContext.table('loinc_codes').count()
 
 def load_ref_gen_ref(sqlContext):
     _get_table_as_df(sqlContext, 'dw', 'ref_gen_ref') \
         .cache() \
         .createOrReplaceTempView('ref_gen_ref')
+    sqlContext.table('ref_gen_ref').count()

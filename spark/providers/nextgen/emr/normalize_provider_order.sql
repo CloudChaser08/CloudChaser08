@@ -2,9 +2,9 @@ SELECT
     '04'                                    AS mdl_vrsn_num,
     ord.dataset                             AS data_set_nm,
     ord.reportingenterpriseid               AS vdr_org_id,
-    concat_ws('_', '118',
+    COALESCE(dem.hvid, concat_ws('_', '118',
         ord.reportingenterpriseid,
-        ord.nextgengroupid)                 AS hvid,
+        ord.nextgengroupid))                AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
     CASE WHEN dem.gender = 'M' THEN 'M'
         WHEN dem.gender = 'F' THEN 'F'
@@ -82,7 +82,7 @@ SELECT
     extract_date(
         substring(ord.CancelledDate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS prov_ord_cxld_dt,
-    ord.obsvalue                            AS prov_ord_result_nm,
+    UPPER(ord.obsvalue)                     AS prov_ord_result_nm,
     clean_up_freetext(ord.obsinterpretation, false)
                                             AS prov_ord_result_desc,
     extract_date(

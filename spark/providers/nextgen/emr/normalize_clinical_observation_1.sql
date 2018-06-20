@@ -2,9 +2,9 @@ SELECT
     '04'                                    AS mdl_vrsn_num,
     sub.dataset                             AS data_set_nm,
     sub.reportingenterpriseid               AS vdr_org_id,
-    concat_ws('_', '118',
+    COALESCE(dem.hvid, concat_ws('_', '118',
         sub.reportingenterpriseid,
-        sub.nextgengroupid)                 AS hvid,
+        sub.nextgengroupid))                AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
     CASE WHEN dem.gender = 'M' THEN 'M'
         WHEN dem.gender = 'F' THEN 'F'
@@ -19,16 +19,21 @@ SELECT
     extract_date(
         substring(sub.datadate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS clin_obsn_dt,
-    ref2.gen_ref_cd                         AS clin_obsn_typ_cd,
-    CASE WHEN ref2.gen_ref_cd IS NOT NULL THEN 'VENDOR'
-        END                                 AS clin_obsn_typ_cd_qual,
-    ref3.gen_ref_itm_nm                     AS clin_obsn_typ_nm,
+    NULL                                    AS clin_obsn_data_ctgy_cd, -- included for easy unioning
+    NULL                                    AS clin_obsn_data_ctgy_cd_qual,
+    NULL                                    AS clin_obsn_data_ctgy_nm,
+    clean_up_freetext(sub.clinicalrecordtypecode, false)
+                                            AS clin_obsn_typ_cd,
+    'VENDOR'                                AS clin_obsn_typ_cd_qual,
+    clean_up_freetext(sub.clinicalrecorddescription, false)
+                                            AS clin_obsn_typ_nm,
     ref1.gen_ref_cd                         AS clin_obsn_substc_cd,
     CASE WHEN ref1.gen_ref_cd IS NOT NULL THEN 'VENDOR'
         END                                 AS clin_obsn_substc_cd_qual,
     ref1.gen_ref_itm_nm                     AS clin_obsn_substc_nm,
     CASE WHEN CAST(sub.emrcode AS DOUBLE) IS NOT NULL THEN sub.emrcode
-        ELSE ref4.gen_ref_itm_nm END        AS clin_obsn_nm,
+        ELSE ref2.gen_ref_itm_nm END        AS clin_obsn_nm,
+    NULL                                    AS clin_obsn_result_desc,
     'substanceusage'                        AS prmy_src_tbl_nm,
     extract_date(
         substring(sub.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
@@ -49,23 +54,9 @@ FROM substanceusage sub
         AND ref1.gen_ref_domn_nm = 'substanceusage.substancecode'
         AND sub.substancecode = ref1.gen_ref_cd
         AND ref1.whtlst_flg = 'Y'
-    LEFT JOIN (SELECT DISTINCT gen_ref_cd
-            FROM ref_gen_ref
-            WHERE hvm_vdr_feed_id = 35
-                AND gen_ref_domn_nm = 'substanceusage.clinicalrecordtypecode'
-                AND whtlst_flg = 'Y'
-        ) ref2
-        ON clean_up_freetext(sub.clinicalrecordtypecode, false) = ref2.gen_ref_cd
-    LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
-            FROM ref_gen_ref
-            WHERE hvm_vdr_feed_id = 35
-                AND gen_ref_domn_nm = 'substanceusage.clinicalrecorddescription'
-                AND whtlst_flg = 'Y'
-        ) ref3
-        ON clean_up_freetext(sub.clinicalrecorddescription, false) = ref3.gen_ref_itm_nm
     LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
         FROM ref_gen_ref
         WHERE gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
             AND whtlst_flg = 'Y'
-        ) ref4
-        ON UPPER(sub.emrcode) = ref4.gen_ref_itm_nm
+        ) ref2
+        ON UPPER(sub.emrcode) = ref2.gen_ref_itm_nm

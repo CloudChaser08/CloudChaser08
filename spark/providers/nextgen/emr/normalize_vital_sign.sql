@@ -2,9 +2,9 @@ SELECT
     '04'                                    AS mdl_vrsn_num,
     vsn.dataset                             AS data_set_nm,
     vsn.reportingenterpriseid               AS vdr_org_id,
-    concat_ws('_', '118',
+    COALESCE(dem.hvid, concat_ws('_', '118',
         vsn.reportingenterpriseid,
-        vsn.nextgengroupid)                 AS hvid,
+        vsn.nextgengroupid))                AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
     CASE WHEN dem.gender = 'M' THEN 'M'
         WHEN dem.gender = 'F' THEN 'F'

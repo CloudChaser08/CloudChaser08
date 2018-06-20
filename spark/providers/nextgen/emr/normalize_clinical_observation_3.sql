@@ -2,9 +2,9 @@ SELECT
     '04'                                    AS mdl_vrsn_num,
     ext.dataset                             AS data_set_nm,
     ext.reportingenterpriseid               AS vdr_org_id,
-    concat_ws('_', '118',
+    COALESCE(dem.hvid, concat_ws('_', '118',
         ext.reportingenterpriseid,
-        ext.nextgengroupid)                 AS hvid,
+        ext.nextgengroupid))                AS hvid,
     dem.birthyear                           AS ptnt_birth_yr,
     CASE WHEN dem.gender = 'M' THEN 'M'
         WHEN dem.gender = 'F' THEN 'F'
@@ -23,14 +23,18 @@ SELECT
     CASE WHEN ref2.gen_ref_cd IS NOT NULL THEN 'VENDOR'
         END                                 AS clin_obsn_data_ctgy_cd_qual,
     ref2.gen_ref_itm_nm                     AS clin_obsn_data_ctgy_nm,
-    ref3.gen_ref_cd                         AS clin_obsn_typ_cd,
-    CASE WHEN ref3.gen_ref_cd IS NOT NULL THEN 'VENDOR'
-        END                                 AS clin_obsn_typ_cd_qual,
-    ref4.gen_ref_itm_nm                     AS clin_obsn_typ_nm,
+    clean_up_freetext(ext.clinicalrecordtypecode, false)
+                                            AS clin_obsn_typ_cd,
+    'VENDOR'                                AS clin_obsn_typ_cd_qual,
+    clean_up_freetext(ext.clinicalrecorddescription, false)
+                                            AS clin_obsn_typ_nm,
+    NULL                                    AS clin_obsn_substc_cd,
+    NULL                                    AS clin_obsn_substc_cd_qual,
+    NULL                                    AS clin_obsn_substc_nm,
     CASE WHEN CAST(ext.emrcode AS DOUBLE) IS NOT NULL THEN ext.emrcode
-        ELSE ref5.gen_ref_itm_nm END        AS clin_obsn_nm,
+        ELSE ref3.gen_ref_itm_nm END        AS clin_obsn_nm,
     CASE WHEN CAST(ext.result AS DOUBLE) IS NOT NULL THEN ext.result
-        ELSE ref6.gen_ref_itm_nm END        AS clin_obsn_result_desc,
+        ELSE ref4.gen_ref_itm_nm END        AS clin_obsn_result_desc,
     'extendeddata'                          AS prmy_src_tbl_nm,
     extract_date(
         substring(ext.referencedatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
@@ -52,29 +56,15 @@ FROM extendeddata ext
         AND gen_ref_domn_nm = 'extendeddata.datacategory'
         AND whtlst_flg = 'Y'
         AND ext.datacategory = ref2.gen_ref_cd
-    LEFT JOIN (SELECT DISTINCT gen_ref_cd
-            FROM ref_gen_ref
-            WHERE hvm_vdr_feed_id = 35
-                AND gen_ref_domn_nm = 'extendeddata.clinicalrecordtypecode'
-                AND whtlst_flg = 'Y'
-        ) ref3
-        ON clean_up_freetext(ext.clinicalrecordtypecode, false) = ref3.gen_ref_cd
-    LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
-            FROM ref_gen_ref
-            WHERE hvm_vdr_feed_id = 35
-                AND whtlst_flg = 'Y'
-                AND gen_ref_domn_nm = 'extendeddata.clinicalrecorddescription'
-        ) ref4
-        ON clean_up_freetext(ext.clinicalrecorddescription, false) = ref4.gen_ref_itm_nm
     LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
             FROM ref_gen_ref
             WHERE gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_nm'
                 AND whtlst_flg = 'Y'
-        ) ref5
-        ON TRIM(UPPER(ext.emrcode)) = ref5.gen_ref_itm_nm
+        ) ref3
+        ON TRIM(UPPER(ext.emrcode)) = ref3.gen_ref_itm_nm
     LEFT JOIN (SELECT DISTINCT gen_ref_itm_nm
             FROM ref_gen_ref
             WHERE gen_ref_domn_nm = 'emr_clin_obsn.clin_obsn_result_desc'
                 AND whtlst_flg = 'Y'
-        ) ref6
-        ON TRIM(UPPER(ext.result)) = ref6.gen_ref_itm_nm
+        ) ref4
+        ON TRIM(UPPER(ext.result)) = ref4.gen_ref_itm_nm
