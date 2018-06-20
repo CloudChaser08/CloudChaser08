@@ -138,7 +138,7 @@ def do_generate_daily_report(ds, **kwargs):
             for line in fin:
                 fields = line.strip().split('|')
                 # Early versions of the delivery summary did not include the "w/records" count
-                fields.insert(3, 0) if len(fields) == 5 else None
+                fields.insert(3, 0) if ds < '2018-05-21' else None
                 patients  = int(fields[1])
                 matched   = int(fields[2])
                 w_records = int(fields[3])
@@ -186,7 +186,7 @@ def do_generate_monthly_report(ds, **kwargs):
             for line in fin:
                 fields = line.strip().split('|')
                 # Early versions of the delivery summary did not include the "w/records" count
-                fields.insert(3, 0) if len(fields) == 5 else None
+                fields.insert(3, 0) if ds < '2018-05-21' else None
                 patients  = int(fields[1])
                 matched   = int(fields[2])
                 w_records = int(fields[3])
