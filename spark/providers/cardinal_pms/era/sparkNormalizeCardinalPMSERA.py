@@ -123,7 +123,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         if not test:
             normalized_records_unloader.unload_delimited_file(
-                spark, runner, '/staging/' + conf['data_type'] + '/', conf['table'])
+                spark, runner, '/staging/' + conf['data_type'] + '/', conf['table'], num_files=50
+            )
 
 def main(args):
     # init
