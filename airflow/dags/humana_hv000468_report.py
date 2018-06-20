@@ -62,6 +62,7 @@ def get_delivered_groups(exec_date):
             .filter(TaskInstance.dag_id == 'humana_hv000468_delivery', TaskInstance.task_id == 'deliver_extracted_data') \
             .all()
     groups = []
+
     for deliv in deliveries:
         if exec_date.date() == deliv.end_date.date():
             gid = session.query(DagRun) \
@@ -74,6 +75,16 @@ def get_delivered_groups(exec_date):
             {'id': '01234567', 'delivery_ts': datetime(2018, 4, 30, 22, 5, 8)},
             {'id': '87654322', 'delivery_ts': datetime(2018, 4, 30, 22, 7, 43)}
         ]
+    return groups
+
+def get_delivered_groups_past_month(exec_date):
+    groups = []
+    if exec_date.day == 1:
+        last_month_start = (exec_date - timedelta(days=1)).replace(day=1)
+        days = 0
+        while last_month_start + timedelta(days=days) < exec_date:
+            groups.extend(get_delivered_groups(last_month_start + timedelta(days)))
+            days += 1
     return groups
 
 def get_tmp_dir(ds, kwargs):
@@ -90,7 +101,7 @@ create_tmp_dir = PythonOperator(
 )
 
 def do_fetch_extract_summaries(ds, **kwargs):
-    groups = get_delivered_groups(kwargs['execution_date'])
+    groups = get_delivered_groups(kwargs['execution_date']) + get_delivered_groups_past_month(kwargs['execution_date'])
     for group in groups:
         fn   = EXTRACT_SUMMARY_TEMPLATE.format(group['id'])
         src  = S3_NORMALIZED_FILE_URL_TEMPLATE.format(group['id']) + fn
@@ -126,6 +137,8 @@ def do_generate_daily_report(ds, **kwargs):
         with open(f) as fin:
             for line in fin:
                 fields = line.strip().split('|')
+                # Early versions of the delivery summary did not include the "w/records" count
+                fields.insert(3, 0) if ds < '2018-05-21' else None
                 patients  = int(fields[1])
                 matched   = int(fields[2])
                 w_records = int(fields[3])
@@ -141,7 +154,7 @@ def do_generate_daily_report(ds, **kwargs):
     report_writer.writerow([])
     report_writer.writerow([])
     for source in total['records'].keys():
-        report_writer.writerow(['TOTAL', received_ts.isoformat(), delivered_ts.isoformat(),
+        report_writer.writerow(['TOTAL', '-', '-',
             total['patients'], total['matched'], total['w_records'], source, total['records'][source]])
     if not total['records'].keys():
         report_writer.writerow(['TOTAL', '-', '-',
@@ -156,19 +169,68 @@ generate_daily_report = PythonOperator(
     dag=mdag
 )
 
-def do_email_daily_report(ds, **kwargs):
+def do_generate_monthly_report(ds, **kwargs):
+    groups = get_delivered_groups_past_month(kwargs['execution_date'])
+    total = {'records': {}, 'patients': 0, 'matched': 0, 'w_records': 0}
+
+    month = (kwargs['execution_date'] - timedelta(days=1)).strftime('%B')
+
+    monthly_report_file = open(get_tmp_dir(ds, kwargs) + month +'_monthly_report.csv', 'w')
+    report_writer = csv.writer(monthly_report_file, quoting=csv.QUOTE_MINIMAL)
+    report_writer.writerow(['', 'Patients Sent', 'Patients Matched',
+        'Patients with Records', 'Source', 'Source Record Count'])
+    for group in groups:
+        fn = EXTRACT_SUMMARY_TEMPLATE.format(group['id'])
+        f  = get_tmp_dir(ds, kwargs) + fn
+        with open(f) as fin:
+            for line in fin:
+                fields = line.strip().split('|')
+                # Early versions of the delivery summary did not include the "w/records" count
+                fields.insert(3, 0) if ds < '2018-05-21' else None
+                patients  = int(fields[1])
+                matched   = int(fields[2])
+                w_records = int(fields[3])
+                total['records'][fields[4]] = total['records'].get(fields[4], 0) + int(fields[5])
+        total['patients']  += patients
+        total['matched']   += matched
+        total['w_records'] += w_records
+
+    if len(total['records'].keys()) > 1 and '-' in total['records']:
+        del total['records']['-']
+
+    for source in total['records'].keys():
+        report_writer.writerow(['TOTAL', total['patients'], total['matched'],
+            total['w_records'], source, total['records'][source]])
+    if not total['records'].keys():
+        report_writer.writerow(['TOTAL', total['patients'], total['matched'],
+            '-', 0])
+
+    monthly_report_file.close()
+
+generate_monthly_report = PythonOperator(
+    task_id='generate_monthly_report',
+    provide_context=True,
+    python_callable=do_generate_monthly_report,
+    dag=mdag
+)
+
+def do_email_report(ds, **kwargs):
+    report_files = [get_tmp_dir(ds, kwargs) + 'daily_report_' + kwargs['ds_nodash'] + '.csv']
+    if kwargs['execution_date'].day == 1:
+        month = (kwargs['execution_date'] - timedelta(days=1)).strftime('%B')
+        report_files.append(get_tmp_dir(ds, kwargs) + month + '_monthly_report.csv')
+
     ses_utils.send_email(
         'delivery-receipts@healthverity.com',
         RECIPIENTS,
         'Humana Delivery Report for ' + ds,
-        '',
-        [get_tmp_dir(ds, kwargs) + 'daily_report_' + kwargs['ds_nodash'] + '.csv']
+        '', report_files
     )
 
-email_daily_report = PythonOperator(
-    task_id='email_daily_report',
+email_report = PythonOperator(
+    task_id='email_report',
     provide_context=True,
-    python_callable=do_email_daily_report,
+    python_callable=do_email_report,
     dag=mdag
 )
 
@@ -184,7 +246,7 @@ clean_up_workspace = PythonOperator(
 )
 
 if HVDAG.HVDAG.airflow_env == 'test':
-    for t in ['email_daily_report']:
+    for t in ['email_report']:
         del mdag.task_dict[t]
         globals()[t] = DummyOperator(
             task_id = t,
@@ -193,5 +255,6 @@ if HVDAG.HVDAG.airflow_env == 'test':
 
 fetch_extract_summaries.set_upstream(create_tmp_dir)
 generate_daily_report.set_upstream(fetch_extract_summaries)
-email_daily_report.set_upstream(generate_daily_report)
-clean_up_workspace.set_upstream(email_daily_report)
+generate_monthly_report.set_upstream(fetch_extract_summaries)
+email_report.set_upstream([generate_daily_report, generate_monthly_report])
+clean_up_workspace.set_upstream(email_report)
