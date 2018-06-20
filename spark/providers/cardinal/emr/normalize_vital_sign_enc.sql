@@ -1,5 +1,5 @@
 SELECT
-    CONCAT('40_', enc.id)                                       AS hv_vit_sign_id,
+    CONCAT('40_', enc.patient_visit_id)                         AS hv_vit_sign_id,
     enc.id                                                      AS vdr_vit_sign_id,
     CASE
       WHEN enc.id IS NOT NULL THEN 'VENDOR_ROW_ID'

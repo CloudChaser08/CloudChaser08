@@ -1,3 +1,5 @@
-id-0||practice_id|system_id|1483966080|test_id|test_name|2015-01-01 12:00:00||||test_name_specific|test_value|test_value_string|loinc20192|min_norm|max_norm|unit_of_measure|||||abnormal_flag_cd|||||||
-id-1||practice_id|system_id|1483966081|test_id||2017-01-01 12:00:00||||test_name_specific|test_value|test_value_string|invalid loinc code|min_norm|max_norm|unit_of_measure|||||abnormal_flag_cd|||||||
-id-2||practice_id|system_id|1483966082|test_id|test_name|2017-01-01 12:00:00||||test_name_specific|test_value|test_value_string|92018|min_norm|max_norm|unit_of_measure|||||abnormal_flag_cd|||||||
+000878FC-CE79-4E90-AE5B-4C9742F5374A-2||practice_id|system_id|1483966080|test_id|test_name|2015-01-01 12:00:00||||test_name_specific|test_value|test_value_string|loinc20192|min_norm|max_norm|unit_of_measure|||||abnormal_flag_cd|||||||
+0004B13F-0CC3-4D7B-B63C-EB2FDEEC3DCE-1||practice_id|system_id|1483966081|test_id||2017-01-01 12:00:00||||test_name_specific|test_value|test_value_string|invalid loinc code|min_norm|max_norm|unit_of_measure|||||abnormal_flag_cd|||||||
+these are provider notes||practice_id|system_id|1483966082|test_id|test_name|2017-01-01 12:00:00||||test_name_specific|test_value|test_value_string|92018|min_norm|max_norm|unit_of_measure|||||abnormal_flag_cd|||||||
+000878FC-CE79-4E90-AE5B-4C9742F5374A-2||practice_id|system_id|1483966080|test_id|HEIGHT_CM|2015-01-01 12:00:00||||test_name_specific|165.72|test_value_string|loinc20192|min_norm|max_norm|unit_of_measure|||||abnormal_flag_cd|||||||
+these are provider notes||practice_id|system_id|1483966082|test_id|WEIGHT_KG|2017-01-01 12:00:00||||test_name_specific|77.1107|test_value_string|92018|min_norm|max_norm|unit_of_measure|||||abnormal_flag_cd|||||||

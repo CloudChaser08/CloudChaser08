@@ -138,9 +138,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized_clinical_observation = runner.run_spark_script(
         'normalize_clinical_observation.sql', return_output=True, source_file_path=script_path
     )
-    normalized_vital_sign = runner.run_spark_script(
-        'normalize_vital_sign.sql', return_output=True, source_file_path=script_path
-    )
+    normalized_vital_sign = schema_enforcer.apply_schema(
+        runner.run_spark_script(
+            'normalize_vital_sign_enc.sql', return_output=True, source_file_path=script_path
+        ), vital_sign_schema
+    ).union(schema_enforcer.apply_schema(
+        runner.run_spark_script(
+            'normalize_vital_sign_lab.sql', return_output=True, source_file_path=script_path
+        ), vital_sign_schema
+    ))
 
     normalized_tables = [
         {
@@ -350,11 +356,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             ]
         )(
             table['normalized_data']
-        ).createOrReplaceTempView(table['table_name'])
+        ).repartition(2001).createOrReplaceTempView(table['table_name'])
 
         # unload delivery file for cardinal
         normalized_records_unloader.unload_delimited_file(
-            spark, runner, '{}{}/'.format(DELIVERABLE_LOC, table['data_type']), table['table_name'], test=test
+            spark, runner, '{}{}/'.format(DELIVERABLE_LOC, table['data_type']), table['table_name'], test=test,
+            num_files=50
         )
 
         # deobfuscate hvid

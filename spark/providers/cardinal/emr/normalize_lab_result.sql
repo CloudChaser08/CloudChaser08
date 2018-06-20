@@ -1,13 +1,17 @@
 SELECT
-    CONCAT('40_', lab.id)                                       AS hv_lab_result_id,
+    CASE WHEN LENGTH(TRIM(UPPER(lab.id))) BETWEEN 30 AND 45 AND lab.id NOT LIKE '% %'
+    THEN CONCAT('40_', lab.id)
+    END                                                         AS hv_lab_result_id,
     lab.test_id                                                 AS vdr_lab_test_id,
     CASE
       WHEN lab.test_id IS NOT NULL
       THEN 'SOURCE_SYSTEM_ROW_ID'
     END                                                         AS vdr_lab_test_id_qual,
-    lab.id                                                      AS vdr_lab_result_id,
+    CASE WHEN LENGTH(TRIM(UPPER(lab.id))) BETWEEN 30 AND 45 AND lab.id NOT LIKE '% %'
+    THEN lab.id
+    END                                                         AS vdr_lab_result_id,
     CASE
-      WHEN lab.id IS NOT NULL
+      WHEN lab.id IS NOT NULL AND LENGTH(TRIM(UPPER(lab.id))) BETWEEN 30 AND 45 AND lab.id NOT LIKE '% %'
       THEN 'VENDOR_ROW_ID'
     END                                                         AS vdr_lab_result_id_qual,
     lab.patient_id                                              AS hvid,
@@ -69,3 +73,7 @@ FROM transactions_lab lab
     LEFT JOIN transactions_demographics dem ON lab.patient_id = dem.patient_id
     LEFT JOIN matching_payload pay ON dem.hvJoinKey = pay.hvJoinKey
 WHERE pay.state IS NULL OR pay.state <> 'state'
+    AND (
+        lab.test_name IS NULL
+        OR TRIM(UPPER(lab.test_name)) NOT IN ('HEIGHT_CM', 'WEIGHT_KG')
+        )

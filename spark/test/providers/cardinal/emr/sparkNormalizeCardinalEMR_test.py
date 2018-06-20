@@ -1,5 +1,6 @@
 import pytest
 
+import os
 import gzip
 import shutil
 import datetime
@@ -30,6 +31,19 @@ vital_sign_delivery_results = []
 script_path = __file__
 output_test_location = file_utils.get_abs_path(script_path, './resources/output/')
 delivery_test_location = file_utils.get_abs_path(script_path, './resources/delivery/')
+
+
+def load_deliverable(table_name):
+    path = file_utils.get_abs_path(script_path, './resources/delivery/{}/'.format(table_name))
+    delivery_results = []
+
+    for f in [f for f in os.listdir(path) if f[0] != '.']:
+        with gzip.open(
+                file_utils.get_abs_path(script_path, './resources/delivery/{}/{}'.format(table_name, f)), 'r'
+        ) as delivery:
+            delivery_results.extend(delivery.read().splitlines())
+
+    return delivery_results
 
 
 def cleanup(spark):
@@ -146,60 +160,35 @@ def test_init(spark):
 
     encounter_results = spark['sqlContext'].sql('select * from normalized_encounter') \
                                            .collect()
-
-    with gzip.open(
-            file_utils.get_abs_path(script_path, './resources/delivery/encounter/part-00000.gz'), 'r'
-    ) as enc_delivery:
-        encounter_delivery_results = enc_delivery.readlines()
+    encounter_delivery_results = load_deliverable('encounter')
 
     diagnosis_results = spark['sqlContext'].sql('select * from normalized_diagnosis') \
                                            .collect()
-    with gzip.open(
-            file_utils.get_abs_path(script_path, './resources/delivery/diagnosis/part-00000.gz'), 'r'
-    ) as diag_delivery:
-        diagnosis_delivery_results = diag_delivery.readlines()
+    diagnosis_delivery_results = load_deliverable('diagnosis')
 
     procedure_results = spark['sqlContext'].sql('select * from normalized_procedure') \
                                            .collect()
-    with gzip.open(
-            file_utils.get_abs_path(script_path, './resources/delivery/procedure/part-00000.gz'), 'r'
-    ) as proc_delivery:
-        procedure_delivery_results = proc_delivery.readlines()
+    procedure_delivery_results = load_deliverable('procedure')
 
     provider_order_results = spark['sqlContext'].sql('select * from normalized_provider_order') \
                                                 .collect()
-    with gzip.open(
-            file_utils.get_abs_path(script_path, './resources/delivery/provider_order/part-00000.gz'), 'r'
-    ) as prov_ord_delivery:
-        provider_order_delivery_results = prov_ord_delivery.readlines()
+    provider_order_delivery_results = load_deliverable('provider_order')
 
     lab_result_results = spark['sqlContext'].sql('select * from normalized_lab_result') \
                                             .collect()
-    with gzip.open(
-            file_utils.get_abs_path(script_path, './resources/delivery/lab_result/part-00000.gz'), 'r'
-    ) as lab_result_delivery:
-        lab_result_delivery_results = lab_result_delivery.readlines()
+    lab_result_delivery_results = load_deliverable('lab_result')
 
     medication_results = spark['sqlContext'].sql('select * from normalized_medication') \
                                             .collect()
-    with gzip.open(
-            file_utils.get_abs_path(script_path, './resources/delivery/medication/part-00000.gz'), 'r'
-    ) as medication_delivery:
-        medication_delivery_results = medication_delivery.readlines()
+    medication_delivery_results = load_deliverable('medication')
 
     clinical_observation_results = spark['sqlContext'].sql('select * from normalized_clinical_observation') \
                                                       .collect()
-    with gzip.open(
-            file_utils.get_abs_path(script_path, './resources/delivery/clinical_observation/part-00000.gz'), 'r'
-    ) as clinical_observation_delivery:
-        clinical_observation_delivery_results = clinical_observation_delivery.readlines()
+    clinical_observation_delivery_results = load_deliverable('clinical_observation')
 
     vital_sign_results = spark['sqlContext'].sql('select * from normalized_vital_sign') \
                                             .collect()
-    with gzip.open(
-            file_utils.get_abs_path(script_path, './resources/delivery/vital_sign/part-00000.gz'), 'r'
-    ) as vital_sign_delivery:
-        vital_sign_delivery_results = vital_sign_delivery.readlines()
+    vital_sign_delivery_results = load_deliverable('vital_sign')
 
 
 def test_hvids():
@@ -434,12 +423,14 @@ def test_lab_result_date_cap():
     Ensure the correct amount of lab_result records were normalized
     """
     for res in lab_result_results:
-        if res.hv_lab_result_id == '40_id-0':
+        if res.hv_lab_result_id == '40_000878FC-CE79-4E90-AE5B-4C9742F5374A-2':
             assert not res.lab_test_execd_dt
-        elif res.hv_lab_result_id == '40_id-1':
+        elif res.hv_lab_result_id == '40_0004B13F-0CC3-4D7B-B63C-EB2FDEEC3DCE-1':
             assert res.lab_test_execd_dt == '2017-01-01'
-        elif res.hv_lab_result_id == '40_id-2':
+        elif res.hv_lab_result_id is None:
             assert res.lab_test_execd_dt == '2017-01-01'
+        else:
+            raise AssertionError("Unexpected result id: {}".format(res.hv_lab_result_id))
 
 
 def test_lab_result_data_cleaning():
@@ -447,12 +438,14 @@ def test_lab_result_data_cleaning():
     Ensure the loinc codes are cleaned properly in the lab_result results
     """
     for res in lab_result_results:
-        if res.hv_lab_result_id == '40_id-0':
+        if res.hv_lab_result_id == '40_000878FC-CE79-4E90-AE5B-4C9742F5374A-2':
             assert res.lab_test_loinc_cd == '20192'
-        elif res.hv_lab_result_id == '40_id-1':
+        elif res.hv_lab_result_id == '40_0004B13F-0CC3-4D7B-B63C-EB2FDEEC3DCE-1':
             assert res.lab_test_loinc_cd == ''
-        elif res.hv_lab_result_id == '40_id-2':
+        elif res.hv_lab_result_id is None:
             assert res.lab_test_loinc_cd == '92018'
+        else:
+            raise AssertionError("Unexpected result id: {}".format(res.hv_lab_result_id))
 
 
 def test_medication_cardinality():
@@ -533,7 +526,7 @@ def test_vital_sign_cardinality():
     """
     Ensure the correct amount of vital_sign records were normalized
     """
-    assert len(vital_sign_results) == 16
+    assert len(vital_sign_results) == 18
 
 
 def test_vital_sign_type_cd():
@@ -541,8 +534,8 @@ def test_vital_sign_type_cd():
     Ensure the type codes were exploded and translated correctly
     """
     assert sorted(set([res.vit_sign_typ_cd for res in vital_sign_results])) == [
-        'CARD_FN_DEC', 'CARD_FN_RAW', 'CDAI', 'DAS28', 'NJC28', 'PAIN',
-        'PGA', 'PTGA', 'RAPID3', 'SDAI', 'SJC28', 'STANFORD_HAQ', 'TJC28'
+        'CARD_FN_DEC', 'CARD_FN_RAW', 'CDAI', 'DAS28', 'HEIGHT', 'NJC28', 'PAIN',
+        'PGA', 'PTGA', 'RAPID3', 'SDAI', 'SJC28', 'STANFORD_HAQ', 'TJC28', 'WEIGHT'
     ]
 
     for res in vital_sign_results:
@@ -572,6 +565,8 @@ def test_vital_sign_type_cd():
             assert res.vit_sign_msrmt == 'pga'
         elif res.vit_sign_typ_cd == 'PTGA':
             assert res.vit_sign_msrmt == 'ptga'
+        elif res.vit_sign_typ_cd == 'HEIGHT':
+            res.vit_sign_msrmt is None
 
     assert len(
         [res for res in vital_sign_results if res.vit_sign_typ_cd == 'RAPID3']
