@@ -6,6 +6,11 @@ import spark.providers.genomind.labtests.sparkNormalizeGenomind as gm
 
 results = None
 
+def cleanup(spark):
+    spark['sqlContext'].dropTempTable('labtests_common_model')
+    spark['sqlContext'].dropTempTable('matching_payload')
+    spark['sqlContext'].dropTempTable('ref_gen_ref')
+
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
     spark['spark'].sparkContext.parallelize([
@@ -22,5 +27,17 @@ def test_init(spark):
     global results
     results = spark['sqlContext'].sql('select * from labtests_common_model').collect()
 
-def test_something():
-    print len(results)
+def test_expected_row_count_matches():
+    assert len(results) == 13
+
+
+def test_expected_amount_of_ordering_npis():
+    assert len(set((map(lambda x: x.ordering_npi, results)))) == 5
+
+
+def test_expected_amount_of_medications():
+    assert len(set(map(lambda x: x.test_ordered_name, filter(lambda x: x.hvid == '113114247', results)))) == 4
+
+
+def test_cleanup(spark):
+    cleanup(spark)

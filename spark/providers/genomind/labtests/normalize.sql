@@ -1,5 +1,6 @@
 SELECT
     MD5(ptn.patientkey)                                     AS claim_id,
+    pay.hvid                                                AS hvid,
     COALESCE(SUBSTR(ptn.gender, 1, 1), pay.gender)          AS patient_gender,
     pay.age                                                 AS patient_age,
     pay.yearOfBirth                                         AS patient_year_of_birth,
