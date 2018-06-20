@@ -1,54 +1,10 @@
-[
-  {
-    "UID": 1,
-    "PatientKey": 6,
-    "GenericName": "mood stabilizer"
-  },
-  {
-    "UID": 2,
-    "PatientKey": 6,
-    "GenericName": "SSRI"
-  },
-  {
-    "UID": 3,
-    "PatientKey": 6,
-    "GenericName": "stimulant"
-  },
-  {
-    "UID": 4,
-    "PatientKey": 17,
-    "GenericName": "bupropion"
-  },
-  {
-    "UID": 5,
-    "PatientKey": 17,
-    "GenericName": "SSRI",
-    "Dosage": "50.0"
-  },
-  {
-    "UID": 6,
-    "PatientKey": 21,
-    "GenericName": "anxiolytic"
-  },
-  {
-    "UID": 7,
-    "PatientKey": 21,
-    "GenericName": "bupropion"
-  },
-  {
-    "UID": 8,
-    "PatientKey": 22,
-    "GenericName": "bupropion",
-    "Dosage": "0.5"
-  },
-  {
-    "UID": 9,
-    "PatientKey": 23,
-    "GenericName": "anxiolytic"
-  },
-  {
-    "UID": 10,
-    "PatientKey": 23,
-    "GenericName": "mood stabilizer"
-  }
-]
+{"UID":1,"PatientKey":6,"GenericName":"mood stabilizer"}
+{"UID":2,"PatientKey":6,"GenericName":"SSRI"}
+{"UID":3,"PatientKey":6,"GenericName":"stimulant"}
+{"UID":4,"PatientKey":17,"GenericName":"bupropion"}
+{"UID":5,"PatientKey":17,"GenericName":"SSRI"}
+{"UID":6,"PatientKey":21,"GenericName":"anxiolytic"}
+{"UID":7,"PatientKey":21,"GenericName":"bupropion"}
+{"UID":8,"PatientKey":22,"GenericName":"bupropion"}
+{"UID":9,"PatientKey":23,"GenericName":"anxiolytic"}
+{"UID":10,"PatientKey":23,"GenericName":"mood stabilizer"}
