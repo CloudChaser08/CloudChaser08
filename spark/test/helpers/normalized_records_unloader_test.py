@@ -420,7 +420,7 @@ def test_unload_delimited_file(spark):
             == [['"val1"', '"val2"'], ['"val3"', '"val4"']]
 
     normalized_records_unloader.unload_delimited_file(
-        spark['spark'], spark['runner'], test_staging_dir4, 'test_table', test=True, file_name='my_file.gz'
+        spark['spark'], spark['runner'], test_staging_dir4, 'test_table', test=True, output_file_name='my_file.gz'
     )
 
     filename = [f for f in os.listdir(test_staging_dir4) if f.endswith('.gz')][0]
