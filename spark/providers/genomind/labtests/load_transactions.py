@@ -1,3 +1,4 @@
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
@@ -13,21 +14,21 @@ def load(runner, input_paths):
 
 TABLE_CONF = {
     'clinicians': {
-        'columns': [
-            'UID',
-            'PatientKey',
-            'FirstName',
-            'LastName',
-            'ProviderId',
-            'Specialization',
-            'Address1',
-            'Address2',
-            'City',
-            'State',
-            'Zipcode',
-            'Country',
-            'LocationName'
-        ],
+        'columns': StructType([
+            StructField('UID', StringType(), True),
+            StructField('FirstName', StringType(), True),
+            StructField('LastName', StringType(), True),
+            StructField('ProviderId', StringType(), True),
+            StructField('Specialization', StringType(), True),
+            StructField('Address1', StringType(), True),
+            StructField('Address2', StringType(), True),
+            StructField('City', StringType(), True),
+            StructField('State', StringType(), True),
+            StructField('Zipcode', StringType(), True),
+            StructField('Country', StringType(), True),
+            StructField('LocationName', StringType(), True),
+            StructField('Patients List', ArrayType(StringType()), True)
+        ]),
         'file_type': 'json',
         'separator': None
     },
