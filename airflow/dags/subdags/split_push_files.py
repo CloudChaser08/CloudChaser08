@@ -174,11 +174,8 @@ def split_push_files(parent_dag_name, child_dag_name, start_date, schedule_inter
     )
 
     create_parts_dir.set_upstream(log_file_volume)
-    if 'source_encoding' in dag_config:
-        convert_file_encoding.set_upstream(create_parts_dir)
-        split_files.set_upstream(convert_file_encoding)
-    else:
-        split_files.set_upstream(create_parts_dir)
+    convert_file_encoding.set_upstream(create_parts_dir)
+    split_files.set_upstream(convert_file_encoding)
     bzip_part_files.set_upstream(split_files)
     push_part_files.set_upstream(bzip_part_files)
     clean_up.set_upstream(push_part_files)
