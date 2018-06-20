@@ -86,11 +86,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Run the normalization
     normalized_df = runner.run_spark_script(
         'normalize.sql',
-        [],
+        [['input_date', max_cap]],
         return_output=True
     )
 
-    postprocessor.compose(
+    final_df = postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),
         postprocessor.add_universal_columns(
             feed_id=FEED_ID,
@@ -102,7 +102,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         lab_priv.filter
     )(
         normalized_df
-    ).createOrReplaceTempView('labtests_common_model')
+    )
 
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
@@ -113,14 +113,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'EARLIST_VALID_SERVICE_DATE'
         )
 
-        normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
-            'mckesson_macro_helix', 'pharmacyclaims_common_model',
-            'date_service', date_input,
-            hvm_historical_date=datetime(hvm_historical.year,
-                                         hvm_historical.month,
-                                         hvm_historical.day)
+        normalized_records_unloader.unload(
+            spark, runner, final_df, 'date_service', max_cap,
+            'genomind', hvm_historical_date=datetime(hvm_historical.year,
+                                                     hvm_historical.month,
+                                                     hvm_historical.day)
         )
+    else:
+        final_df.createOrReplaceTempView('labtests_common_model')
 
 
 def main(args):
