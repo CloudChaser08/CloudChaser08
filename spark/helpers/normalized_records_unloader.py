@@ -271,7 +271,7 @@ def distcp(dest, src=constants.hdfs_staging_dir):
 
 def unload_delimited_file(
         spark, runner, output_path, table_name, test=False, num_files=1, delimiter='|',
-        file_name_prefix='part-', file_name=None
+        output_file_name_prefix='part-', output_file_name=None
     ):
     "Unload a table to a delimited file at the specified location"
     old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
@@ -317,8 +317,8 @@ def unload_delimited_file(
     # rename output files to desired name
     # this step removes the spark hash added to the name by default
     for filename in [f for f in list_dir(output_path) if f[0] != '.']:
-        if num_files == 1 and file_name is not None:
-            rename_file(output_path + filename, output_path + file_name)
+        if num_files == 1 and output_file_name is not None:
+            rename_file(output_path + filename, output_path + output_file_name)
         else:
-            new_name = file_name_prefix + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.gz'
+            new_name = output_file_name_prefix + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.gz'
             rename_file(output_path + filename, output_path + new_name)
