@@ -11,6 +11,9 @@ S3_EXPRESS_SCRIPTS_PREFIX = 'warehouse/text/pharmacyclaims/express_scripts/'
 S3_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_EXPRESS_SCRIPTS_PREFIX
 S3_EXPRESS_SCRIPTS_MATCHING = 's3://salusv/matching/payload/pharmacyclaims/esi/'
 
+ACCREDO_PREFIX     = '10130X001_HV_ODS_Claims'
+NON_ACCREDO_PREFIX = '10130X001_HV_RX_Claims'
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--setid', type=str)
@@ -79,7 +82,7 @@ file_date = datetime.strptime(args.date, '%Y-%m-%d')
 run_psql_script('create_normalized_data_table.sql', [
     ['table', 'normalized_claims', False]
 ])
-setid_path_to_unload = {}
+date_path_to_unload = {}
 for i in xrange(1, 3):
     # Provide some flexibility in case the previous batch came in a day early or late
     for j in xrange(-1, 2):
@@ -94,29 +97,41 @@ for i in xrange(1, 3):
             ['input_path', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'],
             ['credentials', args.s3_credentials]
         ])
-        res = run_psql_query('SELECT DISTINCT data_set FROM normalized_claims', True)
-        setids = map(lambda x: x.replace(' ',''), res.split("\n")[2:-3])
-        for setid in setids:
-            if setid not in setid_path_to_unload:
-                setid_path_to_unload[setid] = S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'
+        date_path_to_unload[d_path.replace('/', '')] = S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'
 
-setid_path_to_unload[args.setid] = S3_EXPRESS_SCRIPTS_WAREHOUSE + date_path + '/'
+date_path_to_unload[date_path.replace('/', '')] = S3_EXPRESS_SCRIPTS_WAREHOUSE + date_path + '/'
 
-enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
-    ['filename', args.setid],
-    ['today', TODAY],
-    ['feedname', 'express scripts pharmacy claims'],
-    ['vendor', 'express scripts']
-])
-enqueue_psql_script('load_transactions.sql', [
-    ['input_path', S3_EXPRESS_SCRIPTS_IN + date_path + '/'],
-    ['credentials', args.s3_credentials]
-])
-enqueue_psql_script('load_matching_payload.sql', [
-    ['matching_path', S3_EXPRESS_SCRIPTS_MATCHING + date_path + '/'],
-    ['credentials', args.s3_credentials]
-])
-enqueue_psql_script('normalize_pharmacy_claims.sql')
+# We need to be able to keep track of the source file, so run this once
+# for accredo files and once for non-accredo files then merge
+for file_prefix, table_name in [(NON_ACCREDO_PREFIX, 'non_accredo_claims'), (ACCREDO_PREFIX, 'accredo_claims')]:
+    enqueue_psql_script('../../redshift_norm_common/pharmacyclaims_common_model.sql', [
+        ['filename', args.setid.replace(NON_ACCREDO_PREFIX, file_prefix)],
+        ['today', TODAY],
+        ['feedname', 'express scripts pharmacy claims'],
+        ['vendor', 'express scripts']
+    ])
+
+    # A particular day may not have both Accredo and non-Accredo data
+    has_data = True
+    try:
+        subprocess.check_call(['aws', 's3', 'ls', S3_EXPRESS_SCRIPTS_IN + date_path + '/' + file_prefix])
+    except:
+        has_data = False
+
+    if has_data:
+        enqueue_psql_script('load_transactions.sql', [
+            ['input_path', S3_EXPRESS_SCRIPTS_IN + date_path + '/' + file_prefix],
+            ['credentials', args.s3_credentials]
+        ])
+        enqueue_psql_script('load_matching_payload.sql', [
+            ['matching_path', S3_EXPRESS_SCRIPTS_MATCHING + date_path + '/' + file_prefix],
+            ['credentials', args.s3_credentials]
+        ])
+        enqueue_psql_script('normalize_pharmacy_claims.sql', [
+            ['tmp_table', table_name]
+        ])
+
+enqueue_psql_script('merge_pharmacy_claims.sql')
 
 # Privacy filtering
 enqueue_psql_script('../../redshift_norm_common/nullify_icd9_blacklist.sql', [
@@ -169,11 +184,11 @@ for i in xrange(1, 3):
 enqueue_psql_script('clean_out_reversed_claims.sql')
 enqueue_psql_script('clean_out_reversals.sql')
 
-for setid, s3_path in setid_path_to_unload.iteritems():
+for date, s3_path in date_path_to_unload.iteritems():
     enqueue_psql_script('../../redshift_norm_common/unload_common_model.sql', [
         ['output_path', s3_path],
         ['credentials', args.s3_credentials],
-        ['select_from_common_model_table', "SELECT * FROM normalized_claims WHERE data_set=\\\'" + setid + "\\\'"]
+        ['select_from_common_model_table', "SELECT * FROM normalized_claims WHERE data_set=\\\'%" + date + "%\\\'"]
     ])
 
 execute_queue(args.debug)
