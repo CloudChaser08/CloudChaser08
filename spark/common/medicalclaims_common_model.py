@@ -147,7 +147,7 @@ schema_v2 = StructType([
 ])
 
 schema_v3 = StructType([
-    StructField('record_id', IntegerType(), True),
+    StructField('record_id', LongType(), True),
     StructField('claim_id', StringType(), True),
     StructField('hvid', StringType(), True),
     StructField('created', DateType(), True),
