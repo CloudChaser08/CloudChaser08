@@ -202,6 +202,7 @@ def _generate_queries(stats, provider_conf):
 
             # append to queries list
             for epi_stat in stat_value:
+                epi_stat['datafeed_id'] = provider_conf['datafeed_id']
                 stat_queries.append(
                     query.format(**epi_stat)
                 )

@@ -429,6 +429,61 @@
             "index_null_dates"  : true
         },
         {
+            "name"              : "amazingcharts",
+            "datafeed_id"       : "5",
+            "datatype"          : "emr",
+            "models"            : [
+              {
+                "datatype"        : "emr_enc",
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_clin_obsn",
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_medctn",
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_vit_sign",
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_lab_result",
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_proc",
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }, {
+                "datatype"        : "emr_diag",
+                "fill_rate"       : true,
+                "top_values"      : true,
+                "longitudinality" : null,
+                "year_over_year"  : null
+              }
+            ],
+            "epi_calcs"         : true,
+            "key_stats"         : true,
+            "earliest_date"     : "2015-10-01",
+            "index_all_dates"   : false,
+            "index_null_dates"  : true
+        },
+        {
             "name"              : "healthjump",
             "datafeed_id"       : "47",
             "datatype"          : "emr",
