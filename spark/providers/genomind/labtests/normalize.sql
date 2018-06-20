@@ -35,7 +35,7 @@ SELECT
     med.dosage                                              AS medication_dose
 FROM patient ptn
 LEFT OUTER JOIN matching_payload pay ON ptn.hvJoinKey = pay.hvJoinKey
-LEFT OUTER JOIN clinicians cln ON ptn.patientkey = cln.patientkey
+LEFT OUTER JOIN clinicians_explode cln ON ptn.patientkey = cln.patientkey
 LEFT OUTER JOIN diagnosis_dedup diag on ptn.patientkey = diag.patientkey
 LEFT OUTER JOIN genes_dedup gns ON ptn.patientkey = gns.patientkey
 LEFT OUTER JOIN medications_dedup med ON ptn.patientkey = med.patientkey

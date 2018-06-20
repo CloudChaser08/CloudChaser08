@@ -3,7 +3,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
 def load(runner, input_paths):
-    for table, input_path in input_paths:
+    for table, input_path in input_paths.items():
         df = records_loader.load(runner, input_path, TABLE_CONF[table]['columns'],
                                  TABLE_CONF[table]['file_type'], TABLE_CONF[table]['separator'])
         postprocessor.compose(

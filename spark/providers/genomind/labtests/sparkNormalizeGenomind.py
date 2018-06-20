@@ -13,6 +13,8 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.labtests as lab_priv
 
+from pyspark.sql.functions import col, explode
+
 FEED_ID = '76'
 VENDOR_ID = '314'
 
@@ -82,6 +84,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     runner.sqlContext.sql('select * from medications') \
                      .dropDuplicates(['patientkey', 'genericname', 'dosage']) \
                      .createOrReplaceTempView('medications_dedup')
+
+    # Explode the clinicians table
+    runner.sqlContext.sql('select * from clinicians') \
+                     .withColumn('PatientKey', explode(col('Patients List'))) \
+                     .drop('Patients List') \
+                     .createOrReplaceTempView('clinicians_explode')
 
     # Run the normalization
     normalized_df = runner.run_spark_script(
