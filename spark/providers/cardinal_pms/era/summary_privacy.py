@@ -28,9 +28,9 @@ era_summary_transformer = priv_common.Transformer(
     ]
 ).append(
     priv_common.Transformer(**dict([
-        (c, priv_common.TransformFunction(filter_due_to_pos_itb,
-                        [c, 'pos_cd', 'instnl_typ_of_bll_cd'])),
-        for c in columns_to_nullify
+        (c, [
+            priv_common.TransformFunction(filter_due_to_pos_itb, [c, 'pos_cd', 'instnl_typ_of_bll_cd'])
+        ]) for c in columns_to_nullify
     ]))
 )
 

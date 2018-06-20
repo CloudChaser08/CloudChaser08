@@ -350,7 +350,8 @@ TABLE_COLUMNS = {
         'secondaryproductserviceidqualifier',
         'secondaryquantity',
         'servicedate',
-        'servicedatetimequalifier'
+        'servicedatetimequalifier',
+        'allowed_amt'
     ],
     'serviceline_adjustment' : [
         'adjustmentamountfive',

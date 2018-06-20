@@ -134,20 +134,20 @@ SELECT
     END                                         AS adjctd_proc_cd,
     CASE WHEN service.productserviceidqualifier NOT IN ('NU', 'N4')
             AND clean_up_procedure_code(service.productserviceid) IS NOT NULL
-        THEN service.productserviceidqualifier  
+        THEN service.productserviceidqualifier
     END                                         AS adjctd_proc_cd_qual,
-    UPPER(SUBSTR(clean_up_alphanumeric_code(service.proceduremodifierone), 1, 2))                
+    UPPER(SUBSTR(clean_up_alphanumeric_code(service.proceduremodifierone), 1, 2))
                                                 AS adjctd_proc_cd_1_modfr,
-    UPPER(SUBSTR(clean_up_alphanumeric_code(service.proceduremodifiertwo), 1, 2))                
+    UPPER(SUBSTR(clean_up_alphanumeric_code(service.proceduremodifiertwo), 1, 2))
                                                 AS adjctd_proc_cd_2_modfr,
-    UPPER(SUBSTR(clean_up_alphanumeric_code(service.proceduremodifierthree), 1, 2))                
+    UPPER(SUBSTR(clean_up_alphanumeric_code(service.proceduremodifierthree), 1, 2))
                                                 AS adjctd_proc_cd_3_modfr,
     UPPER(SUBSTR(clean_up_alphanumeric_code(service.proceduremodifierfour), 1, 2))
                                                 AS adjctd_proc_cd_4_modfr,
     clean_up_procedure_code(service.secondaryproductserviceid)
                                                 AS orig_submtd_adjctd_proc_cd,
     CASE WHEN clean_up_procedure_code(service.secondaryproductserviceid) IS NOT NULL
-        THEN service.secondaryproductserviceidqualifier  
+        THEN service.secondaryproductserviceidqualifier
     END                                         AS orig_submtd_adjctd_proc_cd_qual,
     UPPER(SUBSTR(clean_up_alphanumeric_code(service.secondaryproceduremodifierone), 1, 2))
                                                 AS orig_submtd_adjctd_proc_cd_1_modfr,
@@ -193,7 +193,11 @@ SELECT
         ARRAY(adjust.adjustmentreasoncodefive, adjust.adjustmentamountfive, adjust.adjustmentquantityfive),
         ARRAY(adjust.adjustmentreasoncodesix, adjust.adjustmentamountsix, adjust.adjustmentquantitysix)
     ))[x2.explode_idx][2]                       AS svc_ln_adjmt_qty,
-    MD5(service.lineitemcontrolnumber)          AS svc_ln_prov_ctl_num
+    MD5(service.lineitemcontrolnumber)          AS svc_ln_prov_ctl_num,
+    service.allowed_amt                         AS svc_ln_suplmtl_amt,
+    CASE
+    WHEN service.allowed_amt IS NOT NULL THEN '86'
+    END                                         AS svc_ln_suplmtl_amt_qual
 FROM
     serviceline service
     LEFT JOIN

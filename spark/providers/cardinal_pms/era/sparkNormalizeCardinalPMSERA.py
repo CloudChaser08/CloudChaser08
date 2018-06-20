@@ -6,7 +6,6 @@ from spark.runner import Runner
 from spark.spark_setup import init
 
 import spark.helpers.file_utils as file_utils
-import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
@@ -21,22 +20,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path_prefix = file_utils.get_abs_path(
-            script_path,  '../../../test/providers/cardinal_pms/era/resources/input/{}'
-        ) + '/'
-        matching_path = file_utils.get_abs_path(
-            script_path,  '../../../test/providers/cardinal_pms/era/resources/payload/{}'
+            script_path, '../../../test/providers/cardinal_pms/era/resources/input/{}'
         ) + '/'
     elif airflow_test:
         input_path_prefix = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}/'
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/payload/{}/'
     else:
         input_path_prefix = 's3://salusv/incoming/era/cardinal_pms/{}/'
-        matching_path = 's3://salusv/incoming/era/cardinal_pms/{}/'
 
     input_path_prefix = input_path_prefix.format(date_input.replace('-', '/'))
-    matching_path     = matching_path.format(date_input.replace('-', '/'))
 
-    external_table_loader.load_ref_gen_ref(runner.sqlContext)
+    if not test:
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     min_date = postprocessor.coalesce_dates(
                     runner.sqlContext,
@@ -126,7 +120,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             conf['dataframe']
         ).createTempView(conf['table'])
         logging.debug('Finished post-processing')
-        
+
         if not test:
             normalized_records_unloader.unload_delimited_file(
                 spark, runner, '/staging/' + conf['data_type'] + '/', conf['table'])
