@@ -27,6 +27,7 @@ def test_init(spark):
     global results
     results = spark['sqlContext'].sql('select * from labtests_common_model').collect()
 
+
 def test_expected_row_count_matches():
     assert len(results) == 13
 
