@@ -73,7 +73,8 @@ column_transformer = Transformer(
         TransformFunction(post_norm_cleanup.clean_up_gender, ['patient_gender'])
     ],
     patient_age=[
-        TransformFunction(post_norm_cleanup.cap_age, ['patient_age'])
+        TransformFunction(post_norm_cleanup.cap_age, ['patient_age']),
+        TransformFunction(post_norm_cleanup.validate_age, ['patient_age', 'date_service', 'patient_year_of_birth'])
     ],
     patient_year_of_birth=[
         TransformFunction(post_norm_cleanup.cap_year_of_birth, ['patient_age', 'date_service', 'patient_year_of_birth'])

@@ -3,7 +3,8 @@ import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
 emr_transformer = priv_common.Transformer(
     ptnt_age_num=[
-        priv_common.TransformFunction(post_norm_cleanup.cap_age, ['ptnt_age_num'])
+        priv_common.TransformFunction(post_norm_cleanup.cap_age, ['ptnt_age_num']),
+        priv_common.TransformFunction(post_norm_cleanup.validate_age, ['ptnt_age_num', 'enc_dt', 'ptnt_birth_yr'])
     ],
     ptnt_birth_yr=[
         priv_common.TransformFunction(post_norm_cleanup.cap_year_of_birth, ['ptnt_age_num', 'enc_dt', 'ptnt_birth_yr'])
