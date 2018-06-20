@@ -109,6 +109,9 @@ def init(provider, local=False):
         'slightly_deobfuscate_hvid', slightly_deobfuscate_hvid
     )
     sqlContext.registerFunction(
+        'obfuscate_candidate_hvids', obfuscate_candidate_hvids
+    )
+    sqlContext.registerFunction(
         'to_json', to_json
     )
     sqlContext.registerFunction(
