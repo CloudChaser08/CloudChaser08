@@ -29,16 +29,22 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_PATH = 'testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/raw/'
     S3_DEID_RAW_PATH = 'testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/raw/'
     S3_ORIGIN_BUCKET = 'salusv'
+    S3_TEXT_EXPRESS_SCRIPTS_PREFIX = 'testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/output/text/'
+    S3_PARQUET_EXPRESS_SCRIPTS_PREFIX = 'testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/output/parquet/'
+    S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_TEXT_EXPRESS_SCRIPTS_PREFIX
 else:
     S3_TRANSACTION_PREFIX='incoming/pharmacyclaims/esi/'
     S3_PAYLOAD_LOC_URL = 's3://salusv/matching/payload/pharmacyclaims/esi/'
     S3_TRANSACTION_RAW_PATH='incoming/esi/'
     S3_DEID_RAW_PATH='incoming/esi/'
     S3_ORIGIN_BUCKET = 'healthverity'
+    S3_TEXT_EXPRESS_SCRIPTS_PREFIX = 'warehouse/text/pharmacyclaims/express_scripts/'
+    S3_PARQUET_EXPRESS_SCRIPTS_PREFIX = 'warehouse/parquet/pharmacyclaims/express_scripts/'
+    S3_TEXT_EXPRESS_SCRIPTS_WAREHOUSE = 's3://salusv/' + S3_TEXT_EXPRESS_SCRIPTS_PREFIX
 
 # Transaction file
 TRANSACTION_FILE_DESCRIPTION='Express Scripts transaction file'
-TRANSACTION_FILE_DESCRIPTION='Accredo transaction file'
+ACCREDO_TRANSACTION_FILE_DESCRIPTION='Accredo transaction file'
 S3_TRANSACTION_SPLIT_PATH='s3://salusv/' + S3_TRANSACTION_PREFIX
 TRANSACTION_FILE_NAME_TEMPLATE='10130X001_HV_RX_Claims_D{}{}{}.txt'
 ACCREDO_TRANSACTION_FILE_NAME_TEMPLATE='10130X001_HV_ODS_Claims_D{}{}{}.txt'
@@ -64,7 +70,7 @@ get_expected_accredo_transaction_file_name = date_utils.generate_insert_date_int
 get_expected_transaction_file_regex = date_utils.generate_insert_regex_into_template_function(
         TRANSACTION_FILE_NAME_TEMPLATE
 )
-get_expected_accredo_transaction_file_name = date_utils.generate_insert_regex_into_template_function(
+get_expected_accredo_transaction_file_regex = date_utils.generate_insert_regex_into_template_function(
         ACCREDO_TRANSACTION_FILE_NAME_TEMPLATE
 )
 get_expected_deid_file_name = date_utils.generate_insert_date_into_template_function(
@@ -76,7 +82,7 @@ get_expected_accredo_deid_file_name = date_utils.generate_insert_date_into_templ
 get_expected_deid_file_regex = date_utils.generate_insert_regex_into_template_function(
         DEID_FILE_NAME_TEMPLATE
 )
-get_expected_accredo_deid_file_name = date_utils.generate_insert_regex_into_template_function(
+get_expected_accredo_deid_file_regex = date_utils.generate_insert_regex_into_template_function(
         ACCREDO_DEID_FILE_NAME_TEMPLATE
 )
 
@@ -85,8 +91,8 @@ def get_encrypted_decrypted_file_paths(ds, kwargs):
     in1 = get_expected_transaction_file_name(ds, kwargs)
     in2 = get_expected_accredo_transaction_file_name(ds, kwargs)
     return [
-        [in1, in1 + '.gz'],
-        [in2, in2 + '.gz']
+        [tmp_dir + '/' + in1, tmp_dir + '/' + in1 + '.gz'],
+        [tmp_dir + '/' + in2, tmp_dir + '/' + in2 + '.gz']
     ]
 
 def get_transaction_files_paths(ds, kwargs):
@@ -164,7 +170,7 @@ validate_transaction_file_dag = generate_file_validation_dag(
     MINIMUM_TRANSACTION_FILE_SIZE, S3_TRANSACTION_RAW_PATH, TRANSACTION_FILE_DESCRIPTION
 )
 
-validate_accredo_file_dag = generate_file_validation_dag(
+validate_accredo_transaction_file_dag = generate_file_validation_dag(
     'accredo_transaction', get_expected_accredo_transaction_file_name, get_expected_accredo_transaction_file_regex,
     MINIMUM_TRANSACTION_FILE_SIZE, S3_TRANSACTION_RAW_PATH, ACCREDO_TRANSACTION_FILE_DESCRIPTION
 )
@@ -334,8 +340,8 @@ if HVDAG.HVDAG.airflow_env == 'test':
 
 fetch_transaction_file_dag.set_upstream(validate_transaction_file_dag)
 fetch_accredo_transaction_file_dag.set_upstream(validate_accredo_transaction_file_dag)
-decrypt_transaction_file_dag.set_upstream([fetch_transaction_file_dag, fetch_accredo_transaction_file_dag])
-split_push_transaction_files_dag.set_upstream(decrypt_transaction_file_dag)
+decrypt_transaction_files_dag.set_upstream([fetch_transaction_file_dag, fetch_accredo_transaction_file_dag])
+split_push_transaction_files_dag.set_upstream(decrypt_transaction_files_dag)
 queue_up_for_matching_dag.set_upstream([validate_deid_file_dag, validate_accredo_deid_file_dag])
 detect_move_normalize_dag.set_upstream([queue_up_for_matching_dag, split_push_transaction_files_dag])
 update_analytics_db_old.set_upstream(detect_move_normalize_dag)
