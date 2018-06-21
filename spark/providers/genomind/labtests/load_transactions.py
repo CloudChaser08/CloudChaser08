@@ -5,7 +5,8 @@ import spark.helpers.records_loader as records_loader
 def load(runner, input_paths):
     for table, input_path in input_paths.items():
         df = records_loader.load(runner, input_path, TABLE_CONF[table]['columns'],
-                                 TABLE_CONF[table]['file_type'], TABLE_CONF[table]['separator'])
+                                 TABLE_CONF[table]['file_type'], schema=TABLE_CONF[table]['schema'],
+                                 delimiter=TABLE_CONF[table]['separator'])
         postprocessor.compose(
             postprocessor.trimmify,
             postprocessor.nullify
@@ -14,7 +15,8 @@ def load(runner, input_paths):
 
 TABLE_CONF = {
     'clinicians': {
-        'columns': StructType([
+        'columns': None,
+        'schema': StructType([
             StructField('UID', StringType(), True),
             StructField('FirstName', StringType(), True),
             StructField('LastName', StringType(), True),
@@ -40,6 +42,7 @@ TABLE_CONF = {
             'ICDCode',
             'Diagnosis'
         ],
+        'schema': None,
         'file_type': 'json',
         'separator': None
     },
@@ -50,6 +53,7 @@ TABLE_CONF = {
             'GeneName',
             'PKPhenotype'
         ],
+        'schema': None,
         'file_type': 'json',
         'separator': None
     },
@@ -60,6 +64,7 @@ TABLE_CONF = {
             'GenericName',
             'Dosage'
         ],
+        'schema': None,
         'file_type': 'json',
         'separator': None
     },
@@ -85,6 +90,7 @@ TABLE_CONF = {
             'DNAAvailable',
             'hvJoinKey'
         ],
+        'schema': None,
         'file_type': 'csv',
         'separator': '|'
     }

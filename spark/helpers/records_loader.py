@@ -1,14 +1,12 @@
 from pyspark.sql.types import StructType, StructField, StringType
 import spark.helpers.postprocessor as postprocessor
 
-def load(runner, location, columns, file_type, delimiter=',', header=False):
+def load(runner, location, columns, file_type, schema=None, delimiter=',', header=False):
     """
     Load transaction data for a provider
     """
 
-    if isinstance(columns, StructType):
-        schema = columns
-    else:
+    if schema is None:
         schema = StructType([StructField(c, StringType(), True) for c in columns])
 
     if file_type == 'csv':
