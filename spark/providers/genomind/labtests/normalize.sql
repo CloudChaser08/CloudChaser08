@@ -1,15 +1,10 @@
 SELECT
-    MD5(ptn.patientkey)                                     AS claim_id,
     pay.hvid                                                AS hvid,
     COALESCE(SUBSTR(ptn.gender, 1, 1), pay.gender)          AS patient_gender,
     pay.age                                                 AS patient_age,
     pay.yearOfBirth                                         AS patient_year_of_birth,
     SUBSTR(COALESCE(ptn.zip, pay.threeDigitZip), 1, 3)      AS patient_zip3,
     COALESCE(ptn.stateprovidence, pay.state, '')            AS patient_state,
-    extract_date(
-        {input_date},
-        '%Y-%m-%d'
-    )                                                       AS date_service,
     UPPER(gns.genename)                                     AS test_ordered_name,
     UPPER(gns.pkphenotype)                                  AS result_name,
     'PHARMACOKINETIC_PHENOTYPE'                             AS result_desc,
@@ -43,4 +38,4 @@ LEFT OUTER JOIN medications_dedup med ON ptn.patientkey = med.patientkey
 WHERE
 UPPER(COALESCE(ptn.country, 'EMPTY')) = 'USA'
 AND
-UPPER(COALESCE(cln.country, 'EMPTY')) = 'USA'
+UPPER(COALESCE(cln.country, 'USA')) = 'USA'

@@ -94,7 +94,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Run the normalization
     normalized_df = runner.run_spark_script(
         'normalize.sql',
-        [['input_date', max_cap]],
+        [],
         return_output=True
     )
     
