@@ -140,7 +140,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/era/spark-output/'
     else:
-        output_path = 's3://salusv/deliverable/cardinal_pms-0/' + args.date
+        output_path = 's3://salusv/deliverable/cardinal_pms_remit-0/' + args.date
 
     normalized_records_unloader.distcp(output_path)
 
