@@ -54,8 +54,14 @@ SELECT
     diagnosisrelatedgroupdrgcode                AS drg_cd,
     diagnosisrelatedgroupdrgweight              AS drg_weight_num,
     dischargefraction                           AS dischg_frctn_num,
-    CASE WHEN serviceprovideridentificationcodequalifier = 'XX'
-        THEN serviceprovideridentificationcode
+    CASE
+    WHEN LPAD(TRIM(facilitytypecode), 2, '0') IN (
+        '05', '06', '07', '08', '09', '12', '13', '14', '33'
+        ) THEN NULL
+    WHEN serviceprovideridentificationcodequalifier = 'XX'
+    THEN serviceprovideridentificationcode
+    WHEN 0 <> LENGTH(TRIM(COALESCE(serviceprovideridentificationcode ,'')))
+    THEN serviceprovideridentificationcode
     END                                         AS rndrg_prov_npi,
     renderingproviderreferenceidentification
                                                 AS rndrg_prov_vdr_id,
@@ -122,7 +128,7 @@ FROM
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) as explode_idx) x2
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) as explode_idx) x3
     CROSS JOIN (SELECT explode(array(0, 1, 2, 3, 4, 5)) as explode_idx) x4
-    WHERE 
+    WHERE
         (dense_clm_pymt_remrk_cd[x.explode_idx] != NULL OR x.explode_idx = 0)
         AND
         (dense_clm_amt[x2.explode_idx] != CAST(ARRAY(NULL, NULL) AS ARRAY<STRING>) OR x2.explode_idx = 0)
