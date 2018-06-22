@@ -180,7 +180,7 @@ create_return_file = PythonOperator(
 )
 
 def do_deliver_extracted_data(ds, **kwargs):
-    sftp_config = json.loads(Variable.get('humana_test_sftp_configuration'))
+    sftp_config = json.loads(Variable.get('humana_prod_sftp_configuration'))
     path = sftp_config['path']
     del sftp_config['path']
     gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
