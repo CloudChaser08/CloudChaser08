@@ -315,7 +315,7 @@ CREATE VIEW default.medicalclaims (
     ELSE '0_PREDATES_HVM_HISTORY'
     END AS part_processdate
 FROM default.medicalclaims_20180606
-WHERE part_provider IN ('xifin')
+WHERE part_provider IN ('xifin', 'allscripts')
 UNION ALL
 SELECT record_id,
     claim_id,
@@ -1157,7 +1157,6 @@ SELECT CAST(record_id AS bigint),
     CASE
     WHEN part_processdate IN ('NULL', '0_PREDATES_HVM_HISTORY') THEN '0_PREDATES_HVM_HISTORY'
     WHEN LENGTH(part_processdate) = 4 THEN CONCAT(part_processdate, '-01-01')
-    WHEN part_provider IN ('allscripts') THEN CONCAT(part_processdate, '-01')
     ELSE REGEXP_REPLACE(part_processdate, '/', '-')
     END AS part_processdate
 FROM default.medicalclaims_old
