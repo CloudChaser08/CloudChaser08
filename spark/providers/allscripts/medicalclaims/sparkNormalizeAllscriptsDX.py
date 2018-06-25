@@ -13,6 +13,10 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.medicalclaims as med_priv
 import spark.providers.allscripts.medicalclaims.transactions as transactions
+import spark.providers.allscripts.medicalclaims.udf as allscripts_udf
+import spark.helpers.explode as explode
+
+from pyspark.sql.types import ArrayType, StringType
 
 FEED_ID = '26'
 VENDOR_ID = '35'
@@ -47,6 +51,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         output_path = ''
 
+    runner.sqlContext.registerFunction(
+        'linked_and_unlinked_diagnoses', allscripts_udf.linked_and_unlinked_diagnoses, ArrayType(ArrayType(StringType()))
+    )
+
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
@@ -60,8 +68,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         min_date = min_date.isoformat()
 
     max_date = date_input
-    payload_loader.load(runner, matching_path, ['pcn', 'hvJoinKey'])
-    records_loader.load_and_clean_all(runner, input_path, transactions, 'csv', '|')
+    payload_loader.load(runner, matching_path, ['PCN', 'hvJoinKey'])
+    records_loader.load_and_clean_all(runner, input_path, transactions, 'csv', '|', partitions=1000)
+    explode.generate_exploder_table(spark, 8, 'diag_exploder')
 
     runner.run_spark_script('pre_normalization.sql', return_output=True) \
             .createOrReplaceTempView('tmp')
@@ -72,10 +81,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.add_universal_columns(
             feed_id=FEED_ID,
             vendor_id=VENDOR_ID,
-            filename=None,
+            filename='HV_CLAIMS_' + date_input.replace('-', ''),
             model_version_number='06'
         ),
         postprocessor.nullify,
+        med_priv.filter,
         postprocessor.apply_date_cap(
             runner.sqlContext,
             'date_service',
@@ -92,7 +102,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             None,
             min_date
         ),
-        med_priv.filter,
         schema_enforcer.apply_schema_func(schema)
     )(
         normalized
@@ -127,7 +136,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/medicalclaims/20180606/'
+        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2018-06-06/'
 
     normalized_records_unloader.distcp(output_path)
 
