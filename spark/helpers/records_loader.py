@@ -1,7 +1,7 @@
 from pyspark.sql.types import StructType, StructField, StringType
 import spark.helpers.postprocessor as postprocessor
 
-def load(runner, location, columns, file_type, schema=None, delimiter=',', header=False):
+def load(runner, location, columns, file_type, delimiter=',', header=False, schema=None):
     """
     Load transaction data for a provider
     """
