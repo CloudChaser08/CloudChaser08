@@ -8,8 +8,6 @@ import spark.helpers.file_utils as file_utils
 
 from pyspark.sql import Row
 
-import pdb
-
 clinical_observation_results = lab_result_results = encounter_results = medication_results = \
     procedure_results = diagnosis_results = lab_order_results = provider_order_results = \
     vital_sign_results = None
@@ -74,7 +72,6 @@ def test_init(spark):
 
 
 def test_something():
-    pdb.set_trace()
     print len(clinical_observation_results)
     print len(lab_result_results)
     print len(encounter_results)
