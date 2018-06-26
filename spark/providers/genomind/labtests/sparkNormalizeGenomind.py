@@ -107,7 +107,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             model_version_number='07'
         ),
         postprocessor.nullify,
-        lab_priv.filter
+        lab_priv.filter,
+        schema_enforcer.apply_schema_func(schema)
     )(
         normalized_df
     )
