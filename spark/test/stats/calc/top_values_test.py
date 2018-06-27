@@ -47,16 +47,14 @@ def test_top_values_created_for_each_column():
 
 
 def test_threshold():
-
-    print("results_threshold", results_threshold)
     assert sorted(results_threshold) == [
-        {'column': 'a', 'count': 2, 'percentage': ((float(2) / 3) * 100), 'value': 'a'},
-        {'column': 'b', 'count': 2, 'percentage': 50.0, 'value': 'b'},
-        {'column': 'c', 'count': 2, 'percentage': 50.0, 'value': 's'}
+        {'column': 'a', 'count': 2, 'percentage': 0.5, 'value': 'a'},
+        {'column': 'b', 'count': 2, 'percentage': 0.5, 'value': 'b'},
+        {'column': 'c', 'count': 2, 'percentage': 0.5, 'value': 's'}
     ]
 
     assert results_distinct_threshold == [
-        {'column': 'c', 'count': 2, 'percentage': 50.0, 'value': 's'}
+        {'column': 'c', 'count': 2, 'percentage': 0.66667, 'value': 's'}
     ]
 
 
