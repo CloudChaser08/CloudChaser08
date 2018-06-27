@@ -183,22 +183,22 @@ def test_emr_year_over_year(spark):
     union_results = stats_runner.run(spark['spark'], spark['sqlContext'],
                                      quarter, start_date, end_date, union_provider_config)
 
-    assert enc_results['year_over_year'] == [{'count': 1, 'year': 2015},
-                                             {'count': 1, 'year': 2016},
-                                             {'count': 1, 'year': 2017}]
-    assert union_results['year_over_year'] == [{'count': 1, 'year': 2016},
-                                               {'count': 1, 'year': 2017}]
+    assert sorted(enc_results['year_over_year']) == [{'count': 1, 'year': 2015},
+                                                     {'count': 1, 'year': 2016},
+                                                     {'count': 1, 'year': 2017}]
+    assert sorted(union_results['year_over_year']) == [{'count': 1, 'year': 2016},
+                                                       {'count': 1, 'year': 2017}]
 
     # since these results are different, we can infer that different
     # datasets were used. Since the average is lower for union_resuls
     # (and this table has less data), this means that the encounter
     # table is used for enc_results, and the union table is used for
     # union_results.
-    assert enc_results['longitudinality'] == [
+    assert sorted(enc_results['longitudinality']) == [
         {'average': 1, 'duration': '0 months', 'std_dev': 0, 'value': 2},
         {'average': 6, 'duration': '27 years', 'std_dev': 0, 'value': 1}
     ]
-    assert union_results['longitudinality'] == [
+    assert sorted(union_results['longitudinality']) == [
         {'average': 1, 'duration': '0 months', 'std_dev': 0, 'value': 2},
         {'average': 5, 'duration': '27 years', 'std_dev': 0, 'value': 1}
     ]
