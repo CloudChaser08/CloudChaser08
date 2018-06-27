@@ -39,7 +39,7 @@ def _col_top_values(df, c, num, total, distinct_column=None):
     else:
         result_df = result_df.count()
 
-    result_df = result_df.withColumn('percentage', round(result_df['count'] / float(total), 5))
+    result_df = result_df.withColumn('percentage', round(result_df['count'] / float(total), 4))
 
     # Build the output from the aggregation
     return result_df.withColumn('name', lit(c)) \

@@ -54,7 +54,7 @@ def test_threshold():
     ]
 
     assert results_distinct_threshold == [
-        {'column': 'c', 'count': 2, 'percentage': 0.66667, 'value': 's'}
+        {'column': 'c', 'count': 2, 'percentage': 0.6667, 'value': 's'}
     ]
 
 
