@@ -126,7 +126,7 @@ def test_emr_fill_rates(spark):
     })
 
 
-def test_emr_year_over_year(spark):
+def test_emr_year_over_year_long(spark):
     enc_provider_config = {
         'name'         : 'test_emr',
         'datafeed_id'  : '48',
