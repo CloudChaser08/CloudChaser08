@@ -89,7 +89,7 @@ def test__generate_queries():
     assert year_over_year_queries[1] == "INSERT INTO marketplace_yearoveryearreportitem (startyear, value, datafeed_id) " \
         "values ('myyear', 'mycount', 'TEST_DF');"
 
-    assert len(top_values_queries) == 3
+    assert len(top_values_queries) == 4
     assert top_values_queries[0] == "INSERT INTO marketplace_datafeedfield (name, sequence, datafield_id, data_feed_id, top_values, unique_to_data_feed) " \
         "VALUES ('test_column_1', '0', '1', 'TEST_DF', 'test_value_1 (1000), test_value_2 (2000)', false) " \
         "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
@@ -102,6 +102,12 @@ def test__generate_queries():
         "VALUES ('test_column_3', '0', '3', 'TEST_DF', '99 (90918)', false) " \
         "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
         "SET top_values = '99 (90918)';"
+    assert top_values_queries[3] == "UPDATE marketplace_datafeedfield SET top_values = NULL " \
+        "WHERE data_feed_id = TEST_DF;"
+    assert queries["top_values"][0][:6] == "UPDATE"
+    assert queries["top_values"][1][:6] == "INSERT"
+    assert queries["top_values"][2][:6] == "INSERT"
+    assert queries["top_values"][3][:6] == "INSERT"
 
     assert len(fill_rate_queries) == 3
     assert fill_rate_queries[0] == "INSERT INTO marketplace_datafeedfield (name, sequence, datafield_id, data_feed_id, fill_rate, unique_to_data_feed) " \
