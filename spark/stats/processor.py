@@ -12,8 +12,43 @@ import spark.stats.calc.year_over_year as year_over_year
 import spark.stats.calc.epi as epi
 import spark.helpers.stats.utils as utils
 
+ALL_DATA = None
+SAMPLED_DATA = None
+SAMPLED_DATA_MULTIPLIER = None
 
-def _run_fill_rates(df, conf):
+
+def _get_all_provider_data(sqlContext, provider_conf):
+    global ALL_DATA
+
+    if ALL_DATA is None:
+        ALL_DATA = utils.get_provider_data(
+            sqlContext, provider_conf['datatype'],
+            provider_conf['datafeed_id'] if provider_conf['datatype'].startswith('emr') else provider_conf['name'],
+            custom_schema=provider_conf.get('custom_schema', None), custom_table=provider_conf.get('custom_table', None)
+        ).withColumn(
+            'coalesced_date', coalesce(*provider_conf['date_field'])
+        )
+
+    return ALL_DATA
+
+
+def _get_sampled_provider_data(spark, sqlContext, provider_conf, start_date, end_date):
+    global SAMPLED_DATA, SAMPLED_DATA_MULTIPLIER
+
+    partitions = int(spark.conf.get('spark.sql.shuffle.partitions'))
+
+    if SAMPLED_DATA is None and SAMPLED_DATA_MULTIPLIER is None:
+        SAMPLED_DATA_MULTIPLIER, SAMPLED_DATA = utils.select_data_sample_in_date_range(
+            '1900-01-01' if provider_conf.get('index_all_dates') else start_date, end_date,
+            'coalesced_date', include_nulls=provider_conf.get('index_null_dates'),
+            record_field=provider_conf.get('record_field')
+        )(_get_all_provider_data(sqlContext, provider_conf))
+        SAMPLED_DATA = SAMPLED_DATA.coalesce(partitions).cache()
+
+    return SAMPLED_DATA, SAMPLED_DATA_MULTIPLIER
+
+
+def _run_fill_rates(spark, sqlContext, conf, start_date, end_date):
     '''
     A wrapper around fill_rates calculate fill rate method
     Input:
@@ -24,6 +59,10 @@ def _run_fill_rates(df, conf):
              or None if conf specifies not to calculate
     '''
     if conf.get('fill_rate_conf'):
+        df, _ = _get_sampled_provider_data(
+            spark, sqlContext, conf, start_date, end_date
+        )
+
         # Get only the columns needed to calculate fill rates on
         cols = [c for c in df.columns if c in conf['fill_rate_conf']['columns'].keys()]
         if conf.get('record_field'):
@@ -35,7 +74,7 @@ def _run_fill_rates(df, conf):
 
     return None
 
-def _run_top_values(df, provider_conf):
+def _run_top_values(spark, sqlContext, provider_conf, start_date, end_date):
     '''
     A wrapper around top_values method calculating the N most common values
     in each column
@@ -47,31 +86,46 @@ def _run_top_values(df, provider_conf):
              or None if provider_conf specifies not to calculate
     '''
     if provider_conf.get('top_values_conf'):
+        df, multiplier = _get_sampled_provider_data(
+            spark, sqlContext, provider_conf, start_date, end_date
+        )
+
         # Get only the columns needed to calculate fill rates on
         cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns'].keys()]
         if provider_conf.get('record_field') and provider_conf.get('record_field') not in cols:
             cols.append(provider_conf['record_field'])
         max_num_values = provider_conf['top_values_conf']['max_values']
         top_values_cols_df = df.select(*cols)
-        return top_values.calculate_top_values(top_values_cols_df, max_num_values, distinct_column=provider_conf.get('record_field'))
+
+        sampled_top_values = top_values.calculate_top_values(top_values_cols_df, max_num_values, distinct_column=provider_conf.get('record_field'))
+
+        if sampled_top_values:
+            for top_value_stat in sampled_top_values:
+                top_value_stat['count'] = int(top_value_stat['count'] * multiplier)
+
+        return sampled_top_values
 
     return None
 
-def _run_key_stats(df, earliest_date, start_date, end_date, provider_conf):
+def _run_key_stats(sqlContext, earliest_date, provider_conf, start_date, end_date):
     if provider_conf.get('key_stats'):
+        df = _get_all_provider_data(sqlContext, provider_conf)
+
         return key_stats.calculate_key_stats(df, earliest_date, start_date,
                 end_date, provider_conf)
 
     return None
 
-def _run_longitudinality(df, provider_conf):
+def _run_longitudinality(sqlContext, provider_conf):
     if provider_conf.get('longitudinality'):
+        df = _get_all_provider_data(sqlContext, provider_conf).select("hvid", "coalesced_date")
         return longitudinality.calculate_longitudinality(df, provider_conf)
 
     return None
 
-def _run_year_over_year(df, earliest_date, end_date, provider_conf):
+def _run_year_over_year(sqlContext, earliest_date, end_date, provider_conf):
     if provider_conf.get('year_over_year'):
+        df = _get_all_provider_data(sqlContext, provider_conf).select("hvid", "coalesced_date")
         return year_over_year.calculate_year_over_year(df, earliest_date, end_date, provider_conf)
 
     return None
@@ -96,16 +150,8 @@ def run_marketplace_stats(
         - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
 
-    if not stats_to_calculate:
-        return {}
-
     # pull out some variables from provider_conf
-    datatype = provider_conf['datatype']
-    date_columns = provider_conf['date_field']
     earliest_date = provider_conf['earliest_date']
-    index_all_dates = provider_conf.get('index_all_dates', False)
-    custom_schema = provider_conf.get('custom_schema', None)
-    custom_table = provider_conf.get('custom_table', None)
 
      # if earliest_date is greater than start_date, use earliest_date as start_date
     if earliest_date > start_date:
@@ -115,55 +161,19 @@ def run_marketplace_stats(
         datetime.strptime(end_date, '%Y-%m-%d'), datetime.strptime(earliest_date, '%Y-%m-%d')
     ).years
 
-    # Get data
-    all_data_df = utils.get_provider_data(
-        sqlContext, datatype,
-        provider_conf['datafeed_id'] if datatype.startswith('emr') else provider_conf['name'],
-        custom_schema=custom_schema, custom_table=custom_table
-    )
-    all_data_df = all_data_df.withColumn(
-        'coalesced_date', coalesce(*date_columns)
-    )
-
-    # Desired number of partitions when calculating
-    partitions = int(spark.conf.get('spark.sql.shuffle.partitions'))
-
-    # provider, start_date, end_date df cache
-    # used for fill rate, top values, and key stats
-    if index_all_dates:
-        multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
-            '1900-01-01', end_date, 'coalesced_date', include_nulls=provider_conf.get('index_null_dates'),
-            record_field=provider_conf.get('record_field')
-        )(all_data_df)
-    else:
-        multiplier, sampled_gen_stats_df = utils.select_data_sample_in_date_range(
-            start_date, end_date, 'coalesced_date', include_nulls=provider_conf.get('index_null_dates'),
-            record_field=provider_conf.get('record_field')
-        )(all_data_df)
-
-    sampled_gen_stats_df = sampled_gen_stats_df.coalesce(partitions).cache()
-
     # Generate fill rates
     if 'fill_rates' in stats_to_calculate:
-        fill_rates = _run_fill_rates(sampled_gen_stats_df, provider_conf)
+        fill_rates = _run_fill_rates(spark, sqlContext, provider_conf, start_date, end_date)
 
     # Generate top values
     if 'top_values' in stats_to_calculate:
-        top_values = _run_top_values(sampled_gen_stats_df, provider_conf)
-
-        if top_values:
-            for top_value_stat in top_values:
-                top_value_stat['count'] = int(top_value_stat['count'] * multiplier)
+        top_values = _run_top_values(spark, sqlContext, provider_conf, start_date, end_date)
 
     if 'key_stats' in stats_to_calculate:
         # Generate key stats
         key_stats = _run_key_stats(
-            all_data_df, earliest_date, start_date, end_date, provider_conf
+            sqlContext, earliest_date, provider_conf, start_date, end_date
         )
-
-    # datatype, provider, earliest_date, end_date df cache
-    # used for longitudinality and year over year
-    date_stats_df = all_data_df.select("hvid", "coalesced_date").coalesce(partitions)
 
     if 'longitudinality' in stats_to_calculate:
 
@@ -174,7 +184,7 @@ def run_marketplace_stats(
             longitudinality = None
         else:
             # Generate Longitudinality
-            longitudinality = _run_longitudinality(date_stats_df, provider_conf)
+            longitudinality = _run_longitudinality(sqlContext, provider_conf)
 
     if 'year_over_year' in stats_to_calculate:
 
@@ -185,7 +195,7 @@ def run_marketplace_stats(
             year_over_year = None
         else:
             # Generate year over year
-            year_over_year = _run_year_over_year(date_stats_df, earliest_date, end_date, provider_conf)
+            year_over_year = _run_year_over_year(sqlContext, earliest_date, end_date, provider_conf)
 
     # Return all the dfs
     all_stats = {}
