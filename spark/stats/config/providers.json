@@ -251,6 +251,7 @@
             "epi_calcs"         : true,
             "earliest_date"     : "1900-01-01",
             "index_all_dates"   : true,
+            "index_null_dates"  : true,
             "custom_schema"     : "sample",
             "custom_table"      : "genomind_normalized"
         },
