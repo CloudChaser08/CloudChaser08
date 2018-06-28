@@ -1,0 +1,13 @@
+{"UID":1,"PatientKey":1,"GeneName":"5HT2C"}
+{"UID":2,"PatientKey":1,"GeneName":"ANK3"}
+{"UID":3,"PatientKey":1,"GeneName":"CACNA1C"}
+{"UID":4,"PatientKey":1,"GeneName":"COMT"}
+{"UID":5,"PatientKey":2,"GeneName":"CYP2C19","PKPhenotype":"IM"}
+{"UID":6,"PatientKey":3,"GeneName":"CYP2D6","PKPhenotype":"EM"}
+{"UID":7,"PatientKey":4,"GeneName":"CYP3A4","PKPhenotype":"PM"}
+{"UID":8,"PatientKey":5,"GeneName":"DRD2"}
+{"UID":9,"PatientKey":6,"GeneName":"MTHFR"}
+{"UID":10,"PatientKey":7,"GeneName":"SLC6A4"}
+{"UID":11,"PatientKey":8,"GeneName":"SLC6A4"}
+{"UID":12,"PatientKey":9,"GeneName":"SLC6A4"}
+{"UID":13,"PatientKey":10,"GeneName":"SLC6A4"}
