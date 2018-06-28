@@ -14,11 +14,6 @@ EMR_ENCOUNTER_STATS = ['longitudinality', 'year_over_year']
 
 def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate=ALL_STATS):
 
-    # reset globals
-    processor.ALL_DATA = None
-    processor.SAMPLED_DATA = None
-    processor.SAMPLED_DATA_MULTIPLIER = None
-
     epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats_to_calculate else {}
 
     if provider_config['datatype'] == 'emr':
