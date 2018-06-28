@@ -21,11 +21,18 @@ def _get_all_provider_data(sqlContext, provider_conf):
     global ALL_DATA
 
     if ALL_DATA is None:
-        ALL_DATA = utils.get_provider_data(
-            sqlContext, provider_conf['datatype'],
-            provider_conf['datafeed_id'] if provider_conf['datatype'].startswith('emr') else provider_conf['name'],
-            custom_schema=provider_conf.get('custom_schema', None), custom_table=provider_conf.get('custom_table', None)
-        ).withColumn(
+        if provider_conf['datatype'] == 'emr':
+            ALL_DATA = utils.get_emr_union(
+                sqlContext, provider_conf['models'], provider_conf['datafeed_id']
+            )
+        else:
+            ALL_DATA = utils.get_provider_data(
+                sqlContext, provider_conf['datatype'],
+                provider_conf['datafeed_id'] if provider_conf['datatype'].startswith('emr') else provider_conf['name'],
+                custom_schema=provider_conf.get('custom_schema', None), custom_table=provider_conf.get('custom_table', None)
+            )
+
+        ALL_DATA = ALL_DATA.withColumn(
             'coalesced_date', coalesce(*provider_conf['date_field'])
         )
 
