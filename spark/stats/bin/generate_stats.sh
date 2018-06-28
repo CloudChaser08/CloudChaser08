@@ -51,6 +51,7 @@ generate_stats -f 18        # Quest
 generate_stats -f 46        # LabCorp
 generate_stats -f 58        # Guardant Health
 generate_stats -f 43        # Ambry
+generate_stats -f 76        # Genomind
 
 # Events
 generate_stats -f 27        # Obit Data
