@@ -1,7 +1,7 @@
-from pyspark.sql.functions import col, countDistinct, lit, trim
+from pyspark.sql.functions import col, countDistinct, lit, trim, round
 import logging
 
-def _col_top_values(df, c, num, distinct_column=None):
+def _col_top_values(df, c, num, total, distinct_column=None):
     '''
     Calculate the top values for a given column
     Input:
@@ -15,16 +15,16 @@ def _col_top_values(df, c, num, distinct_column=None):
               along with the count
 
               i.e.
-              +----------------+-----------+--------------+
-              |      name      |    col    |     count    |
-              +----------------+-----------+--------------+
-              |      name      |   val_1   |      450     |
-              |      name      |   val_2   |      400     |
-              |      name      |   val_3   |      200     |
-              |      name      |   val_4   |       27     |
-              |       ...      |    ...    |      ...     |
-              |      name      |    val_n  |       1      |
-              +----------------+--------------------------+
+              +----------------+-----------+--------------+-------------+
+              |      name      |    col    |     count    |  percentage |
+              +----------------+-----------+--------------+-------------+
+              |      name      |   val_1   |      450     |     41.78   |
+              |      name      |   val_2   |      400     |     37.14   |
+              |      name      |   val_3   |      200     |     18.57   |
+              |      name      |   val_4   |       27     |     2.51    |
+              |       ...      |    ...    |      ...     |      ...    |
+              |      name      |    val_n  |       1      |     0.009   |
+              +----------------+--------------------------+-------------+
     '''
 
     # Group the DataFrame by the column we want to calculate
@@ -38,9 +38,12 @@ def _col_top_values(df, c, num, distinct_column=None):
         result_df = result_df.agg(countDistinct(col(distinct_column)).alias('count'))
     else:
         result_df = result_df.count()
+
+    result_df = result_df.withColumn('percentage', round(result_df['count'] / float(total), 4))
+
     # Build the output from the aggregation
     return result_df.withColumn('name', lit(c)) \
-                    .select('name', 'col', 'count') \
+                    .select('name', 'col', 'count', 'percentage') \
                     .sort(col('count').desc()) \
                     .limit(num)
 
@@ -68,20 +71,21 @@ def calculate_top_values(df, max_top_values, distinct_column=None, threshold=0.0
         logging.error("Dataframe with no columns passed in for top values calculation")
         return []
 
+    total = df.select(distinct_column).distinct().count() if distinct_column else df.count()
+
     BATCH_SIZE = 10
     i = 0
     top_values_res = []
     while i < len(columns):
         top_values_res += reduce(
             lambda df1, df2: df1.union(df2),
-            [_col_top_values(df, c, max_top_values, distinct_column) for c in columns[i:i+BATCH_SIZE]]
+            [_col_top_values(df, c, max_top_values, total, distinct_column) for c in columns[i:i+BATCH_SIZE]]
         ).collect()
         i = i + BATCH_SIZE
 
-    stats = map(lambda r: {'column': r.name, 'value': r.col, 'count': r['count']}, top_values_res)
+    stats = map(lambda r: {'column': r.name, 'value': r.col, 'count': r['count'], 'percentage': r['percentage']}, top_values_res)
 
     if threshold:
-        total = df.select(distinct_column).distinct().count() if distinct_column else df.count()
-        stats = [stat for stat in stats if float(stat['count']) / float(total) >= threshold]
+        stats = [stat for stat in stats if stat['percentage'] >= threshold]
 
     return stats

@@ -220,7 +220,7 @@ def _generate_queries(stats, provider_conf):
 
             for column in columns:
                 top_values_string = reduce(lambda x1, x2: x1 + ', ' + x2, [
-                    '{} ({})'.format(r['value'].encode('utf-8'), r['count'])
+                    '{} ({}:{})'.format(r['value'].encode('utf-8'), r['count'], r['percentage'])
                     for r in stat_value if r['column'] == column
                 ])
 

@@ -685,49 +685,49 @@
               {
                 "datatype"        : "emr_clin_obsn",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_medctn",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_vit_sign",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_prov_ord",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_lab_result",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_lab_ord",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_proc",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_diag",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }
@@ -746,25 +746,25 @@
               {
                 "datatype"        : "emr_clin_obsn",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_lab_result",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_proc",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }, {
                 "datatype"        : "emr_diag",
                 "fill_rate"       : true,
-                "top_values"      : null,
+                "top_values"      : true,
                 "longitudinality" : null,
                 "year_over_year"  : null
               }
