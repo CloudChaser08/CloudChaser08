@@ -38,6 +38,9 @@ FILL_RATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
                                 "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                 "SET fill_rate = '{fill_rate}';"
 
+TOP_VALS_DELETE_SQL_TEMPLATE = "UPDATE marketplace_datafeedfield SET top_values = NULL "\
+                               "WHERE data_feed_id = {data_feed_id};"
+
 TOP_VALS_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
                                "(name, sequence, datafield_id, data_feed_id, top_values, unique_to_data_feed) " \
                                "VALUES ('{name}', '{sequence}', '{datafield_id}', '{data_feed_id}', '{top_values}', false) " \
@@ -210,12 +213,16 @@ def _generate_queries(stats, provider_conf):
         elif stat_name == 'top_values' and stat_value:
             columns = set([r['column'] for r in stat_value])
 
+            name_id_dict = provider_conf['top_values_conf']['columns']
+
+            stat_queries.append(TOP_VALS_DELETE_SQL_TEMPLATE.format(
+                data_feed_id=provider_conf["datafeed_id"]))
+
             for column in columns:
                 top_values_string = reduce(lambda x1, x2: x1 + ', ' + x2, [
                     '{} ({}:{})'.format(r['value'].encode('utf-8'), r['count'], r['percentage'])
                     for r in stat_value if r['column'] == column
                 ])
-                name_id_dict = provider_conf['top_values_conf']['columns']
 
                 stat_queries.append(TOP_VALS_INSERT_SQL_TEMPLATE.format(
                     name=column, datafield_id=name_id_dict[column]['field_id'], sequence=name_id_dict[column]['sequence'],
