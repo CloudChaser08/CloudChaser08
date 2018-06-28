@@ -8,6 +8,7 @@ def extract(runner, hvids, timestamp, start_dt, end_dt):
     # Extract conditions
     ext = t1.join(t2, t1['data_feed'] == t2['hvm_vdr_feed_id'], 'inner') \
         .join(hvids, t1['hvid'] == hvids['hvid'], 'left_semi') \
+        .where(t1['part_processdate'] >= start_dt.isoformat()) \
         .where((t1['date_service'] <= end_dt.isoformat()) & (t1['date_service'] >= start_dt.isoformat()))
 
     # Hashing
