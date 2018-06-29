@@ -66,12 +66,13 @@ def do_convert_file_encoding(ds, **kwargs):
 def do_split_files(ds, **kwargs):
     tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
     file_paths_to_split = kwargs['file_paths_to_split_func'](ds, kwargs)
+    chunk_type = ['-C', str(kwargs['split_size'])] if 'split_size' in kwargs else ['-n', 'l/' + str(kwargs['num_splits'])]
 
     logging.info(file_paths_to_split)
     for fp in file_paths_to_split:
         f = fp.split('/')[-1]
         check_call([
-            'split', '-n', 'l/' + str(kwargs['num_splits']), fp,
+            'split'] + chunk_type + [fp,
             tmp_dir + get_parts_dir(ds, kwargs) + '/' + f + '.'
         ])
 
