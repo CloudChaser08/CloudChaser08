@@ -11,11 +11,11 @@ SELECT
     COALESCE(YEAR(demo.dob), demo.yearOfBirth)                                AS patient_year_of_birth,
     SUBSTRING(TRIM(COALESCE(demo.pt_zipcode, demo.threedigitzip, '')), 1, 3)  AS patient_zip3,
     UPPER(TRIM(COALESCE(demo.pt_st_id, demo.state, '')))                      AS patient_state,
-    EXTRACT_DATE(demo.load_date, '%m/%d/%Y')                                  AS date_received,
-    EXTRACT_DATE(demo.dos, '%m/%d/%Y')                                        AS date_service,
-    EXTRACT_DATE(demo.final_rpt_date, '%m/%d/%Y')                             AS date_service_end,
-    EXTRACT_DATE(demo.admission_date, '%m/%d/%Y')                             AS inst_date_admitted,
-    EXTRACT_DATE(demo.discharge_dt, '%m/%d/%Y')                               AS inst_date_discharged,
+    EXTRACT_DATE(demo.load_date, '%m/%d/%Y', CAST({min_date} AS DATE))        AS date_received,
+    EXTRACT_DATE(demo.dos, '%m/%d/%Y', CAST({min_date} AS DATE))              AS date_service,
+    EXTRACT_DATE(demo.final_rpt_date, '%m/%d/%Y', CAST({min_date} AS DATE))   AS date_service_end,
+    EXTRACT_DATE(demo.admission_date, '%m/%d/%Y', CAST({min_date} AS DATE))   AS inst_date_admitted,
+    EXTRACT_DATE(demo.discharge_dt, '%m/%d/%Y', CAST({min_date} AS DATE))     AS inst_date_discharged,
     MD5(proc.place_of_svc)                                                    AS place_of_service_vendor_id,
     diag.diag_code                                                            AS diagnosis_code,
     CASE
@@ -32,39 +32,30 @@ SELECT
 
 -- offset diagnosis sequence to ensure any existing procedure sequence
 -- number comes first when ranked
-    diag.diag_sequence + 4                                                    AS diagnosis_priority_unranked,
+    CASE
+    WHEN diag.diag_code IS NOT NULL
+    THEN diag.diag_sequence + 4
+    END                                                                       AS diagnosis_priority_unranked,
     demo.gross_price                                                          AS total_charge,
     demo.bill_price                                                           AS total_allowed,
     demo.ordering_npi                                                         AS prov_referring_npi,
-    CASE
-    WHEN payor.payor_priority = 1 THEN payor.payor_id
-    END                                                                       AS payer_vendor_id,
-    CASE
-    WHEN payor.payor_priority = 1 THEN payor.payor_name
-    END                                                                       AS payer_name,
+    payor1.payor_id                                                           AS payer_vendor_id,
+    payor1.payor_name                                                         AS payer_name,
     demo.primary_upin                                                         AS prov_rendering_upin,
     COALESCE(demo.ordering_upin, demo.referring_upin)                         AS prov_referring_upin,
     SUBSTRING(
-        demo.ordering_phys_name, 1, LOCATE(', ', demo.ordering_phys_name) - 1
+        demo.ordering_phys_name, 1, LOCATE(',', demo.ordering_phys_name) - 1
         )                                                                     AS prov_referring_name_1,
     SUBSTRING(
-        demo.ordering_phys_name, LOCATE(', ', demo.ordering_phys_name) + 1, 999
+        demo.ordering_phys_name, LOCATE(',', demo.ordering_phys_name) + 1, 999
         )                                                                     AS prov_referring_name_2,
     proc.billing_facility_id                                                  AS prov_facility_vendor_id,
-    CASE
-    WHEN payor.payor_priority = 2 THEN payor.payor_id
-    END                                                                       AS cob_payer_vendor_id_1,
-    CASE
-    WHEN payor.payor_priority = 2 THEN payor.payor_priority
-    END                                                                       AS cob_payer_seq_code_1,
-    CASE
-    WHEN payor.payor_priority = 3 THEN payor.payor_id
-    END                                                                       AS cob_payer_vendor_id_2,
-    CASE
-    WHEN payor.payor_priority = 3 THEN payor.payor_priority
-    END                                                                       AS cob_payer_seq_code_2,
+    payor2.payor_id                                                           AS cob_payer_vendor_id_1,
+    payor2.payor_priority                                                     AS cob_payer_seq_code_1,
+    payor3.payor_id                                                           AS cob_payer_vendor_id_2,
+    payor3.payor_priority                                                     AS cob_payer_seq_code_2,
     diag.test_id                                                              AS vendor_test_id,
-    EXTRACT_DATE(demo.accounting_date, '%m/%d/%Y')                            AS claim_transaction_date,
+    EXTRACT_DATE(demo.accounting_date, '%m/%d/%Y', CAST({min_date} AS DATE))  AS claim_transaction_date,
     ARRAY(
         demo.retro_bill_price, demo.retro_trade_discount_amount, demo.trade_discount_amount, demo.due_amt,
         demo.expect_price
@@ -101,37 +92,41 @@ FROM diagnosis_complete diag
     AND proc.row_num = 1
     LEFT OUTER JOIN demographics_complete demo ON diag.accn_id = demo.accn_id
     AND diag.client_id = demo.client_id
-    LEFT OUTER JOIN payors_complete payor ON diag.accn_id = payor.accn_id
-    AND diag.client_id = payor.client_id
+    LEFT OUTER JOIN payors_complete payor1 ON diag.accn_id = payor1.accn_id
+    AND diag.client_id = payor1.client_id
+    AND payor1.payor_priority = 1
+    LEFT OUTER JOIN payors_complete payor2 ON diag.accn_id = payor2.accn_id
+    AND diag.client_id = payor2.client_id
+    AND payor2.payor_priority = 2
+    LEFT OUTER JOIN payors_complete payor3 ON diag.accn_id = payor3.accn_id
+    AND diag.client_id = payor3.client_id
+    AND payor3.payor_priority = 3
     CROSS JOIN claim_transaction_amount_exploder
-WHERE (((NOT EXISTS (
-                SELECT 1 FROM billed_procedures_complete pr
-                WHERE  diag.accn_id = pr.accn_id
-                    AND  diag.client_id = pr.client_id
-                    AND  diag.test_id = pr.test_id
-                    AND 0 <>  LENGTH(TRIM(COALESCE(diag.test_id,'')))
-                    AND 0 <> LENGTH(TRIM(COALESCE(pr.test_id, '')))
-                    )
-                AND NOT EXISTS (
-                SELECT 1 FROM ordered_tests_complete t
-                WHERE  diag.accn_id = t.accn_id
-                    AND  diag.client_id = t.client_id
-                    AND  diag.test_id = t.test_id
-                    AND 0 <>  LENGTH(TRIM(COALESCE(diag.test_id,'')))
-                    AND 0 <> LENGTH(TRIM(COALESCE(t.test_id, '')))
-                    )
-                )
-            OR (NOT EXISTS (
-                SELECT 1 FROM billed_procedures_complete pr
-                WHERE  diag.accn_id = pr.accn_id
-                    AND  diag.client_id = pr.client_id
-                    AND 0 = LENGTH(TRIM(COALESCE(diag.test_id,'')))
-                    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_1, 'dummy2')
-                    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_2, 'dummy2')
-                    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_3, 'dummy2')
-                    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_4, 'dummy2')
-                    )
-                )
+WHERE NOT EXISTS (
+    SELECT 1 FROM billed_procedures_complete pr
+    WHERE  diag.accn_id = pr.accn_id
+        AND  diag.client_id = pr.client_id
+        AND  diag.test_id = pr.test_id
+        AND 0 <>  LENGTH(TRIM(COALESCE(diag.test_id,'')))
+        AND 0 <> LENGTH(TRIM(COALESCE(pr.test_id, '')))
+        )
+    AND NOT EXISTS (
+    SELECT 1 FROM ordered_tests_complete t
+    WHERE  diag.accn_id = t.accn_id
+        AND  diag.client_id = t.client_id
+        AND  diag.test_id = t.test_id
+        AND 0 <>  LENGTH(TRIM(COALESCE(diag.test_id,'')))
+        AND 0 <> LENGTH(TRIM(COALESCE(t.test_id, '')))
+        )
+    AND NOT EXISTS (
+    SELECT 1 FROM billed_procedures_complete pr
+    WHERE  diag.accn_id = pr.accn_id
+        AND  diag.client_id = pr.client_id
+        AND 0 = LENGTH(TRIM(COALESCE(diag.test_id,''))) AND (
+            COALESCE(diag.diag_code,'') = COALESCE(pr.diag_code_1,'')
+            OR COALESCE(diag.diag_code,'') = COALESCE(pr.diag_code_2,'')
+            OR COALESCE(diag.diag_code,'') = COALESCE(pr.diag_code_3,'')
+            OR COALESCE(diag.diag_code,'') = COALESCE(pr.diag_code_4,'')
             )
         )
     AND demo.pt_country ='USA'
