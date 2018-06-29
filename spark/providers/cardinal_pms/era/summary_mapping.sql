@@ -55,9 +55,6 @@ SELECT
     diagnosisrelatedgroupdrgweight              AS drg_weight_num,
     dischargefraction                           AS dischg_frctn_num,
     CASE
-    WHEN LPAD(TRIM(facilitytypecode), 2, '0') IN (
-        '05', '06', '07', '08', '09', '12', '13', '14', '33'
-        ) THEN NULL
     WHEN serviceprovideridentificationcodequalifier = 'XX'
     THEN serviceprovideridentificationcode
     WHEN 0 <> LENGTH(TRIM(COALESCE(serviceprovideridentificationcode ,'')))
