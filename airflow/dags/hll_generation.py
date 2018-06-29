@@ -39,6 +39,8 @@ MELLON_COPY_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar"
 HLL_COPY_STEP = ('Type=CUSTOM_JAR,Name="Copy HLLs",Jar="command-runner.jar",'
         'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,--src,' + HDFS_STAGING + ','
         '--dest,s3a://healthverityreleases/PatientIntersector/hll_seq_data_store/]')
+HLL_RM_STEP = ('Type=CUSTOM_JAR,Name="Delete HLLs Dir",Jar="command-runner.jar",'
+        'ActionOnFailure=CONTINUE,Args=[hdfs,dfs,-rm,-r,' + HDFS_STAGING + ']')
 HLL_CONFIG_DB = 'hll_config'
 SELECT_CONFIG_AND_LAST_LOG_ENTRY = """
     SELECT *
@@ -129,8 +131,11 @@ create_cluster = PythonOperator(
 def do_generate_hlls(ds, **kwargs):
     hll_configs = get_feeds_to_generate_configs()
 
+    steps = [MELLON_COPY_STEP]
+    emr_utils.run_steps(EMR_CLUSTER_NAME, steps)
+
     for entry in hll_configs:
-        steps = [MELLON_COPY_STEP]
+        steps = []
 
         args = ''
         args += '--datafeed, {},'.format(entry.feed_id)
@@ -144,6 +149,7 @@ def do_generate_hlls(ds, **kwargs):
 
         steps.append(HLL_STEP_TEMPLATE.format(entry.feed_id, args))
         steps.append(HLL_COPY_STEP)
+        steps.append(HLL_RM_STEP)
 
         emr_utils.run_steps(EMR_CLUSTER_NAME, steps)
 
