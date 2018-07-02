@@ -55,16 +55,26 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     # Load the transactions into raw, un-normalized tables
-    runner.run_spark_script('load_transactions.sql', [
-        ['input_path', input_path]
-    ])
+    if len(spark.read.csv(input_path, sep='|').columns) == 90:
+        runner.run_spark_script('load_transactions.sql', [
+            ['input_path', input_path]
+        ])
+        runner.sqlContext.sql('select * from transactional_cardinal_pms_temp') \
+                         .withColumn('product_service_id_qualifier', F.lit(None)) \
+                         .withColumn('product_service_id', F.lit(None)) \
+                         .createOrReplaceTempView('transactional_cardinal_pms')
+    else:
+        runner.run_spark_script('load_transactions_v2.sql', [
+            ['input_path', input_path]
+        ])
+
     logging.debug('Loaded the transaction')
 
     # Remove leading and trailing whitespace from any strings
     # Nullify rows that require it
     postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(
         runner.sqlContext.sql('select * from transactional_cardinal_pms')
-    ).createTempView('transactional_cardinal_pms')
+    ).createOrReplaceTempView('transactional_cardinal_pms')
     logging.debug('Trimmed and nullified data')
 
     # Create exploder table for service-line

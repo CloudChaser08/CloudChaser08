@@ -1,7 +1,6 @@
-DROP TABLE IF EXISTS transactional_cardinal_pms_temp;
 DROP TABLE IF EXISTS transactional_cardinal_pms;
 
-CREATE EXTERNAL TABLE transactional_cardinal_pms_temp (
+CREATE EXTERNAL TABLE transactional_cardinal_pms (
     billproviderid                  string,
     billprovideridqualifier         string,
     billprovidername                string,
@@ -89,6 +88,8 @@ CREATE EXTERNAL TABLE transactional_cardinal_pms_temp (
     servicefacilityzip              string,
     submittedcharge                 string,
     submittedunits                  string,
+    product_service_id_qualifier    string,
+    product_service_id              string,
     hvid                            string,
     tenant_id                       string,
     hvJoinKey                       string

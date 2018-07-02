@@ -41,6 +41,10 @@ SELECT
     t.proceduremodifiertwo                     AS procedure_modifier_2,
     t.proceduremodifierthree                   AS procedure_modifier_3,
     t.proceduremodifierfour                    AS procedure_modifier_4,
+    CASE
+        WHEN t.product_service_id_qualifier = 'N4' THEN product_service_id
+        ELSE NULL
+    END                                        AS ndc_code,
     t.submittedcharge                          AS line_charge,
     t.submittedchargetotal                     AS total_charge,
     CASE
