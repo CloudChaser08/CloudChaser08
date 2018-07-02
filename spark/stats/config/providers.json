@@ -230,6 +230,22 @@
             "earliest_date"     : "2017-04-01"
         },
         {
+            "name"              : "genomind",
+            "datafeed_id"       : "76",
+            "datatype"          : "labtests",
+            "fill_rate"         : true,
+            "key_stats"         : true,
+            "top_values"        : true,
+            "longitudinality"   : false,
+            "year_over_year"    : false,
+            "epi_calcs"         : true,
+            "earliest_date"     : "1900-01-01",
+            "index_all_dates"   : true,
+            "index_null_dates"  : true,
+            "custom_schema"     : "sample",
+            "custom_table"      : "genomind_normalized"
+        },
+        {
             "name"              : "ambry",
             "datafeed_id"       : "43",
             "datatype"          : "labtests",
