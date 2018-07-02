@@ -153,7 +153,7 @@ def do_generate_hlls(ds, **kwargs):
 
         emr_utils.run_steps(EMR_CLUSTER_NAME, steps)
 
-        do_update_log([entry.feed_id])
+        do_update_log(entry.feed_id)
 
 generate_hlls = PythonOperator(
     task_id='generate_hlls',
@@ -172,20 +172,12 @@ delete_cluster = PythonOperator(
     dag=mdag
 )
 
-def do_update_log(feeds_generated):
-    for f in feeds_generated:
-        with get_ref_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(UPDATE_GENERATION_LOG, [f])
+def do_update_log(feed_generated):
+    with get_ref_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(UPDATE_GENERATION_LOG, [feed_generated])
 
-    msg =  'Finished generating HLLs for feed'
-    if len(feeds_generated) > 1:
-        msg += 's '
-        msg += ', '.join(feeds_generated[:-1])
-        msg += ', and {}'.format(feeds_generated[-1])
-    else:
-        msg += ' ' + feeds_generated[0]
-
+    msg =  'Finished generating HLLs for feed ' + feed_generated
     slack.send_message('#logistics', text=msg)
 
 create_cluster.set_upstream(check_pending_requests)
