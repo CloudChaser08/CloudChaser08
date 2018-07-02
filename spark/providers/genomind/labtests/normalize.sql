@@ -18,14 +18,14 @@ SELECT
     CONCAT(
         cln.lastname,
         CASE
-            WHEN LENGTH(cln.lastname) <> 0 AND LENGTH(cln.firstname) <> 0 THEN ','
+            WHEN LENGTH(cln.lastname) <> 0 AND LENGTH(cln.firstname) <> 0 THEN ', '
             ELSE ''
         END,
         cln.firstname
     )                                                       AS ordering_name,
     cln.specialization                                      AS ordering_specialty,
     cln.city                                                AS ordering_city,
-    cln.state                                               AS ordering_state,
+    cln.stateorprovince                                     AS ordering_state,
     cln.zipcode                                             AS ordering_zip,
     med.genericname                                         AS medication_generic_name,
     med.dosage                                              AS medication_dose

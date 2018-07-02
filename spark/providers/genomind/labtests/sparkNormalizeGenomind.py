@@ -97,7 +97,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         [],
         return_output=True
     )
-    
+
     final_df = postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),
         postprocessor.add_universal_columns(
