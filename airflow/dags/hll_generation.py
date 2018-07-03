@@ -39,6 +39,8 @@ MELLON_COPY_STEP = ('Type=CUSTOM_JAR,Name="Copy Mellon",Jar="command-runner.jar"
 HLL_COPY_STEP = ('Type=CUSTOM_JAR,Name="Copy HLLs",Jar="command-runner.jar",'
         'ActionOnFailure=CONTINUE,Args=[s3-dist-cp,--src,' + HDFS_STAGING + ','
         '--dest,s3a://healthverityreleases/PatientIntersector/hll_seq_data_store/]')
+HLL_RM_STEP = ('Type=CUSTOM_JAR,Name="Delete HLLs Dir",Jar="command-runner.jar",'
+        'ActionOnFailure=CONTINUE,Args=[hdfs,dfs,-rm,-r,' + HDFS_STAGING + ']')
 HLL_CONFIG_DB = 'hll_config'
 SELECT_CONFIG_AND_LAST_LOG_ENTRY = """
     SELECT *
@@ -129,9 +131,12 @@ create_cluster = PythonOperator(
 def do_generate_hlls(ds, **kwargs):
     hll_configs = get_feeds_to_generate_configs()
 
-    feeds_to_generate = [c.feed_id for c in hll_configs]
     steps = [MELLON_COPY_STEP]
+    emr_utils.run_steps(EMR_CLUSTER_NAME, steps)
+
     for entry in hll_configs:
+        steps = []
+
         args = ''
         args += '--datafeed, {},'.format(entry.feed_id)
         args += '--modelName, {},'.format(entry.model)
@@ -143,11 +148,12 @@ def do_generate_hlls(ds, **kwargs):
         args += ', '.join((entry.flags or '').split())
 
         steps.append(HLL_STEP_TEMPLATE.format(entry.feed_id, args))
-    steps.append(HLL_COPY_STEP)
+        steps.append(HLL_COPY_STEP)
+        steps.append(HLL_RM_STEP)
 
-    kwargs['ti'].xcom_push(key = 'feeds_to_generate', value = json.dumps(feeds_to_generate))
+        emr_utils.run_steps(EMR_CLUSTER_NAME, steps)
 
-    emr_utils.run_steps(EMR_CLUSTER_NAME, steps)
+        do_update_log(entry.feed_id)
 
 generate_hlls = PythonOperator(
     task_id='generate_hlls',
@@ -166,33 +172,15 @@ delete_cluster = PythonOperator(
     dag=mdag
 )
 
-def do_update_log(ds, **kwargs):
-    feeds_generated = json.loads(kwargs['ti'].xcom_pull(dag_id = DAG_NAME,
-            task_ids = 'generate_hlls', key = 'feeds_to_generate'))
-    for f in feeds_generated:
-        with get_ref_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(UPDATE_GENERATION_LOG, [f])
+def do_update_log(feed_generated):
+    with get_ref_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(UPDATE_GENERATION_LOG, [feed_generated])
 
-    msg =  'Finished generating HLLs for feed'
-    if len(feeds_generated) > 1:
-        msg += 's '
-        msg += ', '.join(feeds_generated[:-1])
-        msg += ', and {}'.format(feeds_generated[-1])
-    else:
-        msg += ' ' + feeds_generated[0]
-
+    msg =  'Finished generating HLLs for feed ' + feed_generated
     slack.send_message('#logistics', text=msg)
-
-update_log = PythonOperator(
-    task_id='update_log',
-    provide_context=True,
-    python_callable=do_update_log,
-    dag=mdag
-)
 
 create_cluster.set_upstream(check_pending_requests)
 do_nothing.set_upstream(check_pending_requests)
 generate_hlls.set_upstream(create_cluster)
 delete_cluster.set_upstream(generate_hlls)
-update_log.set_upstream(delete_cluster)
