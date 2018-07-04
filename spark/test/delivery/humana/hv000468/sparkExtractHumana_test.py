@@ -5,12 +5,11 @@ import spark.delivery.humana_000468.sparkExtractHumana as humana_extract
 import spark.helpers.file_utils as file_utils
 import os
 
-today = date(2018, 4, 26)
-ts = 1524690702.12345
 GROUP1 = 'test1234'
 GROUP2 = 'test0000'
+GROUP3 = 'test4321'
 pharmacy_extract = None
-medical_extract = None
+medical_extract = medical_extract2 = None
 summary = None
 summary2 = None
 @pytest.mark.usefixtures("spark")
@@ -23,29 +22,43 @@ def test_init(spark):
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('pharmacyclaims')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('medicalclaims')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/enroll_sample.json')).createOrReplaceTempView('enrollmentrecords')
-    humana_extract.run(spark['spark'], spark['runner'], GROUP1, test=True)
+    humana_extract.run(spark['spark'], spark['runner'], [GROUP1, GROUP2, GROUP3], test=True)
 
-    global pharmacy_extract, medical_extract, summary, summary2
-    pharmacy_extract = spark['spark'].table('pharmacy_extract').collect()
-    medical_extract = spark['spark'].table('medical_extract').collect()
-    summary = spark['spark'].table('summary').collect()
-
-    humana_extract.run(spark['spark'], spark['runner'], GROUP2, test=True)
-
-    summary2 = spark['spark'].table('summary').collect()
+    global pharmacy_extract, medical_extract, medical_extract2, summary, summary2
+    pharmacy_extract = spark['spark'].table(GROUP1 + '_pharmacy_extract').collect()
+    medical_extract = spark['spark'].table(GROUP1 + '_medical_extract').collect()
+    medical_extract2 = spark['spark'].table(GROUP3 + '_medical_extract').collect()
+    summary  = spark['spark'].table(GROUP1 + '_summary').collect()
+    summary2 = spark['spark'].table(GROUP2 + '_summary').collect()
 
 def test_hashing():
     med_row = [r for r in medical_extract if r['claim_id'] == '365255892'][0]
-    assert med_row['hvid'] == '62af2ceacf0e9c6784b5ddbc451beb6f'
-    assert med_row['prov_rendering_npi'] == '6068df8277a5b577e5529bacea97a95b'
-    assert med_row['prov_billing_npi'] == '83369192da83b9d2995f9395e668dd76'
-    assert med_row['prov_referring_npi'] == '794a2df821a83381288ee908e8638490'
-    assert med_row['prov_facility_npi'] == '83369192da83b9d2995f9395e668dd76'
+    assert med_row['hvid'] == '082f3afe093cf65aad8e29a13e044173'
+    assert med_row['prov_rendering_npi'] == '78ec74e4afe5e3f9d1bdab31900f0d68'
+    assert med_row['prov_billing_npi'] == '3cf098bee8b3a620a618380c197cbf2a'
+    assert med_row['prov_referring_npi'] == 'f3a0090792db47e0a9e72d8b407a9b09'
+    assert med_row['prov_facility_npi'] == '3cf098bee8b3a620a618380c197cbf2a'
 
     pharma_row = [r for r in pharmacy_extract if r['claim_id'] == '749993504'][0]
-    assert pharma_row['hvid'] == '727745e423bda12382d7cccc2db1f6d3'
-    assert pharma_row['pharmacy_npi'] == '6797becb38c81200306e170bfa295244'
-    assert pharma_row['prov_prescribing_npi'] == 'b8cc6f58a038b752e5db275509c67dcd'
+    assert pharma_row['hvid'] == '1996efad03e9ee4320042c52f9f2c353'
+    assert pharma_row['pharmacy_npi'] == '75d1d410d22ff291a33959c30a75cc38'
+    assert pharma_row['prov_prescribing_npi'] == '810e939fe8a15b58877bb86e2a57db72'
+
+def test_different_hashing_differnt_groups():
+    """Ensure that two identical groups have identical data except for the
+    hashed values"""
+
+    # The HVIDs are the same for groups 1 and 3, but the hashed values should be different
+    med_row  = [r for r in medical_extract if r['claim_id'] == '365255892'][0]
+    med_row2 = [r for r in medical_extract2 if r['claim_id'] == '365255892'][0]
+
+    HASHED_FIELDS = ['hvid', 'prov_rendering_npi', 'prov_billing_npi', 'prov_referring_npi', 'prov_facility_npi']
+    for field in HASHED_FIELDS:
+        assert med_row[field] != med_row2[field]
+
+    for field in med_row.asDict().keys():
+        if field not in HASHED_FIELDS:
+            assert med_row[field] == med_row2[field]
 
 def test_nulling():
     for r in pharmacy_extract + medical_extract:
