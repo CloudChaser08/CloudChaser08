@@ -50,10 +50,8 @@ EXTRACT_SUMMARY_TEMPLATE = 'summary_report_{}.txt'
 RECIPIENTS = [
     'Andrew Goldberg<agoldberg@healthverity.com>',
     'John Cappiello<jcappiello@healthverity.com>',
-    'Ilia Fishbein<ifishbein@healthverity.com>', 
-    'Justin Newton<jnewton@humana.com>',
-    'Evan Neises<eneises1@humana.com>',
-    'Brandon Schoenfeldt<bschoenfeldt@humana.com>'
+    'Ilia Fishbein<ifishbein@healthverity.com>',
+    'Humana Risk Assessment Team<HealthVerity_AutomatedRiskAssessment@humana.com>'
 ]
 
 def get_delivered_groups(exec_date):
