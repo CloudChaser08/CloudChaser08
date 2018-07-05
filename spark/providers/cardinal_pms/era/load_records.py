@@ -5,9 +5,12 @@ def load(runner, input_path_prefix):
 
     for t in TABLES:
         df = records_loader \
-            .load(runner, input_path_prefix + t, TABLE_COLUMNS[t], 'csv', '|')
+            .load(runner, input_path_prefix + t, TABLE_COLUMNS[t], 'csv', '|') \
+            .repartition(500)
         postprocessor \
             .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
+            .repartition(5000) \
+            .cache_and_track(t) \
             .createOrReplaceTempView(t)
 
 TABLES = ['remit_claim', 'remit_claim_adjustment', 'serviceline', 'serviceline_adjustment']
@@ -347,7 +350,8 @@ TABLE_COLUMNS = {
         'secondaryproductserviceidqualifier',
         'secondaryquantity',
         'servicedate',
-        'servicedatetimequalifier'
+        'servicedatetimequalifier',
+        'allowed_amt'
     ],
     'serviceline_adjustment' : [
         'adjustmentamountfive',
