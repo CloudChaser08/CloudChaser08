@@ -25,8 +25,8 @@ TABLE_CONF = {
             StructField('Address1', StringType(), True),
             StructField('Address2', StringType(), True),
             StructField('City', StringType(), True),
-            StructField('State', StringType(), True),
-            StructField('Zipcode', StringType(), True),
+            StructField('StateOrProvince', StringType(), True),
+            StructField('ZipCode', StringType(), True),
             StructField('Country', StringType(), True),
             StructField('LocationName', StringType(), True),
             StructField('Patients List', ArrayType(StringType()), True)
@@ -37,7 +37,7 @@ TABLE_CONF = {
     'diagnosis': {
         'columns': [
             'UID',
-            'PatientKey',
+            'patientKey',
             'ICDCodeType',
             'ICDCode',
             'Diagnosis'
