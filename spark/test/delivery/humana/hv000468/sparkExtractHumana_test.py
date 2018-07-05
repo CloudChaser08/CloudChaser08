@@ -6,7 +6,7 @@ import spark.helpers.file_utils as file_utils
 import os
 
 GROUP1 = 'test1234'
-GROUP2 = 'test0000'
+GROUP2 = 'test0000' # Invalid group, less than 10 matches patients
 GROUP3 = 'test4321'
 pharmacy_extract = None
 medical_extract = medical_extract2 = None
@@ -22,6 +22,10 @@ def test_init(spark):
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('pharmacyclaims')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('medicalclaims')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/enroll_sample.json')).createOrReplaceTempView('enrollmentrecords')
+
+    # Test that a run with only invalid groups works
+    humana_extract.run(spark['spark'], spark['runner'], [GROUP2], test=True)
+    # Test that a run with mixed groups works
     humana_extract.run(spark['spark'], spark['runner'], [GROUP1, GROUP2, GROUP3], test=True)
 
     global pharmacy_extract, medical_extract, medical_extract2, summary, summary2
