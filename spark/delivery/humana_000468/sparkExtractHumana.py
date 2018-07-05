@@ -8,12 +8,15 @@ from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.payload_loader as payload_loader
-from pyspark.sql.types import StructType
+from pyspark.sql.types import StructType, StructField, StringType
 import pyspark.sql.functions as F
 
 import extract_medicalclaims
 import extract_pharmacyclaims
 import extract_enrollmentrecords
+
+EMPTY_HUMANA_EXTRACT = lambda spark, group_id: spark.createDataFrame([(F.lit(group_id))], StructType([StructField('humana_group_id', StringType(), True)]))
+EMPTY_HUMANA_SUMMARY = lambda spark: spark.createDataFrame([('-', 0)], ['data_vendor', 'count'])
 
 def run(spark, runner, group_ids, test=False, airflow_test=False):
     ts = time.time()
@@ -67,21 +70,28 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
     group_matched_patient_count   = {mp[0] : mp[1].count() for mp in matched_patients.items()}
     group_patient_w_records_count = {group_id : 0 for group_id in group_ids}
 
-    group_extract = {}
     group_summary = {}
+    valid_groups = []
+    medical_extracts = pharmacy_extracts = enrollment_extracts = []
+    medical_extract  = pharmacy_extract  = enrollment_extract  = None
     for group_id in group_ids:
         if group_matched_patient_count[group_id] < 10:
-            group_extract[group_id] = {
-                'medical'    : spark.createDataFrame([], StructType([])),
-                'pharmacy'   : spark.createDataFrame([], StructType([])),
-                'enrollment' : spark.createDataFrame([], StructType([]))
-            }
-            group_summary[group_id] = spark.createDataFrame([('-', 0)], ['data_vendor', 'count'])
+            medical_extracts.append(EMPTY_HUMANA_EXTRACT(spark, group_id))
+            pharmacy_extracts.append(EMPTY_HUMANA_EXTRACT(spark, group_id))
+            enrollment_extracts.append(EMPTY_HUMANA_EXTRACT(spark, group_id))
+            group_summary[group_id] = EMPTY_HUMANA_SUMMARY(spark)
+        else:
+            valid_groups.append(matched_patients[group_id])
 
-    unioned_matched_patients = reduce(lambda x, y: x.union(y), \
-            [matched_patients[mp[0]] for mp in group_matched_patient_count.items() if mp[1] >= 10])
+    if medical_extracts:
+        medical_extract = reduce(lambda x, y: x.union(y), medical_extracts)
+    if pharmacy_extracts:
+        pharmacy_extract = reduce(lambda x, y: x.union(y), pharmacy_extracts)
+    if enrollment_extracts:
+        enrollment_extract = reduce(lambda x, y: x.union(y), enrollment_extracts)
 
-    if unioned_matched_patients.count() > 0:
+    if valid_groups:
+        unioned_matched_patients = reduce(lambda x, y: x.union(y), valid_groups)
         medical_extract    = extract_medicalclaims.extract(
                 runner, unioned_matched_patients, ts,
                 start, end).cache_and_track('medical_extract')
@@ -122,6 +132,9 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
                             pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
                                 .select('hvid')) \
                         .distinct().count()
+
+                if group_patient_w_records_count[group_id] == 0:
+                    group_summary[group_id] = EMPTY_HUMANA_SUMMARY(spark)
 
     # for easy testing
     for group_id in group_ids:
