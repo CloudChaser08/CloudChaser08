@@ -6,10 +6,10 @@ from datetime import timedelta, date
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.payload_loader as payload_loader
 from pyspark.sql.types import StructType, StructField, StringType
 import pyspark.sql.functions as F
+import boto3
 
 import extract_medicalclaims
 import extract_pharmacyclaims
@@ -199,13 +199,37 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.group_ids.split(','), airflow_test=args.airflow_test)
+    if args.airflow_test:
+        in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-test'
+        out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-test'
+    else:
+        in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-prod'
+        out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-prod'
+
+    client = boto3.client('sqs')
+    while True:
+        msgs = []
+        while True:
+            resp = client.receive_message(QueueUrl=in_queue, MaxNumberOfMessages=10, VisibilityTimeout=30)
+            if 'Messages' not in resp:
+                break
+            msgs += [(m['Body'], m['ReceiptHandle']) for m in resp['Messages']]
+
+        if not msgs:
+            break
+
+        run(spark, runner, set([m[0] for m in msgs]), airflow_test=args.airflow_test)
+
+        for m in msgs:
+            client.delete_message(QueueUrl=in_queue, ReceiptHandle=m[1])
+
+        for m in set(m[0] for m in msgs]):
+            client.send_message(QueueUrl=out_queue, MessageBody=m)
 
     spark.stop()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--group_ids', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
