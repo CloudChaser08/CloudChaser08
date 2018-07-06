@@ -223,7 +223,7 @@ def main(args):
         for m in msgs:
             client.delete_message(QueueUrl=in_queue, ReceiptHandle=m[1])
 
-        for m in set(m[0] for m in msgs]):
+        for m in set([m[0] for m in msgs]):
             client.send_message(QueueUrl=out_queue, MessageBody=m)
 
     spark.stop()
