@@ -49,13 +49,14 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         move_cmd      = ['aws', 's3', 'mv']
 
     all_patients = {
-        group_id: payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True) \
-                .withColumn('humana_group_id', F.lit(group_id))
+        group_id: payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True,
+                    partitions=10) \
+                .withColumn('humana_group_id', F.lit(group_id)).cache()
         for group_id in group_ids
     }
     matched_patients = {
         ap[0] : ap[1].where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'") \
-                .select('hvid', 'humana_group_id').distinct()
+                .select('hvid', 'humana_group_id').distinct().repartition(10).cache()
         for ap in all_patients.items()
     }
 
@@ -91,16 +92,19 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         enrollment_extract = reduce(lambda x, y: x.union(y), enrollment_extracts)
 
     if valid_groups:
-        unioned_matched_patients = reduce(lambda x, y: x.union(y), valid_groups)
+        unioned_matched_patients = (reduce(lambda x, y: x.union(y), valid_groups)).repartition(100).cache_and_track('matched_union')
+        unioned_matched_patients.count()
         medical_extract    = extract_medicalclaims.extract(
                 runner, unioned_matched_patients, ts,
-                start, end).cache_and_track('medical_extract')
+                start, end).repartition(100) \
+                    .cache_and_track('medical_extract')
         pharmacy_extract   = extract_pharmacyclaims.extract(
                 runner, unioned_matched_patients, ts,
-                start, end).cache_and_track('pharmacy_extract')
+                start, end).repartition(100) \
+                    .cache_and_track('pharmacy_extract')
         enrollment_extract = extract_enrollmentrecords.extract(
                 spark, runner, unioned_matched_patients, ts,
-                start, end, pharmacy_extract) \
+                start, end, pharmacy_extract).repartition(100) \
                     .cache_and_track('enrollment_extract')
 
         # summary
