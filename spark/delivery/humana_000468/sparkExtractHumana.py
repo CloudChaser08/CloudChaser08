@@ -58,6 +58,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         [
             payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True,
                     partitions=10) \
+                .select('hvid', 'matchStatus') \
                 .withColumn('humana_group_id', F.lit(group_id))
             for group_id in group_ids
         ]
