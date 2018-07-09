@@ -7,16 +7,18 @@ def extract(runner, hvids, timestamp, start_dt, end_dt):
     
     # Extract conditions
     ext = t1.join(t2, t1['data_feed'] == t2['hvm_vdr_feed_id'], 'inner') \
-        .join(hvids, t1['hvid'] == hvids['hvid'], 'left_semi') \
+        .join(hvids, t1['hvid'] == hvids['hvid'], 'left') \
+        .where(hvids['hvid'].isNotNull()) \
         .where(t1['part_processdate'] >= start_dt.isoformat()) \
-        .where((t1['date_service'] <= end_dt.isoformat()) & (t1['date_service'] >= start_dt.isoformat()))
+        .where((t1['date_service'] <= end_dt.isoformat()) & (t1['date_service'] >= start_dt.isoformat())) \
+        .select(*[t1[c] for c in t1.columns] + [t2[c] for c in t2.columns] + [hvids['humana_group_id']])
 
     # Hashing
-    ext = ext.withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(str(timestamp))))) \
-            .withColumn('prov_rendering_npi', F.md5(F.concat(F.col('prov_rendering_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp))))) \
-            .withColumn('prov_billing_npi', F.md5(F.concat(F.col('prov_billing_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp))))) \
-            .withColumn('prov_referring_npi', F.md5(F.concat(F.col('prov_referring_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp))))) \
-            .withColumn('prov_facility_npi', F.md5(F.concat(F.col('prov_facility_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp)))))
+    ext = ext.withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id')))) \
+            .withColumn('prov_rendering_npi', F.md5(F.concat(F.col('prov_rendering_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id')))) \
+            .withColumn('prov_billing_npi', F.md5(F.concat(F.col('prov_billing_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id')))) \
+            .withColumn('prov_referring_npi', F.md5(F.concat(F.col('prov_referring_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id')))) \
+            .withColumn('prov_facility_npi', F.md5(F.concat(F.col('prov_facility_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id'))))
 
     # Rename columns
     ext = ext.withColumn('data_feed', F.col('hvm_vdr_feed_id')) \
@@ -172,7 +174,8 @@ EXTRACT_COLUMNS = [
     'cob_payer_seq_code_2',
     'cob_payer_hpid_2',
     'cob_payer_claim_filing_ind_code_2',
-    'cob_ins_type_code_2'
+    'cob_ins_type_code_2',
+    'humana_group_id'
 ]
 
 SUPPLIERS = [
