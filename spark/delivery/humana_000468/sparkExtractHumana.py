@@ -147,6 +147,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
             local_summary[r['humana_group_id']] = []
         local_summary[r['humana_group_id']].append((r['data_vendor'], r['count']))
 
+    move_procs = []
     for group_id in group_ids:
         all_patient_count       = group_all_patient_count.get(group_id, 0)
         matched_patient_count   = group_matched_patient_count.get(group_id, 0)
@@ -159,6 +160,8 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         output_path = output_path_template.format(group_id)
         with open('/tmp/summary_report_{}.txt'.format(group_id), 'w') as outf:
             outf.write(summary_report)
+        cmd = move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path]
+        move_procs.append(subprocess.Popen(cmd))
 
         medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
@@ -177,13 +180,14 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
 
     group_ids_rdd = spark.sparkContext.parallelize(group_ids, 100)
     group_ids_rdd.foreach(move_rename_extracts_func(list_cmd, move_cmd, output_path_template))
+    for p in move_procs:
+        p.wait()
+        print p.returncode
 
 
 def move_rename_extracts_func(list_cmd, move_cmd, output_path_template):
     def out(group_id):
         output_path = output_path_template.format(group_id)
-        cmd = move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path]
-        subprocess.check_call(cmd)
         fn = [w for r in
             subprocess.check_output(list_cmd + [output_path]).split('\n')
             for w in r.split(' ') if w.startswith('part-00000')][0]
