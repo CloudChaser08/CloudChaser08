@@ -15,8 +15,14 @@ import extract_medicalclaims
 import extract_pharmacyclaims
 import extract_enrollmentrecords
 
-EMPTY_HUMANA_EXTRACT = lambda spark, group_id: spark.createDataFrame([(F.lit(group_id))], StructType([StructField('humana_group_id', StringType(), True)]))
-EMPTY_HUMANA_SUMMARY = lambda spark: spark.createDataFrame([('-', 0)], ['data_vendor', 'count'])
+def get_extract_summary(df):
+    return df.withColumn('claim',
+                F.when(
+                    F.length(F.trim(F.col('claim_id'))) > 0,
+                    F.col('claim_id')
+                ).otherwise(F.col('record_id'))) \
+        .select('data_vendor', 'claim', 'humana_group_id').distinct() \
+        .groupBy('data_vendor', 'humana_group_id').count()
 
 def run(spark, runner, group_ids, test=False, airflow_test=False):
     ts = time.time()
@@ -48,16 +54,16 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         list_cmd      = ['aws', 's3', 'ls']
         move_cmd      = ['aws', 's3', 'mv']
 
-    all_patients = {
-        group_id: payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True) \
+    all_patients = reduce(lambda x, y: x.union(y),
+        [
+            payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True,
+                    partitions=10) \
+                .select('hvid', 'matchStatus') \
                 .withColumn('humana_group_id', F.lit(group_id))
-        for group_id in group_ids
-    }
-    matched_patients = {
-        ap[0] : ap[1].where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'") \
-                .select('hvid', 'humana_group_id').distinct()
-        for ap in all_patients.items()
-    }
+            for group_id in group_ids
+        ]
+    ).repartition(100).cache()
+    matched_patients = all_patients.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'").cache()
 
     if today.day > 15:
         end   = (today.replace(day=15) - timedelta(days=30)).replace(day=1) # The 1st about 1.5 months back
@@ -66,75 +72,63 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         end   = (today.replace(day=15) - timedelta(days=60)).replace(day=15) # The 15th about 1.5 months back
         start = (end - timedelta(days=455)).replace(day=15) # 15 months before end
 
-    group_all_patient_count       = {ap[0] : ap[1].count() for ap in all_patients.items()}
-    group_matched_patient_count   = {mp[0] : mp[1].count() for mp in matched_patients.items()}
-    group_patient_w_records_count = {group_id : 0 for group_id in group_ids}
+    group_all_patient_count       = \
+        {r.humana_group_id : r['count'] for r in all_patients.groupBy('humana_group_id').count().collect()}
+    group_matched_patient_count   = \
+        {r.humana_group_id : r['count'] for r in matched_patients.groupBy('humana_group_id').count().collect()}
 
-    group_summary = {}
-    valid_groups = []
-    (medical_extracts, pharmacy_extracts, enrollment_extracts) = ([], [], [])
-    medical_extract  = pharmacy_extract  = enrollment_extract  = None
+    (valid_groups, invalid_groups) = ([], [])
     for group_id in group_ids:
-        if group_matched_patient_count[group_id] < 10:
-            medical_extracts.append(EMPTY_HUMANA_EXTRACT(spark, group_id))
-            pharmacy_extracts.append(EMPTY_HUMANA_EXTRACT(spark, group_id))
-            enrollment_extracts.append(EMPTY_HUMANA_EXTRACT(spark, group_id))
-            group_summary[group_id] = EMPTY_HUMANA_SUMMARY(spark)
+        if group_matched_patient_count.get(group_id, 0) < 10:
+            invalid_groups.append(group_id)
         else:
-            valid_groups.append(matched_patients[group_id])
+            valid_groups.append(group_id)
 
-    if medical_extracts:
-        medical_extract = reduce(lambda x, y: x.union(y), medical_extracts)
-    if pharmacy_extracts:
-        pharmacy_extract = reduce(lambda x, y: x.union(y), pharmacy_extracts)
-    if enrollment_extracts:
-        enrollment_extract = reduce(lambda x, y: x.union(y), enrollment_extracts)
+    if invalid_groups:
+        medical_extract    = spark.createDataFrame([("NONE",)], ['humana_group_id'])
+        pharmacy_extract   = spark.createDataFrame([("NONE",)], ['humana_group_id'])
+        enrollment_extract = spark.createDataFrame([("NONE",)], ['humana_group_id'])
 
+    matched_w_count = matched_patients.groupBy('humana_group_id').count().where(F.col('count') >= F.lit(10))
+    matched_patients = matched_patients.join(matched_w_count, 'humana_group_id', 'left_semi')
+
+    group_patient_w_records_count = {}
+    summary = None
     if valid_groups:
-        unioned_matched_patients = reduce(lambda x, y: x.union(y), valid_groups)
         medical_extract    = extract_medicalclaims.extract(
-                runner, unioned_matched_patients, ts,
-                start, end).cache_and_track('medical_extract')
+                runner, matched_patients, ts,
+                start, end).repartition(100) \
+                    .cache_and_track('medical_extract')
         pharmacy_extract   = extract_pharmacyclaims.extract(
-                runner, unioned_matched_patients, ts,
-                start, end).cache_and_track('pharmacy_extract')
+                runner, matched_patients, ts,
+                start, end).repartition(100) \
+                    .cache_and_track('pharmacy_extract')
         enrollment_extract = extract_enrollmentrecords.extract(
-                spark, runner, unioned_matched_patients, ts,
-                start, end, pharmacy_extract) \
+                spark, runner, matched_patients, ts,
+                start, end, pharmacy_extract).repartition(100) \
                     .cache_and_track('enrollment_extract')
 
         # summary
-        for group_id in group_ids:
-            if group_matched_patient_count[group_id] >= 10:
-                med_summary    = medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
-                        .withColumn('claim',
-                                F.when(
-                                    F.length(F.trim(F.col('claim_id'))) > 0,
-                                    F.col('claim_id')
-                                ).otherwise(F.col('record_id'))) \
-                        .select('data_vendor', 'claim').distinct() \
-                        .groupBy('data_vendor').count()
+        med_summary    = get_extract_summary(medical_extract)
+        pharma_summary = get_extract_summary(pharmacy_extract)
 
-                pharma_summary = pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
-                        .withColumn('claim',
-                                F.when(
-                                    F.length(F.trim(F.col('claim_id'))) > 0,
-                                    F.col('claim_id')
-                                ).otherwise(F.col('record_id'))) \
-                        .select('data_vendor', 'claim').distinct() \
-                        .groupBy('data_vendor').count()
+        summary        = med_summary.union(pharma_summary)
+        patient_w_records_counts = medical_extract \
+                .select('hvid', 'humana_group_id').union(
+                    pharmacy_extract.select('hvid', 'humana_group_id')) \
+                .distinct().groupBy('humana_group_id').count().collect()
 
-                group_summary[group_id] = med_summary.union(pharma_summary)
-                group_patient_w_records_count[group_id] = \
-                    medical_extract \
-                        .where(F.col('humana_group_id') == F.lit(group_id)) \
-                        .select('hvid').union(
-                            pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
-                                .select('hvid')) \
-                        .distinct().count()
+        for r in patient_w_records_counts:
+            if r['humana_group_id'] in valid_groups:
+                group_patient_w_records_count[r.humana_group_id] = r['count']
 
-                if group_patient_w_records_count[group_id] == 0:
-                    group_summary[group_id] = EMPTY_HUMANA_SUMMARY(spark)
+    empty_summaries = [('-', group_id, 0) for group_id in group_ids if group_id not in group_patient_w_records_count]
+
+    if empty_summaries:
+        if summary:
+            summary = summary.union(spark.createDataFrame(empty_summaries, summary.schema))
+        else:
+            summary = spark.createDataFrame(empty_summaries, ['data_vendor', 'humana_group_id', 'count'])
 
     # for easy testing
     for group_id in group_ids:
@@ -144,53 +138,73 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .createOrReplaceTempView(group_id.replace('-', '_') + '_pharmacy_extract')
+        summary.where(F.col('humana_group_id') == F.lit(group_id)) \
+            .drop('humana_group_id') \
+            .createOrReplaceTempView(group_id.replace('-', '_') + '_summary')
 
-        group_summary[group_id].createOrReplaceTempView(group_id.replace('-', '_') + '_summary')
+    local_summary = {}
+    for r in summary.collect():
+        if r['humana_group_id'] not in local_summary:
+            local_summary[r['humana_group_id']] = []
+        local_summary[r['humana_group_id']].append((r['data_vendor'], r['count']))
 
+    move_procs = []
     for group_id in group_ids:
-        all_patient_count       = group_all_patient_count[group_id]
-        matched_patient_count   = group_matched_patient_count[group_id]
-        patient_w_records_count = group_patient_w_records_count[group_id]
+        all_patient_count       = group_all_patient_count.get(group_id, 0)
+        matched_patient_count   = group_matched_patient_count.get(group_id, 0)
+        patient_w_records_count = group_patient_w_records_count.get(group_id, 0)
         summary_report = '\n'.join(['|'.join([
                 group_id, str(all_patient_count), str(matched_patient_count),
-                str(patient_w_records_count), r['data_vendor'], str(r['count'])
-            ]) for r in group_summary[group_id].collect()])
+                str(patient_w_records_count), r[0], str(r[1])
+            ]) for r in local_summary.get(group_id, [('-', 0)])])
 
         output_path = output_path_template.format(group_id)
         with open('/tmp/summary_report_{}.txt'.format(group_id), 'w') as outf:
             outf.write(summary_report)
         cmd = move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path]
-        subprocess.check_call(cmd)
+        move_procs.append(subprocess.Popen(cmd))
 
         medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
             .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
-        fn = [w for r in
-            subprocess.check_output(list_cmd + [output_path]).split('\n')
-            for w in r.split(' ') if w.startswith('part-00000')][0]
-        cmd = move_cmd + [output_path + fn, output_path + 'medical_claims_{}.psv'.format(group_id)]
-        subprocess.check_call(cmd)
 
         pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
             .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
-        fn = [w for r in
-            subprocess.check_output(list_cmd + [output_path]).split('\n')
-            for w in r.split(' ') if w.startswith('part-00000')][0]
-        cmd = move_cmd + [output_path + fn, output_path + 'pharmacy_claims_{}.psv'.format(group_id)]
-        subprocess.check_call(cmd)
 
         enrollment_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
             .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
+
+    group_ids_rdd = spark.sparkContext.parallelize(group_ids, 100)
+    group_ids_rdd.foreach(move_rename_extracts_func(list_cmd, move_cmd, output_path_template))
+    for p in move_procs:
+        p.wait()
+        print p.returncode
+
+
+def move_rename_extracts_func(list_cmd, move_cmd, output_path_template):
+    def out(group_id):
+        output_path = output_path_template.format(group_id)
+        fn = [w for r in
+            subprocess.check_output(list_cmd + [output_path]).split('\n')
+            for w in r.split(' ') if w.startswith('part-00000')][0]
+        cmd = move_cmd + [output_path + fn, output_path + 'medical_claims_{}.psv'.format(group_id)]
+        subprocess.check_call(cmd)
+        fn = [w for r in
+            subprocess.check_output(list_cmd + [output_path]).split('\n')
+            for w in r.split(' ') if w.startswith('part-00000')][0]
+        cmd = move_cmd + [output_path + fn, output_path + 'pharmacy_claims_{}.psv'.format(group_id)]
+        subprocess.check_call(cmd)
         fn = [w for r in
             subprocess.check_output(list_cmd + [output_path]).split('\n')
             for w in r.split(' ') if w.startswith('part-00000')][0]
         cmd = move_cmd + [output_path + fn, output_path + 'enrollment_{}.psv'.format(group_id)]
         subprocess.check_call(cmd)
+    return out
 
 def main(args):
     # init
