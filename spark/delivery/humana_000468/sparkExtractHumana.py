@@ -131,16 +131,17 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
             summary = spark.createDataFrame(empty_summaries, ['data_vendor', 'humana_group_id', 'count'])
 
     # for easy testing
-    for group_id in group_ids:
-        medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
-            .drop('humana_group_id') \
-            .createOrReplaceTempView(group_id.replace('-', '_') + '_medical_extract')
-        pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
-            .drop('humana_group_id') \
-            .createOrReplaceTempView(group_id.replace('-', '_') + '_pharmacy_extract')
-        summary.where(F.col('humana_group_id') == F.lit(group_id)) \
-            .drop('humana_group_id') \
-            .createOrReplaceTempView(group_id.replace('-', '_') + '_summary')
+    if test:
+        for group_id in group_ids:
+            medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
+                .drop('humana_group_id') \
+                .createOrReplaceTempView(group_id.replace('-', '_') + '_medical_extract')
+            pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
+                .drop('humana_group_id') \
+                .createOrReplaceTempView(group_id.replace('-', '_') + '_pharmacy_extract')
+            summary.where(F.col('humana_group_id') == F.lit(group_id)) \
+                .drop('humana_group_id') \
+                .createOrReplaceTempView(group_id.replace('-', '_') + '_summary')
 
     local_summary = {}
     for r in summary.collect():
