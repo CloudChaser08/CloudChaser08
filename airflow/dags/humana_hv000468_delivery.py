@@ -10,6 +10,7 @@ import subdags.s3_push_files as s3_push_files
 
 import util.s3_utils as s3_utils
 import util.sftp_utils as sftp_utils
+import util.sqs_utils as sqs_utils
 
 import logging
 import json
@@ -17,7 +18,7 @@ import os
 import subprocess
 
 for m in [s3_push_files, detect_move_normalize, HVDAG,
-        s3_utils, sftp_utils]:
+        s3_utils, sftp_utils, sqs_utils]:
     reload(m)
 
 # Applies to all files
@@ -46,6 +47,9 @@ if HVDAG.HVDAG.airflow_env == 'test':
 else:
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/custom/humana/hv000468/'
     S3_NORMALIZED_FILE_URL_TEMPLATE = 's3://salusv/deliverable/humana/hv000468/{}/'
+
+# Matching payloads
+S3_PROD_MATCHING_URL='s3://salusv/matching/prod/payload/53769d77-189e-4d79-a5d4-d2d22d09331e/'
 
 # Deid file
 DEID_FILE_NAME_TEMPLATE = '{}_deid.txt'
@@ -84,44 +88,71 @@ def get_expected_matching_files(ds, kwargs):
         return []
     return expected_files
 
-def norm_args(ds, k):
-    group_id = k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
-    base = ['--group_id', group_id]
-    if HVDAG.HVDAG.airflow_env == 'test':
-        base += ['--airflow_test']
+def do_detect_matching_done(ds, **kwargs):
+    deid_files = get_expected_matching_files(ds, kwargs)
+    s3_path_prefix = S3_PROD_MATCHING_URL
+    template = '{}{}*DONE*'
+    for deid_file in deid_files:
+        s3_key = template.format(s3_path_prefix, deid_file)
+        logging.info('Poking for key : {}'.format(s3_key))
+        if not s3_utils.s3_key_exists(s3_key):
+            raise ValueError('S3 key not found')
 
-    return base
-
-
-detect_move_extract_dag = SubDagOperator(
-    subdag=detect_move_normalize.detect_move_normalize(
-        DAG_NAME,
-        'detect_move_extract',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'expected_matching_files_func'      : get_expected_matching_files,
-            'dest_dir_func'                     : lambda ds, k:
-                k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id'),
-            's3_payload_loc_url'                : S3_PAYLOAD_DEST,
-            'vendor_uuid'                       : '53769d77-189e-4d79-a5d4-d2d22d09331e',
-            'pyspark_normalization_script_name' : '/home/hadoop/spark/delivery/humana_000468/sparkExtractHumana.py',
-            'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True,
-            'connected_to_metastore'            : True,
-            'emr_num_nodes'                     : 5,
-            'emr_node_type'                     : 'm4.16xlarge',
-            'emr_ebs_volume_size'               : 100,
-            'spark_conf_args'                   : [
-                '--conf', 'spark.sql.shuffle.partitions=5000',
-                '--conf', 'spark.executor.cores=4', '--conf', 'spark.executor.memory=13G',
-                '--conf', 'spark.hadoop.fs.s3a.maximum.connections=1000',
-                '--conf', 'spark.files.useFetchCache=false'
-            ]
-        }
-    ),
-    task_id='detect_move_extract',
+detect_matching_done = PythonOperator(
+    task_id='detect_matching_done',
+    provide_context=True,
+    python_callable=do_detect_matching_done,
+    retry_delay=timedelta(minutes=2),
+    retries=180, #6 hours of retrying
     dag=mdag
+)
+
+def do_move_matching_payload(ds, **kwargs):
+    deid_files = get_expected_matching_files(ds, kwargs)
+    for deid_file in deid_files:
+        s3_prefix = S3_PROD_MATCHING_URL + deid_file
+        for payload_file in s3_utils.list_s3_bucket('s3://salusv/' + s3_prefix):
+            directory = k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+            s3_utils.copy_file(payload_file, S3_PAYLOAD_DEST + directory + '/' + payload_file.split('/')[-1])
+
+move_matching_payload = PythonOperator(
+    task_id='move_matching_payload',
+    provide_context=True,
+    python_callable=do_move_matching_payload,
+    dag=mdag
+)
+
+def do_queue_for_extraction(ds, **kwargs):
+    group_id = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+    sqs_utils.send_message(HUMANA_INBOX, group_id)
+
+queue_for_extraction = PythonOperator(
+    task_id='queue_for_extraction',
+    provide_context=True,
+    python_callable=do_queue_for_extraction,
+    dag=mdag,
+)
+
+def detect_extraction_done(ds, **kwargs):
+    group_id = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+    msgs = sqs_utils.get_messages(HUMANA_OUTBOX, visibility_timeout=2)
+    relevant = [m for m in msgs if m['MessageBody'] == group_id]
+    if relevant:
+        for m in relevant:
+            sqs_utils.delete_message(HUMANA_OUTBOX, m['ReceiptHandle'])
+    else:
+        # Sleep for a random amount of time to allow other instances to
+        # fetch the queue
+        time.sleep(random.randint(5, 30))
+        raise ValueError("Processed group not found")
+
+detect_extraction_done = PythonOperator(
+    task_id='detect_extraction_done',
+    provide_context=True,
+    python_callable=detect_extraction_done,
+    retry_delay=timedelta(seconds=30),
+    retries=240, #2 hours of retrying
+    dag=mdag,
 )
 
 def get_tmp_dir(ds, kwargs):
@@ -224,8 +255,11 @@ if HVDAG.HVDAG.airflow_env == 'test':
             dag = mdag
         )
 
-detect_move_extract_dag.set_upstream(get_group_id)
-create_tmp_dir.set_upstream(detect_move_extract_dag)
+detect_matching_done.set_upstream(get_group_id)
+move_matching_payload.set_upstream(detect_matching_done)
+queue_for_extraction.set_upstream(move_matching_payload)
+detect_extraction_done.set_upstream(queue_for_extraction)
+create_tmp_dir.set_upstream(detect_extraction_done)
 fetch_extracted_data.set_upstream(create_tmp_dir)
 create_return_file.set_upstream(fetch_extracted_data)
 deliver_extracted_data.set_upstream(create_return_file)
