@@ -72,7 +72,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
 
     group_summary = {}
     valid_groups = []
-    medical_extracts = pharmacy_extracts = enrollment_extracts = []
+    (medical_extracts, pharmacy_extracts, enrollment_extracts) = ([], [], [])
     medical_extract  = pharmacy_extract  = enrollment_extract  = None
     for group_id in group_ids:
         if group_matched_patient_count[group_id] < 10:
