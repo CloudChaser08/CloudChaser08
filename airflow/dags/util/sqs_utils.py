@@ -26,7 +26,7 @@ def get_messages(queue_url, count=None, visibility_timeout=30):
     msgs = []
     while count > 0:
         cnt = 10 if count > 10 else count
-        resp = sqs.receive_message(queue_url, MaxNumberOfMessages=cnt, VisibilityTimeout=visibility_timeout)
+        resp = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=cnt, VisibilityTimeout=visibility_timeout)
 
         if 'Messages' not in resp:
             break

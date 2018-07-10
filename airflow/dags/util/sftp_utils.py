@@ -4,7 +4,7 @@
 import pysftp
 
 
-def fetch_file(path, ignore_host_key=False, dest_path, **conn_kwargs):
+def fetch_file(path, dest_path, ignore_host_key=False, **conn_kwargs):
     """
     Fetch a file from SFTP
     """
