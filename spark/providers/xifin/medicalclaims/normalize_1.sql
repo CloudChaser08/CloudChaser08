@@ -50,9 +50,8 @@ SELECT
     ARRAY(proc.proc_code, test.proc_code)[proc_explode.n]                     AS procedure_code,
     CASE
     WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN 'PROC.PROC_CODE'
-    WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN 'TEST.PROC_CODE'
+        OR proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
+    THEN 'HC'
     END                                                                       AS procedure_code_qual,
     proc.units_billed                                                         AS procedure_units_billed,
     proc.units_paid                                                           AS procedure_units_paid,
