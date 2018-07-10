@@ -23,7 +23,7 @@ HUMANA_INBOX='https://sqs.us-east-1.amazonaws.com/581191604223/humana-inbox-prod
 
 BOTO3_INSTALL_STEP = ('Type=CUSTOM_JAR,Name="Install Boto3",Jar="command-runner.jar",'
         'ActionOnFailure=CONTINUE,Args=[sudo,pip,install,boto3]')
-PROFILING_STEP_TEMPLATE = ('Type=Spark,Name="Extract for Humana",'
+EXTRACTION_STEP = ('Type=Spark,Name="Extract for Humana",'
         'ActionOnFailure=TERMINATE_JOB_FLOW,Args=[--jars,'
         '"/home/hadoop/spark/common/json-serde-1.3.7-jar-with-dependencies.jar,'
         '/home/hadoop/spark/common/HiveJDBC41.jar",'
@@ -77,6 +77,7 @@ create_cluster = PythonOperator(
 )
 
 def do_run_extraction(ds, **kwargs):
+    emr_utils._build_dewey(emr_utils._get_emr_cluster_id(EMR_CLUSTER_NAME))
     steps = [BOTO3_INSTALL_STEP, EXTRACTION_STEP]
     emr_utils.run_steps(EMR_CLUSTER_NAME, steps)
 
@@ -86,7 +87,17 @@ run_extraction = PythonOperator(
     python_callable=do_run_extraction,
     dag=mdag
 )
+def do_delete_cluster(ds, **kwargs):
+    emr_utils.delete_emr_cluster(EMR_CLUSTER_NAME)
+
+delete_cluster = PythonOperator(
+    task_id='delete_cluster',
+    provide_context=True,
+    python_callable=do_delete_cluster,
+    dag=mdag
+)
 
 create_cluster.set_upstream(check_pending_requests)
 do_nothing.set_upstream(check_pending_requests)
 run_extraction.set_upstream(create_cluster)
+delete_cluster.set_upstream(run_extraction)
