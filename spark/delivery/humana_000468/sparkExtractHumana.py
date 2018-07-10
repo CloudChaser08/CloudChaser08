@@ -131,16 +131,17 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
             summary = spark.createDataFrame(empty_summaries, ['data_vendor', 'humana_group_id', 'count'])
 
     # for easy testing
-    for group_id in group_ids:
-        medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
-            .drop('humana_group_id') \
-            .createOrReplaceTempView(group_id.replace('-', '_') + '_medical_extract')
-        pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
-            .drop('humana_group_id') \
-            .createOrReplaceTempView(group_id.replace('-', '_') + '_pharmacy_extract')
-        summary.where(F.col('humana_group_id') == F.lit(group_id)) \
-            .drop('humana_group_id') \
-            .createOrReplaceTempView(group_id.replace('-', '_') + '_summary')
+    if test:
+        for group_id in group_ids:
+            medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
+                .drop('humana_group_id') \
+                .createOrReplaceTempView(group_id.replace('-', '_') + '_medical_extract')
+            pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
+                .drop('humana_group_id') \
+                .createOrReplaceTempView(group_id.replace('-', '_') + '_pharmacy_extract')
+            summary.where(F.col('humana_group_id') == F.lit(group_id)) \
+                .drop('humana_group_id') \
+                .createOrReplaceTempView(group_id.replace('-', '_') + '_summary')
 
     local_summary = {}
     for r in summary.collect():
@@ -162,49 +163,43 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         with open('/tmp/summary_report_{}.txt'.format(group_id), 'w') as outf:
             outf.write(summary_report)
         cmd = move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path]
-        move_procs.append(subprocess.Popen(cmd))
+        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
 
         medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
             .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
+        fn = [w for r in
+            subprocess.check_output(list_cmd + [output_path]).split('\n')
+            for w in r.split(' ') if w.startswith('part-00000')][0]
+        cmd = move_cmd + [output_path + fn, output_path + 'medical_claims_{}.psv'.format(group_id)]
+        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
 
         pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
             .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
+        fn = [w for r in
+            subprocess.check_output(list_cmd + [output_path]).split('\n')
+            for w in r.split(' ') if w.startswith('part-00000')][0]
+        cmd = move_cmd + [output_path + fn, output_path + 'pharmacy_claims_{}.psv'.format(group_id)]
+        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
 
         enrollment_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
             .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
-
-    group_ids_rdd = spark.sparkContext.parallelize(group_ids, 100)
-    group_ids_rdd.foreach(move_rename_extracts_func(list_cmd, move_cmd, output_path_template))
-    for p in move_procs:
-        p.wait()
-        print p.returncode
-
-
-def move_rename_extracts_func(list_cmd, move_cmd, output_path_template):
-    def out(group_id):
-        output_path = output_path_template.format(group_id)
-        fn = [w for r in
-            subprocess.check_output(list_cmd + [output_path]).split('\n')
-            for w in r.split(' ') if w.startswith('part-00000')][0]
-        cmd = move_cmd + [output_path + fn, output_path + 'medical_claims_{}.psv'.format(group_id)]
-        subprocess.check_call(cmd)
-        fn = [w for r in
-            subprocess.check_output(list_cmd + [output_path]).split('\n')
-            for w in r.split(' ') if w.startswith('part-00000')][0]
-        cmd = move_cmd + [output_path + fn, output_path + 'pharmacy_claims_{}.psv'.format(group_id)]
-        subprocess.check_call(cmd)
         fn = [w for r in
             subprocess.check_output(list_cmd + [output_path]).split('\n')
             for w in r.split(' ') if w.startswith('part-00000')][0]
         cmd = move_cmd + [output_path + fn, output_path + 'enrollment_{}.psv'.format(group_id)]
-        subprocess.check_call(cmd)
-    return out
+        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
+
+    for p in move_procs:
+        p.wait()
+        if p.returncode != 0:
+            print p.stderr.read()
+            raise Exception("Subprocess returned with code {}".format(p.returncode))
 
 def main(args):
     # init

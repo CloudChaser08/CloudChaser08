@@ -35,7 +35,7 @@ PROFILING_STEP_TEMPLATE = ('Type=Spark,Name="Extract for Humana",'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 7, 5),
+    'start_date': datetime(2018, 7, 10),
     'depends_on_past': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=2),
