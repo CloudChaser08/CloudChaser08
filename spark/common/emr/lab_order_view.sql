@@ -39,7 +39,8 @@ CREATE VIEW dw.hvm_emr_lab_ord (
         data_captr_dt,
         rec_stat_cd,
         part_hvm_vdr_feed_id,
-        part_mth
+        part_mth,
+        prmy_src_tbl_nm
         ) AS SELECT
     row_id,
     hv_lab_ord_id,
@@ -80,6 +81,7 @@ CREATE VIEW dw.hvm_emr_lab_ord (
     data_captr_dt,
     rec_stat_cd,
     part_hvm_vdr_feed_id,
-    part_mth
+    part_mth,
+    prmy_src_tbl_nm
 FROM dw.emr_lab_ord
     ;
