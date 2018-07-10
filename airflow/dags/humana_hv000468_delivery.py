@@ -16,6 +16,8 @@ import logging
 import json
 import os
 import subprocess
+import time
+import random
 
 for m in [s3_push_files, detect_move_normalize, HVDAG,
         s3_utils, sftp_utils, sqs_utils]:
@@ -47,6 +49,10 @@ if HVDAG.HVDAG.airflow_env == 'test':
 else:
     S3_PAYLOAD_DEST = 's3://salusv/matching/payload/custom/humana/hv000468/'
     S3_NORMALIZED_FILE_URL_TEMPLATE = 's3://salusv/deliverable/humana/hv000468/{}/'
+
+# SQS
+HUMANA_INBOX = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-inbox-prod'
+HUMANA_OUTBOX = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-outbox-prod'
 
 # Matching payloads
 S3_PROD_MATCHING_URL='s3://salusv/matching/prod/payload/53769d77-189e-4d79-a5d4-d2d22d09331e/'
@@ -136,7 +142,7 @@ queue_for_extraction = PythonOperator(
 def detect_extraction_done(ds, **kwargs):
     group_id = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
     msgs = sqs_utils.get_messages(HUMANA_OUTBOX, visibility_timeout=2)
-    relevant = [m for m in msgs if m['MessageBody'] == group_id]
+    relevant = [m for m in msgs if m['Body'] == group_id]
     if relevant:
         for m in relevant:
             sqs_utils.delete_message(HUMANA_OUTBOX, m['ReceiptHandle'])
