@@ -49,9 +49,9 @@ CREATE VIEW dw.hvm_emr_proc (
         proc_diag_cd_qual,
         data_captr_dt,
         rec_stat_cd,
+        prmy_src_tbl_nm,
         part_hvm_vdr_feed_id,
-        part_mth,
-        prmy_src_tbl_nm
+        part_mth
         ) AS SELECT
     row_id,
     hv_proc_id,
@@ -102,8 +102,8 @@ CREATE VIEW dw.hvm_emr_proc (
     proc_diag_cd_qual,
     data_captr_dt,
     rec_stat_cd,
+    prmy_src_tbl_nm,
     part_hvm_vdr_feed_id,
-    part_mth,
-    prmy_src_tbl_nm
+    part_mth
 FROM dw.emr_proc
     ;

@@ -44,9 +44,9 @@ CREATE VIEW dw.hvm_emr_vit_sign (
         vit_sign_norm_max_msrmt,
         data_captr_dt,
         rec_stat_cd,
+        prmy_src_tbl_nm,
         part_hvm_vdr_feed_id,
-        part_mth,
-        prmy_src_tbl_nm
+        part_mth
         ) AS SELECT
     row_id,
     hv_vit_sign_id,
@@ -92,8 +92,8 @@ CREATE VIEW dw.hvm_emr_vit_sign (
     vit_sign_norm_max_msrmt,
     data_captr_dt,
     rec_stat_cd,
+    prmy_src_tbl_nm,
     part_hvm_vdr_feed_id,
-    part_mth,
-    prmy_src_tbl_nm
+    part_mth
 FROM dw.emr_vit_sign
     ;
