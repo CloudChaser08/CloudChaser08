@@ -39,7 +39,7 @@ SELECT
     test.proc_code                                                            AS procedure_code,
     CASE
     WHEN test.proc_code IS NOT NULL
-    THEN 'TEST.PROC_CODE'
+    THEN 'HC'
     END                                                                       AS procedure_code_qual,
     test.modifier_1                                                           AS procedure_modifier_1,
     test.modifier_2                                                           AS procedure_modifier_2,

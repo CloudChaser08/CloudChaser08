@@ -74,11 +74,11 @@ def test_procedure_code():
             res.claim_id, res.vendor_test_id, res.procedure_code, res.procedure_code_qual, res.procedure_modifier_1,
             res.procedure_modifier_2, res.procedure_modifier_3, res.procedure_modifier_4
         ) for res in results
-    ])) == [('0_accn_id-0', 'test_id-0', 'PROC', 'PROC.PROC_CODE', 'mo', 'mo', 'mo', 'mo'),
+    ])) == [('0_accn_id-0', 'test_id-0', 'PROC', 'HC', 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-0', 'test_id-5', None, None, None, None, None, None),
             ('0_accn_id-1', 'test_id-1', None, None, None, None, None, None),
-            ('0_accn_id-2', 'test_id-2', 'PROC', 'PROC.PROC_CODE', 'mo', 'mo', 'mo', 'mo'),
-            ('0_accn_id-2', 'test_id-3', 'PROC', 'TEST.PROC_CODE', 'mo', 'mo', 'mo', 'mo'),
+            ('0_accn_id-2', 'test_id-2', 'PROC', 'HC', 'mo', 'mo', 'mo', 'mo'),
+            ('0_accn_id-2', 'test_id-3', 'PROC', 'HC', 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-2', 'test_id-4', None, None, None, None, None, None)]
 
 
