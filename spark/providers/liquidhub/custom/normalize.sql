@@ -1,4 +1,8 @@
 SELECT
+    -- HVIDs and custom IDs need to be linkable between different sources for
+    -- the same manufacturer. For different manufacturers, they can't link.
+    -- Manufacturer 'Amgen' has to be obfuscated differently because we went
+    -- live with them before the new requirements/spec were established
     CASE WHEN hvid IS NULL THEN NULL
         WHEN LOWER(manufacturer) = 'amgen' THEN LOWER(obfuscate_hvid(hvid, 'LHv2'))
         ELSE LOWER(obfuscate_hvid(hvid, CONCAT('LHv2', COALESCE(LOWER(manufacturer), 'unknown'))))
