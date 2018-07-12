@@ -2,7 +2,7 @@ TABLES = ['liquidhub_raw']
 
 TABLE_COLUMNS = {
     'liquidhub_raw' : [
-        'record_id',
+        'source_patient_id',
         'first_name',
         'middle_name',
         'last_name',
@@ -18,7 +18,7 @@ TABLE_COLUMNS = {
         'patient_city',
         'patient_state',
         'patient_postal_code',
-        'patient_postal_code_zip2',
+        'additional_field_1',
         'patient_phone_1',
         'patient_phone_2',
         'patient_phone_3',
@@ -26,11 +26,11 @@ TABLE_COLUMNS = {
         'email_2',
         'email_3',
         'email_4',
-        'pharmacy_name',
+        'source_name',
         'ip_address',
         'brand',
         'patient_yob',
-        'additional_field_2',
+        'manufacturer',
         'additional_field_3',
         'additional_field_4',
         'additional_field_5',

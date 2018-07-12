@@ -48,25 +48,26 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
 
     schema = StructType([
             StructField('hvid', StringType(), True),
-            StructField('lhid', StringType(), True),
-            StructField('pharmacy_name', StringType(), True),
+            StructField('source_patient_id', StringType(), True),
+            StructField('source_name', StringType(), True),
             StructField('brand', StringType(), True),
+            StructField('manufacturer', StringType(), True),
         ] + [
-            StructField('filler_' + str(i), StringType(), True) for i in xrange(1, 9)
+            StructField('filler_' + str(i), StringType(), True) for i in xrange(1, 8)
         ] + [
             StructField('weak_match', StringType(), True),
-            StructField('provider_specific_id', StringType(), True),
+            StructField('custom_hv_id', StringType(), True),
             StructField('provider_meta', StringType(), True),
-            StructField('matching_meta_data', StringType(), True)
+            StructField('matching_meta', StringType(), True)
         ]
     )
 
     content = schema_enforcer.apply_schema(content, schema)
     header = spark.createDataFrame(
         [tuple(
-            ['HVID', 'LHID', 'Pharmacy Name', 'Brand'] +
-            ['filler_' + str(i) for i in xrange(1, 9)] +
-            ['Weak Match', 'Provider Specific ID', 'Provider Meta', 'Matching Meta Data'])],
+            ['HVID', 'Source Patient Id', 'Source Name', 'Brand', 'Manufacturer'] +
+            ['Filler'] * 8 +
+            ['Weak Match', 'Custom HV ID', 'Provider Meta', 'Matching Meta'])],
         schema=schema
     )
     deliverable = header.union(content).coalesce(1)
