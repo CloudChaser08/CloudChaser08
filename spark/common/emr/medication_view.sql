@@ -83,9 +83,9 @@ CREATE VIEW dw.hvm_emr_medctn (
         medctn_prod_svc_id_qual,
         data_captr_dt,
         rec_stat_cd,
+        prmy_src_tbl_nm,
         part_hvm_vdr_feed_id,
-        part_mth,
-        prmy_src_tbl_nm
+        part_mth
         ) AS SELECT
     row_id,
     hv_medctn_id,
@@ -173,8 +173,8 @@ CREATE VIEW dw.hvm_emr_medctn (
     medctn_prod_svc_id_qual,
     data_captr_dt,
     rec_stat_cd,
+    prmy_src_tbl_nm,
     part_hvm_vdr_feed_id,
-    part_mth,
-    prmy_src_tbl_nm
+    part_mth
 FROM dw.emr_medctn
     ;

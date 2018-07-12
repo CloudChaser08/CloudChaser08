@@ -69,9 +69,9 @@ CREATE VIEW dw.hvm_emr_clin_obsn (
         clin_obsn_norm_max_msrmt,
         data_captr_dt,
         rec_stat_cd,
+        prmy_src_tbl_nm,
         part_hvm_vdr_feed_id,
-        part_mth,
-        prmy_src_tbl_nm
+        part_mth
         ) AS SELECT
     row_id,
     hv_clin_obsn_id,
@@ -142,8 +142,8 @@ CREATE VIEW dw.hvm_emr_clin_obsn (
     clin_obsn_norm_max_msrmt,
     data_captr_dt,
     rec_stat_cd,
+    prmy_src_tbl_nm,
     part_hvm_vdr_feed_id,
-    part_mth,
-    prmy_src_tbl_nm
+    part_mth
 FROM dw.emr_clin_obsn
     ;
