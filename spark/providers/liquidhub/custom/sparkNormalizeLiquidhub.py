@@ -1,6 +1,7 @@
 #! /usr/bin/python
 import argparse
 from datetime import datetime
+import dateutil.tz as tz
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -10,10 +11,10 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.constants as constants
 from pyspark.sql.types import StringType, StructType, StructField
 from pyspark.sql.functions import udf, lit
-import transactions
+import transactions_lhv1, transactions_lhv2
 import spark.helpers.schema_enforcer as schema_enforcer
 
-def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False):
+def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     if test:
         incoming_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/liquidhub/custom/resources/incoming/'
@@ -21,30 +22,37 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
         matching_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/liquidhub/custom/resources/matching/'
         ) + '/'
-        output_dir = '/tmp/staging/' + date_input.replace('-', '/') + '/'
+        output_dir = '/tmp/staging/' + group_id + '/'
     elif airflow_test:
-        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/incoming/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        output_dir = '/tmp/staging/' + date_input.replace('-', '/') + '/'
+        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/payload/{}/'.format(group_id)
+        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/incoming/{}/'.format(group_id)
+        output_dir = '/tmp/staging/' + group_id + '/'
     else:
-        incoming_path = 's3a://salusv/incoming/custom/lhv2/{}/{}/'.format(
-            pharmacy_name, date_input.replace('-', '/')
-        )
-        matching_path = 's3a://salusv/matching/payload/custom/lhv2/{}/{}/'.format(
-            pharmacy_name, date_input.replace('-', '/')
-        )
+        incoming_path = 's3a://salusv/incoming/custom/lhv2/{}/'.format(group_id)
+        matching_path = 's3a://salusv/matching/payload/custom/lhv2/{}/'.format(group_id)
         output_dir = constants.hdfs_staging_dir + date_input.replace('-', '/') + '/'
 
-    payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
-    records_loader.load_and_clean_all(runner, incoming_path, transactions, 'csv', '|')
+    # Possible group id patterns
+    # LHV1_<source>_PatDemo_YYYYMMDD_v#
+    # LHV1_<manufacturer>_<source>_YYYYMMDD_v#
+    # LHV2_<source>_PatDemo_YYYYMMDD_v#
+    # LHV2_<manufacturer>_<source>_YYYYMMDD_v#
 
-    content = runner.run_spark_script('normalize.sql', [
-        ['location', output_dir]
-    ], return_output=True)
+    group_id_parts = group_id_in.split('_')
+
+    payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
+    if 'LHV1' in group_id:
+        records_loader.load_and_clean_all(runner, incoming_path, transactions_lhv1, 'csv', '|')
+    else
+        records_loader.load_and_clean_all(runner, incoming_path, transactions_lhv2, 'csv', '|')
+    
+    # If the manufacturer name is not in the data, it will be in the group id
+    if 'PatDemo' not in group_id:
+        spark.table('liquidhub_raw') \
+            .withColumn('manufacturer', lit(group_id_parts[1])) \
+            .createOrReplaceTempView('liquidhub_raw')
+
+    content = runner.run_spark_script('normalize.sql', return_output=True)
 
     schema = StructType([
             StructField('hvid', StringType(), True),
@@ -73,12 +81,23 @@ def run(spark, runner, date_input, pharmacy_name, test=False, airflow_test=False
     deliverable = header.union(content).coalesce(1)
 
     deliverable.createOrReplaceTempView('liquidhub_deliverable')
+
+    # The beginning of the output file should be the same the group_id
+    # Then today's date and version number of the data processing run
+    # (1 for the first run of this group, 2 for the second, etc)
+    # and then any file ID that HealthVerity wants, we'll use a combination
+    # of the original group date and version number
+    output_file_name  = '_'.join(name_parts[:-2])
+    output_file_name += '_' + datetime.datetime.now(tz.gettz('America/New York')).date().isoformat().replace('-', '')
+    output_file_name += '_v' + run_version
+    output_file_name += '_' + group_id_parts[-2] + group_id_parts[-1] + '.txt.gz'
+
     if test:
-        deliverable.createOrReplaceTempView('liquidhub_deliverable')
-    else:
+        return output_file_name
+    if not test:
         normalized_records_unloader.unload_delimited_file(
-            spark, runner, 'hdfs:///staging/' + pharmacy_name + '/' + date_input.replace('-', '/') + '/', 'liquidhub_deliverable',
-            output_file_name='LH_Amgen_' + pharmacy_name + '_' + date_input.replace('-', '') + '_FILEID.txt.gz')
+            spark, runner, 'hdfs:///staging/' + group_id + '/', 'liquidhub_deliverable',
+            output_file_name=output_file_name)
 
 def main(args):
     # init
@@ -87,7 +106,7 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, args.pharmacy_name, airflow_test=args.airflow_test)
+    run(spark, runner, args.group_id, args.run_version, airflow_test=args.airflow_test)
 
     spark.stop()
 
@@ -101,8 +120,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--date', type=str)
-    parser.add_argument('--pharmacy_name', type=str)
+    parser.add_argument('--group_id', type=str)
+    parser.add_argument('--run_version', type=str, default='1')
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
