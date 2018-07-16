@@ -22,6 +22,9 @@ parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
 
+if ACCREDO_PREFIX in args.setid:
+    args.setid = args.setid.replace(ACCREDO_PREFIX, NON_ACCREDO_PREFIX)
+
 def run_psql_script(script, variables=[]):
     args = ['psql', '-f', script]
     for var in variables:
@@ -76,6 +79,8 @@ if args.first_run:
         ['min_valid_date', min_date]
     ])
 
+run_psql_query('DROP TABLE IF EXISTS express_scripts_rx_raw_all;')
+
 date_path = args.date.replace('-', '/')
 
 file_date = datetime.strptime(args.date, '%Y-%m-%d')
@@ -128,7 +133,7 @@ for file_prefix, table_name in [(NON_ACCREDO_PREFIX, 'non_accredo_claims'), (ACC
             ['credentials', args.s3_credentials]
         ])
         enqueue_psql_script('normalize_pharmacy_claims.sql', [
-            ['tmp_table', table_name]
+            ['tmp_table', table_name, False]
         ])
 
 enqueue_psql_script('merge_pharmacy_claims.sql')
@@ -170,7 +175,7 @@ enqueue_psql_script('../../redshift_norm_common/cap_age.sql', [
 for i in xrange(1, 3):
     # Provide some flexibility in case the batch came in a day early or late
     for j in xrange(-1, 2):
-        d_path = (file_date - timedelta(days=7*i + j)).strftime('%Y/%m/%d')
+        d_path = (file_date + timedelta(days=7*i + j)).strftime('%Y/%m/%d')
         try:
             subprocess.check_call(['aws', 's3', 'ls', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path])
         except:
@@ -188,7 +193,7 @@ for date, s3_path in date_path_to_unload.iteritems():
     enqueue_psql_script('../../redshift_norm_common/unload_common_model.sql', [
         ['output_path', s3_path],
         ['credentials', args.s3_credentials],
-        ['select_from_common_model_table', "SELECT * FROM normalized_claims WHERE data_set=\\\'%" + date + "%\\\'"]
+        ['select_from_common_model_table', "SELECT * FROM normalized_claims WHERE data_set LIKE \\\'%" + date + "%\\\'"]
     ])
 
 execute_queue(args.debug)
