@@ -89,8 +89,8 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # of the original group date and version number
     output_file_name  = '_'.join(group_id_parts[:-2])
     output_file_name += '_' + datetime.now(tz.gettz('America/New York')).date().isoformat().replace('-', '')
-    output_file_name += '_v' + str(run_version)
-    output_file_name += '_' + group_id_parts[-2] + group_id_parts[-1] + '.txt.gz'
+    output_file_name += '_' + group_id_parts[-1]
+    output_file_name += '_' + group_id_parts[-2] + 'v' + str(run_version) + '.txt.gz'
 
     if test:
         return output_file_name
