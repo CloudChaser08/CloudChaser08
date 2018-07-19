@@ -18,10 +18,10 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     if test:
         incoming_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/liquidhub/custom/resources/incoming/'
-        ) + '/'
+        ) + '/{}/'.format(group_id)
         matching_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/liquidhub/custom/resources/matching/'
-        ) + '/'
+        ) + '/{}/'.format(group_id)
         output_dir = '/tmp/staging/' + group_id + '/'
     elif airflow_test:
         matching_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/payload/{}/'.format(group_id)
@@ -38,12 +38,12 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # LHV2_<source>_PatDemo_YYYYMMDD_v#
     # LHV2_<manufacturer>_<source>_YYYYMMDD_v#
 
-    group_id_parts = group_id_in.split('_')
+    group_id_parts = group_id.split('_')
 
     payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
     if 'LHV1' in group_id:
         records_loader.load_and_clean_all(runner, incoming_path, transactions_lhv1, 'csv', '|')
-    else
+    else:
         records_loader.load_and_clean_all(runner, incoming_path, transactions_lhv2, 'csv', '|')
     
     # If the manufacturer name is not in the data, it will be in the group id
@@ -74,7 +74,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     header = spark.createDataFrame(
         [tuple(
             ['HVID', 'Source Patient Id', 'Source Name', 'Brand', 'Manufacturer'] +
-            ['Filler'] * 8 +
+            ['Filler'] * 7 +
             ['Weak Match', 'Custom HV ID', 'Provider Meta', 'Matching Meta'])],
         schema=schema
     )
@@ -87,9 +87,9 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # (1 for the first run of this group, 2 for the second, etc)
     # and then any file ID that HealthVerity wants, we'll use a combination
     # of the original group date and version number
-    output_file_name  = '_'.join(name_parts[:-2])
-    output_file_name += '_' + datetime.datetime.now(tz.gettz('America/New York')).date().isoformat().replace('-', '')
-    output_file_name += '_v' + run_version
+    output_file_name  = '_'.join(group_id_parts[:-2])
+    output_file_name += '_' + datetime.now(tz.gettz('America/New York')).date().isoformat().replace('-', '')
+    output_file_name += '_v' + str(run_version)
     output_file_name += '_' + group_id_parts[-2] + group_id_parts[-1] + '.txt.gz'
 
     if test:

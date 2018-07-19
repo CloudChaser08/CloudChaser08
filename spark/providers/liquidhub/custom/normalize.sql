@@ -20,7 +20,7 @@ SELECT
     CASE WHEN matchStatus = 'multi_match' THEN
         CASE WHEN LOWER(manufacturer) = 'amgen'
                 THEN LOWER(to_json(obfuscate_candidate_hvids(topCandidates, 'LHv2')))
-            ELSE LOWER(to_json(obfuscate_candidate_hvids(topCandidates ,CONCAT('LHv2', COALESCE(LOWER(manufacturer), 'unknown')))))
+            ELSE LOWER(to_json(obfuscate_candidate_hvids(topCandidates, CONCAT('LHv2', COALESCE(LOWER(manufacturer), 'unknown')))))
         END
     END                                         AS matching_meta
 FROM matching_payload

@@ -9,7 +9,7 @@ TABLE_COLUMNS = {
         'patient_zip_code',
         'date_of_birth',
         'gender',
-        'filler_2'
+        'filler_2',
         'source_name',
         'source_patient_id',
         'manufacturer',
