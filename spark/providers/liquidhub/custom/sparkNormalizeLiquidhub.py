@@ -106,7 +106,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
             output_file_name=output_file_name)
         normalized_records_unloader.unload_delimited_file(
             spark, runner, 'hdfs:///staging/' + group_id + '/', 'liquidhub_summary',
-            output_file_name=output_file_name)
+            output_file_name='summary_report_' + group_id + '.txt')
 
 def main(args):
     # init
