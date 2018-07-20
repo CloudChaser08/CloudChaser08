@@ -82,6 +82,9 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
 
     deliverable.createOrReplaceTempView('liquidhub_deliverable')
 
+    content.select('source_name', 'manufacturer').distinct() \
+            .createOrReplaceTempView('liquidhub_summary')
+
     # The beginning of the output file should be the same the group_id
     # Then today's date and version number of the data processing run
     # (1 for the first run of this group, 2 for the second, etc)
@@ -100,6 +103,9 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     if not test:
         normalized_records_unloader.unload_delimited_file(
             spark, runner, 'hdfs:///staging/' + group_id + '/', 'liquidhub_deliverable',
+            output_file_name=output_file_name)
+        normalized_records_unloader.unload_delimited_file(
+            spark, runner, 'hdfs:///staging/' + group_id + '/', 'liquidhub_summary',
             output_file_name=output_file_name)
 
 def main(args):
