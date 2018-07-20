@@ -36,9 +36,13 @@ def test_hvid_obfuscation():
     # Manufacturer name in file content
     assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[2]])[0] \
         .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'NOVARTIS'.lower())).lower()
+    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[0]])[0] \
+        .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'NOVARTIS'.lower())).lower()
 
     # Manufacturer name in file file
     assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[3]])[0] \
+        .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'Manufacturer1'.lower())).lower()
+    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[1]])[0] \
         .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'Manufacturer1'.lower())).lower()
 
 def test_multimatch_candidates_present():
@@ -67,6 +71,20 @@ def test_header_row():
     assert results[GROUPS[2]][0].source_patient_id == 'Source Patient Id'
     assert results[GROUPS[2]][0].hvid == 'HVID'
     assert results[GROUPS[2]][0].matching_meta == 'Matching Meta'
+
+def test_manufacturer_column():
+    # Manufacturer name in file content
+    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[2]])[0] \
+        .manufacturer == "NOVARTIS"
+    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[0]])[0] \
+        .manufacturer == "NOVARTIS"
+
+    # Manufacturer name in file file
+    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[3]])[0] \
+        .manufacturer == "Manufacturer1"
+    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[1]])[0] \
+        .manufacturer == "Manufacturer1"
+
 
 def test_cleanup(spark):
     cleanup(spark)
