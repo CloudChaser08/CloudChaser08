@@ -24,4 +24,8 @@ spark-test-jenkins: clean-test build-notest
 	pytest -v -x --ignore=test/helpers/external_table_loader_test.py \
                   --ignore=test/providers/nextgen test/ || (rm target/${APP_NAME}.zip && exit 1)
 
+package: clean-test build-notest
+	cd .. && tar -czf dewey_spark.tar.gz --exclude spark/test spark
+	echo "Created dewey_spark.tar.gz"
+
 build: spark-test
