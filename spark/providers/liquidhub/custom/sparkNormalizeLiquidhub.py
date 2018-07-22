@@ -88,7 +88,10 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # and then any file ID that HealthVerity wants, we'll use a combination
     # of the original group date and version number
     output_file_name  = '_'.join(group_id_parts[:-2])
-    output_file_name += '_' + datetime.now(tz.gettz('America/New York')).date().isoformat().replace('-', '')
+    if test:
+        output_file_name += '_' + datetime.now(tz.gettz('America/New York')).date().isoformat().replace('-', '')
+    else:
+        output_file_name += '_' + datetime(2018, 7, 15).date().isoformat().replace('-', '')
     output_file_name += '_' + group_id_parts[-1]
     output_file_name += '_' + group_id_parts[-2] + 'v' + str(run_version) + '.txt.gz'
 
