@@ -337,7 +337,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=['allscripts_date_partition']),
             postprocessor.add_universal_columns(
                 feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=date_obj.strftime(
-                    'Allscripts_HV_%b%y'
+                    'HV_%b%y'
                 ), model_version_number=table['model_version'],
 
                 # rename defaults
