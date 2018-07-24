@@ -20,9 +20,9 @@ def load(runner, input_path, s3_encounter_reference, s3_demographics_reference):
 
     for t in TABLES:
         df.select(*([df['_c' + str(i)].alias(TABLE_COLUMNS[t][i]) for i in xrange(len(TABLE_COLUMNS[t]))] + [
-                F.regexp_extract('input_file_name', 'NG_LSSA_([^_]*)_[^\.]*.txt', 1).alias('reportingenterpriseid'),
-                F.regexp_extract('input_file_name', 'NG_LSSA_[^_]*_([^\.]*).txt', 1).alias('recorddate'),
-                F.regexp_extract('input_file_name', '(NG_LSSA_[^_]*_[^\.]*.txt)', 1).alias('dataset')
+                F.regexp_extract('input_file_name', '(NG|HV)_LSSA_([^_]*)_[^\.]*.txt', 2).alias('reportingenterpriseid'),
+                F.regexp_extract('input_file_name', '(NG|HV)_LSSA_[^_]*_([^\.]*).txt', 2).alias('recorddate'),
+                F.regexp_extract('input_file_name', '((NG|HV)_LSSA_[^_]*_[^\.]*.txt)', 1).alias('dataset')
             ])) \
             .where(F.col('tbl_type') == TABLE_TYPE[t]) \
             .createOrReplaceTempView(t)
