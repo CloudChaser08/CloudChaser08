@@ -17,12 +17,12 @@ def load(spark, runner, table_locs):
                 postprocessor.compose(
                     postprocessor.trimmify,
                     postprocessor.nullify
-                )(df).repartition(5000).cache().createOrReplaceTempView(table)
+                )(df).where("date_key != 'date_key'").repartition(5000).cache().createOrReplaceTempView(table)
         except:
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),
                 schema=StructType(map(lambda x: StructField(x, StringType()), TABLE_COLS[table]))
-            ).where("date_key != 'date_key'").createOrReplaceTempView(table)
+            ).createOrReplaceTempView(table)
 
 
 TABLE_COLS = {
