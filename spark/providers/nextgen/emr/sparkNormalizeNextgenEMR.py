@@ -118,7 +118,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     explode.generate_exploder_table(spark, 5, 'medication_exploder')
     logging.debug("Created exploder tables")
 
-    payload_loader.load(runner, matching_path, ['hvJoinKey'], load_file_name=True)
+    payload_loader.load(runner, matching_path, ['hvJoinKey'], load_file_name=True, allow_empty=True)
 
     load_transactions.load(runner, input_path, enc_reference_path, demo_reference_path)
     logging.debug("Loaded transactions data")
