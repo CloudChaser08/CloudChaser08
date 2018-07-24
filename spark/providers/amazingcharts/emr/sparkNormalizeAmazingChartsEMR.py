@@ -28,7 +28,7 @@ import spark.helpers.privacy.emr.clinical_observation as clinical_observation_pr
 import spark.helpers.privacy.emr.vital_sign as vital_sign_priv
 
 from pyspark.sql.window import Window
-from pyspark.sql.functions import col, lit, rank, split, explode
+from pyspark.sql.functions import col, lit, row_number, split, explode
 
 FEED_ID = '5'
 VENDOR_ID = '5'
@@ -96,9 +96,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # personid (we use personid as our join key, not hvJoinKey)
     window = Window.partitionBy(col('personId')).orderBy(col('age'))
     runner.sqlContext.sql('select * from matching_payload')     \
-          .withColumn('rank', rank().over(window))              \
-          .where(col('rank') == lit(1))                         \
-          .drop('rank')                                         \
+          .withColumn('row_num', row_number().over(window))     \
+          .where(col('row_num') == lit(1))                      \
+          .drop('row_num')                                      \
           .createOrReplaceTempView('matching_payload_deduped')
 
     exploder.generate_exploder_table(spark, 2, 'proc_2_exploder')
