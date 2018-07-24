@@ -22,7 +22,7 @@ def load(spark, runner, table_locs):
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),
                 schema=StructType(map(lambda x: StructField(x, StringType()), TABLE_COLS[table]))
-            ).createOrReplaceTempView(table)
+            ).where("date_key != 'date_key'").createOrReplaceTempView(table)
 
 
 TABLE_COLS = {
