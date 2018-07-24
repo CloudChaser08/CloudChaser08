@@ -162,13 +162,11 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         output_path = output_path_template.format(group_id)
         with open('/tmp/summary_report_{}.txt'.format(group_id), 'w') as outf:
             outf.write(summary_report)
-        cmd = move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path]
-        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
 
         medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
-            .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
+            .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='overwrite')
         fn = [w for r in
             subprocess.check_output(list_cmd + [output_path]).split('\n')
             for w in r.split(' ') if w.startswith('part-00000')][0]
@@ -193,6 +191,9 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
             subprocess.check_output(list_cmd + [output_path]).split('\n')
             for w in r.split(' ') if w.startswith('part-00000')][0]
         cmd = move_cmd + [output_path + fn, output_path + 'enrollment_{}.psv'.format(group_id)]
+        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
+        
+        cmd = move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path]
         move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
 
     for p in move_procs:
