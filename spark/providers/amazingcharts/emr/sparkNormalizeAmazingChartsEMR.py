@@ -89,7 +89,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     import spark.providers.amazingcharts.emr.load_transactions as load_transactions
-    load_transactions.load(spark, runner, input_paths)
+    load_transactions.load(spark, runner, input_paths, date_input)
 
     payload_loader.load(runner, matching_path, ['personId'])
     # De-duplicate the payloads so that there is only one
@@ -99,7 +99,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
           .withColumn('row_num', row_number().over(window))     \
           .where(col('row_num') == lit(1))                      \
           .drop('row_num')                                      \
+          .cache_and_track('matching_payload_deduped')          \
           .createOrReplaceTempView('matching_payload_deduped')
+
+    spark.table('matching_payload_deduped').count()
 
     exploder.generate_exploder_table(spark, 2, 'proc_2_exploder')
     exploder.generate_exploder_table(spark, 5, 'clin_obsn_exploder')
@@ -315,7 +318,7 @@ def main(args):
     if args.airflow_test:
         pass
     else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2018-05-21/'
+        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
     
     normalized_records_unloader.distcp(output_path)
 
