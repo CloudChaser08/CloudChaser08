@@ -211,7 +211,7 @@ def do_trigger_deliveries(**kwargs):
 
         trigger_delivery_dag = TriggerDagRunOperator(
             task_id='trigger_delivery_dag_' + gid,
-            trigger_dag_id='liquidhub_delivery',
+            trigger_dag_id='liquidhub_delivery_pipeline',
             python_callable=do_trigger_delivery_dag,
             dag=mdag
         )
