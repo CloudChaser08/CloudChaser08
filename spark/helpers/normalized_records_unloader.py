@@ -75,7 +75,7 @@ def unload(
             # Make sure that hvm_historical_date is a date type to avoid this
             # problem
             if type(hvm_historical_date) == datetime:
-                hvm_historical_date = hmv_historical_date.date()
+                hvm_historical_date = hvm_historical_date.date()
             when_clause = (when_clause | (col(date_column) < hvm_historical_date))
         date_partition_val = when(when_clause, lit(NULL_PARTITION_NAME)).otherwise(col(date_column).substr(0, 7))
 
