@@ -2,6 +2,7 @@ from airflow.models import Variable
 from airflow.operators import PythonOperator, SubDagOperator, DummyOperator
 from datetime import datetime, timedelta
 import os
+import re
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -21,11 +22,11 @@ for m in [s3_fetch_file, decrypt_files, queue_up_for_matching,
 
 # Applies to all files
 TMP_PATH_TEMPLATE = '/tmp/liquidhub/custom/{}{}{}/'
-DAG_NAME = 'liquidhub_pipeline'
+DAG_NAME = 'liquidhub_ingestion_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 7, 12),
+    'start_date': datetime(2018, 7, 25),
     'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -69,9 +70,9 @@ def do_get_groups_ready(**kwargs):
     received_groups = []
     received_files  = set(s3_utils.list_s3_bucket_files(S3_INCOMING_LOCATION))
     for f in received_files:
-        if re.match(FILE_V1T1_TEMPLATE.format('.*', '\d{8}', '\d+') + DEID_EXTENSION, f) or
-                re.match(FILE_V1T2_TEMPLATE.format('.*', '.*', '\d{8}', '\d+') + DEID_EXTENSION, f) or
-                re.match(FILE_V2T1_TEMPLATE.format('.*', '\d{8}', '\d+') + DEID_EXTENSION, f) or
+        if re.match(FILE_V1T1_TEMPLATE.format('.*', '\d{8}', '\d+') + DEID_EXTENSION, f) or             \
+                re.match(FILE_V1T2_TEMPLATE.format('.*', '.*', '\d{8}', '\d+') + DEID_EXTENSION, f) or  \
+                re.match(FILE_V2T1_TEMPLATE.format('.*', '\d{8}', '\d+') + DEID_EXTENSION, f) or        \
                 re.match(FILE_V2T2_TEMPLATE.format('.*', '.*', '\d{8}', '\d+') + DEID_EXTENSION, f):
 
             group = f.replace(DEID_EXTENSION, '').replace(TRANSACTION_EXTENSION, '')
@@ -86,7 +87,7 @@ def do_get_groups_ready(**kwargs):
     new_groups = set(received_groups).difference(set(processed_groups))
     groups_ready = set()
     for g in new_groups:
-        if (g + DEID_EXTENSION) in recieved_files and (g + TRANSACTION_EXTENSION) in received_files:
+        if (g + DEID_EXTENSION) in received_files and (g + TRANSACTION_EXTENSION) in received_files:
             groups_ready.add(g)
 
     kwargs['ti'].xcom_push(key = 'groups_ready', value = groups_ready)
@@ -98,9 +99,13 @@ get_groups_ready = PythonOperator(
     dag = mdag
 )
 
+def get_transaction_files_regex(ds, kwargs):
+    groups = get_transaction_file_names(ds, kwargs)
+    return '(' + '|'.join(groups) + ')'
+
 def get_transaction_file_names(ds, kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
-    [g + TRANSACTION_EXTENSION for g in groups_ready]
+    return [g + TRANSACTION_EXTENSION for g in groups_ready]
 
 def get_transaction_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + f for f in get_transaction_file_names(ds, kwargs)]
@@ -114,19 +119,21 @@ def get_encrypted_decrypted_file_paths(ds, kwargs):
 
 def get_deid_file_urls(ds, kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
-    [S3_INCOMING_LOCATION + g + DEID_EXTENSION for g in groups_ready]
+    return [S3_INCOMING_LOCATION + g + DEID_EXTENSION for g in groups_ready]
 
 fetch_transaction = SubDagOperator(
     subdag=s3_fetch_file.s3_fetch_file(
         DAG_NAME,
-        'fetch_transaction_file',
+        'fetch_transaction_files',
         default_args['start_date'],
         mdag.schedule_interval,
         {
             'tmp_path_template'      : TRANSACTION_TMP_PATH_TEMPLATE,
-            'expected_file_name_func': get_transaction_file_names,
+            'expected_file_name_func': get_transaction_files_regex,
             's3_prefix'              : '/'.join(S3_INCOMING_LOCATION.split('/')[3:]),
-            's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity'
+            's3_bucket'              : 'salusv' if HVDAG.HVDAG.airflow_env == 'test' else 'healthverity',
+            'regex_name_match'       : True,
+            'multi_match'            : True
         }
     ),
     task_id='fetch_transaction_files',
@@ -136,7 +143,7 @@ fetch_transaction = SubDagOperator(
 decrypt_transaction = SubDagOperator(
     subdag=decrypt_files.decrypt_files(
         DAG_NAME,
-        'decrypt_transaction_file',
+        'decrypt_transaction_files',
         default_args['start_date'],
         mdag.schedule_interval,
         {
@@ -144,22 +151,21 @@ decrypt_transaction = SubDagOperator(
             'encrypted_decrypted_file_paths_func' : get_encrypted_decrypted_file_paths
         }
     ),
-    task_id='decrypt_transaction_file',
+    task_id='decrypt_transaction_files',
     dag=mdag
 )
 
-def do_recompress_push(ds, **kwargs):
+def do_compress_push(ds, **kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
     for g in groups_ready:
         f = get_tmp_dir(ds, kwargs) + g + TRANSACTION_EXTENSION
-        decompression.decompress_gzip_file(f + '.gz')
         compression.compress_bzip2_file(f)
         s3_utils.copy_file(f + '.bz2', S3_TRANSACTION_PROCESSED_URL_TEMPLATE.format(g))
 
-recompress_push = PythonOperator(
+compress_push = PythonOperator(
     provide_context=True,
-    task_id='recompress_push',
-    python_callable=do_recompress_push,
+    task_id='compress_push',
+    python_callable=do_compress_push,
     dag=mdag
 )
 
@@ -227,7 +233,9 @@ if HVDAG.HVDAG.airflow_env != 'prod':
             dag = mdag
         )
 
+fetch_transaction.set_upstream(get_groups_ready)
 decrypt_transaction.set_upstream(fetch_transaction)
-recompress_push.set_upstream(decrypt_transaction)
-trigger_deliveries.set_upstream([queue_up_for_matching, recompress_push])
-clean_up_workspace.set_upstream(recompress_push)
+compress_push.set_upstream(decrypt_transaction)
+queue_up_for_matching.set_upstream(get_groups_ready)
+trigger_deliveries.set_upstream([queue_up_for_matching, compress_push])
+clean_up_workspace.set_upstream(compress_push)
