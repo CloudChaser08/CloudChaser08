@@ -1,12 +1,13 @@
 SELECT /*+ BROADCAST (prv1) */ /*+ BROADCAST (prv2) */ /*+ BROADCAST (lbd) */
     CONCAT(
         '5_',
-        SUBSTR(lab.sign_off_date, 1, 10),
+        COALESCE(SUBSTR(lab.sign_off_date, 1, 10), '0000-00-00'),
         '_',
         lab.practice_key,
         '_',
         lab.patient_key
     )                                       AS hv_lab_result_id,
+    lab.practice_key                        AS vdr_org_id,
     lab.lab_test_id                         AS vdr_lab_test_id,
     CASE
         WHEN lab.lab_test_id IS NULL THEN NULL
@@ -78,8 +79,8 @@ SELECT /*+ BROADCAST (prv1) */ /*+ BROADCAST (prv2) */ /*+ BROADCAST (lbd) */
     UPPER(COALESCE(prv2.state, ''))         AS lab_test_exectg_fclty_state_cd,
     lab.specimen_source                     AS lab_test_specmn_typ_cd,
     CASE
-        WHEN lab.fasting = '1' THEN 'Y'
-        WHEN lab.fasting = '0' THEN 'N'
+        WHEN lab.fasting = 'True' THEN 'Y'
+        WHEN lab.fasting = 'False' THEN 'N'
         ELSE NULL
     END                                     AS lab_test_fstg_stat_flg,
     lbd.test_name                           AS lab_test_nm,
