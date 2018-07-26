@@ -3,7 +3,8 @@ SELECT /*+ BROADCAST (prv) */
         '5_',
         COALESCE(
             SUBSTR(enc.encounter_date, 1, 10),
-            SUBSTR(enc.date_row_added, 1, 10)
+            SUBSTR(enc.date_row_added, 1, 10),
+            '0000-00-00'
         ),
         '_',
         enc.practice_key,

@@ -4,7 +4,8 @@ SELECT /*+ BROADCAST (prv) */
         SUBSTR(
             COALESCE(
                 dig.date_active,
-                dig.date_row_added
+                dig.date_row_added,
+                '0000-00-00'
             ),
             1,
             10
