@@ -4,7 +4,8 @@ SELECT /*+ BROADCAST (prv) */
         SUBSTR(
             COALESCE(
                 enc.encounter_date,
-                enc.date_row_added
+                enc.date_row_added,
+                '0000-00-00'
             ),
             1,
             10
@@ -45,7 +46,8 @@ SELECT /*+ BROADCAST (prv) */
         SUBSTR(
             COALESCE(
                 enc.encounter_date,
-                enc.date_row_added
+                enc.date_row_added,
+                '0000-00-00'
             ),
             1,
             10

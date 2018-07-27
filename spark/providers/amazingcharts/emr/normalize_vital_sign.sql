@@ -46,7 +46,8 @@ SELECT /*+ BROADCAST (prv) */
         SUBSTR(
             COALESCE(
                 enc.encounter_date,
-                enc.date_row_added
+                enc.date_row_added,
+                '0000-00-00'
             ),
             1,
             10
@@ -161,7 +162,7 @@ SELECT /*+ BROADCAST (prv) */
         'mmHg',
         'FAHRENHEIT',
         'SNELLEN_CHART',
-        'SNELLEL_CHART',
+        'SNELLEN_CHART',
         'POUNDS'
     )[e.n]                                  AS vit_sign_uom,
     extract_date(
