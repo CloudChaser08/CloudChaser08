@@ -198,3 +198,24 @@ WHERE
         enc.vision_os,
         enc.weight_in_pounds
     )[e.n] IS NOT NULL
+    AND
+    ((e.n != 1 AND e.n != 2 AND e.n != 4) OR CAST(ARRAY(
+        enc.body_mass_index,
+        enc.diastolic,
+        enc.head_circumference,
+        enc.hearing,
+        enc.height_in_inches,
+        enc.oxygen_saturation,
+        enc.oxygen_saturation_room_air,
+        enc.pain_scale,
+        enc.peak_flow_post_bronchodilator,
+        enc.pulmonary_function,
+        enc.pulse,
+        enc.rest_rate,
+        enc.supplemental_o2_amount,
+        enc.systolic,
+        enc.temperature,
+        enc.vision_od,
+        enc.vision_os,
+        enc.weight_in_pounds
+    )[e.n] AS INT) != 0)
