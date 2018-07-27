@@ -3,7 +3,8 @@ SELECT /*+ BROADCAST (prv) */
         '5_',
         COALESCE(
             SUBSTR(enc.encounter_date, 1, 10),
-            SUBSTR(enc.date_row_added, 1, 10)
+            SUBSTR(enc.date_row_added, 1, 10),
+            '0000-00-00'
         ),
         '_',
         enc.practice_key,
@@ -37,7 +38,8 @@ SELECT /*+ BROADCAST (prv) */
         '5_',
         COALESCE(
             SUBSTR(enc.encounter_date, 1, 10),
-            SUBSTR(enc.date_row_added, 1, 10)
+            SUBSTR(enc.date_row_added, 1, 10),
+            '0000-00-00'
         ),
         '_',
         enc.practice_key,
@@ -86,13 +88,13 @@ SELECT /*+ BROADCAST (prv) */
         REGEXP_REPLACE(
             REGEXP_REPLACE(
                 UPPER(cpt_code),
-                '(\\([^)]*\\))|(LOW)|(MEDIUM)|(HIGH)|(COMPLEXITY)|\\<|\\>',
+                '(\\([^)]*\\))|(\\bLOW\\b)|(\\bMEDIUM\\b)|(\\bHIGH\\b)|(\\bCOMPLEXITY\\b)|\\<|\\>',
                 ''
             ),
             '[^A-Z0-9]',
             ' '    
         )
-    )                                      AS proc_cd,
+    )                                       AS proc_cd,
     CASE
         WHEN enc.cpt_code IS NULL THEN NULL
         ELSE 'CPT_CODE'
@@ -106,3 +108,4 @@ FROM f_encounter enc
 LEFT OUTER JOIN d_patient ptn ON enc.patient_key = ptn.patient_key
 LEFT OUTER JOIN matching_payload_deduped pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv ON enc.provider_key = prv.provider_key
+WHERE LENGTH(TRIM(COALESCE(enc.cpt_code, ''))) != 0
