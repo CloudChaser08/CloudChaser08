@@ -24,13 +24,13 @@ def load(spark, runner, table_locs, batch_date):
             if table in ['d_costar', 'd_patient', 'd_cpt', 'd_drug', 'd_icd10', 'd_icd9', 'd_lab_directory', 'd_multum_to_ndc', 'd_provider', 'd_vaccine_cpt']:
                 postprocessor.compose(
                     postprocessor.trimmify,
-                    postprocessor.nullify
+                    lambda df: postprocessor.nullify(df, ['NULL', ''])
                 )(df).cache().createOrReplaceTempView(table)
                 runner.sqlContext.table(tn).count()
             else:
                 postprocessor.compose(
                     postprocessor.trimmify,
-                    postprocessor.nullify
+                    lambda df: postprocessor.nullify(df, ['NULL', ''])
                 )(df).where("date_key != 'date_key'").repartition(5000, 'patient_key').cache().createOrReplaceTempView(table)
         except:
             df = spark.createDataFrame(
