@@ -1,7 +1,10 @@
 SELECT /*+ BROADCAST (prv) */
     CONCAT(
         '5_',
-        SUBSTR(med.date_initiated, 1, 10),
+        COALESCE(
+            SUBSTR(med.date_initiated, 1, 10),
+            '0000-00-00'
+        ),
         '_',
         med.practice_key,
         '_',
