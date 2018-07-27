@@ -145,7 +145,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         [], return_output=True
     )
 
-    normalized_procedure_1 = normalized_procedure_1.withColumn('proc_cd', explode(split(col('proc_cd'), '\s+')))
+    normalized_procedure_1 = normalized_procedure_1.withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))) \
+            .where("length(proc_cd) != 0").cache()
 
     join_keys = [
         normalized_procedure_1.proc_dt == normalized_procedure_3.proc_dt,
