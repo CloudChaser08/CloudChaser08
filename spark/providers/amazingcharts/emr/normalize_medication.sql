@@ -47,7 +47,7 @@ SELECT /*+ BROADCAST (prv) */
     med.provider_key                        AS medctn_ordg_prov_vdr_id,
     CASE
         WHEN med.provider_key IS NULL THEN NULL
-        ELSE NULL
+        ELSE 'PROVIDER_KEY'
     END                                     AS medctn_ordg_prov_vdr_id_qual,
     med.practice_key                        AS medctn_ordg_prov_alt_id,
     CASE
@@ -84,7 +84,7 @@ SELECT /*+ BROADCAST (prv) */
         '%Y-%m-%d'
     )                                       AS medctn_last_rfll_dt,
     CASE
-        WHEN med.deleted = '1' THEN 'DELETED'
+        WHEN med.deleted = 'True' THEN 'DELETED'
         ELSE NULL
     END                                     AS rec_stat_cd,
     'f_medication'                          AS prmy_src_tbl_nm
