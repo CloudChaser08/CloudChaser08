@@ -78,12 +78,12 @@ SELECT /*+ BROADCAST (prv) */
         ''
     )                                       AS proc_uom,
     CASE
-        WHEN inj.patient_refused = '1' THEN 'Patient Refused'
-        WHEN inj.patient_parent_refused = '1' THEN 'Patient Parent Refused'
+        WHEN inj.patient_refused = 'True' THEN 'Patient Refused'
+        WHEN inj.patient_parent_refused = 'True' THEN 'Patient Parent Refused'
         ELSE NULL
     END                                     AS proc_stat_cd,
     CASE
-        WHEN inj.patient_refused != '1' OR inj.patient_parent_refused != '1' THEN NULL
+        WHEN inj.patient_refused != 'True' OR inj.patient_parent_refused != 'True' THEN NULL
         ELSE 'INJECTION_REFUSED'
     END                                     AS proc_stat_cd_qual,
     inj.record_type                         AS proc_typ_cd,
@@ -93,7 +93,9 @@ SELECT /*+ BROADCAST (prv) */
     END                                     AS proc_typ_cd_qual,
     inj.route                               AS proc_admin_rte_cd,
     inj.site                                AS proc_admin_site_cd,
-    inj.deleted                             AS rec_stat_cd,
+    CASE
+        WHEN inj.deleted = 'True' THEN 'DELETED'
+    END                                     AS rec_stat_cd,
     'f_injection'                           AS prmy_src_tbl_nm
 FROM f_injection inj
     LEFT OUTER JOIN d_patient ptn ON inj.patient_key = ptn.patient_key
