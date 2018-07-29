@@ -79,8 +79,8 @@ SELECT /*+ BROADCAST (prv1) */ /*+ BROADCAST (prv2) */ /*+ BROADCAST (lbd) */
     UPPER(COALESCE(prv2.state, ''))         AS lab_test_exectg_fclty_state_cd,
     lab.specimen_source                     AS lab_test_specmn_typ_cd,
     CASE
-        WHEN lab.fasting = 'True' THEN 'Y'
-        WHEN lab.fasting = 'False' THEN 'N'
+        WHEN lab.fasting = 'True' OR lab.fasting = '1' THEN 'Y'
+        WHEN lab.fasting = 'False' OR lab.fasting = '0' THEN 'N'
         ELSE NULL
     END                                     AS lab_test_fstg_stat_flg,
     lbd.test_name                           AS lab_test_nm,

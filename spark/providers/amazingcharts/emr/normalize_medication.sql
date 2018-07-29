@@ -84,7 +84,7 @@ SELECT /*+ BROADCAST (prv) */
         '%Y-%m-%d'
     )                                       AS medctn_last_rfll_dt,
     CASE
-        WHEN med.deleted = 'True' THEN 'DELETED'
+        WHEN med.deleted = 'True' OR med.deleted = '1' THEN 'DELETED'
         ELSE NULL
     END                                     AS rec_stat_cd,
     'f_medication'                          AS prmy_src_tbl_nm
