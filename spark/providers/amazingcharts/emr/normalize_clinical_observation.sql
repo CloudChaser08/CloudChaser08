@@ -114,7 +114,7 @@ SELECT /*+ BROADCAST (prv) */
         'ESTIMATED_DATE',
         'DATE',
         'PACKS_PER_DAY',
-        'YEARS_SMOKING',
+        'YEARS_SMOKED',
         'YEARS_QUIT'
     )[e.n]                                  AS clin_obsn_uom,
     extract_date(
@@ -134,6 +134,6 @@ WHERE
         enc.estimated_delivery_date,
         enc.last_menstrual_period,
         enc.packs_per_day,
-        enc.years_quit,
-        enc.years_smoked
+        enc.years_smoked,
+        enc.years_quit
     )[e.n] IS NOT NULL
