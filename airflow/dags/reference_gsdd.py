@@ -39,13 +39,10 @@ mdag = HVDAG.HVDAG(
 def sftp_fetch_files(ds, **kwargs):
     file_path = date_utils.insert_date_into_template(TMP_PATH_TEMPLATE, kwargs)
     sftp_config = json.loads(Variable.get('gsdd_cert'))
+    path = sftp_config['path']
+    del sftp_config['path']
     for filename in FILES_OF_INTEREST:
-        sftp_utils.fetch_file(sftp_config['path'] + filename,
-                              file_path + filename,
-                              host=sftp_config['host'],
-                              username=sftp_config['user'],
-                              password=sftp_config['password'],
-                              )
+        sftp_utils.fetch_file(path + filename, file_path + filename, **sftp_cofig)
 
 
 def copy_files_to_s3(ds, **kwargs):
