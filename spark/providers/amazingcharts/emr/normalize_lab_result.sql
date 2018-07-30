@@ -99,6 +99,7 @@ SELECT /*+ BROADCAST (prv1) */ /*+ BROADCAST (prv2) */ /*+ BROADCAST (lbd) */
         WHEN lbd.test_code IS NULL THEN NULL
         ELSE 'PRACTICE_KEY_TEST_CODE'
     END                                     AS lab_test_vdr_cd_qual,
+    lbd2.test_name                          AS lab_result_nm,
     lab.observation_value                   AS lab_result_msrmt,
     lab.uom                                 AS lab_result_uom,
     CASE
@@ -148,3 +149,4 @@ LEFT OUTER JOIN matching_payload_deduped pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv1 ON lab.ordering_provider_id = prv1.provider_key
 LEFT OUTER JOIN d_provider prv2 ON lab.sign_off_id = prv2.provider_key
 LEFT OUTER JOIN d_lab_directory lbd ON lab.lab_directory_key = lbd.lab_directory_key AND lab.practice_key = lbd.practice_key
+LEFT OUTER JOIN d_lab_directory lbd2 ON lab.lab_test_code_lrd = lbd2.test_code AND lbd.lab_company = lbd2.lab_company AND lab.practice_key = lbd2.practice_key
