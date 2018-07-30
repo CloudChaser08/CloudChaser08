@@ -1,4 +1,4 @@
-from airflow.operators import SubDagOperator
+from airflow.operators import PythonOperator, SubDagOperator
 from datetime import datetime, timedelta
 import os
 import re
@@ -15,10 +15,11 @@ import subdags.split_push_files as split_push_files
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir 
 import subdags.update_analytics_db as update_analytics_db
 import util.date_utils as date_utils
+import util.s3_utils as s3_utils
 
 for m in [HVDAG, s3_validate_file, s3_fetch_file, detect_move_normalize,
           queue_up_for_matching, split_push_files, update_analytics_db,
-          date_utils, clean_up_tmp_dir]:
+          date_utils, s3_utils, clean_up_tmp_dir]:
     reload(m)
 
 DAG_NAME = 'pdx_pipeline'
@@ -54,6 +55,7 @@ TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/transactions/'
 
 TRANSACTION_FILE_NAME_TEMPLATE = 'hvfeedfile_po_record_deid_{}{}{}\d{{6}}.hvout$'
 DEID_FILE_NAME_TEMPLATE = 'hvfeedfile_header_deid_{}{}{}\d{{6}}.hvout'
+VENDOR_UUID = '3dac3f25-9e54-4ab6-82b4-3a12f7d01e85'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TMP_PATH_TEMPLATE
@@ -77,6 +79,13 @@ def get_transaction_file_paths(ds, kwargs):
                               )
     logging.info("Filtered files: {}".format(str(transaction_files)))
     return map(lambda x: file_dir + x, transaction_files) 
+
+
+def get_deid_file_paths(ds, **kwargs):
+    deid_regex = date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs, day_offset=PDX_DAY_OFFSET)
+    deid_files = [k.split('/')[-1] for k in s3_utils.list_s3_bucket(S3_TRANSACTION_RAW_URL) if re.search(deid_regex, k)]
+    logging.info('Found deid files: {}'.format(str(deid_files)))
+    kwargs['ti'].xcom_push(key='deid_files', value=deid_files)
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
@@ -232,6 +241,13 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
+get_deid_files = PythonOperator(
+   task_id='get_deid_files',
+   provide_context=True,
+   python_callable=get_deid_file_paths,
+   dag=mdag
+)
+
 #
 # Post-Matching
 #
@@ -249,17 +265,13 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds, k: [
-                date_utils.generate_insert_date_into_template_function(
-                    DEID_FILE_NAME_TEMPLATE, day_offset=PDX_DAY_OFFSET
-                )(ds, k)
-            ],
+            'expected_matching_files_func'      : lambda ds, k: k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_deid_files', key='deid_files'),
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}',
                 day_offset=PDX_DAY_OFFSET
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
-            'vendor_uuid'                       : '3dac3f25-9e54-4ab6-82b4-3a12f7d01e85',
+            'vendor_uuid'                       : VENDOR_UUID,
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/pdx/pharmacyclaims/sparkNormalizePDX.py',
             'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True
@@ -290,8 +302,9 @@ if HVDAG.HVDAG.airflow_env != 'test':
 ### DAG STRUCTURE ###
 if HVDAG.HVDAG.airflow_env != 'test':
     fetch_transaction_file.set_upstream(validate_transaction)
+    get_deid_files.set_upstream(validate_deid)
     queue_up_for_matching.set_upstream(validate_deid)
-    detect_move_normalize_dag.set_upstream(queue_up_for_matching)
+    detect_move_normalize_dag.set_upstream([get_deid_files, queue_up_for_matching])
     update_analytics_db.set_upstream(detect_move_normalize_dag)
 
 decrypt_transaction.set_upstream(fetch_transaction_file)
