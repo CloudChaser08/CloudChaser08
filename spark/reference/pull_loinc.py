@@ -19,17 +19,18 @@ S3_CONF = {
     'Key': 'marketplace/search/lab/lab.psv.gz'
 }
 
-
-sql = """
-select distinct trim(loinc_num) as loinc_code, trim(component) as loinc_component, trim(long_common_name), loinc_system as body_system, trim(loinc_class), trim(method_type) as loinc_method, trim(relatednames2) as related,
-    row_number() OVER(ORDER BY b.claims desc, b.loinc_code) as ordernum
-from ref_loinc a
-    left join
-    (select loinc_code, count(distinct claim_id) as claims
+sql1 = """
+select loinc_code, count(distinct claim_id) as claims
     from labtests
     where part_provider = 'quest' and loinc_code<>' ' and loinc_code<>'' and loinc_code is not null
     group by loinc_code
-    ) b on a.loinc_num=b.loinc_code
+"""
+
+sql2 = """
+select distinct trim(loinc_num) as loinc_code, trim(component) as loinc_component, trim(long_common_name), loinc_system as body_system, trim(loinc_class), trim(method_type) as loinc_method, trim(relatednames2) as related,
+    row_number() OVER(ORDER BY b.claims desc, b.loinc_code) as ordernum
+from ref_loinc a
+    left join loinc_popularity b on a.loinc_num=b.loinc_code
 order by 1
 """
 
@@ -40,7 +41,9 @@ spark = SparkSession.builder.master("yarn").appName("marketplace-pull-loinc").co
 def pull_loinc():
     with open('marketplace_lab.psv', 'w') as ndc_out:
         csv_writer = csv.writer(ndc_out, delimiter='|')
-        ndc_table = spark.sql(sql).collect()
+        spark.sql(sql1).cache().createOrReplaceTempView('loinc_popularity')
+        spark.table('loinc_popularity').count()
+        ndc_table = spark.sql(sql2).collect()
         for row in ndc_table:
             try:
                 csv_writer.writerow(row)
