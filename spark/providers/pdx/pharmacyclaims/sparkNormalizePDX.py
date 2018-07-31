@@ -106,9 +106,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     current_year_month = date_input[:7]
     prev_year_month = (datetime.strptime(date_input, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m')
     if not test:
-        spark.read.parquet(normalized_path + '/part_best_date={}'.format(current_year_month),
-                           normalized_path + '/part_best_date={}'.format(prev_year_month)
-                          ).createOrReplaceTempView('normalized_claims')
+        prev_part_date = spark.read.parquet(normalized_path + '/part_best_date={}'.format(prev_year_month))
+        try:
+            current_part_date = spark.read.parquet(normalized_path + '/part_best_date={}'.format(current_year_month))
+            prev_part_date.union(current_part_date).createOrReplaceTempView('normalized_claims')
+        except:
+            prev_part_date.createOrReplaceTempView('normalized_claims')
     else:
         spark.read.csv([normalized_path + '/part_best_date={}'.format(current_year_month),
                         normalized_path + '/part_best_date={}'.format(prev_year_month)],
@@ -185,12 +188,12 @@ def main(args):
     current_year_month = args.date[:7]
     prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m')
 
-    date_part = 'part_best_date={}/'
+    date_part = '/part_provider=pdx/part_best_date={}/'
     subprocess.check_call(
-        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(current_year_month), tmp_path + date_part.format(current_year_month)]
+        ['aws', 's3', 'mv', '--recursive', output_path + args.date + date_part.format(current_year_month), tmp_path + date_part.format(current_year_month)]
     )
     subprocess.check_call(
-        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(prev_year_month), tmp_path + date_part.format(prev_year_month)]
+        ['aws', 's3', 'mv', '--recursive', output_path + args.date + date_part.format(prev_year_month), tmp_path + date_part.format(prev_year_month)]
     )
     normalized_records_unloader.distcp(output_path)
 

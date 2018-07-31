@@ -27,7 +27,7 @@ DAG_NAME = 'pdx_pipeline'
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2018, 6, 4),
-    'end_date': datetime(2018, 6, 11),
+    'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
