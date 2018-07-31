@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import logging
 import os
 import re
 
@@ -18,10 +19,11 @@ import subdags.update_analytics_db as update_analytics_db
 import subdags.clean_up_tmp_dir as clean_up_tmp_dir
 import util.decompression as decompression
 import util.date_utils as date_utils
+import util.s3_utils as s3_utils
 
 for m in [s3_validate_file, s3_fetch_file, decrypt_files,
           split_push_files, queue_up_for_matching, clean_up_tmp_dir,
-          detect_move_normalize, decompression, date_utils, HVDAG]:
+          detect_move_normalize, decompression, date_utils, s3_utils, HVDAG]:
     reload(m)
 
 # Applies to all files
@@ -85,6 +87,13 @@ def get_transaction_file_paths(ds, kwargs):
         file_dir + f for f in os.listdir(file_dir)
         if re.search(expected_file_name_regex, f)
     ]
+
+
+def get_deid_file_paths(ds, **kwargs):
+    deid_regex = date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, kwargs, day_offset=CARDINAL_PMS_DAY_OFFSET)
+    deid_files = [k.split('/')[-1] for k in s3_utils.list_s3_bucket(S3_TRANSACTION_RAW_URL) if re.search(deid_regex, k)]
+    logging.info('Found deid files: {}'.format(str(deid_files)))
+    kwargs['ti'].xcom_push(key='deid_files', value=deid_files)
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
@@ -218,6 +227,13 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
+get_deid_files = PythonOperator(
+    task_id='get_deid_files',
+    provide_context=True,
+    python_callable=get_deid_file_paths,
+    dag=mdag
+)
+
 #
 # Post-Matching
 #
@@ -235,11 +251,7 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds,k: [
-                date_utils.generate_insert_date_into_template_function(
-                    'T'.join(DEID_FILE_NAME_TEMPLATE.split('T')[:-1]), day_offset=CARDINAL_PMS_DAY_OFFSET
-                )(ds, k)
-            ],
+            'expected_matching_files_func'      : lambda ds,k: k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_deid_files', key='deid_files'),
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}', day_offset=CARDINAL_PMS_DAY_OFFSET
             ),
