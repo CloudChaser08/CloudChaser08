@@ -40,7 +40,7 @@ else:
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 4, 21),
+    'start_date': datetime(2018, 6, 21),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -193,22 +193,7 @@ if HVDAG.HVDAG.airflow_env != 'test':
         dag=mdag
     )
 
-    update_analytics_db_repair_table = SubDagOperator(
-        subdag=update_analytics_db.update_analytics_db(
-            DAG_NAME,
-            'update_analytics_db_repair_table',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'sql_command_func' : lambda ds, k: """MSCK REPAIR TABLE ref_nppes"""
-            }
-        ),
-        task_id='update_analytics_db',
-        dag=mdag
-    )
-
     update_analytics_db.set_upstream(run_pyspark_routine)
-    update_analytics_db_repair_table.set_upstream(update_analytics_db)
 
 fetch_NPI_file.set_upstream(create_tmp_dir)
 unzip_file.set_upstream(fetch_NPI_file)
