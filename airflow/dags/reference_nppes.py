@@ -176,27 +176,32 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
+update_analytics_db = SubDagOperator(
+    subdag=update_analytics_db.update_analytics_db(
+        DAG_NAME,
+        'update_analytics_db',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'sql_command_func' : lambda ds, k:
+            """ ALTER TABLE ref_nppes set location """ + date_utils.insert_date_into_template(S3_PARQUET_LOCATION, k)
+        }
+    ),
+    task_id='update_analytics_db',
+    dag=mdag
+)
 
-if HVDAG.HVDAG.airflow_env != 'test':
-    update_analytics_db = SubDagOperator(
-        subdag=update_analytics_db.update_analytics_db(
-            DAG_NAME,
-            'update_analytics_db',
-            default_args['start_date'],
-            mdag.schedule_interval,
-            {
-                'sql_command_func' : lambda ds, k:
-                """ ALTER TABLE ref_nppes set location """ + date_utils.insert_date_into_template(S3_PARQUET_LOCATION, k)
-            }
-        ),
-        task_id='update_analytics_db',
-        dag=mdag
-    )
-
-    update_analytics_db.set_upstream(run_pyspark_routine)
+if HVDAG.HVDAG.airflow_env == 'test':
+    for t in ['update_analytics_db']:
+        del mdag.task_dict[t]
+        globals()[t] = DummyOperator(
+            task_id = t,
+            dag = mdag
+        )
 
 fetch_NPI_file.set_upstream(create_tmp_dir)
 unzip_file.set_upstream(fetch_NPI_file)
 push_file_to_s3.set_upstream(unzip_file)
 run_pyspark_routine.set_upstream(push_file_to_s3)
+update_analytics_db.set_upstream(run_pyspark_routine)
 clean_up_workspace.set_upstream(run_pyspark_routine)
