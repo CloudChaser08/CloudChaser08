@@ -184,7 +184,7 @@ update_analytics_db = SubDagOperator(
         mdag.schedule_interval,
         {
             'sql_command_func' : lambda ds, k:
-            """ ALTER TABLE ref_nppes set location """ + date_utils.insert_date_into_template(S3_PARQUET_LOCATION, k)
+            """ ALTER TABLE ref_nppes set location '{}'""".format(date_utils.insert_date_into_template(S3_PARQUET_LOCATION, k))
         }
     ),
     task_id='update_analytics_db',
