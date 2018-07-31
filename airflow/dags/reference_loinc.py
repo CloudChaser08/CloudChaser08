@@ -27,7 +27,7 @@ from util.hv_datadog import hv_datadog, start_dag_op, end_dag_op
 from util.hive import hive_execute
 
 TMP_PATH='/tmp/loinc_'
-FILES_OF_INTEREST=['loinc.csv','map_to.csv','source_organization.csv']
+FILES_OF_INTEREST=['Loinc.csv','MapTo.csv','SourceOrganization.csv']
 
 if Variable.get('AIRFLOW_ENV', default_var='').find('prod') != -1:
     SCHEMA='default'
