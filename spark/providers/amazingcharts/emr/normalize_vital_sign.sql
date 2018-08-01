@@ -202,7 +202,7 @@ WHERE
     ((e.n != 1 AND e.n != 2 AND e.n != 4) OR CAST(ARRAY(
         enc.body_mass_index,
         enc.diastolic,
-        enc.head_circumference,
+        REGEXP_REPLACE(enc.head_circumference, '[^0-9|\.]', ''),
         enc.hearing,
         enc.height_in_inches,
         enc.oxygen_saturation,
