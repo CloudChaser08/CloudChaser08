@@ -218,4 +218,4 @@ WHERE
         enc.vision_od,
         enc.vision_os,
         enc.weight_in_pounds
-    )[e.n] AS INT) != 0)
+    )[e.n] AS FLOAT) != 0)
