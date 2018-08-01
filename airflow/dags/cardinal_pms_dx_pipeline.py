@@ -368,11 +368,12 @@ if HVDAG.HVDAG.airflow_env == 'test':
 
 fetch_transaction.set_upstream(validate_transaction)
 queue_up_for_matching.set_upstream(validate_deid)
+get_deid_files.set_upstream(validate_deid)
 
 decrypt_transaction.set_upstream(fetch_transaction)
 split_transaction.set_upstream(decrypt_transaction)
 detect_move_normalize_dag.set_upstream(
-    [split_transaction, queue_up_for_matching]
+    [split_transaction, get_deid_files, queue_up_for_matching]
 )
 
 update_analytics_db.set_upstream(detect_move_normalize_dag)
