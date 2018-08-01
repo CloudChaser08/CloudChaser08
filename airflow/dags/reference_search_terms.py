@@ -18,7 +18,7 @@ DAG_NAME = 'reference_search_terms_mapping'
 
 NUM_NODES = 5
 NODE_TYPE = 'm4.4xlarge'
-EBS_VOLUME_SIZE = '100'
+EBS_VOLUME_SIZE = '200'
 
 INSTALL_BOTO3_STEP = (
     'Type=CUSTOM_JAR,Name="Install boto3",Jar="command-runner.jar",'
