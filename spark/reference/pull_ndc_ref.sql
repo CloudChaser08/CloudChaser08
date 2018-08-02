@@ -118,11 +118,11 @@ from default.ref_ndc_code z
 
 drop table if exists ndc_temp8;
 create temporary view ndc_temp8 as
-select ndc_code, level3 as level1, level4 as level2,
+select ndc_code, COALESCE(level3, 'Other') as level1, COALESCE(level4, 'Other') as level2,
     CASE WHEN substance_name is not null and substance_name<>'' and substance_name<>' ' then substance_name
         WHEN nonproprietary_name is not null and nonproprietary_name<>'' and nonproprietary_name<>' ' then nonproprietary_name
-        ELSE genericnamelong end as level3,
-    proprietary_name as level4
+        ELSE COALESCE(genericnamelong, 'Other') end as level3,
+    COALESCE(proprietary_name, 'Other') as level4
 from ndc_temp7 where level1<>'HUMAN OTC DRUG';
 
 
