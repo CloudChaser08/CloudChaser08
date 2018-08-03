@@ -302,9 +302,12 @@ def mask_zip_code(zip_code):
 
 
 def validate_state_code(state):
-    if state and str(state).strip().upper() in constants.states:
-        return str(state).strip().upper()
-    else:
+    try:
+        if state and str(state).strip().upper() in constants.states:
+            return str(state).strip().upper()
+        else:
+            return None
+    except:
         return None
 
 

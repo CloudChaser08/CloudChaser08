@@ -5,7 +5,7 @@ import spark.helpers.constants as constants
 
 from pyspark.sql.functions import when, col, lit
 
-from datetime import datetime
+from datetime import datetime, date
 
 
 def mk_move_file(prefix, test=False):
@@ -71,6 +71,11 @@ def unload(
     else:
         when_clause = col(date_column).isNull()
         if hvm_historical_date:
+            # When executed in pyspark, date(Y, m, d) is less than datetime(Y, m, d)
+            # Make sure that hvm_historical_date is a date type to avoid this
+            # problem
+            if type(hvm_historical_date) == datetime:
+                hvm_historical_date = hvm_historical_date.date()
             when_clause = (when_clause | (col(date_column) < hvm_historical_date))
         date_partition_val = when(when_clause, lit(NULL_PARTITION_NAME)).otherwise(col(date_column).substr(0, 7))
 

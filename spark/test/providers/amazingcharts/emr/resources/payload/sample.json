@@ -1,0 +1,10 @@
+{"gender": "F", "personid": "a", "hvid": "1", "age": 27, "parentid": null, "state": "ca", "threeDigitZip": "934", "yearOfBirth": "1850"}
+{"gender": "F", "personid": "b", "hvid": "2", "age": 27, "parentid": null, "state": "ca", "threeDigitZip": "908", "yearOfBirth": "1951"}
+{"gender": "F", "personid": "c", "hvid": "3", "age": 27, "parentid": null, "state": "tn", "threeDigitZip": "372", "yearOfBirth": "1952"}
+{"gender": "F", "personid": "d", "hvid": "4", "age": 27, "parentid": null, "state": "ca", "threeDigitZip": "927", "yearOfBirth": "1953"}
+{"gender": "F", "personid": "e", "hvid": "5", "age": 27, "parentid": null, "state": "tx", "threeDigitZip": "752", "yearOfBirth": "1954"}
+{"gender": "M", "personid": "f", "hvid": "6", "age": 27, "parentid": null, "state": "tn", "threeDigitZip": "372", "yearOfBirth": "1955"}
+{"gender": "M", "personid": "g", "hvid": "7", "age": 27, "parentid": null, "state": "ma", "threeDigitZip": "017", "yearOfBirth": "1956"}
+{"gender": "F", "personid": "h", "hvid": "8", "age": 27, "parentid": null, "state": "ca", "threeDigitZip": "926", "yearOfBirth": "1957"}
+{"gender": "F", "personid": "i", "hvid": "9", "age": 27, "parentid": null, "state": "ma", "threeDigitZip": "013", "yearOfBirth": "1958"}
+{"gender": "F", "personid": "j", "hvid": "10", "age": 45, "parentid": null, "state": "nv", "threeDigitZip": "891", "yearOfBirth": "1959"} 
