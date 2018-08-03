@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col, trim, udf, collect_list, when
+from pyspark.sql.functions import col, trim, udf, collect_list, when, broadcast
 from functools import reduce
 
 
@@ -92,7 +92,8 @@ def select_data_sample_in_date_range(start_date, end_date, date_column_name, inc
 
             sample = records_sample.alias('sample')
             full = limited_date_df.alias('full')
-            res = full.join(sample, col('full.{}'.format(record_field)) == col('sample.{}'.format(record_field)), 'leftsemi')
+            # Broadcast sample to avoid slow mergesort joins
+            res = full.join(broadcast(sample), col('full.{}'.format(record_field)) == col('sample.{}'.format(record_field)), 'leftsemi')
         else:
             total_count = limited_date_df.count()
             if total_count:
