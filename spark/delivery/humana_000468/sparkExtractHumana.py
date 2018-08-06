@@ -7,6 +7,7 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from pyspark.sql.types import StructType, StructField, StringType
 import pyspark.sql.functions as F
 import boto3
@@ -24,15 +25,22 @@ def get_extract_summary(df):
         .select('data_vendor', 'claim', 'humana_group_id').distinct() \
         .groupBy('data_vendor', 'humana_group_id').count()
 
+def get_part_file_path(list_cmd, directory):
+    for row in subprocess.check_output(list_cmd + [directory]).split('\n'):
+        file_path = row.split(' ')[-1].replace('//', '/')
+        prefix = (directory + 'part-00000')
+        if file_path.startswith(prefix):
+            return file_path
+
 def run(spark, runner, group_ids, test=False, airflow_test=False):
     ts = time.time()
     today = date.today()
 
     if airflow_test:
-        output_path_template   = 's3://salusv/testing/dewey/airflow/e2e/humana/hv000468/deliverable/{}/'
+        output_path_template   = '/staging/{}/'
         matching_path_template = 's3a://salusv/testing/dewey/airflow/e2e/humana/hv000468/payload/{}/'
-        list_cmd      = ['aws', 's3', 'ls']
-        move_cmd      = ['aws', 's3', 'mv']
+        list_cmd      = ['hadoop', 'fs', '-ls']
+        move_cmd      = ['hadoop', 'fs', '-mv']
     elif test:
         output_path_template = file_utils.get_abs_path(
             __file__, '../../test/delivery/humana/hv000468/out/{}/'
@@ -42,17 +50,17 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         matching_path_template = file_utils.get_abs_path(
             __file__, '../../test/delivery/humana/hv000468/resources/matching/{}/'
         ) + '/'
-        list_cmd      = ['ls', '-la']
+        list_cmd      = ['find']
         move_cmd      = ['mv']
 
         # Need to be able to test consistantly
         today = date(2018, 4, 26)
         ts = 1524690702.12345
     else:
-        output_path_template   = 's3://salusv/deliverable/humana/hv000468/{}/'
+        output_path_template   = '/staging/{}/'
         matching_path_template = 's3a://salusv/matching/payload/custom/humana/hv000468/{}/'
-        list_cmd      = ['aws', 's3', 'ls']
-        move_cmd      = ['aws', 's3', 'mv']
+        list_cmd      = ['hadoop', 'fs', '-ls']
+        move_cmd      = ['hadoop', 'fs', '-mv']
 
     all_patients = reduce(lambda x, y: x.union(y),
         [
@@ -149,7 +157,6 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
             local_summary[r['humana_group_id']] = []
         local_summary[r['humana_group_id']].append((r['data_vendor'], r['count']))
 
-    move_procs = []
     for group_id in group_ids:
         all_patient_count       = group_all_patient_count.get(group_id, 0)
         matched_patient_count   = group_matched_patient_count.get(group_id, 0)
@@ -166,41 +173,30 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
         medical_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
-            .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='overwrite')
-        fn = [w for r in
-            subprocess.check_output(list_cmd + [output_path]).split('\n')
-            for w in r.split(' ') if w.startswith('part-00000')][0]
-        cmd = move_cmd + [output_path + fn, output_path + 'medical_claims_{}.psv'.format(group_id)]
-        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
+            .csv(output_path, sep='|', mode='overwrite')
+        fn = get_part_file_path(list_cmd, output_path)
+        cmd = move_cmd + [fn, output_path + 'medical_claims_{}.psv'.format(group_id)]
+        subprocess.check_call(cmd)
 
         pharmacy_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
-            .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
-        fn = [w for r in
-            subprocess.check_output(list_cmd + [output_path]).split('\n')
-            for w in r.split(' ') if w.startswith('part-00000')][0]
-        cmd = move_cmd + [output_path + fn, output_path + 'pharmacy_claims_{}.psv'.format(group_id)]
-        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
+            .csv(output_path, sep='|', mode='append')
+        fn = get_part_file_path(list_cmd, output_path)
+        cmd = move_cmd + [fn, output_path + 'pharmacy_claims_{}.psv'.format(group_id)]
+        subprocess.check_call(cmd)
 
         enrollment_extract.where(F.col('humana_group_id') == F.lit(group_id)) \
             .drop('humana_group_id') \
             .repartition(1).write \
-            .csv(output_path.replace('s3://', 's3a://'), sep='|', mode='append')
-        fn = [w for r in
-            subprocess.check_output(list_cmd + [output_path]).split('\n')
-            for w in r.split(' ') if w.startswith('part-00000')][0]
-        cmd = move_cmd + [output_path + fn, output_path + 'enrollment_{}.psv'.format(group_id)]
-        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
+            .csv(output_path, sep='|', mode='append')
+        fn = get_part_file_path(list_cmd, output_path)
+        cmd = move_cmd + [fn, output_path + 'enrollment_{}.psv'.format(group_id)]
+        subprocess.check_call(cmd)
         
-        cmd = move_cmd + ['/tmp/summary_report_{}.txt'.format(group_id), output_path]
-        move_procs.append(subprocess.Popen(cmd, stderr=subprocess.PIPE))
-
-    for p in move_procs:
-        p.wait()
-        if p.returncode != 0:
-            print p.stderr.read()
-            raise Exception("Subprocess returned with code {}".format(p.returncode))
+        if not test:
+            cmd = ['hadoop', 'fs', '-put', '/tmp/summary_report_{}.txt'.format(group_id), output_path + 'summary_report_{0}.txt'.format(group_id)]
+            subprocess.check_call(cmd)
 
 def main(args):
     # init
@@ -210,9 +206,11 @@ def main(args):
     runner = Runner(sqlContext)
 
     if args.airflow_test:
+        output_path = 's3a://salusv/testing/dewey/airflow/e2e/humana/hv000468/deliverable/'
         in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-test'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-test'
     else:
+        output_path = 's3a://salusv/deliverable/humana/hv000468/'
         in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-prod'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-prod'
 
@@ -230,11 +228,18 @@ def main(args):
 
         run(spark, runner, set([m[0] for m in msgs]), airflow_test=args.airflow_test)
 
+        spark.stop()
+
+        normalized_records_unloader.distcp(output_path, '/staging/')
+
         for m in msgs:
             client.delete_message(QueueUrl=in_queue, ReceiptHandle=m[1])
 
         for m in set([m[0] for m in msgs]):
             client.send_message(QueueUrl=out_queue, MessageBody=m)
+
+        spark, sqlContext = init("Extract for Humana")
+        runner = Runner(sqlContext)
 
     spark.stop()
 
