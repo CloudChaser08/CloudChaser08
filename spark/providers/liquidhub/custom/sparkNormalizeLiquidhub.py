@@ -13,6 +13,7 @@ from pyspark.sql.types import StringType, StructType, StructField
 from pyspark.sql.functions import udf, lit
 import transactions_lhv1, transactions_lhv2
 import spark.helpers.schema_enforcer as schema_enforcer
+import subprocess
 
 def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     if test:
@@ -105,8 +106,11 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
             spark, runner, 'hdfs:///staging/' + group_id + '/', 'liquidhub_deliverable',
             output_file_name=output_file_name)
         normalized_records_unloader.unload_delimited_file(
-            spark, runner, 'hdfs:///staging/' + group_id + '/', 'liquidhub_summary',
+            spark, runner, 'hdfs:///staging/' + group_id + '/report/', 'liquidhub_summary',
             output_file_name='summary_report_' + group_id + '.txt')
+        subprocess.check_call(['hadoop', 'fs', '-mv', 'hdfs:///staging/' + group_id + '/report/summary_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/summary_report_' + group_id + '.txt'])
+        subprocess.check_call(['hadoop', 'fs', '-rm', '-r', 'hdfs:///staging/' + group_id + '/report/'])
+        
 
 def main(args):
     # init
