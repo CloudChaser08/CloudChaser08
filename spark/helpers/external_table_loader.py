@@ -8,6 +8,7 @@ def _get_table_as_df(sqlContext, schema, table_name):
         url=ANALYTICS_DB_CONN + '/' + schema,
         table=table_name,
         properties={
+            "user"   : "hadoop",
             "driver" : HIVE_DRIVER
         }
     )
