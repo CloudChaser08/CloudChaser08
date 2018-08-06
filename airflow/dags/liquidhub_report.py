@@ -52,6 +52,21 @@ RECIPIENTS = [
     'Ilia Fishbein<ifishbein@healthverity.com>'
 ]
 
+def get_opp_id(manufacturer, source, version):
+    OPP_ID_MAPPING = {
+        ('amgen', 'liquidhub', 'lhv2')      : 'HV-000387',
+        ('novartis', 'liquidhub', 'lhv2')   : 'HV-000728',
+        ('amgen', 'accredo', 'lhv1')        : 'HV-000213',
+        ('amgen', 'cigna', 'lhv1')          : 'HV-000213',
+        ('amgen', 'briova', 'lhv1')         : 'HV-000213',
+        ('amgen', 'liquidhub', 'lhv1')      : 'HV-000213',
+        ('lilly', 'liquidhub', 'lhv2')      : 'HV-000637',
+        ('lilly', 'accredo', 'lhv2')        : 'HV-000637',
+        ('lilly', 'cigna', 'lhv2')          : 'HV-000637'
+    }
+
+    return OPP_ID_MAPPING.get((manufacturer.lower(), source.lower(), version.lower()), 'UNKNOWN')
+
 def get_delivered_groups(exec_date):
     session = settings.Session()
     deliveries = session.query(TaskInstance) \
@@ -174,6 +189,7 @@ def do_generate_monthly_report(ds, **kwargs):
     if groups:
         report_writer.writerow(['File ID', 'Date Received', 'Date Returned'])
     for group in groups:
+        feed_version = group['id'].split('_')[0]
         fn = SUMMARY_TEMPLATE.format(group['id'])
         f  = get_tmp_dir(ds, kwargs) + fn
         received_ts  = get_group_received_ts(group['id'])
@@ -181,7 +197,7 @@ def do_generate_monthly_report(ds, **kwargs):
         report_writer.writerow([group['id'], received_ts.isoformat(), delivered_ts.isoformat()])
         with open(f) as fin:
             for line in fin:
-                fields = tuple(line.strip().split('|'))
+                fields = tuple(line.strip().split('|') + [feed_version])
                 if fields not in source_manufacturer_file_count:
                     source_manufacturer_file_count[fields] = 0
                 source_manufacturer_file_count[fields] += 1
@@ -192,7 +208,7 @@ def do_generate_monthly_report(ds, **kwargs):
 
     report_writer.writerow(['Opp ID', 'Source', 'Manufacturer', 'File Count'])
     for (key, val) in source_manufacturer_file_count.items():
-        report_writer.writerow(['', key[0], key[1], val])
+        report_writer.writerow([get_opp_id(*key), key[0], key[1], val])
 
     if groups:
         report_writer.writerow([])
