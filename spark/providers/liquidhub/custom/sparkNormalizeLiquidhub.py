@@ -31,7 +31,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     else:
         incoming_path = 's3a://salusv/incoming/custom/lhv2/{}/'.format(group_id)
         matching_path = 's3a://salusv/matching/payload/custom/lhv2/{}/'.format(group_id)
-        output_dir = constants.hdfs_staging_dir + date_input.replace('-', '/') + '/'
+        output_dir = constants.hdfs_staging_dir + group_id + '/'
 
     # Possible group id patterns
     # LHV1_<source>_PatDemo_YYYYMMDD_v#
@@ -92,7 +92,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # and then any file ID that HealthVerity wants, we'll use a combination
     # of the original group date and version number
     output_file_name  = '_'.join(group_id_parts[:-2])
-    if test:
+    if not test:
         output_file_name += '_' + datetime.now(tz.gettz('America/New York')).date().isoformat().replace('-', '')
     else:
         output_file_name += '_' + datetime(2018, 7, 15).date().isoformat().replace('-', '')
@@ -105,11 +105,10 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
         normalized_records_unloader.unload_delimited_file(
             spark, runner, 'hdfs:///staging/' + group_id + '/', 'liquidhub_deliverable',
             output_file_name=output_file_name)
-        normalized_records_unloader.unload_delimited_file(
-            spark, runner, 'hdfs:///staging/' + group_id + '/report/', 'liquidhub_summary',
-            output_file_name='summary_report_' + group_id + '.txt')
-        subprocess.check_call(['hadoop', 'fs', '-mv', 'hdfs:///staging/' + group_id + '/report/summary_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/summary_report_' + group_id + '.txt'])
-        subprocess.check_call(['hadoop', 'fs', '-rm', '-r', 'hdfs:///staging/' + group_id + '/report/'])
+        with open('/tmp/summary_report_' + group_id + '.txt', 'w') as fout:
+            summ = spark.table('liquidhub_summary').collect()
+            fout.write('\n'.join(['{}|{}'.format(r.source_name, r.manufacturer) for r in summ]))
+        subprocess.check_call(['hadoop', 'fs', '-put', '/tmp/summary_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/summary_report_' + group_id + '.txt'])
         
 
 def main(args):
