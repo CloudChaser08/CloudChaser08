@@ -54,7 +54,14 @@ RECIPIENTS = [
     'Ilia Fishbein<ifishbein@healthverity.com>'
 ]
 
-def get_opp_id(source, manufacturer, version):
+def get_opp_id_and_name(source, manufacturer, version):
+    OPP_NAME = {
+        'HV-000387' : 'Amgen Patient Master',
+        'HV-000728' : 'Novartis Aimovig',
+        'HV-000213' : 'Amgen SP Aggregation',
+        'HV-000637' : 'Lilly SP Aggregation'
+    }
+
     OPP_ID_MAPPING = {
         ('amgen', None, 'lhv2')      : 'HV-000387',
         ('novartis', None, 'lhv2')   : 'HV-000728',
@@ -69,9 +76,10 @@ def get_opp_id(source, manufacturer, version):
 
     opp_id = OPP_ID_MAPPING.get((manufacturer.lower(), source.lower(), version.lower()))
     if opp_id:
-        return opp_id
+        return (opp_id, OPP_NAME.get(opp_id, 'UNKOWN'))
 
-    return OPP_ID_MAPPING.get((manufacturer.lower(), None, version.lower()), 'UNKNOWN')
+    opp_id = OPP_ID_MAPPING.get((manufacturer.lower(), None, version.lower()), 'UNKNOWN')
+    return (opp_id, OPP_NAME.get(opp_id, 'UNKOWN'))
 
 def get_delivered_groups(exec_date):
     session = settings.Session()
@@ -167,14 +175,15 @@ def do_generate_daily_report(ds, **kwargs):
         report_writer.writerow([])
         report_writer.writerow([])
 
-    report_writer.writerow(['Opp ID', 'Source', 'Manufacturer', 'File Count'])
+    report_writer.writerow(['Opp ID', 'Opp Name', 'Source', 'Manufacturer', 'File Count'])
     for (key, val) in source_manufacturer_file_count.items():
-        report_writer.writerow([get_opp_id(*key), key[0], key[1], val])
+        opp_d = get_opp_id_and_name(*key)
+        report_writer.writerow([opp_d[0], opp_d[1], key[0], key[1], val])
 
     if groups:
         report_writer.writerow([])
         report_writer.writerow([])
-    report_writer.writerow(['TOTAL', '-', '-', len(groups)])
+    report_writer.writerow(['TOTAL', '-', '-', '-', len(groups)])
 
     daily_report_file.close()
 
@@ -213,14 +222,15 @@ def do_generate_monthly_report(ds, **kwargs):
         report_writer.writerow([])
         report_writer.writerow([])
 
-    report_writer.writerow(['Opp ID', 'Source', 'Manufacturer', 'File Count'])
+    report_writer.writerow(['Opp ID', 'Opp Name', 'Source', 'Manufacturer', 'File Count'])
     for (key, val) in source_manufacturer_file_count.items():
-        report_writer.writerow([get_opp_id(*key), key[0], key[1], val])
+        opp_d = get_opp_id_and_name(*key)
+        report_writer.writerow([opp_d[0], opp_d[1], key[0], key[1], val])
 
     if groups:
         report_writer.writerow([])
         report_writer.writerow([])
-    report_writer.writerow(['TOTAL', '-', '-', len(groups)])
+    report_writer.writerow(['TOTAL', '-', '-', '-', len(groups)])
 
     monthly_report_file.close()
 
