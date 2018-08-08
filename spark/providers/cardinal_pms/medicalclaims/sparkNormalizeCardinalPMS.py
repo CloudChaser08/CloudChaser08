@@ -122,7 +122,7 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
           .createOrReplaceTempView('service_line_diags')
 
     # Create exploder table for claim
-    exploder.generate_exploder_table(spark, 8, 'claim_exploder')
+    exploder.generate_exploder_table(spark, 12, 'claim_exploder')
     logging.debug('Created exploder for claim')
 
     # Normalize claim
