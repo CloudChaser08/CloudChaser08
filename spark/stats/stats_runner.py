@@ -8,7 +8,7 @@ import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
 
 ALL_STATS = [
-    'key_stats', 'longitudinality', 'year_over_year', 'fill_rates', 'top_values', 'epi'
+    'key_stats', 'longitudinality', 'year_over_year', 'fill_rate', 'top_values', 'epi'
 ]
 EMR_ENCOUNTER_STATS = ['longitudinality', 'year_over_year']
 
