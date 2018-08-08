@@ -381,9 +381,7 @@
             "key_stats"         : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "earliest_date"     : "2003-01-01",
-            "index_all_dates"   : true,
-            "index_null_dates"  : true
+            "earliest_date"     : "2003-01-01"
         },
         {
             "name"              : "amazingcharts",
