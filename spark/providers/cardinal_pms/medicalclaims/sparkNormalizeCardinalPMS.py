@@ -156,8 +156,7 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
         postprocessor.add_universal_columns(
             feed_id='41',
             vendor_id='188',
-            filename='pms_record.{}'.format(date_obj.strftime('%Y%m%d'),
-            model_version='08')
+            filename='pms_record.{}'.format(date_obj.strftime('%Y%m%d'))
         ),
         medical_priv.filter,
         schema_enforcer.apply_schema_func(schema)
