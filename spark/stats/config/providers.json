@@ -138,39 +138,39 @@
               {
                 "datatype"        : "emr_clin_obsn",
                 "fill_rate"       : true,
-                "top_values"      : true,
+                "top_values"      : true
               }, {
                 "datatype"        : "emr_medctn",
                 "fill_rate"       : true,
-                "top_values"      : true,
+                "top_values"      : true
               }, {
                 "datatype"        : "emr_enc",
                 "fill_rate"       : true,
-                "top_values"      : true,
+                "top_values"      : true
               }, {
                 "datatype"        : "emr_vit_sign",
                 "fill_rate"       : true,
-                "top_values"      : true,
+                "top_values"      : true
               }, {
                 "datatype"        : "emr_prov_ord",
                 "fill_rate"       : true,
-                "top_values"      : true,
+                "top_values"      : true
               }, {
                 "datatype"        : "emr_lab_result",
                 "fill_rate"       : true,
-                "top_values"      : true,
+                "top_values"      : true
               }, {
                 "datatype"        : "emr_lab_ord",
                 "fill_rate"       : true,
-                "top_values"      : true,
+                "top_values"      : true
               }, {
                 "datatype"        : "emr_proc",
                 "fill_rate"       : true,
-                "top_values"      : true,
+                "top_values"      : true
               }, {
                 "datatype"        : "emr_diag",
                 "fill_rate"       : true,
-                "top_values"      : true,
+                "top_values"      : true
               }
             ],
             "epi_calcs"         : true,
@@ -285,19 +285,6 @@
             "earliest_date"     : "2011-01-01"
         },
         {
-            "name"              : "mckesson_res",
-            "datafeed_id"       : "36",
-            "datatype"          : "pharmacyclaims",
-            "record_field"      : "claim_id",
-            "fill_rate"         : true,
-            "key_stats"         : true,
-            "top_values"        : true,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : null,
-            "earliest_date"     : "2011-01-01"
-        },
-        {
             "name"              : "mckesson_macro_helix",
             "datafeed_id"       : "51",
             "datatype"          : "pharmacyclaims",
@@ -311,32 +298,6 @@
             "earliest_date"     : "2016-01-01"
         },
         {
-            "name"              : "diplomat",
-            "datafeed_id"       : "34",
-            "datatype"          : "pharmacyclaims",
-            "record_field"      : "claim_id",
-            "fill_rate"         : true,
-            "key_stats"         : true,
-            "top_values"        : true,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : null,
-            "earliest_date"     : "2015-01-01"
-        },
-        {
-            "name"              : "apothecary_by_design",
-            "datafeed_id"       : "45",
-            "datatype"          : "pharmacyclaims",
-            "record_field"      : "claim_id",
-            "fill_rate"         : true,
-            "key_stats"         : true,
-            "top_values"        : true,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : null,
-            "earliest_date"     : "2017-01-01"
-        },
-        {
             "name"              : "cardinal_vitalpath",
             "datafeed_id"       : "30",
             "datatype"          : "pharmacyclaims",
@@ -345,8 +306,8 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
-            "earliest_date"     : "2012-02-02"
+            "epi_calcs"         : true,
+            "earliest_date"     : "2012-02-01"
         },
         {
             "name"              : "cardinal_pds",
@@ -359,7 +320,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : true,
-            "earliest_date"     : "2011-01-01"
+            "earliest_date"     : "2011-02-01"
         },
         {
             "name"              : "mckesson_res",
@@ -524,30 +485,6 @@
             "epi_calcs"         : null
         },
         {
-            "name"              : "epsilon",
-            "datafeed_id"       : "42",
-            "datatype"          : "events",
-            "earliest_date"     : "2015-09-01",
-            "fill_rate"         : false,
-            "key_stats"         : true,
-            "top_values"        : false,
-            "longitudinality"   : false,
-            "year_over_year"    : false,
-            "epi_calcs"         : null
-        },
-        {
-            "name"              : "acxiom",
-            "datafeed_id"       : "50",
-            "datatype"          : "events",
-            "earliest_date"     : "2017-01-01",
-            "fill_rate"         : false,
-            "key_stats"         : true,
-            "top_values"        : false,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : null
-        },
-        {
             "name"              : "alliance",
             "datafeed_id"       : "56",
             "datatype"          : "events",
@@ -557,7 +494,9 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : true,
-            "earliest_date"     : "2015-04-01"
+            "earliest_date"     : "2015-04-01",
+            "index_all_dates"   : true,
+            "index_null_dates"  : true
         },
         {
             "name"              : "diplomat",
@@ -596,30 +535,6 @@
             "earliest_date"     : "2017-01-01"
         },
         {
-            "name"              : "cardinal_vitalpath",
-            "datafeed_id"       : "30",
-            "datatype"          : "pharmacyclaims",
-            "fill_rate"         : true,
-            "key_stats"         : true,
-            "top_values"        : true,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : true,
-            "earliest_date"     : "2013-01-01"
-        },
-        {
-            "name"              : "cardinal_pds",
-            "datafeed_id"       : "39",
-            "datatype"          : "pharmacyclaims",
-            "fill_rate"         : true,
-            "key_stats"         : true,
-            "top_values"        : true,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : true,
-            "earliest_date"     : "2011-02-01"
-        },
-        {
             "name"              : "epsilon",
             "datafeed_id"       : "42",
             "datatype"          : "events",
@@ -641,19 +556,9 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : true,
-            "earliest_date"     : "1990-01-01"
-        },
-        {
-            "name"              : "alliance",
-            "datafeed_id"       : "56",
-            "datatype"          : "events",
-            "fill_rate"         : true,
-            "key_stats"         : true,
-            "top_values"        : false,
-            "longitudinality"   : true,
-            "year_over_year"    : true,
-            "epi_calcs"         : true,
-            "earliest_date"     : "1900-01-01"
+            "earliest_date"     : "2017-01-01",
+            "index_all_dates"   : true,
+            "index_null_dates"  : true
         },
         {
             "name"              : "cardinal_raintree_emr",
