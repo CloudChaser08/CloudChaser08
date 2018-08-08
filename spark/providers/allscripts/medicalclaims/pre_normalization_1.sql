@@ -20,7 +20,7 @@ SELECT
             sln.service_diagnosis_code_pointer_3,
             sln.service_diagnosis_code_pointer_4
         )
-    )                               AS linked_and_unlinked_diagnoses
+    )                               AS linked_diagnoses
 FROM header clm
 LEFT JOIN serviceline sln
     ON clm.header_entity_id = sln.service_entity_id

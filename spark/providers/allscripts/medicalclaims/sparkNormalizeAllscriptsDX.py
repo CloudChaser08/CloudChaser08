@@ -72,9 +72,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     records_loader.load_and_clean_all(runner, input_path, transactions, 'csv', '|', partitions=1000)
     explode.generate_exploder_table(spark, 8, 'diag_exploder')
 
-    runner.run_spark_script('pre_normalization.sql', return_output=True) \
+    runner.run_spark_script('pre_normalization_1.sql', return_output=True) \
             .createOrReplaceTempView('tmp')
-    normalized = runner.run_spark_script('normalize.sql', return_output=True)
+    normalized_related = runner.run_spark_script('normalize_1.sql', return_output=True).cache()
+    normalized_related.createOrReplaceTempView('related_diagnoses_records')
+    normalized_related.cache()
+    runner.run_spark_script('pre_normalization_2.sql', return_output=True) \
+            .createOrReplaceTempView('tmp')
+    normalized_unrelated = runner.run_spark_script('normalize_2.sql', return_output=True)
+
+    normalized = schema_enforcer.apply_schema(normalized_related, schema) \
+        .union(schema_enforcer.apply_schema(normalized_unrelated, schema))
 
     postprocessed = postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),

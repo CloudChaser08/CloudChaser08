@@ -1,4 +1,4 @@
-SELECT
+SELECT DISTINCT
     header_entity_id                        AS claim_id,
     hvid                                    AS hvid,
     header_version_code                     AS source_version,
@@ -16,48 +16,14 @@ SELECT
         substring(header_create_date, length(header_create_date) - 5, 8), '%y%m%d'
     )                                       AS date_received,
     extract_date(
-        substring(service_service_from_date, 1, 8), '%Y%m%d'
+        substring(earliest_service_date, 1, 8), '%Y%m%d'
     )                                       AS date_service,
     extract_date(
-        substring(service_service_to_date, 1, 8), '%Y%m%d'
+        substring(latest_service_date, 1, 8), '%Y%m%d'
     )                                       AS date_service_end,
     service_place_of_service                AS place_of_service_std_id,
-    CASE WHEN linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL
-            OR linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        THEN service_charge_line_number
-    END                                     AS service_line_number,
-    linked_and_unlinked_diagnoses[x.n][0]   AS diagnosis_code,
-    linked_and_unlinked_diagnoses[x.n][1]   AS diagnosis_priority,
-    CASE WHEN linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL
-            OR linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        THEN service_std_chg_line_hcpcs_procedure_code
-    END                                     AS procedure_code,
-    CASE WHEN linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL
-            OR linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        THEN service_units_of_service
-    END                                     AS procedure_units_billed,
-    CASE WHEN linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL
-            OR linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        THEN service_hcpcs_modifier_1
-    END                                     AS procedure_modifier_1,
-    CASE WHEN linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL
-            OR linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        THEN service_hcpcs_modifier_2
-    END                                     AS procedure_modifier_2,
-    CASE WHEN linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL
-            OR linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        THEN service_hcpcs_modifier_3
-    END                                     AS procedure_modifier_3,
-    CASE WHEN linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL
-            OR linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        THEN service_hcpcs_modifier_4
-    END                                     AS procedure_modifier_4,
-    CASE WHEN linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL
-            OR linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        THEN service_ndc_code
-    END                                     AS ndc_code,
+    all_diagnoses[x.n][0]                   AS diagnosis_code,
     header_source_of_payment                AS medical_coverage_type,
-    service_line_charges                    AS line_charge,
     header_total_claim_charge_amount        AS total_charge,
     COALESCE(service_rendering_provider_npi, header_rendering_provider_npi)
                                             AS prov_rendering_npi,
@@ -67,6 +33,7 @@ SELECT
     COALESCE(service_service_facility_npi, header_facility_lab_npi)
                                             AS prov_facility_npi,
     header_primary_payer_name               AS payer_name,
+    header.primary_payer_tspid              AS payer_plan_id,
     header_insurance_type_code              AS payer_type,
     CASE WHEN service_rendering_provider_tax_id_qual IN ('24', '34')
             THEN service_rendering_provider_primary_id
@@ -156,7 +123,6 @@ SELECT
     pcn                                     AS medical_claim_link_text
 FROM tmp
     CROSS JOIN diag_exploder x
-WHERE x.n < size(linked_and_unlinked_diagnoses) AND
-    (linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        OR linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL
-        OR service_charge_line_number = '1')
+WHERE all_diagnoses[x.n] IS NOT NULL
+    AND all_diagnoses[x.n] not in linked_diagnoses
+    AND service_charge_line_number = '1'
