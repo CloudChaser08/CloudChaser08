@@ -157,8 +157,8 @@ def run_marketplace_stats(
         - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
 
-    global ALL_DATA, SAMPLE_DATA, SAMPLE_DATA_MULTIPLIER
-    ALL_DATA = SAMPLE_DATA = SAMPLE_DATA_MULTIPLIER = None
+    global ALL_DATA, SAMPLED_DATA, SAMPLED_DATA_MULTIPLIER
+    ALL_DATA = SAMPLED_DATA = SAMPLED_DATA_MULTIPLIER = None
 
     # pull out some variables from provider_conf
     earliest_date = provider_conf['earliest_date']
