@@ -76,7 +76,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             .createOrReplaceTempView('tmp')
     normalized_related = runner.run_spark_script('normalize_1.sql', return_output=True).cache()
     normalized_related.createOrReplaceTempView('related_diagnoses_records')
-    normalized_related.cache()
+    normalized_related.count()
     runner.run_spark_script('pre_normalization_2.sql', return_output=True) \
             .createOrReplaceTempView('tmp')
     normalized_unrelated = runner.run_spark_script('normalize_2.sql', return_output=True)

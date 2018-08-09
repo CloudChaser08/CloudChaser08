@@ -44,7 +44,7 @@ SELECT
     COALESCE(service_service_facility_npi, header_facility_lab_npi)
                                             AS prov_facility_npi,
     header_primary_payer_name               AS payer_name,
-    header.primary_payer_tspid              AS payer_plan_id,
+    header_primary_payer_tspid              AS payer_plan_id,
     header_insurance_type_code              AS payer_type,
     CASE WHEN service_rendering_provider_tax_id_qual IN ('24', '34')
             THEN service_rendering_provider_primary_id
@@ -134,6 +134,6 @@ SELECT
     pcn                                     AS medical_claim_link_text
 FROM tmp
     CROSS JOIN diag_exploder x
-WHERE x.n < size(linked_and_unlinked_diagnoses) AND
-    (linked_and_unlinked_diagnoses[x.n][0] IS NULL
-        OR linked_and_unlinked_diagnoses[x.n][1] IS NOT NULL)
+WHERE x.n < size(linked_diagnoses) AND
+    (linked_diagnoses[x.n][0] IS NULL
+        OR linked_diagnoses[x.n][1] IS NOT NULL)

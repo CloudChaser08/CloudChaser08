@@ -15,14 +15,10 @@ SELECT DISTINCT
     extract_date(
         substring(header_create_date, length(header_create_date) - 5, 8), '%y%m%d'
     )                                       AS date_received,
-    extract_date(
-        substring(earliest_service_date, 1, 8), '%Y%m%d'
-    )                                       AS date_service,
-    extract_date(
-        substring(latest_service_date, 1, 8), '%Y%m%d'
-    )                                       AS date_service_end,
+    earliest_service_date                   AS date_service,
+    latest_service_date                     AS date_service_end,
     service_place_of_service                AS place_of_service_std_id,
-    all_diagnoses[x.n][0]                   AS diagnosis_code,
+    all_diagnoses[x.n]                      AS diagnosis_code,
     header_source_of_payment                AS medical_coverage_type,
     header_total_claim_charge_amount        AS total_charge,
     COALESCE(service_rendering_provider_npi, header_rendering_provider_npi)
@@ -33,7 +29,7 @@ SELECT DISTINCT
     COALESCE(service_service_facility_npi, header_facility_lab_npi)
                                             AS prov_facility_npi,
     header_primary_payer_name               AS payer_name,
-    header.primary_payer_tspid              AS payer_plan_id,
+    header_primary_payer_tspid              AS payer_plan_id,
     header_insurance_type_code              AS payer_type,
     CASE WHEN service_rendering_provider_tax_id_qual IN ('24', '34')
             THEN service_rendering_provider_primary_id
@@ -124,5 +120,5 @@ SELECT DISTINCT
 FROM tmp
     CROSS JOIN diag_exploder x
 WHERE all_diagnoses[x.n] IS NOT NULL
-    AND all_diagnoses[x.n] not in linked_diagnoses
+    AND NOT array_contains(linked_diagnoses, all_diagnoses[x.n])
     AND service_charge_line_number = '1'
