@@ -52,6 +52,9 @@ def do_queue_up_for_matching(ds, **kwargs):
     if 'passthrough_only' in kwargs and kwargs['passthrough_only']:
         queue_up_cmd.append("true")
 
+    if 'matching-engine' in kwargs and kwargs['matching-engine']:
+        queue_up_cmd[3] = kwargs['matching-engine']
+
     if 'priority' in kwargs:
         queue_up_cmd[4] = kwargs['priority']
 
