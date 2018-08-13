@@ -77,6 +77,8 @@ def convert_value(value, conversion):
             return convert_cm_to_in(value)
         elif conversion == 'CENTIGRADE_TO_FAHRENHEIT':
             return convert_celsius_to_fahrenheit(value)
+        elif conversion == 'METERS_TO_INCHES':
+            return convert_m_to_in(value)
         elif conversion == '' or conversion is None:
             return value
 
@@ -91,6 +93,13 @@ def convert_kg_to_lb(value):
 def convert_cm_to_in(value):
     try:
         return round(float(value) * 0.3937, 2)
+    except:
+        return None
+
+
+def convert_m_to_in(value):
+    try:
+        return round(float(value) * 39.3701, 2)
     except:
         return None
 
