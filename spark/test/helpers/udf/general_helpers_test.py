@@ -52,6 +52,15 @@ def test_convert_cm_to_in():
     assert gh.convert_cm_to_in(100) == 39.37
 
 
+def test_convert_m_to_in():
+    assert gh.convert_m_to_in(None) is None
+
+    assert gh.convert_m_to_in(0) == 0
+    assert gh.convert_m_to_in(0.1) == 3.94
+    assert gh.convert_m_to_in(1) == 39.37
+    assert gh.convert_m_to_in(5) == 196.85
+
+
 def test_convert_kg_to_lb():
     assert gh.convert_kg_to_lb(None) is None
 
