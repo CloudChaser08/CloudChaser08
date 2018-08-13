@@ -88,23 +88,27 @@ def get_file_paths_func(template, zipped = False):
 
     return out
 
-def get_deid_demographics_file_names(ds, kwargs):
+def get_deid_demographics_file_names(ds, kwargs, with_s3_prefix=True):
+    s3_prefix = S3_TRANSACTION_RAW_URL if with_s3_prefix else ''
     return [
-        S3_TRANSACTION_RAW_URL + f + '.out' for f in 
+        s3_prefix + f + '.out' for f in
         kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='persist_batch_file_names', key='batch_file_names')
         if 'demographics' in f
     ]
 
-def get_deid_not_demographics_file_names(ds, kwargs):
+def get_deid_not_demographics_file_names(ds, kwargs, with_s3_prefix=True):
+    s3_prefix = S3_TRANSACTION_RAW_URL if with_s3_prefix else ''
     return [
-        S3_TRANSACTION_RAW_URL + f + '.out' for f in 
+        s3_prefix + f + '.out' for f in
         kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='persist_batch_file_names', key='batch_file_names')
         if 'demographics' not in f
     ]
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
-    file_names = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='persist_batch_file_names', key='batch_file_names'),
-    return [[fname + '.out', fname + '.out.gz'] for fname in file_names]
+    file_dir = get_tmp_dir(ds, kwargs)
+    file_names = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='persist_batch_file_names', key='batch_file_names')
+    logging.info(file_names)
+    return [[file_dir + fname + '.pout', file_dir + fname + '.pout.gz'] for fname in file_names]
 
 def generate_file_validation_task(
         task_id, path_template, minimum_file_size
@@ -224,7 +228,7 @@ def generate_file_split_task(task_id, path_template, subdir):
                     date_utils.generate_insert_date_into_template_function(
                         S3_TRANSACTION_PROCESSED_URL_TEMPLATE + subdir + '/', day_offset=XIFIN_DX_DAY_OFFSET
                     ),
-                'split_size'               : '20M'
+                'split_size'               : '100M'
             }
         ),
         task_id='split_' + task_id + '_files',
@@ -271,7 +275,7 @@ queue_up_for_passthrough_matching = SubDagOperator(
 # Post-Matching
 #
 def do_detect_full_matching_done(ds, **kwargs):
-    deid_files = get_deid_demographics_file_names(ds, kwargs)
+    deid_files = get_deid_demographics_file_names(ds, kwargs, False)
     s3_path_prefix = S3_PROD_MATCHING_URL_TEMPLATE.format('prod')
     template = '{}{}*DONE*'
     for deid_file in deid_files:
@@ -290,7 +294,7 @@ detect_full_matching_done = PythonOperator(
 )
 
 def do_detect_passthrough_matching_done(ds, **kwargs):
-    deid_files = get_deid_demographics_file_names(ds, kwargs)
+    deid_files = get_deid_not_demographics_file_names(ds, kwargs, False)
     s3_path_prefix = S3_PROD_MATCHING_URL_TEMPLATE.format('xifin-passthrough')
     template = '{}{}*DONE*'
     for deid_file in deid_files:
@@ -309,12 +313,12 @@ detect_passthrough_matching_done = PythonOperator(
 )
 
 def do_move_full_matching_payloads(ds, **kwargs):
-    deid_files = get_deid_demographics_file_names(ds, kwargs)
-    date_path = date_utils.insert_date_into_template_function('{}/{}/{}/', k, day_offset=XIFIN_DX_DAY_OFFSET),
+    deid_files = get_deid_demographics_file_names(ds, kwargs, False)
+    date_path = date_utils.insert_date_into_template('{}/{}/{}/', kwargs, day_offset=XIFIN_DX_DAY_OFFSET)
     for deid_file in deid_files:
-        s3_prefix = S3_PROD_MATCHING_URL.format('prod') + deid_file
+        s3_prefix = S3_PROD_MATCHING_URL_TEMPLATE.format('prod') + deid_file
         for payload_file in s3_utils.list_s3_bucket(s3_prefix):
-            directory = [f_type for f_type in XIFIN_FILE_TYPES if f_type in payload_file][1]
+            directory = [f_type for f_type in XIFIN_FILE_TYPES if f_type in payload_file][0]
             s3_utils.copy_file(payload_file, S3_PAYLOAD_DEST + date_path + directory + '/' + payload_file.split('/')[-1])
 
 move_full_matching_payloads = PythonOperator(
@@ -325,10 +329,10 @@ move_full_matching_payloads = PythonOperator(
 )
 
 def do_move_passthrough_matching_payloads(ds, **kwargs):
-    deid_files = get_deid_not_demographics_file_names(ds, kwargs)
-    date_path = date_utils.insert_date_into_template_function('{}/{}/{}/', k, day_offset=XIFIN_DX_DAY_OFFSET),
+    deid_files = get_deid_not_demographics_file_names(ds, kwargs, False)
+    date_path = date_utils.insert_date_into_template('{}/{}/{}/', kwargs, day_offset=XIFIN_DX_DAY_OFFSET)
     for deid_file in deid_files:
-        s3_prefix = S3_PROD_MATCHING_URL.format('xifin-passthrough') + deid_file
+        s3_prefix = S3_PROD_MATCHING_URL_TEMPLATE.format('xifin-passthrough') + deid_file
         for payload_file in s3_utils.list_s3_bucket(s3_prefix):
             directory = [f_type for f_type in XIFIN_FILE_TYPES if f_type in payload_file][0]
             s3_utils.copy_file(payload_file, S3_PAYLOAD_DEST + date_path + directory + '/' + payload_file.split('/')[-1])
