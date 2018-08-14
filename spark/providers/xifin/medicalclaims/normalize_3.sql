@@ -16,7 +16,6 @@ SELECT
     EXTRACT_DATE(demo.final_rpt_date, '%m/%d/%Y', CAST({min_date} AS DATE))   AS date_service_end,
     EXTRACT_DATE(demo.admission_date, '%m/%d/%Y', CAST({min_date} AS DATE))   AS inst_date_admitted,
     EXTRACT_DATE(demo.discharge_dt, '%m/%d/%Y', CAST({min_date} AS DATE))     AS inst_date_discharged,
-    MD5(proc.place_of_svc)                                                    AS place_of_service_vendor_id,
     diag.diag_code                                                            AS diagnosis_code,
     CASE
     WHEN diag.diag_code IS NOT NULL
@@ -42,6 +41,7 @@ SELECT
     payor1.payor_id                                                           AS payer_vendor_id,
     payor1.payor_name                                                         AS payer_name,
     demo.primary_upin                                                         AS prov_rendering_upin,
+    proc.billing_facility_id                                                  AS prov_billing_vendor_id,
     COALESCE(demo.ordering_upin, demo.referring_upin)                         AS prov_referring_upin,
     SUBSTRING(
         demo.ordering_phys_name, 1, LOCATE(',', demo.ordering_phys_name) - 1
@@ -49,7 +49,7 @@ SELECT
     SUBSTRING(
         demo.ordering_phys_name, LOCATE(',', demo.ordering_phys_name) + 1, 999
         )                                                                     AS prov_referring_name_2,
-    proc.billing_facility_id                                                  AS prov_facility_vendor_id,
+    MD5(proc.place_of_svc)                                                    AS prov_facility_vendor_id,
     payor2.payor_id                                                           AS cob_payer_vendor_id_1,
     payor2.payor_priority                                                     AS cob_payer_seq_code_1,
     payor3.payor_id                                                           AS cob_payer_vendor_id_2,
