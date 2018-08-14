@@ -56,6 +56,9 @@ SELECT
     payor3.payor_priority                                                     AS cob_payer_seq_code_2,
     diag.test_id                                                              AS vendor_test_id,
     EXTRACT_DATE(demo.accounting_date, '%m/%d/%Y', CAST({min_date} AS DATE))  AS claim_transaction_date,
+    CASE WHEN EXTRACT_DATE(demo.accounting_date, '%m/%d/%Y', CAST({min_date} AS DATE)) IS NOT NULL
+        THEN 'DEMO.ACCOUNTING_DATE'
+    END                                                                       AS claim_transaction_date_qual,
     ARRAY(
         demo.retro_bill_price, demo.retro_trade_discount_amount, demo.trade_discount_amount, demo.due_amt,
         demo.expect_price
