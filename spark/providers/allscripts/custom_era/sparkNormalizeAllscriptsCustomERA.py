@@ -1,18 +1,10 @@
 import argparse
-from datetime import datetime, date
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.lab_common_model import schema_v7 as schema
 import spark.helpers.file_utils as file_utils
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.postprocessor as postprocessor
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
-    script_path = __file__
-    max_cap = date_input
-    max_cap_obj = datetime.strptime(max_cap, '%Y-%m-%d')
-
+def run(runner, date_input, test=False, airflow_test=False):
     input_tables = [
         'svc',
         'ts3',
@@ -24,6 +16,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     input_paths = {}
     if test:
+        script_path = __file__
         for t in input_tables:
             if t == 'payload':
                 input_paths[t] = file_utils.get_abs_path(
@@ -73,16 +66,9 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    run(runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
-
-    if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/genomind/labtests/spark-output/'
-    else:
-        output_path = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
-
-    normalized_records_unloader.distcp(output_path)
 
 
 if __name__ == '__main__':
@@ -91,4 +77,3 @@ if __name__ == '__main__':
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
-
