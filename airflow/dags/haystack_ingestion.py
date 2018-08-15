@@ -1,5 +1,5 @@
 from airflow.models import Variable
-from airflow.operators import PythonOperator, SubDagOperator, DummyOperator
+from airflow.operators import PythonOperator, SubDagOperator, DummyOperator, TriggerDagRunOperator
 from datetime import datetime, timedelta
 import os
 import re
@@ -96,7 +96,8 @@ def do_get_groups_ready(**kwargs):
         received_files  = []
 
     try:
-        received_files += [f.split(' ')[-1] for f in subprocess.check_output(['aws', 's3', 'ls', s3_incoming_loc2], env=env).split('\n')[:-1]]
+        #received_files += [f.split(' ')[-1] for f in subprocess.check_output(['aws', 's3', 'ls', s3_incoming_loc2], env=env).split('\n')[:-1]]
+        pass
     except:
         pass
 
@@ -149,8 +150,10 @@ def do_fetch_files(ds, **kwargs):
     env = get_haystack_aws_env()
     tmp_dir = get_tmp_dir(ds, kwargs)
     subprocess.check_call(['mkdir', '-p', tmp_dir])
+    s3_incoming_loc1 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION, kwargs)
     for g in groups_ready:
-        subprocess.check_call(['aws', 's3', 'cp', S3_INCOMING_LOCATION + DEID_PREFIX + g, tmp_dir], env=env)
+        subprocess.check_call(['aws', 's3', 'cp', s3_incoming_loc1 + DEID_PREFIX + g, tmp_dir], env=env)
+        subprocess.check_call(['aws', 's3', 'cp', s3_incoming_loc1 + TRANSACTION_PREFIX + g, tmp_dir], env=env)
 
 fetch_files = PythonOperator(
     provide_context=True,
@@ -200,7 +203,7 @@ split_push_transactions = SubDagOperator(
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
             'file_name_pattern_func'   : lambda ds, k: TRANSACTION_PREFIX + '\d{8}T\d{9}',
-            's3_prefix_func'           : lambda ds, k: S3_TRANSACTION_URL_TEMPLATE.format(k['file_to_push']),
+            's3_prefix_func'           : lambda ds, k: S3_TRANSACTION_URL_TEMPLATE.format(k['file_to_push'].split('.')[0].split('-')[-1]),
             'num_splits'               : 1
         }
     ),
