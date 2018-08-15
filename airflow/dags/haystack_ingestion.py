@@ -3,6 +3,8 @@ from airflow.operators import PythonOperator, SubDagOperator, DummyOperator
 from datetime import datetime, timedelta
 import os
 import re
+import json
+import subprocess
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -46,8 +48,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
 else:
     S3_INCOMING_LOCATION = 's3://haystack-deid-test/outgoing/{}-{}-{}/'
     S3_INGESTION_URL = 's3://healthverity/incoming/haystack/'
-    S3_TRANSACTION_URL_TEMPLATE = 's3://salusv/incoming/custom/haystack/{}/'
-    S3_PAYLOAD_DEST = 's3://salusv/matching/payload/custom/haystack/'
+    S3_TRANSACTION_URL_TEMPLATE = 's3://salusv/incoming/custom/haystack/testing/{}/'
 
 # File naming patterns
 FILE_TEMPLATE = '{}' # Just a timestamp
@@ -66,12 +67,13 @@ get_tmp_dir = date_utils.generate_insert_date_into_template_function(
 def get_haystack_aws_env():
     ext_id_d = json.loads(subprocess.check_output(['aws', 'ssm', 'get-parameters', '--names', 'HealthVerityHaystackMavenAlnylamTest.extid', '--with-decryption']))
     ext_id = ext_id_d['Parameters'][0]['Value']
-    assumer_creds_d = json.loads(subprocess.check_output(['aws', 'ssm get-parameters', '--names', 'haystack-maven-s3-credentials', '--with-decryption']))
+    assumer_creds_d = json.loads(subprocess.check_output(['aws', 'ssm', 'get-parameters', '--names', 'haystack-maven-s3-credentials', '--with-decryption']))
+    assumer_creds = json.loads(assumer_creds_d['Parameters'][0]['Value'])
     assumer_env = dict(os.environ)
-    assumer_env['AWS_ACCESS_KEY_ID']     = assumer_creds_d['aws_access_key_id']
-    assumer_env['AWS_SECRET_ACCESS_KEY'] = assumer_creds_d['aws_secret_access_key']
+    assumer_env['AWS_ACCESS_KEY_ID']     = assumer_creds['aws_access_key_id']
+    assumer_env['AWS_SECRET_ACCESS_KEY'] = assumer_creds['aws_secret_access_key']
     
-    assumed_role_cred_d = json.loads(subprocess.check_output(['aws', 'sts', 'assume-role', '--role-arn', 'arn:aws:iam::278511714598:role/haystack-storage-deid-test-DeIdPartnerAccessRole-1FI81DT0QTRC7', '--role-session-name', 'de-id-pickup', '--external-id', ext_id], env=assumer_env))
+    assumed_role_creds_d = json.loads(subprocess.check_output(['aws', 'sts', 'assume-role', '--role-arn', 'arn:aws:iam::278511714598:role/haystack-storage-deid-test-DeIdPartnerAccessRole-1FI81DT0QTRC7', '--role-session-name', 'de-id-pickup', '--external-id', ext_id], env=assumer_env))
 
     assumed_env = dict(os.environ)
     assumed_env['AWS_ACCESS_KEY_ID']     = assumed_role_creds_d['Credentials']['AccessKeyId']
@@ -85,11 +87,19 @@ def get_haystack_aws_env():
 def do_get_groups_ready(**kwargs):
     received_groups = []
     env = get_haystack_aws_env()
-    s3_incoming_loc1 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION)
-    s3_incoming_loc2 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION, day_offset=-1)
+    s3_incoming_loc1 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION, kwargs)
+    s3_incoming_loc2 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION, kwargs, day_offset=-1)
 
-    received_files  = subprocess.check_call(['aws', 's3', 'ls', s3_incoming_loc1], env=env))
-    received_files += subprocess.check_call(['aws', 's3', 'ls', s3_incoming_loc2], env=env))
+    try:
+        received_files  = [f.split(' ')[-1] for f in subprocess.check_output(['aws', 's3', 'ls', s3_incoming_loc1], env=env).split('\n')[:-1]]
+    except:
+        received_files  = []
+
+    try:
+        received_files += [f.split(' ')[-1] for f in subprocess.check_output(['aws', 's3', 'ls', s3_incoming_loc2], env=env).split('\n')[:-1]]
+    except:
+        pass
+
     for f in received_files:
         if re.match(FILE_TEMPLATE.format('\d{8}T\d{9}') + DEID_EXTENSION, f):
             group = f.replace(DEID_EXTENSION, '').replace(TRANSACTION_EXTENSION, '')
@@ -139,13 +149,13 @@ def do_fetch_files(ds, **kwargs):
     env = get_haystack_aws_env()
     tmp_dir = get_tmp_dir(ds, kwargs)
     subprocess.check_call(['mkdir', '-p', tmp_dir])
-    for g in groups_read:
+    for g in groups_ready:
         subprocess.check_call(['aws', 's3', 'cp', S3_INCOMING_LOCATION + g + DEID_EXTENSION, tmp_dir], env=env)
 
 fetch_files = PythonOperator(
     provide_context=True,
     task_id='fetch_files',
-    paython_callback=do_fetch_files,
+    python_callable=do_fetch_files,
     dag=mdag
 )
 
@@ -156,7 +166,7 @@ push_raw_files = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'file_paths_func'       : lambda ds, k: get_deid_file_urls(ds, k) + get_transaction_file_paths(ds, kwargs),
+            'file_paths_func'       : lambda ds, k: get_deid_file_urls(ds, k) + get_transaction_file_paths(ds, k),
             's3_prefix_func'        : lambda ds, k: '/'.join(S3_INGESTION_URL.split('/')[3:]),
             's3_bucket'             : S3_INGESTION_URL.split('/')[2],
         }
@@ -191,7 +201,6 @@ split_push_transactions = SubDagOperator(
             'file_paths_to_split_func' : get_transaction_file_paths,
             'file_name_pattern_func'   : lambda ds, k: '\d{8}T\d{9}' + TRANSACTION_EXTENSION,
             's3_prefix_func'           : lambda ds, k: S3_TRANSACTION_URL_TEMPLATE.format(k['file_to_push']),
-            ),
             'num_splits'               : 1
         }
     ),
@@ -221,7 +230,8 @@ queue_up_for_matching = SubDagOperator(
         mdag.schedule_interval,
         {
             'source_files_func' : get_deid_file_urls,
-            'priority'          : 'priority1'
+            'priority'          : 'priority1',
+            'write_lock'        : True
         }
     ),
     task_id='queue_up_for_matching',
