@@ -66,7 +66,7 @@ create_tmp_dir = PythonOperator(
 # Post-Matching
 #
 def norm_args(ds, k):
-    group_id = get_group_id(d, k)
+    group_id = get_group_id(ds, k)
     base = ['--group_id', group_id]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
