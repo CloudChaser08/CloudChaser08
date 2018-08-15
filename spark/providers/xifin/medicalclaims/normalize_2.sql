@@ -95,41 +95,50 @@ SELECT
     THEN 'DEMO.EXPECT_PRICE'
     END                                                                       AS claim_transaction_amount_qual
 FROM ordered_tests_complete test
-    LEFT OUTER JOIN diagnosis_complete diag ON test.accn_id = diag.accn_id
-    AND test.client_id = diag.client_id
-    AND  0 = LENGTH(TRIM(COALESCE(diag.test_id, '')))
+    LEFT OUTER JOIN diagnosis_complete diag
+        ON test.accn_id = diag.accn_id
+        AND test.client_id = diag.client_id
+        AND (
+            0 = LENGTH(TRIM(COALESCE(diag.test_id, '')))
+            OR COALESCE(test.test_id, '') = COALESCE(diag.test_id, '')
+        )
     LEFT OUTER JOIN (
-    SELECT *, ROW_NUMBER() OVER (PARTITION BY accn_id, client_id ORDER BY test_id) AS row_num
-    FROM billed_procedures_complete
-        ) proc
-    ON test.accn_id = proc.accn_id
-    AND test.client_id = proc.client_id
-    AND proc.row_num = 1
-    LEFT OUTER JOIN demographics_complete demo ON test.accn_id = demo.accn_id
-    AND test.client_id = demo.client_id
-    LEFT OUTER JOIN payors_complete payor1 ON test.accn_id = payor1.accn_id
-    AND test.client_id = payor1.client_id
-    AND payor1.payor_priority = 1
-    LEFT OUTER JOIN payors_complete payor2 ON test.accn_id = payor2.accn_id
-    AND test.client_id = payor2.client_id
-    AND payor2.payor_priority = 2
-    LEFT OUTER JOIN payors_complete payor3 ON test.accn_id = payor3.accn_id
-    AND test.client_id = payor3.client_id
-    AND payor3.payor_priority = 3
+            SELECT *, ROW_NUMBER() OVER (PARTITION BY accn_id, client_id ORDER BY test_id) AS row_num
+            FROM billed_procedures_complete
+                ) proc
+        ON test.accn_id = proc.accn_id
+        AND test.client_id = proc.client_id
+        AND proc.row_num = 1
+    LEFT OUTER JOIN demographics_complete demo
+        ON test.accn_id = demo.accn_id
+        AND test.client_id = demo.client_id
+    LEFT OUTER JOIN payors_complete payor1
+        ON test.accn_id = payor1.accn_id
+        AND test.client_id = payor1.client_id
+        AND payor1.payor_priority = 1
+    LEFT OUTER JOIN payors_complete payor2
+        ON test.accn_id = payor2.accn_id
+        AND test.client_id = payor2.client_id
+        AND payor2.payor_priority = 2
+    LEFT OUTER JOIN payors_complete payor3
+        ON test.accn_id = payor3.accn_id
+        AND test.client_id = payor3.client_id
+        AND payor3.payor_priority = 3
     CROSS JOIN claim_transaction_amount_exploder
 WHERE NOT EXISTS (
-    SELECT 1 FROM billed_procedures_complete pr
-    WHERE test.accn_id = pr.accn_id
-        AND  test.client_id = pr.client_id
-        AND  test.test_id = pr.test_id
-        AND 0 <> LENGTH(TRIM(COALESCE(pr.test_id, '')))
+    SELECT 1 FROM billed_procedures_complete pr1
+    WHERE test.accn_id = pr1.accn_id
+        AND  test.client_id = pr1.client_id
+        AND  test.test_id = pr1.test_id
+        AND 0 <> LENGTH(TRIM(COALESCE(pr1.test_id, '')))
         AND 0 <> LENGTH(TRIM(COALESCE(test.test_id, '')))
+        AND COALESCE(test.proc_code, '') = COALESCE(pr1.proc_code, '')
         )
     AND NOT EXISTS (
-    SELECT 1 FROM billed_procedures_complete pr
-    WHERE  test.accn_id = pr.accn_id
-        AND  test.client_id = pr.client_id
-        AND test.proc_code = proc.proc_code
+    SELECT 1 FROM billed_procedures_complete pr2
+    WHERE  test.accn_id = pr2.accn_id
+        AND test.client_id = pr2.client_id
+        AND COALESCE(test.proc_code, '') = COALESCE(pr2.proc_code, '')
         AND 0 =  LENGTH(TRIM(COALESCE(test.test_id,'')))
         )
     AND demo.pt_country ='USA'
