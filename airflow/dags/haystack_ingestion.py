@@ -54,11 +54,11 @@ else:
 FILE_TEMPLATE = '{}' # Just a timestamp
 
 # Transaction files
-TRANSACTION_EXTENSION = '-record'
+TRANSACTION_PREFIX = 'record-'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/'
 
 # Deid files
-DEID_EXTENSION = '-deid'
+DEID_PREFIX = 'deid-'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TRANSACTION_TMP_PATH_TEMPLATE
@@ -101,20 +101,20 @@ def do_get_groups_ready(**kwargs):
         pass
 
     for f in received_files:
-        if re.match(FILE_TEMPLATE.format('\d{8}T\d{9}') + DEID_EXTENSION, f):
-            group = f.replace(DEID_EXTENSION, '').replace(TRANSACTION_EXTENSION, '')
+        if re.match(DEID_PREFIX + FILE_TEMPLATE.format('\d{8}T\d{9}'), f):
+            group = f.replace(DEID_PREFIX, '').replace(TRANSACTION_PREFIX, '')
             received_groups.append(group)
 
     processed_groups = []
     for f in s3_utils.list_s3_bucket_files(S3_INGESTION_URL):
-        group = f.split('/')[-1].split(DEID_EXTENSION)[0].split(TRANSACTION_EXTENSION)[0]
+        group = f.split('/')[-1].split(DEID_PREFIX)[-1].split(TRANSACTION_PREFIX)[-1]
         processed_groups.append(group)
 
     # processed_files are in the format <gid>/<filename>
     new_groups = set(received_groups).difference(set(processed_groups))
     groups_ready = set()
     for g in new_groups:
-        if (g + DEID_EXTENSION) in received_files and (g + TRANSACTION_EXTENSION) in received_files:
+        if (DEID_PREFIX + g) in received_files and (TRANSACTION_PREFIX + g) in received_files:
             groups_ready.add(g)
 
     kwargs['ti'].xcom_push(key = 'groups_ready', value = groups_ready)
@@ -128,7 +128,7 @@ get_groups_ready = PythonOperator(
 
 def get_transaction_file_names(ds, kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
-    return [g + TRANSACTION_EXTENSION for g in groups_ready]
+    return [TRANSACTION_PREFIX + g for g in groups_ready]
 
 def get_transaction_file_paths(ds, kwargs):
     return [get_tmp_dir(ds, kwargs) + f for f in get_transaction_file_names(ds, kwargs)]
@@ -142,7 +142,7 @@ def get_encrypted_decrypted_file_paths(ds, kwargs):
 
 def get_deid_file_urls(ds, kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
-    return [get_tmp_dir(ds, kwargs) + g + DEID_EXTENSION for g in groups_ready]
+    return [get_tmp_dir(ds, kwargs) + DEID_PREFIX + g for g in groups_ready]
 
 def do_fetch_files(ds, **kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
@@ -150,7 +150,7 @@ def do_fetch_files(ds, **kwargs):
     tmp_dir = get_tmp_dir(ds, kwargs)
     subprocess.check_call(['mkdir', '-p', tmp_dir])
     for g in groups_ready:
-        subprocess.check_call(['aws', 's3', 'cp', S3_INCOMING_LOCATION + g + DEID_EXTENSION, tmp_dir], env=env)
+        subprocess.check_call(['aws', 's3', 'cp', S3_INCOMING_LOCATION + DEID_PREFIX + g, tmp_dir], env=env)
 
 fetch_files = PythonOperator(
     provide_context=True,
@@ -199,7 +199,7 @@ split_push_transactions = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : lambda ds, k: '\d{8}T\d{9}' + TRANSACTION_EXTENSION,
+            'file_name_pattern_func'   : lambda ds, k: TRANSACTION_PREFIX + '\d{8}T\d{9}',
             's3_prefix_func'           : lambda ds, k: S3_TRANSACTION_URL_TEMPLATE.format(k['file_to_push']),
             'num_splits'               : 1
         }
