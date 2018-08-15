@@ -24,7 +24,7 @@ def run(runner, date_input, test=False, airflow_test=False):
                 )
             else:
                 input_paths[t] = file_utils.get_abs_path(
-                    script_path, '../../../test/providers/genomind/labtests/resources/input/{}/'.format(t)
+                    script_path, '../../../test/providers/allscripts/custom_era/resources/input/{}/'.format(t)
                 )
     elif airflow_test:
         for t in input_tables:
