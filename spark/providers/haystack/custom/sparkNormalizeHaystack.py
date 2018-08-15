@@ -78,7 +78,7 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
 
     deliverable.createOrReplaceTempView('haystack_deliverable')
 
-    output_file_name  = group_id + '_daily_reponse.psv.gz'
+    output_file_name  = group_id + '_daily_response.psv.gz'
 
     if test:
         return output_file_name
@@ -95,7 +95,7 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.group_id, args.run_version, airflow_test=args.airflow_test)
+    run(spark, runner, args.group_id, airflow_test=args.airflow_test)
 
     spark.stop()
 
