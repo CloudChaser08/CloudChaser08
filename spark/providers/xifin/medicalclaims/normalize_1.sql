@@ -46,46 +46,17 @@ SELECT
 -- later.
     ELSE diag.diag_sequence + 4
     END                                                                       AS diagnosis_priority_unranked,
-    ARRAY(proc.proc_code, test.proc_code)[proc_explode.n]                     AS procedure_code,
+    proc.proc_code                                                            AS procedure_code,
     CASE
-    WHEN (proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL)
-        OR (proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL)
-    THEN 'HC'
+    WHEN proc.proc_code IS NOT NULL
+        THEN 'HC'
     END                                                                       AS procedure_code_qual,
     proc.units_billed                                                         AS procedure_units_billed,
     proc.units_paid                                                           AS procedure_units_paid,
-    CASE
-    WHEN proc.proc_code = test.proc_code
-    THEN COALESCE(proc.modifier_1, test.modifier_1)
-    WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN proc.modifier_1
-    WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN test.modifier_1
-    END                                                                       AS procedure_modifier_1,
-    CASE
-    WHEN proc.proc_code = test.proc_code
-    THEN COALESCE(proc.modifier_2, test.modifier_2)
-    WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN proc.modifier_2
-    WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN test.modifier_2
-    END                                                                       AS procedure_modifier_2,
-    CASE
-    WHEN proc.proc_code = test.proc_code
-    THEN COALESCE(proc.modifier_3, test.modifier_3)
-    WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN proc.modifier_3
-    WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN test.modifier_3
-    END                                                                       AS procedure_modifier_3,
-    CASE
-    WHEN proc.proc_code = test.proc_code
-    THEN COALESCE(proc.modifier_4, test.modifier_4)
-    WHEN proc_explode.n = 0 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN proc.modifier_4
-    WHEN proc_explode.n = 1 AND ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-    THEN test.modifier_4
-    END                                                                       AS procedure_modifier_4,
+    COALESCE(proc.modifier_1, test.modifier_1)                                AS procedure_modifier_1,
+    COALESCE(proc.modifier_2, test.modifier_2)                                AS procedure_modifier_2,
+    COALESCE(proc.modifier_3, test.modifier_3)                                AS procedure_modifier_3,
+    COALESCE(proc.modifier_4, test.modifier_4)                                AS procedure_modifier_4,
     proc.bill_price                                                           AS line_charge,
     demo.gross_price                                                          AS total_charge,
     demo.bill_price                                                           AS total_allowed,
@@ -138,32 +109,38 @@ SELECT
     THEN 'DEMO.EXPECT_PRICE'
     END                                                                       AS claim_transaction_amount_qual
 FROM billed_procedures_complete proc
-    LEFT OUTER JOIN diagnosis_complete diag
-    ON proc.accn_id = diag.accn_id
-    AND proc.client_id = diag.client_id
-    AND proc.test_id = diag.test_id
-    AND  0 <> LENGTH(TRIM(COALESCE(diag.test_id, '')))
-    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_1, 'dummy2')
-    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_2, 'dummy2')
-    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_3, 'dummy2')
-    AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_4, 'dummy2')
-    LEFT OUTER JOIN ordered_tests_complete test ON proc.accn_id = test.accn_id
-    AND proc.client_id = test.client_id
-    AND proc.test_id = test.test_id
-    AND  0 <> LENGTH(TRIM(COALESCE(test.test_id, '')))
-    LEFT OUTER JOIN demographics_complete demo on proc.accn_id = demo.accn_id
-    AND proc.client_id = demo.client_id
-    LEFT OUTER JOIN payors_complete payor1 ON proc.accn_id = payor1.accn_id
-    AND proc.client_id = payor1.client_id
-    AND payor1.payor_priority = 1
-    LEFT OUTER JOIN payors_complete payor2 ON proc.accn_id = payor2.accn_id
-    AND proc.client_id = payor2.client_id
-    AND payor2.payor_priority = 2
-    LEFT OUTER JOIN payors_complete payor3 ON proc.accn_id = payor3.accn_id
-    AND proc.client_id = payor3.client_id
-    AND payor3.payor_priority = 3
+    LEFT OUTER JOIN diagnosis_complete diag 
+        ON proc.accn_id = diag.accn_id
+        AND proc.client_id = diag.client_id
+        AND proc.test_id = diag.test_id
+        AND 0 <> LENGTH(TRIM(COALESCE(diag.test_id, '')))
+        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_1, 'dummy2')
+        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_2, 'dummy2')
+        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_3, 'dummy2')
+        AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_4, 'dummy2')
+    LEFT OUTER JOIN ordered_tests_complete test
+        ON proc.accn_id = test.accn_id
+        AND proc.client_id = test.client_id
+        AND proc.test_id = test.test_id
+        AND 0 <> LENGTH(TRIM(COALESCE(test.test_id, '')))
+        AND COALESCE(proc.proc_code, '') = COALESCE(test.proc_code, '')
+        AND 0 <> LENGTH(TRIM(COALESCE(proc.proc_code, ''))) 
+    LEFT OUTER JOIN demographics_complete demo
+        ON proc.accn_id = demo.accn_id
+        AND proc.client_id = demo.client_id
+    LEFT OUTER JOIN payors_complete payor1
+        ON proc.accn_id = payor1.accn_id
+        AND proc.client_id = payor1.client_id
+        AND payor1.payor_priority = 1
+    LEFT OUTER JOIN payors_complete payor2
+        ON proc.accn_id = payor2.accn_id
+        AND proc.client_id = payor2.client_id
+        AND payor2.payor_priority = 2
+    LEFT OUTER JOIN payors_complete payor3
+        ON proc.accn_id = payor3.accn_id
+        AND proc.client_id = payor3.client_id
+        AND payor3.payor_priority = 3
     CROSS JOIN proc_test_exploder pos_explode
-    CROSS JOIN proc_test_exploder proc_explode
     CROSS JOIN proc_diag_exploder
     CROSS JOIN claim_transaction_amount_exploder
 WHERE COALESCE(demo.pt_country, 'dummy') = 'USA' AND (
@@ -182,14 +159,6 @@ WHERE COALESCE(demo.pt_country, 'dummy') = 'USA' AND (
             COALESCE(
                 proc.diag_code_1, proc.diag_code_2, proc.diag_code_3, proc.diag_code_4, diag.diag_code
                 ) IS NULL AND proc_diag_exploder.n = 0
-            )
-        ) AND ((
-            proc.proc_code = test.proc_code AND proc_explode.n = 0
-            ) OR proc.proc_code != test.proc_code OR proc.proc_code IS NULL OR test.proc_code IS NULL
-        ) AND (
-        ARRAY(proc.proc_code, test.proc_code)[proc_explode.n] IS NOT NULL
-        OR (
-            COALESCE(proc.proc_code, test.proc_code) IS NULL AND proc_explode.n = 0
             )
         ) AND (
         ARRAY(
