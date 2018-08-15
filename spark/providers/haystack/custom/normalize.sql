@@ -2,7 +2,8 @@ SELECT
     CASE WHEN matchStatus = 'exact_match' OR matchStatus = 'inexact_match' OR matchStatus = 'multi_match'
         THEN LOWER(obfuscate_hvid(hvid, 'hvid265'))
     END                                         AS hvid,
-    CASE WHEN matchStatus != 'exact_match' AND matchStatus != 'inexact_match' AND matchStatus != 'multi_match'
+    CASE WHEN (matchStatus != 'exact_match' AND matchStatus != 'inexact_match' AND matchStatus != 'multi_match')
+            OR matchStatus IS NULL
         THEN gen_uuid()
     END                                         AS temporary_id,
     matchScore                                  AS match_score,
