@@ -97,8 +97,7 @@ SELECT
 FROM ordered_tests_complete test
     LEFT OUTER JOIN diagnosis_complete diag ON test.accn_id = diag.accn_id
     AND test.client_id = diag.client_id
-    AND test.test_id = diag.test_id
-    AND  0 <> LENGTH(TRIM(COALESCE(diag.test_id, '')))
+    AND  0 = LENGTH(TRIM(COALESCE(diag.test_id, '')))
     LEFT OUTER JOIN (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY accn_id, client_id ORDER BY test_id) AS row_num
     FROM billed_procedures_complete
