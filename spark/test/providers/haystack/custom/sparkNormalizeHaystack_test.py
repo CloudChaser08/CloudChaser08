@@ -1,0 +1,46 @@
+import pytest
+
+import datetime
+import json
+
+import spark.providers.haystack.custom.sparkNormalizeHaystack as haystack
+from spark.helpers.udf.general_helpers import obfuscate_hvid
+
+results = {}
+return_file_name = {}
+
+GROUPS = ['123456']
+
+def cleanup(spark):
+    pass
+
+@pytest.mark.usefixtures("spark")
+def test_init(spark):
+    global results, return_file_name
+    # new model run
+    for g in GROUPS:
+        return_file_name[g] = haystack.run(spark['spark'], spark['runner'], g, True)
+        results[g] = spark['sqlContext'].table('haystack_deliverable').collect()
+
+def test_hvid_obfuscation():
+    assert filter(lambda r: r.hvid is not None and r.hvid != 'HVID', results[GROUPS[0]])[0] \
+        .hvid == str(obfuscate_hvid('650226624', 'hvid265')).lower()
+
+def test_temporary_id():
+    assert filter(lambda r: r.hvid is not None and r.hvid != 'HVID', results[GROUPS[0]])[0] \
+        .temporary_id is None
+
+    assert len(filter(lambda r: r.hvid is None, results[GROUPS[0]])[0]
+            .temporary_id) == 38
+
+def test_header_row():
+    assert results[GROUPS[0]][0].temporary_id == 'Temporary ID'
+    assert results[GROUPS[0]][0].hvid == 'HVID'
+    assert results[GROUPS[0]][0].activity_date == 'Activity Date'
+
+def test_file_name():
+    for g in GROUPS:
+        return_file_name[g] == g + '_daily_report.psv.gz'
+
+def test_cleanup(spark):
+    cleanup(spark)
