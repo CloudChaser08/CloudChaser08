@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -35,7 +36,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                     date_input.replace('-', '/')
                 )
             else:
-                input_paths[t] = 's3://salusv/incoming/incoming/era/{}/'.format(
+                input_paths[t] = 's3://salusv/incoming/era/allscripts/{}/'.format(
                     date_input.replace('-', '/')
                 )
 
@@ -53,9 +54,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test:
         for table, output_location in output_locations.items():
-            runner.sqlContext.sql('select * from {}'.format(table)) \
-                             .repartition(20) \
-                             .write.parquet(output_location)
+            df = runner.sqlContext.sql('select * from {}'.format(table))
+            if df.count() != 0:
+                df.repartition(20) \
+                  .write.parquet(output_location)
+            else:
+                logging.warn('Table {} had 0 rows'.format(table))
 
 def main(args):
     spark, sqlContext = init('Allscripts ERA Custom Normalization')
