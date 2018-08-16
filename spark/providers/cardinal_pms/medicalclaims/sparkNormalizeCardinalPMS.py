@@ -66,7 +66,7 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
                          .withColumn('diagnosisten', F.lit(None)) \
                          .withColumn('diagnosiseleven', F.lit(None)) \
                          .withColumn('diagnosistwelve', F.lit(None)) \
-                         .withColumnRenamed('claim_line_id', 'id_3') \
+                         .withColumnRenamed('claim_lines_id', 'id_3') \
                          .createOrReplaceTempView('transactional_cardinal_pms')
     elif len(spark.read.csv(input_path, sep='|').columns) == 92:
         runner.run_spark_script('load_transactions_v2.sql', [
@@ -77,7 +77,7 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
                          .withColumn('diagnosisten', F.lit(None)) \
                          .withColumn('diagnosiseleven', F.lit(None)) \
                          .withColumn('diagnosistwelve', F.lit(None)) \
-                         .withColumnRenamed('claim_line_id', 'id_3') \
+                         .withColumnRenamed('claim_lines_id', 'id_3') \
                          .createOrReplaceTempView('transactional_cardinal_pms')
     else:
         runner.run_spark_script('load_transactions_v3.sql', [
