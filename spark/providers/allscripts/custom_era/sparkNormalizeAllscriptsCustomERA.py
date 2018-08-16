@@ -57,7 +57,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             df = runner.sqlContext.sql('select * from {}'.format(table))
             if df.count() != 0:
                 df.repartition(20) \
-                  .write.parquet(output_location)
+                  .write.parquet(output_location, mode='append')
             else:
                 logging.warn('Table {} had 0 rows'.format(table))
 
