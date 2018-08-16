@@ -1,7 +1,7 @@
 SELECT
     t.ediclaim_id                              AS claim_id,
     t.hvid                                     AS hvid,
-    '05'                                       AS model_version,
+    '08'                                       AS model_version,
     t.tenant_id                                AS vendor_org_id,
     COALESCE(p.gender, t.patientgender)        AS patient_gender,
     COALESCE(p.yearOfBirth,
@@ -14,9 +14,12 @@ SELECT
     )                                          AS date_service,
     t.facilitycode                             AS place_of_service_std_id,
     t.linesequencenumber                       AS service_line_number,
+    t.id_3                                     AS service_line_id,
     ARRAY(t.principaldiagnosis, t.diagnosistwo,
         t.diagnosisthree, t.diagnosisfour, t.diagnosisfive,
-        t.diagnosissix, t.diagnosisseven, t.diagnosiseight
+        t.diagnosissix, t.diagnosisseven, t.diagnosiseight,
+        t.diagnosisnine, t.diagnosisten, t.diagnosiseleven,
+        t.diagnosistwelve
         )
         [
             CAST(

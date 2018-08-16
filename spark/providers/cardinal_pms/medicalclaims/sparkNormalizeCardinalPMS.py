@@ -7,7 +7,7 @@ import pyspark.sql.functions as F
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.medicalclaims_common_model import schema_v5 as schema
+from spark.common.medicalclaims_common_model import schema_v8 as schema
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
@@ -62,9 +62,25 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
         runner.sqlContext.sql('select * from transactional_cardinal_pms_temp') \
                          .withColumn('product_service_id_qualifier', F.lit(None)) \
                          .withColumn('product_service_id', F.lit(None)) \
+                         .withColumn('diagnosisnine', F.lit(None)) \
+                         .withColumn('diagnosisten', F.lit(None)) \
+                         .withColumn('diagnosiseleven', F.lit(None)) \
+                         .withColumn('diagnosistwelve', F.lit(None)) \
+                         .withColumnRenamed('claim_lines_id', 'id_3') \
+                         .createOrReplaceTempView('transactional_cardinal_pms')
+    elif len(spark.read.csv(input_path, sep='|').columns) == 92:
+        runner.run_spark_script('load_transactions_v2.sql', [
+            ['input_path', input_path]
+        ])
+        runner.sqlContext.sql('select * from transactional_cardinal_pms_temp') \
+                         .withColumn('diagnosisnine', F.lit(None)) \
+                         .withColumn('diagnosisten', F.lit(None)) \
+                         .withColumn('diagnosiseleven', F.lit(None)) \
+                         .withColumn('diagnosistwelve', F.lit(None)) \
+                         .withColumnRenamed('claim_lines_id', 'id_3') \
                          .createOrReplaceTempView('transactional_cardinal_pms')
     else:
-        runner.run_spark_script('load_transactions_v2.sql', [
+        runner.run_spark_script('load_transactions_v3.sql', [
             ['input_path', input_path]
         ])
 
@@ -106,7 +122,7 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
           .createOrReplaceTempView('service_line_diags')
 
     # Create exploder table for claim
-    exploder.generate_exploder_table(spark, 8, 'claim_exploder')
+    exploder.generate_exploder_table(spark, 12, 'claim_exploder')
     logging.debug('Created exploder for claim')
 
     # Normalize claim
