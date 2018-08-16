@@ -20,7 +20,7 @@ def cleanup(spark):
 
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
-    asce.run(spark['runner'], '2018-08-14', test=True)
+    asce.run(spark['spark'], spark['runner'], '2018-08-14', test=True)
     global svc_results, ts3_results, hdr_results, plb_results, clp_results, payload_results
     svc_results = spark['sqlContext'].sql('select * from svc').collect()
     ts3_results = spark['sqlContext'].sql('select * from ts3').collect()

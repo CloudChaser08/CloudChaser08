@@ -1,19 +1,52 @@
 from pyspark.sql.types import StructType, StructField, StringType
 from spark.helpers.source_table import SourceTable
+import pyspark.sql.functions as F
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
-def load(runner, input_paths):
+def load(spark, runner, input_paths):
     for table, input_path in input_paths.items():
-        source_table = TABLE_CONF[table]
-        df = records_loader.load(runner, input_path, None,
-                                 source_table.file_type, schema=source_table.schema,
-                                 delimiter=source_table.separator)
+        if table == 'payload':
+            source_table = TABLE_CONF[table]
+            df = records_loader.load(runner, input_path, None,
+                                     source_table.file_type, schema=source_table.schema,
+                                     delimiter=source_table.separator)
 
-        postprocessor.compose(
-            postprocessor.trimmify,
-            postprocessor.nullify
-        )(df).createOrReplaceTempView(table)
+            postprocessor.compose(
+                postprocessor.trimmify,
+                postprocessor.nullify
+            )(df).createOrReplaceTempView(table)
+        else:
+            # Read in data as lines of text
+            raw_df = spark.read.text(input_path)
+            # Get the columns for each source table we expect
+            svc_cols = map(lambda x: x.name, TABLE_CONF['svc'].schema)
+            ts3_cols = map(lambda x: x.name, TABLE_CONF['ts3'].schema)
+            hdr_cols = map(lambda x: x.name, TABLE_CONF['hdr'].schema)
+            plb_cols = map(lambda x: x.name, TABLE_CONF['plb'].schema)
+            clp_cols = map(lambda x: x.name, TABLE_CONF['clp'].schema)
+            # Filter based on the length of columns
+            svc_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(svc_cols)))
+            ts3_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(ts3_cols)))
+            hdr_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(hdr_cols)))
+            plb_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(plb_cols)))
+            clp_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(clp_cols)))
+            # Extract the line into a dataframe with one column for each element in the array
+            svc = svc_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                         .select(*[F.col('split')[i].alias(svc_cols[i]) for i in xrange(len(svc_cols))]) \
+                         .createOrReplaceTempView('svc')
+            ts3 = ts3_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                         .select(*[F.col('split')[i].alias(ts3_cols[i]) for i in xrange(len(ts3_cols))]) \
+                         .createOrReplaceTempView('ts3')
+            hdr = hdr_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                         .select(*[F.col('split')[i].alias(hdr_cols[i]) for i in xrange(len(hdr_cols))]) \
+                         .createOrReplaceTempView('hdr')
+            plb = plb_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                         .select(*[F.col('split')[i].alias(plb_cols[i]) for i in xrange(len(plb_cols))]) \
+                         .createOrReplaceTempView('plb')
+            clp = clp_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                         .select(*[F.col('split')[i].alias(clp_cols[i]) for i in xrange(len(clp_cols))]) \
+                         .createOrReplaceTempView('clp')
 
 
 TABLE_CONF = {
