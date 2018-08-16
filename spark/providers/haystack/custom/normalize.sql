@@ -9,8 +9,8 @@ SELECT
     matchScore                                  AS match_score,
     yearOfBirth                                 AS year_of_birth,
     p.age                                       AS age,
-    CASE WHEN UPPER(p.age) IN ('M', 'F', 'U')
-        THEN UPPER(p.age)
+    CASE WHEN UPPER(p.gender) IN ('M', 'F', 'U')
+        THEN UPPER(p.gender)
     END                                         AS gender,
     threeDigitZip                               AS zip3,
     p.state                                     AS state,
