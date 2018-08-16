@@ -32,21 +32,21 @@ def load(spark, runner, input_paths):
             plb_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(plb_cols)))
             clp_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(clp_cols)))
             # Extract the line into a dataframe with one column for each element in the array
-            svc = svc_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                         .select(*[F.col('split')[i].alias(svc_cols[i]) for i in xrange(len(svc_cols))]) \
-                         .createOrReplaceTempView('svc')
-            ts3 = ts3_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                         .select(*[F.col('split')[i].alias(ts3_cols[i]) for i in xrange(len(ts3_cols))]) \
-                         .createOrReplaceTempView('ts3')
-            hdr = hdr_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                         .select(*[F.col('split')[i].alias(hdr_cols[i]) for i in xrange(len(hdr_cols))]) \
-                         .createOrReplaceTempView('hdr')
-            plb = plb_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                         .select(*[F.col('split')[i].alias(plb_cols[i]) for i in xrange(len(plb_cols))]) \
-                         .createOrReplaceTempView('plb')
-            clp = clp_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                         .select(*[F.col('split')[i].alias(clp_cols[i]) for i in xrange(len(clp_cols))]) \
-                         .createOrReplaceTempView('clp')
+            svc_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                   .select(*[F.col('split')[i].alias(svc_cols[i]) for i in xrange(len(svc_cols))]) \
+                   .createOrReplaceTempView('svc')
+            ts3_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                   .select(*[F.col('split')[i].alias(ts3_cols[i]) for i in xrange(len(ts3_cols))]) \
+                   .createOrReplaceTempView('ts3')
+            hdr_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                   .select(*[F.col('split')[i].alias(hdr_cols[i]) for i in xrange(len(hdr_cols))]) \
+                   .createOrReplaceTempView('hdr')
+            plb_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                   .select(*[F.col('split')[i].alias(plb_cols[i]) for i in xrange(len(plb_cols))]) \
+                   .createOrReplaceTempView('plb')
+            clp_raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                   .select(*[F.col('split')[i].alias(clp_cols[i]) for i in xrange(len(clp_cols))]) \
+                   .createOrReplaceTempView('clp')
 
 
 TABLE_CONF = {
