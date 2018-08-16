@@ -13,7 +13,7 @@ SELECT
         THEN UPPER(p.gender)
     END                                         AS gender,
     threeDigitZip                               AS zip3,
-    p.state                                     AS state,
+    UPPER(p.state)                              AS state,
     status                                      AS status,
     symptoms                                    AS symptoms,
     hcp_1_npi                                   AS hcp_1_npi,
