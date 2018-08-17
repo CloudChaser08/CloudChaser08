@@ -1,6 +1,7 @@
+DROP TABLE IF EXISTS transactional_cardinal_pms_temp;
 DROP TABLE IF EXISTS transactional_cardinal_pms;
 
-CREATE EXTERNAL TABLE transactional_cardinal_pms (
+CREATE EXTERNAL TABLE transactional_cardinal_pms_temp (
     billproviderid                  string,
     billprovideridqualifier         string,
     billprovidername                string,
