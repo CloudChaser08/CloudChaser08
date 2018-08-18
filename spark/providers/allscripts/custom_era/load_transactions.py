@@ -18,7 +18,10 @@ def load(spark, runner, input_paths):
             )(df).createOrReplaceTempView(table)
         else:
             # Read in data as lines of text
-            raw_df = spark.read.text(input_path)
+            raw_df = postprocessor.compose(
+                postprocessor.trimmify,
+                postprocessor.nullify
+            )(spark.read.text(input_path))
             # Get the columns for each source table we expect
             svc_cols = map(lambda x: x.name, TABLE_CONF['svc'].schema)
             ts3_cols = map(lambda x: x.name, TABLE_CONF['ts3'].schema)
@@ -641,8 +644,8 @@ TABLE_CONF = {
     'payload': SourceTable(
         'json',
         schema=StructType([
-            StructField('claimid', StringType(), True),
-            StructField('pcn', StringType(), True),
+            StructField('claimId', StringType(), True),
+            StructField('PCN', StringType(), True),
             StructField('hvJoinKey', StringType(), True)
         ])
     )
