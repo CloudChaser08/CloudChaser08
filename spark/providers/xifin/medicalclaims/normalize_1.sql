@@ -107,7 +107,8 @@ SELECT
         demo.retro_bill_price, demo.retro_trade_discount_amount, demo.trade_discount_amount, demo.due_amt, demo.expect_price
         )[claim_transaction_amount_exploder.n] IS NOT NULL
     THEN 'DEMO.EXPECT_PRICE'
-    END                                                                       AS claim_transaction_amount_qual
+    END                                                                       AS claim_transaction_amount_qual,
+    demo.status                                                               AS logical_delete_reason
 FROM billed_procedures_complete proc
     LEFT OUTER JOIN diagnosis_complete diag 
         ON proc.accn_id = diag.accn_id
