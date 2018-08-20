@@ -118,7 +118,7 @@ def do_move_matching_payload(ds, **kwargs):
     for deid_file in deid_files:
         s3_prefix = S3_PROD_MATCHING_URL + deid_file
         for payload_file in s3_utils.list_s3_bucket(s3_prefix):
-            directory = k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+            directory = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
             s3_utils.copy_file(payload_file, S3_PAYLOAD_DEST + directory + '/' + payload_file.split('/')[-1])
 
 move_matching_payload = PythonOperator(
