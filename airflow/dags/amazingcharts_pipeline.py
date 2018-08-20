@@ -142,6 +142,41 @@ unzip_dict = {
     'f_medication': generate_unzip_step("f_medication.zip")
 }
 
+def generate_iconv_step(filename):
+    def execute(ds, **kwargs):
+        check_call([
+            'iconv', '-f', 'utf-16', '-t', 'utf-8',
+            '-o', filename + '.utf8', filename
+        ])
+
+    return PythonOperator(
+        python_callable=execute,
+        provide_context=True,
+        task_id='convert_{}'.format(filename),
+        dag=mdag
+    )
+
+
+
+iconv_dict = {
+    'd_costar': generate_iconv_step("d_costar.psv"),
+    'd_date': generate_iconv_step("d_date.psv"),
+    'd_icd10': generate_iconv_step("d_icd10.psv"),
+    'd_lab_directory': generate_iconv_step("d_lab_directory.psv"),
+    'd_provider': generate_iconv_step("d_provider.psv"),
+    'd_vaccine_cpt': generate_iconv_step("d_vaccine_cpt.psv"),
+    'f_encounter': generate_iconv_step("f_encounter.psv"),
+    'f_lab': generate_iconv_step("f_lab.psv"),
+    'f_procedure': generate_iconv_step("f_procedure.psv"),
+    'd_cpt': generate_iconv_step("d_cpt.psv"),
+    'd_drug': generate_iconv_step("d_drug.psv"),
+    'd_icd9': generate_iconv_step("d_icd9.psv"),
+    'd_patient': generate_iconv_step("d_patient.psv"),
+    'd_time': generate_iconv_step("d_time.psv"),
+    'f_diagnosis': generate_iconv_step("f_diagnosis.psv"),
+    'f_injection': generate_iconv_step("f_injection.psv"),
+    'f_medication': generate_iconv_step("f_medication.psv")
+}
 
 def generate_split_step(filename):
     file_id = filename.split('.')[0]
@@ -170,23 +205,23 @@ def generate_split_step(filename):
 
 
 split_dict = {
-    'd_costar': generate_split_step("d_costar.psv"),
-    'd_date': generate_split_step("d_date.psv"),
-    'd_icd10': generate_split_step("d_icd10.psv"),
-    'd_lab_directory': generate_split_step("d_lab_directory.psv"),
-    'd_provider': generate_split_step("d_provider.psv"),
-    'd_vaccine_cpt': generate_split_step("d_vaccine_cpt.psv"),
-    'f_encounter': generate_split_step("f_encounter.psv"),
-    'f_lab': generate_split_step("f_lab.psv"),
-    'f_procedure': generate_split_step("f_procedure.psv"),
-    'd_cpt': generate_split_step("d_cpt.psv"),
-    'd_drug': generate_split_step("d_drug.psv"),
-    'd_icd9': generate_split_step("d_icd9.psv"),
-    'd_patient': generate_split_step("d_patient.psv"),
-    'd_time': generate_split_step("d_time.psv"),
-    'f_diagnosis': generate_split_step("f_diagnosis.psv"),
-    'f_injection': generate_split_step("f_injection.psv"),
-    'f_medication': generate_split_step("f_medication.psv")
+    'd_costar': generate_split_step("d_costar.psv.utf8"),
+    'd_date': generate_split_step("d_date.psv.utf8"),
+    'd_icd10': generate_split_step("d_icd10.psv.utf8"),
+    'd_lab_directory': generate_split_step("d_lab_directory.psv.utf8"),
+    'd_provider': generate_split_step("d_provider.psv.utf8"),
+    'd_vaccine_cpt': generate_split_step("d_vaccine_cpt.psv.utf8"),
+    'f_encounter': generate_split_step("f_encounter.psv.utf8"),
+    'f_lab': generate_split_step("f_lab.psv.utf8"),
+    'f_procedure': generate_split_step("f_procedure.psv.utf8"),
+    'd_cpt': generate_split_step("d_cpt.psv.utf8"),
+    'd_drug': generate_split_step("d_drug.psv.utf8"),
+    'd_icd9': generate_split_step("d_icd9.psv.utf8"),
+    'd_patient': generate_split_step("d_patient.psv.utf8"),
+    'd_time': generate_split_step("d_time.psv.utf8"),
+    'f_diagnosis': generate_split_step("f_diagnosis.psv.utf8"),
+    'f_injection': generate_split_step("f_injection.psv.utf8"),
+    'f_medication': generate_split_step("f_medication.psv.utf8")
 }
 
 
@@ -300,7 +335,8 @@ unzip_transaction.set_upstream(fetch_transaction)
 unzip_transaction.set_downstream(unzip_dict.values() + [unzip_hv_tokens])
 
 for k in split_dict.keys():
-    split_dict[k].set_upstream(unzip_dict[k])
+    iconv_dict[k].set_upstream(unzip_dict[k])
+    split_dict[k].set_upstream(iconv_dict[k])
 
 push_deid_file.set_upstream(unzip_hv_tokens)
 
