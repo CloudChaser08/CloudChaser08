@@ -36,6 +36,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_RECEIVED_LOCATION_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/humana/hv000468/processed/{}/'
 else:
     S3_INCOMING_LOCATION = 's3://healthverity/incoming/humana/'
+    S3_INCOMING_LOCATION_UAT = 's3://healthverity/incoming/humana/'
     S3_RECEIVED_LOCATION_TEMPLATE = 's3://salusv/data_requests/humana/hv000468/{}/'
 
 # Deid file
@@ -43,16 +44,24 @@ DEID_FILE_NAME_TEMPLATE = '{}_deid.txt'
 
 # Determine groups that are ready for processing
 def do_get_groups_ready(**kwargs):
-    received_files  = s3_utils.list_s3_bucket_files(S3_INCOMING_LOCATION)
-    received_files  = [f for f in received_files if re.match(DEID_FILE_NAME_TEMPLATE.format('.*'), f)]
-    processed_files = s3_utils.list_s3_bucket_files(S3_RECEIVED_LOCATION_TEMPLATE.format('')[:-1])
+    received_files      = s3_utils.list_s3_bucket_files(S3_INCOMING_LOCATION)
+    received_files      = [f for f in received_files if re.match(DEID_FILE_NAME_TEMPLATE.format('.*'), f)]
+    received_uat_files  = s3_utils.list_s3_bucket_files(S3_INCOMING_LOCATION_UAT)
+    received_uat_files  = [f for f in received_files if re.match(DEID_FILE_NAME_TEMPLATE.format('.*'), f)]
+    processed_files     = s3_utils.list_s3_bucket_files(S3_RECEIVED_LOCATION_TEMPLATE.format('')[:-1])
     # processed_files are in the format <gid>/<filename>
-    processed_files = [f.split('/')[-1] for f in processed_files]
+    # UAT files will start with 'UAT-'
+    processed_files = [f.split('/')[-1].replace('UAT-', '') for f in processed_files]
     new_files = set(received_files).difference(set(processed_files))
     groups_ready = set()
     for f in new_files:
         gid = f.split('_')[0]
         groups_ready.add(gid)
+
+    new_files = set(received_uat_files).difference(set(processed_files))
+    for f in new_files:
+        gid = f.split('_')[0]
+        groups_ready.add('UAT-' + gid)
 
     kwargs['ti'].xcom_push(key = 'groups_ready', value = groups_ready)
 
@@ -67,10 +76,11 @@ get_groups_ready = PythonOperator(
 def do_copy_deid_files(ds, **kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
     for gid in groups_ready:
-        fn = DEID_FILE_NAME_TEMPLATE.format(gid)
+        src_fn = DEID_FILE_NAME_TEMPLATE.format(gid.replace('UAT-', ''))
+        dest_fn = DEID_FILE_NAME_TEMPLATE.format(gid)
         s3_utils.copy_file(
-            S3_INCOMING_LOCATION + fn,
-            S3_RECEIVED_LOCATION_TEMPLATE.format(gid) + fn
+            S3_INCOMING_LOCATION + src_fn,
+            S3_RECEIVED_LOCATION_TEMPLATE.format(gid) + dest_fn
         )
 
 copy_deid_files = PythonOperator(
@@ -83,7 +93,7 @@ copy_deid_files = PythonOperator(
 # Queue up DeID file for matching
 def get_deid_file_urls(ds, kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
-    return [S3_INCOMING_LOCATION + DEID_FILE_NAME_TEMPLATE.format(gid) for gid in groups_ready]
+    return [S3_INCOMING_LOCATION + DEID_FILE_NAME_TEMPLATE.format(gid.replace('UAT-', '')) for gid in groups_ready]
 
 queue_up_for_matching = SubDagOperator(
     subdag=queue_up_for_matching.queue_up_for_matching(
