@@ -162,13 +162,13 @@ def do_generate_daily_report(ds, **kwargs):
             total['Production']['patients'], total['Production']['matched'], total['Production']['w_records'], source, total['Production']['records'][source]])
     if not total['Production']['records'].keys():
         report_writer.writerow(['TOTAL', 'Production', '-', '-',
-            total['Production']['patients'], total['Production']['matched'], '-', 0])
+            total['Production']['patients'], total['Production']['matched'], total['Production']['w_records'], '-', 0])
     for source in total['UAT']['records'].keys():
         report_writer.writerow(['TOTAL', 'UAT', '-', '-',
             total['UAT']['patients'], total['UAT']['matched'], total['UAT']['w_records'], source, total['UAT']['records'][source]])
     if not total['UAT']['records'].keys():
         report_writer.writerow(['TOTAL', 'UAT', '-', '-',
-            total['UAT']['patients'], total['UAT']['matched'], '-', 0])
+            total['UAT']['patients'], total['UAT']['matched'], total['UAT']['w_records'], '-', 0])
 
     daily_report_file.close()
 
@@ -219,13 +219,13 @@ def do_generate_monthly_report(ds, **kwargs):
             total['Production']['patients'], total['Production']['matched'], total['Production']['w_records'], source, total['Production']['records'][source]])
     if not total['Production']['records'].keys():
         report_writer.writerow(['TOTAL', 'Production',
-            total['Production']['patients'], total['Production']['matched'], '-', 0])
+            total['Production']['patients'], total['Production']['matched'], total['Production']['w_records'], '-', 0])
     for source in total['UAT']['records'].keys():
         report_writer.writerow(['TOTAL', 'UAT',
             total['UAT']['patients'], total['UAT']['matched'], total['UAT']['w_records'], source, total['UAT']['records'][source]])
     if not total['UAT']['records'].keys():
         report_writer.writerow(['TOTAL', 'UAT',
-            total['UAT']['patients'], total['UAT']['matched'], '-', 0])
+            total['UAT']['patients'], total['UAT']['matched'], total['UAT']['w_records'], '-', 0])
 
     monthly_report_file.close()
 
