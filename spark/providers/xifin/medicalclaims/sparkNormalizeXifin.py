@@ -65,12 +65,12 @@ def run(spark, runner, date_input, in_parts=False, test=False, airflow_test=Fals
     transactions_loader.load(runner, input_path)
     transactions_loader.load_matching_payloads(runner, matching_path)
 
-    parts = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'] if in_parts else [None]
+    parts = ['0', '2', '4', '6', '8', 'a', 'c', 'e', 'g'] if in_parts else [None, None]
 
-    for prt in parts:
+    for i, prt in enumerate(parts[:-1]):
         transactions_loader.reconstruct_records(runner, partitions=(
             10 if test else 2500
-        ), part=prt)
+        ), part1=prt, part2=parts[i+1])
 
         normalized = reduce(
             lambda df1, df2: df1.union(df2), [

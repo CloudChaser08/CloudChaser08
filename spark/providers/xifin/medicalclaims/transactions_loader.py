@@ -188,7 +188,7 @@ def load_matching_payloads(runner, matching_path_prefix):
         )
 
 
-def reconstruct_records(runner, partitions, part=None):
+def reconstruct_records(runner, partitions, part1=None, part2=None):
     '''
     Combine the transactional and payload data back into complete records
     '''
@@ -202,8 +202,8 @@ def reconstruct_records(runner, partitions, part=None):
                 .withColumn('full_accn_id', F.concat(transactional['client_id'], F.lit('_'), payload['patientId'])) \
                 .withColumn('accn_id', payload['patientId']) \
 
-        if part is not None:
-            combined = combined.where(F.md(F.col('full_accn_id')).cast('string').substr(1, 1) == F.lit(part))
+        if part1 is not None:
+            combined = combined.where((F.md(F.col('full_accn_id')).cast('string').substr(1, 1) >= F.lit(part1)) & (F.md(F.col('full_accn_id')).cast('string').substr(1, 1) < F.lit(part2)))
 
         combined = combined.repartition(partitions, F.col('full_accn_id'))
 
