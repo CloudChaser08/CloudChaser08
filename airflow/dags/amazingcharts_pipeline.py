@@ -51,7 +51,7 @@ else:
 
 # Transaction Zip file
 TRANSACTION_FILE_DESCRIPTION = 'AmazingCharts transaction zip file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'healthverity_{0}{1}.zip'
+TRANSACTION_FILE_NAME_TEMPLATE = 'healthverity_{0}{1}{2}.zip'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE
@@ -112,7 +112,7 @@ def generate_unzip_step(zip_filename_template):
         )
         os.remove(get_tmp_dir(ds, kwargs) + zip_filename)
     return PythonOperator(
-        task_id='unzip_' + zip_filename_template.format('y', 'm').split('.')[0],
+        task_id='unzip_' + zip_filename_template.format('y', 'm', 'd').split('.')[0],
         provide_context=True,
         python_callable=execute,
         dag=mdag
