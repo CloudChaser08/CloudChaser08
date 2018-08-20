@@ -254,7 +254,6 @@ def clean_up_workspace_step():
         task_id='clean_up_workspace',
         provide_context=True,
         python_callable=execute,
-        trigger_rule='all_done',
         dag=mdag
     )
 
