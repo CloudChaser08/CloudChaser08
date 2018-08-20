@@ -95,7 +95,7 @@ SELECT
     THEN 'DEMO.EXPECT_PRICE'
     END                                                                       AS claim_transaction_amount_qual,
     demo.status                                                               AS logical_delete_reason
-FROM ordered_tests_complete test
+FROM tests_complete test
     LEFT OUTER JOIN diagnosis_complete diag
         ON test.accn_id = diag.accn_id
         AND test.client_id = diag.client_id

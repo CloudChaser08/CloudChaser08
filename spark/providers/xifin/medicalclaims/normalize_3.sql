@@ -115,7 +115,7 @@ WHERE NOT EXISTS (
         AND 0 <> LENGTH(TRIM(COALESCE(pr.test_id, '')))
         )
     AND NOT EXISTS (
-    SELECT 1 FROM ordered_tests_complete t
+    SELECT 1 FROM tests_complete t
     WHERE  diag.accn_id = t.accn_id
         AND  diag.client_id = t.client_id
         AND  diag.test_id = t.test_id

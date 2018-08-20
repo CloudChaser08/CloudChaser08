@@ -119,7 +119,7 @@ FROM billed_procedures_complete proc
         AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_2, 'dummy2')
         AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_3, 'dummy2')
         AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_4, 'dummy2')
-    LEFT OUTER JOIN ordered_tests_complete test
+    LEFT OUTER JOIN tests_complete test
         ON proc.accn_id = test.accn_id
         AND proc.client_id = test.client_id
         AND proc.test_id = test.test_id

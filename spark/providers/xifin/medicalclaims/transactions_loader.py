@@ -113,7 +113,7 @@ TABLES = {
         'diagnosis_code_table',
         'hvJoinKey'
     ],
-    'ordered_tests': [
+    'tests': [
         'accn_id',
         'test_id',
         'test_name',
@@ -147,7 +147,7 @@ MATCHING_TABLES = {
         'patientId',
         'hvJoinKey'
     ],
-    'ordered_tests': [
+    'tests': [
         'patientId',
         'hvJoinKey'
     ],
