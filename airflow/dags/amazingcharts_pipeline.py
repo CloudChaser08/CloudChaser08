@@ -144,9 +144,10 @@ unzip_dict = {
 
 def generate_iconv_step(filename):
     def execute(ds, **kwargs):
+        tmp_dir = get_tmp_dir(ds, kwargs)
         check_call([
             'iconv', '-f', 'utf-16', '-t', 'utf-8',
-            '-o', filename + '.utf8', filename
+            '-o', tmp_dir + filename + '.utf8', tmp_dir + filename
         ])
 
     return PythonOperator(
