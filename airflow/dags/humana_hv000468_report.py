@@ -120,11 +120,14 @@ def get_group_received_ts(group_id):
 
 def do_generate_daily_report(ds, **kwargs):
     groups = get_delivered_groups(kwargs['execution_date'])
-    total = {'records': {}, 'patients': 0, 'matched': 0, 'w_records': 0}
+    total = {
+        'Production' : {'records': {}, 'patients': 0, 'matched': 0, 'w_records': 0},
+        'UAT'        : {'records': {}, 'patients': 0, 'matched': 0, 'w_records': 0}
+    }
 
     daily_report_file = open(get_tmp_dir(ds, kwargs) + 'daily_report_' + kwargs['ds_nodash'] + '.csv', 'w')
     report_writer = csv.writer(daily_report_file, quoting=csv.QUOTE_MINIMAL)
-    report_writer.writerow(['Group ID', 'Date Received', 'Date Delivered',
+    report_writer.writerow(['Group ID', 'Environment', 'Date Received', 'Date Delivered',
         'Patients Sent', 'Patients Matched', 'Patients with Records', 'Source',
         'Source Record Count'])
     for group in groups:
@@ -132,6 +135,7 @@ def do_generate_daily_report(ds, **kwargs):
         f  = get_tmp_dir(ds, kwargs) + fn
         received_ts  = get_group_received_ts(group['id'])
         delivered_ts = group['delivery_ts']
+        env = 'UAT' if ('UAT-' in f or ds < '2018-07-01') else 'Production'
         with open(f) as fin:
             for line in fin:
                 fields = line.strip().split('|')
@@ -140,23 +144,31 @@ def do_generate_daily_report(ds, **kwargs):
                 patients  = int(fields[1])
                 matched   = int(fields[2])
                 w_records = int(fields[3])
-                total['records'][fields[4]] = total['records'].get(fields[4], 0) + int(fields[5])
-                report_writer.writerow([group['id'], received_ts.isoformat(), delivered_ts.isoformat()] + fields[1:])
-        total['patients']  += patients
-        total['matched']   += matched
-        total['w_records'] += w_records
+                total[env]['records'][fields[4]] = total[env]['records'].get(fields[4], 0) + int(fields[5])
+                report_writer.writerow([group['id'], env, received_ts.isoformat(), delivered_ts.isoformat()] + fields[1:])
+        total[env]['patients']  += patients
+        total[env]['matched']   += matched
+        total[env]['w_records'] += w_records
 
-    if len(total['records'].keys()) > 1 and '-' in total['records']:
-        del total['records']['-']
+    if len(total['Production']['records'].keys()) > 1 and '-' in total['Production']['records']:
+        del total['Production']['records']['-']
+    if len(total['UAT']['records'].keys()) > 1 and '-' in total['UAT']['records']:
+        del total['UAT']['records']['-']
 
     report_writer.writerow([])
     report_writer.writerow([])
-    for source in total['records'].keys():
-        report_writer.writerow(['TOTAL', '-', '-',
-            total['patients'], total['matched'], total['w_records'], source, total['records'][source]])
-    if not total['records'].keys():
-        report_writer.writerow(['TOTAL', '-', '-',
-            total['patients'], total['matched'], '-', 0])
+    for source in total['Production']['records'].keys():
+        report_writer.writerow(['TOTAL', 'Production', '-', '-',
+            total['Production']['patients'], total['Production']['matched'], total['Production']['w_records'], source, total['Production']['records'][source]])
+    if not total['Production']['records'].keys():
+        report_writer.writerow(['TOTAL', 'Production', '-', '-',
+            total['Production']['patients'], total['Production']['matched'], '-', 0])
+    for source in total['UAT']['records'].keys():
+        report_writer.writerow(['TOTAL', 'UAT', '-', '-',
+            total['UAT']['patients'], total['UAT']['matched'], total['UAT']['w_records'], source, total['UAT']['records'][source]])
+    if not total['UAT']['records'].keys():
+        report_writer.writerow(['TOTAL', 'UAT', '-', '-',
+            total['UAT']['patients'], total['UAT']['matched'], '-', 0])
 
     daily_report_file.close()
 
@@ -169,17 +181,21 @@ generate_daily_report = PythonOperator(
 
 def do_generate_monthly_report(ds, **kwargs):
     groups = get_delivered_groups_past_month(kwargs['execution_date'])
-    total = {'records': {}, 'patients': 0, 'matched': 0, 'w_records': 0}
+    total = {
+        'Production' : {'records': {}, 'patients': 0, 'matched': 0, 'w_records': 0},
+        'UAT'        : {'records': {}, 'patients': 0, 'matched': 0, 'w_records': 0}
+    }
 
     month = (kwargs['execution_date'] - timedelta(days=1)).strftime('%B')
 
     monthly_report_file = open(get_tmp_dir(ds, kwargs) + month +'_monthly_report.csv', 'w')
     report_writer = csv.writer(monthly_report_file, quoting=csv.QUOTE_MINIMAL)
-    report_writer.writerow(['', 'Patients Sent', 'Patients Matched',
+    report_writer.writerow(['', 'Environment', 'Patients Sent', 'Patients Matched',
         'Patients with Records', 'Source', 'Source Record Count'])
     for group in groups:
         fn = EXTRACT_SUMMARY_TEMPLATE.format(group['id'])
         f  = get_tmp_dir(ds, kwargs) + fn
+        env = 'UAT' if ('UAT-' in f or ds < '2018-07-01') else 'Production'
         with open(f) as fin:
             for line in fin:
                 fields = line.strip().split('|')
@@ -188,20 +204,28 @@ def do_generate_monthly_report(ds, **kwargs):
                 patients  = int(fields[1])
                 matched   = int(fields[2])
                 w_records = int(fields[3])
-                total['records'][fields[4]] = total['records'].get(fields[4], 0) + int(fields[5])
-        total['patients']  += patients
-        total['matched']   += matched
-        total['w_records'] += w_records
+                total[env]['records'][fields[4]] = total[env]['records'].get(fields[4], 0) + int(fields[5])
+        total[env]['patients']  += patients
+        total[env]['matched']   += matched
+        total[env]['w_records'] += w_records
 
-    if len(total['records'].keys()) > 1 and '-' in total['records']:
-        del total['records']['-']
+    if len(total['Production']['records'].keys()) > 1 and '-' in total['Production']['records']:
+        del total['Production']['records']['-']
+    if len(total['UAT']['records'].keys()) > 1 and '-' in total['UAT']['records']:
+        del total['UAT']['records']['-']
 
-    for source in total['records'].keys():
-        report_writer.writerow(['TOTAL', total['patients'], total['matched'],
-            total['w_records'], source, total['records'][source]])
-    if not total['records'].keys():
-        report_writer.writerow(['TOTAL', total['patients'], total['matched'],
-            '-', 0])
+    for source in total['Production']['records'].keys():
+        report_writer.writerow(['TOTAL', 'Production',
+            total['Production']['patients'], total['Production']['matched'], total['Production']['w_records'], source, total['Production']['records'][source]])
+    if not total['Production']['records'].keys():
+        report_writer.writerow(['TOTAL', 'Production',
+            total['Production']['patients'], total['Production']['matched'], '-', 0])
+    for source in total['UAT']['records'].keys():
+        report_writer.writerow(['TOTAL', 'UAT',
+            total['UAT']['patients'], total['UAT']['matched'], total['UAT']['w_records'], source, total['UAT']['records'][source]])
+    if not total['UAT']['records'].keys():
+        report_writer.writerow(['TOTAL', 'UAT',
+            total['UAT']['patients'], total['UAT']['matched'], '-', 0])
 
     monthly_report_file.close()
 
