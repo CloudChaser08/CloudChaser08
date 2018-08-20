@@ -36,7 +36,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_RECEIVED_LOCATION_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/humana/hv000468/processed/{}/'
 else:
     S3_INCOMING_LOCATION = 's3://healthverity/incoming/humana/'
-    S3_INCOMING_LOCATION_UAT = 's3://healthverity/incoming/humana/'
+    S3_INCOMING_LOCATION_UAT = 's3://healthverity/incoming/humana_uat/'
     S3_RECEIVED_LOCATION_TEMPLATE = 's3://salusv/data_requests/humana/hv000468/{}/'
 
 # Deid file
@@ -47,7 +47,7 @@ def do_get_groups_ready(**kwargs):
     received_files      = s3_utils.list_s3_bucket_files(S3_INCOMING_LOCATION)
     received_files      = [f for f in received_files if re.match(DEID_FILE_NAME_TEMPLATE.format('.*'), f)]
     received_uat_files  = s3_utils.list_s3_bucket_files(S3_INCOMING_LOCATION_UAT)
-    received_uat_files  = [f for f in received_files if re.match(DEID_FILE_NAME_TEMPLATE.format('.*'), f)]
+    received_uat_files  = [f for f in received_uat_files if re.match(DEID_FILE_NAME_TEMPLATE.format('.*'), f)]
     processed_files     = s3_utils.list_s3_bucket_files(S3_RECEIVED_LOCATION_TEMPLATE.format('')[:-1])
     # processed_files are in the format <gid>/<filename>
     # UAT files will start with 'UAT-'
