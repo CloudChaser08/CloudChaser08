@@ -31,7 +31,7 @@ DAG_NAME = 'allscripts_era_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 6, 7, 8),      #TODO: change when figured out
+    'start_date': datetime(2018, 8, 9, 6),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -39,7 +39,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 8 * * *',            #TODO: change when figured out
+    schedule_interval = '0 6 * * *',
     default_args = default_args
 )
 
@@ -89,10 +89,13 @@ def get_file_paths_function(tmp_dir_func, filename_template):
         expected_file_name_regex = date_utils.insert_date_into_template(
             filename_template, kwargs, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
         )
-        return [
+        file_paths = [
             file_dir + f for f in os.listdir(file_dir)
             if re.search(expected_file_name_regex, f)
         ]
+        logging.info('file paths: {}'.format(str(file_paths)))
+        return file_paths
+    return out
 
 
 def get_enc_dec_file_paths_function(file_name_template):
@@ -172,6 +175,7 @@ def generate_unzip_files_dag(task_id, tmp_dir_func):
         tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
         for f in os.listdir(tmp_dir):
             decompression.decompress_zip_file(tmp_dir + f, tmp_dir)
+            os.remove(tmp_dir + f)
 
     return PythonOperator(
         python_callable=do_unzip_files,
@@ -196,14 +200,14 @@ def do_push_unzipped_deid_files(ds, **kwargs):
     deid_files = os.listdir(tmp_dir)
     kwargs['ti'].xcom_push(key='deid_files', value=deid_files)
 
-    s3_utils.move_path_recursive(tmp_dir, unzipped_deid_location)
+    s3_utils.copy_file_recursive(tmp_dir, unzipped_deid_location)
 
 
 push_unzipped_deid = PythonOperator(
     python_callable=do_push_unzipped_deid_files,
     op_kwargs={
         'tmp_dir_func': get_d_tmp_dir,
-        'unzipped_deid_locaiton': date_utils.generate_insert_date_into_template_function(
+        'unzipped_deid_location': date_utils.generate_insert_date_into_template_function(
             S3_UNZIPPED_DEID_URL_TEMPLATE, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
         )
     },
@@ -221,7 +225,7 @@ queue_up_for_matching = SubDagOperator(
         {
             'source_files_func' : lambda ds, k: [
                 date_utils.insert_date_into_template(
-                    S3_TRANSACTION_RAW_URL, k, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
+                    S3_UNZIPPED_DEID_URL_TEMPLATE, k, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
                 ) +
                 date_utils.insert_date_into_template(
                     DEID_FILE_NAME_TEMPLATE, k, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
@@ -253,13 +257,13 @@ def generate_decrypt_files_subdag(task_id, tmp_dir_func, enc_dec_func):
 decrypt_transaction = generate_decrypt_files_subdag('transaction',
                                                     get_t_tmp_dir,
                                                     get_enc_dec_file_paths_function(
-                                                        TRANSACTION_FILE_NAME_TEMPLATE
+                                                        TRANSACTION_FILE_NAME_TEMPLATE[:-4]
                                                     )
                                                    )
 decrypt_rest = generate_decrypt_files_subdag('rest',
                                              get_r_tmp_dir,
                                              get_enc_dec_file_paths_function(
-                                                 REST_FILE_NAME_TEMPLATE
+                                                 REST_FILE_NAME_TEMPLATE[:-4]
                                              )
                                             )
 
@@ -286,8 +290,8 @@ def generate_split_push_files_subdag(task_id, tmp_dir_func, file_name_template):
     )
 
 
-split_transaction = generate_split_push_files_subdag('transaction', get_t_tmp_dir, TRANSACTION_FILE_NAME_TEMPLATE)
-split_rest = generate_split_push_files_subdag('rest', get_r_tmp_dir, REST_FILE_NAME_TEMPLATE)
+split_transaction = generate_split_push_files_subdag('transaction', get_t_tmp_dir, TRANSACTION_FILE_NAME_TEMPLATE[:-4])
+split_rest = generate_split_push_files_subdag('rest', get_r_tmp_dir, REST_FILE_NAME_TEMPLATE[:-4])
 
 clean_up_workspace = SubDagOperator(
     subdag=clean_up_tmp_dir.clean_up_tmp_dir(
