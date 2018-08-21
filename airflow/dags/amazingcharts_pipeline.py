@@ -311,7 +311,16 @@ detect_move_normalize_dag = SubDagOperator(
             'vendor_uuid'                       : 'f00ca57c-4935-494e-9e40-b064fd38afda',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/amazingcharts/emr/sparkNormalizeAmazingChartsEMR.py',
             'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'emr_num_nodes'                     : 5,
+            'emr_node_type'                     : 'r4.16xlarge',
+            'emr_ebs_volume_size'               : 500,
+            'spark_conf_args'                   : ['--conf', 'spark.sql.shuffle.partitions=5000',
+                '--conf', 'spark.executor.cores=4', '--conf', 'spark.executor.memory=32G',
+                '--conf', 'spark.hadoop.fs.s3a.maximum.connections=1000',
+                '--conf', 'spark.files.useFetchCache=false',
+                '--conf', 'spark.sql.autoBroadcastJoinThreshold=1073741824'
+            ]
         }
     ),
     task_id='detect_move_normalize',
