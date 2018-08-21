@@ -231,7 +231,8 @@ queue_up_for_matching = SubDagOperator(
                     DEID_FILE_NAME_TEMPLATE, k, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
                 )
             ],
-            'regex_name_match'  : True
+            'regex_name_match'  : True,
+            'passthrough_only'  : True
         }
     ), task_id='queue_up_for_matching',
     dag=mdag
