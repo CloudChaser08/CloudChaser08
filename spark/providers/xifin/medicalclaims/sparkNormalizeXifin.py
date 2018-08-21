@@ -129,7 +129,7 @@ def run(spark, runner, date_input, in_parts=False, test=False, airflow_test=Fals
 
             prefix = date_input if prt is None else date_input + '_' + prt
             normalized_records_unloader.unload(
-                spark, runner, postprocessed, 'date_service', date_input, 'xifin',
+                spark, runner, postprocessed, 'date_service', prefix, 'xifin',
                 hvm_historical_date=datetime(hvm_historical.year,
                                             hvm_historical.month,
                                             hvm_historical.day)
