@@ -261,7 +261,7 @@ detect_move_normalize_dag = SubDagOperator(
                 path.split('/')[-1] for path in get_file_paths_func(DEID_FILE_NAME_TEMPLATE)
             ],
             'file_date_func'                    :
-                date_utils.generate_insert_date_into_template_function('{}/{}/{}'),
+                date_utils.generate_insert_date_into_template_function('{}/{}/{}', day_offset=ALLSCRIPTS_DX_DAY_OFFSET),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : '0b6cc05b-bff3-4365-b229-8d06480ad4a3',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/allscripts/medicalclaims/sparkNormalizeMcKessonRx.py',
