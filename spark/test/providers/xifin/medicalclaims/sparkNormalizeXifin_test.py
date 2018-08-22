@@ -37,7 +37,7 @@ def test_init(spark):
 
 
 def test_cardinality():
-    assert len(results) == 33
+    assert len(results) == 32
 
 
 def test_diagnosis_distinct_values():
