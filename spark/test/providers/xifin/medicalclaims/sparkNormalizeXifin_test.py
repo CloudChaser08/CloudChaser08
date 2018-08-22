@@ -40,16 +40,6 @@ def test_cardinality():
     assert len(results) == 33
 
 
-def test_place_of_service_id():
-    assert set(
-        [(res.claim_id, res.place_of_service_vendor_id) for res in results]
-    ) == {('0_accn_id-0', None),
-          ('0_accn_id-1', '4bf09e35675093d612a09c531be4d9fd'),
-          ('0_accn_id-1', '52d6db6abaec60fed808a063fe7aa8ab'),
-          ('0_accn_id-2', '62bfe176d368298264b4e4fdfc6cff3c'),
-          ('0_accn_id-2', '95d54e70718889763960b6b6565a24d0')}
-
-
 def test_diagnosis_distinct_values():
     assert sorted(set([
         (res.claim_id, res.vendor_test_id, res.diagnosis_priority, res.diagnosis_code, res.diagnosis_code_qual)
