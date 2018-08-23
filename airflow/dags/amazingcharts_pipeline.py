@@ -280,7 +280,7 @@ detect_move_normalize_dag = SubDagOperator(
             'emr_node_type'                     : 'r4.16xlarge',
             'emr_ebs_volume_size'               : 500,
             'spark_conf_args'                   : ['--conf', 'spark.sql.shuffle.partitions=5000',
-                '--conf', 'spark.executor.cores=4', '--conf', 'spark.executor.memory=32G',
+                '--conf', 'spark.executor.cores=4', '--conf', 'spark.executor.memory=26G',
                 '--conf', 'spark.hadoop.fs.s3a.maximum.connections=1000',
                 '--conf', 'spark.files.useFetchCache=false',
                 '--conf', 'spark.sql.autoBroadcastJoinThreshold=1073741824'
