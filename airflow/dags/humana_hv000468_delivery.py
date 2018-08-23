@@ -221,7 +221,7 @@ def do_deliver_extracted_data(ds, **kwargs):
 
     if 'UAT-' in gid:
         sftp_config = json.loads(Variable.get('humana_test_sftp_configuration'))
-        gid = git.replace('UAT-', '')
+        gid = gid.replace('UAT-', '')
     else:
         sftp_config = json.loads(Variable.get('humana_prod_sftp_configuration'))
     path = sftp_config['path']
@@ -246,7 +246,7 @@ def do_clean_up_workspace(ds, **kwargs):
     for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE,
         ENROLLMENT_EXTRACT_TEMPLATE, RETURN_FILE_TEMPLATE]:
 
-        os.remove(TMP_PATH_TEMPLATE.format(gid) + t.format(gid.replace('UAT-')))
+        os.remove(TMP_PATH_TEMPLATE.format(gid) + t.format(gid.replace('UAT-', '')))
 
     os.rmdir(TMP_PATH_TEMPLATE.format(gid))
 
