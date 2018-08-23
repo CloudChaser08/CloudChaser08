@@ -160,7 +160,7 @@ def nullify_due_to_level_of_service(target_column, level_of_service):
 # 33 Custodial Care Facility
 bad_pos_codes = [
     '5', '05', '6', '06', '7', '07', '8',
-    '08', '9', '09', '12', '13', '14', '33'
+    '08', '9', '09', '12', '13', '14', '33', '99'
 ]
 
 
