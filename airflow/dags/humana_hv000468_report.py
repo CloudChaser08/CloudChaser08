@@ -41,6 +41,7 @@ if HVDAG.HVDAG.airflow_env == 'test':
     S3_NORMALIZED_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/humana/hv000468/deliverable/{}/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/humana/'
+    S3_TRANSACTION_RAW_URL_UAT = 's3://healthverity/incoming/humana_uat/'
     S3_NORMALIZED_FILE_URL_TEMPLATE = 's3://salusv/deliverable/humana/hv000468/{}/'
 
 DEID_FILE_NAME_TEMPLATE = '{}_deid.txt'
@@ -115,7 +116,10 @@ fetch_extract_summaries = PythonOperator(
 )
 
 def get_group_received_ts(group_id):
-    path = S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(group_id)
+    if 'UAT-' in group_id:
+        path = S3_TRANSACTION_RAW_URL_UAT + DEID_FILE_NAME_TEMPLATE.format(group_id.replace('UAT-',''))
+    else:
+        path = S3_TRANSACTION_RAW_URL + DEID_FILE_NAME_TEMPLATE.format(group_id)
     return s3_utils.get_file_modified_date(path)
 
 def do_generate_daily_report(ds, **kwargs):
