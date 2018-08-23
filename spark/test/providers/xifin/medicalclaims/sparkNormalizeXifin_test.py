@@ -66,7 +66,7 @@ def test_procedure_code():
         ) for res in results
     ])) == [('0_accn_id-0', 'test_id-0', 'PROC', 'HC', 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-0', 'test_id-5', None, None, None, None, None, None),
-            ('0_accn_id-1', 'test_id-1', None, None, None, None, None, None),
+            ('0_accn_id-1', 'test_id-1', None, None, 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-2', 'test_id-2', 'PROC', 'HC', 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-2', 'test_id-3', 'PROC', 'HC', 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-2', 'test_id-4', None, None, None, None, None, None)]
