@@ -229,7 +229,7 @@ def _generate_queries(stats, provider_conf):
                     data_feed_id=provider_conf['datafeed_id'], top_values=top_values_string
                 ))
 
-        elif stat_name == 'fill_rates' and stat_value:
+        elif stat_name == 'fill_rate' and stat_value:
             name_id_dict = provider_conf['fill_rate_conf']['columns']
 
             for field_dict in stat_value:

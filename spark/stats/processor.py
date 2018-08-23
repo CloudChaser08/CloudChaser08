@@ -140,7 +140,7 @@ def _run_year_over_year(sqlContext, earliest_date, end_date, provider_conf):
 
 def run_marketplace_stats(
         spark, sqlContext, quarter, start_date, end_date, provider_conf, stats_to_calculate=[
-            'key_stats', 'longitudinality', 'year_over_year', 'fill_rates', 'top_values', 'epi'
+            'key_stats', 'longitudinality', 'year_over_year', 'fill_rate', 'top_values', 'epi'
         ]
 ):
     '''
@@ -157,8 +157,8 @@ def run_marketplace_stats(
         - all_stats: a dict of lists of Rows for each marketplace stat calculated
     '''
 
-    global ALL_DATA, SAMPLE_DATA, SAMPLE_DATA_MULTIPLIER
-    ALL_DATA = SAMPLE_DATA = SAMPLE_DATA_MULTIPLIER = None
+    global ALL_DATA, SAMPLED_DATA, SAMPLED_DATA_MULTIPLIER
+    ALL_DATA = SAMPLED_DATA = SAMPLED_DATA_MULTIPLIER = None
 
     # pull out some variables from provider_conf
     earliest_date = provider_conf['earliest_date']
@@ -172,7 +172,7 @@ def run_marketplace_stats(
     ).years
 
     # Generate fill rates
-    if 'fill_rates' in stats_to_calculate:
+    if 'fill_rate' in stats_to_calculate:
         fill_rates = _run_fill_rates(spark, sqlContext, provider_conf, start_date, end_date)
 
     # Generate top values
@@ -210,7 +210,7 @@ def run_marketplace_stats(
     # Return all the dfs
     all_stats = {}
     for stat in stats_to_calculate:
-        if stat == 'fill_rates':
+        if stat == 'fill_rate':
             all_stats[stat] = fill_rates
         elif stat == 'key_stats':
             all_stats[stat] = key_stats

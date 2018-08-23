@@ -69,7 +69,7 @@ def test_init(spark):
             'datatype'          : 'medicalclaims',
             'date_field'        : ['service_date'],
             'record_field'      : 'claim_id',
-            'fill_rates'        : True,
+            'fill_rate'         : True,
             'fill_rate_conf'    : fill_rate_conf,
             'key_stats'         : None,
             'top_values'        : None,
@@ -85,7 +85,7 @@ def test_init(spark):
             'datatype'          : 'medicalclaims',
             'date_field'        : ['service_date'],
             'record_field'      : None,
-            'fill_rates'        : True,
+            'fill_rate'         : True,
             'fill_rate_conf'    : fill_rate_conf,
             'key_stats'         : None,
             'top_values'        : None,
@@ -101,7 +101,7 @@ def test_init(spark):
             'datatype'          : 'medicalclaims',
             'date_field'        : ['service_date'],
             'record_field'      : None,
-            'fill_rates'        : None,
+            'fill_rate'         : None,
             'key_stats'         : None,
             'top_values'        : None,
             'longitudinality'   : None,
@@ -126,12 +126,12 @@ def test_init(spark):
                     end_date, prov_conf_no_fill_rate_calc)
 
 def test_fill_rate_calculated():
-    assert results_distinct_column['fill_rates'] is not None
-    assert results_no_distinct_column['fill_rates'] is not None
+    assert results_distinct_column['fill_rate'] is not None
+    assert results_no_distinct_column['fill_rate'] is not None
 
 
 def test_fill_rate_values():
-    assert sorted(results_distinct_column['fill_rates']) == [
+    assert sorted(results_distinct_column['fill_rate']) == [
         {'field': 'claim_id', 'fill': 1.0},
         {'field': 'col_2', 'fill': 1.0},
         {'field': 'hvid', 'fill': 1.0}
@@ -139,9 +139,9 @@ def test_fill_rate_values():
 
 
 def test_fill_rate_dataframe_count():
-    assert len(results_distinct_column['fill_rates']) == 3
-    assert len(results_no_distinct_column['fill_rates']) == 2
+    assert len(results_distinct_column['fill_rate']) == 3
+    assert len(results_no_distinct_column['fill_rate']) == 2
 
 
 def test_no_df_if_fill_rates_is_none_in_provider_conf():
-    assert results_no_fill_rate['fill_rates'] == None
+    assert results_no_fill_rate['fill_rate'] == None
