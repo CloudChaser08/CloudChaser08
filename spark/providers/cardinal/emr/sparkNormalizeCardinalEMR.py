@@ -356,7 +356,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             ]
         )(
             table['normalized_data']
-        ).repartition(2001).createOrReplaceTempView(table['table_name'])
+        ).repartition(1 if test else 2001).createOrReplaceTempView(table['table_name'])
 
         # unload delivery file for cardinal
         normalized_records_unloader.unload_delimited_file(

@@ -89,7 +89,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     import spark.providers.amazingcharts.emr.load_transactions as load_transactions
-    load_transactions.load(spark, runner, input_paths, date_input)
+    load_transactions.load(spark, runner, input_paths, date_input, test=test)
 
     payload_loader.load(runner, matching_path, ['personId'])
     # De-duplicate the payloads so that there is only one

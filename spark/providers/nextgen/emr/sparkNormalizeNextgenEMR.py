@@ -120,12 +120,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['hvJoinKey'], load_file_name=True, allow_empty=True)
 
-    load_transactions.load(runner, input_path, enc_reference_path, demo_reference_path)
+    load_transactions.load(runner, input_path, enc_reference_path, demo_reference_path, test=test)
     logging.debug("Loaded transactions data")
 
     # Append HVIDs to the demographics table
     prepare_demographics.prepare(spark, runner, crosswalk_path)
-    deduplicate_transactions.deduplicate(runner)
+    deduplicate_transactions.deduplicate(runner, test=test)
 
     transaction_tables = [
         'demographics_local', 'encounter_dedup', 'vitalsigns', 'lipidpanel',

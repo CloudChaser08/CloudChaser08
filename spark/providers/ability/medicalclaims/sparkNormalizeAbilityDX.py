@@ -60,14 +60,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_pth     = matching_path.format(date_input.replace('-', '/')) + set_id + '_*'
 
         try:
-            load_records.load(runner, input_pth_prefix, product, date_input)
+            load_records.load(runner, input_pth_prefix, product, date_input, test=test)
         except AnalysisException as e:
             if 'Path does not exist' in str(e):
                 continue
             else:
                 raise(e)
 
-        payload_loader.load(runner, matching_pth, ['claimId'], partitions=500, cache=True)
+        payload_loader.load(runner, matching_pth, ['claimId'], partitions=1 if test else 500, cache=True)
         runner.sqlContext.sql('SELECT * FROM matching_payload') \
                 .distinct() \
                 .createOrReplaceTempView('matching_payload')
@@ -76,15 +76,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         norm1 = schema_enforcer.apply_schema(
             runner.run_spark_script('mapping_1.sql', [['min_date', min_date]], return_output=True),
             medicalclaims_schema
-        ).distinct().repartition(500, 'claim_id').checkpoint()
+        ).distinct().repartition(1 if test else 500, 'claim_id').checkpoint()
         norm1.createOrReplaceTempView('medicalclaims_common_model')
         remaining_diags = runner.run_spark_script('mapping_pre_2.sql', return_output=True) \
-            .distinct().repartition(500, 'claimid')
+            .distinct().repartition(1 if test else 500, 'claimid')
         remaining_diags.createOrReplaceTempView('remaining_diagnosis')
         norm2 = schema_enforcer.apply_schema(
             runner.run_spark_script('mapping_2.sql', [['min_date', min_date]], return_output=True),
             medicalclaims_schema
-        ).distinct().repartition(500, 'claim_id').checkpoint()
+        ).distinct().repartition(1 if test else 500, 'claim_id').checkpoint()
         norm3 = schema_enforcer.apply_schema(
             runner.run_spark_script('mapping_3.sql', [['min_date', min_date]], return_output=True),
             medicalclaims_schema
