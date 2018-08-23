@@ -37,17 +37,7 @@ def test_init(spark):
 
 
 def test_cardinality():
-    assert len(results) == 33
-
-
-def test_place_of_service_id():
-    assert set(
-        [(res.claim_id, res.place_of_service_vendor_id) for res in results]
-    ) == {('0_accn_id-0', None),
-          ('0_accn_id-1', '4bf09e35675093d612a09c531be4d9fd'),
-          ('0_accn_id-1', '52d6db6abaec60fed808a063fe7aa8ab'),
-          ('0_accn_id-2', '62bfe176d368298264b4e4fdfc6cff3c'),
-          ('0_accn_id-2', '95d54e70718889763960b6b6565a24d0')}
+    assert len(results) == 32
 
 
 def test_diagnosis_distinct_values():
@@ -76,7 +66,7 @@ def test_procedure_code():
         ) for res in results
     ])) == [('0_accn_id-0', 'test_id-0', 'PROC', 'HC', 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-0', 'test_id-5', None, None, None, None, None, None),
-            ('0_accn_id-1', 'test_id-1', None, None, None, None, None, None),
+            ('0_accn_id-1', 'test_id-1', None, None, 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-2', 'test_id-2', 'PROC', 'HC', 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-2', 'test_id-3', 'PROC', 'HC', 'mo', 'mo', 'mo', 'mo'),
             ('0_accn_id-2', 'test_id-4', None, None, None, None, None, None)]
