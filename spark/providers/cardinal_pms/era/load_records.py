@@ -1,15 +1,15 @@
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
-def load(runner, input_path_prefix):
+def load(runner, input_path_prefix, test=False):
 
     for t in TABLES:
         df = records_loader \
             .load(runner, input_path_prefix + t, TABLE_COLUMNS[t], 'csv', '|') \
-            .repartition(500)
+            .repartition(1 if test else 500)
         postprocessor \
             .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
-            .repartition(5000) \
+            .repartition(1 if test else 5000) \
             .cache_and_track(t) \
             .createOrReplaceTempView(t)
 

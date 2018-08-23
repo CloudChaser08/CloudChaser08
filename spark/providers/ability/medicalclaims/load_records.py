@@ -4,7 +4,7 @@ import spark.helpers.records_loader as records_loader
 CLAIM_AFFILIATION_FIX_FILE = \
     's3://salusv/incoming/medicalclaims/ability/vwclaimaffiliation_correction_20170215/ap_vwclaimaffiliation.txt.20140101_20170215*'
 
-def load(runner, input_path_prefix, product, file_date):
+def load(runner, input_path_prefix, product, file_date, test=False):
 
     df = records_loader \
         .load(runner, input_path_prefix + 'record.vwheader*', TABLES['transactional_header'], 'csv', '|')
@@ -14,7 +14,7 @@ def load(runner, input_path_prefix, product, file_date):
                 lambda x: postprocessor.nullify(x, null_vals=['', 'NULL']))(df) \
         .drop('claimid2', 'hvjoinkey') \
         .distinct() \
-        .repartition(500, 'claimid').cache_and_track('transactional_header') \
+        .repartition(1 if test else 500, 'claimid').cache_and_track('transactional_header') \
         .createOrReplaceTempView('transactional_header')
 
     conf = [
@@ -41,7 +41,7 @@ def load(runner, input_path_prefix, product, file_date):
             .compose(postprocessor.trimmify,
                     lambda x: postprocessor.nullify(x, null_vals=['', 'NULL']))(df) \
             .distinct() \
-            .repartition(500, 'claimid').cache_and_track(c['table']) \
+            .repartition(1 if test else 500, 'claimid').cache_and_track(c['table']) \
             .createOrReplaceTempView(c['table'])
 
     for affiliation_type in ['Rendering', 'Referring', 'ServiceLocation', 'AmbulanceDropOff', 'Supervising', 'Operating', 'Purchased', 'Other']:

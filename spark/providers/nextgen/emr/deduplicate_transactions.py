@@ -1,7 +1,7 @@
 import pyspark.sql.functions as F
 from pyspark.sql import Window
 
-def deduplicate(runner):
+def deduplicate(runner, test=False):
     old_encounter = runner.sqlContext.table('old_encounter').drop('nextrecorddate')
     new_encounter = runner.sqlContext.table('new_encounter')
     encounter_union = old_encounter.union(new_encounter)
@@ -9,7 +9,7 @@ def deduplicate(runner):
 
     encounter_union.withColumn('nextrecorddate', F.lead(F.col('recorddate')).over(window)) \
             .where('nextrecorddate IS NULL').drop('nextrecorddate') \
-            .repartition(5000, 'nextgengroupid').cache_and_track('encounter_dedup') \
+            .repartition(1 if test else 5000, 'nextgengroupid').cache_and_track('encounter_dedup') \
             .createOrReplaceTempView('encounter_dedup')
 
     old_demographics = runner.sqlContext.table('old_demographics').drop('nextrecorddate')
@@ -32,5 +32,5 @@ def deduplicate(runner):
     window = Window.orderBy('recorddate').partitionBy('nextgengroupid', 'reportingenterpriseid')
 
     demographics_union.withColumn('nextrecorddate', F.lead(F.col('recorddate')).over(window)) \
-            .repartition(5000, 'nextgengroupid') \
+            .repartition(1 if test else 5000, 'nextgengroupid') \
             .createOrReplaceTempView('demographics_local')

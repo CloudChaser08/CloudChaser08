@@ -46,7 +46,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     import load_records
-    load_records.load(runner, input_path_prefix)
+    load_records.load(runner, input_path_prefix, test=test)
 
     # Normalize claim summary
     runner.run_spark_script('pre_summary_mapping.sql', return_output=True) \

@@ -4,7 +4,7 @@ import spark.helpers.records_loader as records_loader
 from pyspark.sql.types import *
 from pyspark.sql.functions import lit
 
-def load(spark, runner, table_locs, batch_date):
+def load(spark, runner, table_locs, batch_date, test=False):
     for table, input_path in table_locs.items():
         try:
             tns = sorted([tn for tn in TABLE_COLS.keys() if tn.startswith(table)])
@@ -31,7 +31,7 @@ def load(spark, runner, table_locs, batch_date):
                 postprocessor.compose(
                     postprocessor.trimmify,
                     lambda df: postprocessor.nullify(df, ['NULL', ''])
-                )(df).where("date_key != 'date_key'").repartition(5000, 'patient_key').cache().createOrReplaceTempView(table)
+                )(df).where("date_key != 'date_key'").repartition(1 if test else 5000, 'patient_key').cache().createOrReplaceTempView(table)
         except:
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),
