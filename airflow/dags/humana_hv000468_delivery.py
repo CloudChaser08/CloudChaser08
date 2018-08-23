@@ -87,7 +87,7 @@ def get_expected_matching_files(ds, kwargs):
     group_id = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
 
     expected_files = [
-        DEID_FILE_NAME_TEMPLATE.format(group_id)
+        DEID_FILE_NAME_TEMPLATE.format(group_id.replace('UAT-', ''))
     ]
     if HVDAG.HVDAG.airflow_env != 'prod':
         logging.info(expected_files)
@@ -118,7 +118,7 @@ def do_move_matching_payload(ds, **kwargs):
     for deid_file in deid_files:
         s3_prefix = S3_PROD_MATCHING_URL + deid_file
         for payload_file in s3_utils.list_s3_bucket(s3_prefix):
-            directory = k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+            directory = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
             s3_utils.copy_file(payload_file, S3_PAYLOAD_DEST + directory + '/' + payload_file.split('/')[-1])
 
 move_matching_payload = PythonOperator(
@@ -188,7 +188,7 @@ def do_fetch_extracted_data(ds, **kwargs):
         s3_utils.fetch_file_from_s3(
             S3_NORMALIZED_FILE_URL_TEMPLATE.format(gid) + \
                 t.format(gid),
-            get_tmp_dir(ds, kwargs) + t.format(gid)
+            get_tmp_dir(ds, kwargs) + t.format(gid.replace('UAT-', ''))
         )
 
 fetch_extracted_data = PythonOperator(
@@ -199,7 +199,7 @@ fetch_extracted_data = PythonOperator(
 )
 
 def do_create_return_file(ds, **kwargs):
-    gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+    gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id').replace('UAT-', '')
     tmp_dir = get_tmp_dir(ds, kwargs)
     extracted_files = [t.format(gid) for t in [
         MEDICAL_CLAIMS_EXTRACT_TEMPLATE,
@@ -217,10 +217,15 @@ create_return_file = PythonOperator(
 )
 
 def do_deliver_extracted_data(ds, **kwargs):
-    sftp_config = json.loads(Variable.get('humana_prod_sftp_configuration'))
+    gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
+
+    if 'UAT-' in gid:
+        sftp_config = json.loads(Variable.get('humana_test_sftp_configuration'))
+        gid = gid.replace('UAT-', '')
+    else:
+        sftp_config = json.loads(Variable.get('humana_prod_sftp_configuration'))
     path = sftp_config['path']
     del sftp_config['path']
-    gid = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
 
     sftp_utils.upload_file(
         get_tmp_dir(ds, kwargs) + RETURN_FILE_TEMPLATE.format(gid),
@@ -241,7 +246,7 @@ def do_clean_up_workspace(ds, **kwargs):
     for t in [MEDICAL_CLAIMS_EXTRACT_TEMPLATE, PHARMACY_CLAIMS_EXTRACT_TEMPLATE,
         ENROLLMENT_EXTRACT_TEMPLATE, RETURN_FILE_TEMPLATE]:
 
-        os.remove(TMP_PATH_TEMPLATE.format(gid) + t.format(gid))
+        os.remove(TMP_PATH_TEMPLATE.format(gid) + t.format(gid.replace('UAT-', '')))
 
     os.rmdir(TMP_PATH_TEMPLATE.format(gid))
 
