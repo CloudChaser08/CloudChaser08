@@ -51,7 +51,7 @@ else:
 
 # Transaction Zip file
 TRANSACTION_FILE_DESCRIPTION = 'AmazingCharts transaction zip file'
-TRANSACTION_FILE_NAME_TEMPLATE = 'healthverity_{0}{1}.zip'
+TRANSACTION_FILE_NAME_TEMPLATE = 'healthverity_{0}{1}{2}.zip'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
     TMP_PATH_TEMPLATE
@@ -112,7 +112,7 @@ def generate_unzip_step(zip_filename_template):
         )
         os.remove(get_tmp_dir(ds, kwargs) + zip_filename)
     return PythonOperator(
-        task_id='unzip_' + zip_filename_template.format('y', 'm').split('.')[0],
+        task_id='unzip_' + zip_filename_template.format('y', 'm', 'd').split('.')[0],
         provide_context=True,
         python_callable=execute,
         dag=mdag
@@ -142,7 +142,6 @@ unzip_dict = {
     'f_medication': generate_unzip_step("f_medication.zip")
 }
 
-
 def generate_split_step(filename):
     file_id = filename.split('.')[0]
 
@@ -161,7 +160,8 @@ def generate_split_step(filename):
                     S3_TRANSACTION_PROCESSED_URL_TEMPLATE + file_id + '/',
                     month_offset=AMAZINGCHARTS_MONTH_OFFSET
                 ),
-                'num_splits'               : 20
+                'num_splits'               : 20,
+                'source_encoding'          : 'utf-16'
             }
         ),
         task_id='split_' + file_id + '_file',
@@ -218,7 +218,6 @@ def clean_up_workspace_step():
         task_id='clean_up_workspace',
         provide_context=True,
         python_callable=execute,
-        trigger_rule='all_done',
         dag=mdag
     )
 
@@ -276,7 +275,16 @@ detect_move_normalize_dag = SubDagOperator(
             'vendor_uuid'                       : 'f00ca57c-4935-494e-9e40-b064fd38afda',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/amazingcharts/emr/sparkNormalizeAmazingChartsEMR.py',
             'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'emr_num_nodes'                     : 5,
+            'emr_node_type'                     : 'r4.16xlarge',
+            'emr_ebs_volume_size'               : 500,
+            'spark_conf_args'                   : ['--conf', 'spark.sql.shuffle.partitions=5000',
+                '--conf', 'spark.executor.cores=4', '--conf', 'spark.executor.memory=26G',
+                '--conf', 'spark.hadoop.fs.s3a.maximum.connections=1000',
+                '--conf', 'spark.files.useFetchCache=false',
+                '--conf', 'spark.sql.autoBroadcastJoinThreshold=1073741824'
+            ]
         }
     ),
     task_id='detect_move_normalize',
