@@ -78,8 +78,9 @@ def do_copy_deid_files(ds, **kwargs):
     for gid in groups_ready:
         src_fn = DEID_FILE_NAME_TEMPLATE.format(gid.replace('UAT-', ''))
         dest_fn = DEID_FILE_NAME_TEMPLATE.format(gid)
+        incoming_loc = S3_INCOMING_LOCATION if 'UAT-' not in gid else S3_INCOMING_LOCATION_UAT
         s3_utils.copy_file(
-            S3_INCOMING_LOCATION + src_fn,
+            incoming_loc + src_fn,
             S3_RECEIVED_LOCATION_TEMPLATE.format(gid) + dest_fn
         )
 
@@ -93,7 +94,14 @@ copy_deid_files = PythonOperator(
 # Queue up DeID file for matching
 def get_deid_file_urls(ds, kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
-    return [S3_INCOMING_LOCATION + DEID_FILE_NAME_TEMPLATE.format(gid.replace('UAT-', '')) for gid in groups_ready]
+    locs = []
+    for gid in groups_ready:
+        if 'UAT-' in gid:
+            locs.append(S3_INCOMING_LOCATION_UAT + DEID_FILE_NAME_TEMPLATE.format(gid.replace('UAT-', '')))
+        else:
+            locs.append(S3_INCOMING_LOCATION + DEID_FILE_NAME_TEMPLATE.format(gid.replace('UAT-', '')))
+
+    return locs
 
 queue_up_for_matching = SubDagOperator(
     subdag=queue_up_for_matching.queue_up_for_matching(
