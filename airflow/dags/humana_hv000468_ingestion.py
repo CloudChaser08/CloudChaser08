@@ -58,8 +58,8 @@ def do_get_groups_ready(**kwargs):
         gid = f.split('_')[0]
         groups_ready.add(gid)
 
-    new_files = set(received_uat_files).difference(set(processed_files))
-    for f in new_files:
+    new_uat_files = set(received_uat_files).difference(set(processed_files))
+    for f in new_uat_files:
         gid = f.split('_')[0]
         groups_ready.add('UAT-' + gid)
 
@@ -112,7 +112,7 @@ queue_up_for_matching = SubDagOperator(
         {
             'source_files_func' : get_deid_file_urls,
             'priority'          : 'priority1',
-            'write_lock'        : True
+            'write_lock'        : True,
         }
     ),
     task_id='queue_up_for_matching',
