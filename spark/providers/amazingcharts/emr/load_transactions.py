@@ -31,7 +31,7 @@ def load(spark, runner, table_locs, batch_date, test=False):
                 postprocessor.compose(
                     postprocessor.trimmify,
                     lambda df: postprocessor.nullify(df, ['NULL', ''])
-                )(df).where("date_key != 'date_key'").repartition(1 if test else 5000, 'patient_key').cache()
+                )(df).where("date_key != 'date_key'").repartition(1 if test else 5000, 'patient_key').cache().createOrReplaceTempView(table)
         except:
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),
