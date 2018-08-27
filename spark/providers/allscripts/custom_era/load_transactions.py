@@ -18,38 +18,20 @@ def load(spark, runner, input_paths):
             )(df).createOrReplaceTempView(table)
         else:
             # Read in data as lines of text
-            raw_df = postprocessor.compose(
-                postprocessor.trimmify,
-                postprocessor.nullify
-            )(spark.read.text(input_path))
-            # Get the columns for each source table we expect
-            svc_cols = map(lambda x: x.name, TABLE_CONF['svc'].schema)
-            ts3_cols = map(lambda x: x.name, TABLE_CONF['ts3'].schema)
-            hdr_cols = map(lambda x: x.name, TABLE_CONF['hdr'].schema)
-            plb_cols = map(lambda x: x.name, TABLE_CONF['plb'].schema)
-            clp_cols = map(lambda x: x.name, TABLE_CONF['clp'].schema)
-            # Filter based on the length of columns
-            svc_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(svc_cols)))
-            ts3_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(ts3_cols)))
-            hdr_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(hdr_cols)))
-            plb_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(plb_cols)))
-            clp_raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(clp_cols)))
-            # Extract the line into a dataframe with one column for each element in the array
-            svc_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                   .select(*[F.col('split')[i].alias(svc_cols[i]) for i in xrange(len(svc_cols))]) \
-                   .createOrReplaceTempView('svc')
-            ts3_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                   .select(*[F.col('split')[i].alias(ts3_cols[i]) for i in xrange(len(ts3_cols))]) \
-                   .createOrReplaceTempView('ts3')
-            hdr_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                   .select(*[F.col('split')[i].alias(hdr_cols[i]) for i in xrange(len(hdr_cols))]) \
-                   .createOrReplaceTempView('hdr')
-            plb_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                   .select(*[F.col('split')[i].alias(plb_cols[i]) for i in xrange(len(plb_cols))]) \
-                   .createOrReplaceTempView('plb')
-            clp_raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                   .select(*[F.col('split')[i].alias(clp_cols[i]) for i in xrange(len(clp_cols))]) \
-                   .createOrReplaceTempView('clp')
+            raw_df = spark.read.text(input_path)
+            for t in set(TABLE_CONF.keys()) - set(['payload']):
+                # Get the columns for each source table we expect
+                cols = map(lambda x: x.name, TABLE_CONF[t].schema)
+                # Filter based on the length of columns
+                raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(cols)))
+                # Extract the line into a dataframe with one column for each element in the array
+                split = raw.select(F.split(F.col('value'), '\|').alias('split')) \
+                           .select(*[F.col('split')[i].alias(cols[i]) for i in xrange(len(cols))])
+                # Trimmify and Nullify the data
+                postprocessor.compose(
+                    postprocessor.trimmify,
+                    postprocessor.nullify
+                )(split).createOrReplaceTempView(t)
 
 
 TABLE_CONF = {
