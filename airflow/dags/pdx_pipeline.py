@@ -90,7 +90,6 @@ def get_deid_file_paths(ds, **kwargs):
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
     transaction_files = get_transaction_file_paths(ds, kwargs)
-    logging.info("Filtered files: {}".format(str(transaction_files)))
     return map(lambda x: [x, x + '.gz'], transaction_files)
 
 
