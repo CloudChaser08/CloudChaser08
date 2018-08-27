@@ -89,23 +89,9 @@ def get_deid_file_paths(ds, **kwargs):
 
 
 def encrypted_decrypted_file_paths_function(ds, kwargs):
-    file_dir = get_tmp_dir(ds, kwargs)
-    files = os.listdir(file_dir)
-    logging.info("File dir: {}".format(file_dir))
-    logging.info("Files found: {}".format(str(files)))
-    transaction_files = filter(lambda x:
-                               re.search(
-                                   date_utils.insert_date_into_template(
-                                       TRANSACTION_FILE_NAME_TEMPLATE,
-                                       kwargs,
-                                       day_offset=PDX_DAY_OFFSET
-                                   ),
-                                   x
-                               ),
-                               files
-                              )
+    transaction_files = get_transaction_file_paths(ds, kwargs)
     logging.info("Filtered files: {}".format(str(transaction_files)))
-    return map(lambda x: [file_dir + x, file_dir + x + '.gz'], transaction_files)
+    return map(lambda x: [x, x + '.gz'], transaction_files)
 
 
 def generate_file_validation_task(
