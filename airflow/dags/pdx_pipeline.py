@@ -205,7 +205,7 @@ split_transaction_file = SubDagOperator(
                 S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 
                 day_offset = PDX_DAY_OFFSET
             ),
-            'num_splits'               : 20
+            'split_size'               : '20M'
         }
     ),
     task_id='split_transaction_file',
