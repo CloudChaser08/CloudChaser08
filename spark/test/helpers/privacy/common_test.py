@@ -69,3 +69,51 @@ def test_filter(spark):
     # assert original transformer was not modified by additional
     # transforms dict update
     assert common_priv.column_transformer.transforms == old_transformer.transforms
+
+
+def cap_year_of_birth_helper(spark, age, yob, date_service):
+    test_df = spark['spark'].sparkContext.parallelize([[age, yob, date_service]])\
+	.toDF(StructType([
+	    StructField('patient_age', StringType()), 
+	    StructField('patient_year_of_birth', StringType()),
+	    StructField('date_service', StringType())
+	]))
+    return common_priv.filter(test_df).collect()
+
+def test_cap_year_of_birth(spark):
+
+    # test when service - yob >= 85 
+    age, yob, date_service = None, "1900", "2017-01-01"
+    assert cap_year_of_birth_helper(spark, age, yob, date_service) \
+	== [Row(None, '1927', '2017-01-01')]
+
+    # test when service - yob < 85
+    age, yob, date_service = None, "2000", "2017-01-01"
+    assert cap_year_of_birth_helper(spark, age, yob, date_service) \
+    	== [Row(None, '2000', '2017-01-01')]
+
+    # test when age < 85
+    age, yob, date_service = "18", "2000", None
+    assert cap_year_of_birth_helper(spark, age, yob, date_service) \
+    	== [Row("18", "2000", None)]
+
+    # test when age >= 85 and yob is null
+    age, yob, date_service = "90", None, None
+    assert cap_year_of_birth_helper(spark, age, yob, date_service) \
+	== [Row("90", None, None)]
+
+    # test when age >= 85
+    age, yob, date_service = "90", "1916", None
+    assert cap_year_of_birth_helper(spark, age, yob, date_service) \
+	== [Row("90", "1927", None)]
+
+    # test when YOB is > 85 years ago
+    age, yob, date_service = None, "1800", None
+    assert cap_year_of_birth_helper(spark, age, yob, date_service) \
+	== [Row(None, "1927", None)]
+
+    # test when YOB < 85 years ago
+    age, yob, date_service = None, "2018", None
+    assert cap_year_of_birth_helper(spark, age, yob, date_service) \
+	== [Row(None, "2018", None)] 
+    

@@ -267,7 +267,7 @@ def cap_year_of_birth(age, date_service, year_of_birth):
             age is not None
             and age != ''
         ):
-            if int(age) >= 85:
+            if int(age) >= 85 and year_of_birth is not None:
                 return 1927
             return year_of_birth
 
