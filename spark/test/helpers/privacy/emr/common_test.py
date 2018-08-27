@@ -9,17 +9,18 @@ from pyspark.sql.types import StructField, StructType, StringType, Row
 def test_filter(spark):
     # test df including commonly filtered fields
     test_df = spark['spark'].sparkContext.parallelize([
-        ['100', '1880', '2017-01-01', 'dummyval']
+        ['100', '1880', 'unknown', '2017-01-01', 'dummyval']
     ]).toDF(StructType([
         StructField('ptnt_age_num', StringType()),
         StructField('ptnt_birth_yr', StringType()),
-        StructField('enc_dt', StringType()),
+	StructField('ptnt_gender_cd', StringType()),    
+	StructField('enc_dt', StringType()),
         StructField('notransform', StringType())
     ]))
 
     # assertion with no additional transforms
     assert common_emr_priv.filter(test_df).collect() \
-        == [Row('90', '1927', '2017-01-01', 'dummyval')]
+        == [Row('90', '1927', 'U', '2017-01-01', 'dummyval')]
 
     # save original state of built-in transformer
     old_transformer = Transformer(**dict(common_emr_priv.emr_transformer.transforms))
@@ -29,7 +30,7 @@ def test_filter(spark):
         notransform=[
             TransformFunction(upper, ['notransform'], True)
         ]
-    )).collect() == [Row('90', '1927', '2017-01-01', 'DUMMYVAL')]
+    )).collect() == [Row('90', '1927', 'U', '2017-01-01', 'DUMMYVAL')]
 
     # assert original transformer was not modified by additional
     # transforms dict update
