@@ -8,6 +8,7 @@ from spark.helpers.udf.general_helpers import obfuscate_hvid
 
 results = {}
 return_file_name = {}
+errors = {}
 
 GROUPS = [
     'LHV1_Source1_PatDemo_20180717_v1',         # t1
@@ -26,6 +27,7 @@ def test_init(spark):
     for g in GROUPS:
         return_file_name[g] = liquidhub.run(spark['spark'], spark['runner'], g, 1, True)
         results[g] = spark['sqlContext'].table('liquidhub_deliverable').collect()
+        errors[g]  = spark['sqlContext'].table('liquidhub_error').collect()
 
 def test_hvid_obfuscation():
     # Manufacturer is Amgen, salt is just 'LHv2'
@@ -89,6 +91,17 @@ def test_manufacturer_column():
 def test_file_name():
     for g in GROUPS:
         return_file_name[g] == g + '20180715v1.txt'
+
+def test_bad_manufacturers():
+    assert(len(errors[GROUPS[2]]) == 2)
+    assert [r for r in errors[GROUPS[2]] if r.manufacturer == 'UNKNOWN'][0] \
+        .bad_patient_ids == ['claim-14']
+    assert [r for r in errors[GROUPS[2]] if r.manufacturer == 'UNKNOWN'][0] \
+        .bad_patient_count == 1
+    assert [r for r in errors[GROUPS[2]] if r.manufacturer == 'AIMOVIG'][0] \
+        .bad_patient_ids == None
+    assert [r for r in errors[GROUPS[2]] if r.manufacturer == 'AIMOVIG'][0] \
+        .bad_patient_count == 7
 
 def test_cleanup(spark):
     cleanup(spark)

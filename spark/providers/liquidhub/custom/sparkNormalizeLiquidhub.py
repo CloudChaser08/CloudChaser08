@@ -9,11 +9,17 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.records_loader as records_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.constants as constants
-from pyspark.sql.types import StringType, StructType, StructField
-from pyspark.sql.functions import udf, lit
+from pyspark.sql.types import StringType, StructType, StructField, ArrayType
+import pyspark.sql.functions as F
 import transactions_lhv1, transactions_lhv2
 import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
+import json
+
+VALID_MANUFACTURERS = [
+        m.lower() for m in 
+        ['Amgen', 'Novartis']
+    ]
 
 def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     if test:
@@ -50,7 +56,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # If the manufacturer name is not in the data, it will be in the group id
     if 'PatDemo' not in group_id:
         spark.table('liquidhub_raw') \
-            .withColumn('manufacturer', lit(group_id_parts[1])) \
+            .withColumn('manufacturer', F.lit(group_id_parts[1])) \
             .createOrReplaceTempView('liquidhub_raw')
 
     content = runner.run_spark_script('normalize.sql', return_output=True)
@@ -86,6 +92,29 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     content.select('source_name', 'manufacturer').distinct() \
             .createOrReplaceTempView('liquidhub_summary')
 
+    # Identify data from unexpected manufacturers
+    bad_content = content.select('source_patient_id', 'source_name', F.coalesce(F.col('manufacturer'), F.lit('UNKNOWN')).alias('manufacturer')) \
+            .where((F.lower(F.col('manufacturer')).isin(VALID_MANUFACTURERS) == False) | F.isnull(F.col('manufacturer')))
+
+    small_bad_manus = bad_content \
+            .groupBy(F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu')) \
+            .count().where('count <= 5').collect()
+
+    small_bad_manus = [r.manu for r in small_bad_manus]
+
+    few_bad_rows  = bad_content.where(
+                F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus)
+            ).groupBy('source_name', 'manufacturer') \
+            .agg(F.collect_set('source_patient_id').alias('bad_patient_ids'), F.count('manufacturer').alias('bad_patient_count'))
+
+    lots_bad_rows = bad_content.where(
+                F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus) == False
+            ).groupBy('source_name', 'manufacturer') \
+            .agg(F.count('manufacturer').alias('bad_patient_count')) \
+            .select('source_name', 'manufacturer', F.lit(None).cast(ArrayType(StringType())).alias('bad_patient_ids'), 'bad_patient_count')
+
+    few_bad_rows.union(lots_bad_rows).createOrReplaceTempView('liquidhub_error')
+
     # The beginning of the output file should be the same the group_id
     # Then today's date and version number of the data processing run
     # (1 for the first run of this group, 2 for the second, etc)
@@ -109,6 +138,11 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
             summ = spark.table('liquidhub_summary').collect()
             fout.write('\n'.join(['{}|{}'.format(r.source_name, r.manufacturer) for r in summ]))
         subprocess.check_call(['hadoop', 'fs', '-put', '/tmp/summary_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/summary_report_' + group_id + '.txt'])
+        err = spark.table('liquidhub_error').collect()
+        if len(err) != 0:
+            with open('/tmp/error_report_' + group_id + '.txt', 'w') as fout:
+                fout.write('\n'.join(['{}|{}|{}|{}'.format(r.source_name, r.manufacturer, r.bad_patient_count, json.dumps(r.bad_patient_ids)) for r in err]))
+            subprocess.check_call(['hadoop', 'fs', '-put', '/tmp/error_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/error_report_' + group_id + '.txt'])
         
 
 def main(args):
