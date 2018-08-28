@@ -107,7 +107,8 @@ SELECT
         demo.retro_bill_price, demo.retro_trade_discount_amount, demo.trade_discount_amount, demo.due_amt, demo.expect_price
         )[claim_transaction_amount_exploder.n] IS NOT NULL
     THEN 'DEMO.EXPECT_PRICE'
-    END                                                                       AS claim_transaction_amount_qual
+    END                                                                       AS claim_transaction_amount_qual,
+    demo.status                                                               AS logical_delete_reason
 FROM billed_procedures_complete proc
     LEFT OUTER JOIN diagnosis_complete diag 
         ON proc.accn_id = diag.accn_id
@@ -118,7 +119,7 @@ FROM billed_procedures_complete proc
         AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_2, 'dummy2')
         AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_3, 'dummy2')
         AND COALESCE(diag.diag_code, 'dummy1') <> COALESCE(proc.diag_code_4, 'dummy2')
-    LEFT OUTER JOIN ordered_tests_complete test
+    LEFT OUTER JOIN tests_complete test
         ON proc.accn_id = test.accn_id
         AND proc.client_id = test.client_id
         AND proc.test_id = test.test_id

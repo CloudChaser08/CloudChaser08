@@ -113,7 +113,7 @@ TABLES = {
         'diagnosis_code_table',
         'hvJoinKey'
     ],
-    'ordered_tests': [
+    'tests': [
         'accn_id',
         'test_id',
         'test_name',
@@ -147,7 +147,7 @@ MATCHING_TABLES = {
         'patientId',
         'hvJoinKey'
     ],
-    'ordered_tests': [
+    'tests': [
         'patientId',
         'hvJoinKey'
     ],
@@ -188,7 +188,7 @@ def load_matching_payloads(runner, matching_path_prefix):
         )
 
 
-def reconstruct_records(runner, partitions):
+def reconstruct_records(runner, partitions, part1=None, part2=None):
     '''
     Combine the transactional and payload data back into complete records
     '''
@@ -200,9 +200,12 @@ def reconstruct_records(runner, partitions):
 
         combined = transactional.join(payload, 'hvJoinKey', 'inner') \
                 .withColumn('full_accn_id', F.concat(transactional['client_id'], F.lit('_'), payload['patientId'])) \
-                .withColumn('accn_id', payload['patientId']) \
-                .repartition(partitions, F.col('full_accn_id')) \
-                .cache_and_track(table + '_complete')
+                .withColumn('accn_id', payload['patientId'])
+
+        if part1 is not None:
+            combined = combined.where((F.md5(F.col('full_accn_id')).cast('string').substr(1, 1) >= F.lit(part1)) & (F.md5(F.col('full_accn_id')).cast('string').substr(1, 1) < F.lit(part2)))
+
+        combined = combined.repartition(partitions, F.col('full_accn_id'))
 
         deduplication_window = Window.partitionBy(
             *[field for field in combined.columns if field != 'hvJoinKey']
@@ -212,5 +215,6 @@ def reconstruct_records(runner, partitions):
             combined.columns + [F.row_number().over(deduplication_window).alias('row_num')]
         ).where(F.col('row_num') == 1).drop('row_num')
 
+        deduplicated.cache_and_track(table + '_complete')
         deduplicated.createOrReplaceTempView(table + '_complete')
         deduplicated.count()

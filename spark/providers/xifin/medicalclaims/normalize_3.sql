@@ -84,7 +84,8 @@ SELECT
         demo.retro_bill_price, demo.retro_trade_discount_amount, demo.trade_discount_amount, demo.due_amt, demo.expect_price
         )[claim_transaction_amount_exploder.n] IS NOT NULL
     THEN 'DEMO.EXPECT_PRICE'
-    END                                                                       AS claim_transaction_amount_qual
+    END                                                                       AS claim_transaction_amount_qual,
+    demo.status                                                               AS logical_delete_reason
 FROM diagnosis_complete diag
     LEFT OUTER JOIN (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY accn_id, client_id ORDER BY test_id) AS row_num
@@ -114,7 +115,7 @@ WHERE NOT EXISTS (
         AND 0 <> LENGTH(TRIM(COALESCE(pr.test_id, '')))
         )
     AND NOT EXISTS (
-    SELECT 1 FROM ordered_tests_complete t
+    SELECT 1 FROM tests_complete t
     WHERE  diag.accn_id = t.accn_id
         AND  diag.client_id = t.client_id
         AND  diag.test_id = t.test_id
