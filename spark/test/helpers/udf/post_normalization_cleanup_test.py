@@ -42,7 +42,7 @@ def test_age_validation():
 def test_year_of_birth_cap():
     # should get capped
     assert cleanup.cap_year_of_birth(None, None, 1800) == 1927
-    assert cleanup.cap_year_of_birth(100, None, None) == 1927
+    assert cleanup.cap_year_of_birth(100, None, None) == None
     assert cleanup.cap_year_of_birth(
         None, datetime.date(2016, 1, 1), 1915
     ) == 1927

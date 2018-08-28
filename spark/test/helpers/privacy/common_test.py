@@ -69,3 +69,13 @@ def test_filter(spark):
     # assert original transformer was not modified by additional
     # transforms dict update
     assert common_priv.column_transformer.transforms == old_transformer.transforms
+
+
+def cap_year_of_birth_helper(spark, age, yob, date_service):
+    test_df = spark['spark'].sparkContext.parallelize([[age, yob, date_service]])\
+	.toDF(StructType([
+	    StructField('patient_age', StringType()), 
+	    StructField('patient_year_of_birth', StringType()),
+	    StructField('date_service', StringType())
+	]))
+    return common_priv.filter(test_df).collect()
