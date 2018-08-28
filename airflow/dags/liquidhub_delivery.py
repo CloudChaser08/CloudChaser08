@@ -1,7 +1,8 @@
 from airflow.models import Variable
-from airflow.operators import PythonOperator, SubDagOperator, DummyOperator
+from airflow.operators import *
 from datetime import datetime, timedelta
 import os
+import json
 
 # hv-specific modules
 import common.HVDAG as HVDAG
@@ -9,8 +10,10 @@ import subdags.detect_move_normalize as detect_move_normalize
 
 import util.s3_utils as s3_utils
 import util.sftp_utils as sftp_utils
+import util.ses_utils as ses_utils
 
-for m in [detect_move_normalize, s3_utils, sftp_utils]:
+for m in [detect_move_normalize, s3_utils, sftp_utils,
+        ses_utils]:
     reload(m)
 
 # Applies to all files
@@ -94,11 +97,83 @@ detect_move_normalize_dag = SubDagOperator(
     dag=mdag
 )
 
+def do_check_errors(ds, **kwargs):
+    gid = get_group_id(ds, kwargs)
+
+    s3_url = S3_NORMALIZED_FILE_URL_TEMPLATE.format(gid)
+    error_files = [f for f in 
+            s3_utils.list_s3_bucket_files(s3_url)
+            if f.startswith('error_report')]
+    if len(error_files) > 0:
+        kwargs['ti'].xcom_push(key='error_file', value=error_files[0])
+        return 'fetch_error_file'
+
+    return 'fetch_return_file'
+
+check_errors = BranchPythonOperator(
+    task_id='check_errors',
+    provide_context=True,
+    python_callable=do_check_errors,
+    dag=mdag
+)
+
+def do_fetch_error_file(ds, **kwargs):
+    gid = get_group_id(ds, kwargs)
+
+    s3_url = S3_NORMALIZED_FILE_URL_TEMPLATE.format(gid)
+    error_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='check_errors', key='error_file')
+
+    s3_utils.fetch_file_from_s3(s3_url + error_file, get_tmp_dir(ds, kwargs) + error_file)
+
+fetch_error_file = PythonOperator(
+    task_id='fetch_error_file',
+    provide_context=True,
+    python_callable=do_fetch_error_file,
+    dag=mdag
+)
+
+def do_email_error_report(ds, **kwargs):
+    RECIPIENTS = [
+        'Lauren Langhauser <lfrancis@healthverity.com>',
+        'Cree Flory <cflory@healthverity.com>',
+        'Dominique Hurley <dhurley@healthverity.com>'
+    ]
+
+    error_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='check_errors', key='error_file')
+    with open(get_tmp_dir(ds, kwargs) + error_file) as fin:
+        lines = fin.readlines()
+
+    LOTS_PATIENTS_MSG = 'Source "{}" sent unexpected manufacturer value "{}" for {} patients\n'
+    FEW_PATIENTS_MSG  = 'Source "{}" sent unexpected manufacturer value "{}" for patient id "{}"\n'
+    email_content = ''
+    for l in lines:
+        (source, manufacturer, count, patient_ids) = l.strip().split('|')
+
+        patient_ids = json.loads(patient_ids)
+        if patient_ids:
+            email_content += ''.join([FEW_PATIENTS_MSG.format(source, manufacturer, patient_id) for patient_id in patient_ids])
+        else:
+            email_content += LOTS_PATIENTS_MSG.format(source, manufacturer, count)
+
+    ses_utils.send_email(
+        'noreply@healthverity.com',
+        RECIPIENTS,
+        'Unexpected Manufacturers Detected in {}'.format(get_group_id(ds, kwargs)),
+        email_content
+    )
+
+email_error_report = PythonOperator(
+    task_id='email_error_report',
+    provide_context=True,
+    python_callable=do_email_error_report,
+    dag=mdag
+)
+
 def do_fetch_return_file(ds, **kwargs):
     gid = get_group_id(ds, kwargs)
 
     s3_url = S3_NORMALIZED_FILE_URL_TEMPLATE.format(gid)
-    return_file = [f for f in 
+    return_file = [f for f in
             s3_utils.list_s3_bucket_files(S3_NORMALIZED_FILE_URL_TEMPLATE.format(gid))
             if f.startswith('LHV')][0]
     kwargs['ti'].xcom_push(key='return_file', value=return_file)
@@ -117,7 +192,7 @@ def do_deliver_return_file(ds, **kwargs):
     path = sftp_config['path']
     del sftp_config['path']
     gid = get_group_id(ds, kwargs)
-    return_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_id='fetch_return_file', key='return_file')
+    return_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='fetch_return_file', key='return_file')
 
     sftp_utils.upload_file(
         get_tmp_dir(ds, kwargs) + return_file,
@@ -135,8 +210,17 @@ deliver_return_file = PythonOperator(
 
 def do_clean_up_workspace(ds, **kwargs):
     return_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='fetch_return_file', key='return_file')
-    os.remove(get_tmp_dir(ds, kwargs) + return_file)
-    os.rmdir(get_tmp_dir)
+    error_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='check_errors', key='error_file')
+    try:
+        os.remove(get_tmp_dir(ds, kwargs) + return_file)
+    except:
+        pass
+
+    try:
+        os.remove(get_tmp_dir(ds, kwargs) + error_file)
+    except:
+        pass
+    os.rmdir(get_tmp_dir(ds, kwargs))
 
 clean_up_workspace = PythonOperator(
     task_id='clean_up_workspace',
@@ -156,8 +240,11 @@ if HVDAG.HVDAG.airflow_env == 'test':
 
 create_tmp_dir.set_upstream(persist_group_id)
 detect_move_normalize_dag.set_upstream(create_tmp_dir)
-fetch_return_file.set_upstream(detect_move_normalize_dag)
+check_errors.set_upstream(detect_move_normalize_dag)
+fetch_error_file.set_upstream(check_errors)
+email_error_report.set_upstream(fetch_error_file)
+fetch_return_file.set_upstream(check_errors)
 deliver_return_file.set_upstream(fetch_return_file)
 
 # cleanup
-clean_up_workspace.set_upstream(deliver_return_file)
+clean_up_workspace.set_upstream([deliver_return_file, email_error_report])
