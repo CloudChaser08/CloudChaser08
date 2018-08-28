@@ -151,7 +151,7 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
     )
 
     # Postprocessing
-    postprocessor.compose(
+    final_df = postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(
             feed_id='41',
@@ -162,7 +162,9 @@ def run(spark, runner, date_input, batch_path, test=False, airflow_test=False):
         schema_enforcer.apply_schema_func(schema)
     )(
         pms_data
-    ).createOrReplaceTempView('medicalclaims')
+    )
+    final_df.cache_and_track('final')
+    final_df.createOrReplaceTempView('medicalclaims')
     logging.debug('Finished post-processing')
 
     # unload delivery file for cardinal
