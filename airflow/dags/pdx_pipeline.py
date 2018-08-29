@@ -258,7 +258,8 @@ detect_move_normalize_dag = SubDagOperator(
             'vendor_uuid'                       : VENDOR_UUID,
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/pdx/pharmacyclaims/sparkNormalizePDX.py',
             'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'emr_node_type'                     : 'm4.4xlarge'
         }
     ),
     task_id='detect_move_normalize',
