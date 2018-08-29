@@ -27,7 +27,7 @@ DAG_NAME = 'consent_mckesson_extract'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 8, 28, 15, 30),
+    'start_date': datetime(2018, 8, 29, 15, 30),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
