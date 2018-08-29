@@ -17,8 +17,8 @@ def test_run():
     ])
     subprocess.check_call([
         'airflow', 'backfill', 'consent_mckesson_extract',
-        '-s', datetime.utcnow(),
-        '-e', datetime.utcnow(),
+        '-s', datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
+        '-e', datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
         '-I'
     ])
 
