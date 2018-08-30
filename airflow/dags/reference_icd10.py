@@ -2,11 +2,14 @@ import common.HVDAG as HVDAG
 
 from datetime import datetime, timedelta
 import httplib
+import logging
 
 from airflow.operators import BranchPythonOperator, PythonOperator, SubDagOperator
 
 import util.hive as hive_utils
 import util.date_utils as date_utils
+import util.slack as slack
+import config as config
 
 for m in [hive_utils, date_utils, HVDAG]:
     reload(m)
@@ -67,6 +70,37 @@ check_for_pcs_file = generate_check_for_file_task(
         year_offset=ICD10_YEAR_OFFSET
     )
 )
+
+def generate_log_file_not_found_task(filetype):
+    def log_file_not_found(ds, kwargs):
+        res = kwargs['ti'].xcom_pull(task_ids='check_for_{}_file'.format(filetype),
+                                     key='head_response'
+                                    )
+        log_msg = 'Head response for {} file:\n'.format(filetype)
+        log_msg = log_msg + res.status + '\t' + res.reason + '\n'
+        for header in res.getheaders():
+            log_msg = log_msg + header[0] + ': ' + header[1] + '\n'
+        logging.info(log_msg)
+        attachment = {
+            'fallback'      : log_msg,
+            'color'         : '#ED6504',
+            'pretext'       : 'Reference data failure',
+            'title'         : 'ICD10 Reference Data Not Found',
+            'title_link'    : kwargs['ti'].log_url,
+            'text'          : log_msg
+        }
+        slack.send_message(config.AIRFLOW_ALERTS_CHANNEL, attachment=attachment)
+        
+    return PythonOperator(
+        task_id='log_{}_file_not_found',
+        provide_context=True,
+        python_callable=log_file_not_found,
+        dag=mdag
+    )
+
+
+log_cm_file_not_found = generate_log_file_not_found_task('cm')
+log_pcs_file_not_found = generate_log_file_not_found_task('pcs')
 
 ### DAG Structure ###
 fetch_cm_file.set_upstream(check_for_cm_file)
