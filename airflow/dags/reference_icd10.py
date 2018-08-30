@@ -3,18 +3,21 @@ import common.HVDAG as HVDAG
 from datetime import datetime, timedelta
 import httplib
 import logging
+import os
 
 from airflow.operators import BranchPythonOperator, PythonOperator, SubDagOperator
 
-import util.hive as hive_utils
-import util.date_utils as date_utils
-import util.slack as slack
 import config as config
+import util.date_utils as date_utils
+import util.decompression as decompression
+import util.hive as hive_utils
+import util.slack as slack
 
-for m in [hive_utils, date_utils, HVDAG]:
+for m in [config, date_utils, decompression,
+          hive_utils, slack, HVDAG]:
     reload(m)
 
-TMP_PATH_TEMPLATE = 'tmp/reference/icd10/{}'
+TMP_PATH_TEMPLATE = '/tmp/reference/icd10/{}/'
 DAG_NAME = 'reference_icd10'
 
 default_args = {
@@ -35,8 +38,16 @@ ICD_HOSTNAME = 'www.cms.gov'
 DIAGNOSIS_ZIP_URL_TEMPLATE = '/Medicare/Coding/ICD10/Downloads/{}-ICD-10-CM-Code-Descriptions.zip'
 PROCEDURE_ZIP_URL_TEMPLATE = '/Medicare/Coding/ICD10/Downloads/{}-ICD-10-PCS-Order-File.zip'
 
-
 ICD10_YEAR_OFFSET = 2
+
+get_cm_tmp_dir = date_utils.generate_insert_date_into_template_function(
+    TMP_PATH_TEMPLATE + 'cm/',
+    year_offset=ICD10_YEAR_OFFSET
+)
+get_pcs_tmp_dir = date_utils.generate_insert_date_into_template_function(
+    TMP_PATH_TEMPLATE + 'pcs/',
+    year_offset=ICD10_YEAR_OFFSET
+)
 
 def generate_check_for_file_task(filetype, path_template_function):
     def check_for_http_file(ds, kwargs):
@@ -101,6 +112,48 @@ def generate_log_file_not_found_task(filetype):
 
 log_cm_file_not_found = generate_log_file_not_found_task('cm')
 log_pcs_file_not_found = generate_log_file_not_found_task('pcs')
+
+def generate_fetch_file_task(filetype, get_tmp_dir_function, path_template_function):
+    def fetch_file(ds, kwargs):
+        tmp_dir = get_tmp_dir_function(ds, kwargs)
+        path = path_template_function(ds, kwargs)
+
+        os.makedirs(tmp_dir)
+
+        conn = httplib.HTTPSConnection(ICD_HOSTNAME)
+        conn.request('GET', path)
+        res = conn.getresponse()
+
+        output_file = tmp_dir + path.split('/')[-1]
+        with open(output_file, 'wb') as f:
+            f.write(res.read())
+
+        decompression.decompress_zip_file(output_file, tmp_dir)
+
+    return PythonOperator(
+        task_id='fetch_{}_file'.format(filetype),
+        provide_context=True,
+        python_callable=fetch_file,
+        dag=mdag
+    )
+
+
+fetch_cm_file = generate_fetch_file_task(
+    'cm',
+    get_cm_tmp_dir,
+    date_utils.generate_insert_date_into_template_function(
+        DIAGNOSIS_ZIP_URL_TEMPLATE,
+        year_offset=ICD10_YEAR_OFFSET
+    )
+)
+fetch_pcs_file = generate_fetch_file_task(
+    'pcs',
+    get_pcs_tmp_dir,
+    date_utils.generate_insert_date_into_template_function(
+        PROCEDURE_ZIP_URL_TEMPLATE,
+        year_offset=ICD10_YEAR_OFFSET
+    )
+)
 
 ### DAG Structure ###
 fetch_cm_file.set_upstream(check_for_cm_file)
