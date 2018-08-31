@@ -5,7 +5,7 @@ import httplib
 import logging
 import os
 
-from airflow.operators import BranchPythonOperator, PythonOperator, SubDagOperator
+from airflow.operators import BranchPythonOperator, DummyOperator, PythonOperator, SubDagOperator
 
 import config as config
 import util.date_utils as date_utils
@@ -50,14 +50,20 @@ get_pcs_tmp_dir = date_utils.generate_insert_date_into_template_function(
 )
 
 def generate_check_for_file_task(filetype, path_template_function):
-    def check_for_http_file(ds, kwargs):
+    def check_for_http_file(ds, **kwargs):
         path = path_template_function(ds, kwargs)
         conn = httplib.HTTPSConnection(ICD_HOSTNAME)
         conn.request('HEAD', path)
         res = conn.getresponse()
-        if res.status == '200':
+        if res.status == 200:
             return 'fetch_{}_file'.format(filetype)
-        kwargs.xcom_push(key='head_response', value=res)
+        response_info = {
+            'url'       : ICD_HOSTNAME + path,
+            'status'    : res.status,
+            'reason'    : res.reason,
+            'headers'   : res.getheaders()
+        }
+        kwargs['ti'].xcom_push(key='head_response', value=response_info)
         return 'log_{}_file_not_found'.format(filetype)
 
     return BranchPythonOperator(
@@ -83,13 +89,13 @@ check_for_pcs_file = generate_check_for_file_task(
 )
 
 def generate_log_file_not_found_task(filetype):
-    def log_file_not_found(ds, kwargs):
-        res = kwargs['ti'].xcom_pull(task_ids='check_for_{}_file'.format(filetype),
+    def log_file_not_found(ds, **kwargs):
+        res = kwargs['ti'].xcom_pull(task_ids='check_{}_file'.format(filetype),
                                      key='head_response'
                                     )
-        log_msg = 'Head response for {} file:\n'.format(filetype)
-        log_msg = log_msg + res.status + '\t' + res.reason + '\n'
-        for header in res.getheaders():
+        log_msg = 'Head response for {}\n'.format(res['url'])
+        log_msg = log_msg + str(res['status']) + '\t' + res['reason'] + '\n'
+        for header in res['headers']:
             log_msg = log_msg + header[0] + ': ' + header[1] + '\n'
         logging.info(log_msg)
         attachment = {
@@ -103,7 +109,7 @@ def generate_log_file_not_found_task(filetype):
         slack.send_message(config.AIRFLOW_ALERTS_CHANNEL, attachment=attachment)
         
     return PythonOperator(
-        task_id='log_{}_file_not_found',
+        task_id='log_{}_file_not_found'.format(filetype),
         provide_context=True,
         python_callable=log_file_not_found,
         dag=mdag
@@ -114,7 +120,7 @@ log_cm_file_not_found = generate_log_file_not_found_task('cm')
 log_pcs_file_not_found = generate_log_file_not_found_task('pcs')
 
 def generate_fetch_file_task(filetype, get_tmp_dir_function, path_template_function):
-    def fetch_file(ds, kwargs):
+    def fetch_file(ds, **kwargs):
         tmp_dir = get_tmp_dir_function(ds, kwargs)
         path = path_template_function(ds, kwargs)
 
@@ -154,6 +160,15 @@ fetch_pcs_file = generate_fetch_file_task(
         year_offset=ICD10_YEAR_OFFSET
     )
 )
+
+validate_cm_format = DummyOperator(task_id='validate_cm_format', dag=mdag)
+validate_pcs_format = DummyOperator(task_id='validate_pcs_format', dag=mdag)
+log_cm_format_changed = DummyOperator(task_id='log_cm_format_changed', dag=mdag)
+log_pcs_format_changed = DummyOperator(task_id='log_pcs_format_changed', dag=mdag)
+push_cm_file = DummyOperator(task_id='push_cm_file', dag=mdag)
+push_pcs_file = DummyOperator(task_id='push_pcs_file', dag=mdag)
+transform_to_parquet = DummyOperator(task_id='transform_to_parquet', dag=mdag)
+update_table_locations = DummyOperator(task_id='update_table_locations', dag=mdag)
 
 ### DAG Structure ###
 fetch_cm_file.set_upstream(check_for_cm_file)
