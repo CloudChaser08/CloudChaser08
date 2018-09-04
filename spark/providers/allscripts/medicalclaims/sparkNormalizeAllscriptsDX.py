@@ -12,7 +12,8 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.medicalclaims as med_priv
-import spark.providers.allscripts.medicalclaims.transactions as transactions
+import spark.providers.allscripts.medicalclaims.transactions_v1 as transactions_v1
+import spark.providers.allscripts.medicalclaims.transactions_v2 as transactions_v2
 import spark.providers.allscripts.medicalclaims.udf as allscripts_udf
 import spark.helpers.explode as explode
 
@@ -69,7 +70,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     max_date = date_input
     payload_loader.load(runner, matching_path, ['PCN', 'hvJoinKey'])
-    records_loader.load_and_clean_all(runner, input_path, transactions, 'csv', '|', partitions=1000)
+
+    # New layout after 2018-07-25, but we already got it once on 2018-07-24
+    if date_input > '2018-07-25' or date_input == '2018-07-24':
+        records_loader.load_and_clean_all(runner, input_path, transactions_v2, 'csv', '|', partitions=1000)
+    else:
+        records_loader.load_and_clean_all(runner, input_path, transactions_v1, 'csv', '|', partitions=1000)
+
     explode.generate_exploder_table(spark, 8, 'diag_exploder')
 
     runner.run_spark_script('pre_normalization_1.sql', return_output=True) \
