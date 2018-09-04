@@ -73,9 +73,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # New layout after 2018-07-25, but we already got it once on 2018-07-24
     if date_input > '2018-07-25' or date_input == '2018-07-24':
-        records_loader.load_and_clean_all(runner, input_path, transactions_v2, 'csv', '|', partitions=1000)
+        records_loader.load_and_clean_all(runner, input_path, transactions_v2, 'csv', '|', partitions=5 if test else 1000)
     else:
-        records_loader.load_and_clean_all(runner, input_path, transactions_v1, 'csv', '|', partitions=1000)
+        records_loader.load_and_clean_all(runner, input_path, transactions_v1, 'csv', '|', partitions=5 if test else 1000)
 
     explode.generate_exploder_table(spark, 8, 'diag_exploder')
 
