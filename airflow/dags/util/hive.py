@@ -16,3 +16,6 @@ def hive_execute(sqls, conn_id='hive_analytics'):
             cur.execute(statement)
 
 
+def hive_query(query, conn_id='hive_analytics', schema='default'):
+    hive_hook = HiveServer2Hook(hiveserver2_conn_id=conn_id)
+    return hive_hook.get_records(query, schema=schema)
