@@ -36,7 +36,9 @@ mdag = HVDAG.HVDAG(
 
 ICD_HOSTNAME = 'www.cms.gov'
 DIAGNOSIS_ZIP_URL_TEMPLATE = '/Medicare/Coding/ICD10/Downloads/{}-ICD-10-CM-Code-Descriptions.zip'
+DIAGNOSIS_FILENAME_TEMPLATE = 'icd10cm_order_{}.txt'
 PROCEDURE_ZIP_URL_TEMPLATE = '/Medicare/Coding/ICD10/Downloads/{}-ICD-10-PCS-Order-File.zip'
+PROCEDURE_FILENAME_TEMPLATE = 'icd10pcs_order_{}.txt'
 
 ICD10_YEAR_OFFSET = 2
 
@@ -161,10 +163,93 @@ fetch_pcs_file = generate_fetch_file_task(
     )
 )
 
-validate_cm_format = DummyOperator(task_id='validate_cm_format', dag=mdag)
-validate_pcs_format = DummyOperator(task_id='validate_pcs_format', dag=mdag)
-log_cm_format_changed = DummyOperator(task_id='log_cm_format_changed', dag=mdag)
-log_pcs_format_changed = DummyOperator(task_id='log_pcs_format_changed', dag=mdag)
+def generate_validate_file_task(filetype, get_tmp_dir_function, filename_template_function,
+        *validation_funcs):
+    def validate_file(ds, **kwargs):
+        tmp_dir = get_tmp_dir_function(ds, kwargs)
+        filename = filename_template_function(ds, kwargs)
+
+        with open(tmp_dir + filename, 'r') as f:
+            for num, line in enumerate(f):
+                for validation_func in validation_funcs:
+                    if not validation_func['function'](line):
+                        failure_info = {
+                            'filename'          : filename,
+                            'line_num'          : num + 1,
+                            'failure_message'   : validation_func['failure_message']
+                        }
+                        kwargs['ti'].xcom_push(key='failure_info', value=failure_info)
+                        return 'log_{}_format_changed'.format(filetype)
+        return 'push_{}_file'.format(filetype)
+
+    return BranchPythonOperator(
+        task_id='validate_{}_format'.format(filetype),
+        provide_context=True,
+        python_callable=validate_file,
+        dag=mdag
+    )
+
+
+validate_cm_format = generate_validate_file_task(
+    'cm',
+    get_cm_tmp_dir,
+    date_utils.generate_insert_date_into_template_function(
+        DIAGNOSIS_FILENAME_TEMPLATE,
+        year_offset=ICD10_YEAR_OFFSET
+    ),
+    {
+        'function': lambda x: len(x) <= 400,
+        'failure_message': 'row is longer than 400 characters'
+    },
+    {
+        'function': lambda x: x[6].isalpha(),
+        'failure_message': 'code does not start with a letter'
+    }
+)
+validate_pcs_format = generate_validate_file_task(
+    'pcs',
+    get_pcs_tmp_dir,
+    date_utils.generate_insert_date_into_template_function(
+        PROCEDURE_FILENAME_TEMPLATE,
+        year_offset=ICD10_YEAR_OFFSET
+    ),
+    {
+        'function': lambda x: len(x) <= 400,
+        'failure_message': 'row is longer than 400 characters'
+    }
+)
+
+def generate_log_format_changed_task(filetype):
+    def log_format_changed(ds, **kwargs):
+        res = kwargs['ti'].xcom_pull(task_ids='validate_{}_format'.format(filetype),
+                                     key='failure_info'
+                                    )
+        log_msg = 'Failure for {} file\n'.format(filetype)
+        log_msg = log_msg + 'File: {}\n'.format(res['filename'])
+        log_msg = log_msg + 'Validation failure on line {}\n'.format(str(res['line_num']))
+        log_msg = log_msg + 'Failure message: {}\n'.format(res['failure_message'])
+        logging.info(log_msg)
+        attachment = {
+            'fallback'      : log_msg,
+            'color'         : '#ED6504',
+            'pretext'       : 'Reference data failure',
+            'title'         : 'ICD10 Reference Data Validation Failed',
+            'title_link'    : kwargs['ti'].log_url,
+            'text'          : log_msg
+        }
+        slack.send_message(config.AIRFLOW_ALERTS_CHANNEL, attachment=attachment)
+        
+    return PythonOperator(
+        task_id='log_{}_format_changed'.format(filetype),
+        provide_context=True,
+        python_callable=log_format_changed,
+        dag=mdag
+    )
+
+
+log_cm_format_changed = generate_log_format_changed_task('cm')
+log_pcs_format_changed = generate_log_format_changed_task('pcs')
+
 push_cm_file = DummyOperator(task_id='push_cm_file', dag=mdag)
 push_pcs_file = DummyOperator(task_id='push_pcs_file', dag=mdag)
 transform_to_parquet = DummyOperator(task_id='transform_to_parquet', dag=mdag)
