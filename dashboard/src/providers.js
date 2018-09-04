@@ -383,18 +383,17 @@ exports.config = [
   {
     id: 'nextgen',
     displayName: 'Nextgen EMR',
-    providerPrefix: 'ng-lssa',
+    providerPrefix: 'ng-lssa/20',
     schedule: this.schedule.MONTHLY,
     startDate: new Date('2017-07-20'),
     airflowPipelineName: 'nextgen_pipeline',
-    expectedFilenameRegex: /^.*ng-lssa\/[0-9]{6}\/deltas\/Manifest.txt$/,
+    expectedFilenameRegex: /^.*ng-lssa\/[0-9]{6}\/deltas.*\/Manifest.txt$/,
     filenameToExecutionDate: function(filename) {
       var isolatedDate = filename.split('/')[2];
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-20';
     },
     executionDateToFilename: function(date) {
-      var yesterday = helpers.addDays(-1)(date);
-      return 'incoming/ng-lssa/' + yesterday.getFullYear() + helpers.leftZPad(yesterday.getMonth() + 1, 2) + '/deltas/Manifest.txt';
+      return 'incoming/ng-lssa/' + date.getFullYear() + helpers.leftZPad(date.getMonth() + 1, 2) + '/deltas/Manifest.txt';
     },
     listRecursively: true
   },
