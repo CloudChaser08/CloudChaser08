@@ -11,10 +11,11 @@ import config as config
 import util.date_utils as date_utils
 import util.decompression as decompression
 import util.hive as hive_utils
+import util.s3_utils as s3_utils
 import util.slack as slack
 
 for m in [config, date_utils, decompression,
-          hive_utils, slack, HVDAG]:
+          hive_utils, s3_utils, slack, HVDAG]:
     reload(m)
 
 TMP_PATH_TEMPLATE = '/tmp/reference/icd10/{}/'
@@ -37,8 +38,10 @@ mdag = HVDAG.HVDAG(
 ICD_HOSTNAME = 'www.cms.gov'
 DIAGNOSIS_ZIP_URL_TEMPLATE = '/Medicare/Coding/ICD10/Downloads/{}-ICD-10-CM-Code-Descriptions.zip'
 DIAGNOSIS_FILENAME_TEMPLATE = 'icd10cm_order_{}.txt'
+DIAGNOSIS_S3_URL_TEMPLATE = 's3://salusv/incoming/reference/icd10/cm/{}/'
 PROCEDURE_ZIP_URL_TEMPLATE = '/Medicare/Coding/ICD10/Downloads/{}-ICD-10-PCS-Order-File.zip'
 PROCEDURE_FILENAME_TEMPLATE = 'icd10pcs_order_{}.txt'
+PROCEDURE_S3_URL_TEMPLATE = 's3://salusv/incoming/reference/icd10/pcs/{}/'
 
 ICD10_YEAR_OFFSET = 2
 
@@ -250,8 +253,48 @@ def generate_log_format_changed_task(filetype):
 log_cm_format_changed = generate_log_format_changed_task('cm')
 log_pcs_format_changed = generate_log_format_changed_task('pcs')
 
-push_cm_file = DummyOperator(task_id='push_cm_file', dag=mdag)
-push_pcs_file = DummyOperator(task_id='push_pcs_file', dag=mdag)
+def generate_push_file_task(filetype, get_tmp_dir_function, filename_template_function,
+        s3_location_template_function):
+    def push_file(ds, **kwargs):
+        tmp_dir = get_tmp_dir_function(ds, kwargs)
+        filename = filename_template_function(ds, kwargs)
+        s3_location = s3_location_template_function(ds, kwargs)
+
+        s3_utils.copy_file(tmp_dir + filename, s3_location)
+
+    return PythonOperator(
+        task_id='push_{}_file'.format(filetype),
+        provide_context=True,
+        python_callable=push_file,
+        dag=mdag
+    )
+
+
+push_cm_file = generate_push_file_task(
+    'cm',
+    get_cm_tmp_dir,
+    date_utils.generate_insert_date_into_template_function(
+        DIAGNOSIS_FILENAME_TEMPLATE,
+        year_offset=ICD10_YEAR_OFFSET
+    ),
+    date_utils.generate_insert_date_into_template_function(
+        DIAGNOSIS_S3_URL_TEMPLATE,
+        year_offset=ICD10_YEAR_OFFSET
+    )
+)
+push_pcs_file = generate_push_file_task(
+    'pcs',
+    get_pcs_tmp_dir,
+    date_utils.generate_insert_date_into_template_function(
+        PROCEDURE_FILENAME_TEMPLATE,
+        year_offset=ICD10_YEAR_OFFSET
+    ),
+    date_utils.generate_insert_date_into_template_function(
+        PROCEDURE_S3_URL_TEMPLATE,
+        year_offset=ICD10_YEAR_OFFSET
+    )
+)
+
 transform_to_parquet = DummyOperator(task_id='transform_to_parquet', dag=mdag)
 update_table_locations = DummyOperator(task_id='update_table_locations', dag=mdag)
 
