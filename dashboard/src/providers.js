@@ -315,7 +315,7 @@ exports.config = [
     airflowPipelineName: 'cardinal_mpi_pipeline',
     expectedFilenameRegex: /^.*mpi.[0-9]{8}T[0-9]{6}.zip$/,
     filenameToExecutionDate: function(filename) {
-      var isolatedDate = filename.split('.')[1].split('T')[0];
+      var isolatedDate = filename.split(/[._]/)[1].split('T')[0];
       return isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8);
     },
     executionDateToFilename: function(date) {
@@ -427,7 +427,23 @@ exports.config = [
   {
     id: 'allscripts',
     displayName: 'Allscripts DX',
-    providerPrefix: 'allscripts/claims'
+    providerPrefix: 'allscripts',
+    schedule: this.schedule.DAILY,
+    startDate: new Date('2018-06-22'),
+    airflowPipelineName: 'allscripts_dx_pipeline',
+    expectedFilenameRegex: /^.*HV_CLAIMS_[0-9]{8}_[0-9]{1}.out.zip$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('_')[2];
+      var adjusted = helpers.addDays(2)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      var file_date = helpers.addDays(-2)(date);
+      return 'incoming/allscripts/HV_CLAIMS_' + file_date.getUTCFullYear() + helpers.leftZPad(file_date.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(file_date.getUTCDate(), 2) + '_1.out.zip';
+    },
   },
   {
     id: 'corrona',
@@ -472,7 +488,23 @@ exports.config = [
   {
     id: 'allscripts_emr',
     displayName: 'Allscripts EMR',
-    providerPrefix: 'allscripts/emr'
+    providerPrefix: 'allscripts',
+    schedule: this.schedule.MONTHLY,
+    startDate: new Date('2017-12-22'),
+    airflowPipelineName: 'allscripts_emr_pipeline',
+    expectedFilenameRegex: /^.*Allscripts_[A-Z][a-z]{2}[0-9]{2}_[0-9]{7}_01.zip$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('_')[1];
+      var adjusted = helpers.addMonths(1)(helpers.addDays(21)(new Date(
+        Date.parse('01 ' + isolatedDate.substring(0,3) + ' ' + isolatedDate.substring(3, 5))
+      )));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      date_parts = helpers.addMonths(-1)(date).toUTCString().split(' ');
+      return 'incoming/allscripts/Allscripts_' + date_parts[2] + date.getUTCFullYear().toString().substring(2,4)
+        + '_[0-9]{7}_01.zip'
+    },
   },
   {
     id: 'visonex',
@@ -508,5 +540,46 @@ exports.config = [
     id: 'transmed',
     displayName: 'Transmed EMR',
     providerPrefix: 'transmed'
-  }
+  },
+  {
+    id: 'pdx',
+    displayName: 'PDX RX',
+    providerPrefix: 'pdx',
+    schedule: this.schedule.WEEKLY,
+    startDate: new Date('2018-04-02'),
+    airflowPipelineName: 'pdx_pipeline',
+    expectedFilenameRegex: /^.*hvfeedfile_po_record_deid_[0-9]{8}[0-9]{6}.hvout$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('_')[4];
+      var adjusted = helpers.addDays(0)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      return 'incoming/pdx/hvfeedfile_po_record_deid_' + date.getUTCFullYear() + helpers.leftZPad(date.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(date.getUTCDate(), 2) + '[0-9]{6}.hvout';
+    },
+  },
+  {
+    id: 'xifin',
+    displayName: 'Xifin',
+    providerPrefix: 'xifin',
+    schedule: this.schedule.WEEKLY,
+    startDate: new Date('2018-07-28'),
+    airflowPipelineName: 'xifin_dx_pipeline',
+    expectedFilenameRegex: /^.*accn_(billed_procedures|demographics|diagnosis|tests|payors)_[0-9]{8}_[0-9]{1,}.out$/,
+    filenameToExecutionDate: function(filename) {
+      var isolatedDate = filename.split('_')[2];
+      var adjusted = helpers.addDays(0)(new Date(
+        isolatedDate.substring(0, 4) + '-' + isolatedDate.substring(4, 6) + '-' + isolatedDate.substring(6, 8)
+      ));
+      return helpers.formatDate(adjusted);
+    },
+    executionDateToFilename: function(date) {
+      return 'incoming/xifin/accn_(billed_procedures|demographics|diagnosis|tests|payors)_' 
+        + date.getUTCFullYear() + helpers.leftZPad(date.getUTCMonth() + 1, 2)
+        + helpers.leftZPad(date.getUTCDate(), 2) + '[0-9]{1,}.out';
+    },
+  },
 ];
