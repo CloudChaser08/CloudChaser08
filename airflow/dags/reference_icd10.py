@@ -8,6 +8,7 @@ import os
 from airflow.operators import BranchPythonOperator, DummyOperator, PythonOperator, SubDagOperator
 
 import config as config
+import subdags.run_pyspark_routine as run_pyspark_routine
 import util.date_utils as date_utils
 import util.decompression as decompression
 import util.hive as hive_utils
@@ -299,7 +300,35 @@ push_pcs_file = generate_push_file_task(
     )
 )
 
-transform_to_parquet = DummyOperator(task_id='transform_to_parquet', dag=mdag)
+def norm_args(ds, kwargs):
+    base = ['--year', date_utils.insert_date_into_template({}, kwargs, year_offset=ICD10_YEAR_OFFSET)]
+    return base
+
+
+transform_to_parquet = SubDagOperator(
+    subdag=run_pyspark_routine.run_pyspark_routine(
+        DAG_NAME,
+        'run_transform_to_parquet',
+        default_args['start_date'],
+        mdag.schedule_interval,
+        {
+            'EMR_CLUSTER_NAME_FUNC' : date_utils.generate_insert_date_into_template_function(
+                'reference_icd10_{}',
+                year_offset=ICD10_YEAR_OFFSET
+            ),
+            'PYSPARK_SCRIPT_NAME'   : '/home/hadoop/spark/reference/icd10/sparkTransformToParquet.py',
+            'PYSPARK_ARGS_FUNC'     : norm_args,
+            'NUM_NODES'             : '2',
+            'NODE_TYPE'             : 'm4.xlarge',
+            'EBS_VOLUME_SIZE'       : '50',
+            'PURPOSE'               : 'reference_data',
+            'CONNECT_TO_METASTORE'  : False
+        }
+    ),
+    task_id='transform_to_parquet',
+    dag=mdag
+)
+
 update_table_locations = DummyOperator(task_id='update_table_locations', dag=mdag)
 
 ### DAG Structure ###
