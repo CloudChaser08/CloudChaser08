@@ -14,7 +14,7 @@ def test_extract_number():
 def test_extract_date():
     assert gh.extract_date(None, None) is None
 
-    assert gh.extract_date('1990-Jun-01', '%Y-%b-%d') == '1990-06-01'
+    assert gh.extract_date('1990-Jun-01', '%Y-%b-%d') == datetime.date(1990, 06, 01)
 
     # max date cap
     assert gh.extract_date(
