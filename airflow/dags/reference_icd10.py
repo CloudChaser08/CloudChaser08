@@ -329,7 +329,22 @@ transform_to_parquet = SubDagOperator(
     dag=mdag
 )
 
-update_table_locations = DummyOperator(task_id='update_table_locations', dag=mdag)
+def do_update_table_locations(ds, **kwargs):
+    new_diagnosis_loc = date_utils.insert_date_into_template(DIAGNOSIS_S3_OUTPUT_TEMPLATE, kwargs, year_offset=ICD10_YEAR_OFFSET)
+    new_procedure_loc = date_utils.insert_date_into_template(PROCEDURE_S3_OUTPUT_TEMPLATE, kwargs, year_offset=ICD10_YEAR_OFFSET)
+    queries = [
+        'ALTER TABLE ref_icd10_diagnosis SET LOCATION {}'.format(new_diagnosis_loc),
+        'ALTER TABLE ref_icd10_procedure SET LOCATION {}'.format(new_procedure_loc)
+    ]
+    hive_utils.hive_execute(queries)
+
+
+update_table_locations = PythonOperator(
+    task_id='update_table_locations',
+    provide_context=True,
+    python_callable=do_update_table_locations,
+    dag=mdag
+)
 
 ### DAG Structure ###
 fetch_cm_file.set_upstream(check_for_cm_file)
