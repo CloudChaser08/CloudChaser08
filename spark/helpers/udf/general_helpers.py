@@ -45,7 +45,8 @@ def cap_date(d, min_date, max_date):
     ):
         return None
     else:
-        return d.isoformat().split("T")[0]
+	return d
+        #return d.isoformat().split("T")[0]
 
 
 def extract_date(text, pattern, min_date=None, max_date=None):
