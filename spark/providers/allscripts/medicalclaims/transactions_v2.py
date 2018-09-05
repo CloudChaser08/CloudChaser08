@@ -415,7 +415,7 @@ TABLE_COLUMNS = {
         'header_patient_address_1',
         'header_patient_address_2',
         'header_patient_city',
-        'header_initial_file_date'
+        'header_initial_file_date',
         'header_hvjoinkey'
     ],
     'serviceline' : [
