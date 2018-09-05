@@ -39,9 +39,11 @@ ICD_HOSTNAME = 'www.cms.gov'
 DIAGNOSIS_ZIP_URL_TEMPLATE = '/Medicare/Coding/ICD10/Downloads/{}-ICD-10-CM-Code-Descriptions.zip'
 DIAGNOSIS_FILENAME_TEMPLATE = 'icd10cm_order_{}.txt'
 DIAGNOSIS_S3_URL_TEMPLATE = 's3://salusv/incoming/reference/icd10/cm/{}/'
+DIAGNOSIS_S3_OUTPUT_TEMPLATE = 's3://salusv/reference/parquet/icd10/{}/dx/'
 PROCEDURE_ZIP_URL_TEMPLATE = '/Medicare/Coding/ICD10/Downloads/{}-ICD-10-PCS-Order-File.zip'
 PROCEDURE_FILENAME_TEMPLATE = 'icd10pcs_order_{}.txt'
 PROCEDURE_S3_URL_TEMPLATE = 's3://salusv/incoming/reference/icd10/pcs/{}/'
+PROCEDURE_S3_OUTPUT_TEMPLATE = 's3://salusv/reference/parquet/icd10/{}/pcs/'
 
 ICD10_YEAR_OFFSET = 2
 
@@ -193,6 +195,8 @@ def generate_validate_file_task(filetype, get_tmp_dir_function, filename_templat
     )
 
 
+MAX_CHARACTERS_IN_ROW = 400
+ICD10_CM_START_INDEX = 6
 validate_cm_format = generate_validate_file_task(
     'cm',
     get_cm_tmp_dir,
@@ -201,11 +205,11 @@ validate_cm_format = generate_validate_file_task(
         year_offset=ICD10_YEAR_OFFSET
     ),
     {
-        'function': lambda x: len(x) <= 400,
-        'failure_message': 'row is longer than 400 characters'
+        'function': lambda x: len(x) <= MAX_CHARACTERS_IN_ROW,
+        'failure_message': 'row is longer than {} characters'.format(MAX_CHARACTERS_IN_ROW)
     },
     {
-        'function': lambda x: x[6].isalpha(),
+        'function': lambda x: x[ICD10_CM_START_INDEX].isalpha(),
         'failure_message': 'code does not start with a letter'
     }
 )
@@ -217,8 +221,8 @@ validate_pcs_format = generate_validate_file_task(
         year_offset=ICD10_YEAR_OFFSET
     ),
     {
-        'function': lambda x: len(x) <= 400,
-        'failure_message': 'row is longer than 400 characters'
+        'function': lambda x: len(x) <= MAX_CHARACTERS_IN_ROW,
+        'failure_message': 'row is longer than {} characters'.format(MAX_CHARACTERS_IN_ROW)
     }
 )
 
