@@ -1,5 +1,5 @@
 from pyspark.sql import SQLContext, SparkSession
-from pyspark.sql.types import ArrayType, StringType
+from pyspark.sql.types import ArrayType, StringType, DateType
 from spark.helpers.udf.post_normalization_cleanup import *
 from spark.helpers.udf.general_helpers import *
 from spark.helpers.udf.medicalclaims_helpers import *
@@ -88,10 +88,10 @@ def init(provider, local=False):
         'convert_value', convert_value
     )
     sqlContext.registerFunction(
-        'cap_date', cap_date
+        'cap_date', cap_date, DateType()
     )
     sqlContext.registerFunction(
-        'extract_date', extract_date
+        'extract_date', extract_date, DateType()
     )
     sqlContext.registerFunction(
         'extract_currency', extract_currency
