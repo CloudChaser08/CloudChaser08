@@ -1,5 +1,6 @@
 import argparse
 import pyspark.sql.functions as F
+import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 
 def run(spark, year):
@@ -11,20 +12,32 @@ def run(spark, year):
     pcs = spark.read.text(PCS_INPUT)
     cm = spark.read.text(CM_INPUT)
 
-    pcs.select(
-        pcs.value.substr(1,5).alias('ordernum'),
-        pcs.value.substr(7,7).alias('code'),
-        pcs.value.substr(15,1).alias('header'),
-        pcs.value.substr(17,60).alias('short_description'),
-        pcs.value.substr(78, 323).alias('long_description')
+    postprocessor.compose(
+        postprocessor.trimmify,
+        postprocessor.nullify
+    )
+    (
+        pcs.select(
+            pcs.value.substr(1, 5).alias('ordernum'),
+            pcs.value.substr(7, 7).alias('code'),
+            pcs.value.substr(15, 1).alias('header'),
+            pcs.value.substr(17, 60).alias('short_description'),
+            pcs.value.substr(78, 323).alias('long_description')
+        )
     ).repartition(1).write.parquet(PCS_OUTPUT)
 
-    cm.select(
-        cm.value.substr(1, 5).alias('ordernum'),
-        cm.value.substr(7,7).alias('code'),
-        cm.value.substr(15,1).alias('header'),
-        cm.value.substr(17, 60).alias('short_description'),
-        cm.value.substr(78, 323).alias('long_description')
+    postprocessor.compose(
+        postprocessor.trimmify,
+        postprocessor.nullify
+    )
+    (
+        cm.select(
+            cm.value.substr(1, 5).alias('ordernum'),
+            cm.value.substr(7, 7).alias('code'),
+            cm.value.substr(15, 1).alias('header'),
+            cm.value.substr(17, 60).alias('short_description'),
+            cm.value.substr(78, 323).alias('long_description')
+        )
     ).repartition(1).write.parquet(CM_OUTPUT)
 
 def main(args):
