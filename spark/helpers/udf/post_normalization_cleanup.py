@@ -41,7 +41,7 @@ def clean_up_ndc_code(code):
     clean_code = clean_up_numeric_code(code)
     if clean_code is None:
         return clean_code
-    return None if len(clean_code) < 8 else clean_code
+    return None if len(clean_code) < 8 or re.sub('0', '', clean_code) == '' else clean_code
 
 
 # These codes are specific enough that along with other public fields they pose a
@@ -134,7 +134,7 @@ def clean_up_loinc_code(loinc_code):
 
 def clean_up_npi_code(npi_code):
     cleaned = clean_up_numeric_code(npi_code)
-    if cleaned and len(cleaned) == 10:
+    if cleaned and len(cleaned) == 10 and re.sub('0', '', cleaned) != '':
         return cleaned
     else:
         return None
