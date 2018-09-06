@@ -1,5 +1,5 @@
 from airflow.models import Variable
-from airflow.operators import PythonOperator, SubDagOperator, DummyOperator, TriggerDagRunOperator
+from airflow.operators import *
 from datetime import datetime, timedelta
 import os
 import re
@@ -125,6 +125,21 @@ get_groups_ready = PythonOperator(
     python_callable = do_get_groups_ready,
     provide_context = True,
     dag = mdag
+)
+
+def do_check_any_groups_ready(ds, **kwargs):
+    groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
+    if groups_ready:
+        return True
+
+    return False
+
+check_any_groups_ready = ShortCircuitOperator(
+    task_id='check_any_groups_ready',
+    provide_context=True,
+    python_callable=do_check_any_groups_ready,
+    retries=0,
+    dag=mdag
 )
 
 def get_transaction_file_names(ds, kwargs):
@@ -276,9 +291,10 @@ if HVDAG.HVDAG.airflow_env != 'prod':
             dag = mdag
         )
 
-fetch_files.set_upstream(get_groups_ready)
+check_any_groups_ready.set_upstream(get_groups_ready)
+fetch_files.set_upstream(check_any_groups_ready)
 push_raw_files.set_upstream(fetch_files)
-decrypt_transaction_files.set_upstream(fetch_files)
+decrypt_transaction_files.set_upstream(push_raw_files)
 split_push_transactions.set_upstream(decrypt_transaction_files)
 queue_up_for_matching.set_upstream(fetch_files)
 trigger_deliveries.set_upstream([queue_up_for_matching, split_push_transactions])
