@@ -321,7 +321,7 @@ transform_to_parquet = SubDagOperator(
             'NUM_NODES'             : '2',
             'NODE_TYPE'             : 'm4.xlarge',
             'EBS_VOLUME_SIZE'       : '50',
-            'PURPOSE'               : 'reference_data',
+            'PURPOSE'               : 'reference_data_update',
             'CONNECT_TO_METASTORE'  : False
         }
     ),
