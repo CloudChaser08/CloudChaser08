@@ -262,13 +262,6 @@ log_pcs_format_changed = generate_log_format_changed_task('pcs')
 
 def generate_push_file_task(filetype, get_tmp_dir_function, filename_template_function,
         s3_location_template_function, s3_bucket):
-    def push_file(ds, **kwargs):
-        tmp_dir = get_tmp_dir_function(ds, kwargs)
-        filename = filename_template_function(ds, kwargs)
-        s3_location = s3_location_template_function(ds, kwargs)
-
-        s3_utils.copy_file(tmp_dir + filename, s3_location)
-
     return SubDagOperator(
         subdag = s3_push_files.s3_push_files(
             DAG_NAME,
@@ -282,12 +275,6 @@ def generate_push_file_task(filetype, get_tmp_dir_function, filename_template_fu
             }
         ),
         task_id='push_{}_file'.format(filetype),
-        dag=mdag
-    )
-    return PythonOperator(
-        task_id='push_{}_file'.format(filetype),
-        provide_context=True,
-        python_callable=push_file,
         dag=mdag
     )
 
