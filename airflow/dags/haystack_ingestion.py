@@ -28,7 +28,7 @@ DAG_NAME = 'haystack_ingestion_pipeline'
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2018, 8, 15),
-    'depends_on_past': True,
+    'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
 }
@@ -102,7 +102,7 @@ def do_get_groups_ready(**kwargs):
         pass
 
     for f in received_files:
-        if re.match(DEID_PREFIX + FILE_TEMPLATE.format('\d{8}T\d{9}'), f):
+        if re.match(DEID_PREFIX + FILE_TEMPLATE.format('[0-9a-f-]*'), f):
             group = f.replace(DEID_PREFIX, '').replace(TRANSACTION_PREFIX, '')
             received_groups.append(group)
 
@@ -165,7 +165,7 @@ def do_fetch_files(ds, **kwargs):
     env = get_haystack_aws_env()
     tmp_dir = get_tmp_dir(ds, kwargs)
     subprocess.check_call(['mkdir', '-p', tmp_dir])
-    s3_incoming_loc1 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION, kwargs)
+    s3_incoming_loc1 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION, kwargs, day_offset=0)
     for g in groups_ready:
         subprocess.check_call(['aws', 's3', 'cp', s3_incoming_loc1 + DEID_PREFIX + g, tmp_dir], env=env)
         subprocess.check_call(['aws', 's3', 'cp', s3_incoming_loc1 + TRANSACTION_PREFIX + g, tmp_dir], env=env)
@@ -217,8 +217,8 @@ split_push_transactions = SubDagOperator(
         {
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
-            'file_name_pattern_func'   : lambda ds, k: TRANSACTION_PREFIX + '\d{8}T\d{9}',
-            's3_prefix_func'           : lambda ds, k: S3_TRANSACTION_URL_TEMPLATE.format(k['file_to_push'].split('.')[0].split('-')[-1]),
+            'file_name_pattern_func'   : lambda ds, k: TRANSACTION_PREFIX + '[0-9a-f-]*',
+            's3_prefix_func'           : lambda ds, k: S3_TRANSACTION_URL_TEMPLATE.format(k['file_to_push'].split('.')[0].replace(TRANSACTION_PREFIX, '')),
             'num_splits'               : 1
         }
     ),
