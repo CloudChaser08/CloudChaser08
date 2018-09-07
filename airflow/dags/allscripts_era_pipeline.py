@@ -10,7 +10,6 @@ from airflow.models import Variable
 import common.HVDAG as HVDAG
 import subdags.s3_validate_file as s3_validate_file
 import subdags.s3_fetch_file as s3_fetch_file
-import subdags.s3_push_files as s3_push_files
 import subdags.decrypt_files as decrypt_files
 import subdags.split_push_files as split_push_files
 import subdags.queue_up_for_matching as queue_up_for_matching
