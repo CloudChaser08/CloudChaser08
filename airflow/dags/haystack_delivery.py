@@ -103,7 +103,7 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds, k: [get_group_id(ds, k)],
+            'expected_matching_files_func'      : lambda ds, k: ['deid-' + get_group_id(ds, k)],
             'dest_dir_func'                     : get_group_id,
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'e082e26a-0c90-4e7c-b8ac-1cc6704d52aa',
@@ -136,7 +136,7 @@ fetch_return_file = PythonOperator(
 
 def do_deliver_return_file(ds, **kwargs):
     env = get_haystack_aws_env()
-    return_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_id='fetch_return_file', key='return_file')
+    return_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='fetch_return_file', key='return_file')
 
     subprocess.check_call(['aws', 's3', 'cp', '--sse', 'AES256',
         get_tmp_dir(ds, kwargs) + return_file, S3_DELIVERY_LOCATION], env=env)
@@ -151,7 +151,7 @@ deliver_return_file = PythonOperator(
 def do_clean_up_workspace(ds, **kwargs):
     return_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='fetch_return_file', key='return_file')
     os.remove(get_tmp_dir(ds, kwargs) + return_file)
-    os.rmdir(get_tmp_dir)
+    os.rmdir(get_tmp_dir(ds, kwargs))
 
 clean_up_workspace = PythonOperator(
     task_id='clean_up_workspace',
