@@ -5,10 +5,11 @@ import httplib
 import logging
 import os
 
-from airflow.operators import BranchPythonOperator, DummyOperator, PythonOperator, SubDagOperator
+from airflow.operators import BranchPythonOperator, PythonOperator, SubDagOperator
 
 import config as config
 import subdags.run_pyspark_routine as run_pyspark_routine
+import subdags.s3_push_files as s3_push_files
 import util.date_utils as date_utils
 import util.decompression as decompression
 import util.hive as hive_utils
@@ -16,7 +17,8 @@ import util.s3_utils as s3_utils
 import util.slack as slack
 
 for m in [config, date_utils, decompression,
-          hive_utils, s3_utils, slack, HVDAG]:
+          hive_utils, s3_utils, slack,
+          run_pyspark_routine, s3_push_files, HVDAG]:
     reload(m)
 
 TMP_PATH_TEMPLATE = '/tmp/reference/icd10/{}/'
@@ -259,7 +261,7 @@ log_cm_format_changed = generate_log_format_changed_task('cm')
 log_pcs_format_changed = generate_log_format_changed_task('pcs')
 
 def generate_push_file_task(filetype, get_tmp_dir_function, filename_template_function,
-        s3_location_template_function):
+        s3_location_template_function, s3_bucket):
     def push_file(ds, **kwargs):
         tmp_dir = get_tmp_dir_function(ds, kwargs)
         filename = filename_template_function(ds, kwargs)
@@ -267,6 +269,21 @@ def generate_push_file_task(filetype, get_tmp_dir_function, filename_template_fu
 
         s3_utils.copy_file(tmp_dir + filename, s3_location)
 
+    return SubDagOperator(
+        subdag = s3_push_files.s3_push_files(
+            DAG_NAME,
+            'push_{}_file'.format(filetype),
+            default_args['start_date'],
+            mdag.schedule_interval,
+            {
+                'file_path_func'        : lambda ds, k: get_tmp_dir_function(ds, k) + filename_template_function(ds, k),
+                's3_prefix_func'        : lambda ds, k: '/'.join(s3_location_template_function.split('/')[3:]),
+                's3_bucket'             : s3_bucket
+            }
+        ),
+        task_id='push_{}_file'.format(filetype),
+        dag=mdag
+    )
     return PythonOperator(
         task_id='push_{}_file'.format(filetype),
         provide_context=True,
@@ -285,7 +302,8 @@ push_cm_file = generate_push_file_task(
     date_utils.generate_insert_date_into_template_function(
         DIAGNOSIS_S3_URL_TEMPLATE,
         year_offset=ICD10_YEAR_OFFSET
-    )
+    ),
+    DIAGNOSIS_S3_URL_TEMPLATE.split('/')[2]
 )
 push_pcs_file = generate_push_file_task(
     'pcs',
@@ -297,7 +315,8 @@ push_pcs_file = generate_push_file_task(
     date_utils.generate_insert_date_into_template_function(
         PROCEDURE_S3_URL_TEMPLATE,
         year_offset=ICD10_YEAR_OFFSET
-    )
+    ),
+    PROCEDURE_S3_URL_TEMPLATE.split('/')[2]
 )
 
 def norm_args(ds, kwargs):
