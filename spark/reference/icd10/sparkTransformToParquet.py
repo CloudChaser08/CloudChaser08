@@ -11,7 +11,21 @@ def run(spark, year):
 
     pcs = spark.read.text(PCS_INPUT)
     cm = spark.read.text(CM_INPUT)
+    '''
+    Fixed Width Layout for ICD10 Reference Data:
 
+    Position | Length | Contents
+    ---------+--------+---------------------------------------------------------------------------------------------------------
+        1    |     5  |  Order number, right justified, zero filled.
+        6    |     1  |  Blank
+        7    |     7  |  ICD-10-CM or ICD-10-PCS code. Dots are not included.
+       14    |     1  |  Blank
+       15    |     1  |  0 if the code is a “header” –not valid for HIPAA-covered transactions.  1 if the code is valid. 
+       16    |     1  |  Blank
+       17    |    60  |  Short description
+       77    |     1  |  Blank
+       78    |   323  |  Long description
+    '''
     postprocessor.compose(
         postprocessor.trimmify,
         postprocessor.nullify
