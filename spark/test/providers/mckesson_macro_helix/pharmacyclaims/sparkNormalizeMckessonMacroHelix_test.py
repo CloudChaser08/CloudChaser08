@@ -51,15 +51,15 @@ def test_results_exploded_properly():
 
 # Each row in source has a blacklisted icd9/10 code, check they were nulled out
 def test_exploded_diagnosis_codes_nulled_out():
-    assert len([r for r in results if r.diagnosis_code is None and r.claim_id != '10']) == 10
+    assert len([r for r in results if r.diagnosis_code is None and r.claim_id != '10']) == 5
 
 
 def test_diagnosis_codes_with_prefix_a():
     assert sorted([r.diagnosis_code for r in results if r.claim_id == '8']) \
         == [
-            None, '2449', '2724', '4019', '4280', '4580', '49390', '53081', '7802', '78630', '92401',
+            '2449', '2724', '4019', '4280', '4580', '49390', '53081', '7802', '78630', '92401',
             'A41401', # this code had the '.' in the wrong place
-            'E8889'
+            'E8889', 'V4582'
         ]
 
 
