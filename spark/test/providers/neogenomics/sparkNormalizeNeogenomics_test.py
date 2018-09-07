@@ -4,8 +4,8 @@ import datetime
 import shutil
 import os
 
-import spark.providers.neogenomics.sparkNormalizeNeogenomics as neogenomics
-import spark.providers.neogenomics.deduplicator as neogenomics_deduplicator
+import spark.providers.neogenomics.labv1.sparkNormalizeNeogenomics as neogenomics
+import spark.providers.neogenomics.labv1.deduplicator as neogenomics_deduplicator
 import spark.helpers.file_utils as file_utils
 from pyspark.sql.types import Row
 from pyspark.sql.functions import col, concat, lit
