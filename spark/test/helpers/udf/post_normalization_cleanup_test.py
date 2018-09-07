@@ -71,21 +71,45 @@ def test_clean_up_gender():
 
 def test_clean_up_ndc_code():
     # 11 digits
-    assert cleanup.clean_up_ndc_code('00000000000') == '00000000000'
+    assert cleanup.clean_up_ndc_code('10000000000') == '10000000000'
     assert cleanup.clean_up_ndc_code('000000001ab-00') == '00000000100'
 
     # 10 digits
-    assert cleanup.clean_up_ndc_code('0000000000') == '0000000000'
+    assert cleanup.clean_up_ndc_code('1000000000') == '1000000000'
     assert cleanup.clean_up_ndc_code('000000001-0') == '0000000010'
 
     # 8 digits
     assert cleanup.clean_up_ndc_code('27272727') == '27272727'
     assert cleanup.clean_up_ndc_code('27a27b27c27d') == '27272727'
 
+    # Codes with all zeroes are NULL
+    assert cleanup.clean_up_ndc_code('00000000') is None
+    assert cleanup.clean_up_ndc_code('000000000') is None
+    assert cleanup.clean_up_ndc_code('0000000000') is None
+    assert cleanup.clean_up_ndc_code('0000000000aabb') is None
+
     # other digit counts
     assert cleanup.clean_up_ndc_code('0000000') is None
     assert cleanup.clean_up_ndc_code('abc') is None
     assert cleanup.clean_up_ndc_code(None) is None
+
+
+def test_clean_up_npi_code():
+    # Codes not 10 digits are NULL
+    assert cleanup.clean_up_npi_code('123456789') is None
+    assert cleanup.clean_up_npi_code('12345678901') is None
+    assert cleanup.clean_up_npi_code('1') is None
+    assert cleanup.clean_up_npi_code(None) is None
+
+    # 10 digit numeric codes are good
+    assert cleanup.clean_up_npi_code('abc1234567890') == '1234567890'
+    assert cleanup.clean_up_npi_code('1234567890') == '1234567890'
+    assert cleanup.clean_up_npi_code('1234567890abc') == '1234567890'
+
+    # Codes with all zeroes are NULL
+    assert cleanup.clean_up_npi_code('0000000000') is None
+    assert cleanup.clean_up_npi_code('abc0000000000') is None
+    assert cleanup.clean_up_npi_code('0000000000abc') is None
 
 
 def test_clean_up_procedure_code():
