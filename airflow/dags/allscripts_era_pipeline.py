@@ -343,8 +343,8 @@ detect_move_normalize_dag = SubDagOperator(
 
 if HVDAG.HVDAG.airflow_env == 'test':
     for t in [
-            'validate_transaction_file', 'validate_deid_file', 'validate_rest_file', 
-            'queue_up_for_matching', 'detect_move_normalize', 'clean_up_workspace'
+            'validate_transaction_file', 'validate_deid_file',
+            'validate_rest_file', 'queue_up_for_matching'
     ]:
         del mdag.task_dict[t]
         globals()[t] = DummyOperator(
