@@ -369,6 +369,6 @@ decrypt_transaction.set_upstream(unzip_transaction)
 split_rest.set_upstream(decrypt_rest)
 split_transaction.set_upstream(decrypt_transaction)
 detect_move_normalize_dag.set_upstream(
-    [split_transaction, queue_up_for_matching]
+    [split_transaction, split_rest, queue_up_for_matching]
 )
 clean_up_workspace.set_upstream([split_transaction, split_rest, push_unzipped_deid])
