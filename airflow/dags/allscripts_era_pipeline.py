@@ -282,7 +282,7 @@ def generate_split_push_files_subdag(task_id, tmp_dir_func, file_name_template):
                 's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(
                     S3_TRANSACTION_PROCESSED_URL_TEMPLATE, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
                 ),
-                'num_splits'               : 20
+                'split_size'               : '20M'
             }
         ),
         task_id='split_{}_file'.format(task_id),
