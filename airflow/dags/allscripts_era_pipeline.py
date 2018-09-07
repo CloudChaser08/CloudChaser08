@@ -255,17 +255,17 @@ def generate_decrypt_files_subdag(task_id, tmp_dir_func, enc_dec_func):
 
 
 decrypt_transaction = generate_decrypt_files_subdag('transaction',
-                                                    get_t_tmp_dir,
-                                                    get_enc_dec_file_paths_function(
-                                                        TRANSACTION_FILE_NAME_TEMPLATE[:-4]
-                                                    )
-                                                   )
+    get_t_tmp_dir,
+    get_enc_dec_file_paths_function(
+        TRANSACTION_FILE_NAME_TEMPLATE[:-4]
+    )
+)
 decrypt_rest = generate_decrypt_files_subdag('rest',
-                                             get_r_tmp_dir,
-                                             get_enc_dec_file_paths_function(
-                                                 REST_FILE_NAME_TEMPLATE[:-4]
-                                             )
-                                            )
+    get_r_tmp_dir,
+    get_enc_dec_file_paths_function(
+        REST_FILE_NAME_TEMPLATE[:-4]
+    )
+)
 
 def generate_split_push_files_subdag(task_id, tmp_dir_func, file_name_template):
     return SubDagOperator(
