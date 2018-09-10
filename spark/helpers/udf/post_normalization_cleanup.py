@@ -228,7 +228,7 @@ def validate_age(age, date_service, year_of_birth):
     consider '0' a null value and nullify the age.
     """
     try:
-        int(age)
+        age = int(age)
     except TypeError:
         return
 
