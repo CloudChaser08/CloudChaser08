@@ -45,7 +45,11 @@ class HVDAG(DAG):
                 "title_link" : ti.log_url,
                 "text"       : "Execution date: {}\nFailure timestamp {}".format(ti.execution_date, ti.start_date)
             }
-            slack.send_message(config.AIRFLOW_ALERTS_CHANNEL, attachment=attachment)
+            # if the dag is for Consent, send failure alerts to the consent_alerts slack channel, else send to airflow_alerts
+            if DagBag().get_dag(ti.dag_id) in config.consent_dags:
+                slack.send_message(config.CONSENT_ALERTS_CHANNEL, attachment=attachment)
+            else:
+                slack.send_message(config.AIRFLOW_ALERTS_CHANNEL, attachment=attachment)
 
     def _on_retry(self, context):
         dag_id = "{}.{}".format(
