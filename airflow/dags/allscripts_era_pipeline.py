@@ -191,30 +191,6 @@ unzip_transaction = generate_unzip_files_dag('transaction', get_t_tmp_dir)
 unzip_rest = generate_unzip_files_dag('rest', get_r_tmp_dir)
 unzip_deid = generate_unzip_files_dag('deid', get_d_tmp_dir)
 
-def do_push_unzipped_deid_files(ds, **kwargs):
-    tmp_dir = kwargs['tmp_dir_func'](ds, kwargs)
-    unzipped_deid_location = kwargs['unzipped_deid_location'](ds, kwargs)
-
-    # Get list of deid files to check for
-    deid_files = os.listdir(tmp_dir)
-    kwargs['ti'].xcom_push(key='deid_files', value=deid_files)
-
-    s3_utils.copy_file_recursive(tmp_dir, unzipped_deid_location)
-
-
-push_unzipped_deid = PythonOperator(
-    python_callable=do_push_unzipped_deid_files,
-    op_kwargs={
-        'tmp_dir_func': get_d_tmp_dir,
-        'unzipped_deid_location': date_utils.generate_insert_date_into_template_function(
-            S3_UNZIPPED_DEID_URL_TEMPLATE, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
-        )
-    },
-    provide_context=True,
-    task_id='push_unzipped_deid',
-    dag=mdag
-)
-
 queue_up_for_matching = SubDagOperator(
     subdag=queue_up_for_matching.queue_up_for_matching(
         DAG_NAME,
@@ -223,14 +199,11 @@ queue_up_for_matching = SubDagOperator(
         mdag.schedule_interval,
         {
             'source_files_func' : lambda ds, k: [
-                date_utils.insert_date_into_template(
-                    S3_UNZIPPED_DEID_URL_TEMPLATE, k, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
-                ) +
-                date_utils.insert_date_into_template(
-                    DEID_FILE_NAME_TEMPLATE, k, day_offset=ALLSCRIPTS_ERA_DAY_OFFSET
-                )
+                os.path.join(root, f)                                       \
+                        for f in files                                      \
+                        for root, dirs, files                               \
+                        in os.walk(get_d_tmp_dir(ds, k))
             ],
-            'regex_name_match'  : True,
             'passthrough_only'  : True
         }
     ), task_id='queue_up_for_matching',
@@ -360,8 +333,7 @@ unzip_rest.set_upstream(fetch_rest)
 unzip_transaction.set_upstream(fetch_transaction)
 unzip_deid.set_upstream(fetch_deid)
 
-push_unzipped_deid.set_upstream(unzip_deid)
-queue_up_for_matching.set_upstream(push_unzipped_deid)
+queue_up_for_matching.set_upstream(unzip_deid)
 
 decrypt_rest.set_upstream(unzip_rest)
 decrypt_transaction.set_upstream(unzip_transaction)
@@ -371,4 +343,4 @@ split_transaction.set_upstream(decrypt_transaction)
 detect_move_normalize_dag.set_upstream(
     [split_transaction, split_rest, queue_up_for_matching]
 )
-clean_up_workspace.set_upstream([split_transaction, split_rest, push_unzipped_deid])
+clean_up_workspace.set_upstream([split_transaction, split_rest, queue_up_for_matching])
