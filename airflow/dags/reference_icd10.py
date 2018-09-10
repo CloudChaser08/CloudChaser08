@@ -26,7 +26,7 @@ DAG_NAME = 'reference_icd10'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2017, 10, 1),
+    'start_date': datetime(2017, 10, 1, 9),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -34,7 +34,7 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = None,       #TODO: determine later
+    schedule_interval = '0 9 1 10 *',
     default_args = default_args
 )
 
@@ -314,7 +314,7 @@ def norm_args(ds, kwargs):
 transform_to_parquet = SubDagOperator(
     subdag=run_pyspark_routine.run_pyspark_routine(
         DAG_NAME,
-        'run_transform_to_parquet',
+        'transform_to_parquet',
         default_args['start_date'],
         mdag.schedule_interval,
         {
