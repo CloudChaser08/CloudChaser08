@@ -12,17 +12,15 @@ SELECT
     pay.yearofbirth                                                                     AS patient_year_of_birth,
     pay.threedigitzip                                                                   AS patient_zip3,
     pay.state                                                                           AS patient_state, -- 10
-    EXTRACT_DATE(txn.test_created_date, '%m/%d/%Y', cast({min_date} as date), cast({max_date} as date))
+    EXTRACT_DATE(txn.test_created_date, '%m/%d/%Y', cast({min_date} as date), txn.vendor_file_date)
                                                                                         AS date_service,
-    EXTRACT_DATE(txn.specimen_collection_date, '%m/%d/%Y', cast({min_date} as date), cast({max_date} as date))
+    EXTRACT_DATE(txn.specimen_collection_date, '%m/%d/%Y', cast({min_date} as date), txn.vendor_file_date)
                                                                                         AS date_specimen,
     EXTRACT_DATE(
-        CASE WHEN txn.test_cancellation_date IS NOT NULL
-            THEN txn.test_cancellation_date
-            ELSE txn.test_report_date,
+        COALESCE(txn.test_cancellation_date, txn.test_report_date),
         '%m/%d/%Y',
         cast({min_date} as date),
-        cast({max_date} as date)
+        txn.vendor_file_date
     )                                                                                   AS date_report,
     txn.test_orderid_hashed                                                             AS test_id,
     txn.panel_code                                                                      AS test_battery_local_id,
@@ -53,7 +51,7 @@ SELECT
     txn.cpt_code                                                                        AS procedure_code,
     CASE WHEN 0 <> LENGTH(CLEAN_UP_PROCEDURE_CODE(txn.cpt_code)) THEN 'HC'
           ELSE NULL
-      END)                                                                              AS procedure_code_qual,
+      END                                                                               AS procedure_code_qual,
     SUBSTR(UPPER(CLEAN_UP_ALPHANUMERIC_CODE(txn.cpt_modifier_id)), 1, 2)                AS procedure_modifier_1,
     txn.ordering_provider_npi_number                                                    AS ordering_npi, -- 30
     txn.insurance_company_id                                                            AS payer_id,

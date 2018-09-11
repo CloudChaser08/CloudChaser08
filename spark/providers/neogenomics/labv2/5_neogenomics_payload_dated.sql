@@ -8,6 +8,5 @@ SELECT DISTINCT
     gender,
     age,
     state,
-    -- Replace CURRENT_DATE with the vendor's file date.
-    CURRENT_DATE AS vendor_file_date
+    EXTRACT_DATE(REGEXP_EXTRACT(input_file_name, '(..../../..)/[^/]*$', 1), '%Y/%m/%d') AS vendor_file_date
  FROM matching_payload
