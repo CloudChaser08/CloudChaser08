@@ -52,7 +52,7 @@ def test_year_of_birth_cap():
 def test_date_parsing():
     "Ensure that dates are correctly parsed"
     assert filter(lambda r: r.claim_id == '2073344007_17897', results)[0] \
-        .date_service == '2016-12-01'
+        .date_service == datetime.date(2016, 12, 01)
 
 
 def test_diag_explosion():

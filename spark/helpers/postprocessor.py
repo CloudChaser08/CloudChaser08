@@ -1,7 +1,7 @@
 # Generic, agnostic functions to be applied on a dataframe
 
 import spark.helpers.udf.general_helpers as gen_helpers
-from pyspark.sql.types import StringType
+from pyspark.sql.types import StringType, DateType
 from pyspark.storagelevel import StorageLevel
 from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, \
     coalesce, input_file_name
@@ -82,7 +82,7 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
 
     def out(df):
         return df.withColumn(
-            date_col, udf(gen_helpers.cap_date)(col(date_col), lit(min_cap), lit(max_cap))
+            date_col, udf(gen_helpers.cap_date, DateType())(col(date_col), lit(min_cap), lit(max_cap))
         )
 
     return out

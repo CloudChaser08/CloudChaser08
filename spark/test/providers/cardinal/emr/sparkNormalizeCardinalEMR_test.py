@@ -343,23 +343,23 @@ def test_procedure_date_cap():
             assert not res.enc_dt
             assert not res.proc_dt
         elif res.hv_proc_id == '40_enc_pat-visit-id-1':
-            assert res.enc_dt == '2017-01-01'
-            assert res.proc_dt == '2017-01-01'
+            assert res.enc_dt == datetime.date(2017, 01, 01)
+            assert res.proc_dt == datetime.date(2017, 01, 01)
         elif res.hv_proc_id == '40_enc_pat-visit-id-2':
-            assert res.enc_dt == '2017-01-01'
-            assert res.proc_dt == '2017-01-01'
+            assert res.enc_dt == datetime.date(2017, 01, 01)
+            assert res.proc_dt == datetime.date(2017, 01, 01)
         elif res.hv_proc_id == '40_ord_id-0':
-            assert res.enc_dt == '2017-02-01'
-            assert res.proc_dt == '2017-01-01'
-            assert res.data_captr_dt == '2016-01-01'
+            assert res.enc_dt == datetime.date(2017, 02, 01)
+            assert res.proc_dt == datetime.date(2017, 01, 01)
+            assert res.data_captr_dt == datetime.date(2016, 01, 01)
         elif res.hv_proc_id == '40_ord_id-1':
-            assert res.enc_dt == '2017-02-01'
-            assert res.proc_dt == '2017-01-01'
-            assert res.data_captr_dt == '2016-01-01'
+            assert res.enc_dt == datetime.date(2017, 02, 01)
+            assert res.proc_dt == datetime.date(2017, 01, 01)
+            assert res.data_captr_dt == datetime.date(2016, 01, 01)
         elif res.hv_proc_id == '40_ord_id-2':
-            assert res.enc_dt == '2017-02-01'
-            assert res.proc_dt == '2017-01-01'
-            assert res.data_captr_dt == '2016-01-01'
+            assert res.enc_dt == datetime.date(2017, 02, 01)
+            assert res.proc_dt == datetime.date(2017, 01, 01)
+            assert res.data_captr_dt == datetime.date(2016, 01, 01)
 
 
 def test_procedure_data_cleaning():
@@ -426,9 +426,9 @@ def test_lab_result_date_cap():
         if res.hv_lab_result_id == '40_000878FC-CE79-4E90-AE5B-4C9742F5374A-2':
             assert not res.lab_test_execd_dt
         elif res.hv_lab_result_id == '40_0004B13F-0CC3-4D7B-B63C-EB2FDEEC3DCE-1':
-            assert res.lab_test_execd_dt == '2017-01-01'
+            assert res.lab_test_execd_dt == datetime.date(2017, 01, 01)
         elif res.hv_lab_result_id is None:
-            assert res.lab_test_execd_dt == '2017-01-01'
+            assert res.lab_test_execd_dt == datetime.date(2017, 01, 01)
         else:
             raise AssertionError("Unexpected result id: {}".format(res.hv_lab_result_id))
 

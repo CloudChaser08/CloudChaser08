@@ -46,15 +46,17 @@ def test_init(spark):
     diagnosis_results = spark['sqlContext'].sql('select * from diagnosis_common_model') \
                                            .collect()
 
+
 def test_date_parsing():
+ 
     # date with slashes
-    assert [r.proc_dt for r in procedure_results if r.hvid == 'hvid-9'] == ['2010-04-01']
+    assert [r.proc_dt for r in procedure_results if r.hvid == 'hvid-9'] == [ datetime.date(2010, 04, 01) ]
 
     # date without slashes
-    assert [r.proc_dt for r in procedure_results if r.hvid == 'hvid-8'] == ['2009-10-09']
+    assert [r.proc_dt for r in procedure_results if r.hvid == 'hvid-8'] == [ datetime.date(2009, 10, 9) ]
 
     # no date
-    assert [r.medctn_admin_dt for r in medication_results if r.hvid == 'hvid-9'] == ['2011-10-11']
+    assert [r.medctn_admin_dt for r in medication_results if r.hvid == 'hvid-9'] == [ datetime.date(2011, 10, 11) ] 
     assert [r.medctn_admin_dt for r in medication_results if r.hvid == 'hvid-0'] == [None]
 
 

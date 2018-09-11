@@ -2,45 +2,77 @@ import pytest
 
 import mock
 import datetime
-
-from pyspark.sql.types import Row, StringType
+from pyspark.sql.types import Row, StructType, StructField, StringType, DateType, IntegerType, DoubleType, FloatType, ArrayType
 from pyspark.sql.functions import col, lit, udf
-
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.file_utils as file_utils
 
 
 @pytest.mark.usefixtures("spark")
 def test_trimmify(spark):
-    "Ensure all string columns are trimmed"
+    "Ensure all string columns are trimmed and the schema is unchanged"
+    
+    # Include columns with various types for testing that schema is not changed
+    schema_to_use = StructType([
+		StructField('test_strings', StringType(), True),
+		StructField('test_dates', DateType(), True),
+		StructField('test_ints', IntegerType(), True),
+		StructField('test_doubles', DoubleType(), True),
+		StructField('test_floats', FloatType(), True),
+		StructField('test_arrays', ArrayType(IntegerType()), True)
+	     ])    
+    
+    rdd = spark['spark'].sparkContext.parallelize([
+        [' trim this', datetime.date(2016, 1, 1), 1, 1.1, 1.11, [1]],
+        ['trim this ', datetime.date(2017, 1, 1), 2, 2.2, 2.22, [2]],
+        ['unchanged',  datetime.date(2018, 1, 1), 3, 3.3, 3.33, [3]],
+    ])
 
-    df = spark['spark'].sparkContext.parallelize([
-        [' trim this'],
-        ['trim this '],
-        ['unchanged']
-    ]).toDF()
+    df = spark['spark'].createDataFrame(rdd, schema=schema_to_use)
 
-    trimmed = postprocessor.trimmify(df).collect()
+    schema_before = df.schema
+    trimmed = postprocessor.trimmify(df)
+    schema_after = trimmed.schema  
+    assert schema_before == schema_after
 
-    for column in [el._1 for el in trimmed]:
+    trimmed = trimmed.collect()
+    
+    for column in [el['test_strings'] for el in trimmed]:
         assert not column.startswith(' ') and not column.endswith(' ')
 
 
 def test_nullify(spark):
     "Ensure all null columns are nullified"
+    
+    # Include columns with various types for testing that schema is not changed
+    schema_to_use = StructType([
+			StructField('test_strings', StringType(), True),
+			StructField('test_dates', DateType(), True),
+			StructField('test_ints', IntegerType(), True),
+			StructField('test_doubles', DoubleType(), True),
+			StructField('test_floats', FloatType(), True),
+			StructField('test_arrays', ArrayType(IntegerType()), True)
+		    ])
 
-    df = spark['spark'].sparkContext.parallelize([
-        [None],
-        ['NULL'],
-        ['nUll'],
-        ['this is also null'],
-        ['NON NULL']
-    ]).toDF()
+    rdd = spark['spark'].sparkContext.parallelize([
+        [None,                datetime.date(2012, 1, 1), 1, 1.1, 1.11, [1]],
+        ['NULL',              datetime.date(2013, 1, 1), 2, 2.2, 2.22, [2]],
+        ['nUll',              datetime.date(2014, 1, 1), 3, 3.3, 3.33, [3]],
+        ['this is also null', datetime.date(2015, 1, 1), 4, 4.4, 4.44, [4]],
+        ['NON NULL',          datetime.date(2016, 1, 1), 5, 5.5, 5.55, [5]],
+    ])
 
-    nullified_with_func = postprocessor.nullify(df, ['NULL', 'THIS IS ALSO NULL'], lambda c: c.upper() if c else None).collect()
+    df = spark['spark'].createDataFrame(rdd, schema=schema_to_use)
+	
+    schema_before = df.schema
+    nullified_with_func = postprocessor.nullify(df, ['NULL', 'THIS IS ALSO NULL'], lambda c: c.upper() if c and type(c) is unicode else None)
+    schema_after = nullified_with_func.schema
+    assert schema_before == schema_after
 
+    nullified_with_func = nullified_with_func.collect()
+    
     for (null_column, raw_column) in [
-            (null_row._1, raw_row._1) for (null_row, raw_row) in zip(nullified_with_func, df.collect())
+            (null_row['test_strings'], raw_row['test_strings']) for (null_row, raw_row) in zip(nullified_with_func, df.collect())
     ]:
         if not raw_column or raw_column.upper() in ['NULL', 'THIS IS ALSO NULL']:
             assert not null_column
@@ -58,6 +90,8 @@ def test_apply_date_cap(spark):
         Row(row_id=4, date_col=datetime.date(2016, 4, 1))
     ]).toDF()
 
+    schema_before = df.schema
+
     sample_date_cap = spark['spark'].sparkContext.parallelize([
         Row(gen_ref_1_dt=datetime.date(2016, 1, 15))
     ])
@@ -66,15 +100,19 @@ def test_apply_date_cap(spark):
     spark['sqlContext'].sql = mock.MagicMock(return_value=sample_date_cap)
 
     try:
-        capped = postprocessor.apply_date_cap(spark['sqlContext'], 'date_col', '2016-03-15', '<feedid>', '<domain_name>')(df).collect()
+        capped = postprocessor.apply_date_cap(spark['sqlContext'], 'date_col', '2016-03-15', '<feedid>', '<domain_name>')(df)
+	schema_after = capped.schema
+	assert schema_before == schema_after
+
+	capped = capped.collect()
 
         for row in capped:
             if row.row_id in [1, 4]:
                 assert not row.date_col
             elif row.row_id == 2:
-                assert row.date_col == '2016-02-01'
+                assert row.date_col == datetime.date(2016, 2, 1)
             elif row.row_id == 3:
-                assert row.date_col == '2016-03-01'
+                assert row.date_col == datetime.date(2016, 3, 1)
     except:
         spark['sqlContext'].sql = old_sql_func
         raise
@@ -88,7 +126,14 @@ def test_deobfuscate_hvid(spark):
         Row(row_id=2, hvid='100001I')
     ]).toDF()
 
-    assert postprocessor.deobfuscate_hvid('test_proj')(df).collect() \
+    schema_before = df.schema
+
+    deobfuscated_hvid = postprocessor.deobfuscate_hvid('test_proj')(df)
+    schema_after = deobfuscated_hvid.schema
+
+    assert schema_before == schema_after
+
+    assert deobfuscated_hvid.collect() \
         == [Row(row_id=1, hvid='1299049670'),
             Row(row_id=2, hvid=None)]
 
@@ -103,6 +148,8 @@ def test_apply_whitelist(spark):
         Row(row_id=4, whitelist_col='this value is neutral'),
         Row(row_id=5, whitelist_col='this value is a-ok')
     ]).toDF()
+    
+    schema_before = df.schema    
 
     sample_whitelist = spark['spark'].sparkContext.parallelize([
         Row(gen_ref_itm_nm='THIS VALUE IS OK'),
@@ -113,8 +160,11 @@ def test_apply_whitelist(spark):
     spark['sqlContext'].sql = mock.MagicMock(return_value=sample_whitelist)
 
     try:
-        whitelisted = postprocessor.apply_whitelist(spark['sqlContext'], 'whitelist_col', '<domain_name>')(df).collect()
+        whitelisted = postprocessor.apply_whitelist(spark['sqlContext'], 'whitelist_col', '<domain_name>')(df)
+	schema_after = whitelisted.schema
+	assert schema_before == schema_after
 
+	whitelisted = whitelisted.collect()
         for row in whitelisted:
             if row.row_id in [2, 3, 4]:
                 assert not row.whitelist_col
