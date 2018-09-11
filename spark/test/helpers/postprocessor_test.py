@@ -2,58 +2,77 @@ import pytest
 
 import mock
 import datetime
-
-from pyspark.sql.types import Row, StringType
+from pyspark.sql.types import Row, StructType, StructField, StringType, DateType, IntegerType, DoubleType, FloatType, ArrayType
 from pyspark.sql.functions import col, lit, udf
-
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.file_utils as file_utils
 
 
 @pytest.mark.usefixtures("spark")
 def test_trimmify(spark):
-    "Ensure all string columns are trimmed"
+    "Ensure all string columns are trimmed and the schema is unchanged"
+    
+    # Include columns with various types for testing that schema is not changed
+    schema_to_use = StructType([
+		StructField('test_strings', StringType(), True),
+		StructField('test_dates', DateType(), True),
+		StructField('test_ints', IntegerType(), True),
+		StructField('test_doubles', DoubleType(), True),
+		StructField('test_floats', FloatType(), True),
+		StructField('test_arrays', ArrayType(IntegerType()), True)
+	     ])    
+    
+    rdd = spark['spark'].sparkContext.parallelize([
+        [' trim this', datetime.date(2016, 1, 1), 1, 1.1, 1.11, [1]],
+        ['trim this ', datetime.date(2017, 1, 1), 2, 2.2, 2.22, [2]],
+        ['unchanged',  datetime.date(2018, 1, 1), 3, 3.3, 3.33, [3]],
+    ])
 
-    df = spark['spark'].sparkContext.parallelize([
-        [' trim this'],
-        ['trim this '],
-        ['unchanged'],
-	[datetime.date(2018, 1, 1)]
-    ]).toDF()
+    df = spark['spark'].createDataFrame(rdd, schema=schema_to_use)
 
     schema_before = df.schema
-
     trimmed = postprocessor.trimmify(df)
     schema_after = trimmed.schema  
     assert schema_before == schema_after
 
     trimmed = trimmed.collect()
     
-    for column in [el._1 for el in trimmed]:
+    for column in [el['test_strings'] for el in trimmed]:
         assert not column.startswith(' ') and not column.endswith(' ')
 
 
 def test_nullify(spark):
     "Ensure all null columns are nullified"
-
-    df = spark['spark'].sparkContext.parallelize([
-        [None],
-        ['NULL'],
-        ['nUll'],
-        ['this is also null'],
-        ['NON NULL'],
-	[datetime.date(2018, 1, 1)]
-    ]).toDF()
-    schema_before = df.schema
     
-    nullified_with_func = postprocessor.nullify(df, ['NULL', 'THIS IS ALSO NULL'], lambda c: c.upper() if c else None)
+    # Include columns with various types for testing that schema is not changed
+    schema_to_use = StructType([
+			StructField('test_strings', StringType(), True),
+			StructField('test_dates', DateType(), True),
+			StructField('test_ints', IntegerType(), True),
+			StructField('test_doubles', DoubleType(), True),
+			StructField('test_floats', FloatType(), True),
+			StructField('test_arrays', ArrayType(IntegerType()), True)
+		    ])
+
+    rdd = spark['spark'].sparkContext.parallelize([
+        [None,                datetime.date(2012, 1, 1), 1, 1.1, 1.11, [1]],
+        ['NULL',              datetime.date(2013, 1, 1), 2, 2.2, 2.22, [2]],
+        ['nUll',              datetime.date(2014, 1, 1), 3, 3.3, 3.33, [3]],
+        ['this is also null', datetime.date(2015, 1, 1), 4, 4.4, 4.44, [4]],
+        ['NON NULL',          datetime.date(2016, 1, 1), 5, 5.5, 5.55, [5]],
+    ])
+
+    df = spark['spark'].createDataFrame(rdd, schema=schema_to_use)
+	
+    schema_before = df.schema
+    nullified_with_func = postprocessor.nullify(df, ['NULL', 'THIS IS ALSO NULL'], lambda c: c.upper() if c and type(c) is unicode else None)
     schema_after = nullified_with_func.schema
     assert schema_before == schema_after
 
     nullified_with_func = nullified_with_func.collect()
-
+    
     for (null_column, raw_column) in [
-            (null_row._1, raw_row._1) for (null_row, raw_row) in zip(nullified_with_func, df.collect())
+            (null_row['test_strings'], raw_row['test_strings']) for (null_row, raw_row) in zip(nullified_with_func, df.collect())
     ]:
         if not raw_column or raw_column.upper() in ['NULL', 'THIS IS ALSO NULL']:
             assert not null_column
