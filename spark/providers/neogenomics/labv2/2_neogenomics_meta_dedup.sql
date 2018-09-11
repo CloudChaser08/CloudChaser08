@@ -1,10 +1,10 @@
 SELECT DISTINCT
     bse.* 
- FROM t1 bse
+ FROM neogenomics_meta_pivot bse
 WHERE NOT EXISTS 
     (
         SELECT 1 
-         FROM t1 ltr 
+         FROM neogenomics_meta_pivot ltr
         WHERE bse.test_orderid_hashed = ltr.test_orderid_hashed 
           AND bse.vendor_file_date > ltr.vendor_file_date
     ) 
