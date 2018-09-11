@@ -22,7 +22,7 @@ VENDOR_ID = '78'
 script_path = __file__
 
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
+def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
@@ -35,11 +35,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 date_input.replace('-', '/')
             )
         ) + '/'
-    elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/out/{}/'.format(
+    elif end_to_end_test:
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v2/out/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/payload/{}/'.format(
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v2/payload/{}/'.format(
             date_input.replace('-', '/')
         )
     else:
