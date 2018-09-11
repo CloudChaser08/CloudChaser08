@@ -56,13 +56,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    runner.run_spark_script('normalize_1.sql', return_output=True).createOrReplaceTempView('t1')
-    runner.run_spark_script('normalize_2.sql', return_output=True).createOrReplaceTempView('neogenomics_meta_dedup')
-    runner.run_spark_script('normalize_3.sql', return_output=True).createOrReplaceTempView('t3')
-    runner.run_spark_script('normalize_4.sql', return_output=True).createOrReplaceTempView('neogenomics_results_dedup')
-    runner.run_spark_script('normalize_5.sql', return_output=True).createOrReplaceTempView('t5')
-    runner.run_spark_script('normalize_6.sql', return_output=True).createOrReplaceTempView('neogenomics_payload_lag')
-    normalized_output = runner.run_spark_script('normalize_7.sql', return_output=True)
+    normalized_output = runner.run_all_spark_scripts()
 
     df = postprocessor.compose(
         lambda df: schema_enforcer.apply_schema(df, lab_schema),
