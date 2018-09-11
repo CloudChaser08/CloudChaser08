@@ -55,6 +55,14 @@ def copy_file(src_path, dest_path, encrypt=True, env=get_aws_env()):
     check_call(cmd, env=env)
 
 
+def copy_file_recursive(src_path, dest_path, encrypt=True, env=get_aws_env()):
+    cmd = ['aws', 's3', 'cp', '--recursive'] + \
+        (['--sse', 'AES256'] if encrypt else []) + \
+        [src_path, dest_path]
+
+    check_call(cmd, env=env)
+
+
 def copy_file_async(src_path, dest_path, encrypt=True, env=get_aws_env()):
     cmd = ['aws', 's3', 'cp'] + \
         (['--sse', 'AES256'] if encrypt else []) + \
