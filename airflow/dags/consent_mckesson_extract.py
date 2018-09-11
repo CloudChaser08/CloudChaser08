@@ -37,6 +37,7 @@ mdag = HVDAG.HVDAG(
     'consent_mckesson_extract',
     default_args=default_args,
     schedule_interval='30 15 * * *',  # run daily at 11:30am ET
+    params={"is_consent_dag" : True}
 )
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(TMP_PATH_TEMPLATE)
