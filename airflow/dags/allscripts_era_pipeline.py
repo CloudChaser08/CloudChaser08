@@ -46,11 +46,9 @@ mdag = HVDAG.HVDAG(
 if HVDAG.HVDAG.airflow_env == 'test':
     S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/allscripts/era/raw/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/allscripts/era/out/{}/{}/{}/'
-    S3_UNZIPPED_DEID_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/allscripts/era/deid/{}/{}/{}/'
 else:
     S3_TRANSACTION_RAW_URL = 's3://healthverity/incoming/allscripts/'
     S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/incoming/allscripts/era/{}/{}/{}/'
-    S3_UNZIPPED_DEID_URL_TEMPLATE = 's3://salusv/incoming/allscripts/era/deid/{}/{}/{}/'
 
 # Transaction file
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/out/'
