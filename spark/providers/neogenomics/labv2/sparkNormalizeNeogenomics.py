@@ -26,37 +26,38 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/neogenomics/resources/input/{}/'.format(
-                date_input.replace('-', '/')
-            )
+            script_path, '../../../test/providers/neogenomics/resources/input/*/*/*/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/neogenomics/resources/matching/{}/'.format(
-                date_input.replace('-', '/')
-            )
+            script_path, '../../../test/providers/neogenomics/resources/matching/*/*/*/'
         ) + '/'
     elif end_to_end_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v2/out/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v2/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v2/out/*/*/*/'
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v2/payload/*/*/*/'
     else:
-        input_path = 's3a://salusv/incoming/labtests/neogenomics/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3a://salusv/matching/payload/labtests/neogenomics/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        input_path = 's3a://salusv/incoming/labtests/neogenomics/*/*/*/'
+        matching_path = 's3a://salusv/matching/payload/labtests/neogenomics/*/*/*/'
+
+    min_date = postprocessor.coalesce_dates(
+        runner.sqlContext,
+        FEED_ID,
+        None,
+        'EARLIEST_VALID_SERVICE_DATE',
+        'HVM_AVAILABLE_HISTORY_START_DATE'
+    )
+
+    if min_date:
+        min_date = min_date.isoformat()
 
     records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas)
-    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId'])
+    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId'], load_file_name=True)
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    normalized_output = runner.run_all_spark_scripts()
+    normalized_output = runner.run_all_spark_scripts([
+        ['min_date', min_date]
+    ])
 
     df = postprocessor.compose(
         lambda df: schema_enforcer.apply_schema(df, lab_schema),
@@ -95,7 +96,6 @@ def main(args):
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
-    return
 
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'

@@ -73,8 +73,7 @@ SELECT
     test_status,
     upstream_reflux,
     sql_column_name,
-    -- Replace CURRENT_DATE with the vendor's file date.
-    CURRENT_DATE AS vendor_file_date
+    EXTRACT_DATE(REGEXP_EXTRACT(input_file_name, '(..../../..)/meta', 1), '%Y/%m/%d') AS vendor_file_date
  FROM meta
 WHERE 0 <> LENGTH(TRIM(COALESCE(billing_icd_codes, '')))
 UNION ALL
@@ -155,7 +154,6 @@ SELECT
     test_status,
     upstream_reflux,
     sql_column_name,
-    -- Replace CURRENT_DATE with the vendor's file date.
-    CURRENT_DATE AS vendor_file_date
+    EXTRACT_DATE(REGEXP_EXTRACT(input_file_name, '(..../../..)/meta', 1), '%Y/%m/%d') AS vendor_file_date
  FROM meta
 WHERE 0 = LENGTH(TRIM(COALESCE(billing_icd_codes, '')))
