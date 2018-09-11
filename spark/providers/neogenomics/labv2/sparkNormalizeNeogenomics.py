@@ -60,7 +60,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     df = postprocessor.compose(
         lambda df: schema_enforcer.apply_schema(df, lab_schema),
-        priv_labtests.filter
+        priv_labtests.filter,
+        lambda df: schema_enforcer.apply_schema(df, lab_schema),
+        postprocessor.add_universal_columns(
+            feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=None, model_version_number='07'
+        ),
+        lambda df: schema_enforcer.apply_schema(df, lab_schema)
     )(normalized_output)
 
     if not test:
