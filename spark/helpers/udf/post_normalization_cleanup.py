@@ -228,7 +228,7 @@ def validate_age(age, date_service, year_of_birth):
     consider '0' a null value and nullify the age.
     """
     try:
-        int(age)
+        age = int(age)
     except TypeError:
         return
 
@@ -239,11 +239,11 @@ def validate_age(age, date_service, year_of_birth):
             return age
     elif isinstance(date_service, datetime.date):
         try:
-            int(year_of_birth)
+            year_of_birth = int(year_of_birth)
         except TypeError:
             return age
 
-        if abs(int(age) - (date_service.year - int(year_of_birth))) > 2:
+        if abs(age - (date_service.year - year_of_birth)) > 2:
             return None
         else:
             return age

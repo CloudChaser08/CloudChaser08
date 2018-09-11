@@ -27,6 +27,7 @@ def test_age_validation():
     assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2018) == 0
     assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2019) == 0
     assert cleanup.validate_age(0, datetime.date(2017, 1, 1), 2020) is None
+    assert cleanup.validate_age(0, datetime.date(2017, 1, 1), None) is None    
 
     # misc other cases
     assert cleanup.validate_age(40, datetime.date(2014, 1, 1), 1974) == 40
