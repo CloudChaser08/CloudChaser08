@@ -17,7 +17,8 @@ def test_trimmify(spark):
     df = spark['spark'].sparkContext.parallelize([
         [' trim this'],
         ['trim this '],
-        ['unchanged']
+        ['unchanged'],
+	[datetime.date(2018, 1, 1)]
     ]).toDF()
 
     schema_before = df.schema
@@ -40,7 +41,8 @@ def test_nullify(spark):
         ['NULL'],
         ['nUll'],
         ['this is also null'],
-        ['NON NULL']
+        ['NON NULL'],
+	[datetime.date(2018, 1, 1)]
     ]).toDF()
     schema_before = df.schema
     
