@@ -1,4 +1,5 @@
 from pyspark.sql.types import StructType, StructField, StringType
+import pyspark.sql.functions as F
 import spark.helpers.postprocessor as postprocessor
 import pyspark.sql.functions as F
 import logging
