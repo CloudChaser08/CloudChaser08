@@ -365,7 +365,8 @@ detect_move_normalize = SubDagOperator(
             'vendor_uuid'                       : '5a1b4dc1-e88c-4c17-a653-ef15ea1e633a',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/xifin/medicalclaims/sparkNormalizeXifin.py',
             'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'emr_node_type'                     : 'm4.4xlarge'
         }
     ),
     task_id='detect_move_normalize',
