@@ -38,6 +38,12 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         input_path = 's3a://salusv/incoming/labtests/neogenomics/*/*/*/'
         matching_path = 's3a://salusv/matching/payload/labtests/neogenomics/*/*/*/'
 
+    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
+    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId'], load_file_name=True)
+
+    if not test:
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
+
     min_date = postprocessor.coalesce_dates(
         runner.sqlContext,
         FEED_ID,
@@ -48,12 +54,6 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
     if min_date:
         min_date = min_date.isoformat()
-
-    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
-    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId'], load_file_name=True)
-
-    if not test:
-        external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     normalized_output = runner.run_all_spark_scripts([
         ['min_date', min_date]
