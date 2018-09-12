@@ -65,11 +65,11 @@ def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitio
             .cache_and_track(table) \
             .createOrReplaceTempView(table)
 
-def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitions=0):
+def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitions=0, load_file_name=False):
     for table in transactions_module.TABLE_CONF:
         loc = location_prefix if len(transactions_module.TABLE_CONF) == 1 else location_prefix + table
         conf = transactions_module.TABLE_CONF[table]
-        df = load(runner, loc, source_table_conf=conf)
+        df = load(runner, loc, source_table_conf=conf, load_file_name=load_file_name)
 
         if partitions > 0:
             df = df.repartition(partitions)
