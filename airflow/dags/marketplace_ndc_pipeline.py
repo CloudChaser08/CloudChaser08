@@ -34,7 +34,7 @@ S3_OUTPUT_LOCATION_TEMPLATE = 's3://salusv/warehouse/parquet/marketplace/ndc/{}{
 MARKETPLACE_NDC_DAY_OFFSET = 1
 
 def norm_args(ds, kwargs):
-    base = ['--date', date_utils.insert_date_into_template('{}-{}-{}', kwargs, day_offset=MARKETPLACE_NDC_DAY_OFFSET)]
+    base = ['--output_loc', date_utils.insert_date_into_template(S3_OUTPUT_LOCATION_TEMPLATE, kwargs, day_offset=MARKETPLACE_NDC_DAY_OFFSET)]
     return base
 
 
@@ -46,7 +46,7 @@ create_output = SubDagOperator(
         mdag.schedule_interval,
         {
             'EMR_CLUSTER_NAME_FUNC' : date_utils.generate_insert_date_into_template_function(
-                'marketplace_ndc_{}',
+                'marketplace_ndc_{}{}{}',
                 day_offset=MARKETPLACE_NDC_DAY_OFFSET
             ),
             'PYSPARK_SCRIPT_NAME'   : '/home/hadoop/spark/reference/marketplace_ndc/sparkCreateMarketplaceNDC.py',
@@ -72,7 +72,7 @@ update_analytics_db = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'sql_command_func' : lambda ds, k: date_utils.generate_insert_date_into_template_function(
+            'sql_command_func' : date_utils.generate_insert_date_into_template_function(
                 sql_template,
                 day_offset=MARKETPLACE_NDC_DAY_OFFSET
             )
