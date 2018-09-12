@@ -49,7 +49,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     if min_date:
         min_date = min_date.isoformat()
 
-    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas)
+    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
     payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId'], load_file_name=True)
 
     if not test:
