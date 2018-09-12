@@ -93,11 +93,11 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, end_to_end_test=args.end_to_end_test)
 
     spark.stop()
 
-    if args.airflow_test:
+    if args.end_to_end_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
     else:
         output_path = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
@@ -119,6 +119,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
-    parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
