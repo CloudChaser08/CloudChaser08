@@ -31,7 +31,7 @@ def test_temporary_id():
         .temporary_id is None
 
     assert len(filter(lambda r: r.hvid is None, results[GROUPS[0]])[0]
-            .temporary_id) == 38
+            .temporary_id) == 36
 
 def test_header_row():
     assert results[GROUPS[0]][0].temporary_id == 'Temporary ID'
