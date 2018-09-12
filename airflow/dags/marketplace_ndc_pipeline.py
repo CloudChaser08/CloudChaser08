@@ -10,7 +10,8 @@ import subdags.update_analytics_db as update_analytics_db
 import util.date_utils as date_utils
 
 for m in [
-    run_pyspark_routine, update_analytics_db, HVDAG
+    run_pyspark_routine, update_analytics_db,
+    date_utils, HVDAG
     ]:
     reload(m)
 

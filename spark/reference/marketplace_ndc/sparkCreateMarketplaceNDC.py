@@ -23,7 +23,7 @@ def run(spark, runner, output_location):
 
 
 def main(args):
-    spark, sqlContext = init('Genomind Normalization')
+    spark, sqlContext = init('Marketplace NDC')
 
     runner = Runner(sqlContext)
 
