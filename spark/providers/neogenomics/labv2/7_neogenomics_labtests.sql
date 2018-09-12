@@ -5,6 +5,7 @@ SELECT
             txn.case_number_hashed
         )                                                                               AS claim_id,
     pay.hvid                                                                            AS hvid,
+    CONCAT('TestMeta_', cast(txn.vendor_file_date as string), '.txt')                   AS data_set,
     CASE WHEN UPPER(pay.gender) IN ('F', 'M') THEN UPPER(pay.gender)
         ELSE 'U'
     END                                                                                 AS patient_gender,
@@ -12,15 +13,15 @@ SELECT
     pay.yearofbirth                                                                     AS patient_year_of_birth,
     pay.threedigitzip                                                                   AS patient_zip3,
     pay.state                                                                           AS patient_state, -- 10
-    EXTRACT_DATE(txn.test_created_date, '%m/%d/%Y', cast({min_date} as date), txn.vendor_file_date)
+    EXTRACT_DATE(txn.test_created_date, '%m/%d/%Y', cast({min_date} as date), cast(txn.vendor_file_date as date))
                                                                                         AS date_service,
-    EXTRACT_DATE(txn.specimen_collection_date, '%m/%d/%Y', cast({min_date} as date), txn.vendor_file_date)
+    EXTRACT_DATE(txn.specimen_collection_date, '%m/%d/%Y', cast({min_date} as date), cast(txn.vendor_file_date as date))
                                                                                         AS date_specimen,
     EXTRACT_DATE(
         COALESCE(txn.test_cancellation_date, txn.test_report_date),
         '%m/%d/%Y',
         cast({min_date} as date),
-        txn.vendor_file_date
+        cast(txn.vendor_file_date as date)
     )                                                                                   AS date_report,
     txn.test_orderid_hashed                                                             AS test_id,
     txn.panel_code                                                                      AS test_battery_local_id,
