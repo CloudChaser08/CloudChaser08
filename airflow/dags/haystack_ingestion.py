@@ -103,7 +103,7 @@ def do_get_groups_ready(**kwargs):
 
     for f in received_files:
         if re.match(DEID_PREFIX + FILE_TEMPLATE.format('[0-9a-f-]*'), f):
-            group = f.replace(DEID_PREFIX, '').replace(TRANSACTION_PREFIX, '')
+            group = f.replace(DEID_PREFIX, '')
             received_groups.append(group)
 
     processed_groups = []
