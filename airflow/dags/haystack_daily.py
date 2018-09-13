@@ -29,7 +29,7 @@ DAG_NAME = 'haystack_daily'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 9, 14, 4),
+    'start_date': datetime(2018, 9, 13, 4),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -43,9 +43,9 @@ mdag = HVDAG.HVDAG(
 
 # Applies to all transaction files
 if HVDAG.HVDAG.airflow_env == 'test':
-    S3_TRANSACTION_RAW_URL = 's3://salusv/testing/dewey/airflow/e2e/lhv2/custom/raw/'
-    S3_TRANSACTION_PROCESSED_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/lhv2/custom/out/{}/{{}}/{{}}/{{}}/'
-    S3_NORMALIZED_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/lhv2/custom/spark-out/{}/{{}}/{{}}/{{}}/'
+    S3_INCOMING_LOCATION = 's3://salusv/testing/dewey/airflow/e2e/haystack/custom/outgoing/{}-{}-{}/'
+    S3_INGESTION_URL = 's3://salusv/testing/dewey/airflow/e2e/haystack/custom/ingestion/'
+    S3_TRANSACTION_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/haystack/custom/testing/'
     S3_PAYLOAD_DEST = 's3://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/'
     S3_NORMALIZED_FILE_URL_TEMPLATE = 's3://salusv/testing/dewey/airflow/e2e/haystack/custom/spark-out/{}/'
     S3_DELIVERY_LOCATION = None
@@ -179,6 +179,10 @@ def get_deid_file_urls(ds, kwargs):
     deid_files = [g['deid_file'].split('/')[-1] for g in groups_ready]
     return [get_tmp_dir(ds, kwargs) + d for d in deid_files]
 
+def get_deid_file_names(ds, kwargs):
+    groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
+    return [g['deid_file'].split('/')[-1] for g in groups_ready]
+
 def do_fetch_files(ds, **kwargs):
     groups_ready = kwargs['ti'].xcom_pull(dag_id = DAG_NAME, task_ids = 'get_groups_ready', key = 'groups_ready')
     env = get_haystack_aws_env()
@@ -278,8 +282,7 @@ queue_up_for_matching = SubDagOperator(
 # Post-Matching
 #
 def norm_args(ds, k):
-    group_id = get_group_id(ds, k)
-    base = ['--date', date]
+    base = ['--date', ds]
     if HVDAG.HVDAG.airflow_env == 'test':
         base += ['--airflow_test']
 
@@ -293,8 +296,10 @@ detect_move_normalize_dag = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds, k: ['deid-' + get_group_id(ds, k)],
-            'dest_dir_func'                     : get_group_id,
+            'expected_matching_files_func'      : get_deid_file_names,
+            'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
+                '{}/{}/{}/'
+            ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'e082e26a-0c90-4e7c-b8ac-1cc6704d52aa',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/haystack/custom/sparkNormalizeHaystack.py',

@@ -100,7 +100,6 @@ def run(spark, runner, group_id, date=None, test=False, airflow_test=False):
             normalized_records_unloader.unload_delimited_file(
                 spark, runner, 'hdfs:///staging/' + date.replace('-', '/') + '/', 'haystack_deliverable',
                 output_file_name=output_file_name)
-            pass
         else:
             normalized_records_unloader.unload_delimited_file(
                 spark, runner, 'hdfs:///staging/' + group_id + '/', 'haystack_deliverable',
