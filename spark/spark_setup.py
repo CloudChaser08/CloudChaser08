@@ -105,6 +105,18 @@ def init(provider, local=False):
         'obfuscate_hvid', obfuscate_hvid
     )
     sqlContext.registerFunction(
+	'clean_up_gender', clean_up_gender
+    )
+    sqlContext.registerFunction(
+	'validate_age', validate_age
+    )
+    sqlContext.registerFunction(
+	'validate_state_code', validate_state_code
+    )
+    sqlContext.registerFunction(
+	'clean_up_npi_code', clean_up_npi_code
+    )
+    sqlContext.registerFunction(
         'slightly_obfuscate_hvid', slightly_obfuscate_hvid
     )
     sqlContext.registerFunction(
