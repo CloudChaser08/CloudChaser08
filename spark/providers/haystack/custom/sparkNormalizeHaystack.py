@@ -42,7 +42,7 @@ def run(spark, runner, group_id, date=None, test=False, airflow_test=False):
         else:
             incoming_path = 's3a://salusv/incoming/custom/haystack/testing/{}/'.format(group_id)
             matching_path = 's3a://salusv/matching/payload/custom/haystack/testing/{}/'.format(group_id)
-            output_dir = constants.hdfs_staging_dir + date.replace('-', '/') + '/'
+            output_dir = constants.hdfs_staging_dir + group_id + '/'
 
     runner.sqlContext.registerFunction(
         'gen_uuid', lambda: str(uuid.uuid4())
@@ -113,7 +113,7 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.group_id, airflow_test=args.airflow_test)
+    run(spark, runner, args.group_id, date=args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 

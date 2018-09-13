@@ -240,25 +240,11 @@ split_push_transactions = SubDagOperator(
             'tmp_dir_func'             : get_tmp_dir,
             'file_paths_to_split_func' : get_transaction_file_paths,
             'file_name_pattern_func'   : lambda ds, k: TRANSACTION_PREFIX + '[0-9a-f-]*',
-            's3_prefix_func'           : lambda ds, k: date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_URL_TEMPLATE),
+            's3_prefix_func'           : date_utils.generate_insert_date_into_template_function(S3_TRANSACTION_URL_TEMPLATE),
             'num_splits'               : 1
         }
     ),
     task_id='split_push_transaction_files',
-    dag=mdag
-)
-
-clean_up_workspace = SubDagOperator(
-    subdag=clean_up_tmp_dir.clean_up_tmp_dir(
-        DAG_NAME,
-        'clean_up_workspace',
-        default_args['start_date'],
-        mdag.schedule_interval,
-        {
-            'tmp_path_template': TMP_PATH_TEMPLATE
-        }
-    ),
-    task_id='clean_up_workspace',
     dag=mdag
 )
 
@@ -298,7 +284,7 @@ detect_move_normalize_dag = SubDagOperator(
         {
             'expected_matching_files_func'      : get_deid_file_names,
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
-                '{}/{}/{}/'
+                '{}/{}/{}'
             ),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
             'vendor_uuid'                       : 'e082e26a-0c90-4e7c-b8ac-1cc6704d52aa',
