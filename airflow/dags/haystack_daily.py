@@ -95,7 +95,7 @@ def do_get_groups_ready(**kwargs):
     received_groups = []
     env = get_haystack_aws_env()
     s3_incoming_loc1 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION, kwargs)
-    s3_incoming_loc2 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION, kwargs, day_offset=-1)
+    s3_incoming_loc2 = date_utils.insert_date_into_template(S3_INCOMING_LOCATION, kwargs, day_offset=1)
 
     try:
         received_files  = [s3_incoming_loc1 + f.split(' ')[-1] for f in subprocess.check_output(['aws', 's3', 'ls', s3_incoming_loc1], env=env).split('\n')[:-1]]
