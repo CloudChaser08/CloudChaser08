@@ -362,10 +362,11 @@ detect_move_normalize = SubDagOperator(
             'file_date_func'                    :
                 date_utils.generate_insert_date_into_template_function('{}/{}/{}', day_offset=XIFIN_DX_DAY_OFFSET),
             's3_payload_loc_url'                : S3_PAYLOAD_DEST,
-            'vendor_uuid'                       : '0b6cc05b-bff3-4365-b229-8d06480ad4a3',
+            'vendor_uuid'                       : '5a1b4dc1-e88c-4c17-a653-ef15ea1e633a',
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/xifin/medicalclaims/sparkNormalizeXifin.py',
             'pyspark_normalization_args_func'   : norm_args,
-            'pyspark'                           : True
+            'pyspark'                           : True,
+            'emr_node_type'                     : 'm4.4xlarge'
         }
     ),
     task_id='detect_move_normalize',
@@ -422,14 +423,6 @@ if HVDAG.HVDAG.airflow_env == 'test':
             task_id = t,
             dag = mdag
         )
-
-# For now, don't normalize
-for t in ['detect_move_normalize']:
-    del mdag.task_dict[t]
-    globals()[t] = DummyOperator(
-        task_id = t,
-        dag = mdag
-    )
 
 for f_type in XIFIN_FILE_TYPES:
     fetch_transaction[f_type].set_upstream(validate_transaction[f_type])
