@@ -18,4 +18,9 @@ def test_init(spark):
 	    whtlst_flg=''
 	)
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
+
     auroradx.run(spark['spark'], spark['runner'], '2018-02-08', True)
+
+    spark['spark'].table('auroradx_labtests').repartition(1).write.csv('/Users/amcmullen/output/', mode='overwrite')
+    spark['spark'].table('auroradx_transactions').repartition(1).write.csv('/Users/amcmullen/transactions/', mode='overwrite')
+    spark['spark'].table('auroradx_transactions_dedup').repartition(1).write.csv('/Users/amcmullen/dedup/', mode='overwrite')

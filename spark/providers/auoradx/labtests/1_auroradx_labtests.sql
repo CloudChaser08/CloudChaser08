@@ -106,11 +106,9 @@ SELECT
  FROM auroradx_transactions_dedup txn
  LEFT OUTER JOIN auroradx_payload pay
    ON txn.hvJoinKey = pay.hvJoinKey
-CROSS JOIN ref_gen_ref esdt
-   ON 1 = 1
-  AND esdt.hvm_vdr_feed_id = 85
+LEFT JOIN ref_gen_ref esdt
+  ON esdt.hvm_vdr_feed_id = 85
   AND esdt.gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-CROSS JOIN ref_gen_ref ahdt
-   ON 1 = 1
-  AND ahdt.hvm_vdr_feed_id = 85
+LEFT JOIN ref_gen_ref ahdt
+  ON ahdt.hvm_vdr_feed_id = 85
   AND ahdt.gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'

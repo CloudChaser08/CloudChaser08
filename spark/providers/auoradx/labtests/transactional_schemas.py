@@ -5,8 +5,6 @@ TABLE_CONF = {
 	'csv',
 	separator='|',
 	columns=[
-	    'header',
-	    'source',
 	    'patient_object_id',
 	    'accession_id',
 	    'patient_first_name',

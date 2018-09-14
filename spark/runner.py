@@ -86,7 +86,10 @@ class Runner:
             raise Exception("At least one SQL script did not follow naming convention <step_number>_<table_name>.sql")
 
         for s in scripts:
+	    print("[DEBUG]")
+	    print("script_name: " + s)
             table_name = '_'.join(s.replace('.sql', '').split('_')[1:])
+	    print("table_name: " + table_name)
             self.run_spark_script(s, variables=variables, source_file_path=directory_path, return_output=True) \
                 .createOrReplaceTempView(table_name)
 
