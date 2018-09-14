@@ -9,16 +9,16 @@ function get_optimal_memory_config()
             #These numbers were derived based documented Hadoop memory allocation and a 10% overhead per executor
             #https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-hadoop-task-config.html
             case $instance in
-                "m[4-5]")
-                    mem='--conf spark.executor.memory='$(expr '10500 + 200 * '$mult)'M'
+                m[4-5])
+                    mem='--conf spark.executor.memory='$(expr 10500 + 200 '*' $mult)'M'
                     ;;
-                "c[4-5]")
+                c[4-5])
                     mem='--conf spark.executor.memory=5G'
                     ;;
-                "r[4-5]")
+                r[4-5])
                     mem='--conf spark.executor.memory='$(expr 20500 + 400 '*' $mult)'M'
                     ;;
-                "i3")
+                i3)
                     mem='--conf spark.executor.memory='$(expr 20500 + 400 '*' $mult)'M'
                     ;;
                 *)
