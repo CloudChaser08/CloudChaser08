@@ -19,7 +19,7 @@ DAG_NAME = 'marketplace_ndc'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 9, 12, 14),
+    'start_date': datetime(2018, 9, 14, 14),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
