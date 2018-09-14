@@ -16,7 +16,7 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
 import uuid
 
-def run(spark, runner, group_id, test=False, airflow_test=False):
+def run(spark, runner, group_id, date=None, test=False, airflow_test=False):
     if test:
         incoming_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/haystack/custom/resources/incoming/'
@@ -26,13 +26,23 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
         ) + '/{}/'.format(group_id)
         output_dir = '/tmp/staging/' + group_id + '/'
     elif airflow_test:
-        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'.format(group_id)
-        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'.format(group_id)
-        output_dir = '/tmp/staging/' + group_id + '/'
+        if date:
+            matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'.format(date.replace('-', '/'))
+            matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'.format(date.replace('-', '/'))
+            output_dir = '/tmp/staging/' + date.replace('-', '/') + '/'
+        else:
+            matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'.format(group_id)
+            matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'.format(group_id)
+            output_dir = '/tmp/staging/' + group_id + '/'
     else:
-        incoming_path = 's3a://salusv/incoming/custom/haystack/testing/{}/'.format(group_id)
-        matching_path = 's3a://salusv/matching/payload/custom/haystack/testing/{}/'.format(group_id)
-        output_dir = constants.hdfs_staging_dir + group_id + '/'
+        if date:
+            incoming_path = 's3a://salusv/incoming/custom/haystack/testing/{}/'.format(date.replace('-', '/'))
+            matching_path = 's3a://salusv/matching/payload/custom/haystack/testing/{}/'.format(date.replace('-', '/'))
+            output_dir = constants.hdfs_staging_dir + date.replace('-', '/') + '/'
+        else:
+            incoming_path = 's3a://salusv/incoming/custom/haystack/testing/{}/'.format(group_id)
+            matching_path = 's3a://salusv/matching/payload/custom/haystack/testing/{}/'.format(group_id)
+            output_dir = constants.hdfs_staging_dir + group_id + '/'
 
     runner.sqlContext.registerFunction(
         'gen_uuid', lambda: str(uuid.uuid4())
@@ -78,14 +88,22 @@ def run(spark, runner, group_id, test=False, airflow_test=False):
 
     deliverable.createOrReplaceTempView('haystack_deliverable')
 
-    output_file_name  = group_id + '_daily_response.psv.gz'
+    if date:
+        output_file_name = date + '_daily_response.psv.gz'
+    else:
+        output_file_name = group_id + '_daily_response.psv.gz'
 
     if test:
         return output_file_name
     if not test:
-        normalized_records_unloader.unload_delimited_file(
-            spark, runner, 'hdfs:///staging/' + group_id + '/', 'haystack_deliverable',
-            output_file_name=output_file_name)
+        if date:
+            normalized_records_unloader.unload_delimited_file(
+                spark, runner, 'hdfs:///staging/' + date.replace('-', '/') + '/', 'haystack_deliverable',
+                output_file_name=output_file_name)
+        else:
+            normalized_records_unloader.unload_delimited_file(
+                spark, runner, 'hdfs:///staging/' + group_id + '/', 'haystack_deliverable',
+                output_file_name=output_file_name)
         
 
 def main(args):
@@ -95,7 +113,7 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.group_id, airflow_test=args.airflow_test)
+    run(spark, runner, args.group_id, date=args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 
@@ -110,6 +128,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--group_id', type=str)
+    parser.add_argument('--date', type=str, default=None)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
