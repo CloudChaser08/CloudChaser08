@@ -27,11 +27,11 @@ EXTRACTION_STEP = ('Type=Spark,Name="Extract for Humana",'
         'spark.driver.memory=10G, --conf, spark.executor.memory=13G,'
         '--conf, spark.executor.cores=4, --conf, spark.files.useFetchCache=false,'
         '--conf, spark.hadoop.s3a.connection.maximum=500, --conf,'
-        'spark.default.parallelism=5000, /home/hadoop/spark/delivery/humana_000468/sparkExtractHumana.py]')
+        'spark.default.parallelism=5000, /home/hadoop/spark/delivery/humana_000468/sparkExtractHumana.py{}]')
 
-create_humana_dag(DAG_NAME, EMR_CLUSTER_NAME, HUMANA_INBOX, START_DATE)
+create_humana_dag(DAG_NAME, EMR_CLUSTER_NAME, HUMANA_INBOX, START_DATE, True)
 
-def create_humana_dag(dag_name, emr_cluster_name, inbox_url, start_date):
+def create_humana_dag(dag_name, emr_cluster_name, inbox_url, start_date, is_prod=False):
 
     default_args = {
         'owner': 'airflow',
@@ -78,6 +78,7 @@ def create_humana_dag(dag_name, emr_cluster_name, inbox_url, start_date):
 
     def do_run_extraction(ds, **kwargs):
         emr_utils._build_dewey(emr_utils._get_emr_cluster_id(emr_cluster_name))
+        extraction_step = EXTRACTION_STEP.format(', --is_prod') if is_prod else EXTRACTION_STEP.format('')
         steps = [BOTO3_INSTALL_STEP, EXTRACTION_STEP]
         emr_utils.run_steps(emr_cluster_name, steps)
 
