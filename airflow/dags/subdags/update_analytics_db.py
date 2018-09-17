@@ -1,3 +1,4 @@
+import logging
 from airflow.models import Variable
 from airflow.operators import PythonOperator
 from pyhive import hive
@@ -15,9 +16,11 @@ def do_update_db(ds, **kwargs):
     if 'sql_commands_func' in kwargs:
         sql_commands.extend(kwargs['sql_commands_func'](ds, kwargs))
     if len(sql_commands) == 0:
+        logging.warn('No SQL commands were passed in.  Returning...')
         return
     cursor = hive.connect(Variable.get('analytics_db_host')).cursor()
     for sql in sql_commands:
+        logging.info('SQL Command:\n{}'.format(sql))
         cursor.execute(sql)
     cursor.close()
 
