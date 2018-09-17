@@ -64,7 +64,7 @@ create_output = SubDagOperator(
 )
 
 sql_template = """
-    ALTER TABLE marketplace_ndc SET LOCATION {}
+    ALTER TABLE marketplace_ndc SET LOCATION "{}"
 """.format(S3_OUTPUT_LOCATION_TEMPLATE)
 update_analytics_db = SubDagOperator(
     subdag=update_analytics_db.update_analytics_db(
