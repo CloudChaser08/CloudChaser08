@@ -45,7 +45,7 @@ class HVDAG(DAG):
                 "title_link" : ti.log_url,
                 "text"       : "Execution date: {}\nFailure timestamp {}".format(ti.execution_date, ti.start_date)
             }
-            # if the dag is for Consent, send failure alerts to the consent_alerts slack channel, else send to airflow_alerts
+            # if an alerts channel is specified in the DAG, send alerts to that channel. Otherwise default channel to 'airflow_alerts'.
             if DagBag().get_dag(ti.dag_id).params.get('alerts_channel', False):
                 slack.send_message(DagBag().get_dag(ti.dag_id).params['alerts_channel'], attachment=attachment)
             else:
