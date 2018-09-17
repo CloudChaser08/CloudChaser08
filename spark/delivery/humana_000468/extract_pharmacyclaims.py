@@ -1,6 +1,6 @@
 import pyspark.sql.functions as F
 
-def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table):
+def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table, filter_by_part_processdate=False):
     claims       = runner.sqlContext.table(claims_table)
     ref_vdr_feed = runner.sqlContext.table('dw.ref_vdr_feed')
     ref_vdr_feed = ref_vdr_feed[ref_vdr_feed.hvm_tile_nm.isin(*SUPPLIERS)]
@@ -8,9 +8,16 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table)
     # Extract conditions
     ext = claims.join(ref_vdr_feed, claims['data_feed'] == ref_vdr_feed['hvm_vdr_feed_id'], 'inner') \
         .join(hvids, claims['hvid'] == hvids['hvid'], 'left') \
-        .where(hvids['hvid'].isNotNull()) \
-        .where(claims['part_processdate'] >= start_dt.isoformat()) \
-        .where((claims['date_service'] <= end_dt.isoformat()) & (claims['date_service'] >= start_dt.isoformat())) \
+        .where(hvids['hvid'].isNotNull())
+
+    if filter_by_part_processdate:
+        ext = ext\
+            .where(claims['part_processdate'] >= start_dt.isoformat())
+
+    # Some claims do not have a date_service, only date_written
+    ext = ext \
+        .where(F.coalesce(claims['date_service'], claims['date_written']) <= end_dt.isoformat()) \
+        .where(F.coalesce(claims['date_service'], claims['date_written']) >= start_dt.isoformat()) \
         .select(*[claims[c] for c in claims.columns] + [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
 
     # Hashing
@@ -32,8 +39,8 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table)
     return ext.select(*EXTRACT_COLUMNS)
 
 def extract(runner, hvids, timestamp, start_dt, end_dt):
-    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'pharmacyclaims').union(
-        extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_pharmacyclaims')
+    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'pharmacyclaims', True).union(
+        extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_pharmacyclaims', False)
     )
 
 
