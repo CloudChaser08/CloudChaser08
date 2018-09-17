@@ -1,11 +1,15 @@
 import spark.helpers.schema_enforcer as schema_enforcer
 from spark.common.medicalclaims_common_model import schema_v7 as med_schema
 from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
+from datetime import timedelta
 
-def prepare(runner, hvids, start_dt, end_dt):
+def prepare(runner, hvids, start_dt):
     for table_name in ['hvm_emr_diag', 'hvm_emr_enc', 'hvm_emr_medctn', 'hvm_emr_proc']:
+        # Because this is EMR data, we are going back an additional year in the
+        # partitions. This will be cut down to the the appropriate date ranges
+        # in the extract scripts
         df = runner.sqlContext.table('dw.' + table_name) \
-            .where("part_mth >= '2016-04'") \
+            .where(F.col('part_mth') >= (start_dt - timedelta(days=366))) \
             .join(hvids, 'hvid', 'left') \
             .where(hvids['hvid'].isNotNull())
         df = df[df.part_hvm_vdr_feed_id.isin(*SUPPLIERS)]
@@ -21,8 +25,7 @@ def prepare(runner, hvids, start_dt, end_dt):
         med_schema,
         columns_to_keep=['part_provider', 'part_processdate']
     ).checkpoint().cache()
-#    df.write.parquet('/debug/medclaims/')
-#    df = runner.sqlContext.read.parquet('/debug/medclaims/')
+
     df.createOrReplaceTempView('synthetic_medicalclaims')
     df.count()
 
@@ -31,8 +34,7 @@ def prepare(runner, hvids, start_dt, end_dt):
         pharma_schema,
         columns_to_keep=['part_provider', 'part_processdate']
     ).checkpoint().cache()
-#    df.write.parquet('/debug/pharmaclaims/')
-#    df = runner.sqlContext.read.parquet('/debug/pharmaclaims/')
+
     df.createOrReplaceTempView('synthetic_pharmacyclaims')
     df.count()
 
