@@ -1,10 +1,12 @@
 import pytest
 import os
+import shutil
 from pyspark.sql import Row
 
 (df1, df2) = (None, None)
 def cleanup(spark):
     spark['runner'].unpersist('df')
+    shutil.rmtree('/tmp/checkpoint/')
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):

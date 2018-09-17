@@ -2,6 +2,7 @@ import spark.helpers.schema_enforcer as schema_enforcer
 from spark.common.medicalclaims_common_model import schema_v7 as med_schema
 from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
 from datetime import timedelta
+import pyspark.sql.functions as F
 
 def prepare(runner, hvids, start_dt):
     for table_name in ['hvm_emr_diag', 'hvm_emr_enc', 'hvm_emr_medctn', 'hvm_emr_proc']:

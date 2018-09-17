@@ -36,7 +36,7 @@ def get_part_file_path(list_cmd, directory):
 def run(spark, runner, group_ids, test=False, airflow_test=False):
     ts = time.time()
     today = date.today()
-    spark.setCheckpoint('/tmp/checkpoint/')
+    spark.sparkContext.setCheckpointDir('/tmp/checkpoint/')
 
     if airflow_test:
         output_path_template   = '/staging/{}/'
@@ -105,7 +105,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
     group_patient_w_records_count = {}
     summary = None
     if valid_groups:
-        prepare_emr.prepare(runner, matched_patients, start, end)
+        prepare_emr.prepare(runner, matched_patients, start)
         medical_extract    = extract_medicalclaims.extract(
                 runner, matched_patients, ts,
                 start, end).repartition(5 if test else 100) \
