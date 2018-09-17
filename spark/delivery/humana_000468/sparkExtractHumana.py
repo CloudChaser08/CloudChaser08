@@ -36,7 +36,6 @@ def get_part_file_path(list_cmd, directory):
 def run(spark, runner, group_ids, test=False, airflow_test=False):
     ts = time.time()
     today = date.today()
-    spark.sparkContext.setCheckpointDir('/tmp/checkpoint/')
 
     if airflow_test:
         output_path_template   = '/staging/{}/'

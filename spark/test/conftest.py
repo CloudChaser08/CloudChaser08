@@ -3,6 +3,8 @@ import pytest
 from spark.spark_setup import init
 from spark.runner import Runner
 
+import shutil
+
 
 def is_prod(sqlContext):
     return len([
@@ -12,6 +14,7 @@ def is_prod(sqlContext):
 
 @pytest.fixture(scope="session")
 def spark():
+    shutil.rmtree('/tmp/checkpoint/', True)
     spark, sqlContext = init("Tests", True)
     runner = Runner(sqlContext)
 
