@@ -10,3 +10,6 @@ build:
 push:
 	docker push ${DOCKER_REG}/${NAME}
 	docker push ${DOCKER_REG}/${NAME}:latest
+
+package-spark:
+	cd spark && make package && cd ..
