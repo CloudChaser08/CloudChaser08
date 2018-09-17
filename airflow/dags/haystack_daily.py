@@ -2,6 +2,7 @@ from airflow.models import Variable
 from airflow.operators import *
 from datetime import datetime, timedelta
 import os
+import shutil
 import re
 import json
 import subprocess
@@ -328,15 +329,12 @@ deliver_return_file = PythonOperator(
 )
 
 def do_clean_up_workspace(ds, **kwargs):
-    return_file = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='fetch_return_file', key='return_file')
-    os.remove(get_tmp_dir(ds, kwargs) + return_file)
-    os.rmdir(get_tmp_dir(ds, kwargs))
+    shutil.rmtree(get_tmp_dir(ds, kwargs))
 
 clean_up_workspace = PythonOperator(
     task_id='clean_up_workspace',
     provide_context=True,
     python_callable=do_clean_up_workspace,
-    trigger_rule='all_done',
     dag=mdag
 )
 
