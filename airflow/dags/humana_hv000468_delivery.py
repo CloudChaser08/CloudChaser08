@@ -51,8 +51,11 @@ else:
     S3_NORMALIZED_FILE_URL_TEMPLATE = 's3://salusv/deliverable/humana/hv000468/{}/'
 
 # SQS
-HUMANA_INBOX = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-inbox-prod'
-HUMANA_OUTBOX = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-outbox-prod'
+HUMANA_INBOX_PROD = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-inbox-prod'
+HUMANA_OUTBOX_PROD = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-outbox-prod'
+
+HUMANA_INBOX_UAT = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-inbox-uat'
+HUMANA_OUTBOX_UAT = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-outbox-uat'
 
 # Matching payloads
 S3_PROD_MATCHING_URL='s3://salusv/matching/prod/payload/53769d77-189e-4d79-a5d4-d2d22d09331e/'
@@ -130,7 +133,10 @@ move_matching_payload = PythonOperator(
 
 def do_queue_for_extraction(ds, **kwargs):
     group_id = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
-    sqs_utils.send_message(HUMANA_INBOX, group_id)
+    if group_id.startswith('UAT-'):
+        sqs_utils.send_message(HUMANA_INBOX_UAT, group_id)
+    else:
+        sqs_utils.send_message(HUMANA_INBOX_PROD, group_id)
 
 queue_for_extraction = PythonOperator(
     task_id='queue_for_extraction',
@@ -141,11 +147,12 @@ queue_for_extraction = PythonOperator(
 
 def detect_extraction_done(ds, **kwargs):
     group_id = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
-    msgs = sqs_utils.get_messages(HUMANA_OUTBOX, visibility_timeout=2)
+    outbox = HUMANA_OUTBOX_UAT if 'UAT-' else HUMANA_OUTBOX_PROD
+    msgs = sqs_utils.get_messages(outbox, visibility_timeout=2)
     relevant = [m for m in msgs if m['Body'] == group_id]
     if relevant:
         for m in relevant:
-            sqs_utils.delete_message(HUMANA_OUTBOX, m['ReceiptHandle'])
+            sqs_utils.delete_message(outbox, m['ReceiptHandle'])
     else:
         # Sleep for a random amount of time to allow other instances to
         # fetch the queue
