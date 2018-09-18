@@ -1,17 +1,22 @@
 import pyspark.sql.functions as F
 
-def extract(runner, hvids, timestamp, start_dt, end_dt):
-    t1 = runner.sqlContext.table('medicalclaims')
-    t2 = runner.sqlContext.table('dw.ref_vdr_feed')
-    t2 = t2[t2.hvm_tile_nm.isin(*SUPPLIERS)]
+def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table, filter_by_part_processdate=False):
+    claims       = runner.sqlContext.table(claims_table).where("part_provider != 'xifin'")
+    ref_vdr_feed = runner.sqlContext.table('dw.ref_vdr_feed')
+    ref_vdr_feed = ref_vdr_feed[ref_vdr_feed.hvm_tile_nm.isin(*SUPPLIERS)]
     
     # Extract conditions
-    ext = t1.join(t2, t1['data_feed'] == t2['hvm_vdr_feed_id'], 'inner') \
-        .join(hvids, t1['hvid'] == hvids['hvid'], 'left') \
-        .where(hvids['hvid'].isNotNull()) \
-        .where(t1['part_processdate'] >= start_dt.isoformat()) \
-        .where((t1['date_service'] <= end_dt.isoformat()) & (t1['date_service'] >= start_dt.isoformat())) \
-        .select(*[t1[c] for c in t1.columns] + [t2[c] for c in t2.columns] + [hvids['humana_group_id']])
+    ext = claims.join(ref_vdr_feed, claims['data_feed'] == ref_vdr_feed['hvm_vdr_feed_id'], 'inner') \
+        .join(hvids, claims['hvid'] == hvids['hvid'], 'left') \
+        .where(hvids['hvid'].isNotNull())
+
+    if filter_by_part_processdate:
+        ext = ext\
+            .where(claims['part_processdate'] >= start_dt.isoformat())
+
+    ext = ext \
+        .where((claims['date_service'] <= end_dt.isoformat()) & (claims['date_service'] >= start_dt.isoformat())) \
+        .select(*[claims[c] for c in claims.columns] + [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
 
     # Hashing
     ext = ext.withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id')))) \
@@ -30,6 +35,11 @@ def extract(runner, hvids, timestamp, start_dt, end_dt):
 
     # Reorder
     return ext.select(*EXTRACT_COLUMNS)
+
+def extract(runner, hvids, timestamp, start_dt, end_dt):
+    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'medicalclaims', True).union(
+        extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_medicalclaims', False)
+    )
 
 EXTRACT_COLUMNS = [
     'record_id',
@@ -182,7 +192,8 @@ SUPPLIERS = [
     'Allscripts',
     'Practice Insight',
     'Private Source 14',
-    'Private Source 34'
+    'Private Source 34',
+    'Private Source 42'
 ]
 
 NULL_COLUMNS = [

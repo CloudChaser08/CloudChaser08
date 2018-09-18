@@ -30,6 +30,8 @@ def init(provider, local=False):
         spark.sparkContext \
              .addPyFile(file_utils.get_abs_path(__file__, 'target/dewey.zip'))
 
+    spark.sparkContext.setCheckpointDir('/tmp/checkpoint/')
+
     # register privacy filters
     sqlContext.registerFunction(
         'filter_due_to_place_of_service', filter_due_to_place_of_service

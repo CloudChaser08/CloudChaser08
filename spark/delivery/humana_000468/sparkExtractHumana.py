@@ -15,6 +15,7 @@ import boto3
 import extract_medicalclaims
 import extract_pharmacyclaims
 import extract_enrollmentrecords
+import prepare_emr
 
 def get_extract_summary(df):
     return df.withColumn('claim',
@@ -70,7 +71,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
                 .withColumn('humana_group_id', F.lit(group_id))
             for group_id in group_ids
         ]
-    ).repartition(100).cache()
+    ).repartition(5 if test else 100).checkpoint().cache()
     matched_patients = all_patients.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'").cache()
 
     if today.day > 15:
@@ -103,17 +104,18 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
     group_patient_w_records_count = {}
     summary = None
     if valid_groups:
+        prepare_emr.prepare(runner, matched_patients, start)
         medical_extract    = extract_medicalclaims.extract(
                 runner, matched_patients, ts,
-                start, end).repartition(100) \
+                start, end).repartition(5 if test else 100) \
                     .cache_and_track('medical_extract')
         pharmacy_extract   = extract_pharmacyclaims.extract(
                 runner, matched_patients, ts,
-                start, end).repartition(100) \
+                start, end).repartition(5 if test else 100) \
                     .cache_and_track('pharmacy_extract')
         enrollment_extract = extract_enrollmentrecords.extract(
                 spark, runner, matched_patients, ts,
-                start, end, pharmacy_extract).repartition(100) \
+                start, end, pharmacy_extract).repartition(5 if test else 100) \
                     .cache_and_track('enrollment_extract')
 
         # summary
