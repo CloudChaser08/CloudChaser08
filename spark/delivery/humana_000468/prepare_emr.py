@@ -25,7 +25,7 @@ def prepare(runner, hvids, start_dt):
         runner.sqlContext.table('synthetic_medicalclaims').repartition(100),
         med_schema,
         columns_to_keep=['part_provider', 'part_processdate']
-    ).checkpoint().cache()
+    ).checkpoint()
 
     df.createOrReplaceTempView('synthetic_medicalclaims')
     df.count()
@@ -34,7 +34,7 @@ def prepare(runner, hvids, start_dt):
         runner.sqlContext.table('synthetic_pharmacyclaims').repartition(100),
         pharma_schema,
         columns_to_keep=['part_provider', 'part_processdate']
-    ).checkpoint().cache()
+    ).checkpoint()
 
     df.createOrReplaceTempView('synthetic_pharmacyclaims')
     df.count()
