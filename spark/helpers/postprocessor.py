@@ -16,11 +16,12 @@ def _apply_to_all_columns(f, df):
 
 def nullify(df, null_vals=None, preprocess_func=lambda c: c):
     "Convert all columns matching any value in null_vals to null"
+    
     if not null_vals:
-        null_vals = {"NULL"}
+        null_vals = {"NULL", "Null", "null"}
 
     if "NULL" not in null_vals:
-	null_vals.add('NULL')
+	null_vals.add('NULL', "Null", "null")
 
     def convert_to_null(column_name):
         return when(udf(preprocess_func)(col(column_name)).isin(null_vals), lit(None)) \
