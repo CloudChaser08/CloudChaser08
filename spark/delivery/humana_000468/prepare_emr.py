@@ -4,7 +4,7 @@ from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
 from datetime import timedelta
 import pyspark.sql.functions as F
 
-def prepare(runner, hvids, start_dt):
+def prepare(runner, hvids, start_dt, is_prod=False):
     for table_name in ['hvm_emr_diag', 'hvm_emr_enc', 'hvm_emr_medctn', 'hvm_emr_proc']:
         # Because this is EMR data, we are going back an additional year in the
         # partitions. This will be cut down to the the appropriate date ranges
@@ -13,6 +13,11 @@ def prepare(runner, hvids, start_dt):
             .where(F.col('part_mth') >= (start_dt - timedelta(days=366))) \
             .join(hvids, 'hvid', 'left') \
             .where(hvids['hvid'].isNotNull())
+
+        # Humana has not yet approved this for production
+        if is_prod:
+            df = runner.sqlContext.createDataFrame([], df.schema)
+
         df = df[df.part_hvm_vdr_feed_id.isin(*SUPPLIERS)]
 
         df.cache() \

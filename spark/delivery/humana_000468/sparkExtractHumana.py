@@ -33,7 +33,7 @@ def get_part_file_path(list_cmd, directory):
         if file_path.startswith(prefix):
             return file_path
 
-def run(spark, runner, group_ids, test=False, airflow_test=False):
+def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False):
     ts = time.time()
     today = date.today()
 
@@ -104,7 +104,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False):
     group_patient_w_records_count = {}
     summary = None
     if valid_groups:
-        prepare_emr.prepare(runner, matched_patients, start)
+        prepare_emr.prepare(runner, matched_patients, start, is_prod)
         medical_extract    = extract_medicalclaims.extract(
                 runner, matched_patients, ts,
                 start, end).repartition(5 if test else 100) \
@@ -211,10 +211,14 @@ def main(args):
         output_path = 's3a://salusv/testing/dewey/airflow/e2e/humana/hv000468/deliverable/'
         in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-test'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-test'
-    else:
+    elif args.is_prod:
         output_path = 's3a://salusv/deliverable/humana/hv000468/'
         in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-prod'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-prod'
+    else:
+        output_path = 's3a://salusv/deliverable/humana/hv000468/'
+        in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-uat'
+        out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-uat'
 
     client = boto3.client('sqs')
     while True:
@@ -228,7 +232,7 @@ def main(args):
         if not msgs:
             break
 
-        run(spark, runner, set([m[0] for m in msgs]), airflow_test=args.airflow_test)
+        run(spark, runner, set([m[0] for m in msgs]), airflow_test=args.airflow_test, is_prod=args.is_prod)
 
         spark.stop()
 
@@ -248,5 +252,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--is_prod', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
