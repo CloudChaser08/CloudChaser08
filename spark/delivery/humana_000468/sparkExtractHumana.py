@@ -232,7 +232,7 @@ def main(args):
         if not msgs:
             break
 
-        run(spark, runner, set([m[0] for m in msgs]), airflow_test=args.airflow_test, is_prod=is_prod)
+        run(spark, runner, set([m[0] for m in msgs]), airflow_test=args.airflow_test, is_prod=args.is_prod)
 
         spark.stop()
 

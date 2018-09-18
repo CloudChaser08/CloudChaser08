@@ -15,8 +15,8 @@ def prepare(runner, hvids, start_dt, is_prod=False):
             .where(hvids['hvid'].isNotNull())
 
         # Humana has not yet approved this for production
-        if not is_prod:
-            df = df.limit(0)
+        if is_prod:
+            df = runner.sqlContext.createDataFrame([], df.schema)
 
         df = df[df.part_hvm_vdr_feed_id.isin(*SUPPLIERS)]
 
