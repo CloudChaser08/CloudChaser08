@@ -126,6 +126,6 @@ select ndc_code, COALESCE(level3, 'Other') as level1, COALESCE(level4, 'Other') 
 from ndc_temp7 where level1<>'HUMAN OTC DRUG';
 
 
-drop table if exists marketplace_ndc;
-create temporary view marketplace_ndc as
+drop table if exists marketplace_ndc_new;
+create temporary view marketplace_ndc_new as
 select * from ndc_temp8;
