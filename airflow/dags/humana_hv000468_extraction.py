@@ -8,11 +8,6 @@ import common.HVDAG as HVDAG
 for m in [emr_utils, HVDAG, sqs_utils]:
     reload(m)
 
-DAG_NAME='humana_hv000468_extraction'
-EMR_CLUSTER_NAME='humana-data-extraction'
-START_DATE=datetime(2018, 7, 10)
-HUMANA_INBOX='https://sqs.us-east-1.amazonaws.com/581191604223/humana-inbox-prod'
-
 NUM_NODES=5
 NODE_TYPE='m4.16xlarge'
 EBS_VOLUME_SIZE='100'
@@ -28,8 +23,6 @@ EXTRACTION_STEP = ('Type=Spark,Name="Extract for Humana",'
         '--conf, spark.executor.cores=4, --conf, spark.files.useFetchCache=false,'
         '--conf, spark.hadoop.s3a.connection.maximum=500, --conf,'
         'spark.default.parallelism=1000, /home/hadoop/spark/delivery/humana_000468/sparkExtractHumana.py{}]')
-
-create_humana_dag(DAG_NAME, EMR_CLUSTER_NAME, HUMANA_INBOX, START_DATE, True)
 
 def create_humana_dag(dag_name, emr_cluster_name, inbox_url, start_date, is_prod=False):
 
@@ -102,3 +95,15 @@ def create_humana_dag(dag_name, emr_cluster_name, inbox_url, start_date, is_prod
     do_nothing.set_upstream(check_pending_requests)
     run_extraction.set_upstream(create_cluster)
     delete_cluster.set_upstream(run_extraction)
+
+DAG_NAME_PROD         = 'humana_hv000468_extraction'
+EMR_CLUSTER_NAME_PROD = 'humana-data-extraction'
+START_DATE_PROD       = datetime(2018, 7, 10)
+HUMANA_INBOX_PROD     = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-inbox-prod'
+prod_dag = create_humana_dag(PROD_DAG_NAME, PROD_EMR_CLUSTER_NAME, PROD_HUMANA_INBOX, PROD_START_DATE, True)
+
+DAG_NAME_UAT          = 'humana_hv000468_extraction_uat'
+EMR_CLUSTER_NAME_UAT  = 'humana-data-extraction-uat'
+START_DATE_UAT        = datetime(2018, 9, 18)
+HUMANA_INBOX_UAT      = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-inbox-uat'
+uat_dag  = create_humana_dag(UAT_DAG_NAME, UAT_EMR_CLUSTER_NAME, UAT_HUMANA_INBOX, UAT_START_DATE, True)
