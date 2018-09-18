@@ -23,21 +23,21 @@ SELECT
 	MASK_ZIP_CODE(COALESCE(txn.patient_zip_code, pay.threedigitzip))                      AS patient_zip3,
 	VALIDATE_STATE_CODE(COALESCE(txn.patient_state, pay.state, ''))                      AS patient_state,
 	CAP_DATE
-	    (
+        (
             CAST(EXTRACT_DATE(txn.date_of_service, '%Y/%m/%d') AS DATE),
-            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
+            esdt.gen_ref_1_dt,
             CURRENT_DATE -- Replace with the vendor's file date.
         )                                                                               AS date_service,
-	CAP_DATE
-	    (
+        CAP_DATE
+        (
             CAST(EXTRACT_DATE(COALESCE(txn.accession_datetime, txn.received_datetime), '%Y/%m/%d') AS DATE),
-            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
+            esdt.gen_ref_1_dt,
             CURRENT_DATE -- Replace with the vendor's file date.
         )                                                                               AS date_specimen,
-	CAP_DATE
-	    (
+        CAP_DATE
+        (
             CAST(EXTRACT_DATE(txn.final_signout_datetime, '%Y/%m/%d') AS DATE),
-            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
+            esdt.gen_ref_1_dt,
             CURRENT_DATE -- Replace with the vendor's file date.
         )                                                                               AS date_report,
 	txn.performing_lab_object_id                                                           AS lab_id,

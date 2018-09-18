@@ -62,7 +62,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     
     df = postprocessor.compose(
 	lambda df: schema_enforcer.apply_schema(df, lab_schema),
-	priv_labtests.filter,
+	# priv_labtests.filter,
 	postprocessor.add_universal_columns(
 	    feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=None, model_version_number=MODEL_VERSION_NUMBER
 	)
