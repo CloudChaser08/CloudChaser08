@@ -27,7 +27,7 @@ EXTRACTION_STEP = ('Type=Spark,Name="Extract for Humana",'
         'spark.driver.memory=10G, --conf, spark.executor.memory=13G,'
         '--conf, spark.executor.cores=4, --conf, spark.files.useFetchCache=false,'
         '--conf, spark.hadoop.s3a.connection.maximum=500, --conf,'
-        'spark.default.parallelism=5000, /home/hadoop/spark/delivery/humana_000468/sparkExtractHumana.py{}]')
+        'spark.default.parallelism=1000, /home/hadoop/spark/delivery/humana_000468/sparkExtractHumana.py{}]')
 
 create_humana_dag(DAG_NAME, EMR_CLUSTER_NAME, HUMANA_INBOX, START_DATE, True)
 
