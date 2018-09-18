@@ -19,34 +19,19 @@ SELECT
             pay.age,
             CAST(EXTRACT_DATE(txn.date_of_service, '%Y/%m/%d') AS DATE),
             COALESCE(YEAR(txn.patient_date_of_birth), pay.yearofbirth)
-        )                                                                               AS patient_year_of_birth,
-	MASK_ZIP_CODE(COALESCE(txn.patient_zip_code, pay.threedigitzip))                      AS patient_zip3,
-	VALIDATE_STATE_CODE(COALESCE(txn.patient_state, pay.state, ''))                      AS patient_state,
-	CAP_DATE
-        (
-            CAST(EXTRACT_DATE(txn.date_of_service, '%Y/%m/%d') AS DATE),
-            esdt.gen_ref_1_dt,
-            CURRENT_DATE -- Replace with the vendor's file date.
-        )                                                                               AS date_service,
-        CAP_DATE
-        (
-            CAST(EXTRACT_DATE(COALESCE(txn.accession_datetime, txn.received_datetime), '%Y/%m/%d') AS DATE),
-            esdt.gen_ref_1_dt,
-            CURRENT_DATE -- Replace with the vendor's file date.
-        )                                                                               AS date_specimen,
-        CAP_DATE
-        (
-            CAST(EXTRACT_DATE(txn.final_signout_datetime, '%Y/%m/%d') AS DATE),
-            esdt.gen_ref_1_dt,
-            CURRENT_DATE -- Replace with the vendor's file date.
-        )                                                                               AS date_report,
-	txn.performing_lab_object_id                                                           AS lab_id,
-	txn.specimen_id                                                                      AS test_id,
-	txn.specimen_number                                                                  AS test_number,
-	txn.test_code                                                                        AS test_ordered_local_id,
-	txn.test_name                                                                        AS test_ordered_name,
-	txn.final_diagnosis                                                                  AS result,
-	txn.microscopic_description                                                          AS result_desc,
+        )												    AS patient_year_of_birth,
+	MASK_ZIP_CODE(COALESCE(txn.patient_zip_code, pay.threedigitzip))				    AS patient_zip3,
+	VALIDATE_STATE_CODE(COALESCE(txn.patient_state, pay.state, ''))					    AS patient_state,
+        EXTRACT_DATE(txn.date_of_service, '%Y/%m/%d')							    AS date_service,
+        EXTRACT_DATE(COALESCE(txn.accession_datetime, txn.received_datetime), '%Y/%m/%d')		    AS date_specimen,
+        EXTRACT_DATE(txn.final_signout_datetime, '%Y/%m/%d')						    AS date_report,
+	txn.performing_lab_object_id									    AS lab_id,
+	txn.specimen_id											    AS test_id,
+	txn.specimen_number										    AS test_number,
+	txn.test_code											    AS test_ordered_local_id,
+	txn.test_name											    AS test_ordered_name,
+	txn.final_diagnosis										    AS result,
+	txn.microscopic_description									    AS result_desc,
 	(CASE WHEN 0 <> LENGTH(TRIM(COALESCE(txn.comment, ''))) 
 	       AND 0 <> LENGTH(TRIM(COALESCE(txn.clinical_information, ''))) 
 	           THEN CONCAT(txn.comment, ' | ', txn.clinical_information) 

@@ -65,6 +65,13 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 	# priv_labtests.filter,
 	postprocessor.add_universal_columns(
 	    feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=None, model_version_number=MODEL_VERSION_NUMBER
+	),
+	priv_labtests.filter,
+	postprocessor.apply_date_cap(
+	    runner.sqlContext, 'date_service', date_input, FEED_ID, "EARLIEST_VALID_SERVICE_DATE", min_date
+	), 
+	postprocessor.apply_date_cap(
+	    runner.sqlContext, 'date_specimen', date_input, FEED_ID, "EARLIEST_VALID_SERVICE_DATE", min_date
 	)
     )(normalized_output)
 
