@@ -18,6 +18,8 @@ import spark.providers.neogenomics.labv2.transactional_schemas as transactional_
 
 FEED_ID = '32'
 VENDOR_ID = '78'
+MODEL_VERSION = '07'
+GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 
 script_path = __file__
 
@@ -64,7 +66,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         priv_labtests.filter,
         lambda df: schema_enforcer.apply_schema(df, lab_schema),
         postprocessor.add_universal_columns(
-            feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=None, model_version_number='07'
+            feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=None, model_version_number=MODEL_VERSION
         ),
         lambda df: schema_enforcer.apply_schema(df, lab_schema)
     )(normalized_output)
@@ -73,7 +75,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         hvm_historical_date = postprocessor.coalesce_dates(
             runner.sqlContext,
             FEED_ID,
-            datetime.date(1901, 1, 1),
+            GENERIC_MINIMUM_DATE,
             'HVM_AVAILABLE_HISTORY_START_DATE',
             'EARLIEST_VALID_SERVICE_DATE'
         )
