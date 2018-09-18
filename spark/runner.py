@@ -2,6 +2,7 @@ import logging
 import spark.helpers.file_utils as file_utils
 import inspect
 from pyspark.sql import DataFrame
+import os
 
 
 class Runner:
@@ -62,6 +63,35 @@ class Runner:
             if return_output and len(content.split(';')) == 1:
                 return self.run_spark_query(statement, return_output=True)
             self.run_spark_query(statement)
+
+    def run_all_spark_scripts(self, variables=[], directory_path=None):
+        if directory_path:
+            if directory_path[-1] != '/':
+                directory_path += '/'
+        else:
+            directory_path = os.path.dirname(inspect.getframeinfo(inspect.stack()[1][0]).filename) + '/'
+
+        # SQL scripts have a naming convention of <step_number>_<table_name>.sql
+        # Where <step_number> defines the order in which they need to run and
+        # <table_name> the name of the table that results from this script
+        scripts = [f for f in os.listdir(directory_path) if f.endswith('.sql')]
+
+        # Compare the number of unique step numbers to the number of scripts
+        if len(set([int(f.split('_')[0]) for f in scripts])) != len(scripts):
+            raise Exception("At least two SQL scripts have the same step number")
+
+        try:
+            scripts = sorted(scripts, key=lambda f: int(f.split('_')[0]))
+        except:
+            raise Exception("At least one SQL script did not follow naming convention <step_number>_<table_name>.sql")
+
+        for s in scripts:
+            table_name = '_'.join(s.replace('.sql', '').split('_')[1:])
+            self.run_spark_script(s, variables=variables, source_file_path=directory_path, return_output=True) \
+                .createOrReplaceTempView(table_name)
+
+        last_table = '_'.join(scripts[-1].replace('.sql', '').split('_')[1:])
+        return self.sqlContext.table(last_table)
 
     def run_spark_query(self, query, return_output=False):
         """

@@ -1,4 +1,5 @@
 import pytest
+import os
 from pyspark.sql import Row
 
 (df1, df2) = (None, None)
@@ -51,3 +52,12 @@ def test_unpersisting(spark):
     assert not df2.storageLevel.useDisk and not df2.storageLevel.useMemory \
             and not df2.storageLevel.deserialized and not df2.storageLevel.useOffHeap
 
+def test_run_all_scripts(spark):
+    '''
+        Test that if sql scripts follow the correct naming convention, they
+        are all run in sequence and the results of the last one are returned
+    '''
+    scripts_dir = os.path.dirname(__file__) + '/resources/'
+    res = spark['runner'].run_all_spark_scripts(directory_path=scripts_dir).collect()
+
+    assert res[0][0] == 5
