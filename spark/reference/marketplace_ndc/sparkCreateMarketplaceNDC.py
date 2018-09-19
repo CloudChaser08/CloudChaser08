@@ -17,7 +17,7 @@ def run(spark, runner, output_location):
         []
     )
 
-    marketplace_ndc = runner.sqlContext.sql('select * from marketplace_ndc')
+    marketplace_ndc = runner.sqlContext.sql('select * from marketplace_ndc_new')
 
     marketplace_ndc.repartition(1).write.parquet(output_location)
 
