@@ -123,6 +123,9 @@ def init(provider, local=False):
     sqlContext.registerFunction(
         'densify_2d_array', densify_2d_array, ArrayType(ArrayType(StringType()))
     )
+    sqlContext.registerFunction(
+	'densify_2d_array_by_key', densify_2d_array_by_key, ArrayType(ArrayType(StringType()))
+    )
 
     # helper functions for normalizing medical claims
     sqlContext.registerFunction(
