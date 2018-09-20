@@ -12,6 +12,28 @@
     ]
   },
   {
+    "name": "amgen_oce_consent",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "amgen_oce_consent_sftp"
+    },
+    "dest_path": "s3://healthverityconsent/incoming/amgen-oce/",
+    "file_name_regexes": [
+      "Amgen_PATIENT_MOVEMENT_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}.txt"
+    ]
+  },
+  {
+    "name": "amgen_css_consent",
+    "src_system": "sftp",
+    "src_conf": {
+      "airflow_conf_variable": "amgen_css_consent_sftp"
+    },
+    "dest_path": "s3://healthverityconsent/incoming/amgen-css/",
+    "file_name_regexes": [
+      ".*"
+    ]
+  },
+  {
     "name": "cardinal_mpi",
     "src_system": "s3",
     "src_conf": {
