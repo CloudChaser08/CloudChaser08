@@ -79,6 +79,25 @@ def test_nullify(spark):
         else:
             assert null_column
 
+def test_default_nullify(spark):
+    "Ensure column's with 'NULL' are always nullified by default"
+    
+    rdd = spark['spark'].sparkContext.parallelize([
+	['NULL'],
+	['not null'],
+	['null'],
+	['Null']
+    ])
+    
+    df = spark['spark'].createDataFrame(rdd)
+    
+    nullified_with_func = postprocessor.nullify(df)
+    nullified_with_func = nullified_with_func.collect()
+
+    assert not nullified_with_func[0]._1
+    assert nullified_with_func[1]._1    
+    assert not nullified_with_func[2]._1
+    assert not nullified_with_func[3]._1
 
 def test_apply_date_cap(spark):
     "Ensure specified date capping is applied"
