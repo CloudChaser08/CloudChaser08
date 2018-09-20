@@ -17,7 +17,7 @@
     "src_conf": {
       "airflow_conf_variable": "amgen_oce_consent_sftp"
     },
-    "dest_path": "s3://healthverityconsent/incoming/amgen-mdm/merge",
+    "dest_path": "s3://healthverityconsent/incoming/merge/amgen-mdm/",
     "file_name_regexes": [
       "Amgen_PATIENT_MOVEMENT_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}.txt"
     ]
@@ -28,7 +28,7 @@
     "src_conf": {
       "airflow_conf_variable": "amgen_oce_consent_sftp_dev"
     },
-    "dest_path": "s3://healthveritydev/consent/incoming/amgen-mdm/merge/",
+    "dest_path": "s3://healthveritydev/consent/incoming/merge/amgen-mdm/",
     "file_name_regexes": [
       "Amgen_PATIENT_MOVEMENT_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}.txt"
     ]
