@@ -225,6 +225,15 @@ def densify_2d_array(arr):
         return [arr[0]]
     return res
 
+def densify_2d_array_by_key(arr):
+    res = [] 
+    for sub_arr in arr:
+	if sub_arr[0] is not None:
+	    res.append(sub_arr)
+    if not res:
+	return [arr[0]]
+    return res
+
 def obfuscate_candidate_hvids(arr, salt):
     if arr is None:
         return None
