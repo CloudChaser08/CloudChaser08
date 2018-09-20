@@ -31,9 +31,10 @@ class HVDAG(DAG):
 
     def _on_failure(self, context):
         ti = context['task_instance']
+        dag = DagBag().get_dag(ti.dag_id)
 
         # don't send alerts if this task is part of a subdag, the parent dag will also fail
-        if not DagBag().get_dag(ti.dag_id).is_subdag:
+        if not dag.is_subdag:
             message = "Failed task\nDAG: {}\nTASK: {}\nEXECUTION DATE: {}\nFAILURE TIMESTAMP:{}\n<{}|Task log>".format(
                 ti.dag_id, ti.task_id, ti.execution_date, ti.start_date, ti.log_url
             )
@@ -46,10 +47,13 @@ class HVDAG(DAG):
                 "text"       : "Execution date: {}\nFailure timestamp {}".format(ti.execution_date, ti.start_date)
             }
             # if an alerts channel is specified in the DAG, send alerts to that channel. Otherwise default channel to 'airflow_alerts'.
-            if DagBag().get_dag(ti.dag_id).params.get('alerts_channel', False):
-                slack.send_message(DagBag().get_dag(ti.dag_id).params['alerts_channel'], attachment=attachment)
+
+            if dag.params is not None:
+                slack_channel = dag.params.get('alerts_channel', config.AIRFLOW_ALERTS_CHANNEL)
             else:
-                slack.send_message(config.AIRFLOW_ALERTS_CHANNEL, attachment=attachment)
+                slack_channel = config.AIRFLOW_ALERTS_CHANNEL
+
+            slack.send_message(slack_channel, attachment=attachment)
 
     def _on_retry(self, context):
         dag_id = "{}.{}".format(
