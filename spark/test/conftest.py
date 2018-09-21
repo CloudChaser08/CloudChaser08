@@ -2,6 +2,7 @@ import pytest
 
 from spark.spark_setup import init
 from spark.runner import Runner
+from pyspark.sql import DataFrame
 
 import shutil
 
@@ -16,7 +17,13 @@ def is_prod(sqlContext):
 def spark():
     shutil.rmtree('/tmp/checkpoint/', True)
     spark, sqlContext = init("Tests", True)
+    sqlContext.sql('SET spark.sql.shuffle.partitions=5')
     runner = Runner(sqlContext)
+
+    DataFrame._old_repartition = DataFrame.repartition
+    def repart(inst, cnt, *args):
+        return inst._old_repartition(5, *args)
+    DataFrame.repartition = repart
 
     if is_prod(sqlContext):
         raise Exception("This test suite has access to the production metastore.")
@@ -29,20 +36,11 @@ def spark():
 
     spark.stop()
 
-@pytest.fixture(scope='module', autouse=True)
-def testcase_result(request):
-    def fin():
-        print("Test module '{}' DURATION={}".format(request.node.nodeid, request.node.duration))
-    request.addfinalizer(fin)
-
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     # execute all other hooks to obtain the report object
     outcome = yield
     rep = outcome.get_result()
-
-    # set a report attribute for each phase of a call, which can
-    # be "setup", "call", "teardown"
 
     tot_duration = 0
     if hasattr(item.parent, 'duration'):
@@ -50,3 +48,14 @@ def pytest_runtest_makereport(item, call):
     else:
         tot_duration = rep.duration
     setattr(item.parent, "duration", tot_duration)
+
+    if hasattr(item, 'is_last') and item.is_last and call.when == "teardown":
+        print("\nTest module '{}' DURATION={:.2f}s".format(item.parent.nodeid, item.parent.duration))
+
+
+@pytest.hookimpl
+def pytest_collection_modifyitems(session, config, items):
+    for i in xrange(1, len(items)):
+        is_last = items[i].parent != items[i-1].parent
+        setattr(items[i-1], "is_last", is_last)
+    setattr(items[-1], "is_last", True)
