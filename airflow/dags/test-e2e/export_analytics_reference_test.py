@@ -1,6 +1,6 @@
 import subprocess
 
-REFERENCE_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/export_analytics_reference/')
+REFERENCE_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/export_analytics_reference/'
 
 
 def cleanup():

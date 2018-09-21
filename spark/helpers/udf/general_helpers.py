@@ -1,8 +1,8 @@
 #! /usr/bin/python
-from datetime import datetime
+import hashlib
 import json
 import re
-import hashlib
+from datetime import datetime
 
 
 def clean_up_freetext(val, remove_periods=False):
@@ -15,46 +15,46 @@ def clean_up_freetext(val, remove_periods=False):
         if remove_periods:
             new_val = new_val.replace('.', '')
         return new_val
-    except:
-        return None
+    except ValueError:
+        return
 
 
 def extract_number(text):
-    if text is None or text == '':
-        return None
+    if not text:
+        return
 
-    if len(text) - len(text.replace('.','')) == 1:
+    if len(text) - len(text.replace('.', '')) == 1:
         try:
             return float(re.sub('[^0-9.]', '', text))
-        except Exception:
-            return None
+        except ValueError:
+            return
     else:
         try:
             return float(re.sub('[^0-9]', '', text))
-        except Exception:
-            return None
+        except ValueError:
+            return
 
 
 def cap_date(d, min_date, max_date):
     if not d:
-        return None
+        return
     elif (
-        min_date is not None and d < min_date
+            min_date is not None and d < min_date
     ) or (
-        max_date is not None and d > max_date
+            max_date is not None and d > max_date
     ):
-        return None
+        return
     else:
-	return d
+        return d
 
 
 def extract_date(text, pattern, min_date=None, max_date=None):
     if text is None or text == '':
-        return None
+        return
     try:
         d = datetime.strptime(text, pattern).date()
     except Exception:
-        return None
+        return
 
     return cap_date(d, min_date, max_date)
 
@@ -66,7 +66,7 @@ def extract_currency(text):
 
         return float(text)
     except:
-        return None
+        return
 
 
 def convert_value(value, conversion):
@@ -87,55 +87,56 @@ def convert_kg_to_lb(value):
     try:
         return round(float(value) * 2.2046, 2)
     except:
-        return None
+        return
 
 
 def convert_cm_to_in(value):
     try:
         return round(float(value) * 0.3937, 2)
     except:
-        return None
+        return
 
 
 def convert_m_to_in(value):
     try:
         return round(float(value) * 39.3701, 2)
     except:
-        return None
+        return
 
 
 def convert_celsius_to_fahrenheit(value):
     try:
         return round((float(value) * 9 / 5) + 32, 2)
     except:
-        return None
+        return
 
 
 def create_range(max):
     try:
         return ','.join(map(lambda i: str(i), range(max)))
     except:
-        return None
+        return
 
 
 # Takes 2 sets as colon-separated strings, and the returns the difference between
 # them as a colon-separated string
-def string_set_diff(s1,s2):
-    if s1 is None:
-        return None
-    if s2 is None:
+def string_set_diff(s1, s2):
+    if not s1:
+        return
+    if not s2:
         s2 = ''
 
-    s1s = map(lambda x : x.split('_')[0], filter(lambda x: x is not None and len(x) > 0, s1.split(':')))
-    s2s = map(lambda x : x.split('_')[0], filter(lambda x: x is not None and len(x) > 0, s2.split(':')))
+    s1s = map(lambda x: x.split('_')[0], filter(lambda x: x is not None and len(x) > 0, s1.split(':')))
+    s2s = map(lambda x: x.split('_')[0], filter(lambda x: x is not None and len(x) > 0, s2.split(':')))
 
     return ':'.join(set(s1s).difference(set(s2s)))
+
 
 # Takes a list as a colon-sparated string, and returns a unique list of values as
 # a colon-separated string
 def uniquify(with_dupes):
     if with_dupes is None:
-        return None;
+        return
     return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
 
 
@@ -166,7 +167,7 @@ def slightly_obfuscate_hvid(hvid, key):
     if key is None or len(key) == 0:
         raise ValueError("A project-specific key must be provided to properly obfuscate the HVID")
     if hvid is None:
-        return None
+        return
     if type(hvid) is not int:
         raise ValueError("Only integer HVIDs are expected")
     res = hvid
@@ -176,11 +177,11 @@ def slightly_obfuscate_hvid(hvid, key):
     # Do multiple rounds of XORing of the id with different
     # parts of the key
     for i in xrange(len(key) / 4):
-        key_p = key[i * 4 : (i + 1) * 4]
+        key_p = key[i * 4: (i + 1) * 4]
         xor = ((ord(key_p[0]) ^ (i * 4)) * (1 << 24) + \
-                (ord(key_p[1]) ^ (i * 4 + 1)) * (1 << 16) + \
-                (ord(key_p[2]) ^ (i * 4 + 2)) * (1 << 8) + \
-                (ord(key_p[3]) ^ (i * 4 + 3)))
+               (ord(key_p[1]) ^ (i * 4 + 1)) * (1 << 16) + \
+               (ord(key_p[2]) ^ (i * 4 + 2)) * (1 << 8) + \
+               (ord(key_p[3]) ^ (i * 4 + 3)))
         res = res ^ xor
     return res
 
@@ -203,6 +204,7 @@ def remove_split_suffix(filename, include_parent_dirs=False):
 def to_json(val):
     return json.dumps(val)
 
+
 # Some of our normalizations involve exploding a sparse array, keeping only the
 # non-NULL values, and numbering the rows sequentially. Removing NULL values
 # and NULL structures from the array will help achieve that
@@ -211,6 +213,7 @@ def to_json(val):
 # Output: Array of non-NULL scalar values
 def densify_scalar_array(arr):
     return [v for v in arr if v is not None]
+
 
 # Expected input array of arrays of scalar values
 # Output: Array of arrays that contain at least one non-NULL scalar value
@@ -225,18 +228,20 @@ def densify_2d_array(arr):
         return [arr[0]]
     return res
 
+
 def densify_2d_array_by_key(arr):
-    res = [] 
+    res = []
     for sub_arr in arr:
-	if sub_arr[0] is not None:
-	    res.append(sub_arr)
+        if sub_arr[0] is not None:
+            res.append(sub_arr)
     if not res:
-	return [arr[0]]
+        return [arr[0]]
     return res
+
 
 def obfuscate_candidate_hvids(arr, salt):
     if arr is None:
-        return None
+        return
 
     res = []
     for i in xrange(len(arr)):

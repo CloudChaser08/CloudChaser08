@@ -10,6 +10,8 @@ def test_extract_number():
     assert gh.extract_number('$1.90') == 1.9
     assert gh.extract_number('$.1.90') == 190
 
+def test_clean_up_freetext():
+    assert "3123LLL &&&" == gh.clean_up_freetext("3123LLL   ,,,&&&   ", remove_periods=True)
 
 def test_extract_date():
     assert gh.extract_date(None, None) is None
@@ -135,11 +137,11 @@ def test_densify_2d_array():
     assert gh.densify_2d_array([[1,None,2],[None,None,None]]) == [[1,None,2]]
     assert gh.densify_2d_array([[None,None,None],[None,None,None]]) == [[None,None,None]]
 
-def test_densify_2d_array_by_key(): 
+def test_densify_2d_array_by_key():
     assert gh.densify_2d_array_by_key([[1, 2, 3], [4, 5, 6]]) == [[1, 2, 3], [4, 5, 6]]
     assert gh.densify_2d_array_by_key([[None, 2, 3], [4, 5, 6]]) == [[4, 5, 6]]
     assert gh.densify_2d_array_by_key([[1, None, 3], [None, 5, 6]]) == [[1, None, 3]]
     assert gh.densify_2d_array_by_key([[None, 2, 3], [None, 5, None]]) == [[None, 2, 3]]
-    
+
 def test_obfuscate_candidate_hvids():
     assert gh.obfuscate_candidate_hvids([['1234567', 1]], 'CPQ-013') == [['CEB8F9B33421E4DEB16CE7FE1358D554', 1]]

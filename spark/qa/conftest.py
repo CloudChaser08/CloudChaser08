@@ -1,4 +1,5 @@
 import pytest
+from pytest import skip
 
 import spark.qa.datafeed as qa_datafeed
 
