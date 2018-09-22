@@ -212,7 +212,7 @@ def densify_2d_array(arr):
 
 
 def densify_2d_array_by_key(arr):
-    result = filter(lambda subarr: subarr[0], arr)
+    result = filter(lambda subarr: subarr[0] is not None, arr)
     return result if result else [arr[0]]
 
 
