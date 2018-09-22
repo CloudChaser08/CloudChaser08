@@ -36,52 +36,36 @@ def extract_number(text):
 
 
 def cap_date(d, min_date, max_date):
-    if not d:
-        return
-    elif (
-            min_date is not None and d < min_date
-    ) or (
-            max_date is not None and d > max_date
-    ):
-        return
-    else:
-        return d
-
+    min_date = min_date or d.min
+    max_date = max_date or d.max
+    return d if d and max_date >= d >= min_date else None
 
 def extract_date(text, pattern, min_date=None, max_date=None):
-    if text is None or text == '':
-        return
     try:
-        d = datetime.strptime(text, pattern).date()
-    except Exception:
+        return cap_date(datetime.strptime(text, pattern).date(), min_date, max_date)
+    except TypeError:
         return
-
-    return cap_date(d, min_date, max_date)
-
 
 def extract_currency(text):
     try:
         # remove non-numeric characters
-        text = re.sub('[^0-9.]', '', text)
-
-        return float(text)
-    except:
+        return float(re.sub('[^0-9.]', '', text))
+    except (TypeError, ValueError):
         return
 
 
 def convert_value(value, conversion):
-    if value is not None:
-        if conversion == 'KILOGRAMS_TO_POUNDS':
-            return convert_kg_to_lb(value)
-        elif conversion == 'CENTIMETERS_TO_INCHES':
-            return convert_cm_to_in(value)
-        elif conversion == 'CENTIGRADE_TO_FAHRENHEIT':
-            return convert_celsius_to_fahrenheit(value)
-        elif conversion == 'METERS_TO_INCHES':
-            return convert_m_to_in(value)
-        elif conversion == '' or conversion is None:
-            return value
+    converters = {
+        'KILOGRAMS_TO_POUNDS': convert_kg_to_lb,
+        'CENTIMETERS_TO_INCHES': convert_cm_to_in,
+        'CENTIGRADE_TO_FAHRENHEIT': convert_celsius_to_fahrenheit,
+        'METERS_TO_INCHES': convert_m_to_in
+    }
 
+    try:
+        return converters[conversion](value)
+    except KeyError:
+        return
 
 def convert_kg_to_lb(value):
     try:
@@ -150,9 +134,7 @@ def is_int(val):
         try:
             int(val)
             return True
-        except ValueError:
-            return False
-        except TypeError:
+        except (ValueError, TypeError):
             return False
 
 
@@ -178,9 +160,9 @@ def slightly_obfuscate_hvid(hvid, key):
     # parts of the key
     for i in xrange(len(key) / 4):
         key_p = key[i * 4: (i + 1) * 4]
-        xor = ((ord(key_p[0]) ^ (i * 4)) * (1 << 24) + \
-               (ord(key_p[1]) ^ (i * 4 + 1)) * (1 << 16) + \
-               (ord(key_p[2]) ^ (i * 4 + 2)) * (1 << 8) + \
+        xor = ((ord(key_p[0]) ^ (i * 4)) * (1 << 24) +
+               (ord(key_p[1]) ^ (i * 4 + 1)) * (1 << 16) +
+               (ord(key_p[2]) ^ (i * 4 + 2)) * (1 << 8) +
                (ord(key_p[3]) ^ (i * 4 + 3)))
         res = res ^ xor
     return res
@@ -230,13 +212,8 @@ def densify_2d_array(arr):
 
 
 def densify_2d_array_by_key(arr):
-    res = []
-    for sub_arr in arr:
-        if sub_arr[0] is not None:
-            res.append(sub_arr)
-    if not res:
-        return [arr[0]]
-    return res
+    result = filter(lambda subarr: subarr[0], arr)
+    return result if result else [arr[0]]
 
 
 def obfuscate_candidate_hvids(arr, salt):
