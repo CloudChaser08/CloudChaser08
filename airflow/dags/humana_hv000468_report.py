@@ -63,11 +63,17 @@ def get_delivered_groups(exec_date):
     groups = []
 
     for deliv in deliveries:
-        if exec_date.date() == deliv.end_date.date():
-            gid = session.query(DagRun) \
-                .filter(DagRun.dag_id == 'humana_hv000468_delivery', DagRun.execution_date == deliv.execution_date) \
-                .one().conf['group_id']
-            groups.append({'id': gid, 'delivery_ts': deliv.end_date if deliv.state == "success" else None})
+        try:
+            if exec_date.date() == deliv.end_date.date():
+                gid = session.query(DagRun) \
+                    .filter(DagRun.dag_id == 'humana_hv000468_delivery', DagRun.execution_date == deliv.execution_date) \
+                    .one().conf['group_id']
+                groups.append({'id': gid, 'delivery_ts': deliv.end_date if deliv.state == "success" else None})
+        except AttributeError as e:
+            import logging
+            logging.info(exec_date)
+            logging.info(deliv)
+            raise e
 
     if HVDAG.HVDAG.airflow_env == 'test':
         return [
@@ -143,19 +149,20 @@ def do_generate_daily_report(ds, **kwargs):
         received_ts  = get_group_received_ts(group['id'])
         delivered_ts = group['delivery_ts']
         env = 'UAT' if ('UAT-' in f or ds < '2018-07-01') else 'Production'
-        with open(f) as fin:
-            for line in fin:
-                fields = line.strip().split('|')
-                # Early versions of the delivery summary did not include the "w/records" count
-                fields.insert(3, 0) if ds < '2018-05-21' else None
-                patients  = int(fields[1])
-                matched   = int(fields[2])
-                w_records = int(fields[3])
-                total[env]['records'][fields[4]] = total[env]['records'].get(fields[4], 0) + int(fields[5])
-                if delivered_ts:
+        if delivered_ts is None:
+            patients, matched, w_records = 0, 0, 0
+            report_writer.writerow([group['id'], env, received_ts.isoformat(), "Error processing file"] + ['-'] * 5)
+        else:
+            with open(f) as fin:
+                for line in fin:
+                    fields = line.strip().split('|')
+                    # Early versions of the delivery summary did not include the "w/records" count
+                    fields.insert(3, 0) if ds < '2018-05-21' else None
+                    patients  = int(fields[1])
+                    matched   = int(fields[2])
+                    w_records = int(fields[3])
+                    total[env]['records'][fields[4]] = total[env]['records'].get(fields[4], 0) + int(fields[5])
                     report_writer.writerow([group['id'], env, received_ts.isoformat(), delivered_ts.isoformat()] + fields[1:])
-                else:
-                    report_writer.writerow([group['id'], env, received_ts.isoformat(), "Error processing file"] + fields[1:])
         total[env]['patients']  += patients
         total[env]['matched']   += matched
         total[env]['w_records'] += w_records
@@ -203,6 +210,9 @@ def do_generate_monthly_report(ds, **kwargs):
     report_writer.writerow(['', 'Environment', 'Patients Sent', 'Patients Matched',
         'Patients with Records', 'Source', 'Source Record Count'])
     for group in groups:
+        if group['delivery_ts'] is None:
+            continue
+
         fn = EXTRACT_SUMMARY_TEMPLATE.format(group['id'])
         f  = get_tmp_dir(ds, kwargs) + fn
         env = 'UAT' if ('UAT-' in f or ds < '2018-07-01') else 'Production'
