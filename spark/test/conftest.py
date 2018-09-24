@@ -40,17 +40,28 @@ def spark():
 def pytest_runtest_makereport(item, call):
     # execute all other hooks to obtain the report object
     outcome = yield
+
+    if item.config.getoption('verbose', 0) <= 0:
+        return
+
     rep = outcome.get_result()
 
-    tot_duration = 0
-    if hasattr(item.parent, 'duration'):
-        tot_duration = item.parent.duration + rep.duration
+    if item.config.getoption('verbose', 0) > 1:
+        if call.when == "call":
+            setattr(item, "duration", rep.duration)
+        elif call.when == "teardown":
+            print("\nTest '{}' DURATION={:.2f}s".format(item.nodeid, item.duration))
     else:
-        tot_duration = rep.duration
-    setattr(item.parent, "duration", tot_duration)
+        tot_duration = 0
+        if call.when == "call":
+            if hasattr(item.parent, 'duration'):
+                tot_duration = item.parent.duration + rep.duration
+            else:
+                tot_duration = rep.duration
+            setattr(item.parent, "duration", tot_duration)
 
-    if hasattr(item, 'is_last') and item.is_last and call.when == "teardown":
-        print("\nTest module '{}' DURATION={:.2f}s".format(item.parent.nodeid, item.parent.duration))
+        if hasattr(item, 'is_last') and item.is_last and call.when == "teardown":
+            print("\nTest module '{}' DURATION={:.2f}s".format(item.parent.nodeid, item.parent.duration))
 
 
 @pytest.hookimpl
