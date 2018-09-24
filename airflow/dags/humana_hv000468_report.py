@@ -67,7 +67,7 @@ def get_delivered_groups(exec_date):
             gid = session.query(DagRun) \
                 .filter(DagRun.dag_id == 'humana_hv000468_delivery', DagRun.execution_date == deliv.execution_date) \
                 .one().conf['group_id']
-            groups.append({'id': gid, 'delivery_ts': deliv.end_date})
+            groups.append({'id': gid, 'delivery_ts': deliv.end_date if deliv.state == "success" else None})
 
     if HVDAG.HVDAG.airflow_env == 'test':
         return [
@@ -102,6 +102,9 @@ create_tmp_dir = PythonOperator(
 def do_fetch_extract_summaries(ds, **kwargs):
     groups = get_delivered_groups(kwargs['execution_date']) + get_delivered_groups_past_month(kwargs['execution_date'])
     for group in groups:
+        if group['delivery_ts'] is None:
+            continue
+
         fn   = EXTRACT_SUMMARY_TEMPLATE.format(group['id'])
         src  = S3_NORMALIZED_FILE_URL_TEMPLATE.format(group['id']) + fn
         dest = get_tmp_dir(ds, kwargs) + fn
@@ -149,7 +152,10 @@ def do_generate_daily_report(ds, **kwargs):
                 matched   = int(fields[2])
                 w_records = int(fields[3])
                 total[env]['records'][fields[4]] = total[env]['records'].get(fields[4], 0) + int(fields[5])
-                report_writer.writerow([group['id'], env, received_ts.isoformat(), delivered_ts.isoformat()] + fields[1:])
+                if delivered_ts:
+                    report_writer.writerow([group['id'], env, received_ts.isoformat(), delivered_ts.isoformat()] + fields[1:])
+                else:
+                    report_writer.writerow([group['id'], env, received_ts.isoformat(), "Error processing file"] + fields[1:])
         total[env]['patients']  += patients
         total[env]['matched']   += matched
         total[env]['w_records'] += w_records
