@@ -14,17 +14,17 @@ def test_clean_up_freetext():
     assert "3123LLL &&&" == gh.clean_up_freetext("3123LLL   ,,,&&&   ", remove_periods=True)
 
 def test_cap_date():
-    test_date = datetime.date(1990, 06, 01)
+    test_date = datetime.date(1990, 6, 1)
     assert test_date == gh.cap_date(test_date, None, None)
-    assert test_date == gh.cap_date(test_date, datetime.date(1980, 06, 01), None)
-    assert test_date == gh.cap_date(test_date, datetime.date(1980, 06, 01), datetime.date(1991, 06, 01))
-    assert not gh.cap_date(test_date, datetime.date(1995, 06, 01), None)
-    assert not gh.cap_date(test_date, None, datetime.date(1985, 06, 01))
+    assert test_date == gh.cap_date(test_date, datetime.date(1980, 6, 1), None)
+    assert test_date == gh.cap_date(test_date, datetime.date(1980, 6, 1), datetime.date(1991, 6, 1))
+    assert not gh.cap_date(test_date, datetime.date(1995, 6, 1), None)
+    assert not gh.cap_date(test_date, None, datetime.date(1985, 6, 1))
 
 def test_extract_date():
     assert gh.extract_date(None, None) is None
 
-    assert gh.extract_date('1990-Jun-01', '%Y-%b-%d') == datetime.date(1990, 06, 01)
+    assert gh.extract_date('1990-Jun-01', '%Y-%b-%d') == datetime.date(1990, 6, 1)
 
     # max date cap
     assert gh.extract_date(

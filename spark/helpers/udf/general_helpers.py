@@ -43,7 +43,7 @@ def cap_date(d, min_date, max_date):
 def extract_date(text, pattern, min_date=None, max_date=None):
     try:
         return cap_date(datetime.strptime(text, pattern).date(), min_date, max_date)
-    except TypeError:
+    except (ValueError, TypeError):
         return
 
 def extract_currency(text):
@@ -64,34 +64,34 @@ def convert_value(value, conversion):
 
     try:
         return converters[conversion](value)
-    except KeyError:
+    except (KeyError, TypeError):
         return
 
 def convert_kg_to_lb(value):
     try:
         return round(float(value) * 2.2046, 2)
-    except:
+    except TypeError:
         return
 
 
 def convert_cm_to_in(value):
     try:
         return round(float(value) * 0.3937, 2)
-    except:
+    except TypeError:
         return
 
 
 def convert_m_to_in(value):
     try:
         return round(float(value) * 39.3701, 2)
-    except:
+    except TypeError:
         return
 
 
 def convert_celsius_to_fahrenheit(value):
     try:
         return round((float(value) * 9 / 5) + 32, 2)
-    except:
+    except TypeError:
         return
 
 
@@ -105,9 +105,9 @@ def create_range(max):
 # Takes 2 sets as colon-separated strings, and the returns the difference between
 # them as a colon-separated string
 def string_set_diff(s1, s2):
-    if not s1:
+    if s1 is None:
         return
-    if not s2:
+    if s2 is None:
         s2 = ''
 
     s1s = map(lambda x: x.split('_')[0], filter(lambda x: x is not None and len(x) > 0, s1.split(':')))
@@ -212,13 +212,13 @@ def densify_2d_array(arr):
 
 
 def densify_2d_array_by_key(arr):
-    result = filter(lambda subarr: subarr[0] is not None, arr)
+    result = [subarr for subarr in arr if subarr[0] is not None]
     return result if result else [arr[0]]
 
 
 def obfuscate_candidate_hvids(arr, salt):
     if arr is None:
-        return
+        return None
 
     res = []
     for i in xrange(len(arr)):
