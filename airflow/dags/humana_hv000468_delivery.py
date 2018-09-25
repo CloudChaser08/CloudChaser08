@@ -58,7 +58,7 @@ HUMANA_INBOX_UAT = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-inbo
 HUMANA_OUTBOX_UAT = 'https://sqs.us-east-1.amazonaws.com/581191604223/humana-outbox-uat'
 
 # Matching payloads
-S3_PROD_MATCHING_URL='s3://salusv/matching/prod/payload/53769d77-189e-4d79-a5d4-d2d22d09331e/'
+S3_PROD_MATCHING_URL='s3://salusv/matching/humana-matching-engine/payload/53769d77-189e-4d79-a5d4-d2d22d09331e/'
 
 # Deid file
 DEID_FILE_NAME_TEMPLATE = '{}_deid.txt'
