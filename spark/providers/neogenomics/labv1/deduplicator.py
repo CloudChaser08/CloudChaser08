@@ -8,8 +8,8 @@ from pyspark.sql.utils import AnalysisException
 import spark.helpers.file_utils as file_utils
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.payload_loader as payload_loader
-from spark.providers.neogenomics import RESULTS_START_DATE
-from spark.providers.neogenomics.transactional_schemas import results_schema, tests_schema
+from spark.providers.neogenomics.labv1 import RESULTS_START_DATE
+from spark.providers.neogenomics.labv1.transactional_schemas import results_schema, tests_schema
 
 
 def get_date_from_input_path(input_path):

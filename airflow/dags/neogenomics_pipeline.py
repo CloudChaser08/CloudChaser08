@@ -236,7 +236,7 @@ detect_move_normalize_dag = SubDagOperator(
             ),
             's3_payload_loc_url': S3_PAYLOAD_DEST,
             'vendor_uuid': 'cc11bfe2-d75a-432f-96b4-71240433d46f',
-            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/neogenomics/sparkNormalizeNeogenomics.py',
+            'pyspark_normalization_script_name': '/home/hadoop/spark/providers/neogenomics/labv1/sparkNormalizeNeogenomics.py',
             'pyspark_normalization_args_func': norm_args,
             'pyspark': True
         }
