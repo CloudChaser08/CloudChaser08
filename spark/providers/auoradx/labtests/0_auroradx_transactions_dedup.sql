@@ -34,7 +34,7 @@ SELECT
     txn.received_datetime,
     txn.final_signout_datetime,
     MAX(txn.hvjoinkey) AS hvjoinkey
- FROM auroradx_transactions txn
+FROM auroradx_transactions txn
 GROUP BY
     txn.patient_object_id,
     txn.accession_id,
