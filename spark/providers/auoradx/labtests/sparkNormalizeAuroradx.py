@@ -59,7 +59,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     normalized_output = runner.run_all_spark_scripts([
 	['min_date', min_date]
     ])
-    
+
     df = postprocessor.compose(
 	lambda df: schema_enforcer.apply_schema(df, lab_schema),
 	# priv_labtests.filter,

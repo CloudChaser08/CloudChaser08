@@ -1,5 +1,4 @@
 from pyspark.sql.types import StructType, StructField, StringType
-import pyspark.sql.functions as F
 import spark.helpers.postprocessor as postprocessor
 import pyspark.sql.functions as F
 import logging
@@ -39,8 +38,7 @@ def load_and_clean_all(runner, location_prefix, transactions_module, file_type, 
     logging.warn("load_and_clean_all is deprecated in favor of load_and_clean_all_v2")
     for table in transactions_module.TABLES:
         loc = location_prefix if len(transactions_module.TABLES) == 1 else location_prefix + table
-        df = load(runner, loc, transactions_module.TABLE_COLUMNS[table], file_type, delimiter, header,
-                load_file_name=load_file_name)
+        df = load(runner, loc, transactions_module.TABLE_COLUMNS[table], file_type, delimiter, header)
 
         if partitions > 0:
             df = df.repartition(partitions)
@@ -64,18 +62,3 @@ def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitio
             .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
             .cache_and_track(table) \
             .createOrReplaceTempView(table)
-
-def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitions=0, load_file_name=False):
-    for table in transactions_module.TABLE_CONF:
-        loc = location_prefix if len(transactions_module.TABLE_CONF) == 1 else location_prefix + table
-        conf = transactions_module.TABLE_CONF[table]
-        df = load(runner, loc, source_table_conf=conf, load_file_name=load_file_name)
-
-        if partitions > 0:
-            df = df.repartition(partitions)
-
-        postprocessor \
-            .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
-            .cache_and_track(table) \
-            .createOrReplaceTempView(table)
-

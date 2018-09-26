@@ -47,6 +47,7 @@ TABLE_CONF = {
 	    'specimen_number',
 	    'comment',
 	    'microscopic_description',
+	    'gross_description',
 	    'specimen_source',
 	    'specimen_location',
 	    'clinical_information',
