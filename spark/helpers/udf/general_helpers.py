@@ -16,23 +16,23 @@ def clean_up_freetext(val, remove_periods=False):
             new_val = new_val.replace('.', '')
         return new_val
     except ValueError:
-        return
+        return None
 
 
 def extract_number(text):
     if not text:
-        return
+        return None
 
     if len(text) - len(text.replace('.', '')) == 1:
         try:
             return float(re.sub('[^0-9.]', '', text))
         except ValueError:
-            return
+            return None
     else:
         try:
             return float(re.sub('[^0-9]', '', text))
         except ValueError:
-            return
+            return None
 
 
 def cap_date(d, min_date, max_date):
@@ -44,14 +44,14 @@ def extract_date(text, pattern, min_date=None, max_date=None):
     try:
         return cap_date(datetime.strptime(text, pattern).date(), min_date, max_date)
     except (ValueError, TypeError):
-        return
+        return None
 
 def extract_currency(text):
     try:
         # remove non-numeric characters
         return float(re.sub('[^0-9.]', '', text))
     except (TypeError, ValueError):
-        return
+        return None
 
 
 def convert_value(value, conversion):
@@ -65,48 +65,48 @@ def convert_value(value, conversion):
     try:
         return converters[conversion](value)
     except (KeyError, TypeError):
-        return
+        return None
 
 def convert_kg_to_lb(value):
     try:
         return round(float(value) * 2.2046, 2)
     except TypeError:
-        return
+        return None
 
 
 def convert_cm_to_in(value):
     try:
         return round(float(value) * 0.3937, 2)
     except TypeError:
-        return
+        return None
 
 
 def convert_m_to_in(value):
     try:
         return round(float(value) * 39.3701, 2)
     except TypeError:
-        return
+        return None
 
 
 def convert_celsius_to_fahrenheit(value):
     try:
         return round((float(value) * 9 / 5) + 32, 2)
     except TypeError:
-        return
+        return None
 
 
 def create_range(max):
     try:
         return ','.join(map(lambda i: str(i), range(max)))
     except:
-        return
+        return None
 
 
 # Takes 2 sets as colon-separated strings, and the returns the difference between
 # them as a colon-separated string
 def string_set_diff(s1, s2):
     if s1 is None:
-        return
+        return None
     if s2 is None:
         s2 = ''
 
@@ -120,7 +120,7 @@ def string_set_diff(s1, s2):
 # a colon-separated string
 def uniquify(with_dupes):
     if with_dupes is None:
-        return
+        return None
     return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
 
 
@@ -149,7 +149,7 @@ def slightly_obfuscate_hvid(hvid, key):
     if key is None or len(key) == 0:
         raise ValueError("A project-specific key must be provided to properly obfuscate the HVID")
     if hvid is None:
-        return
+        return None
     if type(hvid) is not int:
         raise ValueError("Only integer HVIDs are expected")
     res = hvid
