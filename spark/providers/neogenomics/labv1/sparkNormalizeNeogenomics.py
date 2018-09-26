@@ -12,9 +12,9 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.privacy.labtests as priv_labtests
-import spark.providers.neogenomics.udf as neo_udf
-import spark.providers.neogenomics.deduplicator as neo_deduplicator
-from spark.providers.neogenomics import RESULTS_START_DATE
+import spark.providers.neogenomics.labv1.udf as neo_udf
+import spark.providers.neogenomics.labv1.deduplicator as neo_deduplicator
+from spark.providers.neogenomics.labv1 import RESULTS_START_DATE
 
 FEED_ID = '32'
 VENDOR_ID = '78'
@@ -30,12 +30,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/neogenomics/resources/input/{}/'.format(
+            script_path, '../../../test/providers/neogenomics/resources/input/{}/'.format(
                 date_input.replace('-', '/')
             )
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/neogenomics/resources/matching/{}/'.format(
+            script_path, '../../../test/providers/neogenomics/resources/matching/{}/'.format(
                 date_input.replace('-', '/')
             )
         ) + '/'
