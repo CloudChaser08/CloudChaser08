@@ -105,6 +105,18 @@ def init(provider, local=False):
         'obfuscate_hvid', obfuscate_hvid
     )
     sqlContext.registerFunction(
+        'clean_up_gender', clean_up_gender
+    )
+    sqlContext.registerFunction(
+        'validate_age', validate_age
+    )
+    sqlContext.registerFunction(
+        'validate_state_code', validate_state_code
+    )
+    sqlContext.registerFunction(
+        'clean_up_npi_code', clean_up_npi_code
+    )
+    sqlContext.registerFunction(
         'slightly_obfuscate_hvid', slightly_obfuscate_hvid
     )
     sqlContext.registerFunction(
@@ -126,7 +138,7 @@ def init(provider, local=False):
         'densify_2d_array', densify_2d_array, ArrayType(ArrayType(StringType()))
     )
     sqlContext.registerFunction(
-	'densify_2d_array_by_key', densify_2d_array_by_key, ArrayType(ArrayType(StringType()))
+        'densify_2d_array_by_key', densify_2d_array_by_key, ArrayType(ArrayType(StringType()))
     )
 
     # helper functions for normalizing medical claims
