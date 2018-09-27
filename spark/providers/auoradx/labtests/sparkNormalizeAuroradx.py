@@ -36,8 +36,12 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         input_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/out/2018/09/12/'
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/payload/2018/09/12/'
     else: 
-        input_path = 's3a://salusv/incoming/labtests/auroradx/'
-        matching_path = 's3a://salusv/matching/payload/labtests/auroradx/*/*/*/'
+        input_path = 's3a://salusv/incoming/labtests/auroradx/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        matching_path = 's3a://salusv/matching/payload/labtests/auroradx/{}/'.format(
+            date_input.replace('-', '/')
+        )
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
