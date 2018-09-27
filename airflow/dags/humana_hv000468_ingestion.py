@@ -113,6 +113,7 @@ queue_up_for_matching = SubDagOperator(
             'source_files_func' : get_deid_file_urls,
             'priority'          : 'priority1',
             'write_lock'        : True,
+            'matching-engine'   : 'humana-matching-engine'
         }
     ),
     task_id='queue_up_for_matching',
