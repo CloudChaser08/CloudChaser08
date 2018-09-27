@@ -72,7 +72,7 @@ def create_humana_dag(dag_name, emr_cluster_name, inbox_url, start_date, is_prod
     def do_run_extraction(ds, **kwargs):
         emr_utils._build_dewey(emr_utils._get_emr_cluster_id(emr_cluster_name))
         extraction_step = EXTRACTION_STEP.format(', --is_prod') if is_prod else EXTRACTION_STEP.format('')
-        steps = [BOTO3_INSTALL_STEP, EXTRACTION_STEP]
+        steps = [BOTO3_INSTALL_STEP, extraction_step]
         emr_utils.run_steps(emr_cluster_name, steps)
 
     run_extraction = PythonOperator(

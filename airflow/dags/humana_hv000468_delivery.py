@@ -147,7 +147,7 @@ queue_for_extraction = PythonOperator(
 
 def detect_extraction_done(ds, **kwargs):
     group_id = kwargs['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_group_id', key='group_id')
-    outbox = HUMANA_OUTBOX_UAT if 'UAT-' else HUMANA_OUTBOX_PROD
+    outbox = HUMANA_OUTBOX_UAT if 'UAT-' in group_id else HUMANA_OUTBOX_PROD
     msgs = sqs_utils.get_messages(outbox, visibility_timeout=2)
     relevant = [m for m in msgs if m['Body'] == group_id]
     if relevant:
