@@ -4,7 +4,7 @@ SELECT
         '07'                                                                                                AS model_version,
         '85'                                                                                                AS data_feed,
         '335'                                                                                               AS data_vendor,
-        CLEAN_UP_GENDER(COALESCE(txn.patient_gender, pay.gender, 'U'))                                      AS patient_gen:der,
+        CLEAN_UP_GENDER(COALESCE(txn.patient_gender, pay.gender, 'U'))                                      AS patient_gender,
         CAP_AGE
             (
             VALIDATE_AGE
