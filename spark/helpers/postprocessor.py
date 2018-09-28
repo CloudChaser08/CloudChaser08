@@ -4,7 +4,7 @@ import spark.helpers.udf.general_helpers as gen_helpers
 from pyspark.sql.types import StringType, DateType
 from pyspark.storagelevel import StorageLevel
 from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, \
-    coalesce, input_file_name, upper
+    coalesce, input_file_name, upper, current_date
 import functools
 import logging
 import time
@@ -186,7 +186,7 @@ def add_universal_columns(feed_id, vendor_id, filename,
     def add(df):
         return df.withColumn(record_id, monotonically_increasing_id())                   \
                  .alias(record_id)                                                       \
-                 .withColumn(created, lit(time.strftime('%Y-%m-%d', time.localtime())))  \
+                 .withColumn(created, current_date())  \
                  .alias(created)                                                         \
                  .withColumn(data_set, coalesce(lit(filename), col(data_set)))           \
                  .alias(data_set)                                                        \
