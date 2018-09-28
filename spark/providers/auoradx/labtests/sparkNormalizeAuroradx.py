@@ -89,7 +89,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         )
 
         normalized_records_unloader.unload(
-            spark, runner, df, 'date_service', date_input, 'auroradx',
+            spark, runner, df, 'date_service', date_input, 'aurora_diagnostics',
             hvm_historical_date=datetime.datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             )
