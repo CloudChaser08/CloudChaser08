@@ -112,7 +112,7 @@ def main(args):
     if args.end_to_end_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
+        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
     normalized_records_unloader.distcp(output_path)
 
