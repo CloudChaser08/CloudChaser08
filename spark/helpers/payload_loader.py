@@ -71,3 +71,16 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
     else:
         runner.sqlContext.sql('DROP TABLE IF EXISTS {}'.format(table_name))
         final_payload.registerTempTable(table_name)
+
+def load_all(runner, location_prefix, matching_payloads_module):
+    for table in matching_payloads_module.TABLE_CONF:
+        if len(matching_payloads_module.TABLE_CONF) == 1:
+            loc = location_prefix
+            table_name = 'matching_payload'
+        else:
+            loc = location_prefix + table
+            table_name = 'matching_payload_' + table
+
+        conf = matching_payloads_module.TABLE_CONF[table]
+        load(runner, loc, extra_cols=conf.get('extract_cols', []), table_name=table_name,
+                partitions=5000, cache=True, load_file_name=True)
