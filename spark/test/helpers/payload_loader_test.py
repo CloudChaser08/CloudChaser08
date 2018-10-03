@@ -3,12 +3,18 @@ import pytest
 from pyspark.sql.functions import col
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils
+import spark.test.resources.one_payload_table as one_payload_table
+import spark.test.resources.two_payload_tables as two_payload_tables
 
 script_path = __file__
 
 std_location = file_utils.get_abs_path(
     script_path, '../resources/parentId_test_payload.json'
 )
+
+std_location_prefix = file_utils.get_abs_path(
+    script_path, '../resources/'
+) + '/'
 
 no_hvid_location = file_utils.get_abs_path(
     script_path, '../resources/no_id_test_payload.json'
@@ -18,6 +24,8 @@ no_hvid_location = file_utils.get_abs_path(
 @pytest.fixture(autouse=True)
 def setup_teardown(spark):
     spark['sqlContext'].sql('DROP TABLE IF EXISTS matching_payload')
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS matching_payload_foo')
+    spark['sqlContext'].sql('DROP TABLE IF EXISTS matching_payload_bar')
     spark['sqlContext'].sql('DROP TABLE IF EXISTS test')
     yield
 
@@ -93,3 +101,26 @@ def test_file_name_loaded(spark):
 
     assert 'input_file_name' in spark['sqlContext'].table('test').columns
     assert spark['sqlContext'].table('test').collect()[0].input_file_name.endswith('parentId_test_payload.json')
+
+def test_load_all_one_table(spark):
+    """
+    Test that a payload file is loaded as a single table using load_all
+    conventions
+    """
+    payload_loader.load_all(spark['runner'], std_location, one_payload_table)
+
+    assert spark['sqlContext'].table('matching_payload') is not None
+    assert len(spark['sqlContext'].table('matching_payload').collect()) == 10
+
+def test_load_all_two_tablse(spark):
+    """
+    Test that a payload file is loaded as multiple tables using load_all
+    conventions
+    """
+    payload_loader.load_all(spark['runner'], std_location_prefix, two_payload_tables)
+
+    assert spark['sqlContext'].table('matching_payload_foo') is not None
+    assert len(spark['sqlContext'].table('matching_payload_foo').collect()) == 10
+
+    assert spark['sqlContext'].table('matching_payload_bar') is not None
+    assert len(spark['sqlContext'].table('matching_payload_bar').collect()) == 10
