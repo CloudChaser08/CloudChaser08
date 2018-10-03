@@ -13,7 +13,12 @@ DEFAULT_ATTRS = [
     'yearOfBirth',
     'gender',
     'state',
-    'age'
+    'age',
+    'patientId',
+    'recordId',
+    'personId',
+    'claimId',
+    'hvJoinKey'
 ]
 
 
