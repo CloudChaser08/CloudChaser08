@@ -25,3 +25,10 @@ class SourceTable:
 
     def set_input_path(self, input_path):
         self.input_path = input_path
+
+class PayloadTable:
+    def __init__(self, extra_columns=None):
+        if extra_columns is None:
+            self.extra_columns = []
+        else:
+            self.extra_columns = extra_columns
