@@ -69,4 +69,6 @@ def pytest_collection_modifyitems(session, config, items):
     for i in xrange(1, len(items)):
         is_last = items[i].parent != items[i-1].parent
         setattr(items[i-1], "is_last", is_last)
-    setattr(items[-1], "is_last", True)
+
+    if items:
+        setattr(items[-1], "is_last", True)
