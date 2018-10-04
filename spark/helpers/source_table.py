@@ -34,7 +34,7 @@ class PayloadTable:
     Configuration details for matching payload tbales
     """
     def __init__(self, extra_columns=None):
-        if extra_columns is None:
+        if not extra_columns:
             self.extra_columns = []
         else:
             self.extra_columns = extra_columns
