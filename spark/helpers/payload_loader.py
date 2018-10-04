@@ -73,6 +73,9 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
         final_payload.registerTempTable(table_name)
 
 def load_all(runner, location_prefix, matching_payloads_module):
+    """
+    Load all the matching payload tables specified in the module
+    """
     table_conf = matching_payloads_module.TABLE_CONF
     for table in table_conf:
         if len(table_conf) == 1:
