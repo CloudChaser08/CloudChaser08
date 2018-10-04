@@ -111,6 +111,7 @@ def test_load_all_one_table(spark):
 
     assert spark['sqlContext'].table('matching_payload') is not None
     assert len(spark['sqlContext'].table('matching_payload').collect()) == 10
+    assert 'my_special_column' in spark['sqlContext'].table('matching_payload').columns
 
 def test_load_all_two_tablse(spark):
     """
