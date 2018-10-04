@@ -638,11 +638,11 @@ SELECT
     clinicorganizationidnumber,
     defaultclinicidnumber,
     patientidnumber,
-    patientid,
+    pd.patientid,
     hvid,
     medicalrecordnumber,
     labidnumber,
-    patientdata.state,
+    pd.state,
     mask_zip_code(substring(zipcode, 1, 3)) as zipcode,
     sex,
     status_original,
@@ -661,14 +661,14 @@ SELECT
     extract_date(substring(advrevdate, 1, 10), '%Y-%m-%d') as advrevdate,
     tribecode,
     extract_date(substring(inactivatedate, 1, 10), '%Y-%m-%d') as inactivatedate,
-    cap_age(patientdata.age) as age,
+    cap_age(pd.age) as age,
     monthsindialysis,
     transplantwaitlist,
     medicalcoveragemedicare,
     extract_date(substring(medicalcoveragemedicareeffectivedate, 1, 10), '%Y-%m-%d') as medicalcoveragemedicareeffectivedate,
     masterpatientidnumber,
     extract_date(substring(datefirstdialysiscurrentunit, 1, 10), '%Y-%m-%d') as datefirstdialysiscurrentunit
-FROM patientdata
+FROM patientdata pd
 LEFT JOIN matching_payload ON analyticrowidnumber = claimId
 ;
 
