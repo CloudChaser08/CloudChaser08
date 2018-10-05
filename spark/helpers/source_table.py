@@ -1,6 +1,9 @@
 from pyspark.sql.types import StructType, StructField, StringType
 
 class SourceTable:
+    """
+    Configuration details for records tables
+    """
     def __init__(self, file_type, separator=None, columns=None, schema=None, input_path=None):
         if columns is None and schema is None:
             raise Exception('Must specify one of columns or schema')
@@ -25,3 +28,13 @@ class SourceTable:
 
     def set_input_path(self, input_path):
         self.input_path = input_path
+
+class PayloadTable:
+    """
+    Configuration details for matching payload tbales
+    """
+    def __init__(self, extra_columns=None):
+        if not extra_columns:
+            self.extra_columns = []
+        else:
+            self.extra_columns = extra_columns
