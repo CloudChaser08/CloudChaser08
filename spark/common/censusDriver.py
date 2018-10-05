@@ -18,6 +18,24 @@ PRODUCTION           = 'production'
 DRIVER_MODULE_NAME   = 'driver'
 PACKAGE_PATH         = 'spark/target/dewey.zip/'
 
+MODE_RECORDS_PATH_TEMPLATE = {
+    TEST            : '../../../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{{day:02d}}/',
+    END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{{day:02d}}/',
+    PRODUCTION      : 's3a://salusv/incoming/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
+}
+
+MODE_MATCHING_PATH_TEMPLATE = {
+    TEST            : '../../../test/census/{client}/{opp_id}/resources/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
+    END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
+    PRODUCTION      : 's3a://salusv/matching/payload/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
+}
+
+MODE_OUTPUT_PATH_TEMPLATE = {
+    TEST            : '../../../test/census/{client}/{opp_id}/resources/output/{{year}}/{{month:02d}}/{{day:02d}}/',
+    END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/output/{{year}}/{{month:02d}}/{{day:02d}}/',
+    PRODUCTION      : 's3a://salusv/deliverable/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
+}
+
 class SetterProperty(object):
     def __init__(self, func, doc=None):
         self.func = func
@@ -52,24 +70,6 @@ class CensusDriver(object):
         else:
             mode = PRODUCTION
 
-        mode_records_path_template = {
-            TEST            : '../../../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{{day:02d}}/',
-            END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{{day:02d}}/',
-            PRODUCTION      : 's3a://salusv/incoming/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
-        }
-
-        mode_matching_path_template = {
-            TEST            : '../../../test/census/{client}/{opp_id}/resources/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
-            END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
-            PRODUCTION      : 's3a://salusv/matching/payload/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
-        }
-
-        mode_output_path_template = {
-            TEST            : '../../../test/census/{client}/{opp_id}/resources/output/{{year}}/{{month:02d}}/{{day:02d}}/',
-            END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/output/{{year}}/{{month:02d}}/{{day:02d}}/',
-            PRODUCTION      : 's3a://salusv/deliverable/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
-        }
-
         # init
         if spark_fixture:
             self._spark      = spark_fixture['spark']
@@ -79,13 +79,13 @@ class CensusDriver(object):
             self._spark, self._sqlContext = init("{} {} Census".format(self._client_name, self._opportunity_id))
             self._runner = Runner(self._sqlContext)
 
-        self._records_path_template  = mode_records_path_template[mode].format(
+        self._records_path_template  = MODE_RECORDS_PATH_TEMPLATE[mode].format(
                 client=self._client_name, opp_id=self._opportunity_id
             )
-        self._matching_path_template = mode_matching_path_template[mode].format(
+        self._matching_path_template = MODE_MATCHING_PATH_TEMPLATE[mode].format(
                 client=self._client_name, opp_id=self._opportunity_id
             )
-        self._output_path_template = mode_output_path_template[mode].format(
+        self._output_path_template   = MODE_OUTPUT_PATH_TEMPLATE[mode].format(
                 client=self._client_name, opp_id=self._opportunity_id
             )
 
