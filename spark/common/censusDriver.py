@@ -53,21 +53,21 @@ class CensusDriver(object):
             mode = PRODUCTION
 
         mode_records_path_template = {
-            TEST            : '../../../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{day:02d}}/',
-            END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/out/{{year}}/{{month:02d}}/{day:02d}/',
+            TEST            : '../../../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{{day:02d}}/',
+            END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{{day:02d}}/',
             PRODUCTION      : 's3a://salusv/incoming/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
         }
 
         mode_matching_path_template = {
-            TEST            : '../../../test/census/{client}/{opp_id}/resources/matching/{{year}}/{{month:02d}}/{day:02d}}/',
-            END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{day:02d}/',
-            PRODUCTION      : 's3a://salusv/incoming/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
+            TEST            : '../../../test/census/{client}/{opp_id}/resources/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
+            END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
+            PRODUCTION      : 's3a://salusv/matching/payload/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
         }
 
         mode_output_path_template = {
-            TEST            : '../../../test/census/{client}/{opp_id}/resources/output/{{year}}/{{month:02d}}/{day:02d}}/',
-            END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/output/{{year}}/{{month:02d}}/{day:02d}/',
-            PRODUCTION      : 's3a://salusv/incoming/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
+            TEST            : '../../../test/census/{client}/{opp_id}/resources/output/{{year}}/{{month:02d}}/{{day:02d}}/',
+            END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/output/{{year}}/{{month:02d}}/{{day:02d}}/',
+            PRODUCTION      : 's3a://salusv/deliverable/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
         }
 
         # init
