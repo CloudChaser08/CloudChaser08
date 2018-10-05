@@ -26,7 +26,7 @@ DAG_NAME = 'auroradx_pipeline'
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2018, 7, 23), 
+    'start_date': datetime(2018, 7, 23),
     'depends_on_past': True,
     'retries': 3,
     'retry_delay': timedelta(minutes=2)
@@ -34,11 +34,11 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 0 16 ? * MON *',       # Every Monday at noon est
+    schedule_interval = '0 0 16 ? * MON *',       # Every Monday at Noon EST
     default_args = default_args
 )
 
-AURORADX_DAY_OFFSET = 7 # TODO: confirm
+AURORADX_DAY_OFFSET = 7
 
 if HVDAG.HVDAG.airflow_env == 'test':
     test_loc = 's3://salusv/testing/dewey/airflow/e2e/auroradx/'
@@ -114,7 +114,7 @@ def generate_file_validation_task(
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(s3_path.split('/')[3:]),
                 's3_bucket'               : 'healthverity',
-                'file_description'        : 'AURORADX ' + task_id + ' file'          #TODO: update this if it's a manifest or not
+                'file_description'        : 'PDX ' + task_id + ' file'          #TODO: update this if it's a manifest or not
             }
         ),
         task_id='validate_' + task_id + '_file',
@@ -204,7 +204,7 @@ split_transaction_file = SubDagOperator(
                 S3_TRANSACTION_PROCESSED_URL_TEMPLATE, 
                 day_offset = AURORADX_DAY_OFFSET
             ),
-            'split_size'               : '20M' 
+            'split_size'               : '20M'
         }
     ),
     task_id='split_transaction_file',
@@ -225,7 +225,6 @@ clean_up_workspace = SubDagOperator(
     dag=mdag
 )
 
-
 #
 # Post-Matching
 #
@@ -236,7 +235,7 @@ def norm_args(ds, k):
 
     return base
 
-detect_move_normalize_dag = SubDagOperator(
+detect_move_normalize = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
         DAG_NAME,
         'detect_move_normalize',
@@ -253,19 +252,21 @@ detect_move_normalize_dag = SubDagOperator(
             'pyspark_normalization_script_name' : '/home/hadoop/spark/providers/auoradx/labtests/sparkNormalizeAuroradx.py',
             'pyspark_normalization_args_func'   : norm_args,
             'pyspark'                           : True,
-            'emr_node_type'                     : 'm4.4xlarge' # TODO: confirm
+            'emr_node_type'                     : 'm4.4xlarge'
         }
     ),
     task_id='detect_move_normalize',
     dag=mdag
 )
 
+
 sql_template = """
-    MSCK REPAIR TABLE labtests_20170216
+    MSCK REPAIR TABLE labtests_20170216 
 """
+
 update_analytics_db = SubDagOperator(
     subdag=update_analytics_db.update_analytics_db(
-        DAG_NAME,
+    DAG_NAME,
         'update_analytics_db',
         default_args['start_date'],
         mdag.schedule_interval,
@@ -276,6 +277,7 @@ update_analytics_db = SubDagOperator(
     task_id='update_analytics_db',
     dag=mdag
 )
+
 
 if HVDAG.HVDAG.airflow_env == 'test':
     for t in [
@@ -288,14 +290,18 @@ if HVDAG.HVDAG.airflow_env == 'test':
             dag=mdag
         )
 
-### DAG STRUCTURE ###
+
 fetch_transaction_file.set_upstream(validate_transaction)
+    
+queue_up_for_matching.set_upstream(validate_deid)
+    
 decrypt_transaction.set_upstream(fetch_transaction_file)
+
 split_transaction_file.set_upstream(decrypt_transaction)
 
-queue_up_for_matching.set_upstream(validate_deid)
+detect_move_normalize.set_upstream([queue_up_for_matching, split_transaction_file])
 
-detect_move_normalize_dag.set_upstream([queue_up_for_matching, split_transaction_file])
-update_analytics_db.set_upstream(detect_move_normalize_dag)
+update_analytics_db.set_upstream(detect_move_normalize)
 
 clean_up_workspace.set_upstream(split_transaction_file)
+
