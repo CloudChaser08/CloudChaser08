@@ -139,7 +139,8 @@ class CensusDriver(object):
         # package path. Remove that in order to find the location of the
         # transformation scripts
         scripts_directory = '/'.join(inspect.getfile(std_census).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
-        content = self._runner.run_all_spark_scripts(directory_path=scripts_directory)
+        content = self._runner.run_all_spark_scripts(variables=[['opp_id', self._opportunity_id]],
+                directory_path=scripts_directory)
         header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
         return header.union(content).coalesce(1)
 
