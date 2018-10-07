@@ -2,14 +2,16 @@ import datetime
 import inspect
 import importlib
 
-from spark.runner import Runner
-from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.common.std_census as std_census
+
+from spark.runner import Runner
+from spark.spark_setup import init
+from std_census import records_schemas, matching_payloads_schemas
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 TEST                 = 'test'
@@ -19,19 +21,19 @@ DRIVER_MODULE_NAME   = 'driver'
 PACKAGE_PATH         = 'spark/target/dewey.zip/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
-    TEST            : '../../../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{{day:02d}}/',
+    TEST            : '../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{{day:02d}}/',
     END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{{day:02d}}/',
     PRODUCTION      : 's3a://salusv/incoming/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
-    TEST            : '../../../test/census/{client}/{opp_id}/resources/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
+    TEST            : '../test/census/{client}/{opp_id}/resources/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
     END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
     PRODUCTION      : 's3a://salusv/matching/payload/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
 }
 
 MODE_OUTPUT_PATH_TEMPLATE = {
-    TEST            : '../../../test/census/{client}/{opp_id}/resources/output/{{year}}/{{month:02d}}/{{day:02d}}/',
+    TEST            : '../test/census/{client}/{opp_id}/resources/output/{{year}}/{{month:02d}}/{{day:02d}}/',
     END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/output/{{year}}/{{month:02d}}/{{day:02d}}/',
     PRODUCTION      : 's3a://salusv/deliverable/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
 }
@@ -40,9 +42,21 @@ class SetterProperty(object):
     def __init__(self, func, doc=None):
         self.func = func
         self.__doc__ = doc if doc is not None else func.__doc__
+
     def __set__(self, obj, value):
         return self.func(obj, value)
 
+# Directory structure if inherting from this class
+# spark/census/
+#   <client_name>/
+#       __init__.py
+#       <opportunity_id>/
+#           __init__.py
+#           driver.py
+#           matching_payloads_schemas.py
+#           records_schemas.py
+#           *.sql
+#
 class CensusDriver(object):
     """
     Base class for census routine drivers
@@ -115,12 +129,16 @@ class CensusDriver(object):
         self.__dict__['_matching_payloads_module_name'] = module_name
 
     def load(self, batch_date):
-        records_schemas           = importlib.import_module(
-                self.__module__.replace(DRIVER_MODULE_NAME, self._records_module_name)
-            )
-        matching_payloads_schemas = importlib.import_module(
-                self.__module__.replace(DRIVER_MODULE_NAME, self._matching_payloads_module_name)
-            )
+        if self.__class__.__name__ == CensusDriver.__name__:
+            records_schemas           = std_census.records_schemas
+            matching_payloads_schemas = std_census.matching_payloads_schemas
+        else:
+            records_schemas           = importlib.import_module(
+                    self.__module__.replace(DRIVER_MODULE_NAME, self._records_module_name)
+                )
+            matching_payloads_schemas = importlib.import_module(
+                    self.__module__.replace(DRIVER_MODULE_NAME, self._matching_payloads_module_name)
+                )
 
         records_path  = self._records_path_template.format(
             year=batch_date.year, month=batch_date.month, day=batch_date.day
