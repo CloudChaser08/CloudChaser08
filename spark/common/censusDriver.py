@@ -55,7 +55,7 @@ class SetterProperty(object):
 #           driver.py
 #           matching_payloads_schemas.py
 #           records_schemas.py
-#           *.sql
+#           *.sql -- See runner.py for sql script naming conventions
 #
 class CensusDriver(object):
     """
