@@ -1,5 +1,10 @@
 APP_NAME=dewey
 
+analytics-deploy:
+	scp -i spark/target/dewey.zip .ssh/emr_deployer hadoop@analytics.aws.healthverity.com:/tmp/
+	ssh -i .ssh/emr_deployer hadoop@analytics.aws.healthverity.com 'sudo cp /mnt/home/hadoop/dewey.zip /mnt/home/hadoop/dewey.zip.$(date +%Y%m%d%H%M)'
+	ssh -i .ssh/emr_deployer hadoop@analytics.aws.healthverity.com "sudo mv /tmp/dewey.zip /mnt/home/hadoop/dewey.zip.deploy"
+
 clean-build:
 	rm -f target/${APP_NAME}.zip
 
