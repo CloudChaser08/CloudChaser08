@@ -106,27 +106,27 @@ class CensusDriver(object):
     # Overwrite default records path template
     @SetterProperty
     def records_path_template(self, path_template):
-        self.__dict__['_records_path_template'] = path_template
+        self._records_path_template = path_template
 
     # Overwrite default matching paylaods path template
     @SetterProperty
     def matching_path_template(self, path_template):
-        self.__dict__['_matching_path_template'] = path_template
+        self._matching_path_template = path_template
 
     # Overwrite default output path template
     @SetterProperty
     def output_path_template(self, path_template):
-        self.__dict__['_output_path_template'] = path_template
+        self._output_path_template = path_template
 
     # Overwrite default records module name
     @SetterProperty
     def records_module_name(self, module_name):
-        self.__dict__['_records_module_name'] = module_name
+        self._records_module_name = module_name
 
     # Overwrite default matching payloads module name
     @SetterProperty
     def matching_payloads_module_name(self, module_name):
-        self.__dict__['_matching_payloads_module_name'] = module_name
+        self._matching_payloads_module_name = module_name
 
     def load(self, batch_date):
         if self.__class__.__name__ == CensusDriver.__name__:
