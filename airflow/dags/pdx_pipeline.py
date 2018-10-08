@@ -242,7 +242,7 @@ def norm_args(ds, k):
 
     return base
 
-detect_move_normalize_dag = SubDagOperator(
+detect_move_normalize = SubDagOperator(
     subdag=detect_move_normalize.detect_move_normalize(
         DAG_NAME,
         'detect_move_normalize',
@@ -302,7 +302,7 @@ split_transaction_file.set_upstream(decrypt_transaction)
 get_deid_files.set_upstream(validate_deid)
 queue_up_for_matching.set_upstream(validate_deid)
 
-detect_move_normalize_dag.set_upstream([get_deid_files, queue_up_for_matching, split_transaction_file])
-update_analytics_db.set_upstream(detect_move_normalize_dag)
+detect_move_normalize.set_upstream([get_deid_files, queue_up_for_matching, split_transaction_file])
+update_analytics_db.set_upstream(detect_move_normalize)
 
 clean_up_workspace.set_upstream(split_transaction_file)
