@@ -19,6 +19,7 @@ END_TO_END_TEST      = 'end_to_end_test'
 PRODUCTION           = 'production'
 DRIVER_MODULE_NAME   = 'driver'
 PACKAGE_PATH         = 'spark/target/dewey.zip/'
+SAVE_PATH            = 'hdfs:///staging/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
     TEST            : '../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{{day:02d}}/',
@@ -32,10 +33,10 @@ MODE_MATCHING_PATH_TEMPLATE = {
     PRODUCTION      : 's3a://salusv/matching/payload/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
 }
 
-MODE_OUTPUT_PATH_TEMPLATE = {
-    TEST            : '../test/census/{client}/{opp_id}/resources/output/{{year}}/{{month:02d}}/{{day:02d}}/',
-    END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/output/{{year}}/{{month:02d}}/{{day:02d}}/',
-    PRODUCTION      : 's3a://salusv/deliverable/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
+MODE_OUTPUT_PATH = {
+    TEST            : '../test/census/{client}/{opp_id}/resources/output/',
+    END_TO_END_TEST : 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/output/',
+    PRODUCTION      : 's3a://salusv/deliverable/{client}/{opp_id}/'
 }
 
 class SetterProperty(object):
@@ -69,7 +70,7 @@ class CensusDriver(object):
 
         self._records_path_template     = None
         self._matching_path_template    = None
-        self._output_path_template      = None
+        self._output_path               = None
         self._output_file_name_template = 'response_{year}{month:02d}{day:02d}.gz'
 
         self._records_module_name           = 'records_schemas'
@@ -99,7 +100,7 @@ class CensusDriver(object):
         self._matching_path_template = MODE_MATCHING_PATH_TEMPLATE[mode].format(
                 client=self._client_name, opp_id=self._opportunity_id
             )
-        self._output_path_template   = MODE_OUTPUT_PATH_TEMPLATE[mode].format(
+        self._output_path            = MODE_OUTPUT_PATH[mode].format(
                 client=self._client_name, opp_id=self._opportunity_id
             )
 
@@ -115,8 +116,8 @@ class CensusDriver(object):
 
     # Overwrite default output path template
     @SetterProperty
-    def output_path_template(self, path_template):
-        self._output_path_template = path_template
+    def output_path(self, path):
+        self._output_path = path
 
     # Overwrite default records module name
     @SetterProperty
@@ -170,21 +171,16 @@ class CensusDriver(object):
     def save(self, dataframe, batch_date):
         dataframe.createOrReplaceTempView('deliverable')
         normalized_records_unloader.unload_delimited_file(
-            self._spark, self._runner, 'hdfs:///staging/{year}/{month:02d}/{day:02d}/'.format(
+            self._spark, self._runner, SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
                 year=batch_date.year, month=batch_date.month, day=batch_date.day
             ),
             'deliverable',
-            output_file_name=self._output_file_name.format(
-                batch_date.year, batch_date.month, batch_date.day
-            )
+            output_file_name=self._output_file_name_template.format(
+                year=batch_date.year, month=batch_date.month, day=batch_date.day
+            ),
+            test=self._test
         )
 
-    def copy_to_s3(self, batch_date):
-        output_path = self._output_path_template.format(
-            batch_date.year, batch_date.month, batch_date.day
-        )
-        if self._test:
-            output_path = file_utils.get_abs_path(__file__, output_path) + '/'
-
-        normalized_records_unloader.distcp(output_path)
+    def copy_to_s3(self):
+        normalized_records_unloader.distcp(self._output_path)
 
