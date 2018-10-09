@@ -34,11 +34,11 @@ default_args = {
 
 mdag = HVDAG.HVDAG(
     dag_id = DAG_NAME,
-    schedule_interval = '0 0 16 ? * MON *',       # Every Monday at Noon EST
+    schedule_interval = '0 19 * * 10',       
     default_args = default_args
 )
 
-AURORADX_DAY_OFFSET = 7
+AURORADX_DAY_OFFSET = 5
 
 if HVDAG.HVDAG.airflow_env == 'test':
     test_loc = 's3://salusv/testing/dewey/airflow/e2e/auroradx/'
@@ -53,8 +53,11 @@ else:
 TMP_PATH_TEMPLATE = '/tmp/auroradx/labtests/{}{}{}/'
 TRANSACTION_TMP_PATH_TEMPLATE = TMP_PATH_TEMPLATE + 'raw/transactions/'
 
-TRANSACTION_FILE_NAME_TEMPLATE = 'hvfeedfile_po_record_deid_{}{}{}\d{{6}}.hvout$'
-DEID_FILE_NAME_TEMPLATE = 'hvfeedfile_header_deid_{}{}{}\d{{6}}.hvout'
+# TODO: make file template regex more explicity once we know defiinitive file naming
+TRANSACTION_FILE_NAME_TEMPLATE = 'HealthVerity_record_{}_*'
+# TRANSACTION_FILE_NAME_TEMPLATE = 'hvfeedfile_po_record_deid_{}{}{}\d{{6}}.hvout$'
+# DEID_FILE_NAME_TEMPLATE = 'hvfeedfile_header_deid_{}{}{}\d{{6}}.hvout'
+DEID_FILE_NAME_TEMPLATE = 'HealthVerity_deid_{}_*'
 VENDOR_UUID = '37716df4-ff36-4166-a1e5-36111dc85d2e'
 
 get_tmp_dir = date_utils.generate_insert_date_into_template_function(
@@ -114,7 +117,7 @@ def generate_file_validation_task(
                 'minimum_file_size'       : minimum_file_size,
                 's3_prefix'               : '/'.join(s3_path.split('/')[3:]),
                 's3_bucket'               : 'healthverity',
-                'file_description'        : 'PDX ' + task_id + ' file'          #TODO: update this if it's a manifest or not
+                'file_description'        : 'AURORADX ' + task_id + ' file'          #TODO: update this if it's a manifest or not
             }
         ),
         task_id='validate_' + task_id + '_file',
@@ -242,7 +245,10 @@ detect_move_normalize = SubDagOperator(
         default_args['start_date'],
         mdag.schedule_interval,
         {
-            'expected_matching_files_func'      : lambda ds, k: k['ti'].xcom_pull(dag_id=DAG_NAME, task_ids='get_deid_files', key='deid_files'),
+            'expected_matching_files_func'      : lambda ds, k: [ 
+                date_utils.insert_date_into_template(DEID_FILE_NAME_TEMPLATE, k, 
+                    day_offset = AURORADX_DAY_OFFSET)
+            ]
             'file_date_func'                    : date_utils.generate_insert_date_into_template_function(
                 '{}/{}/{}',
                 day_offset=AURORADX_DAY_OFFSET
