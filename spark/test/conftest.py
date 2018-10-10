@@ -1,5 +1,8 @@
 import pytest
 
+import spark.spark_setup as spark_setup
+import spark.runner as spark_runner
+
 from spark.spark_setup import init
 from spark.runner import Runner
 from pyspark.sql import DataFrame
@@ -35,6 +38,22 @@ def spark():
     }
 
     spark.stop()
+
+@pytest.fixture
+@pytest.mark.usefixtures("spark")
+def patch_spark_init(spark, monkeypatch):
+    """
+    Patch the spark init and runner instantion to use a spark session
+    for local testing
+    """
+    def spark_init(name):
+        return (spark, sqlContext)
+
+    def runner_init(sqlCtx):
+        return runner
+
+    monkeypatch.setattr(spark_setup, 'init', spark_init)
+    monkeypatch.setattr(spark_runner, 'Runner', runner_init)
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
