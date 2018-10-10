@@ -1,0 +1,8 @@
+from spark.common.censusDriver import CensusDriver
+
+class InvitaeCensusDriver(CensusDriver):
+    CLIENT_NAME    = 'invitae'
+    OPPORTUNITY_ID = 'hv000743'
+
+    def __init__(self, end_to_end_test=False):
+        super(InvitaeCensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID, end_to_end_test=end_to_end_test)

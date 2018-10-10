@@ -1,0 +1,3 @@
+TABLE_CONF = {
+    'invitae' : {}
+}
