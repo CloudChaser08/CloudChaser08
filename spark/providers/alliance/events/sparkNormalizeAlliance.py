@@ -46,7 +46,11 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
             project_id, date_input.replace('-', '/')
         ) if project_id else 's3://salusv/incoming/consumer/alliance/2018/03/12/onemillion/'
         matching_path = 's3://salusv/matching/payload/consumer/alliance/*/*/*'
-        actives_path = 's3://salusv/incoming/consumer/alliance/actives/*/*/*'
+        #NOTE: alliance sends a full refresh of actives each time (mostly on an ad-hoc basis)
+        #      You will need to swap the warehouse data each time this is ran
+        actives_path = 's3://salusv/incoming/consumer/alliance/actives/{}/'.format(
+            date_input.replace('-', '/')
+        )
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
