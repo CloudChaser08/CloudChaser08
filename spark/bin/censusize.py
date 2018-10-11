@@ -10,21 +10,29 @@ def main(date, client_name=None, opportunity_id=None, census_module=None, end_to
     """
     Run standard census driver script or one from the provided census module
     """
+    driver = None
     if census_module:
         mod = importlib.import_module(census_module)
-        getattr(mod, 'CensusDriver')
-        for on in dir(mod):
-            o = getattr(mod, on)
-            if type(o) == type(CensusDriver) and o.__base__.__name__ == 'CensusDriver':
-                driver = o()
-                break
-    else:
-        driver = CensusDriver(args.client_name, args.opportunity_id)
 
-    driver.load(datetime.strptime(args.date, '%Y-%m-%d').date())
+        # Find the driver subclass in this module
+        for an in dir(mod):
+            attribute = getattr(mod, an)
+            if type(attribute) == type(CensusDriver) and attribute.__base__.__name__ == 'CensusDriver':
+                driver = attribute()
+                break
+
+        if not driver:
+            raise AttributeError("Module {} does not contain a CensusDriver subclass".format(census_module))
+    else:
+        driver = CensusDriver(client_name, opportunity_id)
+
+
+    batch_date = datetime.strptime(date, '%Y-%m-%d').date()
+
+    driver.load(batch_date)
     df = driver.transform()
-    driver.unload(df, datetime.strptime(args.date, '%Y-%m-%d').date())
-    driver.save_to_s3()
+    driver.save(df, batch_date)
+    driver.copy_to_s3()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
