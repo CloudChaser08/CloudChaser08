@@ -11,19 +11,19 @@ CLIENT_NAME    = 'TEST'
 OPPORTUNITY_ID = 'TEST123'
 
 @pytest.fixture
-@pytest.mark.usefixtures("spark")
-def test_driver(spark):
-    return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID, spark_fixture=spark, test=True)
+@pytest.mark.usefixtures("patch_spark_init")
+def test_driver(patch_spark_init):
+    return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID, test=True)
 
 @pytest.fixture
-@pytest.mark.usefixtures("spark")
-def e2e_driver(spark):
-    return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID, spark_fixture=spark, end_to_end_test=True)
+@pytest.mark.usefixtures("patch_spark_init")
+def e2e_driver(patch_spark_init):
+    return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID, end_to_end_test=True)
 
 @pytest.fixture
-@pytest.mark.usefixtures("spark")
-def prod_driver(spark):
-    return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID, spark_fixture=spark)
+@pytest.mark.usefixtures("patch_spark_init")
+def prod_driver(patch_spark_init):
+    return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID)
 
 @pytest.mark.usefixtures("test_driver", "e2e_driver", "prod_driver")
 def test_default_paths_templates(test_driver, e2e_driver, prod_driver):
