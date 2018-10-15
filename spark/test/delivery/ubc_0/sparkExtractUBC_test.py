@@ -46,9 +46,9 @@ def test_hvid_obfuscation():
 def test_num_records_exported():
     """Test that only the relevant pharmacy claims were exported, and that all
     of the enrollment records were exported"""
-    assert len(pharmacy_prelim_export) == 5
+    assert len(pharmacy_prelim_export) == 3
     assert len(pharmacy_prelim_export) != pharmacyclaims_record_count
-    assert len(pharmacy_final_export) == 2
+    assert len(pharmacy_final_export) == 1
     assert len(enrollment_export) == enrollment_record_count
 
 def test_file_name_prefixes():
