@@ -4,7 +4,7 @@ import importlib
 import spark.common
 
 from datetime import datetime, date
-from spark.common.censusDriver import CensusDriver
+from spark.common.census_driver import CensusDriver
 
 def main(date, client_name=None, opportunity_id=None, census_module=None, end_to_end_test=False):
     """

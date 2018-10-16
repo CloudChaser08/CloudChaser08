@@ -2,7 +2,7 @@ import spark.census.example.hvXXXXX2.records_schemas_weekdays
 import spark.census.example.hvXXXXX2.records_schemas_weekends
 import spark.census.example.hvXXXXX2.matching_payloads_schemas
 
-from spark.common.censusDriver import CensusDriver, PACKAGE_PATH
+from spark.common.census_driver import CensusDriver, PACKAGE_PATH
 
 class ComplexExampleCensusDriver(CensusDriver):
     """
