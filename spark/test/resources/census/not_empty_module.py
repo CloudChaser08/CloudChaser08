@@ -1,4 +1,4 @@
-from spark.common.censusDriver import CensusDriver
+from spark.common.census_driver import CensusDriver
 
 class TestCensusDriver(CensusDriver):
 

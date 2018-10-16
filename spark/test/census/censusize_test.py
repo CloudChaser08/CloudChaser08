@@ -2,7 +2,7 @@ import pytest
 import spark.bin.censusize as censusize
 import spark.test.resources.census.empty_module
 
-from spark.common.censusDriver import CensusDriver
+from spark.common.census_driver import CensusDriver
 from spark.test.resources.census.not_empty_module import TestCensusDriver
 
 CENSUS_STEPS = ['load', 'transform', 'save', 'copy_to_s3']
