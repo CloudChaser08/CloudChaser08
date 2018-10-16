@@ -1,8 +1,10 @@
 import pytest
-from datetime import datetime, date
 import hashlib
 import spark.delivery.ubc_0.sparkExtractUBC as ubc_extract
 import os
+import shutil
+
+from datetime import datetime, date
 
 pharmacy_final_export       = []
 pharmacy_prelim_export      = []
@@ -46,9 +48,9 @@ def test_hvid_obfuscation():
 def test_num_records_exported():
     """Test that only the relevant pharmacy claims were exported, and that all
     of the enrollment records were exported"""
-    assert len(pharmacy_prelim_export) == 5
+    assert len(pharmacy_prelim_export) == 3
     assert len(pharmacy_prelim_export) != pharmacyclaims_record_count
-    assert len(pharmacy_final_export) == 2
+    assert len(pharmacy_final_export) == 1
     assert len(enrollment_export) == enrollment_record_count
 
 def test_file_name_prefixes():
@@ -89,3 +91,17 @@ def test_cleanup(spark):
     spark['sqlContext'].sql('drop table if exists express_scripts_rx_norm_final_out')
     spark['sqlContext'].sql('drop table if exists express_scripts_rx_norm_prelim_out')
 
+    try:
+        shutil.rmtree('/tmp/ubc_pharmacy_final_data/')
+    except:
+        pass
+
+    try:
+        shutil.rmtree('/tmp/ubc_pharmacy_prelim_data/')
+    except:
+        pass
+
+    try:
+        shutil.rmtree('/tmp/ubc_enrollment_data/')
+    except:
+        pass

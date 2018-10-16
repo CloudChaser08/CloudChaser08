@@ -62,7 +62,7 @@ class CensusDriver(object):
     """
     Base class for census routine drivers
     """
-    def __init__(self, client_name, opportunity_id, test=False, end_to_end_test=False, spark_fixture=None):
+    def __init__(self, client_name, opportunity_id, test=False, end_to_end_test=False):
         self._client_name       = client_name
         self._opportunity_id    = opportunity_id
         self._test              = test
@@ -85,14 +85,8 @@ class CensusDriver(object):
         else:
             mode = PRODUCTION
 
-        # init
-        if spark_fixture:
-            self._spark      = spark_fixture['spark']
-            self._sqlContext = spark_fixture['sqlContext']
-            self._runner     = spark_fixture['runner']
-        else:
-            self._spark, self._sqlContext = init("{} {} Census".format(self._client_name, self._opportunity_id))
-            self._runner = Runner(self._sqlContext)
+        self._spark, self._sqlContext = init("{} {} Census".format(self._client_name, self._opportunity_id))
+        self._runner = Runner(self._sqlContext)
 
         self._records_path_template  = MODE_RECORDS_PATH_TEMPLATE[mode].format(
                 client=self._client_name, opp_id=self._opportunity_id

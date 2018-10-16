@@ -141,7 +141,8 @@ def is_int(val):
 def obfuscate_hvid(hvid, salt):
     if salt is None or len(salt) == 0:
         raise ValueError("A project-specific salt must be provided to properly obfuscate the HVID")
-    hvid = "" if hvid is None else hvid
+    if hvid is None or hvid.strip() == '':
+        return None
     return hashlib.md5(hvid + salt).hexdigest().upper()
 
 
