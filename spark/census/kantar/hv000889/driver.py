@@ -1,0 +1,9 @@
+from spark.common.census_driver import CensusDriver
+
+class KantarLightSpeedCensusDriver(CensusDriver):
+    CLIENT_NAME = 'kantar'
+    OPPORTUNITY = 'hv000089'
+
+    def __init__(self, end_to_end_test=False):
+        super(SimpleExampleCensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY,
+                end_to_end_test=end_to_end_test)
