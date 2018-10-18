@@ -12,6 +12,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.events as events_priv
 
 FEED_ID = '56'
+LATEST_ACTIVES_DATE='2018-09-25'
 
 def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
     script_path = __file__
@@ -49,7 +50,7 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
         #NOTE: alliance sends a full refresh of actives each time (mostly on an ad-hoc basis)
         #      You will need to swap the warehouse data each time this is ran
         actives_path = 's3://salusv/incoming/consumer/alliance/actives/{}/'.format(
-            date_input.replace('-', '/')
+            LATEST_ACTIVES_DATE.replace('-', '/')
         )
 
     if not test:
