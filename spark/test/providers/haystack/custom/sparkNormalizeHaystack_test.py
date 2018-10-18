@@ -19,7 +19,7 @@ def test_init(spark):
     global results, return_file_name
     # new model run
     for g in GROUPS:
-        return_file_name[g] = haystack.run(spark['spark'], spark['runner'], g, test=True)
+        return_file_name[g] = haystack.run(spark['spark'], spark['runner'], 'test', g, test=True)
         results[g] = spark['sqlContext'].table('haystack_deliverable').collect()
 
 def test_hvid_obfuscation():

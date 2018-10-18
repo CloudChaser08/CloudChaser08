@@ -16,7 +16,7 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
 import uuid
 
-def run(spark, runner, group_id, date=None, test=False, airflow_test=False):
+def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=False):
     if test:
         incoming_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/haystack/custom/resources/incoming/'
@@ -36,12 +36,12 @@ def run(spark, runner, group_id, date=None, test=False, airflow_test=False):
             output_dir = '/tmp/staging/' + group_id + '/'
     else:
         if date:
-            incoming_path = 's3a://salusv/incoming/custom/haystack/testing/{}/'.format(date.replace('-', '/'))
-            matching_path = 's3a://salusv/matching/payload/custom/haystack/testing/{}/'.format(date.replace('-', '/'))
+            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
+            matching_path = 's3a://salusv/matching/payload/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
             output_dir = constants.hdfs_staging_dir + date.replace('-', '/') + '/'
         else:
-            incoming_path = 's3a://salusv/incoming/custom/haystack/testing/{}/'.format(group_id)
-            matching_path = 's3a://salusv/matching/payload/custom/haystack/testing/{}/'.format(group_id)
+            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, group_id)
+            matching_path = 's3a://salusv/matching/payload/custom/haystack/{}/{}/'.format(channel, group_id)
             output_dir = constants.hdfs_staging_dir + group_id + '/'
 
     runner.sqlContext.registerFunction(
@@ -113,14 +113,14 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.group_id, date=args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.channel, args.group_id, date=args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/haystack/custom/spark-output/'
     else:
-        output_path = 's3a://salusv/deliverable/haystack/testing/'
+        output_path = 's3a://salusv/deliverable/haystack/{}/'.format(args.channel)
 
     normalized_records_unloader.distcp(output_path)
 
@@ -129,6 +129,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--group_id', type=str)
     parser.add_argument('--date', type=str, default=None)
+    parser.add_argument('--channel', type=str, required=True, choices={'test', 'prod'})
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
