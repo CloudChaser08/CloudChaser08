@@ -74,7 +74,7 @@ class CensusDriver(object):
         self._output_file_name_template = 'response_{year}{month:02d}{day:02d}.gz'
 
         self._records_module_name           = 'records_schemas'
-        self._matching_payloads_module_name = 'matching_paylods_schemas'
+        self._matching_payloads_module_name = 'matching_payloads_schemas'
 
         self._script_path = None
 

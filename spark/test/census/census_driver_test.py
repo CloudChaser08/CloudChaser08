@@ -53,7 +53,7 @@ def test_default_paths_templates(test_driver, e2e_driver, prod_driver):
 
     assert test_driver._output_file_name_template     == 'response_{year}{month:02d}{day:02d}.gz'
     assert test_driver._records_module_name           == 'records_schemas'
-    assert test_driver._matching_payloads_module_name == 'matching_paylods_schemas'
+    assert test_driver._matching_payloads_module_name == 'matching_payloads_schemas'
 
 @pytest.mark.usefixtures("test_driver")
 def test_property_overwrites(test_driver):
