@@ -51,9 +51,9 @@ def test_default_paths_templates(test_driver, e2e_driver, prod_driver):
     assert prod_driver._output_path == \
         "s3a://salusv/deliverable/TEST/TEST123/"
 
-    assert test_driver._output_file_name_template     == 'response_{year}{month:02d}{day:02d}.gz'
+    assert test_driver._output_file_name_template     == '{year}{month:02d}{day:02d}_response.gz'
     assert test_driver._records_module_name           == 'records_schemas'
-    assert test_driver._matching_payloads_module_name == 'matching_paylods_schemas'
+    assert test_driver._matching_payloads_module_name == 'matching_payloads_schemas'
 
 @pytest.mark.usefixtures("test_driver")
 def test_property_overwrites(test_driver):
@@ -118,7 +118,7 @@ def test_save(test_driver, monkeypatch):
     df = test_driver._spark.sql("SELECT '1' as hvid, '2' as rowid")
     test_driver.save(df, date(2018, 1, 1))
 
-    with gzip.open('/tmp/2018/01/01/response_20180101.gz') as fin:
+    with gzip.open('/tmp/2018/01/01/20180101_response.gz') as fin:
         content = fin.readlines()
 
     row           = content[0].strip()
