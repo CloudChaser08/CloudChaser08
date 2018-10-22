@@ -153,10 +153,15 @@ class CensusDriver(object):
                 matching_payloads_schemas)
 
     def transform(self):
-        # Since this module are in the package, its file path will contain the
+        if self.__class__.__name__ == CensusDriver.__name__:
+            census_module = std_census
+        else:
+            census_module = importlib.import_module(self.__module__)
+
+        # Since this module is in the package, its file path will contain the
         # package path. Remove that in order to find the location of the
         # transformation scripts
-        scripts_directory = '/'.join(inspect.getfile(std_census).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
+        scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
         content = self._runner.run_all_spark_scripts(variables=[['opp_id', self._opportunity_id]],
                 directory_path=scripts_directory)
         header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
