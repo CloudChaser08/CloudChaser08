@@ -59,6 +59,21 @@ def run(spark, year):
         )
     ).repartition(1).write.parquet(CM_OUTPUT)
 
+    # Groups processing
+
+    pcs_grp = spark.read.csv(PCS_GRP_INPUT, sep=",", quote='"', header=True)
+    postprocessor.compose(
+        postprocessor.trimmify,
+        postprocessor.nullify
+    )(pcs_grp).repartition(1).write.parquet(PCS_GRP_OUTPUT, mode='overwrite')
+
+    cm_grp = spark.read.csv(CM_GRP_INPUT, sep=",", quote='"', header=True)
+    postprocessor.compose(
+        postprocessor.trimmify,
+        postprocessor.nullify
+    )(cm_grp).repartition(1).write.parquet(CM_GRP_OUTPUT, mode='overwrite')
+
+
 def main(args):
     spark, sqlContext = init('Reference ICD10')
 
