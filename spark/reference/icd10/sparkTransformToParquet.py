@@ -11,8 +11,8 @@ def run(spark, year):
 
     PCS_GRP_INPUT = 's3://salusv/incoming/reference/icd10/pcs-cat/{}/'.format(year)
     PCS_GRP_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/pcs-cat/'.format(year)
-    CM_GRP_INPUT = 's3://salusv/incoming/reference/icd10/cm/{}/'.format(year)
-    CM_GRP_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/cm/'.format(year)
+    CM_GRP_INPUT = 's3://salusv/incoming/reference/icd10/cm-cat/{}/'.format(year)
+    CM_GRP_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/cm-cat/'.format(year)
 
     pcs = spark.read.text(PCS_INPUT)
     cm = spark.read.text(CM_INPUT)
