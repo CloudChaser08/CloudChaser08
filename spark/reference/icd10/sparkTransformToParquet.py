@@ -43,7 +43,7 @@ def run(spark, year):
             pcs.value.substr(17, 60).alias('short_description'),
             pcs.value.substr(78, 323).alias('long_description')
         )
-    ).repartition(1).write.parquet(PCS_OUTPUT)
+    ).repartition(1).write.parquet(PCS_OUTPUT, mode='overwrite')
 
     postprocessor.compose(
         postprocessor.trimmify,
@@ -57,7 +57,7 @@ def run(spark, year):
             cm.value.substr(17, 60).alias('short_description'),
             cm.value.substr(78, 323).alias('long_description')
         )
-    ).repartition(1).write.parquet(CM_OUTPUT)
+    ).repartition(1).write.parquet(CM_OUTPUT, mode='overwrite')
 
     # Groups processing
 
