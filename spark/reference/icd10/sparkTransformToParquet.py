@@ -1,5 +1,7 @@
 import argparse
 import pyspark.sql.functions as F
+from pyspark.sql.types import StructType, StructField
+from pyspark.sql.types import DoubleType, IntegerType, StringType
 import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 
@@ -61,13 +63,28 @@ def run(spark, year):
 
     # Groups processing
 
-    pcs_grp = spark.read.csv(PCS_GRP_INPUT, sep=",", quote='"', header=True)
+    schema_pcs = StructType([
+        StructField("section", StringType()),
+        StructField("section_desc", StringType()),
+        StructField("position_num", DoubleType()),
+        StructField("position_value", StringType()),
+        StructField("position_description", StringType())
+    ])
+
+    pcs_grp = spark.read.csv(PCS_GRP_INPUT, sep=",", quote='"', header=True, schema=schema_pcs)
     postprocessor.compose(
         postprocessor.trimmify,
         postprocessor.nullify
     )(pcs_grp).repartition(1).write.parquet(PCS_GRP_OUTPUT, mode='overwrite')
 
-    cm_grp = spark.read.csv(CM_GRP_INPUT, sep=",", quote='"', header=True)
+    schema_cm = StructType([
+        StructField("level_num", DoubleType()),
+        StructField("start_num", StringType()),
+        StructField("stop_num", StringType()),
+        StructField("description", StringType()),
+    ])
+
+    cm_grp = spark.read.csv(CM_GRP_INPUT, sep=",", quote='"', header=True, schema=schema_cm)
     postprocessor.compose(
         postprocessor.trimmify,
         postprocessor.nullify
