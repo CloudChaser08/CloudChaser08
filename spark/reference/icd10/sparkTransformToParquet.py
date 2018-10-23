@@ -5,16 +5,16 @@ from pyspark.sql.types import DoubleType, IntegerType, StringType
 import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 
-def run(spark, year):
-    PCS_INPUT = 's3://salusv/incoming/reference/icd10/pcs/{}/'.format(year)
-    PCS_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/pcs/'.format(year)
-    CM_INPUT = 's3://salusv/incoming/reference/icd10/cm/{}/'.format(year)
-    CM_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/cm/'.format(year)
+def run(spark, execution_date):
+    PCS_INPUT = 's3://salusv/incoming/reference/icd10/pcs/{}/'.format(execution_date)
+    PCS_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/pcs/'.format(execution_date)
+    CM_INPUT = 's3://salusv/incoming/reference/icd10/cm/{}/'.format(execution_date)
+    CM_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/cm/'.format(execution_date)
 
-    PCS_GRP_INPUT = 's3://salusv/incoming/reference/icd10/pcs-cat/{}/'.format(year)
-    PCS_GRP_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/pcs-cat/'.format(year)
-    CM_GRP_INPUT = 's3://salusv/incoming/reference/icd10/cm-cat/{}/'.format(year)
-    CM_GRP_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/cm-cat/'.format(year)
+    PCS_GRP_INPUT = 's3://salusv/incoming/reference/icd10/pcs-cat/{}/'.format(execution_date)
+    PCS_GRP_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/pcs-cat/'.format(execution_date)
+    CM_GRP_INPUT = 's3://salusv/incoming/reference/icd10/cm-cat/{}/'.format(execution_date)
+    CM_GRP_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/cm-cat/'.format(execution_date)
 
     pcs = spark.read.text(PCS_INPUT)
     cm = spark.read.text(CM_INPUT)
