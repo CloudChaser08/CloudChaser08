@@ -14,6 +14,7 @@ def run(spark, args):
     """
     hcpcs = spark.read.text(args.incoming)
 
+    # We only need lines 320 charater long. There's some comments in the document.
     hcpcs = hcpcs.where(length(col("value")) == 320)
 
     print(hcpcs.head(50))
