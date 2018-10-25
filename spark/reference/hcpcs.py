@@ -77,7 +77,7 @@ def run(spark, args):
 
 
 def main(args):
-    spark, sqlContext = init('Reference HCPCS', local=True)
+    spark, sqlContext = init('Reference HCPCS')
 
     run(spark, args)
 
