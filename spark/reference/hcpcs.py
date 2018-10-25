@@ -1,18 +1,22 @@
-import spark.helpers.postprocessor as postprocessor
+import argparse
+
 from pyspark.sql.functions import *
+
+import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 
-def run(spark, execution_date):
-    # hcpcs = spark.read.text('s3://salusv/incoming/reference/hcpcs/{}/'.format(execution_date))
-    # hcpcs = spark.read.text('s3://salusv/incoming/reference/hcpcs/2018-10-24/')
-    hcpcs = spark.read.text('/Users/aakimov/tmp/inbound_csv')
-    out = 's3://salusv/incoming/reference/hcpcs/csv-out/parquet'
-    out = '/Users/aakimov/tmp/parquet'
+
+def run(spark, args):
+    """
+    Schema source: https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS-Items/2018-HCPCS-Record-Layout-.html
+
+    File: https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS-Items/2018-Alpha-Numeric-HCPCS-File-.html?DLPage=1&DLEntries=10&DLSort=0&DLSortDir=descending
+    """
+    hcpcs = spark.read.text(args.incoming)
 
     hcpcs = hcpcs.where(length(col("value")) == 320)
 
     print(hcpcs.head(50))
-
 
     new_df = hcpcs.select(
         hcpcs.value.substr(1, 5).alias('hcpc'),
@@ -65,20 +69,25 @@ def run(spark, execution_date):
         hcpcs.value.substr(293, 1).alias('action_cd')
 
     )
+
     postprocessor.compose(
         postprocessor.trimmify,
         postprocessor.nullify
-    )(new_df).repartition(1).write.parquet(out, mode='overwrite')
+    )(new_df).repartition(args.partitions).write.parquet(args.s3_parquet_loc, mode='overwrite')
 
 
 def main(args):
     spark, sqlContext = init('Reference HCPCS', local=True)
 
-    run(spark, args['date'])
+    run(spark, args)
 
     spark.stop()
 
 
 if __name__ == '__main__':
-    args = {'date': '2018-10-24'}
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--incoming', type=str)
+    parser.add_argument('--s3_parquet_loc', type=str)
+    parser.add_argument('--partitions', default=20, type=int)
+    args = parser.parse_args()
     main(args)
