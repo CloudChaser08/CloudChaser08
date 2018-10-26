@@ -1,13 +1,14 @@
 import argparse
 
+import spark.helpers.postprocessor as postprocessor
 from pyspark.sql.types import DoubleType, StringType
 from pyspark.sql.types import StructType, StructField
-
-import spark.helpers.postprocessor as postprocessor
+from spark.helpers import external_table_loader
+from spark.runner import Runner
 from spark.spark_setup import init
 
 
-def run(spark, execution_date):
+def run(spark, runner, execution_date):
     PCS_INPUT = 's3://salusv/incoming/reference/icd10/pcs/{}/'.format(execution_date)
     PCS_OUTPUT = 's3://salusv/reference/parquet/icd10/{}/pcs/'.format(execution_date)
     CM_INPUT = 's3://salusv/incoming/reference/icd10/cm/{}/'.format(execution_date)
@@ -35,6 +36,10 @@ def run(spark, execution_date):
        77    |     1  |  Blank
        78    |   323  |  Long description
     '''
+
+    external_table_loader.load_icd_diag_codes(runner.sqlContext)
+    external_table_loader.load_icd_proc_codes(runner.sqlContext)
+
     trimmed_pcs = (postprocessor.compose(
         postprocessor.trimmify,
         postprocessor.nullify
@@ -49,7 +54,14 @@ def run(spark, execution_date):
         )
     ))
 
-    trimmed_pcs.repartition(1).write.parquet(PCS_OUTPUT, mode='overwrite')
+    current_pcs_codes_table = spark.table('ref_icd10_procedure')
+
+    missing_pcs_codes = current_pcs_codes_table.join(trimmed_pcs, current_pcs_codes_table.code == trimmed_pcs.code,
+                                                     'leftanti')
+
+    all_pcs_codes = trimmed_pcs.union(missing_pcs_codes)
+
+    all_pcs_codes.repartition(1).write.parquet(PCS_OUTPUT, mode='overwrite')
 
     trimmed_cm = (
         postprocessor.compose(
@@ -66,7 +78,14 @@ def run(spark, execution_date):
             )
         )
     )
-    trimmed_cm.repartition(1).write.parquet(CM_OUTPUT, mode='overwrite')
+
+    current_cm_codes_table = spark.table('ref_icd10_diagnosis')
+
+    missing_cm_codes = current_cm_codes_table.join(trimmed_cm, current_cm_codes_table.code == trimmed_cm.code, 'leftanti')
+
+    all_cm_codes = trimmed_cm.union(missing_cm_codes)
+
+    all_cm_codes.repartition(1).write.parquet(CM_OUTPUT, mode='overwrite')
 
     # Groups processing
 
@@ -107,7 +126,8 @@ def run(spark, execution_date):
 def main(args):
     spark, sqlContext = init('Reference ICD10')
 
-    run(spark, args.year)
+    runner = Runner(sqlContext)
+    run(spark, runner, args.year)
 
     spark.stop()
 
