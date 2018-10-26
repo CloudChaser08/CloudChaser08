@@ -16,6 +16,17 @@ def run(spark, runner, year):
     cpt_pla = spark.table('pla')
     cpt_mod = spark.table('mod')
 
+    '''
+    The rules for creating the cpt table are as follows:
+        1. Start with the long description and short description table.  Join them on the cpt code to
+           get a base set of cpt_codes that contain: code, short_desc, long_desc
+        2. Union the CPT-PLA codes to the base set created in step 1.
+        3. Union the Modifiers to get the final set of cpt_codes.  The Modifiers table only
+           has a long description column, so set the short_desc to NULL when performing the union
+
+    NOTE: This logic IS subject to change year by year, so make sure to always verify with
+          analytics that the logic remains the same based on the files we recived.
+    '''
     cpt_short_long = cpt_long.join(cpt_short, cpt_long.long_code == cpt_short.short_code, 'full') \
                              .select(F.col('short_code').alias('code'), F.col('short_description'),
                                      F.col('long_description')
