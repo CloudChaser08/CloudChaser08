@@ -71,10 +71,11 @@ def run(spark, args):
 
     )
 
-    postprocessor.compose(
+    trimmed_df = (postprocessor.compose(
         postprocessor.trimmify,
         postprocessor.nullify
-    )(new_df).repartition(args.partitions).write.parquet(args.s3_parquet_loc, mode='overwrite')
+    )(new_df))
+    trimmed_df.repartition(args.partitions).write.parquet(args.s3_parquet_loc, mode='overwrite')
 
 
 def main(args):
