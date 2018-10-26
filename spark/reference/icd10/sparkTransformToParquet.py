@@ -1,9 +1,11 @@
 import argparse
-import pyspark.sql.functions as F
+
+from pyspark.sql.types import DoubleType, StringType
 from pyspark.sql.types import StructType, StructField
-from pyspark.sql.types import DoubleType, IntegerType, StringType
+
 import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
+
 
 def run(spark, execution_date):
     PCS_INPUT = 's3://salusv/incoming/reference/icd10/pcs/{}/'.format(execution_date)
@@ -33,11 +35,11 @@ def run(spark, execution_date):
        77    |     1  |  Blank
        78    |   323  |  Long description
     '''
-    postprocessor.compose(
+    trimmed_pcs = (postprocessor.compose(
         postprocessor.trimmify,
         postprocessor.nullify
     )
-    (
+        (
         pcs.select(
             pcs.value.substr(1, 5).alias('ordernum'),
             pcs.value.substr(7, 7).alias('code'),
@@ -45,21 +47,26 @@ def run(spark, execution_date):
             pcs.value.substr(17, 60).alias('short_description'),
             pcs.value.substr(78, 323).alias('long_description')
         )
-    ).repartition(1).write.parquet(PCS_OUTPUT, mode='overwrite')
+    ))
 
-    postprocessor.compose(
-        postprocessor.trimmify,
-        postprocessor.nullify
-    )
-    (
-        cm.select(
-            cm.value.substr(1, 5).alias('ordernum'),
-            cm.value.substr(7, 7).alias('code'),
-            cm.value.substr(15, 1).alias('header'),
-            cm.value.substr(17, 60).alias('short_description'),
-            cm.value.substr(78, 323).alias('long_description')
+    trimmed_pcs.repartition(1).write.parquet(PCS_OUTPUT, mode='overwrite')
+
+    trimmed_cm = (
+        postprocessor.compose(
+            postprocessor.trimmify,
+            postprocessor.nullify
         )
-    ).repartition(1).write.parquet(CM_OUTPUT, mode='overwrite')
+            (
+            cm.select(
+                cm.value.substr(1, 5).alias('ordernum'),
+                cm.value.substr(7, 7).alias('code'),
+                cm.value.substr(15, 1).alias('header'),
+                cm.value.substr(17, 60).alias('short_description'),
+                cm.value.substr(78, 323).alias('long_description')
+            )
+        )
+    )
+    trimmed_cm.repartition(1).write.parquet(CM_OUTPUT, mode='overwrite')
 
     # Groups processing
 
@@ -72,10 +79,14 @@ def run(spark, execution_date):
     ])
 
     pcs_grp = spark.read.csv(PCS_GRP_INPUT, sep=",", quote='"', header=True, schema=schema_pcs)
-    postprocessor.compose(
-        postprocessor.trimmify,
-        postprocessor.nullify
-    )(pcs_grp).repartition(1).write.parquet(PCS_GRP_OUTPUT, mode='overwrite')
+
+    trimmed_pcs_grp = (
+        postprocessor.compose(
+            postprocessor.trimmify,
+            postprocessor.nullify
+        )(pcs_grp))
+
+    trimmed_pcs_grp.repartition(1).write.parquet(PCS_GRP_OUTPUT, mode='overwrite')
 
     schema_cm = StructType([
         StructField("level_num", DoubleType()),
@@ -85,10 +96,12 @@ def run(spark, execution_date):
     ])
 
     cm_grp = spark.read.csv(CM_GRP_INPUT, sep=",", quote='"', header=True, schema=schema_cm)
-    postprocessor.compose(
-        postprocessor.trimmify,
-        postprocessor.nullify
-    )(cm_grp).repartition(1).write.parquet(CM_GRP_OUTPUT, mode='overwrite')
+    trimmed_cm_grp = (
+        postprocessor.compose(
+            postprocessor.trimmify,
+            postprocessor.nullify
+        )(cm_grp))
+    trimmed_cm_grp.repartition(1).write.parquet(CM_GRP_OUTPUT, mode='overwrite')
 
 
 def main(args):
