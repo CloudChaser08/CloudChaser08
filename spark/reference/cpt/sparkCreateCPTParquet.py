@@ -1,3 +1,4 @@
+from datetime import datetime
 import argparse
 import pyspark.sql.functions as F
 from spark.runner import Runner
@@ -7,8 +8,9 @@ import spark.helpers.records_loader as records_loader
 import file_schemas as file_schemas
 
 def run(spark, runner, year):
+    timestamp = datetime.now().strftime('%Y%M%d%H%m%S')
     CPT_INPUT = 's3://salusv/incoming/reference/cpt/{}/'.format(year)
-    CPT_OUTPUT = 's3://salusv/reference/parquet/cpt/{}/'.format(year)
+    CPT_OUTPUT = 's3://salusv/reference/parquet/cpt/{}/{}/'.format(year, timestamp)
 
     records_loader.load_and_clean_all_v2(runner, CPT_INPUT, file_schemas)
     external_table_loader.load_cpt_codes(runner.sqlContext)
@@ -53,6 +55,7 @@ def run(spark, runner, year):
     cpt_final = cpt_plus_modifiers.union(missing_current_cpt_codes)
 
     cpt_final.repartion(1).write.parquet(CPT_OUTPUT)
+
 
 def main(args):
     spark, sqlContext = init('Reference CPT')
