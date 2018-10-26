@@ -5,7 +5,7 @@ TABLE_CONF = {
         'csv',
         separator='\t',
         columns=[
-            'code',
+            'long_code',
             'long_description'
         ]
     ),
@@ -13,7 +13,7 @@ TABLE_CONF = {
         'csv',
         separator='\t',
         columns=[
-            'code',
+            'short_code',
             'short_description'
         ]
     ),
@@ -21,7 +21,7 @@ TABLE_CONF = {
         'csv',
         separator='\t',
         columns=[
-            'code',
+            'pla_code',
             'long_description',
             'medium_description',
             'short_description',
@@ -38,7 +38,7 @@ TABLE_CONF = {
         'csv',
         separator='\t',
         columns=[
-            'code',
+            'mod_code',
             'long_description'
         ]
     )

@@ -16,15 +16,15 @@ def run(spark, runner, year):
     cpt_pla = spark.table('pla')
     cpt_mod = spark.table('mod')
 
-    cpt_short_long = cpt_long.join(cpt_short, cpt_long.code == cpt_short.code, 'full') \
-                             .select(F.col('code'), F.col('short_description'),
+    cpt_short_long = cpt_long.join(cpt_short, cpt_long.long_code == cpt_short.short_code, 'full') \
+                             .select(F.col('short_code').alias('code'), F.col('short_description'),
                                      F.col('long_description')
                                     )
     cpt = cpt_short_long.union(
-            cpt_pla.select(F.col('code'), F.col('short_description'), F.col('long_description')))
+            cpt_pla.select(F.col('pla_code').alias('code'), F.col('short_description'), F.col('long_description')))
 
     cpt_plus_modifiers = cpt.union(
-        cpt_mod.select(F.col('code'), F.lit(None).alias('short_description'),
+        cpt_mod.select(F.col('mod_code').alias('code'), F.lit(None).alias('short_description'),
                        F.col('long_description')
                       )
     )
