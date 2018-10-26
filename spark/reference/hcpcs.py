@@ -15,7 +15,7 @@ def run(spark, runner, args):
     """
     hcpcs = spark.read.text(args.incoming)
 
-    external_table_loader.load_hcpcs_codes(runner.sqlContext)
+    external_table_loader.load_analytics_db_table(runner.sqlContext, "default", "ref_hcpcs", "ref_hcpcs")
 
 
     # We only need lines 320 charater long. There's some comments in the document.
