@@ -38,7 +38,8 @@ def run(spark, runner, execution_date):
     '''
 
     external_table_loader.load_icd_diag_codes(runner.sqlContext)
-    external_table_loader.load_icd_proc_codes(runner.sqlContext)
+    external_table_loader.load_analytics_db_table(runner.sqlContext, "default", "ref_icd10_diagnosis", "ref_icd10_diagnosis")
+    external_table_loader.load_analytics_db_table(runner.sqlContext, "default", "ref_icd10_procedure", "ref_icd10_procedure")
 
     trimmed_pcs = (postprocessor.compose(
         postprocessor.trimmify,
