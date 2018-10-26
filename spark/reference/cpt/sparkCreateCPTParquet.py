@@ -13,7 +13,12 @@ def run(spark, runner, year):
     CPT_OUTPUT = 's3://salusv/reference/parquet/cpt/{}/{}/'.format(year, timestamp)
 
     records_loader.load_and_clean_all_v2(runner, CPT_INPUT, file_schemas)
-    external_table_loader.load_cpt_codes(runner.sqlContext)
+    external_table_loader.load_analytics_db_table(
+        runner.sqlContext,
+        'default',
+        'ref_cpt',
+        'cpt_codes'
+    )
 
     cpt_long = spark.table('long')
     cpt_short = spark.table('short')
