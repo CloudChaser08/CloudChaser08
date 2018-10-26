@@ -1,18 +1,22 @@
 import argparse
 
-from pyspark.sql.functions import *
-
 import spark.helpers.postprocessor as postprocessor
+from pyspark.sql.functions import *
+from spark.helpers import external_table_loader
+from spark.runner import Runner
 from spark.spark_setup import init
 
 
-def run(spark, args):
+def run(spark, runner, args):
     """
     Schema source: https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS-Items/2018-HCPCS-Record-Layout-.html
 
     File: https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS-Items/2018-Alpha-Numeric-HCPCS-File-.html?DLPage=1&DLEntries=10&DLSort=0&DLSortDir=descending
     """
     hcpcs = spark.read.text(args.incoming)
+
+    external_table_loader.load_hcpcs_codes(runner.sqlContext)
+
 
     # We only need lines 320 charater long. There's some comments in the document.
     hcpcs = hcpcs.where(length(col("value")) == 320)
@@ -75,13 +79,20 @@ def run(spark, args):
         postprocessor.trimmify,
         postprocessor.nullify
     )(new_df))
-    trimmed_df.repartition(args.partitions).write.parquet(args.s3_parquet_loc, mode='overwrite')
+
+    current_hcpcs_codes_table = spark.table('ref_hcpcs')
+
+    missing_hcpcs_codes = current_hcpcs_codes_table.join(trimmed_df, current_hcpcs_codes_table.hcpc == trimmed_df.hcpc, 'leftanti')
+
+    all_hcpcs_codes = trimmed_df.union(missing_hcpcs_codes)
+
+    all_hcpcs_codes.repartition(args.partitions).write.parquet(args.s3_parquet_loc, mode='overwrite')
 
 
 def main(args):
     spark, sqlContext = init('Reference HCPCS')
-
-    run(spark, args)
+    runner = Runner(sqlContext)
+    run(spark, runner, args)
 
     spark.stop()
 
