@@ -59,7 +59,7 @@ def run(spark, runner, year):
 
     cpt_final = cpt_plus_modifiers.union(missing_current_cpt_codes)
 
-    cpt_final.repartion(1).write.parquet(CPT_OUTPUT)
+    cpt_final.repartition(1).write.parquet(CPT_OUTPUT)
 
 
 def main(args):
