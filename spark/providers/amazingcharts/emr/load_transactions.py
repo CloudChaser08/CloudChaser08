@@ -1,8 +1,8 @@
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
-
-from pyspark.sql.types import *
 from pyspark.sql.functions import lit
+from pyspark.sql.types import *
+
 
 def load(spark, runner, table_locs, batch_date, test=False):
     for table, input_path in table_locs.items():
@@ -102,7 +102,7 @@ TABLE_COLS = {
         'shorter_description',
         'description'
     ],
-    'd_lab_directory_20180101': [
+    'd_lab_directory_20180101_deprecated': [
         'lab_directory_key',
         'test_code',
         'lab_company',
@@ -162,7 +162,7 @@ TABLE_COLS = {
         'cvx_code_unspecified_formulation',
         'immunity_code'
     ],
-    'f_diagnosis_20180301': [
+    'f_diagnosis_20180301_deprecated': [
         'date_key',
         'time_key',
         'record_type',
@@ -272,7 +272,7 @@ TABLE_COLS = {
         'diastolic',
         'height_in_inches'
     ],
-    'f_injection_20180301': [
+    'f_injection_20180301_deprecated': [
         'date_key',
         'time_key',
         'record_type',
@@ -332,7 +332,7 @@ TABLE_COLS = {
         'how_migrated',
         'reaction_date'
     ],
-    'f_injection_20170701': [
+    'f_injection_20180701': [
         'date_key',
         'time_key',
         'practice_key',
@@ -362,7 +362,7 @@ TABLE_COLS = {
         'how_migrated',
         'reaction_date'
     ],
-    'f_lab_20180301': [
+    'f_lab_20180301_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
@@ -500,7 +500,7 @@ TABLE_COLS = {
         'normal_abnormal_type',
         'value_type'
     ],
-    'f_medication_20180301': [
+    'f_medication_20180301_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
