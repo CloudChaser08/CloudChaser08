@@ -140,10 +140,9 @@ def run(spark, runner, args):
     all_hcpcs_codes = combine_new_and_old_tables(hcpcs, current_hcpcs_codes_table)
 
     just_descriptions = concatenate_multiline_descriptions(all_hcpcs_codes)
-    ###
+
     first_rows_no_desc = get_first_rows(all_hcpcs_codes)
 
-    ###
     full_dataset = first_rows_no_desc.join(just_descriptions, ['hcpc'])
 
     full_dataset.repartition(args.partitions).write.parquet(args.s3_parquet_loc, mode='overwrite')
