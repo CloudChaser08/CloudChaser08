@@ -197,7 +197,7 @@ TABLE_COLS = {
         'snomed'
     ]
     ,
-    'f_diagnosis_20180701': [
+    'f_diagnosis_20180701_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
@@ -332,7 +332,7 @@ TABLE_COLS = {
         'how_migrated',
         'reaction_date'
     ],
-    'f_injection_20180701': [
+    'f_injection_20180701_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
@@ -454,7 +454,7 @@ TABLE_COLS = {
         'normal_abnormal_type',
         'value_type'
     ],
-    'f_lab_20180701': [
+    'f_lab_20180701_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
@@ -530,7 +530,7 @@ TABLE_COLS = {
         'script_printed',
         'script_faxed'
     ],
-    'f_medication_20180701': [
+    'f_medication_20180701_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
