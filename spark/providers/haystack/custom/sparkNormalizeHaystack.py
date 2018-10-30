@@ -36,7 +36,7 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
             output_dir = '/tmp/staging/' + group_id + '/'
     else:
         if date:
-            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
+            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, date)
             matching_path = 's3a://salusv/matching/payload/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
             output_dir = constants.hdfs_staging_dir + date.replace('-', '/') + '/'
         else:
@@ -98,11 +98,11 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
     if not test:
         if date:
             normalized_records_unloader.unload_delimited_file(
-                spark, runner, 'hdfs:///staging/' + date.replace('-', '/') + '/', 'haystack_deliverable',
+                spark, runner, 'hdfs:///staging/part_dt=' + date + '/', 'haystack_deliverable',
                 output_file_name=output_file_name)
         else:
             normalized_records_unloader.unload_delimited_file(
-                spark, runner, 'hdfs:///staging/' + group_id + '/', 'haystack_deliverable',
+                spark, runner, 'hdfs:///staging/part_dt=' + group_id + '/', 'haystack_deliverable',
                 output_file_name=output_file_name)
         
 
