@@ -36,7 +36,7 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
             output_dir = '/tmp/staging/' + group_id + '/'
     else:
         if date:
-            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, date)
+            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
             matching_path = 's3a://salusv/matching/payload/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
             output_dir = constants.hdfs_staging_dir + date.replace('-', '/') + '/'
         else:
