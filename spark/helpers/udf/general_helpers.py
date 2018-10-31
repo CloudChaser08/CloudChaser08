@@ -70,28 +70,28 @@ def convert_value(value, conversion):
 def convert_kg_to_lb(value):
     try:
         return round(float(value) * 2.2046, 2)
-    except TypeError:
+    except (TypeError, ValueError):
         return None
 
 
 def convert_cm_to_in(value):
     try:
         return round(float(value) * 0.3937, 2)
-    except TypeError:
+    except (TypeError, ValueError):
         return None
 
 
 def convert_m_to_in(value):
     try:
         return round(float(value) * 39.3701, 2)
-    except TypeError:
+    except (TypeError, ValueError):
         return None
 
 
 def convert_celsius_to_fahrenheit(value):
     try:
         return round((float(value) * 9 / 5) + 32, 2)
-    except TypeError:
+    except (TypeError, ValueError):
         return None
 
 
