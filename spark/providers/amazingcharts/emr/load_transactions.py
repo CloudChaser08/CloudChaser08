@@ -2,22 +2,44 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 from pyspark.sql.functions import lit
 from pyspark.sql.types import *
+import csv
+import json
+
+
+def get_headers(file_name, table_name):
+    table_name = table_name.lower()
+
+    file_schema = TABLE_COLS[table_name]
+
+    with open(file_name, 'r') as infile:
+        dialect = csv.Sniffer().sniff(infile.read(4096))
+        infile.seek(0)
+        reader = csv.reader(infile, dialect)
+        header = next(reader)
+
+    return header, file_schema
+
+def validate_file(file_name, table_name):
+    header, file_schema = get_headers(file_name, table_name)
+    return header == file_schema
+
+def get_tablename_for_date(table, batch_date):
+    table = table.lower()
+    tns = sorted([tn for tn in TABLE_COLS.keys() if tn.startswith(table)])
+    tn = None
+    for t in tns:
+        if t > (table + '_' + batch_date.replace('-', '')):
+            tn = t
+            break
+    if tn is None:
+        tn = table
+    return tn
 
 
 def load(spark, runner, table_locs, batch_date, test=False):
     for table, input_path in table_locs.items():
         try:
-            tns = sorted([tn for tn in TABLE_COLS.keys() if tn.startswith(table)])
-            print tns
-            tn = None
-            for t in tns:
-                if t > (table + '_' + batch_date.replace('-', '')):
-                    tn = t
-                    break
-            if tn is None:
-                tn = table
-            print tn
-
+            tn = get_tablename_for_date(table, batch_date)
             df = records_loader.load(runner, input_path, TABLE_COLS[tn], 'csv', '|')
             if tn == 'd_lab_directory' and 'provider_key' not in df.columns:
                 df = df.withColumn('provider_key', lit(None).cast('string'))
