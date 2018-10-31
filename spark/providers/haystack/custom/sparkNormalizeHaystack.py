@@ -102,7 +102,7 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
                 output_file_name=output_file_name)
         else:
             normalized_records_unloader.unload_delimited_file(
-                spark, runner, 'hdfs:///staging/part_dt=' + group_id + '/', 'haystack_deliverable',
+                spark, runner, 'hdfs:///staging/' + group_id + '/', 'haystack_deliverable',
                 output_file_name=output_file_name)
         
 
