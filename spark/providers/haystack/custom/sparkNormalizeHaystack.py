@@ -98,7 +98,7 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
     if not test:
         if date:
             normalized_records_unloader.unload_delimited_file(
-                spark, runner, 'hdfs:///staging/' + date.replace('-', '/') + '/', 'haystack_deliverable',
+                spark, runner, 'hdfs:///staging/part_dt=' + date + '/', 'haystack_deliverable',
                 output_file_name=output_file_name)
         else:
             normalized_records_unloader.unload_delimited_file(
