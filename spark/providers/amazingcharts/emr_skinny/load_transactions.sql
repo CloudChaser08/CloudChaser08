@@ -141,7 +141,7 @@ CREATE EXTERNAL TABLE d_patient (
         patient_key            string,
         practice_key           string,
         gender                 string,
-        birth_date             string,
+        birth_year             string,
         state                  string,
         zip                    string,
         inactive               string,
@@ -258,7 +258,7 @@ CREATE EXTERNAL TABLE f_medication (
         erx_status                   string,
         daw                          string,
         sent_by_sure_scripts         string,
-        inactivate_reason            string,
+        inactive_reason            string,
         script_printed               string,
         script_faxed                 string
         )
@@ -392,7 +392,7 @@ CREATE EXTERNAL TABLE f_encounter (
         plan                             string,
         blood_pressure                   string,
         temperature                      string,
-        rest_rate                        string,
+        respiratory_rate                        string,
         pulse                            string,
         weight                           string,
         height                           string,

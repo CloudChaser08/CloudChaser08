@@ -19,7 +19,7 @@ SELECT /*+ BROADCAST (prv) */
     pay.hvid                                            AS hvid,
     COALESCE(
         SUBSTR(
-            ptn.birth_date,
+            ptn.birth_year,
             1,
             4
         ),

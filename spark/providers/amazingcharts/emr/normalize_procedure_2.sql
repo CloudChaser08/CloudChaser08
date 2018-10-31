@@ -13,7 +13,7 @@ SELECT /*+ BROADCAST (prv) */
     inj.practice_key                        AS vdr_org_id,
     pay.hvid                                AS hvid,
     COALESCE(
-        SUBSTR(ptn.birth_date, 1, 4),
+        SUBSTR(ptn.birth_year, 1, 4),
         pay.yearOfBirth
     )                                       AS ptnt_birth_yr,
     pay.age                                 AS ptnt_age_num,
