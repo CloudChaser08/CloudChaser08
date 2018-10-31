@@ -22,12 +22,16 @@ def test_amazing(path, exec_date):
                     header, schema = get_headers(full_file, tablename)
                     diff = [(i, j) for (i, j) in zip(header, schema) if i != j]
                     print(diff)
+                    print('========================')
+
                     # print("HEADER")
                     # print(header)
                     # print("SCHEMA")
                     # print(schema)
                     #
                     print('\n\n')
+                else:
+                    print('{} correct'.format(filename))
             except KeyError:
                 print('Unknown file: {}', filename)
 
