@@ -1,8 +1,8 @@
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
-
-from pyspark.sql.types import *
 from pyspark.sql.functions import lit
+from pyspark.sql.types import *
+
 
 def load(spark, runner, table_locs, batch_date, test=False):
     for table, input_path in table_locs.items():
@@ -102,7 +102,7 @@ TABLE_COLS = {
         'shorter_description',
         'description'
     ],
-    'd_lab_directory_20180101': [
+    'd_lab_directory_20180101_deprecated': [
         'lab_directory_key',
         'test_code',
         'lab_company',
@@ -162,7 +162,7 @@ TABLE_COLS = {
         'cvx_code_unspecified_formulation',
         'immunity_code'
     ],
-    'f_diagnosis_20180301': [
+    'f_diagnosis_20180301_deprecated': [
         'date_key',
         'time_key',
         'record_type',
@@ -180,6 +180,24 @@ TABLE_COLS = {
         'snomed'
     ],
     'f_diagnosis': [
+        'date_key',
+        'time_key',
+        'record_type',
+        'practice_key',
+        'patient_key',
+        'problem_icd',
+        'icd_type',
+        'date_active',
+        'date_inactive',
+        'provider_key',
+        'date_row_added',
+        'date_last_activated',
+        'date_resolved',
+        'costar_key',
+        'snomed'
+    ]
+    ,
+    'f_diagnosis_20180701_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
@@ -254,7 +272,7 @@ TABLE_COLS = {
         'diastolic',
         'height_in_inches'
     ],
-    'f_injection_20180301': [
+    'f_injection_20180301_deprecated': [
         'date_key',
         'time_key',
         'record_type',
@@ -287,6 +305,36 @@ TABLE_COLS = {
     'f_injection': [
         'date_key',
         'time_key',
+        'record_type',
+        'record_name',
+        'practice_key',
+        'patient_key',
+        'vaccine_cpt_key',
+        'provider_key',
+        'lot_no',
+        'date_given',
+        'volume',
+        'route',
+        'site',
+        'manufacturer',
+        'expiration',
+        'sequence',
+        'type',
+        'cpt',
+        'is_given_elsewhere',
+        'patient_refused',
+        'vis_version',
+        'vis_date_given',
+        'deleted',
+        'date_sent_to_registry',
+        'patient_parent_refused',
+        'patient_had_infection',
+        'how_migrated',
+        'reaction_date'
+    ],
+    'f_injection_20180701_deprecated': [
+        'date_key',
+        'time_key',
         'practice_key',
         'patient_key',
         'record_type',
@@ -314,7 +362,7 @@ TABLE_COLS = {
         'how_migrated',
         'reaction_date'
     ],
-    'f_lab_20180301': [
+    'f_lab_20180301_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
@@ -364,6 +412,52 @@ TABLE_COLS = {
         'date_key',
         'time_key',
         'practice_key',
+        'lab_test_id',
+        'patient_key',
+        'created_date_lt',
+        'lab_directory_key',
+        'specimen_nbr_lt',
+        'specimen_status',
+        'fasting',
+        'lab_test_status_lt',
+        'sign_off_id',
+        'sign_off_date',
+        'comments',
+        'lab_result_id',
+        'accession_nbr_ac',
+        'ordering_provider_id',
+        'specimen_nbr_lr',
+        'lab_test_code_lr',
+        'specimen_volume',
+        'specimen_collected_dt',
+        'action_code',
+        'clinical_info',
+        'specimen_source',
+        'alternate_id_1',
+        'alternate_id_2',
+        'lab_test_status_lr',
+        'parent_for_reflex_obx',
+        'parent_for_reflex_obr',
+        'specimen_condition',
+        'lab_result_detail_id',
+        'inactive_flag',
+        'corrects_lab_test_id',
+        'corrected_by_lab_test_id',
+        'lab_test_status_lrd',
+        'lab_test_code_lrd',
+        'loinc_test_code',
+        'observation_sub_id',
+        'observation_value',
+        'uom',
+        'reference_ranges',
+        'abnormal_flag',
+        'normal_abnormal_type',
+        'value_type'
+    ],
+    'f_lab_20180701_deprecated': [
+        'date_key',
+        'time_key',
+        'practice_key',
         'patient_key',
         'comments',
         'lab_test_id',
@@ -406,7 +500,7 @@ TABLE_COLS = {
         'normal_abnormal_type',
         'value_type'
     ],
-    'f_medication_20180301': [
+    'f_medication_20180301_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
@@ -436,7 +530,7 @@ TABLE_COLS = {
         'script_printed',
         'script_faxed'
     ],
-    'f_medication': [
+    'f_medication_20180701_deprecated': [
         'date_key',
         'time_key',
         'practice_key',
@@ -453,6 +547,36 @@ TABLE_COLS = {
         'med_comments',
         'prior_refills',
         'refillable',
+        'drug_key',
+        'quick_add_reason_prescribed',
+        'deleted',
+        'date_inactivated',
+        'date_started',
+        'dispense_qualifier',
+        'erx_status',
+        'daw',
+        'sent_by_sure_scripts',
+        'inactivate_reason',
+        'script_printed',
+        'script_faxed'
+    ],
+    'f_medication': [
+        'date_key',
+        'time_key',
+        'practice_key',
+        'patient_key',
+        'provider_key',
+        'med_name',
+        'med_sig',
+        'med_no',
+        'med_refill',
+        'med_dns',
+        'date_initiated',
+        'date_last_refilled',
+        'med_comments',
+        'prior_refills',
+        'refillable',
+        'inactive',
         'drug_key',
         'quick_add_reason_prescribed',
         'deleted',
