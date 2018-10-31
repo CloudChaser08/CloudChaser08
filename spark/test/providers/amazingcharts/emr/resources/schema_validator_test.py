@@ -5,10 +5,10 @@ from spark.providers.amazingcharts.emr.load_transactions import validate_file, g
 
 def test_general_validate():
     assert validate_file(
-        file_name='/Users/aakimov/amazing/d_costar.psv.utf8',
+        file_name='spark/test/providers/amazingcharts/emr/resources/input/d_costar/sample-d_costar.zip.psv',
         table_name='d_costar')
 
-def test_amazing(path, exec_date):
+def amazing(path, exec_date):
     for filename in os.listdir(path):
         if filename.endswith('utf8'):
             try:
@@ -23,12 +23,6 @@ def test_amazing(path, exec_date):
                     diff = [(i, j) for (i, j) in zip(header, schema) if i != j]
                     print(diff)
                     print('========================')
-
-                    # print("HEADER")
-                    # print(header)
-                    # print("SCHEMA")
-                    # print(schema)
-                    #
                     print('\n\n')
                 else:
                     print('{} correct'.format(filename))
@@ -37,8 +31,4 @@ def test_amazing(path, exec_date):
 
 
 def test_amazing_oct():
-    test_amazing('/Users/aakimov/amazing/', '2018-10-23')
-
-
-def test_real_amazing_aug():
-    test_amazing('/Users/aakimov/not_so_amazing/', '2018-08-14')
+    amazing('spark/test/providers/amazingcharts/emr/resources/input/d_costar/', '2018-10-23')
