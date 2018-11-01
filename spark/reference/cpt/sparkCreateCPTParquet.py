@@ -58,7 +58,9 @@ def run(spark, runner, year):
                                                        'leftanti'
                                                       )
 
-    cpt_final = cpt_plus_modifiers.union(missing_current_cpt_codes)
+    cpt_all = cpt_plus_modifiers.union(missing_current_cpt_codes)
+
+    cpt_final = cpt_all.where((F.length(F.col('code')) == 2) | (F.length(F.col('code')) == 5))
 
     cpt_final.repartition(1).write.parquet(CPT_OUTPUT)
 
