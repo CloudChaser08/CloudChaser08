@@ -8,7 +8,7 @@ import spark.helpers.records_loader as records_loader
 import file_schemas as file_schemas
 
 def run(spark, runner, year):
-    timestamp = datetime.now().strftime('%Y%M%d%H%m%S')
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     CPT_INPUT = 's3://salusv/incoming/reference/cpt/{}/'.format(year)
     CPT_OUTPUT = 's3://salusv/reference/parquet/cpt/{}/{}/'.format(year, timestamp)
 
@@ -34,6 +34,7 @@ def run(spark, runner, year):
            has a long description column, so set the short_desc to NULL when performing the union
         4. Take missing rows from current ref_cpt table and union them to get the final set
            of cpt_codes
+        5. Filter out any codes that are not of length 2 (modifiers) or length 5 (codes)
 
     NOTE: This logic IS subject to change year by year, so make sure to always verify with
           analytics that the logic remains the same based on the files we recived.
@@ -57,7 +58,9 @@ def run(spark, runner, year):
                                                        'leftanti'
                                                       )
 
-    cpt_final = cpt_plus_modifiers.union(missing_current_cpt_codes)
+    cpt_all = cpt_plus_modifiers.union(missing_current_cpt_codes)
+
+    cpt_final = cpt_all.where((F.length(F.col('code')) == 2) | (F.length(F.col('code')) == 5))
 
     cpt_final.repartition(1).write.parquet(CPT_OUTPUT)
 
