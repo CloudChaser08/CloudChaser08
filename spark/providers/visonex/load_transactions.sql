@@ -11,6 +11,9 @@ CREATE EXTERNAL TABLE address (
         associationidnumber             string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}address/'
     ;
@@ -30,6 +33,9 @@ CREATE EXTERNAL TABLE clinicpreference (
         inactivatedate              string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}clinicpreference/'
     ;
@@ -53,6 +59,9 @@ CREATE EXTERNAL TABLE dialysistraining (
         inactivatedate                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}dialysistraining/'
     ;
@@ -135,6 +144,9 @@ CREATE EXTERNAL TABLE dialysistreatment (
         isprimary                               string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}dialysistreatment/'
     ;
@@ -163,6 +175,9 @@ CREATE EXTERNAL TABLE facilityadmitdischarge (
         analyticdos                     string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}facilityadmitdischarge/'
     ;
@@ -192,6 +207,9 @@ CREATE EXTERNAL TABLE hospitalization (
         analyticdos                     string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}hospitalization/'
     ;
@@ -229,6 +247,9 @@ CREATE EXTERNAL TABLE immunization (
         icd10                           string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}immunization/'
     ;
@@ -262,6 +283,9 @@ CREATE EXTERNAL TABLE insurance (
         inactivatedate                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}insurance/'
     ;
@@ -281,6 +305,9 @@ CREATE EXTERNAL TABLE labidlist (
         inactivatedate         string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}labidlist/'
     ;
@@ -311,6 +338,9 @@ CREATE EXTERNAL TABLE labpanelsdrawn (
         treatmentidnumber               string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}labpanelsdrawn/'
     ;
@@ -349,6 +379,9 @@ CREATE EXTERNAL TABLE labresult (
         icd10                           string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}labresult/'
     ;
@@ -361,6 +394,9 @@ CREATE EXTERNAL TABLE medication (
         inactivatedate  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}medication/'
     ;
@@ -379,6 +415,9 @@ CREATE EXTERNAL TABLE medicationgroup (
         inactivatedate                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}medicationgroup/'
     ;
@@ -400,6 +439,9 @@ CREATE EXTERNAL TABLE modalitychangehistorycrownweb (
         crowndialysissetting                            string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}modalitychangehistorycrownweb/'
     ;
@@ -420,6 +462,9 @@ CREATE EXTERNAL TABLE nursinghomehistory (
         analyticdos                     string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}nursinghomehistory/'
     ;
@@ -446,6 +491,9 @@ CREATE EXTERNAL TABLE patientaccess (
         inactivatedate                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientaccess/'
     ;
@@ -479,6 +527,9 @@ CREATE EXTERNAL TABLE patientaccess_examproc (
         icd10                                string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientaccess_examproc/'
     ;
@@ -502,6 +553,9 @@ CREATE EXTERNAL TABLE patientaccess_otheraccessevent (
         inactivatedate                      string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientaccess_otheraccessevent/'
     ;
@@ -534,6 +588,9 @@ CREATE EXTERNAL TABLE patientaccess_placedrecorded (
         inactivatedate                      string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientaccess_placedrecorded/'
     ;
@@ -559,6 +616,9 @@ CREATE EXTERNAL TABLE patientaccess_removed (
         inactivatedate                      string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientaccess_removed/'
     ;
@@ -583,6 +643,9 @@ CREATE EXTERNAL TABLE patientallergy (
         inactivatedate                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientallergy/'
     ;
@@ -658,6 +721,9 @@ CREATE EXTERNAL TABLE patientcms2728 (
         inactivatedate                      string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientcms2728/'
     ;
@@ -697,6 +763,9 @@ CREATE EXTERNAL TABLE patientcomorbidityandtransplantstate (
         inactivatedate                              string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientcomorbidityandtransplantstate/'
     ;
@@ -738,6 +807,9 @@ CREATE EXTERNAL TABLE patientdata (
         datefirstdialysiscurrentunit            string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientdata/'
     ;
@@ -764,6 +836,9 @@ CREATE EXTERNAL TABLE patientdiagcodes (
         analyticdos                     string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientdiagcodes/'
     ;
@@ -801,6 +876,9 @@ CREATE EXTERNAL TABLE patientdialysisprescription (
         analyticdos                         string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientdialysisprescription/'
     ;
@@ -855,6 +933,9 @@ CREATE EXTERNAL TABLE patientdialysisrxhemo (
         inactivatedate                                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientdialysisrxhemo/'
     ;
@@ -882,6 +963,9 @@ CREATE EXTERNAL TABLE patientdialysisrxpd (
         inactivatedate                                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientdialysisrxpd/'
     ;
@@ -910,6 +994,9 @@ CREATE EXTERNAL TABLE patientdialysisrxpdexchanges (
         inactivatedate                                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientdialysisrxpdexchanges/'
     ;
@@ -933,6 +1020,9 @@ CREATE EXTERNAL TABLE patientevent (
         analyticdos                     string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientevent/'
     ;
@@ -965,6 +1055,9 @@ CREATE EXTERNAL TABLE patientfluidweightmanagement (
         inactivatedate                      string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientfluidweightmanagement/'
     ;
@@ -989,6 +1082,9 @@ CREATE EXTERNAL TABLE patientheighthistory (
         inactivatedate                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientheighthistory/'
     ;
@@ -1032,6 +1128,9 @@ CREATE EXTERNAL TABLE patientinfection (
         accesssitenhsn_otheraccessdevice    string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientinfection/'
     ;
@@ -1052,6 +1151,9 @@ CREATE EXTERNAL TABLE patientinfection_laborganism (
         inactivatedate                              string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientinfection_laborganism/'
     ;
@@ -1072,6 +1174,9 @@ CREATE EXTERNAL TABLE patientinfection_laborganismdrug (
         inactivatedate                              string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientinfection_laborganismdrug/'
     ;
@@ -1096,6 +1201,9 @@ CREATE EXTERNAL TABLE patientinfection_labresultculture (
         analyticdos                                 string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientinfection_labresultculture/'
     ;
@@ -1114,6 +1222,9 @@ CREATE EXTERNAL TABLE patientinfection_medication (
         inactivatedate                          string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientinfection_medication/'
     ;
@@ -1139,6 +1250,9 @@ CREATE EXTERNAL TABLE patientinstabilityhistory (
         inactivatedate                      string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientinstabilityhistory/'
     ;
@@ -1184,6 +1298,9 @@ CREATE EXTERNAL TABLE patientmasterscheduleheader (
         sessionsperweek                 string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientmasterscheduleheader/'
     ;
@@ -1250,6 +1367,9 @@ CREATE EXTERNAL TABLE patientmedadministered (
         drug_id                          string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientmedadministered/'
     ;
@@ -1318,6 +1438,9 @@ CREATE EXTERNAL TABLE patientmednotgiven (
         drug_id                                 string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientmednotgiven/'
     ;
@@ -1387,6 +1510,9 @@ CREATE EXTERNAL TABLE patientmedprescription (
         eprescribeddate                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientmedprescription/'
     ;
@@ -1409,6 +1535,9 @@ CREATE EXTERNAL TABLE patientstatushistory (
         analyticdos                     string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}patientstatushistory/'
     ;
@@ -1437,6 +1566,9 @@ CREATE EXTERNAL TABLE problemlist (
         inactivatedate                  string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}problemlist/'
     ;
@@ -1454,6 +1586,9 @@ CREATE EXTERNAL TABLE sodiumufprofile (
         inactivatedate      string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}sodiumufprofile/'
     ;
@@ -1469,6 +1604,9 @@ CREATE EXTERNAL TABLE stategeo (
         censusbureauregionnumber    string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}stategeo/'
     ;
@@ -1488,6 +1626,9 @@ CREATE EXTERNAL TABLE zipgeo (
         ruralvsurban        string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
     STORED AS TEXTFILE
     LOCATION '{input_path}zipgeo/'
     ;
