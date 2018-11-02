@@ -18,7 +18,7 @@ import json
 
 VALID_MANUFACTURERS = [
         m.lower() for m in 
-        ['Amgen', 'Novartis']
+        ['Amgen', 'Novartis', 'Lilly']
     ]
 
 def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
