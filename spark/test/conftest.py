@@ -6,6 +6,7 @@ import spark.runner as spark_runner
 from spark.spark_setup import init
 from spark.runner import Runner
 from pyspark.sql import DataFrame
+from pyspark import RDD
 
 import shutil
 
@@ -23,10 +24,16 @@ def spark():
     sqlContext.sql('SET spark.sql.shuffle.partitions=5')
     runner = Runner(sqlContext)
 
-    DataFrame._old_repartition = DataFrame.repartition
-    def repart(inst, cnt, *args):
+    def df_repart(inst, cnt, *args):
         return inst._old_repartition(5, *args)
-    DataFrame.repartition = repart
+
+    def rdd_repart(inst, cnt):
+        return inst._old_repartition(5)
+
+    DataFrame._old_repartition = DataFrame.repartition
+    DataFrame.repartition = df_repart
+    RDD._old_repartition = RDD.repartition
+    RDD.repartition = rdd_repart
 
     if is_prod(sqlContext):
         raise Exception("This test suite has access to the production metastore.")
