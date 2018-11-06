@@ -62,6 +62,11 @@ def test_discharge_date_filled():
     for row in results:
         assert row.discharge_date is not None
 
+def test_product_code_qualifier():
+    for row in results:
+        assert '99' == row.original_product_code_qualifier
+        assert '88' == row.original_product_code
+
 
 def test_cleanup(spark):
     cleanup(spark)
