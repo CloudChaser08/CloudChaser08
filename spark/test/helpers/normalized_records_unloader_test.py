@@ -37,7 +37,7 @@ prefix = 'PREFIX'
 HVM_HISTORICAL_DATE = datetime(2015, 1, 1)
 
 
-def cleanup():
+def cleanup(spark):
     try:
         shutil.rmtree(test_staging_dir)
     except:
@@ -66,6 +66,14 @@ def cleanup():
         shutil.rmtree(test_staging_dir_unload3)
     except:
         pass
+    try:
+        spark['sqlContext'].sql('DROP VIEW IF EXISTS lab_common_model')
+    except:
+        pass
+    try:
+        spark['sqlContext'].sql('DROP TABLE IF EXISTS lab_common_model')
+    except:
+        pass
 
 # Note: 13 is the column number of 'date_service'
 def make_lab_model_df(sqlContext, date_service, row_count):
@@ -82,7 +90,7 @@ def make_lab_model_df(sqlContext, date_service, row_count):
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
-    cleanup()
+    cleanup(spark)
     spark['sqlContext'].sql('DROP TABLE IF EXISTS lab_common_model')
     spark['runner'].run_spark_script('../../common/lab_common_model.sql', [
         ['table_name', 'lab_common_model', False],
@@ -403,5 +411,6 @@ def test_unload_delimited_file(spark):
             == [['"val1"', '"val2"'], ['"val3"', '"val4"']]
 
 
-def test_cleanup():
-    cleanup()
+@pytest.mark.usefixtures("spark")
+def test_cleanup(spark):
+    cleanup(spark)
