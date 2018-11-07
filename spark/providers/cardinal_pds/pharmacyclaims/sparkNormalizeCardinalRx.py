@@ -89,7 +89,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         pharm_priv.filter
     )(
         normalized_output
-    ).createTempView('pharmacyclaims_common_model')
+    ).persist().createTempView('pharmacyclaims_common_model')
+
+    spark.table('pharmacyclaims_common_model').count()
 
     properties = """
 PARTITIONED BY (part_best_date string)
