@@ -26,7 +26,9 @@ CREATE EXTERNAL TABLE cardinal_dcoa_transactions (
     address1                        string,
     drg_code                        string,
     service_area_description        string,
-    master_service_area_description string
+    master_service_area_description string,
+    original_product_code_qualifier string,
+    original_product_code           string
 )
 ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 WITH SERDEPROPERTIES (

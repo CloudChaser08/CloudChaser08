@@ -33,5 +33,7 @@ SELECT
     client_name                      AS pharmacy_name,
     address1                         AS pharmacy_address,
     service_area_description         AS pharmacy_service_area_vendor,
-    master_service_area_description  AS pharmacy_master_service_area_vendor
+    master_service_area_description  AS pharmacy_master_service_area_vendor,
+    original_product_code_qualifier  AS original_product_code_qualifier,
+    original_product_code            AS original_product_code
 FROM cardinal_dcoa_transactions

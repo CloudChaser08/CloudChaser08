@@ -41,7 +41,9 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
         StructField('pharmacy_name', StringType(), True),
         StructField('pharmacy_address', StringType(), True),
         StructField('pharmacy_service_area_vendor', StringType(), True),
-        StructField('pharmacy_master_service_area_vendor', StringType(), True)
+        StructField('pharmacy_master_service_area_vendor', StringType(), True,),
+        StructField('original_product_code_qualifier', StringType(), True, ),
+        StructField('original_product_code', StringType(), True, )
     ])
 
     # Point Hive to the location of the transaction data
