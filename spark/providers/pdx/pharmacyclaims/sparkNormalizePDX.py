@@ -99,7 +99,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         pharm_priv.filter
     )(
         normalized_df
-    ).createOrReplaceTempView('pharmacyclaims_common_model')
+    ).cache_and_track('pharmacyclaims_common_model').createOrReplaceTempView('pharmacyclaims_common_model')
 
     # Run the reversal logic on the normalized source and
     # the last 2 months of normalized data
@@ -117,7 +117,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                         normalized_path + '/part_best_date={}'.format(prev_year_month)],
                        schema=schema,
                        sep='|'
-                      ).createOrReplaceTempView('normalized_claims')
+                      ).cache_and_track('normalized_claims').createOrReplaceTempView('normalized_claims')
+
+    # Force into cache
+    spark.table('pharmacyclaims_common_model').count()
+    spark.table('normalized_claims').count()
 
     new_reversals = runner.sqlContext \
             .sql("select * from pharmacyclaims_common_model" + \

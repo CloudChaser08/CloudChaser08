@@ -1,6 +1,4 @@
 import pytest
-
-from functools import reduce
 import os
 import shutil
 
@@ -8,6 +6,9 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 from datetime import datetime
+from functools import reduce
+
+from pyspark.sql.utils import AnalysisException
 
 script_path = __file__
 test_staging_dir  = file_utils.get_abs_path(
@@ -38,7 +39,7 @@ prefix = 'PREFIX'
 HVM_HISTORICAL_DATE = datetime(2015, 1, 1)
 
 
-def cleanup():
+def cleanup(spark):
     try:
         shutil.rmtree(test_staging_dir)
     except:
@@ -67,69 +68,49 @@ def cleanup():
         shutil.rmtree(test_staging_dir_unload3)
     except:
         pass
+    try:
+        spark['sqlContext'].sql('DROP VIEW IF EXISTS lab_common_model')
+    except AnalysisException:
+        pass
+    try:
+        spark['sqlContext'].sql('DROP TABLE IF EXISTS lab_common_model')
+    except AnalysisException:
+        pass
 
+# Note: 13 is the column number of 'date_service'
+def make_lab_model_df(sqlContext, date_service, row_count):
+    schema = sqlContext.table('lab_common_model').schema
+
+    df_data = []
+    for i in xrange(row_count):
+        d = [None] * len(schema)
+        d[0] = i
+        d[14] = date_service
+        df_data.append(tuple(d))
+
+    return sqlContext.createDataFrame(df_data, schema)
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
-    cleanup()
+    cleanup(spark)
     spark['sqlContext'].sql('DROP TABLE IF EXISTS lab_common_model')
     spark['runner'].run_spark_script('../../common/lab_common_model.sql', [
         ['table_name', 'lab_common_model', False],
         ['properties', '', False]
     ])
 
-    column_count = None
-    with open(file_utils.get_abs_path(
-            script_path, '../../common/lab_common_model.sql'
-    ), 'r') as lab:
-        column_count = len(lab.readlines()) - 6
+    # 50 rows after HVM_HISTORICAL_DATE
+    after_historical = make_lab_model_df(spark['sqlContext'], datetime(2015, 11, 7), 50)
 
-    # insert 50 values after HVM_HISTORICAL_DATE
-    # Note: 13 is the column number of 'date_service'
-    spark['sqlContext'].sql(
-        'INSERT INTO lab_common_model VALUES {}'
-        .format(reduce(
-            lambda x1, x2: x1 + ', ' + x2,
-            map(
-                lambda l: l + reduce(
-                    lambda str1, str2: str1 + str2,
-                    [',NULL' if i != 13 else ',CAST("2015-11-07" AS DATE)' for i in range(column_count)]
-                ) + ')',
-                ['({}'.format(x) for x in range(50)]
-            )
-        ))
-    )
+    # 50 row before HVM_HISTORICAL_DATE
+    before_historical = make_lab_model_df(spark['sqlContext'], datetime(1992, 11, 7), 50)
 
-    # insert 50 values before HVM_HISTORICAL_DATE
-    # Note: 13 is the column number of 'date_service'
-    spark['sqlContext'].sql(
-        'INSERT INTO lab_common_model VALUES {}'
-        .format(reduce(
-            lambda x1, x2: x1 + ', ' + x2,
-            map(
-                lambda l: l + reduce(
-                    lambda str1, str2: str1 + str2,
-                    [',NULL' if i != 13 else ',CAST("1992-11-07" AS DATE)' for i in range(column_count)]
-                ) + ')',
-                ['({}'.format(x) for x in range(50)]
-            )
-        ))
-    )
+    # 100 rows with NULL date_service
+    null_dates = make_lab_model_df(spark['sqlContext'], None, 50)
 
-    # insert 100 values with NULL date_service into the table
-    spark['sqlContext'].sql(
-        'INSERT INTO lab_common_model VALUES {}'
-        .format(reduce(
-            lambda x1, x2: x1 + ', ' + x2,
-            map(
-                lambda l: l + reduce(
-                    lambda str1, str2: str1 + str2,
-                    [',NULL' for _ in range(column_count)]
-                ) + ')',
-                ['({}'.format(x) for x in range(100)]
-            )
-        ))
-    )
+    after_historical.union(before_historical).union(null_dates) \
+            .cache_and_track('lab_common_model') \
+            .createOrReplaceTempView('lab_common_model')
 
     normalized_records_unloader.partition_and_rename(
         spark['spark'], spark['runner'], 'lab', 'lab_common_model.sql',
@@ -148,16 +129,16 @@ def test_init(spark):
     )
 
     normalized_records_unloader.unload(
-        spark['spark'], spark['runner'], spark['sqlContext'].sql('select * from lab_common_model'),
+        spark['spark'], spark['runner'], spark['sqlContext'].table('lab_common_model'),
         'date_service', prefix, 'test_provider', test_dir=test_staging_dir_unload
     )
     normalized_records_unloader.unload(
-        spark['spark'], spark['runner'], spark['sqlContext'].sql('select * from lab_common_model'),
+        spark['spark'], spark['runner'], spark['sqlContext'].table('lab_common_model'),
         'date_service', prefix, 'test_provider', test_dir=test_staging_dir_unload2,
         date_partition_value='2017-01'
     )
     normalized_records_unloader.unload(
-        spark['spark'], spark['runner'], spark['sqlContext'].sql('select * from lab_common_model'),
+        spark['spark'], spark['runner'], spark['sqlContext'].table('lab_common_model'),
         'date_service', prefix, 'test_provider', hvm_historical_date=HVM_HISTORICAL_DATE,
         test_dir=test_staging_dir_unload3
     )
@@ -432,5 +413,6 @@ def test_unload_delimited_file(spark):
             == [['"val1"', '"val2"'], ['"val3"', '"val4"']]
 
 
-def test_cleanup():
-    cleanup()
+@pytest.mark.usefixtures("spark")
+def test_cleanup(spark):
+    cleanup(spark)
