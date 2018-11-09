@@ -8,6 +8,8 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from datetime import datetime
 from functools import reduce
 
+from pyspark.sql.utils import AnalysisException
+
 script_path = __file__
 test_staging_dir  = file_utils.get_abs_path(
     script_path, './test-staging/'
@@ -68,11 +70,11 @@ def cleanup(spark):
         pass
     try:
         spark['sqlContext'].sql('DROP VIEW IF EXISTS lab_common_model')
-    except:
+    except AnalysisException:
         pass
     try:
         spark['sqlContext'].sql('DROP TABLE IF EXISTS lab_common_model')
-    except:
+    except AnalysisException:
         pass
 
 # Note: 13 is the column number of 'date_service'
