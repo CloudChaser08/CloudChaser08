@@ -6,26 +6,6 @@ from pyspark.sql.functions import lit
 from pyspark.sql.types import *
 from pyspark.sql.utils import AnalysisException
 
-
-def get_headers(file_name, table_name):
-    table_name = table_name.lower()
-
-    file_schema = TABLE_COLS[table_name]
-
-    with open(file_name, 'r') as infile:
-        dialect = csv.Sniffer().sniff(infile.read(4096))
-        infile.seek(0)
-        reader = csv.reader(infile, dialect)
-        header = next(reader)
-
-    return header, file_schema
-
-
-def validate_file(file_name, table_name):
-    header, file_schema = get_headers(file_name, table_name)
-    return header == file_schema
-
-
 def get_tablename_for_date(table, batch_date):
     table = table.lower()
     tns = sorted([tn for tn in TABLE_COLS.keys() if tn.startswith(table)])
@@ -73,7 +53,7 @@ def load(spark, runner, table_locs, batch_date, test=False):
                 postprocessor.compose(
                     postprocessor.trimmify,
                     lambda df: postprocessor.nullify(df, ['NULL', ''])
-                )(df).where("date_key != 'date_key'").repartition(1 if test else 5000,
+                )(df).where("date_key != 'date_key'").repartition(5000,
                                                                   'patient_key').cache().createOrReplaceTempView(table)
         except AnalysisException:
             df = spark.createDataFrame(

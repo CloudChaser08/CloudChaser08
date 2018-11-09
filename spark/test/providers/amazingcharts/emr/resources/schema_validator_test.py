@@ -1,6 +1,26 @@
+import csv
 import os
 
-from spark.providers.amazingcharts.emr.load_transactions import validate_file, get_headers, get_tablename_for_date
+from spark.providers.amazingcharts.emr.load_transactions import get_tablename_for_date, TABLE_COLS
+
+
+def get_headers(file_name, table_name):
+    table_name = table_name.lower()
+
+    file_schema = TABLE_COLS[table_name]
+
+    with open(file_name, 'r') as infile:
+        dialect = csv.Sniffer().sniff(infile.read(4096))
+        infile.seek(0)
+        reader = csv.reader(infile, dialect)
+        header = next(reader)
+
+    return header, file_schema
+
+
+def validate_file(file_name, table_name):
+    header, file_schema = get_headers(file_name, table_name)
+    return header == file_schema
 
 
 def test_general_validate():
