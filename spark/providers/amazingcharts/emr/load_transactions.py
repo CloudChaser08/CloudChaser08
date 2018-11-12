@@ -1,27 +1,49 @@
+import csv
+
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 from pyspark.sql.functions import lit
 from pyspark.sql.types import *
+from pyspark.sql.utils import AnalysisException
+
+def get_tablename_for_date(table, batch_date):
+    table = table.lower()
+    tns = sorted([tn for tn in TABLE_COLS.keys() if tn.startswith(table)])
+    tn = None
+    for t in tns:
+        if t > (table + '_' + batch_date.replace('-', '')):
+            tn = t
+            break
+    if tn is None:
+        tn = table
+    return tn
+
+
+def validate_header(df, tn):
+    first_col = df.columns[0]
+    header = df.where(df[first_col].contains('_')).first()
+    if header:
+        header = [s for s in header]
+        if header != TABLE_COLS[tn]:
+            print("Error in header validation for table {}.\nSchema: {}\nActual Header: {}".format(tn, TABLE_COLS[tn],
+                                                                                                   header))
+            print("Difference: {}".format([(i, j) for (i, j) in zip(header, TABLE_COLS[tn]) if i != j]))
+        return header == TABLE_COLS[tn]
+    else:
+        return True
 
 
 def load(spark, runner, table_locs, batch_date, test=False):
     for table, input_path in table_locs.items():
         try:
-            tns = sorted([tn for tn in TABLE_COLS.keys() if tn.startswith(table)])
-            print tns
-            tn = None
-            for t in tns:
-                if t > (table + '_' + batch_date.replace('-', '')):
-                    tn = t
-                    break
-            if tn is None:
-                tn = table
-            print tn
-
+            tn = get_tablename_for_date(table, batch_date)
             df = records_loader.load(runner, input_path, TABLE_COLS[tn], 'csv', '|')
+            if not validate_header(df, tn):
+                raise ValueError('Error in header validation')
             if tn == 'd_lab_directory' and 'provider_key' not in df.columns:
                 df = df.withColumn('provider_key', lit(None).cast('string'))
-            if table in ['d_costar', 'd_patient', 'd_cpt', 'd_drug', 'd_icd10', 'd_icd9', 'd_lab_directory', 'd_multum_to_ndc', 'd_provider', 'd_vaccine_cpt']:
+            if table in ['d_costar', 'd_patient', 'd_cpt', 'd_drug', 'd_icd10', 'd_icd9', 'd_lab_directory',
+                         'd_multum_to_ndc', 'd_provider', 'd_vaccine_cpt']:
                 postprocessor.compose(
                     postprocessor.trimmify,
                     lambda df: postprocessor.nullify(df, ['NULL', ''])
@@ -31,8 +53,9 @@ def load(spark, runner, table_locs, batch_date, test=False):
                 postprocessor.compose(
                     postprocessor.trimmify,
                     lambda df: postprocessor.nullify(df, ['NULL', ''])
-                )(df).where("date_key != 'date_key'").repartition(1 if test else 5000, 'patient_key').cache().createOrReplaceTempView(table)
-        except:
+                )(df).where("date_key != 'date_key'").repartition(5000,
+                                                                  'patient_key').cache().createOrReplaceTempView(table)
+        except AnalysisException:
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),
                 schema=StructType(map(lambda x: StructField(x, StringType()), TABLE_COLS[table]))
@@ -126,7 +149,7 @@ TABLE_COLS = {
         'patient_key',
         'practice_key',
         'gender',
-        'birth_date',
+        'birth_year',
         'state',
         'zip',
         'inactive',
@@ -233,7 +256,7 @@ TABLE_COLS = {
         'plan',
         'blood_pressure',
         'temperature',
-        'rest_rate',
+        'respiratory_rate',
         'pulse',
         'weight',
         'height',
@@ -586,7 +609,7 @@ TABLE_COLS = {
         'erx_status',
         'daw',
         'sent_by_sure_scripts',
-        'inactivate_reason',
+        'inactive_reason',
         'script_printed',
         'script_faxed'
     ],

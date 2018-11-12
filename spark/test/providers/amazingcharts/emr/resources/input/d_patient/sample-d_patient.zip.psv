@@ -1,3 +1,4 @@
+patient_key|practice_key|gender|birth_year|state|zip|inactive|reason_inactive|marital_status|takes_no_meds|patient_race|language_preference|ethnicity_id|date_of_death|state_code|ethnicity_description|race_description
 48727860|9956|F|1976|WA|985|False||M|False|White||2||WA|Hispanic or Latino|White
 48727864|10032|M|2004|MD|212|False||S|False|Black Hispanic or Latino||1||MD|Refused|Black Hispanic or Latino
 48727868|10171|F|1970|CA|900|False|||False|||||CA|Unknown|Unknown

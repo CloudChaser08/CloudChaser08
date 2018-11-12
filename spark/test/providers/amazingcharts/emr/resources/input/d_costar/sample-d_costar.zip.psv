@@ -1,3 +1,4 @@
+costar_key|full_code|base_code|code_to_store|concept_name|semantic_type|base_code_onto_by_icd_9cm|representative_icd_9cm_code|icd_9cm_set|representative_icd_10cm_code|representative_icd_10cm_branch
 60201|A0001X|A0001X|A0001X|Repair of retinal detachment with xenon arc photocoagulation|procedure|False||||
 60202|A0008R|A0008R|A0008R|Uncomplicated sedative, hypnotic AND/OR anxiolytic withdrawal|disorder|False|292.0||F13.930|
 60203|A000CT|A000CT|A000CT|Tracheal stenosis following tracheostomy|disorder|True|519.02||J95.03|
