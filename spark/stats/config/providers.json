@@ -281,7 +281,7 @@
             "top_values"        : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null,
+            "epi_calcs"         : true,
             "earliest_date"     : "2011-01-01"
         },
         {
