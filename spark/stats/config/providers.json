@@ -455,7 +455,7 @@
             "year_over_year"    : true,
             "earliest_date"     : "2008-01-01",
             "index_all_dates"   : true,
-            "index_null_dates"  : false
+            "index_null_dates"  : true
         },
         {
             "name"              : "cardinal_rcm",
