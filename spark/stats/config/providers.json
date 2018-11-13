@@ -468,6 +468,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : true,
+            "index_all_dates"   : true,
             "earliest_date"     : "2012-01-01"
         },
         {
