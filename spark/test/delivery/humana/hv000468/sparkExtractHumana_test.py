@@ -89,6 +89,9 @@ def test_record_count():
     assert [r['count'] for r in summary if r['data_vendor'] == 'Private Source 14'][0] == 26
     assert [r['count'] for r in summary if r['data_vendor'] == 'Private Source 22'][0] == 29
 
+def test_synthetic_record_count():
+    assert not [r['count'] for r in summary if r['data_vendor'] == 'Allscripts']
+
 def test_few_patients():
     assert [r['count'] for r in summary2 if r['data_vendor'] == '-'][0] == 0
 
