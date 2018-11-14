@@ -2,7 +2,7 @@ import logging
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 
-from pyspark.sql.functions import coalesce
+from pyspark.sql.functions import coalesce, col, lit, upper
 
 import spark.stats.calc.fill_rate as fill_rate
 import spark.stats.calc.top_values as top_values
@@ -30,6 +30,12 @@ def _get_all_provider_data(sqlContext, provider_conf):
                 sqlContext, provider_conf['datatype'],
                 provider_conf['datafeed_id'] if provider_conf['datatype'].startswith('emr') else provider_conf['name'],
                 custom_schema=provider_conf.get('custom_schema', None), custom_table=provider_conf.get('custom_table', None)
+            )
+
+        if 'logical_delete_reason' in ALL_DATA.columns:
+            ALL_DATA = ALL_DATA.where(
+                           col('logical_delete_reason').isNull() |
+                           (upper(col('logical_delete_reason')) != lit('INACTIVE'))
             )
 
         ALL_DATA = ALL_DATA.withColumn(
