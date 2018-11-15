@@ -367,27 +367,20 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
         )
 
         # deduplicate
-        new_data = runner.sqlContext.sql(
-            'select * from normalized_{}'.format(table['name'])
-        ).alias('new_data')
+        new_data = runner.sqlContext.table(
+            'normalized_{}'.format(table['name'])
+        ).alias('new_data').cache_and_track('new_data')
 
         try:
             warehouse_data = runner.sqlContext.read.parquet(
                 warehouse_path_template.format(table['name'])
             ).alias('warehouse_data')
 
+            new_claims = new_data.select(table['join_key']).distinct()
+
             deduplicated_data = warehouse_data.join(
-                new_data,
-                col(
-                    'warehouse_data.{}'.format(table['join_key'])
-                ) == col(
-                    'new_data.{}'.format(table['join_key'])
-                ), 'left'
-            ).filter(
-                col('new_data.{}'.format(table['join_key'])).isNull()
-            ).select(
-                *['warehouse_data.{}'.format(column) for column in warehouse_data.columns]
-            ).distinct().union(new_data)
+                    new_claims.hint("broadcast"), table['join_key'], 'leftanti'
+                ).union(new_data)
         except AnalysisException as e:
             if 'Path does not exist' in str(e):
                 # Warehouse data does not exist. This may be the first run.
