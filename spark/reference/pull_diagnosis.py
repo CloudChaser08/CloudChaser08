@@ -35,13 +35,18 @@ from ref_icd10_diagnosis a
     left join ref_icd10_to_icd9_diagnosis c on a.code=c.icd10
     left join ref_icd10_diagnosis d on c.icd9=d.code
     left join (select * from ref_icd10_diagnosis_groups where level_num=1) f on b.code between f.start_num and f.stop_num
-    left join (select * from ref_icd10_diagnosis_groups where level_num=2) g on b.code between g.start_num and g.stop_num
+    left join (select * from ref_icd10_diagnosis_groups where level_num=2) g on (
+        (b.code between g.start_num and g.stop_num) or
+        (b.code = 'M1A' and g.start_num = 'M05' and g.stop_num = 'M14') or
+        (b.code = 'Z3A' and g.start_num = 'Z30' and g.stop_num = 'Z39') or
+        (b.code = 'C4A' and g.start_num = 'C43' and g.stop_num = 'C44')
+    )
 where
     a.header = 1 -- indicates billable
 """
 
 
-spark = SparkSession.builder.master("yarn").appName("marketplace-pull-diagnosis").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
+#spark = SparkSession.builder.master("yarn").appName("marketplace-pull-diagnosis").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
 
 
 def pull_diagnosis():
