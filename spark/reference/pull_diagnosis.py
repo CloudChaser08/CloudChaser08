@@ -46,7 +46,7 @@ where
 """
 
 
-#spark = SparkSession.builder.master("yarn").appName("marketplace-pull-diagnosis").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
+spark = SparkSession.builder.master("yarn").appName("marketplace-pull-diagnosis").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
 
 
 def pull_diagnosis():
