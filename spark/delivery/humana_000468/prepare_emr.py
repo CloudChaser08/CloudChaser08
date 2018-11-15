@@ -14,9 +14,11 @@ def prepare(runner, hvids, start_dt, is_prod=False):
             .join(hvids, 'hvid', 'left') \
             .where(hvids['hvid'].isNotNull())
 
-        # Humana has not yet approved this for production
-        if is_prod:
-            df = runner.sqlContext.createDataFrame([], df.schema)
+        # Humana has not yet approved this for production, so null it out
+
+        # Humana requested that these claims would not be included in UAT
+        # responses for now either
+        df = runner.sqlContext.createDataFrame([], df.schema)
 
         df = df[df.part_hvm_vdr_feed_id.isin(*SUPPLIERS)]
 

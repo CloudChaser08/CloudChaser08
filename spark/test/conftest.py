@@ -25,10 +25,10 @@ def spark():
     runner = Runner(sqlContext)
 
     def df_repart(inst, cnt, *args):
-        return inst._old_repartition(5, *args)
+        return inst._old_repartition(5 if cnt > 5 else cnt, *args)
 
     def rdd_repart(inst, cnt):
-        return inst._old_repartition(5)
+        return inst._old_repartition(5 if cnt > 5 else cnt)
 
     DataFrame._old_repartition = DataFrame.repartition
     DataFrame.repartition = df_repart
