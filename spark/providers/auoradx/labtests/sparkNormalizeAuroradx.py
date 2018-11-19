@@ -13,7 +13,6 @@ import spark.helpers.privacy.labtests as priv_labtests
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers.auoradx.labtests.transactional_schemas as transactional_schemas
-#import pdb
 
 FEED_ID = '85'
 VENDOR_ID = '335'
@@ -24,7 +23,6 @@ script_path = __file__
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
-    # pdb.set_trace()
     if test:
         input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/auroradx/labtests/resources/input/'
