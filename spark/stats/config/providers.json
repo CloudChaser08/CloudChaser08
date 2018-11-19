@@ -80,7 +80,7 @@
             "earliest_date"     : "2014-08-01"
         },
         {
-            "name"              : "auroradx",
+            "name"              : "aurora_diagnostics",
             "datafeed_id"       : "85",
             "datatype"          : "labtests",
             "record_field"      : "claim_id",
