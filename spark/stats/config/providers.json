@@ -83,7 +83,7 @@
             "name"              : "auroradx",
             "datafeed_id"       : "85",
             "datatype"          : "labtests",
-            "record_field"      : "record_id",
+            "record_field"      : "claim_id",
             "fill_rate"         : true,
             "key_stats"         : true,
             "top_values"        : true,
