@@ -454,7 +454,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "earliest_date"     : "2008-01-01",
-            "index_all_dates"   : false,
+            "index_all_dates"   : true,
             "index_null_dates"  : true
         },
         {
@@ -468,6 +468,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : true,
+            "index_all_dates"   : true,
             "earliest_date"     : "2012-01-01"
         },
         {

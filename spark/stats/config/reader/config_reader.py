@@ -44,7 +44,7 @@ def _get_config_from_db(query):
         - data: the config represented as a Python dict
     '''
     conn = psycopg2.connect(
-        host='pg-prod.healthverity.com',
+        host='pg-dev.healthverity.com',
         database='config',
         user='hvreadonly',
         password=os.environ.get('PGPASSWORD')
