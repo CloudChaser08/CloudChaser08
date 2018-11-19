@@ -87,7 +87,7 @@ class Runner:
 
         for s in scripts:
             table_name = '_'.join(s.replace('.sql', '').split('_')[1:])
-            self.run_spark_script(s, variables=variables, source_file_path=directory_path, return_output=True) \
+            self.run_spark_script(s, variables=list(variables), source_file_path=directory_path, return_output=True) \
                 .createOrReplaceTempView(table_name)
 
         last_table = '_'.join(scripts[-1].replace('.sql', '').split('_')[1:])
