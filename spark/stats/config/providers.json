@@ -80,6 +80,19 @@
             "earliest_date"     : "2014-08-01"
         },
         {
+            "name"              : "auroradx",
+            "datafeed_id"       : "85",
+            "datatype"          : "labtests",
+            "record_field"      : "record_id",
+            "fill_rate"         : true,
+            "key_stats"         : true,
+            "top_values"        : true,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
+            "epi_calcs"         : true,
+            "earliest_date"     : "2013-01-01"
+        },
+        {
             "name"              : "guardant_health",
             "datafeed_id"       : "58",
             "datatype"          : "labtests",
