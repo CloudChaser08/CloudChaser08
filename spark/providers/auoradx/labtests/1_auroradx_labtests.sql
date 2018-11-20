@@ -1,99 +1,127 @@
 SELECT
-        txn.accession_id                                                                                    AS claim_id,
-        COALESCE(pay.hvid, CONCAT('85_', txn.patient_object_id))                                            AS hvid,
-        '07'                                                                                                AS model_version,
-        '85'                                                                                                AS data_feed,
-        '335'                                                                                               AS data_vendor,
-        CLEAN_UP_GENDER(COALESCE(txn.patient_gender, pay.gender, 'U'))                                      AS patient_gender,
-        CAP_AGE
-            (
+    txn.accessionid                                                                     AS claim_id,
+    COALESCE(pay.hvid, CONCAT('85_', COALESCE(txn.patientobjectid, '')))                AS hvid,
+    '07'                                                                                AS model_version,
+    '85'                                                                                AS data_feed,
+    '335'                                                                               AS data_vendor,
+    CLEAN_UP_GENDER(COALESCE(txn.patientgender, pay.gender, 'U'))                       AS patient_gender,
+    CAP_AGE
+        (
             VALIDATE_AGE
-                    (
+                (
                     pay.age, 
-                    CAST(EXTRACT_DATE(txn.date_of_service, '%Y/%m/%d') AS DATE),
-                    COALESCE(YEAR(txn.patient_date_of_birth), pay.yearofbirth)
+                    CAST(EXTRACT_DATE(txn.dateofservice, '%Y/%m/%d') AS DATE),
+                    COALESCE(YEAR(txn.patientdateofbirth), pay.yearofbirth)
                 )
-        )                                                                                                   AS patient_age,
-        CAP_YEAR_OF_BIRTH
-            (
+        )                                                                               AS patient_age,
+    CAP_YEAR_OF_BIRTH
+        (
             pay.age,
-            CAST(EXTRACT_DATE(txn.date_of_service, '%Y/%m/%d') AS DATE),
-            COALESCE(YEAR(txn.patient_date_of_birth), pay.yearofbirth)
-        )                                                                                                   AS patient_year_of_birth,
-        MASK_ZIP_CODE(COALESCE(txn.patient_zip_code, pay.threedigitzip))                                    AS patient_zip3,
-        VALIDATE_STATE_CODE(COALESCE(txn.patient_state, pay.state, ''))                                     AS patient_state,
-        EXTRACT_DATE(txn.date_of_service, '%Y/%m/%d')                                                       AS date_service,
-        EXTRACT_DATE(COALESCE(txn.accession_datetime, txn.received_datetime), '%Y/%m/%d')                   AS date_specimen,
-        EXTRACT_DATE(txn.final_signout_datetime, '%Y/%m/%d')                                                AS date_report,
-        txn.performing_lab_object_id                                                                        AS lab_id,
-        txn.specimen_id                                                                                     AS test_id,
-        txn.specimen_number                                                                                 AS test_number,
-        txn.test_code                                                                                       AS test_ordered_local_id,
-        txn.test_name                                                                                       AS test_ordered_name,
-        txn.final_diagnosis                                                                                 AS result,
-        txn.microscopic_description                                                                         AS result_desc,
-        (CASE WHEN 0 <> LENGTH(TRIM(COALESCE(txn.comment, ''))) 
-               AND 0 <> LENGTH(TRIM(COALESCE(txn.clinical_information, ''))) 
-                   THEN CONCAT(txn.comment, ' | ', txn.clinical_information) 
-              WHEN 0 <> LENGTH(TRIM(COALESCE(txn.comment, ''))) 
-                   THEN txn.comment 
-              ELSE txn.clinical_information 
-          END)                                                                                              AS result_comments,
-        CLEAN_UP_DIAGNOSIS_CODE
-            (
-                txn.icd_code,
-                NULL,
-                CAST(EXTRACT_DATE(txn.date_of_service, '%Y/%m/%d') AS DATE)
-            )                                                                                               AS diagnosis_code,
-        CLEAN_UP_PROCEDURE_CODE
-            (
-                CASE WHEN 0 = LOCATE('X', UPPER(txn.test_cpt_code)) 
-                          THEN UPPER(txn.test_cpt_code) 
-                     ELSE SUBSTR(UPPER(txn.test_cpt_code), 1, -1 + LOCATE('X', UPPER(txn.test_cpt_code))) 
-                 END
-            )                                                                                               AS procedure_code,
-        CLEAN_UP_NPI_CODE
-            (
-                CASE WHEN 0 <> LENGTH(TRIM(COALESCE(txn.ordering_provider_npi, '')))
-                      AND '0000000000' <> TRIM(COALESCE(txn.ordering_provider_npi, ''))
-                          THEN txn.ordering_provider_npi
-                     ELSE NULL
-                 END
-            )                                                                                               AS ordering_npi,
-        txn.performing_lab_name                                                                             AS lab_other_id,
-        (CASE WHEN txn.performing_lab_name IS NOT NULL THEN 'PERFORMINGLABNAME'
-              ELSE NULL
-          END)                                                                                              AS lab_other_qual,
-        txn.ordering_practice_id                                                                            AS ordering_other_id,
-        (CASE WHEN txn.ordering_practice_id IS NOT NULL THEN 'ORDERINGPRACTICEID'
-              ELSE NULL
-          END)                                                                                              AS ordering_other_qual,
-        (CASE WHEN 0 <> LENGTH(TRIM(COALESCE(txn.ordering_provider_last_name, ''))) 
-               AND 0 <> LENGTH(TRIM(COALESCE(txn.ordering_provider_first_name, '')))
-                   THEN CONCAT
+            CAST(EXTRACT_DATE(txn.dateofservice, '%Y/%m/%d') AS DATE),
+            COALESCE(YEAR(txn.patientdateofbirth), pay.yearofbirth)
+        )                                                                               AS patient_year_of_birth,
+    MASK_ZIP_CODE(COALESCE(txn.patientzipcode, pay.threedigitzip))                      AS patient_zip3,
+    VALIDATE_STATE_CODE(COALESCE(txn.patientstate, pay.state, ''))                      AS patient_state,
+    CAP_DATE
+        (
+            CAST(EXTRACT_DATE(COALESCE(txn.accessiondatetime, txn.receiveddatetime), '%Y/%m/%d') AS DATE),
+            esdt.gen_ref_1_dt,
+            CAST('{file_date}' as DATE)
+	)                                                                               AS date_service,
+    CAP_DATE
+        (
+            CAST(EXTRACT_DATE(txn.dateofservice, '%Y/%m/%d') AS DATE),
+            esdt.gen_ref_1_dt,
+            CAST('{file_date}' as DATE)
+        )                                                                               AS date_specimen,
+    CAP_DATE
+        (
+            CAST(EXTRACT_DATE(txn.finalsignoutdatetime, '%Y/%m/%d') AS DATE),
+            esdt.gen_ref_1_dt,
+            CAST('{file_date}' as DATE)
+        )                                                                               AS date_report,
+    txn.performinglabobjectid                                                           AS lab_id,
+    txn.testcode                                                                        AS test_ordered_std_id,
+    txn.testname                                                                        AS test_ordered_name,
+    txn.procedurename                                                                   AS result_name,
+    txn.microscopicdescription                                                          AS result_desc,
+    CONCAT(
+            'FINAL DIAGNOSIS: ', COALESCE(txn.finaldiagnosis, ''),
+            '|COMMENT: ', COALESCE(txn.comment, ''), 
+            '|CLINICAL INFORMATION: ', COALESCE(txn.clinicalinformation, ''), 
+            '| SPECIMEN SOURCE: ', COALESCE(txn.specimensource, ''), 
+            '| SPECIMEN LOCATION: ', COALESCE(txn.specimenlocation, '')
+          )                                                                             AS result_comments,
+    CLEAN_UP_DIAGNOSIS_CODE
+        (
+            txn.icdcode,
+            NULL,
+            CAST(EXTRACT_DATE(txn.dateofservice, '%Y/%m/%d') AS DATE)
+        )                                                                               AS diagnosis_code,
+    CLEAN_UP_PROCEDURE_CODE
+        (
+            CASE WHEN 0 = LOCATE('X', UPPER(txn.testcptcode)) 
+                      THEN UPPER(txn.testcptcode) 
+                 ELSE SUBSTR(UPPER(txn.testcptcode), 1, -1 + LOCATE('X', UPPER(txn.testcptcode))) 
+             END
+        )                                                                               AS procedure_code,
+    CLEAN_UP_NPI_CODE
+        (
+            CASE WHEN 0 <> LENGTH(TRIM(COALESCE(txn.orderingprovidernpi, '')))
+                  AND '0000000000' <> TRIM(COALESCE(txn.orderingprovidernpi, ''))
+                      THEN txn.orderingprovidernpi
+                 ELSE NULL
+             END
+        )                                                                               AS ordering_npi,
+    txn.performinglabname                                                               AS lab_other_id,
+    (CASE WHEN txn.performinglabname IS NOT NULL THEN 'PERFORMINGLABNAME'
+          ELSE NULL
+      END)                                                                              AS lab_other_qual,
+    txn.orderingpracticeid                                                              AS ordering_other_id,
+    (CASE WHEN txn.orderingpracticeid IS NOT NULL THEN 'ORDERINGPRACTICEID'
+          ELSE NULL
+      END)                                                                              AS ordering_other_qual,
+    (CASE WHEN 0 <> LENGTH(TRIM(COALESCE(txn.orderingproviderlastname, ''))) 
+           AND 0 <> LENGTH(TRIM(COALESCE(txn.orderingproviderfirstname, '')))
+               THEN CONCAT
                     (
-                        txn.ordering_provider_last_name, ', ', 
-                        txn.ordering_provider_first_name, 
-                        CASE WHEN 0 <> LENGTH(TRIM(COALESCE(txn.ordering_provider_middle_initial, ''))) 
-                                  THEN CONCAT(' ', txn.ordering_provider_middle_initial) 
+                        txn.orderingproviderlastname, ', ', 
+                        txn.orderingproviderfirstname, 
+                        CASE WHEN 0 <> LENGTH(TRIM(COALESCE(txn.orderingprovidermiddleinitial, ''))) 
+                                  THEN CONCAT(' ', txn.orderingprovidermiddleinitial) 
                              ELSE '' 
                          END
                     ) 
-          ELSE txn.ordering_provider_last_name 
-          END)                                                                                              AS ordering_name,
-        txn.ordering_provider_specialty                                                                     AS ordering_specialty,
-        txn.ordering_provider_id                                                                            AS ordering_vendor_id,
-        txn.ordering_practice_address_line_1                                                                AS ordering_address_1,
-        txn.ordering_practice_address_line_2                                                                AS ordering_address_2,
-        txn.ordering_practice_city                                                                          AS ordering_city,
-        VALIDATE_STATE_CODE(txn.ordering_practice_state)                                                    AS ordering_state,
-        txn.ordering_practice_zipcode                                                                       AS ordering_zip
-FROM auroradx_transactions_dedup txn
-LEFT OUTER JOIN auroradx_payload pay
-   ON txn.hvJoinKey = pay.hvJoinKey
-LEFT JOIN ref_gen_ref esdt
-  ON esdt.hvm_vdr_feed_id = 85
+          ELSE txn.orderingproviderlastname 
+      END)                                                                              AS ordering_name,
+    txn.orderingproviderspecialty                                                       AS ordering_specialty,
+    txn.orderingproviderid                                                              AS ordering_vendor_id,
+    txn.orderingpracticeaddressline1                                                    AS ordering_address_1,
+    txn.orderingpracticeaddressline2                                                    AS ordering_address_2,
+    txn.orderingpracticecity                                                            AS ordering_city,
+    VALIDATE_STATE_CODE(txn.orderingpracticestate)                                      AS ordering_state,
+    txn.orderingpracticezipcode                                                         AS ordering_zip,
+    'aurora_diagnostics'                                                                AS part_provider,
+    (CASE WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE(
+                                                    CAST(EXTRACT_DATE(COALESCE(txn.accessiondatetime, txn.receiveddatetime), '%Y/%m/%d') AS DATE), 
+                                                    COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt, CAST('1901-01-01' AS DATE)),
+                                                    CAST('{file_date}' as DATE)
+                                                )
+                                                , '')))
+               THEN '0_PREDATES_HVM_HISTORY'
+          ELSE CONCAT(
+                        SUBSTR(COALESCE(txn.accessiondatetime, txn.receiveddatetime), 1, 4), '-',
+                        SUBSTR(COALESCE(txn.accessiondatetime, txn.receiveddatetime), 6, 2)
+                     )
+      END)                                                                              AS part_best_date
+ FROM auroradx_transactions_dedup txn
+ LEFT OUTER JOIN auroradx_payload pay
+   ON txn.hvjoinkey = pay.hvjoinkey
+ LEFT OUTER JOIN ref_gen_ref esdt
+   ON 1 = 1
+  AND esdt.hvm_vdr_feed_id = 85
   AND esdt.gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-LEFT JOIN ref_gen_ref ahdt
-  ON ahdt.hvm_vdr_feed_id = 85
+ LEFT OUTER JOIN ref_gen_ref ahdt
+   ON 1 = 1
+  AND ahdt.hvm_vdr_feed_id = 85
   AND ahdt.gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'

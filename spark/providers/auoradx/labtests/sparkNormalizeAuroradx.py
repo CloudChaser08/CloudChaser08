@@ -1,7 +1,6 @@
 import argparse 
 import datetime
 import subprocess
-
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.lab_common_model import schema_v7 as lab_schema
@@ -14,7 +13,6 @@ import spark.helpers.privacy.labtests as priv_labtests
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers.auoradx.labtests.transactional_schemas as transactional_schemas
-
 
 FEED_ID = '85'
 VENDOR_ID = '335'
@@ -33,8 +31,8 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
             script_path, '../../../test/providers/auroradx/labtests/resources/matching/'
         ) + '/'
     elif end_to_end_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/out/2018/09/12/'
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/payload/2018/09/12/'
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/out/2018/11/14/'
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/payload/2018/11/14/'
     else: 
         input_path = 's3a://salusv/incoming/labtests/auroradx/{}/'.format(
             date_input.replace('-', '/')
@@ -61,22 +59,14 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId', 'hvJoinKey'], table_name='auroradx_payload', load_file_name=True)
 
     normalized_output = runner.run_all_spark_scripts([
-        ['min_date', min_date]
+        ['file_date', date_input, False]
     ])
 
     df = postprocessor.compose(
-        lambda df: schema_enforcer.apply_schema(df, lab_schema),
-        # priv_labtests.filter,
+        lambda df: schema_enforcer.apply_schema(df, lab_schema, columns_to_keep=['part_provider', 'part_best_date']),
         postprocessor.add_universal_columns(
             feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=None, model_version_number=MODEL_VERSION_NUMBER
         ),
-        priv_labtests.filter,
-        postprocessor.apply_date_cap(
-            runner.sqlContext, 'date_service', date_input, FEED_ID, "EARLIEST_VALID_SERVICE_DATE", min_date
-        ), 
-        postprocessor.apply_date_cap(
-            runner.sqlContext, 'date_specimen', date_input, FEED_ID, "EARLIEST_VALID_SERVICE_DATE", min_date
-        )
     )(normalized_output)
 
     if not test:
@@ -88,8 +78,13 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
             'EARLIEST_VALID_SERVICE_DATE'
         )
 
+        _columns = df.columns
+        _columns.remove('part_provider')
+        _columns.remove('part_best_date')
+
         normalized_records_unloader.unload(
             spark, runner, df, 'date_service', date_input, 'aurora_diagnostics',
+            columns=_columns, 
             hvm_historical_date=datetime.datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             )
