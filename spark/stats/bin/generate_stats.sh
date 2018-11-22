@@ -30,7 +30,7 @@ function generate_stats()
 
     echo "Generating stats for feed $feed_id"
 
-    spark-submit --py-files ../../target/dewey.zip --conf spark.executor.instances=80 --conf spark.executor.cores=4 --conf spark.executor.memory=13G --conf spark.sql.shuffle.partitions=2001 --conf spark.driver.memory=13G --conf spark.yarn.executor.memoryOverhead=1024 --conf spark.scheduler.minRegisteredResourcesRatio=1 --conf spark.scheduler.maxRegisteredResourcesWaitingTime=60s --conf spark.hadoop.fs.s3.connection.maximum=500 --conf spark.files.useFileCache=false ../stats_runner.py --feed_id $feed_id --quarter $QUARTER --start_date $START_DATE --end_date $END_DATE
+    spark-submit --py-files ../../target/dewey.zip --conf spark.executor.instances=80 --conf spark.sql.broadcastTimeout=36000 --conf spark.executor.cores=4 --conf spark.executor.memory=28G --conf spark.sql.shuffle.partitions=2001 --conf spark.driver.memory=13G --conf spark.yarn.executor.memoryOverhead=1024 --conf spark.scheduler.minRegisteredResourcesRatio=1 --conf spark.scheduler.maxRegisteredResourcesWaitingTime=60s --conf spark.hadoop.fs.s3.connection.maximum=500 --conf spark.files.useFileCache=false ../stats_runner.py --feed_id $feed_id --quarter $QUARTER --start_date $START_DATE --end_date $END_DATE
 }
 
 # Medical Claims (Old Model)
@@ -40,7 +40,6 @@ generate_stats -f 15        # Private Source 14 (Ability)
 
 # Medical Claims
 generate_stats -f 22        # Practice Insight
-generate_stats -f 10        # Emdeon DX
 generate_stats -f 29        # Cardinal RCM
 generate_stats -f 55        # Xifin
 
@@ -62,7 +61,6 @@ generate_stats -f 50        # Acxiom
 generate_stats -f 56        # Alliance
 
 # Pharmacy Claims (Old Model)
-generate_stats -f 11        # WebMD Rx
 generate_stats -f 21        # Genoa
 generate_stats -f 16        # ESI
 
