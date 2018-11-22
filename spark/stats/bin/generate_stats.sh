@@ -50,12 +50,10 @@ generate_stats -f 18        # Quest
 generate_stats -f 46        # LabCorp
 generate_stats -f 58        # Guardant Health
 generate_stats -f 43        # Ambry
-generate_stats -f 76        # Genomind
 generate_stats -f 85        # Auroradx
 
 # Events
 generate_stats -f 27        # Obit Data
-generate_stats -f 38        # MindBody
 generate_stats -f 42        # Epsilon
 generate_stats -f 50        # Acxiom
 generate_stats -f 56        # Alliance
