@@ -189,7 +189,7 @@ EXTRACT_COLUMNS = [
 ]
 
 SUPPLIERS = [
-    'Allscripts',
+    'Veradigm Health',
     'Practice Insight',
     'Private Source 14',
     'Private Source 34',
