@@ -167,7 +167,7 @@ SUPPLIERS = [
     'Private Source 17',
     'Private Source 22',
     'PDX, Inc.',
-    'Allscripts',
+    'Veradigm Health',
     'Private Source 42'
 ]
 
