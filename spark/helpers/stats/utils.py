@@ -123,7 +123,7 @@ def get_provider_data(sqlContext, table_name, provider_partition, custom_schema=
         - df:   pyspark.sql.DataFrame of the data
     '''
     data_schema = custom_schema if custom_schema else 'dw' if table_name.startswith('emr') else 'default'
-    data_table = custom_table if custom_table else table_name
+    data_table = custom_table if custom_table else 'hvm_' + table_name if table_name.startswith('emr') else table_name
     df = sqlContext.sql(
         "SELECT * FROM {}.{} WHERE {}='{}'".format(
             data_schema, data_table,
@@ -140,7 +140,7 @@ def get_emr_union(sqlContext, model_confs, provider_id):
         [
             sqlContext.sql('''
                 SELECT hvid, hv_enc_id, coalesce({}) as coalesced_emr_date
-                FROM dw.{}
+                FROM dw.hvm_{}
                 WHERE part_hvm_vdr_feed_id='{}'
             '''.format(
                 ','.join(model_conf['date_field']), model_conf['datatype'], provider_id
