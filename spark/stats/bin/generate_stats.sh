@@ -79,3 +79,5 @@ generate_stats -f 47        # Healthjump
 generate_stats -f 40        # Cardinal Raintree EMR
 generate_stats -f 54        # Transmed
 generate_stats -f 31        # Cardinal TSI
+generate_stats -f 5         # Amazing Charts
+
