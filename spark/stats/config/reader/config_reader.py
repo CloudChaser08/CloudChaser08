@@ -13,13 +13,10 @@ emr_datatype_name_map = {
     'emr_diag': 'Diagnosis',
     'emr_clin_obsn': 'Clinical Observation',
     'emr_proc': 'Procedure',
-    'emr_lab_ord': 'Lab Order',
     'emr_prov_ord': 'Provider Order',
-    'emr_lab_result': 'Lab Result',
-    'emr_vit_sign': 'Vital Sign',
+    'emr_lab_test': 'Lab Test',
     'emr_medctn': 'Medication'
 }
-
 
 def _get_config_from_json(filename):
     '''

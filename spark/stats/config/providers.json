@@ -161,19 +161,11 @@
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
-                "datatype"        : "emr_vit_sign",
-                "fill_rate"       : true,
-                "top_values"      : true
-              }, {
                 "datatype"        : "emr_prov_ord",
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
-                "datatype"        : "emr_lab_result",
-                "fill_rate"       : true,
-                "top_values"      : true
-              }, {
-                "datatype"        : "emr_lab_ord",
+                "datatype"        : "emr_lab_test",
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
@@ -361,10 +353,6 @@
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
-                "datatype"        : "emr_vit_sign",
-                "fill_rate"       : true,
-                "top_values"      : true
-              }, {
                 "datatype"        : "emr_prov_ord",
                 "fill_rate"       : true,
                 "top_values"      : true
@@ -373,11 +361,7 @@
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
-                "datatype"        : "emr_lab_result",
-                "fill_rate"       : true,
-                "top_values"      : true
-              }, {
-                "datatype"        : "emr_lab_ord",
+                "datatype"        : "emr_lab_test",
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
@@ -414,11 +398,7 @@
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
-                "datatype"        : "emr_vit_sign",
-                "fill_rate"       : true,
-                "top_values"      : true
-              }, {
-                "datatype"        : "emr_lab_result",
+                "datatype"        : "emr_lab_test",
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
@@ -446,10 +426,6 @@
             "models"            : [
               {
                 "datatype"        : "emr_medctn",
-                "fill_rate"       : true,
-                "top_values"      : true
-              }, {
-                "datatype"        : "emr_lab_ord",
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
@@ -586,23 +562,15 @@
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
-                "datatype"        : "emr_vit_sign",
-                "fill_rate"       : true,
-                "top_values"      : true
-              }, {
                 "datatype"        : "emr_prov_ord",
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
-                "datatype"        : "emr_lab_result",
+                "datatype"        : "emr_lab_test",
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
                 "datatype"        : "emr_enc",
-                "fill_rate"       : true,
-                "top_values"      : true
-              }, {
-                "datatype"        : "emr_lab_ord",
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
@@ -633,7 +601,7 @@
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
-                "datatype"        : "emr_lab_result",
+                "datatype"        : "emr_lab_test",
                 "fill_rate"       : true,
                 "top_values"      : true
               }, {
