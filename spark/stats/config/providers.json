@@ -436,6 +436,10 @@
                 "datatype"        : "emr_diag",
                 "fill_rate"       : true,
                 "top_values"      : true
+              }, {
+                "datatype"        : "emr_lab_test",
+                "fill_rate"       : true,
+                "top_values"      : true
               }
             ],
             "epi_calcs"         : true,
