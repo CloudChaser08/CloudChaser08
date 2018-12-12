@@ -8,6 +8,7 @@ import spark.helpers.create_date_validation_table \
     as date_validator
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.constants as constants
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 # init
 spark, sqlContext = init("ObituaryData")
@@ -95,3 +96,5 @@ runner.run_spark_script('../../common/unload_common_model.sql', [
 ])
 
 spark.stop()
+S3_PATH = 's3://salusv/warehouse/parquet/consumer/2017-02-23/'
+normalized_records_unloader.distcp(S3_PATH, src=output_path)
