@@ -60,11 +60,16 @@ class CensusDriver(object):
     """
     Base class for census routine drivers
     """
-    def __init__(self, client_name, opportunity_id, test=False, end_to_end_test=False):
+    def __init__(self, client_name, opportunity_id, salt=None, test=False, end_to_end_test=False):
         self._client_name = client_name
         self._opportunity_id = opportunity_id
+        self._salt = salt
         self._test = test
         self._end_to_end_test = end_to_end_test
+
+        # if a salt is not specified, default to the opp id
+        if self._salt is None:
+            self._salt = opportunity_id
 
         self._records_path_template = None
         self._matching_path_template = None
@@ -160,8 +165,8 @@ class CensusDriver(object):
         # package path. Remove that in order to find the location of the
         # transformation scripts
         scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
-        content = self._runner.run_all_spark_scripts(variables=[['opp_id', self._opportunity_id]],
-                directory_path=scripts_directory)
+        content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
+                                                     directory_path=scripts_directory)
         header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
         return header.union(content).coalesce(1)
 
