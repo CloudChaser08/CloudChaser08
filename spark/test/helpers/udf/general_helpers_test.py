@@ -109,7 +109,7 @@ def test_is_int():
     assert not gh.is_int(None)
 
 def test_obfuscate_hvid():
-    assert gh.obfuscate_hvid('1234567', 'CPQ-013') == 'CEB8F9B33421E4DEB16CE7FE1358D554'
+    assert gh.obfuscate_hvid('1234567', 'CPQ-013') == 'ceb8f9b33421e4deb16ce7fe1358d554'
     with pytest.raises(ValueError) as excinfo:
         gh.obfuscate_hvid('1234567', None)
     assert str(excinfo.value) == 'A project-specific salt must be provided to properly obfuscate the HVID'
@@ -155,4 +155,4 @@ def test_densify_2d_array_by_key():
     assert gh.densify_2d_array_by_key([[None, 2, 3], [None, 5, None]]) == [[None, 2, 3]]
 
 def test_obfuscate_candidate_hvids():
-    assert gh.obfuscate_candidate_hvids([['1234567', 1]], 'CPQ-013') == [['CEB8F9B33421E4DEB16CE7FE1358D554', 1]]
+    assert gh.obfuscate_candidate_hvids([['1234567', 1]], 'CPQ-013') == [['ceb8f9b33421e4deb16ce7fe1358d554', 1]]
