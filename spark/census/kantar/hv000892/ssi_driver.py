@@ -8,7 +8,7 @@ class KantarSSICensusDriver(CensusDriver):
     SSI census driver
     '''
     CLIENT_NAME = 'kantar'
-    OPPORTUNITY = 'hv000892'
+    OPPORTUNITY = 'hv000892_ssi'
     SALT = 'hvidKAN'
 
     def __init__(self, end_to_end_test=False):
