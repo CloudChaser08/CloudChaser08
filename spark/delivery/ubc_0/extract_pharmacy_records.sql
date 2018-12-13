@@ -12,7 +12,7 @@ LINES TERMINATED BY '\n'
 LOCATION {out_path}
 AS SELECT
  claim_id,
- obfuscate_hvid(hvid, 'UBC0') as hvid,
+ UPPER(obfuscate_hvid(hvid, 'UBC0')) as hvid,
  source_version,
  patient_gender,
  patient_age,
