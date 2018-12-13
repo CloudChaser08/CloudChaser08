@@ -24,7 +24,7 @@ def test_init(spark):
 
 def test_hvid_obfuscation():
     assert filter(lambda r: r.hvid is not None and r.hvid != 'HVID', results[GROUPS[0]])[0] \
-        .hvid == str(obfuscate_hvid('650226624', 'hvid265')).lower()
+        .hvid == str(obfuscate_hvid('650226624', 'hvid265'))
 
 def test_temporary_id():
     assert filter(lambda r: r.hvid is not None and r.hvid != 'HVID', results[GROUPS[0]])[0] \
