@@ -13,3 +13,8 @@ push:
 
 package-spark:
 	cd spark && make package && cd ..
+
+
+pylint-score:
+	SCORE=$(shell find . -name '*.py' | xargs pylint | grep 'Your code' | sed -e 's/Your\ code\ has\ been\ rated\ at\ //' -e 's/\/.*//')
+	$(shell echo "pylint.score.dewey:$$SCORE|g" > /dev/udp/localhost/8125)
