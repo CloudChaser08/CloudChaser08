@@ -11,7 +11,7 @@ CREATE TABLE express_scripts_enrollment_out
     LINES TERMINATED BY '\n'
     LOCATION {out_path}
     AS SELECT
-        obfuscate_hvid(hvid, 'UBC0') as hvid,
+        UPPER(obfuscate_hvid(hvid, 'UBC0')) as hvid,
         source_version,
         patient_age,
         patient_year_of_birth,

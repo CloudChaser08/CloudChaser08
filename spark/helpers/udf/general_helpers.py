@@ -143,7 +143,7 @@ def obfuscate_hvid(hvid, salt):
         raise ValueError("A project-specific salt must be provided to properly obfuscate the HVID")
     if hvid is None or hvid.strip() == '':
         return None
-    return hashlib.md5(hvid + salt).hexdigest().upper()
+    return hashlib.md5(hvid + salt).hexdigest()
 
 
 def slightly_obfuscate_hvid(hvid, key):
