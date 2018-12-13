@@ -1,5 +1,5 @@
 SELECT
-    obfuscate_hvid(hvid, 'hvidhv000710')                            AS hvid,
+    UPPER(obfuscate_hvid(hvid, 'hvidhv000710'))                     AS hvid,
     hc1.claimId                                                     AS hc1_record_id,
     mph.claimId                                                     AS mph_record_id,
     COALESCE(hc1.gender, mph.gender, tests.patient_gender)          AS patient_gender,
