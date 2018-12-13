@@ -7,26 +7,36 @@ from spark.common.census_driver import CensusDriver
 from spark.helpers.udf.general_helpers import obfuscate_hvid
 from datetime import date
 
-CLIENT_NAME    = 'TEST'
+CLIENT_NAME = 'TEST'
 OPPORTUNITY_ID = 'TEST123'
+CUSTOM_SALT = 'custom_salt'
 
 @pytest.fixture
 @pytest.mark.usefixtures("patch_spark_init")
 def test_driver(patch_spark_init):
     return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID, test=True)
 
+
 @pytest.fixture
 @pytest.mark.usefixtures("patch_spark_init")
 def e2e_driver(patch_spark_init):
     return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID, end_to_end_test=True)
+
 
 @pytest.fixture
 @pytest.mark.usefixtures("patch_spark_init")
 def prod_driver(patch_spark_init):
     return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID)
 
-@pytest.mark.usefixtures("test_driver", "e2e_driver", "prod_driver")
-def test_default_paths_templates(test_driver, e2e_driver, prod_driver):
+
+@pytest.fixture
+@pytest.mark.usefixtures("patch_spark_init")
+def salt_def_driver(patch_spark_init):
+    return CensusDriver(CLIENT_NAME, OPPORTUNITY_ID, salt=CUSTOM_SALT, test=True)
+
+
+@pytest.mark.usefixtures("test_driver", "e2e_driver", "prod_driver", "salt_def_driver")
+def test_default_paths_templates(test_driver, e2e_driver, prod_driver, salt_def_driver):
     """
     Ensure that all the various templates are set correctly
     """
@@ -51,9 +61,17 @@ def test_default_paths_templates(test_driver, e2e_driver, prod_driver):
     assert prod_driver._output_path == \
         "s3a://salusv/deliverable/TEST/TEST123/"
 
-    assert test_driver._output_file_name_template     == '{year}{month:02d}{day:02d}_response.gz'
-    assert test_driver._records_module_name           == 'records_schemas'
+    assert salt_def_driver._records_path_template == \
+        '../test/census/TEST/TEST123/resources/input/{year}/{month:02d}/{day:02d}/'
+    assert salt_def_driver._matching_path_template == \
+        '../test/census/TEST/TEST123/resources/matching/{year}/{month:02d}/{day:02d}/'
+    assert salt_def_driver._output_path == \
+        '../test/census/TEST/TEST123/resources/output/'
+
+    assert test_driver._output_file_name_template == '{year}{month:02d}{day:02d}_response.gz'
+    assert test_driver._records_module_name == 'records_schemas'
     assert test_driver._matching_payloads_module_name == 'matching_payloads_schemas'
+
 
 @pytest.mark.usefixtures("test_driver")
 def test_property_overwrites(test_driver):
@@ -75,6 +93,18 @@ def test_property_overwrites(test_driver):
     test_driver.matching_payloads_module_name = '123460'
     assert test_driver._matching_payloads_module_name == '123460'
 
+
+@pytest.mark.usefixtures("test_driver", "salt_def_driver")
+def test_salt_overwrites(test_driver, salt_def_driver):
+    """
+    Ensure that when a custom salt is specified it
+    overrides the default behaviour of setting the
+    salt to the opp_id
+    """
+    assert test_driver._salt == OPPORTUNITY_ID
+    assert salt_def_driver._salt == CUSTOM_SALT
+
+
 @pytest.mark.usefixtures("test_driver")
 def test_load(test_driver):
     """
@@ -90,6 +120,7 @@ def test_load(test_driver):
     assert 'hvid' in matching_tbl.columns
     assert 'claimId' in matching_tbl.columns
 
+
 @pytest.mark.usefixtures("test_driver")
 def test_transform(test_driver):
     """
@@ -101,12 +132,13 @@ def test_transform(test_driver):
     results = test_driver.transform().collect()
 
     # first row should be a header
-    assert results[0]['hvid']  == 'hvid'
+    assert results[0]['hvid'] == 'hvid'
     assert results[0]['rowid'] == 'rowid'
 
     # content
-    assert results[1]['hvid']  == obfuscate_hvid('1', 'hvidTEST123')
+    assert results[1]['hvid'] == obfuscate_hvid('1', 'hvidTEST123')
     assert results[1]['rowid'] == '2'
+
 
 @pytest.mark.usefixtures("test_driver")
 def test_save(test_driver, monkeypatch):
@@ -133,6 +165,7 @@ def test_save(test_driver, monkeypatch):
     # First columns should be the hvid, 2nd the rowid. Both in quotes
     assert hvid  == '"1"'
     assert rowid == '"2"'
+
 
 @pytest.mark.usefixtures("prod_driver")
 def test_copy_to_s3(prod_driver, monkeypatch):
