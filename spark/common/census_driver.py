@@ -10,6 +10,7 @@ import spark.common.std_census as std_census
 
 from spark.runner import Runner
 from spark.spark_setup import init
+from std_census import records_schemas, matching_payloads_schemas
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 TEST = 'test'
