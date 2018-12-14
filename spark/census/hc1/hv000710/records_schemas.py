@@ -31,7 +31,7 @@ TABLE_CONF = {
             'location_id',
             'test_group',
             'drug_grouping',
-            'loinc_componant',
+            'loinc_component',
             'provider_specialty',
             'hvjoinkey'
         ]

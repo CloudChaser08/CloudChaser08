@@ -16,7 +16,7 @@ SELECT
     tests.test_group                                                AS test_group,
     tests.drug_grouping                                             AS drug_grouping,
     tests.patient_county_code                                       AS patient_county_code,
-    tests.loinc_componant                                           AS loinc_componant,
+    tests.loinc_component                                           AS loinc_component,
     tests.provider_specialty                                        AS provider_specialty
 FROM tests
     INNER JOIN matching_payload_hc1 hc1
