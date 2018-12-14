@@ -1,3 +1,6 @@
+'''
+HV000710 HC1/MPH record table definitions
+'''
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
@@ -21,13 +24,15 @@ TABLE_CONF = {
             'result_positivity',
             'result_mix',
             'patient_gender',
-            'patient_county',
+            'patient_county_code',
             'result_date_month',
             'lab_order_id',
             'provider_id',
             'location_id',
             'test_group',
             'drug_grouping',
+            'loinc_componant',
+            'provider_specialty',
             'hvjoinkey'
         ]
     )
