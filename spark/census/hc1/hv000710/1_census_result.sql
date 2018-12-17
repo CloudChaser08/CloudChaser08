@@ -14,7 +14,10 @@ SELECT
     tests.provider_id                                               AS provider_id,
     tests.location_id                                               AS location_id,
     tests.test_group                                                AS test_group,
-    tests.drug_grouping                                             AS drug_grouping
+    tests.drug_grouping                                             AS drug_grouping,
+    tests.patient_county_code                                       AS patient_county_code,
+    tests.loinc_component                                           AS loinc_component,
+    tests.provider_specialty                                        AS provider_specialty
 FROM tests
     INNER JOIN matching_payload_hc1 hc1
         USING (hvjoinkey)
