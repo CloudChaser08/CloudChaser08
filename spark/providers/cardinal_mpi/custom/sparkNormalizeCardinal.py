@@ -67,7 +67,7 @@ def main(args):
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/spark-output/'
     else:
-        output_path = 's3a://salusv/warehouse/text/custom/cardinal_mpi/'
+        output_path = 's3a://salusv/deliverable/cardinal_mpi-0/'
 
     normalized_records_unloader.distcp(output_path)
 
