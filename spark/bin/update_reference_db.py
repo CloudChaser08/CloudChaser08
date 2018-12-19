@@ -1,5 +1,3 @@
-#!/usr/bin/pythonG
-
 import argparse
 import os
 import re
@@ -7,6 +5,8 @@ import subprocess
 import psycopg2
 import datetime
 import boto3
+import json
+import tempfile
 
 def extract_routine_files(root_dir='.', file_matching_pattern='sparkNormalize*'):
     """ Extract file names for spark routines 
@@ -29,7 +29,7 @@ def extract_routine_files(root_dir='.', file_matching_pattern='sparkNormalize*')
     return matches
 
 
-def create_mapping(spark_files, census_files):
+def create_mapping(spark_files, census_files, extract_routines):
     """ Given a list of file paths for our normal spark_routines plus our census_files, 
         create a mapping from routine name to script path and script arguments.
 
@@ -42,7 +42,7 @@ def create_mapping(spark_files, census_files):
     
     """
     mapping = {}
-    for script in spark_files + census_files:
+    for script in spark_files + census_files + extract_routines):
         parts = script.split('/')
         
         if script in spark_files:    
@@ -54,12 +54,8 @@ def create_mapping(spark_files, census_files):
         mapping[routine_name]['script_path'] = script
 
         module = script.replace('/', '.')[:-3]
-        p = subprocess.Popen('python -m {} --help'.format(module), 
-                                  shell=True,
-                                  stdout=subprocess.PIPE, 
-                                  stderr=subprocess.STDOUT)
-        try : 
-            usage_output = p.stdout.next()
+        try :
+            usage_output = subprocess.check_output(['python', '-m', module, '--help'])
         except StopIteration:
             usage_output = 'NA'
         
@@ -77,9 +73,14 @@ def create_mapping(spark_files, census_files):
 
 def get_reference_db_connection():
     """ Get connection to our reference database. """
+    ssm_client = boto3.client('ssm')
+    resp = ssm_client.get_parameter(Name='prod-airflow-reference-db_conn', WithDecryption=True)
+    creds = resp['Paramater']['Value']
+    passwd = json.loads(creds)['password']
+
     return psycopg2.connect(dbname='request_normalization', 
                             user='airflow', 
-                            password='LDKF5Gmn!7^9', 
+                            password=passwd, 
                             host='reference.aws.healthverity.com', 
                             port=5432)
 
@@ -87,14 +88,14 @@ def get_reference_db_connection():
 def perform_db_updates(mapping):
     """ Insert mapping entries to DB."""
     current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-    QUERY = "INSERT INTO provider_normalization_routines VALUES ('{}', '{}', '{}', '{}')"
+    QUERY = "INSERT INTO provider_normalization_routines VALUES (%s, %s, %s, %s)"
 
     for key, value in mapping.iteritems():
         with get_reference_db_connection() as conn:
             with conn.cursor() as cur:
                 # ~ fresh table
                 cur.execute("DELETE FROM provider_normalization_routines")
-                cur.execute(QUERY.format(key, value['script_path'], current_date, value['script_args']))
+                cur.execute(QUERY, (key, value['script_path'], current_date, value['script_args']))
 
 def write_to_s3(mapping):
     """ Write entries to a file daglist.prod.txt and upload to S3. 
@@ -109,30 +110,29 @@ def write_to_s3(mapping):
     NOTE: although the Jenkins user has access to write to this S3 bucket, you may not on your laptop. 
     
     """
-    file_name = 'daglist.txt'
+    s3_client = boto3.resource('s3')
+    BUCKET = 'healthverityreleases'
+    PREFIX = 'dewey'
+    FILE_NAME = 'daglist.prod.txt'
 
-    with open(file_name, 'w') as f:
+    with tempfile.TemporaryFile() as fp:
         for key, value in mapping.iteritems():
-            f.write(key + ': ' + value['script_args'] + '\n')
-
-    s3 = boto3.resource('s3')
-    BUCKET = 'hvstatus.healthverity.com'
-    s3.Bucket(BUCKET).upload_file('mapping', 'dewey/daglist.prod.txt')
-    
-    # ~ cleanup 
-    os.remove(file_name)
+            fp.write('{} {}\n'.format(key, value['script_args']))
+        s3.Bucket(BUCKET).upload_file('mapping', '{}/{}'.format(PREFIX, FILE_NAME)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
    
     # TODO: add support for dryrun
     parser.add_argument('--dryrun', 
-            help='Show what updates would be applied to the reference database, but do not actually apply them',
+            help='show what updates would be applied to the reference database, but do not actually apply them \n \
+                  [WARNING] dryrun is not yet supported. this flag is currently a placeholder',
             action='store_true',
-            default=False)
+            default=True)
     
     spark_routines = extract_routine_files('spark/providers/', file_matching_pattern='sparkNormalize*')
     census_routines = extract_routine_files('spark/census/', file_matching_pattern='driver*')
-    mapping = create_mapping(spark_routines, census_routines)
+    extract_routines = extract_routine_files('spark/delivery/', file_matching_pattern='sparkExtract*')
+    mapping = create_mapping(spark_routines, census_routines, delivery_routines)
     write_to_s3(mapping)
-    :perform_db_updates(mapping)
+    perform_db_updates(mapping)
