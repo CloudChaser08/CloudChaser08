@@ -118,7 +118,7 @@ def write_to_s3(mapping):
     with tempfile.TemporaryFile() as fp:
         for key, value in mapping.iteritems():
             fp.write('{} {}\n'.format(key, value['script_args']))
-        s3.Bucket(BUCKET).upload_file('mapping', '{}/{}'.format(PREFIX, FILE_NAME)
+        s3.Bucket(BUCKET).upload_file(fp.name, '{}/{}'.format(PREFIX, FILE_NAME)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
