@@ -12,7 +12,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.events as events_priv
 
 FEED_ID = '56'
-LATEST_ACTIVES_DATE='2018-09-25'
+LATEST_ACTIVES_DATE = '2018-09-25'
 
 def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
     script_path = __file__
@@ -70,6 +70,11 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
     payload_loader.load(
         runner, matching_path, ['claimId', 'personId', 'hvJoinKey'], partitions=10 if test else 1000
     )
+
+    spark.table('matching_payload') \
+         .select('hvid', 'age', 'yearOfBirth', 'threeDigitZip', 'state', 'gender', 'personid') \
+         .distinct() \
+         .createOrReplaceTempView('matching_payload')
 
     import spark.providers.alliance.events.load_transactions as load_transactions
     load_transactions.load(runner, input_path, actives_path)
