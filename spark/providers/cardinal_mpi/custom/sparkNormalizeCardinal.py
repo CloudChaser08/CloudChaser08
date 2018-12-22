@@ -1,6 +1,5 @@
 #! /usr/bin/python
 import argparse
-from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -11,7 +10,6 @@ from pyspark.sql.types import ArrayType, StringType
 from pyspark.sql.functions import udf, lit
 
 def run(spark, runner, batch_id, test=False, airflow_test=False):
-    date_obj = datetime.strptime(batch_id, '%Y-%m-%d')
 
     script_path = __file__
 
@@ -54,6 +52,10 @@ def run(spark, runner, batch_id, test=False, airflow_test=False):
 
 
 def main(args):
+    if args.date is not None:
+        batch_id = args.date.replace('-', '/')
+    else:
+        batch_id = args.batch_id
     # init
     spark, sqlContext = init("CardinalRx")
 
@@ -75,6 +77,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_id', type=str)
+    parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
