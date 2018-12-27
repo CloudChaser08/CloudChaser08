@@ -50,8 +50,10 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
     if 'LHV1' in group_id:
         records_loader.load_and_clean_all(runner, incoming_path, transactions_lhv1, 'csv', '|')
+        source_patient_id_col = 'source_patient_id'
     else:
         records_loader.load_and_clean_all(runner, incoming_path, transactions_lhv2, 'csv', '|')
+        source_patient_id_col = 'claimId'
 
     # Special handling for Bioplus
     no_transactional = spark.table('liquidhub_raw').count() == 0
@@ -69,7 +71,9 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
             .withColumn('manufacturer', F.lit(group_id_parts[1])) \
             .createOrReplaceTempView('liquidhub_raw')
 
-    content = runner.run_spark_script('normalize.sql', return_output=True)
+    content = runner.run_spark_script('normalize.sql',
+                                      [['source_patient_id_col', source_patient_id_col, False]],
+                                      return_output=True)
 
     schema = StructType([
             StructField('hvid', StringType(), True),

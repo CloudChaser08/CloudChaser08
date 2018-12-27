@@ -7,7 +7,7 @@ SELECT
         WHEN LOWER(manufacturer) = 'amgen' THEN LOWER(obfuscate_hvid(hvid, 'LHv2'))
         ELSE obfuscate_hvid(hvid, CONCAT('LHv2', COALESCE(LOWER(manufacturer), 'unknown')))
     END                                         AS hvid,
-    claimId                                     AS source_patient_id,
+    {source_patient_id_col}                     AS source_patient_id,
     source_name                                 AS source_name,
     brand                                       AS brand,
     manufacturer                                AS manufacturer,
