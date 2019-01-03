@@ -1,2 +1,5 @@
-awscli
-xlrd
+awscli==1.16.82
+xlrd==1.2
+psycopg2==2.7.6
+boto3==1.9.72
+botocore==1.12.72
