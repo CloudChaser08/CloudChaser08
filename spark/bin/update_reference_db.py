@@ -8,6 +8,7 @@ import boto3
 import json
 import tempfile
 
+
 def extract_routine_files(root_dir='.', file_matching_pattern='sparkNormalize*'):
     """ Extract file names for spark routines 
 
@@ -29,7 +30,7 @@ def extract_routine_files(root_dir='.', file_matching_pattern='sparkNormalize*')
     return matches
 
 
-def create_mapping(spark_files, census_files, extract_routines):
+def create_mapping(spark_files, census_files, standard_files):
     """ Given a list of file paths for our normal spark_routines plus our census_files, 
         create a mapping from routine name to script path and script arguments.
 
@@ -41,24 +42,26 @@ def create_mapping(spark_files, census_files, extract_routines):
                  }
     
     """
-    mapping = {}
-    for script in spark_files + census_files + extract_routines):
+    _mapping = {}
+    for script in spark_files + census_files + standard_files:
         parts = script.split('/')
-        
-        if script in spark_files:    
+
+        routine_name = None
+        if script in spark_files:
             routine_name = '{}/{}'.format(parts[2], parts[3])
         elif script in census_files:
             routine_name = '{}/{}/{}'.format(parts[1], parts[2], parts[3])
 
-        mapping[routine_name] = {}
-        mapping[routine_name]['script_path'] = script
+        if routine_name:
+            _mapping[routine_name] = {}
+            _mapping[routine_name]['script_path'] = script
 
         module = script.replace('/', '.')[:-3]
-        try :
+        try:
             usage_output = subprocess.check_output(['python', '-m', module, '--help'])
         except StopIteration:
             usage_output = 'NA'
-        
+
         if len(usage_output) > 1 and usage_output[-1] == '\n':
             usage_output = usage_output[:-1]
         usage_pattern = 'usage:*'
@@ -66,9 +69,11 @@ def create_mapping(spark_files, census_files, extract_routines):
             usage_output = 'NA'
         else:
             usage_output = usage_output.split(':')[1].strip()
-        mapping[routine_name]['script_args'] = usage_output
 
-    return mapping
+        if routine_name:
+            _mapping[routine_name]['script_args'] = usage_output
+
+    return _mapping
 
 
 def get_reference_db_connection():
@@ -78,26 +83,27 @@ def get_reference_db_connection():
     creds = resp['Paramater']['Value']
     passwd = json.loads(creds)['password']
 
-    return psycopg2.connect(dbname='request_normalization', 
-                            user='airflow', 
-                            password=passwd, 
-                            host='reference.aws.healthverity.com', 
+    return psycopg2.connect(dbname='request_normalization',
+                            user='airflow',
+                            password=passwd,
+                            host='reference.aws.healthverity.com',
                             port=5432)
 
 
-def perform_db_updates(mapping):
+def perform_db_updates(_mapping):
     """ Insert mapping entries to DB."""
     current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-    QUERY = "INSERT INTO provider_normalization_routines VALUES (%s, %s, %s, %s)"
+    query = "INSERT INTO provider_normalization_routines VALUES (%s, %s, %s, %s)"
 
-    for key, value in mapping.iteritems():
+    for key, value in _mapping.iteritems():
         with get_reference_db_connection() as conn:
             with conn.cursor() as cur:
                 # ~ fresh table
                 cur.execute("DELETE FROM provider_normalization_routines")
-                cur.execute(QUERY, (key, value['script_path'], current_date, value['script_args']))
+                cur.execute(query, (key, value['script_path'], current_date, value['script_args']))
 
-def write_to_s3(mapping):
+
+def write_to_s3(_mapping):
     """ Write entries to a file daglist.prod.txt and upload to S3. 
 
     The reason for writing to s3 is because I have not figured out how to 
@@ -111,28 +117,29 @@ def write_to_s3(mapping):
     
     """
     s3_client = boto3.resource('s3')
-    BUCKET = 'healthverityreleases'
-    PREFIX = 'dewey'
-    FILE_NAME = 'daglist.prod.txt'
+    bucket = 'healthverityreleases'
+    prefix = 'dewey'
+    file_name = 'daglist.prod.txt'
 
     with tempfile.TemporaryFile() as fp:
-        for key, value in mapping.iteritems():
+        for key, value in _mapping.iteritems():
             fp.write('{} {}\n'.format(key, value['script_args']))
-        s3.Bucket(BUCKET).upload_file(fp.name, '{}/{}'.format(PREFIX, FILE_NAME)
+        s3_client.Bucket(bucket).upload_file(fp.name, '{}/{}'.format(prefix, file_name))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-   
+
     # TODO: add support for dryrun
-    parser.add_argument('--dryrun', 
-            help='show what updates would be applied to the reference database, but do not actually apply them \n \
+    parser.add_argument('--dryrun',
+                        help='show what updates would be applied to the reference database, but do not actually apply them \n \
                   [WARNING] dryrun is not yet supported. this flag is currently a placeholder',
-            action='store_true',
-            default=True)
-    
+                        action='store_true',
+                        default=True)
+
     spark_routines = extract_routine_files('spark/providers/', file_matching_pattern='sparkNormalize*')
     census_routines = extract_routine_files('spark/census/', file_matching_pattern='driver*')
-    extract_routines = extract_routine_files('spark/delivery/', file_matching_pattern='sparkExtract*')
-    mapping = create_mapping(spark_routines, census_routines, delivery_routines)
+    standard_routines = extract_routine_files('spark/delivery/', file_matching_pattern='sparkExtract*')
+    mapping = create_mapping(spark_routines, census_routines, standard_routines)
     write_to_s3(mapping)
     perform_db_updates(mapping)
