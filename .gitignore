@@ -4,3 +4,5 @@ nppes/nppes_data
 derby.log
 metastore_db/
 spark-warehouse/
+env/
+.idea/

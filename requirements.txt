@@ -1,2 +1,4 @@
 awscli
 xlrd
+psycopg2
+boto3
