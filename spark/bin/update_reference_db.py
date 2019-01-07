@@ -10,7 +10,7 @@ import tempfile
 
 
 def extract_routine_files(root_dir='.', file_matching_pattern='sparkNormalize*'):
-    """ Extract file names for spark routines 
+    """ Extract file names for spark routines
 
     Crawl the dewey package finding all files that match the specified pattern.
 
@@ -20,7 +20,7 @@ def extract_routine_files(root_dir='.', file_matching_pattern='sparkNormalize*')
 
     Returns:
         list: the list of file names
-    
+
     """
     matches = []
     for root, dirs, files in os.walk(root_dir):
@@ -31,16 +31,16 @@ def extract_routine_files(root_dir='.', file_matching_pattern='sparkNormalize*')
 
 
 def create_mapping(spark_files, census_files, standard_files):
-    """ Given a list of file paths for our normal spark_routines plus our census_files, 
+    """ Given a list of file paths for our normal spark_routines plus our census_files,
         create a mapping from routine name to script path and script arguments.
 
         Returns:
-            Map: { ['routine'] : { 
+            Map: { ['routine'] : {
                                     ['script_path'] = 'path/to/file.py',
                                     ['script_args'] = 'usage: [h] [date]'
-                                  } 
+                                 }
                  }
-    
+
     """
     _mapping = {}
     for script in spark_files + census_files + standard_files:
@@ -104,17 +104,17 @@ def perform_db_updates(_mapping):
 
 
 def write_to_s3(_mapping):
-    """ Write entries to a file daglist.prod.txt and upload to S3. 
+    """ Write entries to a file daglist.prod.txt and upload to S3.
 
-    The reason for writing to s3 is because I have not figured out how to 
+    The reason for writing to s3 is because I have not figured out how to
     get Jenkins to connect to postgres from the groovy script box which is in an sanboxed environment,
-    however, I was able to get jenkins to read content from s3. 
+    however, I was able to get jenkins to read content from s3.
 
-    The file is a list of dags in dewey, along with paramaters attached. This data will pre-populate 
-    the jenkins job with dags as choices in a dropdown box. 
-    
-    NOTE: although the Jenkins user has access to write to this S3 bucket, you may not on your laptop. 
-    
+    The file is a list of dags in dewey, along with paramaters attached. This data will pre-populate
+    the jenkins job with dags as choices in a dropdown box.
+
+    NOTE: although the Jenkins user has access to write to this S3 bucket, you may not on your laptop.
+
     """
     s3_client = boto3.resource('s3')
     bucket = 'healthverityreleases'
