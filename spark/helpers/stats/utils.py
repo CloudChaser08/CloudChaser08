@@ -140,7 +140,7 @@ def get_emr_union(sqlContext, model_confs, provider_id):
         [
             sqlContext.sql('''
                 SELECT hvid, hv_enc_id, coalesce({}) as coalesced_emr_date
-                FROM dw.hvm_emr_{}
+                FROM dw.hvm_{}
                 WHERE part_hvm_vdr_feed_id='{}'
             '''.format(
                 ','.join(model_conf['date_field']), model_conf['datatype'], provider_id
