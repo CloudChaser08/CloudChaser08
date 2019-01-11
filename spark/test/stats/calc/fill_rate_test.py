@@ -44,4 +44,17 @@ def test_expected_values():
     assert set(expected_results) - set([r['fill'] for r in results]) == set()
     assert expected_results == [r['fill'] for r in results]
 
+@pytest.mark.usefixtures("spark")
+def test_gender_unknown_filetered(spark):
+    """Test that the unknown gender values are no included when fill
+    rate is calculated"""
 
+    data_row = Row('claim_id', 'patient_gender', 'ptnt_gender_cd')
+    df = spark['spark'].sparkContext.parallelize([
+        data_row('1', 'F', 'M'),
+        data_row('2', 'F', 'F'),
+        data_row('3', 'M', None),
+        data_row('4', 'U', 'U') # should be filtered out
+    ]).toDF()
+
+    assert [r['fill'] for r in fill_rate.calculate_fill_rate(df)] == [1.0, 0.75, 0.5]
