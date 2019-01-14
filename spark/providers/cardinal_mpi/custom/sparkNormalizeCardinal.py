@@ -27,7 +27,7 @@ def run(spark, runner, batch_id, test=False, airflow_test=False):
         matching_path = 's3a://salusv/matching/payload/custom/cardinal_mpi/{}/'.format(
             batch_id
         )
-        output_dir = constants.hdfs_staging_dir + '/'
+        output_dir = constants.hdfs_staging_dir + batch_id + '/'
 
     payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus'])
 
