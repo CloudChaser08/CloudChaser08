@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col, sum, isnan, count, trim, lit
+from pyspark.sql.functions import col, sum, isnan, count, trim, lit, upper
 
 def _col_fill_rate(c, row_count):
     '''
@@ -8,6 +8,7 @@ def _col_fill_rate(c, row_count):
         - ''
         - ' '
         - NaN
+        - 'U' if the column contains gender
     Input:
         - col: dataframe column of type pyspark.sql.Column
         - row_count: the number of rows in the column as an int
@@ -15,6 +16,8 @@ def _col_fill_rate(c, row_count):
         - fr: the fill rate for that column of type pyspark.sql.Column
     '''
     is_not_null = col(c).isNotNull() & (trim(col(c)) != '')
+    if c in ['patient_gender', 'ptnt_gender_cd']:
+        is_not_null = is_not_null & (upper(trim(col(c))) != 'U')
     fr = (sum(is_not_null.cast("integer")) / row_count).alias(c)
     return fr
 
