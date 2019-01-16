@@ -1,5 +1,5 @@
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.records_loader as records_loader
+from pyspark.sql.functions import input_file_name
 
 def load(runner, input_path_prefix):
     '''
@@ -14,7 +14,8 @@ def load(runner, input_path_prefix):
             cols.append(df.value.substr(index, width).alias(col))
             index = index + width
 
-        df = df.select(*cols)
+        df = df.select(*cols).withColumn('data_set', input_file_name()).cache()
+        df.count()
 
         postprocessor.compose(
             postprocessor.trimmify,
