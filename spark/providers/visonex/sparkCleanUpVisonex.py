@@ -1,7 +1,5 @@
 import argparse
-import time as time_module
-from subprocess import check_output
-from datetime import datetime, date, time
+from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.payload_loader as payload_loader
@@ -10,21 +8,23 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.file_utils as file_utils
 
 TABLES = ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment',
-        'facilityadmitdischarge', 'hospitalization', 'immunization', 'insurance',
-        'labidlist', 'labpanelsdrawn', 'labresult', 'medication', 'medicationgroup',
-        'modalitychangehistorycrownweb', 'nursinghomehistory', 'patientaccess',
-        'patientaccess_examproc', 'patientaccess_otheraccessevent',
-        'patientaccess_placedrecorded', 'patientaccess_removed', 'patientallergy',
-        'patientcms2728', 'patientcomorbidityandtransplantstate', 'patientdata',
-        'patientdiagcodes', 'patientdialysisprescription', 'patientdialysisrxhemo',
-        'patientdialysisrxpd', 'patientdialysisrxpdexchanges', 'patientevent',
-        'patientfluidweightmanagement', 'patientheighthistory', 'patientinfection',
-        'patientinfection_laborganism', 'patientinfection_laborganismdrug',
-        'patientinfection_labresultculture', 'patientinfection_medication',
-        'patientinstabilityhistory', 'patientmasterscheduleheader',
-        'patientmedadministered', 'patientmednotgiven', 'patientmedprescription',
-        'patientstatushistory', 'problemlist', 'sodiumufprofile', 'stategeo',
-        'zipgeo']
+          'facilityadmitdischarge', 'hospitalization', 'immunization', 'insurance',
+          'labidlist', 'labpanelsdrawn', 'labresult', 'medication', 'medicationgroup',
+          'modalitychangehistorycrownweb', 'nursinghomehistory', 'patientaccess',
+          'patientaccess_examproc', 'patientaccess_otheraccessevent',
+          'patientaccess_placedrecorded', 'patientaccess_removed', 'patientallergy',
+          'patientcms2728', 'patientcomorbidityandtransplantstate', 'patientdata',
+          'patientdiagcodes', 'patientdialysisprescription', 'patientdialysisrxhemo',
+          'patientdialysisrxpd', 'patientdialysisrxpdexchanges', 'patientevent',
+          'patientfluidweightmanagement', 'patientheighthistory', 'patientinfection',
+          'patientinfection_laborganism', 'patientinfection_laborganismdrug',
+          'patientinfection_labresultculture', 'patientinfection_medication',
+          'patientinstabilityhistory', 'patientmasterscheduleheader',
+          'patientmedadministered', 'patientmednotgiven', 'patientmedprescription',
+          'patientstatushistory', 'problemlist', 'sodiumufprofile', 'stategeo',
+          'zipgeo']
+
+V2_START_DATE = '2018-11-01'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -53,13 +53,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             date_input.replace('-', '/')
         )
 
-    runner.run_spark_script('clean_visonex_tables.sql')
-
     payload_loader.load(runner, matching_path, ['claimId'])
 
-    runner.run_spark_script('load_transactions.sql', [
+    runner.run_spark_script('clean_visonex_tables_common.sql')
+    runner.run_spark_script('load_transactions_common.sql', [
         ['input_path', input_path, False]
     ])
+
+    if date_input > V2_START_DATE:
+        runner.run_spark_script('clean_visonex_tables_v2.sql')
+        runner.run_spark_script('load_transactions_v2.sql', [
+            ['input_path', input_path, False]
+        ])
+    else:
+        runner.run_spark_script('clean_visonex_tables_v1.sql')
+        runner.run_spark_script('load_transactions_v1.sql', [
+            ['input_path', input_path, False]
+        ])
 
     # trim and nullify all incoming transactions tables
     for table in TABLES:
@@ -67,7 +77,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             postprocessor.trimmify, postprocessor.nullify
         )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
 
-    runner.run_spark_script('clean_up_visonex.sql')
+    runner.run_spark_script('clean_up_visonex_common.sql')
+    if date_input > V2_START_DATE:
+        runner.run_spark_script('clean_up_visonex_v2.sql')
+    else:
+        runner.run_spark_script('clean_up_visonex_v1.sql')
 
     if not test:
         for table in TABLES:
