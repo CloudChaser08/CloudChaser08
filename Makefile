@@ -16,4 +16,4 @@ package-spark:
 
 
 pylint-score:
-	echo "pylint.score.dewey:`find . -name '*.py' | xargs pylint | grep 'Your code' | sed -e 's/Your\ code\ has\ been\ rated\ at\ //' -e 's/\/.*//'`|g"| nc -v -q2 -u localhost 8125
+	bin/run_pylint.sh
