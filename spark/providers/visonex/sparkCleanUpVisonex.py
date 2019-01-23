@@ -7,9 +7,9 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.file_utils as file_utils
 
-TABLES = ['address', 'advancedirective', 'clinicpreference', 'dialysistraining',
-          'dialysistreatment', 'facilityadmitdischarge', 'hospitalization', 'immunization',
-          'insurance', 'labidlist', 'labpanelsdrawn', 'labresult', 'medication', 'medicationgroup',
+TABLES = ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment',
+          'facilityadmitdischarge', 'hospitalization', 'immunization', 'insurance',
+          'labidlist', 'labpanelsdrawn', 'labresult', 'medication', 'medicationgroup',
           'modalitychangehistorycrownweb', 'nursinghomehistory', 'patientaccess',
           'patientaccess_examproc', 'patientaccess_otheraccessevent',
           'patientaccess_placedrecorded', 'patientaccess_removed', 'patientallergy',
@@ -27,6 +27,10 @@ TABLES = ['address', 'advancedirective', 'clinicpreference', 'dialysistraining',
 V2_START_DATE = '2018-11-01'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
+    global TABLES
+    if date_input > V2_START_DATE:
+        TABLES = TABLES + ['advancedirective']
+
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     script_path = __file__
