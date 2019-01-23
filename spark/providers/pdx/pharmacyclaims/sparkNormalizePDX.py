@@ -16,7 +16,8 @@ import spark.providers.pdx.pharmacyclaims.load_transactions as load_transactions
 FEED_ID = '65'
 
 
-def run(spark, runner, date_input, test=False, end_to_end_test=False):
+def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=None, test=False,
+        end_to_end_test=False):
 
     script_path = __file__
 
@@ -41,6 +42,12 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         matching_path = 's3://salusv/matching/payload/pharmacyclaims/pdx/{}/'.format(
             date_input.replace('-', '/')
         )
+
+    if custom_input_path:
+        input_path = custom_input_path
+
+    if custom_matching_path:
+        matching_path = custom_matching_path
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -103,7 +110,8 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, end_to_end_test=args.end_to_end_test)
+    run(spark, runner, args.date, custom_input_path=args.input_path,
+        custom_matching_path=args.matching_path, end_to_end_test=args.end_to_end_test)
 
     spark.stop()
 
@@ -113,6 +121,9 @@ def main(args):
     else:
         output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-11-26/'
         tmp_path = 's3://salusv/backup/pdx/{}/'.format(args.date)
+
+    if args.ouptut_path:
+        output_path = args.output_path
 
     current_year_month = args.date[:7]
     prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m')
@@ -131,5 +142,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
+    parser.add_argument('--input_path', help='Overwrite default input path with this value')
+    parser.add_argument('--matching_path', help='Overwrite default matching path with this value')
+    parser.add_argument('--ouptut_path', help='Overwrite default output path with this value')
     args = parser.parse_args()
     main(args)
