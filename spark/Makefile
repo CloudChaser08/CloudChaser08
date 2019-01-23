@@ -2,9 +2,11 @@ APP_NAME=dewey
 
 analytics-deploy:
 	scp -i ~/.ssh/emr_deployer target/dewey.zip hadoop@analytics.aws.healthverity.com:/tmp/
-	ssh -i ~/.ssh/emr_deployer hadoop@analytics.aws.healthverity.com 'sudo cp /usr/lib/spark/python/lib/dewey.zip /usr/lib/spark/python/lib/dewey.zip.$(date +%Y%m%d%H%M)'
+	ssh -i ~/.ssh/emr_deployer hadoop@analytics.aws.healthverity.com "sudo cp /usr/lib/spark/python/lib/dewey.zip /usr/lib/spark/python/lib/dewey.zip.$(date +%Y%m%d%H%M)"
 	ssh -i ~/.ssh/emr_deployer hadoop@analytics.aws.healthverity.com "sudo mv /tmp/dewey.zip /usr/lib/spark/python/lib/dewey.zip"
 	ssh -i ~/.ssh/emr_deployer hadoop@analytics.aws.healthverity.com "sudo find /usr/lib/spark/python/lib/dewey.zip.* -mtime +7 -delete"
+	ssh -i ~/.ssh/emr_deployer hadoop@analytics.aws.healthverity.com "sudo -u hadoop hdfs dfs -put -f /usr/lib/spark/python/lib/dewey.zip /user/spark/lib/""
+	ssh -i ~/.ssh/emr_deployer hadoop@analytics.aws.healthverity.com "sudo -u hadoop hdfs dfs -chgrp hadoop /user/spark/lib/dewey.zip"
 
 clean-build:
 	rm -f target/${APP_NAME}.zip
