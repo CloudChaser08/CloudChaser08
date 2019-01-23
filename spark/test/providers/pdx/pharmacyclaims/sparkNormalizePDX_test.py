@@ -155,9 +155,9 @@ def test_init(spark):
             logical_delete_reason='',
             logical_delete_reason_date=datetime.date(2019, 1, 15),
             part_provider='',
-            part_processdate=''
+            part_best_date=''
         )
-    ]).toDF().createOrReplaceTempView('pharmacyclaims')
+    ]).toDF().createOrReplaceTempView('_pharmacyclaims_nb')
 
     pdx.run(spark['spark'], spark['runner'], '2019-01-15', test=True)
 

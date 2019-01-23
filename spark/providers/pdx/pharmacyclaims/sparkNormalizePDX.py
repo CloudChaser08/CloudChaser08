@@ -35,6 +35,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/payload/{}/'.format(
             date_input.replace('-', '/')
         )
+        spark.table('dw._pharmacyclaims_nb').createOrReplaceTempView('_pharmacyclaims_nb')
     else:
         input_path = 's3://salusv/incoming/pharmacyclaims/pdx/{}/'.format(
             date_input.replace('-', '/')
@@ -42,6 +43,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
         matching_path = 's3://salusv/matching/payload/pharmacyclaims/pdx/{}/'.format(
             date_input.replace('-', '/')
         )
+        spark.table('dw._pharmacyclaims_nb').createOrReplaceTempView('_pharmacyclaims_nb')
 
     if custom_input_path:
         input_path = custom_input_path
@@ -69,7 +71,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
 
     date_input_do = datetime.strptime(date_input, '%Y-%m-%d')
     vendor_file_date = date_input_do.strftime('%Y%m%d')
-    vendor_file_date_format = input_date_do.strftime('%Y-%m-%d')
+    vendor_file_date_format = date_input_do.strftime('%Y-%m-%d')
 
     normalized_output = runner.run_all_spark_scripts([
         ['VENDOR_FILE_DATE_STR', vendor_file_date, False],
