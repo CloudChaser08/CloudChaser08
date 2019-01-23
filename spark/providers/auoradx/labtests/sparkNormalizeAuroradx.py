@@ -1,6 +1,5 @@
 import argparse 
 import datetime
-import subprocess
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.lab_common_model import schema_v7 as lab_schema
@@ -9,15 +8,11 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
-import spark.helpers.privacy.labtests as priv_labtests
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers.auoradx.labtests.transactional_schemas as transactional_schemas
 
 FEED_ID = '85'
-VENDOR_ID = '335'
-MODEL_VERSION_NUMBER = '07'
-
 script_path = __file__
 
 
@@ -63,10 +58,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     ])
 
     df = postprocessor.compose(
-        lambda df: schema_enforcer.apply_schema(df, lab_schema, columns_to_keep=['part_provider', 'part_best_date']),
-        postprocessor.add_universal_columns(
-            feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=None, model_version_number=MODEL_VERSION_NUMBER
-        ),
+        lambda df: schema_enforcer.apply_schema(df, lab_schema, columns_to_keep=['part_provider', 'part_best_date'])
     )(normalized_output)
 
     if not test:

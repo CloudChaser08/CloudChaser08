@@ -1,4 +1,5 @@
 SELECT
+    MAX(txn.input_file_name) AS input_file_name, -- To avoid adding input_file_name to group_by below
     txn.patientobjectid,
     txn.accessionid,
     txn.patientstate,
