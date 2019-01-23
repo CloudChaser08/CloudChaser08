@@ -24,12 +24,14 @@ TABLES = ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment'
           'patientstatushistory', 'problemlist', 'sodiumufprofile', 'stategeo',
           'zipgeo']
 
+ADVANCE_DIRECTIVE_TABLE = 'advancedirective'
+
 V2_START_DATE = '2018-11-01'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
-    global TABLES
+    tables = TABLES
     if date_input > V2_START_DATE:
-        TABLES = TABLES + ['advancedirective']
+        tables = tables + [ADVANCE_DIRECTIVE_TABLE]
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
@@ -76,7 +78,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ])
 
     # trim and nullify all incoming transactions tables
-    for table in TABLES:
+    for table in tables:
         postprocessor.compose(
             postprocessor.trimmify, postprocessor.nullify
         )(runner.sqlContext.sql('select * from {}'.format(table))).createTempView(table)
@@ -88,7 +90,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         runner.run_spark_script('clean_up_visonex_v1.sql')
 
     if not test:
-        for table in TABLES:
+        for table in tables:
             normalized_records_unloader.partition_custom(
                 spark, runner, 'visonex', 'clean_' + table, None, date_input,
                 partition_value=date_input[:7], staging_subdir='{}/'.format(table)
