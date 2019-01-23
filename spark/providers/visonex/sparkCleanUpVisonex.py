@@ -7,9 +7,9 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.file_utils as file_utils
 
-TABLES = ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment',
-          'facilityadmitdischarge', 'hospitalization', 'immunization', 'insurance',
-          'labidlist', 'labpanelsdrawn', 'labresult', 'medication', 'medicationgroup',
+TABLES = ['address', 'advancedirective', 'clinicpreference', 'dialysistraining',
+          'dialysistreatment', 'facilityadmitdischarge', 'hospitalization', 'immunization',
+          'insurance', 'labidlist', 'labpanelsdrawn', 'labresult', 'medication', 'medicationgroup',
           'modalitychangehistorycrownweb', 'nursinghomehistory', 'patientaccess',
           'patientaccess_examproc', 'patientaccess_otheraccessevent',
           'patientaccess_placedrecorded', 'patientaccess_removed', 'patientallergy',

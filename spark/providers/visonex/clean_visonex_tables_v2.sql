@@ -71,3 +71,28 @@ CREATE TABLE clean_patientmasterscheduleheader (
         )
     ;
 
+DROP TABLE IF EXISTS clean_advancedirective;
+CREATE TABLE clean_advancedirective (
+        analyticrowidnumber                             string,
+        clinicorganizationidnumber                      string,
+        patientdataanalyticrowidnumber                  string,
+        analyticdos                                     date,
+        inactivatedate                                  date,
+        advancedirectiveidnumber                        string,
+        patientidnumber                                 string,
+        resuscitationcode                               string,
+        livingwilldocument                              string,
+        healthcarepowerofattorneydocument               string,
+        surrogatedecisionmakerdocument                  string,
+        surrogatedecisionmakerpersonandrelationship     string,
+        dnrform                                         string,
+        molstdocument                                   string,
+        mostdocument                                    string,
+        polstdocument                                   string,
+        postdocument                                    string,
+        otherdocument                                   string,
+        advdircomments                                  string,
+        addeddate                                       date,
+        editdate                                        date
+    )
+    ;
