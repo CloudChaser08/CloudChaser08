@@ -82,3 +82,34 @@ CREATE EXTERNAL TABLE patientmasterscheduleheader (
     LOCATION '{input_path}patientmasterscheduleheader/'
     ;
 
+DROP TABLE IF EXISTS advancedirective;
+CREATE TABLE advancedirective (
+        analyticrowidnumber                             string,
+        clinicorganizationidnumber                      string,
+        patientdataanalyticrowidnumber                  string,
+        analyticdos                                     string,
+        inactivatedate                                  string,
+        advancedirectiveidnumber                        string,
+        patientidnumber                                 string,
+        resuscitationcode                               string,
+        livingwilldocument                              string,
+        healthcarepowerofattorneydocument               string,
+        surrogatedecisionmakerdocument                  string,
+        surrogatedecisionmakerpersonandrelationship     string,
+        dnrform                                         string,
+        molstdocument                                   string,
+        mostdocument                                    string,
+        polstdocument                                   string,
+        postdocument                                    string,
+        otherdocument                                   string,
+        advdircomments                                  string,
+        addeddate                                       string,
+        editdate                                        string
+    )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+        "separatorChar" = "|"
+    )
+    STORED AS TEXTFILE
+    LOCATION '{input_path}advancedirective/'
+    ;
