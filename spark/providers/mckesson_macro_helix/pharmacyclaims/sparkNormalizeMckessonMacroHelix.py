@@ -63,7 +63,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     cutoff_date = datetime(2018, 9, 30)
 
-    if datetime.strptime(date_input, '%Y-%m-%d') <= cutoff_date:
+    if datetime.strptime(date_input, '%Y-%m-%d') < cutoff_date:
         load_transactions.load(runner, input_path, transactions_schema.v1)
     else:
         load_transactions.load(runner, input_path, transactions_schema.v2)
