@@ -1,6 +1,6 @@
 import pyspark.sql.functions as F
 
-def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table, filter_by_part_processdate=False):
+def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table, filter_by_date_partition=False):
     claims       = runner.sqlContext.table(claims_table)
     ref_vdr_feed = runner.sqlContext.table('dw.ref_vdr_feed')
     ref_vdr_feed = ref_vdr_feed[ref_vdr_feed.hvm_tile_nm.isin(*SUPPLIERS)]
@@ -10,9 +10,9 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
         .join(hvids, claims['hvid'] == hvids['hvid'], 'left') \
         .where(hvids['hvid'].isNotNull())
 
-    if filter_by_part_processdate:
+    if filter_by_date_partition:
         ext = ext\
-            .where(claims['part_processdate'] >= start_dt.isoformat())
+            .where(claims['part_best_date'] >= start_dt.isoformat())
 
     # Some claims do not have a date_service, only date_written
     ext = ext \
@@ -39,7 +39,7 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
     return ext.select(*EXTRACT_COLUMNS)
 
 def extract(runner, hvids, timestamp, start_dt, end_dt):
-    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'pharmacyclaims', True)
+    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'dw.hvm_pharmacyclaims_v07', True)
 
 #   This is comented out until Humana wants us to turn synthetic claims back on
 #    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'pharmacyclaims', True).union(
