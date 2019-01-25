@@ -51,6 +51,7 @@ TABLES = {
         'mystery_column',  # TODO: find out what this is
         'store_id',
         'date_340b',
+        'date_gpo',
         'doctor_dea_number',
         'doctor_npi_number',
         'hvJoinKey'
