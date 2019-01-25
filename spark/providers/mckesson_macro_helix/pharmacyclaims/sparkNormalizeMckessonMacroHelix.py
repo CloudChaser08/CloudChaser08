@@ -3,7 +3,7 @@ import argparse
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model_v6 import schema
+from spark.common.pharmacyclaims_common_model_v6 import schema as model_schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -12,6 +12,8 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
+import load_transactions
+from load_transactions import Schema as transactions_schema
 
 FEED_ID = '51'
 VENDOR_ID = '86'
@@ -59,8 +61,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['claimId', 'patientId', 'hvJoinKey'])
 
-    import load_transactions
-    load_transactions.load(runner, input_path)
+    cutoff_date = datetime(2018, 9, 30)
+
+    if datetime.strptime(date_input, '%Y-%m-%d') <= cutoff_date:
+        load_transactions.load(runner, input_path, transactions_schema.v1)
+    else:
+        load_transactions.load(runner, input_path, transactions_schema.v2)
 
     explode.generate_exploder_table(spark, 24, 'exploder')
 
@@ -71,7 +77,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
 
     postprocessor.compose(
-        schema_enforcer.apply_schema_func(schema),
+        schema_enforcer.apply_schema_func(model_schema),
         postprocessor.add_universal_columns(
             feed_id=FEED_ID,
             vendor_id=VENDOR_ID,
