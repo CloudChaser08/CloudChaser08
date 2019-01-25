@@ -13,6 +13,8 @@ pharmacy_extract = None
 medical_extract = medical_extract2 = None
 summary = None
 summary2 = None
+DW_TABLES = ['hvm_emr_diag', 'hvm_emr_proc', 'hvm_emr_medctn', 'hvm_emr_enc', 'ref_vdr_feed',
+             'ref_gen_ref', 'hvm_pharmacyclaims_v07']
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     test_cleanup(spark)
@@ -29,7 +31,7 @@ def test_init(spark):
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
     
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/ref_vdr_feed.json')).createOrReplaceTempView('ref_vdr_feed')
-    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('pharmacyclaims')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('hvm_pharmacyclaims_v07')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('medicalclaims')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/enroll_sample.json')).createOrReplaceTempView('enrollmentrecords')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_diag_sample.json')).createOrReplaceTempView('hvm_emr_diag')
@@ -37,7 +39,7 @@ def test_init(spark):
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_medctn_sample.json')).createOrReplaceTempView('hvm_emr_medctn')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_enc_sample.json')).createOrReplaceTempView('hvm_emr_enc')
     spark['spark'].sql('CREATE SCHEMA dw')
-    for table_name in ['hvm_emr_diag', 'hvm_emr_proc', 'hvm_emr_medctn', 'hvm_emr_enc', 'ref_vdr_feed', 'ref_gen_ref']:
+    for table_name in DW_TABLES:
         spark['spark'].sql('CREATE TABLE dw.{0} AS SELECT * FROM {0}'.format(table_name))
 
     # Test that a run with only invalid groups works
@@ -96,7 +98,7 @@ def test_few_patients():
     assert [r['count'] for r in summary2 if r['data_vendor'] == '-'][0] == 0
 
 def test_cleanup(spark):
-    for table_name in ['hvm_emr_diag', 'hvm_emr_proc', 'hvm_emr_medctn', 'hvm_emr_enc', 'ref_vdr_feed', 'ref_gen_ref']:
+    for table_name in DW_TABLES:
         try:
             spark['spark'].sql('DROP TABLE IF EXISTS dw.' + table_name)
         except:
