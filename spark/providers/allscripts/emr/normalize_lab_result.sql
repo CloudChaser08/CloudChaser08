@@ -6,7 +6,7 @@ SELECT
     CASE WHEN res.primarykey IS NOT NULL THEN 'PRIMARYKEY' END                 AS vdr_lab_test_id_qual,
     res.primarykey                                                             AS vdr_lab_result_id,
     CASE WHEN res.primarykey IS NOT NULL THEN 'PRIMARYKEY' END                 AS vdr_lab_result_id_qual,
-    pay.hvid                                                                   AS hvid,
+    COALESCE(pay.hvid, CONCAT('35_', res.gen2patientid))                       AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                                     AS ptnt_birth_yr,
     CASE
     WHEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) IN ('F', 'M', 'U')

@@ -4,7 +4,7 @@ SELECT
     ord.genclientid                                                            AS vdr_org_id,
     ord.primarykey                                                             AS vdr_proc_id,
     CASE WHEN ord.primarykey IS NOT NULL THEN 'PRIMARYKEY' END                 AS vdr_proc_id_qual,
-    pay.hvid                                                                   AS hvid,
+    COALESCE(pay.hvid, CONCAT('35_', ord.gen2patientid))                       AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                                     AS ptnt_birth_yr,
     CASE
     WHEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) IN ('F', 'M', 'U')
