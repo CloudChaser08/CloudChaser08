@@ -56,5 +56,6 @@ FROM transactional_vitals vit
     LEFT JOIN ref_gen_ref ref ON ref.whtlst_flg = 'Y'
     AND ref.gen_ref_domn_nm = 'allscripts_emr.vitals'
     AND TRIM(UPPER(vit.name)) = ref.gen_ref_cd
-    AND TRIM(UPPER(COALESCE(vit.units, ''))) = ref.gen_ref_itm_nm
+    AND TRIM(UPPER(COALESCE(vit.units, ''))) = COALESCE(ref.gen_ref_itm_nm, '')
 WHERE vit.gen2patientid IS NOT NULL
+    AND ref.gen_ref_cd IS NOT NULL
