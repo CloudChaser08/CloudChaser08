@@ -184,17 +184,20 @@ def test_proc_explosion():
         ('25_gen2patientid-0_orderid-0_1', '36475', 'CPTCODE', None, '02'),
         ('25_gen2patientid-0_orderid-0_1', '36475', 'CPTCODE', 'V90', '01'),
         ('25_gen2patientid-0_prbid-0_0', None, None, None, None),
+        ('25_gen2patientid-0_vacid-0_17194404700007', '0', 'VACCINES.CVX', None, None),
         ('25_gen2patientid-1_orderid-1_1', '0000', 'HCPCS', None, '02'),
         ('25_gen2patientid-1_orderid-1_1', '0000', 'HCPCS', 'V90', '01'),
         ('25_gen2patientid-1_orderid-1_1', '36475', 'CPTCODE', None, '02'),
         ('25_gen2patientid-1_orderid-1_1', '36475', 'CPTCODE', 'V90', '01'),
         ('25_gen2patientid-1_prbid-1_0', None, None, 'V700', '01'),
         ('25_gen2patientid-1_prbid-1_0', None, None, 'Z0000', '02'),
+        ('25_gen2patientid-1_vacid-1_17194404700007', '0', 'VACCINES.CVX', None, None),
         ('25_gen2patientid-2_orderid-2_1', '0000', 'HCPCS', None, '02'),
         ('25_gen2patientid-2_orderid-2_1', '0000', 'HCPCS', 'V90', '01'),
         ('25_gen2patientid-2_orderid-2_1', '36475', 'CPTCODE', None, '02'),
         ('25_gen2patientid-2_orderid-2_1', '36475', 'CPTCODE', 'V90', '01'),
-        ('25_gen2patientid-2_prbid-2_0', None, None, 'V700', '01')
+        ('25_gen2patientid-2_prbid-2_0', None, None, 'V700', '01'),
+        ('25_gen2patientid-2_vacid-2_17194404700007', '0', 'VACCINES.CVX', None, None)
     ]
 
 
@@ -205,13 +208,10 @@ def test_prov_ord_explosion():
     ) == [
         ('25_gen2patientid-0_orderid-0_1', None, '02'),
         ('25_gen2patientid-0_orderid-0_1', 'V90', '01'),
-        ('25_gen2patientid-0_vacid-0_17194404700007', None, None),
         ('25_gen2patientid-1_orderid-1_1', None, '02'),
         ('25_gen2patientid-1_orderid-1_1', 'V90', '01'),
-        ('25_gen2patientid-1_vacid-1_17194404700007', None, None),
         ('25_gen2patientid-2_orderid-2_1', None, '02'),
-        ('25_gen2patientid-2_orderid-2_1', 'V90', '01'),
-        ('25_gen2patientid-2_vacid-2_17194404700007', None, None)
+        ('25_gen2patientid-2_orderid-2_1', 'V90', '01')
     ]
 
 

@@ -13,7 +13,7 @@ from spark.spark_setup import init
 import spark.providers.allscripts.emr.transaction_schemas as transaction_schemas
 from spark.common.emr.encounter import schema_v7 as encounter_schema
 from spark.common.emr.diagnosis import schema_v7 as diagnosis_schema
-from spark.common.emr.procedure import schema_v7 as procedure_schema
+from spark.common.emr.procedure import schema_v9 as procedure_schema
 from spark.common.emr.provider_order import schema_v7 as provider_order_schema
 from spark.common.emr.lab_order import schema_v6 as lab_order_schema
 from spark.common.emr.lab_result import schema_v7 as lab_result_schema
@@ -152,6 +152,12 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 ['max_cap', max_cap]
             ], return_output=True, source_file_path=script_path
         ), procedure_schema, columns_to_keep=['allscripts_date_partition']
+    )).union(schema_enforcer.apply_schema(
+        runner.run_spark_script(
+            'normalize_procedure_vac.sql', [
+                ['max_cap', max_cap]
+            ], return_output=True, source_file_path=script_path
+        ), procedure_schema, columns_to_keep=['allscripts_date_partition']
     ))
     normalized_provider_order = schema_enforcer.apply_schema(
         runner.run_spark_script(
@@ -159,13 +165,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 ['max_cap', max_cap]
             ], return_output=True, source_file_path=script_path
         ), provider_order_schema, columns_to_keep=['allscripts_date_partition']
-    ).union(schema_enforcer.apply_schema(
-        runner.run_spark_script(
-            'normalize_provider_order_vac.sql', [
-                ['max_cap', max_cap]
-            ], return_output=True, source_file_path=script_path
-        ), provider_order_schema, columns_to_keep=['allscripts_date_partition']
-    ))
+    )
     normalized_lab_order = runner.run_spark_script(
         'normalize_lab_order.sql', [
             ['max_cap', max_cap]
@@ -256,7 +256,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             'data': normalized_procedure,
             'privacy': procedure_priv,
             'schema': procedure_schema,
-            'model_version': '07',
+            'model_version': '09',
             'join_key': 'hv_proc_id',
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
