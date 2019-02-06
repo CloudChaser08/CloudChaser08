@@ -92,8 +92,8 @@ medications = TransactionTable(
 orders = TransactionTable(
     'orders',
     StructType([
-        StructField(column_name, StringType(), True) for
-        column_name in [
+        StructField(column_name, StringType(), True)
+        for column_name in [
             'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
             'encounterID', 'orderID', 'versionID', 'auditdataflag', 'name', 'type', 'status', 'cpt4', 'cptmod',
             'cptpos', 'billingICD9code', 'billingICD10code', 'hcpcs', 'source', 'specimen', 'orderDTTM',
@@ -184,8 +184,8 @@ vaccines = TransactionTable(
 vitals = TransactionTable(
     'vitals',
     StructType([
-        StructField(column_name, StringType(), True) for
-        column_name in [
+        StructField(column_name, StringType(), True)
+        for column_name in [
             'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
             'encounterID', 'vitalID', 'versionID', 'auditdataflag', 'name', 'status', 'value', 'units', 'refrange',
             'errorflag', 'clinicalDTTM', 'performedDTTM', 'recordedDTTM', 'genproviderID', 'gen2providerID',
@@ -196,7 +196,30 @@ vitals = TransactionTable(
     skewed_columns=['genproviderID', 'gen2providerID']
 )
 
+vitals_backfill = TransactionTable(
+    'vitals_backfill',
+    StructType([
+        StructField(column_name, StringType(), True)
+        for column_name in [
+            'gen2patientid', 'genpatientid', 'vitalid', 'versionid', 'value', 'units',
+            'recordeddttm'
+        ]
+    ])
+)
+
+results_backfill = TransactionTable(
+    'results_backfill',
+    StructType([
+        StructField(column_name, StringType(), True)
+        for column_name in [
+            'gen2patientid', 'genpatientid', 'resultid', 'versionid', 'value', 'units',
+            'recordeddttm'
+        ]
+    ])
+)
+
 all_tables = [
     vitals, vaccines, results, providers, problems, patients, orders,
-    medications, encounters, clients, appointments, allergies
+    medications, encounters, clients, appointments, allergies, vitals_backfill,
+    results_backfill
 ]

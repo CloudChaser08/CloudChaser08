@@ -69,6 +69,9 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
         warehouse_path_template = file_utils.get_abs_path(
             script_path, '../../../test/providers/allscripts/emr/resources/warehouse/{}/part_hvm_vdr_feed_id=25/*'
         )
+        backfill_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/allscripts/emr/resources/input/2016/12/'
+        ) + '/'
     elif airflow_test:
         input_path = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/out/{}/'.format(
             date_input.replace('-', '/')
@@ -78,6 +81,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
         )
         warehouse_path_template = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/warehouse/{}/' \
                          'part_hvm_vdr_feed_id=25/*'
+        backfill_path = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/out/2018/10/'
     else:
         input_path = 's3a://salusv/incoming/emr/allscripts/{}/'.format(
             date_input.replace('-', '/')
@@ -86,6 +90,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             matching_date.replace('-', '/')
         )
         warehouse_path_template = 's3a://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/*'
+        backfill_path = 's3a://salusv/incoming/emr/allscripts/2018/10/'
 
     runner.sqlContext.registerFunction(
         'remove_last_chars', allscripts_udf.remove_last_chars
@@ -100,7 +105,11 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     explode.generate_exploder_table(spark, 3, 'clin_obsn_exploder')
 
     for table in transaction_schemas.all_tables:
-        if table.name in ['providers', 'patients', 'clients']:
+        if table.name in {'vitals_backfill', 'results_backfill'}:
+            runner.sqlContext.read.csv(
+                backfill_path + table.name + '/', sep='|', schema=table.schema
+            ).createOrReplaceTempView(table.name)
+        elif table.name in {'providers', 'patients', 'clients'}:
             runner.sqlContext.read.csv(
                 input_path + table.name + '/', sep='|', schema=table.schema
             ).createOrReplaceTempView('transactional_' + table.name)

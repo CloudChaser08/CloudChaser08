@@ -30,8 +30,10 @@ SELECT
     res.loinc                                                                  AS lab_test_loinc_cd,
     res.ocdid                                                                  AS lab_test_vdr_cd,
     CASE WHEN res.ocdid IS NOT NULL THEN 'OCDID' END                           AS lab_test_vdr_cd_qual,
-    res.value                                                                  AS lab_result_nm,
-    res.units                                                                  AS lab_result_uom,
+    CASE WHEN rbf.resultid IS NOT NULL
+        THEN rbf.value ELSE res.value END                                      AS lab_result_nm,
+    CASE WHEN rbf.resultid IS NOT NULL
+        THEN rbf.units ELSE res.units END                                      AS lab_result_uom,
     CASE WHEN TRIM(UPPER(res.abnormalflag)) IN ('N', 'Y')
     THEN TRIM(UPPER(res.abnormalflag))
     END                                                                        AS lab_result_abnorm_flg,
@@ -47,7 +49,8 @@ SELECT
     res.resultstatus                                                           AS lab_result_stat_cd,
     CASE WHEN res.resultstatus IS NOT NULL THEN 'RESULT_STATUS' END            AS lab_result_stat_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
-    res.recordeddttm                                                           AS data_captr_dt,
+    CASE WHEN rbf.resultid IS NOT NULL
+        THEN rbf.recordeddttm ELSE res.recordeddttm END                        AS data_captr_dt,
     REMOVE_LAST_CHARS(
         CONCAT(
             CASE
@@ -70,4 +73,7 @@ FROM transactional_results res
     LEFT JOIN matching_payload pay ON UPPER(ptn.gen2patientID) = UPPER(pay.personid)
     LEFT JOIN transactional_providers prv ON prv.gen2providerid = res.hv_gen2providerid
     LEFT JOIN transactional_clients clt ON res.genclientid = clt.genclientid
+    LEFT JOIN results_backfill rbf ON res.genpatientid = rbf.genpatientid
+    AND res.resultid = rbf.resultid
+    AND res.versionid = rbf.versionid
 WHERE res.gen2patientid IS NOT NULL

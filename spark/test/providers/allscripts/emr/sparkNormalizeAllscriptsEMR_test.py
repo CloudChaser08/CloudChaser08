@@ -40,6 +40,17 @@ def test_init(spark):
             gen_ref_2_txt='',
             gen_ref_itm_desc='',
             whtlst_flg=''
+        ),
+        Row(
+            hvm_vdr_feed_id='25',
+            gen_ref_domn_nm='allscripts_emr.vitals',
+            gen_ref_itm_nm='INCH',
+            gen_ref_cd='HEIGHT',
+            gen_ref_1_dt=datetime.date(2016, 1, 1),
+            gen_ref_1_txt='HEIGHT',
+            gen_ref_2_txt='INCHES',
+            gen_ref_itm_desc=None,
+            whtlst_flg='Y'
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
@@ -214,6 +225,15 @@ def test_prov_ord_explosion():
         ('25_gen2patientid-2_orderid-2_1', 'V90', '01')
     ]
 
+def test_vit_sign_backfill():
+    assert sorted(
+        [(res.hv_vit_sign_id, res.vit_sign_msrmt, res.vit_sign_uom)
+         for res in vital_sign_results]
+    ) == [
+        ('25_gen2patientid-0_vitid-0_0', '64', 'INCHES'), # First one is "backfilled"
+        ('25_gen2patientid-1_vitid-1_0', '63', 'INCHES'),
+        ('25_gen2patientid-2_vitid-2_0', '63', 'INCHES')
+    ]
 
 def test_cleanup(spark):
     cleanup(spark)
