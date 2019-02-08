@@ -5,8 +5,9 @@ from dateutil.relativedelta import relativedelta
 import subprocess
 import logging
 
-from pyspark.sql.functions import col, rand, concat, when, lit
+import pyspark.sql.functions as F
 from pyspark.sql.utils import AnalysisException
+from pyspark.sql import Window
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -66,9 +67,6 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 matching_date.replace('-', '/')
             )
         ) + '/'
-        warehouse_path_template = file_utils.get_abs_path(
-            script_path, '../../../test/providers/allscripts/emr/resources/warehouse/{}/part_hvm_vdr_feed_id=25/*'
-        )
         backfill_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/allscripts/emr/resources/input/2016/12/'
         ) + '/'
@@ -79,8 +77,6 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
         matching_path = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/payload/{}/'.format(
             matching_date.replace('-', '/')
         )
-        warehouse_path_template = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/warehouse/{}/' \
-                         'part_hvm_vdr_feed_id=25/*'
         backfill_path = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/out/2018/10/'
     else:
         input_path = 's3a://salusv/incoming/emr/allscripts/{}/'.format(
@@ -89,7 +85,6 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
         matching_path = 's3a://salusv/matching/payload/emr/allscripts/{}/'.format(
             matching_date.replace('-', '/')
         )
-        warehouse_path_template = 's3a://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/*'
         backfill_path = 's3a://salusv/incoming/emr/allscripts/2018/10/'
 
     runner.sqlContext.registerFunction(
@@ -109,22 +104,27 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             runner.sqlContext.read.csv(
                 backfill_path + table.name + '/', sep='|', schema=table.schema
             ).createOrReplaceTempView(table.name)
-        elif table.name in {'providers', 'patients', 'clients'}:
+        elif table.name in {'providers', 'patientdemographics', 'clients'}:
             runner.sqlContext.read.csv(
                 input_path + table.name + '/', sep='|', schema=table.schema
             ).createOrReplaceTempView('transactional_' + table.name)
         else:
-            # add non-skewed provider columns
+            window = Window.partitionBy(*table.pk).orderBy(F.col('recordeddttm').desc())
             raw_table = runner.sqlContext.read.csv(
                 input_path + table.name + '/', sep='|', schema=table.schema
-            ).distinct()
+            )
 
+            # deduplicate based on natural key
+            raw_table = raw_table.withColumn('row_num', F.row_number().over(window))\
+                    .where(F.col('row_num') == 1)
+
+            # add non-skewed provider columns
             for column in table.skewed_columns:
                 raw_table = raw_table.withColumn(
-                    'hv_{}'.format(column), when(
-                        col(column).isNull(),
-                        concat(lit('nojoin_'), rand())
-                    ).otherwise(col(column))
+                    'hv_{}'.format(column), F.when(
+                        F.col(column).isNull(),
+                        F.concat(F.lit('nojoin_'), F.rand())
+                    ).otherwise(F.col(column))
                 )
 
             raw_table.createOrReplaceTempView('transactional_' + table.name)
@@ -375,31 +375,12 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             'EARLIEST_VALID_SERVICE_DATE'
         )
 
-        # deduplicate
         new_data = runner.sqlContext.table(
             'normalized_{}'.format(table['name'])
         ).alias('new_data').cache_and_track('new_data')
 
-        try:
-            warehouse_data = runner.sqlContext.read.parquet(
-                warehouse_path_template.format(table['name'])
-            ).alias('warehouse_data')
-
-            new_claims = new_data.select(table['join_key']).distinct()
-
-            deduplicated_data = warehouse_data.join(
-                    new_claims.hint("broadcast"), table['join_key'], 'leftanti'
-                ).union(new_data)
-        except AnalysisException as e:
-            if 'Path does not exist' in str(e):
-                # Warehouse data does not exist. This may be the first run.
-                logging.warning("No warehouse data found - deduplication will be skipped.")
-                deduplicated_data = new_data
-            else:
-                raise
-
         normalized_records_unloader.unload(
-            spark, runner, deduplicated_data, 'allscripts_date_partition', max_cap,
+            spark, runner, new_data, 'allscripts_date_partition', max_cap,
             FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
             date_partition_name='part_mth', hvm_historical_date=datetime.datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day

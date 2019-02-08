@@ -106,9 +106,6 @@ def test_deduplication():
                 medication_results, procedure_results, diagnosis_results]:
         assert len(res) == len(set(res))
 
-    # Encounter has warehouse data that should be incorporated but still deduped
-    assert '25_gen2patientid-1_apptid-1_OLD_UNIQUE' in [res.hv_enc_id for res in encounter_results]
-
     assert sorted([res.hv_enc_id for res in encounter_results]) \
         == sorted(set([res.hv_enc_id for res in encounter_results]))
 
