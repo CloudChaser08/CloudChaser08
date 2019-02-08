@@ -28,10 +28,10 @@ SELECT
         ELSE CASE WHEN ref1.gen_ref_1_txt IS NOT NULL THEN 'VITAL_NAME' END
         END                                                                    AS vit_sign_typ_cd_qual,
     CASE WHEN vbf.vitalid IS NOT NULL
-        THEN CASE WHEN ref2.gen_ref_1_txt IS NOT NULL
+        THEN CASE WHEN ref2.gen_ref_1_txt IS NOT NULL AND ref2.gen_ref_itm_desc IS NOT NULL
             THEN CONVERT_VALUE(vbf.value, ref2.gen_ref_itm_desc)
             ELSE vbf.value END
-        ELSE CASE WHEN ref1.gen_ref_1_txt IS NOT NULL
+        ELSE CASE WHEN ref1.gen_ref_1_txt IS NOT NULL AND ref1.gen_ref_itm_desc IS NOT NULL
             THEN CONVERT_VALUE(vit.value, ref1.gen_ref_itm_desc)
             ELSE vit.value END
         END                                                                    AS vit_sign_msrmt,
