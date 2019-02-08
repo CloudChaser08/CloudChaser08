@@ -148,12 +148,12 @@ def test_lab_ord_explosion():
     assert sorted([
         (res.hv_lab_ord_id, res.lab_ord_diag_cd, res.lab_ord_diag_cd_qual) for res in lab_order_results
     ]) == [
-        ('25_gen2patientid-0_orderid-0_1', None, '02'),
-        ('25_gen2patientid-0_orderid-0_1', 'V90', '01'),
-        ('25_gen2patientid-1_orderid-1_1', None, '02'),
-        ('25_gen2patientid-1_orderid-1_1', 'V90', '01'),
-        ('25_gen2patientid-2_orderid-2_1', None, '02'),
-        ('25_gen2patientid-2_orderid-2_1', 'V90', '01')
+        ('25_gen2patientid-0_orderid-6_1', None, '02'),
+        ('25_gen2patientid-0_orderid-6_1', 'V90', '01'),
+        ('25_gen2patientid-1_orderid-7_1', None, '02'),
+        ('25_gen2patientid-1_orderid-7_1', 'V90', '01'),
+        ('25_gen2patientid-2_orderid-8_1', None, '02'),
+        ('25_gen2patientid-2_orderid-8_1', 'V90', '01')
     ]
 
 
@@ -214,12 +214,12 @@ def test_prov_ord_explosion():
         [(res.hv_prov_ord_id, res.prov_ord_diag_cd, res.prov_ord_diag_cd_qual)
          for res in provider_order_results]
     ) == [
-        ('25_gen2patientid-0_orderid-0_1', None, '02'),
-        ('25_gen2patientid-0_orderid-0_1', 'V90', '01'),
-        ('25_gen2patientid-1_orderid-1_1', None, '02'),
-        ('25_gen2patientid-1_orderid-1_1', 'V90', '01'),
-        ('25_gen2patientid-2_orderid-2_1', None, '02'),
-        ('25_gen2patientid-2_orderid-2_1', 'V90', '01')
+        ('25_gen2patientid-0_orderid-3_1', None, '02'),
+        ('25_gen2patientid-0_orderid-3_1', 'V90', '01'),
+        ('25_gen2patientid-1_orderid-4_1', None, '02'),
+        ('25_gen2patientid-1_orderid-4_1', 'V90', '01'),
+        ('25_gen2patientid-2_orderid-5_1', None, '02'),
+        ('25_gen2patientid-2_orderid-5_1', 'V90', '01')
     ]
 
 def test_vit_sign_backfill():
