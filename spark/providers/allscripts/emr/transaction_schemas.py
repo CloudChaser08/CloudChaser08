@@ -85,7 +85,7 @@ medications = TransactionTable(
                 'primarykey'
         ]
     ]),
-    ['gen2patientid', 'medicationid', 'versionid'],
+    ['gen2patientid', 'medid', 'versionid'],
     skewed_columns=['administeredbygen2providerid', 'prescribedbygen2providerid', 'genproviderid', 'gen2providerid']
 )
 
