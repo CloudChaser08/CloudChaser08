@@ -100,7 +100,8 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
             columns=_columns,
             hvm_historical_date=datetime(hvm_historical.year,
                                          hvm_historical.month,
-                                         hvm_historical.day)
+                                         hvm_historical.day),
+            substr_date_part=False
         )
 
     else:
@@ -127,8 +128,8 @@ def main(args):
     if args.ouptut_path:
         output_path = args.output_path
 
-    current_year_month = args.date[:7]
-    prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m')
+    current_year_month = args.date[:7] + '-01'
+    prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
 
     date_part = 'part_provider=pdx/part_best_date={}/'
     subprocess.check_call(

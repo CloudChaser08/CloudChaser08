@@ -38,7 +38,7 @@ def unload(
         spark, runner, df, date_column, partition_name_prefix, provider_partition_value,
         provider_partition_name='part_provider', date_partition_value=None, date_partition_name='part_best_date',
         hvm_historical_date=None, staging_subdir='', columns=None, unload_partition_count=20, test_dir=None,
-        skip_rename=False, distribution_key='record_id'
+        skip_rename=False, distribution_key='record_id', substr_date_part=True
 ):
     """
     Unload normalized data into partitions based on a date column
@@ -77,7 +77,8 @@ def unload(
             if type(hvm_historical_date) == datetime:
                 hvm_historical_date = hvm_historical_date.date()
             when_clause = (when_clause | (col(date_column) < hvm_historical_date))
-        date_partition_val = when(when_clause, lit(NULL_PARTITION_NAME)).otherwise(col(date_column).substr(0, 7))
+        date_column_val = col(date_column).substr(0, 7) if substr_date_part else col(date_column)
+        date_partition_val = when(when_clause, lit(NULL_PARTITION_NAME)).otherwise(date_column_val)
 
     # add partition columns to the total column list
     columns.extend([
