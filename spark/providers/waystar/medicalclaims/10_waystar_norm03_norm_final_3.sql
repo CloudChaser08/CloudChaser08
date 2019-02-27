@@ -86,17 +86,19 @@ SELECT
                     CAST('${VDR_FILE_DT}' AS DATE)
                 ) IS NULL
              THEN '0_PREDATES_HVM_HISTORY'
-        ELSE SUBSTR(CAST(DATE_ADD(date_service, dei.d) AS STRING), 1, 7)
+        ELSE CONCATENATE
+                (
+                    SUBSTR(CAST(DATE_ADD(date_service, dei.d) AS STRING), 1, 7), '-01'
+                )
     END                                                                                     AS part_best_date
  FROM waystar_norm01_norm_lines sln
- LEFT OUTER JOIN ref_gen_ref esdt
-   ON 1 = 1
-  AND esdt.hvm_vdr_feed_id = 24
-  AND esdt.gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
- LEFT OUTER JOIN ref_gen_ref ahdt
-   ON 1 = 1
-  AND ahdt.hvm_vdr_feed_id = 24
-  AND ahdt.gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
+CROSS JOIN
+    (
+        SELECT gen_ref_1_dt
+         FROM ref_gen_ref
+        WHERE hvm_vdr_feed_id = 24
+          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
+    ) ahdt
 CROSS JOIN date_explode_indices dei
    ON COALESCE(sln.claim_type, 'X') = 'P'
   AND sln.date_service_end IS NOT NULL
