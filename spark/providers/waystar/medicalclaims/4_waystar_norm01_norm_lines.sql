@@ -1,5 +1,4 @@
 SELECT  
-    monotonically_increasing_id()                                                           AS record_id,
     clm.claim_number                                                                        AS claim_id,
     pay.hvid                                                                                AS hvid,
     '08'                                                                                    AS model_version,

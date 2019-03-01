@@ -1,5 +1,4 @@
-SELECT DISTINCT 
-    monotonically_increasing_id()                                                           AS record_id,
+SELECT DISTINCT
     clm.claim_number                                                                        AS claim_id,
     pay.hvid                                                                                AS hvid,
     '08'                                                                                    AS model_version,
@@ -44,21 +43,21 @@ SELECT DISTINCT
         (
             CAST(EXTRACT_DATE(mmd.min_claim_date, '%Y%m%d') AS DATE),
             esdt.gen_ref_1_dt,
-            CAST('${VDR_FILE_DT}' AS DATE)
+            CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS date_service,
     /* date_service_end */
     CAP_DATE
         (
             CAST(EXTRACT_DATE(mmd.max_claim_date, '%Y%m%d') AS DATE),
             esdt.gen_ref_1_dt,
-            CAST('${VDR_FILE_DT}' AS DATE)
+            CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS date_service_end,
     /* inst_date_admitted */
     CAP_DATE
         (
             CAST(EXTRACT_DATE(clm.admission_date, '%Y%m%d') AS DATE),
             esdt.gen_ref_1_dt,
-            CAST('${VDR_FILE_DT}' AS DATE)
+            CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS inst_date_admitted,
     clm.admit_type_code                                                                        AS inst_admit_type_std_id,
     clm.admit_src_code                                                                        AS inst_admit_source_std_id,
@@ -90,69 +89,138 @@ SELECT DISTINCT
         ELSE SUBSTR(CONCAT('00', sln.place_service), -2)
     END                                                                                     AS place_of_service_std_id,
     NULL                                                                                    AS service_line_number,
-    NULL                                                                                    AS diagnosis_code,
-    NULL                                                                                    AS diagnosis_code_qual,
-    NULL                                                                                    AS diagnosis_priority,
-    NULL                                                                                    AS admit_diagnosis_ind,
-    /* procedure_code */
-    CLEAN_UP_PROCEDURE_CODE
-        (
-            ARRAY
-                (
-                    clm.principal_procedure,
-                    clm.other_proc_code_2,
-                    clm.other_proc_code_3,
-                    clm.other_proc_code_4,
-                    clm.other_proc_code_5,
-                    clm.other_proc_code_6,
-                    clm.initial_procedure,
-                    clm.other_proc_code_7,
-                    clm.other_proc_code_8,
-                    clm.other_proc_code_9,
-                    clm.other_proc_code_10
-                )[proc_explode.n]
-        )                                                                                    AS procedure_code,
-    NULL                                                                                    AS procedure_code_qual,
-    /* principal_proc_ind */
+    /* diagnosis_code */
     CASE
         WHEN ARRAY
                 (
-                    clm.principal_procedure,
-                    clm.other_proc_code_2,
-                    clm.other_proc_code_3,
-                    clm.other_proc_code_4,
-                    clm.other_proc_code_5,
-                    clm.other_proc_code_6,
-                    clm.initial_procedure,
-                    clm.other_proc_code_7,
-                    clm.other_proc_code_8,
-                    clm.other_proc_code_9,
-                    clm.other_proc_code_10
-                )[proc_explode.n] IS NULL
+                    clm.admit_diagnosis,
+                    clm.primary_diagnosis,
+                    clm.diagnosis_code_2,
+                    clm.diagnosis_code_3,
+                    clm.diagnosis_code_4,
+                    clm.diagnosis_code_5,
+                    clm.diagnosis_code_6,
+                    clm.diagnosis_code_7,
+                    clm.diagnosis_code_8,
+                    clm.amb_nurse_to_diag
+                )[diag_explode.n] IS NULL 
              THEN NULL
-        WHEN clm.principal_procedure IS NULL
-             THEN NULL
-        WHEN CLEAN_UP_PROCEDURE_CODE(clm.principal_procedure) = 
-             CLEAN_UP_PROCEDURE_CODE
+        ELSE CLEAN_UP_DIAGNOSIS_CODE
                 (
                     ARRAY
                         (
-                            clm.principal_procedure,
-                            clm.other_proc_code_2,
-                            clm.other_proc_code_3,
-                            clm.other_proc_code_4,
-                            clm.other_proc_code_5,
-                            clm.other_proc_code_6,
-                            clm.initial_procedure,
-                            clm.other_proc_code_7,
-                            clm.other_proc_code_8,
-                            clm.other_proc_code_9,
-                            clm.other_proc_code_10
-                        )[proc_explode.n]
+                            clm.admit_diagnosis,
+                            clm.primary_diagnosis,
+                            clm.diagnosis_code_2,
+                            clm.diagnosis_code_3,
+                            clm.diagnosis_code_4,
+                            clm.diagnosis_code_5,
+                            clm.diagnosis_code_6,
+                            clm.diagnosis_code_7,
+                            clm.diagnosis_code_8,
+                            clm.amb_nurse_to_diag
+                        )[diag_explode.n],
+                    CASE 
+                        WHEN clm.coding_type IS NULL 
+                             THEN NULL 
+                        WHEN clm.coding_type = '9' 
+                             THEN '01' 
+                        WHEN UPPER(clm.coding_type) = 'X' 
+                             THEN '02' 
+                        ELSE NULL 
+                    END,
+                    CAST(EXTRACT_DATE(mmd.min_claim_date, '%Y%m%d') AS DATE)
+                )
+    END                                                                                     AS diagnosis_code,
+    /* diagnosis_code_qual */
+    CASE
+        WHEN ARRAY
+                (
+                    clm.admit_diagnosis,
+                    clm.primary_diagnosis,
+                    clm.diagnosis_code_2,
+                    clm.diagnosis_code_3,
+                    clm.diagnosis_code_4,
+                    clm.diagnosis_code_5,
+                    clm.diagnosis_code_6,
+                    clm.diagnosis_code_7,
+                    clm.diagnosis_code_8,
+                    clm.amb_nurse_to_diag
+                )[diag_explode.n] IS NULL 
+             THEN NULL
+        WHEN clm.coding_type IS NULL
+             THEN NULL
+        WHEN clm.coding_type = '9'
+             THEN '01'
+        WHEN UPPER(clm.coding_type) = 'X'
+             THEN '02'
+        ELSE NULL
+    END                                                                                     AS diagnosis_code_qual,
+    NULL                                                                                     AS diagnosis_priority,
+    /* admit_diagnosis_ind */
+    CASE
+        WHEN ARRAY
+                (
+                    clm.admit_diagnosis,
+                    clm.primary_diagnosis,
+                    clm.diagnosis_code_2,
+                    clm.diagnosis_code_3,
+                    clm.diagnosis_code_4,
+                    clm.diagnosis_code_5,
+                    clm.diagnosis_code_6,
+                    clm.diagnosis_code_7,
+                    clm.diagnosis_code_8,
+                    clm.amb_nurse_to_diag
+                )[diag_explode.n] IS NULL 
+             THEN NULL
+        WHEN clm.admit_diagnosis IS NULL
+             THEN NULL
+        WHEN CLEAN_UP_DIAGNOSIS_CODE
+                (
+                    clm.admit_diagnosis,
+                    CASE 
+                        WHEN clm.coding_type IS NULL 
+                             THEN NULL 
+                        WHEN clm.coding_type = '9' 
+                             THEN '01' 
+                        WHEN UPPER(clm.coding_type) = 'X' 
+                             THEN '02' 
+                        ELSE NULL 
+                    END,
+                    CAST(EXTRACT_DATE(mmd.min_claim_date, '%Y%m%d') AS DATE)
+                ) =
+           CLEAN_UP_DIAGNOSIS_CODE
+                (
+                    ARRAY
+                        (
+                            clm.admit_diagnosis,
+                            clm.primary_diagnosis,
+                            clm.diagnosis_code_2,
+                            clm.diagnosis_code_3,
+                            clm.diagnosis_code_4,
+                            clm.diagnosis_code_5,
+                            clm.diagnosis_code_6,
+                            clm.diagnosis_code_7,
+                            clm.diagnosis_code_8,
+                            clm.amb_nurse_to_diag
+                        )[diag_explode.n],
+                    CASE 
+                        WHEN clm.coding_type IS NULL 
+                             THEN NULL 
+                        WHEN clm.coding_type = '9' 
+                             THEN '01' 
+                        WHEN UPPER(clm.coding_type) = 'X' 
+                             THEN '02' 
+                        ELSE NULL 
+                    END,
+                    CAST(EXTRACT_DATE(mmd.min_claim_date, '%Y%m%d') AS DATE)
                 )
              THEN 'Y'
         ELSE 'N'
-    END                                                                                     AS principal_proc_ind,
+    END                                                                                     AS admit_diagnosis_ind,
+    NULL                                                                                    AS procedure_code,
+    NULL                                                                                     AS procedure_code_qual,
+    NULL                                                                                     AS principal_proc_ind,
     NULL                                                                                    AS procedure_units_billed,
     NULL                                                                                    AS procedure_modifier_1,
     NULL                                                                                    AS procedure_modifier_2,
@@ -583,55 +651,68 @@ SELECT DISTINCT
     GROUP BY 1
 ) mmd
    ON clm.claim_number = mmd.claim_number
- LEFT OUTER JOIN ref_gen_ref esdt
-   ON 1 = 1
-  AND esdt.hvm_vdr_feed_id = 24
-  AND esdt.gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
- LEFT OUTER JOIN ref_gen_ref ahdt
-   ON 1 = 1
-  AND ahdt.hvm_vdr_feed_id = 24
-  AND ahdt.gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) AS n) proc_explode
+CROSS JOIN
+    (
+        SELECT gen_ref_1_dt
+         FROM ref_gen_ref
+        WHERE hvm_vdr_feed_id = 24
+          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
+    ) esdt
+CROSS JOIN
+    (
+        SELECT gen_ref_1_dt
+         FROM ref_gen_ref 
+        WHERE hvm_vdr_feed_id = 24
+          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
+    ) ahdt
+CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)) AS n) diag_explode
 WHERE NOT EXISTS
     (
         SELECT 1
          FROM waystar_norm01_norm_lines nml
         WHERE clm.claim_number = nml.claim_id
-          AND COALESCE(nml.procedure_code, 'x') = 
+          AND COALESCE(nml.diagnosis_code, 'x') = 
               COALESCE
                 (
-                    CLEAN_UP_PROCEDURE_CODE
-                        (
-                            ARRAY
-                                (
-                                    clm.principal_procedure,
-                                    clm.other_proc_code_2,
-                                    clm.other_proc_code_3,
-                                    clm.other_proc_code_4,
-                                    clm.other_proc_code_5,
-                                    clm.other_proc_code_6,
-                                    clm.initial_procedure,
-                                    clm.other_proc_code_7,
-                                    clm.other_proc_code_8,
-                                    clm.other_proc_code_9,
-                                    clm.other_proc_code_10
-                                )[proc_explode.n]
-                        ), 'EMPTY'
+                  CLEAN_UP_DIAGNOSIS_CODE
+                    (
+                        ARRAY
+                            (
+                                clm.admit_diagnosis,
+                                clm.primary_diagnosis,
+                                clm.diagnosis_code_2,
+                                clm.diagnosis_code_3,
+                                clm.diagnosis_code_4,
+                                clm.diagnosis_code_5,
+                                clm.diagnosis_code_6,
+                                clm.diagnosis_code_7,
+                                clm.diagnosis_code_8,
+                                clm.amb_nurse_to_diag
+                            )[diag_explode.n],
+                        CASE 
+                            WHEN clm.coding_type IS NULL 
+                                 THEN NULL 
+                            WHEN clm.coding_type = '9' 
+                                 THEN '01' 
+                            WHEN UPPER(clm.coding_type) = 'X' 
+                                 THEN '02' 
+                            ELSE NULL 
+                        END,
+                        CAST(EXTRACT_DATE(mmd.min_claim_date, '%Y%m%d') AS DATE)
+                    ), 'EMPTY'
                 )
-
     )
----------- Procedure code explosion
+---------- Diagnosis code explosion
   AND ARRAY
         (
-            clm.principal_procedure,
-            clm.other_proc_code_2,
-            clm.other_proc_code_3,
-            clm.other_proc_code_4,
-            clm.other_proc_code_5,
-            clm.other_proc_code_6,
-            clm.initial_procedure,
-            clm.other_proc_code_7,
-            clm.other_proc_code_8,
-            clm.other_proc_code_9,
-            clm.other_proc_code_10
-        )[proc_explode.n] IS NOT NULL
+            clm.admit_diagnosis,
+            clm.primary_diagnosis,
+            clm.diagnosis_code_2,
+            clm.diagnosis_code_3,
+            clm.diagnosis_code_4,
+            clm.diagnosis_code_5,
+            clm.diagnosis_code_6,
+            clm.diagnosis_code_7,
+            clm.diagnosis_code_8,
+            clm.amb_nurse_to_diag
+        )[diag_explode.n] IS NOT NULL

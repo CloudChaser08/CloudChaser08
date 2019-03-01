@@ -1,5 +1,4 @@
 SELECT
-    record_id,
     claim_id,
     hvid,
     model_version,

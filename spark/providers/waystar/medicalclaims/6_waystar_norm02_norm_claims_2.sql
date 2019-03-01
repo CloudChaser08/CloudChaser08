@@ -1,5 +1,4 @@
 SELECT DISTINCT 
-    monotonically_increasing_id()                                                           AS record_id,
     clm.claim_number                                                                        AS claim_id,
     pay.hvid                                                                                AS hvid,
     '08'                                                                                    AS model_version,
@@ -557,7 +556,7 @@ SELECT DISTINCT
  LEFT OUTER JOIN waystar_dedup_lines sln
    ON clm.claim_number = sln.claim_number
   AND sln.line_number = '1'
- LEFT OUTER JOIN waystar_payload_sample pay 
+ LEFT OUTER JOIN waystar_payload pay 
    ON clm.hvjoinkey = pay.hvjoinkey
  LEFT OUTER JOIN
 /* Get the min and max dates for each claim_number. */

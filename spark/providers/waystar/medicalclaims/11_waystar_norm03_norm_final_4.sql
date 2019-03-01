@@ -1,5 +1,4 @@
 SELECT
-    record_id,
     claim_id,
     hvid,
     model_version,
@@ -86,7 +85,7 @@ SELECT
                     CAST('${VDR_FILE_DT}' AS DATE)
                 ) IS NULL
              THEN '0_PREDATES_HVM_HISTORY'
-        ELSE CONCATENATE
+        ELSE CONCAT
                 (
                     SUBSTR(CAST(DATE_ADD(date_service, dei.d) AS STRING), 1, 7), '-01'
                 )
