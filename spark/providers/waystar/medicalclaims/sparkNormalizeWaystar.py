@@ -38,18 +38,22 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
-        df = external_table_loader.load_analytics_db_table(
+        external_table_loader.load_analytics_db_table(
             runner.sqlContext, 'dw', 'date_explode_indices', 'date_explode_indices'
         )
-        df.cache().createOrReplaceTempView('date_explode_indices')
+        spark.table('date_explode_indices').cache().createOrReplaceTempView('date_explode_indices')
         spark.table('date_explode_indices').count()
 
     records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
-    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId', 'hvJoinKey'], table_name='waystar_payload', load_file_name=True)
+    payload_loader.load(runner, matching_path, table_name='waystar_payload', load_file_name=True)
 
     normalized_output = runner.run_all_spark_scripts([
         ['VDR_FILE_DT', date_input, False]
     ])
+
+    for t in ['waystar_dedup_lines', 'waystar_dedup_claims']:
+        spark.table(t).persist().createOrReplaceTempView(t)
+        spark.table(t).count()
 
     df = postprocessor.compose(
         lambda df: schema_enforcer.apply_schema(df, medicalclaims_schema, columns_to_keep=['part_provider', 'part_best_date'])
@@ -62,10 +66,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
         normalized_records_unloader.unload(
             spark, runner, df, 'part_best_date', date_input, 'navicure',
-            columns=_columns, 
-            hvm_historical_date=datetime.datetime(
-                hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
-            ), substr_date_part=False
+            columns=_columns, substr_date_part=False
         )
     else: 
         df.collect()
