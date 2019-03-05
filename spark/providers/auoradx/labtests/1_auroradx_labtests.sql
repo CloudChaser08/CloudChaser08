@@ -1,7 +1,7 @@
 SELECT
     monotonically_increasing_id()                                                       AS record_id,
     current_date()                                                                      AS created,
-    split(txn.input_file_name, '/')[size(split(txn.input_file_name, '/'))-1]            AS input_file_name,
+    split(txn.input_file_name, '/')[size(split(txn.input_file_name, '/'))-1]            AS data_set,
     txn.accessionid                                                                     AS claim_id,
     COALESCE(pay.hvid, CONCAT('85_', COALESCE(txn.patientobjectid, '')))                AS hvid,
     '07'                                                                                AS model_version,
