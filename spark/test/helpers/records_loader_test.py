@@ -81,6 +81,15 @@ def test_incomplete_csv(spark):
     assert df.count() == 0
     assert df.columns == columns
 
+def test_error_wrong_number_of_columns_csv(spark):
+    """
+    Test that attempting to read a CSV with too many columns results in an error
+    """
+    with pytest.raises(Exception) as e:
+        records_loader.load(spark['runner'], csv_location, columns[:-1], 'csv', ',')
+
+    assert str(e.value) == "Number of columns in data file exceeds expected schema"
+
 def test_unsupported_file_type(spark):
     """
     Test that the loader throws an error when an unsupported file type is passed
@@ -89,7 +98,7 @@ def test_unsupported_file_type(spark):
     with pytest.raises(ValueError) as e:
         records_loader.load(spark['runner'], empty_csv_location, columns, 'tsv')
 
-    assert e.value.message == 'Unsupported file type: tsv'
+    assert str(e.value) == 'Unsupported file type: tsv'
 
 def test_load_and_clean_all(spark):
     records_loader.load_and_clean_all(spark['runner'], csv_location, transactions, 'csv', ',')
