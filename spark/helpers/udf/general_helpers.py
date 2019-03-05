@@ -36,6 +36,9 @@ def extract_number(text):
 
 
 def cap_date(d, min_date, max_date):
+    if d is None:
+        return None
+
     min_date = min_date or d.min
     max_date = max_date or d.max
     return d if d and max_date >= d >= min_date else None
