@@ -88,7 +88,7 @@ def test_error_wrong_number_of_columns_csv(spark):
     with pytest.raises(Exception) as e:
         records_loader.load(spark['runner'], csv_location, columns[:-1], 'csv', ',')
 
-    assert str(e.value) == "Number of columns in data file exceeds expected schema"
+    assert str(e.value) == "Number of columns in data file (5) exceeds expected schema (4)"
 
 def test_unsupported_file_type(spark):
     """

@@ -21,7 +21,11 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
         df = runner.sqlContext.read.csv(location, schema=schema, sep=delimiter, header=header)
         temp_df = runner.sqlContext.read.csv(location, sep=delimiter, header=header)
         if len(temp_df.schema) > len(schema):
-            raise Exception("Number of columns in data file exceeds expected schema")
+            raise Exception(
+                "Number of columns in data file ({}) exceeds expected schema ({})".format(
+                    len(temp_df.schema), len(schema)
+                )
+            )
     elif file_type == 'orc':
         df = runner.sqlContext.read.schema(schema).orc(location)
     elif file_type == 'json':
