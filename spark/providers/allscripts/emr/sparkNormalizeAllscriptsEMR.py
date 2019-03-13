@@ -101,18 +101,28 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
 
     for table in transaction_schemas.all_tables:
         if table.name in {'vitals_backfill', 'results_backfill'}:
-            runner.sqlContext.read.csv(
+            raw_table = runner.sqlContext.read.csv(
                 backfill_path + table.name + '/', sep='|', schema=table.schema
-            ).createOrReplaceTempView(table.name)
+            )
+            postprocessor.compose(
+                    postprocessor.trimmify, postprocessor.nullify
+                )(raw_table).createOrReplaceTempView(table.name)
         elif table.name in {'providers', 'patientdemographics', 'clients'}:
-            runner.sqlContext.read.csv(
+            raw_table = runner.sqlContext.read.csv(
                 input_path + table.name + '/', sep='|', schema=table.schema
-            ).createOrReplaceTempView('transactional_' + table.name)
+            )
+            postprocessor.compose(
+                    postprocessor.trimmify, postprocessor.nullify
+                )(raw_table).createOrReplaceTempView('transactional_' + table.name)
         else:
             window = Window.partitionBy(*table.pk).orderBy(F.col('recordeddttm').desc())
             raw_table = runner.sqlContext.read.csv(
                 input_path + table.name + '/', sep='|', schema=table.schema
             )
+
+            raw_table = postprocessor.compose(
+                    postprocessor.trimmify, postprocessor.nullify
+                )(raw_table)
 
             # deduplicate based on natural key
             raw_table = raw_table.withColumn('row_num', F.row_number().over(window))\
