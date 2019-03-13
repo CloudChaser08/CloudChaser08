@@ -196,8 +196,8 @@ vitals = TransactionTable(
     skewed_columns=['genproviderID', 'gen2providerID']
 )
 
-vitals_backfill = TransactionTable(
-    'vitals_backfill',
+vitals_backfill_tier1 = TransactionTable(
+    'vitals_backfill_tier1',
     StructType([
         StructField(column_name, StringType(), True)
         for column_name in [
@@ -207,8 +207,19 @@ vitals_backfill = TransactionTable(
     ])
 )
 
-results_backfill = TransactionTable(
-    'results_backfill',
+vitals_backfill_tier2 = TransactionTable(
+    'vitals_backfill_tier2',
+    StructType([
+        StructField(column_name, StringType(), True)
+        for column_name in [
+            'genpatientid', 'gen2patientid', 'vitalid', 'versionid', 'value', 'units',
+            'recordeddttm'
+        ]
+    ])
+)
+
+results_backfill_tier1 = TransactionTable(
+    'results_backfill_tier1',
     StructType([
         StructField(column_name, StringType(), True)
         for column_name in [
@@ -218,8 +229,20 @@ results_backfill = TransactionTable(
     ])
 )
 
+results_backfill_tier2 = TransactionTable(
+    'results_backfill_tier2',
+    StructType([
+        StructField(column_name, StringType(), True)
+        for column_name in [
+            'genpatientid', 'gen2patientid', 'resultid', 'versionid', 'value', 'units',
+            'recordeddttm'
+        ]
+    ])
+)
+
 all_tables = [
     vitals, vaccines, results, providers, problems, patients, orders,
-    medications, encounters, clients, appointments, allergies, vitals_backfill,
-    results_backfill
+    medications, encounters, clients, appointments, allergies,
+    vitals_backfill_tier1, vitals_backfill_tier2, results_backfill_tier1,
+    results_backfill_tier2
 ]

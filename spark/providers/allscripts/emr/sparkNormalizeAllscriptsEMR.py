@@ -100,7 +100,8 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     explode.generate_exploder_table(spark, 3, 'clin_obsn_exploder')
 
     for table in transaction_schemas.all_tables:
-        if table.name in {'vitals_backfill', 'results_backfill'}:
+        if table.name in {'vitals_backfill_tier1', 'vitals_backfill_tier2',
+                'results_backfill_tier1', 'results_backfill_tier2'}:
             raw_table = runner.sqlContext.read.csv(
                 backfill_path + table.name + '/', sep='|', schema=table.schema
             )
@@ -138,6 +139,16 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 )
 
             raw_table.createOrReplaceTempView('transactional_' + table.name)
+
+    # Tier1 and tier2 backfill data was delivered in slightly different layouts
+    # Align and merge them
+    t1 = spark.table('vitals_backfill_tier1')
+    t2 = spark.table('vitals_backfill_tier2')
+    t1.union(t2.select(*t1.columns)).createOrReplaceTempView('vitals_backfill')
+
+    t1 = spark.table('results_backfill_tier1')
+    t2 = spark.table('results_backfill_tier2')
+    t1.union(t2.select(*t1.columns)).createOrReplaceTempView('results_backfill')
 
     payload_loader.load(runner, matching_path, extra_cols=['personId', 'claimId'])
 
