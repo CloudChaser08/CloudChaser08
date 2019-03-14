@@ -1,6 +1,8 @@
 from datetime import datetime, date
 import argparse
 
+import pyspark.sql.functions as func
+
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -9,37 +11,28 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
+import spark.helpers.records_loader as records_loader
 import spark.common.pharmacyclaims_common_model_v6 as pharmacyclaims_common_model
 import spark.helpers.schema_enforcer as schema_enforcer
-from spark.providers.genoa.pharmacyclaims import load_transactions
-
+import spark.helpers.udf.general_helpers as gen_helpers
+import spark.providers.genoa.pharmacyclaims.transactional_schemas as transactional_schemas
 
 def run(spark, runner, date_input, test = False, airflow_test = False):
     script_path = __file__
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/genoa/pharmacyclaims/resources/input/{}/'.format(
-                date_input.replace('-', '/')
-            )
+            script_path, '../../../test/providers/genoa/pharmacyclaims/resources/input/*/*/*/'
         )
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/genoa/pharmacyclaims/resources/matching/'
         )
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/genoa/out/{}/transactions/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/genoa/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/genoa/out/*/*/*/transactions/'
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/genoa/payload/*/*/*/'
     else:
-        input_path = 's3://salusv/incoming/pharmacyclaims/genoa/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3://salusv/matching/payload/pharmacyclaims/genoa/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        input_path = 's3://salusv/incoming/pharmacyclaims/genoa/*/*/*/'
+        matching_path = 's3://salusv/matching/payload/pharmacyclaims/genoa/*/*/*/'
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -51,23 +44,56 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     # Load in the matching payload
     payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
-    # Genoa sent historical data in one schema, and then added 3 new columns
-    # later on
-    load_transactions.load(spark, runner.sqlContext, input_path, date_input >= '2017-11-01')
+    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
 
-    postprocessor.compose(
-        postprocessor.trimmify,
-        postprocessor.nullify
-    )(
-        runner.sqlContext.sql('select * from genoa_rx_raw')
-    ).createOrReplaceTempView('genoa_rx_raw')
+    # Genoa sent historical data (before 2017-11-01) in one schema, and then
+    # added 3 new columns later on. We load everything as though it's in the
+    # new schema, so the historical data columns need to be adjusted
+    historical = spark.table('genoa_rx_raw').where(func.regexp_extract('input_file_name', '(..../../..)/[^/]*$', 1) < '2017/11/01')
+    not_historical = spark.table('genoa_rx_raw').where(func.regexp_extract('input_file_name', '(..../../..)/[^/]*$', 1) >= '2017/11/01')
+
+    old_col_name = historical.columns[-5]
+    new_col_name = historical.columns[-2]
+    historical_adjusted = (
+        historical.withColumnRenamed(old_col_name, 'tmp')
+                  .withColumnRenamed(historical.columns[-2], old_col_name)
+                  .withColumnRenamed('tmp', new_col_name)
+                  .select(*not_historical.columns) 
+    )
+
+    get_set_id = func.udf(lambda x: gen_helpers.remove_split_suffix(x).replace('Genoa_',''))
 
     # On 2017-11-01, Genoa gave us a restatement of all the data from
     # 2015-05-31 on. If any batches before 2017-11-01 contain data from the
     # restated time period, remove it
-    if date_input < '2017-11-01' and date_input >= '2015-05-31':
-        runner.sqlContext.sql("select * from genoa_rx_raw where date_of_service < '2015-05-31'") \
-            .createOrReplaceTempView('genoa_rx_raw')
+    historical_adjusted = historical_adjusted.where(historical_adjusted['date_of_service'] < '2015-05-31')
+
+    (
+        historical_adjusted.union(not_historical)
+                           .withColumn('input_file_name', get_set_id('input_file_name'))
+                           .createOrReplaceTempView('genoa_rx_raw')
+    )
+
+    # Genoa sends 90 days of data in every batch, resulting in a lot of duplciates. Rather than
+    # trying to remove duplicates from individual batch, deduplicate all the Genoa data
+    raw_table = spark.table('genoa_rx_raw')
+    grouping_cols = raw_table.columns
+    grouping_cols.remove("hv_join_key")
+    grouping_cols.remove("input_file_name")
+
+    final_columns = [func.col(c) for c in grouping_cols]
+    final_columns.append(func.max("hv_join_key").alias("hv_join_key"))
+    # Use the minimal input file name so that claim_id - data_set pairs will not change when we
+    # normalize new batches that also contain the same claims
+    final_columns.append(func.min("input_file_name").alias("input_file_name"))
+
+    # Deduplicate by every column except hv_join_key and input_file_name since those are unique to
+    # a batch
+    (
+        raw_table.groupBy(*grouping_cols)
+                 .agg(*final_columns)
+                 .createOrReplaceTempView("genoa_rx_raw")
+    )
 
     norm_pharmacy = runner.run_spark_script('mapping.sql', return_output=True)
     schema_enforcer.apply_schema(norm_pharmacy, pharmacyclaims_common_model.schema) \
@@ -116,8 +142,18 @@ def main(args):
     else:
         output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
-    normalized_records_unloader.distcp(output_path)
+    backup_path = output_path.replace('salusv', 'salusv/backup')
 
+    subprocess.check_call(
+        ['aws', 's3', 'rm', '--recursive', '{}part_provider=genoa/'.format(backup_path)]
+    )
+
+    subprocess.check_call([
+        'aws', 's3', 'mv', '--recursive', '{}part_provider=genoa/'.format(output_path),
+        '{}part_provider=genoa/'.format(backup_path)
+    ])
+
+    normalized_records_unloader.distcp(output_path)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

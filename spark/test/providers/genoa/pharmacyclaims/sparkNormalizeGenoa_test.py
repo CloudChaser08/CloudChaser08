@@ -4,18 +4,15 @@ import pytest
 from pyspark.sql import Row
 import spark.providers.genoa.pharmacyclaims.sparkNormalizeGenoaRX as genoa
 
-results_old = None
-results_bad = None
-results_new = None
-
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
     spark['sqlContext'].dropTempTable('genoa_rx_raw')
     spark['sqlContext'].dropTempTable('ref_gen_ref')
 
 
+@pytest.fixture(scope='module')
 @pytest.mark.usefixtures('spark')
-def test_init(spark):
+def normalization_results(spark):
     spark['spark'].sparkContext.parallelize([
         Row(
             hvm_vdr_feed_id = '21',
@@ -26,47 +23,55 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    global results_old, results_new, results_bad
-    genoa.run(spark['spark'], spark['runner'], '2015-02-01', test = True)
-    results_old = spark['sqlContext'] \
-                .sql('select * from pharmacyclaims_common_model') \
-                .collect()
     genoa.run(spark['spark'], spark['runner'], '2017-11-01', test = True)
-    results_new = spark['sqlContext'] \
-                .sql('select * from pharmacyclaims_common_model') \
-                .collect()
+    return (
+                spark['sqlContext']
+                    .sql('select * from pharmacyclaims_common_model')
+                    .collect()
+           )
+
+@pytest.mark.usefixtures('normalization_results')
+def test_hardcode_values(normalization_results):
+    for r in normalization_results:
+        assert r.model_version == '06'
+        assert r.data_feed == '21'
+        assert r.data_vendor == '20'
+        assert r.data_set in {"HealthVerity_DeID_Payload_20171101_110404.txt",
+                              "HealthVerity_DeID_Payload_20150201_110404.txt"}
+
+@pytest.mark.usefixtures('normalization_results')
+def test_new_fields_mapped(normalization_results):
+    for r in normalization_results:
+        if r.data_set == "HealthVerity_DeID_Payload_20171101_110404.txt":
+            assert '50' in r.claim_id
+            assert r.transaction_code_std == 'B1'
+            assert r.response_code_std == 'P'
+
+@pytest.mark.usefixtures('normalization_results')
+def test_new_fields_exist_null(normalization_results):
+    for r in normalization_results:
+        if r.data_set == "HealthVerity_DeID_Payload_20150201_110404.txt":
+            assert r.claim_id is None
+            assert r.transaction_code_std is None
+            assert r.response_code_std is None
+
+@pytest.mark.usefixtures('normalization_results')
+def test_bad_data_deleted(normalization_results):
     # Genoa sent a restatement of all the data between 2015-05-31 and 2017-11-01
     # Any batches between those dates should have data removed if it falls in
     # the restated range
-    genoa.run(spark['spark'], spark['runner'], '2016-05-01', test = True)
-    results_bad = spark['sqlContext'] \
-                .sql('select * from pharmacyclaims_common_model') \
-                .collect()
+    bad_results = [
+        r for r in normalization_results
+        if r.data_set == "HealthVerity_DeID_Payload_20160501_110404.txt"
+    ]
+    len(bad_results) == 0
 
-def test_hardcode_values():
-    for r in results_new:
-        assert r.model_version == '06'
-        assert r.data_feed == '21'
-        assert r.data_vendor == '20'
-        assert r.data_set == "HealthVerity_DeID_Payload_20171101_110404.txt"
-
-    for r in results_old:
-        assert r.model_version == '06'
-        assert r.data_feed == '21'
-        assert r.data_vendor == '20'
-        assert r.data_set == "HealthVerity_DeID_Payload_20150201_110404.txt"
-
-def test_new_fields_mapped():
-    for r in results_new:
-        assert '50' in r.claim_id
-        assert r.transaction_code_std == 'B1'
-        assert r.response_code_std == 'P'
-
-def test_new_fields_exist_null():
-    for r in results_old:
-        assert r.claim_id is None
-        assert r.transaction_code_std is None
-        assert r.response_code_std is None
-
-def test_bad_data_deleted():
-    len(results_bad) == 0
+@pytest.mark.usefixtures('normalization_results')
+def test_duplicate_data_removed(normalization_results):
+    # All the data in the 2017-12-01 batch also exists in the 2017-11-01 batch,
+    # so nothing of the 2017-12-01 batch will remain
+    duplicate_results = [
+        r for r in normalization_results
+        if r.data_set == "HealthVerity_DeID_Payload_20171201_110404.txt"
+    ]
+    len(duplicate_results) == 0
