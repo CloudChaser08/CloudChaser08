@@ -178,6 +178,8 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
         final_df
     ).createOrReplaceTempView('medicalclaims_common_model')
 
+    final_df = spark.table('medicalclaims_common_model')
+
     if not test:
         normalized_records_unloader.unload(
             spark, runner, final_df, 'date_service', date_input, 'cardinal_pms'
