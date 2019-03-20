@@ -172,16 +172,16 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
         spark, runner, DELIVERABLE_LOC, 'medicalclaims', test=test
     )
 
-    # NOTE: Uncomment or add a flag to run this if/when we start adding their data to the warehouse
-    # # deobfuscate hvid
-    # postprocessor.deobfuscate_hvid(DEOBFUSCATION_KEY, nullify_non_integers=True)(
-    #     pms_data_final
-    # ).createOrReplaceTempView('medicalclaims_common_model')
 
-    # if not test:
-    #     normalized_records_unloader.unload(
-    #         spark, runner, pms_data_final, 'date_service', date_input, 'cardinal_pms'
-    #     )
+    # deobfuscate hvid
+    postprocessor.deobfuscate_hvid(DEOBFUSCATION_KEY, nullify_non_integers=True)(
+        final_df
+    ).createOrReplaceTempView('medicalclaims_common_model')
+
+    if not test:
+        normalized_records_unloader.unload(
+            spark, runner, final_df, 'date_service', date_input, 'cardinal_pms'
+        )
 
 
 def main(args):
@@ -201,12 +201,12 @@ def main(args):
             args.batch_id if args.batch_id else args.date.replace('-', '/')
         )
     else:
-        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2018-05-16/'
+        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
         deliverable_path = 's3://salusv/deliverable/cardinal_pms-0/{}/'.format(
             args.batch_id if args.batch_id else args.date.replace('-', '/')
         )
 
-    # normalized_records_unloader.distcp(output_path)
+    normalized_records_unloader.distcp(output_path)
     normalized_records_unloader.distcp(deliverable_path, DELIVERABLE_LOC)
 
 
