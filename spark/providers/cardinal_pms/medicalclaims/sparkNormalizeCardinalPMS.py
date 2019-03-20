@@ -174,11 +174,9 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
 
 
     # deobfuscate hvid
-    postprocessor.deobfuscate_hvid(DEOBFUSCATION_KEY, nullify_non_integers=True)(
+    final_df = postprocessor.deobfuscate_hvid(DEOBFUSCATION_KEY, nullify_non_integers=True)(
         final_df
-    ).createOrReplaceTempView('medicalclaims_common_model')
-
-    final_df = spark.table('medicalclaims_common_model')
+    )
 
     if not test:
         normalized_records_unloader.unload(
