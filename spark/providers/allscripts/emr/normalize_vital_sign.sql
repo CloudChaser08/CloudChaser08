@@ -41,7 +41,9 @@ SELECT
     CASE WHEN vit.status IS NOT NULL THEN 'VITAL_STATUS' END                   AS vit_sign_stat_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     CASE WHEN vbf.vitalid IS NOT NULL
-        THEN vbf.recordeddttm ELSE vit.recordeddttm END                        AS data_captr_dt,
+        THEN EXTRACT_DATE(SUBSTRING(vbf.recordeddttm, 1, 10), '%Y-%m-%d', NULL, CAST({backfill_max_cap} AS DATE))
+        ELSE EXTRACT_DATE(SUBSTRING(vit.recordeddttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE))
+    END                                                                        AS data_captr_dt,
     REMOVE_LAST_CHARS(
         CONCAT(
             CASE

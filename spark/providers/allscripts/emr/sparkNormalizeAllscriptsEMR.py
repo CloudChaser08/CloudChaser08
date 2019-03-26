@@ -55,6 +55,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     matching_date = '2017-09' if date_input <= '2017-09' else date_input
 
     max_cap = (date_obj + relativedelta(months=1) - relativedelta(days=1)).strftime('%Y-%m-%d')
+    backfill_max_cap = '2018-09-30'
 
     if test:
         input_path = file_utils.get_abs_path(
@@ -203,7 +204,8 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     )
     normalized_lab_result = runner.run_spark_script(
         'normalize_lab_result.sql', [
-            ['max_cap', max_cap]
+            ['max_cap', max_cap],
+            ['backfill_max_cap', backfill_max_cap]
         ], return_output=True, source_file_path=script_path
     )
     normalized_medication = runner.run_spark_script(
@@ -218,7 +220,8 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     )
     normalized_vital_sign = runner.run_spark_script(
         'normalize_vital_sign.sql', [
-            ['max_cap', max_cap]
+            ['max_cap', max_cap],
+            ['backfill_max_cap', backfill_max_cap]
         ], return_output=True, source_file_path=script_path
     )
 
@@ -248,7 +251,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31') # Max cap is applied in SQL
             ]
         }, {
             'name': 'encounter',
@@ -356,7 +359,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31') # Max cap is applied in SQL
             ]
         }
     ]

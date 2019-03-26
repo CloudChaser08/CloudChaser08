@@ -50,7 +50,9 @@ SELECT
     CASE WHEN res.resultstatus IS NOT NULL THEN 'RESULT_STATUS' END            AS lab_result_stat_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     CASE WHEN rbf.resultid IS NOT NULL
-        THEN rbf.recordeddttm ELSE res.recordeddttm END                        AS data_captr_dt,
+        THEN EXTRACT_DATE(SUBSTRING(rbf.recordeddttm, 1, 10), '%Y-%m-%d', NULL, CAST({backfill_max_cap} AS DATE))
+        ELSE EXTRACT_DATE(SUBSTRING(res.recordeddttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE))
+    END                                                                        AS data_captr_dt,
     REMOVE_LAST_CHARS(
         CONCAT(
             CASE
