@@ -410,7 +410,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             ), staging_subdir=table['name'], test_dir=(file_utils.get_abs_path(
                 script_path, '../../../test/providers/allscripts/emr/resources/output/'
-            ) if test else None), unload_partition_count=500, skip_rename=True,
+            ) if test else None), unload_partition_count=50, skip_rename=True,
             distribution_key='row_id'
         )
 
@@ -437,32 +437,6 @@ def main(args):
             output_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/spark-output/'
         else:
             output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
-
-        # backup allscripts normalized data before distcp
-        if not args.airflow_test:
-            try:
-                subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(
-                    model
-                )])
-                files_exist = True
-            except subprocess.CalledProcessError as e:
-                if str(e).endswith('status 1'):
-                    files_exist = False
-                else:
-                    raise
-
-            if files_exist:
-                subprocess.check_call([
-                    'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
-                ])
-                multi_s3_transfer.multithreaded_copy(
-                    's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
-                    's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
-                )
-                subprocess.check_call([
-                    'aws', 's3', 'rm', '--recursive',
-                    's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model)
-                ])
 
         normalized_records_unloader.distcp(output_path)
 
