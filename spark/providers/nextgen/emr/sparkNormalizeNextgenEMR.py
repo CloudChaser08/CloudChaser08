@@ -453,7 +453,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=cols_to_keep),
             table['privacy_filter'].filter(*filter_args),
             postprocessor.trimmify,
-            postprocessor.nullify
+            postprocessor.nullify,
             schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=cols_to_keep),
         )(
             normalized[table['data_type']]
