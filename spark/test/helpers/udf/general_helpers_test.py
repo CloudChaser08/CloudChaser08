@@ -12,6 +12,7 @@ def test_extract_number():
 
 def test_clean_up_freetext():
     assert "3123LLL &&&" == gh.clean_up_freetext("3123LLL   ,,,&&&   ", remove_periods=True)
+    assert gh.clean_up_freetext(None) is None
 
 def test_cap_date():
     test_date = datetime.date(1990, 6, 1)
