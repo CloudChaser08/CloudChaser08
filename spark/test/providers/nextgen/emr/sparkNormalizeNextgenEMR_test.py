@@ -73,11 +73,11 @@ def test_lipid_msrmt_mapping():
 
     global results
     assert len(filter(lambda r: r.lab_test_panel_nm == 'LIPID_PANEL', results['lab_result'])) == 8
-    assert len(filter(lambda r: r.lab_result_qual == 'LDL_CHOLESTEROL'
-            and r.lab_result_msrmt == '147.00', results['lab_result'])) \
+    assert len(filter(lambda r: r.lab_test_nm == 'LDL_CHOLESTEROL'
+            and r.lab_result_nm == '147.00', results['lab_result'])) \
         == 2
-    assert len(filter(lambda r: r.lab_result_qual == 'TOTAL_CHOLESTEROL'
-            and r.lab_result_msrmt == '235.00', results['lab_result'])) \
+    assert len(filter(lambda r: r.lab_test_nm == 'TOTAL_CHOLESTEROL'
+            and r.lab_result_nm == '235.00', results['lab_result'])) \
         == 2
 
 def test_medication_diagnosis_split():

@@ -25,18 +25,18 @@ SELECT
         substring(lip.datadatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS lab_result_dt,
     'LIPID_PANEL'                           AS lab_test_panel_nm,
-    NULL                                    AS lab_test_nm,
+    ARRAY('LDL_CHOLESTEROL', 'HDL_CHOLESTEROL', 'TRIGLYCERIDES', 'TOTAL_CHOLESTEROL')[x.n]
+                                            AS lab_test_nm,
     ARRAY('134577', '20859', '25718', '20933')[x.n]
                                             AS lab_test_loinc_cd,
     NULL                                    AS lab_test_snomed_cd,
     NULL                                    AS lab_test_vdr_cd,
-    NULL                                    AS lab_result_nm,
     ARRAY(lip.ldl, lip.hdl, lip.triglycerides, lip.totalcholesterol)[x.n]
-                                            AS lab_result_msrmt,
+                                            AS lab_result_nm,
+    NULL                                    AS lab_result_msrmt,
     ARRAY('mg/dl', 'mg/dl or mg/mL', 'mg/dl', 'mg/dl')[x.n]
                                             AS lab_result_uom,
-    ARRAY('LDL_CHOLESTEROL', 'HDL_CHOLESTEROL', 'TRIGLYCERIDES', 'TOTAL_CHOLESTEROL')[x.n]
-                                            AS lab_result_qual,
+    NULL                                    AS lab_result_qual,
     NULL                                    AS data_captr_dt,
     NULL                                    AS rec_stat_cd,
     'lipidpanel'                            AS prmy_src_tbl_nm,
