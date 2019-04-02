@@ -10,6 +10,8 @@ def clean_up_freetext(val, remove_periods=False):
     Remove all characters that are not numbers, letters, spaces, periods, or ampersands
     Convert multiple consequtive spaces into a single space
     """
+    if val is None:
+        return None
     try:
         new_val = re.sub(r'  *', ' ', re.sub(r'[^A-Za-z0-9 .&#%]', ' ', val)).strip()
         if remove_periods:
