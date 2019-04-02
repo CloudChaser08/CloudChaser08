@@ -33,13 +33,30 @@ def get_part_file_path(list_cmd, directory):
         if file_path.startswith(prefix):
             return file_path
 
-def group_validity_check(group_matched_patient_count):
-    (valid_groups, invalid_groups) = ([], [])
-    for group_id in group_ids:
-        if group_matched_patient_count.get(group_id, 0) < 10:
-            invalid_groups.append(group_id)
+def group_validity_check(group_dfs, group_ids):
+    """
+    A group is valid if it contains at least 10 valid records.
+
+    A record is valid as long as it has an entry for first clusterA.
+
+    If a row in matching payload does not contain invalidReason, then the record contains clusterA.
+    If a row in matching payload does contain invalidReason AND invalidReason['clusterA'] is True,
+        then the record contains clusterA.
+    """
+    valid_groups = []
+    invalid_groups = []
+    for group_df, group_id in zip(group_dfs, group_ids):
+        if ('invalidReason', 'string') not in group_df.dtypes:
+            invalid_patients = group_df.where(~group_df.invalidReason.isNull()).cache()
+            invalid_patients = invalid_patients.where(invalid_patients['invalidReason']['clusterA']== False).cache()
+
+            if group_df.count() - invalid_patients.count() < 10:
+                invalid_groups.append(group_id)
+            else:
+                valid_groups.append(group_id)
         else:
             valid_groups.append(group_id)
+
     return valid_groups, invalid_groups
 
 def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False):
@@ -72,6 +89,17 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
         list_cmd      = ['hadoop', 'fs', '-ls']
         move_cmd      = ['hadoop', 'fs', '-mv']
 
+
+    group_dfs = [
+        payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus', 'invalidReason'], return_output=True,
+                partitions=10) \
+            .select('hvid', 'matchStatus', 'invalidReason') \
+            .withColumn('humana_group_id', F.lit(group_id))
+        for group_id in group_ids
+     ]
+
+    valid_groups, invalid_groups = group_validity_check(group_dfs, group_ids)
+
     all_patients = reduce(lambda x, y: x.union(y),
         [
             payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True,
@@ -95,7 +123,10 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     group_matched_patient_count   = \
         {r.humana_group_id : r['count'] for r in matched_patients.groupBy('humana_group_id').count().collect()}
 
-    valid_groups, invalid_groups = group_validity_check(group_matched_patient_count)
+    if invalid_groups:
+        medical_extract    = spark.createDataFrame([("NONE",)], ['humana_group_id'])
+        pharmacy_extract   = spark.createDataFrame([("NONE",)], ['humana_group_id'])
+        enrollment_extract = spark.createDataFrame([("NONE",)], ['humana_group_id'])
 
     matched_w_count = matched_patients.groupBy('humana_group_id').count().where(F.col('count') >= F.lit(10))
     matched_patients = matched_patients.join(matched_w_count, 'humana_group_id', 'left_semi')
