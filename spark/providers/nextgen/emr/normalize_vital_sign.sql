@@ -52,8 +52,8 @@ WHERE
     OR
     (
     -- Unless the vit_sign_msrmt is INCHES, we still want the row if the date exists
-        vsn.vit_sign_last_msrmt_dt IS NOT NULL
-        AND vsn.vit_sign_uom = 'INCHES'
+        vsn.vit_sign_last_msrmt_dt[x.n] IS NOT NULL
+        AND vsn.vit_sign_uom[x.n] = 'INCHES'
     )
 )
 DISTRIBUTE BY hvid
