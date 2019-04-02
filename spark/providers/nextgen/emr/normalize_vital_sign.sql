@@ -42,5 +42,18 @@ FROM vitalsigns_w_msrmt vsn
             ) < substring(dem.nextrecorddate, 1, 8)
             OR dem.nextrecorddate IS NULL)
     CROSS JOIN vital_signs_exploder x
-WHERE (vsn.vit_sign_msrmt[x.n] IS NOT NULL AND vsn.vit_sign_msrmt[x.n] != '')
+WHERE
+(
+    (
+    -- Only keep a row if it's measurement is populated
+        vsn.vit_sign_msrmt[x.n] IS NOT NULL
+        AND vsn.vit_sign_msrmt[x.n] != ''
+    )
+    OR
+    (
+    -- Unless the vit_sign_msrmt is INCHES, we still want the row if the date exists
+        vsn.vit_sign_last_msrmt_dt[x.n] IS NOT NULL
+        AND vsn.vit_sign_uom[x.n] = 'INCHES'
+    )
+)
 DISTRIBUTE BY hvid
