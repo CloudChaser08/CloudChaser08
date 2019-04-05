@@ -5,15 +5,16 @@ from dateutil.relativedelta import relativedelta
 import subprocess
 import logging
 
-from pyspark.sql.functions import col, rand, concat, when, lit
+import pyspark.sql.functions as F
 from pyspark.sql.utils import AnalysisException
+from pyspark.sql import Window
 
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.providers.allscripts.emr.transaction_schemas as transaction_schemas
 from spark.common.emr.encounter import schema_v7 as encounter_schema
 from spark.common.emr.diagnosis import schema_v7 as diagnosis_schema
-from spark.common.emr.procedure import schema_v7 as procedure_schema
+from spark.common.emr.procedure import schema_v9 as procedure_schema
 from spark.common.emr.provider_order import schema_v7 as provider_order_schema
 from spark.common.emr.lab_order import schema_v6 as lab_order_schema
 from spark.common.emr.lab_result import schema_v7 as lab_result_schema
@@ -54,6 +55,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     matching_date = '2017-09' if date_input <= '2017-09' else date_input
 
     max_cap = (date_obj + relativedelta(months=1) - relativedelta(days=1)).strftime('%Y-%m-%d')
+    backfill_max_cap = '2018-09-30'
 
     if test:
         input_path = file_utils.get_abs_path(
@@ -66,9 +68,9 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 matching_date.replace('-', '/')
             )
         ) + '/'
-        warehouse_path_template = file_utils.get_abs_path(
-            script_path, '../../../test/providers/allscripts/emr/resources/warehouse/{}/part_hvm_vdr_feed_id=25/*'
-        )
+        backfill_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/allscripts/emr/resources/input/2016/12/'
+        ) + '/'
     elif airflow_test:
         input_path = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/out/{}/'.format(
             date_input.replace('-', '/')
@@ -76,8 +78,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
         matching_path = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/payload/{}/'.format(
             matching_date.replace('-', '/')
         )
-        warehouse_path_template = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/warehouse/{}/' \
-                         'part_hvm_vdr_feed_id=25/*'
+        backfill_path = 's3a://salusv/testing/dewey/airflow/e2e/allscripts/emr/out/2018/10/'
     else:
         input_path = 's3a://salusv/incoming/emr/allscripts/{}/'.format(
             date_input.replace('-', '/')
@@ -85,7 +86,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
         matching_path = 's3a://salusv/matching/payload/emr/allscripts/{}/'.format(
             matching_date.replace('-', '/')
         )
-        warehouse_path_template = 's3a://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/*'
+        backfill_path = 's3a://salusv/incoming/emr/allscripts/2018/10/'
 
     runner.sqlContext.registerFunction(
         'remove_last_chars', allscripts_udf.remove_last_chars
@@ -100,25 +101,55 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     explode.generate_exploder_table(spark, 3, 'clin_obsn_exploder')
 
     for table in transaction_schemas.all_tables:
-        if table.name in ['providers', 'patients', 'clients']:
-            runner.sqlContext.read.csv(
-                input_path + table.name + '/', sep='|', schema=table.schema
-            ).createOrReplaceTempView('transactional_' + table.name)
-        else:
-            # add non-skewed provider columns
+        if table.name in {'vitals_backfill_tier1', 'vitals_backfill_tier2',
+                'results_backfill_tier1', 'results_backfill_tier2'}:
+            raw_table = runner.sqlContext.read.csv(
+                backfill_path + table.name + '/', sep='|', schema=table.schema
+            )
+            postprocessor.compose(
+                    postprocessor.trimmify, postprocessor.nullify
+                )(raw_table).createOrReplaceTempView(table.name)
+        elif table.name in {'providers', 'patientdemographics', 'clients'}:
             raw_table = runner.sqlContext.read.csv(
                 input_path + table.name + '/', sep='|', schema=table.schema
-            ).distinct()
+            )
+            postprocessor.compose(
+                    postprocessor.trimmify, postprocessor.nullify
+                )(raw_table).createOrReplaceTempView('transactional_' + table.name)
+        else:
+            window = Window.partitionBy(*table.pk).orderBy(F.col('recordeddttm').desc())
+            raw_table = runner.sqlContext.read.csv(
+                input_path + table.name + '/', sep='|', schema=table.schema
+            )
 
+            raw_table = postprocessor.compose(
+                    postprocessor.trimmify, postprocessor.nullify
+                )(raw_table)
+
+            # deduplicate based on natural key
+            raw_table = raw_table.withColumn('row_num', F.row_number().over(window))\
+                    .where(F.col('row_num') == 1)
+
+            # add non-skewed provider columns
             for column in table.skewed_columns:
                 raw_table = raw_table.withColumn(
-                    'hv_{}'.format(column), when(
-                        col(column).isNull(),
-                        concat(lit('nojoin_'), rand())
-                    ).otherwise(col(column))
+                    'hv_{}'.format(column), F.when(
+                        F.col(column).isNull(),
+                        F.concat(F.lit('nojoin_'), F.rand())
+                    ).otherwise(F.col(column))
                 )
 
             raw_table.createOrReplaceTempView('transactional_' + table.name)
+
+    # Tier1 and tier2 backfill data was delivered in slightly different layouts
+    # Align and merge them
+    t1 = spark.table('vitals_backfill_tier1')
+    t2 = spark.table('vitals_backfill_tier2')
+    t1.union(t2.select(*t1.columns)).createOrReplaceTempView('vitals_backfill')
+
+    t1 = spark.table('results_backfill_tier1')
+    t2 = spark.table('results_backfill_tier2')
+    t1.union(t2.select(*t1.columns)).createOrReplaceTempView('results_backfill')
 
     payload_loader.load(runner, matching_path, extra_cols=['personId', 'claimId'])
 
@@ -152,6 +183,12 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 ['max_cap', max_cap]
             ], return_output=True, source_file_path=script_path
         ), procedure_schema, columns_to_keep=['allscripts_date_partition']
+    )).union(schema_enforcer.apply_schema(
+        runner.run_spark_script(
+            'normalize_procedure_vac.sql', [
+                ['max_cap', max_cap]
+            ], return_output=True, source_file_path=script_path
+        ), procedure_schema, columns_to_keep=['allscripts_date_partition']
     ))
     normalized_provider_order = schema_enforcer.apply_schema(
         runner.run_spark_script(
@@ -159,13 +196,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 ['max_cap', max_cap]
             ], return_output=True, source_file_path=script_path
         ), provider_order_schema, columns_to_keep=['allscripts_date_partition']
-    ).union(schema_enforcer.apply_schema(
-        runner.run_spark_script(
-            'normalize_provider_order_vac.sql', [
-                ['max_cap', max_cap]
-            ], return_output=True, source_file_path=script_path
-        ), provider_order_schema, columns_to_keep=['allscripts_date_partition']
-    ))
+    )
     normalized_lab_order = runner.run_spark_script(
         'normalize_lab_order.sql', [
             ['max_cap', max_cap]
@@ -173,7 +204,8 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     )
     normalized_lab_result = runner.run_spark_script(
         'normalize_lab_result.sql', [
-            ['max_cap', max_cap]
+            ['max_cap', max_cap],
+            ['backfill_max_cap', backfill_max_cap]
         ], return_output=True, source_file_path=script_path
     )
     normalized_medication = runner.run_spark_script(
@@ -188,7 +220,8 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     )
     normalized_vital_sign = runner.run_spark_script(
         'normalize_vital_sign.sql', [
-            ['max_cap', max_cap]
+            ['max_cap', max_cap],
+            ['backfill_max_cap', backfill_max_cap]
         ], return_output=True, source_file_path=script_path
     )
 
@@ -218,7 +251,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31') # Max cap is applied in SQL
             ]
         }, {
             'name': 'encounter',
@@ -256,7 +289,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             'data': normalized_procedure,
             'privacy': procedure_priv,
             'schema': procedure_schema,
-            'model_version': '07',
+            'model_version': '09',
             'join_key': 'hv_proc_id',
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
@@ -326,7 +359,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31') # Max cap is applied in SQL
             ]
         }
     ]
@@ -366,37 +399,18 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
             'EARLIEST_VALID_SERVICE_DATE'
         )
 
-        # deduplicate
         new_data = runner.sqlContext.table(
             'normalized_{}'.format(table['name'])
         ).alias('new_data').cache_and_track('new_data')
 
-        try:
-            warehouse_data = runner.sqlContext.read.parquet(
-                warehouse_path_template.format(table['name'])
-            ).alias('warehouse_data')
-
-            new_claims = new_data.select(table['join_key']).distinct()
-
-            deduplicated_data = warehouse_data.join(
-                    new_claims.hint("broadcast"), table['join_key'], 'leftanti'
-                ).union(new_data)
-        except AnalysisException as e:
-            if 'Path does not exist' in str(e):
-                # Warehouse data does not exist. This may be the first run.
-                logging.warning("No warehouse data found - deduplication will be skipped.")
-                deduplicated_data = new_data
-            else:
-                raise
-
         normalized_records_unloader.unload(
-            spark, runner, deduplicated_data, 'allscripts_date_partition', max_cap,
+            spark, runner, new_data, 'allscripts_date_partition', max_cap,
             FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
             date_partition_name='part_mth', hvm_historical_date=datetime.datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             ), staging_subdir=table['name'], test_dir=(file_utils.get_abs_path(
                 script_path, '../../../test/providers/allscripts/emr/resources/output/'
-            ) if test else None), unload_partition_count=500, skip_rename=True,
+            ) if test else None), unload_partition_count=50, skip_rename=True,
             distribution_key='row_id'
         )
 
@@ -423,32 +437,6 @@ def main(args):
             output_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/spark-output/'
         else:
             output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
-
-        # backup allscripts normalized data before distcp
-        if not args.airflow_test:
-            try:
-                subprocess.check_call(['aws', 's3', 'ls', 's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(
-                    model
-                )])
-                files_exist = True
-            except subprocess.CalledProcessError as e:
-                if str(e).endswith('status 1'):
-                    files_exist = False
-                else:
-                    raise
-
-            if files_exist:
-                subprocess.check_call([
-                    'aws', 's3', 'rm', '--recursive', 's3://salusv/backup/allscripts_emr/{}/{}/'.format(args.date, model)
-                ])
-                multi_s3_transfer.multithreaded_copy(
-                    's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model),
-                    's3://salusv/backup/allscripts_emr/{1}/{0}/'.format(model, args.date)
-                )
-                subprocess.check_call([
-                    'aws', 's3', 'rm', '--recursive',
-                    's3://salusv/warehouse/parquet/emr/2017-08-23/{}/part_hvm_vdr_feed_id=25/'.format(model)
-                ])
 
         normalized_records_unloader.distcp(output_path)
 

@@ -13,7 +13,7 @@ SELECT
     WHEN app.gen2patientid IS NOT NULL AND app.encounterid IS NOT NULL
     THEN 'GEN2PATIENTID_ENCOUNTERID'
     END                                                                        AS vdr_alt_enc_id_qual,
-    pay.hvid                                                                   AS hvid,
+    COALESCE(pay.hvid, CONCAT('35_', app.gen2patientid))                       AS hvid,
     COALESCE(ptn.dobyear, pay.yearofbirth)                                     AS ptnt_birth_yr,
     CASE
     WHEN UPPER(SUBSTRING(COALESCE(ptn.gender, pay.gender, 'U'), 1, 1)) IN ('F', 'M', 'U')

@@ -40,6 +40,17 @@ def test_init(spark):
             gen_ref_2_txt='',
             gen_ref_itm_desc='',
             whtlst_flg=''
+        ),
+        Row(
+            hvm_vdr_feed_id='25',
+            gen_ref_domn_nm='allscripts_emr.vitals',
+            gen_ref_itm_nm='INCH',
+            gen_ref_cd='HEIGHT',
+            gen_ref_1_dt=datetime.date(2016, 1, 1),
+            gen_ref_1_txt='HEIGHT',
+            gen_ref_2_txt='INCHES',
+            gen_ref_itm_desc=None,
+            whtlst_flg='Y'
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
@@ -95,9 +106,6 @@ def test_deduplication():
                 medication_results, procedure_results, diagnosis_results]:
         assert len(res) == len(set(res))
 
-    # Encounter has warehouse data that should be incorporated but still deduped
-    assert '25_gen2patientid-1_apptid-1_OLD_UNIQUE' in [res.hv_enc_id for res in encounter_results]
-
     assert sorted([res.hv_enc_id for res in encounter_results]) \
         == sorted(set([res.hv_enc_id for res in encounter_results]))
 
@@ -140,12 +148,12 @@ def test_lab_ord_explosion():
     assert sorted([
         (res.hv_lab_ord_id, res.lab_ord_diag_cd, res.lab_ord_diag_cd_qual) for res in lab_order_results
     ]) == [
-        ('25_gen2patientid-0_orderid-0_1', None, '02'),
-        ('25_gen2patientid-0_orderid-0_1', 'V90', '01'),
-        ('25_gen2patientid-1_orderid-1_1', None, '02'),
-        ('25_gen2patientid-1_orderid-1_1', 'V90', '01'),
-        ('25_gen2patientid-2_orderid-2_1', None, '02'),
-        ('25_gen2patientid-2_orderid-2_1', 'V90', '01')
+        ('25_gen2patientid-0_orderid-6_1', None, '02'),
+        ('25_gen2patientid-0_orderid-6_1', 'V90', '01'),
+        ('25_gen2patientid-1_orderid-7_1', None, '02'),
+        ('25_gen2patientid-1_orderid-7_1', 'V90', '01'),
+        ('25_gen2patientid-2_orderid-8_1', None, '02'),
+        ('25_gen2patientid-2_orderid-8_1', 'V90', '01')
     ]
 
 
@@ -184,17 +192,20 @@ def test_proc_explosion():
         ('25_gen2patientid-0_orderid-0_1', '36475', 'CPTCODE', None, '02'),
         ('25_gen2patientid-0_orderid-0_1', '36475', 'CPTCODE', 'V90', '01'),
         ('25_gen2patientid-0_prbid-0_0', None, None, None, None),
+        ('25_gen2patientid-0_vacid-0_17194404700007', '0', 'VACCINES.CVX', None, None),
         ('25_gen2patientid-1_orderid-1_1', '0000', 'HCPCS', None, '02'),
         ('25_gen2patientid-1_orderid-1_1', '0000', 'HCPCS', 'V90', '01'),
         ('25_gen2patientid-1_orderid-1_1', '36475', 'CPTCODE', None, '02'),
         ('25_gen2patientid-1_orderid-1_1', '36475', 'CPTCODE', 'V90', '01'),
         ('25_gen2patientid-1_prbid-1_0', None, None, 'V700', '01'),
         ('25_gen2patientid-1_prbid-1_0', None, None, 'Z0000', '02'),
+        ('25_gen2patientid-1_vacid-1_17194404700007', '0', 'VACCINES.CVX', None, None),
         ('25_gen2patientid-2_orderid-2_1', '0000', 'HCPCS', None, '02'),
         ('25_gen2patientid-2_orderid-2_1', '0000', 'HCPCS', 'V90', '01'),
         ('25_gen2patientid-2_orderid-2_1', '36475', 'CPTCODE', None, '02'),
         ('25_gen2patientid-2_orderid-2_1', '36475', 'CPTCODE', 'V90', '01'),
-        ('25_gen2patientid-2_prbid-2_0', None, None, 'V700', '01')
+        ('25_gen2patientid-2_prbid-2_0', None, None, 'V700', '01'),
+        ('25_gen2patientid-2_vacid-2_17194404700007', '0', 'VACCINES.CVX', None, None)
     ]
 
 
@@ -203,17 +214,23 @@ def test_prov_ord_explosion():
         [(res.hv_prov_ord_id, res.prov_ord_diag_cd, res.prov_ord_diag_cd_qual)
          for res in provider_order_results]
     ) == [
-        ('25_gen2patientid-0_orderid-0_1', None, '02'),
-        ('25_gen2patientid-0_orderid-0_1', 'V90', '01'),
-        ('25_gen2patientid-0_vacid-0_17194404700007', None, None),
-        ('25_gen2patientid-1_orderid-1_1', None, '02'),
-        ('25_gen2patientid-1_orderid-1_1', 'V90', '01'),
-        ('25_gen2patientid-1_vacid-1_17194404700007', None, None),
-        ('25_gen2patientid-2_orderid-2_1', None, '02'),
-        ('25_gen2patientid-2_orderid-2_1', 'V90', '01'),
-        ('25_gen2patientid-2_vacid-2_17194404700007', None, None)
+        ('25_gen2patientid-0_orderid-3_1', None, '02'),
+        ('25_gen2patientid-0_orderid-3_1', 'V90', '01'),
+        ('25_gen2patientid-1_orderid-4_1', None, '02'),
+        ('25_gen2patientid-1_orderid-4_1', 'V90', '01'),
+        ('25_gen2patientid-2_orderid-5_1', None, '02'),
+        ('25_gen2patientid-2_orderid-5_1', 'V90', '01')
     ]
 
+def test_vit_sign_backfill():
+    assert sorted(
+        [(res.hv_vit_sign_id, res.vit_sign_msrmt, res.vit_sign_uom)
+         for res in vital_sign_results]
+    ) == [
+        ('25_gen2patientid-0_vitid-0_0', '64', 'INCHES'), # First one is "backfilled"
+        ('25_gen2patientid-1_vitid-1_0', '63', 'INCHES'),
+        ('25_gen2patientid-2_vitid-2_0', '63', 'INCHES')
+    ]
 
 def test_cleanup(spark):
     cleanup(spark)

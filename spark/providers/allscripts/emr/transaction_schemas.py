@@ -85,15 +85,15 @@ medications = TransactionTable(
                 'primarykey'
         ]
     ]),
-    ['gen2patientid', 'medicationid', 'versionid'],
+    ['gen2patientid', 'medid', 'versionid'],
     skewed_columns=['administeredbygen2providerid', 'prescribedbygen2providerid', 'genproviderid', 'gen2providerid']
 )
 
 orders = TransactionTable(
     'orders',
     StructType([
-        StructField(column_name, StringType(), True) for
-        column_name in [
+        StructField(column_name, StringType(), True)
+        for column_name in [
             'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
             'encounterID', 'orderID', 'versionID', 'auditdataflag', 'name', 'type', 'status', 'cpt4', 'cptmod',
             'cptpos', 'billingICD9code', 'billingICD10code', 'hcpcs', 'source', 'specimen', 'orderDTTM',
@@ -184,8 +184,8 @@ vaccines = TransactionTable(
 vitals = TransactionTable(
     'vitals',
     StructType([
-        StructField(column_name, StringType(), True) for
-        column_name in [
+        StructField(column_name, StringType(), True)
+        for column_name in [
             'rectype', 'rectypeversion', 'genclientID', 'gen2clientID', 'genpatientID', 'gen2patientID',
             'encounterID', 'vitalID', 'versionID', 'auditdataflag', 'name', 'status', 'value', 'units', 'refrange',
             'errorflag', 'clinicalDTTM', 'performedDTTM', 'recordedDTTM', 'genproviderID', 'gen2providerID',
@@ -196,7 +196,53 @@ vitals = TransactionTable(
     skewed_columns=['genproviderID', 'gen2providerID']
 )
 
+vitals_backfill_tier1 = TransactionTable(
+    'vitals_backfill_tier1',
+    StructType([
+        StructField(column_name, StringType(), True)
+        for column_name in [
+            'gen2patientid', 'genpatientid', 'vitalid', 'versionid', 'value', 'units',
+            'recordeddttm'
+        ]
+    ])
+)
+
+vitals_backfill_tier2 = TransactionTable(
+    'vitals_backfill_tier2',
+    StructType([
+        StructField(column_name, StringType(), True)
+        for column_name in [
+            'genpatientid', 'gen2patientid', 'vitalid', 'versionid', 'value', 'units',
+            'recordeddttm'
+        ]
+    ])
+)
+
+results_backfill_tier1 = TransactionTable(
+    'results_backfill_tier1',
+    StructType([
+        StructField(column_name, StringType(), True)
+        for column_name in [
+            'gen2patientid', 'genpatientid', 'resultid', 'versionid', 'value', 'units',
+            'recordeddttm'
+        ]
+    ])
+)
+
+results_backfill_tier2 = TransactionTable(
+    'results_backfill_tier2',
+    StructType([
+        StructField(column_name, StringType(), True)
+        for column_name in [
+            'genpatientid', 'gen2patientid', 'resultid', 'versionid', 'value', 'units',
+            'recordeddttm'
+        ]
+    ])
+)
+
 all_tables = [
     vitals, vaccines, results, providers, problems, patients, orders,
-    medications, encounters, clients, appointments, allergies
+    medications, encounters, clients, appointments, allergies,
+    vitals_backfill_tier1, vitals_backfill_tier2, results_backfill_tier1,
+    results_backfill_tier2
 ]
