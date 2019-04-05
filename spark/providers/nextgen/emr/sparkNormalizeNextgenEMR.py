@@ -328,6 +328,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ]
     )
 
+    def update_procedure_whitelists(whitelists):
+        return whitelists + [{
+            'column_name': 'proc_stat_cd',
+            'domain_name': 'emr_proc.proc_stat_cd',
+            'whitelist_col_name': 'gen_ref_cd'
+        }]
+
+
     def update_lab_order_whitelists(whitelists):
         return whitelists + [{
             'column_name': 'lab_ord_snomed_cd',
@@ -409,7 +417,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'schema'        : procedure_schema,
             'data_type'     : 'procedure',
             'date_column'   : 'proc_dt',
-            'privacy_filter': priv_procedure
+            'privacy_filter': priv_procedure,
+            'filter_args'   : [update_procedure_whitelists]
         },
         {
             'schema'        : lab_result_schema,
