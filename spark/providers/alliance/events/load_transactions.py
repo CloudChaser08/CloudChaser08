@@ -37,6 +37,10 @@ TABLES = {
         'cnp_ind'
     ],
     'actives': [
-        'agility_id'
+        'agility_id',
+        'column2',
+        'column3',
+        'column4',
+        'column5'
     ]
 }

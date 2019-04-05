@@ -19,6 +19,13 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
 
     if file_type == 'csv':
         df = runner.sqlContext.read.csv(location, schema=schema, sep=delimiter, header=header)
+        temp_df = runner.sqlContext.read.csv(location, sep=delimiter, header=header)
+        if len(temp_df.schema) > len(schema):
+            raise Exception(
+                "Number of columns in data file ({}) exceeds expected schema ({})".format(
+                    len(temp_df.schema), len(schema)
+                )
+            )
     elif file_type == 'orc':
         df = runner.sqlContext.read.schema(schema).orc(location)
     elif file_type == 'json':
@@ -58,9 +65,9 @@ def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitio
         if partitions > 0:
             df = df.repartition(partitions)
 
-        postprocessor \
-            .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
-            .cache_and_track(table) \
-            .createOrReplaceTempView(table)
+        df = (postprocessor
+            .compose(postprocessor.trimmify, postprocessor.nullify)(df)
+            .cache_and_track(table))
+        df.createOrReplaceTempView(table)
 
         df.count()  # to force computation 

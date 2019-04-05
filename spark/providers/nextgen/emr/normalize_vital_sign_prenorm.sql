@@ -47,7 +47,7 @@ SELECT *,
         NULL,
         NULL,
         NULL,
-        'INCHES',
+        vsn.heightdate,
         NULL
     ) as vit_sign_last_msrmt_dt,
     ARRAY(
