@@ -31,7 +31,7 @@ SELECT
             'ACTCODE'
         )[e.n]
     ))                                      AS proc_cd_qual,
-    ord.actdiagnosiscode                    AS proc_diag_cd,
+    ord.clean_actdiagnosiscode              AS proc_diag_cd,
     TRIM(UPPER(ord.actstatus))              AS proc_stat_cd,
     CASE
         WHEN ord.actstatus IS NOT NULL AND LENGTH(TRIM(ord.actstatus)) <> 0 THEN 'ACTSTATUS'
