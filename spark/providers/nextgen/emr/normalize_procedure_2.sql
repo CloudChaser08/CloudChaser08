@@ -65,6 +65,6 @@ FROM `procedure_order_real_actcode` ord
         AND ref2.gen_ref_domn_nm = 'order.actclass'
         AND ord.actclass = ref2.gen_ref_cd
         AND ref2.whtlst_flg = 'Y'
-    WHERE ARRAY(ord.real_vcxcode, ord.real_actcode)[e.n] IS NOT NULL
-        -- If both columns are empty, keep one row w/ null proc_cd
-        OR (COALESCE(ord.vcxcode, ord.real_actcode) IS NULL AND e.n = 1)
+    -- Only take rows where vcxcode is not null
+    WHERE ord.real_vcxcode IS NOT NULL
+        AND ARRAY(ord.real_vcxcode, ord.real_actcode)[e.n] IS NOT NULL
