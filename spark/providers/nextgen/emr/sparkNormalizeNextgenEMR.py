@@ -332,7 +332,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         return whitelists + [{
             'column_name': 'proc_stat_cd',
             'domain_name': 'emr_proc.proc_stat_cd',
-            'whitelist_col_name': 'gen_ref_cd'
+            'whitelist_col_name': 'gen_ref_cd',
+            'comp_col_names': ['proc_stat_cd_qual']
         }]
 
 
