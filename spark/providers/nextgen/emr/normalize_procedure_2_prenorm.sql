@@ -1,5 +1,10 @@
 SELECT
     ord.*,
+    CASE
+        WHEN LENGTH(TRIM(ord.vcxcode)) <> 0
+            THEN ord.vcxcode
+        ELSE NULL
+    END                                             AS real_vcxcode,
     CASE 
         WHEN cpt_codes.code IS NOT NULL
             THEN cpt_codes.code
