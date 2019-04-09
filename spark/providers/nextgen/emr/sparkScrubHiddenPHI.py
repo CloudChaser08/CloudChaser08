@@ -76,18 +76,19 @@ def gen_scrubbing_func(dryrun):
 
                 # See spark/providers/nextgen/emr/load_transactions.py for
                 # file layouts
-                src_row_id = (src_tokens[3], src_tokens[4], src_tokens[1])
-                if src_row_id in value_metas_by_row:
-                    remaining = []
-                    for value_meta in value_metas_by_row[src_row_id]:
-                        src_value_idx = 3 + int(value_meta[0])
-                        src_value = src_tokens[src_value_idx]
-                        if base64.b64encode(hashlib.sha256(src_value).digest()) == value_meta[1]:
-                            src_tokens[src_value_idx] = ''
-                            found = True
-                        else:
-                            remaining.append(value_meta)
-                    value_metas_by_row[src_row_id] = remaining
+                if len(src_tokens) >= 5:
+                    src_row_id = (src_tokens[3], src_tokens[4], src_tokens[1])
+                    if src_row_id in value_metas_by_row:
+                        remaining = []
+                        for value_meta in value_metas_by_row[src_row_id]:
+                            src_value_idx = 3 + int(value_meta[0])
+                            src_value = src_tokens[src_value_idx]
+                            if base64.b64encode(hashlib.sha256(src_value).digest()) == value_meta[1]:
+                                src_tokens[src_value_idx] = ''
+                                found = True
+                            else:
+                                remaining.append(value_meta)
+                        value_metas_by_row[src_row_id] = remaining
 
                 if found:
                     # reconstruct the row now that we've scrubbed it
@@ -105,7 +106,11 @@ def gen_scrubbing_func(dryrun):
             # S3 upload new file
             subprocess.check_call(['aws', 's3', 'cp', new_local_path, 's3://salusv/' + new_s3_key])
 
-        return (s3_key, len(to_clean2))
+        not_scrubbed = 0
+        for (k, v) in value_metas_by_row.items():
+            not_scrubbed += len(v)
+
+        return (s3_key, not_scrubbed)
 
     return scrub
 
