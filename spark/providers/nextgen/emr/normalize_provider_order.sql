@@ -58,8 +58,7 @@ SELECT
             THEN clean_up_diagnosis_code(diag2.code, NULL,
                 COALESCE(ord.prov_ord_dt, ord.enc_dt))
         ELSE NULL END                       AS prov_ord_diag_cd,
-    clean_up_freetext(ord.actdiagnosis, false)
-                                            AS prov_ord_diag_nm,
+    TRIM(UPPER(ord.actdiagnosis))           AS prov_ord_diag_nm,
     ord.vcxcode                             AS prov_ord_vcx_cd,
     CASE WHEN ord.vcxcode IS NOT NULL THEN 'CVX'
         ELSE NULL END                       AS prov_ord_vcx_cd_qual,
