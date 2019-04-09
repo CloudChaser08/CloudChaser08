@@ -41,7 +41,7 @@ SELECT
     med.rxquantity                          AS medctn_rx_qty,
     clean_up_freetext(med.sigcodes, false)  AS medctn_admin_sig_cd,
     med.dose                                AS medctn_dose_txt,
-    med.orgrefills                          AS medctn_orig_rfll_qty,
+    med.orgrefills                          AS medctn_fll_num,
     med.rxrefills                           AS medctn_remng_rfll_qty,
     extract_date(
         substring(med.datelastrefilled, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
