@@ -32,7 +32,7 @@ from spark.common.emr.encounter import schema_v4 as encounter_schema
 from spark.common.emr.lab_order import schema_v3 as lab_order_schema
 from spark.common.emr.lab_result import schema_v4 as lab_result_schema
 from spark.common.emr.medication import schema_v4 as medication_schema
-from spark.common.emr.procedure import schema_v4 as procedure_schema
+from spark.common.emr.procedure import schema_v9 as procedure_schema
 from spark.common.emr.provider_order import schema_v4 as provider_order_schema
 from spark.common.emr.vital_sign import schema_v4 as vital_sign_schema
 
@@ -116,6 +116,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     explode.generate_exploder_table(spark, 4, 'lipid_exploder')
     explode.generate_exploder_table(spark, 15, 'vital_signs_exploder')
     explode.generate_exploder_table(spark, 5, 'medication_exploder')
+    explode.generate_exploder_table(spark, 2, 'procedure_2_exploder')
     logging.debug("Created exploder tables")
 
     payload_loader.load(runner, matching_path, ['hvJoinKey'], load_file_name=True, allow_empty=True)
@@ -157,10 +158,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ], return_output=True)
     logging.debug("Normalized diagnosis")
 
-    normalized['procedure'] = runner.run_spark_script('normalize_procedure.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ], return_output=True)
+    runner.run_spark_script('normalize_procedure_2_prenorm.sql',
+                            [
+                                ['min_date', min_date],
+                                ['max_date', max_date]
+                            ],
+                            return_output=True
+                           ).createOrReplaceTempView('procedure_order_real_actcode')
+    normalized['procedure'] = schema_enforcer.apply_schema(
+            runner.run_spark_script('normalize_procedure_1.sql', [
+                ['min_date', min_date],
+                ['max_date', max_date]
+            ], return_output=True), procedure_schema) \
+        .union(schema_enforcer.apply_schema(
+            runner.run_spark_script('normalize_procedure_2.sql', [
+                ['min_date', min_date],
+                ['max_date', max_date],
+            ], return_output=True), procedure_schema))
     logging.debug("Normalized procedure")
 
     normalized['lab_order'] = runner.run_spark_script('normalize_lab_order.sql', [
@@ -314,6 +328,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ]
     )
 
+    def update_procedure_whitelists(whitelists):
+        return whitelists + [{
+            'column_name': 'proc_stat_cd',
+            'domain_name': 'emr_proc.proc_stat_cd',
+            'whitelist_col_name': 'gen_ref_cd',
+            'comp_col_names': ['proc_stat_cd_qual']
+        }]
+
+
     def update_lab_order_whitelists(whitelists):
         return whitelists + [{
             'column_name': 'lab_ord_snomed_cd',
@@ -395,7 +418,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'schema'        : procedure_schema,
             'data_type'     : 'procedure',
             'date_column'   : 'proc_dt',
-            'privacy_filter': priv_procedure
+            'privacy_filter': priv_procedure,
+            'filter_args'   : [update_procedure_whitelists]
         },
         {
             'schema'        : lab_result_schema,

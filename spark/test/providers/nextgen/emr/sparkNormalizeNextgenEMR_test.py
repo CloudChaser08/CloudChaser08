@@ -100,7 +100,14 @@ def test_procedure_cpt():
     """Test that cpt codes are properly mapped and transformed"""
 
     global results
-    assert len(filter(lambda r: r.proc_cd == '36415', results['procedure'])) == 2
+    # procedure_1 and procedure_2 both fill in cpt codes for proc_cd
+    assert len(filter(lambda r: r.proc_cd == '36415', results['procedure'])) == 4
+    # Only procedure_1 states it as a cpt code
+    assert len(filter(lambda r: r.proc_cd == '36415'
+                      and r.proc_cd_qual == 'CPT', results['procedure'])) == 2
+    # Only procedure_2 states it as an act code
+    assert len(filter(lambda r: r.proc_cd == '36415'
+                      and r.proc_cd_qual == 'ACTCODE', results['procedure'])) == 2
 
 def test_provider_order_actcode():
     """Test that only whitelisted values are allowed in provider order code column"""
