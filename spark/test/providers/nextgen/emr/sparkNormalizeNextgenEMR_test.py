@@ -101,14 +101,15 @@ def test_procedure_cpt():
 
     global results
     # procedure_1 and procedure_2 both fill in cpt codes for proc_cd
-    # procedure_2 does not keep the row because vcxcode is null
-    assert len(filter(lambda r: r.proc_cd == '36415', results['procedure'])) == 2
+    # the test data has two rows with cpt code 36415
+    # procedure_2 does not keep one row because vcxcode is null
+    assert len(filter(lambda r: r.proc_cd == '36415', results['procedure'])) == 3
     # Only procedure_1 states it as a cpt code
     assert len(filter(lambda r: r.proc_cd == '36415'
                       and r.proc_cd_qual == 'CPT', results['procedure'])) == 2
     # Only procedure_2 states it as an act code
     assert len(filter(lambda r: r.proc_cd == '36415'
-                      and r.proc_cd_qual == 'ACTCODE', results['procedure'])) == 0
+                      and r.proc_cd_qual == 'ACTCODE', results['procedure'])) == 1
 
 def test_provider_order_actcode():
     """Test that only whitelisted values are allowed in provider order code column"""
