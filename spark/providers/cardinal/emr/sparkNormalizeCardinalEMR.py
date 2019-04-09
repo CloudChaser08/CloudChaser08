@@ -43,7 +43,7 @@ DEOBFUSCATION_KEY = 'Cardinal_MPI-0'
 script_path = __file__
 
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
+def run(spark, runner, batch_id, date_input, test=False, airflow_test=False):
     global DELIVERABLE_LOC
 
     if test:
@@ -58,17 +58,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/'.format(
-            date_input.replace('-', '/')
+            batch_id
         )
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/matching/{}/'.format(
-            date_input.replace('-', '/')
+            batch_id
         )
     else:
         input_path = 's3a://salusv/incoming/emr/cardinal/{}/'.format(
-            date_input.replace('-', '/')
+            batch_id
         )
         matching_path = 's3a://salusv/matching/payload/emr/cardinal/{}/'.format(
-            date_input.replace('-', '/')
+            batch_id
         )
 
     explode.generate_exploder_table(spark, 6, 'clin_obs_exploder')
@@ -338,7 +338,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             lambda df: schema_enforcer.apply_schema(df, table['schema']),
             postprocessor.add_universal_columns(
                 feed_id=FEED_ID, vendor_id=VENDOR_ID,
-                filename='EMR.{}.zip'.format(datetime.strptime(date_input, '%Y-%m-%d').strftime('%m%d%Y')),
+                filename='EMR.{}.zip'.format(batch_id),
                 model_version_number=table['model_version'],
 
                 # rename defaults
@@ -388,19 +388,19 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.batch_id, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/spark-output/'
         deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/delivery/{}/'.format(
-            args.date.replace('-', '/')
+            args.batch_id
         )
     else:
         output_path = 's3://salusv/warehouse/parquet/emr/2018-02-12/'
         deliverable_path = 's3://salusv/deliverable/cardinal_raintree_emr-0/{}/'.format(
-            args.date.replace('-', '/')
+            args.batch_id
         )
 
     # normalized_records_unloader.distcp(output_path)
@@ -410,6 +410,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
+    parser.add_argument('--batch_id', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
