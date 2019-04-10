@@ -47,7 +47,7 @@ def group_validity_check(group_dfs, group_ids):
     invalid_groups = []
     for group_df, group_id in zip(group_dfs, group_ids):
         if ('invalidReason', 'string') not in group_df.dtypes:
-            invalid_patients = group_df.where(~group_df.invalidReason.isNull()).cache()
+            invalid_patients = group_df.where(~group_df.invalidReason.isNull())
             invalid_patients = invalid_patients.where(invalid_patients['invalidReason']['clusterA']== False).cache()
 
             if group_df.count() - invalid_patients.count() < 10:
@@ -128,8 +128,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
         pharmacy_extract   = spark.createDataFrame([("NONE",)], ['humana_group_id'])
         enrollment_extract = spark.createDataFrame([("NONE",)], ['humana_group_id'])
 
-    matched_w_count = matched_patients.groupBy('humana_group_id').count().where(F.col('count') >= F.lit(10))
-    matched_patients = matched_patients.join(matched_w_count, 'humana_group_id', 'left_semi')
+    matched_patients = (matched_patients.where(F.col('humana_group_id').isin(valid_groups)))
 
     group_patient_w_records_count = {}
     summary = None
