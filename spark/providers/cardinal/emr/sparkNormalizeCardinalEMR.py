@@ -388,7 +388,7 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.batch_id, args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, batch_id=args.batch_id, airflow_test=args.airflow_test)
 
     spark.stop()
 
