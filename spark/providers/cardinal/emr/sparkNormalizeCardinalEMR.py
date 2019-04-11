@@ -58,7 +58,7 @@ def run(spark, runner, batch_id, date_input, test=False, airflow_test=False):
         ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/out/{}/'.format(
-            batch_id
+            batch_id if batch_id is not None else date_input.replace('-', '/')
         )
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/matching/{}/'.format(
             batch_id if batch_id is not None else date_input.replace('-', '/')
