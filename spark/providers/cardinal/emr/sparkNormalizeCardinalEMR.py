@@ -43,7 +43,7 @@ DEOBFUSCATION_KEY = 'Cardinal_MPI-0'
 script_path = __file__
 
 
-def run(spark, runner, batch_id, date_input, test=False, airflow_test=False):
+def run(spark, runner, date_input, batch_id=None, test=False, airflow_test=False):
     global DELIVERABLE_LOC
 
     if test:
