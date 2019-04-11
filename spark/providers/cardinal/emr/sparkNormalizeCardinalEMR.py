@@ -68,7 +68,7 @@ def run(spark, runner, batch_id, date_input, test=False, airflow_test=False):
             batch_id
         )
         matching_path = 's3a://salusv/matching/payload/emr/cardinal/{}/'.format(
-            batch_id
+            batch_id if batch_id is not None else date_input.replace('-', '/')
         )
 
     explode.generate_exploder_table(spark, 6, 'clin_obs_exploder')
