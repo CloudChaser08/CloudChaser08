@@ -338,7 +338,7 @@ def run(spark, runner, batch_id, date_input, test=False, airflow_test=False):
             lambda df: schema_enforcer.apply_schema(df, table['schema']),
             postprocessor.add_universal_columns(
                 feed_id=FEED_ID, vendor_id=VENDOR_ID,
-                filename='EMR.{}.zip'.format(batch_id),
+                filename='EMR.{}.zip'.format(batch_id if batch_id is not None else datetime.strptime(date_input, '%Y-%m-%d').strftime('%m%d%Y')),
                 model_version_number=table['model_version'],
 
                 # rename defaults
