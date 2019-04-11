@@ -48,7 +48,7 @@ S3_CROSSWALK_REFERENCE    = 's3a://salusv/reference/nextgen/crosswalk/'
 HDFS_ENCOUNTER_REFERENCE    = '/user/hive/warehouse/encounter_dedup'
 HDFS_DEMOGRAPHICS_REFERENCE = '/user/hive/warehouse/demographics_local'
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
+def run(spark, runner, date_input, input_file_path, payload_path, test=False, airflow_test=False):
     runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
     runner.sqlContext.sql('SET hive.exec.compress.output=true')
     runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress=true')
@@ -56,9 +56,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
 
     if test:
-        input_root_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/nextgen/emr/resources/input/'
-        ) + '/'
         input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/nextgen/emr/resources/input/'
         ) + '/'
@@ -75,7 +72,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/nextgen/emr/resources/reference/crosswalk/'
         ) + '/'
     elif airflow_test:
-        input_root_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/input/'
         input_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/input/{}/'.format(
             date_input.replace('-', '/')
         )
@@ -86,15 +82,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         crosswalk_path = S3_CROSSWALK_REFERENCE
     else:
-        input_root_path = 's3a://salusv/incoming/emr/nextgen/'
         input_path = 's3a://salusv/incoming/emr/nextgen/{}/'.format(
             date_input.replace('-', '/')
-        )
+        ) if input_file_path is None else input_file_path
         demo_reference_path = S3_DEMOGRAPHICS_REFERENCE
         enc_reference_path  = S3_ENCOUNTER_REFERENCE
         matching_path = 's3a://salusv/matching/payload/emr/nextgen/{}/'.format(
             date_input.replace('-', '/')
-        )
+        ) if payload_path is None else payload_path
         crosswalk_path = S3_CROSSWALK_REFERENCE
 
     external_table_loader.load_icd_diag_codes(runner.sqlContext)
@@ -564,29 +559,32 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, args.input_path,
+        args.payload_path, airflow_test=args.airflow_test)
 
     spark.stop()
 
     if args.airflow_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/spark-output/'
+    elif args.output_path:
+        output_path = args.output_path
     else:
         output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
         try:
             check_output(['hadoop', 'fs', '-ls', HDFS_ENCOUNTER_REFERENCE])
             check_output(['aws', 's3', 'rm', '--recursive',
-                        S3_ENCOUNTER_REFERENCE.replace("s3a://", "s3://")])
+                          S3_ENCOUNTER_REFERENCE.replace("s3a://", "s3://")])
             check_output(['s3-dist-cp', '--src', HDFS_ENCOUNTER_REFERENCE,
-                        '--dest', S3_ENCOUNTER_REFERENCE])
+                          '--dest', S3_ENCOUNTER_REFERENCE])
         except:
             logging.warn("Something went wrong in persisting the new distinct encounter data")
 
         try:
             check_output(['hadoop', 'fs', '-ls', HDFS_DEMOGRAPHICS_REFERENCE])
             check_output(['aws', 's3', 'rm', '--recursive',
-                        S3_DEMOGRAPHICS_REFERENCE.replace("s3a://", "s3://")])
+                          S3_DEMOGRAPHICS_REFERENCE.replace("s3a://", "s3://")])
             check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
-                        '--dest', S3_DEMOGRAPHICS_REFERENCE])
+                          '--dest', S3_DEMOGRAPHICS_REFERENCE])
         except:
             logging.warn("Something went wrong in persisting the new demographics data")
 
@@ -594,7 +592,7 @@ def main(args):
         try:
             check_output(['hadoop', 'fs', '-ls', '/staging/encounter/'])
             check_output(['aws', 's3', 'rm', '--recursive',
-                        output_dir + 'encounter/part_hvm_vdr_feed_id=35/'])
+                          output_path + 'encounter/part_hvm_vdr_feed_id=35/'])
         except:
             logging.warn("Something went wrong in removing the old normalized encounter data")
 
@@ -605,6 +603,9 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
+    parser.add_argument('--input_path', type=str)
+    parser.add_argument('--payload_path', type=str)
+    parser.add_argument('--output_path', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
