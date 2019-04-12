@@ -55,7 +55,7 @@ def gen_scrubbing_func(dryrun):
                 raise err
 
         local_path = '/mnt/tmp/' + dir_name + '/' + s3_key.split('/')[-1]
-        new_local_path = re.sub('.gz$', '.bz2.corrected', local_path)
+        new_local_path = re.sub('(.gz|.bz2)$', '.bz2.corrected', local_path)
 
         # getting boto3 on the slave nodes requires too much effort. the CLI is
         # already available
