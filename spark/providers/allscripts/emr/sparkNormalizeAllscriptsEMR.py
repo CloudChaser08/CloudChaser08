@@ -52,6 +52,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_payload_pa
         model=None, test=False, airflow_test=False):
     date_input = '-'.join(date_input.split('-')[:2])
     date_obj = datetime.date(*[int(el) for el in (date_input + '-01').split('-')])
+    batch_id = date_obj.strftime('HV_%b%y')
 
     matching_date = '2017-09' if date_input <= '2017-09' else date_input
 
@@ -123,6 +124,8 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_payload_pa
                 input_path + table.name + '/', sep='|', schema=table.schema
             )
 
+            raw_table = raw_table.withColumn('input_file_name', F.input_file_name()).persist()
+
             raw_table = postprocessor.compose(
                     postprocessor.trimmify, postprocessor.nullify
                 )(raw_table)
@@ -157,72 +160,84 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_payload_pa
     normalized_encounter = schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_encounter_app.sql', [
-                ['max_cap', max_cap]
+                ['max_cap', max_cap],
+                ['batch_id', batch_id, False]
             ], return_output=True, source_file_path=script_path
         ), encounter_schema, columns_to_keep=['allscripts_date_partition']
     ).union(schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_encounter_enc.sql', [
-                ['max_cap', max_cap]
+                ['max_cap', max_cap],
+                ['batch_id', batch_id, False]
             ], return_output=True, source_file_path=script_path
         ), encounter_schema, columns_to_keep=['allscripts_date_partition']
     ))
     normalized_diagnosis = runner.run_spark_script(
         'normalize_diagnosis.sql', [
-            ['max_cap', max_cap]
+            ['max_cap', max_cap],
+            ['batch_id', batch_id, False]
         ], return_output=True, source_file_path=script_path
     )
     normalized_procedure = schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_procedure_ord.sql', [
-                ['max_cap', max_cap]
+                ['max_cap', max_cap],
+                ['batch_id', batch_id, False]
             ], return_output=True, source_file_path=script_path
         ), procedure_schema, columns_to_keep=['allscripts_date_partition']
     ).union(schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_procedure_prb.sql', [
-                ['max_cap', max_cap]
+                ['max_cap', max_cap],
+                ['batch_id', batch_id, False]
             ], return_output=True, source_file_path=script_path
         ), procedure_schema, columns_to_keep=['allscripts_date_partition']
     )).union(schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_procedure_vac.sql', [
-                ['max_cap', max_cap]
+                ['max_cap', max_cap],
+                ['batch_id', batch_id, False]
             ], return_output=True, source_file_path=script_path
         ), procedure_schema, columns_to_keep=['allscripts_date_partition']
     ))
     normalized_provider_order = schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_provider_order_ord.sql', [
-                ['max_cap', max_cap]
+                ['max_cap', max_cap],
+                ['batch_id', batch_id, False]
             ], return_output=True, source_file_path=script_path
         ), provider_order_schema, columns_to_keep=['allscripts_date_partition']
     )
     normalized_lab_order = runner.run_spark_script(
         'normalize_lab_order.sql', [
-            ['max_cap', max_cap]
+            ['max_cap', max_cap],
+            ['batch_id', batch_id, False]
         ], return_output=True, source_file_path=script_path
     )
     normalized_lab_result = runner.run_spark_script(
         'normalize_lab_result.sql', [
             ['max_cap', max_cap],
-            ['backfill_max_cap', BACKFILL_MAX_CAP]
+            ['backfill_max_cap', BACKFILL_MAX_CAP],
+            ['batch_id', batch_id, False]
         ], return_output=True, source_file_path=script_path
     )
     normalized_medication = runner.run_spark_script(
         'normalize_medication.sql', [
-            ['max_cap', max_cap]
+            ['max_cap', max_cap],
+            ['batch_id', batch_id, False]
         ], return_output=True, source_file_path=script_path
     )
     normalized_clinical_observation = runner.run_spark_script(
         'normalize_clinical_observation.sql', [
-            ['max_cap', max_cap]
+            ['max_cap', max_cap],
+            ['batch_id', batch_id, False]
         ], return_output=True, source_file_path=script_path
     )
     normalized_vital_sign = runner.run_spark_script(
         'normalize_vital_sign.sql', [
             ['max_cap', max_cap],
-            ['backfill_max_cap', BACKFILL_MAX_CAP]
+            ['backfill_max_cap', BACKFILL_MAX_CAP],
+            ['batch_id', batch_id, False]
         ], return_output=True, source_file_path=script_path
     )
 
@@ -370,9 +385,8 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_payload_pa
             postprocessor.trimmify, postprocessor.nullify,
             schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=['allscripts_date_partition']),
             postprocessor.add_universal_columns(
-                feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=date_obj.strftime(
-                    'HV_%b%y'
-                ), model_version_number=table['model_version'],
+                feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=batch_id,
+                model_version_number=table['model_version'],
 
                 # rename defaults
                 record_id='row_id', created='crt_dt', data_set='data_set_nm',

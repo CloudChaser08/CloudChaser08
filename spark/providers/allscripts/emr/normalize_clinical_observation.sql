@@ -1,5 +1,7 @@
 SELECT
     CONCAT('25_', alg.gen2patientid, '_', alg.allergyid, '_', alg.versionid)   AS hv_clin_obsn_id,
+    CASE WHEN alg.input_file_name rlike '.*tier2.*' THEN '{batch_id}_201' ELSE '{batch_id}_01'
+    END                                                                        AS data_set_nm,
     alg.rectypeversion                                                         AS src_vrsn_id,
     alg.genclientid                                                            AS vdr_org_id,
     alg.primarykey                                                             AS vdr_clin_obsn_id,

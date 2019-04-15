@@ -1,5 +1,7 @@
 SELECT
     CONCAT('25_', ord.gen2patientid, '_', ord.orderid, '_', ord.versionid)     AS hv_lab_ord_id,
+    CASE WHEN ord.input_file_name rlike '.*tier2.*' THEN '{batch_id}_201' ELSE '{batch_id}_01'
+    END                                                                        AS data_set_nm,
     ord.rectypeversion                                                         AS src_vrsn_id,
     ord.genclientid                                                            AS vdr_org_id,
     ord.primarykey                                                             AS vdr_lab_ord_id,

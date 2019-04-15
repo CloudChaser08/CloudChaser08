@@ -2,6 +2,8 @@ SELECT
     CONCAT(
         '25_', app.gen2patientid, '_', app.appointmentid
         )                                                                      AS hv_enc_id,
+    CASE WHEN app.input_file_name rlike '.*tier2.*' THEN '{batch_id}_201' ELSE '{batch_id}_01'
+    END                                                                        AS data_set_nm,
     app.rectypeversion                                                         AS src_vrsn_id,
     app.genclientid                                                            AS vdr_org_id,
     app.primarykey                                                             AS vdr_enc_id,
