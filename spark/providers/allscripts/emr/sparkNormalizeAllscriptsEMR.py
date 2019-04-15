@@ -48,14 +48,15 @@ script_path = __file__
 FEED_ID = '25'
 VENDOR_ID = '35'
 
-def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
+def run(spark, runner, date_input, explicit_input_path=None, explicit_payload_path=None,
+        model=None, test=False, airflow_test=False):
     date_input = '-'.join(date_input.split('-')[:2])
     date_obj = datetime.date(*[int(el) for el in (date_input + '-01').split('-')])
 
     matching_date = '2017-09' if date_input <= '2017-09' else date_input
 
     max_cap = (date_obj + relativedelta(months=1) - relativedelta(days=1)).strftime('%Y-%m-%d')
-    backfill_max_cap = '2018-09-30'
+    BACKFILL_MAX_CAP = '2018-09-30'
 
     if test:
         input_path = file_utils.get_abs_path(
@@ -82,10 +83,10 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     else:
         input_path = 's3a://salusv/incoming/emr/allscripts/{}/'.format(
             date_input.replace('-', '/')
-        )
+        ) if not explicit_input_path else explicit_input_path
         matching_path = 's3a://salusv/matching/payload/emr/allscripts/{}/'.format(
             matching_date.replace('-', '/')
-        )
+        ) if not explicit_matching_path else explicit_matching_path
         backfill_path = 's3a://salusv/incoming/emr/allscripts/2018/10/'
 
     runner.sqlContext.registerFunction(
@@ -205,7 +206,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     normalized_lab_result = runner.run_spark_script(
         'normalize_lab_result.sql', [
             ['max_cap', max_cap],
-            ['backfill_max_cap', backfill_max_cap]
+            ['backfill_max_cap', BACKFILL_MAX_CAP]
         ], return_output=True, source_file_path=script_path
     )
     normalized_medication = runner.run_spark_script(
@@ -221,7 +222,7 @@ def run(spark, runner, date_input, model=None, test=False, airflow_test=False):
     normalized_vital_sign = runner.run_spark_script(
         'normalize_vital_sign.sql', [
             ['max_cap', max_cap],
-            ['backfill_max_cap', backfill_max_cap]
+            ['backfill_max_cap', BACKFILL_MAX_CAP]
         ], return_output=True, source_file_path=script_path
     )
 
@@ -429,12 +430,16 @@ def main(args):
         # initialize runner
         runner = Runner(sqlContext)
 
-        run(spark, runner, args.date, model=model, airflow_test=args.airflow_test)
+        run(spark, runner, args.date, explicit_input_path=args.input_path,
+            explicit_payload_path=args.payload_path, model=model,
+            airflow_test=args.airflow_test)
 
         spark.stop()
 
         if args.airflow_test:
             output_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/spark-output/'
+        elif args.output_path:
+            output_path = args.output_path
         else:
             output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 
@@ -446,5 +451,8 @@ if __name__ == "__main__":
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     parser.add_argument('--models', type=str, default=None)
+    parser.add_argument('--input_path', type=str)
+    parser.add_argument('--payload_path', type=str)
+    parser.add_argument('--output_path', type=str)
     args = parser.parse_args()
     main(args)
