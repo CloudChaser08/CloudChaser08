@@ -393,7 +393,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             postprocessor.trimmify, postprocessor.nullify,
             schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=['allscripts_date_partition']),
             postprocessor.add_universal_columns(
-                feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=batch_id,
+                feed_id=FEED_ID, vendor_id=VENDOR_ID, filename=None,
                 model_version_number=table['model_version'],
 
                 # rename defaults
