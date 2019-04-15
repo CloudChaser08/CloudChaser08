@@ -24,6 +24,7 @@ def prepare(spark, runner, s3_crosswalk_reference):
     dem_xwalked = dem_wo_hvid.join(cross, 'ngid', 'left_outer') \
         .select(*([dem_wo_hvid[c] for c in dem_wo_hvid.columns if c != 'hvid' and c != 'ngid'] + [cross['hvid']]))
 
+    dem_xwalked = dem.xwalked.select(*dem_w_hvid.columns)
     dem_w_hvid.union(dem_xwalked).createOrReplaceTempView('new_demographics')
 
 CROSSWALK_COLUMNS = [
