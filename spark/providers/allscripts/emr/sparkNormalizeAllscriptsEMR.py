@@ -48,7 +48,7 @@ script_path = __file__
 FEED_ID = '25'
 VENDOR_ID = '35'
 
-def run(spark, runner, date_input, explicit_input_path=None, explicit_payload_path=None,
+def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_path=None,
         model=None, test=False, airflow_test=False):
     date_input = '-'.join(date_input.split('-')[:2])
     date_obj = datetime.date(*[int(el) for el in (date_input + '-01').split('-')])
@@ -445,7 +445,7 @@ def main(args):
         runner = Runner(sqlContext)
 
         run(spark, runner, args.date, explicit_input_path=args.input_path,
-            explicit_payload_path=args.payload_path, model=model,
+            explicit_matching_path=args.matching_path, model=model,
             airflow_test=args.airflow_test)
 
         spark.stop()
@@ -466,7 +466,7 @@ if __name__ == "__main__":
     parser.add_argument('--airflow_test', default=False, action='store_true')
     parser.add_argument('--models', type=str, default=None)
     parser.add_argument('--input_path', type=str)
-    parser.add_argument('--payload_path', type=str)
+    parser.add_argument('--matching_path', type=str)
     parser.add_argument('--output_path', type=str)
     args = parser.parse_args()
     main(args)
