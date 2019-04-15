@@ -88,7 +88,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
         matching_path = 's3a://salusv/matching/payload/emr/allscripts/{}/'.format(
             matching_date.replace('-', '/')
         ) if not explicit_matching_path else explicit_matching_path
-        backfill_path = 's3a://salusv/incoming/emr/allscripts/2018/10/'
+        backfill_path = 's3a://salusv/incoming/emr/allscripts/2018/09/'
 
     runner.sqlContext.registerFunction(
         'remove_last_chars', allscripts_udf.remove_last_chars
@@ -149,10 +149,18 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
     # Align and merge them
     t1 = spark.table('vitals_backfill_tier1')
     t2 = spark.table('vitals_backfill_tier2')
+    # backfill does not impact data before 2014-04 or after 2018-09
+    if date_input < '2014-04' or date_input > '2018-09':
+        t1 = spark.createDataFrame([], schema=t1.schema)
+        t2 = spark.createDataFrame([], schema=t2.schema)
     t1.union(t2.select(*t1.columns)).createOrReplaceTempView('vitals_backfill')
 
     t1 = spark.table('results_backfill_tier1')
     t2 = spark.table('results_backfill_tier2')
+    # backfill does not impact data before 2014-04 or after 2018-09
+    if date_input < '2014-04' or date_input > '2018-09':
+        t1 = spark.createDataFrame([], schema=t1.schema)
+        t2 = spark.createDataFrame([], schema=t2.schema)
     t1.union(t2.select(*t1.columns)).createOrReplaceTempView('results_backfill')
 
     payload_loader.load(runner, matching_path, extra_cols=['personId', 'claimId'])
