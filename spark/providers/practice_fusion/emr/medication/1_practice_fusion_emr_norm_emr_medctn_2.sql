@@ -6,8 +6,8 @@ SELECT
             COALESCE(txn.prescription_id, 'NO_PRESCRIPTION_ID')
         )                                                                                    AS hv_medctn_id,
     CURRENT_DATE()                                                                          AS crt_dt,
-    split(txn.input_file_name, '/')[size(split(txn.input_file_name, '/')) - 1]              AS data_set_nm,
     '09a'                                                                                   AS mdl_vrsn_num,
+    split(txn.input_file_name, '/')[size(split(txn.input_file_name, '/')) - 1]              AS data_set_nm,
     439                                                                                     AS hvm_vdr_id,
     136                                                                                     AS hvm_vdr_feed_id,
     txn.prescription_id                                                                        AS vdr_medctn_ord_id,
