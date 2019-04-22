@@ -1,0 +1,10 @@
+ENCTYPE_ID|ENCCAT_ID|CODE_ID|CODE|CODE_NAME|IS_ACTIVE|NAME
+67093|17|8|26009-1|LOINC|t|Treponema pallidum Ab [Titer] in Serum by Hemagglutination
+66853|5|14|183452005|SNOMED-CT|t|Emergency hospital admission (procedure)
+66613|9|3|104544000|SNOMED-CT|t|beta-Endorphin measurement
+66373|9|3|24598006|SNOMED-CT|t|Arthroplasty of metacarpophalangeal and interphalangeal joint
+66133|9|3|50572006|SNOMED-CT|t|Anesthesia for reconstructive procedure on breast
+65893|9|3|104479001|SNOMED-CT|t|Alanine measurement
+65653|9|3|121321008|SNOMED-CT|t|9-Hydroxyrisperidone measurement
+65412|9|3|395058002|SNOMED-CT|t|Viral load
+65172|9|3|412970000|SNOMED-CT|t|Urine citrulline measurement

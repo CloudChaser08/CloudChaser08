@@ -1,0 +1,10 @@
+MEDICATION_ID|NDC_FORMATTED|RXNORM_CUI|TRADE_NAME_ID|TRADE_NAME|GENERIC_NAME|RX_OR_OTC|ROUTE|STRENGTH|DOSEFORM
+51991071641|51991-0716-41|199387|44558|risperiDONE                   |Risperidone Soln 1 MG/ML                                    |S|PO - Oral|1              |SOLN
+94604083589|94604-0835-89||161920|Resveratrol                   |Resveratrol Cap 100 MG                                      |P|PO - Oral|100            |CAPS
+49452001302|49452-0013-02||44078|Amikacin Sulfate              |Amikacin Sulfate Powder                                     |R|XX - Does not apply|               |POWD
+11917006265|11917-0062-65||126159|Contact Lens Case             |Optical Supplies - Misc                                  |O|XX - Does not apply|               |MISC
+00409158229|00409-1582-29|1012409|12828|Marcaine                      |Bupivacaine HCl Preservative Free (PF) Inj 0.75%            |S|IJ - Injection|0.75           |SOLN
+58657047906|58657-0479-06||200253|Selenium Sulfide              |Selenium Sulfide Shampoo 2.3%                               |S|EX - External|2.3            |SHAM
+00409166020|00409-1660-20|1718902|187292|Precedex                      |Dexmedetomidine HCl in NaCl 0.9% IV Soln 80 MCG/20ML        |R|IV - Intravenous|80             |SOLN
+66116042130|66116-0421-30|197379|2010|Atenolol                      |Atenolol Tab 100 MG                                         |S|PO - Oral|100            |TABS
+50428459956|50428-4599-56|252870|173685|CVS Coenzyme Q-10             |Coenzyme Q10 Cap 200 MG                                     |P|PO - Oral|200            |CAPS
