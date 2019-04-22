@@ -49,7 +49,7 @@ TABLE_CONF = {
             'start_date',
             'start_date_source',
             'stop_date',
-            'last_modified_at',
+            'last_modified',
             'created_at'
         ]
     ),
@@ -260,7 +260,7 @@ TABLE_CONF = {
             'unit',
             'is_abnormal',
             'created_at',
-            'last_modifed',
+            'last_modified',
             'transcript_id'
         ]
     ),
@@ -434,8 +434,8 @@ TABLE_CONF = {
             'edit_level',
             'created_at',
             'gender',
-            'derieved_specialty',
-            'derieved_provider_type',
+            'derived_specialty',
+            'derived_provider_type',
             'derived_ama_taxonomy',
             'consistent_provider_id'
         ]
