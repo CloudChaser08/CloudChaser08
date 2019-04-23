@@ -111,7 +111,17 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             postprocessor.compose(
                     postprocessor.trimmify, postprocessor.nullify
                 )(raw_table).createOrReplaceTempView(table.name)
-        elif table.name in {'providers', 'patientdemographics', 'clients'}:
+        elif table.name in {'providers', 'patientdemographics', 'clients', 'clients2'}:
+            # In the 2019/02 batch, Allscript sent us a clients table with a different schema
+            # For that batch only, use that schema for the clients table
+            if date_input == '2019-02':
+                if table.name == 'clients':
+                    continue
+                if table.name == 'clients2':
+                    table.name = 'clients'
+            elif table.name == 'clients2':
+                continue
+
             raw_table = runner.sqlContext.read.csv(
                 input_path + table.name + '/', sep='|', schema=table.schema
             )

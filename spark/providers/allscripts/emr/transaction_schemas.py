@@ -49,6 +49,17 @@ clients = TransactionTable(
     ])
 )
 
+# In the 2019/02 batch, Allscripts sent us an extra column
+clients2 = TransactionTable(
+    'clients2',
+    StructType([
+        StructField(column_name, StringType(), True)
+        for column_name in [
+                'genclientID', 'gen2clientID', 'sourcesystemcode', 'startdate', 'enddate'
+        ]
+    ])
+)
+
 encounters = TransactionTable(
     'encounters',
     StructType([
@@ -242,7 +253,7 @@ results_backfill_tier2 = TransactionTable(
 
 all_tables = [
     vitals, vaccines, results, providers, problems, patients, orders,
-    medications, encounters, clients, appointments, allergies,
+    medications, encounters, clients, clients2, appointments, allergies,
     vitals_backfill_tier1, vitals_backfill_tier2, results_backfill_tier1,
     results_backfill_tier2
 ]
