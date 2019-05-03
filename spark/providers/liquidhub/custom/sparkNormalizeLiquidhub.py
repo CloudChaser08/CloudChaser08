@@ -55,9 +55,9 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
         records_loader.load_and_clean_all(runner, incoming_path, transactions_lhv2, 'csv', '|')
         source_patient_id_col = 'claimId'
 
-    # Special handling for Bioplus
+    # Special handling for Accredo
     no_transactional = spark.table('liquidhub_raw').count() == 0
-    if 'lhv2_lilly_bioplus' in group_id.lower() and no_transactional:
+    if '_accredo_' in group_id.lower() and no_transactional:
         df = spark.table('matching_payload').select(F.col('hvJoinKey').alias('hvjoinkey')) \
             .withColumn('manufacturer', F.lit(group_id_parts[1])) \
             .withColumn('source_name', F.lit(group_id_parts[2])) \
