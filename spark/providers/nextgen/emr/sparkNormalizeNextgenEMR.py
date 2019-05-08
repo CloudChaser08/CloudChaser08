@@ -41,14 +41,16 @@ import pyspark.sql.functions as F
 import logging
 
 LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
-S3_ENCOUNTER_REFERENCE    = 's3a://salusv/reference/nextgen/encounter_deduped/'
-S3_DEMOGRAPHICS_REFERENCE = 's3a://salusv/reference/nextgen/demographics_orc/'
-S3_CROSSWALK_REFERENCE    = 's3a://salusv/reference/nextgen/crosswalk/'
+S3_ENCOUNTER_REFERENCE    = 's3://salusv/reference/nextgen/encounter_deduped/'
+S3_DEMOGRAPHICS_REFERENCE = 's3://salusv/reference/nextgen/demographics_orc/'
+S3_CROSSWALK_REFERENCE    = 's3://salusv/reference/nextgen/crosswalk/'
 
 HDFS_ENCOUNTER_REFERENCE    = '/user/hive/warehouse/encounter_dedup'
 HDFS_DEMOGRAPHICS_REFERENCE = '/user/hive/warehouse/demographics_local'
 
-def run(spark, runner, date_input, input_file_path, payload_path, test=False, airflow_test=False):
+def run(spark, runner, date_input, input_file_path, payload_path, normalize_encounter=True,
+        demo_ref=S3_DEMOGRAPHICS_REFERENCE, enc_ref=S3_ENCOUNTER_REFERENCE,
+        test=False, airflow_test=False):
     runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
     runner.sqlContext.sql('SET hive.exec.compress.output=true')
     runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress=true')
@@ -75,8 +77,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, test=False, ai
         input_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/input/{}/'.format(
             date_input.replace('-', '/')
         )
-        demo_reference_path = S3_DEMOGRAPHICS_REFERENCE
-        enc_reference_path  = S3_ENCOUNTER_REFERENCE
+        demo_reference_path = demo_ref
+        enc_reference_path  = enc_ref
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/payload/{}/'.format(
             date_input.replace('-', '/')
         )
@@ -85,8 +87,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, test=False, ai
         input_path = 's3a://salusv/incoming/emr/nextgen/{}/'.format(
             date_input.replace('-', '/')
         ) if input_file_path is None else input_file_path
-        demo_reference_path = S3_DEMOGRAPHICS_REFERENCE
-        enc_reference_path  = S3_ENCOUNTER_REFERENCE
+        demo_reference_path = demo_ref
+        enc_reference_path  = enc_ref
         matching_path = 's3a://salusv/matching/payload/emr/nextgen/{}/'.format(
             date_input.replace('-', '/')
         ) if payload_path is None else payload_path
@@ -140,11 +142,12 @@ def run(spark, runner, date_input, input_file_path, payload_path, test=False, ai
     runner.sqlContext.table('demographics_local').count()
 
     normalized = {}
-    normalized['encounter'] = runner.run_spark_script('normalize_encounter.sql', [
-        ['min_date', min_date],
-        ['max_date', max_date]
-    ], return_output=True)
-    logging.debug("Normalized encounter")
+    if normalize_encounter:
+        normalized['encounter'] = runner.run_spark_script('normalize_encounter.sql', [
+            ['min_date', min_date],
+            ['max_date', max_date]
+        ], return_output=True)
+        logging.debug("Normalized encounter")
 
     normalized['diagnosis'] = runner.run_spark_script('normalize_diagnosis.sql', [
         ['min_date', min_date],
@@ -394,13 +397,6 @@ def run(spark, runner, date_input, input_file_path, payload_path, test=False, ai
             'filter_args'   : [update_diagnosis_whitelists]
         },
         {
-            'schema'        : encounter_schema,
-            'data_type'     : 'encounter',
-            'date_column'   : 'enc_start_dt',
-            'privacy_filter': priv_encounter,
-            'filter_args'   : [update_encounter_whitelists]
-        },
-        {
             'schema'        : medication_schema,
             'data_type'     : 'medication',
             'date_column'   : 'part_mth',
@@ -448,6 +444,15 @@ def run(spark, runner, date_input, input_file_path, payload_path, test=False, ai
         }
     ]
 
+    if normalize_encounter:
+        normalized_tables.append({
+            'schema'        : encounter_schema,
+            'data_type'     : 'encounter',
+            'date_column'   : 'enc_start_dt',
+            'privacy_filter': priv_encounter,
+            'filter_args'   : [update_encounter_whitelists]
+        })
+
     min_hvm_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'HVM_AVAILABLE_HISTORY_START_DATE')
 
     if min_hvm_date is not None:
@@ -473,7 +478,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, test=False, ai
             table['privacy_filter'].filter(*filter_args),
             postprocessor.trimmify,
             postprocessor.nullify,
-            schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=cols_to_keep),
+            schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=cols_to_keep)
         )(
             normalized[table['data_type']]
         )
@@ -560,7 +565,9 @@ def main(args):
     runner = Runner(sqlContext)
 
     run(spark, runner, args.date, args.input_path,
-        args.payload_path, airflow_test=args.airflow_test)
+        args.payload_path, normalize_encounter=args.normalize_encounter,
+        demo_ref=args.input_demo_ref, enc_ref=args.input_enc_ref,
+        airflow_test=args.airflow_test)
 
     spark.stop()
 
@@ -572,29 +579,44 @@ def main(args):
         output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
         try:
             check_output(['hadoop', 'fs', '-ls', HDFS_ENCOUNTER_REFERENCE])
-            check_output(['aws', 's3', 'rm', '--recursive',
-                          S3_ENCOUNTER_REFERENCE.replace("s3a://", "s3://")])
-            check_output(['s3-dist-cp', '--src', HDFS_ENCOUNTER_REFERENCE,
-                          '--dest', S3_ENCOUNTER_REFERENCE])
+            if args.output_enc_ref.startswith('s3://'):
+                check_output(['aws', 's3', 'rm', '--recursive', args.output_enc_ref])
+                check_output(['s3-dist-cp', '--src', HDFS_ENCOUNTER_REFERENCE,
+                              '--dest', args.output_enc_ref])
+            elif args.output_enc_ref.startswith('hdfs://'):
+                check_output(['hadoop', 'fs', '-rm', '-r', '-f', args.output_enc_ref])
+                check_output(['s3-dist-cp', '--src', HDFS_ENCOUNTER_REFERENCE,
+                              '--dest', args.output_enc_ref])
+            else:
+                raise ValueError("Unexpected protocol in encounter output path")
+            check_output(['hadoop', 'fs', '-rm', '-r', '-f', HDFS_ENCOUNTER_REFERENCE])
         except:
             logging.warn("Something went wrong in persisting the new distinct encounter data")
 
         try:
             check_output(['hadoop', 'fs', '-ls', HDFS_DEMOGRAPHICS_REFERENCE])
-            check_output(['aws', 's3', 'rm', '--recursive',
-                          S3_DEMOGRAPHICS_REFERENCE.replace("s3a://", "s3://")])
-            check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
-                          '--dest', S3_DEMOGRAPHICS_REFERENCE])
+            if args.output_enc_ref.startswith('s3://'):
+                check_output(['aws', 's3', 'rm', '--recursive', args.output_demo_ref])
+                check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
+                              '--dest', args.output_demo_ref])
+            elif args.output_enc_ref.startswith('hdfs://'):
+                check_output(['hadoop', 'fs', 'rm', '-r', '-f', args.output_demo_ref])
+                check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
+                              '--dest', args.output_demo_ref])
+            else:
+                raise ValueError("Unexpected protocol in demographics output path")
+            check_output(['hadoop', 'fs', '-rm', '-r', '-f', HDFS_DEMOGRAPHICS_REFERENCE])
         except:
             logging.warn("Something went wrong in persisting the new demographics data")
 
 
-        try:
-            check_output(['hadoop', 'fs', '-ls', '/staging/encounter/'])
-            check_output(['aws', 's3', 'rm', '--recursive',
-                          output_path + 'encounter/part_hvm_vdr_feed_id=35/'])
-        except:
-            logging.warn("Something went wrong in removing the old normalized encounter data")
+        if args.normalize_encounter:
+            try:
+                check_output(['hadoop', 'fs', '-ls', '/staging/encounter/'])
+                check_output(['aws', 's3', 'rm', '--recursive',
+                              output_path + 'encounter/part_hvm_vdr_feed_id=35/'])
+            except:
+                logging.warn("Something went wrong in removing the old normalized encounter data")
 
 
     normalized_records_unloader.distcp(output_path)
@@ -606,6 +628,11 @@ if __name__ == "__main__":
     parser.add_argument('--input_path', type=str)
     parser.add_argument('--payload_path', type=str)
     parser.add_argument('--output_path', type=str)
+    parser.add_argument('--input_demo_ref', default=S3_DEMOGRAPHICS_REFERENCE, type=str)
+    parser.add_argument('--output_demo_ref', default=S3_DEMOGRAPHICS_REFERENCE, type=str)
+    parser.add_argument('--input_enc_ref', default=S3_ENCOUNTER_REFERENCE, type=str)
+    parser.add_argument('--output_enc_ref', default=S3_ENCOUNTER_REFERENCE, type=str)
+    parser.add_argument('--dont_normalize_encounter', default=True, action='store_false', dest='normalize_encounter')
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
