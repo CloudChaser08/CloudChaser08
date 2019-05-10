@@ -45,7 +45,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # LHV2_<source>_PatDemo_YYYYMMDD_v#
     # LHV2_<manufacturer>_<source>_YYYYMMDD_v#
 
-    group_id_parts = group_id.split('_')
+    (lh_version, manufacturer, source_name, batch_date, batch_version) = group_id.split('_')[:5]
 
     payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
     if 'LHV1' in group_id:
@@ -57,10 +57,10 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
 
     # Special handling for Accredo
     no_transactional = spark.table('liquidhub_raw').count() == 0
-    if '_accredo_' in group_id.lower() and no_transactional:
+    if 'accredo' == source_name.lower() and no_transactional:
         df = spark.table('matching_payload').select(F.col('hvJoinKey').alias('hvjoinkey')) \
-            .withColumn('manufacturer', F.lit(group_id_parts[1])) \
-            .withColumn('source_name', F.lit(group_id_parts[2])) \
+            .withColumn('manufacturer', F.lit(manufacturer)) \
+            .withColumn('source_name', F.lit(source_name)) \
 
         schema_enforcer.apply_schema(df, spark.table('liquidhub_raw').schema) \
             .createOrReplaceTempView('liquidhub_raw')
@@ -68,7 +68,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # If the manufacturer name is not in the data, it will be in the group id
     if 'PatDemo' not in group_id:
         spark.table('liquidhub_raw') \
-            .withColumn('manufacturer', F.lit(group_id_parts[1])) \
+            .withColumn('manufacturer', F.lit(manufacturer)) \
             .createOrReplaceTempView('liquidhub_raw')
 
     content = runner.run_spark_script('normalize.sql',
@@ -134,13 +134,13 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # (1 for the first run of this group, 2 for the second, etc)
     # and then any file ID that HealthVerity wants, we'll use a combination
     # of the original group date and version number
-    output_file_name  = '_'.join(group_id_parts[:-2])
+    output_file_name  = '_'.join([lh_version, manufacturer, source_name])
     if not test:
         output_file_name += '_' + datetime.now(tz.gettz('America/New York')).date().isoformat().replace('-', '')
     else:
         output_file_name += '_' + datetime(2018, 7, 15).date().isoformat().replace('-', '')
-    output_file_name += '_' + group_id_parts[-1]
-    output_file_name += '_' + group_id_parts[-2] + 'v' + str(run_version) + '.txt.gz'
+    output_file_name += '_' + batch_version
+    output_file_name += '_' + batch_date + 'v' + str(run_version) + '.txt.gz'
 
     if test:
         return output_file_name
