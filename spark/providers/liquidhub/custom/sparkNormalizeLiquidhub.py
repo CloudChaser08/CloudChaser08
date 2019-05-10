@@ -58,9 +58,17 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # Special handling for Accredo
     no_transactional = spark.table('liquidhub_raw').count() == 0
     if 'accredo' == source_name.lower() and no_transactional:
+        # This version of the feed doesn't have an hvJoinKey, so create one to reduce
+        # downstream burden
+        df = spark.table('matching_payload').withColumn('hvJoinKey', F.monotonically_increasing_id()).cache()
+        df.createOrReplaceTempView('matching_payload')
+        df.count()
+
         df = spark.table('matching_payload').select(F.col('hvJoinKey').alias('hvjoinkey')) \
             .withColumn('manufacturer', F.lit(manufacturer)) \
             .withColumn('source_name', F.lit(source_name)) \
+
+        source_patient_id_col = 'personId'
 
         schema_enforcer.apply_schema(df, spark.table('liquidhub_raw').schema) \
             .createOrReplaceTempView('liquidhub_raw')
