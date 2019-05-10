@@ -600,7 +600,7 @@ def main(args):
                 check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
                               '--dest', args.output_demo_ref])
             elif args.output_enc_ref.startswith('hdfs://'):
-                check_output(['hadoop', 'fs', 'rm', '-r', '-f', args.output_demo_ref])
+                check_output(['hadoop', 'fs', '-rm', '-r', '-f', args.output_demo_ref])
                 check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
                               '--dest', args.output_demo_ref])
             else:
