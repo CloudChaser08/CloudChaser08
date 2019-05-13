@@ -18,10 +18,9 @@ def is_prod(sqlContext):
 
 
 @pytest.fixture(scope="session")
-def spark():
+def spark_session():
     shutil.rmtree('/tmp/checkpoint/', True)
     spark, sqlContext = init("Tests", True)
-    sqlContext.sql('SET spark.sql.shuffle.partitions=5')
     runner = Runner(sqlContext)
 
     def df_repart(inst, cnt, *args):
@@ -45,6 +44,27 @@ def spark():
     }
 
     spark.stop()
+
+@pytest.fixture(scope="module")
+@pytest.mark.usefixtures("spark_session")
+def spark(spark_session):
+    spark_session['sqlContext'].clearCache()
+    spark_session['sqlContext'].sql('SET spark.sql.shuffle.partitions=5')
+
+    for tbl in spark_session['spark'].catalog.listTables():
+        if tbl.tableType.lower() == 'temporary':
+            # for temporary tables, there is no indication whether it's a table
+            # or a view
+            try:
+                spark_session['spark'].sql('DROP VIEW {}'.format(tbl.name))
+            except:
+                spark_session['spark'].sql('DROP TABLE {}'.format(tbl.name))
+        elif tbl.tableType.lower() == 'view':
+            spark_session['spark'].sql('DROP VIEW {}'.format(tbl.name))
+        else:
+            spark_session['spark'].sql('DROP TABLE {}'.format(tbl.name))
+
+    return spark_session
 
 @pytest.fixture
 @pytest.mark.usefixtures("spark")
