@@ -10,11 +10,11 @@ def load(runner, input_path, s3_encounter_reference, s3_demographics_reference, 
         .withColumn('tbl_type', F.col('_c3')) \
         .withColumn('input_file_name', F.input_file_name()) \
         .repartition(1 if test else 5000, '_c1') \
-        .cache_and_track('raw_data') \
         .where("_c0 = '5'")
 
     df = postprocessor \
-        .compose(postprocessor.trimmify, postprocessor.nullify)(df)
+        .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
+        .cache_and_track('raw_data')
 
     df.limit(5).createOrReplaceTempView('raw_data')
 
