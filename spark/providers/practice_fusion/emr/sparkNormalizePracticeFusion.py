@@ -27,7 +27,10 @@ MODEL_SCHEMA = {
     'procedure' : procedure_schema
 }
 
-def run(spark, runner, date_input, model, custom_input_path=None, custom_matching_path=None,
+MODELS = ['encounter', 'clinical_observation', 'diagnosis', 'lab_test',
+          'medication', 'procedure']
+
+def run(spark, runner, date_input, model=None, custom_input_path=None, custom_matching_path=None,
         test=False, end_to_end_test=False):
 
     script_path = __file__
@@ -68,34 +71,35 @@ def run(spark, runner, date_input, model, custom_input_path=None, custom_matchin
     records_loader.load_and_clean_all_v2(runner, input_path, records_schemas, load_file_name=True)
     payload_loader.load(runner, matching_path, ['claimId', 'patientId', 'hvJoinKey'], table_name='payload')
 
-    normalized_output = runner.run_all_spark_scripts([
-            ['VDR_FILE_DT', date_input, False],
-        ], directory_path=os.path.dirname(script_path) + '/' + model
-    )
-
-    df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[model],
-                                      columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
-
-    if not test:
-        _columns = df.columns
-        _columns.remove('part_hvm_vdr_feed_id')
-        _columns.remove('part_mth')
-
-        normalized_records_unloader.unload(
-            spark, runner, df, 'part_mth', date_input, FEED_ID,
-            provider_partition_name='part_hvm_vdr_feed_id',
-            date_partition_name='part_mth', columns=_columns,
-            staging_subdir=model, unload_partition_count=100,
-            distribution_key='row_id'
+    models = [model] if model else MODELS
+    for mdl in models:
+        normalized_output = runner.run_all_spark_scripts([
+                ['VDR_FILE_DT', date_input, False],
+            ], directory_path=os.path.dirname(script_path) + '/' + mdl
         )
 
-    else:
-        df.collect()
+        df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
+                                        columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
+
+        if not test:
+            _columns = df.columns
+            _columns.remove('part_hvm_vdr_feed_id')
+            _columns.remove('part_mth')
+
+            normalized_records_unloader.unload(
+                spark, runner, df, 'part_mth', date_input, FEED_ID,
+                provider_partition_name='part_hvm_vdr_feed_id',
+                date_partition_name='part_mth', columns=_columns,
+                staging_subdir=mdl, unload_partition_count=100,
+                distribution_key='row_id'
+            )
+
+        else:
+            df.collect()
 
 
 def main(args):
-    models = ['encounter', 'clinical_observation', 'diagnosis', 'lab_test',
-              'medication', 'procedure']
+    models = MODELS
 
     if args.models:
         models = args.models.split(',')
