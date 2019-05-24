@@ -18,21 +18,21 @@ def main(date, client_name=None, opportunity_id=None, salt=None, census_module=N
         for an in dir(mod):
             attribute = getattr(mod, an)
             if type(attribute) == type(CensusDriver) and attribute.__base__.__name__ == 'CensusDriver':
-                driver = attribute()
+                driver = attribute(end_to_end_test=end_to_end_test)
                 break
 
         if not driver:
             raise AttributeError("Module {} does not contain a CensusDriver subclass".format(census_module))
     else:
-        driver = CensusDriver(client_name, opportunity_id, salt=salt)
+        driver = CensusDriver(client_name, opportunity_id, salt=salt, end_to_end_test=end_to_end_test)
 
 
     batch_date = datetime.strptime(date, '%Y-%m-%d').date()
 
     driver.load(batch_date)
-    df = driver.transform()
+    df = driver.transform(batch_date)
     driver.save(df, batch_date)
-    driver.copy_to_s3()
+    driver.copy_to_s3(batch_date)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

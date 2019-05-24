@@ -8,6 +8,7 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.common.std_census as std_census
 
+from pyspark.sql.types import StructType, StructField, StringType
 from spark.runner import Runner
 from spark.spark_setup import init
 from std_census import records_schemas, matching_payloads_schemas
@@ -156,7 +157,7 @@ class CensusDriver(object):
         payload_loader.load_all(self._runner, matching_path,
                                 matching_payloads_schemas)
 
-    def transform(self):
+    def transform(self, date_input=None):
         if self.__class__.__name__ == CensusDriver.__name__:
             census_module = std_census
         else:
@@ -168,7 +169,10 @@ class CensusDriver(object):
         scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
         content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
                                                      directory_path=scripts_directory)
-        header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
+
+        header_schema = StructType([StructField(column, StringType()) for column in content.columns])
+        header = self._sqlContext.createDataFrame([content.columns], schema=header_schema)
+
         return header.union(content).coalesce(1)
 
     def save(self, dataframe, batch_date):
@@ -184,5 +188,5 @@ class CensusDriver(object):
             test=self._test
         )
 
-    def copy_to_s3(self):
+    def copy_to_s3(self, batch_date=None):
         normalized_records_unloader.distcp(self._output_path)
