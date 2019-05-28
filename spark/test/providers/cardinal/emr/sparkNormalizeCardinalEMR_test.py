@@ -151,7 +151,7 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    cardinal_emr.run(spark['spark'], spark['runner'], '2017-08-31', '2017-08-31', True)
+    cardinal_emr.run(spark['spark'], spark['runner'], '2017-08-31', 1, '2017-08-31', True)
     global clinical_observation_results, lab_result_results, encounter_results, medication_results, \
         provider_order_results, procedure_results, diagnosis_results, vital_sign_results, \
         clinical_observation_delivery_results, lab_result_delivery_results, encounter_delivery_results, \
