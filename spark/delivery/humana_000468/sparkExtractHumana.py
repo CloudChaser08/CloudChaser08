@@ -46,14 +46,16 @@ def group_validity_check(group_dfs, group_ids):
     valid_groups = []
     invalid_groups = []
     for group_df, group_id in zip(group_dfs, group_ids):
+        total_patient_count = group_df.count()
+        invalid_patient_count = 0
         if ('invalidReason', 'string') not in group_df.dtypes:
             invalid_patients = group_df.where(~group_df.invalidReason.isNull())
             invalid_patients = invalid_patients.where(invalid_patients['invalidReason']['clusterA']== False).cache()
 
-            if group_df.count() - invalid_patients.count() < 10:
-                invalid_groups.append(group_id)
-            else:
-                valid_groups.append(group_id)
+            invalid_patient_count = invalid_patients.count()
+
+        if total_patient_count - invalid_patient_count < 10:
+            invalid_groups.append(group_id)
         else:
             valid_groups.append(group_id)
 
