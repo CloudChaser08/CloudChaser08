@@ -7,12 +7,14 @@ import os
 from pyspark.sql import Row
 
 GROUP1 = 'test1234'
-GROUP2 = 'test0000' # Invalid group, less than 10 matches patients
+GROUP2 = 'test0000' # Invalid group, 20 patients, 1 valid
 GROUP3 = 'test4321'
+GROUP4 = 'test0001' # Invalid group, 5 patients, 5 valid
 pharmacy_extract = None
 medical_extract = medical_extract2 = None
 summary = None
 summary2 = None
+summary4 = None
 DW_TABLES = ['hvm_emr_diag', 'hvm_emr_proc', 'hvm_emr_medctn', 'hvm_emr_enc', 'ref_vdr_feed',
              'ref_gen_ref', 'hvm_pharmacyclaims_v07', 'hvm_medicalclaims_v08']
 @pytest.mark.usefixtures("spark")
@@ -45,14 +47,15 @@ def test_init(spark):
     # Test that a run with only invalid groups works
     humana_extract.run(spark['spark'], spark['runner'], [GROUP2], test=True)
     # Test that a run with mixed groups works
-    humana_extract.run(spark['spark'], spark['runner'], [GROUP1, GROUP2, GROUP3], test=True)
+    humana_extract.run(spark['spark'], spark['runner'], [GROUP1, GROUP2, GROUP3, GROUP4], test=True)
 
-    global pharmacy_extract, medical_extract, medical_extract2, summary, summary2
+    global pharmacy_extract, medical_extract, medical_extract2, summary, summary2, summary4
     pharmacy_extract = spark['spark'].table(GROUP1 + '_pharmacy_extract').collect()
     medical_extract = spark['spark'].table(GROUP1 + '_medical_extract').collect()
     medical_extract2 = spark['spark'].table(GROUP3 + '_medical_extract').collect()
     summary  = spark['spark'].table(GROUP1 + '_summary').collect()
     summary2 = spark['spark'].table(GROUP2 + '_summary').collect()
+    summary4 = spark['spark'].table(GROUP4 + '_summary').collect()
 
 def test_hashing():
     med_row = [r for r in medical_extract if r['claim_id'] == '365255892'][0]
@@ -94,8 +97,11 @@ def test_record_count():
 def test_synthetic_record_count():
     assert not [r['count'] for r in summary if r['data_vendor'] == 'Allscripts']
 
-def test_few_patients():
+def test_few_valid_patients():
     assert [r['count'] for r in summary2 if r['data_vendor'] == '-'][0] == 0
+
+def test_few_patients():
+    assert [r['count'] for r in summary4 if r['data_vendor'] == '-'][0] == 0
 
 def test_cleanup(spark):
     for table_name in DW_TABLES:
