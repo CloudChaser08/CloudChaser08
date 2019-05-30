@@ -22,7 +22,17 @@ class _8451CensusDriver(CensusDriver):
 
     def transform(self, date_input=None):
 
-        content = self._runner.run_all_spark_scripts(variables=[['VDR_FILE_DT', date_input.strftime('%Y-%m-%d')]])
+        # Since this module is in the package, its file path will contain the
+        # package path. Remove that in order to find the location of the
+        # transformation scripts
+        #
+        # If we do not explicitly define the path here, run_all_spark_scripts will
+        # be default use ... /spark/target/dewey.zip/spark/census/ .. which will result in an error.
+        #
+        census_module = importlib.import_module(self.__module__)
+        scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
+        content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
+                                                     directory_path=scripts_directory)
 
         # Only include the file_name in the data_set
         def data_set_name(full_path):
