@@ -126,7 +126,8 @@ CREATE TABLE cardinal_deliverable
     other_payer_coverage_qual,
     other_payer_date,
     other_payer_coverage_code,
-    logical_delete_reason
+    logical_delete_reason,
+    tenant_id -- 05/30 Added at Cardinal's request
 FROM pharmacyclaims_common_model
     DISTRIBUTE BY hvid;
 SET spark.sql.shuffle.partitions={partitions};
