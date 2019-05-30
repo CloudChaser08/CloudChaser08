@@ -168,6 +168,7 @@ class CensusDriver(object):
         scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
         content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
                                                      directory_path=scripts_directory)
+
         header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
         return header.union(content).coalesce(1)
 
@@ -184,5 +185,5 @@ class CensusDriver(object):
             test=self._test
         )
 
-    def copy_to_s3(self):
+    def copy_to_s3(self, batch_date=None):
         normalized_records_unloader.distcp(self._output_path)

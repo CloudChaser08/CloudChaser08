@@ -44,7 +44,7 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
 
     # log any requested column that is missing from the payload
     for k in total_attrs:
-        if k not in raw_payload.columns:
+        if k.lower() not in [_col.lower() for _col in raw_payload.columns]:
             logging.warning("Column does not exist in payload: " + k)
             raw_payload = postprocessor.add_null_column(k)(raw_payload)
 
