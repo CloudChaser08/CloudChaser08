@@ -8,7 +8,7 @@ import re
 import subprocess
 
 
-class _8451GrocceryCensusDriver(CensusDriver):
+class Grocery8451CensusDriver(CensusDriver):
 
     CLIENT_NAME = '8451'
     OPPORTUNITY_ID = 'hvXXXXX2'
