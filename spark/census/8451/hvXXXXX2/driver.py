@@ -15,7 +15,7 @@ class Grocery8451CensusDriver(CensusDriver):
     NUM_PARTITIONS = 20
 
     def __init__(self, end_to_end_test=False):
-        super(_8451GrocceryCensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID,
+        super(Grocery8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID,
                                                         end_to_end_test=end_to_end_test)
 
     def transform(self):
