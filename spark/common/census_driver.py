@@ -9,7 +9,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.common.std_census as std_census
 
 from pyspark.sql.types import StructType, StructField, StringType
-from spark.runner import Runner
+from spark.runner import Runner, PACKAGE_PATH
 from spark.spark_setup import init
 from std_census import records_schemas, matching_payloads_schemas
 
@@ -18,7 +18,6 @@ TEST = 'test'
 END_TO_END_TEST = 'end_to_end_test'
 PRODUCTION = 'production'
 DRIVER_MODULE_NAME = 'driver'
-PACKAGE_PATH = 'spark/target/dewey.zip/'
 SAVE_PATH = 'hdfs:///staging/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
@@ -169,10 +168,7 @@ class CensusDriver(object):
         scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
         content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
                                                      directory_path=scripts_directory)
-
-        header_schema = StructType([StructField(column, StringType()) for column in content.columns])
-        header = self._sqlContext.createDataFrame([content.columns], schema=header_schema)
-
+        header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
         return header.union(content).coalesce(1)
 
     def save(self, dataframe, batch_date):

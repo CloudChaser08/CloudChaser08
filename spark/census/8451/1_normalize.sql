@@ -3,7 +3,7 @@ SELECT
     CAST(MONOTONICALLY_INCREASING_ID() AS STRING)                                       AS record_id,
     /* MD5 added on 5/16/19 */
     MD5(txn.med_phm_fill_fid)                                                           AS claim_id,
-    UPPER(obfuscate_hvid(pay.hvid, 'hvidhvXXXXXX'))                                     AS hvid,
+    UPPER(obfuscate_hvid(pay.hvid, {SALT}))                                             AS hvid,
     CURRENT_DATE()                                                                      AS created,
 	'09'                                                                                AS model_version,
     txn.input_file_name                                                                 AS data_set,

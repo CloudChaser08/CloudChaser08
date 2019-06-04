@@ -7,15 +7,15 @@ import spark.common.std_census as std_census
 
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import udf
-from spark.common.census_driver import CensusDriver, PACKAGE_PATH, SAVE_PATH
+from spark.common.census_driver import CensusDriver, SAVE_PATH
 from spark.helpers import normalized_records_unloader
-
 
 class _8451CensusDriver(CensusDriver):
 
     CLIENT_NAME = '8451'
     OPPORTUNITY_ID = 'hvXXXXXX'
     NUM_PARTITIONS = 20
+    SALT = "hvidhvXXXXXX"
 
     def __init__(self, end_to_end_test=False):
         super(_8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID, end_to_end_test=end_to_end_test)
@@ -29,10 +29,8 @@ class _8451CensusDriver(CensusDriver):
         # If we do not explicitly define the path here, run_all_spark_scripts will
         # be default use ... /spark/target/dewey.zip/spark/census/ .. which will result in an error.
         #
-        census_module = importlib.import_module(self.__module__)
-        scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
-        content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
-                                                     directory_path=scripts_directory)
+        content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT],
+                                                                ['VDR_FILE_DT', date_input.strftime('%Y-%m-%d')]])
 
         # Only include the file_name in the data_set
         def data_set_name(full_path):
