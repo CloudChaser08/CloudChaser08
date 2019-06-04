@@ -2,7 +2,7 @@ SELECT
     /* Sunil added 6 columns on 5/23/19 to make delivery consistent with 84.51 RX (with the exception of claim_id which doesn't apply to Grocery Data) */
     CAST(MONOTONICALLY_INCREASING_ID() AS STRING)                                           AS record_id,
     /* Laurie 5/24/19: Moved hvid to below record_id, to match the source-to-target mapping. */
-    pay.hvid                                                                                AS hvid,
+    UPPER(obfuscate_hvid(pay.hvid, {SALT}))                                                 AS hvid,
     CURRENT_DATE()                                                                          AS created,
     /* Laurie 5/24/19: Deleted the model_version column, since there's no HV standard data model involved in this delivery. */
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,

@@ -5,6 +5,8 @@ from pyspark.sql import DataFrame
 import os
 
 
+PACKAGE_PATH = 'spark/target/dewey.zip/'
+
 class Runner:
     """
     Run spark queries and scripts
@@ -69,7 +71,8 @@ class Runner:
             if directory_path[-1] != '/':
                 directory_path += '/'
         else:
-            directory_path = os.path.dirname(inspect.getframeinfo(inspect.stack()[1][0]).filename) + '/'
+            directory_path = os.path.dirname(inspect.getframeinfo(inspect.stack()[1][0]).filename) \
+                                    .replace(PACKAGE_PATH, "") + '/'
 
         # SQL scripts have a naming convention of <step_number>_<table_name>.sql
         # Where <step_number> defines the order in which they need to run and

@@ -13,6 +13,7 @@ class Grocery8451CensusDriver(CensusDriver):
     CLIENT_NAME = '8451'
     OPPORTUNITY_ID = 'hvXXXXX2'
     NUM_PARTITIONS = 20
+    SALT = "hvidhvXXXXX2"
 
     def __init__(self, end_to_end_test=False):
         super(Grocery8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID,
@@ -22,14 +23,8 @@ class Grocery8451CensusDriver(CensusDriver):
         # Since this module is in the package, its file path will contain the
         # package path. Remove that in order to find the location of the
         # transformation scripts
-        #
-        # If we do not explicitly define the path here, run_all_spark_scripts will
-        # be default use ... /spark/target/dewey.zip/spark/census/ .. which will result in an error.
-        #
-        census_module = importlib.import_module(self.__module__)
-        scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
-        content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
-                                                     directory_path=scripts_directory)
+
+        content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT]])
         return content.coalesce(1)
 
     def save(self, dataframe, batch_date):
@@ -72,9 +67,3 @@ class Grocery8451CensusDriver(CensusDriver):
         for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
             new_name = 'part-' + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.gz'
             rename_file(output_path + filename, output_path + new_name)
-
-    def copy_to_s3(self, batch_date=None):
-        output_path = SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
-                year=batch_date.year, month=batch_date.month, day=batch_date.day
-            )
-        normalized_records_unloader.distcp(self._output_path, src=output_path)
