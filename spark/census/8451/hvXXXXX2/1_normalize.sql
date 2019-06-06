@@ -9,16 +9,16 @@ SELECT
 	'110'                                                                                   AS data_feed,
 	'318'                                                                                   AS data_vendor,
 	/* patient_gender */
-        CLEAN_UP_GENDER
-        (
-                CASE
-                    WHEN SUBSTR(UPPER(TRIM(COALESCE(txn.gender_code, 'U'))), 1, 1) IN ('F', 'M')
-                        THEN SUBSTR(UPPER(TRIM(COALESCE(txn.gender_code, 'U'))), 1, 1)
-                    WHEN SUBSTR(UPPER(TRIM(COALESCE(pay.gender, 'U'))), 1, 1) IN ('F', 'M')
-                        THEN SUBSTR(UPPER(TRIM(COALESCE(pay.gender, 'U'))), 1, 1)
-                    ELSE 'U'
-                END
-        )                                                                                   AS patient_gender,
+	CLEAN_UP_GENDER
+    	(
+        	CASE
+        	    WHEN SUBSTR(UPPER(TRIM(COALESCE(txn.gender_code, 'U'))), 1, 1) IN ('F', 'M')
+        	        THEN SUBSTR(UPPER(TRIM(COALESCE(txn.gender_code, 'U'))), 1, 1)
+        	    WHEN SUBSTR(UPPER(TRIM(COALESCE(pay.gender, 'U'))), 1, 1) IN ('F', 'M') 
+        	        THEN SUBSTR(UPPER(TRIM(COALESCE(pay.gender, 'U'))), 1, 1)
+        	    ELSE 'U' 
+        	END
+	    )                                                                                   AS patient_gender,
 	/* patient_year_of_birth */
 	CAP_YEAR_OF_BIRTH
         (
@@ -54,11 +54,11 @@ SELECT
     CASE
         WHEN txn.household_size IS NULL
             THEN NULL
-        WHEN CAST(COALESCE(txn.household_size, '0') AS INTEGER) > 5
+        WHEN CAST(COALESCE(txn.household_size, '0') AS INTEGER) > 5 
             THEN '5'
         WHEN txn.household_size = '5+'
             THEN '5'
-        ELSE txn.household_size
+        ELSE txn.household_size 
     END																		                AS household_size,
 	txn.presence_of_children																AS presence_of_children,
 	txn.continuous_panel_1yr																AS continuous_panel_1yr,
@@ -90,20 +90,20 @@ SELECT
 	txn.item_qty																			AS item_qty,
 	txn.unit_qty																			AS unit_qty,
 	/* net_spend_amt */
-	CASE
-	    WHEN txn.net_spend_amt IS NULL
-	        THEN NULL
-	    WHEN ABS(CAST(txn.net_spend_amt AS FLOAT)) > CAST(300 AS FLOAT)
-	        THEN CAST(SIGNUM(CAST(txn.net_spend_amt AS FLOAT)) * 300 AS STRING)
-	    ELSE txn.net_spend_amt
+	CASE 
+	    WHEN txn.net_spend_amt IS NULL 
+	        THEN NULL 
+	    WHEN ABS(CAST(txn.net_spend_amt AS FLOAT)) > CAST(300 AS FLOAT) 
+	        THEN CAST(SIGNUM(CAST(txn.net_spend_amt AS FLOAT)) * 300 AS STRING) 
+	    ELSE txn.net_spend_amt 
 	END																		                AS net_spend_amt,
 	/* spend_amt */
-	CASE
-	    WHEN txn.spend_amt IS NULL
-	        THEN NULL
-	    WHEN ABS(CAST(txn.spend_amt AS FLOAT)) > CAST(300 AS FLOAT)
-	        THEN CAST(SIGNUM(CAST(txn.spend_amt AS FLOAT)) * 300 AS STRING)
-	    ELSE txn.spend_amt
+	CASE 
+	    WHEN txn.spend_amt IS NULL 
+	        THEN NULL 
+	    WHEN ABS(CAST(txn.spend_amt AS FLOAT)) > CAST(300 AS FLOAT) 
+	        THEN CAST(SIGNUM(CAST(txn.spend_amt AS FLOAT)) * 300 AS STRING) 
+	    ELSE txn.spend_amt 
 	END																		                AS spend_amt,
 	txn.gov_snap_flag																		AS gov_snap_flag,
 	txn.gov_wic_flag																		AS gov_wic_flag,
@@ -125,15 +125,17 @@ SELECT
 	txn.prod_merch_l22_desc																	AS prod_merch_l22_desc,
 	txn.prod_merch_l30_desc																	AS prod_merch_l30_desc,
 	/* weight_uom_qty */
-	CASE
-	    WHEN txn.net_spend_amt IS NULL
-	     AND txn.spend_amt IS NULL
-	        THEN txn.weight_uom_qty
-	    WHEN ABS(CAST(COALESCE(txn.net_spend_amt, '0') AS FLOAT)) > CAST(300 AS FLOAT)
-	      OR ABS(CAST(COALESCE(txn.spend_amt, '0') AS FLOAT)) > CAST(300 AS FLOAT)
+	CASE 
+	    WHEN txn.net_spend_amt IS NULL 
+	     AND txn.spend_amt IS NULL 
+	        THEN txn.weight_uom_qty 
+	    WHEN ABS(CAST(COALESCE(txn.net_spend_amt, '0') AS FLOAT)) > CAST(300 AS FLOAT) 
+	      OR ABS(CAST(COALESCE(txn.spend_amt, '0') AS FLOAT)) > CAST(300 AS FLOAT) 
 	        THEN NULL
-	    ELSE txn.weight_uom_qty
-	END                                                                                     AS weight_uom_qty
+	    ELSE txn.weight_uom_qty 
+	END                                                                                     AS weight_uom_qty,
+	/* Laurie 6/5/19: Added the hashed household code. */
+	MD5(txn.hshd_code)                                                                      AS hshd_code
  FROM 8451_grocerry_transactions txn
  LEFT OUTER JOIN matching_payload pay
-   ON txn.hvjoinkey = pay.hvJoinKey
+   ON txn.hvjoinkey = pay.hvjoinkey
