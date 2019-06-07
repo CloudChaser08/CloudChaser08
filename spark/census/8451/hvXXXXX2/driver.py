@@ -13,7 +13,7 @@ class Grocery8451CensusDriver(CensusDriver):
     CLIENT_NAME = '8451'
     OPPORTUNITY_ID = 'hvXXXXX2'
     NUM_PARTITIONS = 20
-    SALT = "hvidhvXXXXX2"
+    SALT = "hvid8451"
 
     def __init__(self, end_to_end_test=False):
         super(Grocery8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID,
@@ -25,10 +25,14 @@ class Grocery8451CensusDriver(CensusDriver):
         # transformation scripts
 
         content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT]])
-        return content.coalesce(1)
+        return content
 
     def save(self, dataframe, batch_date):
         output_path = SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
+                year=batch_date.year, month=batch_date.month, day=batch_date.day
+            )
+
+        output_file_name_template = '{year}{month:02d}{day:02d}_response{{}}'.format(
                 year=batch_date.year, month=batch_date.month, day=batch_date.day
             )
 
@@ -65,5 +69,6 @@ class Grocery8451CensusDriver(CensusDriver):
         # rename output files to desired name
         # this step removes the spark hash added to the name by default
         for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
-            new_name = 'part-' + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.gz'
+            part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1) 
+            new_name = output_file_name_template.format(part_number) + '.psv.gz'
             rename_file(output_path + filename, output_path + new_name)
