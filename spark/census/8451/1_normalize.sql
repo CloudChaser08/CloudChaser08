@@ -6,7 +6,7 @@ SELECT
     UPPER(obfuscate_hvid(pay.hvid, {SALT}))                                             AS hvid,
     CURRENT_DATE()                                                                      AS created,
 	'09'                                                                                AS model_version,
-    txn.input_file_name                                                                 AS data_set,
+    SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]          AS data_set,
 	'86'                                                                                AS data_feed,
 	'337'                                                                               AS data_vendor,
 	/* patient_gender */
