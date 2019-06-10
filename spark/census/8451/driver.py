@@ -69,8 +69,9 @@ class _8451CensusDriver(CensusDriver):
 
         # rename output files to desired name
         # this step removes the spark hash added to the name by default
+        # e.g. part-00000-746f59d5-b38f-4afc-b211-ff2e02e17b7c-c000.csv is renamed to part-00000.psv.gz
         for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
-                new_name = output_file_name_prefix + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.gz'
+                new_name = output_file_name_prefix + re.match('''part-([0-9]+)[.-].*''', filename).group(1) + '.psv.gz'
                 rename_file(output_path + filename, output_path + new_name)
 
     def copy_to_s3(self, batch_date=None):
