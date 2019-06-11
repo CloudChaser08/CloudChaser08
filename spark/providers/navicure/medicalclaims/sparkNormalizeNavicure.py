@@ -74,7 +74,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
             medicalclaims_schema,
             cols_to_keep=['part_provider', 'part_best_date']
         )
-    )
+    )(df)
 
     if not test:
         _columns = output.columns
