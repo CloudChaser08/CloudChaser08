@@ -20,10 +20,7 @@ class Grocery8451CensusDriver(CensusDriver):
                                                         end_to_end_test=end_to_end_test)
 
     def transform(self):
-        # Since this module is in the package, its file path will contain the
-        # package path. Remove that in order to find the location of the
-        # transformation scripts
-
+        # By default, run_all_spark_scripts will run all sql scripts in the working directory
         content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT]])
         return content
 
@@ -68,6 +65,8 @@ class Grocery8451CensusDriver(CensusDriver):
 
         # rename output files to desired name
         # this step removes the spark hash added to the name by default
+        # e.g. part-00081-35b44b47-2b52-4430-a12a-c4ed31c7bfd5-c000.psv.gz becomes <date>_response00081.psv.gz
+        #
         for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
             part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1) 
             new_name = output_file_name_template.format(part_number) + '.psv.gz'
