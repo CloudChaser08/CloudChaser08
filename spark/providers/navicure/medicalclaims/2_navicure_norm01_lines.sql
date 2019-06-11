@@ -7,7 +7,9 @@ CONCAT
     COALESCE(txn.claim_revision_no, '')
 )                                                                                   AS claim_id,
 pay.hvid                                                                                AS hvid,
+CURRENT_DATE()                                                                          AS created,
 '08'                                                                                    AS model_version,
+SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
 '24'                                                                                    AS data_feed,
 '34'                                                                                    AS data_vendor,
 /* patient_gender */

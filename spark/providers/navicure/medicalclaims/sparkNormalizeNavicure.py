@@ -5,11 +5,13 @@ from spark.spark_setup import init
 from spark.common.medicalclaims_common_model import schema_v8 as medicalclaims_schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers.navicure.medicalclaims.transactional_schemas as transactional_schemas
+import pyspark.sql.functions as F
 
 FEED_ID = '24'
 SCRIPT_PATH = __file__
@@ -66,17 +68,25 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
             columns_to_keep=['part_provider', 'part_best_date']
         ) for t in target_tables])
 
+    output = postprocessor.compose(
+        lambda df: df.withColumn('record_id', F.monotonically_increasing_id()),
+        schema_enforcer.apply_schema_func(
+            medicalclaims_schema,
+            cols_to_keep=['part_provider', 'part_best_date']
+        )
+    )
+
     if not test:
-        _columns = df.columns
+        _columns = output.columns
         _columns.remove('part_provider')
         _columns.remove('part_best_date')
 
         normalized_records_unloader.unload(
-            spark, runner, df, 'part_best_date', date_input, 'navicure',
+            spark, runner, output, 'part_best_date', date_input, 'navicure',
             columns=_columns, substr_date_part=False
         )
     else:
-        df.collect()
+        output.collect()
 
 
 def main(args):
