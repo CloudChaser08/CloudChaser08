@@ -22,7 +22,15 @@ SELECT
     inst_drg_std_id,
     place_of_service_std_id,
     service_line_number,
-    diagnosis_code,
+    /* diagnosis_code */
+    /* We left the privacy filtering to the final normalization */
+    /* so we can accurately add the claim-level diagnoses.      */
+    CLEAN_UP_DIAGNOSIS_CODE
+        (
+            diagnosis_code,
+            diagnosis_code_qual,
+            date_service
+        )                                                                                   AS diagnosis_code,
     diagnosis_code_qual,
     diagnosis_priority,
     admit_diagnosis_ind,
@@ -45,12 +53,11 @@ SELECT
     prov_billing_npi,
     prov_referring_npi,
     prov_facility_npi,
+    payer_name,
     payer_plan_id,
-    payer_plan_name,
     prov_rendering_state_license,
     prov_rendering_upin,
     prov_rendering_name_1,
-    prov_rendering_name_2,
     prov_rendering_std_taxonomy,
     prov_rendering_vendor_specialty,
     prov_billing_tax_id,
@@ -58,7 +65,6 @@ SELECT
     prov_billing_state_license,
     prov_billing_upin,
     prov_billing_name_1,
-    prov_billing_name_2,
     prov_billing_address_1,
     prov_billing_address_2,
     prov_billing_city,
@@ -66,15 +72,14 @@ SELECT
     prov_billing_zip,
     prov_billing_std_taxonomy,
     prov_referring_name_1,
-    prov_referring_name_2,
     prov_facility_state_license,
     prov_facility_name_1,
-    prov_facility_name_2,
     prov_facility_address_1,
     prov_facility_address_2,
     prov_facility_city,
     prov_facility_state,
     prov_facility_zip,
+    medical_claim_link_text,
     part_provider,
     /* part_best_date */
     CASE
@@ -94,23 +99,36 @@ SELECT
 CROSS JOIN
     (
         SELECT gen_ref_1_dt
-         FROM ref_gen_ref
+         FROM ref_gen_ref 
         WHERE hvm_vdr_feed_id = 24
           AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
+        LIMIT 1
     ) ahdt
 CROSS JOIN date_explode_indices dei
    ON COALESCE(clm.claim_type, 'X') = 'P'
-  AND clm.date_service_end IS NOT NULL
   AND clm.date_service IS NOT NULL
+  AND clm.date_service_end IS NOT NULL
+  AND DATEDIFF
+        (
+            COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE)),
+            COALESCE(clm.date_service, CAST('1900-01-01' AS DATE))
+        ) <> 0
   AND DATEDIFF
         (
             COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE)),
             COALESCE(clm.date_service, CAST('1900-01-01' AS DATE))
         ) <= 365
   AND DATE_ADD(clm.date_service, dei.d) <= COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE))
+/* Select only professional claims, where both dates are populated, the */
+/* two dates are not the same, and the two dates are a year apart or less. */
 WHERE COALESCE(clm.claim_type, 'X') = 'P'
-  AND clm.date_service_end IS NOT NULL
   AND clm.date_service IS NOT NULL
+  AND clm.date_service_end IS NOT NULL
+  AND DATEDIFF
+        (
+            COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE)),
+            COALESCE(clm.date_service, CAST('1900-01-01' AS DATE))
+        ) <> 0
   AND DATEDIFF
         (
             COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE)),

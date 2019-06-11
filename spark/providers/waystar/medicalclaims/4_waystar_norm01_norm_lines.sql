@@ -90,6 +90,8 @@ SELECT
     END                                                                                     AS place_of_service_std_id,
     sln.line_number                                                                            AS service_line_number,
     /* diagnosis_code */
+    /* Leave the privacy filtering to the final normalization */
+    /* so we can accurately add the claim-level diagnoses.    */
     CASE
         WHEN ARRAY
                 (
@@ -103,62 +105,37 @@ SELECT
                     sln.diagnosis_pointer_8
                 )[diag_explode.n] IS NULL 
              THEN NULL
-        ELSE CLEAN_UP_DIAGNOSIS_CODE
+        ELSE ARRAY
                 (
-                    ARRAY
-                        (
-                            clm.primary_diagnosis,
-                            clm.diagnosis_code_2,
-                            clm.diagnosis_code_3,
-                            clm.diagnosis_code_4,
-                            clm.diagnosis_code_5,
-                            clm.diagnosis_code_6,
-                            clm.diagnosis_code_7,
-                            clm.diagnosis_code_8
-                        )
-                            [
-                                CAST(-1 AS INTEGER) +
-                                CAST
-                                    (
-                                        COALESCE
-                                            (
-                                                ARRAY
-                                                    (
-                                                        sln.diagnosis_pointer_1,
-                                                        sln.diagnosis_pointer_2,
-                                                        sln.diagnosis_pointer_3,
-                                                        sln.diagnosis_pointer_4,
-                                                        sln.diagnosis_pointer_5,
-                                                        sln.diagnosis_pointer_6,
-                                                        sln.diagnosis_pointer_7,
-                                                        sln.diagnosis_pointer_8
-                                                    )[diag_explode.n], '1'
-                                            ) AS INTEGER
-                                    )
-                            ],
-                    CASE 
-                        WHEN clm.coding_type IS NULL 
-                             THEN NULL 
-                        WHEN clm.coding_type = '9' 
-                             THEN '01' 
-                        WHEN UPPER(clm.coding_type) = 'X' 
-                             THEN '02' 
-                        ELSE NULL 
-                    END,
-                    CAST
-                        (
-                            EXTRACT_DATE
-                                (
-                                    COALESCE
-                                        (
-                                            sln.service_from, 
-                                            clm.statement_from, 
-                                            sln.service_to, 
-                                            clm.statement_to
-                                        ), '%Y%m%d'
-                                ) AS DATE
-                        )
+                    clm.primary_diagnosis,
+                    clm.diagnosis_code_2,
+                    clm.diagnosis_code_3,
+                    clm.diagnosis_code_4,
+                    clm.diagnosis_code_5,
+                    clm.diagnosis_code_6,
+                    clm.diagnosis_code_7,
+                    clm.diagnosis_code_8
                 )
+                    [
+                        CAST(-1 AS INTEGER) +
+                        CAST
+                            (
+                                COALESCE
+                                    (
+                                        ARRAY
+                                            (
+                                                sln.diagnosis_pointer_1,
+                                                sln.diagnosis_pointer_2,
+                                                sln.diagnosis_pointer_3,
+                                                sln.diagnosis_pointer_4,
+                                                sln.diagnosis_pointer_5,
+                                                sln.diagnosis_pointer_6,
+                                                sln.diagnosis_pointer_7,
+                                                sln.diagnosis_pointer_8
+                                            )[diag_explode.n], '1'
+                                    ) AS INTEGER
+                            )
+                    ]
     END                                                                                     AS diagnosis_code,
     /* diagnosis_code_qual */
     CASE
@@ -214,88 +191,37 @@ SELECT
              THEN NULL
         WHEN clm.admit_diagnosis IS NULL
              THEN NULL
-        WHEN CLEAN_UP_DIAGNOSIS_CODE
-                (
-                    clm.admit_diagnosis,
-                    CASE 
-                        WHEN clm.coding_type IS NULL 
-                             THEN NULL 
-                        WHEN clm.coding_type = '9' 
-                             THEN '01' 
-                        WHEN UPPER(clm.coding_type) = 'X' 
-                             THEN '02' 
-                        ELSE NULL 
-                    END,
-                    CAST
-                        (
-                            EXTRACT_DATE
-                                (
-                                    COALESCE
-                                        (
-                                            sln.service_from, 
-                                            clm.statement_from, 
-                                            sln.service_to, 
-                                            clm.statement_to
-                                        ), '%Y%m%d'
-                                ) AS DATE
-                        )
-                ) =
-           CLEAN_UP_DIAGNOSIS_CODE
-                (
-                    ARRAY
-                        (
-                            clm.primary_diagnosis,
-                            clm.diagnosis_code_2,
-                            clm.diagnosis_code_3,
-                            clm.diagnosis_code_4,
-                            clm.diagnosis_code_5,
-                            clm.diagnosis_code_6,
-                            clm.diagnosis_code_7,
-                            clm.diagnosis_code_8
-                        )
-                            [
-                                CAST(-1 AS INTEGER) +
-                                CAST
+        WHEN clm.admit_diagnosis = ARRAY
                                     (
-                                        COALESCE
-                                            (
-                                                ARRAY
-                                                    (
-                                                        sln.diagnosis_pointer_1,
-                                                        sln.diagnosis_pointer_2,
-                                                        sln.diagnosis_pointer_3,
-                                                        sln.diagnosis_pointer_4,
-                                                        sln.diagnosis_pointer_5,
-                                                        sln.diagnosis_pointer_6,
-                                                        sln.diagnosis_pointer_7,
-                                                        sln.diagnosis_pointer_8
-                                                    )[diag_explode.n], '1'
-                                            ) AS INTEGER
+                                        clm.primary_diagnosis,
+                                        clm.diagnosis_code_2,
+                                        clm.diagnosis_code_3,
+                                        clm.diagnosis_code_4,
+                                        clm.diagnosis_code_5,
+                                        clm.diagnosis_code_6,
+                                        clm.diagnosis_code_7,
+                                        clm.diagnosis_code_8
                                     )
-                            ],
-                    CASE 
-                        WHEN clm.coding_type IS NULL 
-                             THEN NULL 
-                        WHEN clm.coding_type = '9' 
-                             THEN '01' 
-                        WHEN UPPER(clm.coding_type) = 'X' 
-                             THEN '02' 
-                        ELSE NULL 
-                    END,
-                    CAST
-                        (
-                            EXTRACT_DATE
-                                (
-                                    COALESCE
-                                        (
-                                            sln.service_from, 
-                                            clm.statement_from, 
-                                            sln.service_to, 
-                                            clm.statement_to
-                                        ), '%Y%m%d'
-                                ) AS DATE
-                        )
-                )
+                                        [
+                                            CAST(-1 AS INTEGER) +
+                                            CAST
+                                                (
+                                                    COALESCE
+                                                        (
+                                                            ARRAY
+                                                                (
+                                                                    sln.diagnosis_pointer_1,
+                                                                    sln.diagnosis_pointer_2,
+                                                                    sln.diagnosis_pointer_3,
+                                                                    sln.diagnosis_pointer_4,
+                                                                    sln.diagnosis_pointer_5,
+                                                                    sln.diagnosis_pointer_6,
+                                                                    sln.diagnosis_pointer_7,
+                                                                    sln.diagnosis_pointer_8
+                                                                )[diag_explode.n], '1'
+                                                        ) AS INTEGER
+                                                )
+                                        ]
              THEN 'Y'
         ELSE 'N'
     END                                                                                     AS admit_diagnosis_ind,
@@ -316,7 +242,7 @@ SELECT
              THEN 'Y'
         ELSE 'N'
     END                                                                                     AS principal_proc_ind,
-    sln.units                                                                                AS procedure_units_billed,
+    CAST(sln.units AS FLOAT)                                                                AS procedure_units_billed,
     SUBSTR(UPPER(sln.procedure_modifier_1), 1, 2)                                            AS procedure_modifier_1,
     SUBSTR(UPPER(sln.procedure_modifier_2), 1, 2)                                            AS procedure_modifier_2,
     SUBSTR(UPPER(sln.procedure_modifier_3), 1, 2)                                            AS procedure_modifier_3,
@@ -388,8 +314,8 @@ SELECT
                 ELSE clm.facility_npi
             END
         )                                                                                    AS prov_facility_npi,
+    clm.payer_name                                                                            AS payer_name,
     clm.payer_id                                                                            AS payer_plan_id,
-    clm.payer_name                                                                            AS payer_plan_name,
     /* prov_rendering_state_license */
     CASE
         WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
@@ -424,20 +350,18 @@ SELECT
         WHEN clm.claim_type_code = 'I'
          AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
              THEN NULL
-        ELSE clm.attending_name1
+        WHEN 0 <> LENGTH(TRIM(CONCAT
+                                (
+                                    COALESCE(clmnms.attending_name1, ''), 
+                                    COALESCE(clmnms.attending_name2, '')
+                                ))) 
+             THEN TRIM(CONCAT
+                        (
+                            COALESCE(clmnms.attending_name1, ''), 
+                            COALESCE(clmnms.attending_name2, '')
+                        )) 
+        ELSE NULL
     END                                                                                        AS prov_rendering_name_1,
-    /* prov_rendering_name_2 */
-    CASE
-        WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
-             THEN NULL
-        WHEN clm.claim_type_code = 'P'
-         AND SUBSTR(CONCAT('00', sln.place_service), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
-             THEN NULL
-        WHEN clm.claim_type_code = 'I'
-         AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
-             THEN NULL
-        ELSE clm.attending_name2
-    END                                                                                        AS prov_rendering_name_2,
     clm.rendering_taxonomy                                                                    AS prov_rendering_std_taxonomy,
     clm.prov_specialty                                                                        AS prov_rendering_vendor_specialty,
     /* prov_billing_tax_id */
@@ -498,20 +422,18 @@ SELECT
         WHEN clm.claim_type_code = 'I'
          AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
              THEN NULL
-        ELSE clm.billing_name1
+        WHEN 0 <> LENGTH(TRIM(CONCAT
+                                (
+                                    COALESCE(clmnms.billing_name1, ''),
+                                    COALESCE(clmnms.billing_name2, '')
+                                ))) 
+             THEN TRIM(CONCAT
+                        (
+                            COALESCE(clmnms.billing_name1, ''), 
+                            COALESCE(clmnms.billing_name2, '')
+                        )) 
+        ELSE NULL
     END                                                                                        AS prov_billing_name_1,
-    /* prov_billing_name_2 */
-    CASE
-        WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
-             THEN NULL
-        WHEN clm.claim_type_code = 'P'
-         AND SUBSTR(CONCAT('00', sln.place_service), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
-             THEN NULL
-        WHEN clm.claim_type_code = 'I'
-         AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
-             THEN NULL
-        ELSE clm.billing_name2
-    END                                                                                        AS prov_billing_name_2,
     /* prov_billing_address_1 */
     CASE
         WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
@@ -586,20 +508,18 @@ SELECT
         WHEN clm.claim_type_code = 'I'
          AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
              THEN NULL
-        ELSE clm.referring_name1
+        WHEN 0 <> LENGTH(TRIM(CONCAT
+                                (
+                                    COALESCE(clmnms.referring_name1, ''), 
+                                    COALESCE(clmnms.referring_name2, '')
+                                )))
+             THEN TRIM(CONCAT
+                        (
+                            COALESCE(clmnms.referring_name1, ''), 
+                            COALESCE(clmnms.referring_name2, '')
+                        ))
+        ELSE NULL
     END                                                                                        AS prov_referring_name_1,
-    /* prov_referring_name_2 */
-    CASE
-        WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
-             THEN NULL
-        WHEN clm.claim_type_code = 'P'
-         AND SUBSTR(CONCAT('00', sln.place_service), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
-             THEN NULL
-        WHEN clm.claim_type_code = 'I'
-         AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
-             THEN NULL
-        ELSE clm.referring_name2
-    END                                                                                        AS prov_referring_name_2,
     /* prov_facility_state_license */
     CASE
         WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
@@ -622,20 +542,18 @@ SELECT
         WHEN clm.claim_type_code = 'I'
          AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
              THEN NULL
-        ELSE clm.facility_name1
+        WHEN 0 <> LENGTH(TRIM(CONCAT
+                                (
+                                    COALESCE(clmnms.facility_name1, ''), 
+                                    COALESCE(clmnms.facility_name2, '')
+                                ))) 
+             THEN TRIM(CONCAT
+                        (
+                            COALESCE(clmnms.facility_name1, ''), 
+                            COALESCE(clmnms.facility_name2, '')
+                        ))
+        ELSE NULL 
     END                                                                                        AS prov_facility_name_1,
-    /* prov_facility_name_2 */
-    CASE
-        WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
-             THEN NULL
-        WHEN clm.claim_type_code = 'P'
-         AND SUBSTR(CONCAT('00', sln.place_service), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
-             THEN NULL
-        WHEN clm.claim_type_code = 'I'
-         AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
-             THEN NULL
-        ELSE clm.facility_name2
-    END                                                                                        AS prov_facility_name_2,
     /* prov_facility_address_1 */
     CASE
         WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
@@ -699,6 +617,7 @@ SELECT
              THEN NULL
         ELSE clm.facility_adr_zip
     END                                                                                        AS prov_facility_zip,
+    pay.pcn                                                                                 AS medical_claim_link_text,
     'navicure'                                                                                AS part_provider,
     /* part_best_date */
     CASE
@@ -718,22 +637,42 @@ SELECT
  FROM waystar_dedup_lines sln 
  LEFT OUTER JOIN waystar_dedup_claims clm 
    ON clm.claim_number = sln.claim_number 
- LEFT OUTER JOIN waystar_payload pay 
+ LEFT OUTER JOIN waystar_payload pay
    ON clm.hvjoinkey = pay.hvjoinkey
- CROSS JOIN
-     (
-         SELECT gen_ref_1_dt
-          FROM ref_gen_ref
-         WHERE hvm_vdr_feed_id = 24
-           AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-     ) esdt
- CROSS JOIN
-     (
-         SELECT gen_ref_1_dt
-          FROM ref_gen_ref
-         WHERE hvm_vdr_feed_id = 24
-           AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-     ) ahdt
+ /* Deduplicate the source name columns without trimming and nullifying. */
+ /* The source columns sometimes contain trailing blanks (1) and leading */
+ /* blanks (2) that are part of the full provider name. */
+ LEFT OUTER JOIN
+    (
+        SELECT DISTINCT
+            claim_number,
+            attending_name1,
+            attending_name2,
+            billing_name1,
+            billing_name2,
+            referring_name1,
+            referring_name2,
+            facility_name1,
+            facility_name2
+         FROM waystar_claims_hist_dedup
+    ) clmnms
+   ON sln.claim_number = clmnms.claim_number
+CROSS JOIN
+    (
+        SELECT gen_ref_1_dt
+         FROM ref_gen_ref
+        WHERE hvm_vdr_feed_id = 24
+          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
+        LIMIT 1
+    ) esdt
+CROSS JOIN
+    (
+        SELECT gen_ref_1_dt
+         FROM ref_gen_ref 
+        WHERE hvm_vdr_feed_id = 24
+          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
+        LIMIT 1
+    ) ahdt
 CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7)) AS n) diag_explode
 WHERE
 ---------- Diagnosis code explosion
@@ -764,4 +703,11 @@ WHERE
                 ) IS NULL
         AND diag_explode.n = 0
         )
+    )
+/* Eliminate claims loaded from Navicure source data. */
+  AND NOT EXISTS
+    (
+        SELECT 1
+         FROM waystar_medicalclaims_augment aug
+        WHERE sln.claim_number = aug.instanceid
     )

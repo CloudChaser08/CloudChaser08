@@ -88,11 +88,11 @@ SELECT DISTINCT
              THEN '99'
         ELSE SUBSTR(CONCAT('00', sln.place_service), -2)
     END                                                                                     AS place_of_service_std_id,
-    NULL                                                                                    AS service_line_number,
-    NULL                                                                                    AS diagnosis_code,
-    NULL                                                                                    AS diagnosis_code_qual,
-    NULL                                                                                    AS diagnosis_priority,
-    NULL                                                                                    AS admit_diagnosis_ind,
+    CAST(NULL AS STRING)                                                                    AS service_line_number,
+    CAST(NULL AS STRING)                                                                    AS diagnosis_code,
+    CAST(NULL AS STRING)                                                                    AS diagnosis_code_qual,
+    CAST(NULL AS STRING)                                                                    AS diagnosis_priority,
+    CAST(NULL AS STRING)                                                                    AS admit_diagnosis_ind,
     /* procedure_code */
     CLEAN_UP_PROCEDURE_CODE
         (
@@ -111,7 +111,7 @@ SELECT DISTINCT
                     clm.other_proc_code_10
                 )[proc_explode.n]
         )                                                                                    AS procedure_code,
-    NULL                                                                                    AS procedure_code_qual,
+    CAST(NULL AS STRING)                                                                    AS procedure_code_qual,
     /* principal_proc_ind */
     CASE
         WHEN ARRAY
@@ -152,16 +152,16 @@ SELECT DISTINCT
              THEN 'Y'
         ELSE 'N'
     END                                                                                     AS principal_proc_ind,
-    NULL                                                                                    AS procedure_units_billed,
-    NULL                                                                                    AS procedure_modifier_1,
-    NULL                                                                                    AS procedure_modifier_2,
-    NULL                                                                                    AS procedure_modifier_3,
-    NULL                                                                                    AS procedure_modifier_4,
-    NULL                                                                                    AS revenue_code,
-    NULL                                                                                    AS ndc_code,
+    CAST(NULL AS FLOAT)                                                                        AS procedure_units_billed,
+    CAST(NULL AS STRING)                                                                    AS procedure_modifier_1,
+    CAST(NULL AS STRING)                                                                    AS procedure_modifier_2,
+    CAST(NULL AS STRING)                                                                    AS procedure_modifier_3,
+    CAST(NULL AS STRING)                                                                    AS procedure_modifier_4,
+    CAST(NULL AS STRING)                                                                    AS revenue_code,
+    CAST(NULL AS STRING)                                                                    AS ndc_code,
     clm.type_coverage                                                                        AS medical_coverage_type,
-    NULL                                                                                    AS line_charge,
-    NULL                                                                                    AS line_allowed,
+    CAST(NULL AS FLOAT)                                                                        AS line_charge,
+    CAST(NULL AS FLOAT)                                                                        AS line_allowed,
     CAST(clm.total_charge AS FLOAT)                                                            AS total_charge,
     CAST(clm.total_allowed AS FLOAT)                                                        AS total_allowed,
     /* prov_rendering_npi */
@@ -224,8 +224,8 @@ SELECT DISTINCT
                 ELSE clm.facility_npi
             END
         )                                                                                    AS prov_facility_npi,
+    clm.payer_name                                                                            AS payer_name,
     clm.payer_id                                                                            AS payer_plan_id,
-    clm.payer_name                                                                            AS payer_plan_name,
     /* prov_rendering_state_license */
     CASE
         WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
@@ -260,20 +260,18 @@ SELECT DISTINCT
         WHEN clm.claim_type_code = 'I'
          AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
              THEN NULL
-        ELSE clm.attending_name1
+        WHEN 0 <> LENGTH(TRIM(CONCAT
+                                (
+                                    COALESCE(clmnms.attending_name1, ''), 
+                                    COALESCE(clmnms.attending_name2, '')
+                                ))) 
+             THEN TRIM(CONCAT
+                        (
+                            COALESCE(clmnms.attending_name1, ''), 
+                            COALESCE(clmnms.attending_name2, '')
+                        )) 
+        ELSE NULL
     END                                                                                        AS prov_rendering_name_1,
-    /* prov_rendering_name_2 */
-    CASE
-        WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
-             THEN NULL
-        WHEN clm.claim_type_code = 'P'
-         AND SUBSTR(CONCAT('00', sln.place_service), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
-             THEN NULL
-        WHEN clm.claim_type_code = 'I'
-         AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
-             THEN NULL
-        ELSE clm.attending_name2
-    END                                                                                        AS prov_rendering_name_2,
     clm.rendering_taxonomy                                                                    AS prov_rendering_std_taxonomy,
     clm.prov_specialty                                                                        AS prov_rendering_vendor_specialty,
     /* prov_billing_tax_id */
@@ -334,20 +332,18 @@ SELECT DISTINCT
         WHEN clm.claim_type_code = 'I'
          AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
              THEN NULL
-        ELSE clm.billing_name1
+        WHEN 0 <> LENGTH(TRIM(CONCAT
+                                (
+                                    COALESCE(clmnms.billing_name1, ''),
+                                    COALESCE(clmnms.billing_name2, '')
+                                ))) 
+             THEN TRIM(CONCAT
+                        (
+                            COALESCE(clmnms.billing_name1, ''), 
+                            COALESCE(clmnms.billing_name2, '')
+                        )) 
+        ELSE NULL
     END                                                                                        AS prov_billing_name_1,
-    /* prov_billing_name_2 */
-    CASE
-        WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
-             THEN NULL
-        WHEN clm.claim_type_code = 'P'
-         AND SUBSTR(CONCAT('00', sln.place_service), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
-             THEN NULL
-        WHEN clm.claim_type_code = 'I'
-         AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
-             THEN NULL
-        ELSE clm.billing_name2
-    END                                                                                        AS prov_billing_name_2,
     /* prov_billing_address_1 */
     CASE
         WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
@@ -422,20 +418,18 @@ SELECT DISTINCT
         WHEN clm.claim_type_code = 'I'
          AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
              THEN NULL
-        ELSE clm.referring_name1
+        WHEN 0 <> LENGTH(TRIM(CONCAT
+                                (
+                                    COALESCE(clmnms.referring_name1, ''), 
+                                    COALESCE(clmnms.referring_name2, '')
+                                )))
+             THEN TRIM(CONCAT
+                        (
+                            COALESCE(clmnms.referring_name1, ''), 
+                            COALESCE(clmnms.referring_name2, '')
+                        ))
+        ELSE NULL
     END                                                                                        AS prov_referring_name_1,
-    /* prov_referring_name_2 */
-    CASE
-        WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
-             THEN NULL
-        WHEN clm.claim_type_code = 'P'
-         AND SUBSTR(CONCAT('00', sln.place_service), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
-             THEN NULL
-        WHEN clm.claim_type_code = 'I'
-         AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
-             THEN NULL
-        ELSE clm.referring_name2
-    END                                                                                        AS prov_referring_name_2,
     /* prov_facility_state_license */
     CASE
         WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
@@ -458,20 +452,18 @@ SELECT DISTINCT
         WHEN clm.claim_type_code = 'I'
          AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
              THEN NULL
-        ELSE clm.facility_name1
+        WHEN 0 <> LENGTH(TRIM(CONCAT
+                                (
+                                    COALESCE(clmnms.facility_name1, ''), 
+                                    COALESCE(clmnms.facility_name2, '')
+                                ))) 
+             THEN TRIM(CONCAT
+                        (
+                            COALESCE(clmnms.facility_name1, ''), 
+                            COALESCE(clmnms.facility_name2, '')
+                        ))
+        ELSE NULL
     END                                                                                        AS prov_facility_name_1,
-    /* prov_facility_name_2 */
-    CASE
-        WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
-             THEN NULL
-        WHEN clm.claim_type_code = 'P'
-         AND SUBSTR(CONCAT('00', sln.place_service), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
-             THEN NULL
-        WHEN clm.claim_type_code = 'I'
-         AND SUBSTR(COALESCE(clm.type_bill, 'X'), 1, 1) IN ('3', 'X')
-             THEN NULL
-        ELSE clm.facility_name2
-    END                                                                                        AS prov_facility_name_2,
     /* prov_facility_address_1 */
     CASE
         WHEN COALESCE(clm.claim_type_code, 'X') NOT IN ('I', 'P')
@@ -535,6 +527,7 @@ SELECT DISTINCT
              THEN NULL
         ELSE clm.facility_adr_zip
     END                                                                                        AS prov_facility_zip,
+    pay.pcn                                                                                 AS medical_claim_link_text,
     'navicure'                                                                                AS part_provider,
     /* part_best_date */
     CASE
@@ -558,6 +551,24 @@ SELECT DISTINCT
   AND sln.line_number = '1'
  LEFT OUTER JOIN waystar_payload pay 
    ON clm.hvjoinkey = pay.hvjoinkey
+ /* Deduplicate the source name columns without trimming and nullifying. */
+ /* The source columns sometimes contain trailing blanks (1) and leading */
+ /* blanks (2) that are part of the full provider name. */
+ LEFT OUTER JOIN
+    (
+        SELECT DISTINCT
+            claim_number,
+            attending_name1,
+            attending_name2,
+            billing_name1,
+            billing_name2,
+            referring_name1,
+            referring_name2,
+            facility_name1,
+            facility_name2
+         FROM waystar_claims_hist_dedup
+    ) clmnms
+   ON clm.claim_number = clmnms.claim_number
  LEFT OUTER JOIN
 /* Get the min and max dates for each claim_number. */
 (
@@ -588,6 +599,7 @@ CROSS JOIN
          FROM ref_gen_ref
         WHERE hvm_vdr_feed_id = 24
           AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
+        LIMIT 1
     ) esdt
 CROSS JOIN
     (
@@ -595,6 +607,7 @@ CROSS JOIN
          FROM ref_gen_ref 
         WHERE hvm_vdr_feed_id = 24
           AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
+        LIMIT 1
     ) ahdt
 CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) AS n) proc_explode
 WHERE NOT EXISTS
@@ -640,3 +653,10 @@ WHERE NOT EXISTS
             clm.other_proc_code_9,
             clm.other_proc_code_10
         )[proc_explode.n] IS NOT NULL
+/* Eliminate claims loaded from Navicure source data. */
+  AND NOT EXISTS
+    (
+        SELECT 1
+         FROM waystar_medicalclaims_augment aug
+        WHERE clm.claim_number = aug.instanceid
+    )

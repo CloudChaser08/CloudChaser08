@@ -12,8 +12,20 @@ SELECT
     patient_state,
     claim_type,
     date_received,
-    date_service,
-    date_service_end,
+    /* date_service */
+    /* For professional claims, if date_service is NULL, set it to date_service_end. */
+    CASE
+        WHEN COALESCE(claim_type, 'X') = 'P'
+            THEN COALESCE(date_service, date_service_end)
+        ELSE date_service
+    END                                                                                     AS date_service,
+    /* date_service_end */
+    /* For professional claims, if date_service_end is NULL, set it to date_service. */
+    CASE
+        WHEN COALESCE(claim_type, 'X') = 'P'
+            THEN COALESCE(date_service_end, date_service)
+        ELSE date_service_end
+    END                                                                                     AS date_service_end,
     inst_date_admitted,
     inst_admit_type_std_id,
     inst_admit_source_std_id,
@@ -22,7 +34,15 @@ SELECT
     inst_drg_std_id,
     place_of_service_std_id,
     service_line_number,
-    diagnosis_code,
+    /* diagnosis_code */
+    /* We left the privacy filtering to the final normalization */
+    /* so we can accurately add the claim-level diagnoses.      */
+    CLEAN_UP_DIAGNOSIS_CODE
+        (
+            diagnosis_code,
+            diagnosis_code_qual,
+            date_service
+        )                                                                                   AS diagnosis_code,
     diagnosis_code_qual,
     diagnosis_priority,
     admit_diagnosis_ind,
@@ -45,12 +65,11 @@ SELECT
     prov_billing_npi,
     prov_referring_npi,
     prov_facility_npi,
+    payer_name,
     payer_plan_id,
-    payer_plan_name,
     prov_rendering_state_license,
     prov_rendering_upin,
     prov_rendering_name_1,
-    prov_rendering_name_2,
     prov_rendering_std_taxonomy,
     prov_rendering_vendor_specialty,
     prov_billing_tax_id,
@@ -58,7 +77,6 @@ SELECT
     prov_billing_state_license,
     prov_billing_upin,
     prov_billing_name_1,
-    prov_billing_name_2,
     prov_billing_address_1,
     prov_billing_address_2,
     prov_billing_city,
@@ -66,21 +84,28 @@ SELECT
     prov_billing_zip,
     prov_billing_std_taxonomy,
     prov_referring_name_1,
-    prov_referring_name_2,
     prov_facility_state_license,
     prov_facility_name_1,
-    prov_facility_name_2,
     prov_facility_address_1,
     prov_facility_address_2,
     prov_facility_city,
     prov_facility_state,
     prov_facility_zip,
+    medical_claim_link_text,
     part_provider,
     part_best_date
  FROM waystar_norm01_norm_lines
+/* Select where the claim is not professional, or there is no date_service, */
+/* or there is no date_service_end, or the two dates are the same, or the */
+/* two dates are more than a year apart. */
 WHERE COALESCE(claim_type, 'X') <> 'P'
-   OR date_service_end IS NULL
    OR date_service IS NULL
+   OR date_service_end IS NULL
+   OR DATEDIFF
+        (
+            COALESCE(date_service_end, CAST('1900-01-01' AS DATE)),
+            COALESCE(date_service, CAST('1900-01-01' AS DATE))
+        ) = 0
    OR DATEDIFF
         (
             COALESCE(date_service_end, CAST('1900-01-01' AS DATE)),
