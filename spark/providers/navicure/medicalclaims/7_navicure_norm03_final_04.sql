@@ -1,4 +1,3 @@
-INSERT INTO darch.navicure_norm03_final
 SELECT
 	claim_id,
 	hvid,
@@ -81,7 +80,7 @@ SELECT
 	                SUBSTR(CAST(DATE_ADD(date_service, dei.d) AS STRING), 1, 7), '-01'
 	            )
 	END 																					AS part_best_date
- FROM darch.navicure_norm02_claims clm
+ FROM navicure_norm02_claims clm
 CROSS JOIN
     (
         SELECT gen_ref_1_dt
