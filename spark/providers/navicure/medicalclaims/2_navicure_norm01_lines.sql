@@ -5,11 +5,11 @@ CONCAT
     COALESCE(txn.navicure_client_id, ''),
     COALESCE(txn.unique_claim_id, ''),
     COALESCE(txn.claim_revision_no, '')
-)																            		AS claim_id,
-pay.hvid																				AS hvid,
-'08'																					AS model_version,
-'24'																					AS data_feed,
-'34'																					AS data_vendor,
+)                                                                                   AS claim_id,
+pay.hvid                                                                                AS hvid,
+'08'                                                                                    AS model_version,
+'24'                                                                                    AS data_feed,
+'34'                                                                                    AS data_vendor,
 /* patient_gender */
 CLEAN_UP_GENDER
 (
@@ -20,7 +20,7 @@ CLEAN_UP_GENDER
                     THEN UPPER(SUBSTR(pay.gender, 1, 1))
                 ELSE 'U'
         END
-    )																					AS patient_gender,
+    )                                                                                   AS patient_gender,
     /* patient_age */
     CAP_AGE
     (
@@ -30,25 +30,25 @@ CLEAN_UP_GENDER
             CAST(EXTRACT_DATE(COALESCE(txn.service_from_date, txn.service_to_date), '%Y%m%d') AS DATE),
             SUBSTR(COALESCE(txn.patient_date_of_birth, pay.yearofbirth), 1, 4)
         )
-    )																					AS patient_age,
+    )                                                                                   AS patient_age,
     /* patient_year_of_birth */
     CAP_YEAR_OF_BIRTH
     (
         pay.age,
         CAST(EXTRACT_DATE(COALESCE(txn.service_from_date, txn.service_to_date), '%Y%m%d') AS DATE),
         SUBSTR(COALESCE(txn.patient_date_of_birth, pay.yearofbirth), 1, 4)
-    )																					AS patient_year_of_birth,
+    )                                                                                   AS patient_year_of_birth,
     /* patient_zip3 */
     MASK_ZIP_CODE
     (
         SUBSTR(COALESCE(txn.patient_home_address_zip, pay.threedigitzip), 1, 3)
-    )	                                                                        		AS patient_zip3,
+    )                                                                                   AS patient_zip3,
     VALIDATE_STATE_CODE
     (
         UPPER(COALESCE(txn.patient_home_address_state, pay.state, ''))
-    )		                                                                    		AS patient_state,
-    'P'												                						AS claim_type,
-    CAST(EXTRACT_DATE(txn.claim_submit_date, '%Y%m%d') AS DATE)							    AS date_received,
+    )                                                                                   AS patient_state,
+    'P'                                                                                     AS claim_type,
+    CAST(EXTRACT_DATE(txn.claim_submit_date, '%Y%m%d') AS DATE)                             AS date_received,
     /* date_service */
     CAP_DATE
     (
@@ -70,8 +70,8 @@ CLEAN_UP_GENDER
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33')
             THEN '99'
         ELSE SUBSTR(CONCAT('00', txn.place_of_service_code), -2)
-END 																					AS place_of_service_std_id,
-txn.service_line																		AS service_line_number,
+END                                                                                     AS place_of_service_std_id,
+txn.service_line                                                                        AS service_line_number,
 /* diagnosis_code */
 CASE
         WHEN ARRAY
@@ -278,7 +278,7 @@ CASE
             ] IS NOT NULL
             THEN '01'
         ELSE NULL
-END 																					AS diagnosis_code_qual,
+END                                                                                     AS diagnosis_code_qual,
 /* diagnosis_priority */
 CASE
         WHEN ARRAY
@@ -290,28 +290,28 @@ CASE
             )[diag_explode.n] IS NULL
             THEN NULL
         ELSE CAST(1 AS INTEGER) + diag_explode.n
-END 																					AS diagnosis_priority,
-CLEAN_UP_PROCEDURE_CODE(UPPER(txn.product_service_id))							    	AS procedure_code,
+END                                                                                     AS diagnosis_priority,
+CLEAN_UP_PROCEDURE_CODE(UPPER(txn.product_service_id))                                  AS procedure_code,
 /* procedure_code_qual */
 CASE
         WHEN txn.product_service_id IS NULL
             THEN NULL
         ELSE 'HC'
-END 																					AS procedure_code_qual,
-COALESCE(txn.service_unit_count, txn.service_ane_minutes)								AS procedure_units_billed,
-SUBSTR(UPPER(txn.procedure_modifier_1), 1, 2)											AS procedure_modifier_1,
-SUBSTR(UPPER(txn.procedure_modifier_2), 1, 2)											AS procedure_modifier_2,
-SUBSTR(UPPER(txn.procedure_modifier_3), 1, 2)											AS procedure_modifier_3,
-SUBSTR(UPPER(txn.procedure_modifier_4), 1, 2)											AS procedure_modifier_4,
-CLEAN_UP_NDC_CODE(txn.ndc_drug_code)													AS ndc_code,
+END                                                                                     AS procedure_code_qual,
+COALESCE(txn.service_unit_count, txn.service_ane_minutes)                               AS procedure_units_billed,
+SUBSTR(UPPER(txn.procedure_modifier_1), 1, 2)                                           AS procedure_modifier_1,
+SUBSTR(UPPER(txn.procedure_modifier_2), 1, 2)                                           AS procedure_modifier_2,
+SUBSTR(UPPER(txn.procedure_modifier_3), 1, 2)                                           AS procedure_modifier_3,
+SUBSTR(UPPER(txn.procedure_modifier_4), 1, 2)                                           AS procedure_modifier_4,
+CLEAN_UP_NDC_CODE(txn.ndc_drug_code)                                                    AS ndc_code,
 /* medical_coverage_type */
 CASE
         WHEN 0 <> LENGTH(TRIM(COALESCE(txn.dest_claim_filing_indicator, '')))
             THEN TRIM(SUBSTR(txn.dest_claim_filing_indicator, 1, 2))
         ELSE NULL
-END									                									AS medical_coverage_type,
-CAST(txn.line_item_charge_amount AS FLOAT)												AS line_charge,
-CAST(txn.total_claim_charge_amount AS FLOAT)											AS total_charge,
+END                                                                                     AS medical_coverage_type,
+CAST(txn.line_item_charge_amount AS FLOAT)                                              AS line_charge,
+CAST(txn.total_claim_charge_amount AS FLOAT)                                            AS total_charge,
 /* prov_rendering_npi */
 CLEAN_UP_NPI_CODE
 (
@@ -320,7 +320,7 @@ CLEAN_UP_NPI_CODE
                     THEN NULL
                 ELSE txn.rendering_provider_npi
         END
-    )   																				AS prov_rendering_npi,
+    )                                                                                   AS prov_rendering_npi,
     /* prov_billing_npi */
     CLEAN_UP_NPI_CODE
     (
@@ -329,7 +329,7 @@ CLEAN_UP_NPI_CODE
                     THEN NULL
                 ELSE txn.billing_npi
         END
-    )																					AS prov_billing_npi,
+    )                                                                                   AS prov_billing_npi,
     /* prov_referring_npi */
     CLEAN_UP_NPI_CODE
     (
@@ -338,7 +338,7 @@ CLEAN_UP_NPI_CODE
                     THEN NULL
                 ELSE txn.referring_provider_1_npi
         END
-    )																					AS prov_referring_npi,
+    )                                                                                   AS prov_referring_npi,
     /* prov_facility_npi */
     CLEAN_UP_NPI_CODE
     (
@@ -347,7 +347,7 @@ CLEAN_UP_NPI_CODE
                     THEN NULL
                 ELSE txn.facility_npi
         END
-    )																					AS prov_facility_npi,
+    )                                                                                   AS prov_facility_npi,
     /* payer_name */
     CASE
         WHEN txn.dest_client_payer_name IS NOT NULL
@@ -358,7 +358,7 @@ CLEAN_UP_NPI_CODE
         WHEN txn.dest_system_payer_name IS NOT NULL
             THEN txn.dest_system_payer_name
         ELSE NULL
-END						                                                                AS payer_name,
+END                                                                                     AS payer_name,
 /* payer_plan_id */
 CASE
         WHEN txn.dest_client_payer_id IS NOT NULL
@@ -375,19 +375,19 @@ CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.rendering_state_license_no
-END																			    		AS prov_rendering_state_license,
+END                                                                                     AS prov_rendering_state_license,
 /* prov_rendering_upin */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.rendering_upin
-END																    					AS prov_rendering_upin,
+END                                                                                     AS prov_rendering_upin,
 /* prov_rendering_commercial_id */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.rendering_commercial
-END																				    	AS prov_rendering_commercial_id,
+END                                                                                     AS prov_rendering_commercial_id,
 /* prov_rendering_name_1 */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
@@ -413,7 +413,7 @@ CASE
                         END
                 ), 3)
 END                                                                                     AS prov_rendering_name_1,
-txn.rendering_taxonomy_code																AS prov_rendering_std_taxonomy,
+txn.rendering_taxonomy_code                                                             AS prov_rendering_std_taxonomy,
 /* prov_billing_tax_id */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
@@ -421,7 +421,7 @@ CASE
         WHEN txn.billing_tax_id_qualifier = 'EI'
             THEN txn.billing_tax_id
         ELSE NULL
-END						    															AS prov_billing_tax_id,
+END                                                                                     AS prov_billing_tax_id,
 /* prov_billing_ssn */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
@@ -429,19 +429,19 @@ CASE
         WHEN txn.billing_tax_id_qualifier = 'SY'
             THEN txn.billing_tax_id
         ELSE NULL
-END						    															AS prov_billing_ssn,
+END                                                                                     AS prov_billing_ssn,
 /* prov_billing_state_license */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.billing_state_license_no
-END						    															AS prov_billing_state_license,
+END                                                                                     AS prov_billing_state_license,
 /* prov_billing_commercial_id */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.billing_commercial
-END						    															AS prov_billing_commercial_id,
+END                                                                                     AS prov_billing_commercial_id,
 /* prov_billing_name_1 */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
@@ -450,7 +450,7 @@ CASE
             AND COALESCE(txn.billing_last_name, txn.billing_first_name, txn.billing_middle_name) IS NOT NULL
             THEN CONCAT
             (
-                txn.billing_organization_name, '; ',
+                txn.billing_organization_name, ': ',
                 SUBSTR(CONCAT
                     (
                         CASE
@@ -490,25 +490,25 @@ CASE
                             END
                     ), 3)
             ELSE txn.billing_organization_name
-END						    															AS prov_billing_name_1,
+END                                                                                     AS prov_billing_name_1,
 /* prov_billing_address_1 */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.billing_street_address_line_1
-END						    															AS prov_billing_address_1,
+END                                                                                     AS prov_billing_address_1,
 /* prov_billing_address_2 */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.billing_street_address_line_2
-END						    															AS prov_billing_address_2,
+END                                                                                     AS prov_billing_address_2,
 /* prov_billing_city */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.billing_street_address_city
-END						    															AS prov_billing_city,
+END                                                                                     AS prov_billing_city,
 /* prov_billing_state */
 VALIDATE_STATE_CODE
 (
@@ -517,32 +517,32 @@ VALIDATE_STATE_CODE
                     THEN NULL
                 ELSE UPPER(COALESCE(txn.billing_street_address_state, ''))
         END
-    )   																				AS prov_billing_state,
+    )                                                                                   AS prov_billing_state,
     /* prov_billing_zip */
     CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.billing_street_address_zip
-END						    															AS prov_billing_zip,
-txn.billing_taxonomy_code																AS prov_billing_std_taxonomy,
+END                                                                                     AS prov_billing_zip,
+txn.billing_taxonomy_code                                                               AS prov_billing_std_taxonomy,
 /* prov_referring_state_license */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.referring_1_state_license_no
-END						    															AS prov_referring_state_license,
+END                                                                                     AS prov_referring_state_license,
 /* prov_referring_upin */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.referring_1_upin
-END						    															AS prov_referring_upin,
+END                                                                                     AS prov_referring_upin,
 /* prov_referring_commercial_id */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.referring_1_commercial_id
-END						    															AS prov_referring_commercial_id,
+END                                                                                     AS prov_referring_commercial_id,
 /* prov_referring_name_1 */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
@@ -567,31 +567,31 @@ CASE
                                 ELSE ''
                         END
                 ), 3)
-END						    															AS prov_referring_name_1,
+END                                                                                     AS prov_referring_name_1,
 /* prov_facility_name_1 */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.facility_organization_name
-END						    															AS prov_facility_name_1,
+END                                                                                     AS prov_facility_name_1,
 /* prov_facility_address_1 */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.facility_street_address_line_1
-END						    															AS prov_facility_address_1,
+END                                                                                     AS prov_facility_address_1,
 /* prov_facility_address_2 */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.facility_street_address_line_2
-END						    															AS prov_facility_address_2,
+END                                                                                     AS prov_facility_address_2,
 /* prov_facility_city */
 CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.facility_street_address_city
-END						    															AS prov_facility_city,
+END                                                                                     AS prov_facility_city,
 /* prov_facility_state */
 VALIDATE_STATE_CODE
 (
@@ -600,18 +600,18 @@ VALIDATE_STATE_CODE
                     THEN NULL
                 ELSE UPPER(COALESCE(txn.facility_street_address_state, ''))
         END
-    )   																				AS prov_facility_state,
+    )                                                                                   AS prov_facility_state,
     /* prov_facility_zip */
     CASE
         WHEN SUBSTR(CONCAT('00', txn.place_of_service_code), -2) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33', '99')
             THEN NULL
         ELSE txn.facility_street_address_zip
-END						    															AS prov_facility_zip,
+END                                                                                     AS prov_facility_zip,
 txn.box9_client_payer_id                                                                AS cob_payer_vendor_id_1,
 txn.box9_claim_filing_indicator                                                         AS cob_payer_claim_filing_ind_code_1,
 txn.third_client_payer_id                                                               AS cob_payer_vendor_id_2,
 txn.third_claim_filing_indicator                                                        AS cob_payer_claim_filing_ind_code_2,
-'navicure'																				AS part_provider,
+'navicure'                                                                              AS part_provider,
 /* part_best_date */
 CASE
         WHEN CAP_DATE
@@ -626,7 +626,7 @@ CASE
                 SUBSTR(COALESCE(txn.service_from_date, txn.service_to_date), 1, 4), '-',
                 SUBSTR(COALESCE(txn.service_from_date, txn.service_to_date), 5, 2), '-01'
             )
-END 																					AS part_best_date
+END                                                                                     AS part_best_date
 FROM navicure_dedup_txn txn
 LEFT OUTER JOIN navicure_dedup_pay pay
 ON txn.hvjoinkey = pay.hvjoinkey
