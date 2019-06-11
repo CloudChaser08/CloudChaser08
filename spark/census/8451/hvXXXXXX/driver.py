@@ -16,10 +16,7 @@ class _8451CensusDriver(CensusDriver):
         super(_8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID, end_to_end_test=end_to_end_test)
 
     def transform(self, date_input=None):
-        # Since this module is in the package, its file path will contain the
-        # package path. Remove that in order to find the location of the
-        # transformation scripts
-
+        # By default, run_all_spark_scripts runs all sql files in the working directory.
         content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT],
                                                                 ['VDR_FILE_DT', date_input.strftime('%Y-%m-%d')]])
         return content
