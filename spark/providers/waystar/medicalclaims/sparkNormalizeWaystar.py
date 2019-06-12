@@ -25,9 +25,13 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/waystar/medicalclaims/resources/matching/'
         ) + '/'
+        augment_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/waystar/medicalclaims/resources/augment/'
+        ) + '/'
     elif end_to_end_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/waystar/medicalclaims/out/2019/02/26/'
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/waystar/medicalclaims/payload/2019/02/26/'
+        augment_path = 's3://salusv/incoming/medicalclaims/waystar/2018/12/31/augment/'
     else: 
         input_path = 's3a://salusv/incoming/medicalclaims/waystar/{}/'.format(
             date_input.replace('-', '/')
@@ -35,6 +39,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         matching_path = 's3a://salusv/matching/payload/medicalclaims/waystar/{}/'.format(
             date_input.replace('-', '/')
         )
+        augment_path = 's3://salusv/incoming/medicalclaims/waystar/2018/12/31/augment/'
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -45,7 +50,13 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         spark.table('date_explode_indices').count()
 
     records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
-    payload_loader.load(runner, matching_path, table_name='waystar_payload', load_file_name=True)
+    payload_loader.load(runner, matching_path, table_name='waystar_payload',
+                        extra_cols=['pcn'], load_file_name=True)
+
+    augment_df = records_loader.load(runner, augment_path,
+                                        columns=['instanceid', 'accounttype'],
+                                        file_type='csv', header=True)
+    augment_df.createOrReplaceTempView('waystar_medicalclaims_augment')
 
     normalized_output = runner.run_all_spark_scripts([
         ['VDR_FILE_DT', date_input, False]
