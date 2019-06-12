@@ -98,7 +98,8 @@ SELECT
 	service_ane_minutes,
 	ndc_drug_code,
 	line_item_charge_amount,
-	MAX(hvjoinkey) AS hvjoinkey
+	MAX(hvjoinkey) AS hvjoinkey,
+    MAX(input_file_name) AS input_file_name
  FROM navicure_transactions
 /* All Navicure data submitted after 8/31/18 is included in the Waystar feed. */
 WHERE claim_submit_date <= '20180831'

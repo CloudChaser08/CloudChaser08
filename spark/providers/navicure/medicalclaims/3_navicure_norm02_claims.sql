@@ -7,7 +7,9 @@ CONCAT
     COALESCE(txn.claim_revision_no, '')
 )																            		AS claim_id,
 pay.hvid																				AS hvid,
+CURRENT_DATE()                                                                          AS created,
 '08'																					AS model_version,
+SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
 '24'																					AS data_feed,
 '34'																					AS data_vendor,
 /* patient_gender */
@@ -352,7 +354,7 @@ CASE
             AND COALESCE(txn.billing_last_name, txn.billing_first_name, txn.billing_middle_name) IS NOT NULL
             THEN CONCAT
             (
-                txn.billing_organization_name, '; ',
+                txn.billing_organization_name, ': ',
                 SUBSTR(CONCAT
                     (
                         CASE
@@ -529,7 +531,7 @@ CASE
                 SUBSTR(mmd.min_service_from_date, 5, 2), '-01'
             )
 END 																					AS part_best_date
-FROM darch.navicure_dedup_txn txn
+FROM navicure_dedup_txn txn
 /* Take only the first service line number for each claim. */
 INNER JOIN
 (
@@ -538,14 +540,14 @@ INNER JOIN
     unique_claim_id,
     claim_revision_no,
     MIN(CAST(COALESCE(service_line, '0') AS INTEGER)) AS first_service_line
-    FROM darch.navicure_dedup_txn
+    FROM navicure_dedup_txn
     GROUP BY 1, 2, 3
 ) fsl
 ON txn.navicure_client_id = fsl.navicure_client_id
 AND txn.unique_claim_id = fsl.unique_claim_id
 AND txn.claim_revision_no = fsl.claim_revision_no
 AND txn.service_line = fsl.first_service_line
-LEFT OUTER JOIN darch.navicure_dedup_pay pay
+LEFT OUTER JOIN navicure_dedup_pay pay
 ON txn.hvjoinkey = pay.hvjoinkey
 /* Find the earliest and latest service dates for each claim. */
 LEFT OUTER JOIN
@@ -556,7 +558,7 @@ LEFT OUTER JOIN
     claim_revision_no,
     MIN(COALESCE(service_from_date, '29991231')) AS min_service_from_date,
     MAX(COALESCE(service_to_date, '19000101')) AS max_service_to_date
-    FROM darch.navicure_dedup_txn
+    FROM navicure_dedup_txn
     GROUP BY 1, 2, 3
 ) mmd
 ON txn.navicure_client_id = mmd.navicure_client_id
@@ -580,7 +582,7 @@ CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) AS n) di
 WHERE NOT EXISTS
 (
     SELECT 1
-    FROM darch.navicure_dedup_txn sln
+    FROM navicure_dedup_txn sln
     WHERE COALESCE(txn.navicure_client_id, '') = COALESCE(sln.navicure_client_id, '')
     AND COALESCE(txn.unique_claim_id, '') = COALESCE(sln.unique_claim_id, '')
     AND COALESCE(txn.claim_revision_no, '') = COALESCE(sln.claim_revision_no, '')
