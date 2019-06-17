@@ -8,7 +8,8 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.common.std_census as std_census
 
-from spark.runner import Runner
+from pyspark.sql.types import StructType, StructField, StringType
+from spark.runner import Runner, PACKAGE_PATH
 from spark.spark_setup import init
 from std_census import records_schemas, matching_payloads_schemas
 
@@ -17,7 +18,6 @@ TEST = 'test'
 END_TO_END_TEST = 'end_to_end_test'
 PRODUCTION = 'production'
 DRIVER_MODULE_NAME = 'driver'
-PACKAGE_PATH = 'spark/target/dewey.zip/'
 SAVE_PATH = 'hdfs:///staging/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
@@ -156,7 +156,7 @@ class CensusDriver(object):
         payload_loader.load_all(self._runner, matching_path,
                                 matching_payloads_schemas)
 
-    def transform(self):
+    def transform(self, date_input=None):
         if self.__class__.__name__ == CensusDriver.__name__:
             census_module = std_census
         else:

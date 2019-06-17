@@ -29,7 +29,7 @@ def main(date, client_name=None, opportunity_id=None, salt=None, census_module=N
     batch_date = datetime.strptime(date, '%Y-%m-%d').date()
 
     driver.load(batch_date)
-    df = driver.transform()
+    df = driver.transform(batch_date)
     driver.save(df, batch_date)
     driver.copy_to_s3(batch_date)
 
