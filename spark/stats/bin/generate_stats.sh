@@ -71,6 +71,7 @@ generate_stats -f 34        # Diplomat
 generate_stats -f 45        # Apothecary By Design
 generate_stats -f 30        # Cardinal Vitalpath
 generate_stats -f 39        # Cardinal PDS
+generate_stats -f 52        # 84.51 Rx
 
 # EMR
 generate_stats -f 25        # Allscripts EMR
