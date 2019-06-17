@@ -21,6 +21,7 @@ STORED AS TEXTFILE
 """
 PARQUET_FORMAT = "STORED AS PARQUET"
 DELIVERABLE_LOC = 'hdfs:///cardinal_pds_deliverable/'
+EXTRA_COLUMNS = ['tenant_id']
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -83,7 +84,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ], return_output=True)
 
     postprocessor.compose(
-        lambda x: schema_enforcer.apply_schema(x, pharma_schema),
+        schema_enforcer.apply_schema_func(pharma_schema, cols_to_keep=EXTRA_COLUMNS),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='39', vendor_id='42', filename=setid),
         pharm_priv.filter
@@ -115,6 +116,10 @@ LOCATION '{}'
         ['location', deliverable_path],
         ['partitions', org_num_partitions, False]
     ])
+
+    # Drop Cardinal-specific columns before putting data in the warehouse
+    spark.table('pharmacyclaims_common_model').drop(*EXTRA_COLUMNS) \
+        .createOrReplaceTempView('pharmacyclaims_common_model')
 
     # Remove the ids Cardinal created for their own purposes and de-obfuscate the HVIDs
     clean_hvid_sql = """SELECT *,
@@ -164,12 +169,15 @@ def main(args):
         output_path      = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
         deliverable_path = 's3://salusv/deliverable/cardinal_pds-0/'
 
-    normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
-    curr_mo = args.date[:7]
-    prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
-    for mo in [curr_mo, prev_mo]:
-        subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
-    normalized_records_unloader.distcp(output_path)
+    # NOTE: 05/23/2019 - Cardinal has requested that some PDS not be added to the warehouse and
+    # sold through marketplace. Pending additional details and logic, do no copy normalized data into
+    # the warehouse
+    #normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
+    #curr_mo = args.date[:7]
+    #prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
+    #for mo in [curr_mo, prev_mo]:
+    #    subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
+    #normalized_records_unloader.distcp(output_path)
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',

@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--setid', type=str)
 parser.add_argument('--s3_credentials', type=str)
+parser.add_argument('--iam_role', type=str)
 parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
@@ -79,6 +80,10 @@ if args.first_run:
         ['min_valid_date', min_date]
     ])
 
+credentials = args.iam_role
+if args.s3_credentials:
+    credentials = args.s3_credentials
+
 run_psql_query('DROP TABLE IF EXISTS express_scripts_rx_raw_all;')
 
 date_path = args.date.replace('-', '/')
@@ -100,7 +105,7 @@ for i in xrange(1, 3):
         run_psql_script('load_normalized_data.sql', [
             ['table', 'normalized_claims', False],
             ['input_path', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'],
-            ['credentials', args.s3_credentials]
+            ['credentials', credentials]
         ])
         date_path_to_unload[d_path.replace('/', '')] = S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path + '/'
 
@@ -126,11 +131,11 @@ for file_prefix, table_name in [(NON_ACCREDO_PREFIX, 'non_accredo_claims'), (ACC
     if has_data:
         enqueue_psql_script('load_transactions.sql', [
             ['input_path', S3_EXPRESS_SCRIPTS_IN + date_path + '/' + file_prefix],
-            ['credentials', args.s3_credentials]
+            ['credentials', credentials]
         ])
         enqueue_psql_script('load_matching_payload.sql', [
             ['matching_path', S3_EXPRESS_SCRIPTS_MATCHING + date_path + '/' + file_prefix],
-            ['credentials', args.s3_credentials]
+            ['credentials', credentials]
         ])
         enqueue_psql_script('normalize_pharmacy_claims.sql', [
             ['tmp_table', table_name, False]
@@ -183,7 +188,7 @@ for i in xrange(1, 3):
 
         enqueue_psql_script('load_transactions.sql', [
             ['input_path', S3_EXPRESS_SCRIPTS_IN + d_path + '/'],
-            ['credentials', args.s3_credentials]
+            ['credentials', credentials]
         ])
 
 enqueue_psql_script('clean_out_reversed_claims.sql')
@@ -192,7 +197,7 @@ enqueue_psql_script('clean_out_reversals.sql')
 for date, s3_path in date_path_to_unload.iteritems():
     enqueue_psql_script('../../redshift_norm_common/unload_common_model.sql', [
         ['output_path', s3_path],
-        ['credentials', args.s3_credentials],
+        ['credentials', credentials],
         ['select_from_common_model_table', "SELECT * FROM normalized_claims WHERE data_set LIKE \\\'%" + date + "%\\\'"]
     ])
 

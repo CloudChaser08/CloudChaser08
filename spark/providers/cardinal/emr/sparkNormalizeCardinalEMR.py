@@ -43,7 +43,8 @@ DEOBFUSCATION_KEY = 'Cardinal_MPI-0'
 script_path = __file__
 
 
-def run(spark, runner, date_input, batch_id=None, test=False, airflow_test=False):
+def run(spark, runner, date_input, num_output_files=1, batch_id=None,
+        test=False, airflow_test=False):
     global DELIVERABLE_LOC
 
     if test:
@@ -361,7 +362,7 @@ def run(spark, runner, date_input, batch_id=None, test=False, airflow_test=False
         # unload delivery file for cardinal
         normalized_records_unloader.unload_delimited_file(
             spark, runner, '{}{}/'.format(DELIVERABLE_LOC, table['data_type']), table['table_name'], test=test,
-            num_files=50
+            num_files=num_output_files
         )
 
         # deobfuscate hvid
@@ -388,7 +389,8 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, batch_id=args.batch_id, airflow_test=args.airflow_test)
+    run(spark, runner, args.date, num_output_files=args.num_output_files,
+        batch_id=args.batch_id, airflow_test=args.airflow_test)
 
     spark.stop()
 
@@ -411,6 +413,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--batch_id', type=str)
+    parser.add_argument('--num_output_files', type=int, default=1)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)

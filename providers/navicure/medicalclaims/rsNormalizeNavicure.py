@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--setid', type=str)
 parser.add_argument('--s3_credentials', type=str)
+parser.add_argument('--iam_role', type=str)
 parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
@@ -67,6 +68,10 @@ if args.first_run:
         ['min_valid_date', min_date]
     ])
 
+credentials = args.iam_role
+if args.s3_credentials:
+    credentials = args.s3_credentials
+
 enqueue_psql_script('../../redshift_norm_common/medicalclaims_common_model.sql', [
     ['filename', args.setid],
     ['today', TODAY],
@@ -75,11 +80,11 @@ enqueue_psql_script('../../redshift_norm_common/medicalclaims_common_model.sql',
 ])
 enqueue_psql_script('load_transactions.sql', [
     ['input_path', input_path],
-    ['credentials', args.s3_credentials]
+    ['credentials', credentials]
 ])
 enqueue_psql_script('load_matching_payload.sql', [
     ['matching_path', matching_path],
-    ['credentials', args.s3_credentials]
+    ['credentials', credentials]
 ])
 enqueue_psql_script('normalize_claims.sql')
 
@@ -118,7 +123,7 @@ enqueue_psql_script('../../redshift_norm_common/cap_age.sql', [
     
 enqueue_psql_script('../../redshift_norm_common/unload_common_model.sql', [
     ['output_path', output_path],
-    ['credentials', args.s3_credentials],
+    ['credentials', credentials],
     ['select_from_common_model_table', 'SELECT * FROM medicalclaims_common_model']
 ])
 

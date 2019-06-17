@@ -26,7 +26,6 @@ def main(date, client_name=None, opportunity_id=None, salt=None, census_module=N
     else:
         driver = CensusDriver(client_name, opportunity_id, salt=salt, end_to_end_test=end_to_end_test)
 
-
     batch_date = datetime.strptime(date, '%Y-%m-%d').date()
 
     driver.load(batch_date)
