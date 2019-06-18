@@ -651,7 +651,7 @@
         },
         {
             "name"              : "84.51rx",
-            "datafeed_id"       : "52",
+            "datafeed_id"       : "86",
             "datatype"          : "pharmacyclaims",
             "fill_rate"         : true,
             "key_stats"         : true,
