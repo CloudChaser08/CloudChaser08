@@ -648,6 +648,18 @@
           "earliest_date"     : "2012-01-01",
           "index_all_dates"   : true,
           "index_null_dates"  : true
+        },
+        {
+            "name"              : "84.51rx",
+            "datafeed_id"       : "86",
+            "datatype"          : "pharmacyclaims",
+            "fill_rate"         : true,
+            "key_stats"         : true,
+            "top_values"        : true,
+            "longitudinality"   : true,
+            "year_over_year"    : true,
+            "epi_calcs"         : true,
+            "earliest_date"     : "2014-01-01"
         }
     ]
 }
