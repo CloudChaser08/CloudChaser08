@@ -659,7 +659,7 @@
             "longitudinality"   : true,
             "year_over_year"    : true,
             "epi_calcs"         : true,
-            "earliest_date"     : "2016-01-01"
+            "earliest_date"     : "2014-01-01"
         }
     ]
 }
