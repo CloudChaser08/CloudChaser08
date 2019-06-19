@@ -650,7 +650,7 @@
           "index_null_dates"  : true
         },
         {
-            "name"              : "84.51rx",
+            "name"              : "8451",
             "datafeed_id"       : "86",
             "datatype"          : "pharmacyclaims",
             "fill_rate"         : true,
