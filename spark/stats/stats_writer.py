@@ -236,7 +236,7 @@ def _generate_queries(stats, provider_conf):
                 stat_queries.append(FILL_RATE_INSERT_SQL_TEMPLATE.format(
                     name=field_dict['field'], datafield_id=name_id_dict[field_dict['field']]['field_id'],
                     sequence=name_id_dict[field_dict['field']]['sequence'], data_feed_id=provider_conf['datafeed_id'],
-                    fill_rate=str(float(field_dict['fill']) * 100)
+                    fill_rate=str(float(field_dict['fill'] or 0) * 100)
                 ))
 
         queries[stat_name] = stat_queries
