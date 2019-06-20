@@ -122,7 +122,10 @@ def get_provider_data(sqlContext, table_name, provider_partition, custom_schema=
     Output:
         - df:   pyspark.sql.DataFrame of the data
     '''
-    data_schema = custom_schema if custom_schema else 'dw' if table_name.startswith('emr') else 'default'
+    data_schema = custom_schema if custom_schema else 'dw' if (
+            table_name.startswith('emr') or
+            table_name.startswith('pharmacyclaims') or
+            table_name.startswith('medicalclaims'))else 'default'
     data_table = custom_table if custom_table else 'hvm_' + table_name if table_name.startswith('emr') else table_name
     df = sqlContext.sql(
         "SELECT * FROM {}.{} WHERE {}='{}'".format(
