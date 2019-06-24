@@ -136,6 +136,6 @@ SELECT
 	END                                                                                     AS weight_uom_qty,
 	/* Laurie 6/5/19: Added the hashed household code. */
 	MD5(txn.hshd_code)                                                                      AS hshd_code
- FROM 8451_grocerry_transactions txn
+ FROM 8451_grocery_transactions txn
  LEFT OUTER JOIN matching_payload pay
    ON txn.hvjoinkey = pay.hvjoinkey

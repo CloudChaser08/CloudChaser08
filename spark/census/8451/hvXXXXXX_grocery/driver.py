@@ -1,35 +1,36 @@
+from datetime import date
+from spark.common.census_driver import CensusDriver, SAVE_PATH
+import spark.helpers.records_loader as records_loader
+
 import os
 import re
 import subprocess
 
-from spark.common.census_driver import CensusDriver, SAVE_PATH
 
-
-class _8451CensusDriver(CensusDriver):
+class Grocery8451CensusDriver(CensusDriver):
 
     CLIENT_NAME = '8451'
-    OPPORTUNITY_ID = 'hvXXXXXX'
+    OPPORTUNITY_ID = 'hvXXXXX2'
     NUM_PARTITIONS = 20
     SALT = "hvid8451"
 
     def __init__(self, end_to_end_test=False):
-        super(_8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID, end_to_end_test=end_to_end_test)
+        super(Grocery8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID,
+                                                        end_to_end_test=end_to_end_test)
 
-    def transform(self, date_input=None):
-        # By default, run_all_spark_scripts runs all sql files in the working directory.
-        content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT],
-                                                                ['VDR_FILE_DT', date_input.strftime('%Y-%m-%d')]])
+    def transform(self):
+        # By default, run_all_spark_scripts will run all sql scripts in the working directory
+        content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT]])
         return content
 
     def save(self, dataframe, batch_date):
-
         output_path = SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
                 year=batch_date.year, month=batch_date.month, day=batch_date.day
             )
 
         output_file_name_template = '{year}{month:02d}{day:02d}_response{{}}'.format(
-            year=batch_date.year, month=batch_date.month, day=batch_date.day
-        )
+                year=batch_date.year, month=batch_date.month, day=batch_date.day
+            )
 
         if self._test:
 
@@ -59,13 +60,13 @@ class _8451CensusDriver(CensusDriver):
 
         clean_up_output()
 
-        dataframe.repartition(self.NUM_PARTITIONS).write.csv(output_path, sep="|", header=True, compression='gzip')
+        dataframe.repartition(self.NUM_PARTITIONS).write.csv(output_path, sep="|", header=True, compression="gzip")
 
         # rename output files to desired name
         # this step removes the spark hash added to the name by default
-        # e.g. part-00000-746f59d5-b38f-4afc-b211-ff2e02e17b7c-c000.csv is renamed to <date>_response00000.psv.gz
+        # e.g. part-00081-35b44b47-2b52-4430-a12a-c4ed31c7bfd5-c000.psv.gz becomes <date>_response00081.psv.gz
+        #
         for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
-            part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
+            part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1) 
             new_name = output_file_name_template.format(part_number) + '.psv.gz'
             rename_file(output_path + filename, output_path + new_name)
-

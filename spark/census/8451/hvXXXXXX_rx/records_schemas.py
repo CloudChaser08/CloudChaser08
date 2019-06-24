@@ -83,3 +83,14 @@ TABLE_CONF = {
         ]
     ),
 }
+
+PDC_SCHEMA = SourceTable(
+    'csv',
+    separator='|',
+    columns=[
+        'med_phm_fill_fid',
+        'pdc_diabetes',
+        'pdc_rasa',
+        'pdc_statins'
+    ]
+)

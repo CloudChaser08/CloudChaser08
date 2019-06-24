@@ -1,10 +1,10 @@
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
-    '8451_grocerry_transactions': SourceTable(
+    '8451_grocery_transactions': SourceTable(
         'csv',
         separator='|',
-        columns = [
+        columns=[
             "card_code",
             "hshd_code",
             "hshd_first_name",
