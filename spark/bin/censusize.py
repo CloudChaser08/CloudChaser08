@@ -6,7 +6,7 @@ import spark.common
 from datetime import datetime, date
 from spark.common.census_driver import CensusDriver
 
-def main(date, client_name=None, opportunity_id=None, salt=None, census_module=None, end_to_end_test=False):
+def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=None, census_module=None, end_to_end_test=False):
     """
     Run standard census driver script or one from the provided census module
     """
@@ -26,16 +26,19 @@ def main(date, client_name=None, opportunity_id=None, salt=None, census_module=N
     else:
         driver = CensusDriver(client_name, opportunity_id, salt=salt, end_to_end_test=end_to_end_test)
 
-    batch_date = datetime.strptime(date, '%Y-%m-%d').date()
+    # use batch_id as input. default to date
+    batch_id = batch_id_arg if batch_id_arg else datetime.strptime(date, '%Y-%m-%d').date()
 
-    driver.load(batch_date)
-    df = driver.transform(batch_date)
-    driver.save(df, batch_date)
-    driver.copy_to_s3(batch_date)
+    driver.load(batch_id)
+    df = driver.transform(batch_id)
+    driver.save(df, batch_id)
+    driver.copy_to_s3(batch_id)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('date', type=str, help="Date of census data batch")
+    parser.add_argument('--batch_id', type=str, help="Batch Id of census data batch")
     parser.add_argument('--client_name', type=str, default=None, help="Client name")
     parser.add_argument('--opportunity_id', type=str, default=None, help="Opportunity ID")
     parser.add_argument('--salt', type=str, default=None, help="HVID obfuscation salt")
@@ -49,5 +52,5 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    main(args.date, args.client_name, args.opportunity_id,
+    main(args.date, args.batch_id, args.client_name, args.opportunity_id,
          args.salt, args.census_module, args.end_to_end_test)
