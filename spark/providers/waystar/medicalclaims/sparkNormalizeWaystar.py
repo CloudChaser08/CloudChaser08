@@ -31,7 +31,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     elif end_to_end_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/waystar/medicalclaims/out/2019/02/26/'
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/waystar/medicalclaims/payload/2019/02/26/'
-        augment_path = 's3://salusv/incoming/medicalclaims/waystar/2018/12/31/augment/'
+        augment_path = 's3://salusv/incoming/medicalclaims/waystar/2018/08/31/augment/'
     else: 
         input_path = 's3a://salusv/incoming/medicalclaims/waystar/{}/'.format(
             date_input.replace('-', '/')
@@ -39,7 +39,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         matching_path = 's3a://salusv/matching/payload/medicalclaims/waystar/{}/'.format(
             date_input.replace('-', '/')
         )
-        augment_path = 's3://salusv/incoming/medicalclaims/waystar/2018/12/31/augment/'
+        augment_path = 's3://salusv/incoming/medicalclaims/waystar/2018/08/31/augment/'
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
