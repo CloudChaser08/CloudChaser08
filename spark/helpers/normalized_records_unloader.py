@@ -2,7 +2,8 @@ import subprocess
 import os
 import re
 import spark.helpers.constants as constants
-
+import spark.helpers.file_utils as file_utils
+from spark.helpers.file_utils import FileSystemType
 from pyspark.sql.functions import when, col, lit
 
 from datetime import datetime, date
@@ -282,35 +283,13 @@ def unload_delimited_file(
     "Unload a table to a delimited file at the specified location"
     old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
 
-    if test:
-        common_dirpath = '../common/'
+    common_dirpath = "../common/" if test else "../../../../common/"
 
-        def clean_up_output():
-            subprocess.check_call(['rm', '-rf', output_path])
+    file_type = FileSystemType.LOCAL if test else FileSystemType.HDFS
 
-        def list_dir(path):
-            return os.listdir(output_path)
+    clean_up_output, list_dir, rename_file = file_utils.util_functions_factory(file_type)
 
-        def rename_file(old, new):
-            os.rename(old, new)
-
-    else:
-        common_dirpath = '../../../../common/'
-
-        def clean_up_output():
-            subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
-
-        def list_dir(path):
-            return [
-                f.split(' ')[-1].strip().split('/')[-1]
-                for f in subprocess.check_output(['hdfs', 'dfs', '-ls', path]).split('\n')
-                if f.split(' ')[-1].startswith('hdfs')
-            ]
-
-        def rename_file(old, new):
-            subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
-
-    clean_up_output()
+    clean_up_output(output_path)
 
     runner.run_spark_script(common_dirpath + 'unload_common_model_dsv.sql', [
         ['num_files', str(num_files), False],
