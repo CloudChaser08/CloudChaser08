@@ -64,7 +64,7 @@ def test_run(driver, spark):
     assert len(rows_for_table(spark, 'normalize')) > 0
 
     # ~ Then verify output schema
-    assert ['hvid', 'claim_id', 'client_id', 'job_id', 'callback_data', 'errors'] == columns_for_table(spark, 'normalize')
+    assert ['hvid', 'record_id', 'client_id', 'job_id', 'callback', 'errors'] == columns_for_table(spark, 'normalize')
 
     # ~ When the file is saved
     driver.save(df, batch_id=batch_id)
