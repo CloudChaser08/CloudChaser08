@@ -7,7 +7,8 @@ import spark.common
 from datetime import datetime, date
 from spark.common.census_driver import CensusDriver
 
-def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=None, census_module=None, end_to_end_test=False):
+def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=None,
+         census_module=None, end_to_end_test=False, test=False):
     """
     Run standard census driver script or one from the provided census module
     """
@@ -28,7 +29,8 @@ def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=No
         if not driver:
             raise AttributeError("Module {} does not contain a CensusDriver subclass".format(census_module))
     else:
-        driver = CensusDriver(client_name, opportunity_id, salt=salt, end_to_end_test=end_to_end_test)
+        driver = CensusDriver(client_name, opportunity_id, salt=salt,
+                              end_to_end_test=end_to_end_test, test=test)
 
     # use batch_id as input. default to date
     batch_id = batch_id_arg if batch_id_arg else datetime.strptime(date, '%Y-%m-%d').date()
@@ -48,6 +50,7 @@ if __name__ == "__main__":
     parser.add_argument('--salt', type=str, default=None, help="HVID obfuscation salt")
     parser.add_argument('--census_module', type=str, default=None, help="Census module name")
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
+    parser.add_argument('--test', default=False, action='store_true')
     args = parser.parse_args()
 
     if not args.client_name and not args.opportunity_id and not args.census_module:
@@ -57,4 +60,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     main(args.date, args.batch_id, args.client_name, args.opportunity_id,
-         args.salt, args.census_module, args.end_to_end_test)
+         args.salt, args.census_module, args.end_to_end_test, args.test)

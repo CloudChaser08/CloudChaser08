@@ -4,6 +4,7 @@ import spark.test.resources.census.empty_module
 
 from spark.common.census_driver import CensusDriver
 from spark.test.resources.census.not_empty_module import TestCensusDriver
+from spark.test.resources.census.all_params_module import AllParamsDriver
 
 CENSUS_STEPS = ['load', 'transform', 'save', 'copy_to_s3']
 
@@ -63,4 +64,36 @@ def test_step_order(patch_spark_init, monkeypatch):
 
     called_steps = []
     censusize.main('2018-01-01', client_name='TEST', opportunity_id='TEST123')
+    assert called_steps == CENSUS_STEPS
+
+@pytest.mark.userfixtures("patch_spark_init")
+def test_driver_with_extra_params(patch_spark_init):
+    """
+    Ensure that when a sublcass has non-standard param for __init__
+    a KeyError is thrown.
+    """
+    with pytest.raises(KeyError) as err:
+        censusize.main('2018-01-01', census_module='spark.test.resources.census.extra_params_module')
+
+    assert 'nonstandard_param' in err.value.message
+
+@pytest.mark.usefixtures("patch_spark_init")
+def test_all_param_driver_runs(patch_spark_init, monkeypatch):
+    """
+    Ensure that when a subclass constructor has all CensusDriver constructor fields
+    it runs w/o issue
+    """
+    called_steps = []
+    def capture_step_name_func(step):
+        def capture_call(self, *args, **kwargs):
+            called_steps.append(step)
+            return
+
+        return capture_call
+
+    for step in CENSUS_STEPS:
+        monkeypatch.setattr(AllParamsDriver, step, capture_step_name_func(step))
+
+    called_steps = []
+    censusize.main('2018-01-01', census_module='spark.test.resources.census.all_params_module')
     assert called_steps == CENSUS_STEPS
