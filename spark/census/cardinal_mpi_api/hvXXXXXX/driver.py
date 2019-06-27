@@ -62,7 +62,7 @@ class CardinalAPICensusDriver(CensusDriver):
     """
 
     CLIENT_NAME = 'cardinal_mpi_api'
-    OPPORTUNITY_ID = "hvXXXXX3"
+    OPPORTUNITY_ID = "hvXXXXXX"
     NUM_PARTITIONS = 1
 
     def __init__(self, end_to_end_test=False, test=False):

@@ -1,4 +1,4 @@
-from spark.census.cardinal_mpi_api.hvXXXXX3.driver import CardinalAPICensusDriver
+from spark.census.cardinal_mpi_api.hvXXXXXX.driver import CardinalAPICensusDriver
 
 import pytest
 import os

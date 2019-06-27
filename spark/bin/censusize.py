@@ -1,6 +1,7 @@
 import argparse
 import sys
 import importlib
+import inspect
 import spark.common
 
 from datetime import datetime, date
@@ -18,7 +19,10 @@ def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=No
         for an in dir(mod):
             attribute = getattr(mod, an)
             if type(attribute) == type(CensusDriver) and attribute.__base__.__name__ == 'CensusDriver':
-                driver = attribute(end_to_end_test=end_to_end_test)
+                params = inspect.getargspec(attribute.__init__).args
+                local_args = locals()
+                kwargs = {param: local_args[param] for param in params if param != 'self'}
+                driver = attribute(**kwargs)
                 break
 
         if not driver:
