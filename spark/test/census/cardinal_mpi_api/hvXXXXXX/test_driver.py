@@ -70,10 +70,8 @@ def test_run(driver, spark):
     driver.save(df, batch_id=batch_id)
 
     # ~ Then the return file should exist
-    assert os.path.isfile("test/census/{client}/{opp_id}/resources/output/{batch_id}_response.json.gz".format(
-        batch_id=batch_id,
-        client=driver._client_name,
-        opp_id=driver._opportunity_id
+    assert os.path.isfile("/tmp/staging/{batch_id}/{batch_id}_response.json.gz".format(
+        batch_id=batch_id
     ))
 
 
