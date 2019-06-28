@@ -29,6 +29,8 @@ def spark_session():
     def rdd_repart(inst, cnt):
         return inst._old_repartition(5 if cnt > 5 else cnt)
 
+    spark.real_stop = spark.stop
+    spark.stop = lambda: None
     DataFrame._old_repartition = DataFrame.repartition
     DataFrame.repartition = df_repart
     RDD._old_repartition = RDD.repartition
@@ -43,7 +45,7 @@ def spark_session():
         "sqlContext": sqlContext
     }
 
-    spark.stop()
+    spark.real_stop()
 
 @pytest.fixture(scope="module")
 @pytest.mark.usefixtures("spark_session")
