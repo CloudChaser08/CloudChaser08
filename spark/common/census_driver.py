@@ -186,4 +186,5 @@ class CensusDriver(object):
         )
 
     def copy_to_s3(self, batch_date=None):
+        self._spark.stop()
         normalized_records_unloader.distcp(self._output_path)
