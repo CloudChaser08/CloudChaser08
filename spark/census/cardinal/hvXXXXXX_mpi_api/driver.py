@@ -63,26 +63,25 @@ class CardinalAPICensusDriver(CensusDriver):
 
     """
 
-    CLIENT_NAME = 'cardinal_mpi_api'
-    OPPORTUNITY_ID = "hvXXXXXX"
+    CLIENT_NAME = 'cardinal'
     NUM_PARTITIONS = 1
 
-    def __init__(self, end_to_end_test=False, test=False):
+    def __init__(self, opportunity_id, end_to_end_test=False, test=False):
 
         super(CardinalAPICensusDriver, self).__init__(
             client_name=self.CLIENT_NAME,
-            opportunity_id=self.OPPORTUNITY_ID,
+            opportunity_id=opportunity_id,
             end_to_end_test=end_to_end_test,
             test=test
         )
 
         # Override paths
-        self.records_path_template = RECORDS_PATH_TEMPLATE.format(client=self._client_name,
-                                                                  opp_id=self._opportunity_id)
-        self.matching_path_template = MATCHING_PATH_TEMPLATE.format(client=self._client_name,
-                                                                    opp_id=self._opportunity_id)
+        self._records_path_template = RECORDS_PATH_TEMPLATE.format(client=self._client_name,
+                                                                   opp_id=self._opportunity_id)
+        self._matching_path_template = MATCHING_PATH_TEMPLATE.format(client=self._client_name,
+                                                                     opp_id=self._opportunity_id)
 
-        self.output_path = OUTPUT_PATH.format(client=self._client_name, opp_id=self._opportunity_id)
+        self._output_path = OUTPUT_PATH.format(client=self._client_name, opp_id=self._opportunity_id)
 
     def load(self, batch_id):
         matching_payloads_schemas_module = self.__module__.replace(DRIVER_MODULE_NAME,

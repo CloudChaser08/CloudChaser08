@@ -1,4 +1,4 @@
-from spark.census.cardinal_mpi_api.hvXXXXXX.driver import CardinalAPICensusDriver
+from spark.census.cardinal.hvXXXXXX_mpi_api.driver import CardinalAPICensusDriver
 
 import pytest
 import os
@@ -19,15 +19,15 @@ def columns_for_table(spark, table_name):
 @pytest.fixture
 @pytest.mark.usefixtures("patch_spark_init")
 def driver(patch_spark_init):
-    driver = CardinalAPICensusDriver(test=True)
+    driver = CardinalAPICensusDriver(opportunity_id='hvXXXXXX_mpi_api', test=True)
 
     # Use test path locations
-    driver.matching_path_template = "test/census/{client}/{opp_id}/resources/matching/{{batch_id}}/".format(
+    driver._matching_path_template = "test/census/{client}/{opp_id}/resources/matching/{{batch_id}}/".format(
         opp_id=driver._opportunity_id,
         client=driver._client_name
     )
 
-    driver.records_path_template = "test/census/{client}/{opp_id}/resources/transactions/{{batch_id}}/".format(
+    driver._records_path_template = "test/census/{client}/{opp_id}/resources/transactions/{{batch_id}}/".format(
         opp_id=driver._opportunity_id,
         client=driver._client_name
     )
