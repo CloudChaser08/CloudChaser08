@@ -10,7 +10,9 @@ import importlib
 
 RECORDS_PATH_TEMPLATE = "s3://salusv/incoming/census/{client}/{opp_id}/{{batch_id}}/"
 MATCHING_PATH_TEMPLATE = "s3://salusv/matching/payload/census/{client}/{opp_id}/{{batch_id}}/"
-OUTPUT_PATH = "s3://salusv/deliverable/{client}/{{batch_id}}/"
+OUTPUT_PATH = "s3://salusv/deliverable/{client}/{opp_id}/"
+SAVE_PATH = "hdfs:///staging/{batch_id}/"
+LOCAL_SAVE_PATH = "/tmp/staging/{batch_id}/"
 
 
 class CardinalAPICensusDriver(CensusDriver):
@@ -80,7 +82,7 @@ class CardinalAPICensusDriver(CensusDriver):
         self.matching_path_template = MATCHING_PATH_TEMPLATE.format(client=self._client_name,
                                                                     opp_id=self._opportunity_id)
 
-        self.output_path = OUTPUT_PATH.format(client=self._client_name)
+        self.output_path = OUTPUT_PATH.format(client=self._client_name, opp_id=self._opportunity_id)
 
     def load(self, batch_id):
         matching_payloads_schemas_module = self.__module__.replace(DRIVER_MODULE_NAME,
@@ -109,25 +111,24 @@ class CardinalAPICensusDriver(CensusDriver):
 
     def save(self, df, batch_id):
 
-        output_path = self._output_file_name_template.format(batch_id=batch_id)
+        # Use local file system if test, else use HDFS
+        if self._test:
+            save_path = LOCAL_SAVE_PATH.format(batch_id=batch_id)
+            file_type = FileSystemType.LOCAL
+        else:
+            save_path = SAVE_PATH.format(batch_id=batch_id)
+            file_type = FileSystemType.HDFS
 
         output_file_name_template = "{batch_id}_response".format(batch_id=batch_id)
 
-        # Use local file system if test, else use HDFS
-        file_type = FileSystemType.LOCAL if self._test else FileSystemType.HDFS
-
         clean_up_output, list_dir, rename_file = util_functions_factory(file_type)
 
-        clean_up_output(output_path)
+        clean_up_output(save_path)
 
-        df.repartition(self.NUM_PARTITIONS).write.json(output_path, compression="gzip")
+        df.repartition(self.NUM_PARTITIONS).write.option("dropFieldIfAllNull", False).json(save_path, compression="gzip")
 
         # rename file
         # part-{part_number}-{uuid}.json.gzip becomes {batch_id}_response.json.gz
-        for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
+        for filename in [f for f in list_dir(save_path) if f[0] != '.' and f != "_SUCCESS"]:
             new_name = output_file_name_template + '.json.gz'
-            rename_file(output_path + filename, output_path + new_name)
-
-    def copy_to_s3(self, batch_id):
-        output_path = self.output_path.format(batch_id=batch_id)
-        normalized_records_unloader.distcp(output_path)
+            rename_file(save_path + filename, save_path + new_name)
