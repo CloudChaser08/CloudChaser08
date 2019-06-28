@@ -22,12 +22,12 @@ def uat_driver(patch_spark_init):
     driver = CardinalAPICensusDriver(opportunity_id='hvXXXXXX_mpi_api_uat', test=True)
 
     # Use test path locations
-    driver._matching_path_template = "test/census/{client}/{opp_id}/resources/matching/{{batch_id}}/".format(
+    driver.matching_path_template = "test/census/{client}/{opp_id}/resources/matching/{{batch_id}}/".format(
         opp_id=driver._opportunity_id,
         client=driver._client_name
     )
 
-    driver._records_path_template = "test/census/{client}/{opp_id}/resources/transactions/{{batch_id}}/".format(
+    driver.records_path_template = "test/census/{client}/{opp_id}/resources/transactions/{{batch_id}}/".format(
         opp_id=driver._opportunity_id,
         client=driver._client_name
     )

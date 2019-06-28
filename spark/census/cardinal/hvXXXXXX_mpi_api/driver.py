@@ -76,12 +76,12 @@ class CardinalAPICensusDriver(CensusDriver):
         )
 
         # Override paths
-        self._records_path_template = RECORDS_PATH_TEMPLATE.format(client=self._client_name,
+        self.records_path_template = RECORDS_PATH_TEMPLATE.format(client=self._client_name,
                                                                    opp_id=self._opportunity_id)
-        self._matching_path_template = MATCHING_PATH_TEMPLATE.format(client=self._client_name,
+        self.matching_path_template = MATCHING_PATH_TEMPLATE.format(client=self._client_name,
                                                                      opp_id=self._opportunity_id)
 
-        self._output_path = OUTPUT_PATH.format(client=self._client_name, opp_id=self._opportunity_id)
+        self.output_path = OUTPUT_PATH.format(client=self._client_name, opp_id=self._opportunity_id)
 
     def load(self, batch_id):
         matching_payloads_schemas_module = self.__module__.replace(DRIVER_MODULE_NAME,
