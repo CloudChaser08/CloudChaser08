@@ -95,7 +95,7 @@ run_psql_script('create_normalized_data_table.sql', [
 date_path_to_unload = {}
 for i in xrange(1, 3):
     # Provide some flexibility in case the previous batch came in a day early or late
-    for j in xrange(-1, 2):
+    for j in xrange(-2, 2):
         d_path = (file_date - timedelta(days=7*i + j)).strftime('%Y/%m/%d')
         try:
             subprocess.check_call(['aws', 's3', 'ls', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path])
@@ -179,7 +179,7 @@ enqueue_psql_script('../../redshift_norm_common/cap_age.sql', [
 # reversals from claims we received in batches after the current one
 for i in xrange(1, 3):
     # Provide some flexibility in case the batch came in a day early or late
-    for j in xrange(-1, 2):
+    for j in xrange(-2, 2):
         d_path = (file_date + timedelta(days=7*i + j)).strftime('%Y/%m/%d')
         try:
             subprocess.check_call(['aws', 's3', 'ls', S3_EXPRESS_SCRIPTS_WAREHOUSE + d_path])
