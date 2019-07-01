@@ -1,5 +1,6 @@
 import argparse 
 import datetime
+import subprocess
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.lab_common_model import schema_v7 as lab_schema
@@ -99,7 +100,7 @@ def main(args):
         output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
     # the full data set is reprocessed every time
-    check_output(['aws', 's3', 'rm', '--recursive', output_path + 'part_provider=aurora_diagnostics'])
+    subprocess.check_output(['aws', 's3', 'rm', '--recursive', output_path + 'part_provider=aurora_diagnostics'])
     normalized_records_unloader.distcp(output_path)
 
 
