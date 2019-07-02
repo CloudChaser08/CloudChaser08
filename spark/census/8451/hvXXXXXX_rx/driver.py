@@ -2,6 +2,7 @@ from datetime import date
 import os
 import re
 import subprocess
+import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.records_loader as records_loader
 from .records_schemas import PDC_SCHEMA
 
@@ -13,7 +14,7 @@ class _8451CensusDriver(CensusDriver):
     CLIENT_NAME = '8451'
     OPPORTUNITY_ID = 'hvXXXXXX'
     NUM_PARTITIONS = 20
-    SALT = "hvid8451"
+    SALT = 'hvid8451'
     BAD_PDC_DATE = date(2019, 3, 30)
     PDC_LOCATION = 's3://salusv/incoming/census/8451/hvXXXXXX/20190330_pdc_fix/'
 
@@ -29,8 +30,10 @@ class _8451CensusDriver(CensusDriver):
         else:
             # load empty dataframe with pdc file schema
             df = self._spark.createDataFrame([], PDC_SCHEMA)
-
         df.createOrReplaceTempView('pdc_fix')
+
+        if not self._test:
+            external_table_loader.load_ref_gen_ref(self._sqlContext)
 
     def save(self, dataframe, batch_date):
 

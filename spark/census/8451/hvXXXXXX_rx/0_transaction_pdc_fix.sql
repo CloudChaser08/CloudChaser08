@@ -76,5 +76,5 @@ SELECT
     /*--------------------------*/
     txn.payer_type,
     txn.hvjoinkey                   	                    
-FROM 8451_grocerry_transactions txn
+FROM 8451_transactions txn
 LEFT OUTER JOIN pdc_fix pdc ON txn.med_phm_fill_fid = pdc.med_phm_fill_fid

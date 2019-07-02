@@ -2,7 +2,7 @@ SELECT
     CAST(MONOTONICALLY_INCREASING_ID() AS STRING)                                           AS record_id,
     /* MD5 added on 5/16/19 */
     MD5(txn.med_phm_fill_fid)                                                               AS claim_id,
-    UPPER(obfuscate_hvid(pay.hvid, {salt}))                                                 AS hvid,
+    obfuscate_hvid(pay.hvid, {salt})                                                        AS hvid,
     CURRENT_DATE()                                                                          AS created,
 	'09'                                                                                    AS model_version,
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
@@ -236,7 +236,7 @@ SELECT
  LEFT OUTER JOIN
     (
         SELECT gen_ref_1_dt
-         FROM dw.ref_gen_ref
+         FROM ref_gen_ref
         WHERE hvm_vdr_feed_id = 86
           AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
         LIMIT 1
@@ -245,7 +245,7 @@ SELECT
  LEFT OUTER JOIN
     (
         SELECT gen_ref_1_dt
-         FROM dw.ref_gen_ref
+         FROM ref_gen_ref
         WHERE hvm_vdr_feed_id = 86
           AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
         LIMIT 1
