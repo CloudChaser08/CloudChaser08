@@ -88,12 +88,12 @@ def main(args):
         ['aws', 's3', 'rm', '--recursive', '{}part_provider=neogenomics/'.format(backup_path)]
     )
 
-    normalized_records_unloader.distcp(output_path)
-
     subprocess.check_call([
         'aws', 's3', 'mv', '--recursive', '{}part_provider=neogenomics/'.format(output_path),
         '{}part_provider=neogenomics/'.format(backup_path)
     ])
+
+    normalized_records_unloader.distcp(output_path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
