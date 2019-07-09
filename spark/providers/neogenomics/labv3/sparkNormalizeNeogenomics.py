@@ -6,12 +6,10 @@ from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.lab_common_model import schema_v7 as lab_schema
 import spark.helpers.file_utils as file_utils
-import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
-import spark.helpers.privacy.labtests as priv_labtests
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers.neogenomics.labv3.transactional_schemas as transactional_schemas
@@ -20,18 +18,17 @@ FEED_ID = '32'
 VENDOR_ID = '78'
 MODEL_VERSION = '07'
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
-
-script_path = __file__
+SCRIPT_PATH = __file__
 
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/neogenomics/resources/input/*/*/*/'
+            SCRIPT_PATH, '../../../test/providers/neogenomics/resources/input/*/*/*/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/neogenomics/resources/matching/*/*/*/'
+            SCRIPT_PATH, '../../../test/providers/neogenomics/resources/matching/*/*/*/'
         ) + '/'
     elif end_to_end_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v3/out/*/*/*/'
@@ -65,10 +62,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
         normalized_records_unloader.unload(
             spark, runner, df, 'part_best_date', date_input, 'neogenomics',
-            substr_date_part=False, columns=_columns,
-            hvm_historical_date=datetime.datetime(
-                hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
-            )
+            substr_date_part=False, columns=_columns
         )
 
 
@@ -90,17 +84,16 @@ def main(args):
 
     backup_path = output_path.replace('salusv', 'salusv/backup')
 
-    subprocess.check_call([
-        'aws', 's3', 'mv', '--recursive', '{}part_provider=neogenomics/'.format(output_path),
-        '{}part_provider=neogenomics/'.format(backup_path)
-    ])
-
-    normalized_records_unloader.distcp(output_path)
-
     subprocess.check_call(
         ['aws', 's3', 'rm', '--recursive', '{}part_provider=neogenomics/'.format(backup_path)]
     )
 
+    normalized_records_unloader.distcp(output_path)
+
+    subprocess.check_call([
+        'aws', 's3', 'mv', '--recursive', '{}part_provider=neogenomics/'.format(output_path),
+        '{}part_provider=neogenomics/'.format(backup_path)
+    ])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
