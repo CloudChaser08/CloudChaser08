@@ -48,7 +48,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
     df = runner.run_all_spark_scripts()
 
-    df = schema_enforcer.apply_schema(df, lab_schema, columns_to_keep=['part_provider', 'part_best_date'])
+    output = schema_enforcer.apply_schema(df, lab_schema, columns_to_keep=['part_provider', 'part_best_date'])
 
     if not test:
         hvm_historical_date = postprocessor.coalesce_dates(
