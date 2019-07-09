@@ -73,7 +73,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         _columns.remove('part_best_date')
 
         normalized_records_unloader.unload(
-            spark, runner, df, 'date_service', date_input, 'aurora_diagnostics',
+            spark, runner, df, 'part_best_date', date_input, 'aurora_diagnostics',
             columns=_columns, 
             hvm_historical_date=datetime.datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
