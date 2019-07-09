@@ -286,7 +286,7 @@ SELECT
  LEFT OUTER JOIN medication med
    ON COALESCE(txn.medication_id, 'NULL') = COALESCE(med.medication_id, 'empty')
  LEFT OUTER JOIN diagnosis_icd9 d09
-   ON COALESCE(txn.diagnosis_id, 'NULL') = COALESCE(d09.diagnosis_id, 'empty')
+   ON COALESCE(txn.diagnosis_id, CONCAT('NULL', txn.prescription_id)) = COALESCE(d09.diagnosis_id, 'empty')
  LEFT OUTER JOIN pharmacy phy
    ON COALESCE(txn.pharmacy_id, 'NULL') = COALESCE(phy.pharmacy_id, 'empty')
  LEFT OUTER JOIN patient ptn

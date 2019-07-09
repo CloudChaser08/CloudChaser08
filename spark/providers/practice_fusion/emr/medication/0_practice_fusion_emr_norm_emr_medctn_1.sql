@@ -286,7 +286,9 @@ SELECT
  LEFT OUTER JOIN medication med
    ON COALESCE(txn.medication_id, 'NULL') = COALESCE(med.medication_id, 'empty')
  LEFT OUTER JOIN diagnosis_icd10 d10
-   ON COALESCE(txn.diagnosis_id, 'NULL') = COALESCE(d10.diagnosis_id, 'empty')
+   ON COALESCE(txn.diagnosis_id, CONCAT('NULL', txn.prescription_id)) = COALESCE(d10.diagnosis_id, 'empty')
+ LEFT OUTER JOIN diagnosis_icd9 d09
+   ON COALESCE(txn.diagnosis_id, CONCAT('NULL', txn.prescription_id)) = COALESCE(d09.diagnosis_id, 'empty')
  LEFT OUTER JOIN pharmacy phy
    ON COALESCE(txn.pharmacy_id, 'NULL') = COALESCE(phy.pharmacy_id, 'empty')
  LEFT OUTER JOIN patient ptn
@@ -329,10 +331,5 @@ WHERE TRIM(UPPER(COALESCE(txn.prescription_id, 'empty'))) <> 'PRESCRIPTION_ID'
     /* Load where there is an ICD-10 code, OR there is no ICD-9 code. */
     (
         0 <> LENGTH(TRIM(COALESCE(d10.icd10, '')))
-     OR NOT EXISTS
-        (
-            SELECT 1
-             FROM diagnosis_icd9 d09
-            WHERE COALESCE(txn.diagnosis_id, 'NULL') = COALESCE(d09.diagnosis_id, 'empty')
-        )
+        OR d09.diagnosis_id IS NULL
     )

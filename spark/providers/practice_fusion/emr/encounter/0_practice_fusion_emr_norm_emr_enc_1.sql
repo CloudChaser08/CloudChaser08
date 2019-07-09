@@ -208,7 +208,7 @@ SELECT
     END                                                                                        AS part_mth
  FROM appointment txn
  LEFT OUTER JOIN transcript trs
-   ON COALESCE(txn.transcript_id, 'NULL') = COALESCE(trs.transcript_id, 'empty')
+   ON COALESCE(txn.transcript_id, CONCAT('NULL', txn.appointment_id)) = COALESCE(trs.transcript_id, 'empty')
  LEFT OUTER JOIN patient ptn
    ON COALESCE(txn.patient_id, 'NULL') = COALESCE(ptn.patient_id, 'empty')
  LEFT OUTER JOIN provider prv
