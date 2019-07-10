@@ -75,7 +75,7 @@ def main(args):
     if args.end_to_end_test:
         output_path = 's3://salusv/testing/dewey/airflow/e2e/8451/grocery/spark-output/'
     else:
-        output_path = 's3://salusv/warehouse/parquet/consumer/2017-02-23/'
+        output_path = 's3://salusv/warehouse/parquet/consumer/2017-08-02/'
 
     normalized_records_unloader.distcp(output_path)
 
