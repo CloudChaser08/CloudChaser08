@@ -1,4 +1,3 @@
-INSERT INTO 8451_grocery_marketplace_pay_temp2
 SELECT
     pay1.hvid,
     pay1.personid,
