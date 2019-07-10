@@ -1,5 +1,5 @@
 """ Source table definitions for 84.51 Grocery """
-from spark.helpers.source_table import import SourceTable
+from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
     'meta': SourceTable(
