@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.emr.encounter import schema_v8 as encounter_schema
@@ -121,6 +122,11 @@ def main(args):
 
         if args.ouptut_path:
             output_path = args.output_path
+
+        # the full data set is reprocessed every time
+        backup_path = output_path.replace('salusv', 'salusv/backup')
+        subprocess.check_output(['aws', 's3', 'rm', '--recursive', backup_path + model])
+        subprocess.check_call(['aws', 's3', 'mv', '--recursive', output_path + model, backup_path + model])
 
         normalized_records_unloader.distcp(output_path)
 
