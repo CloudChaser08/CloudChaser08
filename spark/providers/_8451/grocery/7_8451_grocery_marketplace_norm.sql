@@ -7,10 +7,10 @@ SELECT
             CONCAT('124_', COALESCE(MD5(txn.hshd_id), 'NO_HOUSEHOLD'))
         )                                                                                   AS hvid,
     CURRENT_DATE()                                                                          AS created,
-	'09'                                                                                    AS model_version,
+	'09'                                                                                AS model_version,
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
-	'124'                                                                                   AS data_feed,
-	'337'                                                                                   AS data_vendor,
+	'124'                                                                               AS data_feed,
+	'337'                                                                               AS data_vendor,
 	/* patient_age */
 	VALIDATE_AGE
         (
@@ -27,14 +27,14 @@ SELECT
         )                                                                                   AS patient_year_of_birth,
     MASK_ZIP_CODE(SUBSTR(pay.threedigitzip, 1, 3))                                          AS patient_zip3,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pay.state, '')))                                     AS patient_state,
-	CLEAN_UP_GENDER(pay.gender)                                                             AS patient_gender,
-	MD5(txn.hshd_id)                                                                        AS source_record_id,
+	CLEAN_UP_GENDER(pay.gender)                                                         AS patient_gender,
+	MD5(txn.hshd_id)                                                                    AS source_record_id,
 	/* source_record_qual */
 	CASE
 	    WHEN txn.hshd_id IS NOT NULL
 	        THEN 'HSHD_ID'
 	    ELSE NULL
-	END                                                                                     AS source_record_qual,
+	END                                                                                 AS source_record_qual,
     /* patient_group */
     CASE 
         WHEN COALESCE
@@ -137,7 +137,7 @@ SELECT
                                     ), 3
                             )
         ELSE NULL 
-    END                                                                                     AS patient_group,
+    END                                                                                         AS patient_group,
 	txn.agg_level_desc                                                                      AS event,
 	txn.agg_total_visits                                                                    AS event_val,
 	/* event_val_uom */
@@ -159,7 +159,7 @@ SELECT
             CAST(EXTRACT_DATE(txn.period_start_dt, '%Y%m%d') AS DATE),
             esdt.gen_ref_1_dt,
             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
-        )                                                                                   AS event_date,
+        )                                                                                       AS event_date,
     /* event_date_qual */
     CASE
         WHEN CAP_DATE
@@ -170,16 +170,16 @@ SELECT
                 ) IS NOT NULL
             THEN 'WEEK_STARTING'
         ELSE NULL
-    END                                                                                     AS event_date_qual,
-    txn.agg_total_spend                                                                     AS event_revenue,
-    txn.agg_level_code                                                                      AS event_category_code,
+    END                                                                                         AS event_date_qual,
+    txn.agg_total_spend                                                                         AS event_revenue,
+    txn.agg_level_code                                                                          AS event_category_code,
     /* event_category_code_qual */
     CASE
         WHEN txn.agg_level_code IS NOT NULL
             THEN 'AGG_LEVEL_CODE'
         ELSE NULL
-    END                                                                                     AS event_category_code_qual,
-    txn.agg_level                                                                           AS event_category_name,
+    END                                                                                         AS event_category_code_qual,
+    txn.agg_level                                                                               AS event_category_name,
 	'8451'                                                                                  AS part_provider,
     /* part_best_date */
 	CASE
