@@ -14,6 +14,6 @@ INNER JOIN
         COUNT(*) AS row_cnt
      FROM 8451_grocery_marketplace_pay_temp1
     GROUP BY 1
-    HAVING COUNT(*) = 1
+    HAVING row_cnt = 1
 ) pay2
    ON pay1.personid = pay2.personid

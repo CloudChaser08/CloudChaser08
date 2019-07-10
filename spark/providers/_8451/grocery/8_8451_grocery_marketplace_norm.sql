@@ -7,7 +7,7 @@ SELECT
             CONCAT('124_', COALESCE(MD5(txn.hshd_id), 'NO_HOUSEHOLD'))
         )                                                                                   AS hvid,
     CURRENT_DATE()                                                                          AS created,
-	'09'                                                                                AS model_version,
+	'10'                                                                                AS model_version,
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
 	'124'                                                                               AS data_feed,
 	'337'                                                                               AS data_vendor,
