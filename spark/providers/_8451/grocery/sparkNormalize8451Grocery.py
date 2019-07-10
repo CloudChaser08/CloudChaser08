@@ -56,7 +56,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         _columns.remove('part_best_date')
 
         normalized_records_unloader.unload(
-            spark, runner, df, 'part_best_date', date_input, '8451',
+            spark, runner, output, 'part_best_date', date_input, '8451',
             substr_date_part=False, columns=_columns
         )
 
