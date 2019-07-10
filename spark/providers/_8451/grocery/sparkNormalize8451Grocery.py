@@ -1,13 +1,10 @@
 import argparse
-import datetime
-import subprocess
 
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.event_common_model import schema_v10 as event_schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.records_loader as records_loader
