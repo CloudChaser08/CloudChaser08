@@ -85,7 +85,7 @@ schema_v10 = StructType([
     StructField('event',                     StringType(),  True),
     StructField('event_val',                 StringType(),  True),
     StructField('event_val_uom',             StringType(),  True),
-    StructField('event_units'                StringType(),  True),
+    StructField('event_units',               StringType(),  True),
     StructField('event_units_uom',           StringType(),  True),
     StructField('event_date',                DateType(),    True),
     StructField('event_date_qual',           StringType(),  True),
