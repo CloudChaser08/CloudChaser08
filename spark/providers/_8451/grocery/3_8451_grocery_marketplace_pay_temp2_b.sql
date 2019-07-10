@@ -1,5 +1,5 @@
 SELECT * 
-FROM 8451_grocery_marketplace_pay_temp2_cache
+FROM 8451_grocery_marketplace_pay_temp2_cache pay1
 WHERE EXISTS
 /* Find personid values that have another row with
    different info (not NULL) on it. */
