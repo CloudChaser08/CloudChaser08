@@ -55,7 +55,8 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     # Load the transactions into raw, un-normalized tables
-    if len(spark.read.csv(input_path, sep='|').columns) == 90:
+    column_length = len(spark.read.csv(input_path, sep='|').columns)
+    if column_length  == 90:
         runner.run_spark_script('load_transactions.sql', [
             ['input_path', input_path]
         ])
@@ -68,7 +69,7 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
                          .withColumn('diagnosistwelve', F.lit(None)) \
                          .withColumnRenamed('claim_lines_id', 'id_3') \
                          .createOrReplaceTempView('transactional_cardinal_pms')
-    elif len(spark.read.csv(input_path, sep='|').columns) == 92:
+    elif column_length == 92:
         runner.run_spark_script('load_transactions_v2.sql', [
             ['input_path', input_path]
         ])
@@ -79,8 +80,12 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
                          .withColumn('diagnosistwelve', F.lit(None)) \
                          .withColumnRenamed('claim_lines_id', 'id_3') \
                          .createOrReplaceTempView('transactional_cardinal_pms')
-    else:
+    elif column_length == 95:
         runner.run_spark_script('load_transactions_v3.sql', [
+            ['input_path', input_path]
+        ])
+    else:
+        runner.run_spark_script('load_transactions_v4.sql', [
             ['input_path', input_path]
         ])
 

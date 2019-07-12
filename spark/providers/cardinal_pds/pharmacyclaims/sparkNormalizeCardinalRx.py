@@ -70,9 +70,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
-    runner.run_spark_script('load_transactions.sql', [
-        ['input_path', input_path]
-    ])
+    column_length = len(spark.read.csv(input_path, sep='|').columns)
+    if column_length == 85:
+        runner.run_spark_script('load_transactions.sql', [
+            ['input_path', input_path]
+        ])
+    else:
+        runner.run_spark_script('load_transactions_v2.sql', [
+            ['input_path', input_path]
+        ])
 
     df = runner.sqlContext.sql('select * from transactions')
     df = postprocessor.nullify(df, ['NULL', 'Unknown', '-1', '-2'])
