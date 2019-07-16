@@ -7,3 +7,10 @@ spark-warehouse/
 env/
 .idea/
 tags
+.DS_Store
+.gitignore.swp
+dewey_spark.tar.gz
+pylint_output.txt
+spark/.DS_Store
+spark/target/
+venv/

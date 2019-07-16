@@ -1,12 +1,11 @@
 import pytest
-
 import datetime
 import hashlib
-
 import spark.providers.cardinal_pds.pharmacyclaims.sparkNormalizeCardinalRx as cardinal_pds
 
 hv_results = []
 cardinal_results = []
+
 
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
@@ -18,9 +17,10 @@ def test_init(spark):
     cardinal_pds.run(spark['spark'], spark['runner'], '2017-08-29', True)
     global hv_results, cardinal_results
     hv_results = spark['sqlContext'].sql('select * from pharmacyclaims_common_model_final') \
-                                 .collect()
+        .collect()
     cardinal_results = spark['sqlContext'].sql('select * from cardinal_deliverable') \
-                                 .collect()
+        .collect()
+
 
 def test_patient_ids():
     "Ensure that patient ids and hvids are populated correctly"
@@ -57,6 +57,7 @@ def test_product_code():
     assert sample_row_nonndc.product_service_id == '59572021015'
     assert sample_row_nonndc.product_service_id_qual == '3'
 
+
 def test_pharmacy_ncpdp():
     "Ensure that pharmacy NCPDP numbers are 0 left-padded to 7 characters"
     sample_row_ndc = filter(lambda r: r.rx_number == '0817b8e97a88844fa6fa894450923ca7', cardinal_results)[0]
@@ -83,7 +84,7 @@ def test_pharmacy_other_id_hashed_in_hv_results_but_not_cardinal_results():
 
     assert hv_sample_row.pharmacy_other_id == hashlib.md5('0134635').hexdigest()
     assert cardinal_sample_row.pharmacy_other_id == '0134635'
-    
+
 
 def test_cleanup(spark):
     cleanup(spark)

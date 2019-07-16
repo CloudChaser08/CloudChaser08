@@ -23,6 +23,8 @@ PARQUET_FORMAT = "STORED AS PARQUET"
 DELIVERABLE_LOC = 'hdfs:///cardinal_pds_deliverable/'
 EXTRA_COLUMNS = ['tenant_id']
 
+
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
@@ -118,6 +120,7 @@ LOCATION '{}'
     else:
         subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', deliverable_path])
 
+    # Create deliverable for Cardinal including all rows
     runner.run_spark_script('create_cardinal_deliverable.sql', [
         ['location', deliverable_path],
         ['partitions', org_num_partitions, False]
@@ -132,23 +135,40 @@ LOCATION '{}'
             slightly_deobfuscate_hvid(cast(hvid as integer), 'Cardinal_MPI-0') as clear_hvid
         FROM pharmacyclaims_common_model"""
     df = runner.sqlContext.sql(clean_hvid_sql)
-    df.withColumn('hvid', df.clear_hvid).drop('clear_hvid')             \
-            .withColumn('pharmacy_other_id', md5(df.pharmacy_other_id)) \
-            .createOrReplaceTempView('pharmacyclaims_common_model')
+
+
+    # If the data contains the row 'hv_marketplace_approved', keep only rows where hv_marketplace_approved == '1'
+    if 'hv_marketplace_approved' in df.columns:
+        df = df.loc[df['hv_marketplace_approved'] == '1']
+        df = df.drop(columns='hv_marketplace_approved')
+
+    df.withColumn('hvid', df.clear_hvid).drop('clear_hvid') \
+        .withColumn('pharmacy_other_id', md5(df.pharmacy_other_id)) \
+        .createOrReplaceTempView('pharmacyclaims_common_model')
 
     curr_mo = date_obj.strftime('%Y-%m')
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:
-        runner.run_spark_query("ALTER TABLE normalized_claims ADD PARTITION (part_best_date='{0}') LOCATION '{1}part_best_date={0}/'".format(mo, normalized_path))
+        runner.run_spark_query(
+            "ALTER TABLE normalized_claims ADD PARTITION (part_best_date='{0}') LOCATION '{1}part_best_date={0}/'".format(
+                mo, normalized_path))
 
     runner.run_spark_script('clean_out_reversed_claims.sql')
 
-    new_reversed = runner.sqlContext.sql("SELECT * FROM pharmacyclaims_common_model WHERE concat_ws(':', record_id, data_set) IN (SELECT * from reversed)").withColumn('logical_delete_reason', lit('Reversed Claim'))
-    old_reversed = runner.sqlContext.sql("SELECT * FROM normalized_claims WHERE concat_ws(':', record_id, data_set) IN (SELECT * from reversed)").drop('part_best_date').withColumn('logical_delete_reason', lit('Reversed Claim'))
-    new_not_reversed = runner.sqlContext.sql("SELECT * FROM pharmacyclaims_common_model WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)")
-    old_not_reversed = runner.sqlContext.sql("SELECT * FROM normalized_claims WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)").drop('part_best_date')
+    new_reversed = runner.sqlContext.sql(
+        "SELECT * FROM pharmacyclaims_common_model WHERE concat_ws(':', record_id, data_set) IN (SELECT * from reversed)").withColumn(
+        'logical_delete_reason', lit('Reversed Claim'))
+    old_reversed = runner.sqlContext.sql(
+        "SELECT * FROM normalized_claims WHERE concat_ws(':', record_id, data_set) IN (SELECT * from reversed)").drop(
+        'part_best_date').withColumn('logical_delete_reason', lit('Reversed Claim'))
+    new_not_reversed = runner.sqlContext.sql(
+        "SELECT * FROM pharmacyclaims_common_model WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)")
+    old_not_reversed = runner.sqlContext.sql(
+        "SELECT * FROM normalized_claims WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)").drop(
+        'part_best_date')
 
-    new_reversed.union(old_reversed).union(new_not_reversed).union(old_not_reversed).createTempView('pharmacyclaims_common_model_final')
+    new_reversed.union(old_reversed).union(new_not_reversed).union(old_not_reversed).createTempView(
+        'pharmacyclaims_common_model_final')
 
     if not test:
         normalized_records_unloader.partition_and_rename(
@@ -169,21 +189,21 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path      = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-output/'
+        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-output/'
         deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-deliverable-output/'
     else:
-        output_path      = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
+        output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
         deliverable_path = 's3://salusv/deliverable/cardinal_pds-0/'
 
     # NOTE: 05/23/2019 - Cardinal has requested that some PDS not be added to the warehouse and
     # sold through marketplace. Pending additional details and logic, do no copy normalized data into
     # the warehouse
-    #normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
-    #curr_mo = args.date[:7]
-    #prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
-    #for mo in [curr_mo, prev_mo]:
+    # normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
+    # curr_mo = args.date[:7]
+    # prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
+    # for mo in [curr_mo, prev_mo]:
     #    subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
-    #normalized_records_unloader.distcp(output_path)
+    # normalized_records_unloader.distcp(output_path)
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',

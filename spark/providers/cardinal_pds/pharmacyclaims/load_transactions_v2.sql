@@ -86,7 +86,7 @@ CREATE EXTERNAL TABLE transactions (
         row_id                                      string,
         tenant_id                                   string,
         hv_join_key                                 string,
-        hv_approved                                 boolean
+        hv_marketplace_approved                     string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (
