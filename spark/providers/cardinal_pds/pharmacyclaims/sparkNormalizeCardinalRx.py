@@ -138,9 +138,9 @@ LOCATION '{}'
 
 
     # If the data contains the row 'hv_marketplace_approved', keep only rows where hv_marketplace_approved == '1'
-    if 'hv_marketplace_approved' in df.columns:
-        df = df.loc[df['hv_marketplace_approved'] == '1']
-        df = df.drop(columns='hv_marketplace_approved')
+    if 'hvm_approved' in df.columns:
+        df = df.loc[df['hvm_approved'] == '1']
+        df = df.drop(columns='hvm_approved')
 
     df.withColumn('hvid', df.clear_hvid).drop('clear_hvid') \
         .withColumn('pharmacy_other_id', md5(df.pharmacy_other_id)) \
