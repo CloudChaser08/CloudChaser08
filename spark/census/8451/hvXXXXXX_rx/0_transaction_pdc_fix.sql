@@ -70,9 +70,9 @@ SELECT
     txn.dispensed_product_strength_quantity               AS dispensed_product_strength_quantity,
     txn.dispensed_product_ndc                             AS dispensed_product_ndc,
     /*update only the pdc values*/
-    COALESCE(pdc.pdc_diabetes, txn.pdc_diabetes)          AS pdc_diabetes,
-    COALESCE(pdc.pdc_rasa, txn.pdc_rasa)                  AS pdc_rasa,
-    COALESCE(pdc.pdc_statins, txn.pdc_statins)            AS pdc_statins,
+    pdc.pdc_diabetes                                      AS pdc_diabetes,
+    pdc.pdc_rasa                                          AS pdc_rasa,
+    pdc.pdc_statins                                       AS pdc_statins,
     /*--------------------------*/
     txn.payer_type                                        AS payer_type,
     txn.hvjoinkey                                         AS hvjoinkey,
