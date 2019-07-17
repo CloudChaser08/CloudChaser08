@@ -85,8 +85,8 @@ CREATE EXTERNAL TABLE transactions (
         unique_patient_id                           string,
         row_id                                      string,
         tenant_id                                   string,
-        hv_join_key                                 string,
-        hvm_approved                                string
+        hvm_approved                                string,
+        hv_join_key                                 string
         )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
     WITH SERDEPROPERTIES (

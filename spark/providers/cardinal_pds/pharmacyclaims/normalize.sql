@@ -108,6 +108,7 @@ SELECT
         WHEN t.transaction_code = 'B2' THEN 'Reversal'
         ELSE NULL
     END                                       AS logical_delete_reason,
-    t.tenant_id                               AS tenant_id -- 05/30 Added at Cardinal's request
+    t.tenant_id                               AS tenant_id, -- 05/30 Added at Cardinal's request
+    t.hvm_approved                            AS hvm_approved
 FROM transactions t
     LEFT JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey

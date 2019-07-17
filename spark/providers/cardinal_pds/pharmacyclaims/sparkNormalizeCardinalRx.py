@@ -1,6 +1,8 @@
 #! /usr/bin/python
 import argparse
 from datetime import datetime, timedelta
+import subprocess
+from pyspark.sql.functions import lit, md5
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
@@ -10,8 +12,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
-import subprocess
-from pyspark.sql.functions import lit, md5
+
 
 TEXT_FORMAT = """
 ROW FORMAT DELIMITED
@@ -21,14 +22,13 @@ STORED AS TEXTFILE
 """
 PARQUET_FORMAT = "STORED AS PARQUET"
 DELIVERABLE_LOC = 'hdfs:///cardinal_pds_deliverable/'
-EXTRA_COLUMNS = ['tenant_id']
+EXTRA_COLUMNS = ['tenant_id', 'hvm_approved']
 
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
-
     # NOTE: VERIFY THAT THIS IS TRUE BEFORE MERGING
     setid = 'PDS.' + date_obj.strftime('%Y%m%d')
 
@@ -126,25 +126,20 @@ LOCATION '{}'
         ['partitions', org_num_partitions, False]
     ])
 
+    # Remove the ids Cardinal created for their own purposes and de-obfuscate the HVIDs
+    clean_hvid_sql = """SELECT *,
+            slightly_deobfuscate_hvid(cast(hvid as integer), 'Cardinal_MPI-0') as clear_hvid
+        FROM pharmacyclaims_common_model
+        WHERE hvm_approved = '1'"""
+    df = runner.sqlContext.sql(clean_hvid_sql).drop(*EXTRA_COLUMNS)
+
     # Drop Cardinal-specific columns before putting data in the warehouse
     spark.table('pharmacyclaims_common_model').drop(*EXTRA_COLUMNS) \
         .createOrReplaceTempView('pharmacyclaims_common_model')
 
-    # Remove the ids Cardinal created for their own purposes and de-obfuscate the HVIDs
-    clean_hvid_sql = """SELECT *,
-            slightly_deobfuscate_hvid(cast(hvid as integer), 'Cardinal_MPI-0') as clear_hvid
-        FROM pharmacyclaims_common_model"""
-    df = runner.sqlContext.sql(clean_hvid_sql)
-
-
-    # If the data contains the row 'hv_marketplace_approved', keep only rows where hv_marketplace_approved == '1'
-    if 'hvm_approved' in df.columns:
-        df = df.loc[df['hvm_approved'] == '1']
-        df = df.drop(columns='hvm_approved')
-
     df.withColumn('hvid', df.clear_hvid).drop('clear_hvid') \
-        .withColumn('pharmacy_other_id', md5(df.pharmacy_other_id)) \
-        .createOrReplaceTempView('pharmacyclaims_common_model')
+         .withColumn('pharmacy_other_id', md5(df.pharmacy_other_id)) \
+         .createOrReplaceTempView('pharmacyclaims_common_model')
 
     curr_mo = date_obj.strftime('%Y-%m')
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
