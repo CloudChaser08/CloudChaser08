@@ -24,10 +24,12 @@ class Runner:
         DataFrame.persist_and_track = persist_and_track
         DataFrame.cache_and_track   = persist_and_track
 
-    def run_spark_script(self, script, variables=[], source_file_path=None, return_output=False):
+    def run_spark_script(self, script, variables=None, source_file_path=None, return_output=False):
         """
         Execute a spark sql script
         """
+        if variables is None:
+            variables = []
 
         # Implicitly get relative path to script
         script = file_utils.get_abs_path(
@@ -66,7 +68,10 @@ class Runner:
                 return self.run_spark_query(statement, return_output=True)
             self.run_spark_query(statement)
 
-    def run_all_spark_scripts(self, variables=[], directory_path=None):
+    def run_all_spark_scripts(self, variables=None, directory_path=None):
+        if variables is None:
+            variables = []
+
         if directory_path:
             if directory_path[-1] != '/':
                 directory_path += '/'
