@@ -1,4 +1,5 @@
 import boto3
+import json
 import os
 from functools import reduce
 
@@ -46,6 +47,10 @@ TOP_VALS_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
                                "VALUES ('{name}', '{sequence}', '{datafield_id}', '{data_feed_id}', '{top_values}', false) " \
                                "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                "SET top_values = '{top_values}';"
+
+DATAFEED_VERSION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedversion " \
+                                      "(version, data_feed_id, data_layout) " \
+                                      "VALUES ('{version}', '{data_feed_id}', '{data_layout}');"
 
 REGION_MAP = {
     "CT": "NEW_ENGLAND",
@@ -121,14 +126,127 @@ VALID_GENDERS = [
 ]
 
 
+def _create_top_values_string(column_name, all_top_values):
+    """
+    Given all top values, string together only the ones that relate to the column given.
+    Format the individual top values like:
+        "value (total:percentage)"
+        EXAMPLE: "100 (1000:.1)"
+    Args:
+        column_name (str): The column to group top values by.
+        all_top_values ([dict, dict, ...]): All top values.
+    Returns:
+        (str): The relevant top values strung together
+    """
+    relevant_top_values = []
+    for top_value in all_top_values:
+        if top_value['column'] == column_name:
+            relevant_top_values.append(
+                '{value} ({total_count}:{percentage})'.format(
+                    value=top_value['value'].encode('utf-8'),
+                    total_count=top_value['count'],
+                    percentage=top_value['percentage']
+                )
+            )
+
+    return ', '.join(relevant_top_values)
+
+
+def _update_layout(data_layout, update_dict):
+    """ TODO """
+    name = update_dict.get('name')
+    field_id = update_dict.get('id')
+
+    field_found = False
+    for field in data_layout:
+        if field.get('name') == name and field.get('id') == field_id:
+            field_found = True
+            field.update(update_dict)
+
+    if not field_found:
+        data_layout.append(update_dict)
+
+    return data_layout
+
+
+def _update_data_layout(data_layout, provider_conf, datafeed_id, stat_name, stat_value):
+    """
+    Updates the DataFeed layout JSON with the stats in stat_name and stat_value.
+    Args:
+        data_layout (dict): The current layout to update
+        provider_conf (dict): Data about the model layout
+        datafeed_id (str): ID of the DataFeed being processed.
+        stat_name (str): The type of stat
+        stat_value ([dict, dict, ...]):
+            List of dictionaries describing the stats
+    Returns:
+        data_layout (dict): The updated layout
+    """
+
+    # TODO REFACTOR
+
+    # We only want to add this info to the layout if it pertains to top_values or fill_rate
+    if stat_name == 'top_values' and stat_value:
+        name_datafield_mapping = provider_conf['top_values_conf']['columns']
+
+        columns = set([r['column'] for r in stat_value])
+        for column in columns:
+            name = column
+            datafield_id = name_datafield_mapping.get(name, {}).get('field_id')
+            sequence = name_datafield_mapping.get(name, {}).get('sequence')
+
+            top_values_string = _create_top_values_string(name, stat_value)
+            data_layout = _update_layout(
+                data_layout,
+                {
+                    'name': column,
+                    'data_feed': datafeed_id,
+                    'id': '{}-{}'.format(datafield_id, datafeed_id),
+                    'sequence': sequence,
+                    'top_values': top_values_string,
+                }
+            )
+
+    elif stat_name == 'fill_rate' and stat_value:
+        name_datafield_mapping = provider_conf.get('fill_rate_conf', {}).get('columns')
+
+        for field_dict in stat_value:
+            name = field_dict.get('field')
+            datafield_id = name_datafield_mapping.get(name, {}).get('field_id')
+            sequence = name_datafield_mapping.get(name, {}).get('sequence')
+
+            data_layout = _update_layout(
+                data_layout,
+                {
+                    'name': name,
+                    'data_feed': datafeed_id,
+                    'id': '{}-{}'.format(datafield_id, datafeed_id),
+                    'sequence': sequence,
+                    'fill_rate': str(float(field_dict['fill']) * 100),
+                }
+            )
+
+    return data_layout
+
+
 def _generate_queries(stats, provider_conf):
-    """
-    Generate queries based on given stats
-    """
+    """ Generate queries based on given stats """
+    print('')
+    print(provider_conf)
+    print('')
+
+    datafeed_id = provider_conf['datafeed_id']
+    data_layout = []
 
     queries = {}
-
     for stat_name, stat_value in stats.items():
+        _update_data_layout(data_layout, provider_conf, datafeed_id, stat_name, stat_value)
+
+        print('')
+        print(stat_name)
+        print(stat_value)
+        print('')
+
         stat_queries = []
 
         if stat_name == 'key_stats' and stat_value:
@@ -219,10 +337,7 @@ def _generate_queries(stats, provider_conf):
                 data_feed_id=provider_conf["datafeed_id"]))
 
             for column in columns:
-                top_values_string = reduce(lambda x1, x2: x1 + ', ' + x2, [
-                    '{} ({}:{})'.format(r['value'].encode('utf-8'), r['count'], r['percentage'])
-                    for r in stat_value if r['column'] == column
-                ])
+                top_values_string = _create_top_values_string(column, stat_value)
 
                 stat_queries.append(TOP_VALS_INSERT_SQL_TEMPLATE.format(
                     name=column, datafield_id=name_id_dict[column]['field_id'], sequence=name_id_dict[column]['sequence'],
@@ -240,6 +355,18 @@ def _generate_queries(stats, provider_conf):
                 ))
 
         queries[stat_name] = stat_queries
+
+    print('\n\n#####################')
+    print(json.dumps(data_layout, indent=4, sort_keys=True))
+    print('#####################\n\n')
+
+    version_number = 'FAKE'  # TODO
+    version_query = DATAFEED_VERSION_INSERT_SQL_TEMPLATE.format(
+        version=version_number,
+        data_feed_id=provider_conf['datafeed_id'],
+        data_layout=data_layout
+    )
+    print(version_query)
 
     return queries
 
@@ -277,5 +404,6 @@ def write_to_s3(stats, provider_conf, quarter):
 
     Those scripts are saved to S3_OUTPUT_DIR.
     """
+    print(provider_conf)
     queries = _generate_queries(stats, provider_conf)
     _write_queries(queries, provider_conf['datafeed_id'], quarter, provider_conf['datatype'])
