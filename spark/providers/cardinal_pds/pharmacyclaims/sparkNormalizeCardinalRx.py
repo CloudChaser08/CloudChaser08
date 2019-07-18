@@ -24,8 +24,6 @@ PARQUET_FORMAT = "STORED AS PARQUET"
 DELIVERABLE_LOC = 'hdfs:///cardinal_pds_deliverable/'
 EXTRA_COLUMNS = ['tenant_id', 'hvm_approved']
 
-
-
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
@@ -33,7 +31,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     setid = 'PDS.' + date_obj.strftime('%Y%m%d')
 
     script_path = __file__
-
+    has_hvm_approved = False
     if test:
         input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/cardinal_pds/pharmacyclaims/resources/input/'
@@ -81,6 +79,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         runner.run_spark_script('load_transactions_v2.sql', [
             ['input_path', input_path]
         ])
+        has_hvm_approved = True
+
 
     df = runner.sqlContext.sql('select * from transactions')
     df = postprocessor.nullify(df, ['NULL', 'Unknown', '-1', '-2'])
@@ -129,8 +129,9 @@ LOCATION '{}'
     # Remove the ids Cardinal created for their own purposes and de-obfuscate the HVIDs
     clean_hvid_sql = """SELECT *,
             slightly_deobfuscate_hvid(cast(hvid as integer), 'Cardinal_MPI-0') as clear_hvid
-        FROM pharmacyclaims_common_model
-        WHERE hvm_approved = '1'"""
+        FROM pharmacyclaims_common_model """
+    if has_hvm_approved:
+        clean_hvid_sql += """ WHERE hvm_approved = '1'"""
     df = runner.sqlContext.sql(clean_hvid_sql).drop(*EXTRA_COLUMNS)
 
     # Drop Cardinal-specific columns before putting data in the warehouse
