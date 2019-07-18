@@ -35,6 +35,12 @@ class _8451CensusDriver(CensusDriver):
         if not self._test:
             external_table_loader.load_ref_gen_ref(self._sqlContext)
 
+    def transform(self, date_input=None):
+        scripts_directory = os.path.dirname(os.path.realpath(__file__))
+        content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
+                                                     directory_path=scripts_directory)
+        return content
+
     def save(self, dataframe, batch_date):
 
         output_path = SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
