@@ -189,7 +189,7 @@ def _update_data_layout(data_layout, provider_conf, datafeed_id, stat_name, stat
     if stat_name == 'top_values' and stat_value:
         name_datafield_mapping = provider_conf['top_values_conf']['columns']
 
-        columns = set([r['column'] for r in stat_value])
+        columns = set([field['column'] for field in stat_value])
         for column in columns:
             name = column
             datafield_id = name_datafield_mapping.get(name, {}).get('field_id')

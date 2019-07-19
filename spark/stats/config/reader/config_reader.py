@@ -50,6 +50,8 @@ def _get_config_from_db(query):
     with closing(conn.cursor()) as cursor:
         cursor.execute(query)
         results = cursor.fetchall()
+
+    # TODO #
     return dict([
         (res[0], {'field_id': res[1], 'sequence': res[2]})
         for res in results
@@ -72,6 +74,10 @@ def _extract_provider_conf(feed_id, providers_conf):
     if len(conf) == 0:
         raise Exception('Feed {} is not in the providers config file'.format(feed_id))
     return conf[0]
+
+
+def build_configuration_query(joins='', conditions=''):
+    pass
 
 
 def _get_top_values_columns(datafeed_id):
