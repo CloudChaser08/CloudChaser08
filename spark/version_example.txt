@@ -24,10 +24,4 @@
   }
 ]
 
-
-X "category": "NULL",
-X "datatable": {"id": 1, "name": "Medical Claims v02", "description": "Medical Claims v02", "sequence": null},
-X "description": "A unique identifier for a line or row in this table, within a given dataset.",
-X "field_type_name": "Number",
-
 "supplemental_type_name": null,

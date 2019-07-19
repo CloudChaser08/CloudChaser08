@@ -153,13 +153,14 @@ def _create_top_values_string(column_name, all_top_values):
 
 
 def _update_layout(data_layout, update_dict):
-    """ TODO """
+    """ TODO DOCSTRING """
+    # name and combined id are a unique combination here
     name = update_dict.get('name')
-    field_id = update_dict.get('id')
+    combined_id = update_dict.get('id')
 
     field_found = False
     for field in data_layout:
-        if field.get('name') == name and field.get('id') == field_id:
+        if field.get('name') == name and field.get('id') == combined_id:
             field_found = True
             field.update(update_dict)
 
@@ -187,65 +188,68 @@ def _update_data_layout(data_layout, provider_conf, datafeed_id, stat_name, stat
 
     # We only want to add this info to the layout if it pertains to top_values or fill_rate
     if stat_name == 'top_values' and stat_value:
-        name_datafield_mapping = provider_conf['top_values_conf']['columns']
+        name_datafield_mapping = provider_conf.get('top_values_conf', {}).get('columns')
 
         columns = set([field['column'] for field in stat_value])
         for column in columns:
-            name = column
-            datafield_id = name_datafield_mapping.get(name, {}).get('field_id')
-            sequence = name_datafield_mapping.get(name, {}).get('sequence')
+            field_name = column
+            field_conf = name_datafield_mapping.get(field_name, {})
 
-            top_values_string = _create_top_values_string(name, stat_value)
-            data_layout = _update_layout(
-                data_layout,
-                {
-                    'name': column,
-                    'data_feed': datafeed_id,
-                    'id': '{}-{}'.format(datafield_id, datafeed_id),
-                    'sequence': sequence,
-                    'top_values': top_values_string,
-                }
-            )
+            top_values_string = _create_top_values_string(field_name, stat_value)
+            current_field_dict = {
+                'name': field_name,
+                'data_feed': datafeed_id,
+                'id': '{}-{}'.format(field_conf.get('field_id'), datafeed_id),
+                'sequence': field_conf.get('sequence'),
+                'category': field_conf.get('category'),
+                'description': field_conf.get('description'),
+                'datatable': {
+                    'id': field_conf.get('table_id'),
+                    'name': field_conf.get('table_name'),
+                    'description': field_conf.get('table_desc'),
+                    'sequence': field_conf.get('table_seq'),
+                },
+                'field_type_name': field_conf.get('field_type_name'),
+                'top_values': top_values_string,
+            }
+            data_layout = _update_layout(data_layout, current_field_dict)
 
     elif stat_name == 'fill_rate' and stat_value:
         name_datafield_mapping = provider_conf.get('fill_rate_conf', {}).get('columns')
 
         for field_dict in stat_value:
-            name = field_dict.get('field')
-            datafield_id = name_datafield_mapping.get(name, {}).get('field_id')
-            sequence = name_datafield_mapping.get(name, {}).get('sequence')
+            field_name = field_dict.get('field')
+            field_conf = name_datafield_mapping.get(field_name, {})
 
-            data_layout = _update_layout(
-                data_layout,
-                {
-                    'name': name,
-                    'data_feed': datafeed_id,
-                    'id': '{}-{}'.format(datafield_id, datafeed_id),
-                    'sequence': sequence,
-                    'fill_rate': str(float(field_dict['fill']) * 100),
-                }
-            )
+            current_field_dict = {
+                'name': field_name,
+                'data_feed': datafeed_id,
+                'id': '{}-{}'.format(field_conf.get('field_id'), datafeed_id),
+                'sequence': field_conf.get('sequence'),
+                'category': field_conf.get('category'),
+                'description': field_conf.get('description'),
+                'datatable': {
+                    'id': field_conf.get('table_id'),
+                    'name': field_conf.get('table_name'),
+                    'description': field_conf.get('table_desc'),
+                    'sequence': field_conf.get('table_seq'),
+                },
+                'field_type_name': field_conf.get('field_type_name'),
+                'fill_rate': str(float(field_dict['fill']) * 100),
+            }
+            data_layout = _update_layout(data_layout, current_field_dict)
 
     return data_layout
 
 
 def _generate_queries(stats, provider_conf):
     """ Generate queries based on given stats """
-    print('')
-    print(provider_conf)
-    print('')
-
     datafeed_id = provider_conf['datafeed_id']
     data_layout = []
 
     queries = {}
     for stat_name, stat_value in stats.items():
         _update_data_layout(data_layout, provider_conf, datafeed_id, stat_name, stat_value)
-
-        print('')
-        print(stat_name)
-        print(stat_value)
-        print('')
 
         stat_queries = []
 
@@ -356,17 +360,14 @@ def _generate_queries(stats, provider_conf):
 
         queries[stat_name] = stat_queries
 
-    print('\n\n#####################')
-    print(json.dumps(data_layout, indent=4, sort_keys=True))
-    print('#####################\n\n')
-
+    # Create SQL for data_layout
     version_number = 'FAKE'  # TODO
     version_query = DATAFEED_VERSION_INSERT_SQL_TEMPLATE.format(
         version=version_number,
         data_feed_id=provider_conf['datafeed_id'],
         data_layout=data_layout
     )
-    print(version_query)
+    queries['version'] = [version_query]
 
     return queries
 
@@ -404,6 +405,5 @@ def write_to_s3(stats, provider_conf, quarter):
 
     Those scripts are saved to S3_OUTPUT_DIR.
     """
-    print(provider_conf)
     queries = _generate_queries(stats, provider_conf)
     _write_queries(queries, provider_conf['datafeed_id'], quarter, provider_conf['datatype'])

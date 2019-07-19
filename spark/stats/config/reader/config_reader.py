@@ -5,10 +5,14 @@ from contextlib import closing
 import psycopg2
 from spark.helpers.file_utils import get_abs_path
 from spark.stats.config.dates import dates as provider_dates
+from spark.stats.config.reader.config_query_builder import (
+    build_configuration_query, parse_configuration_query_results
+)
+
 
 # map from emr datatype (table) name to the name of each datatype in
 # the marketplace db
-emr_datatype_name_map = {
+EMR_DATATYPE_NAME_MAP = {
     'emr_enc': 'Encounter',
     'emr_diag': 'Diagnosis',
     'emr_clin_obsn': 'Clinical Observation',
@@ -32,32 +36,6 @@ def _get_config_from_json(filename):
         return data
 
 
-def _get_config_from_db(query):
-    '''
-    Runs query on marketplace prod and returns a results dict.
-    Input:
-        - query: The query to run
-    Output:
-        - data: the config represented as a Python dict
-    '''
-    conn = psycopg2.connect(
-        host='pg-dev.healthverity.com',
-        database='config',
-        user='hvreadonly',
-        password=os.environ.get('PGPASSWORD')
-    )
-
-    with closing(conn.cursor()) as cursor:
-        cursor.execute(query)
-        results = cursor.fetchall()
-
-    # TODO #
-    return dict([
-        (res[0], {'field_id': res[1], 'sequence': res[2]})
-        for res in results
-    ])
-
-
 def _extract_provider_conf(feed_id, providers_conf):
     '''
     Get a specific providers config from the config file with all
@@ -76,38 +54,82 @@ def _extract_provider_conf(feed_id, providers_conf):
     return conf[0]
 
 
-def build_configuration_query(joins='', conditions=''):
-    pass
+def _get_config_from_db(query):
+    '''
+    Runs query on marketplace prod and returns a results dict.
+    Input:
+        - query: The query to run
+    Output:
+        - data: the config represented as a Python dict
+    '''
+    conn = psycopg2.connect(
+        host='pg-dev.healthverity.com',
+        database='config',
+        user='hvreadonly',
+        password=os.environ.get('PGPASSWORD')
+    )
+
+    with closing(conn.cursor(cursor_factory=psycopg2.extras.DictCursor)) as cursor:
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+    configuration_result_dict = {
+        result_row['name']: dict(result_row)
+        for result_row in result
+    }
+    return configuration_result_dict
+
+
+def _build_configuration_query(datafeed_id, extra_conditions=''):
+    '''
+    Given a DataFeed ID and extra conditions to populate the WHERE clause,
+    build a SQL query that returns important data on every DataField within
+    every DataTable within the DataFeed.
+    '''
+    get_config_sql = """
+        SELECT
+            f.physical_name as name,
+            f.id as field_id,
+            f.category as category,
+            f.description as description,
+            f.sequence as sequence,
+            f.top_values as has_top_values,
+            t.id as table_id,
+            t.description as table_desc,
+            t.name as table_name,
+            t.sequence as table_seq,
+            ft.name as field_type_name
+        FROM marketplace_datafield f
+            JOIN marketplace_fieldtype ft on ft.id = f.field_type_id
+            JOIN marketplace_datatable t on t.id = f.datatable_id
+            JOIN marketplace_datamodel m on m.id = t.datamodel_id
+            JOIN marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
+        WHERE dm.datafeed_id = {datafeed_id} and m.is_supplemental = 'f' {extra_conditions};
+    """.format(
+        datafeed_id=datafeed_id, extra_conditions=extra_conditions
+    )
+    return get_config_sql
 
 
 def _get_top_values_columns(datafeed_id):
-
-    get_columns_sql = """
-        select f.physical_name as name, f.id as field_id, f.sequence as sequence
-            from marketplace_datafield f
-            join marketplace_datatable t on t.id = f.datatable_id
-            join marketplace_datamodel m on m.id = t.datamodel_id
-            join marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
-        where dm.datafeed_id = {} and m.is_supplemental = 'f' and f.top_values= 't';
-    """.format(datafeed_id)
-
-    return _get_config_from_db(get_columns_sql)
+    get_config_sql = build_configuration_query(
+        datafeed_id=datafeed_id,
+        extra_conditions="and f.top_values= 't'"
+    )
+    return _get_config_from_db(get_config_sql)
 
 
 def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
-    get_columns_sql = """
-        select f.physical_name as name, f.id as field_id, f.sequence as sequence
-            from marketplace_datafield f
-            join marketplace_datatable t on t.id = f.datatable_id
-            join marketplace_datamodel m on m.id = t.datamodel_id
-            join marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
-        where dm.datafeed_id = {} and m.is_supplemental = 'f' {};
-    """.format(
-        datafeed_id,
-        "and t.name = '{}'".format(emr_datatype_name_map[emr_datatype]) if emr_datatype else ''
-    )
+    fill_rate_conditions = ''
+    if emr_datatype:
+        fill_rate_conditions += (
+            "and t.name = '{name}'".format(name=EMR_DATATYPE_NAME_MAP[emr_datatype])
+        )
 
-    return _get_config_from_db(get_columns_sql)
+    get_config_sql = build_configuration_query(
+        datafeed_id=datafeed_id, extra_conditions=fill_rate_conditions
+    )
+    return _get_config_from_db(get_config_sql)
 
 
 def _fill_in_dates(conf):
