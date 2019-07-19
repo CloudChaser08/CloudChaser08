@@ -68,7 +68,6 @@ def test_logical_delete_reason(spark):
 
     # The group of claims with this RX number should have 1 final paid claim, 1 rejected claims
     # 1 reversal, and 1 reversed claim
-    print(hv_results)
     res = filter(lambda r: r.rx_number == 'ab572511f8dfb0b8aac3e3e742e99f60', hv_results)
 
     assert len(filter(lambda r: r.logical_delete_reason == 'Claim Rejected', res)) == 1

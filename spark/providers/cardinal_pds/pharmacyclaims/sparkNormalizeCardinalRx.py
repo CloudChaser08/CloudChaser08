@@ -71,7 +71,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
     column_length = len(spark.read.csv(input_path, sep='|').columns)
-    if column_length == 85:
+    if column_length == 86:
         runner.run_spark_script('load_transactions.sql', [
             ['input_path', input_path]
         ])
@@ -129,7 +129,7 @@ LOCATION '{}'
     # Remove the ids Cardinal created for their own purposes and de-obfuscate the HVIDs
     clean_hvid_sql = """SELECT *,
             slightly_deobfuscate_hvid(cast(hvid as integer), 'Cardinal_MPI-0') as clear_hvid
-        FROM pharmacyclaims_common_model """
+        FROM pharmacyclaims_common_model"""
     if has_hvm_approved:
         clean_hvid_sql += """ WHERE hvm_approved = '1'"""
     df = runner.sqlContext.sql(clean_hvid_sql).drop(*EXTRA_COLUMNS)
