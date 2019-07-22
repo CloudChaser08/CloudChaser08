@@ -5,9 +5,6 @@ from contextlib import closing
 import psycopg2
 from spark.helpers.file_utils import get_abs_path
 from spark.stats.config.dates import dates as provider_dates
-from spark.stats.config.reader.config_query_builder import (
-    build_configuration_query, parse_configuration_query_results
-)
 
 
 # map from emr datatype (table) name to the name of each datatype in
@@ -99,6 +96,7 @@ def _build_configuration_query(datafeed_id, extra_conditions=''):
             t.name as table_name,
             t.sequence as table_seq,
             ft.name as field_type_name
+            m.is_supplemental as is_supplemental
         FROM marketplace_datafield f
             JOIN marketplace_fieldtype ft on ft.id = f.field_type_id
             JOIN marketplace_datatable t on t.id = f.datatable_id
