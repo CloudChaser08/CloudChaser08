@@ -134,10 +134,6 @@ LOCATION '{}'
         clean_hvid_sql += """ WHERE hvm_approved = '1'"""
     df = runner.sqlContext.sql(clean_hvid_sql).drop(*EXTRA_COLUMNS)
 
-    # Drop Cardinal-specific columns before putting data in the warehouse
-    spark.table('pharmacyclaims_common_model').drop(*EXTRA_COLUMNS) \
-        .createOrReplaceTempView('pharmacyclaims_common_model')
-
     df.withColumn('hvid', df.clear_hvid).drop('clear_hvid') \
          .withColumn('pharmacy_other_id', md5(df.pharmacy_other_id)) \
          .createOrReplaceTempView('pharmacyclaims_common_model')
@@ -194,12 +190,12 @@ def main(args):
     # NOTE: 05/23/2019 - Cardinal has requested that some PDS not be added to the warehouse and
     # sold through marketplace. Pending additional details and logic, do no copy normalized data into
     # the warehouse
-    # normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
-    # curr_mo = args.date[:7]
-    # prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
-    # for mo in [curr_mo, prev_mo]:
-    #    subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
-    # normalized_records_unloader.distcp(output_path)
+    normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
+    curr_mo = args.date[:7]
+    prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
+    for mo in [curr_mo, prev_mo]:
+       subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
+    normalized_records_unloader.distcp(output_path)
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
