@@ -132,6 +132,9 @@ LOCATION '{}'
         FROM pharmacyclaims_common_model"""
     if has_hvm_approved:
         clean_hvid_sql += """ WHERE hvm_approved = '1'"""
+    else:
+        clean_hvid_sql += """ WHERE false """
+
     df = runner.sqlContext.sql(clean_hvid_sql).drop(*EXTRA_COLUMNS)
 
     df.withColumn('hvid', df.clear_hvid).drop('clear_hvid') \
