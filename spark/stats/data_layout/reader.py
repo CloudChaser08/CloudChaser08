@@ -4,7 +4,7 @@ import psycopg2
 from psycopg2.extras import DictCursor
 
 
-def _create_layout_sql(datafeed_id):
+def _layout_sql(datafeed_id):
     """ Create the SQL statement for extracting the base data_layout from DB. """
     get_config_sql = """
         SELECT
@@ -34,7 +34,7 @@ def _create_layout_sql(datafeed_id):
 
 def _run_sql(query):
     """
-    Run a sql statement and return the output.
+    Run a SQL statement and return the output.
     Uses DictCursor to allow for easy JSON-ification of the output.
     """
 
@@ -52,8 +52,8 @@ def _run_sql(query):
         host='localhost',
         database='config',
         user='hvsuperuser',
-        port=32768,
-        password='hvsuperuser'
+        password='hvsuperuser',
+        port=32768
     )
     with closing(conn.cursor(cursor_factory=DictCursor)) as cursor:
         cursor.execute(query)
@@ -65,7 +65,7 @@ def _run_sql(query):
 def _normalize_field_layout(layout_field):
     """
     Given a single field_dict in a data_layout, manipulate the key-values
-    within this field_dict to match the proper format of a data_layout in Marketplace.
+    to match proper format of a data_layout in Marketplace.
     """
     field_dict = dict(layout_field)
     field_dict.update({
@@ -89,13 +89,13 @@ def _normalize_field_layout(layout_field):
     return field_dict
 
 
-def get_data_layout(feed_id):
+def get_base_data_layout(feed_id):
     """
-    Query for the data_layout associated to a given DataFeed, and manipulate
-    the output to reflect a proper Marketplace format.
+    Query for the data_layout associated to a given DataFeed,
+    and manipulate the output to reflect a proper Marketplace format.
     """
     # Get data_layout
-    layout_sql = _create_layout_sql(feed_id)
+    layout_sql = _layout_sql(feed_id)
     layout_result = _run_sql(layout_sql)
 
     # Properly format the layout
