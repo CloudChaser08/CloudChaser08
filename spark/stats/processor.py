@@ -87,6 +87,7 @@ def _run_fill_rates(spark, sqlContext, conf, start_date, end_date):
 
     return None
 
+
 def _run_top_values(spark, sqlContext, provider_conf, start_date, end_date):
     '''
     A wrapper around top_values method calculating the N most common values

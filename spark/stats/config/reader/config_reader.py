@@ -19,7 +19,7 @@ EMR_DATATYPE_NAME_MAP = {
     'emr_medctn': 'Medication'
 }
 
-def _get_config_from_json(filename):
+def get_config_from_json(filename):
     '''
     Reads a config file as json and stores it in a Python dict.
     Input:
@@ -33,7 +33,7 @@ def _get_config_from_json(filename):
         return data
 
 
-def _extract_provider_conf(feed_id, providers_conf):
+def extract_provider_conf(feed_id, providers_conf):
     '''
     Get a specific providers config from the config file with all
     provider configs.
@@ -72,7 +72,7 @@ def _get_config_from_db(query):
 
     configuration_result_dict = {
         result_row['name']: dict(result_row)
-        for result_row in result
+        for result_row in results
     }
     return configuration_result_dict
 
@@ -95,7 +95,7 @@ def _build_configuration_query(datafeed_id, extra_conditions=''):
             t.description as table_desc,
             t.name as table_name,
             t.sequence as table_seq,
-            ft.name as field_type_name
+            ft.name as field_type_name,
             m.is_supplemental as is_supplemental
         FROM marketplace_datafield f
             JOIN marketplace_fieldtype ft on ft.id = f.field_type_id
@@ -110,7 +110,7 @@ def _build_configuration_query(datafeed_id, extra_conditions=''):
 
 
 def _get_top_values_columns(datafeed_id):
-    get_config_sql = build_configuration_query(
+    get_config_sql = _build_configuration_query(
         datafeed_id=datafeed_id,
         extra_conditions="and f.top_values= 't'"
     )
@@ -124,7 +124,7 @@ def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
             "and t.name = '{name}'".format(name=EMR_DATATYPE_NAME_MAP[emr_datatype])
         )
 
-    get_config_sql = build_configuration_query(
+    get_config_sql = _build_configuration_query(
         datafeed_id=datafeed_id, extra_conditions=fill_rate_conditions
     )
     return _get_config_from_db(get_config_sql)
@@ -166,10 +166,10 @@ def _fill_in_conf_dict(conf, feed_id, providers_conf_file):
             logging.info('No config for {} found in feed {} config, falling back to default.'.format(calc, feed_id))
             conf_file_loc = get_abs_path(providers_conf_file,
                                         conf['datatype'] + '/' + calc + '.json')
-            conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
+            conf[calc + '_conf'] = get_config_from_json(conf_file_loc)
         elif conf[calc + '_conf_file']:
             conf_file_loc = get_abs_path(providers_conf_file, conf[calc + '_conf_file'])
-            conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
+            conf[calc + '_conf'] = get_config_from_json(conf_file_loc)
 
     return conf
 
@@ -186,12 +186,12 @@ def get_provider_config(providers_conf_file, feed_id):
         - provider_conf: A python dict of the providers config with
                          each associated stat calcs config embedded
     '''
-    providers_conf = _get_config_from_json(providers_conf_file)
+    providers_conf = get_config_from_json(providers_conf_file)
 
     if 'providers' not in providers_conf:
         raise Exception('{} does not contain providers list'.format(providers_conf))
 
-    provider_conf = _extract_provider_conf(feed_id, providers_conf)
+    provider_conf = extract_provider_conf(feed_id, providers_conf)
 
     # Check that datatype is specified
     if 'datatype' not in provider_conf or provider_conf['datatype'] is None:

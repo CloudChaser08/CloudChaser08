@@ -67,20 +67,20 @@ def setup_teardown(spark):
 
 def test_standard_stats(spark):
     provider_config = {
-            'name'              : 'test',
-            'datafeed_id'       : '27',
-            'datatype'          : 'medicalclaims',
-            'date_field'        : ['service_date'],
-            'record_field'      : 'claim_id',
-            'fill_rates'        : True,
-            'fill_rate_conf'    : {'columns': {'claim_id': 1, 'service_date': 2, 'col_3': 3}},
-            'key_stats'         : None,
-            'top_values'        : None,
-            'longitudinality'   : None,
-            'year_over_year'    : None,
-            'epi_calcs'         : None,
-            'earliest_date'     : '1990-01-01'
-        }
+        'name'              : 'test',
+        'datafeed_id'       : '27',
+        'datatype'          : 'medicalclaims',
+        'date_field'        : ['service_date'],
+        'record_field'      : 'claim_id',
+        'fill_rates'        : True,
+        'fill_rate_conf'    : {'columns': {'claim_id': 1, 'service_date': 2, 'col_3': 3}},
+        'key_stats'         : None,
+        'top_values'        : None,
+        'longitudinality'   : None,
+        'year_over_year'    : None,
+        'epi_calcs'         : None,
+        'earliest_date'     : '1990-01-01'
+    }
 
     start_date = '2015-04-01'
     end_date = '2017-04-01'
