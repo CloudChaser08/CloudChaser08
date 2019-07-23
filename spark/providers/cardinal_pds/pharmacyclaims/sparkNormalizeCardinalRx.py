@@ -187,9 +187,6 @@ def main(args):
         output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
         deliverable_path = 's3://salusv/deliverable/cardinal_pds-0/'
 
-    # NOTE: 05/23/2019 - Cardinal has requested that some PDS not be added to the warehouse and
-    # sold through marketplace. Pending additional details and logic, do no copy normalized data into
-    # the warehouse
     normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
     curr_mo = args.date[:7]
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
