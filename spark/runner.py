@@ -1,8 +1,10 @@
 import logging
-import spark.helpers.file_utils as file_utils
 import inspect
-from pyspark.sql import DataFrame
 import os
+import copy
+
+import spark.helpers.file_utils as file_utils
+from pyspark.sql import DataFrame
 
 
 PACKAGE_PATH = 'spark/target/dewey.zip/'
@@ -24,10 +26,12 @@ class Runner:
         DataFrame.persist_and_track = persist_and_track
         DataFrame.cache_and_track   = persist_and_track
 
-    def run_spark_script(self, script, variables=[], source_file_path=None, return_output=False):
+    def run_spark_script(self, script, variables=None, source_file_path=None, return_output=False):
         """
         Execute a spark sql script
         """
+        if variables is None:
+            variables = []
 
         # Implicitly get relative path to script
         script = file_utils.get_abs_path(
@@ -66,7 +70,10 @@ class Runner:
                 return self.run_spark_query(statement, return_output=True)
             self.run_spark_query(statement)
 
-    def run_all_spark_scripts(self, variables=[], directory_path=None):
+    def run_all_spark_scripts(self, variables=None, directory_path=None):
+        if variables is None:
+            variables = []
+
         if directory_path:
             if directory_path[-1] != '/':
                 directory_path += '/'
@@ -90,7 +97,7 @@ class Runner:
 
         for s in scripts:
             table_name = '_'.join(s.replace('.sql', '').split('_')[1:])
-            self.run_spark_script(s, variables=list(variables), source_file_path=directory_path, return_output=True) \
+            self.run_spark_script(s, variables=copy.deepcopy(variables), source_file_path=directory_path, return_output=True) \
                 .createOrReplaceTempView(table_name)
 
         last_table = '_'.join(scripts[-1].replace('.sql', '').split('_')[1:])
