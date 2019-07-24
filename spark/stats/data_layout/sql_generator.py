@@ -1,38 +1,21 @@
-import argparse
-import copy
-import inspect
-
-import spark.spark_setup as spark_setup
-import spark.helpers.file_utils as file_utils
-import spark.stats.processor as processor
-from spark.stats.data_layout.reader import get_base_data_layout
+from spark.stats.data_layout.layout_reader import get_base_data_layout
+from spark.stats.data_layout.stat_populator import populate_stat_values
 from spark.stats.data_layout.sql_writer import create_runnable_sql_file
 
 
-def _fill_in_stat_values(data_layout, spark, sqlContext, quarter, start_date, end_date):
-
-
-    return data_layout
-
-
-def generate_data_layout_version_sql(datafeed_id, version_name, quarter, start_date, end_date):
+def generate_data_layout_version_sql(provider_config, stats, version_name, quarter):
     """
-    For a given feed_id and a time frame, create a runnable SQL file that
-    inserts a complete data_layout version into a Marketplace DB.
+    Given a single DataFeed's config and generated stats, create a runnable SQL file that
+    inserts a complete data_layout version into a Marketplace DB for that feed.
     """
 
-    # TODO remove local True
-    spark, sqlContext = spark_setup.init(
-        'Feed {} marketplace data layout'.format(datafeed_id), True
-    )
+    datafeed_id = provider_config['datafeed_id']
 
-    # Get the base data_layout, without top_values and fill_rate filled in
+    # 1) Get the base data_layout, without top_values and fill_rate populated
     data_layout = get_base_data_layout(datafeed_id)
 
-    # Fill top_values and fill_rate for each field in data_layout
-    data_layout = _fill_in_stat_values(
-        data_layout, spark, sqlContext, quarter, start_date, end_date
-    )
+    # 2) Populate top_values and fill_rate for each field in data_layout
+    data_layout = populate_stat_values(provider_config, data_layout, stats)
 
-    # Create the runnable SQL file for adding this new version of data_layout
-    create_runnable_sql_file(datafeed_id, version_name, quarter, data_layout)
+    # 3) Create the runnable SQL file for adding this new version of data_layout
+    create_runnable_sql_file(datafeed_id, data_layout, version_name, quarter)

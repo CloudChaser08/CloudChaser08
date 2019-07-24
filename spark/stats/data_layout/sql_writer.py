@@ -41,7 +41,7 @@ def _write_sql_file(datafeed_id, new_version_query, quarter):
     )
 
 
-def create_runnable_sql_file(datafeed_id, version_name, quarter, data_layout):
+def create_runnable_sql_file(datafeed_id, data_layout, version_name, quarter):
     """
     Create a SQL statement for creating a new data_layout version,
     and then write it to a .sql file on S3.

@@ -7,6 +7,7 @@ import spark.helpers.file_utils as file_utils
 import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
+from spark.stats.data_layout.sql_generator import generate_data_layout_version_sql
 
 
 ALL_STATS = ['key_stats', 'longitudinality', 'year_over_year', 'fill_rate', 'top_values', 'epi']
@@ -96,6 +97,9 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats_t
         )
         stats.update(epi_calcs)
         stats_writer.write_to_s3(stats, provider_conf, quarter)
+
+    # Generate SQL for data_layout
+    generate_data_layout_version_sql(provider_conf, stats, 'FAKE VERSION NAME', quarter)
 
     return stats
 
