@@ -48,10 +48,6 @@ TOP_VALS_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
                                "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                "SET top_values = '{top_values}';"
 
-DATAFEED_VERSION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedversion " \
-                                      "(version, data_feed_id, data_layout) " \
-                                      "VALUES ('{version}', '{data_feed_id}', '{data_layout}');"
-
 REGION_MAP = {
     "CT": "NEW_ENGLAND",
     "ME": "NEW_ENGLAND",
@@ -170,78 +166,6 @@ def _update_layout(data_layout, update_dict):
     return data_layout
 
 
-def _update_data_layout(data_layout, provider_conf, datafeed_id, stat_name, stat_value):
-    """
-    Updates the DataFeed layout JSON with the stats in stat_name and stat_value.
-    Args:
-        data_layout (dict): The current layout to update
-        provider_conf (dict): Data about the model layout
-        datafeed_id (str): ID of the DataFeed being processed.
-        stat_name (str): The type of stat
-        stat_value ([dict, dict, ...]):
-            List of dictionaries describing the stats
-    Returns:
-        data_layout (dict): The updated layout
-    """
-
-    # TODO REFACTOR
-
-    # We only want to add this info to the layout if it pertains to top_values or fill_rate
-    if stat_name == 'top_values' and stat_value:
-        name_datafield_mapping = provider_conf.get('top_values_conf', {}).get('columns')
-
-        columns = set([field['column'] for field in stat_value])
-        for column in columns:
-            field_name = column
-            field_conf = name_datafield_mapping.get(field_name, {})
-
-            top_values_string = _create_top_values_string(field_name, stat_value)
-            current_field_dict = {
-                'name': field_name,
-                'data_feed': datafeed_id,
-                'id': '{}-{}'.format(field_conf.get('field_id'), datafeed_id),
-                'sequence': field_conf.get('sequence'),
-                'category': field_conf.get('category'),
-                'description': field_conf.get('description'),
-                'datatable': {
-                    'id': field_conf.get('table_id'),
-                    'name': field_conf.get('table_name'),
-                    'description': field_conf.get('table_desc'),
-                    'sequence': field_conf.get('table_seq'),
-                },
-                'field_type_name': field_conf.get('field_type_name'),
-                'top_values': top_values_string,
-            }
-            data_layout = _update_layout(data_layout, current_field_dict)
-
-    elif stat_name == 'fill_rate' and stat_value:
-        name_datafield_mapping = provider_conf.get('fill_rate_conf', {}).get('columns')
-
-        for field_dict in stat_value:
-            field_name = field_dict.get('field')
-            field_conf = name_datafield_mapping.get(field_name, {})
-
-            current_field_dict = {
-                'name': field_name,
-                'data_feed': datafeed_id,
-                'id': '{}-{}'.format(field_conf.get('field_id'), datafeed_id),
-                'sequence': field_conf.get('sequence'),
-                'category': field_conf.get('category'),
-                'description': field_conf.get('description'),
-                'datatable': {
-                    'id': field_conf.get('table_id'),
-                    'name': field_conf.get('table_name'),
-                    'description': field_conf.get('table_desc'),
-                    'sequence': field_conf.get('table_seq'),
-                },
-                'field_type_name': field_conf.get('field_type_name'),
-                'fill_rate': str(float(field_dict['fill']) * 100),
-            }
-            data_layout = _update_layout(data_layout, current_field_dict)
-
-    return data_layout
-
-
 def _generate_queries(stats, provider_conf):
     """ Generate queries based on given stats """
     datafeed_id = provider_conf['datafeed_id']
@@ -249,8 +173,6 @@ def _generate_queries(stats, provider_conf):
 
     queries = {}
     for stat_name, stat_value in stats.items():
-        _update_data_layout(data_layout, provider_conf, datafeed_id, stat_name, stat_value)
-
         stat_queries = []
 
         if stat_name == 'key_stats' and stat_value:
@@ -359,15 +281,6 @@ def _generate_queries(stats, provider_conf):
                 ))
 
         queries[stat_name] = stat_queries
-
-    # Create SQL for data_layout
-    version_number = 'FAKE'  # TODO
-    version_query = DATAFEED_VERSION_INSERT_SQL_TEMPLATE.format(
-        version=version_number,
-        data_feed_id=provider_conf['datafeed_id'],
-        data_layout=data_layout
-    )
-    queries['version'] = [version_query]
 
     return queries
 

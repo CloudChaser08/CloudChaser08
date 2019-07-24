@@ -99,7 +99,7 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats_t
         stats_writer.write_to_s3(stats, provider_conf, quarter)
 
     # Generate SQL for data_layout
-    generate_data_layout_version_sql(provider_conf, stats, 'FAKE VERSION NAME', quarter)
+    generate_data_layout_version_sql(provider_conf, stats, 'fake_version_name', quarter)
 
     return stats
 

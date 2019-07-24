@@ -1,3 +1,8 @@
+"""
+Uses stats output from stats_runner.py to populate a data_layout dictionary.
+For an example of stats output from stats_runner.py, see example_stats.txt in this directory.
+"""
+
 from spark.stats.config.reader.config_reader import EMR_DATATYPE_NAME_MAP
 
 
@@ -50,7 +55,7 @@ def _populate_stats_multi_table(provider_config, data_layout, all_stats):
         table_stats = all_stats.get(table_name, {})
 
         # Convert table_name to the same format that is in the data_layout
-        layout_table_name = EMR_DATATYPE_NAME_MAP.get(table_name, default=table_name)
+        layout_table_name = EMR_DATATYPE_NAME_MAP.get(table_name)
 
         # For each field_dict in the layout, populate values
         # if it belongs to our current table.
@@ -88,7 +93,7 @@ def populate_stat_values(provider_config, data_layout, stats):
     Given a data_layout and stats returned by stats_runner.py, populate the fields within
     data_layout with the stats relevant to them.
     """
-    is_multi_table = (provider_config['datatype'] == 'emr')
+    is_multi_table = (provider_config.get('datatype', '') == 'emr')
 
     if is_multi_table:
         data_layout = _populate_stats_multi_table(provider_config, data_layout, stats)
@@ -97,66 +102,3 @@ def populate_stat_values(provider_config, data_layout, stats):
         data_layout = _populate_stats_single_table(data_layout, stats)
 
     return data_layout
-
-
-"""
-### Examples of stats returned by stats_runner.py ###
-
-    # EMR (multi-table) #
-    {
-        'emr_datatype_1': {
-            'fill_rate': [
-                {'field': 'field_1', 'fill': 1.0},
-            ],
-            'top_values': [
-                {
-                    'column': 'field_1',
-                    'value': '20',
-                    'count': '1000',
-                    'percentage': 0.02
-                },
-            ],
-            ...other stats
-        }
-        'emr_datatype_2': {
-            'fill_rate': [
-                {'field': 'field_1', 'fill': 0.6},
-                {'field': 'field_3', 'fill': 0.5}
-            ],
-            'top_values': [
-                {
-                    'column': 'field_1',
-                    'value': '30',
-                    'count': '60',
-                    'percentage': 50.00
-                },
-            ],
-            ...other stats
-        },
-        ...other datatypes
-    }
-
-    # NON EMR (single-table) #
-    {
-        'fill_rate': [
-            {'field': 'field_1', 'fill': 1.0},
-            {'field': 'field_2', 'fill': 1.0},
-            {'field': 'field_3', 'fill': 0.5}
-        ],
-        'top_values': [
-            {
-                'column': 'field_1',
-                'value': '10',
-                'count': '1000',
-                'percentage': 0.01
-            },
-            {
-                'column': 'field_2',
-                'value': '2',
-                'count': '4',
-                'percentage': 50.00
-            },
-        ],
-        ...other stats
-    }
-"""

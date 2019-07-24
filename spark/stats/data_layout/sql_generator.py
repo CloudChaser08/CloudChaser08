@@ -1,5 +1,5 @@
+from spark.stats.data_layout.layout_populator import populate_stat_values
 from spark.stats.data_layout.layout_reader import get_base_data_layout
-from spark.stats.data_layout.stat_populator import populate_stat_values
 from spark.stats.data_layout.sql_writer import create_runnable_sql_file
 
 
@@ -8,7 +8,6 @@ def generate_data_layout_version_sql(provider_config, stats, version_name, quart
     Given a single DataFeed's config and generated stats, create a runnable SQL file that
     inserts a complete data_layout version into a Marketplace DB for that feed.
     """
-
     datafeed_id = provider_config['datafeed_id']
 
     # 1) Get the base data_layout, without top_values and fill_rate populated

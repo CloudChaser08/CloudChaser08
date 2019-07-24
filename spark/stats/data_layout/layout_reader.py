@@ -13,7 +13,6 @@ def _layout_sql(datafeed_id):
             f.category as category,
             f.description as description,
             f.sequence as sequence,
-            f.top_values as has_top_values,
             t.id as table_id,
             t.description as table_desc,
             t.name as table_name,
@@ -83,7 +82,7 @@ def _normalize_field_layout(layout_field):
 
     # If the field is supplemental, supplemental_type_name is DataModel.name
     datamodel_name = field_dict.pop('datamodel_name', '')
-    if field_dict['is_supplemental']:
+    if field_dict['is_supplemental'] == 't':
         field_dict['supplemental_type_name'] = datamodel_name
     else:
         field_dict['supplemental_type_name'] = None
