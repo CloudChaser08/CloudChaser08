@@ -1,3 +1,4 @@
+import os
 from contextlib import closing
 
 import psycopg2
@@ -38,23 +39,12 @@ def _run_sql(query):
     (Could be a common Util)
     """
 
-    """
-    MUSTDO
+    # TODO: Make configurable
     conn = psycopg2.connect(
         host='pg-dev.healthverity.com',
         database='config',
         user='hvreadonly',
         password=os.environ.get('PGPASSWORD')
-    )
-    """
-
-    # TODO: Make configurable
-    conn = psycopg2.connect(
-        host='localhost',
-        database='config',
-        user='hvsuperuser',
-        password='hvsuperuser',
-        port=32768
     )
     with closing(conn.cursor(cursor_factory=DictCursor)) as cursor:
         cursor.execute(query)

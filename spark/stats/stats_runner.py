@@ -98,9 +98,6 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats_t
         stats.update(epi_calcs)
         stats_writer.write_to_s3(stats, provider_conf, quarter)
 
-    # Generate SQL for data_layout
-    generate_data_layout_version_sql(provider_conf, stats, 'fake_version_name', quarter)
-
     return stats
 
 
@@ -126,7 +123,10 @@ def main(args):
     spark, sqlContext = spark_setup.init('Feed {} marketplace stats'.format(feed_id))
 
     # Calculate stats
-    run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
+    stats = run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
+
+    # Generate SQL for data_layout
+    generate_data_layout_version_sql(provider_conf, stats, 'fake_version_name', quarter)
 
 
 if __name__ == '__main__':
