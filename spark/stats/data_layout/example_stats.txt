@@ -1,4 +1,4 @@
-### Examples of stats returned by stats_runner.py ###
+### Examples of stats returned by spark.stats.stats_runner.run() ###
 
     # EMR (multi-table) #
     {
