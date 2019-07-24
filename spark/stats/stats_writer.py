@@ -148,24 +148,6 @@ def _create_top_values_string(column_name, all_top_values):
     return ', '.join(relevant_top_values)
 
 
-def _update_layout(data_layout, update_dict):
-    """ TODO DOCSTRING """
-    # name and combined id are a unique combination here
-    name = update_dict.get('name')
-    combined_id = update_dict.get('id')
-
-    field_found = False
-    for field in data_layout:
-        if field.get('name') == name and field.get('id') == combined_id:
-            field_found = True
-            field.update(update_dict)
-
-    if not field_found:
-        data_layout.append(update_dict)
-
-    return data_layout
-
-
 def _generate_queries(stats, provider_conf):
     """ Generate queries based on given stats """
     datafeed_id = provider_conf['datafeed_id']
