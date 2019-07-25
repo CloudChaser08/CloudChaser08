@@ -125,8 +125,9 @@ def main(args):
     # Calculate stats
     stats = run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
 
-    # Generate SQL for data_layout
-    generate_data_layout_version_sql(provider_conf, stats, 'fake_version_name', quarter)
+    # Generate SQL for new data_layout version.
+    # 'quarter' is used as the version name
+    generate_data_layout_version_sql(provider_conf, stats, quarter)
 
 
 if __name__ == '__main__':

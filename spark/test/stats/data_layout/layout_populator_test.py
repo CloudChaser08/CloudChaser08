@@ -52,12 +52,11 @@ class TestSingleTable(object):
 
     def test_stat_population(self):
         """ Test stat population for data_layouts with one table """
-        data_layout_output = populate_stat_values(
-            self.provider_config_input, self.data_layout_input, self.stats_input
-        )
+        data_layout = self.data_layout_input
+        populate_stat_values(self.provider_config_input, data_layout, self.stats_input)
 
         field_asserted_count = 0
-        for field_dict in data_layout_output:
+        for field_dict in data_layout:
             if field_dict['name'] == 'field_1':
                 assert field_dict['fill_rate'] == 1.0
                 assert field_dict['top_values'] == 'val1 (1000:0.01), val2 (60:5.05)'
@@ -161,12 +160,11 @@ class TestMultiTable(object):
 
     def test_stat_population(self):
         """ Test stat population for data_layouts with more than one table (emr) """
-        data_layout_output = populate_stat_values(
-            self.provider_config_input, self.data_layout_input, self.stats_input
-        )
+        data_layout = self.data_layout_input
+        populate_stat_values(self.provider_config_input, data_layout, self.stats_input)
 
         field_asserted_count = 0
-        for field_dict in data_layout_output:
+        for field_dict in data_layout:
             if (
                 field_dict['name'] == 'field_1' and
                 field_dict['datatable']['name'] == 'Clinical Observation'

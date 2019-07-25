@@ -90,8 +90,8 @@ def get_base_data_layout(feed_id):
     layout_result = _run_sql(layout_sql)
 
     # Properly format the layout
-    layout_dict = [
+    data_layout = [
         _normalize_field_layout(layout_field)
         for layout_field in layout_result
     ]
-    return layout_dict
+    return data_layout

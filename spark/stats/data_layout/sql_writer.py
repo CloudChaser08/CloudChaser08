@@ -3,8 +3,8 @@ import os
 
 import boto3
 
+from spark.stats.stats_writer import S3_OUTPUT_DIR
 
-S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"  # TODO: Make configurable
 
 DATAFEED_VERSION_INSERT_SQL_TEMPLATE = (
     """
@@ -15,17 +15,17 @@ DATAFEED_VERSION_INSERT_SQL_TEMPLATE = (
 )
 
 
-def _write_sql_file(datafeed_id, new_version_query, quarter):
+def _write_sql_file(datafeed_id, new_version_query, version_name):
     """
     Given a SQL query, write a .sql file for running it,
     and upload that runnable file to S3.
     """
-    output_dir = 'output/{}/'.format(quarter)
+    output_dir = 'output/{}/'.format(version_name)
     filename = '{}_layout_version.sql'.format(datafeed_id)
     try:
         os.makedirs(output_dir)
     except OSError:
-        # quarter directory already exists, which isn't a problem
+        # version_name directory already exists, which isn't a problem
         pass
 
     # Write SQL to file
@@ -38,11 +38,11 @@ def _write_sql_file(datafeed_id, new_version_query, quarter):
     boto3.client('s3').upload_file(
         output_dir + filename,
         S3_OUTPUT_DIR.split('/')[2],
-        '/'.join(S3_OUTPUT_DIR.format(quarter).split('/')[3:]) + filename
+        '/'.join(S3_OUTPUT_DIR.format(version_name).split('/')[3:]) + filename
     )
 
 
-def create_runnable_sql_file(datafeed_id, data_layout, version_name, quarter):
+def create_runnable_sql_file(datafeed_id, data_layout, version_name):
     """
     Create a SQL statement for creating a new data_layout version,
     and then write it to a .sql file on S3.
@@ -57,4 +57,4 @@ def create_runnable_sql_file(datafeed_id, data_layout, version_name, quarter):
     )
 
     # Write .sql file onto current machine, then upload it to S3
-    _write_sql_file(datafeed_id, new_version_query, quarter)
+    _write_sql_file(datafeed_id, new_version_query, version_name)
