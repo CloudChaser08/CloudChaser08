@@ -39,11 +39,12 @@ def _run_sql(query):
     (Could be a common Util)
     """
 
-    # TODO: Make configurable
+    # TODO put this and config.reader.config_reader's copy of this in one spot
     conn = psycopg2.connect(
-        host='pg-dev.healthverity.com',
-        database='config',
-        user='hvreadonly',
+        host=os.environ.get('PGHOST', 'pg-dev.healthverity.com'),
+        database=os.environ.get('PGDB', 'config'),
+        user=os.environ.get('PGUSER', 'hvreadonly'),
+        port=os.environ.get('PGPORT', 5432),
         password=os.environ.get('PGPASSWORD')
     )
     with closing(conn.cursor(cursor_factory=DictCursor)) as cursor:
@@ -53,13 +54,21 @@ def _run_sql(query):
     return results
 
 
-def _normalize_field_layout(layout_field):
+def _normalize_field_layout(layout_field, datafeed_id):
     """
     Given a single field_dict in a data_layout, manipulate the key-values
     to match proper format of a data_layout in Marketplace.
     """
     field_dict = dict(layout_field)
+
+    combined_id = '{field_id}-{datafeed_id}'.format(
+        field_id=field_dict.pop('field_id', ''),
+        datafeed_id=datafeed_id
+    )
+
     field_dict.update({
+        'id': combined_id,
+        'data_feed': datafeed_id,
         'fill_rate': None,
         'top_values': None,
         'datatable': {
@@ -91,7 +100,7 @@ def get_base_data_layout(feed_id):
 
     # Properly format the layout
     data_layout = [
-        _normalize_field_layout(layout_field)
+        _normalize_field_layout(layout_field, feed_id)
         for layout_field in layout_result
     ]
     return data_layout
