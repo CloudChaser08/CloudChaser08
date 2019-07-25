@@ -22,12 +22,13 @@ def test_normalizing_basic_field():
         'datamodel_name': 'd_model_name'
     }
 
-    normalized_field = _normalize_field_layout(input_field)
+    normalized_field = _normalize_field_layout(input_field, '10')
     assert(
         normalized_field == (
             {
                 'name': 'field_1',
-                'field_id': '1',
+                'id': '1-10',
+                'data_feed': '10',
                 'category': 'Location',
                 'description': 'Field number 1',
                 'sequence': 0,
@@ -63,12 +64,13 @@ def test_normalizing_supplemental_field():
         'datamodel_name': 'd_model_name'
     }
 
-    normalized_field = _normalize_field_layout(input_field)
+    normalized_field = _normalize_field_layout(input_field, '10')
     assert(
         normalized_field == (
             {
                 'name': 'field_1',
-                'field_id': '1',
+                'id': '1-10',
+                'data_feed': '10',
                 'category': 'Location',
                 'description': 'Field number 1',
                 'sequence': 1,
