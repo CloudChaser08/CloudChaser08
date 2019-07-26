@@ -46,6 +46,15 @@ class SetterProperty(object):
     def __set__(self, obj, value):
         return self.func(obj, value)
 
+class BotoParser:
+    def __init__(self, path):
+        files_path = path.split('/')
+        self.s3 = files_path[0].replace(':', '')
+        self.bucket = files_path[2]
+        self.key = '/'.join(files_path[3:-1])
+        self.pre_key = files_path[0] + "/" + files_path[1] + "/" + files_path[2] + "/"
+        self.path = path
+
 # Directory structure if inherting from this class
 # spark/census/
 #   <client_name>/
@@ -127,7 +136,51 @@ class CensusDriver(object):
     def matching_payloads_module_name(self, module_name):
         self._matching_payloads_module_name = module_name
 
-    def load(self, batch_date):
+    def get_batch_records_files(batch_date):
+	"""List all files within a given os or s3 directory, recursively"""
+        records_path = self._records_path_template.format(
+            year=batch_date.year, month=batch_date.month, day=batch_date.day
+        )
+
+	def recurse_s3_directory_for_files(path: str) -> List[object]:
+	    """Private - List all files within a given s3 directory, recursively"""
+	    files: List[object] = []
+	    boto_parser = BotoParser(path)
+	    s3 = boto3.client(boto_parser.s3)
+	    kwargs = {'Bucket': boto_parser.bucket, 'Prefix': boto_parser.key}
+	    while True:
+		resp = s3.list_objects_v2(**kwargs)
+		contents = resp['Contents']
+		filtered_contents = filter(lambda x: x['Size'] > 0, contents)
+		for obj in filtered_contents:
+		    full_path = boto_parser.pre_key + obj['Key']
+                    files.append(full_path)
+		try:
+		    kwargs['ContinuationToken'] = resp['NextContinuationToken']
+		except KeyError:
+		    break
+	    return files
+
+	def recurse_os_directory_for_file(path: str) -> List[object]:
+	    """Private - List all files within a given os directory, recursively"""
+	    files: List[object] = []
+	    os_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
+	    for a_file in os_files:
+		files.extend(
+		    {
+			{
+			    'Key': a_file,
+			    'LastModified': datetime.datetime.fromtimestamp(os.path.getmtime(a_file))
+			}
+		    })
+	    return files
+
+	if records_path.startswith('s3'):
+	    return recurse_s3_directory_for_files(records_path)
+	else:
+	    return recurse_os_directory_for_file(records_path)
+
+    def load(self, batch_date, chunk_records_files=None):
         if self.__class__.__name__ == CensusDriver.__name__:
             records_schemas = std_census.records_schemas
             matching_payloads_schemas = std_census.matching_payloads_schemas
@@ -145,6 +198,9 @@ class CensusDriver(object):
         matching_path = self._matching_path_template.format(
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
+
+        if chunk_records_files:
+            records_path = '{' + ','.join(chunk_records_files) + '}'
 
         if self._test:
             # Tests run on local files
