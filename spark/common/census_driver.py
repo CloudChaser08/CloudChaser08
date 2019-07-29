@@ -50,10 +50,11 @@ class SetterProperty(object):
 class BotoParser:
     def __init__(self, path):
         files_path = path.split('/')
-        self.s3 = files_path[0].replace(':', '').replace('s3a', 's3')
+        s3_parsed = files_path[0].replace('s3a', 's3')
+        self.s3 = s3_parsed.replace(':', '')
         self.bucket = files_path[2]
         self.key = '/'.join(files_path[3:-1])
-        self.pre_key = files_path[0] + "/" + files_path[1] + "/" + files_path[2] + "/"
+        self.pre_key = s3_parsed + "/" + files_path[1] + "/" + files_path[2] + "/"
         self.path = path
 
 # Directory structure if inherting from this class
