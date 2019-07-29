@@ -160,8 +160,7 @@ class CensusDriver(object):
                         break
                 except KeyError:
                     pass  # the directory doesn't exist. Just return []
-                finally:
-                    return files
+            return files
 
         def recurse_os_directory_for_file(path):
             """Private - List all files within a given os directory, recursively"""
