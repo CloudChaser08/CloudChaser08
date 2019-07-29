@@ -3,24 +3,16 @@ import sys
 import importlib
 import inspect
 import math
-import spark.common
 
 from datetime import datetime, date
 from spark.common.census_driver import CensusDriver
 
-def main(args):
+
+def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=None,
+         census_module=None, end_to_end_test=False, test=False, num_input_files=-1):
     """
     Run standard census driver script or one from the provided census module
     """
-    date = args.date
-    batch_id_arg = args.batch_id_arg
-    clien_name = args.client_name
-    opportunity_id = args.opportunity_id
-    salt = args.salt
-    census_module = args.census_module
-    num_input_files = args.num_input_files
-    end_to_end_test = args.end_to_end_test
-    test = args.test
 
     driver = None
     if census_module:
@@ -46,8 +38,8 @@ def main(args):
     batch_id = batch_id_arg if batch_id_arg else datetime.strptime(date, '%Y-%m-%d').date()
 
     if num_input_files > 0:
-        all_batch_files = driver.get_batch_files(batch_id)
-        num_chunks = math.ceil(all_batch_files / float(num_input_files))
+        all_batch_files = driver.get_batch_records_files(batch_id)
+        num_chunks = int(math.ceil(len(all_batch_files) / float(num_input_files)))
         for i in xrange(num_chunks):
             chunk_files = all_batch_files[num_input_files * i:num_input_files * (i+1)]
             driver.load(batch_id, chunk_records_files=chunk_files)
@@ -81,4 +73,5 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    main(args)
+    main(args.date, args.batch_id, args.client_name, args.opportunity_id,
+         args.salt, args.census_module, args.end_to_end_test, args.test, args.num_input_files)

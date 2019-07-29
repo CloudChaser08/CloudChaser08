@@ -1,14 +1,15 @@
 import datetime
-import inspect
 import importlib
+import inspect
+import os
 
+import boto3
+
+import spark.common.std_census as std_census
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
-import spark.common.std_census as std_census
-
-from pyspark.sql.types import StructType, StructField, StringType
+import spark.helpers.records_loader as records_loader
 from spark.runner import Runner, PACKAGE_PATH
 from spark.spark_setup import init
 from std_census import records_schemas, matching_payloads_schemas
@@ -49,7 +50,7 @@ class SetterProperty(object):
 class BotoParser:
     def __init__(self, path):
         files_path = path.split('/')
-        self.s3 = files_path[0].replace(':', '')
+        self.s3 = files_path[0].replace('a:', '')
         self.bucket = files_path[2]
         self.key = '/'.join(files_path[3:-1])
         self.pre_key = files_path[0] + "/" + files_path[1] + "/" + files_path[2] + "/"
@@ -136,49 +137,48 @@ class CensusDriver(object):
     def matching_payloads_module_name(self, module_name):
         self._matching_payloads_module_name = module_name
 
-    def get_batch_records_files(batch_date):
-	"""List all files within a given os or s3 directory, recursively"""
+    def get_batch_records_files(self, batch_date):
+        """List all files within a given os or s3 directory, recursively"""
+
+        def recurse_s3_directory_for_files(path):
+            """Private - List all files within a given s3 directory, recursively"""
+            files = []
+            boto_parser = BotoParser(path)
+            s3 = boto3.client(boto_parser.s3)
+            kwargs = {'Bucket': boto_parser.bucket, 'Prefix': boto_parser.key}
+            while True:
+                resp = s3.list_objects_v2(**kwargs)
+                try:
+                    contents = resp['Contents']
+                    filtered_contents = filter(lambda x: x['Size'] > 0, contents)
+                    for obj in filtered_contents:
+                        full_path = boto_parser.pre_key + obj['Key']
+                        files.append(full_path)
+                    try:
+                        kwargs['ContinuationToken'] = resp['NextContinuationToken']
+                    except KeyError:
+                        break
+                except KeyError:
+                    pass  # the directory doesn't exist. Just return []
+                finally:
+                    return files
+
+        def recurse_os_directory_for_file(path):
+            """Private - List all files within a given os directory, recursively"""
+            files = []
+            os_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
+            for item in os_files:
+                files.append(item)
+            return files
+
         records_path = self._records_path_template.format(
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
 
-	def recurse_s3_directory_for_files(path: str) -> List[object]:
-	    """Private - List all files within a given s3 directory, recursively"""
-	    files: List[object] = []
-	    boto_parser = BotoParser(path)
-	    s3 = boto3.client(boto_parser.s3)
-	    kwargs = {'Bucket': boto_parser.bucket, 'Prefix': boto_parser.key}
-	    while True:
-		resp = s3.list_objects_v2(**kwargs)
-		contents = resp['Contents']
-		filtered_contents = filter(lambda x: x['Size'] > 0, contents)
-		for obj in filtered_contents:
-		    full_path = boto_parser.pre_key + obj['Key']
-                    files.append(full_path)
-		try:
-		    kwargs['ContinuationToken'] = resp['NextContinuationToken']
-		except KeyError:
-		    break
-	    return files
-
-	def recurse_os_directory_for_file(path: str) -> List[object]:
-	    """Private - List all files within a given os directory, recursively"""
-	    files: List[object] = []
-	    os_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
-	    for a_file in os_files:
-		files.extend(
-		    {
-			{
-			    'Key': a_file,
-			    'LastModified': datetime.datetime.fromtimestamp(os.path.getmtime(a_file))
-			}
-		    })
-	    return files
-
-	if records_path.startswith('s3'):
-	    return recurse_s3_directory_for_files(records_path)
-	else:
-	    return recurse_os_directory_for_file(records_path)
+        if records_path.startswith('s3'):
+            return recurse_s3_directory_for_files(records_path)
+        else:
+            return recurse_os_directory_for_file(records_path)
 
     def load(self, batch_date, chunk_records_files=None):
         if self.__class__.__name__ == CensusDriver.__name__:

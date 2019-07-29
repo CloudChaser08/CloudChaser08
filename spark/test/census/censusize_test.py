@@ -8,6 +8,7 @@ from spark.test.resources.census.all_params_module import AllParamsDriver
 
 CENSUS_STEPS = ['load', 'transform', 'save', 'copy_to_s3']
 
+
 @pytest.mark.usefixtures("patch_spark_init")
 def test_driver_init(patch_spark_init, monkeypatch):
     """
@@ -28,6 +29,10 @@ def test_driver_init(patch_spark_init, monkeypatch):
 
     censusize.main('2018-01-01', client_name='TEST', opportunity_id='TEST123')
     assert driver_class[0] == 'CensusDriver'
+
+    censusize.main('2018-01-01', client_name='TEST', opportunity_id='TEST123', num_input_files=2)
+    assert driver_class[0] == 'CensusDriver'
+
 
 @pytest.mark.usefixtures("patch_spark_init")
 def test_subclass_not_found_error(patch_spark_init, monkeypatch):
