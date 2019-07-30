@@ -137,7 +137,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     if valid_groups:
 
 #   This is comented out until Humana wants us to turn synthetic claims back on
-#        prepare_emr.prepare(runner, matched_patients, start, is_prod)
+        prepare_emr.prepare(runner, matched_patients, start, is_prod)
         medical_extract    = extract_medicalclaims.extract(
                 runner, matched_patients, ts,
                 start, end).repartition(5 if test else 100) \

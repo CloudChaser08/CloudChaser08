@@ -41,10 +41,9 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
 def extract(runner, hvids, timestamp, start_dt, end_dt):
     return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'dw.hvm_pharmacyclaims_v07', True)
 
-#   This is comented out until Humana wants us to turn synthetic claims back on
-#    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'pharmacyclaims', True).union(
-#        extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_pharmacyclaims', False)
-#    )
+    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'pharmacyclaims', True).union(
+        extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_pharmacyclaims', False)
+    )
 
 
 EXTRACT_COLUMNS = [
