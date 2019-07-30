@@ -43,13 +43,13 @@ def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=No
         for i in xrange(num_chunks):
             chunk_files = all_batch_files[num_input_files * i:num_input_files * (i+1)]
             driver.load(batch_id, chunk_records_files=chunk_files)
-            df = driver.transform(batch_id)
+            df = driver.transform()
             driver.save(df, batch_id)
             driver.copy_to_s3(batch_id)
     # -1 and 0 mean the same thing, process everything
     else:
         driver.load(batch_id)
-        df = driver.transform(batch_id)
+        df = driver.transform()
         driver.save(df, batch_id)
         driver.copy_to_s3(batch_id)
 
