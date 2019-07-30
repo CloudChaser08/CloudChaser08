@@ -77,7 +77,7 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats
 
 def main(args):
     # Parse out the cli args
-    feed_id = args.feed_id
+    feed_ids = args.feed_ids
     quarter = args.quarter
     start_date = args.start_date
     end_date = args.end_date
@@ -86,21 +86,22 @@ def main(args):
     if not stats:
         stats = ALL_STATS
 
-    # Get the providers config
-    this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
-    config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
-    provider_conf = config_reader.get_provider_config(config_file, feed_id)
+    for feed_id in feed_ids:
+        # Get the providers config
+        this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
+        config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
+        provider_conf = config_reader.get_provider_config(config_file, feed_id)
 
-    # set up spark
-    spark, sqlContext = spark_setup \
-                        .init('Feed {} marketplace stats'.format(feed_id))
+        # set up spark
+        spark, sqlContext = spark_setup \
+                            .init('Feed {} marketplace stats'.format(feed_id))
 
-    # Calculate stats
-    run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
+        # Calculate stats
+        run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--feed_id', type = str)
+    parser.add_argument('--feed_ids', type = str, nargs='+')
     parser.add_argument('--quarter', type = str)
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)
