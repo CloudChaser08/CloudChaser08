@@ -160,13 +160,21 @@ class CensusDriver(object):
                     except KeyError:
                         break
                 except KeyError:
-                    pass  # the directory doesn't exist. Just return []
+                    break  # the directory doesn't exist. Just return []
             return record_files
+
+        def recurse_os_directory_for_files(path):
+            """Private - List all files within a given os directory, recursively"""
+            return [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
 
         records_path = self._records_path_template.format(
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
-        return recurse_s3_directory_for_files(records_path)
+
+        if records_path.startswith('s3'):
+            return recurse_s3_directory_for_files(records_path)
+        else:
+            return recurse_os_directory_for_files(records_path)
 
     def load(self, batch_date, chunk_records_files=None):
         if self.__class__.__name__ == CensusDriver.__name__:
