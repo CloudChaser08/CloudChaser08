@@ -170,7 +170,6 @@ class CensusDriver(object):
         records_path = self._records_path_template.format(
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
-
         if records_path.startswith('s3'):
             return recurse_s3_directory_for_files(records_path)
         else:

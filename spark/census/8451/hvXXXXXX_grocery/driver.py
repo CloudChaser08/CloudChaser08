@@ -10,7 +10,7 @@ import subprocess
 class Grocery8451CensusDriver(CensusDriver):
 
     CLIENT_NAME = '8451'
-    OPPORTUNITY_ID = 'hvXXXXXX'
+    OPPORTUNITY_ID = 'hvXXXXXX_grocery'
     NUM_PARTITIONS = 20
     SALT = "hvid8451"
 
