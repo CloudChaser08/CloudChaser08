@@ -36,7 +36,7 @@ MODE_MATCHING_PATH_TEMPLATE = {
 
 MODE_OUTPUT_PATH = {
     TEST: '../test/census/{client}/{opp_id}/resources/output/',
-    END_TO_END_TEST: SALUSV + '/testing/dewey/airflow/e2e/{client}/{opp_id}/output/',
+    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/output/',
     PRODUCTION: 's3a://salusv/deliverable/{client}/{opp_id}/'
 }
 
