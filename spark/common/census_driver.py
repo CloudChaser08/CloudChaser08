@@ -20,22 +20,23 @@ END_TO_END_TEST = 'end_to_end_test'
 PRODUCTION = 'production'
 DRIVER_MODULE_NAME = 'driver'
 SAVE_PATH = 'hdfs:///staging/'
+SALUSV = 's3://salusv/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
     TEST: '../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{{day:02d}}/',
-    END_TO_END_TEST: 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{{day:02d}}/',
+    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{{day:02d}}/',
     PRODUCTION: 's3a://salusv/incoming/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
     TEST: '../test/census/{client}/{opp_id}/resources/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
-    END_TO_END_TEST: 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
+    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
     PRODUCTION: 's3a://salusv/matching/payload/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
 }
 
 MODE_OUTPUT_PATH = {
     TEST: '../test/census/{client}/{opp_id}/resources/output/',
-    END_TO_END_TEST: 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/output/',
+    END_TO_END_TEST: SALUSV + '/testing/dewey/airflow/e2e/{client}/{opp_id}/output/',
     PRODUCTION: 's3a://salusv/deliverable/{client}/{opp_id}/'
 }
 
@@ -47,15 +48,15 @@ class SetterProperty(object):
     def __set__(self, obj, value):
         return self.func(obj, value)
 
+
 class BotoParser:
     def __init__(self, path):
-        files_path = path.split('/')
-        s3_parsed = files_path[0].replace('s3a', 's3')
-        self.s3 = s3_parsed.replace(':', '')
+        file_path = path.replace('s3a:', 's3:')
+        files_path = file_path.split('/')
+        self.s3 = 's3'
         self.bucket = files_path[2]
         self.key = '/'.join(files_path[3:-1])
-        self.pre_key = s3_parsed + "/" + files_path[1] + "/" + files_path[2] + "/"
-        self.path = path
+        self.prefix = files_path[0] + '//' + self.bucket + '/'
 
 # Directory structure if inherting from this class
 # spark/census/
@@ -141,10 +142,10 @@ class CensusDriver(object):
     def get_batch_records_files(self, batch_date):
         """List all files within a given os or s3 directory, recursively"""
 
-        def recurse_s3_directory_for_files(path):
+        def recurse_s3_directory_for_files(directory_path):
             """Private - List all files within a given s3 directory, recursively"""
-            files = []
-            boto_parser = BotoParser(path)
+            record_files = []
+            boto_parser = BotoParser(directory_path)
             s3 = boto3.client(boto_parser.s3)
             kwargs = {'Bucket': boto_parser.bucket, 'Prefix': boto_parser.key}
             while True:
@@ -153,32 +154,19 @@ class CensusDriver(object):
                     contents = resp['Contents']
                     filtered_contents = filter(lambda x: x['Size'] > 0, contents)
                     for obj in filtered_contents:
-                        full_path = boto_parser.pre_key + obj['Key']
-                        files.append(full_path)
+                        record_files.append(obj['Key'])
                     try:
                         kwargs['ContinuationToken'] = resp['NextContinuationToken']
                     except KeyError:
                         break
                 except KeyError:
                     pass  # the directory doesn't exist. Just return []
-            return files
-
-        def recurse_os_directory_for_file(path):
-            """Private - List all files within a given os directory, recursively"""
-            files = []
-            os_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
-            for item in os_files:
-                files.append(item)
-            return files
+            return record_files
 
         records_path = self._records_path_template.format(
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
-
-        if records_path.startswith('s3'):
-            return recurse_s3_directory_for_files(records_path)
-        else:
-            return recurse_os_directory_for_file(records_path)
+        return recurse_s3_directory_for_files(records_path)
 
     def load(self, batch_date, chunk_records_files=None):
         if self.__class__.__name__ == CensusDriver.__name__:
@@ -200,7 +188,7 @@ class CensusDriver(object):
         )
 
         if chunk_records_files:
-            records_path = '{' + ','.join(chunk_records_files) + '}'
+            records_path = SALUSV + '{' + ','.join(chunk_records_files) + '}'
 
         if self._test:
             # Tests run on local files
