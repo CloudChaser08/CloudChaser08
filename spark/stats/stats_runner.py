@@ -77,7 +77,7 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats
 
 def main(args):
     # Parse out the cli args
-    feed_ids = args.feed_ids.split()
+    feed_ids = args.feed_ids
     quarter = args.quarter
     start_date = args.start_date
     end_date = args.end_date
