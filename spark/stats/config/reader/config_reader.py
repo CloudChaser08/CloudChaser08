@@ -2,9 +2,26 @@ import json
 import logging
 import os
 from contextlib import closing
+
+import boto3
 import psycopg2
 from spark.helpers.file_utils import get_abs_path
 from spark.stats.config.dates import dates as provider_dates
+
+SSM = boto3.client('ssm')
+
+SSM_PARAM_NAME = 'dev-marketplace-rds_ro_db_conn'
+PG_CONN_DETAILS = json.loads(
+    SSM.get_parameter(
+        Name=SSM_PARAM_NAME,
+        WithDecryption=True
+    )['Parameter']['Value']
+)
+
+PG_HOST = PG_CONN_DETAILS['host']
+PG_PASSWORD = PG_CONN_DETAILS['password']
+PG_DB = PG_CONN_DETAILS['database']
+PG_USER = PG_CONN_DETAILS['user']
 
 # map from emr datatype (table) name to the name of each datatype in
 # the marketplace db
@@ -41,10 +58,10 @@ def _get_config_from_db(query):
         - data: the config represented as a Python dict
     '''
     conn = psycopg2.connect(
-        host='pg-dev.healthverity.com',
-        database='config',
-        user='hvreadonly',
-        password=os.environ.get('PGPASSWORD')
+        host=PG_HOST,
+        database=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD
     )
 
     with closing(conn.cursor()) as cursor:
