@@ -8,6 +8,12 @@ from datetime import datetime, date
 from spark.common.census_driver import CensusDriver
 
 
+def split_into_chunks(input_list, number_of_chunks):
+    """Split a list into n chunks"""
+    for i in xrange(0, len(input_list), number_of_chunks):
+        yield input_list[i:i + number_of_chunks]
+
+
 def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=None,
          census_module=None, end_to_end_test=False, test=False, num_input_files=-1):
     """
@@ -39,12 +45,10 @@ def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=No
 
     if num_input_files > 0:
         all_batch_files = driver.get_batch_records_files(batch_id)
-        num_chunks = int(math.ceil(len(all_batch_files) / float(num_input_files)))
-        for i in xrange(num_chunks):
-            chunk_files = all_batch_files[num_input_files * i:num_input_files * (i+1)]
+        for chunk_idx, chunk_files in enumerate(split_into_chunks(all_batch_files, num_input_files)):
             driver.load(batch_id, chunk_records_files=chunk_files)
             df = driver.transform()
-            driver.save(df, batch_id)
+            driver.save(df, batch_id, chunk_idx)
             driver.copy_to_s3(batch_id)
     # -1 and 0 mean the same thing, process everything
     else:
@@ -52,6 +56,7 @@ def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=No
         df = driver.transform()
         driver.save(df, batch_id)
         driver.copy_to_s3(batch_id)
+    driver.stop_spark()
 
 
 if __name__ == "__main__":

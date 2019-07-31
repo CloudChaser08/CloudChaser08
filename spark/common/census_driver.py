@@ -223,7 +223,7 @@ class CensusDriver(object):
         header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
         return header.union(content).coalesce(1)
 
-    def save(self, dataframe, batch_date):
+    def save(self, dataframe, batch_date, chunk_number=None):
         dataframe.createOrReplaceTempView('deliverable')
         normalized_records_unloader.unload_delimited_file(
             self._spark, self._runner, SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
@@ -237,5 +237,7 @@ class CensusDriver(object):
         )
 
     def copy_to_s3(self, batch_date=None):
-        self._spark.stop()
         normalized_records_unloader.distcp(self._output_path)
+
+    def stop_spark(self):
+        self._spark.stop()
