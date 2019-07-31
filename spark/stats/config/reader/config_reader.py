@@ -12,10 +12,10 @@ SSM = boto3.client('ssm')
 
 SSM_PARAM_NAME = 'dev-marketplace-rds_ro_db_conn'
 PG_CONN_DETAILS = json.loads(
-    SSM.get_parameter(
-        Name=SSM_PARAM_NAME,
+    SSM.get_parameters(
+        Names=[SSM_PARAM_NAME],
         WithDecryption=True
-    )['Parameter']['Value']
+    )['Parameters'][0]['Value']
 )
 
 PG_HOST = PG_CONN_DETAILS['host']
