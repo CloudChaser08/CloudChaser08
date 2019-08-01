@@ -43,4 +43,5 @@ spark-submit --py-files $prefix/target/dewey.zip \
     --conf spark.default.parallelism=5000 --conf spark.file.useFetchCache=false \
     --conf spark.hadoop.fs.s3a.connection.maximum=1000 \
     --conf spark.sql.autoBroadcastJoinThreshold=209715200 \
+    --conf spark.driver.maxResultSize=3G \
     $mem_cfg $@
