@@ -138,4 +138,4 @@ SELECT
 	MD5(txn.hshd_code)                                                                      AS hshd_code
  FROM 8451_grocery_transactions txn
  LEFT OUTER JOIN matching_payload pay
-   ON txn.hvjoinkey = pay.hvjoinkey
+   ON txn.card_code = pay.join_keys
