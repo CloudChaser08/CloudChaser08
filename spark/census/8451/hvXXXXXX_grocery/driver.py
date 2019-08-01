@@ -1,11 +1,8 @@
-from datetime import date
-from spark.common.census_driver import CensusDriver, SAVE_PATH
-import spark.helpers.records_loader as records_loader
-
 import os
 import re
 import subprocess
 
+from spark.common.census_driver import CensusDriver, SAVE_PATH
 
 class Grocery8451CensusDriver(CensusDriver):
 
@@ -16,7 +13,7 @@ class Grocery8451CensusDriver(CensusDriver):
 
     def __init__(self, end_to_end_test=False):
         super(Grocery8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID,
-                                                        end_to_end_test=end_to_end_test)
+                                                      end_to_end_test=end_to_end_test)
 
     def transform(self):
         # By default, run_all_spark_scripts will run all sql scripts in the working directory
@@ -25,12 +22,12 @@ class Grocery8451CensusDriver(CensusDriver):
 
     def save(self, dataframe, batch_date, chunk_idx=None):
         output_path = SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
-                year=batch_date.year, month=batch_date.month, day=batch_date.day
-            )
+            year=batch_date.year, month=batch_date.month, day=batch_date.day
+        )
 
         output_file_name_template = '{year}{month:02d}{day:02d}_response{{}}'.format(
-                year=batch_date.year, month=batch_date.month, day=batch_date.day
-            )
+            year=batch_date.year, month=batch_date.month, day=batch_date.day
+        )
 
         if self._test:
 
