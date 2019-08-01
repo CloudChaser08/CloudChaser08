@@ -164,11 +164,11 @@ SELECT
     END                                                                                     AS logical_delete_reason, 
     'allscripts'                                                                            AS part_provider,
     med.part_mth                                                                            AS part_best_date
- FROM dw.hvm_emr_medctn_v09 med
+ FROM hvm_emr_medctn_v09 med
  LEFT OUTER JOIN
 (
     SELECT *
-     FROM dw.hvm_emr_enc_v08 enc1
+     FROM hvm_emr_enc_v08 enc1
     WHERE enc1.part_hvm_vdr_feed_id = '25'
       AND enc1.hvid IS NOT NULL
       AND enc1.enc_start_dt IS NOT NULL
@@ -179,7 +179,7 @@ SELECT
       AND NOT EXISTS
         (
             SELECT 1
-             FROM dw.hvm_emr_enc_v08 enc2
+             FROM hvm_emr_enc_v08 enc2
             WHERE enc2.part_hvm_vdr_feed_id = '25'
               AND enc2.hvid IS NOT NULL
               AND enc2.enc_start_dt IS NOT NULL

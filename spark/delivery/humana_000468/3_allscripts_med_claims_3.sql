@@ -183,7 +183,7 @@ SELECT
     END                                                                                     AS logical_delete_reason, 
     'allscripts'                                                                            AS part_provider,
     prc.part_mth                                                                            AS part_best_date
- FROM dw.hvm_emr_proc_v10 prc 
+ FROM hvm_emr_proc_v10 prc 
 WHERE prc.part_hvm_vdr_feed_id = '25'
   AND prc.hvid IS NOT NULL
   AND
@@ -195,7 +195,7 @@ WHERE prc.part_hvm_vdr_feed_id = '25'
   AND NOT EXISTS
     (
         SELECT 1
-         FROM dw.hvm_emr_enc_v08 enc
+         FROM hvm_emr_enc_v08 enc
         WHERE prc.part_hvm_vdr_feed_id = '25'
           AND enc.part_hvm_vdr_feed_id = '25'
           AND prc.hvid IS NOT NULL

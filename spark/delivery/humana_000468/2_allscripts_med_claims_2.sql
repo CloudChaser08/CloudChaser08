@@ -216,7 +216,7 @@ SELECT
  FROM 
 (
     SELECT *
-     FROM dw.hvm_emr_enc_v08 enc1
+     FROM hvm_emr_enc_v08 enc1
     WHERE enc1.part_hvm_vdr_feed_id = '25'
       AND enc1.hvid IS NOT NULL
       AND enc1.enc_start_dt IS NOT NULL
@@ -227,7 +227,7 @@ SELECT
       AND NOT EXISTS
         (
             SELECT 1
-             FROM dw.hvm_emr_enc_v08 enc2
+             FROM hvm_emr_enc_v08 enc2
             WHERE enc2.part_hvm_vdr_feed_id = '25'
               AND enc2.hvid IS NOT NULL
               AND enc2.enc_start_dt IS NOT NULL
@@ -254,7 +254,7 @@ SELECT
                 )
         )
 ) enc
-INNER JOIN dw.hvm_emr_diag_v08 dgn
+INNER JOIN hvm_emr_diag_v08 dgn
    ON dgn.part_hvm_vdr_feed_id = '25'
   AND dgn.hvid IS NOT NULL
   AND dgn.diag_cd IS NOT NULL
@@ -277,7 +277,7 @@ WHERE
   AND NOT EXISTS
     (
         SELECT 1
-         FROM dw.hvm_emr_proc_v10 prc
+         FROM hvm_emr_proc_v10 prc
         WHERE dgn.part_hvm_vdr_feed_id = '25'
           AND prc.part_hvm_vdr_feed_id = '25'
           AND dgn.hvid IS NOT NULL

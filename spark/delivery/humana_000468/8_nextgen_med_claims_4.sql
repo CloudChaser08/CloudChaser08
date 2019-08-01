@@ -155,7 +155,7 @@ SELECT DISTINCT
     CAST(NULL AS STRING)                                                                    AS logical_delete_reason,
     'nextgen'                                                                               AS part_provider, 
     dgn.part_mth                                                                            AS part_best_date
- FROM dw.hvm_emr_diag_v08 dgn
+ FROM hvm_emr_diag_v08 dgn
 WHERE dgn.part_hvm_vdr_feed_id = '35'
   AND dgn.hvid IS NOT NULL
   AND dgn.diag_cd IS NOT NULL
@@ -163,7 +163,7 @@ WHERE dgn.part_hvm_vdr_feed_id = '35'
   AND NOT EXISTS
     (
         SELECT 1
-         FROM dw.hvm_emr_proc_v10 prc
+         FROM hvm_emr_proc_v10 prc
         WHERE dgn.part_hvm_vdr_feed_id = '35'
           AND prc.part_hvm_vdr_feed_id = '35'
           AND dgn.hvid IS NOT NULL
@@ -177,7 +177,7 @@ WHERE dgn.part_hvm_vdr_feed_id = '35'
   AND NOT EXISTS
     (
         SELECT 1
-         FROM dw.hvm_emr_enc_v08 enc
+         FROM hvm_emr_enc_v08 enc
         WHERE dgn.part_hvm_vdr_feed_id = '35'
           AND enc.part_hvm_vdr_feed_id = '35'
           AND dgn.hvid IS NOT NULL
