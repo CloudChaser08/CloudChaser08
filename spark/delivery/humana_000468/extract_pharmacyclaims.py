@@ -39,9 +39,7 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
     return ext.select(*EXTRACT_COLUMNS)
 
 def extract(runner, hvids, timestamp, start_dt, end_dt):
-    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'dw.hvm_pharmacyclaims_v07', True)
-
-    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'pharmacyclaims', True).union(
+    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'dw.hvm_pharmacyclaims_v07', True).union(
         extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_pharmacyclaims', False)
     )
 
