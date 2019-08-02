@@ -25,7 +25,7 @@ class Grocery8451CensusDriver(CensusDriver):
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
 
-        output_file_name_template = '{year}{month:02d}{day:02d}_response{{}}'.format(
+        output_file_name_template = '{year}{month:02d}{day:02d}_response_{{}}'.format(
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
 
