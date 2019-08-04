@@ -31,20 +31,20 @@ def test_init(spark):
 
 
 def test_num_of_months_rows_are_correct():
-    months_rows = filter(lambda x: x['duration'].endswith('months'), results)
+    months_rows = [x for x in results if x['duration'].endswith('months')]
     assert len(months_rows) == 2
 
 
 def test_num_of_years_rows_are_correct():
-    years_rows = filter(lambda x: x['duration'].endswith('years'), results)
+    years_rows = [x for x in results if x['duration'].endswith('years')]
     assert len(years_rows) == 2
 
 
 def test_num_of_patients_per_group_correct():
-    one_months = filter(lambda x: x['duration'].endswith('1 months'), results)[0]
-    two_years = filter(lambda x: x['duration'].endswith('2 years'), results)[0]
-    forty_one_years = filter(lambda x: x['duration'].endswith('41 years'), results)[0]
-    forty_two_years = filter(lambda x: x['duration'].endswith('42 years'), results)
+    one_months = [x for x in results if x['duration'].endswith('1 months')][0]
+    two_years = [x for x in results if x['duration'].endswith('2 years')][0]
+    forty_one_years = [x for x in results if x['duration'].endswith('41 years')][0]
+    forty_two_years = [x for x in results if x['duration'].endswith('42 years')]
 
     assert one_months['value'] == 1
     assert two_years['value'] == 1

@@ -93,12 +93,12 @@ def test_create_range():
 def test_string_set_diff():
     # TODO: should these also return 30?
     assert gh.string_set_diff('10_x:20_x', '10_x:30_x') == '20'
-    assert gh.string_set_diff('10_x:20_x:40_x', '10_x:30_x') == '20:40'
+    assert set(gh.string_set_diff('10_x:20_x:40_x', '10_x:30_x').split(':')) == set(['20', '40'])
 
 
 def test_uniquify():
     assert gh.uniquify('10:10:10') == '10'
-    assert gh.uniquify('10:10:20') == '10:20'
+    assert sorted(gh.uniquify('10:10:20').split(':')) == sorted('10:20'.split(':'))
 
 def test_is_int():
     assert gh.is_int('1')

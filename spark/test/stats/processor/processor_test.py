@@ -131,7 +131,7 @@ def test_fill_rate_calculated():
 
 
 def test_fill_rate_values():
-    assert sorted(results_distinct_column['fill_rate']) == [
+    assert sorted(results_distinct_column['fill_rate'], key=lambda c: c['field']) == [
         {'field': 'claim_id', 'fill': 1.0},
         {'field': 'col_2', 'fill': 1.0},
         {'field': 'hvid', 'fill': 1.0}

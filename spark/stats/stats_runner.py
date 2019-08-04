@@ -35,7 +35,7 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats
         model_level_marketplace_stats = dict([
             (model_conf['datatype'], processor.run_marketplace_stats(
                 spark, sqlContext, quarter, start_date, end_date,
-                dict([it for it in provider_config.items() + model_conf.items()]),
+                dict([it for it in list(provider_config.items()) + list(model_conf.items())]),
                 model_level_stats
             )) for model_conf in provider_config['models']
         ])
@@ -44,14 +44,14 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats
         )
         encounter_level_marketplace_stats = processor.run_marketplace_stats(
             spark, sqlContext, quarter, start_date, end_date,
-            dict([it for it in provider_config.items() + [m for m in provider_config['models'] if m['datatype'] == 'emr_enc'][0].items()]),
+            dict([it for it in list(provider_config.items()) + list([m for m in provider_config['models'] if m['datatype'] == 'emr_enc'][0].items())]),
             encounter_level_stats
         ) if encounter_level_stats else {}
 
         for model_conf in provider_config['models']:
             stats_writer.write_to_s3(
                 model_level_marketplace_stats[model_conf['datatype']],
-                dict([it for it in provider_config.items() + model_conf.items()]),
+                dict([it for it in list(provider_config.items()) + list(model_conf.items())]),
                 quarter
             )
         stats_writer.write_to_s3(dict(

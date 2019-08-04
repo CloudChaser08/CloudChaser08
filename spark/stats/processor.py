@@ -77,7 +77,7 @@ def _run_fill_rates(spark, sqlContext, conf, start_date, end_date):
         )
 
         # Get only the columns needed to calculate fill rates on
-        cols = [c for c in df.columns if c in conf['fill_rate_conf']['columns'].keys()]
+        cols = [c for c in df.columns if c in conf['fill_rate_conf']['columns']]
         if conf.get('record_field'):
             if conf.get('record_field') not in cols:
                 cols.append(conf.get('record_field'))
@@ -104,7 +104,7 @@ def _run_top_values(spark, sqlContext, provider_conf, start_date, end_date):
         )
 
         # Get only the columns needed to calculate fill rates on
-        cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns'].keys()]
+        cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns']]
         if provider_conf.get('record_field') and provider_conf.get('record_field') not in cols:
             cols.append(provider_conf['record_field'])
         max_num_values = provider_conf['top_values_conf']['max_values']

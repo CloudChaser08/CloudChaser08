@@ -11,7 +11,7 @@ def generate_exploder_table(spark, length, name='exploder'):
     Force the number of partitions to 1 to avoid large numbers of
     tasks on cross joins
     """
-    spark.sparkContext.parallelize(map(lambda i: [i], range(0, length)), 1).toDF(
+    spark.sparkContext.parallelize([[i] for i in range(0, length)], 1).toDF(
         StructType([StructField('n', LongType(), True)])
     ).registerTempTable(name)
 
@@ -82,14 +82,15 @@ def explode_dates(
     # replace date_start_column and date_end_column with new_date,
     # remove all columns that were added above, and union with the
     # rest of the table
-    full_exploded_table = with_new_date.select(*map(
-        lambda column: col('new_date').alias(column)
-        if column in [date_start_column, date_end_column] else col(column),
-        filter(
-            lambda column: column not in ('new_date', 'raw_range', 'days_to_add'),
-            with_new_date.columns
-        )
-    )).union(
+    full_exploded_table = with_new_date.select(*[
+        col('new_date').alias(column)
+            if column in [date_start_column, date_end_column] else col(column)
+        for column in
+        [
+            column for column in with_new_date.columns
+            if column not in ('new_date', 'raw_range', 'days_to_add')
+        ]
+    ]).union(
         runner.run_spark_query((
             "SELECT * "
             + "FROM {table} "

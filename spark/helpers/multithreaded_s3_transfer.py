@@ -13,7 +13,7 @@ def _copy_file(thread_id):
         'Bucket': src_bucket
     }
 
-    for i in xrange(thread_id, len(file_list), THREADS):
+    for i in range(thread_id, len(file_list), THREADS):
         s3_file = file_list[i]
         source['Key'] = s3_file
         bucket.Object(s3_file.replace(src_prefix, dest_prefix)).copy_from(CopySource=source)
@@ -38,7 +38,7 @@ def multithreaded_copy(src, dest):
 
     # Sort the keys we want to copy in reverse order by files size
     # This helps even out the workload across different threads
-    file_list = map(lambda x: x.get('key'), sorted(files, key= lambda x: x.get('size'), reverse=True))
+    file_list = [x.get('key') for x in sorted(files, key= lambda x: x.get('size'), reverse=True)]
 
     p = Pool(THREADS)
     p.map(_copy_file, range(THREADS))

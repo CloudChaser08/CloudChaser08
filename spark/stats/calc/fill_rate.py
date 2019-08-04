@@ -1,3 +1,4 @@
+from functools import reduce
 from pyspark.sql.functions import col, sum, isnan, count, trim, lit, upper
 
 def _col_fill_rate(c, row_count):
@@ -46,6 +47,6 @@ def calculate_fill_rate(df):
         df_tmp.unpersist()
         i += BATCH_SIZE
 
-    stats = map(lambda r: {'field': r.field, 'fill': r.fill}, res)
+    stats = [{'field': r.field, 'fill': r.fill} for r in res]
 
     return stats

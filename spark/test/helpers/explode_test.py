@@ -33,7 +33,7 @@ def test_init(spark):
 # explode dates tests
 def test_10row():
     "Test ID '10row' exploded into 10 rows"
-    date_explode_results_10row = filter(lambda r: r.test_id == '10row', date_explode_results)
+    date_explode_results_10row = [r for r in date_explode_results if r.test_id == '10row']
 
     assert len(date_explode_results_10row) == 10
 
@@ -43,16 +43,14 @@ def test_10row():
 
 def test_toobig():
     "Test ID 'toobig' did not explode"
-    date_explode_results_toobig = filter(lambda r: r.test_id == 'toobig', date_explode_results)
+    date_explode_results_toobig = [r for r in date_explode_results if r.test_id == 'toobig']
 
     assert len(date_explode_results_toobig) == 1
 
 
 def test_noexplode():
     "Test ID 'noexplode' did not explode"
-    date_explode_results_noexplode = filter(
-        lambda r: r.test_id == 'noexplode', date_explode_results
-    )
+    date_explode_results_noexplode = [r for r in date_explode_results if r.test_id == 'noexplode']
 
     assert len(date_explode_results_noexplode) == 1
 
@@ -78,9 +76,6 @@ def test_generate_exploder_table(spark):
 
     explode.generate_exploder_table(spark['spark'], length, 'test_exploder')
 
-    results = map(
-        lambda r: r.n,
-        spark['sqlContext'].sql('select * from test_exploder').collect()
-    )
+    results = [r.n for r in spark['sqlContext'].sql('select * from test_exploder').collect()]
 
-    assert sorted(results) == range(0, 200)
+    assert sorted(results) == list(range(0, 200))

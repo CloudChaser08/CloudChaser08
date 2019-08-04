@@ -35,14 +35,14 @@ def test_hvid():
 
     global results
     for t in tables:
-        assert len(filter(lambda r: r.hvid == "212345678", results[t])) >= 1
+        assert len([r for r in results[t] if r.hvid == "212345678"]) >= 1
 
 def test_enc_id():
     "Test that all the tables contain an expected encounter ID"
 
     global results
     for t in tables:
-        assert len(filter(lambda r: r.hv_enc_id == "35_00033_285182", results[t])) >= 1
+        assert len([r for r in results[t] if r.hv_enc_id == "35_00033_285182"]) >= 1
 
 def test_encounter_demographics_deduped():
     "Test that all the encounter and demographics entries were deduped"
@@ -56,28 +56,28 @@ def test_lab_order_diagnoses_split():
     and transformed/filtered in accordance with diagnosis rules"""
 
     global results
-    assert len(filter(lambda r: r.lab_ord_diag_cd == 'J4520', results['lab_order'])) == 2
-    assert len(filter(lambda r: r.lab_ord_diag_cd == 'E782', results['lab_order'])) == 2
-    assert len(filter(lambda r: r.lab_ord_diag_cd == 'V200XXA', results['lab_order'])) == 0
+    assert len([r for r in results['lab_order'] if r.lab_ord_diag_cd == 'J4520']) == 2
+    assert len([r for r in results['lab_order'] if r.lab_ord_diag_cd == 'E782']) == 2
+    assert len([r for r in results['lab_order'] if r.lab_ord_diag_cd == 'V200XXA']) == 0
 
 def test_diagnosis_diagnosis_code_transformation():
     """Test that diagnosis codes in the diagnosis table are transformed/filtered
     in accordance with diagnosis rules"""
 
     global results
-    assert len(filter(lambda r: r.diag_cd == 'E782', results['diagnosis'])) == 2
-    assert len(filter(lambda r: r.diag_cd == 'V200XXA', results['diagnosis'])) == 0
+    assert len([r for r in results['diagnosis'] if r.diag_cd == 'E782']) == 2
+    assert len([r for r in results['diagnosis'] if r.diag_cd == 'V200XXA']) == 0
 
 def test_lipid_msrmt_mapping():
     """Test that the lipid-related test results are properly mapped"""
 
     global results
-    assert len(filter(lambda r: r.lab_test_panel_nm == 'LIPID_PANEL', results['lab_result'])) == 8
-    assert len(filter(lambda r: r.lab_test_nm == 'LDL_CHOLESTEROL'
-            and r.lab_result_nm == '147.00', results['lab_result'])) \
+    assert len([r for r in results['lab_result'] if r.lab_test_panel_nm == 'LIPID_PANEL']) == 8
+    assert len([r for r in results['lab_result'] if r.lab_test_nm == 'LDL_CHOLESTEROL'
+            and r.lab_result_nm == '147.00']) \
         == 2
-    assert len(filter(lambda r: r.lab_test_nm == 'TOTAL_CHOLESTEROL'
-            and r.lab_result_nm == '235.00', results['lab_result'])) \
+    assert len([r for r in results['lab_result'] if r.lab_test_nm == 'TOTAL_CHOLESTEROL'
+            and r.lab_result_nm == '235.00']) \
         == 2
 
 def test_medication_diagnosis_split():
@@ -85,16 +85,16 @@ def test_medication_diagnosis_split():
     and transformed/filtered in accordance with diagnosis rules"""
 
     global results
-    assert len(filter(lambda r: r.medctn_diag_cd == 'J4520', results['medication'])) == 2
-    assert len(filter(lambda r: r.medctn_diag_cd == 'E782', results['medication'])) == 2
-    assert len(filter(lambda r: r.medctn_diag_cd == 'V200XXA', results['medication'])) == 0
+    assert len([r for r in results['medication'] if r.medctn_diag_cd == 'J4520']) == 2
+    assert len([r for r in results['medication'] if r.medctn_diag_cd == 'E782']) == 2
+    assert len([r for r in results['medication'] if r.medctn_diag_cd == 'V200XXA']) == 0
 
 def test_medication_ndc():
     """Test that ndc codes are properly mapped and transformed"""
 
     global results
-    assert len(filter(lambda r: r.medctn_ndc == '00378395105', results['medication'])) == 6
-    assert len(filter(lambda r: r.medctn_ndc == '003783', results['medication'])) == 0
+    assert len([r for r in results['medication'] if r.medctn_ndc == '00378395105']) == 6
+    assert len([r for r in results['medication'] if r.medctn_ndc == '003783']) == 0
 
 def test_procedure_cpt():
     """Test that cpt codes are properly mapped and transformed"""
@@ -103,44 +103,44 @@ def test_procedure_cpt():
     # procedure_1 and procedure_2 both fill in cpt codes for proc_cd
     # the test data has two rows with cpt code 36415
     # procedure_2 does not keep one row because vcxcode is null
-    assert len(filter(lambda r: r.proc_cd == '36415', results['procedure'])) == 3
+    assert len([r for r in results['procedure'] if r.proc_cd == '36415']) == 3
     # Only procedure_1 states it as a cpt code
-    assert len(filter(lambda r: r.proc_cd == '36415'
-                      and r.proc_cd_qual == 'CPT', results['procedure'])) == 2
+    assert len([r for r in results['procedure'] if r.proc_cd == '36415'
+                      and r.proc_cd_qual == 'CPT']) == 2
     # Only procedure_2 states it as an act code
-    assert len(filter(lambda r: r.proc_cd == '36415'
-                      and r.proc_cd_qual == 'ACTCODE', results['procedure'])) == 1
+    assert len([r for r in results['procedure'] if r.proc_cd == '36415'
+                      and r.proc_cd_qual == 'ACTCODE']) == 1
 
 def test_provider_order_actcode():
     """Test that only whitelisted values are allowed in provider order code column"""
 
     global results
     # CPT codes
-    assert len(filter(lambda r: r.prov_ord_cd == '36415', results['provider_order'])) == 2
+    assert len([r for r in results['provider_order'] if r.prov_ord_cd == '36415']) == 2
 
     # ICD codes (won't show up because punctuation will cause whitelisting to fail)
-    assert len(filter(lambda r: r.prov_ord_cd == 'E782', results['provider_order'])) == 0
-    assert len(filter(lambda r: r.prov_ord_cd == 'V200XXA', results['provider_order'])) == 0
+    assert len([r for r in results['provider_order'] if r.prov_ord_cd == 'E782']) == 0
+    assert len([r for r in results['provider_order'] if r.prov_ord_cd == 'V200XXA']) == 0
 
     # Random data
-    assert len(filter(lambda r: r.prov_ord_cd == 'Einstein', results['provider_order'])) == 0
+    assert len([r for r in results['provider_order'] if r.prov_ord_cd == 'Einstein']) == 0
 
 def test_provider_order_acttext():
     """Test that only whitelisted values are allowed in provider order text column"""
 
     global results
-    assert len(filter(lambda r: r.prov_ord_alt_cd == 'PROTIME', results['provider_order'])) == 2
+    assert len([r for r in results['provider_order'] if r.prov_ord_alt_cd == 'PROTIME']) == 2
 
 def test_vital_sign_msrmt():
     """Test that vital signs are proprely mapped and filtered in accordance
     with privacy rules"""
 
     global results
-    assert len(filter(lambda r: r.vit_sign_typ_cd == 'WEIGHT'
-            and r.vit_sign_msrmt == '170.0', results['vital_sign'])) == 2
+    assert len([r for r in results['vital_sign'] if r.vit_sign_typ_cd == 'WEIGHT'
+            and r.vit_sign_msrmt == '170.0']) == 2
 
-    assert len(filter(lambda r: r.vit_sign_typ_cd == 'WEIGHT'
-            and r.vit_sign_msrmt == '340.0', results['vital_sign'])) == 0
+    assert len([r for r in results['vital_sign'] if r.vit_sign_typ_cd == 'WEIGHT'
+            and r.vit_sign_msrmt == '340.0']) == 0
 
 def test_crosswalk():
     """Test that HVIDs that should have been applied through the crosswalk

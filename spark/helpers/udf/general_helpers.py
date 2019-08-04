@@ -102,7 +102,7 @@ def convert_celsius_to_fahrenheit(value):
 
 def create_range(max):
     try:
-        return ','.join(map(lambda i: str(i), range(max)))
+        return ','.join([str(i) for i in range(max)])
     except:
         return None
 
@@ -115,8 +115,8 @@ def string_set_diff(s1, s2):
     if s2 is None:
         s2 = ''
 
-    s1s = map(lambda x: x.split('_')[0], filter(lambda x: x is not None and len(x) > 0, s1.split(':')))
-    s2s = map(lambda x: x.split('_')[0], filter(lambda x: x is not None and len(x) > 0, s2.split(':')))
+    s1s = [v2.split('_')[0] for v2 in [v1 for v1 in s1.split(':') if v1 is not None and len(v1) > 0]]
+    s2s = [v2.split('_')[0] for v2 in [v1 for v1 in s2.split(':') if v1 is not None and len(v1) > 0]]
 
     return ':'.join(set(s1s).difference(set(s2s)))
 
@@ -126,7 +126,7 @@ def string_set_diff(s1, s2):
 def uniquify(with_dupes):
     if with_dupes is None:
         return None
-    return ':'.join(set(filter(lambda x: x is not None and len(x) > 0, with_dupes.split(':'))))
+    return ':'.join({x for x in with_dupes.split(':') if x is not None and len(x) > 0})
 
 
 def is_int(val):
@@ -148,7 +148,7 @@ def obfuscate_hvid(hvid, salt):
         raise ValueError("A project-specific salt must be provided to properly obfuscate the HVID")
     if hvid is None or hvid.strip() == '':
         return None
-    return hashlib.md5(hvid + salt).hexdigest()
+    return hashlib.md5(hvid.encode('UTF-8') + salt.encode('UTF-8')).hexdigest()
 
 
 def slightly_obfuscate_hvid(hvid, key):
@@ -164,7 +164,7 @@ def slightly_obfuscate_hvid(hvid, key):
         key = key + key[:4 - len(key) % 4]
     # Do multiple rounds of XORing of the id with different
     # parts of the key
-    for i in xrange(len(key) / 4):
+    for i in range(int(len(key) / 4)):
         key_p = key[i * 4: (i + 1) * 4]
         xor = ((ord(key_p[0]) ^ (i * 4)) * (1 << 24) +
                (ord(key_p[1]) ^ (i * 4 + 1)) * (1 << 16) +
@@ -227,7 +227,7 @@ def obfuscate_candidate_hvids(arr, salt):
         return None
 
     res = []
-    for i in xrange(len(arr)):
+    for i in range(len(arr)):
         res.append([obfuscate_hvid(str(int(arr[i][0])), salt), arr[i][1]])
 
     return res

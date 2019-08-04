@@ -44,6 +44,6 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
                   .groupby('year').count()                                                      \
                   .collect()
 
-    stats = map(lambda r: {'year': r.year, 'count': r['count']}, yoy_stats)
+    stats = [{'year': r.year, 'count': r['count']} for r in yoy_stats]
 
     return stats

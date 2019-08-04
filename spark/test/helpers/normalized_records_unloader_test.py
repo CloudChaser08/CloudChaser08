@@ -82,7 +82,7 @@ def make_lab_model_df(sqlContext, date_service, row_count):
     schema = sqlContext.table('lab_common_model').schema
 
     df_data = []
-    for i in xrange(row_count):
+    for i in range(row_count):
         d = [None] * len(schema)
         d[0] = i
         d[14] = date_service
@@ -146,10 +146,7 @@ def test_init(spark):
 
 def test_correct_dynamic_partitions():
     "Ensure correct dynamic partitions were created"
-    provider_partition = filter(
-        lambda f: "hive-staging" not in f,
-        os.listdir(test_staging_dir)
-    )
+    provider_partition = [f for f in os.listdir(test_staging_dir) if "hive-staging" not in f]
     assert provider_partition == ['part_provider=test_provider']
 
     date_partition = os.listdir(
@@ -176,24 +173,18 @@ def test_correct_dynamic_partitions_unload():
 
 def test_prefix():
     "Ensure prefix was added to part files"
-    part_files = filter(
-        lambda f: not f.endswith('.crc'),
-        os.listdir(
+    part_files = [f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if not f.endswith('.crc')]
     for f in part_files:
         assert f.startswith(prefix)
 
 
 def test_prefix_unload():
     "Ensure prefix was added to part files created by the 'unload' function"
-    part_files = filter(
-        lambda f: not f.endswith('.crc'),
-        os.listdir(
+    part_files = [f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if not f.endswith('.crc')]
     assert part_files
     for f in part_files:
         assert f.startswith(prefix)
@@ -201,10 +192,7 @@ def test_prefix_unload():
 
 def test_fixed_partition():
     "Ensure that when a fixed partition name is specific, only that partition is created"
-    provider_partition = filter(
-        lambda f: "hive-staging" not in f,
-        os.listdir(test_staging_dir2)
-    )
+    provider_partition = [f for f in os.listdir(test_staging_dir2) if "hive-staging" not in f]
     assert provider_partition == ['part_provider=test_provider']
 
     date_partition = os.listdir(
@@ -247,22 +235,16 @@ def test_unload_separate_provider(spark):
     assert os.listdir(test_staging_dir + 'part_provider=test_provider2/')
 
     # ensure new data was prefixed
-    part_files = filter(
-        lambda f: not f.endswith('.crc'),
-        os.listdir(
+    part_files = [f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider2/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if not f.endswith('.crc')]
     for f in part_files:
         assert f.startswith(prefix)
 
     # ensure old data was not re-prefixed
-    part_files = filter(
-        lambda f: not f.endswith('.crc'),
-        os.listdir(
+    part_files = [f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if not f.endswith('.crc')]
     for f in part_files:
         assert f.startswith('{}_part'.format(prefix))
 
@@ -281,23 +263,17 @@ def test_unload_separate_provider_unload(spark):
     assert os.listdir(test_staging_dir_unload + 'part_provider=test_provider2/')
 
     # ensure new data was prefixed
-    part_files = filter(
-        lambda f: not f.endswith('.crc'),
-        os.listdir(
+    part_files = [f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider2/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if not f.endswith('.crc')]
     assert part_files
     for f in part_files:
         assert f.startswith(prefix)
 
     # ensure old data was not re-prefixed
-    part_files = filter(
-        lambda f: not f.endswith('.crc'),
-        os.listdir(
+    part_files = [f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if not f.endswith('.crc')]
     assert part_files
     for f in part_files:
         assert f.startswith('{}_part'.format(prefix))
@@ -312,20 +288,14 @@ def test_unload_new_prefix(spark):
     )
 
     # assert that new prefixes were added
-    assert filter(
-        lambda f: f.startswith(prefix + '_NEW_part'),
-        os.listdir(
+    assert [f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if f.startswith(prefix + '_NEW_part')]
 
     # assert that old prefixes were unchanged
-    assert filter(
-        lambda f: f.startswith(prefix + '_part'),
-        os.listdir(
+    assert [f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if f.startswith(prefix + '_part')]
 
 
 def test_unload_new_prefix_unload(spark):
@@ -336,28 +306,19 @@ def test_unload_new_prefix_unload(spark):
     )
 
     # assert that new prefixes were added
-    assert filter(
-        lambda f: f.startswith(prefix + '_NEW_part'),
-        os.listdir(
+    assert [f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if f.startswith(prefix + '_NEW_part')]
 
     # assert that old prefixes were unchanged
-    assert filter(
-        lambda f: f.startswith(prefix + '_part'),
-        os.listdir(
+    assert [f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        )
-    )
+        ) if f.startswith(prefix + '_part')]
 
 
 def test_hvm_historical_date(spark):
     "Ensure correct dynamic partitions were created"
-    provider_partition = filter(
-        lambda f: "hive-staging" not in f,
-        os.listdir(test_staging_dir3)
-    )
+    provider_partition = [f for f in os.listdir(test_staging_dir3) if "hive-staging" not in f]
     assert provider_partition == ['part_provider=test_provider']
 
     date_partition = os.listdir(
@@ -396,7 +357,7 @@ def test_unload_delimited_file(spark):
     filename = [f for f in os.listdir(test_staging_dir4) if f.endswith('.gz')][0]
 
     import gzip
-    with gzip.open(test_staging_dir4 + filename) as decompressed:
+    with gzip.open(test_staging_dir4 + filename, 'rt') as decompressed:
         assert [line.split('|') for line in decompressed.read().splitlines()] \
             == [['"val1"', '"val2"'], ['"val3"', '"val4"']]
 
@@ -408,7 +369,7 @@ def test_unload_delimited_file(spark):
 
     assert filename == 'my_file.gz'
 
-    with gzip.open(test_staging_dir4 + filename) as decompressed:
+    with gzip.open(test_staging_dir4 + filename, 'rt') as decompressed:
         assert [line.split('|') for line in decompressed.read().splitlines()] \
             == [['"val1"', '"val2"'], ['"val3"', '"val4"']]
 

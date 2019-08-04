@@ -85,7 +85,7 @@ def _extract_provider_conf(feed_id, providers_conf):
         - _ : A Python dict with the config for 'feed_id'
     '''
 
-    conf = list(filter(lambda x: x['datafeed_id'] == feed_id, providers_conf['providers']))
+    conf = [x for x in providers_conf['providers'] if x['datafeed_id'] == feed_id]
     if len(conf) == 0:
         raise Exception('Feed {} is not in the providers config file'.format(feed_id))
     return conf[0]
@@ -190,7 +190,7 @@ def get_provider_config(providers_conf_file, feed_id):
     elif provider_conf['datatype'] == 'emr':
         provider_conf['models'] = [
             _fill_in_dates(_fill_in_conf_dict(dict(
-                model_conf.items() + [('datafeed_id', provider_conf['datafeed_id'])]
+                list(model_conf.items()) + [('datafeed_id', provider_conf['datafeed_id'])]
             ), feed_id, providers_conf_file))
             for model_conf in provider_conf['models']
         ]

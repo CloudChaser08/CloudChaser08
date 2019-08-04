@@ -21,8 +21,8 @@ def test_lines_split_properly():
 
 def test_keys_are_named_correctly():
     for r in result:
-        assert 'field' in r.keys()
-        assert 'value' in r.keys()
+        assert 'field' in r
+        assert 'value' in r
 
 
 def test_extra_separators_added_in_field():
@@ -30,7 +30,7 @@ def test_extra_separators_added_in_field():
 
 
 def test_list_populated_correctly():
-    assert filter(lambda x: x['field'] == '0-17', result)[0]['value'] == '515151'
-    assert filter(lambda x: x['field'] == '18-44', result)[0]['value'] == '2727'
-    assert filter(lambda x: x['field'] == '45-64;extra woops!', result)[0]['value'] == '8'
+    assert [x for x in result if x['field'] == '0-17'][0]['value'] == '515151'
+    assert [x for x in result if x['field'] == '18-44'][0]['value'] == '2727'
+    assert [x for x in result if x['field'] == '45-64;extra woops!'][0]['value'] == '8'
 

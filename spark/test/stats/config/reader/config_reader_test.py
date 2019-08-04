@@ -4,6 +4,10 @@ from mock import Mock
 import spark.stats.config.reader.config_reader as config_reader
 from spark.helpers.file_utils import get_abs_path
 import spark.stats.config.dates as dates
+try:
+    from importlib import reload
+except:
+    pass
 
 @pytest.fixture(autouse=True)
 def setup_teardown():
@@ -46,7 +50,7 @@ def test_exception_raised_when_provider_conf_datatype_is_null():
         conf = config_reader.get_provider_config(conf_file, '3')
 
     exception = e_info.value
-    assert exception.message.startswith('datatype is not specified for feed 3')
+    assert str(exception).startswith('datatype is not specified for feed 3')
 
 
 def test_exception_raised_when_provider_conf_datatype_not_specified():
@@ -55,7 +59,7 @@ def test_exception_raised_when_provider_conf_datatype_not_specified():
         conf = config_reader.get_provider_config(conf_file, '4')
 
     exception = e_info.value
-    assert exception.message.startswith('datatype is not specified for feed 4')
+    assert str(exception).startswith('datatype is not specified for feed 4')
 
 
 def test_exception_raised_when_provider_not_in_providers_conf_file():
@@ -64,4 +68,4 @@ def test_exception_raised_when_provider_not_in_providers_conf_file():
         conf = config_reader.get_provider_config(conf_file, 'lol')
 
     exception = e_info.value
-    assert exception.message == 'Feed lol is not in the providers config file'
+    assert str(exception) == 'Feed lol is not in the providers config file'

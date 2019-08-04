@@ -6,7 +6,7 @@ RAW_COLUMN_COUNT = 37
 
 def load(runner, input_path, s3_encounter_reference, s3_demographics_reference, test=False):
     df = records_loader \
-        .load(runner, input_path, ['_c' + str(i) for i in xrange(RAW_COLUMN_COUNT)], 'csv', '|') \
+        .load(runner, input_path, ['_c' + str(i) for i in range(RAW_COLUMN_COUNT)], 'csv', '|') \
         .withColumn('tbl_type', F.col('_c3')) \
         .withColumn('input_file_name', F.input_file_name()) \
         .repartition(1 if test else 5000, '_c1') \
@@ -19,7 +19,7 @@ def load(runner, input_path, s3_encounter_reference, s3_demographics_reference, 
     df.limit(5).createOrReplaceTempView('raw_data')
 
     for t in TABLES:
-        df.select(*([df['_c' + str(i)].alias(TABLE_COLUMNS[t][i]) for i in xrange(len(TABLE_COLUMNS[t]))] + [
+        df.select(*([df['_c' + str(i)].alias(TABLE_COLUMNS[t][i]) for i in range(len(TABLE_COLUMNS[t]))] + [
                 F.regexp_extract('input_file_name', '(NG|HV)_LSSA_([^_]*)_[^\.]*.txt', 2).alias('reportingenterpriseid'),
                 F.regexp_extract('input_file_name', '(NG|HV)_LSSA_[^_]*_([^\.]*).txt', 2).alias('recorddate'),
                 F.regexp_extract('input_file_name', '((NG|HV)_LSSA_[^_]*_[^\.]*.txt)', 1).alias('dataset')

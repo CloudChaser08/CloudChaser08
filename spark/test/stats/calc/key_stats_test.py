@@ -30,9 +30,9 @@ def test_init(spark):
 
 
 def test_counts_are_correct_for_date_range():
-    assert filter(lambda x: x['field'] == 'total_patient', results)[0]['value'] == 4
-    assert filter(lambda x: x['field'] == 'total_24_month_patient', results)[0]['value'] == 3
-    assert filter(lambda x: x['field'] == 'total_record', results)[0]['value'] == 3
-    assert filter(lambda x: x['field'] == 'total_24_month_record', results)[0]['value'] == 2
-    assert filter(lambda x: x['field'] == 'total_row', results)[0]['value'] == 4
-    assert filter(lambda x: x['field'] == 'total_24_month_row', results)[0]['value'] == 3
+    assert [x for x in results if x['field'] == 'total_patient'][0]['value'] == 4
+    assert [x for x in results if x['field'] == 'total_24_month_patient'][0]['value'] == 3
+    assert [x for x in results if x['field'] == 'total_record'][0]['value'] == 3
+    assert [x for x in results if x['field'] == 'total_24_month_record'][0]['value'] == 2
+    assert [x for x in results if x['field'] == 'total_row'][0]['value'] == 4
+    assert [x for x in results if x['field'] == 'total_24_month_row'][0]['value'] == 3

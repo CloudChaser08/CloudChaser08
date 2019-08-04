@@ -45,22 +45,22 @@ def test_init(spark):
 
 def test_year_of_birth_cap():
     "Ensure that year of birth capping was applied"
-    assert filter(lambda r: r.claim_id == '2073344007_17897', results)[0] \
+    assert [r for r in results if r.claim_id == '2073344007_17897'][0] \
         .patient_year_of_birth == '1927'
 
 
 def test_date_parsing():
     "Ensure that dates are correctly parsed"
-    assert filter(lambda r: r.claim_id == '2073344007_17897', results)[0] \
-        .date_service == datetime.date(2016, 12, 01)
+    assert [r for r in results if r.claim_id == '2073344007_17897'][0] \
+        .date_service == datetime.date(2016, 12, 1)
 
 
 def test_diag_explosion():
     "Ensure that diagnosis codes were exploded on '^'"
-    diags = map(
-        lambda r: str(r.diagnosis_code),
-        filter(lambda r: r.claim_id == '2073344012_17897', results)
-    )
+    diags = [
+        str(r.diagnosis_code) for r in
+        [r for r in results if r.claim_id == '2073344012_17897']
+    ]
     diags.sort()
 
     assert diags == ['DIAG1', 'DIAG4', 'DIAG6']
@@ -68,37 +68,37 @@ def test_diag_explosion():
 
 def test_nodiag_inclusion():
     "Ensure that claims with no diagnosis codes were included"
-    claim = filter(lambda r: r.claim_id == '2073344008_17897', results)
+    claim = [r for r in results if r.claim_id == '2073344008_17897']
 
     assert len(claim) == 1
 
 
 def test_diagnosis_qual_translation():
     "Ensure that diagnosis code qualifiers were correctly translated to HV"
-    assert filter(lambda r: r.claim_id == '2073344009_17897', results)[0] \
+    assert [r for r in results if r.claim_id == '2073344009_17897'][0] \
         .diagnosis_code_qual == '02'
 
-    assert filter(lambda r: r.claim_id == '2073344012_17897', results)[0] \
+    assert [r for r in results if r.claim_id == '2073344012_17897'][0] \
         .diagnosis_code_qual == '01'
 
 
 def test_provider_derived_hvids_added():
     "Ensure that hvids are derived from the provider addon file first"
-    assert filter(lambda r: r.claim_id.startswith('2073344007'), results)[0] \
+    assert [r for r in results if r.claim_id.startswith('2073344007')][0] \
         .hvid == '9999'
 
-    assert filter(lambda r: r.claim_id.startswith('2073344008'), results)[0] \
+    assert [r for r in results if r.claim_id.startswith('2073344008')][0] \
         .hvid == '9999'
 
-    assert filter(lambda r: r.claim_id.startswith('2073344009'), results)[0] \
+    assert [r for r in results if r.claim_id.startswith('2073344009')][0] \
         .hvid == '0000'
 
 
 def test_provider_information_appended():
     "Ensure that hvids are derived from the provider addon file first"
-    assert filter(lambda r: r.claim_id.startswith('2073344007'), results)[0].ordering_npi == '1376766659'
+    assert [r for r in results if r.claim_id.startswith('2073344007')][0].ordering_npi == '1376766659'
 
-    assert filter(lambda r: r.claim_id.startswith('2073344009'), results)[0].ordering_zip == '19147'
+    assert [r for r in results if r.claim_id.startswith('2073344009')][0].ordering_zip == '19147'
 
 
 def test_cleanup(spark):

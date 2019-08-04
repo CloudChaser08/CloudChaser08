@@ -95,7 +95,7 @@ def perform_db_updates(_mapping):
     current_date = datetime.datetime.now().strftime('%Y-%m-%d')
     query = "INSERT INTO provider_normalization_routines VALUES (%s, %s, %s, %s)"
 
-    for key, value in _mapping.iteritems():
+    for key, value in _mapping.items():
         with get_reference_db_connection() as conn:
             with conn.cursor() as cur:
                 # ~ fresh table
@@ -122,7 +122,7 @@ def write_to_s3(_mapping):
     file_name = 'daglist.prod.txt'
 
     with tempfile.TemporaryFile() as fp:
-        for key, value in _mapping.iteritems():
+        for key, value in _mapping.items():
             fp.write('{} {}\n'.format(key, value['script_args']))
         s3_client.Bucket(bucket).upload_file(fp.name, '{}/{}'.format(prefix, file_name))
 

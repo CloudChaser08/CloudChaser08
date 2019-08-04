@@ -50,17 +50,17 @@ def test_diag_explosion():
     assert len(sample_diag_rows) == 4
     assert len(sample_nodiag_rows) == 9
 
-    assert sorted([r.diagnosis_code for r in sample_diag_rows if r.service_line_number]) \
-        == ['DIAG1', 'DIAG4']
+    assert set([r.diagnosis_code for r in sample_diag_rows if r.service_line_number]) \
+        == set(['DIAG1', 'DIAG4'])
 
     # 'PRINC_DIAG' was privacy filtered
-    assert sorted([r.diagnosis_code for r in sample_diag_rows if not r.service_line_number]) \
-        == [None, 'DIAG7']
+    assert set([r.diagnosis_code for r in sample_diag_rows if not r.service_line_number]) \
+        == set([None, 'DIAG7'])
 
 
 def test_prov_npi():
     "Ensure that npi fields are populated"
-    sample_npi_row = filter(lambda r: r.claim_id == 'claim-1', results)[0]
+    sample_npi_row = [r for r in results if r.claim_id == 'claim-1'][0]
 
     assert sample_npi_row.prov_rendering_npi == "9999999999"
 

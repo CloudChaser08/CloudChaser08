@@ -95,7 +95,7 @@ def unload(
     if not skip_rename:
         # add a prefix to part file names
         try:
-            part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
+            part_files = subprocess.check_output(part_files_cmd).decode().strip().split("\n")
         except:
             part_files = []
         spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
@@ -188,7 +188,7 @@ def partition_and_rename(
     # This will throw an exception if the partition path does not exist which
     # happens when a partition has no data in it and was not created
     try:
-        part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
+        part_files = subprocess.check_output(part_files_cmd).decode().strip().split("\n")
     except:
         part_files = []
 
@@ -260,7 +260,7 @@ def partition_custom(
             ['partitions', '20', False]
         ])
 
-    part_files = subprocess.check_output(part_files_cmd).strip().split("\n")
+    part_files = subprocess.check_output(part_files_cmd).decode().strip().split("\n")
 
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
         mk_move_file(file_date, test_dir is not None)

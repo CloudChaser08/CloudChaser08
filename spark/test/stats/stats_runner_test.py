@@ -13,9 +13,9 @@ data_row = Row('claim_id', 'service_date', 'hvid', 'col_2', 'col_3')
 quarter = 'Q12017'
 
 expected_results_dict = {
-    'fill_rate': [{'field': u'claim_id', 'fill': 1.0},
-                  {'field': u'service_date', 'fill': 1.0},
-                  {'field': u'col_3', 'fill': 0.5}],
+    'fill_rate': [{'field': 'claim_id', 'fill': 1.0},
+                  {'field': 'service_date', 'fill': 1.0},
+                  {'field': 'col_3', 'fill': 0.5}],
     'key_stats': None,
     'longitudinality': None,
     'top_values': None,
@@ -183,22 +183,26 @@ def test_emr_year_over_year_long(spark):
     union_results = stats_runner.run(spark['spark'], spark['sqlContext'],
                                      quarter, start_date, end_date, union_provider_config)
 
-    assert sorted(enc_results['year_over_year']) == [{'count': 1, 'year': 2015},
-                                                     {'count': 1, 'year': 2016},
-                                                     {'count': 1, 'year': 2017}]
-    assert sorted(union_results['year_over_year']) == [{'count': 1, 'year': 2016},
-                                                       {'count': 1, 'year': 2017}]
+    assert sorted(enc_results['year_over_year'], key=lambda y: y['year']) == [
+            {'count': 1, 'year': 2015},
+            {'count': 1, 'year': 2016},
+            {'count': 1, 'year': 2017}
+        ]
+    assert sorted(union_results['year_over_year'], key=lambda y: y['year']) == [
+            {'count': 1, 'year': 2016},
+            {'count': 1, 'year': 2017}
+        ]
 
     # since these results are different, we can infer that different
     # datasets were used. Since the average is lower for union_resuls
     # (and this table has less data), this means that the encounter
     # table is used for enc_results, and the union table is used for
     # union_results.
-    assert sorted(enc_results['longitudinality']) == [
+    assert sorted(enc_results['longitudinality'], key=lambda l: l['average']) == [
         {'average': 1, 'duration': '0 months', 'std_dev': 0, 'value': 2},
         {'average': 6, 'duration': '27 years', 'std_dev': 0, 'value': 1}
     ]
-    assert sorted(union_results['longitudinality']) == [
+    assert sorted(union_results['longitudinality'], key=lambda l: l['average']) == [
         {'average': 1, 'duration': '0 months', 'std_dev': 0, 'value': 2},
         {'average': 5, 'duration': '27 years', 'std_dev': 0, 'value': 1}
     ]

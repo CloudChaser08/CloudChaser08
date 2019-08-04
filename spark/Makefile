@@ -32,6 +32,13 @@ spark-test-jenkins: clean-test build-notest
 	pytest -v -x --ignore=test/helpers/external_table_loader_test.py \
                   --ignore=test/providers/nextgen test/ || (rm target/${APP_NAME}.zip && exit 1)
 
+# excludes external table loader tests
+# excludes nextgen tests while they depend on external tables
+spark-test-jenkins-python3: clean-test build-notest
+	PYSPARK_PYTHON=python3 python3 -m pytest -v -x \
+		  --ignore=test/helpers/external_table_loader_test.py \
+                  --ignore=test/providers/nextgen test/ || (rm target/${APP_NAME}.zip && exit 1)
+
 package: clean-test build-notest
 	cd .. && tar -czf dewey_spark.tar.gz --exclude spark/test spark
 	echo "Created dewey_spark.tar.gz"
@@ -42,48 +49,48 @@ build-container:
 	docker build -t dewey_spark:latest .
 
 test-python2: build-container clean-test build-notest
-	if [ -n "${AWS_ACCESS_KEY_ID}" ]; \
+	@if [ -n "${AWS_ACCESS_KEY_ID}" ]; \
 	then \
 		$(eval ID_OPT=-e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}") \
 		$(eval SECRET_OPT=-e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}") \
 		:; \
 	fi
-	docker run --rm --name dewey-spark-tester-2 -v "${PWD}:/dewey/spark" \
+	@docker run --rm --name dewey-spark-tester-2 -v "${PWD}:/dewey/spark" \
 		$(ID_OPT) \
 		${SECRET_OPT} \
 		-e "AWS_DEFAULT_REGION=us-east-1" \
 		-w "/dewey/spark" \
-		--entrypoint python dewey_spark:latest -m pytest -vv \
+		--entrypoint python dewey_spark:latest -m pytest -v \
 		-x --ignore=/dewey/spark/test/helpers/external_table_loader_test.py \
 		-x --ignore=/dewey/spark/test/providers/nextgen \
 		/dewey/spark/test
 
 test-python3: build-container clean-test build-notest
-	if [ -n "${AWS_ACCESS_KEY_ID}" ]; \
+	@if [ -n "${AWS_ACCESS_KEY_ID}" ]; \
 	then \
 		$(eval ID_OPT=-e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}") \
 		$(eval SECRET_OPT=-e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}") \
 		:; \
 	fi
-	docker run --rm --name dewey-spark-tester-3 -v "${PWD}:/dewey/spark" \
+	@docker run --rm --name dewey-spark-tester-3 -v "${PWD}:/dewey/spark" \
 		$(ID_OPT) \
 		${SECRET_OPT} \
 		-e "AWS_DEFAULT_REGION=us-east-1" \
 		-e "PYSPARK_PYTHON=python3" \
 		-w "/dewey/spark" \
-		--entrypoint python3 dewey_spark:latest -m pytest -vv \
+		--entrypoint python3 dewey_spark:latest -m pytest -v \
 		-x --ignore=/dewey/spark/test/helpers/external_table_loader_test.py \
 		-x --ignore=/dewey/spark/test/providers/nextgen \
 		/dewey/spark/test
 
 dewey-spark-shell: build-container clean-test build-notest
-	if [ -n "${AWS_ACCESS_KEY_ID}" ]; \
+	@if [ -n "${AWS_ACCESS_KEY_ID}" ]; \
 	then \
 		$(eval ID_OPT=-e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}") \
 		$(eval SECRET_OPT=-e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}") \
 		:; \
 	fi
-	docker run --rm --name dewey-spark-tester-3 -v "${PWD}:/dewey/spark" \
+	@docker run --rm --name dewey-spark-tester-3 -v "${PWD}:/dewey/spark" \
 		$(ID_OPT) \
 		${SECRET_OPT} \
 		-e "AWS_DEFAULT_REGION=us-east-1" \

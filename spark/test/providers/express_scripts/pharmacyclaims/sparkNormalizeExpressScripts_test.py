@@ -26,14 +26,14 @@ def test_init(spark):
 
 def text_fixed_width_parsing():
     "Check that that fixed width transaction data was parsed correctly"
-    row = filter(lambda r: r.pharmacy_claim_id == '__________________________________________10', transactions)[0]
+    row = [r for r in transactions if r.pharmacy_claim_id == '__________________________________________10'][0]
     assert row.creation_date == '20170502'
     assert row.patient_gender_code == 'F'
     assert row.hv_join_key == '0262b769-2a33-4d84-8532-2c832bf33528'
 
 def test_date_of_service_parsing():
     "Check that date_of_service is parsed correctly"
-    row = filter(lambda r: r.claim_id == '___________________________________________9', results)[0]
+    row = [r for r in results if r.claim_id == '___________________________________________9'][0]
     assert row.date_service == datetime.date(2017, 4, 30)
 
 def test_union_of_old_results_and_new():
@@ -46,8 +46,8 @@ def test_union_of_old_results_and_new():
 
 def test_reversed_claims_deleted():
     "Check that the final output table does not contain claims that were reversed"
-    assert len(filter(lambda r: r.claim_id == '__________________________________________15', results)) == 0
-    assert len(filter(lambda r: r.claim_id != '__________________________________________15', results)) == 11
+    assert len([r for r in results if r.claim_id == '__________________________________________15']) == 0
+    assert len([r for r in results if r.claim_id != '__________________________________________15']) == 11
 
 def test_cleanup(spark):
     cleanup(spark)

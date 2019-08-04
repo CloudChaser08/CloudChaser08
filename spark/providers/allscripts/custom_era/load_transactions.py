@@ -21,12 +21,12 @@ def load(spark, runner, input_paths):
             raw_df = spark.read.text(input_path)
             for t in set(TABLE_CONF.keys()) - set(['payload']):
                 # Get the columns for each source table we expect
-                cols = map(lambda x: x.name, TABLE_CONF[t].schema)
+                cols = [x.name for x in TABLE_CONF[t].schema]
                 # Filter based on the length of columns
                 raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(cols)))
                 # Extract the line into a dataframe with one column for each element in the array
                 split = raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                           .select(*[F.col('split')[i].alias(cols[i]) for i in xrange(len(cols))])
+                           .select(*[F.col('split')[i].alias(cols[i]) for i in range(len(cols))])
                 # Trimmify and Nullify the data
                 postprocessor.compose(
                     postprocessor.trimmify,

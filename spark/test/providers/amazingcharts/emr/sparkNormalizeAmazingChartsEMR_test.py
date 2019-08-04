@@ -72,10 +72,10 @@ def test_init(spark):
 
 
 def test_something():
-    print len(clinical_observation_results)
-    print len(lab_result_results)
-    print len(encounter_results)
-    print len(medication_results)
-    print len(procedure_results)
-    print len(diagnosis_results)
-    print len(vital_sign_results)
+    print(len(clinical_observation_results))
+    print(len(lab_result_results))
+    print(len(encounter_results))
+    print(len(medication_results))
+    print(len(procedure_results))
+    print(len(diagnosis_results))
+    print(len(vital_sign_results))

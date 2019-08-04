@@ -21,11 +21,11 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
         .select(*[claims[c] for c in claims.columns] + [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
 
     # Hashing
-    ext = ext.withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('pharmacy_npi', F.md5(F.concat(F.col('pharmacy_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_dispensing_npi', F.md5(F.concat(F.col('prov_dispensing_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_prescribing_npi', F.md5(F.concat(F.col('prov_prescribing_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_primary_care_npi', F.md5(F.concat(F.col('prov_primary_care_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(str(timestamp)), F.col('humana_group_id'))))
+    ext = ext.withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
+            .withColumn('pharmacy_npi', F.md5(F.concat(F.col('pharmacy_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
+            .withColumn('prov_dispensing_npi', F.md5(F.concat(F.col('prov_dispensing_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
+            .withColumn('prov_prescribing_npi', F.md5(F.concat(F.col('prov_prescribing_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
+            .withColumn('prov_primary_care_npi', F.md5(F.concat(F.col('prov_primary_care_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id'))))
 
     # Rename columns
     ext = ext.withColumn('data_feed', F.col('hvm_vdr_feed_id')) \

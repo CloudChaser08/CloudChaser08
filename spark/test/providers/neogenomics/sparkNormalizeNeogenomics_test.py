@@ -67,9 +67,9 @@ def test_date_parsing():
     """
     for claim_id, date_service in [(r.claim_id, r.date_service) for r in results]:
         if claim_id == 'test1':
-            assert date_service == datetime.date(2017, 04, 14)
+            assert date_service == datetime.date(2017, 4, 14)
         elif claim_id in ['test2', 'test3']:
-            assert date_service == datetime.date(2014, 9, 01)
+            assert date_service == datetime.date(2014, 9, 1)
 
 
 def test_input_filename():

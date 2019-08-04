@@ -198,44 +198,44 @@ def test_hvids():
     """
 
     # encounters
-    assert sorted(set([res.hvid for res in encounter_results])) == ['100000', '100001', '100002']
-    assert sorted(set([enc.split('|')[13] for enc in encounter_delivery_results])) \
-        == ['"1483966080"', '"1483966081"', '"1483966082"']
+    assert set([res.hvid for res in encounter_results]) == set(['100000', '100001', '100002'])
+    assert set([enc.decode().split('|')[13] for enc in encounter_delivery_results]) \
+        == set(['"1483966080"', '"1483966081"', '"1483966082"'])
 
     # diagnoses
-    assert sorted(set([res.hvid for res in diagnosis_results])) == ['100000', '100001', '100002']
-    assert sorted(set([diag.split('|')[13] for diag in diagnosis_delivery_results])) \
-        == ['"1483966080"', '"1483966081"', '"1483966082"']
+    assert set([res.hvid for res in diagnosis_results]) == set(['100000', '100001', '100002'])
+    assert set([diag.decode().split('|')[13] for diag in diagnosis_delivery_results]) \
+        == set(['"1483966080"', '"1483966081"', '"1483966082"'])
 
     # procedures
-    assert sorted(set([res.hvid for res in procedure_results])) == ['100000', '100001', '100002']
-    assert sorted(set([proc.split('|')[13] for proc in procedure_delivery_results])) \
-        == ['"1483966080"', '"1483966081"', '"1483966082"']
+    assert set([res.hvid for res in procedure_results]) == set(['100000', '100001', '100002'])
+    assert set([proc.decode().split('|')[13] for proc in procedure_delivery_results]) \
+        == set(['"1483966080"', '"1483966081"', '"1483966082"'])
 
     # provider order
-    assert sorted(set([res.hvid for res in provider_order_results])) == ['100000', '100001', '100002']
-    assert sorted(set([prov_ord.split('|')[13] for prov_ord in provider_order_delivery_results])) \
-        == ['"1483966080"', '"1483966081"', '"1483966082"']
+    assert set([res.hvid for res in provider_order_results]) == set(['100000', '100001', '100002'])
+    assert set([prov_ord.decode().split('|')[13] for prov_ord in provider_order_delivery_results]) \
+        == set(['"1483966080"', '"1483966081"', '"1483966082"'])
 
     # lab result
-    assert sorted(set([res.hvid for res in lab_result_results])) == ['100000', '100001', '100002']
-    assert sorted(set([lab_result.split('|')[17] for lab_result in lab_result_delivery_results])) \
-        == ['"1483966080"', '"1483966081"', '"1483966082"']
+    assert set([res.hvid for res in lab_result_results]) == set(['100000', '100001', '100002'])
+    assert set([lab_result.decode().split('|')[17] for lab_result in lab_result_delivery_results]) \
+        == set(['"1483966080"', '"1483966081"', '"1483966082"'])
 
     # medication
-    assert sorted(set([res.hvid for res in medication_results])) == ['100000', '100001', '100002']
-    assert sorted(set([medication.split('|')[17] for medication in medication_delivery_results])) \
-        == ['"1483966080"', '"1483966081"', '"1483966082"']
+    assert set([res.hvid for res in medication_results]) == set(['100000', '100001', '100002'])
+    assert set([medication.decode().split('|')[17] for medication in medication_delivery_results]) \
+        == set(['"1483966080"', '"1483966081"', '"1483966082"'])
 
     # clinical_observation
-    assert sorted(set([res.hvid for res in clinical_observation_results])) == ['100000', '100002']
-    assert sorted(set([clinical_observation.split('|')[13] for clinical_observation in clinical_observation_delivery_results])) \
-        == ['"1483966080"', '"1483966082"']
+    assert set([res.hvid for res in clinical_observation_results]) == set(['100000', '100002'])
+    assert set([clinical_observation.decode().split('|')[13] for clinical_observation in clinical_observation_delivery_results]) \
+        == set(['"1483966080"', '"1483966082"'])
 
     # vital_sign
-    assert sorted(set([res.hvid for res in vital_sign_results])) == ['100000', '100001', '100002']
-    assert sorted(set([vital_sign.split('|')[13] for vital_sign in vital_sign_delivery_results])) \
-        == ['"1483966080"', '"1483966081"', '"1483966082"']
+    assert set([res.hvid for res in vital_sign_results]) == set(['100000', '100001', '100002'])
+    assert set([vital_sign.decode().split('|')[13] for vital_sign in vital_sign_delivery_results]) \
+        == set(['"1483966080"', '"1483966081"', '"1483966082"'])
 
 
 def test_encounter_cardinality():
@@ -323,8 +323,8 @@ def test_diagnosis_cleaning():
     """
     Ensure diagnosis codes are cleansed in the diagnosis table
     """
-    assert sorted([res.diag_cd for res in diagnosis_results]) \
-        == ['TESTDIAG0', 'TESTDIAG1', 'TESTDIAG2']
+    assert set([res.diag_cd for res in diagnosis_results]) \
+        == set(['TESTDIAG0', 'TESTDIAG1', 'TESTDIAG2'])
 
 
 def test_procedure_cardinality():
@@ -343,23 +343,23 @@ def test_procedure_date_cap():
             assert not res.enc_dt
             assert not res.proc_dt
         elif res.hv_proc_id == '40_enc_pat-visit-id-1':
-            assert res.enc_dt == datetime.date(2017, 01, 01)
-            assert res.proc_dt == datetime.date(2017, 01, 01)
+            assert res.enc_dt == datetime.date(2017, 1, 1)
+            assert res.proc_dt == datetime.date(2017, 1, 1)
         elif res.hv_proc_id == '40_enc_pat-visit-id-2':
-            assert res.enc_dt == datetime.date(2017, 01, 01)
-            assert res.proc_dt == datetime.date(2017, 01, 01)
+            assert res.enc_dt == datetime.date(2017, 1, 1)
+            assert res.proc_dt == datetime.date(2017, 1, 1)
         elif res.hv_proc_id == '40_ord_id-0':
-            assert res.enc_dt == datetime.date(2017, 02, 01)
-            assert res.proc_dt == datetime.date(2017, 01, 01)
-            assert res.data_captr_dt == datetime.date(2016, 01, 01)
+            assert res.enc_dt == datetime.date(2017, 2, 1)
+            assert res.proc_dt == datetime.date(2017, 1, 1)
+            assert res.data_captr_dt == datetime.date(2016, 1, 1)
         elif res.hv_proc_id == '40_ord_id-1':
-            assert res.enc_dt == datetime.date(2017, 02, 01)
-            assert res.proc_dt == datetime.date(2017, 01, 01)
-            assert res.data_captr_dt == datetime.date(2016, 01, 01)
+            assert res.enc_dt == datetime.date(2017, 2, 1)
+            assert res.proc_dt == datetime.date(2017, 1, 1)
+            assert res.data_captr_dt == datetime.date(2016, 1, 1)
         elif res.hv_proc_id == '40_ord_id-2':
-            assert res.enc_dt == datetime.date(2017, 02, 01)
-            assert res.proc_dt == datetime.date(2017, 01, 01)
-            assert res.data_captr_dt == datetime.date(2016, 01, 01)
+            assert res.enc_dt == datetime.date(2017, 2, 1)
+            assert res.proc_dt == datetime.date(2017, 1, 1)
+            assert res.data_captr_dt == datetime.date(2016, 1, 1)
 
 
 def test_procedure_data_cleaning():
@@ -391,8 +391,8 @@ def test_provider_order_data_cleaning():
     Ensure the provider order codes and diagnosis codes are cleaned
     properly in the provider_order results
     """
-    assert sorted(set([res.prov_ord_cd for res in provider_order_results])) == ['MYCPT']
-    assert sorted(set([res.prov_ord_diag_cd for res in provider_order_results])) == ['ICD10']
+    assert set([res.prov_ord_cd for res in provider_order_results]) == set(['MYCPT'])
+    assert set([res.prov_ord_diag_cd for res in provider_order_results]) == set(['ICD10'])
 
 
 def test_provider_order_first_last_name_parsing():
@@ -426,9 +426,9 @@ def test_lab_result_date_cap():
         if res.hv_lab_result_id == '40_000878FC-CE79-4E90-AE5B-4C9742F5374A-2':
             assert not res.lab_test_execd_dt
         elif res.hv_lab_result_id == '40_0004B13F-0CC3-4D7B-B63C-EB2FDEEC3DCE-1':
-            assert res.lab_test_execd_dt == datetime.date(2017, 01, 01)
+            assert res.lab_test_execd_dt == datetime.date(2017, 1, 1)
         elif res.hv_lab_result_id is None:
-            assert res.lab_test_execd_dt == datetime.date(2017, 01, 01)
+            assert res.lab_test_execd_dt == datetime.date(2017, 1, 1)
         else:
             raise AssertionError("Unexpected result id: {}".format(res.hv_lab_result_id))
 
@@ -533,10 +533,10 @@ def test_vital_sign_type_cd():
     """
     Ensure the type codes were exploded and translated correctly
     """
-    assert sorted(set([res.vit_sign_typ_cd for res in vital_sign_results])) == [
+    assert set([res.vit_sign_typ_cd for res in vital_sign_results]) == set([
         'CARD_FN_DEC', 'CARD_FN_RAW', 'CDAI', 'DAS28', 'HEIGHT', 'NJC28', 'PAIN',
         'PGA', 'PTGA', 'RAPID3', 'SDAI', 'SJC28', 'STANFORD_HAQ', 'TJC28', 'WEIGHT'
-    ]
+    ])
 
     for res in vital_sign_results:
         if res.vit_sign_typ_cd == 'RAPID3':

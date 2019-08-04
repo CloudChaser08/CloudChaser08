@@ -5,7 +5,7 @@ import os
 
 
 def all_tables(spark):
-    return map(lambda el: el['tableName'], spark['sqlContext'].sql("SHOW TABLES").collect())
+    return [el['tableName'] for el in spark['sqlContext'].sql("SHOW TABLES").collect()]
 
 
 def rows_for_table(spark, table_name):

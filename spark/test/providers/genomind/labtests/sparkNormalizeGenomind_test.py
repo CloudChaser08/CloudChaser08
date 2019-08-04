@@ -33,11 +33,11 @@ def test_expected_row_count_matches():
 
 
 def test_expected_amount_of_ordering_npis():
-    assert len(set((map(lambda x: x.ordering_npi, results)))) == 5
+    assert len(set(([x.ordering_npi for x in results]))) == 5
 
 
 def test_expected_amount_of_medications():
-    assert len(set(map(lambda x: x.test_ordered_name, filter(lambda x: x.hvid == '113114247', results)))) == 4
+    assert len(set([x.test_ordered_name for x in [x for x in results if x.hvid == '113114247']])) == 4
 
 
 def test_cleanup(spark):

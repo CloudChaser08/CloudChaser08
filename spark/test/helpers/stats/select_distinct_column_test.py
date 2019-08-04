@@ -34,7 +34,7 @@ def test_init(spark):
 
 def test_expected_values():
     list_length_udf = udf(lambda x: None if x == None else len(x))
-    non_distinct_columns = list(filter(lambda x: x != distinct_column_name, results.columns))
+    non_distinct_columns = list([x for x in results.columns if x != distinct_column_name])
     results_length_df = results.withColumn(distinct_column_name, col(distinct_column_name))
     for c in non_distinct_columns:
         results_length_df = results_length_df.withColumn(c, list_length_udf(col(c)))

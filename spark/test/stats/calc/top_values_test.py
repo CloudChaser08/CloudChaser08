@@ -47,7 +47,7 @@ def test_top_values_created_for_each_column():
 
 
 def test_threshold():
-    assert sorted(results_threshold) == [
+    assert sorted(results_threshold, key=lambda r: r['column']) == [
         {'column': 'a', 'count': 2, 'percentage': 0.5, 'value': 'a'},
         {'column': 'b', 'count': 2, 'percentage': 0.5, 'value': 'b'},
         {'column': 'c', 'count': 2, 'percentage': 0.5, 'value': 's'}
@@ -59,8 +59,8 @@ def test_threshold():
 
 
 def test_duplicate_values_not_counted_twice_when_distinct_column_is_not_none():
-    assert filter(lambda x: x['column'] == 'a' and x['value'] == 'a', results_no_distinct)[0]['count'] == 2
-    assert filter(lambda x: x['column'] == 'a' and x['value'] == 'a', results_distinct)[0]['count'] == 1
+    assert [x for x in results_no_distinct if x['column'] == 'a' and x['value'] == 'a'][0]['count'] == 2
+    assert [x for x in results_distinct if x['column'] == 'a' and x['value'] == 'a'][0]['count'] == 1
 
 
 def test_no_top_values_to_calculate():

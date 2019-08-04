@@ -219,9 +219,12 @@ def _generate_queries(stats, provider_conf):
             stat_queries.append(TOP_VALS_DELETE_SQL_TEMPLATE.format(
                 data_feed_id=provider_conf["datafeed_id"]))
 
+            for r in stat_value:
+                r['value'] = r['value'] if type(r['value'].encode('utf-8')) != str else r['value'].encode('utf-8')
+
             for column in columns:
                 top_values_string = reduce(lambda x1, x2: x1 + ', ' + x2, [
-                    '{} ({}:{})'.format(r['value'].encode('utf-8'), r['count'], r['percentage'])
+                    '{} ({}:{})'.format(r['value'], r['count'], r['percentage'])
                     for r in stat_value if r['column'] == column
                 ])
 

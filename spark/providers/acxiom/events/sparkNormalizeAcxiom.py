@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime, date
 from pyspark.sql.functions import lit
+from pyspark.sql.types import StructType, StructField, StringType
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -78,7 +79,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Remove any source ids that are not in the acxiom ids table
     if test:
-        from pyspark.sql.types import *
         acxiom_ids = runner.sqlContext.read.csv(ids_path, StructType([StructField('aid', StringType(), True)]), sep='|')
     else:
         acxiom_ids = runner.sqlContext.read.parquet(ids_path)

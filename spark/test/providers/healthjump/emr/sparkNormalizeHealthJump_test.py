@@ -50,7 +50,7 @@ def test_init(spark):
 def test_date_parsing():
  
     # date with slashes
-    assert [r.proc_dt for r in procedure_results if r.hvid == 'hvid-9'] == [ datetime.date(2010, 04, 01) ]
+    assert [r.proc_dt for r in procedure_results if r.hvid == 'hvid-9'] == [ datetime.date(2010, 4, 1) ]
 
     # date without slashes
     assert [r.proc_dt for r in procedure_results if r.hvid == 'hvid-8'] == [ datetime.date(2009, 10, 9) ]
