@@ -1,14 +1,15 @@
 import datetime
-import inspect
 import importlib
+import inspect
+import os
 
+import boto3
+
+import spark.common.std_census as std_census
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
-import spark.common.std_census as std_census
-
-from pyspark.sql.types import StructType, StructField, StringType
+import spark.helpers.records_loader as records_loader
 from spark.runner import Runner, PACKAGE_PATH
 from spark.spark_setup import init
 from std_census import records_schemas, matching_payloads_schemas
@@ -19,22 +20,23 @@ END_TO_END_TEST = 'end_to_end_test'
 PRODUCTION = 'production'
 DRIVER_MODULE_NAME = 'driver'
 SAVE_PATH = 'hdfs:///staging/'
+SALUSV = 's3://salusv/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
     TEST: '../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{{day:02d}}/',
-    END_TO_END_TEST: 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{{day:02d}}/',
+    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{{day:02d}}/',
     PRODUCTION: 's3a://salusv/incoming/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
     TEST: '../test/census/{client}/{opp_id}/resources/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
-    END_TO_END_TEST: 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
+    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
     PRODUCTION: 's3a://salusv/matching/payload/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
 }
 
 MODE_OUTPUT_PATH = {
     TEST: '../test/census/{client}/{opp_id}/resources/output/',
-    END_TO_END_TEST: 's3://salusv/testing/dewey/airflow/e2e/{client}/{opp_id}/output/',
+    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/output/',
     PRODUCTION: 's3a://salusv/deliverable/{client}/{opp_id}/'
 }
 
@@ -45,6 +47,16 @@ class SetterProperty(object):
 
     def __set__(self, obj, value):
         return self.func(obj, value)
+
+
+class BotoParser:
+    def __init__(self, path):
+        file_path = path.replace('s3a:', 's3:')
+        files_path = file_path.split('/')
+        self.s3 = 's3'
+        self.bucket = files_path[2]
+        self.key = '/'.join(files_path[3:-1])
+        self.prefix = files_path[0] + '//' + self.bucket + '/'
 
 # Directory structure if inherting from this class
 # spark/census/
@@ -127,7 +139,43 @@ class CensusDriver(object):
     def matching_payloads_module_name(self, module_name):
         self._matching_payloads_module_name = module_name
 
-    def load(self, batch_date):
+    def get_batch_records_files(self, batch_date):
+        """List all files within a given os or s3 directory, recursively"""
+
+        def recurse_s3_directory_for_files(directory_path):
+            """Private - List all files within a given s3 directory, recursively"""
+            record_files = []
+            boto_parser = BotoParser(directory_path)
+            s3 = boto3.client(boto_parser.s3)
+            kwargs = {'Bucket': boto_parser.bucket, 'Prefix': boto_parser.key}
+            while True:
+                resp = s3.list_objects_v2(**kwargs)
+                try:
+                    contents = resp['Contents']
+                    filtered_contents = filter(lambda x: x['Size'] > 0, contents)
+                    for obj in filtered_contents:
+                        record_files.append(obj['Key'])
+                    try:
+                        kwargs['ContinuationToken'] = resp['NextContinuationToken']
+                    except KeyError:
+                        break
+                except KeyError:
+                    break  # the directory doesn't exist. Just return []
+            return record_files
+
+        def recurse_os_directory_for_files(path):
+            """Private - List all files within a given os directory, recursively"""
+            return [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
+
+        records_path = self._records_path_template.format(
+            year=batch_date.year, month=batch_date.month, day=batch_date.day
+        )
+        if records_path.startswith('s3'):
+            return recurse_s3_directory_for_files(records_path)
+        else:
+            return recurse_os_directory_for_files(records_path)
+
+    def load(self, batch_date, chunk_records_files=None):
         if self.__class__.__name__ == CensusDriver.__name__:
             records_schemas = std_census.records_schemas
             matching_payloads_schemas = std_census.matching_payloads_schemas
@@ -146,6 +194,9 @@ class CensusDriver(object):
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
 
+        if chunk_records_files:
+            records_path = SALUSV + '{' + ','.join(chunk_records_files) + '}'
+
         if self._test:
             # Tests run on local files
             records_path = file_utils.get_abs_path(__file__, records_path) + '/'
@@ -156,7 +207,7 @@ class CensusDriver(object):
         payload_loader.load_all(self._runner, matching_path,
                                 matching_payloads_schemas)
 
-    def transform(self, date_input=None):
+    def transform(self):
         if self.__class__.__name__ == CensusDriver.__name__:
             census_module = std_census
         else:
@@ -172,7 +223,7 @@ class CensusDriver(object):
         header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
         return header.union(content).coalesce(1)
 
-    def save(self, dataframe, batch_date):
+    def save(self, dataframe, batch_date, chunk_idx=None):
         dataframe.createOrReplaceTempView('deliverable')
         normalized_records_unloader.unload_delimited_file(
             self._spark, self._runner, SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
@@ -186,5 +237,7 @@ class CensusDriver(object):
         )
 
     def copy_to_s3(self, batch_date=None):
-        self._spark.stop()
         normalized_records_unloader.distcp(self._output_path)
+
+    def stop_spark(self):
+        self._spark.stop()

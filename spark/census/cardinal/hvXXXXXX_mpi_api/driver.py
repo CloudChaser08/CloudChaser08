@@ -101,7 +101,7 @@ class CardinalAPICensusDriver(CensusDriver):
 
         payload_loader.load_all(self._runner, matching_path, matching_payloads_schemas)
 
-    def transform(self, *args):
+    def transform(self):
 
         # Override parent definition to not include a header
         content = self._runner.run_all_spark_scripts()

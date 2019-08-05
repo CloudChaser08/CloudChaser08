@@ -2,16 +2,24 @@ import argparse
 import sys
 import importlib
 import inspect
-import spark.common
+import math
 
 from datetime import datetime, date
 from spark.common.census_driver import CensusDriver
 
+
+def split_into_chunks(input_list, number_of_chunks):
+    """Split a list into n chunks"""
+    for i in xrange(0, len(input_list), number_of_chunks):
+        yield input_list[i:i + number_of_chunks]
+
+
 def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=None,
-         census_module=None, end_to_end_test=False, test=False):
+         census_module=None, end_to_end_test=False, test=False, num_input_files=-1):
     """
     Run standard census driver script or one from the provided census module
     """
+
     driver = None
     if census_module:
         mod = importlib.import_module(census_module)
@@ -35,10 +43,20 @@ def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=No
     # use batch_id as input. default to date
     batch_id = batch_id_arg if batch_id_arg else datetime.strptime(date, '%Y-%m-%d').date()
 
-    driver.load(batch_id)
-    df = driver.transform(batch_id)
-    driver.save(df, batch_id)
-    driver.copy_to_s3(batch_id)
+    if num_input_files > 0:
+        all_batch_files = driver.get_batch_records_files(batch_id)
+        for chunk_idx, chunk_files in enumerate(split_into_chunks(all_batch_files, num_input_files)):
+            driver.load(batch_id, chunk_records_files=chunk_files)
+            df = driver.transform()
+            driver.save(df, batch_id, chunk_idx)
+            driver.copy_to_s3(batch_id)
+    # -1 and 0 mean the same thing, process everything
+    else:
+        driver.load(batch_id)
+        df = driver.transform()
+        driver.save(df, batch_id)
+        driver.copy_to_s3(batch_id)
+    driver.stop_spark()
 
 
 if __name__ == "__main__":
@@ -49,6 +67,7 @@ if __name__ == "__main__":
     parser.add_argument('--opportunity_id', type=str, default=None, help="Opportunity ID")
     parser.add_argument('--salt', type=str, default=None, help="HVID obfuscation salt")
     parser.add_argument('--census_module', type=str, default=None, help="Census module name")
+    parser.add_argument('--num_input_files', type=int, default=-1, help="Number of input files in each chunk of census data we will process in a loop")
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     parser.add_argument('--test', default=False, action='store_true')
     args = parser.parse_args()
@@ -60,4 +79,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     main(args.date, args.batch_id, args.client_name, args.opportunity_id,
-         args.salt, args.census_module, args.end_to_end_test, args.test)
+         args.salt, args.census_module, args.end_to_end_test, args.test, args.num_input_files)

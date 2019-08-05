@@ -11,7 +11,7 @@ GROUP1 = 'test1234'
 GROUP2 = 'test0000' # Invalid group, 20 patients, 1 valid
 GROUP3 = 'test4321'
 GROUP4 = 'test0001' # Invalid group, 5 patients, 5 valid
-DW_TABLES = ['hvm_emr_diag', 'hvm_emr_proc', 'hvm_emr_medctn', 'hvm_emr_enc', 'ref_vdr_feed',
+DW_TABLES = ['hvm_emr_diag_v08', 'hvm_emr_proc_v10', 'hvm_emr_medctn_v09', 'hvm_emr_enc_v08', 'ref_vdr_feed',
              'ref_gen_ref', 'hvm_pharmacyclaims_v07', 'hvm_medicalclaims_v08']
 
 HASHED_FIELDS = ['hvid', 'prov_rendering_npi', 'prov_billing_npi', 'prov_referring_npi', 'prov_facility_npi']
@@ -36,10 +36,10 @@ def _transformation_results(spark):
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('hvm_pharmacyclaims_v07')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('hvm_medicalclaims_v08')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/enroll_sample.json')).createOrReplaceTempView('enrollmentrecords')
-    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_diag_sample.json')).createOrReplaceTempView('hvm_emr_diag')
-    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_proc_sample.json')).createOrReplaceTempView('hvm_emr_proc')
-    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_medctn_sample.json')).createOrReplaceTempView('hvm_emr_medctn')
-    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_enc_sample.json')).createOrReplaceTempView('hvm_emr_enc')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_diag_sample.json')).createOrReplaceTempView('hvm_emr_diag_v08')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_proc_sample.json')).createOrReplaceTempView('hvm_emr_proc_v10')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_medctn_sample.json')).createOrReplaceTempView('hvm_emr_medctn_v09')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_enc_sample.json')).createOrReplaceTempView('hvm_emr_enc_v08')
     spark['spark'].sql('CREATE SCHEMA dw')
     for table_name in DW_TABLES:
         spark['spark'].sql('CREATE TABLE dw.{0} AS SELECT * FROM {0}'.format(table_name))

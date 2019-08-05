@@ -4,6 +4,10 @@ from contextlib import closing
 import psycopg2
 from psycopg2.extras import DictCursor
 
+from spark.stats.config.reader.config_reader import (
+    PG_HOST, PG_PASSWORD, PG_DB, PG_USER
+)
+
 
 def _layout_sql(datafeed_id):
     """ Create the SQL statement for extracting the base data_layout from DB. """
@@ -41,11 +45,10 @@ def _run_sql(query):
 
     # TODO put this and config.reader.config_reader's copy of this in one spot
     conn = psycopg2.connect(
-        host=os.environ.get('PGHOST', 'pg-dev.healthverity.com'),
-        database=os.environ.get('PGDB', 'config'),
-        user=os.environ.get('PGUSER', 'hvreadonly'),
-        port=os.environ.get('PGPORT', 5432),
-        password=os.environ.get('PGPASSWORD')
+        host=PG_HOST,
+        database=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD
     )
     with closing(conn.cursor(cursor_factory=DictCursor)) as cursor:
         cursor.execute(query)

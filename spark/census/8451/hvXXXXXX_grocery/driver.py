@@ -1,36 +1,33 @@
-from datetime import date
-from spark.common.census_driver import CensusDriver, SAVE_PATH
-import spark.helpers.records_loader as records_loader
-
 import os
 import re
 import subprocess
 
+from spark.common.census_driver import CensusDriver, SAVE_PATH
 
 class Grocery8451CensusDriver(CensusDriver):
 
     CLIENT_NAME = '8451'
-    OPPORTUNITY_ID = 'hvXXXXX2'
+    OPPORTUNITY_ID = 'hvXXXXXX_grocery'
     NUM_PARTITIONS = 20
     SALT = "hvid8451"
 
     def __init__(self, end_to_end_test=False):
         super(Grocery8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID,
-                                                        end_to_end_test=end_to_end_test)
+                                                      end_to_end_test=end_to_end_test)
 
     def transform(self):
         # By default, run_all_spark_scripts will run all sql scripts in the working directory
         content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT]])
         return content
 
-    def save(self, dataframe, batch_date):
+    def save(self, dataframe, batch_date, chunk_idx=None):
         output_path = SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
-                year=batch_date.year, month=batch_date.month, day=batch_date.day
-            )
+            year=batch_date.year, month=batch_date.month, day=batch_date.day
+        )
 
-        output_file_name_template = '{year}{month:02d}{day:02d}_response{{}}'.format(
-                year=batch_date.year, month=batch_date.month, day=batch_date.day
-            )
+        output_file_name_template = '{year}{month:02d}{day:02d}_response_{{}}'.format(
+            year=batch_date.year, month=batch_date.month, day=batch_date.day
+        )
 
         if self._test:
 
@@ -67,6 +64,8 @@ class Grocery8451CensusDriver(CensusDriver):
         # e.g. part-00081-35b44b47-2b52-4430-a12a-c4ed31c7bfd5-c000.psv.gz becomes <date>_response00081.psv.gz
         #
         for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
-            part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1) 
-            new_name = output_file_name_template.format(part_number) + '.psv.gz'
+            part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
+            if chunk_idx is not None:
+                part_number = int(part_number) + chunk_idx * self.NUM_PARTITIONS
+            new_name = output_file_name_template.format(str(part_number).zfill(5)) + '.psv.gz'
             rename_file(output_path + filename, output_path + new_name)

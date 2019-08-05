@@ -5,7 +5,7 @@ from datetime import timedelta
 import pyspark.sql.functions as F
 
 def prepare(runner, hvids, start_dt, is_prod=False):
-    for table_name in ['hvm_emr_diag', 'hvm_emr_enc', 'hvm_emr_medctn', 'hvm_emr_proc']:
+    for table_name in ['hvm_emr_diag_v08', 'hvm_emr_enc_v08', 'hvm_emr_medctn_v09', 'hvm_emr_proc_v10']:
         # Because this is EMR data, we are going back an additional year in the
         # partitions. This will be cut down to the the appropriate date ranges
         # in the extract scripts
@@ -15,10 +15,8 @@ def prepare(runner, hvids, start_dt, is_prod=False):
             .where(hvids['hvid'].isNotNull())
 
         # Humana has not yet approved this for production, so null it out
-
-        # Humana requested that these claims would not be included in UAT
-        # responses for now either
-        df = runner.sqlContext.createDataFrame([], df.schema)
+        if is_prod:
+            df = runner.sqlContext.createDataFrame([], df.schema)
 
         df = df[df.part_hvm_vdr_feed_id.isin(*SUPPLIERS)]
 
@@ -31,7 +29,7 @@ def prepare(runner, hvids, start_dt, is_prod=False):
     df = schema_enforcer.apply_schema(
         runner.sqlContext.table('synthetic_medicalclaims').repartition(100),
         med_schema,
-        columns_to_keep=['part_provider', 'part_processdate']
+        columns_to_keep=['part_provider', 'part_best_date']
     ).checkpoint()
 
     df.createOrReplaceTempView('synthetic_medicalclaims')
@@ -40,7 +38,7 @@ def prepare(runner, hvids, start_dt, is_prod=False):
     df = schema_enforcer.apply_schema(
         runner.sqlContext.table('synthetic_pharmacyclaims').repartition(100),
         pharma_schema,
-        columns_to_keep=['part_provider', 'part_processdate']
+        columns_to_keep=['part_provider', 'part_best_date']
     ).checkpoint()
 
     df.createOrReplaceTempView('synthetic_pharmacyclaims')

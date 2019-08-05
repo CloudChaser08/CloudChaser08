@@ -14,163 +14,185 @@ SELECT
     CAST(enc.ptnt_birth_yr AS STRING)                                                       AS patient_year_of_birth,
     enc.ptnt_zip3_cd                                                                        AS patient_zip3,
     enc.ptnt_state_cd                                                                       AS patient_state,
-    NULL                                                                                    AS claim_type,
-    NULL                                                                                    AS date_received,
-    enc.enc_start_dt                                                                        AS date_service, 
-    NULL                                                                                    AS date_service_end, 
-    NULL                                                                                    AS inst_date_admitted,
-    NULL                                                                                    AS inst_date_discharged,
-    NULL                                                                                    AS inst_admit_type_std_id,
-    NULL                                                                                    AS inst_admit_type_vendor_id,
-    NULL                                                                                    AS inst_admit_type_vendor_desc,
-    NULL                                                                                    AS inst_admit_source_std_id,
-    NULL                                                                                    AS inst_admit_source_vendor_id,
-    NULL                                                                                    AS inst_admit_source_vendor_desc,
-    NULL                                                                                    AS inst_discharge_status_std_id,
-    NULL                                                                                    AS inst_discharge_status_vendor_id,
-    NULL                                                                                    AS inst_discharge_status_vendor_desc,
-    NULL                                                                                    AS inst_type_of_bill_std_id,
-    NULL                                                                                    AS inst_type_of_bill_vendor_id,
-    NULL                                                                                    AS inst_type_of_bill_vendor_desc,
-    NULL                                                                                    AS inst_drg_std_id,
-    NULL                                                                                    AS inst_drg_vendor_id,
-    NULL                                                                                    AS inst_drg_vendor_desc,
-    NULL                                                                                    AS place_of_service_std_id,
-    NULL                                                                                    AS place_of_service_vendor_id,
-    NULL                                                                                    AS place_of_service_vendor_desc,
-    NULL                                                                                    AS service_line_number,
+    CAST(NULL AS STRING)                                                                    AS claim_type,
+    CAST(NULL AS DATE)                                                                      AS date_received,
+    enc.hv_enc_dt                                                                           AS date_service,
+    CAST(NULL AS DATE)                                                                      AS date_service_end,
+    CAST(NULL AS DATE)                                                                      AS inst_date_admitted,
+    CAST(NULL AS DATE)                                                                      AS inst_date_discharged,
+    CAST(NULL AS STRING)                                                                    AS inst_admit_type_std_id,
+    CAST(NULL AS STRING)                                                                    AS inst_admit_type_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS inst_admit_type_vendor_desc,
+    CAST(NULL AS STRING)                                                                    AS inst_admit_source_std_id,
+    CAST(NULL AS STRING)                                                                    AS inst_admit_source_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS inst_admit_source_vendor_desc,
+    CAST(NULL AS STRING)                                                                    AS inst_discharge_status_std_id,
+    CAST(NULL AS STRING)                                                                    AS inst_discharge_status_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS inst_discharge_status_vendor_desc,
+    CAST(NULL AS STRING)                                                                    AS inst_type_of_bill_std_id,
+    CAST(NULL AS STRING)                                                                    AS inst_type_of_bill_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS inst_type_of_bill_vendor_desc,
+    CAST(NULL AS STRING)                                                                    AS inst_drg_std_id,
+    CAST(NULL AS STRING)                                                                    AS inst_drg_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS inst_drg_vendor_desc,
+    CAST(NULL AS STRING)                                                                    AS place_of_service_std_id,
+    CAST(NULL AS STRING)                                                                    AS place_of_service_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS place_of_service_vendor_desc,
+    CAST(NULL AS STRING)                                                                    AS service_line_number,
     prc.proc_diag_cd                                                                        AS diagnosis_code,
     prc.proc_diag_cd_qual                                                                   AS diagnosis_code_qual,
-    NULL                                                                                    AS diagnosis_priority,
-    NULL                                                                                    AS admit_diagnosis_ind,
+    CAST(NULL AS STRING)                                                                    AS diagnosis_priority,
+    CAST(NULL AS STRING)                                                                    AS admit_diagnosis_ind,
     prc.proc_cd                                                                             AS procedure_code,
-    (CASE WHEN prc.proc_cd_qual IN ('CPT', 'CPTCODE', 'HCPCS') THEN 'HC'
-          ELSE NULL
-      END)                                                                                  AS procedure_code_qual,
-    NULL                                                                                    AS principal_proc_ind,
-    NULL                                                                                    AS procedure_units_billed,
-    NULL                                                                                    AS procedure_units_paid,
-    NULL                                                                                    AS procedure_modifier_1,
-    NULL                                                                                    AS procedure_modifier_2,
-    NULL                                                                                    AS procedure_modifier_3,
-    NULL                                                                                    AS procedure_modifier_4,
-    NULL                                                                                    AS revenue_code,
-    NULL                                                                                    AS ndc_code,
-    NULL                                                                                    AS medical_coverage_type,
-    NULL                                                                                    AS line_charge,
-    NULL                                                                                    AS line_allowed,
-    NULL                                                                                    AS total_charge,
-    NULL                                                                                    AS total_allowed,
-    NULL                                                                                    AS prov_rendering_npi,
-    NULL                                                                                    AS prov_billing_npi,
-    NULL                                                                                    AS prov_referring_npi,
-    NULL                                                                                    AS prov_facility_npi,
-    NULL                                                                                    AS payer_vendor_id,
-    NULL                                                                                    AS payer_name,
-    NULL                                                                                    AS payer_parent_name,
-    NULL                                                                                    AS payer_org_name,
-    NULL                                                                                    AS payer_plan_id,
-    NULL                                                                                    AS payer_plan_name,
-    NULL                                                                                    AS payer_type,
-    NULL                                                                                    AS prov_rendering_vendor_id,
-    NULL                                                                                    AS prov_rendering_tax_id,
-    NULL                                                                                    AS prov_rendering_dea_id,
-    NULL                                                                                    AS prov_rendering_ssn,
-    NULL                                                                                    AS prov_rendering_state_license,
-    NULL                                                                                    AS prov_rendering_upin,
-    NULL                                                                                    AS prov_rendering_commercial_id,
-    NULL                                                                                    AS prov_rendering_name_1,
-    NULL                                                                                    AS prov_rendering_name_2,
-    NULL                                                                                    AS prov_rendering_address_1,
-    NULL                                                                                    AS prov_rendering_address_2,
-    NULL                                                                                    AS prov_rendering_city,
-    prc.proc_rndrg_prov_state_cd                                                            AS prov_rendering_state, 
-    prc.proc_rndrg_prov_zip_cd                                                              AS prov_rendering_zip,
-    prc.proc_rndrg_prov_taxnmy_id                                                           AS prov_rendering_std_taxonomy,
-    prc.proc_rndrg_prov_speclty_id                                                          AS prov_rendering_vendor_specialty,
-    NULL                                                                                    AS prov_billing_vendor_id,
-    NULL                                                                                    AS prov_billing_tax_id,
-    NULL                                                                                    AS prov_billing_dea_id,
-    NULL                                                                                    AS prov_billing_ssn,
-    NULL                                                                                    AS prov_billing_state_license,
-    NULL                                                                                    AS prov_billing_upin,
-    NULL                                                                                    AS prov_billing_commercial_id,
-    NULL                                                                                    AS prov_billing_name_1,
-    NULL                                                                                    AS prov_billing_name_2,
-    NULL                                                                                    AS prov_billing_address_1,
-    NULL                                                                                    AS prov_billing_address_2,
-    NULL                                                                                    AS prov_billing_city,
-    NULL                                                                                    AS prov_billing_state,
-    NULL                                                                                    AS prov_billing_zip,
-    NULL                                                                                    AS prov_billing_std_taxonomy,
-    NULL                                                                                    AS prov_billing_vendor_specialty,
-    NULL                                                                                    AS prov_referring_vendor_id,
-    NULL                                                                                    AS prov_referring_tax_id,
-    NULL                                                                                    AS prov_referring_dea_id,
-    NULL                                                                                    AS prov_referring_ssn,
-    NULL                                                                                    AS prov_referring_state_license,
-    NULL                                                                                    AS prov_referring_upin,
-    NULL                                                                                    AS prov_referring_commercial_id,
-    NULL                                                                                    AS prov_referring_name_1,
-    NULL                                                                                    AS prov_referring_name_2,
-    NULL                                                                                    AS prov_referring_address_1,
-    NULL                                                                                    AS prov_referring_address_2,
-    NULL                                                                                    AS prov_referring_city,
-    NULL                                                                                    AS prov_referring_state,
-    NULL                                                                                    AS prov_referring_zip,
-    NULL                                                                                    AS prov_referring_std_taxonomy,
-    NULL                                                                                    AS prov_referring_vendor_specialty,
-    NULL                                                                                    AS prov_facility_vendor_id,
-    NULL                                                                                    AS prov_facility_tax_id,
-    NULL                                                                                    AS prov_facility_dea_id,
-    NULL                                                                                    AS prov_facility_ssn,
-    NULL                                                                                    AS prov_facility_state_license,
-    NULL                                                                                    AS prov_facility_upin,
-    NULL                                                                                    AS prov_facility_commercial_id,
-    NULL                                                                                    AS prov_facility_name_1,
-    NULL                                                                                    AS prov_facility_name_2,
-    NULL                                                                                    AS prov_facility_address_1,
-    NULL                                                                                    AS prov_facility_address_2,
-    NULL                                                                                    AS prov_facility_city,
-    NULL                                                                                    AS prov_facility_state,
-    NULL                                                                                    AS prov_facility_zip,
-    NULL                                                                                    AS prov_facility_std_taxonomy,
-    NULL                                                                                    AS prov_facility_vendor_specialty,
-    NULL                                                                                    AS cob_payer_vendor_id_1,
-    NULL                                                                                    AS cob_payer_seq_code_1,
-    NULL                                                                                    AS cob_payer_hpid_1,
-    NULL                                                                                    AS cob_payer_claim_filing_ind_code_1,
-    NULL                                                                                    AS cob_ins_type_code_1,
-    NULL                                                                                    AS cob_payer_vendor_id_2,
-    NULL                                                                                    AS cob_payer_seq_code_2,
-    NULL                                                                                    AS cob_payer_hpid_2,
-    NULL                                                                                    AS cob_payer_claim_filing_ind_code_2,
-    NULL                                                                                    AS cob_ins_type_code_2,
-    NULL                                                                                    AS vendor_test_id,
-    NULL                                                                                    AS vendor_test_name,
-    NULL                                                                                    AS claim_transaction_date,
-    NULL                                                                                    AS claim_transaction_date_qual,
-    NULL                                                                                    AS claim_transaction_amount,
-    NULL                                                                                    AS claim_transaction_amount_qual, 
-    NULL                                                                                    AS medical_claim_link_text,
-    NULL                                                                                    AS emr_link_text,
-    NULL                                                                                    AS logical_delete_reason, 
+    /* procedure_code_qual */
+    CASE 
+        WHEN prc.proc_cd_qual IN ('CPT', 'CPTCODE', 'HCPCS') THEN 'HC'
+        ELSE CAST(NULL AS STRING)
+    END                                                                                     AS procedure_code_qual,
+    CAST(NULL AS STRING)                                                                    AS principal_proc_ind,
+    CAST(NULL AS FLOAT)                                                                     AS procedure_units_billed,
+    CAST(NULL AS FLOAT)                                                                     AS procedure_units_paid,
+    CAST(NULL AS STRING)                                                                    AS procedure_modifier_1,
+    CAST(NULL AS STRING)                                                                    AS procedure_modifier_2,
+    CAST(NULL AS STRING)                                                                    AS procedure_modifier_3,
+    CAST(NULL AS STRING)                                                                    AS procedure_modifier_4,
+    CAST(NULL AS STRING)                                                                    AS revenue_code,
+    CAST(NULL AS STRING)                                                                    AS ndc_code,
+    CAST(NULL AS STRING)                                                                    AS medical_coverage_type,
+    CAST(NULL AS FLOAT)                                                                     AS line_charge,
+    CAST(NULL AS FLOAT)                                                                     AS line_allowed,
+    CAST(NULL AS FLOAT)                                                                     AS total_charge,
+    CAST(NULL AS FLOAT)                                                                     AS total_allowed,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_npi,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_npi,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_npi,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_npi,
+    CAST(NULL AS STRING)                                                                    AS payer_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS payer_name,
+    CAST(NULL AS STRING)                                                                    AS payer_parent_name,
+    CAST(NULL AS STRING)                                                                    AS payer_org_name,
+    CAST(NULL AS STRING)                                                                    AS payer_plan_id,
+    CAST(NULL AS STRING)                                                                    AS payer_plan_name,
+    CAST(NULL AS STRING)                                                                    AS payer_type,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_tax_id,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_dea_id,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_ssn,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_state_license,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_upin,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_commercial_id,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_name_1,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_name_2,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_address_1,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_address_2,
+    CAST(NULL AS STRING)                                                                    AS prov_rendering_city,
+    /* prov_rendering_state */
+    CASE
+        WHEN prc.proc_prov_state_cd_qual = 'RENDERING_PROVIDER'
+            THEN prc.proc_prov_state_cd
+        ELSE CAST(NULL AS STRING)
+    END                                                                                     AS prov_rendering_state, 
+    /* prov_rendering_zip */
+    CASE
+        WHEN prc.proc_prov_zip_cd_qual = 'RENDERING_PROVIDER'
+            THEN prc.proc_prov_zip_cd
+        ELSE CAST(NULL AS STRING)
+    END                                                                                     AS prov_rendering_zip,
+    /* prov_rendering_std_taxonomy */
+    CASE
+        WHEN prc.proc_prov_taxnmy_id_qual = 'RENDERING_PROVIDER'
+            THEN prc.proc_prov_taxnmy_id
+        ELSE CAST(NULL AS STRING)
+    END                                                                                     AS prov_rendering_std_taxonomy,
+    /* prov_rendering_vendor_specialty */
+    CASE
+        WHEN prc.proc_prov_speclty_id_qual = 'RENDERING_PROVIDER'
+            THEN prc.proc_prov_speclty_id
+        ELSE CAST(NULL AS STRING)
+    END                                                                                     AS prov_rendering_vendor_specialty,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_tax_id,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_dea_id,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_ssn,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_state_license,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_upin,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_commercial_id,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_name_1,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_name_2,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_address_1,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_address_2,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_city,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_state,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_zip,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_std_taxonomy,
+    CAST(NULL AS STRING)                                                                    AS prov_billing_vendor_specialty,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_tax_id,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_dea_id,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_ssn,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_state_license,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_upin,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_commercial_id,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_name_1,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_name_2,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_address_1,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_address_2,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_city,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_state,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_zip,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_std_taxonomy,
+    CAST(NULL AS STRING)                                                                    AS prov_referring_vendor_specialty,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_vendor_id,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_tax_id,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_dea_id,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_ssn,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_state_license,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_upin,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_commercial_id,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_name_1,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_name_2,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_address_1,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_address_2,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_city,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_state,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_zip,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_std_taxonomy,
+    CAST(NULL AS STRING)                                                                    AS prov_facility_vendor_specialty,
+    CAST(NULL AS STRING)                                                                    AS cob_payer_vendor_id_1,
+    CAST(NULL AS STRING)                                                                    AS cob_payer_seq_code_1,
+    CAST(NULL AS STRING)                                                                    AS cob_payer_hpid_1,
+    CAST(NULL AS STRING)                                                                    AS cob_payer_claim_filing_ind_code_1,
+    CAST(NULL AS STRING)                                                                    AS cob_ins_type_code_1,
+    CAST(NULL AS STRING)                                                                    AS cob_payer_vendor_id_2,
+    CAST(NULL AS STRING)                                                                    AS cob_payer_seq_code_2,
+    CAST(NULL AS STRING)                                                                    AS cob_payer_hpid_2,
+    CAST(NULL AS STRING)                                                                    AS cob_payer_claim_filing_ind_code_2,
+    CAST(NULL AS STRING)                                                                    AS cob_ins_type_code_2,
+    CAST(NULL AS STRING)                                                                    AS vendor_test_id,
+    CAST(NULL AS STRING)                                                                    AS vendor_test_name,
+    CAST(NULL AS DATE)                                                                      AS claim_transaction_date,
+    CAST(NULL AS STRING)                                                                    AS claim_transaction_date_qual,
+    CAST(NULL AS FLOAT)                                                                     AS claim_transaction_amount,
+    CAST(NULL AS STRING)                                                                    AS claim_transaction_amount_qual, 
+    CAST(NULL AS STRING)                                                                    AS medical_claim_link_text,
+    CAST(NULL AS STRING)                                                                    AS emr_link_text,
+    CAST(NULL AS STRING)                                                                    AS logical_delete_reason, 
     'nextgen'                                                                               AS part_provider,
-    CONCAT(prc.part_mth, '-01')                                                             AS part_processdate
+    prc.part_mth                                                                            AS part_best_date
  FROM 
 (
     SELECT *
-     FROM hvm_emr_enc enc1
+     FROM hvm_emr_enc_v08 enc1
     WHERE enc1.part_hvm_vdr_feed_id = '35'
       AND enc1.hvid IS NOT NULL
       AND enc1.enc_start_dt IS NOT NULL
-      -- Reduce the encounter data to one row per hv_enc_id --  the most recent.
-      -- Eliminate rows where another row exists with a later create date,
-      -- with a "larger" dataset name, or the same dataset name and a larger row ID.
+      /* Reduce the encounter data to one row per hv_enc_id - the most recent.
+         Eliminate rows where another row exists with a later create date,
+         with a "larger" dataset name, or the same dataset name and a larger row ID. */
       AND NOT EXISTS
         (
             SELECT 1
-             FROM hvm_emr_enc enc2
+             FROM hvm_emr_enc_v08 enc2
             WHERE enc2.part_hvm_vdr_feed_id = '35'
               AND enc2.hvid IS NOT NULL
               AND enc2.enc_start_dt IS NOT NULL
@@ -182,12 +204,12 @@ SELECT
               AND enc1.hv_enc_id = enc2.hv_enc_id
               
               AND
-                -- Later create date, larger data_set_nm.
+                /* Later create date, larger data_set_nm. */
                 (
                     enc2.crt_dt > enc1.crt_dt
                  OR enc2.data_set_nm > enc1.data_set_nm
                  OR
-                 -- Same dataset, but a larger row_id.
+                 /* Same dataset, but a larger row_id. */
                     (
                         enc2.data_set_nm = enc1.data_set_nm
                     AND enc2.row_id > enc1.row_id
@@ -195,7 +217,7 @@ SELECT
                 )
         )
 ) enc
- LEFT OUTER JOIN hvm_emr_proc prc 
+ LEFT OUTER JOIN hvm_emr_proc_v10 prc 
    ON prc.part_hvm_vdr_feed_id = '35'
   AND prc.hvid IS NOT NULL
   AND
@@ -209,6 +231,6 @@ SELECT
   AND ref.hvm_vdr_feed_id = 35
   AND ref.whtlst_flg = 'Y'
   AND ref.gen_ref_cd = COALESCE(UPPER(enc.enc_typ_cd), 'empty')
--- Either the Encounter Type Code is empty, or it's in the whitelist.
+/* Either the Encounter Type Code is empty, or it's in the whitelist. */
 WHERE enc.enc_typ_cd IS NULL
    OR ref.gen_ref_cd IS NOT NULL
