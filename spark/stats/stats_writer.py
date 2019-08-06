@@ -1,5 +1,6 @@
 import boto3
 import os
+import logging
 from functools import reduce
 
 S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"
@@ -159,7 +160,7 @@ def _generate_queries(stats, provider_conf):
                 stat_value = [
                     {
                         'field': stat['field'].replace('_', ' ').title(),
-                        'value': float(stat['value'])
+                        'value': _safe_float(stat['value'])
                     } for stat in stat_value if stat['field'].upper() in REGION_MAP.values()
                 ]
 
@@ -170,7 +171,7 @@ def _generate_queries(stats, provider_conf):
                 stat_value = [
                     {
                         'field': stat['field'].upper(),
-                        'value': float(stat['value'])
+                        'value': _safe_float(stat['value'])
                     } for stat in stat_value if stat['field'].upper() in REGION_MAP.keys()
                 ]
 
@@ -181,7 +182,7 @@ def _generate_queries(stats, provider_conf):
                 stat_value = [
                     {
                         'field': stat['field'],
-                        'value': float(stat['value'])
+                        'value': _safe_float(stat['value'])
                     } for stat in stat_value if stat['field'] in VALID_AGES
                 ]
 
@@ -192,7 +193,7 @@ def _generate_queries(stats, provider_conf):
                 stat_value = [
                     {
                         'field': stat['field'],
-                        'value': float(stat['value'])
+                        'value': _safe_float(stat['value'])
                     } for stat in stat_value if stat['field'] in VALID_GENDERS
                 ]
 
@@ -242,6 +243,20 @@ def _generate_queries(stats, provider_conf):
         queries[stat_name] = stat_queries
 
     return queries
+
+
+def _safe_float(val):
+    """ Converts passed-in value to a float. If the value is not a float,
+        logs a warning and defaults to zero instead.
+    """
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        logging.warning(
+            'Value (%s) could not be converted to a float, defaulting to zero',
+            val
+        )
+        return float(0)
 
 
 def _write_queries(queries, datafeed_id, quarter, identifier):
