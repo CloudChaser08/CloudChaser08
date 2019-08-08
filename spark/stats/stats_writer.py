@@ -1,4 +1,5 @@
 import boto3
+import json
 import os
 import logging
 from functools import reduce
@@ -122,13 +123,38 @@ VALID_GENDERS = [
 ]
 
 
+def _create_top_values_string(column_name, all_top_values):
+    """
+    Given all top values, string together only the ones that relate to the column given.
+    Format the individual top values like:
+        "value (total:percentage)"
+        EXAMPLE: "100 (1000:.1)"
+    Args:
+        column_name (str): The column to group top values by.
+        all_top_values ([dict, dict, ...]): All top values.
+    Returns:
+        (str): The relevant top values strung together
+    """
+    relevant_top_values = []
+    for top_value in all_top_values:
+        if top_value['column'] == column_name:
+            relevant_top_values.append(
+                '{value} ({total_count}:{percentage})'.format(
+                    value=top_value['value'].encode('utf-8'),
+                    total_count=top_value['count'],
+                    percentage=top_value['percentage']
+                )
+            )
+
+    return ', '.join(relevant_top_values)
+
+
 def _generate_queries(stats, provider_conf):
-    """
-    Generate queries based on given stats
-    """
+    """ Generate queries based on given stats """
+    datafeed_id = provider_conf['datafeed_id']
+    data_layout = []
 
     queries = {}
-
     for stat_name, stat_value in stats.items():
         stat_queries = []
 
@@ -220,10 +246,7 @@ def _generate_queries(stats, provider_conf):
                 data_feed_id=provider_conf["datafeed_id"]))
 
             for column in columns:
-                top_values_string = reduce(lambda x1, x2: x1 + ', ' + x2, [
-                    '{} ({}:{})'.format(r['value'].encode('utf-8'), r['count'], r['percentage'])
-                    for r in stat_value if r['column'] == column
-                ])
+                top_values_string = _create_top_values_string(column, stat_value)
 
                 stat_queries.append(TOP_VALS_INSERT_SQL_TEMPLATE.format(
                     name=column, datafield_id=name_id_dict[column]['field_id'], sequence=name_id_dict[column]['sequence'],

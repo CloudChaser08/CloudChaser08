@@ -25,7 +25,7 @@ PG_USER = PG_CONN_DETAILS['user']
 
 # map from emr datatype (table) name to the name of each datatype in
 # the marketplace db
-emr_datatype_name_map = {
+EMR_DATATYPE_NAME_MAP = {
     'emr_enc': 'Encounter',
     'emr_diag': 'Diagnosis',
     'emr_clin_obsn': 'Clinical Observation',
@@ -115,7 +115,7 @@ def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
         where dm.datafeed_id = {} and m.is_supplemental = 'f' {};
     """.format(
         datafeed_id,
-        "and t.name = '{}'".format(emr_datatype_name_map[emr_datatype]) if emr_datatype else ''
+        "and t.name = '{}'".format(EMR_DATATYPE_NAME_MAP[emr_datatype]) if emr_datatype else ''
     )
 
     return _get_config_from_db(get_columns_sql)

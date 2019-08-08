@@ -6,6 +6,7 @@ import spark.helpers.file_utils as file_utils
 import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
+from spark.stats.data_layout.sql_generator import generate_data_layout_version_sql
 
 ALL_STATS = [
     'key_stats', 'longitudinality', 'year_over_year', 'fill_rate', 'top_values', 'epi'
@@ -97,7 +98,11 @@ def main(args):
                             .init('Feed {} marketplace stats'.format(feed_id))
 
         # Calculate stats
-        run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
+        stats = run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
+
+        # Generate SQL for new data_layout version.
+        # 'quarter' is used as the version name
+        generate_data_layout_version_sql(provider_conf, stats, quarter)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
