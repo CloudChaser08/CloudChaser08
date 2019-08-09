@@ -17,24 +17,24 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats
 
     epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats_to_calculate else {}
 
-    if provider_config['datatype'] == 'emr':
-        if 'emr_enc' not in [m['datatype'] for m in provider_config['models']]:
+    if provider_config.datatype == 'emr':
+        if 'emr_enc' not in [m.datatype for m in provider_config.models]:
             emr_encounter_stats = []
         else:
             emr_encounter_stats = EMR_ENCOUNTER_STATS
 
-        union_level_stats = [stat for stat in stats_to_calculate if stat in provider_config and stat not in emr_encounter_stats]
+        union_level_stats = [stat for stat in stats_to_calculate if hasattr(provider_config, stat) and stat not in emr_encounter_stats]
         model_level_stats = [
             stat for stat in stats_to_calculate
-            for model_conf in provider_config['models']
-            if stat in model_conf
+            for model_conf in provider_config.models
+            if hasattr(model_conf, stat)
         ]
         encounter_level_stats = [
-            stat for stat in stats_to_calculate if stat in provider_config and stat in emr_encounter_stats
+            stat for stat in stats_to_calculate if hasattr(provider_config, stat) and stat in emr_encounter_stats
         ]
 
         model_level_marketplace_stats = dict([
-            (model_conf['datatype'], processor.run_marketplace_stats(
+            (model_conf.datatype, processor.run_marketplace_stats(
                 spark, sqlContext, quarter, start_date, end_date,
                 dict([it for it in provider_config.items() + model_conf.items()]),
                 model_level_stats
@@ -45,13 +45,13 @@ def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats
         )
         encounter_level_marketplace_stats = processor.run_marketplace_stats(
             spark, sqlContext, quarter, start_date, end_date,
-            dict([it for it in provider_config.items() + [m for m in provider_config['models'] if m['datatype'] == 'emr_enc'][0].items()]),
+            dict([it for it in provider_config.items() + [m for m in provider_config['models'] if m.datatype == 'emr_enc'][0].items()]),
             encounter_level_stats
         ) if encounter_level_stats else {}
 
         for model_conf in provider_config['models']:
             stats_writer.write_to_s3(
-                model_level_marketplace_stats[model_conf['datatype']],
+                model_level_marketplace_stats[model_conf.datatype],
                 dict([it for it in provider_config.items() + model_conf.items()]),
                 quarter
             )

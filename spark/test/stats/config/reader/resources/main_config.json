@@ -3,50 +3,50 @@
         {
             "name":             "test",
             "datafeed_id":      "1",
-            "datatype":         "sub_conf",
+            "datatype":         "labtests",
+            "earliest_date":    "2018-01-01",
             "fill_rate":        true,
-            "key_stats":        null,
-            "top_values":       null,
-            "longitudinality":  null,
-            "year_over_year":   null,
-            "epi_calcs":        null,
-            "other_field":      "hi"
+            "key_stats":        false,
+            "top_values":       false,
+            "longitudinality":  false,
+            "year_over_year":   false,
+            "epi_calcs":        false
         },
         {
             "name":             "other_test",
             "datafeed_id":      "2",
-            "datatype":         "sub_conf",
-            "fill_rate":        null,
-            "key_stats":        null,
-            "top_values":       null,
-            "longitudinality":  null,
-            "year_over_year":   null,
-            "epi_calcs":        null,
-            "other_field":      "hey"
+            "datatype":         "labtests",
+            "earliest_date":    "2018-01-01",
+            "fill_rate":        false,
+            "key_stats":        false,
+            "top_values":       false,
+            "longitudinality":  false,
+            "year_over_year":   false,
+            "epi_calcs":        false
         },
         {
             "name":             "bad_conf",
+            "earliest_date":    "2018-01-01",
             "datafeed_id":      "3",
             "datatype":         null,
-            "fill_rate":        null,
-            "uh_oh":            null
+            "fill_rate":        false
         },
         {
             "name":             "bad_conf_2",
             "datafeed_id":      "4",
-            "fill_rate":        null,
-            "uh_oh":            null
+            "earliest_date":    "2018-01-01",
+            "fill_rate":        false
         },
         {
             "name":             "test_missing_key",
             "datafeed_id":      "5",
-            "datatype":         "sub_conf",
-            "key_stats":        null,
-            "top_values":       null,
-            "longitudinality":  null,
-            "year_over_year":   null,
-            "epi_calcs":        null,
-            "other_field":      "hi"
+            "datatype":         "labtests",
+            "earliest_date":    "2018-01-01",
+            "key_stats":        false,
+            "top_values":       false,
+            "longitudinality":  false,
+            "year_over_year":   false,
+            "epi_calcs":        false
         }
     ]
 }

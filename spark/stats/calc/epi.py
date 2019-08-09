@@ -11,7 +11,7 @@ def _get_s3_file_contents(bucket, key):
 
 
 def calculate_epi(provider_conf, field):
-    feed_id = provider_conf['datafeed_id']
+    feed_id = provider_conf.datafeed_id
 
     s3_bucket = 'healthverityreleases'
     s3_key = 'PatientIntersector/hll_seq_data_store/' \

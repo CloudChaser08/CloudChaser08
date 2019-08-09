@@ -316,4 +316,4 @@ def write_to_s3(stats, provider_conf, quarter):
     Those scripts are saved to S3_OUTPUT_DIR.
     """
     queries = _generate_queries(stats, provider_conf)
-    _write_queries(queries, provider_conf['datafeed_id'], quarter, provider_conf['datatype'])
+    _write_queries(queries, provider_conf['datafeed_id'], quarter, provider_conf.datatype)

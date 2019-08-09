@@ -21,15 +21,15 @@ def _get_all_provider_data(sqlContext, provider_conf):
     global ALL_DATA
 
     if ALL_DATA is None:
-        if provider_conf['datatype'] == 'emr':
+        if provider_conf.datatype == 'emr':
             ALL_DATA = utils.get_emr_union(
-                sqlContext, provider_conf['models'], provider_conf['datafeed_id']
+                sqlContext, provider_conf.models, provider_conf.datafeed_id
             )
         else:
             ALL_DATA = utils.get_provider_data(
-                sqlContext, provider_conf['datatype'],
-                provider_conf['datafeed_id'] if provider_conf['datatype'].startswith('emr') else provider_conf['name'],
-                custom_schema=provider_conf.get('custom_schema', None), custom_table=provider_conf.get('custom_table', None)
+                sqlContext, provider_conf.datatype,
+                provider_conf.datafeed_id if provider_conf.datatype.startswith('emr') else provider_conf.name,
+                custom_schema=provider_conf.custom_schema, custom_table=provider_conf.custom_table
             )
 
         if 'logical_delete_reason' in ALL_DATA.columns:
@@ -39,7 +39,7 @@ def _get_all_provider_data(sqlContext, provider_conf):
             )
 
         ALL_DATA = ALL_DATA.withColumn(
-            'coalesced_date', coalesce(*provider_conf['date_field'])
+            'coalesced_date', coalesce(*provider_conf.date_fields)
         )
 
     return ALL_DATA
@@ -52,9 +52,9 @@ def _get_sampled_provider_data(spark, sqlContext, provider_conf, start_date, end
 
     if SAMPLED_DATA is None and SAMPLED_DATA_MULTIPLIER is None:
         SAMPLED_DATA_MULTIPLIER, SAMPLED_DATA = utils.select_data_sample_in_date_range(
-            '1900-01-01' if provider_conf.get('index_all_dates') else start_date, end_date,
-            'coalesced_date', include_nulls=provider_conf.get('index_null_dates'),
-            record_field=provider_conf.get('record_field')
+            '1900-01-01' if provider_conf.index_all_dates else start_date, end_date,
+            'coalesced_date', include_nulls=provider_conf.index_null_dates,
+            record_field=provider_conf.record_field
         )(_get_all_provider_data(sqlContext, provider_conf))
         SAMPLED_DATA = SAMPLED_DATA.coalesce(partitions).cache()
 
@@ -71,17 +71,16 @@ def _run_fill_rates(spark, sqlContext, conf, start_date, end_date):
         - _: a dataframe with the result of fill_rate.calculate_fill_rate
              or None if conf specifies not to calculate
     '''
-    if conf.get('fill_rate_conf'):
+    if conf.fill_rate_conf:
         df, _ = _get_sampled_provider_data(
             spark, sqlContext, conf, start_date, end_date
         )
 
         # Get only the columns needed to calculate fill rates on
-        cols = [c for c in df.columns if c in conf['fill_rate_conf']['columns'].keys()]
-        if conf.get('record_field'):
-            if conf.get('record_field') not in cols:
-                cols.append(conf.get('record_field'))
-            df = utils.select_distinct_values_from_column(conf.get('record_field'))(df)
+        cols = {c for c in df.columns if c in conf.fill_rate_conf.columns.keys()}
+        if conf.record_field:
+            cols.add(conf.record_field)
+            df = utils.select_distinct_values_from_column(conf.record_field)(df)
         fill_rate_cols_df = df.select(*cols)
         return fill_rate.calculate_fill_rate(fill_rate_cols_df)
 
@@ -99,19 +98,19 @@ def _run_top_values(spark, sqlContext, provider_conf, start_date, end_date):
         - _: a dataframe with the result of top_values.calculate_top_values
              or None if provider_conf specifies not to calculate
     '''
-    if provider_conf.get('top_values_conf'):
+    if provider_conf.top_values_conf:
         df, multiplier = _get_sampled_provider_data(
             spark, sqlContext, provider_conf, start_date, end_date
         )
 
         # Get only the columns needed to calculate fill rates on
-        cols = [c for c in df.columns if c in provider_conf['top_values_conf']['columns'].keys()]
-        if provider_conf.get('record_field') and provider_conf.get('record_field') not in cols:
-            cols.append(provider_conf['record_field'])
-        max_num_values = provider_conf['top_values_conf']['max_values']
+        cols = {c for c in df.columns if c in provider_conf.top_values_conf.columns.keys()}
+        if provider_conf.record_field:
+            cols.add(provider_conf.record_field)
+        max_num_values = provider_conf.top_values_conf.max_values
         top_values_cols_df = df.select(*cols)
 
-        sampled_top_values = top_values.calculate_top_values(top_values_cols_df, max_num_values, distinct_column=provider_conf.get('record_field'))
+        sampled_top_values = top_values.calculate_top_values(top_values_cols_df, max_num_values, distinct_column=provider_conf.record_field)
 
         if sampled_top_values:
             for top_value_stat in sampled_top_values:
@@ -122,7 +121,7 @@ def _run_top_values(spark, sqlContext, provider_conf, start_date, end_date):
     return None
 
 def _run_key_stats(sqlContext, earliest_date, provider_conf, start_date, end_date):
-    if provider_conf.get('key_stats'):
+    if provider_conf.key_stats:
         df = _get_all_provider_data(sqlContext, provider_conf)
 
         return key_stats.calculate_key_stats(df, earliest_date, start_date,
@@ -131,14 +130,14 @@ def _run_key_stats(sqlContext, earliest_date, provider_conf, start_date, end_dat
     return None
 
 def _run_longitudinality(sqlContext, provider_conf):
-    if provider_conf.get('longitudinality'):
+    if provider_conf.longitudinality:
         df = _get_all_provider_data(sqlContext, provider_conf).select("hvid", "coalesced_date")
         return longitudinality.calculate_longitudinality(df, provider_conf)
 
     return None
 
 def _run_year_over_year(sqlContext, earliest_date, end_date, provider_conf):
-    if provider_conf.get('year_over_year'):
+    if provider_conf.year_over_year:
         df = _get_all_provider_data(sqlContext, provider_conf).select("hvid", "coalesced_date")
         return year_over_year.calculate_year_over_year(df, earliest_date, end_date, provider_conf)
 
@@ -168,7 +167,7 @@ def run_marketplace_stats(
     ALL_DATA = SAMPLED_DATA = SAMPLED_DATA_MULTIPLIER = None
 
     # pull out some variables from provider_conf
-    earliest_date = provider_conf['earliest_date']
+    earliest_date = provider_conf.earliest_date
 
      # if earliest_date is greater than start_date, use earliest_date as start_date
     if earliest_date > start_date:
@@ -196,7 +195,7 @@ def run_marketplace_stats(
 
         if available_years < 2:
             logging.error("Cannot calculate longitudinality for {}, this feed has less than 2 years available.".format(
-                provider_conf['datafeed_id']
+                provider_conf.datafeed_id
             ))
             longitudinality = None
         else:
@@ -207,7 +206,7 @@ def run_marketplace_stats(
 
         if available_years < 2:
             logging.error("Cannot calculate year_over_year for {}, this feed has less than 2 years available.".format(
-                provider_conf['datafeed_id']
+                provider_conf.datafeed_id
             ))
             year_over_year = None
         else:
@@ -233,12 +232,10 @@ def run_marketplace_stats(
 def get_epi_calcs(provider_conf):
     all_epi = {}
 
-    if not provider_conf['epi_calcs']:
+    if not provider_conf.epi_calc_conf:
         return all_epi
 
-    fields = provider_conf.get('epi_calc_fields', ['age', 'gender', 'state', 'region'])
-
-    for f in fields:
-        all_epi[f] = epi.calculate_epi(provider_conf, f)
+    for field in provider_conf.epi_calc_conf.fields:
+        all_epi[field] = epi.calculate_epi(provider_conf, field)
 
     return all_epi

@@ -1,3 +1,6 @@
+"""
+    Reads in Provider configuration that is required to run stats
+"""
 import json
 import logging
 import os
@@ -7,6 +10,10 @@ import boto3
 import psycopg2
 from spark.helpers.file_utils import get_abs_path
 from spark.stats.config.dates import dates as provider_dates
+from spark.stats.models import (
+    Provider, Column, FillRateConfig, TopValuesConfig, EPICalcsConfig,
+    KeyStatsConfig, LongitudinalityConfig, YearOverYearConfig
+)
 
 SSM = boto3.client('ssm')
 
@@ -49,14 +56,10 @@ def _get_config_from_json(filename):
         return data
 
 
-def _get_config_from_db(query):
-    '''
-    Runs query on marketplace prod and returns a results dict.
-    Input:
-        - query: The query to run
-    Output:
-        - data: the config represented as a Python dict
-    '''
+def _get_column_map_from_db(query):
+    """
+        Runs query and returns a mapping dict of <name> => Column pairs
+    """
     conn = psycopg2.connect(
         host=PG_HOST,
         database=PG_DB,
@@ -67,32 +70,30 @@ def _get_config_from_db(query):
     with closing(conn.cursor()) as cursor:
         cursor.execute(query)
         results = cursor.fetchall()
-    return dict([
-        (res[0], {'field_id': res[1], 'sequence': res[2]})
+    return {
+        res[0]: Column(name=res[0], field_id=res[1], sequence=res[2])
         for res in results
-    ])
+    }
 
 
-def _extract_provider_conf(feed_id, providers_conf):
-    '''
-    Get a specific providers config from the config file with all
-    provider configs.
-    Input:
-        - feed_id: The id of the provider feed
-        - providers_conf: A Python dict containing configs
-                          for every provider
-    Output:
-        - _ : A Python dict with the config for 'feed_id'
-    '''
+def _extract_provider_conf(feed_id, provider_config_json):
+    """
+        Extract a single Provider object from the providers JSON file that
+        has a matching feed_id, raising an error if that provider does not
+        exist in the file
+    """
 
-    conf = list(filter(lambda x: x['datafeed_id'] == feed_id, providers_conf['providers']))
-    if len(conf) == 0:
-        raise Exception('Feed {} is not in the providers config file'.format(feed_id))
-    return conf[0]
+    for provider in provider_config_json['providers']:
+        if provider.get('datafeed_id') == feed_id:
+            return Provider(**provider)
+
+    raise ValueError(
+        'Feed {} is not in the providers config file'.format(feed_id)
+    )
 
 
-def _get_top_values_columns(datafeed_id):
-
+def _get_top_values_config(datafeed_id):
+    """ Gets the top values configuration from the database """
     get_columns_sql = """
         select f.physical_name as name, f.id as field_id, f.sequence as sequence
             from marketplace_datafield f
@@ -102,10 +103,11 @@ def _get_top_values_columns(datafeed_id):
         where dm.datafeed_id = {} and m.is_supplemental = 'f' and f.top_values= 't';
     """.format(datafeed_id)
 
-    return _get_config_from_db(get_columns_sql)
+    return TopValuesConfig(columns=_get_column_map_from_db(get_columns_sql))
 
 
-def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
+def _get_fill_rate_config(datafeed_id, emr_datatype=None):
+    """ Gets the fill rate configuration from the database """
     get_columns_sql = """
         select f.physical_name as name, f.id as field_id, f.sequence as sequence
             from marketplace_datafield f
@@ -118,83 +120,154 @@ def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
         "and t.name = '{}'".format(EMR_DATATYPE_NAME_MAP[emr_datatype]) if emr_datatype else ''
     )
 
-    return _get_config_from_db(get_columns_sql)
+    return FillRateConfig(columns=_get_column_map_from_db(get_columns_sql))
 
 
-def _fill_in_dates(conf):
-    if not conf.get('date_field'):
-        conf['date_field'] = provider_dates[conf['datatype']]
-
+def _fill_date_fields(conf):
+    """ Fills in date_field from the provider_dates mapping """
+    if not conf.date_fields:
+        conf = conf.copy_with(
+            date_fields=provider_dates[conf.datatype]
+        )
     return conf
 
 
-def _fill_in_conf_dict(conf, feed_id, providers_conf_file):
-    # configure stats whose configurations come from the marketplace db
-    if conf.get('fill_rate'):
-        conf['fill_rate_conf'] = {
-            "columns": _get_fill_rate_columns(
-                conf['datafeed_id'], conf['datatype'] if conf['datatype'].startswith('emr') else None
+def _fill_fill_rate(conf):
+    """ Fills in the fill rate config """
+    if conf.fill_rate:
+        # Only use datatype if it is an emr data type
+        datatype = conf.datatype if conf.datatype.startswith('emr') else None
+        return conf.copy_with(
+            fill_rate_conf=_get_fill_rate_config(conf.datafeed_id, datatype)
+        )
+    return conf
+
+def _fill_top_values(conf):
+    """ Fills in the top values config """
+    if conf.top_values:
+        return conf.copy_with(
+            top_values_conf=_get_top_values_config(conf.datafeed_id)
+        )
+    return conf
+
+def _fill_epi_calcs(conf):
+    """ Fills in the EPI calculations config """
+    if conf.epi_calcs:
+        return conf.copy_with(epi_calcs_conf=EPICalcsConfig(
+            fields=['age', 'gender', 'state', 'region']
+        ))
+    return conf
+
+def _fill_key_stats(providers_conf_file):
+    """
+        Creates a key stats function that fills out the key stats
+        configuration provided from a static config file, located relative to
+        the providers_conf_file
+    """
+    def _fill(conf):
+        if conf.key_stats:
+            file_name = (
+                conf.key_stats_conf_file
+                or os.path.join(conf.datatype, 'key_stats.json')
             )
-        }
+            file_path = get_abs_path(providers_conf_file, file_name)
+            return conf.copy_with(
+                key_stats_conf=KeyStatsConfig(
+                    **_get_config_from_json(file_path)
+                )
+            )
+        return conf
+    return _fill
 
-    if conf.get('top_values'):
-        conf['top_values_conf'] = {
-            "columns": _get_top_values_columns(conf['datafeed_id']),
-            "max_values": 10
-        }
 
-    # epi doesn't require any additional configurations
-    if conf.get('epi_calcs'):
-        conf['epi_calcs_conf'] = {}
+def _fill_longitudinality(providers_conf_file):
+    """
+        Creates a fill function that fills out the longitudinality
+        configuration provided from a static config file, located relative to
+        the providers_conf_file
+    """
+    def _fill(conf):
+        if conf.longitudinality:
+            file_name = (
+                conf.longitudinality_conf_file
+                or os.path.join(conf.datatype, 'longitudinality.json')
+            )
+            file_path = get_abs_path(providers_conf_file, file_name)
+            return conf.copy_with(
+                longitudinality_conf=LongitudinalityConfig(
+                    **_get_config_from_json(file_path)
+                )
+            )
+        return conf
+    return _fill
 
-    # configure stats whose configurations do not come from the marketplace db
-    no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year']
-    for calc in no_db_stat_calcs:
-        if not conf.get(calc):
-            continue
 
-        if calc + '_conf_file' not in conf:
-            logging.info('No config for {} found in feed {} config, falling back to default.'.format(calc, feed_id))
-            conf_file_loc = get_abs_path(providers_conf_file,
-                                        conf['datatype'] + '/' + calc + '.json')
-            conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
-        elif conf[calc + '_conf_file']:
-            conf_file_loc = get_abs_path(providers_conf_file, conf[calc + '_conf_file'])
-            conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
+def _fill_year_over_year(providers_conf_file):
+    """
+        Creates a fill function that fills out the year-over-year
+        configuration provided from a static config file, located relative to
+        the providers_conf_file
+    """
+    def _fill(conf):
+        if conf.year_over_year:
+            file_name = (
+                conf.year_over_year_conf_file
+                or os.path.join(conf.datatype, 'year_over_year.json')
+            )
+            file_path = get_abs_path(providers_conf_file, file_name)
+            return conf.copy_with(
+                year_over_year_conf=YearOverYearConfig(
+                    **_get_config_from_json(file_path)
+                )
+            )
+        return conf
+    return _fill
 
-    return conf
+
+def _pipe_fills(*fills):
+    """
+        Creates a single fill function that passes a configuration object
+        through the provided fill functions, and returns the new configuration
+    """
+    def _fill(conf):
+        for fill in fills:
+            conf = fill(conf)
+        return conf
+    return _fill
 
 
 def get_provider_config(providers_conf_file, feed_id):
-    '''
-    Read the providers config files and each associated stat calc config file
-    and combine them into one provider config object.
-    Input:
-        - feed_id: The id of the provider feed
-        - providers_conf_file: Absolute path of the location of the
-                               config file with all provider configs.
-    Output:
-        - provider_conf: A python dict of the providers config with
-                         each associated stat calcs config embedded
-    '''
-    providers_conf = _get_config_from_json(providers_conf_file)
+    """
+        Read the providers config files and each associated stat calc config
+        file and combine them into one provider config object.
+        :param feed_id: The id of the provider feed
+        :param providers_conf_file: Absolute path of the location of the
+                                    config file with all provider configs
+        :return: A Provider config object
+    """
+    provider_file_json = _get_config_from_json(providers_conf_file)
 
-    if 'providers' not in providers_conf:
-        raise Exception('{} does not contain providers list'.format(providers_conf))
+    # Gets the provider config for only this feed
+    provider_conf = _extract_provider_conf(feed_id, provider_file_json)
 
-    provider_conf = _extract_provider_conf(feed_id, providers_conf)
-
-    # Check that datatype is specified
-    if 'datatype' not in provider_conf or provider_conf['datatype'] is None:
-        raise Exception('datatype is not specified for feed {}'.format(feed_id))
-    elif provider_conf['datatype'] == 'emr':
-        provider_conf['models'] = [
-            _fill_in_dates(_fill_in_conf_dict(dict(
-                model_conf.items() + [('datafeed_id', provider_conf['datafeed_id'])]
-            ), feed_id, providers_conf_file))
-            for model_conf in provider_conf['models']
-        ]
+    # Gets the provider config for only this feed
+    if provider_conf.datatype == 'emr':
+        fill_provider_model = _pipe_fills(
+            _fill_fill_rate,
+            _fill_top_values,
+            _fill_date_fields,
+        )
+        provider_conf = provider_conf.copy_with(
+            models=[fill_provider_model(m) for m in provider_conf.models]
+        )
     else:
-        provider_conf = _fill_in_conf_dict(provider_conf, feed_id, providers_conf_file)
+        provider_conf = _pipe_fills(
+            _fill_fill_rate,
+            _fill_top_values,
+            _fill_epi_calcs,
+            _fill_longitudinality(providers_conf_file),
+            _fill_year_over_year(providers_conf_file),
+            _fill_key_stats(providers_conf_file)
+        )(provider_conf)
 
-    return _fill_in_dates(provider_conf)
+    return _fill_date_fields(provider_conf)
