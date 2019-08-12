@@ -24,8 +24,9 @@ def nullify(df, null_vals=None, preprocess_func=lambda c: c):
     if "NULL" not in null_vals:
         null_vals.add("NULL")
 
+    do_preprocess = udf(preprocess_func)
     def convert_to_null(column_name):
-        return when(upper(udf(preprocess_func)(col(column_name))).isin(null_vals), lit(None)) \
+        return when(upper(do_preprocess(col(column_name))).isin(null_vals), lit(None)) \
             .otherwise(col(column_name)).alias(column_name)
 
     return _apply_to_all_columns(convert_to_null, df)
