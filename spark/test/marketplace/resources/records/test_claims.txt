@@ -1,0 +1,10 @@
+0|999|werwer|sfdgsfg|xcvxcv
+2|2|xcvxv|rtert|fgdfgdg
+3|3|dfgh|cbv|jhg
+5|4|fgdgf|hggkj|dfsf
+6|5|werwer|sfdgsfg|xcvxcv
+7|6|xcvxv|rtert|fgdfgdg
+8|7|dfgh|cbv|jhg
+9|3|fgdgf|hggkj|dfsf
+11|2|werwer|sfdgsfg|xcvxcv
+2|3|xcvxv|rtert|fgdfgdg
