@@ -4,7 +4,7 @@ import shutil
 from datetime import date
 
 import spark.helpers.file_utils as file_utils
-import spark.providers.cardinal_pms.medicalclaims.sparkNormalizeCardinalPMS as cardinal_pms
+import spark.providers.cardinal_pms.medicalclaims_census.sparkNormalizeCardinalPMS as cardinal_pms
 
 script_path = __file__
 results = []

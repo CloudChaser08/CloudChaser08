@@ -31,13 +31,13 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_pms/medicalclaims/resources/input/'
+            script_path, '../../../test/providers/cardinal_pms/medicalclaims_census/resources/input/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_pms/medicalclaims/resources/payload/'
+            script_path, '../../../test/providers/cardinal_pms/medicalclaims_census/resources/payload/'
         ) + '/'
         DELIVERABLE_LOC = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_pms/medicalclaims/resources/delivery/'
+            script_path, '../../../test/providers/cardinal_pms/medicalclaims_census/resources/delivery/'
         ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}/'\
@@ -55,7 +55,8 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
     # Load the transactions into raw, un-normalized tables
-    if len(spark.read.csv(input_path, sep='|').columns) == 90:
+    input_column_length = len(spark.read.csv(input_path, sep='|').columns)
+    if input_column_length == 90:
         runner.run_spark_script('load_transactions.sql', [
             ['input_path', input_path]
         ])
@@ -68,7 +69,7 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
                          .withColumn('diagnosistwelve', F.lit(None)) \
                          .withColumnRenamed('claim_lines_id', 'id_3') \
                          .createOrReplaceTempView('transactional_cardinal_pms')
-    elif len(spark.read.csv(input_path, sep='|').columns) == 92:
+    elif input_column_length == 92:
         runner.run_spark_script('load_transactions_v2.sql', [
             ['input_path', input_path]
         ])
@@ -79,8 +80,12 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
                          .withColumn('diagnosistwelve', F.lit(None)) \
                          .withColumnRenamed('claim_lines_id', 'id_3') \
                          .createOrReplaceTempView('transactional_cardinal_pms')
-    else:
+    elif input_column_length == 96:
         runner.run_spark_script('load_transactions_v3.sql', [
+            ['input_path', input_path]
+        ])
+    else:
+        runner.run_spark_script('load_transactions_v4.sql', [
             ['input_path', input_path]
         ])
 
