@@ -9,7 +9,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.events as event_priv
-from . import mindbodyPrivacy as mindbody_priv
+from spark.providers.mindbody import mindbodyPrivacy as mindbody_priv
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')

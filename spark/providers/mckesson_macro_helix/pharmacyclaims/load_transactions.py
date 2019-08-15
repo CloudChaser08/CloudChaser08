@@ -1,7 +1,7 @@
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
-from . import schema_v1
-from . import schema_v2
+from spark.providers.mckesson_macro_helix.pharmacyclaims import schema_v1
+from spark.providers.mckesson_macro_helix.pharmacyclaims import schema_v2
 
 class Schema:
     v1 = schema_v1.TABLES

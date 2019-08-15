@@ -11,7 +11,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.constants as constants
 from pyspark.sql.types import StringType, StructType, StructField, ArrayType
 import pyspark.sql.functions as F
-from . import transactions_lhv1, transactions_lhv2
+from spark.providers.liquidhub.custom import transactions_lhv1, transactions_lhv2
 import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
 import json

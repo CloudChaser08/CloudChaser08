@@ -13,9 +13,9 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
-from . import load_transactions
-from . import prepare_demographics
-from . import deduplicate_transactions
+from spark.providers.nextgen.emr import load_transactions
+from spark.providers.nextgen.emr import prepare_demographics
+from spark.providers.nextgen.emr import deduplicate_transactions
 from spark.helpers.privacy.emr import                   \
     encounter as priv_encounter,                        \
     clinical_observation as priv_clinical_observation,  \

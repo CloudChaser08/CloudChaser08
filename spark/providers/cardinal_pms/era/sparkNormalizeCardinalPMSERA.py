@@ -45,7 +45,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
-    from . import load_records
+    from spark.providers.cardinal_pms.era import load_records
     load_records.load(runner, input_path_prefix, test=test)
 
     # Normalize claim summary
