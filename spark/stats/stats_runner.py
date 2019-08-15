@@ -4,76 +4,77 @@ import inspect
 import spark.spark_setup as spark_setup
 import spark.helpers.file_utils as file_utils
 import spark.stats.config.reader.config_reader as config_reader
-import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
 from spark.stats.data_layout.sql_generator import generate_data_layout_version_sql
 
-ALL_STATS = [
+ALL_STATS = {
     'key_stats', 'longitudinality', 'year_over_year', 'fill_rate', 'top_values', 'epi'
-]
-EMR_ENCOUNTER_STATS = ['longitudinality', 'year_over_year']
+}
+EMR_ENCOUNTER_STATS = {'longitudinality', 'year_over_year'}
 
-def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate=ALL_STATS):
 
-    epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats_to_calculate else {}
+def _get_encounter_model_config(provider_config):
+    """ Merges the provider config with the emr encounter model if available,
+        otherwise returns None
+    """
+    for model in provider_config.models:
+        if model.datatype == 'emr_enc':
+            return provider_config.merge_provider_model(model)
+    return None
 
-    if provider_config.datatype == 'emr':
-        if 'emr_enc' not in [m.datatype for m in provider_config.models]:
-            emr_encounter_stats = []
-        else:
-            emr_encounter_stats = EMR_ENCOUNTER_STATS
 
-        union_level_stats = [stat for stat in stats_to_calculate if hasattr(provider_config, stat) and stat not in emr_encounter_stats]
-        model_level_stats = [
-            stat for stat in stats_to_calculate
-            for model_conf in provider_config.models
-            if hasattr(model_conf, stat)
-        ]
-        encounter_level_stats = [
-            stat for stat in stats_to_calculate if hasattr(provider_config, stat) and stat in emr_encounter_stats
-        ]
+def run(spark, sql_context, start_date, end_date, provider_config):
+    """ Runs all stats for a provider between the start and end dates,
+        returning a result dictionary
+    """
+    df_provider = processor.DataframeProvider(
+        spark=spark,
+        sql_context=sql_context,
+        provider_conf=provider_config,
+        start_date=start_date,
+        end_date=end_date
+    )
 
-        model_level_marketplace_stats = dict([
-            (model_conf.datatype, processor.run_marketplace_stats(
-                spark, sqlContext, quarter, start_date, end_date,
-                dict([it for it in provider_config.items() + model_conf.items()]),
-                model_level_stats
-            )) for model_conf in provider_config['models']
-        ])
-        union_level_marketplace_stats = processor.run_marketplace_stats(
-            spark, sqlContext, quarter, start_date, end_date, provider_config, union_level_stats
+    # If there's an encounter model available, use that to calculate
+    # longitudinality and year over year, otherwise use the provider config
+    enc_prov_config = provider_config
+    enc_df_provider = df_provider
+    for model in provider_config.models:
+        if model.datatype == 'emr_enc':
+            enc_prov_config = provider_config.merge_provider_model(model)
+            enc_df_provider = df_provider.reconfigure(enc_prov_config)
+            break
+
+    # Run common stats
+    results = {
+        'epi_calcs': processor.get_epi_calcs(provider_config),
+        'key_stats': processor.run_key_stats(
+            provider_config, start_date, end_date, df_provider
+        ),
+        'top_values': processor.run_top_values(
+            provider_config, df_provider
+        ),
+        'fill_rate': processor.run_fill_rates(
+            provider_config, df_provider
+        ),
+        'longitudinality': processor.run_longitudinality(
+            enc_prov_config, end_date, enc_df_provider # use encounter config/dataframe
+        ),
+        'year_over_year': processor.run_year_over_year(
+            enc_prov_config, end_date, enc_df_provider  # use encounter config/dataframe
         )
-        encounter_level_marketplace_stats = processor.run_marketplace_stats(
-            spark, sqlContext, quarter, start_date, end_date,
-            dict([it for it in provider_config.items() + [m for m in provider_config['models'] if m.datatype == 'emr_enc'][0].items()]),
-            encounter_level_stats
-        ) if encounter_level_stats else {}
+    }
 
-        for model_conf in provider_config['models']:
-            stats_writer.write_to_s3(
-                model_level_marketplace_stats[model_conf.datatype],
-                dict([it for it in provider_config.items() + model_conf.items()]),
-                quarter
-            )
-        stats_writer.write_to_s3(dict(
-            union_level_marketplace_stats, **dict(encounter_level_marketplace_stats, **epi_calcs)
-        ), provider_config, quarter)
+    # Calculate fill rate and top values for nested model
+    for model in provider_config.models:
+        model_prov_config = provider_config.merge_provider_model(model)
+        model_df_provider = df_provider.reconfigure(model_prov_config)
+        results[model.datatype] = {
+            'fill_rate': processor.run_fill_rates(model_prov_config, model_df_provider),
+            'top_values': processor.run_top_values(model_prov_config, model_df_provider)
+        }
 
-        stats = dict(
-            model_level_marketplace_stats, **dict(union_level_marketplace_stats, **dict(encounter_level_marketplace_stats, **epi_calcs))
-        )
-
-    else:
-        # Calculate marketplace stats
-        marketplace_stats = processor.run_marketplace_stats(
-            spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate
-        )
-
-        stats = dict(marketplace_stats, **epi_calcs)
-
-        stats_writer.write_to_s3(stats, provider_config, quarter)
-
-    return stats
+    return results
 
 
 def main(args):
@@ -82,10 +83,7 @@ def main(args):
     quarter = args.quarter
     start_date = args.start_date
     end_date = args.end_date
-    stats = args.stats
-
-    if not stats:
-        stats = ALL_STATS
+    stats = set(args.stats or ALL_STATS)
 
     for feed_id in feed_ids:
         # Get the providers config
@@ -94,11 +92,12 @@ def main(args):
         provider_conf = config_reader.get_provider_config(config_file, feed_id)
 
         # set up spark
-        spark, sqlContext = spark_setup \
-                            .init('Feed {} marketplace stats'.format(feed_id))
+        spark, sql_context = spark_setup.init(
+            'Feed {} marketplace stats'.format(feed_id)
+        )
 
         # Calculate stats
-        stats = run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
+        stats = run(spark, sql_context, start_date, end_date, provider_conf)
 
         # Generate SQL for new data_layout version.
         # 'quarter' is used as the version name

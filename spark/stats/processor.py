@@ -43,6 +43,16 @@ class DataframeProvider(object):
             self.start_date = start_date
         self.end_date = end_date
 
+    def reconfigure(self, provider_conf):
+        """ Reconfigures as a copy with a new provider config """
+        return DataframeProvider(
+            spark=self.spark,
+            sql_context=self.sql_context,
+            provider_conf=provider_conf,
+            start_date=self.start_date,
+            end_date=self.end_date
+        )
+
     @property
     def all_data(self):
         """ Returns a dataframe with all data for the provider in the date
@@ -229,12 +239,11 @@ def _calculate_available_years(provider_conf, end_date):
 
 
 def get_epi_calcs(provider_conf):
-    all_epi = {}
+    """ Runs EPI calculations """
 
-    if not provider_conf.epi_calc_conf:
-        return all_epi
-
-    for field in provider_conf.epi_calc_conf.fields:
-        all_epi[field] = epi.calculate_epi(provider_conf, field)
-
-    return all_epi
+    if provider_conf.epi_calc_conf:
+        return {
+            field: epi.calculate_epi(provider_conf, field)
+            for field in provider_conf.epi_calc_conf.fields
+        }
+    return None

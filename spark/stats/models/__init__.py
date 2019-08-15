@@ -43,6 +43,10 @@ class _BaseModel(object):
         """ Copies the model instance, with additional args """
         return attr.evolve(self, **kwargs)
 
+    def to_dict(self):
+        """ Converts the model to a dictionary """
+        return attr.asdict(self)
+
 
 @attr.s(frozen=True)
 class Column(_BaseModel):
@@ -100,9 +104,9 @@ class ProviderModel(_BaseModel):
 
     # Required fields
     datatype = attr.ib(validator=attr.validators.in_(VALID_DATATYPES))
-    row_field = create_required_str_field()
 
     # Optional fields
+    record_field = create_optional_str_field()
     date_fields = create_str_list_field()
     fill_rate = create_optional_bool_field()
     top_values = create_optional_bool_field()
@@ -140,7 +144,7 @@ class Provider(_BaseModel):
 
     fill_rate_conf = create_model_field(FillRateConfig)
     top_values_conf = create_model_field(TopValuesConfig)
-    epi_calcs_conf = create_model_field(EPICalcsConfig)
+    epi_calc_conf = create_model_field(EPICalcsConfig)
 
     longitudinality_conf = create_model_field(LongitudinalityConfig)
     longitudinality_conf_file = create_optional_str_field()
@@ -148,3 +152,12 @@ class Provider(_BaseModel):
     year_over_year_conf_file = create_optional_str_field()
     key_stats_conf = create_model_field(KeyStatsConfig)
     key_stats_conf_file = create_optional_str_field()
+
+    def merge_provider_model(self, provider_model):
+        """ Merges non-null fields from a ProviderModel object into a copy of
+            this provider config
+        """
+        sparese_prov_model_dict = {
+            k: v for k, v in provider_model.to_dict().items() if v is not None
+        }
+        return self.copy_with(**sparese_prov_model_dict)

@@ -153,7 +153,7 @@ def _fill_top_values(conf):
 def _fill_epi_calcs(conf):
     """ Fills in the EPI calculations config """
     if conf.epi_calcs:
-        return conf.copy_with(epi_calcs_conf=EPICalcsConfig(
+        return conf.copy_with(epi_calc_conf=EPICalcsConfig(
             fields=['age', 'gender', 'state', 'region']
         ))
     return conf
