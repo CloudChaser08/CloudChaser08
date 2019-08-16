@@ -34,7 +34,7 @@ def clean_up_output_hdfs(output_path):
 def list_dir_hdfs(path):
     return [
         f.split(' ')[-1].strip().split('/')[-1]
-        for f in subprocess.check_output(['hdfs', 'dfs', '-ls', path]).split('\n')
+        for f in subprocess.check_output(['hdfs', 'dfs', '-ls', path]).decode().split('\n')
         if f.split(' ')[-1].startswith('hdfs')
     ]
 
