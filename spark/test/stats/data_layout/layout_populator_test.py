@@ -76,11 +76,9 @@ def test_stat_population(provider_conf):
         models=[
             ProviderModel(
                 datatype='emr_clin_obsn',
-                row_field='a',
             ),
             ProviderModel(
                 datatype='emr_medctn',
-                row_field='b',
             )
         ]
     )

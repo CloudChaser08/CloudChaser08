@@ -80,7 +80,7 @@ def test_fill_rate_no_record_field(provider_conf, df_provider):
     res = processor.run_fill_rates(prov_conf, df_provider)
     assert res is not None
     assert sorted(res) == [
-        {'field': 'claim_id', 'fill': 7.0 / 9.0},
+        {'field': 'col_2', 'fill': 7.0 / 9.0},
         {'field': 'hvid', 'fill': 7.0 / 9.0}
     ]
 
