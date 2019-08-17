@@ -30,9 +30,7 @@ schema_v1 = StructType([
     StructField('data_src_cd', StringType(), True),
     StructField('data_captr_dt', DateType(), True),
     StructField('rec_stat_cd', StringType(), True),
-    StructField('prmy_src_tbl_nm', StringType(), True),
-    StructField('part_hvm_vdr_feed_id', StringType(), True),
-    StructField('part_mth', StringType(), True)
+    StructField('prmy_src_tbl_nm', StringType(), True)
 ])
 
 output_folder = '2019-08-15/diagnosis/'
