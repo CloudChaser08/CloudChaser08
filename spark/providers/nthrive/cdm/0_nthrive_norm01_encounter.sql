@@ -76,14 +76,14 @@ SELECT
 	    (
             CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
             esdt.gen_ref_1_dt,
-            CAST(${VDR_FILE_DT} AS DATE)
+            CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_start_dt,
 	/* enc_end_dt */
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
             esdt.gen_ref_1_dt,
-            CAST(${VDR_FILE_DT} AS DATE)
+            CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_end_dt,
     CLEAN_UP_NPI_CODE(prv.provider_npi)                                                     AS enc_fclty_npi,
     epi.provider_id                                                                         AS enc_fclty_id,
@@ -508,7 +508,7 @@ SELECT
                                         (
                                             CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), 
                                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
-                                            CAST(${VDR_FILE_DT} AS DATE)
+                                            CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
 	        THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE CONCAT

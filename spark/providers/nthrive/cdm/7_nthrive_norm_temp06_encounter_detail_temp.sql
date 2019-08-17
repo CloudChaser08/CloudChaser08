@@ -87,14 +87,14 @@ SELECT
 	    (
             CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
             esdt.gen_ref_1_dt,
-            CAST(${VDR_FILE_DT} AS DATE)
+            CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_start_dt,
 	/* enc_end_dt */
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
             esdt.gen_ref_1_dt,
-            CAST(${VDR_FILE_DT} AS DATE)
+            CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_end_dt,
 	/* proc_dt */
 	CASE
@@ -104,7 +104,7 @@ SELECT
         	    (
         	        DATE_ADD(CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), CAST(ptn_prc.procedure_day AS INTEGER)),
                     esdt.gen_ref_1_dt,
-                    CAST(${VDR_FILE_DT} AS DATE)
+                    CAST('{VDR_FILE_DT}' AS DATE)
         	    )
 	END                                                                                     AS proc_dt,
     CLEAN_UP_PROCEDURE_CODE(ptn_prc.icd_procedure_code)                                     AS proc_cd,
@@ -160,7 +160,7 @@ SELECT
                                         (
                                             CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), 
                                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
-                                            CAST(${VDR_FILE_DT} AS DATE)
+                                            CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
 	        THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE CONCAT
