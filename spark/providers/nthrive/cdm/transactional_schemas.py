@@ -101,7 +101,7 @@ TABLE_CONF = {
             'manuf_descr'
         ]
     ),
-    'provider' : SourceTable(
+    'providers' : SourceTable(
         'csv',
         separator='|',
         columns=[
