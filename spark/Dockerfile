@@ -2,7 +2,7 @@
 FROM 581191604223.dkr.ecr.us-east-1.amazonaws.com/hvbase:hv-18.04-latest
 MAINTAINER HealthVerity <sysops@healthverity.com>
 
-ARG SPARK_VERSION=2.2.1
+ARG SPARK_VERSION=2.3.2
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV HOME /root
@@ -35,7 +35,7 @@ ENV SPARK_HOME /usr/lib/spark
 ENV PYTHONPATH $SPARK_HOME/python/build
 ENV PYTHONPATH $SPARK_HOME/python/:$PYTHONPATH
 ENV PYTHONPATH $SPARK_HOME/python/lib:$PYTHONPATH
-ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.4-src.zip:$PYTHONPATH
+ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.7-src.zip:$PYTHONPATH
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
 WORKDIR /root/spark
