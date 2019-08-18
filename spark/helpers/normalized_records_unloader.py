@@ -291,11 +291,14 @@ def unload_delimited_file(
 
     clean_up_output(output_path)
 
+    tbl = spark.table(table_name)
+    tbl.select(*[col(c).cast('string').alias(c) for c in tbl.columns]).createOrReplaceTempView('for_delimited_output')
+
     runner.run_spark_script(common_dirpath + 'unload_common_model_dsv.sql', [
         ['num_files', str(num_files), False],
         ['delimiter', delimiter, False],
         ['location', output_path],
-        ['table_name', table_name, False],
+        ['table_name', 'for_delimited_output', False],
         ['original_partition_count', old_partition_count, False]
     ])
 
