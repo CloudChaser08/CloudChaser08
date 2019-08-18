@@ -73,7 +73,7 @@ def run (spark, runner, date_input, test=False):
         )
     else:
         files = subprocess.check_output(['aws', 's3', 'ls',
-            's3://salusv/incoming/enrollmentrecords/express_scripts/', '--recursive']).split("\n")
+            's3://salusv/incoming/enrollmentrecords/express_scripts/', '--recursive']).decode().split("\n")
         dates = [re.findall('2017/../..', x)[0] for x in [x for x in files if re.search('2017/../..', x)]]
         dates = list(set(dates))
         for d in dates:
@@ -97,7 +97,7 @@ def run (spark, runner, date_input, test=False):
         )
     else:
         files = subprocess.check_output(['aws', 's3', 'ls',
-            's3://salusv/matching/payload/enrollmentrecords/express_scripts/', '--recursive']).split("\n")
+            's3://salusv/matching/payload/enrollmentrecords/express_scripts/', '--recursive']).decode().split("\n")
         dates = [re.findall('2017/../..', x)[0] for x in [x for x in files if re.search('2017/../..', x)]]
         dates = list(set(dates))
         for d in dates:
