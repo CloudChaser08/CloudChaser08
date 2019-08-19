@@ -191,8 +191,9 @@ def filter_due_to_inst_type_of_bill(prov_detail, inst_type_of_bill):
     else:
         return prov_detail
 
+
 def scrub_discharge_status(discharge_status):
-    if discharge_status in ['69', '87']:
+    if discharge_status in ['20', '21', '40', '41', '42', '69', '87']:
         return '0'
     else:
         return discharge_status
