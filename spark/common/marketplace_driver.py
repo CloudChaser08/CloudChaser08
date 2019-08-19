@@ -152,7 +152,7 @@ class MarketplaceDriver(object):
             _columns.remove(self.provider_partition_column)
             _columns.remove(self.date_partition_column)
             normalized_records_unloader.unload(
-                self.spark, self.runner, output, self.date_partition_column, self.date_input,
+                self.spark, self.runner, output, self.date_partition_column, str(self.date_input),
                 self.provider_name, substr_date_part=False, columns=_columns,
                 distribution_key=self.distribution_key
             )
