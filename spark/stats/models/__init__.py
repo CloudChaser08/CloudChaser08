@@ -73,25 +73,6 @@ class TopValuesConfig(_BaseModel):
 
 
 @attr.s(frozen=True)
-class LongitudinalityConfig(_BaseModel):
-    """ Longitudinality configuration """
-    patient_id_field = create_required_str_field()
-
-
-@attr.s(frozen=True)
-class YearOverYearConfig(_BaseModel):
-    """ Year-over-year configuration """
-    patient_id_field = create_required_str_field()
-
-
-@attr.s(frozen=True)
-class KeyStatsConfig(_BaseModel):
-    """ Year-over-year configuration """
-    patient_field = create_required_str_field()
-    record_field = create_required_str_field()
-
-
-@attr.s(frozen=True)
 class EPICalcsConfig(_BaseModel):
     """ EMI Calcs configuration (currently empty) """
 
@@ -145,13 +126,6 @@ class Provider(_BaseModel):
     fill_rate_conf = create_model_field(FillRateConfig)
     top_values_conf = create_model_field(TopValuesConfig)
     epi_calc_conf = create_model_field(EPICalcsConfig)
-
-    longitudinality_conf = create_model_field(LongitudinalityConfig)
-    longitudinality_conf_file = create_optional_str_field()
-    year_over_year_conf = create_model_field(YearOverYearConfig)
-    year_over_year_conf_file = create_optional_str_field()
-    key_stats_conf = create_model_field(KeyStatsConfig)
-    key_stats_conf_file = create_optional_str_field()
 
     def merge_provider_model(self, provider_model):
         """ Merges non-null fields from a ProviderModel object into a copy of

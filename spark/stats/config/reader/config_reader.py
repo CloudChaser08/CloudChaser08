@@ -2,17 +2,13 @@
     Reads in Provider configuration that is required to run stats
 """
 import json
-import logging
-import os
 from contextlib import closing
 
 import boto3
 import psycopg2
-from spark.helpers.file_utils import get_abs_path
 from spark.stats.config.dates import dates as provider_dates
 from spark.stats.models import (
-    Provider, Column, FillRateConfig, TopValuesConfig, EPICalcsConfig,
-    KeyStatsConfig, LongitudinalityConfig, YearOverYearConfig
+    Provider, Column, FillRateConfig, TopValuesConfig, EPICalcsConfig
 )
 
 SSM = boto3.client('ssm')
@@ -142,6 +138,7 @@ def _fill_fill_rate(conf):
         )
     return conf
 
+
 def _fill_top_values(conf):
     """ Fills in the top values config """
     if conf.top_values:
@@ -149,6 +146,7 @@ def _fill_top_values(conf):
             top_values_conf=_get_top_values_config(conf.datafeed_id)
         )
     return conf
+
 
 def _fill_epi_calcs(conf):
     """ Fills in the EPI calculations config """
@@ -158,82 +156,19 @@ def _fill_epi_calcs(conf):
         ))
     return conf
 
-def _fill_key_stats(providers_conf_file):
-    """
-        Creates a key stats function that fills out the key stats
-        configuration provided from a static config file, located relative to
-        the providers_conf_file
-    """
-    def _fill(conf):
-        if conf.key_stats:
-            file_name = (
-                conf.key_stats_conf_file
-                or os.path.join(conf.datatype, 'key_stats.json')
-            )
-            file_path = get_abs_path(providers_conf_file, file_name)
-            return conf.copy_with(
-                key_stats_conf=KeyStatsConfig(
-                    **_get_config_from_json(file_path)
-                )
-            )
-        return conf
-    return _fill
 
+def _fill_common_fields(conf):
+    """ Fills all common attributes in the provider config
+        and returns a copy, includes:
 
-def _fill_longitudinality(providers_conf_file):
+        - Fill rate
+        - Top values
+        - Date fields
     """
-        Creates a fill function that fills out the longitudinality
-        configuration provided from a static config file, located relative to
-        the providers_conf_file
-    """
-    def _fill(conf):
-        if conf.longitudinality:
-            file_name = (
-                conf.longitudinality_conf_file
-                or os.path.join(conf.datatype, 'longitudinality.json')
-            )
-            file_path = get_abs_path(providers_conf_file, file_name)
-            return conf.copy_with(
-                longitudinality_conf=LongitudinalityConfig(
-                    **_get_config_from_json(file_path)
-                )
-            )
-        return conf
-    return _fill
-
-
-def _fill_year_over_year(providers_conf_file):
-    """
-        Creates a fill function that fills out the year-over-year
-        configuration provided from a static config file, located relative to
-        the providers_conf_file
-    """
-    def _fill(conf):
-        if conf.year_over_year:
-            file_name = (
-                conf.year_over_year_conf_file
-                or os.path.join(conf.datatype, 'year_over_year.json')
-            )
-            file_path = get_abs_path(providers_conf_file, file_name)
-            return conf.copy_with(
-                year_over_year_conf=YearOverYearConfig(
-                    **_get_config_from_json(file_path)
-                )
-            )
-        return conf
-    return _fill
-
-
-def _pipe_fills(*fills):
-    """
-        Creates a single fill function that passes a configuration object
-        through the provided fill functions, and returns the new configuration
-    """
-    def _fill(conf):
-        for fill in fills:
-            conf = fill(conf)
-        return conf
-    return _fill
+    conf = _fill_fill_rate(conf)
+    conf = _fill_top_values(conf)
+    conf = _fill_date_fields(conf)
+    return conf
 
 
 def get_provider_config(providers_conf_file, feed_id):
@@ -250,24 +185,13 @@ def get_provider_config(providers_conf_file, feed_id):
     # Gets the provider config for only this feed
     provider_conf = _extract_provider_conf(feed_id, provider_file_json)
 
+
     # Gets the provider config for only this feed
     if provider_conf.datatype == 'emr':
-        fill_provider_model = _pipe_fills(
-            _fill_fill_rate,
-            _fill_top_values,
-            _fill_date_fields,
-        )
         provider_conf = provider_conf.copy_with(
-            models=[fill_provider_model(m) for m in provider_conf.models]
+            models=[_fill_common_fields(m) for m in provider_conf.models]
         )
     else:
-        provider_conf = _pipe_fills(
-            _fill_fill_rate,
-            _fill_top_values,
-            _fill_epi_calcs,
-            _fill_longitudinality(providers_conf_file),
-            _fill_year_over_year(providers_conf_file),
-            _fill_key_stats(providers_conf_file)
-        )(provider_conf)
+        provider_conf = _fill_common_fields(provider_conf)
 
     return _fill_date_fields(provider_conf)
