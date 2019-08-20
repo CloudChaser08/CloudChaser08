@@ -1,9 +1,10 @@
+from spark.stats.models import ProviderModel
 from spark.stats.data_layout.layout_populator import populate_stat_values
 
 
-class TestSingleTable(object):
-    """ Class for testing stat population for data_layouts with one table """
-    provider_config_input = {'datatype': 'not_emr'}
+def test_single_table(provider_conf):
+    """ Test stat population for data_layouts with one table """
+    provider_config_input = provider_conf.copy_with(datatype='pharmacyclaims')
 
     data_layout_input = [
         {
@@ -50,32 +51,37 @@ class TestSingleTable(object):
         ],
     }
 
-    def test_stat_population(self):
-        """ Test stat population for data_layouts with one table """
-        data_layout = self.data_layout_input
-        populate_stat_values(self.provider_config_input, data_layout, self.stats_input)
+    data_layout = data_layout_input
+    populate_stat_values(provider_config_input, data_layout, stats_input)
 
-        field_asserted_count = 0
-        for field_dict in data_layout:
-            if field_dict['name'] == 'field_1':
-                assert field_dict['fill_rate'] == 1.0
-                assert field_dict['top_values'] == 'val1 (1000:0.01), val2 (60:5.05)'
-                field_asserted_count += 1
+    field_asserted_count = 0
+    for field_dict in data_layout:
+        if field_dict['name'] == 'field_1':
+            assert field_dict['fill_rate'] == 1.0
+            assert field_dict['top_values'] == 'val1 (1000:0.01), val2 (60:5.05)'
+            field_asserted_count += 1
 
-            elif field_dict['name'] == 'field_2':
-                assert field_dict['fill_rate'] == 2.0
-                assert field_dict['top_values'] is None
-                field_asserted_count += 1
+        elif field_dict['name'] == 'field_2':
+            assert field_dict['fill_rate'] == 2.0
+            assert field_dict['top_values'] is None
+            field_asserted_count += 1
 
-        assert field_asserted_count == 2
+    assert field_asserted_count == 2
 
 
-class TestMultiTable(object):
-    """ Class for testing stat population for data_layouts with more than one table (emr) """
-    provider_config_input = {
-        'datatype': 'emr',
-        'models': [{'datatype' : 'emr_clin_obsn'}, {'datatype' : 'emr_medctn'}]
-    }
+def test_stat_population(provider_conf):
+    """ Test stat population for data_layouts with more than one table (emr) """
+    provider_config_input = provider_conf.copy_with(
+        datatype='emr',
+        models=[
+            ProviderModel(
+                datatype='emr_clin_obsn',
+            ),
+            ProviderModel(
+                datatype='emr_medctn',
+            )
+        ]
+    )
 
     data_layout_input = [
         {
@@ -158,29 +164,28 @@ class TestMultiTable(object):
         }
     }
 
-    def test_stat_population(self):
-        """ Test stat population for data_layouts with more than one table (emr) """
-        data_layout = self.data_layout_input
-        populate_stat_values(self.provider_config_input, data_layout, self.stats_input)
 
-        field_asserted_count = 0
-        for field_dict in data_layout:
-            if (
+    data_layout = data_layout_input
+    populate_stat_values(provider_config_input, data_layout, stats_input)
+
+    field_asserted_count = 0
+    for field_dict in data_layout:
+        if (
                 field_dict['name'] == 'field_1' and
                 field_dict['datatable']['name'] == 'Clinical Observation'
-            ):
-                assert field_dict['fill_rate'] == 1.0
-                assert field_dict['top_values'] == 'val1 (1000:0.01), val2 (60:5.05)'
-                field_asserted_count += 1
+        ):
+            assert field_dict['fill_rate'] == 1.0
+            assert field_dict['top_values'] == 'val1 (1000:0.01), val2 (60:5.05)'
+            field_asserted_count += 1
 
-            if field_dict['name'] == 'field_1' and field_dict['datatable']['name'] == 'Medication':
-                assert field_dict['fill_rate'] == 3.0
-                assert field_dict['top_values'] == 'val1 (100:0.12)'
-                field_asserted_count += 1
+        if field_dict['name'] == 'field_1' and field_dict['datatable']['name'] == 'Medication':
+            assert field_dict['fill_rate'] == 3.0
+            assert field_dict['top_values'] == 'val1 (100:0.12)'
+            field_asserted_count += 1
 
-            if field_dict['name'] == 'field_2' and field_dict['datatable']['name'] == 'Medication':
-                assert field_dict['fill_rate'] == 2.0
-                assert field_dict['top_values'] == 'val1 (40:0.02), val2 (30:4.02)'
-                field_asserted_count += 1
+        if field_dict['name'] == 'field_2' and field_dict['datatable']['name'] == 'Medication':
+            assert field_dict['fill_rate'] == 2.0
+            assert field_dict['top_values'] == 'val1 (40:0.02), val2 (30:4.02)'
+            field_asserted_count += 1
 
-        assert field_asserted_count == 3
+    assert field_asserted_count == 3

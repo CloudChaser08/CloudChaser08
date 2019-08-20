@@ -1,5 +1,0 @@
-{
-    "patient_field": "hvid",
-    "record_field": "claim_id",
-    "row_field": "*"
-}

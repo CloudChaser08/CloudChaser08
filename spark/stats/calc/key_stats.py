@@ -36,10 +36,10 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
                      patient, record, and row
     '''
     date_col = 'coalesced_date'
-    index_all_dates = provider_conf.get('index_all_dates', False)
-    index_null_dates = provider_conf.get('index_null_dates')
+    index_all_dates = provider_conf.index_all_dates
+    index_null_dates = provider_conf.index_null_dates
     patient_attribute = 'hvid'
-    record_attribute = provider_conf.get('record_field', '*')
+    record_attribute = provider_conf.record_field or '*'
     row_attribute = '*'
 
     # If we are indexing all dates, then we want to ignore

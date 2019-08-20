@@ -26,8 +26,8 @@ def calculate_longitudinality(df, provider_conf):
     date_field = 'coalesced_date'
 
     df = df.withColumn(MINIMIZED_DATE_FIELD, when(
-        col(date_field) > lit(provider_conf['earliest_date']), col(date_field)
-    ).otherwise(lit(provider_conf['earliest_date'])))
+        col(date_field) > lit(provider_conf.earliest_date), col(date_field)
+    ).otherwise(lit(provider_conf.earliest_date)))
 
     # Select the columns we care about
     patient_dates = df.select(col(patient_identifier), col(MINIMIZED_DATE_FIELD)).distinct()

@@ -60,8 +60,8 @@ def _populate_stats_multi_table(provider_config, data_layout, all_stats):
         layout_fields_by_table[field_table_name].append(field_dict)
 
     # DataTables are called models in provider_config
-    for table_config in provider_config['models']:
-        table_name_in_stats = table_config['datatype']
+    for table_config in provider_config.models:
+        table_name_in_stats = table_config.datatype
         table_stats = all_stats.get(table_name_in_stats, {})
 
         # Convert table_name to the same format that is in the data_layout
@@ -94,7 +94,7 @@ def populate_stat_values(provider_config, data_layout, stats):
     data_layout with the stats relevant to them.
     MUTATES: The input 'data_layout'
     """
-    is_multi_table = (provider_config['datatype'] == 'emr')
+    is_multi_table = (provider_config.datatype == 'emr')
 
     if is_multi_table:
         _populate_stats_multi_table(provider_config, data_layout, stats)
