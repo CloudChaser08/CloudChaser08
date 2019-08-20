@@ -1,21 +1,18 @@
-import pytest
-import gzip
-import subprocess
 import os
 import inspect
 
-import spark.test.marketplace.resources.test_schema as source_table_schemas
+import spark.test.marketplace.resources.test_schema as source_table_schema
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.helpers.udf.general_helpers import obfuscate_hvid
-from datetime import date
-
+from spark.test.marketplace.resources.transactions import schemas
 
 PROVIDER_NAME = 'TEST'
 PROVIDER_PARTITION_NAME = "100"
 DATA_TYPE = 'TEST_CLAIMS'
-OUTPUT_TABLE_NAMES_TO_SCHEMA = {}
 PROVIDER_PARTITION_COLUMN = 'test'
 DATE_PARTITION_COLUMN = 'test2'
+OUTPUT_TABLE_NAMES_TO_SCHEMAS = {
+        'output_table': schemas['schema_v1']
+    }
 
 # --------------------------- Common for all providers ---------------------------
 INPUT_DATE = '2019-01-02'
@@ -24,66 +21,32 @@ PROVIDER_DIRECTORY_PATH = os.path.dirname(inspect.getframeinfo(inspect.stack()[0
 PROVIDER_DIRECTORY_PATH = PROVIDER_DIRECTORY_PATH.replace('spark/target/dewey.zip/', "") + '/'
 PROVIDER_DIRECTORY_PATH = PROVIDER_DIRECTORY_PATH + 'resources/sql/'
 
+
 TEST_DRIVER = MarketplaceDriver(PROVIDER_NAME,
-                                PROVIDER_PARTITION_NAME,
-                                DATA_TYPE,
+                                '100',
+                                source_table_schema,
+                                OUTPUT_TABLE_NAMES_TO_SCHEMAS,
                                 INPUT_DATE,
-                                SCRIPT_PATH,
-                                PROVIDER_DIRECTORY_PATH,
-                                source_table_schemas,
-                                OUTPUT_TABLE_NAMES_TO_SCHEMA,
-                                PROVIDER_PARTITION_COLUMN,
-                                DATE_PARTITION_COLUMN,
                                 test=True)
 
-E2E_DRIVER = MarketplaceDriver(PROVIDER_NAME,
-                               PROVIDER_PARTITION_NAME,
-                               DATA_TYPE,
-                               INPUT_DATE,
-                               SCRIPT_PATH,
-                               PROVIDER_DIRECTORY_PATH,
-                               source_table_schemas,
-                               OUTPUT_TABLE_NAMES_TO_SCHEMA,
-                               PROVIDER_PARTITION_COLUMN,
-                               DATE_PARTITION_COLUMN,
-                               end_to_end_test=True)
-
 PROD_DRIVER = MarketplaceDriver(PROVIDER_NAME,
-                                PROVIDER_PARTITION_NAME,
-                                DATA_TYPE,
-                                INPUT_DATE,
-                                SCRIPT_PATH,
-                                PROVIDER_DIRECTORY_PATH,
-                                source_table_schemas,
-                                OUTPUT_TABLE_NAMES_TO_SCHEMA,
-                                PROVIDER_PARTITION_COLUMN,
-                                DATE_PARTITION_COLUMN)
+                                '100',
+                                source_table_schema,
+                                OUTPUT_TABLE_NAMES_TO_SCHEMAS,
+                                INPUT_DATE)
 
 
 def test_default_paths_templates():
     """
     Ensure that all the various templates are set correctly
     """
-    assert TEST_DRIVER.input_path == \
-           './test/marketplace/resources/records/'
-    assert TEST_DRIVER.matching_path == \
-           './test/marketplace/resources/matching/'
-    assert TEST_DRIVER.output_path == \
-           './test/marketplace/resources/output/'
+    assert TEST_DRIVER.input_path == './test/marketplace/resources/records/'
+    assert TEST_DRIVER.matching_path == './test/marketplace/resources/matching/'
+    assert TEST_DRIVER.output_path == './test/marketplace/resources/output/'
 
-    assert E2E_DRIVER.input_path == \
-        's3://salusv/testing/dewey/airflow/e2e/TEST/TEST_CLAIMS/2019/01/02/records/'
-    assert E2E_DRIVER.matching_path == \
-        's3://salusv/testing/dewey/airflow/e2e/TEST/TEST_CLAIMS/2019/01/02/matching/'
-    assert E2E_DRIVER.output_path == \
-        's3://salusv/testing/dewey/airflow/e2e/TEST/TEST_CLAIMS/2019/01/02/output/'
-
-    assert PROD_DRIVER.input_path == \
-        's3://salusv/incoming/TEST_CLAIMS/TEST/2019/01/02/'
-    assert PROD_DRIVER.matching_path == \
-        's3://salusv/matching/payload/TEST_CLAIMS/TEST/2019/01/02/'
-    assert PROD_DRIVER.output_path == \
-        's3://salusv/warehouse/parquet/TEST_CLAIMS/'
+    assert PROD_DRIVER.input_path == 's3://salusv/incoming/TEST_CLAIMS/TEST/2019/01/02/'
+    assert PROD_DRIVER.matching_path == 's3://salusv/matching/payload/TEST_CLAIMS/TEST/2019/01/02/'
+    assert PROD_DRIVER.output_path == 's3://salusv/warehouse/parquet/TEST_CLAIMS/'
 
 
 def test_load():
