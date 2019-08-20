@@ -154,6 +154,8 @@ class MarketplaceDriver(object):
             normalized_records_unloader.unload(
                 self.spark, self.runner, output, self.date_partition_column, str(self.date_input),
                 self.provider_name, substr_date_part=False, columns=_columns,
+                date_partition_name=self.date_partition_column,
+                provider_partition_name=self.provider_partition_column,
                 distribution_key=self.distribution_key
             )
             normalized_records_unloader.distcp(self.output_path + schema_obj.output_folder)
