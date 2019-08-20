@@ -77,7 +77,7 @@ def test_default_paths_templates():
     assert PROD_DRIVER.input_path == \
         's3://salusv/incoming/TEST_CLAIMS/TEST/2019/01/02/'
     assert PROD_DRIVER.matching_path == \
-        's3://salusv/input/payload/TEST_CLAIMS/TEST/2019/01/02/'
+        's3://salusv/matching/payload/TEST_CLAIMS/TEST/2019/01/02/'
     assert PROD_DRIVER.output_path == \
         's3://salusv/warehouse/parquet/TEST_CLAIMS/'
 
