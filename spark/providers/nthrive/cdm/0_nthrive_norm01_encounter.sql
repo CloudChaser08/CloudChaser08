@@ -256,15 +256,14 @@ SELECT
             THEN NULL
         ELSE 'REFERRING_PROVIDER_NPI'
     END                                                                                     AS enc_rfrg_prov_id_qual,
+    COALESCE(epi.unique_patient_id, ptn.unique_patient_id)                                  AS vdr_ptnt_id,
     /* enc_grp_txt */
     CASE
         WHEN COALESCE
                 (
                     epi.patient_type, 
                     ptn.patienttype, 
-                    wts.weight,
-                    epi.unique_patient_id,
-                    ptn.unique_patient_id
+                    wts.weight
                 ) IS NULL
             THEN NULL
         ELSE SUBSTR
@@ -296,11 +295,6 @@ SELECT
                                 WHEN wts.weight IS NULL
                                     THEN ''
                                 ELSE CONCAT(' | HOSPITAL_WEIGHT: ', wts.weight)
-                            END,
-                            CASE
-                                WHEN COALESCE(epi.unique_patient_id, ptn.unique_patient_id) IS NULL
-                                    THEN ''
-                                ELSE CONCAT(' | UNIQUE_PATIENT_ID: ', COALESCE(epi.unique_patient_id, ptn.unique_patient_id))
                             END
                         ), 4
                 )

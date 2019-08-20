@@ -44,6 +44,7 @@ schema_v1 = StructType([
     StructField('enc_rfrg_prov_npi', StringType(), True),
     StructField('enc_rfrg_prov_id', StringType(), True),
     StructField('enc_rfrg_prov_id_qual', StringType(), True),
+    StructField('vdr_ptnt_id', StringType(), True),
     StructField('enc_grp_txt', StringType(), True),
     StructField('los_day_cnt', StringType(), True),
     StructField('los_txt', StringType(), True),

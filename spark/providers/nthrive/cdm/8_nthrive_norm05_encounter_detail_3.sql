@@ -115,7 +115,9 @@ SELECT
     CAST(NULL AS STRING)                                                                    AS proc_unit_qty,
     CAST(NULL AS STRING)                                                                    AS proc_grp_txt,
     CAST(NULL AS FLOAT)                                                                     AS dtl_chg_amt,
+    CAST(NULL AS STRING)                                                                    AS chg_meth_desc,
     CAST(NULL AS STRING)                                                                    AS cdm_grp_txt,
+    CAST(NULL AS STRING)                                                                    AS cdm_conv_txt,
     CAST(NULL AS STRING)                                                                    AS cdm_dept_txt,
     CAST(NULL AS STRING)                                                                    AS std_cdm_grp_txt,
     CAST(NULL AS STRING)                                                                    AS vdr_chg_desc,
@@ -169,7 +171,7 @@ WHERE UPPER(COALESCE(ptn_cpt.record_id, '')) <> 'RECORD_ID'
   AND NOT EXISTS
     (
         SELECT 1
-         FROM nthrive_norm_temp03_encounter_detail_temp ptn_chg
+         FROM nthrive_norm_temp03_ptn_chg_temp ptn_chg
         WHERE COALESCE(ptn_cpt.record_id, 'DUMMY') = ptn_chg.record_id
           AND COALESCE(ptn_cpt.procedure_day, 'DUMMY') = ptn_chg.service_day
           AND COALESCE(ptn_cpt.cpt_code, 'DUMMY') = ptn_chg.cpt_code
@@ -178,7 +180,7 @@ WHERE UPPER(COALESCE(ptn_cpt.record_id, '')) <> 'RECORD_ID'
   AND NOT EXISTS
     (
         SELECT 1
-         FROM nthrive_norm_temp04_encounter_detail_temp ptn_prc
+         FROM nthrive_norm_temp04_ptn_prc_temp ptn_prc
         WHERE COALESCE(ptn_cpt.record_id, 'DUMMY') = ptn_prc.record_id
           AND COALESCE(ptn_cpt.procedure_day, 'DUMMY') = ptn_prc.procedure_day
           AND COALESCE(ptn_cpt.cpt_code, 'DUMMY') = ptn_prc.icd_procedure_code

@@ -15,7 +15,7 @@ if __name__ == "__main__":
     output_table_names_to_schemas = {
         'nthrive_norm02_diagnosis': diagnosis_schema['schema_v1'],
         'nthrive_norm01_encounter': encounter_schema['schema_v1'],
-        'nthrive_norm03_encounter_detail': encounter_detail_schema['schema_v1']
+        'nthrive_norm06_encounter_detail': encounter_detail_schema['schema_v1']
     }
     provider_partition_column = 'part_hvm_vdr_feed_id'
     date_partition_column = 'part_mth'
