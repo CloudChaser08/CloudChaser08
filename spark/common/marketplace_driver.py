@@ -156,4 +156,4 @@ class MarketplaceDriver(object):
                 self.provider_name, substr_date_part=False, columns=_columns,
                 distribution_key=self.distribution_key
             )
-            normalized_records_unloader.distcp(self.output_path + schema_obj.output_destination)
+            normalized_records_unloader.distcp(self.output_path + schema_obj.output_folder)

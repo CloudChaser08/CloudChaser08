@@ -115,12 +115,19 @@ SELECT
     ptn_chg.units                                                                           AS proc_unit_qty,
     CAST(NULL AS STRING)                                                                    AS proc_grp_txt,
     CAST(ptn_chg.charge AS FLOAT)                                                           AS dtl_chg_amt,
-    /* cdm_grp_txt */
+    /* chg_meth_desc */
+    CASE
+        WHEN COALESCE(cdm.chg_in_time, 'X') = '1'
+            THEN 'Time'
+        ELSE NULL
+    END                                                                                     AS chg_meth_desc,
+    CAST(NULL AS STRING)                                                                    AS cdm_grp_txt,
+    /* cdm_convsn_txt */
     CASE
         WHEN COALESCE
                 (
                     cdm.cdm_to_std_conv_factor,
-                    cdm.chg_in_time
+                    s_cdm.std_to_cpm_conv_factor
                 ) IS NULL
             THEN NULL
         ELSE SUBSTR
@@ -133,15 +140,13 @@ SELECT
                                 ELSE CONCAT(' | CDM_TO_STANDARD_CONVERSION_FACTOR: ', cdm.cdm_to_std_conv_factor)
                             END,
                             CASE
-                                WHEN COALESCE(cdm.chg_in_time, 'X') = '0'
-                                    THEN ' | CHARGE_IN_TIME: No'
-                                WHEN COALESCE(cdm.chg_in_time, 'X') = '1'
-                                    THEN ' | CHARGE_IN_TIME: Yes'
-                                ELSE ''
+                                WHEN s_cdm.std_to_cpm_conv_factor IS NULL
+                                    THEN ''
+                                ELSE CONCAT(' | STANDARD_TO_CPM_CONVERSION_FACTOR: ', s_cdm.std_to_cpm_conv_factor)
                             END
                         ), 4
                 )
-    END                                                                                     AS cdm_grp_txt,
+    END                                                                                     AS cdm_convsn_txt,
     /* cdm_dept_txt */
     CASE
         WHEN COALESCE
@@ -165,9 +170,9 @@ SELECT
                                     THEN ''
                                 ELSE CONCAT
                                         (
-                                            ' | STANDARD_DEPARTMENT_CODE: ', 
-                                            COALESCE(s_cdm.std_dept_code, ''), 
-                                            ' - ', 
+                                            ' | STANDARD_DEPARTMENT_CODE: ',
+                                            COALESCE(s_cdm.std_dept_code, ''),
+                                            ' - ',
                                             COALESCE(s_cdm.std_dept_desc, '')
                                         )
                             END
@@ -180,8 +185,7 @@ SELECT
                 (
                     s_cdm.cpt_code,
                     s_cdm.hcpcs_code,
-                    s_cdm.hcpcs_modifier,
-                    s_cdm.std_to_cpm_conv_factor
+                    s_cdm.hcpcs_modifier
                 ) IS NULL
             THEN NULL
         ELSE SUBSTR
@@ -202,11 +206,6 @@ SELECT
                                 WHEN s_cdm.hcpcs_modifier IS NULL
                                     THEN ''
                                 ELSE CONCAT(' | STANDARD_CDM_HCPCS_MODIFIER: ', s_cdm.hcpcs_modifier)
-                            END,
-                            CASE
-                                WHEN s_cdm.std_to_cpm_conv_factor IS NULL
-                                    THEN ''
-                                ELSE CONCAT(' | STANDARD_TO_CPM_CONVERSION_FACTOR: ', s_cdm.std_to_cpm_conv_factor)
                             END
                         ), 4
                 )
@@ -289,9 +288,9 @@ SELECT
                                     THEN ''
                                 ELSE CONCAT
                                         (
-                                            ' | MANUFACTURER_ITEM: ', 
-                                            COALESCE(s_cdm.manuf_cat_num, ''), 
-                                            ' - ', 
+                                            ' | MANUFACTURER_ITEM: ',
+                                            COALESCE(s_cdm.manuf_cat_num, ''),
+                                            ' - ',
                                             COALESCE(s_cdm.manuf_descr, '')
                                         )
                             END
@@ -304,7 +303,7 @@ SELECT
 	CASE
 	    WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE
                                         (
-                                            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), 
+                                            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
                                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
                                             CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
@@ -335,7 +334,7 @@ SELECT
         LIMIT 1
     ) esdt
    ON 1 = 1
- LEFT OUTER JOIN 
+ LEFT OUTER JOIN
     (
         SELECT gen_ref_1_dt
          FROM ref_gen_ref
