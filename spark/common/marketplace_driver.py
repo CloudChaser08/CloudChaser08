@@ -25,7 +25,7 @@ MODE_RECORDS_PATH_TEMPLATE = {
 MODE_MATCHING_PATH_TEMPLATE = {
     TEST: './test/marketplace/resources/matching/',
     END_TO_END_TEST: E2E_PATH + 'matching/',
-    PRODUCTION: 's3://salusv/input/payload/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
+    PRODUCTION: 's3://salusv/matching/payload/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
 }
 
 MODE_OUTPUT_PATH = {
