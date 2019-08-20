@@ -54,6 +54,9 @@ class Column(_BaseModel):
     name = create_required_str_field()
     field_id = create_required_str_field()
     sequence = create_required_str_field()
+    datatype = create_required_str_field()
+    description = create_required_str_field()
+    top_values = create_optional_bool_field()
 
 
 @attr.s(frozen=True)
