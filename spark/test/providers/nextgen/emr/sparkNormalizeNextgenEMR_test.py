@@ -19,7 +19,7 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
-    nextgen.run(spark['spark'], spark['runner'], '2017-02-28', None, None, True)
+    nextgen.run(spark['spark'], spark['runner'], '2017-02-28', None, None, test=True)
     global results, deduped_encounter, deduped_demographics
     for t in tables:
         results[t] = spark['sqlContext'].sql('select * from {}_common_model'.format(t)) \

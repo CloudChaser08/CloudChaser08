@@ -2,7 +2,7 @@ SELECT
     concat_ws('_', '35',
         enc.reportingenterpriseid,
         enc.encounterid)                    AS hv_enc_id,
-    '04'                                    AS mdl_vrsn_num,
+    '09'                                    AS mdl_vrsn_num,
     enc.dataset                             AS data_set_nm,
     enc.reportingenterpriseid               AS vdr_org_id,
     enc.encounterid                         AS vdr_enc_id,
@@ -19,6 +19,11 @@ SELECT
     extract_date(
         substring(enc.encounterdatetime, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS enc_start_dt,
+    CASE
+        WHEN LENGTH(REGEXP_REPLACE(enc.renderinghcpnpi, '[^0-9]', '')) == 10
+        THEN REGEXP_REPLACE(enc.renderinghcpnpi, '[^0-9]', '')
+        ELSE ''
+    END AS enc_rndrg_prov_npi,
     enc.hcpprimarytaxonomy                  AS enc_rndrg_prov_nucc_taxnmy_cd,
     enc.hcpzipcode                          AS enc_rndrg_prov_zip_cd,
     UPPER(clean_up_freetext(enc.encounterdescription))

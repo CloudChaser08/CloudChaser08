@@ -2,7 +2,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 import pyspark.sql.functions as F
 
-RAW_COLUMN_COUNT = 37
+RAW_COLUMN_COUNT = 38
 
 def load(runner, input_path, s3_encounter_reference, s3_demographics_reference, test=False):
     df = records_loader \
@@ -24,7 +24,7 @@ def load(runner, input_path, s3_encounter_reference, s3_demographics_reference, 
                 F.regexp_extract('input_file_name', '(NG|HV)_LSSA_[^_]*_([^\.]*).txt', 2).alias('recorddate'),
                 F.regexp_extract('input_file_name', '((NG|HV)_LSSA_[^_]*_[^\.]*.txt)', 1).alias('dataset')
             ])) \
-            .where(F.col('tbl_type') == TABLE_TYPE[t]) \
+            .where(F.col('tbl_type') in TABLE_TYPE[t]) \
             .createOrReplaceTempView(t)
 
     records_loader \
@@ -50,7 +50,8 @@ TABLE_COLUMNS = {
         'encountertype',
         'encounterdescription',
         'hcpzipcode',
-        'hcpprimarytaxonomy'
+        'hcpprimarytaxonomy',
+        'renderinghcpnpi'
     ],
     'new_demographics' : [
         'preambleformatcode',
@@ -189,7 +190,8 @@ TABLE_COLUMNS = {
         'vcxcode',
         'orderedosteoporosisprogramflag',
         'orderinghcpzipcode',
-        'orderinghcpprimarytaxonomy'
+        'orderinghcpprimarytaxonomy',
+        'orderinghcpnpi'
     ],
     'laborder' : [
         'preambleformatcode',
@@ -226,7 +228,10 @@ TABLE_COLUMNS = {
         'collectiontime',
         'loinccode',
         'snomedcode',
-        'ordernum'
+        'ordernum',
+        'unitofmeasure',
+        'referencerange',
+        'normalabnormalflag'
     ],
     'medicationorder' : [
         'preambleformatcode',
@@ -292,7 +297,8 @@ TABLE_COLUMNS = {
         'reportingenterpriseid',
         'recorddate',
         'dataset',
-        'nextrecorddate'
+        'nextrecorddate',
+        'renderinghcpnpi'
     ],
     'old_demographics' : [
         'preambleformatcode',
@@ -316,17 +322,17 @@ TABLE_COLUMNS = {
 }
 
 TABLE_TYPE = {
-    'new_encounter' : '0007.001',
-    'new_demographics' : '0005.001',
-    'vitalsigns' : '0010.001',
-    'lipidpanel' : '0020.001',
-    'allergy' : '0030.001',
-    'substanceusage' : '0040.001',
-    'diagnosis' : '0050.001',
-    'order' : '0060.001',
-    'laborder' : '0070.001',
-    'labresult' : '0080.001',
-    'medicationorder' : '0090.001',
-    'procedure' : '0100.001',
-    'extendeddata' : '0110.001'
+     'new_encounter': ['0007.001', '0007.002'],
+    'new_demographics': ['0005.001'],
+    'vitalsigns': ['0010.001'],
+    'lipidpanel': ['0020.001'],
+    'allergy': ['0030.001'],
+    'substanceusage': ['0040.001'],
+    'diagnosis': ['0050.001'],
+    'order': ['0060.001', '0060.002'],
+    'laborder': ['0070.001'],
+    'labresult': ['0080.001', '0080.002'],
+    'medicationorder': ['0090.001'],
+    'procedure': ['0100.001'],
+    'extendeddata': ['0110.001']
 }

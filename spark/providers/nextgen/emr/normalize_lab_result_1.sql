@@ -1,5 +1,5 @@
 SELECT
-    '04'                                    AS mdl_vrsn_num,
+    '08'                                    AS mdl_vrsn_num,
     rslt.dataset                            AS data_set_nm,
     rslt.reportingenterpriseid              AS vdr_org_id,
     COALESCE(dem.hvid, concat_ws('_', '118',
@@ -37,9 +37,14 @@ SELECT
     CASE WHEN CAST(rslt.result as float) IS NOT NULL
             THEN rslt.result
         ELSE ref2.gen_ref_itm_nm END        AS lab_result_nm,
-    NULL                                    AS lab_result_msrmt,
-    NULL                                    AS lab_result_uom,
-    NULL                                    AS lab_result_qual,
+    rslt.referencerange                     AS lab_result_msrmt,
+    rslt.unitofmeasure                      AS lab_result_uom,
+    CASE
+        WHEN rslt.referencerange IS NULL
+            THEN NULL
+        ELSE 'REFERENCERANGE'
+    END                                     AS lab_result_qual,
+    substring(rslt.normalabnormalflag, 1, 1) AS lab_result_abnorm_flg,
     extract_date(
         substring(rslt.datadate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS data_captr_dt,
