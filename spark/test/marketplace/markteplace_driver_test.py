@@ -11,6 +11,7 @@ from datetime import date
 
 
 PROVIDER_NAME = 'TEST'
+PROVIDER_PARTITION_NAME = "100"
 DATA_TYPE = 'TEST_CLAIMS'
 OUTPUT_TABLE_NAMES_TO_SCHEMA = {}
 PROVIDER_PARTITION_COLUMN = 'test'
@@ -24,6 +25,7 @@ PROVIDER_DIRECTORY_PATH = PROVIDER_DIRECTORY_PATH.replace('spark/target/dewey.zi
 PROVIDER_DIRECTORY_PATH = PROVIDER_DIRECTORY_PATH + 'resources/sql/'
 
 TEST_DRIVER = MarketplaceDriver(PROVIDER_NAME,
+                                PROVIDER_PARTITION_NAME,
                                 DATA_TYPE,
                                 INPUT_DATE,
                                 SCRIPT_PATH,
@@ -35,6 +37,7 @@ TEST_DRIVER = MarketplaceDriver(PROVIDER_NAME,
                                 test=True)
 
 E2E_DRIVER = MarketplaceDriver(PROVIDER_NAME,
+                               PROVIDER_PARTITION_NAME,
                                DATA_TYPE,
                                INPUT_DATE,
                                SCRIPT_PATH,
@@ -46,6 +49,7 @@ E2E_DRIVER = MarketplaceDriver(PROVIDER_NAME,
                                end_to_end_test=True)
 
 PROD_DRIVER = MarketplaceDriver(PROVIDER_NAME,
+                                PROVIDER_PARTITION_NAME,
                                 DATA_TYPE,
                                 INPUT_DATE,
                                 SCRIPT_PATH,

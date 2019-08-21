@@ -18,6 +18,7 @@ if __name__ == "__main__":
         'nthrive_norm06_encounter_detail': encounter_detail_schema['schema_v1']
     }
     provider_partition_column = 'part_hvm_vdr_feed_id'
+    provider_partition_name = '149'
     date_partition_column = 'part_mth'
     distribution_key = 'row_id'
 
@@ -34,6 +35,7 @@ if __name__ == "__main__":
 
     driver = MarketplaceDriver(
         provider_name,
+        provider_partition_name,
         data_type,
         input_date,
         script_path,

@@ -38,7 +38,7 @@ schema_v1 = StructType([
     StructField('medctn_molcl_nm', StringType(), True),
     StructField('medctn_qty', StringType(), True),
     StructField('dtl_chg_amt', FloatType(), True),
-    StructField('chg_meth_desc', FloatType(), True),
+    StructField('chg_meth_desc', StringType(), True),
     StructField('cdm_grp_txt', StringType(), True),
     StructField('cdm_convsn_txt', StringType(), True),
     StructField('cdm_dept_txt', StringType(), True),
