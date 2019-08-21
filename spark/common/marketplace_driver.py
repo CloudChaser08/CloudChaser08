@@ -41,6 +41,7 @@ class MarketplaceDriver(object):
     """
     def __init__(self,
                  provider_name,
+                 provider_partition_name,
                  data_type,
                  date_input,
                  script_path,
@@ -53,6 +54,7 @@ class MarketplaceDriver(object):
                  end_to_end_test=False,
                  distribution_key='record_id'):
         self.provider_name = provider_name
+        self.provider_partition_name = provider_partition_name
         self.data_type = data_type
         self.date_input = datetime.datetime.strptime(date_input, '%Y-%m-%d').date()
         self.script_path = script_path
@@ -153,7 +155,7 @@ class MarketplaceDriver(object):
             _columns.remove(self.date_partition_column)
             normalized_records_unloader.unload(
                 self.spark, self.runner, output, self.date_partition_column, str(self.date_input),
-                self.provider_name, substr_date_part=False, columns=_columns,
+                self.provider_partition_name, substr_date_part=False, columns=_columns,
                 date_partition_name=self.date_partition_column,
                 provider_partition_name=self.provider_partition_column,
                 distribution_key=self.distribution_key

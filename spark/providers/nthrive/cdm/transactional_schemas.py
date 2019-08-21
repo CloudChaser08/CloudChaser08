@@ -111,7 +111,6 @@ TABLE_CONF = {
         columns=[
             'provider_id',
             'provider_npi',
-            'provider_zip',
             'bed_grp',
             'bed_grp_desc',
             'teaching',
@@ -154,7 +153,6 @@ TABLE_CONF = {
             'ms_drg_id',
             'bill_type',
             'patient_type',
-            'ms_drg_code',
             'gender',
             'age',
             'age_days',

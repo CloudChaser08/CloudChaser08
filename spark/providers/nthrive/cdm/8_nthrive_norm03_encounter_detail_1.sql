@@ -170,9 +170,9 @@ SELECT
                                     THEN ''
                                 ELSE CONCAT
                                         (
-                                            ' | STANDARD_DEPARTMENT_CODE: ',
-                                            COALESCE(s_cdm.std_dept_code, ''),
-                                            ' - ',
+                                            ' | STANDARD_DEPARTMENT_CODE: ', 
+                                            COALESCE(s_cdm.std_dept_code, ''), 
+                                            ' - ', 
                                             COALESCE(s_cdm.std_dept_desc, '')
                                         )
                             END
@@ -212,11 +212,13 @@ SELECT
     END                                                                                     AS std_cdm_grp_txt,
     /* vdr_chg_desc */
     CASE
+        /* If the source is empty, or the description is blacklisted, load NULL. */
         WHEN COALESCE
                 (
                     cdm.charge_code,
                     cdm.charge_desc
                 ) IS NULL
+          OR tmp_cdm.whtlst_flg = 'N'
             THEN NULL
         ELSE CONCAT
                 (
@@ -228,13 +230,26 @@ SELECT
     END                                                                                     AS vdr_chg_desc,
     /* std_chg_desc */
     CASE
-        WHEN COALESCE
-                (
-                    s_cdm.cpm_code,
-                    s_cdm.cpm_desc,
-                    s_cdm.cdm_std_code,
-                    s_cdm.cdm_std_desc
-                ) IS NULL
+        WHEN
+        /* If the source is empty, or the description is blacklisted, */
+        /* for both of the source descriptions in s_cdm, load NULL. */
+            (
+                COALESCE
+                    (
+                        s_cdm.cpm_code,
+                        s_cdm.cpm_desc
+                    ) IS NULL
+             OR tmp_cpm.whtlst_flg = 'N'
+            )
+         AND
+            (
+                COALESCE
+                    (
+                        s_cdm.cdm_std_code,
+                        s_cdm.cdm_std_desc
+                    ) IS NULL
+             OR tmp_std.whtlst_flg = 'N'
+            )
             THEN NULL
         ELSE SUBSTR
                 (
@@ -242,6 +257,7 @@ SELECT
                         (
                             CASE
                                 WHEN COALESCE(s_cdm.cpm_code, s_cdm.cpm_desc) IS NULL
+                                  OR tmp_cpm.whtlst_flg = 'N'
                                     THEN ''
                                 ELSE CONCAT
                                         (
@@ -253,6 +269,7 @@ SELECT
                             END,
                             CASE
                                 WHEN COALESCE(s_cdm.cdm_std_code, s_cdm.cdm_std_desc) IS NULL
+                                  OR tmp_std.whtlst_flg = 'N'
                                     THEN ''
                                 ELSE CONCAT
                                         (
@@ -288,9 +305,9 @@ SELECT
                                     THEN ''
                                 ELSE CONCAT
                                         (
-                                            ' | MANUFACTURER_ITEM: ',
-                                            COALESCE(s_cdm.manuf_cat_num, ''),
-                                            ' - ',
+                                            ' | MANUFACTURER_ITEM: ', 
+                                            COALESCE(s_cdm.manuf_cat_num, ''), 
+                                            ' - ', 
                                             COALESCE(s_cdm.manuf_descr, '')
                                         )
                             END
@@ -303,7 +320,7 @@ SELECT
 	CASE
 	    WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE
                                         (
-                                            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
+                                            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), 
                                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
                                             CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
@@ -319,6 +336,12 @@ SELECT
    ON COALESCE(ptn_chg.charge_id, 'EMPTY') = COALESCE(cdm.charge_id, 'DUMMY')
  LEFT OUTER JOIN standard_chargemaster s_cdm
    ON COALESCE(cdm.cdm_std_id, 'EMPTY') = COALESCE(s_cdm.cdm_std_id, 'DUMMY')
+ LEFT OUTER JOIN nthrive_norm_temp06_chg_desc_temp tmp_cdm
+   ON COALESCE(cdm.charge_desc, 'EMPTY') = COALESCE(tmp_cdm.charge_desc, 'DUMMY')
+ LEFT OUTER JOIN nthrive_norm_temp06_chg_desc_temp tmp_cpm
+   ON COALESCE(s_cdm.cpm_desc, 'EMPTY') = COALESCE(tmp_cpm.charge_desc, 'DUMMY')
+ LEFT OUTER JOIN nthrive_norm_temp06_chg_desc_temp tmp_std
+   ON COALESCE(s_cdm.cdm_std_desc, 'EMPTY') = COALESCE(tmp_cdm.charge_desc, 'DUMMY')
  LEFT OUTER JOIN episodes epi
    ON COALESCE(ptn_chg.record_id, 'EMPTY') = COALESCE(epi.record_id, 'DUMMY')
  LEFT OUTER JOIN patient ptn
@@ -334,7 +357,7 @@ SELECT
         LIMIT 1
     ) esdt
    ON 1 = 1
- LEFT OUTER JOIN
+ LEFT OUTER JOIN 
     (
         SELECT gen_ref_1_dt
          FROM ref_gen_ref
