@@ -2,63 +2,67 @@
     data models
 """
 
-import attr
-
-from .models import Column
-
-@attr.s(frozen=True)
-class _WarehouseColumn(object):
-    """ A data structure to represent metadata about a warehouse column """
-    name = attr.ib()
-    datatype = attr.ib()
-    top_values = attr.ib()
-    description = attr.ib()
-    include_in_model = attr.ib()
+from .models import TableMetadata, Column
 
 
-def get_columns_for_model(sql_context, datatype):
-    """ Gets all relevant Columns for a specified datatype as a map, keyed
-        by the name of the column
-    """
-    dw_columns = (
-        _parse_warehouse_column_row(row)
-        for row in sql_context.sql(
-            'describe table dw.hvm_{}'.format(datatype)
-        ).collect()
-    )
-    return {
-        dwc.name: Column(
-            name=dwc.name,
-            field_id=str(idx + 1),
-            sequence=str(idx),
-            datatype=dwc.datatype,
-            top_values=dwc.top_values,
-            description=dwc.description,
-        ) for idx, dwc in enumerate(dw_columns)
-        # filter out any columns where the "include_in_model" flag is false
-        if dwc.include_in_model
-    }
+_DESCRIBE_FORMATTED_TABLE_SQL = 'describe formatted dw.hvm_{datatype}'
 
 
-def _parse_warehouse_column_row(row):
-    """ Parses a spark SQL row of warehouse datamodel column metadata into
-        a _WarehouseColumn object, provided that the column indicates that
-        it should be included in the customer data model.
-    """
-    comment_fields = dict(
-        item.strip().split('=', 1) for item in row.comment.split('|')
-    )
+def get_table_metadata(sql_context, datatype):
+    """ Gets metadata about the table associated with the provided datatype """
 
-    return _WarehouseColumn(
-        name=row.col_name,
-        datatype=row.data_type,
-        top_values=_convert_yes_no_bool(
-            comment_fields['top_values']
-        ),
-        description=comment_fields['description'],
-        include_in_model=_convert_yes_no_bool(
-            comment_fields['included_in_customer_std_data_model']
-        )
+
+    columns = []
+    metadata = {}
+
+    all_columns_collected = False
+    sql = _DESCRIBE_FORMATTED_TABLE_SQL.format(datatype=datatype)
+    for idx, row in enumerate(sql_context.sql(sql).collect()):
+
+        # The describe formatted query first returns column data, then returns
+        # an completely empty row ('', '', ''), followed by metadata rows.
+        # We use the empty row to flip the `all_columns_collected` flag to True
+        if not row.col_name:
+            all_columns_collected = True
+
+        # If all the table's columns have been collected, parse the remainder
+        # as metadata rows
+        if all_columns_collected:
+            # Metadata rows take the form of:
+            # (<Meta field name>, <value>, <empty>)
+            field_name, value, _ = row
+            metadata[field_name] = value
+
+        else:
+
+            # Custom column-level metadata is stored in the `comment` field,
+            # as key value pairs in the format:
+            #       "key1=value1 | key2=value2 | key3=value3"
+            # So we parse this and store in a dictionary
+            fields = dict(
+                item.strip().split('=', 1) for item in row.comment.split('|')
+            )
+
+            # Only include columns in the standard data model
+            include_field = _convert_yes_no_bool(
+                fields['included_in_customer_std_data_model']
+            )
+            if include_field:
+                columns.append(
+                    Column(
+                        name=row.col_name,
+                        field_id=str(idx + 1),
+                        sequence=str(idx),
+                        datatype=row.data_type,
+                        top_values=_convert_yes_no_bool(fields['top_values']),
+                        description=fields['description'],
+                    )
+                )
+
+    return TableMetadata(
+        name=metadata['Table'],
+        description=metadata['Comment'],
+        columns=columns
     )
 
 

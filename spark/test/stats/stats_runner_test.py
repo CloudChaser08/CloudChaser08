@@ -6,22 +6,26 @@ from pyspark.sql import Row
 import spark.helpers.stats.utils as stats_utils
 import spark.stats.stats_runner as stats_runner
 import spark.stats.stats_writer as stats_writer
-from spark.stats.models import Provider, ProviderModel, Column
+from spark.stats.models import Provider, ProviderModel, Column, TableMetadata
 
-COLUMNS = {
-    'claim_id': Column(
-        name='claim_id', field_id='1', sequence='1', top_values=False,
-        datatype='string', description='Claim ID'
-    ),
-    'service_date': Column(
-        name='service_date', field_id='2', sequence='2', top_values=False,
-        datatype='string', description='Service Date'
-    ),
-    'col_3': Column(
-        name='col_3', field_id='2', sequence='2', top_values=False,
-        datatype='string', description='Column 3'
-    ),
-}
+TABLE = TableMetadata(
+    name='tbl',
+    description='desc',
+    columns=[
+        Column(
+            name='claim_id', field_id='1', sequence='1', top_values=False,
+            datatype='string', description='Claim ID'
+        ),
+        Column(
+            name='service_date', field_id='2', sequence='2', top_values=False,
+            datatype='string', description='Service Date'
+        ),
+        Column(
+            name='col_3', field_id='2', sequence='2', top_values=False,
+            datatype='string', description='Column 3'
+        ),
+    ]
+)
 
 @pytest.fixture(autouse=True)
 def setup_teardown(spark):
@@ -64,7 +68,7 @@ def test_standard_stats(spark):
         date_fields=['service_date'],
         record_field='claim_id',
         fill_rate=True,
-        columns=COLUMNS,
+        table=TABLE,
         key_stats=False,
         top_values=False,
         longitudinality=False,
@@ -102,14 +106,14 @@ def test_emr_fill_rates(spark):
                 date_fields=['service_date'],
                 record_field='claim_id',
                 fill_rate=True,
-                columns=COLUMNS
+                table=TABLE
             ),
             ProviderModel(
                 datatype='emr_clin_obsn',
                 date_fields=['service_date'],
                 record_field='claim_id',
                 fill_rate=True,
-                columns=COLUMNS,
+                table=TABLE,
             )
         ],
         earliest_date='1990-01-01',

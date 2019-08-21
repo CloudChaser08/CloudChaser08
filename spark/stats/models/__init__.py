@@ -74,6 +74,13 @@ class Column(_BaseModel):
     top_values = create_optional_bool_field()
 
 
+@attr.s(frozen=True)
+class TableMetadata(_BaseModel):
+    """ Metadata about the table for a given data model """
+    name = create_required_str_field()
+    description = create_required_str_field()
+    columns = attr.ib(converter=model_list_converter(Column))
+
 
 @attr.s(frozen=True)
 class ProviderModel(_BaseModel, _DateFieldsMixin):
@@ -87,10 +94,7 @@ class ProviderModel(_BaseModel, _DateFieldsMixin):
     date_fields = create_str_list_field()
     fill_rate = create_optional_bool_field()
     top_values = create_optional_bool_field()
-    columns = attr.ib(
-        converter=model_map_converter(Column),
-        default=attr.Factory(dict)
-    )
+    table = create_model_field(TableMetadata, optional=True)
     max_top_values = attr.ib(
         validator=attr.validators.instance_of(int),
         default=10
@@ -123,19 +127,11 @@ class Provider(_BaseModel, _DateFieldsMixin):
     )
     custom_schema = create_optional_str_field()
     custom_table = create_optional_str_field()
-    columns = attr.ib(
-        converter=model_map_converter(Column),
-        default=attr.Factory(dict)
-    )
+    table = create_model_field(TableMetadata, optional=True)
     max_top_values = attr.ib(
         validator=attr.validators.instance_of(int),
         default=10
     )
-
-    @property
-    def top_values_columns(self):
-        """ Returns all columns with top-values """
-        return {k: c for k, c in self.columns.items() if c.top_values}
 
     def merge_provider_model(self, provider_model):
         """ Merges non-null fields from a ProviderModel object into a copy of

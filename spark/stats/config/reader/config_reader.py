@@ -4,7 +4,7 @@
 import json
 
 from spark.stats.models import Provider
-from ...datamodel import get_columns_for_model
+from ...datamodel import get_table_metadata
 
 
 def _get_config_from_json(filename):
@@ -37,10 +37,10 @@ def _extract_provider_conf(feed_id, provider_config_json):
     )
 
 
-def _fill_columns(conf, sql_context):
+def _fill_table_meta(conf, sql_context):
     """ Fills in all columns for the model """
     return conf.copy_with(
-        columns=get_columns_for_model(sql_context, conf.datatype)
+        table=get_table_metadata(sql_context, conf.datatype)
     )
 
 
@@ -63,9 +63,9 @@ def get_provider_config(sql_context, providers_conf_file, feed_id):
     # Gets the provider config for only this feed
     if provider_conf.datatype == 'emr':
         provider_conf = provider_conf.copy_with(
-            models=[_fill_columns(m, sql_context) for m in provider_conf.models]
+            models=[_fill_table_meta(m, sql_context) for m in provider_conf.models]
         )
     else:
-        provider_conf = _fill_columns(provider_conf, sql_context)
+        provider_conf = _fill_table_meta(provider_conf, sql_context)
 
     return provider_conf

@@ -128,10 +128,10 @@ def run_fill_rates(provider_conf, df_provider):
         return None
     dataframe = df_provider.sampled_data
 
+    fill_rate_columns = {c.name for c in provider_conf.table.columns}
     # Get only the columns needed to calculate fill rates on
     cols = {
-        c for c in dataframe.columns
-        if c in provider_conf.columns.keys()
+        c for c in dataframe.columns if c in fill_rate_columns
     }
     if provider_conf.record_field:
         cols.add(provider_conf.record_field)
@@ -152,10 +152,13 @@ def run_top_values(provider_conf, df_provider):
     dataframe = df_provider.sampled_data
     multiplier = df_provider.sampled_data_multiplier
 
-    # Get only the columns needed to calculate fill rates on
+    # Get only the columns needed to calculate top values on
+    top_values_columns = {
+        c.name for c in provider_conf.table.columns
+        if c.top_values
+    }
     cols = {
-        c for c in dataframe.columns
-        if c in provider_conf.top_values_columns.keys()
+        c for c in dataframe.columns if c in top_values_columns
     }
     if provider_conf.record_field:
         cols.add(provider_conf.record_field)

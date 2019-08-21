@@ -7,18 +7,22 @@ from mock import Mock
 from pyspark.sql import Row
 
 import spark.stats.processor as processor
-from spark.stats.models import Column
+from spark.stats.models import Column, TableMetadata
 
-COLUMNS = {
-    'hvid': Column(
-        name='hvid', field_id='1', sequence='1', top_values=True,
-        datatype='string', description='HV ID'
-    ),
-    'col_2': Column(
-        name='col_2', field_id='2', sequence='2', top_values=True,
-        datatype='string', description='Column 2'
-    )
-}
+TABLE = TableMetadata(
+    name='tbl',
+    description='desc',
+    columns=[
+        Column(
+            name='hvid', field_id='1', sequence='1', top_values=True,
+            datatype='string', description='HV ID'
+        ),
+        Column(
+            name='col_2', field_id='2', sequence='2', top_values=True,
+            datatype='string', description='Column 2'
+        )
+    ]
+)
 
 
 @pytest.fixture(name='df_provider', scope='module')
@@ -52,7 +56,7 @@ def test_fill_rate_record_field(provider_conf, df_provider):
         date_fields=['service_date'],
         record_field='claim_id',
         fill_rate=True,
-        columns=COLUMNS,
+        table=TABLE,
         earliest_date='1992-11-07'
     )
 
@@ -73,7 +77,7 @@ def test_fill_rate_no_record_field(provider_conf, df_provider):
         date_fields=['service_date'],
         record_field=None,
         fill_rate=True,
-        columns=COLUMNS,
+        table=TABLE,
         earliest_date='1992-11-07'
     )
 
@@ -93,7 +97,7 @@ def test_no_fill_rate(provider_conf, df_provider):
         date_fields=['service_date'],
         record_field=None,
         fill_rate=False,
-        columns=COLUMNS,
+        table=TABLE,
         earliest_date='1992-11-07'
     )
 

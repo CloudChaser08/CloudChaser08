@@ -5,47 +5,51 @@ import spark.stats.config.reader.config_reader as config_reader
 from spark.helpers.file_utils import get_abs_path
 from spark.stats import models
 
-COLUMNS = {
-    'col_a': models.Column(
-        name='col-a',
-        field_id='1',
-        sequence='1',
-        datatype='bigint',
-        description='Column A',
-        top_values=True,
-    )
-}
+TABLE = models.TableMetadata(
+    name='tbl',
+    description='desc',
+    columns=[
+        models.Column(
+            name='col-a',
+            field_id='1',
+            sequence='1',
+            datatype='bigint',
+            description='Column A',
+            top_values=True,
+        )
+    ]
+)
 
-@pytest.fixture(name='get_columns', autouse=True)
-def _mock_get_columns():
-    with patch.object(config_reader, 'get_columns_for_model') as get_cols_mock:
-        get_cols_mock.return_value = COLUMNS
+@pytest.fixture(name='get_table', autouse=True)
+def _mock_get_table():
+    with patch.object(config_reader, 'get_table_metadata') as get_cols_mock:
+        get_cols_mock.return_value = TABLE
         yield get_cols_mock
 
 
 
-def test_get_columns(get_columns):
+def test_get_table(get_table):
     """ Tests gets columns for the provider """
 
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
     sql_context = Mock()
     conf = config_reader.get_provider_config(sql_context, conf_file, '1')
-    assert conf.columns == COLUMNS
-    get_columns.assert_called_with(
+    assert conf.table == TABLE
+    get_table.assert_called_with(
         sql_context, 'labtests'
     )
 
 
-def test_gets_emr_columns(get_columns):
+def test_gets_emr_columns(get_table):
     """ Tests gets columns for the provider """
 
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
     sql_context = Mock()
     conf = config_reader.get_provider_config(sql_context, conf_file, '6')
-    get_columns.assert_called_once()
-    get_columns.assert_called_with(sql_context, 'emr_clin_obsn')
-    assert not conf.columns
-    assert conf.models[0].columns == COLUMNS
+    get_table.assert_called_once()
+    get_table.assert_called_with(sql_context, 'emr_clin_obsn')
+    assert not conf.table
+    assert conf.models[0].table == TABLE
 
 
 def test_datatype_null():
