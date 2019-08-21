@@ -1,12 +1,26 @@
+
+import json
 import os
 from contextlib import closing
 
+import boto3
 import psycopg2
 from psycopg2.extras import DictCursor
 
-from spark.stats.config.reader.config_reader import (
-    PG_HOST, PG_PASSWORD, PG_DB, PG_USER
+SSM = boto3.client('ssm')
+
+SSM_PARAM_NAME = 'dev-marketplace-rds_ro_db_conn'
+PG_CONN_DETAILS = json.loads(
+    SSM.get_parameters(
+        Names=[SSM_PARAM_NAME],
+        WithDecryption=True
+    )['Parameters'][0]['Value']
 )
+
+PG_HOST = PG_CONN_DETAILS['host']
+PG_PASSWORD = PG_CONN_DETAILS['password']
+PG_DB = PG_CONN_DETAILS['database']
+PG_USER = PG_CONN_DETAILS['user']
 
 
 def _layout_sql(datafeed_id):

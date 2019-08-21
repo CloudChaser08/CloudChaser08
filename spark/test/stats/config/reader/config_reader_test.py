@@ -3,51 +3,73 @@ from mock import Mock, patch
 
 import spark.stats.config.reader.config_reader as config_reader
 from spark.helpers.file_utils import get_abs_path
-import spark.stats.config.dates as dates
 from spark.stats import models
 
-@patch('spark.stats.config.reader.config_reader._get_fill_rate_config')
-def test_fill_rate_get_columns(get_fill_mock):
-    fill_rate_conf = models.FillRateConfig(columns={})
-    get_fill_mock.return_value = fill_rate_conf
+COLUMNS = {
+    'col_a': models.Column(
+        name='col-a',
+        field_id='1',
+        sequence='1',
+        datatype='bigint',
+        description='Column A',
+        top_values=True,
+    )
+}
+
+@pytest.fixture(name='get_columns', autouse=True)
+def _mock_get_columns():
+    with patch.object(config_reader, 'get_columns_for_model') as get_cols_mock:
+        get_cols_mock.return_value = COLUMNS
+        yield get_cols_mock
+
+
+
+def test_get_columns(get_columns):
+    """ Tests gets columns for the provider """
 
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
-    conf = config_reader.get_provider_config(conf_file, '1')
-    assert conf.fill_rate
-    assert conf.fill_rate_conf
-    assert conf.fill_rate_conf == fill_rate_conf
+    sql_context = Mock()
+    conf = config_reader.get_provider_config(sql_context, conf_file, '1')
+    assert conf.columns == COLUMNS
+    get_columns.assert_called_with(
+        sql_context, 'labtests'
+    )
 
 
-@patch('spark.stats.config.reader.config_reader._get_fill_rate_config')
-def test_does_not_read_sub_conf_when_null(_):
+def test_gets_emr_columns(get_columns):
+    """ Tests gets columns for the provider """
+
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
-    conf = config_reader.get_provider_config(conf_file, '2')
-    assert conf.fill_rate is False
-    assert conf.fill_rate_conf is None
+    sql_context = Mock()
+    conf = config_reader.get_provider_config(sql_context, conf_file, '6')
+    get_columns.assert_called_once()
+    get_columns.assert_called_with(sql_context, 'emr_clin_obsn')
+    assert not conf.columns
+    assert conf.models[0].columns == COLUMNS
 
 
-@patch('spark.stats.config.reader.config_reader._get_fill_rate_config')
-def test_exception_raised_when_provider_conf_datatype_is_null(_):
+def test_datatype_null():
+    """ Tests raises an exception when datatype is null or missing """
     with pytest.raises(ValueError) as e_info:
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
-        config_reader.get_provider_config(conf_file, '3')
+        config_reader.get_provider_config(Mock(), conf_file, '3')
 
     exception = e_info.value
     assert 'datatype' in exception.message
 
 
-@patch('spark.stats.config.reader.config_reader._get_fill_rate_config')
-def test_exception_raised_when_provider_conf_datatype_not_specified(_):
+def test_datatype_missing():
+    """ Tests raises an exception when datatype is missing """
     with pytest.raises(TypeError):
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
-        config_reader.get_provider_config(conf_file, '4')
+        config_reader.get_provider_config(Mock(), conf_file, '4')
 
 
-@patch('spark.stats.config.reader.config_reader._get_fill_rate_config')
-def test_exception_raised_when_provider_not_in_providers_conf_file(_):
+def test_missing_provider():
+    """ Tests raises an exception when provdier is not in providers file """
     with pytest.raises(ValueError) as e_info:
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
-        config_reader.get_provider_config(conf_file, 'lol')
+        config_reader.get_provider_config(Mock(), conf_file, 'lol')
 
     exception = e_info.value
     assert exception.message == 'Feed lol is not in the providers config file'

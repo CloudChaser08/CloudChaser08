@@ -4,8 +4,15 @@ For an example of stats output from stats_runner.py, see example_stats.txt in th
 """
 from collections import defaultdict
 
-from spark.stats.config.reader.config_reader import EMR_DATATYPE_NAME_MAP
-
+EMR_DATATYPE_NAME_MAP = {
+    'emr_enc': 'Encounter',
+    'emr_diag': 'Diagnosis',
+    'emr_clin_obsn': 'Clinical Observation',
+    'emr_proc': 'Procedure',
+    'emr_prov_ord': 'Provider Order',
+    'emr_lab_test': 'Lab Test',
+    'emr_medctn': 'Medication'
+}
 
 def _get_fill_rate_for_field(field_name, filtered_stats):
     """

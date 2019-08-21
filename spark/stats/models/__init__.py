@@ -4,6 +4,7 @@
 # pylint: disable=too-few-public-methods
 import attr
 
+from ..config.dates import dates as provider_dates
 from .validators import is_bool, optional_instance_of, is_date_str
 
 from .converters import (
@@ -48,6 +49,20 @@ class _BaseModel(object):
         return attr.asdict(self)
 
 
+class _DateFieldsMixin(object):
+    """ A mixin that provides a default date_fields value
+        based on the datatype
+    """
+
+    def __attrs_post_init__(self):
+        if not self.date_fields:
+            # We need to use this syntax in case self is frozen
+            # See: http://www.attrs.org/en/stable/init.html#post-init-hook
+            object.__setattr__(
+                self, 'date_fields', provider_dates[self.datatype]
+            )
+
+
 @attr.s(frozen=True)
 class Column(_BaseModel):
     """ Column data """
@@ -59,31 +74,9 @@ class Column(_BaseModel):
     top_values = create_optional_bool_field()
 
 
-@attr.s(frozen=True)
-class FillRateConfig(_BaseModel):
-    """ Fill rate configuration """
-    columns = attr.ib(converter=model_map_converter(Column))
-
 
 @attr.s(frozen=True)
-class TopValuesConfig(_BaseModel):
-    """ Fill rate configuration """
-    columns = attr.ib(converter=model_map_converter(Column))
-    max_values = attr.ib(
-        validator=attr.validators.instance_of(int),
-        default=10
-    )
-
-
-@attr.s(frozen=True)
-class EPICalcsConfig(_BaseModel):
-    """ EMI Calcs configuration (currently empty) """
-
-    fields = create_str_list_field()
-
-
-@attr.s(frozen=True)
-class ProviderModel(_BaseModel):
+class ProviderModel(_BaseModel, _DateFieldsMixin):
     """ A provider config model object """
 
     # Required fields
@@ -94,13 +87,18 @@ class ProviderModel(_BaseModel):
     date_fields = create_str_list_field()
     fill_rate = create_optional_bool_field()
     top_values = create_optional_bool_field()
-
-    fill_rate_conf = create_model_field(FillRateConfig)
-    top_values_conf = create_model_field(TopValuesConfig)
+    columns = attr.ib(
+        converter=model_map_converter(Column),
+        default=attr.Factory(dict)
+    )
+    max_top_values = attr.ib(
+        validator=attr.validators.instance_of(int),
+        default=10
+    )
 
 
 @attr.s(frozen=True)
-class Provider(_BaseModel):
+class Provider(_BaseModel, _DateFieldsMixin):
     """ A provider config object """
 
     # Required fields
@@ -125,10 +123,19 @@ class Provider(_BaseModel):
     )
     custom_schema = create_optional_str_field()
     custom_table = create_optional_str_field()
+    columns = attr.ib(
+        converter=model_map_converter(Column),
+        default=attr.Factory(dict)
+    )
+    max_top_values = attr.ib(
+        validator=attr.validators.instance_of(int),
+        default=10
+    )
 
-    fill_rate_conf = create_model_field(FillRateConfig)
-    top_values_conf = create_model_field(TopValuesConfig)
-    epi_calc_conf = create_model_field(EPICalcsConfig)
+    @property
+    def top_values_columns(self):
+        """ Returns all columns with top-values """
+        return {k: c for k, c in self.columns.items() if c.top_values}
 
     def merge_provider_model(self, provider_model):
         """ Merges non-null fields from a ProviderModel object into a copy of
