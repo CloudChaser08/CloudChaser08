@@ -170,9 +170,9 @@ SELECT
                                     THEN ''
                                 ELSE CONCAT
                                         (
-                                            ' | STANDARD_DEPARTMENT_CODE: ', 
-                                            COALESCE(s_cdm.std_dept_code, ''), 
-                                            ' - ', 
+                                            ' | STANDARD_DEPARTMENT_CODE: ',
+                                            COALESCE(s_cdm.std_dept_code, ''),
+                                            ' - ',
                                             COALESCE(s_cdm.std_dept_desc, '')
                                         )
                             END
@@ -305,9 +305,9 @@ SELECT
                                     THEN ''
                                 ELSE CONCAT
                                         (
-                                            ' | MANUFACTURER_ITEM: ', 
-                                            COALESCE(s_cdm.manuf_cat_num, ''), 
-                                            ' - ', 
+                                            ' | MANUFACTURER_ITEM: ',
+                                            COALESCE(s_cdm.manuf_cat_num, ''),
+                                            ' - ',
                                             COALESCE(s_cdm.manuf_descr, '')
                                         )
                             END
@@ -320,7 +320,7 @@ SELECT
 	CASE
 	    WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE
                                         (
-                                            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), 
+                                            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
                                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
                                             CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
@@ -336,12 +336,12 @@ SELECT
    ON COALESCE(ptn_chg.charge_id, 'EMPTY') = COALESCE(cdm.charge_id, 'DUMMY')
  LEFT OUTER JOIN standard_chargemaster s_cdm
    ON COALESCE(cdm.cdm_std_id, 'EMPTY') = COALESCE(s_cdm.cdm_std_id, 'DUMMY')
- LEFT OUTER JOIN nthrive_norm_temp06_chg_desc_temp tmp_cdm
+ LEFT OUTER JOIN nthrive_norm_temp05_chg_desc_temp tmp_cdm
    ON COALESCE(cdm.charge_desc, 'EMPTY') = COALESCE(tmp_cdm.charge_desc, 'DUMMY')
- LEFT OUTER JOIN nthrive_norm_temp06_chg_desc_temp tmp_cpm
-   ON COALESCE(s_cdm.cpm_desc, 'EMPTY') = COALESCE(tmp_cpm.charge_desc, 'DUMMY')
- LEFT OUTER JOIN nthrive_norm_temp06_chg_desc_temp tmp_std
-   ON COALESCE(s_cdm.cdm_std_desc, 'EMPTY') = COALESCE(tmp_std.charge_desc, 'DUMMY')
+ LEFT OUTER JOIN nthrive_norm_temp06_cpm_desc_temp tmp_cpm
+   ON COALESCE(s_cdm.cpm_desc, 'EMPTY') = COALESCE(tmp_cpm.cpm_desc, 'DUMMY')
+ LEFT OUTER JOIN nthrive_norm_temp07_std_desc_temp tmp_std
+   ON COALESCE(s_cdm.cdm_std_desc, 'EMPTY') = COALESCE(tmp_std.cdm_std_desc, 'DUMMY')
  LEFT OUTER JOIN episodes epi
    ON COALESCE(ptn_chg.record_id, 'EMPTY') = COALESCE(epi.record_id, 'DUMMY')
  LEFT OUTER JOIN patient ptn
@@ -357,7 +357,7 @@ SELECT
         LIMIT 1
     ) esdt
    ON 1 = 1
- LEFT OUTER JOIN 
+ LEFT OUTER JOIN
     (
         SELECT gen_ref_1_dt
          FROM ref_gen_ref
