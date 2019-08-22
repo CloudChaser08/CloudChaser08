@@ -335,13 +335,13 @@ SELECT
  LEFT OUTER JOIN chargemaster cdm
    ON COALESCE(ptn_chg.charge_id, 'EMPTY') = COALESCE(cdm.charge_id, 'DUMMY')
  LEFT OUTER JOIN standard_chargemaster s_cdm
-   ON COALESCE(cdm.cdm_std_id, 'EMPTY') = COALESCE(s_cdm.cdm_std_id, 'DUMMY')
+   ON COALESCE(cdm.cdm_std_id, CONCAT('EMPTY', cdm.charge_id)) = COALESCE(s_cdm.cdm_std_id, 'DUMMY')
  LEFT OUTER JOIN nthrive_norm_temp05_chg_desc_temp tmp_cdm
    ON COALESCE(cdm.charge_desc, 'EMPTY') = COALESCE(tmp_cdm.charge_desc, 'DUMMY')
  LEFT OUTER JOIN nthrive_norm_temp06_cpm_desc_temp tmp_cpm
-   ON COALESCE(s_cdm.cpm_desc, 'EMPTY') = COALESCE(tmp_cpm.cpm_desc, 'DUMMY')
+   ON COALESCE(s_cdm.cpm_desc, CONCAT('EMPTY', cdm.charge_id)) = COALESCE(tmp_cpm.cpm_desc, 'DUMMY')
  LEFT OUTER JOIN nthrive_norm_temp07_std_desc_temp tmp_std
-   ON COALESCE(s_cdm.cdm_std_desc, 'EMPTY') = COALESCE(tmp_std.cdm_std_desc, 'DUMMY')
+   ON COALESCE(s_cdm.cdm_std_desc, CONCAT('EMPTY', cdm.charge_id)) = COALESCE(tmp_std.cdm_std_desc, 'DUMMY')
  LEFT OUTER JOIN episodes epi
    ON COALESCE(ptn_chg.record_id, 'EMPTY') = COALESCE(epi.record_id, 'DUMMY')
  LEFT OUTER JOIN patient ptn
