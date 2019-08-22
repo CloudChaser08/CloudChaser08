@@ -341,7 +341,7 @@ SELECT
  LEFT OUTER JOIN nthrive_norm_temp06_chg_desc_temp tmp_cpm
    ON COALESCE(s_cdm.cpm_desc, 'EMPTY') = COALESCE(tmp_cpm.charge_desc, 'DUMMY')
  LEFT OUTER JOIN nthrive_norm_temp06_chg_desc_temp tmp_std
-   ON COALESCE(s_cdm.cdm_std_desc, 'EMPTY') = COALESCE(tmp_cdm.charge_desc, 'DUMMY')
+   ON COALESCE(s_cdm.cdm_std_desc, 'EMPTY') = COALESCE(tmp_std.charge_desc, 'DUMMY')
  LEFT OUTER JOIN episodes epi
    ON COALESCE(ptn_chg.record_id, 'EMPTY') = COALESCE(epi.record_id, 'DUMMY')
  LEFT OUTER JOIN patient ptn
