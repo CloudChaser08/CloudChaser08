@@ -1,4 +1,6 @@
 """MarketplaceRunner is a generic runner for HVM normalization routines"""
+import os
+import inspect
 import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -13,7 +15,6 @@ END_TO_END_TEST = 'end_to_end_test'
 TEST = 'test'
 PRODUCTION = 'production'
 DRIVER_MODULE_NAME = 'driver'
-SCRIPT_PATH = __file__
 E2E_PATH = 's3://salusv/testing/dewey/airflow/e2e/{provider_name}/{data_type}/{year}/{month:02d}/{day:02d}/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
@@ -42,30 +43,29 @@ class MarketplaceDriver(object):
     def __init__(self,
                  provider_name,
                  provider_partition_name,
-                 data_type,
-                 date_input,
-                 script_path,
-                 provider_directory_path,
                  source_table_schema,
                  output_table_names_to_schemas,
-                 provider_partition_column,
-                 date_partition_column,
-                 test=False,
+                 date_input,
                  end_to_end_test=False,
-                 distribution_key='record_id'):
+                 test=False):
+
+        # get directory and path for provider
+        previous_stack_frame = inspect.currentframe().f_back
+        provider_directory_path = os.path.dirname(
+            inspect.getframeinfo(previous_stack_frame).filename)
+        provider_directory_path = provider_directory_path.replace('spark/target/dewey.zip/',
+                                                                  "") + '/'
+        # set global variables
+        first_schema = list(output_table_names_to_schemas.keys())[0]
         self.provider_name = provider_name
         self.provider_partition_name = provider_partition_name
-        self.data_type = data_type
+        self.data_type = output_table_names_to_schemas[first_schema].data_type
         self.date_input = datetime.datetime.strptime(date_input, '%Y-%m-%d').date()
-        self.script_path = script_path
         self.provider_directory_path = provider_directory_path
         self.test = test
         self.end_to_end_test = end_to_end_test
         self.source_table_schema = source_table_schema
         self.output_table_names_to_schemas = output_table_names_to_schemas
-        self.provider_partition_column = provider_partition_column
-        self.date_partition_column = date_partition_column
-        self.distribution_key = distribution_key
         self.input_path = None
         self.matching_path = None
         self.output_path = None
@@ -73,6 +73,7 @@ class MarketplaceDriver(object):
         self.sql_context = None
         self.runner = None
 
+        # set running mode
         if self.test:
             mode = TEST
         elif self.end_to_end_test:
@@ -147,17 +148,23 @@ class MarketplaceDriver(object):
             schema_obj = self.output_table_names_to_schemas[table]
             output = schema_enforcer.apply_schema(data_frame,
                                                   schema_obj.schema_structure,
-                                                  columns_to_keep=[self.provider_partition_column,
-                                                                   self.date_partition_column])
+                                                  columns_to_keep=[schema_obj.provider_partition_column,
+                                                                   schema_obj.date_partition_column])
 
             _columns = data_frame.columns
-            _columns.remove(self.provider_partition_column)
-            _columns.remove(self.date_partition_column)
+            _columns.remove(schema_obj.provider_partition_column)
+            _columns.remove(schema_obj.date_partition_column)
             normalized_records_unloader.unload(
-                self.spark, self.runner, output, self.date_partition_column, str(self.date_input),
-                self.provider_partition_name, substr_date_part=False, columns=_columns,
-                date_partition_name=self.date_partition_column,
-                provider_partition_name=self.provider_partition_column,
-                distribution_key=self.distribution_key
+                self.spark, self.runner, output,
+                schema_obj.date_partition_column,
+                str(self.date_input),
+                self.provider_partition_name,
+                substr_date_part=False,
+                columns=_columns,
+                date_partition_name=schema_obj.date_partition_column,
+                provider_partition_name=schema_obj.provider_partition_column,
+                distribution_key=schema_obj.distribution_key
             )
             normalized_records_unloader.distcp(self.output_path + schema_obj.output_folder)
+            self.spark['sqlContext'].sql('MSCK REPAIR TABLE ' + table)
+

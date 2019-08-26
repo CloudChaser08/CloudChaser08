@@ -54,5 +54,11 @@ schema_v1 = StructType([
 
 output_folder = '2019-08-15/encounter_detail/'
 schemas = {
-    'schema_v1': Schema(name='schema_v1', schema_structure=schema_v1, output_folder=output_folder)
+    'schema_v1': Schema(name='schema_v1',
+                        schema_structure=schema_v1,
+                        output_folder=output_folder,
+                        distribution_key='row_id',
+                        data_type='cdm',
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth')
 }
