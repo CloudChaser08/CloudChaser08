@@ -3,6 +3,8 @@ from operator import and_
 from pyspark.sql.functions import rank, year, col
 from pyspark.sql.window import Window
 
+from ..models.results import YearOverYearResult
+
 PATIENT_IDENTIFIER = 'hvid'
 
 def _parse_year(s):
@@ -44,6 +46,6 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
                   .groupby('year').count()                                                      \
                   .collect()
 
-    stats = map(lambda r: {'year': r.year, 'count': r['count']}, yoy_stats)
+    stats = map(lambda r: YearOverYearResult(year=r.year, count=r['count']), yoy_stats)
 
     return stats

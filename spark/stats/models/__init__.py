@@ -5,6 +5,8 @@
 import attr
 
 from ..config.dates import dates as provider_dates
+
+from ._base import BaseModel
 from .validators import is_bool, optional_instance_of, is_date_str
 
 from .converters import (
@@ -38,16 +40,6 @@ VALID_DATATYPES = {
 }
 
 
-class _BaseModel(object):
-
-    def copy_with(self, **kwargs):
-        """ Copies the model instance, with additional args """
-        return attr.evolve(self, **kwargs)
-
-    def to_dict(self):
-        """ Converts the model to a dictionary """
-        return attr.asdict(self)
-
 
 class _DateFieldsMixin(object):
     """ A mixin that provides a default date_fields value
@@ -64,7 +56,7 @@ class _DateFieldsMixin(object):
 
 
 @attr.s(frozen=True)
-class Column(_BaseModel):
+class Column(BaseModel):
     """ Column data """
     name = create_required_str_field()
     field_id = create_required_str_field()
@@ -75,7 +67,7 @@ class Column(_BaseModel):
 
 
 @attr.s(frozen=True)
-class TableMetadata(_BaseModel):
+class TableMetadata(BaseModel):
     """ Metadata about the table for a given data model """
     name = create_required_str_field()
     description = create_required_str_field()
@@ -83,7 +75,7 @@ class TableMetadata(_BaseModel):
 
 
 @attr.s(frozen=True)
-class ProviderModel(_BaseModel, _DateFieldsMixin):
+class ProviderModel(BaseModel, _DateFieldsMixin):
     """ A provider config model object """
 
     # Required fields
@@ -102,7 +94,7 @@ class ProviderModel(_BaseModel, _DateFieldsMixin):
 
 
 @attr.s(frozen=True)
-class Provider(_BaseModel, _DateFieldsMixin):
+class Provider(BaseModel, _DateFieldsMixin):
     """ A provider config object """
 
     # Required fields

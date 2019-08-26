@@ -8,6 +8,7 @@ from pyspark.sql import Row
 
 import spark.stats.processor as processor
 from spark.stats.models import Column, TableMetadata
+from spark.stats.models.results import FillRateResult
 
 TABLE = TableMetadata(
     name='tbl',
@@ -63,9 +64,9 @@ def test_fill_rate_record_field(provider_conf, df_provider):
     res = processor.run_fill_rates(prov_conf, df_provider)
     assert res is not None
     assert sorted(res) == [
-        {'field': 'claim_id', 'fill': 1.0},
-        {'field': 'col_2', 'fill': 1.0},
-        {'field': 'hvid', 'fill': 1.0}
+        FillRateResult(field='claim_id', fill=1.0),
+        FillRateResult(field='col_2', fill=1.0),
+        FillRateResult(field='hvid', fill=1.0),
     ]
 
 
@@ -84,8 +85,8 @@ def test_fill_rate_no_record_field(provider_conf, df_provider):
     res = processor.run_fill_rates(prov_conf, df_provider)
     assert res is not None
     assert sorted(res) == [
-        {'field': 'col_2', 'fill': 7.0 / 9.0},
-        {'field': 'hvid', 'fill': 7.0 / 9.0}
+        FillRateResult(field='col_2', fill=7.0 / 9.0),
+        FillRateResult(field='hvid', fill=7.0 / 9.0),
     ]
 
 

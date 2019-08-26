@@ -31,22 +31,22 @@ def _get_results(dataframe, provider_conf):
 
 
 def test_num_of_months_rows_are_correct(results):
-    months_rows = filter(lambda x: x['duration'].endswith('months'), results)
+    months_rows = filter(lambda x: x.duration.endswith('months'), results)
     assert len(months_rows) == 2
 
 
 def test_num_of_years_rows_are_correct(results):
-    years_rows = filter(lambda x: x['duration'].endswith('years'), results)
+    years_rows = filter(lambda x: x.duration.endswith('years'), results)
     assert len(years_rows) == 2
 
 
 def test_num_of_patients_per_group_correct(results):
-    one_months = filter(lambda x: x['duration'].endswith('1 months'), results)[0]
-    two_years = filter(lambda x: x['duration'].endswith('2 years'), results)[0]
-    forty_one_years = filter(lambda x: x['duration'].endswith('41 years'), results)[0]
-    forty_two_years = filter(lambda x: x['duration'].endswith('42 years'), results)
+    one_months = filter(lambda x: x.duration.endswith('1 months'), results)[0]
+    two_years = filter(lambda x: x.duration.endswith('2 years'), results)[0]
+    forty_one_years = filter(lambda x: x.duration.endswith('41 years'), results)[0]
+    forty_two_years = filter(lambda x: x.duration.endswith('42 years'), results)
 
-    assert one_months['value'] == 1
-    assert two_years['value'] == 1
-    assert forty_one_years['value'] == 1
+    assert one_months.value == 1
+    assert two_years.value == 1
+    assert forty_one_years.value == 1
     assert len(forty_two_years) == 0 # should get minimized

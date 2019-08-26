@@ -7,6 +7,11 @@ import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.processor as processor
 from spark.stats.data_layout.sql_generator import generate_data_layout_version_sql
 
+from spark.stats.models.results import (
+    ProviderStatsResult,
+    StatsResult
+)
+
 ALL_STATS = {
     'key_stats', 'longitudinality', 'year_over_year', 'fill_rate', 'top_values', 'epi'
 }
@@ -46,35 +51,39 @@ def run(spark, sql_context, start_date, end_date, provider_config):
             break
 
     # Run common stats
-    results = {
-        'epi_calcs': processor.get_epi_calcs(provider_config),
-        'key_stats': processor.run_key_stats(
+    results = StatsResult(
+        epi_calcs=processor.get_epi_calcs(provider_config),
+        key_stats=processor.run_key_stats(
             provider_config, start_date, end_date, df_provider
         ),
-        'top_values': processor.run_top_values(
+        top_values=processor.run_top_values(
             provider_config, df_provider
         ),
-        'fill_rate': processor.run_fill_rates(
+        fill_rate=processor.run_fill_rates(
             provider_config, df_provider
         ),
-        'longitudinality': processor.run_longitudinality(
+        longitudinality=processor.run_longitudinality(
             enc_prov_config, end_date, enc_df_provider # use encounter config/dataframe
         ),
-        'year_over_year': processor.run_year_over_year(
+        year_over_year=processor.run_year_over_year(
             enc_prov_config, end_date, enc_df_provider  # use encounter config/dataframe
         )
-    }
+    )
 
-    # Calculate fill rate and top values for nested model
+    # Calculate fill rate and top values for nested models
+    model_results = {}
     for model in provider_config.models:
         model_prov_config = provider_config.merge_provider_model(model)
         model_df_provider = df_provider.reconfigure(model_prov_config)
-        results[model.datatype] = {
-            'fill_rate': processor.run_fill_rates(model_prov_config, model_df_provider),
-            'top_values': processor.run_top_values(model_prov_config, model_df_provider)
-        }
+        model_results[model.datatype] = StatsResult(
+            fill_rate=processor.run_fill_rates(model_prov_config, model_df_provider),
+            top_values=processor.run_top_values(model_prov_config, model_df_provider)
+        )
 
-    return results
+    return ProviderStatsResult(
+        results=results,
+        model_results=model_results
+    )
 
 
 def main(args):

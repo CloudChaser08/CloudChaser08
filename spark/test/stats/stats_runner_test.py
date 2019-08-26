@@ -7,6 +7,10 @@ import spark.helpers.stats.utils as stats_utils
 import spark.stats.stats_runner as stats_runner
 import spark.stats.stats_writer as stats_writer
 from spark.stats.models import Provider, ProviderModel, Column, TableMetadata
+from spark.stats.models.results import (
+    ProviderStatsResult, StatsResult, FillRateResult, YearOverYearResult,
+    LongitudinalityResult
+)
 
 TABLE = TableMetadata(
     name='tbl',
@@ -82,16 +86,16 @@ def test_standard_stats(spark):
     results = stats_runner.run(spark['spark'], spark['sqlContext'],
                                start_date, end_date, provider_config)
 
-    assert results == {
-        'epi_calcs': None,
-        'fill_rate': [{'field': u'service_date', 'fill': 1.0},
-                      {'field': u'claim_id', 'fill': 1.0},
-                      {'field': u'col_3', 'fill': 0.5}],
-        'key_stats': None,
-        'longitudinality': None,
-        'top_values': None,
-        'year_over_year': None
-    }
+    assert results == ProviderStatsResult(
+        results=StatsResult(
+            fill_rate=[
+                FillRateResult(field='service_date', fill=1.0),
+                FillRateResult(field='claim_id', fill=1.0),
+                FillRateResult(field='col_3', fill=0.5),
+            ],
+        ),
+        model_results={}
+    )
 
 
 def test_emr_fill_rates(spark):
@@ -125,30 +129,25 @@ def test_emr_fill_rates(spark):
     results = stats_runner.run(spark['spark'], spark['sqlContext'],
                                start_date, end_date, provider_config)
 
-    assert results == {
-        'epi_calcs': None,
-        'fill_rate': None,
-        'key_stats': None,
-        'longitudinality': None,
-        'top_values': None,
-        'year_over_year': None,
-        'emr_diag': {
-            'top_values': None,
-            'fill_rate': [
-                {'field': u'service_date', 'fill': 1.0},
-                {'field': u'claim_id', 'fill': 1.0},
-                {'field': u'col_3', 'fill': 0.5}
-            ]
-        },
-        'emr_clin_obsn': {
-            'top_values': None,
-            'fill_rate': [
-                {'field': u'service_date', 'fill': 1.0},
-                {'field': u'claim_id', 'fill': 1.0},
-                {'field': u'col_3', 'fill': 0.5}
-            ]
+    assert results == ProviderStatsResult(
+        results=StatsResult(),
+        model_results={
+            'emr_diag': StatsResult(
+                fill_rate=[
+                    FillRateResult(field='service_date', fill=1.0),
+                    FillRateResult(field='claim_id', fill=1.0),
+                    FillRateResult(field='col_3', fill=0.5),
+                ],
+            ),
+            'emr_clin_obsn': StatsResult(
+                fill_rate=[
+                    FillRateResult(field='service_date', fill=1.0),
+                    FillRateResult(field='claim_id', fill=1.0),
+                    FillRateResult(field='col_3', fill=0.5),
+                ],
+            ),
         }
-    }
+    )
 
 
 def test_emr_year_over_year_long(spark):
@@ -210,22 +209,34 @@ def test_emr_year_over_year_long(spark):
     union_results = stats_runner.run(spark['spark'], spark['sqlContext'],
                                      start_date, end_date, union_provider_config)
 
-    assert sorted(enc_results['year_over_year']) == [{'count': 1, 'year': 2015},
-                                                     {'count': 1, 'year': 2016},
-                                                     {'count': 1, 'year': 2017}]
-    assert sorted(union_results['year_over_year']) == [{'count': 1, 'year': 2016},
-                                                       {'count': 1, 'year': 2017}]
+    assert sorted(enc_results.results.year_over_year) == [
+        YearOverYearResult(count=1, year=2015),
+        YearOverYearResult(count=1, year=2016),
+        YearOverYearResult(count=1, year=2017)
+    ]
+    assert sorted(union_results.results.year_over_year) == [
+        YearOverYearResult(count=1, year=2016),
+        YearOverYearResult(count=1, year=2017)
+    ]
 
     # since these results are different, we can infer that different
     # datasets were used. Since the average is lower for union_resuls
     # (and this table has less data), this means that the encounter
     # table is used for enc_results, and the union table is used for
     # union_results.
-    assert sorted(enc_results['longitudinality']) == [
-        {'average': 1, 'duration': '0 months', 'std_dev': 0, 'value': 2},
-        {'average': 6, 'duration': '27 years', 'std_dev': 0, 'value': 1}
+    assert sorted(enc_results.results.longitudinality) == [
+        LongitudinalityResult(
+            average=1, duration='0 months', std_dev=0, value=2
+        ),
+        LongitudinalityResult(
+            average=6, duration='27 years', std_dev=0, value=1
+        )
     ]
-    assert sorted(union_results['longitudinality']) == [
-        {'average': 1, 'duration': '0 months', 'std_dev': 0, 'value': 2},
-        {'average': 5, 'duration': '27 years', 'std_dev': 0, 'value': 1}
+    assert sorted(union_results.results.longitudinality) == [
+        LongitudinalityResult(
+            average=1, duration='0 months', std_dev=0, value=2
+        ),
+        LongitudinalityResult(
+            average=5, duration='27 years', std_dev=0, value=1
+        )
     ]

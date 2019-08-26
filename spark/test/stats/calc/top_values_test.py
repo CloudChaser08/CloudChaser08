@@ -3,6 +3,7 @@ import pytest
 from pyspark.sql import Row
 
 import spark.stats.calc.top_values as top_values
+from spark.stats.models.results import TopValuesResult
 
 MAX_TOP_VALUES = 2
 
@@ -45,19 +46,19 @@ def test_top_values_created_for_each_column(results_no_distinct, results_distinc
 
 def test_threshold(results_threshold, results_distinct_threshold):
     assert sorted(results_threshold) == [
-        {'column': 'a', 'count': 2, 'percentage': 0.5, 'value': 'a'},
-        {'column': 'b', 'count': 2, 'percentage': 0.5, 'value': 'b'},
-        {'column': 'c', 'count': 2, 'percentage': 0.5, 'value': 's'}
+        TopValuesResult(field='a', count=2, percentage=0.5, value='a'),
+        TopValuesResult(field='b', count=2, percentage=0.5, value='b'),
+        TopValuesResult(field='c', count=2, percentage=0.5, value='s')
     ]
 
     assert results_distinct_threshold == [
-        {'column': 'c', 'count': 2, 'percentage': 0.6667, 'value': 's'}
+        TopValuesResult(field='c', count=2, percentage=0.6667, value='s')
     ]
 
 
 def test_duplicate_values_not_counted_twice_when_distinct_column_is_not_none(results_distinct, results_no_distinct):
-    assert filter(lambda x: x['column'] == 'a' and x['value'] == 'a', results_no_distinct)[0]['count'] == 2
-    assert filter(lambda x: x['column'] == 'a' and x['value'] == 'a', results_distinct)[0]['count'] == 1
+    assert filter(lambda x: x.field == 'a' and x.value == 'a', results_no_distinct)[0].count == 2
+    assert filter(lambda x: x.field == 'a' and x.value == 'a', results_distinct)[0].count == 1
 
 
 def test_no_top_values_to_calculate(spark):

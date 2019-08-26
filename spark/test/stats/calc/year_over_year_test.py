@@ -38,6 +38,6 @@ def test_number_of_years_calculated_correct(results):
 
 
 def test_stat_calc_counts_are_correct(results):
-    assert [r for r in results if r['year'] == 2017][0]['count'] == 4
-    assert [r for r in results if r['year'] == 2016][0]['count'] == 2
-    assert [r for r in results if r['year'] == 2015][0]['count'] == 1
+    assert [r for r in results if r.year == 2017][0].count == 4
+    assert [r for r in results if r.year == 2016][0].count == 2
+    assert [r for r in results if r.year == 2015][0].count == 1
