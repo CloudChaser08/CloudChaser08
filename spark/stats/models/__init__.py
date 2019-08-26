@@ -63,6 +63,7 @@ class Column(BaseModel):
     sequence = create_required_str_field()
     datatype = create_required_str_field()
     description = create_required_str_field()
+    category = create_required_str_field()
     top_values = create_optional_bool_field()
 
 
@@ -72,6 +73,7 @@ class TableMetadata(BaseModel):
     name = create_required_str_field()
     description = create_required_str_field()
     columns = attr.ib(converter=model_list_converter(Column))
+    is_supplemental = create_optional_bool_field()
 
 
 @attr.s(frozen=True)

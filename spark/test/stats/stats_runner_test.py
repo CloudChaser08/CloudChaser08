@@ -18,15 +18,15 @@ TABLE = TableMetadata(
     columns=[
         Column(
             name='claim_id', field_id='1', sequence='1', top_values=False,
-            datatype='string', description='Claim ID'
+            datatype='string', description='Claim ID', category='Baseline',
         ),
         Column(
             name='service_date', field_id='2', sequence='2', top_values=False,
-            datatype='string', description='Service Date'
+            datatype='string', description='Service Date', category='Baseline',
         ),
         Column(
             name='col_3', field_id='2', sequence='2', top_values=False,
-            datatype='string', description='Column 3'
+            datatype='string', description='Column 3', category='Baseline',
         ),
     ]
 )

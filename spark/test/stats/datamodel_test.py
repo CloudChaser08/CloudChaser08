@@ -46,6 +46,7 @@ def test_get_columns_for_model(spark):
                 datatype='bigint',
                 top_values=True,
                 description='Column A',
+                category='Baseline',
             ),
             Column(
                 name='b',
@@ -54,6 +55,7 @@ def test_get_columns_for_model(spark):
                 datatype='string',
                 top_values=False,
                 description='Column B',
+                category='Baseline',
             )
         ]
     )

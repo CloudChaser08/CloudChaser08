@@ -16,11 +16,11 @@ TABLE = TableMetadata(
     columns=[
         Column(
             name='hvid', field_id='1', sequence='1', top_values=True,
-            datatype='string', description='HV ID'
+            datatype='string', description='HV ID', category='Baseline',
         ),
         Column(
             name='col_2', field_id='2', sequence='2', top_values=True,
-            datatype='string', description='Column 2'
+            datatype='string', description='Column 2', category='Baseline',
         )
     ]
 )

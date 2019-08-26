@@ -124,7 +124,7 @@ def run_fill_rates(provider_conf, df_provider):
         Runs fill rates using the provider's fill rate configuration, if
         that configuration is defined (otherwise returns None)
     """
-    if not provider_conf.fill_rate:
+    if not provider_conf.fill_rate or not provider_conf.table:
         return None
     dataframe = df_provider.sampled_data
 
@@ -147,7 +147,7 @@ def run_top_values(provider_conf, df_provider):
        Runs top values using the provider's top_values configuration, if
        that configuration is defined (otherwise returns None)
     """
-    if not provider_conf.top_values:
+    if not provider_conf.top_values or not provider_conf.table:
         return None
     dataframe = df_provider.sampled_data
     multiplier = df_provider.sampled_data_multiplier

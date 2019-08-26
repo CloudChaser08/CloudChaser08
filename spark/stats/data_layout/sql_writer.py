@@ -1,8 +1,11 @@
+"""
+    Writes SQL for data layouts
+"""
+
 import json
 import os
 
 import boto3
-from psycopg2 import sql
 
 from spark.stats.stats_writer import S3_OUTPUT_DIR
 
@@ -46,7 +49,8 @@ def create_runnable_sql_file(datafeed_id, data_layout, version_name):
     """
 
     # Create SQL query for making new data_layout version
-    data_layout_json = json.dumps(data_layout).replace("'", "''")  # need to escape single quotes
+    fields = data_layout.to_dict()['fields']
+    data_layout_json = json.dumps(fields).replace("'", "''")  # need to escape single quotes
     new_version_query = DATAFEED_VERSION_INSERT_SQL_TEMPLATE.format(
         data_layout=data_layout_json,
         datafeed_id=datafeed_id,

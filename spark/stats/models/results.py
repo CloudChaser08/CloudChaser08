@@ -56,7 +56,7 @@ class GenericStatsResult(BaseModel):
 class StatsResult(BaseModel):
     """ All combined stats results """
     fill_rate = create_model_list_field(FillRateResult, optional=True)
-    top_values = create_model_list_field(FillRateResult, optional=True)
+    top_values = create_model_list_field(TopValuesResult, optional=True)
     longitudinality = create_model_list_field(LongitudinalityResult, optional=True)
     year_over_year = create_model_list_field(YearOverYearResult, optional=True)
     epi_calcs = create_model_list_field(GenericStatsResult, optional=True)

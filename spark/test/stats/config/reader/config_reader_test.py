@@ -16,6 +16,7 @@ TABLE = models.TableMetadata(
             datatype='bigint',
             description='Column A',
             top_values=True,
+            category='Baseline',
         )
     ]
 )

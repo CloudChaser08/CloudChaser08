@@ -11,7 +11,6 @@ _DESCRIBE_FORMATTED_TABLE_SQL = 'describe formatted dw.hvm_{datatype}'
 def get_table_metadata(sql_context, datatype):
     """ Gets metadata about the table associated with the provided datatype """
 
-
     columns = []
     metadata = {}
 
@@ -56,13 +55,18 @@ def get_table_metadata(sql_context, datatype):
                         datatype=row.data_type,
                         top_values=_convert_yes_no_bool(fields['top_values']),
                         description=fields['description'],
+                        # TODO: remove the default value of Baseline once this
+                        # field gets populated in the warehouse
+                        category=fields.get('category', 'Baseline')
                     )
                 )
 
     return TableMetadata(
         name=metadata['Table'],
         description=metadata['Comment'],
-        columns=columns
+        columns=columns,
+        # TODO: pull supplemental metadata from warehouse
+        is_supplemental=False
     )
 
 
