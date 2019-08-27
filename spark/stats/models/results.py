@@ -53,13 +53,20 @@ class GenericStatsResult(BaseModel):
 
 
 @attr.s(frozen=True)
+class GenericStatsResultSet(BaseModel):
+    """ Holds a list of GenericStatsResults objects """
+    results = create_model_list_field(GenericStatsResult)
+
+
+
+@attr.s(frozen=True)
 class StatsResult(BaseModel):
     """ All combined stats results """
     fill_rate = create_model_list_field(FillRateResult, optional=True)
     top_values = create_model_list_field(TopValuesResult, optional=True)
     longitudinality = create_model_list_field(LongitudinalityResult, optional=True)
     year_over_year = create_model_list_field(YearOverYearResult, optional=True)
-    epi_calcs = create_model_list_field(GenericStatsResult, optional=True)
+    epi_calcs = create_model_map_field(GenericStatsResultSet, optional=True)
     key_stats = create_model_list_field(GenericStatsResult, optional=True)
 
 

@@ -1,6 +1,6 @@
 import boto3
 
-from ..models.results import GenericStatsResult
+from ..models.results import GenericStatsResult, GenericStatsResultSet
 
 def _get_s3_file_contents(bucket, key):
     s3_client = boto3.client('s3')
@@ -35,4 +35,4 @@ def calculate_epi(provider_conf, field):
                 )
             )
 
-    return output
+    return GenericStatsResultSet(results=output)

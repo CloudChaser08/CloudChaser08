@@ -35,13 +35,14 @@ def create_model_list_field(model_cls, optional=False):
     )
 
 
-def create_model_map_field(model_cls):
+def create_model_map_field(model_cls, optional=False):
     """
         Creates a model list field that converts values in the map to an
         instance of the model
     """
     return attr.ib(
-        converter=model_map_converter(model_cls)
+        converter=model_map_converter(model_cls),
+        factory=dict if optional else None
     )
 
 

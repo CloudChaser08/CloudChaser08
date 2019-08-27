@@ -14,7 +14,7 @@ def _get_results(provider_conf):
             'part-00003;127;8;45-64;extra woops!\n'
         )
     ):
-        yield epi.calculate_epi(provider_conf, 'age')
+        yield epi.calculate_epi(provider_conf, 'age').results
 
 
 def test_lines_split_properly(results):
