@@ -5,6 +5,7 @@
 import attr
 
 from ._base import BaseModel
+from . import Provider
 from .fields import (
     create_required_str_field,
     create_model_list_field,
@@ -58,7 +59,6 @@ class GenericStatsResultSet(BaseModel):
     results = create_model_list_field(GenericStatsResult)
 
 
-
 @attr.s(frozen=True)
 class StatsResult(BaseModel):
     """ All combined stats results """
@@ -78,3 +78,6 @@ class ProviderStatsResult(BaseModel):
     results = create_model_field(StatsResult, optional=False)
     # Result set for individual sub-models
     model_results = create_model_map_field(StatsResult)
+
+    # The configuration that this result set was built from
+    config = create_model_field(Provider, optional=False)

@@ -1,5 +1,7 @@
 """
-    Data models for stats generation
+    Marketplace data layout models. These models are used to structure
+    stats results into a format that is compatibly with and friendly to
+    HealthVerity Marketplace.
 """
 # pylint: disable=too-few-public-methods
 import attr
@@ -10,9 +12,10 @@ from .fields import (
     create_required_str_field,
     create_optional_str_field,
     create_model_field,
-    create_model_list_field
+    create_model_list_field,
 )
 from .validators import optional_instance_of
+from .results import ProviderStatsResult
 
 
 @attr.s(frozen=True)
@@ -48,4 +51,10 @@ class LayoutField(BaseModel):
 class Layout(BaseModel):
     """ The full data layout """
 
+    # Stores the structured stats results, as-is
+    stats = create_model_field(ProviderStatsResult, optional=False)
+
+    # Stores flattened list of all data fields for the provider. Note that
+    # this is offered for legacy support of existing Marketplace serialization.
+    # See spark.stats.data_layout for the logic that constructs these fields
     fields = create_model_list_field(LayoutField)

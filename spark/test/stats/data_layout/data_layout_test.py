@@ -16,36 +16,6 @@ from spark.stats.data_layout import generate_data_layout_version_sql
 @patch('spark.stats.data_layout.create_runnable_sql_file', autospec=True)
 def test_single_table(create_sql):
     """ Test data layout creation for provider with one table """
-    prov_config = Provider(
-        name="test",
-        datafeed_id="1",
-        datatype="pharmacyclaims",
-        earliest_date="2018-01-01",
-        table=TableMetadata(
-            name='hvm_pharmacyclaims',
-            description='Pharmacy Claims Table',
-            columns=[
-                Column(
-                    name='field_1',
-                    field_id='1',
-                    sequence='0',
-                    datatype='bigint',
-                    description='Field 1',
-                    category='Baseline',
-                    top_values=True,
-                ),
-                Column(
-                    name='field_2',
-                    field_id='2',
-                    sequence='1',
-                    datatype='bigint',
-                    description='Field 2',
-                    category='Baseline',
-                    top_values=True,
-                )
-            ]
-        )
-    )
     stats = ProviderStatsResult(
         results=StatsResult(
             fill_rate=[
@@ -73,14 +43,44 @@ def test_single_table(create_sql):
                 ),
             ]
         ),
-        model_results={}
+        model_results={},
+        config=Provider(
+            name="test",
+            datafeed_id="1",
+            datatype="pharmacyclaims",
+            earliest_date="2018-01-01",
+            table=TableMetadata(
+                name='hvm_pharmacyclaims',
+                description='Pharmacy Claims Table',
+                columns=[
+                    Column(
+                        name='field_1',
+                        field_id='1',
+                        sequence='0',
+                        datatype='bigint',
+                        description='Field 1',
+                        category='Baseline',
+                        top_values=True,
+                    ),
+                    Column(
+                        name='field_2',
+                        field_id='2',
+                        sequence='1',
+                        datatype='bigint',
+                        description='Field 2',
+                        category='Baseline',
+                        top_values=True,
+                    )
+                ]
+            )
+        )
     )
 
-    generate_data_layout_version_sql(prov_config, stats, 'v1')
+    generate_data_layout_version_sql(stats, 'v1')
 
     create_sql.assert_called_with(
         '1',
-        Layout(fields=[
+        Layout(stats=stats, fields=[
             LayoutField(
                 id='1',
                 name='field_1',
@@ -124,70 +124,6 @@ def test_single_table(create_sql):
 @patch('spark.stats.data_layout.create_runnable_sql_file', autospec=True)
 def test_multi_table(create_sql):
     """ Test data layout creation for provider with multiple tables """
-    prov_config = Provider(
-        name="test",
-        datafeed_id="1",
-        datatype="emr",
-        earliest_date="2018-01-01",
-        models=[
-            ProviderModel(
-                datatype='emr_clin_obsn',
-                table=TableMetadata(
-                    name='hvm_emr_clin_obsn',
-                    description='EMR Clinical Observation',
-                    columns=[
-                        Column(
-                            name='field_1',
-                            field_id='1',
-                            sequence='0',
-                            datatype='bigint',
-                            description='Field 1',
-                            category='Baseline',
-                            top_values=True,
-                        ),
-                        Column(
-                            name='field_2',
-                            field_id='2',
-                            sequence='1',
-                            datatype='bigint',
-                            description='Field 2',
-                            category='Baseline',
-                            top_values=True,
-                        )
-                    ]
-                )
-            ),
-            ProviderModel(
-                datatype='emr_medctn',
-                table=TableMetadata(
-                    name='hvm_emr_medctn',
-                    description='EMR Medication',
-                    columns=[
-                        Column(
-                            name='field_1',
-                            field_id='1',
-                            sequence='0',
-                            datatype='bigint',
-                            description='Field 1',
-                            category='Baseline',
-                            top_values=True,
-                        ),
-                        Column(
-                            name='field_2',
-                            field_id='2',
-                            sequence='1',
-                            datatype='bigint',
-                            description='Field 2',
-                            category='Baseline',
-                            top_values=True,
-                        )
-                    ]
-                )
-            )
-        ]
-    )
-
-
     stats = ProviderStatsResult(
         model_results={
             'emr_clin_obsn': StatsResult(
@@ -245,14 +181,76 @@ def test_multi_table(create_sql):
                 ]
             ),
         },
-        results=StatsResult()
+        results=StatsResult(),
+        config=Provider(
+            name="test",
+            datafeed_id="1",
+            datatype="emr",
+            earliest_date="2018-01-01",
+            models=[
+                ProviderModel(
+                    datatype='emr_clin_obsn',
+                    table=TableMetadata(
+                        name='hvm_emr_clin_obsn',
+                        description='EMR Clinical Observation',
+                        columns=[
+                            Column(
+                                name='field_1',
+                                field_id='1',
+                                sequence='0',
+                                datatype='bigint',
+                                description='Field 1',
+                                category='Baseline',
+                                top_values=True,
+                            ),
+                            Column(
+                                name='field_2',
+                                field_id='2',
+                                sequence='1',
+                                datatype='bigint',
+                                description='Field 2',
+                                category='Baseline',
+                                top_values=True,
+                            )
+                        ]
+                    )
+                ),
+                ProviderModel(
+                    datatype='emr_medctn',
+                    table=TableMetadata(
+                        name='hvm_emr_medctn',
+                        description='EMR Medication',
+                        columns=[
+                            Column(
+                                name='field_1',
+                                field_id='1',
+                                sequence='0',
+                                datatype='bigint',
+                                description='Field 1',
+                                category='Baseline',
+                                top_values=True,
+                            ),
+                            Column(
+                                name='field_2',
+                                field_id='2',
+                                sequence='1',
+                                datatype='bigint',
+                                description='Field 2',
+                                category='Baseline',
+                                top_values=True,
+                            )
+                        ]
+                    )
+                )
+            ]
+        )
     )
 
-    generate_data_layout_version_sql(prov_config, stats, 'v1')
+    generate_data_layout_version_sql(stats, 'v1')
 
     create_sql.assert_called_with(
         '1',
-        Layout(fields=[
+        Layout(stats=stats, fields=[
             LayoutField(
                 id='1',
                 name='field_1',
@@ -328,81 +326,3 @@ def test_multi_table(create_sql):
         ]),
         'v1'
     )
-
-
-# def test_stat_population(provider_conf):
-#     """ Test stat population for data_layouts with more than one table (emr) """
-#     provider_config_input = provider_conf.copy_with(
-#         datatype='emr',
-#         models=[
-#             ProviderModel(
-#                 datatype='emr_clin_obsn',
-#             ),
-#             ProviderModel(
-#                 datatype='emr_medctn',
-#             )
-#         ]
-#     )
-
-#     data_layout_input = [
-#         {
-#             'name': 'field_1',
-#             'fill_rate': None,
-#             'top_values': None,
-#             'datatable': {
-#                 'id': '1',
-#                 'name': 'Clinical Observation',  # map of emr_clin_obsn
-#                 'description': 'Clin obs table',
-#                 'sequence': 0,
-#             },
-#         },
-#         {
-#             'name': 'field_1',
-#             'fill_rate': None,
-#             'top_values': None,
-#             'datatable': {
-#                 'id': '2',
-#                 'name': 'Medication',  # map of emr_medctn
-#                 'description': 'Med table',
-#                 'sequence': 1,
-#             },
-#         },
-#         {
-#             'name': 'field_2',
-#             'fill_rate': None,
-#             'top_values': None,
-#             'datatable': {
-#                 'id': '2',
-#                 'name': 'Medication',  # map of emr_medctn
-#                 'description': 'Med table',
-#                 'sequence': 1,
-#             },
-#         },
-#     ]
-
-
-
-#     data_layout = data_layout_input
-#     populate_stat_values(provider_config_input, data_layout, stats_input)
-
-#     field_asserted_count = 0
-#     for field_dict in data_layout:
-#         if (
-#                 field_dict['name'] == 'field_1' and
-#                 field_dict['datatable']['name'] == 'Clinical Observation'
-#         ):
-#             assert field_dict['fill_rate'] == 1.0
-#             assert field_dict['top_values'] == 'val1 (1000:0.01), val2 (60:5.05)'
-#             field_asserted_count += 1
-
-#         if field_dict['name'] == 'field_1' and field_dict['datatable']['name'] == 'Medication':
-#             assert field_dict['fill_rate'] == 3.0
-#             assert field_dict['top_values'] == 'val1 (100:0.12)'
-#             field_asserted_count += 1
-
-#         if field_dict['name'] == 'field_2' and field_dict['datatable']['name'] == 'Medication':
-#             assert field_dict['fill_rate'] == 2.0
-#             assert field_dict['top_values'] == 'val1 (40:0.02), val2 (30:4.02)'
-#             field_asserted_count += 1
-
-#     assert field_asserted_count == 3

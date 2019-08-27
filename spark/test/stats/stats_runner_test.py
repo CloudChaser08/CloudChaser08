@@ -5,7 +5,6 @@ from pyspark.sql import Row
 
 import spark.helpers.stats.utils as stats_utils
 import spark.stats.stats_runner as stats_runner
-import spark.stats.stats_writer as stats_writer
 from spark.stats.models import Provider, ProviderModel, Column, TableMetadata
 from spark.stats.models.results import (
     ProviderStatsResult, StatsResult, FillRateResult, YearOverYearResult,
@@ -57,8 +56,7 @@ def setup_teardown(spark):
         data_row('2', '1850-01-01', 'a', 'b', 'c'),
         data_row('2', '1900-01-01', 'a', 'b', 'c')
     ]).toDF()
-    with patch.object(stats_writer, 'write_to_s3'), \
-        patch.object(stats_utils, 'get_provider_data', return_value=prov_data), \
+    with patch.object(stats_utils, 'get_provider_data', return_value=prov_data), \
         patch.object(stats_utils, 'get_emr_union', return_value=emr_union):
 
         yield
@@ -94,7 +92,8 @@ def test_standard_stats(spark):
                 FillRateResult(field='col_3', fill=0.5),
             ],
         ),
-        model_results={}
+        model_results={},
+        config=provider_config
     )
 
 
@@ -146,7 +145,8 @@ def test_emr_fill_rates(spark):
                     FillRateResult(field='col_3', fill=0.5),
                 ],
             ),
-        }
+        },
+        config=provider_config
     )
 
 

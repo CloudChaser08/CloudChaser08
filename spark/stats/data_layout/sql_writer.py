@@ -7,7 +7,7 @@ import os
 
 import boto3
 
-from spark.stats.stats_writer import S3_OUTPUT_DIR
+S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"
 
 
 DATAFEED_VERSION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedversion " \
@@ -49,8 +49,9 @@ def create_runnable_sql_file(datafeed_id, data_layout, version_name):
     """
 
     # Create SQL query for making new data_layout version
-    fields = data_layout.to_dict()['fields']
-    data_layout_json = json.dumps(fields).replace("'", "''")  # need to escape single quotes
+    data_layout_json = json.dumps(
+        data_layout.to_dict()
+    ).replace("'", "''")  # need to escape single quotes
     new_version_query = DATAFEED_VERSION_INSERT_SQL_TEMPLATE.format(
         data_layout=data_layout_json,
         datafeed_id=datafeed_id,

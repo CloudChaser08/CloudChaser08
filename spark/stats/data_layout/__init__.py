@@ -10,13 +10,10 @@ from ..models.layout import (
     Layout
 )
 
-def generate_data_layout_version_sql(provider_config, stats, version_name):
+def generate_data_layout_version_sql(stats, version_name):
     """
         Given a single DataFeed's config and generated stats, create a runnable SQL file that
         inserts a complete data_layout version into a Marketplace DB for that feed.
-
-        :param provider_config: Provider's configuration
-        :type provider_config: spark.stats.models.ProviderConfig
 
         :param stats: Stats run result
         :type stats: spark.stats.models.results.ProviderStatsResult
@@ -25,18 +22,18 @@ def generate_data_layout_version_sql(provider_config, stats, version_name):
                              marketplace
         :type version_name: str
     """
-    datafeed_id = provider_config.datafeed_id
+    datafeed_id = stats.config.datafeed_id
 
     # Get the top-level model LayoutField values
-    fields = list(get_fields(stats.results, provider_config, datafeed_id))
+    fields = list(get_fields(stats.results, stats.config, datafeed_id))
 
     # Get the LayoutField objects for all sub models
-    if provider_config.models:
-        for model in provider_config.models:
+    if stats.config.models:
+        for model in stats.config.models:
             model_results = stats.model_results[model.datatype]
             fields.extend(get_fields(model_results, model, datafeed_id))
 
-    layout = Layout(fields=fields)
+    layout = Layout(fields=fields, stats=stats)
     # Create the runnable SQL file for adding this new version of data_layout
     create_runnable_sql_file(datafeed_id, layout, version_name)
 

@@ -82,7 +82,8 @@ def run(spark, sql_context, start_date, end_date, provider_config):
 
     return ProviderStatsResult(
         results=results,
-        model_results=model_results
+        model_results=model_results,
+        config=provider_config
     )
 
 
@@ -113,7 +114,7 @@ def main(args):
 
         # Generate SQL for new data_layout version.
         # 'quarter' is used as the version name
-        generate_data_layout_version_sql(provider_conf, stats, quarter)
+        generate_data_layout_version_sql(stats, quarter)
 
 
 if __name__ == '__main__':
