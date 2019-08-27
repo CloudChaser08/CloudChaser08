@@ -32,15 +32,15 @@ def test_num_columns_equal(dataframe, results):
 
 def test_column_names_equal(dataframe, results):
     dataframe_cols = dataframe.columns
-    results_cols = [r['field'] for r in results]
+    results_cols = [r.field for r in results]
     assert dataframe_cols == results_cols
 
 
 def test_expected_values(results):
     # This tests has some holes in it, so we need to make sure
     # the arrays identical even if this passes
-    assert set(EXPECTED_RESULTS) - set([r['fill'] for r in results]) == set()
-    assert EXPECTED_RESULTS == [r['fill'] for r in results]
+    assert set(EXPECTED_RESULTS) - set([r.fill for r in results]) == set()
+    assert EXPECTED_RESULTS == [r.fill for r in results]
 
 
 @pytest.mark.usefixtures("spark")
@@ -56,4 +56,4 @@ def test_gender_unknown_filetered(spark):
         data_row('4', 'U', 'U') # should be filtered out
     ]).toDF()
 
-    assert [r['fill'] for r in fill_rate.calculate_fill_rate(dataframe)] == [1.0, 0.75, 0.5]
+    assert [r.fill for r in fill_rate.calculate_fill_rate(dataframe)] == [1.0, 0.75, 0.5]

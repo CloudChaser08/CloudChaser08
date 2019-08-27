@@ -7,18 +7,23 @@ from mock import Mock
 from pyspark.sql import Row
 
 import spark.stats.processor as processor
-from spark.stats.models import FillRateConfig, Column
+from spark.stats.models import Column, TableMetadata
+from spark.stats.models.results import FillRateResult
 
-FILL_RATE_CONF = FillRateConfig(
-    columns={
-        'hvid': Column(name='hvid', field_id='1', sequence='1'),
-        'col_2': Column(name='col_2', field_id='2', sequence='2')
-    }
+TABLE = TableMetadata(
+    name='tbl',
+    description='desc',
+    columns=[
+        Column(
+            name='hvid', field_id='1', sequence='1', top_values=True,
+            datatype='string', description='HV ID', category='Baseline',
+        ),
+        Column(
+            name='col_2', field_id='2', sequence='2', top_values=True,
+            datatype='string', description='Column 2', category='Baseline',
+        )
+    ]
 )
-
-QUARTER = 'Q32017'
-START_DATE = '2015-06-27'
-END_DATE = '2017-03-15'
 
 
 @pytest.fixture(name='df_provider', scope='module')
@@ -52,16 +57,16 @@ def test_fill_rate_record_field(provider_conf, df_provider):
         date_fields=['service_date'],
         record_field='claim_id',
         fill_rate=True,
-        fill_rate_conf=FILL_RATE_CONF,
+        table=TABLE,
         earliest_date='1992-11-07'
     )
 
     res = processor.run_fill_rates(prov_conf, df_provider)
     assert res is not None
     assert sorted(res) == [
-        {'field': 'claim_id', 'fill': 1.0},
-        {'field': 'col_2', 'fill': 1.0},
-        {'field': 'hvid', 'fill': 1.0}
+        FillRateResult(field='claim_id', fill=1.0),
+        FillRateResult(field='col_2', fill=1.0),
+        FillRateResult(field='hvid', fill=1.0),
     ]
 
 
@@ -73,15 +78,15 @@ def test_fill_rate_no_record_field(provider_conf, df_provider):
         date_fields=['service_date'],
         record_field=None,
         fill_rate=True,
-        fill_rate_conf=FILL_RATE_CONF,
+        table=TABLE,
         earliest_date='1992-11-07'
     )
 
     res = processor.run_fill_rates(prov_conf, df_provider)
     assert res is not None
     assert sorted(res) == [
-        {'field': 'col_2', 'fill': 7.0 / 9.0},
-        {'field': 'hvid', 'fill': 7.0 / 9.0}
+        FillRateResult(field='col_2', fill=7.0 / 9.0),
+        FillRateResult(field='hvid', fill=7.0 / 9.0),
     ]
 
 
@@ -93,7 +98,7 @@ def test_no_fill_rate(provider_conf, df_provider):
         date_fields=['service_date'],
         record_field=None,
         fill_rate=False,
-        fill_rate_conf=None,
+        table=TABLE,
         earliest_date='1992-11-07'
     )
 

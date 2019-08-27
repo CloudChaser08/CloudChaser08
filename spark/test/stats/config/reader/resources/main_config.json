@@ -47,6 +47,19 @@
             "longitudinality":  false,
             "year_over_year":   false,
             "epi_calcs":        false
+        },
+        {
+            "name": "emr_feed",
+            "datafeed_id": "6",
+            "datatype": "emr",
+            "models": [
+              {
+                "datatype": "emr_clin_obsn",
+                "fill_rate": true,
+                "top_values": true
+              }
+            ],
+            "earliest_date": "2014-01-01"
         }
     ]
 }

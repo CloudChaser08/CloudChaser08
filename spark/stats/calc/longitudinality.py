@@ -2,6 +2,8 @@ from pyspark.sql.functions import col, min, max, countDistinct, mean, stddev, co
     when, lit
 from pyspark.sql.types import IntegerType
 
+from ..models.results import LongitudinalityResult
+
 PATIENT_IDENTIFIER = 'hvid'
 
 # date field to ensure that we never drop below the provider's
@@ -74,4 +76,6 @@ def calculate_longitudinality(df, provider_conf):
         row_dict['duration'] = str(row_dict['duration']) + ' years'
         long_stats.append(row_dict)
 
-    return long_stats
+    return [
+        LongitudinalityResult(**stat) for stat in long_stats
+    ]

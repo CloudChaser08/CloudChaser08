@@ -1,6 +1,8 @@
 import datetime
 from pyspark.sql.functions import col, trim
 
+from ..models.results import GenericStatsResult
+
 def _get_row_count(df, start_date, end_date, attribute, date_col, index_null_dates=False):
     '''
     Get the row count for the attribute between the start and end date
@@ -88,23 +90,67 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
     days = (end_date_dt - earliest_date_dt).days
 
     key_stats = [
-        {'field': 'total_patient', 'value': total_patient},
-        {'field': 'total_24_month_patient', 'value': total_24_month_patient},
-        {'field': 'daily_avg_patient', 'value': total_patient / days},
-        {'field': 'monthly_avg_patient', 'value': ((total_patient / days) * 365) / 12},
-        {'field': 'yearly_avg_patient', 'value': (total_patient / days) * 365},
+        GenericStatsResult(
+            field='total_patient',
+            value=total_patient
+        ),
+        GenericStatsResult(
+            field='total_24_month_patient',
+            value=total_24_month_patient
+        ),
+        GenericStatsResult(
+            field='daily_avg_patient',
+            value=total_patient / days
+        ),
+        GenericStatsResult(
+            field='monthly_avg_patient',
+            value=((total_patient / days) * 365) / 12
+        ),
+        GenericStatsResult(
+            field='yearly_avg_patient',
+            value=(total_patient / days) * 365
+        ),
+        GenericStatsResult(
+            field='total_row',
+            value=total_row
+        ),
+        GenericStatsResult(
+            field='total_24_month_row',
+            value=total_24_month_row
+        ),
+        GenericStatsResult(
+            field='daily_avg_row',
+            value=total_row / days
+        ),
+        GenericStatsResult(
+            field='monthly_avg_row',
+            value=((total_row / days) * 365) / 12
+        ),
+        GenericStatsResult(
+            field='yearly_avg_row',
+            value=(total_row / days) * 365
+        ),
 
-        {'field': 'total_row', 'value': total_row},
-        {'field': 'total_24_month_row', 'value': total_24_month_row},
-        {'field': 'daily_avg_row', 'value': total_row / days},
-        {'field': 'monthly_avg_row', 'value': ((total_row / days) * 365) / 12},
-        {'field': 'yearly_avg_row', 'value': (total_row / days) * 365},
-
-        {'field': 'total_record', 'value': total_record},
-        {'field': 'total_24_month_record', 'value': total_24_month_record},
-        {'field': 'daily_avg_record', 'value': total_record / days},
-        {'field': 'monthly_avg_record', 'value': ((total_record / days) * 365) / 12},
-        {'field': 'yearly_avg_record', 'value': (total_record / days) * 365}
+        GenericStatsResult(
+            field='total_record',
+            value=total_record
+        ),
+        GenericStatsResult(
+            field='total_24_month_record',
+            value=total_24_month_record
+        ),
+        GenericStatsResult(
+            field='daily_avg_record',
+            value=total_record / days
+        ),
+        GenericStatsResult(
+            field='monthly_avg_record',
+            value=((total_record / days) * 365) / 12
+        ),
+        GenericStatsResult(
+            field='yearly_avg_record',
+            value=(total_record / days) * 365
+        ),
     ]
 
     return key_stats

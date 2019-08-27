@@ -20,6 +20,8 @@ ALL_DATA = None
 SAMPLED_DATA = None
 SAMPLED_DATA_MULTIPLIER = None
 
+EPI_FIELDS = ['age', 'gender', 'state', 'region']
+
 
 class DataframeProvider(object):
     """ An object that lazily provides dataframes to use in processing,
@@ -122,14 +124,14 @@ def run_fill_rates(provider_conf, df_provider):
         Runs fill rates using the provider's fill rate configuration, if
         that configuration is defined (otherwise returns None)
     """
-    if not provider_conf.fill_rate_conf:
+    if not provider_conf.fill_rate or not provider_conf.table:
         return None
     dataframe = df_provider.sampled_data
 
+    fill_rate_columns = {c.name for c in provider_conf.table.columns}
     # Get only the columns needed to calculate fill rates on
     cols = {
-        c for c in dataframe.columns
-        if c in provider_conf.fill_rate_conf.columns.keys()
+        c for c in dataframe.columns if c in fill_rate_columns
     }
     if provider_conf.record_field:
         cols.add(provider_conf.record_field)
@@ -145,19 +147,22 @@ def run_top_values(provider_conf, df_provider):
        Runs top values using the provider's top_values configuration, if
        that configuration is defined (otherwise returns None)
     """
-    if not provider_conf.top_values_conf:
+    if not provider_conf.top_values or not provider_conf.table:
         return None
     dataframe = df_provider.sampled_data
     multiplier = df_provider.sampled_data_multiplier
 
-    # Get only the columns needed to calculate fill rates on
+    # Get only the columns needed to calculate top values on
+    top_values_columns = {
+        c.name for c in provider_conf.table.columns
+        if c.top_values
+    }
     cols = {
-        c for c in dataframe.columns
-        if c in provider_conf.top_values_conf.columns.keys()
+        c for c in dataframe.columns if c in top_values_columns
     }
     if provider_conf.record_field:
         cols.add(provider_conf.record_field)
-    max_num_values = provider_conf.top_values_conf.max_values
+    max_num_values = provider_conf.max_top_values
     top_values_cols_dataframe = dataframe.select(*cols)
 
     sampled_top_values = top_values.calculate_top_values(
@@ -241,9 +246,9 @@ def _calculate_available_years(provider_conf, end_date):
 def get_epi_calcs(provider_conf):
     """ Runs EPI calculations """
 
-    if provider_conf.epi_calc_conf:
+    if provider_conf.epi_calcs:
         return {
             field: epi.calculate_epi(provider_conf, field)
-            for field in provider_conf.epi_calc_conf.fields
+            for field in EPI_FIELDS
         }
     return None

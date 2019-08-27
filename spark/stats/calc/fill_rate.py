@@ -1,5 +1,7 @@
 from pyspark.sql.functions import col, sum, isnan, count, trim, lit, upper
 
+from ..models.results import FillRateResult
+
 def _col_fill_rate(c, row_count):
     '''
     Calculate the fill rate for a given column.
@@ -46,6 +48,6 @@ def calculate_fill_rate(df):
         df_tmp.unpersist()
         i += BATCH_SIZE
 
-    stats = map(lambda r: {'field': r.field, 'fill': r.fill}, res)
+    stats = map(lambda r: FillRateResult(field=r.field, fill=r.fill), res)
 
     return stats
