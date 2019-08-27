@@ -47,7 +47,6 @@ def test_gets_emr_columns(get_table):
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
     sql_context = Mock()
     conf = config_reader.get_provider_config(sql_context, conf_file, '6')
-    get_table.assert_called_once()
     get_table.assert_called_with(sql_context, 'emr_clin_obsn')
     assert not conf.table
     assert conf.models[0].table == TABLE
