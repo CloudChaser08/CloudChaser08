@@ -175,7 +175,7 @@ def test_run_top_values_off(prov_conf_no_stats, df_provider):
 
 
 def test_run_longitudinality_off(prov_conf_no_stats, df_provider):
-    """ Tests longidutinality does not run """
+    """ Tests longitudinality does not run """
     assert processor.run_longitudinality(
         prov_conf_no_stats, '2018-01-01', df_provider
     ) is None
@@ -191,7 +191,7 @@ def test_run_longitudinality_bad_date(prov_conf, df_provider):
 
 
 def test_run_longitudinality(prov_conf, df_provider):
-    """ Tests runs longidutinality """
+    """ Tests runs longitudinality """
     assert processor.run_longitudinality(
         prov_conf, '2018-01-01', df_provider
     ) == [
@@ -241,6 +241,15 @@ def test_year_over_year_off(prov_conf_no_stats, df_provider):
     """ Tests key stats does not run """
     assert processor.run_year_over_year(
         prov_conf_no_stats, '2018-01-01', df_provider
+    ) is None
+
+
+def test_year_over_year_bad_date(prov_conf, df_provider):
+    """ Tests runs year_over_year """
+    assert processor.run_year_over_year(
+        prov_conf,
+        '1993-11-07', #end date within 2 years of earliest date
+        df_provider
     ) is None
 
 
