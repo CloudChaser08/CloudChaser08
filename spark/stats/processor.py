@@ -165,16 +165,14 @@ def run_top_values(provider_conf, df_provider):
     max_num_values = provider_conf.max_top_values
     top_values_cols_dataframe = dataframe.select(*cols)
 
-    sampled_top_values = top_values.calculate_top_values(
+    results = top_values.calculate_top_values(
         top_values_cols_dataframe, max_num_values,
         distinct_column=provider_conf.record_field
     )
 
-    if sampled_top_values:
-        for top_value_stat in sampled_top_values:
-            top_value_stat['count'] = int(top_value_stat['count'] * multiplier)
-
-    return sampled_top_values
+    return [
+        r.copy_with(count=r.count * multiplier) for r in results
+    ]
 
 def run_key_stats(provider_conf, start_date, end_date, df_provider):
     """

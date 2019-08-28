@@ -18,16 +18,6 @@ ALL_STATS = {
 EMR_ENCOUNTER_STATS = {'longitudinality', 'year_over_year'}
 
 
-def _get_encounter_model_config(provider_config):
-    """ Merges the provider config with the emr encounter model if available,
-        otherwise returns None
-    """
-    for model in provider_config.models:
-        if model.datatype == 'emr_enc':
-            return provider_config.merge_provider_model(model)
-    return None
-
-
 def run(spark, sql_context, start_date, end_date, provider_config):
     """ Runs all stats for a provider between the start and end dates,
         returning a result dictionary
