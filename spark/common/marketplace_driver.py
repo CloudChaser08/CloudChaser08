@@ -9,6 +9,8 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.common.utility.logger as logger
+
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 END_TO_END_TEST = 'end_to_end_test'
@@ -97,37 +99,39 @@ class MarketplaceDriver(object):
             output_folder=first_schema_obj.output_folder
         )
 
-
     def init_spark_context(self):
         if not self.spark:
             context_list = [str(self.date_input), self.provider_name, self.data_type, 'HVM']
             context_name = ' '.join(context_list)
-            print('Starting {context_name}'.format(context_name=context_name))
+            logger.log('Starting {context_name}'.format(context_name=context_name))
             self.spark, self.sql_context = init(context_name, self.test)
             self.runner = Runner(self.sql_context)
 
     def run(self):
         """
-        Kick off the load, transform, create workflow
+        Run all driver steps in the appropriate order
         """
         self.init_spark_context()
-        print('Starting Step 1 of 3: Loading data')
         self.load()
-        print('Starting Step 2 of 3: Transforming data')
         self.transform()
-        print('Starting Step 3 of 3: Save data')
-        self.save()
-        self.spark.stop()
+        self.save_to_disk()
+        self.stop_spark()
+        self.copy_to_output_path()
 
     def load(self):
         """
         Load the input data into tables
         """
+        logger.log('Loading the source data')
+        logger.log(' -loading: transactions')
         records_loader.load_and_clean_all_v2(self.runner, self.input_path, self.source_table_schema,
                                              load_file_name=True)
+        logger.log(' -loading: payloads')
         payload_loader.load(self.runner, self.matching_path, load_file_name=True)
         if not self.test:
+            logger.log(' -loading: ref_gen_ref')
             external_table_loader.load_ref_gen_ref(self.runner.sqlContext)
+            logger.log(' -loading: date_explode_indices')
             external_table_loader.load_analytics_db_table(
                 self.runner.sqlContext, 'dw', 'date_explode_indices', 'date_explode_indices'
             )
@@ -139,13 +143,15 @@ class MarketplaceDriver(object):
         """
         Transform the loaded data
         """
+        logger.log('Running the normalization SQL scripts')
         self.runner.run_all_spark_scripts([['VDR_FILE_DT', str(self.date_input), False]],
                                           directory_path=self.provider_directory_path)
 
-    def save(self):
+    def save_to_disk(self):
         """
-        Ensure the transformed data conforms to a known data schema and unload the data
+        Ensure the transformed data conforms to a known data schema and unload the data locally
         """
+        logger.log('Saving data to the local file system')
         for table in self.output_table_names_to_schemas.keys():
             data_frame = self.spark.table(table)
             schema_obj = self.output_table_names_to_schemas[table]
@@ -170,6 +176,16 @@ class MarketplaceDriver(object):
                 staging_subdir=schema_obj.staging_subdir
             )
 
+    def stop_spark(self):
+        """
+        Stop the spark context
+        """
+        logger.log('Stopping the spark context')
         self.spark.stop()
-        normalized_records_unloader.distcp(self.output_path)
 
+    def copy_to_output_path(self):
+        """
+        Copy data from local file system to output destination
+        """
+        logger.log('Copying data to the output location: {}'.format(self.output_path))
+        normalized_records_unloader.distcp(self.output_path)
