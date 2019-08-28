@@ -6,6 +6,7 @@ import spark.helpers.file_utils as file_utils
 import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.processor as processor
 from spark.stats.data_layout import generate_data_layout_version_sql
+from spark.stats.data_layout import write_summary_file_to_s3
 
 from spark.stats.models.results import (
     ProviderStatsResult,
@@ -111,6 +112,10 @@ def main(args):
 
         # Calculate stats
         stats = run(spark, sql_context, start_date, end_date, provider_conf)
+
+        #generate and write json summary to s3
+        # 'quarter' is used as the version name
+        write_summary_file_to_s3(stats, quarter)
 
         # Generate SQL for new data_layout version.
         # 'quarter' is used as the version name

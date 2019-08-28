@@ -7,7 +7,7 @@ import os
 
 import boto3
 
-S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"
+S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/{}/"
 
 
 DATAFEED_VERSION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedversion " \
@@ -38,7 +38,7 @@ def _write_sql_file(datafeed_id, new_version_query, version_name):
     boto3.client('s3').upload_file(
         output_dir + filename,
         S3_OUTPUT_DIR.split('/')[2],
-        '/'.join(S3_OUTPUT_DIR.format(version_name).split('/')[3:]) + filename
+        '/'.join(S3_OUTPUT_DIR.format(datafeed_id, version_name).split('/')[3:]) + filename
     )
 
 
