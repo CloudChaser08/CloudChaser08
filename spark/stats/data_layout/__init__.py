@@ -1,9 +1,6 @@
 """
     Data layout package
 """
-import json
-import boto3
-
 from spark.stats.data_layout.sql_writer import create_runnable_sql_file
 
 from ..models.layout import (
@@ -111,35 +108,4 @@ def _format_top_value(top_value_result):
         value=top_value_result.value.encode('utf-8'),
         total_count=top_value_result.count,
         percentage=top_value_result.percentage
-    )
-
-
-def write_summary_file_to_s3(stats, version):
-    """
-    Upload summary json file to s3
-    """
-    summary_json = {
-        "feeds": [{
-            "provider_config": stats.config.to_dict(),
-            "stats": stats.results,
-            "model_stats": getattr(stats, 'model_results', {}),
-            "version": version
-            }]
-    }
-    datafeed_id = stats.config.datafeed_id
-    s3_output_dir = 's3://healthveritydev/marketplace_stats/{}/{}/'.format(datafeed_id, version)
-    filename = 'stats_summary_{}.json'.format(datafeed_id)
-    output_dir = 'output/{}/{}/'.format(datafeed_id, version)
-
-    try:
-        os.makedirs(output_dir)
-    except:
-        pass
-
-    with open(output_dir + filename, 'w+') as summary:
-        summary.write(json.dumps(summary_json))
-    boto3.client('s3').upload_file(
-        output_dir + filename,
-        s3_output_dir.split('/')[2],
-        '/'.join(s3_output_dir.split('/')[3:]) + filename
     )

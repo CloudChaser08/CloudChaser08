@@ -1,12 +1,13 @@
 import argparse
 import inspect
+import json
+import boto3
 
 import spark.spark_setup as spark_setup
 import spark.helpers.file_utils as file_utils
 import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.processor as processor
 from spark.stats.data_layout import generate_data_layout_version_sql
-from spark.stats.data_layout import write_summary_file_to_s3
 
 from spark.stats.models.results import (
     ProviderStatsResult,
@@ -18,6 +19,8 @@ ALL_STATS = {
 }
 EMR_ENCOUNTER_STATS = {'longitudinality', 'year_over_year'}
 
+S3_OUTPUT_BUCKET = "healthveritydev"
+S3_OUTPUT_KEY = "marketplace_stats/json/{}/{}"
 
 def _get_encounter_model_config(provider_config):
     """ Merges the provider config with the emr encounter model if available,
@@ -85,6 +88,31 @@ def run(spark, sql_context, start_date, end_date, provider_config):
         results=results,
         model_results=model_results,
         config=provider_config
+    )
+
+
+def write_summary_file_to_s3(stats, version):
+    """
+    Upload summary json file to s3
+    """
+    summary_json = stats.to_dict()
+    summary_json['version'] = quarter
+
+    datafeed_id = stats.config.datafeed_id
+    filename = 'stats_summary_{}.json'.format(datafeed_id)
+    output_dir = 'output/{}/{}/'.format(datafeed_id, version)
+
+    try:
+        os.makedirs(output_dir)
+    except:
+        pass
+
+    with open(output_dir + filename, 'w+') as summary:
+        summary.write(json.dumps(summary_json))
+    boto3.client('s3').upload_file(
+        output_dir + filename,
+        S3_OUTPUT_BUCKET,
+        S3_OUTPUT_KEY + filename
     )
 
 
