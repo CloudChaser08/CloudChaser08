@@ -114,7 +114,7 @@ def _format_top_value(top_value_result):
     )
 
 
-def write_summary_file_to_s3(stats, quarter):
+def write_summary_file_to_s3(stats, version):
     """
     Upload summary json file to s3
     """
@@ -123,13 +123,13 @@ def write_summary_file_to_s3(stats, quarter):
             "provider_config": stats.config.to_dict(),
             "stats": stats.results,
             "model_stats": getattr(stats, 'model_results', {}),
-            "version": quarter
+            "version": version
             }]
     }
     datafeed_id = stats.config.datafeed_id
-    s3_output_dir = 's3://healthveritydev/marketplace_stats/{}/{}/'.format(datafeed_id, quarter)
+    s3_output_dir = 's3://healthveritydev/marketplace_stats/{}/{}/'.format(datafeed_id, version)
     filename = 'stats_summary_{}.json'.format(datafeed_id)
-    output_dir = 'output/{}/{}/'.format(datafeed_id, quarter)
+    output_dir = 'output/{}/{}/'.format(datafeed_id, version)
 
     try:
         os.makedirs(output_dir)

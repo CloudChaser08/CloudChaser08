@@ -91,7 +91,7 @@ def run(spark, sql_context, start_date, end_date, provider_config):
 def main(args):
     # Parse out the cli args
     feed_ids = args.feed_ids
-    quarter = args.quarter
+    version = args.version
     start_date = args.start_date
     end_date = args.end_date
     stats = set(args.stats or ALL_STATS)
@@ -114,18 +114,16 @@ def main(args):
         stats = run(spark, sql_context, start_date, end_date, provider_conf)
 
         #generate and write json summary to s3
-        # 'quarter' is used as the version name
-        write_summary_file_to_s3(stats, quarter)
+        write_summary_file_to_s3(stats, version)
 
         # Generate SQL for new data_layout version.
-        # 'quarter' is used as the version name
-        generate_data_layout_version_sql(stats, quarter)
+        generate_data_layout_version_sql(stats, version)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--feed_ids', type = str, nargs='+')
-    parser.add_argument('--quarter', type = str)
+    parser.add_argument('--version', type = str)
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)
     parser.add_argument('--stats', nargs = '+', default = None)
