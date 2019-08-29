@@ -1,6 +1,8 @@
 import argparse
 import inspect
 import json
+import os
+
 import boto3
 
 import spark.spark_setup as spark_setup
@@ -20,7 +22,7 @@ ALL_STATS = {
 EMR_ENCOUNTER_STATS = {'longitudinality', 'year_over_year'}
 
 S3_OUTPUT_BUCKET = "healthveritydev"
-S3_OUTPUT_KEY = "marketplace_stats/json/{}/{}"
+S3_OUTPUT_KEY = "marketplace_stats/json/{}/{}/{}"
 
 def _get_encounter_model_config(provider_config):
     """ Merges the provider config with the emr encounter model if available,
@@ -96,23 +98,23 @@ def write_summary_file_to_s3(stats, version):
     Upload summary json file to s3
     """
     summary_json = stats.to_dict()
-    summary_json['version'] = quarter
+    summary_json['version'] = version
 
     datafeed_id = stats.config.datafeed_id
-    filename = 'stats_summary_{}.json'.format(datafeed_id)
-    output_dir = 'output/{}/{}/'.format(datafeed_id, version)
+    filename = '{}_stats_summary_{}.json'.format(datafeed_id, version)
+    output_file = 'output/{}/{}/{}'.format(datafeed_id, version, filename)
 
     try:
         os.makedirs(output_dir)
     except:
         pass
 
-    with open(output_dir + filename, 'w+') as summary:
+    with open(output_file, 'w+') as summary:
         summary.write(json.dumps(summary_json))
     boto3.client('s3').upload_file(
-        output_dir + filename,
+        output_file,
         S3_OUTPUT_BUCKET,
-        S3_OUTPUT_KEY + filename
+        S3_OUTPUT_KEY.format(datafeed_id, version, filename)
     )
 
 
