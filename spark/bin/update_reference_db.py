@@ -59,7 +59,15 @@ def create_mapping(spark_files, census_files, standard_files):
         module = script.replace('/', '.')[:-3]
         try:
             usage_output = subprocess.check_output(['python', '-m', module, '--help'])
-        except StopIteration:
+            try:
+                usage_output = usage_output.decode()
+            except (UnicodeDecodeError, AttributeError):
+                pass
+            usage_output = re.sub('[^a-zA-Z: \'\-\[\]]', '', usage_output)
+            usage_output = re.sub(' +', ' ', usage_output)
+            usage_output = re.sub('optional arguments', '', usage_output)
+
+        except subprocess.CalledProcessError:
             usage_output = 'NA'
 
         if len(usage_output) > 1 and usage_output[-1] == '\n':
@@ -120,10 +128,9 @@ def write_to_s3(_mapping):
     bucket = 'healthverityreleases'
     prefix = 'dewey'
     file_name = 'daglist.prod.txt'
-
-    with tempfile.TemporaryFile() as fp:
+    with tempfile.NamedTemporaryFile() as fp:
         for key, value in _mapping.items():
-            fp.write('{} {}\n'.format(key, value['script_args']))
+            fp.write('{} {}\n'.format(key, value['script_args']).encode())
         s3_client.Bucket(bucket).upload_file(fp.name, '{}/{}'.format(prefix, file_name))
 
 
