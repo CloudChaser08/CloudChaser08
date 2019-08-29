@@ -1,6 +1,7 @@
 import pyspark.sql.functions as F
 from pyspark.sql import Window
 
+
 def deduplicate(runner, test=False):
     old_encounter = runner.sqlContext.table('old_encounter').drop('nextrecorddate')
     new_encounter = runner.sqlContext.table('new_encounter')
