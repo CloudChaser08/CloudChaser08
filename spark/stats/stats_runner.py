@@ -1,5 +1,9 @@
 import argparse
 import inspect
+import json
+import os
+
+import boto3
 
 import spark.spark_setup as spark_setup
 import spark.helpers.file_utils as file_utils
@@ -17,6 +21,8 @@ ALL_STATS = {
 }
 EMR_ENCOUNTER_STATS = {'longitudinality', 'year_over_year'}
 
+S3_OUTPUT_BUCKET = "healthveritydev"
+S3_OUTPUT_KEY = "marketplace_stats/json/{}/{}/{}"
 
 def run(spark, sql_context, start_date, end_date, provider_config):
     """ Runs all stats for a provider between the start and end dates,
@@ -77,10 +83,35 @@ def run(spark, sql_context, start_date, end_date, provider_config):
     )
 
 
+def write_summary_file_to_s3(stats, version):
+    """
+    Upload summary json file to s3
+    """
+    summary_json = stats.to_dict()
+    summary_json['version'] = version
+
+    datafeed_id = stats.config.datafeed_id
+    filename = '{}_stats_summary_{}.json'.format(datafeed_id, version)
+    output_file = 'output/{}/{}/{}'.format(datafeed_id, version, filename)
+
+    try:
+        os.makedirs(output_dir)
+    except:
+        pass
+
+    with open(output_file, 'w+') as summary:
+        summary.write(json.dumps(summary_json))
+    boto3.client('s3').upload_file(
+        output_file,
+        S3_OUTPUT_BUCKET,
+        S3_OUTPUT_KEY.format(datafeed_id, version, filename)
+    )
+
+
 def main(args):
     # Parse out the cli args
     feed_ids = args.feed_ids
-    quarter = args.quarter
+    version = args.version
     start_date = args.start_date
     end_date = args.end_date
     stats = set(args.stats or ALL_STATS)
@@ -102,15 +133,17 @@ def main(args):
         # Calculate stats
         stats = run(spark, sql_context, start_date, end_date, provider_conf)
 
+        #generate and write json summary to s3
+        write_summary_file_to_s3(stats, version)
+
         # Generate SQL for new data_layout version.
-        # 'quarter' is used as the version name
-        generate_data_layout_version_sql(stats, quarter)
+        generate_data_layout_version_sql(stats, version)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--feed_ids', type = str, nargs='+')
-    parser.add_argument('--quarter', type = str)
+    parser.add_argument('--version', type = str)
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)
     parser.add_argument('--stats', nargs = '+', default = None)

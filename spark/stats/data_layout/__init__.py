@@ -1,7 +1,6 @@
 """
     Data layout package
 """
-
 from spark.stats.data_layout.sql_writer import create_runnable_sql_file
 
 from ..models.layout import (
