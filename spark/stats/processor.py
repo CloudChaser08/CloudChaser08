@@ -171,7 +171,7 @@ def run_top_values(provider_conf, df_provider):
     )
 
     return [
-        r.copy_with(count=r.count * multiplier) for r in results
+        r.copy_with(count=int(r.count * multiplier)) for r in results
     ]
 
 def run_key_stats(provider_conf, start_date, end_date, df_provider):

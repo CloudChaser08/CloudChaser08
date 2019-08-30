@@ -95,8 +95,9 @@ def write_summary_file_to_s3(stats, version):
     output_file = 'output/{}/{}/{}'.format(datafeed_id, version, filename)
 
     try:
-        os.makedirs(output_dir)
-    except:
+        os.makedirs(os.path.dirname(output_file))
+    except OSError:
+        # version_name directory already exists, which isn't a problem
         pass
 
     with open(output_file, 'w+') as summary:
