@@ -11,7 +11,7 @@ import time
 import datetime
 
 def _apply_to_all_columns(f, df):
-    return df.select(*map(f, df.columns))
+    return df.select(*[f(c) for c in df.columns])
 
 
 def nullify(df, null_vals=None, preprocess_func=lambda c: c):
@@ -24,8 +24,9 @@ def nullify(df, null_vals=None, preprocess_func=lambda c: c):
     if "NULL" not in null_vals:
         null_vals.add("NULL")
 
+    do_preprocess = udf(preprocess_func)
     def convert_to_null(column_name):
-        return when(upper(udf(preprocess_func)(col(column_name))).isin(null_vals), lit(None)) \
+        return when(upper(do_preprocess(col(column_name))).isin(null_vals), lit(None)) \
             .otherwise(col(column_name)).alias(column_name)
 
     return _apply_to_all_columns(convert_to_null, df)
@@ -34,10 +35,7 @@ def nullify(df, null_vals=None, preprocess_func=lambda c: c):
 def trimmify(df):
     "Trim all string columns"
     def get_type(col_name):
-        return str(filter(
-            lambda f: f.name == col_name,
-            df.schema.fields
-        )[0].dataType)
+        return str([f for f in df.schema.fields if f.name == col_name][0].dataType)
 
     def trim_col(column_name):
         if get_type(column_name) == 'StringType':

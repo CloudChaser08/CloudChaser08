@@ -63,17 +63,17 @@ def run(spark, runner, month, test=False):
         pharmacy_prelim_part_files_cmd = ['hadoop', 'fs', '-ls', '-R', pharmacy_prelim.replace('hdfs://', '')]
         enrollment_part_files_cmd = ['hadoop', 'fs', '-ls', '-R', enrollment_outpath.replace('hdfs://', '')]
 
-    part_files = subprocess.check_output(pharmacy_final_part_files_cmd).strip().split("\n")
+    part_files = subprocess.check_output(pharmacy_final_part_files_cmd).decode().strip().split("\n")
     prefix = 'pharmacyclaims_{}_final'.format(month_final)
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
         normalized_records_unloader.mk_move_file(prefix, test)
     )
-    part_files = subprocess.check_output(pharmacy_prelim_part_files_cmd).strip().split("\n")
+    part_files = subprocess.check_output(pharmacy_prelim_part_files_cmd).decode().strip().split("\n")
     prefix = 'pharmacyclaims_{}_prelim'.format(month_prelim)
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
         normalized_records_unloader.mk_move_file(prefix, test)
     )
-    part_files = subprocess.check_output(enrollment_part_files_cmd).strip().split("\n")
+    part_files = subprocess.check_output(enrollment_part_files_cmd).decode().strip().split("\n")
     prefix = 'enrollmentrecords_{}'.format(month_prelim)
     spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
         normalized_records_unloader.mk_move_file(prefix, test)

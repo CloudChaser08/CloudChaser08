@@ -1,4 +1,5 @@
 from pyspark.sql.types import *
+from spark.common.schema import Schema
 
 schema_v2 = StructType([
     StructField('record_id', LongType(), True),
@@ -1078,3 +1079,36 @@ schema_v8 = StructType([
     StructField('emr_link_text',                      StringType(),  True),
     StructField('logical_delete_reason',              StringType(),  True)
 ])
+
+
+output_folder = '2018-06-06/'
+data_type = 'medicalclaims'
+provider_partition_column = 'part_provider'
+date_partition_column = 'part_best_date'
+schemas = {
+    'schema_v2': Schema(name='schema_v2',
+                        schema_structure=schema_v2,
+                        output_folder='2017-02-24/',
+                        data_type=data_type,
+                        provider_partition_column=provider_partition_column,
+                        date_partition_column=date_partition_column),
+    'schema_v4': Schema(name='schema_v4',
+                        schema_structure=schema_v4,
+                        output_folder=output_folder,
+                        data_type=data_type,
+                        provider_partition_column=provider_partition_column,
+                        date_partition_column=date_partition_column),
+    'schema_v6': Schema(name='schema_v6',
+                        schema_structure=schema_v6,
+                        output_folder=output_folder,
+                        data_type=data_type,
+                        provider_partition_column=provider_partition_column,
+                        date_partition_column=date_partition_column),
+    'schema_v8': Schema(name='schema_v8',
+                        schema_structure=schema_v8,
+                        output_folder=output_folder,
+                        data_type=data_type,
+                        provider_partition_column=provider_partition_column,
+                        date_partition_column=date_partition_column)
+}
+

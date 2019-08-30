@@ -12,8 +12,8 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
-import load_transactions
-from load_transactions import Schema as transactions_schema
+from spark.providers.mckesson_macro_helix.pharmacyclaims import load_transactions
+from spark.providers.mckesson_macro_helix.pharmacyclaims.load_transactions import Schema as transactions_schema
 
 FEED_ID = '51'
 VENDOR_ID = '86'

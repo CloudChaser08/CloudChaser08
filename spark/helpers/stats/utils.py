@@ -17,7 +17,7 @@ def select_distinct_values_from_column(column_name):
     '''
     def out(df):
         is_not_null = lambda c: col(c).isNotNull() & (trim(col(c)) != '')
-        non_distinct_columns = list(filter(lambda x: x != column_name, df.columns))
+        non_distinct_columns = [x for x in df.columns if x != column_name]
         # Nullify all possible "empty" values
         mapped_df = df.withColumn(column_name, col(column_name))
         for c in non_distinct_columns:

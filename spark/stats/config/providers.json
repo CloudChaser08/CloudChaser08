@@ -182,7 +182,8 @@
             "key_stats"         : true,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "earliest_date"     : "2014-01-01"
+            "earliest_date"     : "2014-01-01",
+            "index_null_dates"  : true
         },
         {
             "name"              : "allscripts",

@@ -33,7 +33,7 @@ def test_init(spark):
 
 
 def test_duplicates_removed():
-    unique_claim_ids = set(filter(lambda row: row.claim_id, results))
+    unique_claim_ids = set([row for row in results if row.claim_id])
     assert len(unique_claim_ids) == len(results)
 
 

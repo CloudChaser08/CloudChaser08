@@ -11,7 +11,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.constants as constants
 from pyspark.sql.types import StringType, StructType, StructField, ArrayType
 import pyspark.sql.functions as F
-import transactions_lhv1, transactions_lhv2
+from spark.providers.liquidhub.custom import transactions_lhv1, transactions_lhv2
 import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
 import json
@@ -90,7 +90,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
             StructField('brand', StringType(), True),
             StructField('manufacturer', StringType(), True),
         ] + [
-            StructField('filler_' + str(i), StringType(), True) for i in xrange(1, 8)
+            StructField('filler_' + str(i), StringType(), True) for i in range(1, 8)
         ] + [
             StructField('weak_match', StringType(), True),
             StructField('custom_hv_id', StringType(), True),

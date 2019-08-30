@@ -11,7 +11,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.constants as constants
 from pyspark.sql.types import StringType, StructType, StructField
 from pyspark.sql.functions import udf, lit
-import transactions
+from spark.providers.haystack.custom import transactions
 import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
 import uuid

@@ -23,14 +23,14 @@ def test_init(spark):
         results[g] = spark['sqlContext'].table('haystack_deliverable').collect()
 
 def test_hvid_obfuscation():
-    assert filter(lambda r: r.hvid is not None and r.hvid != 'HVID', results[GROUPS[0]])[0] \
+    assert [r for r in results[GROUPS[0]] if r.hvid is not None and r.hvid != 'HVID'][0] \
         .hvid == str(obfuscate_hvid('650226624', 'hvid265'))
 
 def test_temporary_id():
-    assert filter(lambda r: r.hvid is not None and r.hvid != 'HVID', results[GROUPS[0]])[0] \
+    assert [r for r in results[GROUPS[0]] if r.hvid is not None and r.hvid != 'HVID'][0] \
         .temporary_id is None
 
-    assert len(filter(lambda r: r.hvid is None, results[GROUPS[0]])[0]
+    assert len([r for r in results[GROUPS[0]] if r.hvid is None][0]
             .temporary_id) == 36
 
 def test_header_row():

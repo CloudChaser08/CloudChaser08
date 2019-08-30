@@ -59,7 +59,6 @@ def get_provider_config(sql_context, providers_conf_file, feed_id):
     # Gets the provider config for only this feed
     provider_conf = _extract_provider_conf(feed_id, provider_file_json)
 
-
     # Gets the provider config for only this feed
     if provider_conf.datatype == 'emr':
         provider_conf = provider_conf.copy_with(

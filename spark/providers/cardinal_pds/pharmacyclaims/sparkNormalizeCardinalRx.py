@@ -2,7 +2,7 @@
 import argparse
 from datetime import datetime, timedelta
 import subprocess
-from pyspark.sql.functions import lit, md5
+from pyspark.sql.functions import lit, md5, col
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
@@ -119,6 +119,12 @@ LOCATION '{}'
         subprocess.check_call(['rm', '-rf', deliverable_path])
     else:
         subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', deliverable_path])
+
+    tbl = spark.table('pharmacyclaims_common_model')
+    (
+        tbl.select(*[col(c).cast('string').alias(c) for c in tbl.columns])
+            .createOrReplaceTempView('pharmacyclaims_common_model_strings')
+    )
 
     # Create deliverable for Cardinal including all rows
     runner.run_spark_script('create_cardinal_deliverable.sql', [

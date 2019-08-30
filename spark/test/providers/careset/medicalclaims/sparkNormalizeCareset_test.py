@@ -57,12 +57,12 @@ def test_procedure_code_is_not_null():
 
 
 def test_bad_npi_code_is_null_in_target():
-    bad_row = filter(lambda x: x.procedure_code == '0001E', results)[0]
+    bad_row = [x for x in results if x.procedure_code == '0001E'][0]
     assert bad_row.prov_rendering_npi is None
 
 
 def test_prov_rendering_npi_is_not_null():
-    for r in filter(lambda x: x.procedure_code != '0001E', results):
+    for r in [x for x in results if x.procedure_code != '0001E']:
         assert r.prov_rendering_npi is not None
 
 

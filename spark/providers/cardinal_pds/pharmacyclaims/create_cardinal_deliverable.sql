@@ -128,6 +128,6 @@ CREATE TABLE cardinal_deliverable
     other_payer_coverage_code,
     logical_delete_reason,
     tenant_id -- 05/30 Added at Cardinal's request
-FROM pharmacyclaims_common_model
+FROM pharmacyclaims_common_model_strings
     DISTRIBUTE BY hvid;
 SET spark.sql.shuffle.partitions={partitions};

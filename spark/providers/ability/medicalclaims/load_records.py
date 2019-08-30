@@ -27,8 +27,8 @@ def load(runner, input_path_prefix, product, file_date, test=False):
         { 'table' : 'transactional_claimaffiliation', 'prefix' : 'vwclaimaffiliation'}
     ]
 
-    for c in xrange(len(conf)):
-        conf[c]['input_path'] = input_path_prefix + conf[c]['prefix'] + '*'
+    for conf_entry in conf:
+        conf_entry['input_path'] = input_path_prefix + conf_entry['prefix'] + '*'
 
     if product == 'ap' and file_date <= '2017-02-15':
         conf[-1][input_path] = CLAIM_AFFILIATION_FIX_FILE

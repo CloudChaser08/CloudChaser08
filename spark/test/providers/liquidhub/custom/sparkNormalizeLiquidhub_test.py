@@ -31,25 +31,25 @@ def test_init(spark):
 
 def test_hvid_obfuscation():
     # Manufacturer is Amgen, salt is just 'LHv2'
-    assert filter(lambda r: r.source_patient_id == 'claim-1', results[GROUPS[2]])[0] \
+    assert [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-1'][0] \
         .hvid == str(obfuscate_hvid('206845800', 'LHv2'))
 
     # Manufacturer is not Amgen, salt is a combination of 'LHv2' and manufacturer name
 
     # Manufacturer name in file content
-    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[2]])[0] \
+    assert [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-2'][0] \
         .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'NOVARTIS'.lower()))
-    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[0]])[0] \
+    assert [r for r in results[GROUPS[0]] if r.source_patient_id == 'claim-2'][0] \
         .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'NOVARTIS'.lower()))
 
     # Manufacturer name in file file
-    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[3]])[0] \
+    assert [r for r in results[GROUPS[3]] if r.source_patient_id == 'claim-2'][0] \
         .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'Manufacturer1'.lower()))
-    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[1]])[0] \
+    assert [r for r in results[GROUPS[1]] if r.source_patient_id == 'claim-2'][0] \
         .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'Manufacturer1'.lower()))
 
 def test_multimatch_candidates_present():
-    claim3 = filter(lambda r: r.source_patient_id == 'claim-3', results[GROUPS[2]])[0]
+    claim3 = [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-3'][0]
     candidates = json.loads(claim3.matching_meta)
     assert sorted(candidates, key=lambda x: x[0]) == \
             [
@@ -61,13 +61,13 @@ def test_multimatch_candidates_present():
             ]
 
 def test_extact_match_candidates_empty():
-    claim8 = filter(lambda r: r.source_patient_id == 'claim-8', results[GROUPS[2]])[0]
+    claim8 = [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-8'][0]
     assert 'matching_meta' in claim8
     assert claim8.matching_meta == None
 
 def test_candidate_hvid_obfuscation():
-    claim4 = filter(lambda r: r.source_patient_id == 'claim-4', results[GROUPS[2]])[0]
-    claim4_candidate_hvids = map(lambda x: x[0], json.loads(claim4.matching_meta))
+    claim4 = [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-4'][0]
+    claim4_candidate_hvids = [x[0] for x in json.loads(claim4.matching_meta)]
     assert str(obfuscate_hvid('36024084', 'LHv2')).lower() in claim4_candidate_hvids
 
 def test_header_row():
@@ -77,15 +77,15 @@ def test_header_row():
 
 def test_manufacturer_column():
     # Manufacturer name in file content
-    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[2]])[0] \
+    assert [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-2'][0] \
         .manufacturer == "NOVARTIS"
-    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[0]])[0] \
+    assert [r for r in results[GROUPS[0]] if r.source_patient_id == 'claim-2'][0] \
         .manufacturer == "NOVARTIS"
 
     # Manufacturer name in file file
-    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[3]])[0] \
+    assert [r for r in results[GROUPS[3]] if r.source_patient_id == 'claim-2'][0] \
         .manufacturer == "Manufacturer1"
-    assert filter(lambda r: r.source_patient_id == 'claim-2', results[GROUPS[1]])[0] \
+    assert [r for r in results[GROUPS[1]] if r.source_patient_id == 'claim-2'][0] \
         .manufacturer == "Manufacturer1"
 
 def test_file_name():

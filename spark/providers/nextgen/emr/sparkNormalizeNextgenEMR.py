@@ -13,9 +13,9 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 from spark.helpers.privacy.common import Transformer, TransformFunction
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
-import load_transactions
-import prepare_demographics
-import deduplicate_transactions
+from spark.providers.nextgen.emr import load_transactions
+from spark.providers.nextgen.emr import prepare_demographics
+from spark.providers.nextgen.emr import deduplicate_transactions
 from spark.helpers.privacy.emr import                   \
     encounter as priv_encounter,                        \
     clinical_observation as priv_clinical_observation,  \
@@ -28,12 +28,12 @@ from spark.helpers.privacy.emr import                   \
     vital_sign as priv_vital_sign
 from spark.common.emr.clinical_observation import schema_v4 as clinical_observation_schema
 from spark.common.emr.diagnosis import schema_v5 as diagnosis_schema
-from spark.common.emr.encounter import schema_v4 as encounter_schema
+from spark.common.emr.encounter import schema_v9 as encounter_schema
 from spark.common.emr.lab_order import schema_v3 as lab_order_schema
-from spark.common.emr.lab_result import schema_v4 as lab_result_schema
+from spark.common.emr.lab_result import schema_v8 as lab_result_schema
 from spark.common.emr.medication import schema_v4 as medication_schema
-from spark.common.emr.procedure import schema_v9 as procedure_schema
-from spark.common.emr.provider_order import schema_v4 as provider_order_schema
+from spark.common.emr.procedure import schema_v11 as procedure_schema
+from spark.common.emr.provider_order import schema_v9 as provider_order_schema
 from spark.common.emr.vital_sign import schema_v4 as vital_sign_schema
 
 import pyspark.sql.functions as F

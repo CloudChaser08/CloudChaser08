@@ -209,12 +209,12 @@ def test_emr_year_over_year_long(spark):
     union_results = stats_runner.run(spark['spark'], spark['sqlContext'],
                                      start_date, end_date, union_provider_config)
 
-    assert sorted(enc_results.results.year_over_year) == [
+    assert sorted(enc_results.results.year_over_year, key=lambda r: r.year) == [
         YearOverYearResult(count=1, year=2015),
         YearOverYearResult(count=1, year=2016),
         YearOverYearResult(count=1, year=2017)
     ]
-    assert sorted(union_results.results.year_over_year) == [
+    assert sorted(union_results.results.year_over_year, key=lambda r: r.year) == [
         YearOverYearResult(count=1, year=2016),
         YearOverYearResult(count=1, year=2017)
     ]
@@ -224,7 +224,7 @@ def test_emr_year_over_year_long(spark):
     # (and this table has less data), this means that the encounter
     # table is used for enc_results, and the union table is used for
     # union_results.
-    assert sorted(enc_results.results.longitudinality) == [
+    assert sorted(enc_results.results.longitudinality, key=lambda r: r.average) == [
         LongitudinalityResult(
             average=1, duration='0 months', std_dev=0, value=2
         ),

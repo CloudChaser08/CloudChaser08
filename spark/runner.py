@@ -46,7 +46,7 @@ class Runner:
         content = ''
         with open(script) as inf:
             content = inf.read()
-        for i in xrange(len(variables)):
+        for i in range(len(variables)):
             # special variable
             # expected value is a list of column names and data types
             # [['column1', 'string'], ['column2', 'int'], ...]
@@ -59,7 +59,7 @@ class Runner:
             elif len(variables[i]) != 3 or variables[i][2]:
                 variables[i][1] = "'" + variables[i][1] + "'"
         k_vars = {
-            variables[i][0]: variables[i][1] for i in xrange(len(variables))
+            variables[i][0]: variables[i][1] for i in range(len(variables))
         }
         content = content.format(**k_vars)
         for statement in content.split(';'):

@@ -90,7 +90,7 @@ def test_pharmacyclaims_extract(spark):
         == [('prescribing_npi1', '59572063106'), ('prescribing_npi2', '59572063255')]
 
     hash_generator = hashlib.md5()
-    hash_generator.update("hvid-1" + "hvidHV242")
+    hash_generator.update("hvid-1".encode('UTF-8') + "hvidHV242".encode('UTF-8'))
     intended_hvid = hash_generator.hexdigest()
 
     for res in pharmacy_results:

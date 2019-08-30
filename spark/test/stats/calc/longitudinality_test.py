@@ -31,22 +31,31 @@ def _get_results(dataframe, provider_conf):
 
 
 def test_num_of_months_rows_are_correct(results):
-    months_rows = filter(lambda x: x.duration.endswith('months'), results)
-    assert len(months_rows) == 2
+    assert len(_get_field_values(results, 'months')) == 2
 
 
 def test_num_of_years_rows_are_correct(results):
-    years_rows = filter(lambda x: x.duration.endswith('years'), results)
-    assert len(years_rows) == 2
+    assert len(_get_field_values(results, 'years')) == 2
 
 
 def test_num_of_patients_per_group_correct(results):
-    one_months = filter(lambda x: x.duration.endswith('1 months'), results)[0]
-    two_years = filter(lambda x: x.duration.endswith('2 years'), results)[0]
-    forty_one_years = filter(lambda x: x.duration.endswith('41 years'), results)[0]
-    forty_two_years = filter(lambda x: x.duration.endswith('42 years'), results)
+    assert _get_field_val(results, '1 months') == 1
+    assert _get_field_val(results, '2 years') == 1
+    assert _get_field_val(results, '41 years') == 1
+    assert not _get_field_values(results, '42 years') # should get minimized
 
-    assert one_months.value == 1
-    assert two_years.value == 1
-    assert forty_one_years.value == 1
-    assert len(forty_two_years) == 0 # should get minimized
+
+def _get_field_val(results, duration):
+    vals = _get_field_values(results, duration)
+    if len(vals) == 1:
+        return vals[0]
+
+    raise ValueError(
+        '{} results with a duration ending in {}'.format(len(vals), duration)
+    )
+
+
+def _get_field_values(results, duration):
+    return [
+        res.value for res in results if res.duration.endswith(duration)
+    ]

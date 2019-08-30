@@ -36,7 +36,10 @@ order by 1
 
 
 spark = SparkSession.builder.master("yarn").appName("marketplace-pull-loinc").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
-
+try:
+    basestring
+except:
+    basestring = str
 
 def pull_loinc():
     with open('marketplace_lab.psv', 'w') as ndc_out:

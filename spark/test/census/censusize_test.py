@@ -40,7 +40,12 @@ def test_subclass_not_found_error(patch_spark_init, monkeypatch):
     with pytest.raises(AttributeError) as err:
         censusize.main('2018-01-01', census_module='spark.test.resources.census.empty_module')
 
-    assert err.value.message == "Module spark.test.resources.census.empty_module does not contain a CensusDriver subclass"
+    try:
+        msg = err.value.message
+    except AttributeError:
+        msg = str(err.value)
+
+    assert msg == "Module spark.test.resources.census.empty_module does not contain a CensusDriver subclass"
 
 @pytest.mark.usefixtures("patch_spark_init")
 def test_step_order(patch_spark_init, monkeypatch):
@@ -77,7 +82,12 @@ def test_driver_with_extra_params(patch_spark_init):
     with pytest.raises(KeyError) as err:
         censusize.main('2018-01-01', census_module='spark.test.resources.census.extra_params_module')
 
-    assert 'nonstandard_param' in err.value.message
+    try:
+        msg = err.value.message
+    except AttributeError:
+        msg = str(err.value)
+
+    assert 'nonstandard_param' in msg
 
 @pytest.mark.usefixtures("patch_spark_init")
 def test_all_param_driver_runs(patch_spark_init, monkeypatch):

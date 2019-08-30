@@ -7,6 +7,10 @@ from pyspark.sql.functions import col, lit, udf
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.file_utils as file_utils
 
+try:
+    unicode
+except:
+    unicode = str
 
 @pytest.mark.usefixtures("spark")
 def test_trimmify(spark):
@@ -14,13 +18,13 @@ def test_trimmify(spark):
     
     # Include columns with various types for testing that schema is not changed
     schema_to_use = StructType([
-		StructField('test_strings', StringType(), True),
-		StructField('test_dates', DateType(), True),
-		StructField('test_ints', IntegerType(), True),
-		StructField('test_doubles', DoubleType(), True),
-		StructField('test_floats', FloatType(), True),
-		StructField('test_arrays', ArrayType(IntegerType()), True)
-	     ])    
+                StructField('test_strings', StringType(), True),
+                StructField('test_dates', DateType(), True),
+                StructField('test_ints', IntegerType(), True),
+                StructField('test_doubles', DoubleType(), True),
+                StructField('test_floats', FloatType(), True),
+                StructField('test_arrays', ArrayType(IntegerType()), True)
+             ])    
     
     rdd = spark['spark'].sparkContext.parallelize([
         [' trim this', datetime.date(2016, 1, 1), 1, 1.1, 1.11, [1]],
@@ -46,13 +50,13 @@ def test_nullify(spark):
     
     # Include columns with various types for testing that schema is not changed
     schema_to_use = StructType([
-			StructField('test_strings', StringType(), True),
-			StructField('test_dates', DateType(), True),
-			StructField('test_ints', IntegerType(), True),
-			StructField('test_doubles', DoubleType(), True),
-			StructField('test_floats', FloatType(), True),
-			StructField('test_arrays', ArrayType(IntegerType()), True)
-		    ])
+                        StructField('test_strings', StringType(), True),
+                        StructField('test_dates', DateType(), True),
+                        StructField('test_ints', IntegerType(), True),
+                        StructField('test_doubles', DoubleType(), True),
+                        StructField('test_floats', FloatType(), True),
+                        StructField('test_arrays', ArrayType(IntegerType()), True)
+                    ])
 
     rdd = spark['spark'].sparkContext.parallelize([
         [None,                datetime.date(2012, 1, 1), 1, 1.1, 1.11, [1]],
@@ -63,7 +67,7 @@ def test_nullify(spark):
     ])
 
     df = spark['spark'].createDataFrame(rdd, schema=schema_to_use)
-	
+        
     schema_before = df.schema
     nullified_with_func = postprocessor.nullify(df, ['NULL', 'THIS IS ALSO NULL'], lambda c: c.upper() if c and type(c) is unicode else None)
     schema_after = nullified_with_func.schema
@@ -83,10 +87,10 @@ def test_default_nullify(spark):
     "Ensure column's with 'NULL' are always nullified by default"
     
     rdd = spark['spark'].sparkContext.parallelize([
-	['NULL'],
-	['not null'],
-	['null'],
-	['Null']
+        ['NULL'],
+        ['not null'],
+        ['null'],
+        ['Null']
     ])
     
     df = spark['spark'].createDataFrame(rdd)
@@ -120,10 +124,10 @@ def test_apply_date_cap(spark):
 
     try:
         capped = postprocessor.apply_date_cap(spark['sqlContext'], 'date_col', '2016-03-15', '<feedid>', '<domain_name>')(df)
-	schema_after = capped.schema
-	assert schema_before == schema_after
+        schema_after = capped.schema
+        assert schema_before == schema_after
 
-	capped = capped.collect()
+        capped = capped.collect()
 
         for row in capped:
             if row.row_id in [1, 4]:
@@ -180,10 +184,10 @@ def test_apply_whitelist(spark):
 
     try:
         whitelisted = postprocessor.apply_whitelist(spark['sqlContext'], 'whitelist_col', '<domain_name>')(df)
-	schema_after = whitelisted.schema
-	assert schema_before == schema_after
+        schema_after = whitelisted.schema
+        assert schema_before == schema_after
 
-	whitelisted = whitelisted.collect()
+        whitelisted = whitelisted.collect()
         for row in whitelisted:
             if row.row_id in [2, 3, 4]:
                 assert not row.whitelist_col

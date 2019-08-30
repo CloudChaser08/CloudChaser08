@@ -28,4 +28,4 @@ def linked_and_unlinked_diagnoses(diags, pointers):
         if d is not None and d not in diag_priority:
             diag_priority[d] = None # diagnoses without priority
 
-    return res + diag_priority.items()
+    return res + list(diag_priority.items())

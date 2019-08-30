@@ -1,0 +1,1 @@
+SELECT * from test_claims LIMIT 1

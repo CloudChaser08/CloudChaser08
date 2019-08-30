@@ -49,15 +49,15 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
             raw_payload = postprocessor.add_null_column(k)(raw_payload)
 
     # remove hvid columns missing from the payload
-    relevant_hvid_columns = filter(lambda c: c in raw_payload.columns, HVID)
+    relevant_hvid_columns = [c for c in HVID if c in raw_payload.columns]
 
     if not relevant_hvid_columns:
         logging.warning("No HVID columns found in this payload.")
         final_payload = postprocessor.add_null_column('hvid')(raw_payload)
     else:
         final_payload = raw_payload.select([
-            coalesce(*map(lambda x: col(x), relevant_hvid_columns)).alias('hvid')
-        ] + map(lambda x: col(x), total_attrs))
+            coalesce(*[col(x) for x in relevant_hvid_columns]).alias('hvid')
+        ] + [col(x) for x in total_attrs])
 
     if load_file_name:
         final_payload = final_payload.withColumn('input_file_name', input_file_name())

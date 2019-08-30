@@ -138,4 +138,4 @@ def _transform(transformer):
 
 
 def filter(df, additional_transformer=None):
-    return df.select(*map(_transform(column_transformer.overwrite(additional_transformer)), df.columns))
+    return df.select(*[_transform(column_transformer.overwrite(additional_transformer))(c) for c in df.columns])

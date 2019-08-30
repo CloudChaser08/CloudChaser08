@@ -38,7 +38,7 @@ def test_init(spark):
 
 def test_date_parsing():
     "Ensure that dates are correctly parsed"
-    sample_row = filter(lambda r: r.claim_id == 'prescription-key-0', unrestricted_results)[0]
+    sample_row = [r for r in unrestricted_results if r.claim_id == 'prescription-key-0'][0]
 
     assert sample_row.date_service == datetime.date(2011, 1, 30)
     assert sample_row.date_authorized == datetime.date(2011, 1, 30)
@@ -47,8 +47,8 @@ def test_date_parsing():
 
 def test_transaction_code_vendor():
     "Ensure that dates are correctly parsed"
-    sample_row_orig = filter(lambda r: r.claim_id == 'prescription-key-1', unrestricted_results)[0]
-    sample_row_rebill = filter(lambda r: r.claim_id == 'prescription-key-5', unrestricted_results)[0]
+    sample_row_orig = [r for r in unrestricted_results if r.claim_id == 'prescription-key-1'][0]
+    sample_row_rebill = [r for r in unrestricted_results if r.claim_id == 'prescription-key-5'][0]
 
     assert sample_row_orig.transaction_code_vendor == 'Original'
     assert sample_row_rebill.transaction_code_vendor == 'Rebilled'
@@ -59,7 +59,7 @@ def test_claim_rejected():
             'prescription-key-6', 'prescription-key-7',
             'prescription-key-8', 'prescription-key-9'
     ]:
-        assert filter(lambda r: r.claim_id == k, unrestricted_results)[0] \
+        assert [r for r in unrestricted_results if r.claim_id == k][0] \
             .logical_delete_reason == 'Claim Rejected'
 
     for k in [
@@ -67,7 +67,7 @@ def test_claim_rejected():
             'prescription-key-2', 'prescription-key-3',
             'prescription-key-4'
     ]:
-        assert filter(lambda r: r.claim_id == k, unrestricted_results)[0] \
+        assert [r for r in unrestricted_results if r.claim_id == k][0] \
             .logical_delete_reason != 'Claim Rejected'
 
 
@@ -78,38 +78,38 @@ def test_ndc_codes_populated():
 
 def test_unrestricted_count():
     assert len(unrestricted_results) == 10
-    assert map(lambda r: r.claim_id, unrestricted_results) == ['prescription-key-0', 'prescription-key-1', 'prescription-key-2',
-                                                               'prescription-key-3', 'prescription-key-4', 'prescription-key-5',
-                                                               'prescription-key-6', 'prescription-key-7', 'prescription-key-8',
-                                                               'prescription-key-9']
+    assert [r.claim_id for r in unrestricted_results] == ['prescription-key-0', 'prescription-key-1', 'prescription-key-2',
+                                                          'prescription-key-3', 'prescription-key-4', 'prescription-key-5',
+                                                          'prescription-key-6', 'prescription-key-7', 'prescription-key-8',
+                                                          'prescription-key-9']
 
 
 def test_restricted_count():
     assert len(restricted_results) == 12
-    assert map(lambda r: r.claim_id, restricted_results) == ['prescription-key-0', 'prescription-key-1', 'prescription-key-2',
-                                                             'prescription-key-3', 'prescription-key-4', 'prescription-key-5',
-                                                             'prescription-key-6', 'prescription-key-7', 'prescription-key-8',
-                                                             'prescription-key-9', 'res-prescription-key-10', 'res-prescription-key-11']
+    assert [r.claim_id for r in restricted_results] == ['prescription-key-0', 'prescription-key-1', 'prescription-key-2',
+                                                        'prescription-key-3', 'prescription-key-4', 'prescription-key-5',
+                                                        'prescription-key-6', 'prescription-key-7', 'prescription-key-8',
+                                                        'prescription-key-9', 'res-prescription-key-10', 'res-prescription-key-11']
 
 
 def test_prescription_number_hash():
     # assert that prescription-key-5 had the correct rx_number
     # MD5(PRESCRIPTIONNUMBER) == '2eef6c6aa75adcbd0c2df418c5838d91'
-    assert filter(lambda r: r.claim_id == 'prescription-key-5', restricted_results)[0].rx_number == '2eef6c6aa75adcbd0c2df418c5838d91'
+    assert [r for r in restricted_results if r.claim_id == 'prescription-key-5'][0].rx_number == '2eef6c6aa75adcbd0c2df418c5838d91'
 
     # assert that all of the other rx_number values are null
-    for r in filter(lambda r: r.claim_id != 'prescription-key-5', restricted_results):
+    for r in [r for r in restricted_results if r.claim_id != 'prescription-key-5']:
         assert not r.rx_number
 
 
 def test_no_empty_hvjoinkeys():
     # prescription-key-12 has a newline in it
-    assert len(filter(lambda r: r.claim_id == 'prescription-key-12' or r.claim_id == 'line', restricted_results)) == 0
+    assert len([r for r in restricted_results if r.claim_id == 'prescription-key-12' or r.claim_id == 'line']) == 0
 
 
 def test_output():
     # ensure both provider dirs are created (filtering out hive staging dirs)
-    assert sorted(filter(lambda x: not x.startswith('.hive-staging'), os.listdir(file_utils.get_abs_path(__file__, './resources/output/')))) \
+    assert sorted([x for x in os.listdir(file_utils.get_abs_path(__file__, './resources/output/')) if not x.startswith('.hive-staging')]) \
         == sorted(['part_provider=mckesson', 'part_provider=mckesson_res'])
 
 
@@ -121,8 +121,8 @@ def test_unrestricted_mode(spark):
     new_results = spark['sqlContext'].sql('select * from unrestricted_pharmacyclaims_common_model').collect()
     for field in unrestricted_results[0].asDict().keys():
         if field != 'record_id':
-            assert map(lambda res: res[field], unrestricted_results) == \
-                map(lambda res: res[field], new_results)
+            assert [res[field] for res in unrestricted_results] == \
+                [res[field] for res in new_results]
 
 
 def test_restricted_mode(spark):
@@ -131,8 +131,8 @@ def test_restricted_mode(spark):
     new_results = spark['sqlContext'].sql('select * from restricted_pharmacyclaims_common_model').collect()
     for field in restricted_results[0].asDict().keys():
         if field != 'record_id':
-            assert map(lambda res: res[field], restricted_results) == \
-                map(lambda res: res[field], new_results)
+            assert [res[field] for res in restricted_results] == \
+                [res[field] for res in new_results]
 
 
 def test_cleanup(spark):

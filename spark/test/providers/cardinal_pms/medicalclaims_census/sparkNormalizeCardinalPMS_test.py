@@ -4,7 +4,7 @@ import shutil
 from datetime import date
 
 import spark.helpers.file_utils as file_utils
-import spark.providers.cardinal_pms.medicalclaims.sparkNormalizeCardinalPMS as cardinal_pms
+import spark.providers.cardinal_pms.medicalclaims_census.sparkNormalizeCardinalPMS as cardinal_pms
 
 script_path = __file__
 results = []
@@ -32,16 +32,16 @@ def test_init(spark):
 
 
 def test_claim_levels_all_populated():
-    assert len(filter(lambda r: r.service_line_number is None, results)) == 5
+    assert len([r for r in results if r.service_line_number is None]) == 5
 
 
 def test_service_line_levels_all_populated():
-    assert len(filter(lambda r: r.service_line_number is not None, results)) == 31
+    assert len([r for r in results if r.service_line_number is not None]) == 31
 
 
 def test_claim_levels_are_unique():
-    claim_diags = filter(lambda r: r.service_line_number is None, results)
-    unique_claim_diags = set(map(lambda r: (r.claim_id, r.diagnosis_code), claim_diags))
+    claim_diags = [r for r in results if r.service_line_number is None]
+    unique_claim_diags = set([(r.claim_id, r.diagnosis_code) for r in claim_diags])
 
     assert len(claim_diags) == len(unique_claim_diags)
 

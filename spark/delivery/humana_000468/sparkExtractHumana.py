@@ -12,10 +12,10 @@ from pyspark.sql.types import StructType, StructField, StringType
 import pyspark.sql.functions as F
 import boto3
 
-import extract_medicalclaims
-import extract_pharmacyclaims
-import extract_enrollmentrecords
-import prepare_emr
+from spark.delivery.humana_000468 import extract_medicalclaims
+from spark.delivery.humana_000468 import extract_pharmacyclaims
+from spark.delivery.humana_000468 import extract_enrollmentrecords
+from spark.delivery.humana_000468 import prepare_emr
 
 def get_extract_summary(df):
     return df.withColumn('claim',
@@ -27,7 +27,7 @@ def get_extract_summary(df):
         .groupBy('data_vendor', 'humana_group_id').count()
 
 def get_part_file_path(list_cmd, directory):
-    for row in subprocess.check_output(list_cmd + [directory]).split('\n'):
+    for row in subprocess.check_output(list_cmd + [directory]).decode().split('\n'):
         file_path = row.split(' ')[-1].replace('//', '/')
         prefix = (directory + 'part-00000')
         if file_path.startswith(prefix):
@@ -102,15 +102,19 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
 
     valid_groups, invalid_groups = group_validity_check(group_dfs, group_ids)
 
-    all_patients = reduce(lambda x, y: x.union(y),
-        [
+    all_patient_dfs = [
             payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True,
                     partitions=10) \
                 .select('hvid', 'matchStatus') \
                 .withColumn('humana_group_id', F.lit(group_id))
             for group_id in group_ids
         ]
-    ).repartition(5 if test else 100).checkpoint().cache()
+
+    all_patients = all_patient_dfs[0]
+    for patients_df in all_patient_dfs[1:]:
+        all_patients = all_patients.union(patients_df)
+
+    all_patients.repartition(100).checkpoint().cache()
     matched_patients = all_patients.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'").cache()
 
     if today.day > 15:

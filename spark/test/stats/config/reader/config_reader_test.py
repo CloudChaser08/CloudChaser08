@@ -31,7 +31,6 @@ def _mock_get_table():
 
 def test_get_table(get_table):
     """ Tests gets columns for the provider """
-
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
     sql_context = Mock()
     conf = config_reader.get_provider_config(sql_context, conf_file, '1')
@@ -76,4 +75,4 @@ def test_missing_provider():
         config_reader.get_provider_config(Mock(), conf_file, 'lol')
 
     exception = e_info.value
-    assert exception.message == 'Feed lol is not in the providers config file'
+    assert str(exception) == 'Feed lol is not in the providers config file'

@@ -30,33 +30,33 @@ def test_init(spark):
 
 
 def test_legacy_date_parsing():
-    assert filter(lambda r: r.claim_id == 'patient-6_ods-6', legacy_results)[0] \
+    assert [r for r in legacy_results if r.claim_id == 'patient-6_ods-6'][0] \
         .date_service == datetime.date(2005, 4, 20)
-    assert filter(lambda r: r.claim_id == 'patient-7_ods-7', legacy_results)[0] \
+    assert [r for r in legacy_results if r.claim_id == 'patient-7_ods-7'][0] \
         .date_service == datetime.date(2017, 3, 17)
 
 
 def test_date_parsing():
-    assert filter(lambda r: r.claim_id == 'patient-0_deid-0', results)[0] \
+    assert [r for r in results if r.claim_id == 'patient-0_deid-0'][0] \
         .date_service == datetime.date(2017, 3, 25)
 
 
 def test_labtests_translated():
-    assert len(filter(
-        lambda r: r.claim_id == 'patient-1_deid-1' and r.test_ordered_name == 'IHC_ERCC1',
-        results
-    )) == 1
+    assert len([
+        r for r in results
+        if r.claim_id == 'patient-1_deid-1' and r.test_ordered_name == 'IHC_ERCC1'
+    ]) == 1
 
 
 def test_ngs_offering():
-    assert len(filter(
-        lambda r: r.claim_id == 'patient-0_deid-0' and r.test_ordered_name == 'NGS_OFFERING_X',
-        results
-    )) == 1
-    assert len(filter(
-        lambda r: r.claim_id == 'patient-6_deid-6' and r.test_ordered_name == 'NGS_OFFERING_A',
-        results
-    )) == 1
+    assert len([
+        r for r in results
+        if r.claim_id == 'patient-0_deid-0' and r.test_ordered_name == 'NGS_OFFERING_X'
+    ]) == 1
+    assert len([
+        r for r in results
+        if r.claim_id == 'patient-6_deid-6' and r.test_ordered_name == 'NGS_OFFERING_A'
+    ]) == 1
 
 
 def test_cleanup(spark):

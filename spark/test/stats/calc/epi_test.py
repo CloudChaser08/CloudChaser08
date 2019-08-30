@@ -26,6 +26,13 @@ def test_extra_separators_added_in_field(results):
 
 
 def test_list_populated_correctly(results):
-    assert filter(lambda x: x.field == '0-17', results)[0].value == 515151
-    assert filter(lambda x: x.field == '18-44', results)[0].value == 2727
-    assert filter(lambda x: x.field == '45-64;extra woops!', results)[0].value == 8
+    assert _get_field_val(results, '0-17') == 515151
+    assert _get_field_val(results, '18-44') == 2727
+    assert _get_field_val(results, '45-64;extra woops!') == 8
+
+def _get_field_val(results, field):
+    for res in results:
+        if res.field == field:
+            return res.value
+
+    raise ValueError('No result with field {}'.format(field))

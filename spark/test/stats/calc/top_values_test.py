@@ -45,7 +45,7 @@ def test_top_values_created_for_each_column(results_no_distinct, results_distinc
 
 
 def test_threshold(results_threshold, results_distinct_threshold):
-    assert sorted(results_threshold) == [
+    assert sorted(results_threshold, key=lambda r: r.field) == [
         TopValuesResult(field='a', count=2, percentage=0.5, value='a'),
         TopValuesResult(field='b', count=2, percentage=0.5, value='b'),
         TopValuesResult(field='c', count=2, percentage=0.5, value='s')
@@ -57,8 +57,12 @@ def test_threshold(results_threshold, results_distinct_threshold):
 
 
 def test_duplicate_values_not_counted_twice_when_distinct_column_is_not_none(results_distinct, results_no_distinct):
-    assert filter(lambda x: x.field == 'a' and x.value == 'a', results_no_distinct)[0].count == 2
-    assert filter(lambda x: x.field == 'a' and x.value == 'a', results_distinct)[0].count == 1
+    assert [
+        x for x in results_no_distinct if x.field == 'a' and x.value == 'a'
+    ][0].count == 2
+    assert [
+        x for x in results_distinct if x.field == 'a' and x.value == 'a'
+    ][0].count == 1
 
 
 def test_no_top_values_to_calculate(spark):

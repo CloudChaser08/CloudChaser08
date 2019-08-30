@@ -18,10 +18,6 @@ def test_init(spark):
     results = spark['sqlContext'].sql('select * from nextgen_crosswalk').collect()
 
 
-def test_something():
-    print results
-
-
 # There are 10 rows in source
 # 2 rows have the same hvJoinKey
 # 1 row did not match
@@ -31,9 +27,9 @@ def test_that_crosswalk_dedupes():
 
 
 def test_that_crosswalk_dedupes_by_selecting_row_with_highest_match_score():
-    duplicated_row = filter(lambda x: x.nextgen_id == 'NG_12345_00008989', results)[0]
+    duplicated_row = [x for x in results if x.nextgen_id == 'NG_12345_00008989'][0]
     assert duplicated_row.hvid == '202460434'
 
 
 def test_that_crosswalk_drops_rows_that_have_null_hvid():
-    assert len(filter(lambda x: x.nextgen_id == 'NG_12345_00008102', results)) == 0
+    assert len([x for x in results if x.nextgen_id == 'NG_12345_00008102']) == 0

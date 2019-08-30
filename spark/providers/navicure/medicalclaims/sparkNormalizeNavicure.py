@@ -1,5 +1,6 @@
 """Normalization routine for Navicure"""
 import argparse
+from functools import reduce
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.medicalclaims_common_model import schema_v8 as medicalclaims_schema

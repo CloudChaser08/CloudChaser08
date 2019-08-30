@@ -1,5 +1,5 @@
 SELECT
-    '04'                                    AS mdl_vrsn_num,
+    '09'                                    AS mdl_vrsn_num,
     ord.dataset                             AS data_set_nm,
     ord.reportingenterpriseid               AS vdr_org_id,
     COALESCE(dem.hvid, concat_ws('_', '118',
@@ -19,6 +19,11 @@ SELECT
     extract_date(
         substring(ord.orderdate, 1, 8), '%Y%m%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
         )                                   AS prov_ord_dt,
+    CASE
+        WHEN LENGTH(REGEXP_REPLACE(ord.orderinghcpnpi, '[^0-9]', '')) == 10
+        THEN REGEXP_REPLACE(ord.orderinghcpnpi, '[^0-9]', '')
+        ELSE ''
+    END AS ordg_prov_npi,
     ord.orderinghcpprimarytaxonomy          AS ordg_prov_nucc_taxnmy_cd,
     ord.orderinghcpzipcode                  AS ordg_prov_zip_cd,
     ref1.gen_ref_cd                         AS prov_ord_ctgy_cd,

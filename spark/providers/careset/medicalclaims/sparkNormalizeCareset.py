@@ -50,7 +50,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     max_date = date_input
 
-    import load_transactions
+    from spark.providers.careset.medicalclaims import load_transactions
     load_transactions.load(runner, input_path)
 
     normalized_df = runner.run_spark_script(

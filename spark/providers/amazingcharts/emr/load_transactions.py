@@ -58,7 +58,7 @@ def load(spark, runner, table_locs, batch_date, test=False):
         except AnalysisException:
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),
-                schema=StructType(map(lambda x: StructField(x, StringType()), TABLE_COLS[table]))
+                schema=StructType([StructField(x, StringType()) for x in TABLE_COLS[table]])
             )
             if tn == 'd_lab_directory' and 'provider_key' not in df.columns:
                 df = df.withColumn('provider_key', lit(None).cast('string'))

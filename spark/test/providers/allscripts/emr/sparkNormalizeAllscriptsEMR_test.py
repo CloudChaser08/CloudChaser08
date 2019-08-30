@@ -145,16 +145,16 @@ def test_diag_cd_explosion():
 
 
 def test_lab_ord_explosion():
-    assert sorted([
+    assert set([
         (res.hv_lab_ord_id, res.lab_ord_diag_cd, res.lab_ord_diag_cd_qual) for res in lab_order_results
-    ]) == [
+    ]) == set([
         ('25_gen2patientid-0_orderid-6_1', None, '02'),
         ('25_gen2patientid-0_orderid-6_1', 'V90', '01'),
         ('25_gen2patientid-1_orderid-7_1', None, '02'),
         ('25_gen2patientid-1_orderid-7_1', 'V90', '01'),
         ('25_gen2patientid-2_orderid-8_1', None, '02'),
         ('25_gen2patientid-2_orderid-8_1', 'V90', '01')
-    ]
+    ])
 
 
 def test_lab_result_rec_stat_cd():
@@ -183,10 +183,10 @@ def test_medctn_alt_substc_cd():
 
 
 def test_proc_explosion():
-    assert sorted(
+    assert set(
         [(res.hv_proc_id, res.proc_cd, res.proc_cd_qual, res.proc_diag_cd, res.proc_diag_cd_qual)
          for res in procedure_results]
-    ) == [
+    ) == set([
         ('25_gen2patientid-0_orderid-0_1', '0000', 'HCPCS', None, '02'),
         ('25_gen2patientid-0_orderid-0_1', '0000', 'HCPCS', 'V90', '01'),
         ('25_gen2patientid-0_orderid-0_1', '36475', 'CPTCODE', None, '02'),
@@ -206,31 +206,31 @@ def test_proc_explosion():
         ('25_gen2patientid-2_orderid-2_1', '36475', 'CPTCODE', 'V90', '01'),
         ('25_gen2patientid-2_prbid-2_0', None, None, 'V700', '01'),
         ('25_gen2patientid-2_vacid-2_17194404700007', '0', 'VACCINES.CVX', None, None)
-    ]
+    ])
 
 
 def test_prov_ord_explosion():
-    assert sorted(
+    assert set(
         [(res.hv_prov_ord_id, res.prov_ord_diag_cd, res.prov_ord_diag_cd_qual)
          for res in provider_order_results]
-    ) == [
+    ) == set([
         ('25_gen2patientid-0_orderid-3_1', None, '02'),
         ('25_gen2patientid-0_orderid-3_1', 'V90', '01'),
         ('25_gen2patientid-1_orderid-4_1', None, '02'),
         ('25_gen2patientid-1_orderid-4_1', 'V90', '01'),
         ('25_gen2patientid-2_orderid-5_1', None, '02'),
         ('25_gen2patientid-2_orderid-5_1', 'V90', '01')
-    ]
+    ])
 
 def test_vit_sign_backfill():
-    assert sorted(
+    assert set(
         [(res.hv_vit_sign_id, res.vit_sign_msrmt, res.vit_sign_uom)
          for res in vital_sign_results]
-    ) == [
+    ) == set([
         ('25_gen2patientid-0_vitid-0_0', '64', 'INCHES'), # First one is "backfilled"
         ('25_gen2patientid-1_vitid-1_0', '63', 'INCHES'),
         ('25_gen2patientid-2_vitid-2_0', '63', 'INCHES')
-    ]
+    ])
 
 def test_cleanup(spark):
     cleanup(spark)

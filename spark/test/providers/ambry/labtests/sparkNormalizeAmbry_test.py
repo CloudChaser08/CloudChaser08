@@ -44,11 +44,11 @@ def test_number_of_target_rows_correct_length():
 
 
 def test_number_of_target_rows_per_source_row_correct_length():
-    assert len(filter(lambda x: x.claim_id == 'a', results)) == 6
-    assert len(filter(lambda x: x.claim_id == 'b', results)) == 5
-    assert len(filter(lambda x: x.claim_id == 'c', results)) == 1
-    assert len(filter(lambda x: x.claim_id == 'd', results)) == 1
-    assert len(filter(lambda x: x.claim_id == 'e', results)) == 1
+    assert len([x for x in results if x.claim_id == 'a']) == 6
+    assert len([x for x in results if x.claim_id == 'b']) == 5
+    assert len([x for x in results if x.claim_id == 'c']) == 1
+    assert len([x for x in results if x.claim_id == 'd']) == 1
+    assert len([x for x in results if x.claim_id == 'e']) == 1
 
 
 def test_test_battery_name_field_is_populated():
@@ -57,7 +57,7 @@ def test_test_battery_name_field_is_populated():
 
 
 def test_test_ordered_name_is_populated():
-    assert len(filter(lambda r: r.test_ordered_name is not None, results)) == 12
+    assert len([r for r in results if r.test_ordered_name is not None]) == 12
 
 
 def test_cleanup(spark):

@@ -12,8 +12,8 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
-import normalize
-import load_transactions
+from spark.providers.genoa.pharmacyclaims import normalize
+from spark.providers.genoa.pharmacyclaims import load_transactions
 
 def run(spark, runner, date_input, test = False, airflow_test = False):
     script_path = __file__

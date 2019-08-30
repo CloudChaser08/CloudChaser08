@@ -150,10 +150,12 @@ def test_save(test_driver, monkeypatch):
     df = test_driver._spark.sql("SELECT '1' as hvid, '2' as rowid")
     test_driver.save(df, date(2018, 1, 1))
 
-    with gzip.open('/tmp/2018/01/01/20180101_response.gz') as fin:
+    with gzip.open('/tmp/2018/01/01/20180101_response.gz', 'rt') as fin:
         content = fin.readlines()
 
     row           = content[0].strip()
+    print(row)
+    print(type(row))
     (hvid, rowid) = row.split('|')
 
     # Should only be 1 row of data

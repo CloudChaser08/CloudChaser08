@@ -1,6 +1,6 @@
 import argparse
 import csv
-import StringIO
+import io
 import subprocess
 import gzip
 import bz2
@@ -130,7 +130,7 @@ def run(spark, dryrun):
     res = obj.get()
 
     # Put the contents into a file-like object
-    csv_file = StringIO.StringIO()
+    csv_file = io.StringIO()
     csv_file.write(res['Body'].read())
     csv_file.seek(0)
 

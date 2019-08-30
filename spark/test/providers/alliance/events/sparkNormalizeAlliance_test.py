@@ -81,13 +81,13 @@ def test_init(spark):
 
 
 def test_that_event_category_fields_are_nullified_when_naisc_code_starts_with_813():
-    row_of_interest = filter(lambda x: x.hvid == '7', results)[0]
+    row_of_interest = [x for x in results if x.hvid == '7'][0]
     assert row_of_interest.event_category_code is None
 
 
 def test_that_event_category_fields_are_populated_properly():
-    has_cat = filter(lambda x: x.event_category_code is not None, results)
-    no_cat = filter(lambda x: x.event_category_code is None, results)
+    has_cat = [x for x in results if x.event_category_code is not None]
+    no_cat = [x for x in results if x.event_category_code is None]
 
     for r in has_cat:
         assert r.event_category_code_qual == 'NAICS_CODE'
@@ -99,8 +99,8 @@ def test_that_event_category_fields_are_populated_properly():
 
 
 def test_that_event_category_flag_fields_are_populated_properly():
-    has_flag = filter(lambda x: x.event_category_flag is not None, results)
-    no_flag = filter(lambda x: x.event_category_flag is None, results)
+    has_flag = [x for x in results if x.event_category_flag is not None]
+    no_flag = [x for x in results if x.event_category_flag is None]
 
     for r in has_flag:
         assert r.event_category_flag_qual == 'CNP_IND'
@@ -110,7 +110,7 @@ def test_that_event_category_flag_fields_are_populated_properly():
 
 
 def test_that_naics_codes_not_on_whitelist_are_nullified():
-    row_of_interest = filter(lambda x: x.hvid == '8', results)[0]
+    row_of_interest = [x for x in results if x.hvid == '8'][0]
     assert row_of_interest.event_category_code is None
 
 

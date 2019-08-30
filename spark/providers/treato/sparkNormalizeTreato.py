@@ -73,7 +73,7 @@ def _enumerate_range(range_string):
 
         # this range spans across letter prefixes
         if range_string[0] != range_string.split('-')[1][0]:
-            char_range = range(ord(range_string[0]), ord(range_string.split('-')[1][0]) + 1)
+            char_range = list(range(ord(range_string[0]), ord(range_string.split('-')[1][0]) + 1))
             beginning = [
                 range_string[0] + str(range_element).zfill(2) for range_element in range(int(range_string.split('-')[0][1:]), 100)
             ]

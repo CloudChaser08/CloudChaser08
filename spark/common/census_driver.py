@@ -12,7 +12,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.records_loader as records_loader
 from spark.runner import Runner, PACKAGE_PATH
 from spark.spark_setup import init
-from std_census import records_schemas, matching_payloads_schemas
+from .std_census import records_schemas, matching_payloads_schemas
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 TEST = 'test'
