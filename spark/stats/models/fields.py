@@ -3,6 +3,7 @@
 """
 
 from functools import partial
+from six import string_types
 
 import attr
 
@@ -49,13 +50,13 @@ def create_model_map_field(model_cls, optional=False):
 def create_required_str_field():
     """ Creates a field that requires a string value """
     return attr.ib(
-        validator=attr.validators.instance_of(basestring)
+        validator=attr.validators.instance_of(string_types)
     )
 
 def create_optional_str_field():
     """ Creates a field that requires a string value, but defaults to None """
     return attr.ib(
-        validator=optional_instance_of(basestring),
+        validator=optional_instance_of(string_types),
         default=None
     )
 

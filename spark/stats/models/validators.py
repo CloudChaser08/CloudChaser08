@@ -3,6 +3,7 @@
 """
 
 from datetime import datetime
+from six import string_types
 
 import attr
 
@@ -32,5 +33,5 @@ def is_list_of_strs(_, __, value):
     if not isinstance(value, list):
         raise ValueError('{} is not a list'.format(value))
     for item in value:
-        if not isinstance(item, basestring):
+        if not isinstance(item, string_types):
             raise ValueError('{} is not a string'.format(item))
