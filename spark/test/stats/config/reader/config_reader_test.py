@@ -53,12 +53,9 @@ def test_gets_emr_columns(get_table):
 
 def test_datatype_null():
     """ Tests raises an exception when datatype is null or missing """
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError, match='datatype'):
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
         config_reader.get_provider_config(Mock(), conf_file, '3')
-
-    exception = e_info.value
-    assert 'datatype' in exception.message
 
 
 def test_datatype_missing():
