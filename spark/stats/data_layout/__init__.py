@@ -105,7 +105,7 @@ def get_top_values_for_column(results, col_name):
 
 def _format_top_value(top_value_result):
     return '{value} ({total_count}:{percentage})'.format(
-        value=top_value_result.value.encode('utf-8'),
+        value=top_value_result.value,
         total_count=top_value_result.count,
         percentage=top_value_result.percentage
     )
