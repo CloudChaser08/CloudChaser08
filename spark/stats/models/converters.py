@@ -31,11 +31,7 @@ def model_list_converter(model_cls):
     """
     _model_converter = model_converter(model_cls)
     def _converter(val):
-        if not val:
-            return []
-        if isinstance(val, list):
-            return [_model_converter(item) for item in val]
-        raise ValueError('Expecting a list of values')
+        return convert_model_list(_model_converter, val)
     return _converter
 
 
@@ -56,3 +52,12 @@ def model_map_converter(model):
             }
         raise ValueError('Expecting a mapping')
     return _converter
+
+
+def convert_model_list(converter, val):
+    """ Runs the model list conversion """
+    if not val:
+        return []
+    if isinstance(val, list):
+        return [converter(item) for item in val]
+    raise ValueError('Expecting a list of values')
