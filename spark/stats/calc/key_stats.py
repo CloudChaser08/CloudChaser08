@@ -92,64 +92,64 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
     key_stats = [
         GenericStatsResult(
             field='total_patient',
-            value=total_patient
+            value=int(total_patient)
         ),
         GenericStatsResult(
             field='total_24_month_patient',
-            value=total_24_month_patient
+            value=int(total_24_month_patient)
         ),
         GenericStatsResult(
             field='daily_avg_patient',
-            value=total_patient / days
+            value=int(total_patient / days)
         ),
         GenericStatsResult(
             field='monthly_avg_patient',
-            value=((total_patient / days) * 365) / 12
+            value=int(((total_patient / days) * 365) / 12)
         ),
         GenericStatsResult(
             field='yearly_avg_patient',
-            value=(total_patient / days) * 365
+            value=int((total_patient / days) * 365)
         ),
         GenericStatsResult(
             field='total_row',
-            value=total_row
+            value=int(total_row)
         ),
         GenericStatsResult(
             field='total_24_month_row',
-            value=total_24_month_row
+            value=int(total_24_month_row)
         ),
         GenericStatsResult(
             field='daily_avg_row',
-            value=total_row / days
+            value=int(total_row / days)
         ),
         GenericStatsResult(
             field='monthly_avg_row',
-            value=((total_row / days) * 365) / 12
+            value=int(((total_row / days) * 365) / 12)
         ),
         GenericStatsResult(
             field='yearly_avg_row',
-            value=(total_row / days) * 365
+            value=int((total_row / days) * 365)
         ),
 
         GenericStatsResult(
             field='total_record',
-            value=total_record
+            value=int(total_record)
         ),
         GenericStatsResult(
             field='total_24_month_record',
-            value=total_24_month_record
+            value=int(total_24_month_record)
         ),
         GenericStatsResult(
             field='daily_avg_record',
-            value=total_record / days
+            value=int(total_record / days)
         ),
         GenericStatsResult(
             field='monthly_avg_record',
-            value=((total_record / days) * 365) / 12
+            value=int(((total_record / days) * 365) / 12)
         ),
         GenericStatsResult(
             field='yearly_avg_record',
-            value=(total_record / days) * 365
+            value=int((total_record / days) * 365)
         ),
     ]
 
