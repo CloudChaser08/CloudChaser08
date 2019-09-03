@@ -52,7 +52,7 @@ def model_map_converter(model):
             return {}
         if isinstance(val, dict):
             return {
-                key: _model_converter(item) for key, item in val.iteritems()
+                key: _model_converter(item) for key, item in val.items()
             }
         raise ValueError('Expecting a mapping')
     return _converter
