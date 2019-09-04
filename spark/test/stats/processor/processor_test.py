@@ -122,7 +122,7 @@ def test_no_fill_rate(prov_conf_no_stats, df_provider):
 def test_run_top_values(prov_conf_no_rf, df_provider):
     """ Tests runs top values """
     res = processor.run_top_values(prov_conf_no_rf, df_provider)
-    assert res == [
+    assert sorted(res) == sorted([
         TopValuesResult(
             field='col_2',
             value='b',
@@ -141,13 +141,13 @@ def test_run_top_values(prov_conf_no_rf, df_provider):
             count=7,
             percentage=0.7778
         )
-    ]
+    ])
 
 
 def test_run_top_values_distinct(prov_conf, df_provider):
     """ Tests runs top values with claim_id as distinct column """
     res = processor.run_top_values(prov_conf, df_provider)
-    assert res == [
+    assert sorted(res) == sorted([
         TopValuesResult(
             field='col_2',
             value='b',
@@ -166,7 +166,7 @@ def test_run_top_values_distinct(prov_conf, df_provider):
             count=3,
             percentage=1.0
         )
-    ]
+    ])
 
 
 def test_run_top_values_off(prov_conf_no_stats, df_provider):
@@ -202,9 +202,9 @@ def test_run_longitudinality(prov_conf, df_provider):
 
 def test_key_stats(prov_conf, df_provider):
     """ Tests runs key stats """
-    assert processor.run_key_stats(
+    assert sorted(processor.run_key_stats(
         prov_conf, '1900-01-01', '2018-01-01', df_provider
-    ) == [
+    )) == sorted([
         GenericStatsResult(field='total_patient', value=2),
         GenericStatsResult(field='total_24_month_patient', value=3),
         GenericStatsResult(field='daily_avg_patient', value=0),
@@ -220,7 +220,7 @@ def test_key_stats(prov_conf, df_provider):
         GenericStatsResult(field='daily_avg_record', value=0),
         GenericStatsResult(field='monthly_avg_record', value=0),
         GenericStatsResult(field='yearly_avg_record', value=0)
-    ]
+    ])
 
 
 def test_key_stats_off(prov_conf_no_stats, df_provider):
