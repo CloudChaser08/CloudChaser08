@@ -2,4 +2,5 @@
 # "sudo yum install postgresql-devel" on Amazon EMR
 psycopg2
 boto3
+awscli
 attrs==19.1.0
