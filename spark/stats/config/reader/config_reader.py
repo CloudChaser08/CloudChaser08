@@ -1,39 +1,11 @@
+"""
+    Reads in Provider configuration that is required to run stats
+"""
 import json
-import logging
-import os
-from contextlib import closing
 
-import boto3
-import psycopg2
-from spark.helpers.file_utils import get_abs_path
-from spark.stats.config.dates import dates as provider_dates
+from spark.stats.models import Provider
+from ...datamodel import get_table_metadata
 
-SSM = boto3.client('ssm')
-
-SSM_PARAM_NAME = 'dev-marketplace-rds_ro_db_conn'
-PG_CONN_DETAILS = json.loads(
-    SSM.get_parameters(
-        Names=[SSM_PARAM_NAME],
-        WithDecryption=True
-    )['Parameters'][0]['Value']
-)
-
-PG_HOST = PG_CONN_DETAILS['host']
-PG_PASSWORD = PG_CONN_DETAILS['password']
-PG_DB = PG_CONN_DETAILS['database']
-PG_USER = PG_CONN_DETAILS['user']
-
-# map from emr datatype (table) name to the name of each datatype in
-# the marketplace db
-emr_datatype_name_map = {
-    'emr_enc': 'Encounter',
-    'emr_diag': 'Diagnosis',
-    'emr_clin_obsn': 'Clinical Observation',
-    'emr_proc': 'Procedure',
-    'emr_prov_ord': 'Provider Order',
-    'emr_lab_test': 'Lab Test',
-    'emr_medctn': 'Medication'
-}
 
 def _get_config_from_json(filename):
     '''
@@ -49,152 +21,50 @@ def _get_config_from_json(filename):
         return data
 
 
-def _get_config_from_db(query):
-    '''
-    Runs query on marketplace prod and returns a results dict.
-    Input:
-        - query: The query to run
-    Output:
-        - data: the config represented as a Python dict
-    '''
-    conn = psycopg2.connect(
-        host=PG_HOST,
-        database=PG_DB,
-        user=PG_USER,
-        password=PG_PASSWORD
+def _extract_provider_conf(feed_id, provider_config_json):
+    """
+        Extract a single Provider object from the providers JSON file that
+        has a matching feed_id, raising an error if that provider does not
+        exist in the file
+    """
+
+    for provider in provider_config_json['providers']:
+        if provider.get('datafeed_id') == feed_id:
+            return Provider(**provider)
+
+    raise ValueError(
+        'Feed {} is not in the providers config file'.format(feed_id)
     )
 
-    with closing(conn.cursor()) as cursor:
-        cursor.execute(query)
-        results = cursor.fetchall()
-    return dict([
-        (res[0], {'field_id': res[1], 'sequence': res[2]})
-        for res in results
-    ])
 
-
-def _extract_provider_conf(feed_id, providers_conf):
-    '''
-    Get a specific providers config from the config file with all
-    provider configs.
-    Input:
-        - feed_id: The id of the provider feed
-        - providers_conf: A Python dict containing configs
-                          for every provider
-    Output:
-        - _ : A Python dict with the config for 'feed_id'
-    '''
-
-    conf = [x for x in providers_conf['providers'] if x['datafeed_id'] == feed_id]
-    if len(conf) == 0:
-        raise Exception('Feed {} is not in the providers config file'.format(feed_id))
-    return conf[0]
-
-
-def _get_top_values_columns(datafeed_id):
-
-    get_columns_sql = """
-        select f.physical_name as name, f.id as field_id, f.sequence as sequence
-            from marketplace_datafield f
-            join marketplace_datatable t on t.id = f.datatable_id
-            join marketplace_datamodel m on m.id = t.datamodel_id
-            join marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
-        where dm.datafeed_id = {} and m.is_supplemental = 'f' and f.top_values= 't';
-    """.format(datafeed_id)
-
-    return _get_config_from_db(get_columns_sql)
-
-
-def _get_fill_rate_columns(datafeed_id, emr_datatype=None):
-    get_columns_sql = """
-        select f.physical_name as name, f.id as field_id, f.sequence as sequence
-            from marketplace_datafield f
-            join marketplace_datatable t on t.id = f.datatable_id
-            join marketplace_datamodel m on m.id = t.datamodel_id
-            join marketplace_datafeed_datamodels dm on dm.datamodel_id = m.id
-        where dm.datafeed_id = {} and m.is_supplemental = 'f' {};
-    """.format(
-        datafeed_id,
-        "and t.name = '{}'".format(emr_datatype_name_map[emr_datatype]) if emr_datatype else ''
+def _fill_table_meta(conf, sql_context):
+    """ Fills in all columns for the model """
+    return conf.copy_with(
+        table=get_table_metadata(sql_context, conf.datatype)
     )
 
-    return _get_config_from_db(get_columns_sql)
 
+def get_provider_config(sql_context, providers_conf_file, feed_id):
+    """
+        Read the providers config files and each associated stat calc config
+        file and combine them into one provider config object.
+        :param sql_context: A Spark SQLContext object
+        :param feed_id: The id of the provider feed
+        :param providers_conf_file: Absolute path of the location of the
+                                    config file with all provider configs
+        :return: A Provider config object
+    """
+    provider_file_json = _get_config_from_json(providers_conf_file)
 
-def _fill_in_dates(conf):
-    if not conf.get('date_field'):
-        conf['date_field'] = provider_dates[conf['datatype']]
+    # Gets the provider config for only this feed
+    provider_conf = _extract_provider_conf(feed_id, provider_file_json)
 
-    return conf
-
-
-def _fill_in_conf_dict(conf, feed_id, providers_conf_file):
-    # configure stats whose configurations come from the marketplace db
-    if conf.get('fill_rate'):
-        conf['fill_rate_conf'] = {
-            "columns": _get_fill_rate_columns(
-                conf['datafeed_id'], conf['datatype'] if conf['datatype'].startswith('emr') else None
-            )
-        }
-
-    if conf.get('top_values'):
-        conf['top_values_conf'] = {
-            "columns": _get_top_values_columns(conf['datafeed_id']),
-            "max_values": 10
-        }
-
-    # epi doesn't require any additional configurations
-    if conf.get('epi_calcs'):
-        conf['epi_calcs_conf'] = {}
-
-    # configure stats whose configurations do not come from the marketplace db
-    no_db_stat_calcs = ['key_stats', 'longitudinality', 'year_over_year']
-    for calc in no_db_stat_calcs:
-        if not conf.get(calc):
-            continue
-
-        if calc + '_conf_file' not in conf:
-            logging.info('No config for {} found in feed {} config, falling back to default.'.format(calc, feed_id))
-            conf_file_loc = get_abs_path(providers_conf_file,
-                                        conf['datatype'] + '/' + calc + '.json')
-            conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
-        elif conf[calc + '_conf_file']:
-            conf_file_loc = get_abs_path(providers_conf_file, conf[calc + '_conf_file'])
-            conf[calc + '_conf'] = _get_config_from_json(conf_file_loc)
-
-    return conf
-
-
-def get_provider_config(providers_conf_file, feed_id):
-    '''
-    Read the providers config files and each associated stat calc config file
-    and combine them into one provider config object.
-    Input:
-        - feed_id: The id of the provider feed
-        - providers_conf_file: Absolute path of the location of the
-                               config file with all provider configs.
-    Output:
-        - provider_conf: A python dict of the providers config with
-                         each associated stat calcs config embedded
-    '''
-    providers_conf = _get_config_from_json(providers_conf_file)
-
-    if 'providers' not in providers_conf:
-        raise Exception('{} does not contain providers list'.format(providers_conf))
-
-    provider_conf = _extract_provider_conf(feed_id, providers_conf)
-
-    # Check that datatype is specified
-    if 'datatype' not in provider_conf or provider_conf['datatype'] is None:
-        raise Exception('datatype is not specified for feed {}'.format(feed_id))
-    elif provider_conf['datatype'] == 'emr':
-        provider_conf['models'] = [
-            _fill_in_dates(_fill_in_conf_dict(dict(
-                list(model_conf.items()) + [('datafeed_id', provider_conf['datafeed_id'])]
-            ), feed_id, providers_conf_file))
-            for model_conf in provider_conf['models']
-        ]
+    # Gets the provider config for only this feed
+    if provider_conf.datatype == 'emr':
+        provider_conf = provider_conf.copy_with(
+            models=[_fill_table_meta(m, sql_context) for m in provider_conf.models]
+        )
     else:
-        provider_conf = _fill_in_conf_dict(provider_conf, feed_id, providers_conf_file)
+        provider_conf = _fill_table_meta(provider_conf, sql_context)
 
-    return _fill_in_dates(provider_conf)
+    return provider_conf

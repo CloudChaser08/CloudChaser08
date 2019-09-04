@@ -1,71 +1,75 @@
 import pytest
-from mock import Mock
+from mock import Mock, patch
 
 import spark.stats.config.reader.config_reader as config_reader
 from spark.helpers.file_utils import get_abs_path
-import spark.stats.config.dates as dates
-try:
-    from importlib import reload
-except:
-    pass
+from spark.stats import models
 
-@pytest.fixture(autouse=True)
-def setup_teardown():
-    old_get_fill_rate_cols_fn = config_reader._get_fill_rate_columns
-    old_provider_dates = dates.dates
+TABLE = models.TableMetadata(
+    name='tbl',
+    description='desc',
+    columns=[
+        models.Column(
+            name='col-a',
+            field_id='1',
+            sequence='1',
+            datatype='bigint',
+            description='Column A',
+            top_values=True,
+            category='Baseline',
+        )
+    ]
+)
 
-    dates.dates = {
-        'sub_conf': ['date_service']
-    }
-    reload(config_reader)
-
-    yield
-
-    config_reader._get_fill_rate_columns = old_get_fill_rate_cols_fn
-    dates.dates = old_provider_dates
+@pytest.fixture(name='get_table', autouse=True)
+def _mock_get_table():
+    with patch.object(config_reader, 'get_table_metadata') as get_cols_mock:
+        get_cols_mock.return_value = TABLE
+        yield get_cols_mock
 
 
-def test_fill_rate_get_columns():
-    config_reader._get_fill_rate_columns = Mock(return_value=["one", "two"])
+
+def test_get_table(get_table):
+    """ Tests gets columns for the provider """
+    conf_file = get_abs_path(__file__, 'resources/main_config.json')
+    sql_context = Mock()
+    conf = config_reader.get_provider_config(sql_context, conf_file, '1')
+    assert conf.table == TABLE
+    get_table.assert_called_with(
+        sql_context, 'labtests'
+    )
+
+
+def test_gets_emr_columns(get_table):
+    """ Tests gets columns for the provider """
 
     conf_file = get_abs_path(__file__, 'resources/main_config.json')
-    conf = config_reader.get_provider_config(conf_file, '1')
-    assert 'fill_rate' in conf
-    assert 'fill_rate_conf' in conf
-    assert conf['fill_rate']
-    assert conf['fill_rate_conf']
-    assert conf['fill_rate_conf'] == {"columns": ['one', 'two']}
+    sql_context = Mock()
+    conf = config_reader.get_provider_config(sql_context, conf_file, '6')
+    get_table.assert_called_with(sql_context, 'emr_clin_obsn')
+    assert not conf.table
+    assert conf.models[0].table == TABLE
 
 
-def test_does_not_read_sub_conf_when_null():
-    conf_file = get_abs_path(__file__, 'resources/main_config.json')
-    conf = config_reader.get_provider_config(conf_file, '2')
-    assert 'fill_rate' in conf
-    assert conf['fill_rate'] == None
-
-
-def test_exception_raised_when_provider_conf_datatype_is_null():
-    with pytest.raises(Exception) as e_info:
+def test_datatype_null():
+    """ Tests raises an exception when datatype is null or missing """
+    with pytest.raises(ValueError, match='datatype'):
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
-        conf = config_reader.get_provider_config(conf_file, '3')
-
-    exception = e_info.value
-    assert str(exception).startswith('datatype is not specified for feed 3')
+        config_reader.get_provider_config(Mock(), conf_file, '3')
 
 
-def test_exception_raised_when_provider_conf_datatype_not_specified():
-    with pytest.raises(Exception) as e_info:
+def test_datatype_missing():
+    """ Tests raises an exception when datatype is missing """
+    with pytest.raises(TypeError):
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
-        conf = config_reader.get_provider_config(conf_file, '4')
-
-    exception = e_info.value
-    assert str(exception).startswith('datatype is not specified for feed 4')
+        config_reader.get_provider_config(Mock(), conf_file, '4')
 
 
-def test_exception_raised_when_provider_not_in_providers_conf_file():
-    with pytest.raises(Exception) as e_info:
+def test_missing_provider():
+    """ Tests raises an exception when provdier is not in providers file """
+    with pytest.raises(ValueError) as e_info:
         conf_file = get_abs_path(__file__, 'resources/main_config.json')
-        conf = config_reader.get_provider_config(conf_file, 'lol')
+        config_reader.get_provider_config(Mock(), conf_file, 'lol')
 
     exception = e_info.value
     assert str(exception) == 'Feed lol is not in the providers config file'

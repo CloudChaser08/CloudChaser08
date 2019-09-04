@@ -1,108 +1,150 @@
 import argparse
 import inspect
+import json
+import os
+
+import boto3
 
 import spark.spark_setup as spark_setup
 import spark.helpers.file_utils as file_utils
 import spark.stats.config.reader.config_reader as config_reader
-import spark.stats.stats_writer as stats_writer
 import spark.stats.processor as processor
+from spark.stats.data_layout import generate_data_layout_version_sql
 
-ALL_STATS = [
+from spark.stats.models.results import (
+    ProviderStatsResult,
+    StatsResult
+)
+
+ALL_STATS = {
     'key_stats', 'longitudinality', 'year_over_year', 'fill_rate', 'top_values', 'epi'
-]
-EMR_ENCOUNTER_STATS = ['longitudinality', 'year_over_year']
+}
+EMR_ENCOUNTER_STATS = {'longitudinality', 'year_over_year'}
 
-def run(spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate=ALL_STATS):
+S3_OUTPUT_BUCKET = "healthveritydev"
+S3_OUTPUT_KEY = "marketplace_stats/json/{}/{}/{}"
 
-    epi_calcs = processor.get_epi_calcs(provider_config) if 'epi' in stats_to_calculate else {}
+def run(spark, sql_context, start_date, end_date, provider_config):
+    """ Runs all stats for a provider between the start and end dates,
+        returning a result dictionary
+    """
+    df_provider = processor.DataframeProvider(
+        spark=spark,
+        sql_context=sql_context,
+        provider_conf=provider_config,
+        start_date=start_date,
+        end_date=end_date
+    )
 
-    if provider_config['datatype'] == 'emr':
-        if 'emr_enc' not in [m['datatype'] for m in provider_config['models']]:
-            emr_encounter_stats = []
-        else:
-            emr_encounter_stats = EMR_ENCOUNTER_STATS
+    # If there's an encounter model available, use that to calculate
+    # longitudinality and year over year, otherwise use the provider config
+    enc_prov_config = provider_config
+    enc_df_provider = df_provider
+    for model in provider_config.models:
+        if model.datatype == 'emr_enc':
+            enc_prov_config = provider_config.merge_provider_model(model)
+            enc_df_provider = df_provider.reconfigure(enc_prov_config)
+            break
 
-        union_level_stats = [stat for stat in stats_to_calculate if stat in provider_config and stat not in emr_encounter_stats]
-        model_level_stats = [
-            stat for stat in stats_to_calculate
-            for model_conf in provider_config['models']
-            if stat in model_conf
-        ]
-        encounter_level_stats = [
-            stat for stat in stats_to_calculate if stat in provider_config and stat in emr_encounter_stats
-        ]
-
-        model_level_marketplace_stats = dict([
-            (model_conf['datatype'], processor.run_marketplace_stats(
-                spark, sqlContext, quarter, start_date, end_date,
-                dict([it for it in list(provider_config.items()) + list(model_conf.items())]),
-                model_level_stats
-            )) for model_conf in provider_config['models']
-        ])
-        union_level_marketplace_stats = processor.run_marketplace_stats(
-            spark, sqlContext, quarter, start_date, end_date, provider_config, union_level_stats
+    # Run common stats
+    results = StatsResult(
+        epi_calcs=processor.get_epi_calcs(provider_config),
+        key_stats=processor.run_key_stats(
+            provider_config, start_date, end_date, df_provider
+        ),
+        top_values=processor.run_top_values(
+            provider_config, df_provider
+        ),
+        fill_rate=processor.run_fill_rates(
+            provider_config, df_provider
+        ),
+        longitudinality=processor.run_longitudinality(
+            enc_prov_config, end_date, enc_df_provider # use encounter config/dataframe
+        ),
+        year_over_year=processor.run_year_over_year(
+            enc_prov_config, end_date, enc_df_provider  # use encounter config/dataframe
         )
-        encounter_level_marketplace_stats = processor.run_marketplace_stats(
-            spark, sqlContext, quarter, start_date, end_date,
-            dict([it for it in list(provider_config.items()) + list([m for m in provider_config['models'] if m['datatype'] == 'emr_enc'][0].items())]),
-            encounter_level_stats
-        ) if encounter_level_stats else {}
+    )
 
-        for model_conf in provider_config['models']:
-            stats_writer.write_to_s3(
-                model_level_marketplace_stats[model_conf['datatype']],
-                dict([it for it in list(provider_config.items()) + list(model_conf.items())]),
-                quarter
-            )
-        stats_writer.write_to_s3(dict(
-            union_level_marketplace_stats, **dict(encounter_level_marketplace_stats, **epi_calcs)
-        ), provider_config, quarter)
-
-        stats = dict(
-            model_level_marketplace_stats, **dict(union_level_marketplace_stats, **dict(encounter_level_marketplace_stats, **epi_calcs))
+    # Calculate fill rate and top values for nested models
+    model_results = {}
+    for model in provider_config.models:
+        model_prov_config = provider_config.merge_provider_model(model)
+        model_df_provider = df_provider.reconfigure(model_prov_config)
+        model_results[model.datatype] = StatsResult(
+            fill_rate=processor.run_fill_rates(model_prov_config, model_df_provider),
+            top_values=processor.run_top_values(model_prov_config, model_df_provider)
         )
 
-    else:
-        # Calculate marketplace stats
-        marketplace_stats = processor.run_marketplace_stats(
-            spark, sqlContext, quarter, start_date, end_date, provider_config, stats_to_calculate
-        )
+    return ProviderStatsResult(
+        results=results,
+        model_results=model_results,
+        config=provider_config
+    )
 
-        stats = dict(marketplace_stats, **epi_calcs)
 
-        stats_writer.write_to_s3(stats, provider_config, quarter)
+def write_summary_file_to_s3(stats, version):
+    """
+    Upload summary json file to s3
+    """
+    summary_json = stats.to_dict()
+    summary_json['version'] = version
 
-    return stats
+    datafeed_id = stats.config.datafeed_id
+    filename = '{}_stats_summary_{}.json'.format(datafeed_id, version)
+    output_file = 'output/{}/{}/{}'.format(datafeed_id, version, filename)
+
+    try:
+        os.makedirs(os.path.dirname(output_file))
+    except OSError:
+        # version_name directory already exists, which isn't a problem
+        pass
+
+    with open(output_file, 'w+') as summary:
+        summary.write(json.dumps(summary_json))
+    boto3.client('s3').upload_file(
+        output_file,
+        S3_OUTPUT_BUCKET,
+        S3_OUTPUT_KEY.format(datafeed_id, version, filename)
+    )
 
 
 def main(args):
     # Parse out the cli args
     feed_ids = args.feed_ids
-    quarter = args.quarter
+    version = args.version
     start_date = args.start_date
     end_date = args.end_date
-    stats = args.stats
-
-    if not stats:
-        stats = ALL_STATS
+    stats = set(args.stats or ALL_STATS)
 
     for feed_id in feed_ids:
         # Get the providers config
         this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
         config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
-        provider_conf = config_reader.get_provider_config(config_file, feed_id)
 
         # set up spark
-        spark, sqlContext = spark_setup \
-                            .init('Feed {} marketplace stats'.format(feed_id))
+        spark, sql_context = spark_setup.init(
+            'Feed {} marketplace stats'.format(feed_id)
+        )
+
+        provider_conf = config_reader.get_provider_config(
+            sql_context, config_file, feed_id
+        )
 
         # Calculate stats
-        run(spark, sqlContext, quarter, start_date, end_date, provider_conf, stats)
+        stats = run(spark, sql_context, start_date, end_date, provider_conf)
+
+        #generate and write json summary to s3
+        write_summary_file_to_s3(stats, version)
+
+        # Generate SQL for new data_layout version.
+        generate_data_layout_version_sql(stats, version)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--feed_ids', type = str, nargs='+')
-    parser.add_argument('--quarter', type = str)
+    parser.add_argument('--version', type = str)
     parser.add_argument('--start_date', type = str)
     parser.add_argument('--end_date', type = str)
     parser.add_argument('--stats', nargs = '+', default = None)

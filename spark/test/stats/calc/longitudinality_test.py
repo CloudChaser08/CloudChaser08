@@ -4,19 +4,11 @@ from pyspark.sql import Row
 
 import spark.stats.calc.longitudinality as longitudinality
 
-df = None
-results = None
 
-@pytest.mark.usefixtures("spark")
-def test_init(spark):
-    global df, results
-    conf = {
-        'date_field': ['date'],
-        'longitudinality': True,
-        'earliest_date': '1975-12-01'
-    }
+@pytest.fixture(scope='module', name='dataframe')
+def _get_dataframe(spark):
     data_row = Row('coalesced_date', 'hvid', 'c', 'd', 'e')
-    df = spark['spark'].sparkContext.parallelize([
+    yield spark['spark'].sparkContext.parallelize([
         data_row('1974-12-11', 'b', 'c', 'd', 'e'),
         data_row('1975-12-11', 'b', 'c', 'd', 'e'),
         data_row('2017-11-08', 'b', 'e', 'f', 'g'),
@@ -27,26 +19,43 @@ def test_init(spark):
         data_row('2016-11-07', 'z', 'y', 'x', 'w'),
         data_row('2016-12-16', 'z', 'a', 'b', 'c')
     ]).toDF()
-    results = longitudinality.calculate_longitudinality(df, conf)
+
+@pytest.fixture(scope='module', name='results')
+def _get_results(dataframe, provider_conf):
+    conf = provider_conf.copy_with(
+        date_fields=['date'],
+        longitudinality=True,
+        earliest_date='1975-12-01'
+    )
+    yield longitudinality.calculate_longitudinality(dataframe, conf)
 
 
-def test_num_of_months_rows_are_correct():
-    months_rows = [x for x in results if x['duration'].endswith('months')]
-    assert len(months_rows) == 2
+def test_num_of_months_rows_are_correct(results):
+    assert len(_get_field_values(results, 'months')) == 2
 
 
-def test_num_of_years_rows_are_correct():
-    years_rows = [x for x in results if x['duration'].endswith('years')]
-    assert len(years_rows) == 2
+def test_num_of_years_rows_are_correct(results):
+    assert len(_get_field_values(results, 'years')) == 2
 
 
-def test_num_of_patients_per_group_correct():
-    one_months = [x for x in results if x['duration'].endswith('1 months')][0]
-    two_years = [x for x in results if x['duration'].endswith('2 years')][0]
-    forty_one_years = [x for x in results if x['duration'].endswith('41 years')][0]
-    forty_two_years = [x for x in results if x['duration'].endswith('42 years')]
+def test_num_of_patients_per_group_correct(results):
+    assert _get_field_val(results, '1 months') == 1
+    assert _get_field_val(results, '2 years') == 1
+    assert _get_field_val(results, '41 years') == 1
+    assert not _get_field_values(results, '42 years') # should get minimized
 
-    assert one_months['value'] == 1
-    assert two_years['value'] == 1
-    assert forty_one_years['value'] == 1
-    assert len(forty_two_years) == 0 # should get minimized
+
+def _get_field_val(results, duration):
+    vals = _get_field_values(results, duration)
+    if len(vals) == 1:
+        return vals[0]
+
+    raise ValueError(
+        '{} results with a duration ending in {}'.format(len(vals), duration)
+    )
+
+
+def _get_field_values(results, duration):
+    return [
+        res.value for res in results if res.duration.endswith(duration)
+    ]

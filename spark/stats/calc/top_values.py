@@ -2,6 +2,8 @@ import logging
 from functools import reduce
 from pyspark.sql.functions import col, countDistinct, lit, trim, round
 
+from ..models.results import TopValuesResult
+
 def _col_top_values(df, c, num, total, distinct_column=None):
     '''
     Calculate the top values for a given column
@@ -84,9 +86,13 @@ def calculate_top_values(df, max_top_values, distinct_column=None, threshold=0.0
         ).collect()
         i = i + BATCH_SIZE
 
-    stats = [{'column': r.name, 'value': r.col, 'count': r['count'], 'percentage': r['percentage']} for r in top_values_res]
+
+    stats = [
+        TopValuesResult(field=r.name, value=r.col, count=r['count'], percentage=r['percentage'])
+        for r in top_values_res
+    ]
 
     if threshold:
-        stats = [stat for stat in stats if stat['percentage'] >= threshold]
+        stats = [stat for stat in stats if stat.percentage >= threshold]
 
     return stats

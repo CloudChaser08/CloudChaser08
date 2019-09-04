@@ -1,6 +1,8 @@
 import datetime
 from pyspark.sql.functions import col, trim
 
+from ..models.results import GenericStatsResult
+
 def _get_row_count(df, start_date, end_date, attribute, date_col, index_null_dates=False):
     '''
     Get the row count for the attribute between the start and end date
@@ -36,10 +38,10 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
                      patient, record, and row
     '''
     date_col = 'coalesced_date'
-    index_all_dates = provider_conf.get('index_all_dates', False)
-    index_null_dates = provider_conf.get('index_null_dates')
+    index_all_dates = provider_conf.index_all_dates
+    index_null_dates = provider_conf.index_null_dates
     patient_attribute = 'hvid'
-    record_attribute = provider_conf.get('record_field', '*')
+    record_attribute = provider_conf.record_field or '*'
     row_attribute = '*'
 
     # If we are indexing all dates, then we want to ignore
@@ -88,23 +90,67 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
     days = (end_date_dt - earliest_date_dt).days
 
     key_stats = [
-        {'field': 'total_patient', 'value': total_patient},
-        {'field': 'total_24_month_patient', 'value': total_24_month_patient},
-        {'field': 'daily_avg_patient', 'value': total_patient / days},
-        {'field': 'monthly_avg_patient', 'value': ((total_patient / days) * 365) / 12},
-        {'field': 'yearly_avg_patient', 'value': (total_patient / days) * 365},
+        GenericStatsResult(
+            field='total_patient',
+            value=int(total_patient)
+        ),
+        GenericStatsResult(
+            field='total_24_month_patient',
+            value=int(total_24_month_patient)
+        ),
+        GenericStatsResult(
+            field='daily_avg_patient',
+            value=int(total_patient / days)
+        ),
+        GenericStatsResult(
+            field='monthly_avg_patient',
+            value=int(((total_patient / days) * 365) / 12)
+        ),
+        GenericStatsResult(
+            field='yearly_avg_patient',
+            value=int((total_patient / days) * 365)
+        ),
+        GenericStatsResult(
+            field='total_row',
+            value=int(total_row)
+        ),
+        GenericStatsResult(
+            field='total_24_month_row',
+            value=int(total_24_month_row)
+        ),
+        GenericStatsResult(
+            field='daily_avg_row',
+            value=int(total_row / days)
+        ),
+        GenericStatsResult(
+            field='monthly_avg_row',
+            value=int(((total_row / days) * 365) / 12)
+        ),
+        GenericStatsResult(
+            field='yearly_avg_row',
+            value=int((total_row / days) * 365)
+        ),
 
-        {'field': 'total_row', 'value': total_row},
-        {'field': 'total_24_month_row', 'value': total_24_month_row},
-        {'field': 'daily_avg_row', 'value': total_row / days},
-        {'field': 'monthly_avg_row', 'value': ((total_row / days) * 365) / 12},
-        {'field': 'yearly_avg_row', 'value': (total_row / days) * 365},
-
-        {'field': 'total_record', 'value': total_record},
-        {'field': 'total_24_month_record', 'value': total_24_month_record},
-        {'field': 'daily_avg_record', 'value': total_record / days},
-        {'field': 'monthly_avg_record', 'value': ((total_record / days) * 365) / 12},
-        {'field': 'yearly_avg_record', 'value': (total_record / days) * 365}
+        GenericStatsResult(
+            field='total_record',
+            value=int(total_record)
+        ),
+        GenericStatsResult(
+            field='total_24_month_record',
+            value=int(total_24_month_record)
+        ),
+        GenericStatsResult(
+            field='daily_avg_record',
+            value=int(total_record / days)
+        ),
+        GenericStatsResult(
+            field='monthly_avg_record',
+            value=int(((total_record / days) * 365) / 12)
+        ),
+        GenericStatsResult(
+            field='yearly_avg_record',
+            value=int((total_record / days) * 365)
+        ),
     ]
 
     return key_stats

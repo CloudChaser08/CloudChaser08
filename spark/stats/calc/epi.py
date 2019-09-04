@@ -1,5 +1,7 @@
 import boto3
 
+from ..models.results import GenericStatsResult, GenericStatsResultSet
+
 def _get_s3_file_contents(bucket, key):
     s3_client = boto3.client('s3')
     response = s3_client.get_object(
@@ -11,7 +13,7 @@ def _get_s3_file_contents(bucket, key):
 
 
 def calculate_epi(provider_conf, field):
-    feed_id = provider_conf['datafeed_id']
+    feed_id = provider_conf.datafeed_id
 
     s3_bucket = 'healthverityreleases'
     s3_key = 'PatientIntersector/hll_seq_data_store/' \
@@ -26,8 +28,11 @@ def calculate_epi(provider_conf, field):
             res = line.strip().split(';')[2:]
             value = res[0]
             output_field = ';'.join(res[1:])
-            output.append({'field': output_field, 'value': value})
+            output.append(
+                GenericStatsResult(
+                    field=output_field,
+                    value=int(value)
+                )
+            )
 
-    return output
-
-
+    return GenericStatsResultSet(results=output)

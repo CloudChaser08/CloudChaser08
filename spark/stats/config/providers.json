@@ -475,7 +475,7 @@
             "top_values"        : false,
             "longitudinality"   : true,
             "year_over_year"    : true,
-            "epi_calcs"         : null
+            "epi_calcs"         : false
         },
         {
             "name"              : "alliance",
