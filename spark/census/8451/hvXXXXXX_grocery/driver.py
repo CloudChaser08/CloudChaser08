@@ -1,8 +1,15 @@
 import os
 import re
 import subprocess
+import importlib
+import spark.helpers.payload_loader as payload_loader
+import spark.helpers.records_loader as records_loader
+
 
 from spark.common.census_driver import CensusDriver, SAVE_PATH
+
+DRIVER_MODULE_NAME = 'driver'
+SALUSV = 's3://salusv/'
 
 class Grocery8451CensusDriver(CensusDriver):
 
@@ -14,6 +21,37 @@ class Grocery8451CensusDriver(CensusDriver):
     def __init__(self, end_to_end_test=False):
         super(Grocery8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID,
                                                       end_to_end_test=end_to_end_test)
+        self._column_length = None
+
+    def load(self, batch_date, chunk_records_files=None):
+
+        records_path = self._records_path_template.format(
+            year=batch_date.year, month=batch_date.month, day=batch_date.day
+        )
+
+        matching_path = self._matching_path_template.format(
+            year=batch_date.year, month=batch_date.month, day=batch_date.day
+        )
+
+        matching_payloads_schemas_module = self.__module__.replace(DRIVER_MODULE_NAME, self._matching_payloads_module_name)
+        matching_payloads_schemas = importlib.import_module(matching_payloads_schemas_module)
+
+        # _column_length should only be set the first time load is called.
+        # This is important when chunking files.
+        if self._column_length is None:
+            self._column_length = len(self._spark.read.csv(records_path, sep='|').columns)
+
+        if self._column_length == 63:
+            records_schemas = importlib.import_module('records_schemas')
+        else:
+            records_schemas = importlib.import_module('records_schemas_v2')
+
+        if chunk_records_files:
+            records_path = SALUSV + '{' + ','.join(chunk_records_files) + '}'
+
+        records_loader.load_and_clean_all_v2(self._runner, records_path,
+                                             records_schemas, load_file_name=True)
+        payload_loader.load_all(self._runner, matching_path, matching_payloads_schemas)
 
     def transform(self):
         # By default, run_all_spark_scripts will run all sql scripts in the working directory
