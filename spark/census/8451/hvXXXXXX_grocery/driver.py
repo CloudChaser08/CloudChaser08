@@ -42,9 +42,9 @@ class Grocery8451CensusDriver(CensusDriver):
             self._column_length = len(self._spark.read.csv(records_path, sep='|').columns)
 
         if self._column_length == 63:
-            records_schemas = importlib.import_module('records_schemas')
+            records_schemas = importlib.import_module('.records_schemas', __package__)
         else:
-            records_schemas = importlib.import_module('records_schemas_v2')
+            records_schemas = importlib.import_module('.records_schemas_v2', __package__)
 
         if chunk_records_files:
             records_path = SALUSV + '{' + ','.join(chunk_records_files) + '}'
