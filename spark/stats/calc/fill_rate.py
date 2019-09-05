@@ -50,4 +50,4 @@ def calculate_fill_rate(df):
         i += BATCH_SIZE
 
 
-    return [FillRateResult(field=r.field, fill=r.fill) for r in res]
+    return [FillRateResult(field=r.field, fill=r.fill or 0.0) for r in res]

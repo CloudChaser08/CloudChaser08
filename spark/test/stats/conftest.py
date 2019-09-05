@@ -3,7 +3,6 @@
 """
 import pytest
 from mock import patch
-from attr import evolve
 from spark.stats.models.converters import convert_model_list
 from spark.stats.models import Provider
 

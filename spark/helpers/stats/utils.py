@@ -145,7 +145,7 @@ def get_emr_union(sqlContext, model_confs, provider_id):
                 FROM dw.hvm_{}
                 WHERE part_hvm_vdr_feed_id='{}'
             '''.format(
-                ','.join(model_conf['date_field']), model_conf['datatype'], provider_id
+                ','.join(model_conf.date_fields), model_conf.datatype, provider_id
             )) for model_conf in model_confs
         ]
     )

@@ -1,5 +1,6 @@
 # Requires postgres development libraries to be installed
 # "sudo yum install postgresql-devel" on Amazon EMR
-psycopg2
-boto3
+psycopg2==2.7.6
+boto3==1.9.72
+awscli==1.16.82
 attrs==19.1.0
