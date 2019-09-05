@@ -56,30 +56,33 @@ def create_mapping(spark_files, census_files, standard_files):
             _mapping[routine_name] = {}
             _mapping[routine_name]['script_path'] = script
 
-        module = script.replace('/', '.')[:-3]
-        try:
-            usage_output = subprocess.check_output(['python', '-m', module, '--help'])
-            try:
-                usage_output = usage_output.decode()
-            except (UnicodeDecodeError, AttributeError):
-                pass
-            usage_output = re.sub('[^a-zA-Z: \'\-\[\]]', '', usage_output)
-            usage_output = re.sub(' +', ' ', usage_output)
-            usage_output = re.sub('optional arguments', '', usage_output)
-
-        except subprocess.CalledProcessError:
-            usage_output = 'NA'
-
-        if len(usage_output) > 1 and usage_output[-1] == '\n':
-            usage_output = usage_output[:-1]
-        usage_pattern = 'usage:*'
-        if re.match(usage_pattern, usage_output) is None:
-            usage_output = 'NA'
-        else:
-            usage_output = usage_output.split(':')[1].strip()
-
         if routine_name:
-            _mapping[routine_name]['script_args'] = usage_output
+            if routine_name.startswith('census/'):
+                _mapping[routine_name]['script_args'] = '[--num-input-files INT] [DATE]'
+            else:
+                module = script.replace('/', '.')[:-3]
+                try:
+                    usage_output = subprocess.check_output(['python', '-m', module, '--help'])
+                    try:
+                        usage_output = usage_output.decode()
+                    except (UnicodeDecodeError, AttributeError):
+                        pass
+                    usage_output = re.sub('[^a-zA-Z: \.\'\-\[\]]', '', usage_output)
+                    usage_output = re.sub(' +', ' ', usage_output)
+                    usage_output = re.sub('optional arguments', '', usage_output)
+
+                except subprocess.CalledProcessError:
+                    usage_output = 'NA'
+
+                if len(usage_output) > 1 and usage_output[-1] == '\n':
+                    usage_output = usage_output[:-1]
+                usage_pattern = 'usage:*'
+                if re.match(usage_pattern, usage_output) is None:
+                    usage_output = 'NA'
+                else:
+                    usage_output = usage_output.split(':')[1].strip()
+
+                _mapping[routine_name]['script_args'] = usage_output
 
     return _mapping
 
@@ -129,8 +132,9 @@ def write_to_s3(_mapping):
     prefix = 'dewey'
     file_name = 'daglist.prod.txt'
     with tempfile.NamedTemporaryFile() as fp:
-        for key, value in _mapping.items():
+        for key, value in sorted(_mapping.items(), key=lambda item: item[0]):
             fp.write('{} {}\n'.format(key, value['script_args']).encode())
+        fp.flush()
         s3_client.Bucket(bucket).upload_file(fp.name, '{}/{}'.format(prefix, file_name))
 
 
