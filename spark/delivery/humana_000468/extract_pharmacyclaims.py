@@ -3,7 +3,7 @@ import pyspark.sql.functions as F
 def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table, filter_by_date_partition=False):
     claims       = runner.sqlContext.table(claims_table)
     ref_vdr_feed = runner.sqlContext.table('dw.ref_vdr_feed')
-    ref_vdr_feed = ref_vdr_feed[ref_vdr_feed.hvm_tile_nm.isin(*SUPPLIERS)]
+    ref_vdr_feed = ref_vdr_feed[ref_vdr_feed.hvm_vdr_feed_id.isin(*SUPPLIER_FEED_IDS)]
     
     # Extract conditions
     ext = claims.join(ref_vdr_feed, claims['data_feed'] == ref_vdr_feed['hvm_vdr_feed_id'], 'inner') \
@@ -163,12 +163,13 @@ EXTRACT_COLUMNS = [
     'humana_group_id'
 ]
 
-SUPPLIERS = [
-    'Private Source 17',
-    'Private Source 22',
-    'PDX, Inc.',
-    'Veradigm Health',
-    'Private Source 42'
+# Feed tile names as of 09/05
+SUPPLIER_FEED_IDS = [
+    '16', # Private Source 17
+    '36', # Private Source 22
+    '65', # PDX, Inc.
+    '25', # Veradigm Health
+    '35' # Private Source 42
 ]
 
 NULL_COLUMNS = [

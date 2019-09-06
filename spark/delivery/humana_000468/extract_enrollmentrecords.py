@@ -5,7 +5,7 @@ from datetime import timedelta
 def extract(spark, runner, hvids, timestamp, start_dt, end_dt, pharmacy_extract):
     t1 = runner.sqlContext.table('enrollmentrecords')
     t2 = runner.sqlContext.table('dw.ref_vdr_feed')
-    t2 = t2[t2.hvm_tile_nm.isin(*SUPPLIERS)]
+    t2 = t2[t2.hvm_vdr_feed_id.isin(*SUPPLIER_FEED_IDS)]
 
     date_in_range = spark.createDataFrame(
             [{'cal_date' : ((start_dt + timedelta(days=i)).isoformat())} for i in range((end_dt - start_dt).days + 1)],
@@ -42,8 +42,9 @@ EXTRACT_COLUMNS = [
     'humana_group_id'
 ]
 
-SUPPLIERS = [
-    'Private Source 17',
-    'Private Source 22',
-    'PDX, Inc.'
+# Feed tile names as of 09/05
+SUPPLIER_FEED_IDS = [
+    '61', # Private Source 17
+    '36', # Private Source 22
+    '65' # PDX, Inc.
 ]
