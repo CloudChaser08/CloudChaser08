@@ -24,7 +24,7 @@ def load(runner, input_path, s3_encounter_reference, s3_demographics_reference, 
                 F.regexp_extract('input_file_name', '(NG|HV)_LSSA_[^_]*_([^\.]*).txt', 2).alias('recorddate'),
                 F.regexp_extract('input_file_name', '((NG|HV)_LSSA_[^_]*_[^\.]*.txt)', 1).alias('dataset')
             ])) \
-            .where(F.col('tbl_type') in TABLE_TYPE[t]) \
+            .where(F.col('tbl_type').isin(*TABLE_TYPE[t])) \
             .createOrReplaceTempView(t)
 
     records_loader \
@@ -294,11 +294,11 @@ TABLE_COLUMNS = {
         'encounterdescription',
         'hcpzipcode',
         'hcpprimarytaxonomy',
+        'renderinghcpnpi',
         'reportingenterpriseid',
         'recorddate',
         'dataset',
-        'nextrecorddate',
-        'renderinghcpnpi'
+        'nextrecorddate'
     ],
     'old_demographics' : [
         'preambleformatcode',
