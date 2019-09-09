@@ -49,13 +49,15 @@ def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=No
             driver.load(batch_id, chunk_records_files=chunk_files)
             df = driver.transform()
             driver.save(df, batch_id, chunk_idx)
+            driver.copy_to_s3(batch_id)
     # -1 and 0 mean the same thing, process everything
     else:
         driver.load(batch_id)
         df = driver.transform()
         driver.save(df, batch_id)
     driver.stop_spark()
-    driver.copy_to_s3(batch_id)
+    if num_input_files <= 0:
+        driver.copy_to_s3(batch_id)
 
 
 if __name__ == "__main__":
