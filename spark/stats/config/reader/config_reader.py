@@ -3,22 +3,28 @@
 """
 import json
 
+import boto3
+
 from spark.stats.models import Provider
 from ...datamodel import get_table_metadata
 
+_S3_CLIENT = boto3.client('s3')
+_S3_BUCKET = 'healthveritydev'
+_S3_KEY = 'marketplace_stats/config/providers.json'
 
-def _get_config_from_json(filename):
-    '''
-    Reads a config file as json and stores it in a Python dict.
-    Input:
-        - filename: Absolute path of the location for the file
-    Output:
-        - data: the config represented as a Python dict
-    '''
 
-    with open(filename, 'r') as conf:
-        data = json.loads(conf.read())
-        return data
+def _load_providers_json_from_s3():
+    return json.load(
+        _S3_CLIENT.get_object(Bucket=_S3_BUCKET, Key=_S3_KEY)['Body']
+    )
+
+
+def _get_base_provider_config_for_feed(feed_id):
+    """
+        Gets the base provider configuration for a datafeed
+    """
+    providers_config_json = _load_providers_json_from_s3()
+    return _extract_provider_conf(feed_id, providers_config_json)
 
 
 def _extract_provider_conf(feed_id, provider_config_json):
@@ -44,7 +50,7 @@ def _fill_table_meta(conf, sql_context):
     )
 
 
-def get_provider_config(sql_context, providers_conf_file, feed_id):
+def get_provider_config(sql_context, feed_id):
     """
         Read the providers config files and each associated stat calc config
         file and combine them into one provider config object.
@@ -54,10 +60,9 @@ def get_provider_config(sql_context, providers_conf_file, feed_id):
                                     config file with all provider configs
         :return: A Provider config object
     """
-    provider_file_json = _get_config_from_json(providers_conf_file)
 
     # Gets the provider config for only this feed
-    provider_conf = _extract_provider_conf(feed_id, provider_file_json)
+    provider_conf = _get_base_provider_config_for_feed(feed_id)
 
     # Gets the provider config for only this feed
     if provider_conf.datatype == 'emr':
