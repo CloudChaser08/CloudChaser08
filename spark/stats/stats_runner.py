@@ -6,7 +6,6 @@ import os
 import boto3
 
 import spark.spark_setup as spark_setup
-import spark.helpers.file_utils as file_utils
 import spark.stats.config.reader.config_reader as config_reader
 import spark.stats.processor as processor
 from spark.stats.data_layout import generate_data_layout_version_sql
@@ -118,18 +117,13 @@ def main(args):
     stats = set(args.stats or ALL_STATS)
 
     for feed_id in feed_ids:
-        # Get the providers config
-        this_file = inspect.getframeinfo(inspect.stack()[1][0]).filename
-        config_file = file_utils.get_abs_path(this_file, 'config/providers.json')
 
         # set up spark
         spark, sql_context = spark_setup.init(
             'Feed {} marketplace stats'.format(feed_id)
         )
 
-        provider_conf = config_reader.get_provider_config(
-            sql_context, config_file, feed_id
-        )
+        provider_conf = config_reader.get_provider_config(sql_context, feed_id)
 
         # Calculate stats
         stats = run(spark, sql_context, start_date, end_date, provider_conf)
