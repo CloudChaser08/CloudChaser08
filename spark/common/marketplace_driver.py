@@ -32,7 +32,7 @@ MODE_MATCHING_PATH_TEMPLATE = {
 MODE_OUTPUT_PATH = {
     TEST: './test/marketplace/resources/output/',
     END_TO_END_TEST: E2E_PATH + 'output/',
-    PRODUCTION: 's3://salusv/warehouse/parquet/{data_type}/'
+    PRODUCTION: 's3://salusv/warehouse/parquet/{data_type}/{output_folder}/'
 }
 
 
@@ -56,10 +56,11 @@ class MarketplaceDriver(object):
         provider_directory_path = provider_directory_path.replace('spark/target/dewey.zip/',
                                                                   "") + '/'
         # set global variables
-        first_schema = list(output_table_names_to_schemas.keys())[0]
+        first_schema_name = list(output_table_names_to_schemas.keys())[0]
+        first_schema_obj = output_table_names_to_schemas[first_schema_name]
         self.provider_name = provider_name
         self.provider_partition_name = provider_partition_name
-        self.data_type = output_table_names_to_schemas[first_schema].data_type
+        self.data_type = first_schema_obj.data_type
         self.date_input = datetime.datetime.strptime(date_input, '%Y-%m-%d').date()
         self.provider_directory_path = provider_directory_path
         self.test = test
@@ -92,8 +93,10 @@ class MarketplaceDriver(object):
         )
         self.output_path = MODE_OUTPUT_PATH[mode].format(
             provider_name=self.provider_name, data_type=self.data_type,
-            year=self.date_input.year, month=self.date_input.month, day=self.date_input.day
+            year=self.date_input.year, month=self.date_input.month, day=self.date_input.day,
+            output_folder=first_schema_obj.output_folder
         )
+
 
     def init_spark_context(self):
         if not self.spark:
@@ -163,8 +166,10 @@ class MarketplaceDriver(object):
                 columns=_columns,
                 date_partition_name=schema_obj.date_partition_column,
                 provider_partition_name=schema_obj.provider_partition_column,
-                distribution_key=schema_obj.distribution_key
+                distribution_key=schema_obj.distribution_key,
+                staging_subdir=schema_obj.staging_subdir
             )
-            normalized_records_unloader.distcp(self.output_path + schema_obj.output_folder)
-            self.spark['sqlContext'].sql('MSCK REPAIR TABLE ' + table)
+
+        self.spark.stop()
+        normalized_records_unloader.distcp(self.output_path)
 

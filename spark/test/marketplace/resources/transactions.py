@@ -9,7 +9,7 @@ schema_v1 = StructType([
     StructField('test5', StringType(), True)
 ])
 
-output_folder = '2019-08-15/test/'
+output_folder = '2019-08-15'
 schemas = {
     'schema_v1': Schema(name='schema_v1',
                         schema_structure=schema_v1,
@@ -17,5 +17,6 @@ schemas = {
                         distribution_key='row_id',
                         data_type='TEST_CLAIMS',
                         provider_partition_column='part_hvm_vdr_feed_id',
-                        date_partition_column='part_mth')
+                        date_partition_column='part_mth',
+                        staging_subdir='test')
 }
