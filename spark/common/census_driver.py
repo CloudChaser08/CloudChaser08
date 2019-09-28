@@ -23,15 +23,15 @@ SAVE_PATH = 'hdfs:///staging/'
 SALUSV = 's3://salusv/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
-    TEST: '../test/census/{client}/{opp_id}/resources/input/{{year}}/{{month:02d}}/{{day:02d}}/',
-    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{year}}/{{month:02d}}/{{day:02d}}/',
-    PRODUCTION: 's3a://salusv/incoming/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
+    TEST: '../test/census/{client}/{opp_id}/resources/input/{{batch_id_path}}/',
+    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/records/{{batch_id_path}}/',
+    PRODUCTION: 's3a://salusv/incoming/census/{client}/{opp_id}/{{batch_id_path}}/'
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
-    TEST: '../test/census/{client}/{opp_id}/resources/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
-    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{year}}/{{month:02d}}/{{day:02d}}/',
-    PRODUCTION: 's3a://salusv/matching/payload/census/{client}/{opp_id}/{{year}}/{{month:02d}}/{{day:02d}}/'
+    TEST: '../test/census/{client}/{opp_id}/resources/matching/{{batch_id_path}}/',
+    END_TO_END_TEST: SALUSV + 'testing/dewey/airflow/e2e/{client}/{opp_id}/matching/{{batch_id_path}}/',
+    PRODUCTION: 's3a://salusv/matching/payload/census/{client}/{opp_id}/{{batch_id_path}}/'
 }
 
 MODE_OUTPUT_PATH = {
@@ -87,7 +87,7 @@ class CensusDriver(object):
         self._records_path_template = None
         self._matching_path_template = None
         self._output_path = None
-        self._output_file_name_template = '{year}{month:02d}{day:02d}_response.gz'
+        self._output_file_name_template = '{batch_id_value}_response.gz'
 
         self._records_module_name = 'records_schemas'
         self._matching_payloads_module_name = 'matching_payloads_schemas'
@@ -114,6 +114,20 @@ class CensusDriver(object):
             client=self._client_name, opp_id=self._opportunity_id
         )
 
+    def _get_batch_info(self, batch_date, batch_id):
+        if batch_id:
+            _batch_id_path = batch_id
+            _batch_id_value = batch_id
+        else:
+            _batch_id_path = '{year}/{month:02d}/{day:02d}'.format(year=batch_date.year,
+                                                                   month=batch_date.month,
+                                                                   day=batch_date.day)
+            _batch_id_value ='{year}{month:02d}{day:02d}'.format(year=batch_date.year,
+                                                                 month=batch_date.month,
+                                                                 day=batch_date.day)
+
+        return _batch_id_path, _batch_id_value
+
     # Overwrite default records path template
     @SetterProperty
     def records_path_template(self, path_template):
@@ -139,7 +153,7 @@ class CensusDriver(object):
     def matching_payloads_module_name(self, module_name):
         self._matching_payloads_module_name = module_name
 
-    def get_batch_records_files(self, batch_date):
+    def get_batch_records_files(self, batch_date, batch_id):
         """List all files within a given os or s3 directory, recursively"""
 
         def recurse_s3_directory_for_files(directory_path):
@@ -167,15 +181,16 @@ class CensusDriver(object):
             """Private - List all files within a given os directory, recursively"""
             return [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
 
+        _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
         records_path = self._records_path_template.format(
-            year=batch_date.year, month=batch_date.month, day=batch_date.day
+            batch_id_path=_batch_id_path
         )
         if records_path.startswith('s3'):
             return recurse_s3_directory_for_files(records_path)
         else:
             return recurse_os_directory_for_files(records_path)
 
-    def load(self, batch_date, chunk_records_files=None):
+    def load(self, batch_date, batch_id, chunk_records_files=None):
         if self.__class__.__name__ == CensusDriver.__name__:
             records_schemas = std_census.records_schemas
             matching_payloads_schemas = std_census.matching_payloads_schemas
@@ -187,11 +202,12 @@ class CensusDriver(object):
                 self.__module__.replace(DRIVER_MODULE_NAME, self._matching_payloads_module_name)
             )
 
+        _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
         records_path = self._records_path_template.format(
-            year=batch_date.year, month=batch_date.month, day=batch_date.day
+            batch_id_path=_batch_id_path
         )
         matching_path = self._matching_path_template.format(
-            year=batch_date.year, month=batch_date.month, day=batch_date.day
+            batch_id_path=_batch_id_path
         )
 
         if chunk_records_files:
@@ -223,20 +239,21 @@ class CensusDriver(object):
         header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
         return header.union(content).coalesce(1)
 
-    def save(self, dataframe, batch_date, chunk_idx=None):
+    def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
         dataframe.createOrReplaceTempView('deliverable')
+        _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
         normalized_records_unloader.unload_delimited_file(
-            self._spark, self._runner, SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
-                year=batch_date.year, month=batch_date.month, day=batch_date.day
+            self._spark, self._runner, SAVE_PATH + '{batch_id_path}/'.format(
+                batch_id_path=_batch_id_path
             ),
             'deliverable',
             output_file_name=self._output_file_name_template.format(
-                year=batch_date.year, month=batch_date.month, day=batch_date.day
+                batch_id_value=_batch_id_value
             ),
             test=self._test
         )
 
-    def copy_to_s3(self, batch_date=None):
+    def copy_to_s3(self, batch_date=None, batch_id=None):
         normalized_records_unloader.distcp(self._output_path)
 
     def stop_spark(self):

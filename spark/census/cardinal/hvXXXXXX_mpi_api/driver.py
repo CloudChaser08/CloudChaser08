@@ -7,10 +7,6 @@ import spark.helpers.records_loader as records_loader
 
 import importlib
 
-
-RECORDS_PATH_TEMPLATE = "s3://salusv/incoming/census/{client}/{opp_id}/{{batch_id}}/"
-MATCHING_PATH_TEMPLATE = "s3://salusv/matching/payload/census/{client}/{opp_id}/{{batch_id}}/"
-OUTPUT_PATH = "s3://salusv/deliverable/{client}/{opp_id}/"
 SAVE_PATH = "hdfs:///staging/{batch_id}/"
 LOCAL_SAVE_PATH = "/tmp/staging/{batch_id}/"
 
@@ -75,32 +71,6 @@ class CardinalAPICensusDriver(CensusDriver):
             test=test
         )
 
-        # Override paths
-        self.records_path_template = RECORDS_PATH_TEMPLATE.format(client=self._client_name,
-                                                                   opp_id=self._opportunity_id)
-        self.matching_path_template = MATCHING_PATH_TEMPLATE.format(client=self._client_name,
-                                                                     opp_id=self._opportunity_id)
-
-        self.output_path = OUTPUT_PATH.format(client=self._client_name, opp_id=self._opportunity_id)
-
-    def load(self, batch_id):
-        matching_payloads_schemas_module = self.__module__.replace(DRIVER_MODULE_NAME,
-                                                                   self._matching_payloads_module_name)
-
-        records_schemas_module = self.__module__.replace(DRIVER_MODULE_NAME, self._records_module_name)
-
-        matching_payloads_schemas = importlib.import_module(matching_payloads_schemas_module)
-
-        records_schemas = importlib.import_module(records_schemas_module)
-
-        matching_path = self._matching_path_template.format(batch_id=batch_id)
-
-        records_path = self._records_path_template.format(batch_id=batch_id)
-
-        records_loader.load_and_clean_all_v2(self._runner, records_path, records_schemas, load_file_name=True)
-
-        payload_loader.load_all(self._runner, matching_path, matching_payloads_schemas)
-
     def transform(self):
 
         # Override parent definition to not include a header
@@ -108,7 +78,7 @@ class CardinalAPICensusDriver(CensusDriver):
 
         return content
 
-    def save(self, df, batch_id):
+    def save(self, df, batch_date, batch_id):
 
         # Use local file system if test, else use HDFS
         if self._test:

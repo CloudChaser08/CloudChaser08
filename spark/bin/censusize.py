@@ -14,7 +14,7 @@ def split_into_chunks(input_list, number_of_chunks):
         yield input_list[i:i + number_of_chunks]
 
 
-def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=None,
+def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=None,
          census_module=None, end_to_end_test=False, test=False, num_input_files=-1):
     """
     Run standard census driver script or one from the provided census module
@@ -40,24 +40,23 @@ def main(date, batch_id_arg=None, client_name=None, opportunity_id=None, salt=No
         driver = CensusDriver(client_name, opportunity_id, salt=salt,
                               end_to_end_test=end_to_end_test, test=test)
 
-    # use batch_id as input. default to date
-    batch_id = batch_id_arg if batch_id_arg else datetime.strptime(date, '%Y-%m-%d').date()
+    batch_date = datetime.strptime(batch_date, '%Y-%m-%d').date()
 
     if num_input_files > 0:
-        all_batch_files = driver.get_batch_records_files(batch_id)
+        all_batch_files = driver.get_batch_records_files(batch_date, batch_id)
         for chunk_idx, chunk_files in enumerate(split_into_chunks(all_batch_files, num_input_files)):
-            driver.load(batch_id, chunk_records_files=chunk_files)
+            driver.load(batch_date, batch_id, chunk_records_files=chunk_files)
             df = driver.transform()
-            driver.save(df, batch_id, chunk_idx)
-            driver.copy_to_s3(batch_id)
+            driver.save(df, batch_date, batch_id, chunk_idx)
+            driver.copy_to_s3(batch_date, batch_id)
     # -1 and 0 mean the same thing, process everything
     else:
-        driver.load(batch_id)
+        driver.load(batch_date, batch_id)
         df = driver.transform()
-        driver.save(df, batch_id)
+        driver.save(df, batch_date, batch_id)
     driver.stop_spark()
     if num_input_files <= 0:
-        driver.copy_to_s3(batch_id)
+        driver.copy_to_s3(batch_date, batch_id)
 
 
 if __name__ == "__main__":

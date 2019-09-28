@@ -20,7 +20,7 @@ class ComplexExampleCensusDriver(CensusDriver):
         self.output_file_name_template = OUTPUT_FILE_NAME_TEMPLATE
 
     # Example of overwriting the default load function
-    def load(self, batch_date):
+    def load(self, batch_date, batch_id):
         if batch_date.weekday() <= 4:
             records_schemas = spark.census.example.hvXXXXX2.records_schemas_weekdays
         else:
@@ -28,11 +28,12 @@ class ComplexExampleCensusDriver(CensusDriver):
 
         matching_payloads_schemas = spark.census.example.hvXXXXX2.matching_payloads_schemas
 
+        _batch_id_path, _batch_id_value = self._get_batch_info(self, batch_date, batch_id):
         records_path  = self._records_path_template.format(
-            batch_date.year, batch_date.month, batch_date.day
+            batch_id_path=_batch_id_path
         )
         matching_path = self._matching_path_template.format(
-            batch_date.year, batch_date.month, batch_date.day
+            batch_id_path=_batch_id_path
         )
 
         records_loader.load_and_clean_all_v2(self._runner, records_path,
@@ -47,7 +48,7 @@ class ComplexExampleCensusDriver(CensusDriver):
         return content
 
     # Example of overwriting the default save function
-    def save(self, dataframe, batch_date):
+    def save(self, dataframe, batch_date, batch_id):
         if batch_date.weekday() <= 4:
             day_type = 'weekday'
         else:

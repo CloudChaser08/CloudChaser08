@@ -1,3 +1,4 @@
+from datetime import date
 from spark.census.cardinal.hvXXXXXX_mpi_api.driver import CardinalAPICensusDriver
 
 import pytest
@@ -22,17 +23,17 @@ def driver(patch_spark_init):
     driver = CardinalAPICensusDriver(opportunity_id='hvXXXXXX_mpi_api', test=True)
 
     # Use test path locations
-    driver.matching_path_template = "test/census/{client}/{opp_id}/resources/matching/{{batch_id}}/".format(
+    driver.matching_path_template = "../test/census/{client}/{opp_id}/resources/matching/{{batch_id_path}}/".format(
         opp_id=driver._opportunity_id,
         client=driver._client_name
     )
 
-    driver.records_path_template = "test/census/{client}/{opp_id}/resources/transactions/{{batch_id}}/".format(
+    driver.records_path_template = "../test/census/{client}/{opp_id}/resources/transactions/{{batch_id_path}}/".format(
         opp_id=driver._opportunity_id,
         client=driver._client_name
     )
 
-    driver._output_file_name_template = "test/census/{client}/{opp_id}/resources/output/".format(
+    driver._output_file_name_template = "../test/census/{client}/{opp_id}/resources/output/".format(
         opp_id=driver._opportunity_id,
         client=driver._client_name
     )
@@ -46,9 +47,10 @@ def test_run(driver, spark):
     # ~ With superfluous log output disabled
     spark['spark'].sparkContext.setLogLevel("OFF")
     batch_id = "20190618"
+    batch_date = date(2019, 6, 18)
 
     # ~ When matching payload is loaded
-    driver.load(batch_id=batch_id)
+    driver.load(batch_date=batch_date, batch_id=batch_id)
 
     # ~ Then a populated table "matching_payload" exists
     assert 'matching_payload' in all_tables(spark)
@@ -67,7 +69,7 @@ def test_run(driver, spark):
     assert ['hvid', 'record_id', 'client_id', 'job_id', 'callback', 'errors'] == columns_for_table(spark, 'normalize')
 
     # ~ When the file is saved
-    driver.save(df, batch_id=batch_id)
+    driver.save(df, batch_date=batch_date, batch_id=batch_id)
 
     # ~ Then the return file should exist
     assert os.path.isfile("/tmp/staging/{batch_id}/{batch_id}_response.json.gz".format(

@@ -41,34 +41,34 @@ def test_default_paths_templates(test_driver, e2e_driver, prod_driver, salt_def_
     Ensure that all the various templates are set correctly
     """
     assert test_driver._records_path_template == \
-        '../test/census/TEST/TEST123/resources/input/{year}/{month:02d}/{day:02d}/'
+        '../test/census/TEST/TEST123/resources/input/{batch_id_path}/'
     assert test_driver._matching_path_template == \
-        '../test/census/TEST/TEST123/resources/matching/{year}/{month:02d}/{day:02d}/'
+        '../test/census/TEST/TEST123/resources/matching/{batch_id_path}/'
     assert test_driver._output_path == \
         '../test/census/TEST/TEST123/resources/output/'
 
     assert e2e_driver._records_path_template == \
-        's3://salusv/testing/dewey/airflow/e2e/TEST/TEST123/records/{year}/{month:02d}/{day:02d}/'
+        's3://salusv/testing/dewey/airflow/e2e/TEST/TEST123/records/{batch_id_path}/'
     assert e2e_driver._matching_path_template == \
-        's3://salusv/testing/dewey/airflow/e2e/TEST/TEST123/matching/{year}/{month:02d}/{day:02d}/'
+        's3://salusv/testing/dewey/airflow/e2e/TEST/TEST123/matching/{batch_id_path}/'
     assert e2e_driver._output_path == \
         's3://salusv/testing/dewey/airflow/e2e/TEST/TEST123/output/'
 
     assert prod_driver._records_path_template == \
-        "s3a://salusv/incoming/census/TEST/TEST123/{year}/{month:02d}/{day:02d}/"
+        "s3a://salusv/incoming/census/TEST/TEST123/{batch_id_path}/"
     assert prod_driver._matching_path_template == \
-        "s3a://salusv/matching/payload/census/TEST/TEST123/{year}/{month:02d}/{day:02d}/"
+        "s3a://salusv/matching/payload/census/TEST/TEST123/{batch_id_path}/"
     assert prod_driver._output_path == \
         "s3a://salusv/deliverable/TEST/TEST123/"
 
     assert salt_def_driver._records_path_template == \
-        '../test/census/TEST/TEST123/resources/input/{year}/{month:02d}/{day:02d}/'
+        '../test/census/TEST/TEST123/resources/input/{batch_id_path}/'
     assert salt_def_driver._matching_path_template == \
-        '../test/census/TEST/TEST123/resources/matching/{year}/{month:02d}/{day:02d}/'
+        '../test/census/TEST/TEST123/resources/matching/{batch_id_path}/'
     assert salt_def_driver._output_path == \
         '../test/census/TEST/TEST123/resources/output/'
 
-    assert test_driver._output_file_name_template == '{year}{month:02d}{day:02d}_response.gz'
+    assert test_driver._output_file_name_template == '{batch_id_value}_response.gz'
     assert test_driver._records_module_name == 'records_schemas'
     assert test_driver._matching_payloads_module_name == 'matching_payloads_schemas'
 
@@ -112,7 +112,7 @@ def test_load(test_driver):
     matching_path directory
     """
     test_driver._matching_path_template = '../test/resources/foo/'
-    test_driver.load(date(2018, 1, 1))
+    test_driver.load(date(2018, 1, 1), None)
 
     matching_tbl = test_driver._spark.table('matching_payload')
 
@@ -148,7 +148,7 @@ def test_save(test_driver, monkeypatch):
     monkeypatch.setattr(spark.common.census_driver, 'SAVE_PATH', '/tmp/')
 
     df = test_driver._spark.sql("SELECT '1' as hvid, '2' as rowid")
-    test_driver.save(df, date(2018, 1, 1))
+    test_driver.save(df, date(2018, 1, 1), None)
 
     with gzip.open('/tmp/2018/01/01/20180101_response.gz', 'rt') as fin:
         content = fin.readlines()
