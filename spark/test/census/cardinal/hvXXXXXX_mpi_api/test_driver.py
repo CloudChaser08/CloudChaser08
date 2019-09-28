@@ -3,6 +3,7 @@ from spark.census.cardinal.hvXXXXXX_mpi_api.driver import CardinalAPICensusDrive
 
 import pytest
 import os
+import gzip
 
 
 def all_tables(spark):
@@ -16,6 +17,8 @@ def rows_for_table(spark, table_name):
 def columns_for_table(spark, table_name):
     return spark['sqlContext'].table(table_name).columns
 
+
+EXPECTED_OUTPUT_FILE = 'test/census/cardinal/hvXXXXXX_mpi_api/resources/output/expected_output.json.gz'
 
 @pytest.fixture
 @pytest.mark.usefixtures("patch_spark_init")
@@ -72,9 +75,13 @@ def test_run(driver, spark):
     driver.save(df, batch_date=batch_date, batch_id=batch_id)
 
     # ~ Then the return file should exist
-    assert os.path.isfile("/tmp/staging/{batch_id}/{batch_id}_response.json.gz".format(
+    output_file = "/tmp/staging/{batch_id}/{batch_id}_response.json.gz".format(
         batch_id=batch_id
-    ))
+    )
+    assert os.path.isfile(output_file)
+
+    with gzip.open(output_file) as actual_file, gzip.open(EXPECTED_OUTPUT_FILE) as expected_file:
+        assert sorted(actual_file.readlines()) == sorted(expected_file.readlines())
 
 
 if __name__ == "__main__":
