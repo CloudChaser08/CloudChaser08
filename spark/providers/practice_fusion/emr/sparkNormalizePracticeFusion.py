@@ -92,7 +92,7 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
                 provider_partition_name='part_hvm_vdr_feed_id',
                 date_partition_name='part_mth', columns=_columns,
                 staging_subdir=mdl, unload_partition_count=100,
-                distribution_key='row_id'
+                distribution_key='row_id', substr_date_part=False
             )
 
         else:
