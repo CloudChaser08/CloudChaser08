@@ -157,3 +157,16 @@ def test_densify_2d_array_by_key():
 
 def test_obfuscate_candidate_hvids():
     assert gh.obfuscate_candidate_hvids([['1234567', 1]], 'CPQ-013') == [['ceb8f9b33421e4deb16ce7fe1358d554', 1]]
+
+
+def test_find_descendants_recursively():
+    parents = [1, 1, 2, 2, 2, 2, 3, 4, 5, 5, 5, 5, 6, 6, 6, 7, 8, 9, 9, 10, 10, 11, 11, 12, 13]
+    children = [1, 2, 1, 2, 3, 4, 3, 4, 5, 6, 7, 8, 6, 7, 8, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13]
+    expected_result = {1: {1, 2, 3, 4}, 13: {13}, 5: {8, 5, 6, 7}, 9: {9, 10, 11, 12}}
+    results = gh.find_descendants_recursively(parents, children)
+
+    for key in results.keys():
+        assert key in expected_result.keys()
+
+    for value in results.values():
+        assert value in expected_result.values()
