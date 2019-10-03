@@ -3,6 +3,7 @@ import hashlib
 import json
 import re
 from datetime import datetime
+from collections import defaultdict
 
 
 def clean_up_freetext(val, remove_periods=False):
@@ -231,3 +232,32 @@ def obfuscate_candidate_hvids(arr, salt):
         res.append([obfuscate_hvid(str(int(arr[i][0])), salt), arr[i][1]])
 
     return res
+
+
+def find_descendants_recursively(parents, children):
+    """
+    Find descendants recursively. This function will primarily be used to help in the creation of
+    synthetic encounters and events.
+    :param parents: list of ints. ex:  [1, 1, 2, 2, 2, 2, 3, 4, 5, 5, 5, 5]
+    :param children: list of ints. ex: [1, 2, 1, 2, 3, 4, 3, 4, 5, 6, 7, 8]
+    :return: full paths of parent-child relationships.  {1: {1, 2, 3, 4}, 5: {5, 6, 7, 8}}
+    """
+    parent_child = list(zip(parents, children))
+    result_dict = defaultdict(set)
+
+    def find_grandparent(value):
+        for key in result_dict.keys():
+            if value in result_dict[key]:
+                return key
+        return -1
+
+    for parent, child in parent_child:
+        grandparent = find_grandparent(parent)
+        # if the parent does not already exists as a child in the result_dic
+        if grandparent == -1:
+            result_dict[parent].add(child)
+        else:
+            result_dict[grandparent].add(parent)
+            result_dict[grandparent].add(child)
+
+    return result_dict
