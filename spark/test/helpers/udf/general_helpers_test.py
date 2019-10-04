@@ -167,6 +167,6 @@ def test_find_descendants_recursively():
 
     for key in results.keys():
         assert key in expected_result.keys()
-
-    for value in results.values():
-        assert value in expected_result.values()
+        expected_values = expected_result[key]
+        for value in results[key]:
+            assert value in expected_values

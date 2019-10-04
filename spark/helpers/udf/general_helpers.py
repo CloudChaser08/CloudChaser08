@@ -243,21 +243,26 @@ def find_descendants_recursively(parents, children):
     :return: full paths of parent-child relationships.  {1: {1, 2, 3, 4}, 5: {5, 6, 7, 8}}
     """
     parent_child = list(zip(parents, children))
-    result_dict = defaultdict(set)
+    parent_child = sorted(parent_child)
+    result_dict = defaultdict(list)
 
     def find_grandparent(value):
-        for key in result_dict.keys():
-            if value in result_dict[key]:
-                return key
+        for dict_key in result_dict.keys():
+            if value in result_dict[dict_key]:
+                return dict_key
         return -1
 
     for parent, child in parent_child:
         grandparent = find_grandparent(parent)
         # if the parent does not already exists as a child in the result_dic
         if grandparent == -1:
-            result_dict[parent].add(child)
+            result_dict[parent].append(child)
         else:
-            result_dict[grandparent].add(parent)
-            result_dict[grandparent].add(child)
+            result_dict[grandparent].append(parent)
+            result_dict[grandparent].append(child)
 
-    return result_dict
+    # unique the dictionary values and convert to standard dict type for UDF
+    for key in result_dict.keys():
+        result_dict[key] = list(set(result_dict[key]))
+
+    return dict(result_dict)
