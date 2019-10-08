@@ -121,14 +121,13 @@ schema_v5 = StructType([
 ])
 
 data_type = 'era'
-output_folder = '2018-02-13'
+output_directory = data_type + '/2018-02-13/detail'
 distribution_key = 'row_id'
 
 schemas = {
     'schema_v5': Schema(name='schema_v5',
                         data_type=data_type,
                         schema_structure=schema_v5,
-                        output_folder=output_folder,
-                        distribution_key=distribution_key,
-                        staging_subdir='detail')
+                        output_directory=output_directory,
+                        distribution_key=distribution_key)
 }

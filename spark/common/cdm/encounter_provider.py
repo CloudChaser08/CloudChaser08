@@ -3,7 +3,8 @@ from spark.common.schema import Schema
 
 schema_v1 = StructType([
     StructField('row_id', LongType(), True),
-    StructField('hv_diag_id', StringType(), True),
+    StructField('hv_enc_id', StringType(), True),
+    StructField('hv_enc_dtl_id', StringType(), True),
     StructField('crt_dt', DateType(), True),
     StructField('mdl_vrsn_num', StringType(), True),
     StructField('data_set_nm', StringType(), True),
@@ -11,22 +12,17 @@ schema_v1 = StructType([
     StructField('hvm_vdr_id', IntegerType(), True),
     StructField('hvm_vdr_feed_id', IntegerType(), True),
     StructField('vdr_org_id', StringType(), True),
-    StructField('vdr_diag_id', StringType(), True),
+    StructField('vdr_enc_id', StringType(), True),
     StructField('hvid', StringType(), True),
     StructField('ptnt_birth_yr', IntegerType(), True),
     StructField('ptnt_age_num', StringType(), True),
     StructField('ptnt_gender_cd', StringType(), True),
     StructField('ptnt_state_cd', StringType(), True),
     StructField('ptnt_zip3_cd', StringType(), True),
-    StructField('hv_enc_id', StringType(), True),
     StructField('enc_start_dt', DateType(), True),
     StructField('enc_end_dt', DateType(), True),
-    StructField('diag_cd', StringType(), True),
-    StructField('diag_cd_qual', StringType(), True),
-    StructField('diag_prty_cd', StringType(), True),
-    StructField('admtg_diag_flg', StringType(), True),
-    StructField('prmy_diag_flg', StringType(), True),
-    StructField('diag_grp_txt', StringType(), True),
+    StructField('enc_prov_id', StringType(), True),
+    StructField('enc_prov_id_qual', StringType(), True),
     StructField('data_src_cd', StringType(), True),
     StructField('data_captr_dt', DateType(), True),
     StructField('rec_stat_cd', StringType(), True),
@@ -34,7 +30,7 @@ schema_v1 = StructType([
 ])
 
 data_type = 'cdm'
-output_directory = data_type + '/2019-08-15/diagnosis'
+output_directory = data_type + '/2019-10-03/encounter_provider'
 schemas = {
     'schema_v1': Schema(name='schema_v1',
                         schema_structure=schema_v1,
