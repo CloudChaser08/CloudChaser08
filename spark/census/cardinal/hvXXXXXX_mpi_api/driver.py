@@ -74,7 +74,10 @@ class CardinalAPICensusDriver(CensusDriver):
     def transform(self):
 
         # Override parent definition to not include a header
-        content = self._runner.run_all_spark_scripts()
+        stage = "test" if self._end_to_end_test else "prod"
+        content = self._runner.run_all_spark_scripts([
+            ["stage", stage]
+        ])
 
         return content
 
