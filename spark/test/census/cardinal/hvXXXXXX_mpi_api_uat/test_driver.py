@@ -66,7 +66,7 @@ def test_run(uat_driver, spark):
     assert len(rows_for_table(spark, 'normalize')) > 0
 
     # ~ Then verify output schema
-    assert ["message_body", "content", "metadata"] == columns_for_table(spark, 'normalize')
+    assert ["message_body", "metadata"] == columns_for_table(spark, 'normalize')
 
     # ~ When the file is saved
     uat_driver.save(df, batch_date=batch_date, batch_id=batch_id)
