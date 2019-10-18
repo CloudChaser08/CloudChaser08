@@ -5,7 +5,6 @@ import subprocess
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.records_loader as records_loader
 from .records_schemas import PDC_SCHEMA
-
 from spark.common.census_driver import CensusDriver, SAVE_PATH
 
 
@@ -22,14 +21,18 @@ class _8451CensusDriver(CensusDriver):
         super(_8451CensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID,
                                                 salt=self.SALT, end_to_end_test=end_to_end_test)
 
-    def load(self, batch_date):
-        super(_8451CensusDriver, self).load(batch_date)
+    def load(self, batch_date, batch_id, chunk_records_files=None):
+        if chunk_records_files:
+            raise ValueError(
+                "Chunking is not currently supported in this module")
+
+        super(_8451CensusDriver, self).load(batch_date, batch_id)
 
         if batch_date == self.BAD_PDC_DATE:
             df = records_loader.load(self._runner, self.PDC_LOCATION, source_table_conf=PDC_SCHEMA)
         else:
             # load empty dataframe with pdc file schema
-            df = self._spark.createDataFrame([], PDC_SCHEMA)
+            df = self._spark.createDataFrame([], PDC_SCHEMA.schema)
         df.createOrReplaceTempView('pdc_fix')
 
         if not self._test:
@@ -38,8 +41,11 @@ class _8451CensusDriver(CensusDriver):
     def transform(self):
         return self._runner.run_all_spark_scripts(variables=[['salt', self._salt]])
 
-    def save(self, dataframe, batch_date):
-
+    def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
+        if chunk_idx:
+            raise ValueError(
+                "Chunking is not currently supported in this module")
+        
         output_path = SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
                 year=batch_date.year, month=batch_date.month, day=batch_date.day
             )
