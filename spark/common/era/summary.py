@@ -219,16 +219,16 @@ schema_v5 = StructType([
     StructField('medcl_clm_lnk_txt',                 StringType(),      True)
 ])
 
-output_folder = '2018-02-13'
 data_type = 'era'
+output_directory = data_type + '/2018-02-13/summary'
 distribution_key = 'row_id'
 
 schemas = {
     'schema_v5': Schema(name='schema_v5',
                         data_type=data_type,
                         schema_structure=schema_v5,
-                        output_folder=output_folder,
-                        distribution_key=distribution_key,
-                        staging_subdir='summary')
+                        output_directory=output_directory,
+                        distribution_key=distribution_key
+                        )
 }
 

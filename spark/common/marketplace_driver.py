@@ -34,7 +34,7 @@ MODE_MATCHING_PATH_TEMPLATE = {
 MODE_OUTPUT_PATH = {
     TEST: './test/marketplace/resources/output/',
     END_TO_END_TEST: E2E_PATH + 'output/',
-    PRODUCTION: 's3://salusv/warehouse/parquet/{data_type}/{output_folder}/'
+    PRODUCTION: 's3://salusv/warehouse/parquet/'
 }
 
 
@@ -93,11 +93,7 @@ class MarketplaceDriver(object):
             provider_name=self.provider_name, data_type=self.data_type,
             year=self.date_input.year, month=self.date_input.month, day=self.date_input.day
         )
-        self.output_path = MODE_OUTPUT_PATH[mode].format(
-            provider_name=self.provider_name, data_type=self.data_type,
-            year=self.date_input.year, month=self.date_input.month, day=self.date_input.day,
-            output_folder=first_schema_obj.output_folder
-        )
+        self.output_path = MODE_OUTPUT_PATH[mode]
 
     def init_spark_context(self):
         if not self.spark:
@@ -173,7 +169,7 @@ class MarketplaceDriver(object):
                 date_partition_name=schema_obj.date_partition_column,
                 provider_partition_name=schema_obj.provider_partition_column,
                 distribution_key=schema_obj.distribution_key,
-                staging_subdir=schema_obj.staging_subdir
+                staging_subdir=schema_obj.output_directory
             )
 
     def stop_spark(self):

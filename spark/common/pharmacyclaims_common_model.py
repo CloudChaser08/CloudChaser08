@@ -554,13 +554,14 @@ schema_v11 = StructType([
     StructField('logical_delete_reason', StringType(), True)
 ])
 
-output_folder = '2018-11-26'
+data_type = 'pharmacyclaims'
+output_directory = data_type + '/2018-11-26'
 schemas = {
     'schema_v11': Schema(name='schema_v11',
                          schema_structure=schema_v11,
-                         output_folder=output_folder,
+                         output_directory=output_directory,
                          distribution_key='record_id',
-                         data_type='pharmacyclaims',
+                         data_type=data_type,
                          provider_partition_column='part_provider',
                          date_partition_column='part_best_date')
 }

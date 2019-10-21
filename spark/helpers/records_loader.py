@@ -49,7 +49,6 @@ def load_and_clean_all(runner, location_prefix, transactions_module, file_type, 
 
         if partitions > 0:
             df = df.repartition(partitions)
-
         postprocessor \
             .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
             .cache_and_track(table) \
@@ -70,4 +69,4 @@ def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitio
             .cache_and_track(table))
         df.createOrReplaceTempView(table)
 
-        df.count()  # to force computation 
+        df.count()  # to force computation

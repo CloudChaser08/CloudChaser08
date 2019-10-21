@@ -86,14 +86,14 @@ schema_v1 = StructType([
     StructField('prmy_src_tbl_nm', StringType(), True)
 ])
 
-output_folder = '2019-08-15'
+data_type = 'cdm'
+output_directory = data_type + '/2019-08-15/encounter'
 schemas = {
     'schema_v1': Schema(name='schema_v1',
                         schema_structure=schema_v1,
-                        output_folder=output_folder,
                         distribution_key='row_id',
                         data_type='cdm',
                         provider_partition_column='part_hvm_vdr_feed_id',
                         date_partition_column='part_mth',
-                        staging_subdir='encounter')
+                        output_directory=output_directory)
 }

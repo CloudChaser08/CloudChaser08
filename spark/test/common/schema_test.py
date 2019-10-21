@@ -12,7 +12,7 @@ STRUCTURE = StructType([
 
 
 def test_schema():
-    schema = Schema(name="test", schema_structure=STRUCTURE, output_folder='/test')
+    schema = Schema(name="test", schema_structure=STRUCTURE, output_directory='/test')
     assert schema.name == "test"
     assert schema.schema_structure == STRUCTURE
-    assert schema.output_folder == '/test'
+    assert schema.output_directory == '/test'

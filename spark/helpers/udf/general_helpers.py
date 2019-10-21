@@ -245,19 +245,20 @@ def find_descendants_recursively(parents, children):
     parent_child = list(zip(parents, children))
     parent_child = sorted(parent_child)
     result_dict = defaultdict(list)
+    reverse_dict = defaultdict(int)
 
     def find_grandparent(value):
-        for dict_key in result_dict.keys():
-            if value in result_dict[dict_key]:
-                return dict_key
-        return -1
+        return reverse_dict[value]
 
     for parent, child in parent_child:
         grandparent = find_grandparent(parent)
         # if the parent does not already exists as a child in the result_dic
-        if grandparent == -1:
+        if grandparent == 0:
             result_dict[parent].append(child)
+            reverse_dict[child] = parent
         else:
+            reverse_dict[parent] = grandparent
+            reverse_dict[child] = grandparent
             result_dict[grandparent].append(parent)
             result_dict[grandparent].append(child)
 

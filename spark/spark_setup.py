@@ -1,5 +1,5 @@
 from pyspark.sql import SQLContext, SparkSession
-from pyspark.sql.types import ArrayType, StringType, DateType
+from pyspark.sql.types import ArrayType, StringType, DateType, MapType, IntegerType
 from spark.helpers.udf.post_normalization_cleanup import *
 from spark.helpers.udf.general_helpers import *
 from spark.helpers.udf.medicalclaims_helpers import *
@@ -155,4 +155,6 @@ def init(provider, local=False):
         'string_set_diff', string_set_diff
     )
 
+    spark.udf.register('find_descendants_recursively', find_descendants_recursively,
+                       MapType(IntegerType(), ArrayType(IntegerType())))
     return spark, sqlContext
