@@ -88,7 +88,7 @@ class CensusDriver(object):
         self._records_path_template = None
         self._matching_path_template = None
         self._output_path = None
-        self._output_file_name_template = '{batch_id_value}_response.gz'
+        self._output_file_name_template = '{batch_id_value}_response_{{part_num}}.csv.gz'
 
         self._records_module_name = 'records_schemas'
         self._matching_payloads_module_name = 'matching_payloads_schemas'
@@ -251,7 +251,7 @@ class CensusDriver(object):
                 batch_id_path=_batch_id_path
             ),
             'deliverable',
-            output_file_name=self._output_file_name_template.format(
+            output_file_name_template=self._output_file_name_template.format(
                 batch_id_value=_batch_id_value
             ),
             test=self._test

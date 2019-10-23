@@ -68,7 +68,7 @@ def test_default_paths_templates(test_driver, e2e_driver, prod_driver, salt_def_
     assert salt_def_driver._output_path == \
         '../test/census/TEST/TEST123/resources/output/'
 
-    assert test_driver._output_file_name_template == '{batch_id_value}_response.gz'
+    assert test_driver._output_file_name_template == '{batch_id_value}_response_{{part_num}}.csv.gz'
     assert test_driver._records_module_name == 'records_schemas'
     assert test_driver._matching_payloads_module_name == 'matching_payloads_schemas'
 
@@ -150,7 +150,7 @@ def test_save(test_driver, monkeypatch):
     df = test_driver._spark.sql("SELECT '1' as hvid, '2' as rowid")
     test_driver.save(df, date(2018, 1, 1), None)
 
-    with gzip.open('/tmp/2018/01/01/20180101_response.gz', 'rt') as fin:
+    with gzip.open('/tmp/2018/01/01/20180101_response_00000.csv.gz', 'rt') as fin:
         content = fin.readlines()
 
     row           = content[0].strip()
