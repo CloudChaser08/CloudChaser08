@@ -14,8 +14,17 @@ import spark.helpers.payload_loader as payload_loader
 import spark.providers.navicure.medicalclaims.transactional_schemas as transactional_schemas
 import pyspark.sql.functions as F
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 FEED_ID = '24'
 SCRIPT_PATH = __file__
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/navicure/medicalclaims/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2018-06-06/'
+
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
     if test:
@@ -89,6 +98,17 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     else:
         output.collect()
 
+    if not test and not end_to_end_test:
+        logger.log_run_details(
+            provider_name='Navicure',
+            data_type=DataType.MEDICAL_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # init
@@ -102,13 +122,17 @@ def main(args):
     spark.stop()
 
     if args.end_to_end_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/navicure/medicalclaims/spark-output/'
+        output_path = OUTPUT_PATH_TEST
     elif args.output_loc is not None:
         output_path = args.output_loc
     else:
-        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2018-06-06/'
+        output_path = OUTPUT_PATH_PRODUCTION
 
-    normalized_records_unloader.distcp(output_path)
+    if args.airflow_test:
+        normalized_records_unloader.distcp(output_path)
+    else:
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":
@@ -117,4 +141,4 @@ if __name__ == "__main__":
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     parser.add_argument('--output_loc', type=str)
     args = parser.parse_args()
-    main(args)    
+    main(args)

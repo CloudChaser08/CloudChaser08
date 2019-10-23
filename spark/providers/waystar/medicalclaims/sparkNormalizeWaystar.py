@@ -1,4 +1,4 @@
-import argparse 
+import argparse
 import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -12,8 +12,16 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers.waystar.medicalclaims.transactional_schemas as transactional_schemas
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 FEED_ID = '24'
 script_path = __file__
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/waystar/medicalclaims/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2018-06-06/'
 
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
@@ -32,7 +40,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         input_path = 's3://salusv/testing/dewey/airflow/e2e/waystar/medicalclaims/out/2019/02/26/'
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/waystar/medicalclaims/payload/2019/02/26/'
         augment_path = 's3://salusv/incoming/medicalclaims/waystar/2018/08/31/augment/'
-    else: 
+    else:
         input_path = 's3a://salusv/incoming/medicalclaims/waystar/{}/'.format(
             date_input.replace('-', '/')
         )
@@ -79,8 +87,19 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
             spark, runner, df, 'part_best_date', date_input, 'navicure',
             columns=_columns, substr_date_part=False
         )
-    else: 
+    else:
         df.collect()
+
+    if not test and not end_to_end_test:
+        logger.log_run_details(
+            provider_name='Waystar',
+            data_type=DataType.MEDICAL_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
 
 
 def main(args):
@@ -95,11 +114,10 @@ def main(args):
     spark.stop()
 
     if args.end_to_end_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/waystar/medicalclaims/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2018-06-06/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":
@@ -107,4 +125,4 @@ if __name__ == "__main__":
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_args()
-    main(args)    
+    main(args)

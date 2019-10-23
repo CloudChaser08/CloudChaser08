@@ -1,5 +1,6 @@
 from pyspark.sql.types import *
 from spark.common.schema import Schema
+from spark.common.utility.output_type import DataType
 
 schema_v1 = StructType([
     StructField('row_id', LongType(), True),
@@ -86,13 +87,13 @@ schema_v1 = StructType([
     StructField('prmy_src_tbl_nm', StringType(), True)
 ])
 
-data_type = 'cdm'
-output_directory = data_type + '/2019-08-15/encounter'
+data_type = DataType.CDM
+output_directory = DataType(data_type).value + '/2019-08-15/encounter'
 schemas = {
     'schema_v1': Schema(name='schema_v1',
                         schema_structure=schema_v1,
                         distribution_key='row_id',
-                        data_type='cdm',
+                        data_type=DataType.CDM,
                         provider_partition_column='part_hvm_vdr_feed_id',
                         date_partition_column='part_mth',
                         output_directory=output_directory)

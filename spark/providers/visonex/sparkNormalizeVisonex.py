@@ -8,6 +8,11 @@ from spark.spark_setup import init
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 # init
 spark, sqlContext = init("Visonex")
 
@@ -71,6 +76,19 @@ normalized_records_unloader.partition_and_rename(
     spark, runner, 'emr', 'emr_common_model.sql', 'visonex',
     'emr_common_model', 'date_start', args.date
 )
-normalized_records_unloader.distcp(args.output_path)
+
+logger.log_run_details(
+    provider_name='Visonex',
+    data_type=DataType.IMAGE,
+    data_source_transaction_path=input_prefix,
+    data_source_matching_path=matching_path,
+    output_path=args.output_path,
+    run_type=RunType.MARKETPLACE,
+    input_date=args.date
+)
 
 spark.stop()
+
+if not args.debug:
+    hadoop_time = normalized_records_unloader.timed_distcp(args.output_path)
+    RunRecorder().record_run_details(additional_time=hadoop_time)

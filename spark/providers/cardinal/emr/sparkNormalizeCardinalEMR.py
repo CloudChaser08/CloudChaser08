@@ -21,6 +21,10 @@ from spark.common.emr.lab_result import schema_v6 as lab_result_schema
 from spark.common.emr.procedure import schema_v6 as procedure_schema
 from spark.common.emr.provider_order import schema_v6 as provider_order_schema
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
 import spark.providers.cardinal.emr.transactional_schemas as cardinal_schemas
 from spark.helpers.privacy.emr import                   \
     encounter as priv_encounter,                        \
@@ -39,6 +43,9 @@ FEED_ID = '40'
 VENDOR_ID = '42'
 
 DEOBFUSCATION_KEY = 'Cardinal_MPI-0'
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/emr/2018-02-12/'
 
 script_path = __file__
 
@@ -381,6 +388,16 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
         #         )
         #     )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Cardinal_Rain_Tree',
+            data_type=DataType.EMR,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
 
 def main(args):
     # init
@@ -389,24 +406,27 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
+    if args.airflow_test:
+        output_path = OUTPUT_PATH_TEST
+        deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/delivery/{}/'.format(
+            args.batch_id
+        )
+    else:
+        output_path = OUTPUT_PATH_PRODUCTION
+        deliverable_path = 's3://salusv/deliverable/cardinal_raintree_emr-0/{}/'.format(
+            args.batch_id
+        )
+
     run(spark, runner, args.date, num_output_files=args.num_output_files,
         batch_id=args.batch_id, airflow_test=args.airflow_test)
 
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/spark-output/'
-        deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal/emr/delivery/{}/'.format(
-            args.batch_id
-        )
+        normalized_records_unloader.distcp(deliverable_path, DELIVERABLE_LOC)
     else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2018-02-12/'
-        deliverable_path = 's3://salusv/deliverable/cardinal_raintree_emr-0/{}/'.format(
-            args.batch_id
-        )
-
-    # normalized_records_unloader.distcp(output_path)
-    normalized_records_unloader.distcp(deliverable_path, DELIVERABLE_LOC)
+        hadoop_time = normalized_records_unloader.timed_distcp(deliverable_path, DELIVERABLE_LOC)
+        RunRecorder().record_run_detials(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

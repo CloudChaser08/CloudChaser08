@@ -1,6 +1,7 @@
 import spark.providers.inmar.pharmacyclaims.transactional_schemas as source_table_schemas
 import subprocess
 import argparse
+from spark.common.utility.output_type import DataType, RunType
 import spark.common.utility.logger as logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims_common_model import schemas as pharmacy_claims_schema
@@ -46,6 +47,17 @@ if __name__ == "__main__":
     driver.load()
     driver.transform()
     driver.save_to_disk()
+
+    if not end_to_end_test:
+        logger.log_run_details(
+            provider_name='Inmar',
+            data_type=DataType.PHARMACY_CLAIMS,
+            data_source_transaction_path=driver.input_path,
+            data_source_matching_path=driver.matching_path,
+            output_path=driver.output_path,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
 
     logger.log('Backup historical data')
     if end_to_end_test:

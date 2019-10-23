@@ -5,6 +5,11 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
     input_tables = [
         'raw',
@@ -61,6 +66,22 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             else:
                 logging.warn('Table {} had 0 rows'.format(table))
 
+    if not test and not airflow_test:
+        transaction_path = input_paths.get("raw", "")
+        matching_path = input_paths.get("payload", "")
+
+        output_path = ','.join(output_locations.values())
+
+        logger.log_run(
+            provider_name='AllScripts',
+            data_type=DataType.CUSTOM,
+            data_source_transaction_path=transaction_path,
+            data_source_matching_path=matching_path,
+            output_path=output_path,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 def main(args):
     spark, sqlContext = init('Allscripts ERA Custom Normalization')
 
@@ -69,6 +90,9 @@ def main(args):
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
+
+    if not args.airflow_test:
+        RunRecorder().record_run_details()
 
 
 if __name__ == '__main__':

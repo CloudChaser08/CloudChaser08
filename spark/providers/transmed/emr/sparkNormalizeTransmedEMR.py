@@ -17,6 +17,14 @@ from spark.helpers.privacy.emr import                   \
     lab_result as priv_lab_result,                      \
     diagnosis as priv_diagnosis
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/transmed/emr/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
+
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
 
@@ -206,6 +214,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             for table in ['transactions_cancerepisode', 'transactions_treatmentsite']:
                 runner.unpersist('{}_with_input_filename'.format(table))
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Transmed',
+            data_type=DataType.EMR,
+            data_source_transaction_path="",
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
 
 def main(args):
     # init
@@ -219,11 +237,10 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/transmed/emr/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

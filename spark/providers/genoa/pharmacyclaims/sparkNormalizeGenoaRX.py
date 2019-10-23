@@ -17,6 +17,15 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.udf.general_helpers as gen_helpers
 import spark.providers.genoa.pharmacyclaims.transactional_schemas as transactional_schemas
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/genoa/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
+
+
 def run(spark, runner, date_input, test = False, airflow_test = False):
     script_path = __file__
 
@@ -127,6 +136,17 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
                                            hvm_historical.day)
         )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Genoa',
+            data_type=DataType.PHARMACY_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     spark, sqlContext = init('Genoa')
@@ -138,9 +158,9 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/genoa/spark-output/'
+        output_path = OUTPUT_PATH_TEST
     else:
-        output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
+        output_path = OUTPUT_PATH_PRODUCTION
 
     backup_path = output_path.replace('salusv', 'salusv/backup')
 
@@ -153,7 +173,12 @@ def main(args):
         '{}part_provider=genoa/'.format(backup_path)
     ])
 
-    normalized_records_unloader.distcp(output_path)
+    if args.airflow_test:
+        normalized_records_unloader.distcp(output_path)
+    else:
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

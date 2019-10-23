@@ -11,8 +11,17 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.events as events_priv
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 FEED_ID = '56'
 LATEST_ACTIVES_DATE = '2018-09-25'
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/alliance/spark-output/'
+OUTPUT_PATH_PRODUCTION = ""
+
 
 def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
     script_path = __file__
@@ -142,22 +151,38 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
     else:
         alliance_data_final.createOrReplaceTempView('event_common_model')
 
+    if not test and not airflow_test:
+        # TODO: Determine DataType
+        logger.log_run_details(
+            provider_name='Alliance',
+            data_type=DataType.CONSUMER,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
 
 def main(args):
     spark, sqlContext = init('Alliance Normalization')
 
     runner = Runner(sqlContext)
 
+    if args.airflow_test:
+        output_path = OUTPUT_PATH_TEST
+    else:
+        OUTPUT_PATH_PRODUCTION = args.output_path
+        ouput_path = OUTPUT_PATH_PRODUCTION
+
     run(spark, runner, args.date, args.project_id, airflow_test=args.airflow_test)
 
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/alliance/spark-output/'
+        normalized_records_unloader.distcp(output_path)
     else:
-        output_path = args.output_path
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == '__main__':

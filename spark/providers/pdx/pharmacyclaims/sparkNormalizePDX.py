@@ -13,7 +13,15 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.providers.pdx.pharmacyclaims.load_transactions as load_transactions
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 FEED_ID = '65'
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/pdx/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-11-26/'
 
 
 def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=None, test=False,
@@ -107,6 +115,17 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
     else:
         df.collect()
 
+    if not test and not end_to_end_test:
+        logger.log_run_details(
+            provider_name='PDX',
+            data_type=DataType.PHARMACY_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     spark, sqlContext = init('PDX Normalization')
@@ -119,14 +138,13 @@ def main(args):
     spark.stop()
 
     if args.end_to_end_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/spark-output/'
+        output_path = OUTPUT_PATH_TEST
         tmp_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/temp/'
-    else:
-        output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-11-26/'
-        tmp_path = 's3://salusv/backup/pdx/{}/'.format(args.date)
-
-    if args.ouptut_path:
+    elif args.ouput_path:
         output_path = args.output_path
+    else:
+        output_path = OUTPUT_PATH_PRODUCTION
+        tmp_path = 's3://salusv/backup/pdx/{}/'.format(args.date)
 
     current_year_month = args.date[:7] + '-01'
     prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
@@ -138,7 +156,12 @@ def main(args):
     subprocess.check_call(
         ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(prev_year_month), tmp_path + date_part.format(prev_year_month)]
     )
-    normalized_records_unloader.distcp(output_path)
+
+    if args.airflow_test:
+        normalized_records_unloader.distcp(output_path)
+    else:
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == '__main__':

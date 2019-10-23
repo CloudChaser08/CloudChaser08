@@ -14,9 +14,17 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.medicalclaims as medical_priv
 import spark.helpers.privacy.common as priv_common
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
 
 FEED_ID = '57'
 VENDOR_ID = '244'
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/careset/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/custom/careset/'
+
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     setid = 'hcpcs_careset_npi_{}.csv'.format(date_input.replace('-', '_'))
@@ -99,6 +107,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                                          hvm_historical.day)
         )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Careset',
+            data_type=DataType.MEDICAL_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path="",
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     spark, sqlContext = init('Careset')
@@ -110,11 +129,10 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/careset/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        output_path = 's3://salusv/warehouse/parquet/custom/careset/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == '__main__':

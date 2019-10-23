@@ -35,7 +35,6 @@ def get_spark_runtime(json_endpoint):
 
     return total_time
 
-
 def format_time(seconds):
     intervals = (
         ('weeks', 604800),

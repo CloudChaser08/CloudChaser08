@@ -4,10 +4,11 @@ import inspect
 import spark.test.marketplace.resources.test_schema as source_table_schema
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.test.marketplace.resources.transactions import schemas
+from spark.common.utility.output_type import DataType
 
 PROVIDER_NAME = 'TEST'
 PROVIDER_PARTITION_NAME = "100"
-DATA_TYPE = 'TEST_CLAIMS'
+DATA_TYPE = DataType.TEST_CLAIMS
 PROVIDER_PARTITION_COLUMN = 'test'
 DATE_PARTITION_COLUMN = 'test2'
 OUTPUT_TABLE_NAMES_TO_SCHEMAS = {

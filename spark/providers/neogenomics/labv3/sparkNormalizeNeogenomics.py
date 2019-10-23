@@ -14,11 +14,19 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers.neogenomics.labv3.transactional_schemas as transactional_schemas
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 FEED_ID = '32'
 VENDOR_ID = '78'
 MODEL_VERSION = '07'
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 SCRIPT_PATH = __file__
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
 
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
@@ -65,6 +73,17 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
             substr_date_part=False, columns=_columns
         )
 
+    if not test and not end_to_end_test:
+        logger.log_run_details(
+            provider_name='Neogenomics',
+            data_type=DataType.LAB_TESTS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # init
@@ -78,9 +97,9 @@ def main(args):
     spark.stop()
 
     if args.end_to_end_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
+        output_path = OUTPUT_PATH_TEST
     else:
-        output_path = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
+        output_path = OUTPUT_PATH_PRODUCTION
 
     backup_path = output_path.replace('salusv', 'salusv/backup')
 
@@ -93,7 +112,12 @@ def main(args):
         '{}part_provider=neogenomics/'.format(backup_path)
     ])
 
-    normalized_records_unloader.distcp(output_path)
+    if args.end_to_end_test:
+        normalized_records_unloader.distcp(output_path)
+    else:
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

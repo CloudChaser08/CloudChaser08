@@ -9,7 +9,15 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -88,6 +96,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'pharmacyclaims_common_model', 'date_service', date_input
         )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='DiplomatRX',
+            data_type=DataType.PHARMACY_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # init
@@ -98,14 +117,18 @@ def main(args):
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
+    if args.airflow_test:
+        output_path = OUTPUT_PATH_TEST
+    else:
+        output_path = OUTPUT_PATH_PRODUCTION
+
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/spark-output/'
+        normalized_records_unloader.distcp(output_path)
     else:
-        output_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

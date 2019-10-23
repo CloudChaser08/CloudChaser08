@@ -10,8 +10,13 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 from spark.runner import Runner
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
 
 AIRFLOW_E2E_BASE = 's3://salusv/testing/dewey/airflow/e2e/caris/labtests/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -99,6 +104,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'date_service', date_input
         )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Caris',
+            data_type=DataType.LAB_TESTS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # init
@@ -107,16 +123,20 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
+    if args.airflow_test:
+        output_path = AIRFLOW_E2E_BASE + 'spark-output/'
+    else:
+        output_path = OUTPUT_PATH_PRODUCTION
+
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 
     if args.airflow_test:
-        output_path = AIRFLOW_E2E_BASE + 'spark-output/'
+        normalized_records_unloader.distcp(output_path)
     else:
-        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

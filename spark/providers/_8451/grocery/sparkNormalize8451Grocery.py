@@ -10,11 +10,18 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers._8451.grocery.transactional_schemas as transactional_schemas
+from spark.common.utility import logger
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+
 
 FEED_ID = '124'
 VENDOR_ID = '337'
 MODEL_VERSION = '10'
 SCRIPT_PATH = __file__
+
+OUTPUT_PATH_TESTING = 's3://salusv/testing/dewey/airflow/e2e/8451/grocery/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/consumer/2017-08-02/'
 
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
@@ -57,6 +64,17 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
             substr_date_part=False, columns=_columns
         )
 
+    if not test and not end_to_end_test:
+        logger.log_run_details(
+            provider_name='8451_Grocery_HVM',
+            data_type=DataType.CONSUMER,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # init
@@ -70,11 +88,12 @@ def main(args):
     spark.stop()
 
     if args.end_to_end_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/8451/grocery/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TESTING)
     else:
-        output_path = 's3://salusv/warehouse/parquet/consumer/2017-08-02/'
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
 
-    normalized_records_unloader.distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

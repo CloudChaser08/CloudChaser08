@@ -11,6 +11,10 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 S3_EXPRESS_SCRIPTS_IN = 's3a://salusv/incoming/enrollmentrecords/express_scripts/'
@@ -88,7 +92,7 @@ def run (spark, runner, date_input, test=False):
     runner.run_spark_query('ALTER TABLE matching_payload RENAME TO new_phi')
 
     runner.run_spark_script('load_matching_payload.sql', [
-        ['matching_path', matching_path] 
+        ['matching_path', matching_path]
     ])
 
     if test:
@@ -130,6 +134,18 @@ def run (spark, runner, date_input, test=False):
         normalized_records_unloader.partition_and_rename(spark, runner, 'enrollmentrecords', 'enrollment_common_model.sql',
             'express_scripts', 'enrollment_common_model', 'date_service', date_input[:-3], date_input[:-3])
 
+    if not test:
+        # TODO: Determine DataType
+        logger.log_run_details(
+            provider_name='Express_Scripts',
+            data_type=DataType.CUSTOM,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=S3_EXPRESS_SCRIPTS_OUT,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 def main(args):
     # init
     spark, sqlContext = init("Express Scripts")
@@ -141,7 +157,8 @@ def main(args):
 
     spark.stop()
 
-    normalized_records_unloader.distcp(S3_EXPRESS_SCRIPTS_OUT)
+    hadoop_time = normalized_records_unloader.distcp(S3_EXPRESS_SCRIPTS_OUT)
+    RunRecorder().record_run_details(additional_time=hadoop_time)
 
     # offload reference data
     subprocess.check_call(['aws', 's3', 'rm', '--recursive', S3_REF_PHI])

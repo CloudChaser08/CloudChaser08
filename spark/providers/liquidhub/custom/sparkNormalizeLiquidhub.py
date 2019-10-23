@@ -16,10 +16,16 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
 import json
 
-VALID_MANUFACTURERS = [
-        m.lower() for m in 
-        ['Amgen', 'Novartis', 'Lilly']
-    ]
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+VALID_MANUFACTURERS = [m.lower() for m in ['Amgen', 'Novartis', 'Lilly']]
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/lhv2/custom/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3a://salusv/deliverable/lhv2/'
+
 
 def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     if test:
@@ -165,7 +171,17 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
             with open('/tmp/error_report_' + group_id + '.txt', 'w') as fout:
                 fout.write('\n'.join(['{}|{}|{}|{}'.format(r.source_name, r.manufacturer, r.bad_patient_count, json.dumps(r.bad_patient_ids)) for r in err]))
             subprocess.check_call(['hadoop', 'fs', '-put', '/tmp/error_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/error_report_' + group_id + '.txt'])
-        
+
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Liquidhub_Mastering',
+            data_type=DataType.CUSTOM,
+            data_source_transaction_path=incoming_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=batch_date
+        )
 
 def main(args):
     # init
@@ -179,11 +195,10 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/lhv2/custom/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        output_path = 's3a://salusv/deliverable/lhv2/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ from spark.common.cdm.encounter import schemas as encounter_schema
 from spark.common.cdm.diagnosis import schemas as diagnosis_schema
 from spark.common.cdm.encounter_detail import schemas as encounter_detail_schema
 from spark.common.cdm.encounter_provider import schemas as encounter_provider_schema
+from spark.common.utility.output_type import DataType, RunType
 import spark.common.utility.logger as logger
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
@@ -60,5 +61,17 @@ if __name__ == "__main__":
 
     driver.transform()
     driver.save_to_disk()
+
+    if not end_to_end_test:
+        logger.log_run_detaisl(
+            provider_name='Sentry',
+            data_type=DataType.CDM,
+            data_source_transaction_path=driver.input_path,
+            data_source_matching_path=driver.matching_path,
+            output_path=driver.output_path,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
     driver.stop_spark()
     driver.copy_to_output_path()
