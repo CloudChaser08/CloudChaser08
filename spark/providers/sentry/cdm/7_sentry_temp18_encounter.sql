@@ -5,6 +5,7 @@ SELECT
     enc.disch_dt,
     enc.imported_on,
     clm_prt.patientid,
+    clm_prt.claim_id,  -- claim_id added to populate provider table for 340B and Medicare Provider Number
     clm_prt.patient_status_code,
     clm_prt.patient_status,
     clm_prt.emergent_status,

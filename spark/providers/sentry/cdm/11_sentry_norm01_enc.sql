@@ -1,4 +1,4 @@
-SELECT 
+SELECT
     MONOTONICALLY_INCREASING_ID()                                                           AS row_id,
     /* hv_enc_id */
     CONCAT
@@ -48,7 +48,11 @@ SELECT
                     COALESCE
                         (
                             enc.threedigitzip,
-                            enc.facility_zip 
+                            CASE
+                               WHEN LENGTH(CLEAN_UP_NUMERIC_CODE(enc.facility_zip) ) <> 0
+                               THEN CLEAN_UP_NUMERIC_CODE(enc.facility_zip)
+                            ELSE NULL
+                            END
                         ), 1, 3
                 )
         )                                                                                   AS ptnt_zip3_cd,
@@ -73,7 +77,11 @@ SELECT
             THEN NULL
         ELSE 'RENDERING_FACILITY_VENDOR_ID'
     END                                                                                     AS enc_fclty_id_qual,
-    enc.facility_zip                                                                        AS enc_fclty_zip_cd,
+    CASE
+       WHEN LENGTH(CLEAN_UP_NUMERIC_CODE(enc.facility_zip) ) <> 0
+       THEN CLEAN_UP_NUMERIC_CODE(enc.facility_zip)
+    ELSE NULL
+    END                                                                                     AS enc_fclty_zip_cd,
     MD5(prv.npi_number)                                                                     AS enc_prov_id,
     /* enc_prov_id_qual */
     CASE
@@ -114,7 +122,7 @@ SELECT
                                     THEN ''
                                 ELSE CONCAT
                                         (
-                                            ' | PATIENT_STATUS: ', 
+                                            ' | PATIENT_STATUS: ',
                                             COALESCE(enc.patient_status_code, ''),
                                             ' - ',
                                             COALESCE(enc.patient_status, '')
@@ -124,11 +132,6 @@ SELECT
                                 WHEN enc.emergent_status IS NULL
                                     THEN ''
                                 ELSE CONCAT(' | EMERGENT_STATUS: ', enc.emergent_status)
-                            END,
-                            CASE
-                                WHEN enc.340b_id IS NULL
-                                    THEN ''
-                                ELSE CONCAT(' | 340B_ID: ', enc.340b_id)
                             END
                         ), 4
                 )
@@ -143,12 +146,6 @@ SELECT
 	        THEN CONCAT('X', SUBSTR(enc.bill_type, 2))
         ELSE enc.bill_type
 	END                                                                                     AS bill_typ_std_cd,
-    /* payr_grp_txt */
-    CASE
-        WHEN enc.medicare_provider_number IS NULL
-            THEN NULL
-        ELSE CONCAT('MEDICARE_PROVIDER_NUMBER: ', enc.medicare_provider_number)
-    END                                                                                     AS payr_grp_txt,
     /* data_captr_dt */
 	CAP_DATE
 	    (
@@ -162,13 +159,13 @@ SELECT
 	CASE
 	    WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE
                                         (
-                                            CAST(EXTRACT_DATE(enc.admit_dt, '%Y-%m-%d') AS DATE), 
+                                            CAST(EXTRACT_DATE(enc.admit_dt, '%Y-%m-%d') AS DATE),
                                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
                                             CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
 	        THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(enc.admit_dt, 1, 7)
-	END                                                                                     AS part_mth
+	END                                                                                                            AS part_mth
  FROM sentry_temp18_encounter enc
  LEFT OUTER JOIN sentry_temp19_best_provider prv
               ON COALESCE(enc.enc_id, 'EMPTY') = COALESCE(prv.enc_id, 'DUMMY')
