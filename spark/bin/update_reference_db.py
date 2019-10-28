@@ -58,7 +58,7 @@ def create_mapping(spark_files, census_files, standard_files):
 
         if routine_name:
             if routine_name.startswith('census/'):
-                _mapping[routine_name]['script_args'] = '[--num-input-files INT] [DATE]'
+                _mapping[routine_name]['script_args'] = '--Run me using bin/censusize'
             else:
                 module = script.replace('/', '.')[:-3]
                 try:
@@ -83,6 +83,15 @@ def create_mapping(spark_files, census_files, standard_files):
                     usage_output = usage_output.split(':')[1].strip()
 
                 _mapping[routine_name]['script_args'] = usage_output
+
+    # add censusize
+    census_name = 'bin/censusize.py'
+    _mapping[census_name] = {}
+    _mapping[census_name]['script_path'] = 'spark/bin/censusize.py'
+    _mapping[census_name]['script_args'] = '[--batch_id BATCH_ID] [--client_name CLIENT_NAME] ' \
+                                            '[--opportunity_id OPPORTUNITY_ID] [--salt SALT] ' \
+                                            '[--census_module CENSUS_MODULE] ' \
+                                            '[--end_to_end_test] [--test] date'
 
     return _mapping
 
