@@ -1,6 +1,4 @@
 from datetime import datetime, date
-from pyspark.sql.functions import isnull, lead
-from pyspark.sql import Window
 import argparse
 
 from spark.runner import Runner
@@ -11,9 +9,10 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
-
-from spark.providers.genoa.pharmacyclaims import normalize
+import spark.common.pharmacyclaims_common_model_v6 as pharmacyclaims_common_model
+import spark.helpers.schema_enforcer as schema_enforcer
 from spark.providers.genoa.pharmacyclaims import load_transactions
+
 
 def run(spark, runner, date_input, test = False, airflow_test = False):
     script_path = __file__
@@ -70,7 +69,9 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
         runner.sqlContext.sql("select * from genoa_rx_raw where date_of_service < '2015-05-31'") \
             .createOrReplaceTempView('genoa_rx_raw')
 
-    normalize.run(runner)
+    norm_pharmacy = runner.run_spark_script('mapping.sql', return_output=True)
+    schema_enforcer.apply_schema(norm_pharmacy, pharmacyclaims_common_model.schema) \
+        .createOrReplaceTempView('pharmacyclaims_common_model')
 
     # Apply clean up and privacy filtering
     postprocessor.compose(
