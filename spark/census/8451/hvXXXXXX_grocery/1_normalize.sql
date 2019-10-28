@@ -138,4 +138,6 @@ SELECT
 	MD5(txn.hshd_code)                                                                      AS hshd_code
  FROM 8451_grocery_transactions txn
  LEFT OUTER JOIN deduplicated_payload pay
-   ON txn.card_code = pay.join_keys
+   --TODO: USE THE FOLLOWING LINE WHEN YOU GO TO AUTOMATE THIS METHOD
+   --ON txn.card_code = pay.join_keys
+   ON txn.card_code = pay.claimId

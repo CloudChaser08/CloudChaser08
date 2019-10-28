@@ -13,6 +13,7 @@ import spark.helpers.records_loader as records_loader
 from spark.runner import Runner, PACKAGE_PATH
 from spark.spark_setup import init
 from .std_census import records_schemas, matching_payloads_schemas
+from spark.common.utility.logger import log
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 TEST = 'test'
@@ -79,7 +80,7 @@ class CensusDriver(object):
         self._salt = salt
         self._test = test
         self._end_to_end_test = end_to_end_test
-
+        log("Starting Census Routine - {}: {}".format(client_name, opportunity_id))
         # if a salt is not specified, default to the opp id
         if self._salt is None:
             self._salt = opportunity_id
@@ -191,6 +192,7 @@ class CensusDriver(object):
             return recurse_os_directory_for_files(records_path)
 
     def load(self, batch_date, batch_id, chunk_records_files=None):
+        log("Loading input")
         if self.__class__.__name__ == CensusDriver.__name__:
             records_schemas = std_census.records_schemas
             matching_payloads_schemas = std_census.matching_payloads_schemas
@@ -224,6 +226,7 @@ class CensusDriver(object):
                                 matching_payloads_schemas)
 
     def transform(self, batch_date, batch_id):
+        log("Transforming records")
         if self.__class__.__name__ == CensusDriver.__name__:
             census_module = std_census
         else:
@@ -240,6 +243,7 @@ class CensusDriver(object):
         return header.union(content).coalesce(1)
 
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
+        log("Saving results to the local file system")
         dataframe.createOrReplaceTempView('deliverable')
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
         normalized_records_unloader.unload_delimited_file(
@@ -254,7 +258,9 @@ class CensusDriver(object):
         )
 
     def copy_to_s3(self, batch_date=None, batch_id=None):
+        log("Copying files to: " + self._output_path)
         normalized_records_unloader.distcp(self._output_path)
 
     def stop_spark(self):
+        log("Stopping spark.")
         self._spark.stop()
