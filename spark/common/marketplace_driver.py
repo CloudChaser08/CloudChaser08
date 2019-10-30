@@ -10,6 +10,8 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.common.utility.logger as logger
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility.output_type import DataType, RunType
 
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
@@ -53,25 +55,38 @@ class MarketplaceDriver(object):
 
         # get directory and path for provider
         previous_stack_frame = inspect.currentframe().f_back
+
         provider_directory_path = os.path.dirname(
             inspect.getframeinfo(previous_stack_frame).filename)
-        provider_directory_path = provider_directory_path.replace('spark/target/dewey.zip/',
-                                                                  "") + '/'
+
+        provider_directory_path = \
+                provider_directory_path.replace('spark/target/dewey.zip/', "") + '/'
+
         # set global variables
         first_schema_name = list(output_table_names_to_schemas.keys())[0]
         first_schema_obj = output_table_names_to_schemas[first_schema_name]
+
         self.provider_name = provider_name
         self.provider_partition_name = provider_partition_name
+
         self.data_type = first_schema_obj.data_type
+        self._data_type_str = DataType(self.data_type).value
+
         self.date_input = datetime.datetime.strptime(date_input, '%Y-%m-%d').date()
+
         self.provider_directory_path = provider_directory_path
+
         self.test = test
         self.end_to_end_test = end_to_end_test
+
         self.source_table_schema = source_table_schema
+
         self.output_table_names_to_schemas = output_table_names_to_schemas
+
         self.input_path = None
         self.matching_path = None
         self.output_path = None
+
         self.spark = None
         self.sql_context = None
         self.runner = None
@@ -86,18 +101,18 @@ class MarketplaceDriver(object):
 
         # get i/o paths
         self.input_path = MODE_RECORDS_PATH_TEMPLATE[mode].format(
-            provider_name=self.provider_name, data_type=self.data_type,
+            provider_name=self.provider_name, data_type=self._data_type_str,
             year=self.date_input.year, month=self.date_input.month, day=self.date_input.day
         )
         self.matching_path = MODE_MATCHING_PATH_TEMPLATE[mode].format(
-            provider_name=self.provider_name, data_type=self.data_type,
+            provider_name=self.provider_name, data_type=self._data_type_str,
             year=self.date_input.year, month=self.date_input.month, day=self.date_input.day
         )
         self.output_path = MODE_OUTPUT_PATH[mode]
 
     def init_spark_context(self):
         if not self.spark:
-            context_list = [str(self.date_input), self.provider_name, self.data_type, 'HVM']
+            context_list = [str(self.date_input), self.provider_name, self._data_type_str, 'HVM']
             context_name = ' '.join(context_list)
             logger.log('Starting {context_name}'.format(context_name=context_name))
             self.spark, self.sql_context = init(context_name, self.test)
@@ -111,6 +126,18 @@ class MarketplaceDriver(object):
         self.load()
         self.transform()
         self.save_to_disk()
+
+        if not self.test and not self.end_to_end:
+            logger.log_run_details(
+                self.provider_name,
+                self.data_type,
+                self.input_path,
+                self.matching_path,
+                self.output_path,
+                RunType.MARKETPLACE,
+                self.date_input
+            )
+
         self.stop_spark()
         self.copy_to_output_path()
 
@@ -184,4 +211,10 @@ class MarketplaceDriver(object):
         Copy data from local file system to output destination
         """
         logger.log('Copying data to the output location: {}'.format(self.output_path))
-        normalized_records_unloader.distcp(self.output_path)
+
+        if not self.test and not self.end_to_end:
+            hadoop_time = normalized_records_unloader.timed_distcp(self.output_path)
+            RunRecorder().record_run_details(additional_time=hadoop_time)
+
+        else:
+            normalized_records_unloader.distcp(self.output_path)

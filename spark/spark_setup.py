@@ -4,6 +4,7 @@ from spark.helpers.udf.post_normalization_cleanup import *
 from spark.helpers.udf.general_helpers import *
 from spark.helpers.udf.medicalclaims_helpers import *
 import spark.helpers.file_utils as file_utils
+from spark.common.utility import logger
 
 
 def init(provider, local=False):
@@ -31,6 +32,8 @@ def init(provider, local=False):
              .addPyFile(file_utils.get_abs_path(__file__, 'target/dewey.zip'))
 
     spark.sparkContext.setCheckpointDir('/tmp/checkpoint/')
+
+    logger.log_spark_state()
 
     # register privacy filters
     sqlContext.registerFunction(
