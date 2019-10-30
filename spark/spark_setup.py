@@ -158,6 +158,10 @@ def init(provider, local=False):
         'string_set_diff', string_set_diff
     )
 
+    sqlContext.registerFunction(
+        'clean_up_vital_sign', clean_up_vital_sign
+    )
+
     spark.udf.register('find_descendants_recursively', find_descendants_recursively,
                        MapType(IntegerType(), ArrayType(IntegerType())))
     return spark, sqlContext

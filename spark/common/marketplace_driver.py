@@ -19,23 +19,25 @@ END_TO_END_TEST = 'end_to_end_test'
 TEST = 'test'
 PRODUCTION = 'production'
 DRIVER_MODULE_NAME = 'driver'
-E2E_PATH = 's3://salusv/testing/dewey/airflow/e2e/{provider_name}/{data_type}/{year}/{month:02d}/{day:02d}/'
+E2E_OUTPUT_PATH = 's3://salusv/testing/dewey/airflow/e2e/'
+RECORDS_PATH = 's3://salusv/incoming/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
+MATCHING_PATH = 's3://salusv/matching/payload/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
     TEST: './test/marketplace/resources/records/',
-    END_TO_END_TEST: E2E_PATH + 'records/',
-    PRODUCTION: 's3://salusv/incoming/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
+    END_TO_END_TEST: RECORDS_PATH,
+    PRODUCTION: RECORDS_PATH
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
     TEST: './test/marketplace/resources/matching/',
-    END_TO_END_TEST: E2E_PATH + 'matching/',
-    PRODUCTION: 's3://salusv/matching/payload/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
+    END_TO_END_TEST: MATCHING_PATH,
+    PRODUCTION: MATCHING_PATH
 }
 
 MODE_OUTPUT_PATH = {
     TEST: './test/marketplace/resources/output/',
-    END_TO_END_TEST: E2E_PATH + 'output/',
+    END_TO_END_TEST: E2E_OUTPUT_PATH,
     PRODUCTION: 's3://salusv/warehouse/parquet/'
 }
 
@@ -108,6 +110,7 @@ class MarketplaceDriver(object):
             provider_name=self.provider_name, data_type=self._data_type_str,
             year=self.date_input.year, month=self.date_input.month, day=self.date_input.day
         )
+
         self.output_path = MODE_OUTPUT_PATH[mode]
 
     def init_spark_context(self):
