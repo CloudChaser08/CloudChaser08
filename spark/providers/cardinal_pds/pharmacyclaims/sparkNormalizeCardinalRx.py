@@ -13,6 +13,10 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
 
 TEXT_FORMAT = """
 ROW FORMAT DELIMITED
@@ -23,6 +27,10 @@ STORED AS TEXTFILE
 PARQUET_FORMAT = "STORED AS PARQUET"
 DELIVERABLE_LOC = 'hdfs:///cardinal_pds_deliverable/'
 EXTRA_COLUMNS = ['tenant_id', 'hvm_approved']
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
+
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -177,6 +185,17 @@ LOCATION '{}'
             'pharmacyclaims_common_model_final', 'date_service', date_input
         )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='CardinalRx',
+            data_type=DataType.PHARMACY_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # init
@@ -185,23 +204,28 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
+    if args.airflow_test:
+        output_path = OUTPUT_PATH_TEST
+        deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-deliverable-output/'
+    else:
+        output_path = OUTPUT_PATH_PRODUCTION
+        deliverable_path = 's3://salusv/deliverable/cardinal_pds-0/'
+
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
-
-    if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-output/'
-        deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-deliverable-output/'
-    else:
-        output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
-        deliverable_path = 's3://salusv/deliverable/cardinal_pds-0/'
 
     normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
     curr_mo = args.date[:7]
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:
        subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
-    normalized_records_unloader.distcp(output_path)
+
+    if args.airflow_test:
+        normalized_records_unloader.distcp(output_path)
+    else:
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
     subprocess.check_call([
         's3-dist-cp', '--s3ServerSideEncryption', '--src',

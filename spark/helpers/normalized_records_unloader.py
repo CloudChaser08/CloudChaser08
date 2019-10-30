@@ -1,6 +1,7 @@
 import subprocess
 import os
 import re
+import time
 import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 from spark.helpers.file_utils import FileSystemType
@@ -274,6 +275,12 @@ def distcp(dest, src=constants.hdfs_staging_dir):
     subprocess.check_call([
         'hdfs', 'dfs', '-rm', '-r', src
     ])
+
+def timed_distcp(dest, src=constants.hdfs_staging_dir):
+    start = time.time()
+    distcp(dest, src)
+
+    return time.time() - start
 
 
 def unload_delimited_file(
