@@ -4,31 +4,23 @@ import pytest
 import spark.providers.cardinal_pds.pharmacyclaims.sparkNormalizeCardinalRx as cardinal_pds
 
 hv_results = []
-cardinal_results = []
 
 
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
 
+
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
     cardinal_pds.run(spark['spark'], spark['runner'], '2017-08-29', True)
-    global hv_results, cardinal_results
+    global hv_results
     hv_results = spark['sqlContext'].sql('select * from pharmacyclaims_common_model_final') \
-        .collect()
-    cardinal_results = spark['sqlContext'].sql('select * from cardinal_deliverable') \
         .collect()
 
 
 def test_patient_ids():
     "Ensure that patient ids and hvids are populated correctly"
-    sample_row = [r for r in cardinal_results if r.rx_number == '0817b8e97a88844fa6fa894450923ca7'][0]
-    assert sample_row.hvid == '0003660202I'
-
-    sample_row = [r for r in cardinal_results if r.rx_number == '2e531da0548a838e2ba3497e432b87f1'][0]
-    assert sample_row.hvid == '1505255655'
-
     sample_row = [r for r in hv_results if r.rx_number == '0817b8e97a88844fa6fa894450923ca7'][0]
     assert sample_row.hvid is None
 
@@ -56,13 +48,6 @@ def test_product_code():
     assert sample_row_nonndc.product_service_id_qual == '3'
 
 
-def test_pharmacy_ncpdp():
-    "Ensure that pharmacy NCPDP numbers are 0 left-padded to 7 characters"
-    sample_row_ndc = [r for r in cardinal_results if r.rx_number == '0817b8e97a88844fa6fa894450923ca7'][0]
-
-    assert sample_row_ndc.pharmacy_other_id == '0134635'
-
-
 def test_logical_delete_reason(spark):
     "Ensure that logical delete reason is being correctly applied"
 
@@ -76,22 +61,18 @@ def test_logical_delete_reason(spark):
     assert len([r for r in res if r.logical_delete_reason is None]) == 1
 
 
-def test_pharmacy_other_id_hashed_in_hv_results_but_not_cardinal_results():
+def test_pharmacy_other_id_hashed_in_hv_results():
     hv_sample_row = [r for r in hv_results if r.rx_number == '0817b8e97a88844fa6fa894450923ca7'][0]
-    cardinal_sample_row = [r for r in cardinal_results if r.rx_number == '0817b8e97a88844fa6fa894450923ca7'][0]
     assert hv_sample_row.pharmacy_other_id == hashlib.md5('0134635'.encode('UTF-8')).hexdigest()
-    assert cardinal_sample_row.pharmacy_other_id == '0134635'
 
 
 def test_hvm_approved_filtering():
-    """Ensure hvm_approved fields are filtered out for hv_results, but not cardinal_results"""
-    assert len(cardinal_results) == 13
+    """Ensure hvm_approved fields are filtered out for hv_results"""
     assert len(hv_results) == 9
 
 
 def test_hvm_approved_columns():
-    """Ensure that the hvm_approved column doesn't exist in cardinal_results or hv_results"""
-    assert not hasattr(cardinal_results[0], 'hvm_approved')
+    """Ensure that the hvm_approved column doesn't exist in hv_results"""
     assert not hasattr(hv_results[0], 'hvm_approved')
 
 

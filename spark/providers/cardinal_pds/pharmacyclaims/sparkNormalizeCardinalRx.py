@@ -51,17 +51,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/cardinal_pds/pharmacyclaims/resources/normalized/'
         ) + '/'
         table_format = TEXT_FORMAT
-        deliverable_path = '/tmp/cardinal_pds_deliverable/'
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/out/{}/'.format(
+        input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_pds/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/payload/{}/'.format(
+        matching_path = 's3a://salusv/matching/payload/pharmacyclaims/cardinal_pds/{}/'.format(
             date_input.replace('-', '/')
         )
         normalized_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/normalized/'
         table_format = TEXT_FORMAT
-        deliverable_path = DELIVERABLE_LOC
     else:
         input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_pds/{}/'.format(
             date_input.replace('-', '/')
@@ -71,7 +69,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         normalized_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
         table_format = PARQUET_FORMAT
-        deliverable_path = DELIVERABLE_LOC
 
     min_date = '2011-01-01'
     max_date = date_input
@@ -123,22 +120,11 @@ LOCATION '{}'
         ['properties', properties, False]
     ])
 
-    if test:
-        subprocess.check_call(['rm', '-rf', deliverable_path])
-    else:
-        subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', deliverable_path])
-
     tbl = spark.table('pharmacyclaims_common_model')
     (
         tbl.select(*[col(c).cast('string').alias(c) for c in tbl.columns])
             .createOrReplaceTempView('pharmacyclaims_common_model_strings')
     )
-
-    # Create deliverable for Cardinal including all rows
-    runner.run_spark_script('create_cardinal_deliverable.sql', [
-        ['location', deliverable_path],
-        ['partitions', org_num_partitions, False]
-    ])
 
     # Remove the ids Cardinal created for their own purposes and de-obfuscate the HVIDs
     clean_hvid_sql = """SELECT *,
@@ -206,10 +192,8 @@ def main(args):
 
     if args.airflow_test:
         output_path = OUTPUT_PATH_TEST
-        deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-deliverable-output/'
     else:
         output_path = OUTPUT_PATH_PRODUCTION
-        deliverable_path = 's3://salusv/deliverable/cardinal_pds-0/'
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
@@ -221,16 +205,13 @@ def main(args):
     for mo in [curr_mo, prev_mo]:
        subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
 
+    logger.log("Moving files to s3")
     if args.airflow_test:
         normalized_records_unloader.distcp(output_path)
     else:
         hadoop_time = normalized_records_unloader.timed_distcp(output_path)
         RunRecorder().record_run_details(additional_time=hadoop_time)
 
-    subprocess.check_call([
-        's3-dist-cp', '--s3ServerSideEncryption', '--src',
-        DELIVERABLE_LOC, '--dest', deliverable_path + args.date.replace('-', '/') + '/'
-    ])
 
 
 if __name__ == "__main__":
