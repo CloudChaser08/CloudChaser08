@@ -1,7 +1,7 @@
 import subprocess
 from csv import DictWriter
 from datetime import datetime
-
+from spark.common.utility.logger import log
 from spark.common.utility import get_spark_runtime, format_time
 from spark.common.utility.singleton import Singleton
 from spark.common.utility.spark_state import SparkState
@@ -43,6 +43,7 @@ class RunRecorder(object):
                 such as Hadoop. If `None`, then only the Spark time will be used
                 to represent the total run time.
         """
+        log("Recording run details")
 
         if spark_app_runtime is None:
             spark_runtime = get_spark_runtime(self.spark_state.history_endpoint)
