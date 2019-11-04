@@ -15,6 +15,12 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
+aws s3 cp s3://salusv/reference/gsdd/GSDDMedGuide.db /opt/goldstandard/gsdd5/
+if [ $? -ne 0 ]; then
+	echo "Problem downloading GSDDMedGuide.db"
+	exit 1
+fi
+
 # all else bail automatically 
 set -e
 GSDDUpdate
