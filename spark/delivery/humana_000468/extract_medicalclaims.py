@@ -37,9 +37,9 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
     return ext.select(*EXTRACT_COLUMNS)
 
 def extract(runner, hvids, timestamp, start_dt, end_dt):
-    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'dw.hvm_medicalclaims_v08', True).union(
-        extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_medicalclaims', False)
-    )
+    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'dw.hvm_medicalclaims_v08', True)
+            #NOTE: 2019-11-04 - Removing synthetic claims until told to turn back on.
+            # .union(extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_medicalclaims', False))
 
 EXTRACT_COLUMNS = [
     'record_id',
