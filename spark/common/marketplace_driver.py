@@ -130,7 +130,7 @@ class MarketplaceDriver(object):
         self.transform()
         self.save_to_disk()
 
-        if not self.test and not self.end_to_end:
+        if not self.test and not self.end_to_end_test:
             logger.log_run_details(
                 self.provider_name,
                 self.data_type,
@@ -215,7 +215,7 @@ class MarketplaceDriver(object):
         """
         logger.log('Copying data to the output location: {}'.format(self.output_path))
 
-        if not self.test and not self.end_to_end:
+        if not self.test and not self.end_to_end_test:
             hadoop_time = normalized_records_unloader.timed_distcp(self.output_path)
             RunRecorder().record_run_details(additional_time=hadoop_time)
 
