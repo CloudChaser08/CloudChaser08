@@ -125,7 +125,8 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
             'date_service', date_input,
             hvm_historical_date = datetime(hvm_historical.year,
                                            hvm_historical.month,
-                                           hvm_historical.day)
+                                           hvm_historical.day),
+            unload_partition_count=100
         )
 
 
