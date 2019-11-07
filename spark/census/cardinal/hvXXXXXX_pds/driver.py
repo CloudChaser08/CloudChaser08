@@ -16,7 +16,7 @@ class CardinalPDSCensusDriver(CensusDriver):
         self._output_file_name_template = 'cardinal_pds_normalized_{batch_id_value}.psv.gz'
 
     def load(self, batch_date, batch_id, chunk_records_files=None):
-        super(CardinalPDSCensusDriver, self).load(batch_date, batch_id, chunk_records_file)
+        super(CardinalPDSCensusDriver, self).load(batch_date, batch_id, chunk_records_files)
 
         df = self._spark.table('cardinal_pds_transactions')
         df = postprocessor.nullify(df, ['NULL', 'Unknown', '-1', '-2'])
