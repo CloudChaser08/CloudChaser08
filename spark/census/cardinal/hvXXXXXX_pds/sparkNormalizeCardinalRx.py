@@ -6,7 +6,7 @@ import subprocess
 from pyspark.sql.functions import lit, md5, col
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
+from spark.common.pharmacyclaims_common_model_census_v6 import schema as pharma_schema
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
@@ -96,7 +96,7 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
 
     properties = ""
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v6.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims_common_model_census_v6.sql', [
         ['external', '', False],
         ['additional_columns', [], False],
         ['table_name', 'normalized_claims', False],
