@@ -129,7 +129,7 @@ def test_transform(test_driver):
     """
     test_driver._spark.sql("SELECT '1' as hvid, '2' as claimId").createOrReplaceTempView('matching_payload')
 
-    results = test_driver.transform().collect()
+    results = test_driver.transform(date(2018, 1, 1), None).collect()
 
     # first row should be a header
     assert results[0]['hvid'] == 'hvid'

@@ -38,7 +38,7 @@ class _8451CensusDriver(CensusDriver):
         if not self._test:
             external_table_loader.load_ref_gen_ref(self._sqlContext)
 
-    def transform(self):
+    def transform(self, batch_date, batch_id):
         return self._runner.run_all_spark_scripts(variables=[['salt', self._salt]])
 
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None):

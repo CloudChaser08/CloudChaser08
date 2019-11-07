@@ -52,7 +52,7 @@ def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=
     # -1 and 0 mean the same thing, process everything
     else:
         driver.load(batch_date, batch_id)
-        df = driver.transform()
+        df = driver.transform(batch_date, batch_id)
         driver.save(df, batch_date, batch_id)
     driver.stop_spark()
     if num_input_files <= 0:

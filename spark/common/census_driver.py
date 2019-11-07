@@ -223,7 +223,7 @@ class CensusDriver(object):
         payload_loader.load_all(self._runner, matching_path,
                                 matching_payloads_schemas)
 
-    def transform(self):
+    def transform(self, batch_date, batch_id):
         if self.__class__.__name__ == CensusDriver.__name__:
             census_module = std_census
         else:

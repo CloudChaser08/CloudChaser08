@@ -60,7 +60,7 @@ class Grocery8451CensusDriver(CensusDriver):
             self.LOADED_PAYLOADS = True
             payload_loader.load_all(self._runner, matching_path, matching_payloads_schemas)
 
-    def transform(self):
+    def transform(self, batch_date, batch_id):
         logger.log('Transforming')
 
         # By default, run_all_spark_scripts will run all sql scripts in the working directory

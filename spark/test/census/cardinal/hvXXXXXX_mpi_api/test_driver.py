@@ -62,7 +62,7 @@ def test_run(driver, spark):
     assert len(rows_for_table(spark, 'cardinal_mpi_api_transactions')) > 0
 
     # ~ When transformation scripts are run
-    df = driver.transform()
+    df = driver.transform(batch_date, batch_id)
 
     # ~ Then normalized table exists
     assert 'normalize' in all_tables(spark)

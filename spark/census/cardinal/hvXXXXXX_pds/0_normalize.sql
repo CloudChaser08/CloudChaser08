@@ -110,5 +110,5 @@ SELECT
     END                                       AS logical_delete_reason,
     t.tenant_id                               AS tenant_id, -- 05/30 Added at Cardinal's request
     t.hvm_approved                            AS hvm_approved
-FROM transactions t
+FROM cardinal_pds_transactions t
     LEFT JOIN matching_payload mp ON t.hv_join_key = mp.hvJoinKey

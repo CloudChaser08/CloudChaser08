@@ -71,7 +71,7 @@ class CardinalAPICensusDriver(CensusDriver):
             test=test
         )
 
-    def transform(self):
+    def transform(self, batch_date, batch_id):
 
         # Override parent definition to not include a header
         stage = "test" if self._end_to_end_test else "prod"

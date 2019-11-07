@@ -43,7 +43,7 @@ class ComplexExampleCensusDriver(CensusDriver):
 
 
     # Example of overwriting the default transform function
-    def transform(self):
+    def transform(self, batch_date, batch_id):
         content = self._runner.run_all_spark_scripts().repartition(1).sortWithinPartitions('hvid')
         return content
 
