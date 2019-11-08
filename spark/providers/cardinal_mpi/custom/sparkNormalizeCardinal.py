@@ -60,7 +60,7 @@ def run(spark, runner, batch_id, test=False, airflow_test=False):
     ])
 
     if not test and not airflow_test:
-        logger.log_run(
+        logger.log_run_details(
             provider_name='CardinalRx',
             data_type=DataType.CUSTOM,
             data_source_transaction_path="",

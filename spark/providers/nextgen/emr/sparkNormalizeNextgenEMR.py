@@ -516,7 +516,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
                 .orc(HDFS_DEMOGRAPHICS_REFERENCE, compression='zlib', mode='overwrite')
 
     if not test and not airflow_test:
-        logger.log_run(
+        logger.log_run_details(
             provider_name='NextGen',
             data_type=DataType.EMR,
             data_source_transaction_path=input_path,

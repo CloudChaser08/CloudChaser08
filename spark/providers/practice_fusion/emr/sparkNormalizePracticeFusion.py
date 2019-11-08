@@ -162,7 +162,7 @@ def main(args):
         total_spark_time = sum(spark_runtimes)
         total_hadoop_time = sum(hadoop_runtimes)
 
-        logger.log_run(
+        logger.log_run_details(
             provider_name='Practice Fusion',
             data_type=DataType.EMR,
             data_source_transaction_path=combined_trans_paths,
