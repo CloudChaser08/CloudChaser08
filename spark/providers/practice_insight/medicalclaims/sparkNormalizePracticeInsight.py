@@ -13,8 +13,16 @@ import spark.helpers.explode as explode
 import spark.providers.practice_insight.medicalclaims.udf as pi_udf
 import spark.helpers.postprocessor as postprocessor
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 AIRFLOW_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/'
+
+OUTPUT_PATH_TEST = AIRFLOW_TEST_DIR + 'spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
 
 input_path, min_date, max_date, matching_path, setid = \
     None, None, None, None, None
@@ -243,14 +251,24 @@ def main(args):
             spark, runner, part, args.date, args.shuffle_partitions, airflow_test=args.airflow_test
         )
 
+    if not args.airflow_test:
+        logger.log_run_details(
+            provider_name='Practice_Fusion',
+            data_type=DataType.MEDICAL_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=args.date
+        )
+
     spark.stop()
 
     if args.airflow_test:
-        output_path = AIRFLOW_TEST_DIR + 'spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

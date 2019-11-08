@@ -2,6 +2,7 @@ import subprocess
 from csv import DictWriter
 from datetime import datetime
 from spark.common.utility.logger import log
+
 from spark.common.utility import get_spark_runtime, format_time
 from spark.common.utility.singleton import Singleton
 from spark.common.utility.spark_state import SparkState
@@ -51,9 +52,9 @@ class RunRecorder(object):
             spark_runtime = spark_app_runtime
 
         if additional_time is not None:
-            total_time = spark_runtime + additional_time
+            total_time = format_time(spark_runtime + additional_time)
         else:
-            total_time = spark_runtime
+            total_time = format_time(spark_runtime)
 
         header = [
             'provider_name',

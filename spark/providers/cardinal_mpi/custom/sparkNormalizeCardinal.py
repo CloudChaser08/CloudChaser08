@@ -9,6 +9,15 @@ import spark.helpers.constants as constants
 from pyspark.sql.types import ArrayType, StringType
 from pyspark.sql.functions import udf, lit
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3a://salusv/deliverable/cardinal_mpi-0/'
+
+
 def run(spark, runner, batch_id, test=False, airflow_test=False):
 
     script_path = __file__
@@ -50,6 +59,16 @@ def run(spark, runner, batch_id, test=False, airflow_test=False):
         ['location', output_dir]
     ])
 
+    if not test and not airflow_test:
+        logger.log_run(
+            provider_name='CardinalRx',
+            data_type=DataType.CUSTOM,
+            data_source_transaction_path="",
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=batch_id
+        )
 
 def main(args):
     if args.date is not None:
@@ -67,11 +86,10 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        output_path = 's3a://salusv/deliverable/cardinal_mpi-0/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

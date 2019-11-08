@@ -11,12 +11,21 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.events as event_priv
 from spark.providers.mindbody import mindbodyPrivacy as mindbody_priv
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mindbody/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/consumer/2017-08-02/'
+
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     date_path = '/'.join(date_input.split('-')[:2])
-    
+
     setid = 'record_data_' + date_obj.strftime('%Y%m%d')
-    
+
     script_path = __file__
 
     if test:
@@ -43,8 +52,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Load the matching payload
     payload_loader.load(runner, matching_path, ['claimId', 'hvJoinKey'])
-    
-    # Create the Event v03 table 
+
+    # Create the Event v03 table
     # to store the results in
     runner.run_spark_script('../../common/event_common_model_v4.sql', [
         ['table_name', 'event_common_model', False],
@@ -69,7 +78,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ['max_date', str(date_obj)]
     ])
 
-    # Postprocessing 
+    # Postprocessing
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='38', vendor_id='133', filename=setid),
@@ -85,6 +94,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 'mindbody', 'event_common_model', 'event_date', date_input
             )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='MindBody',
+            data_type=DataType.CONSUMER,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # Initialize Spark
@@ -95,16 +115,17 @@ def main(args):
 
     # Run the normalization routine
     run(spark, runner, args.date, airflow_test=args.airflow_test)
-    
+
     # Tell spark to shutdown
     spark.stop()
 
     # Determine where to put the output
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/mindbody/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-       output_path = 's3://salusv/warehouse/parquet/consumer/2017-08-02/'
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

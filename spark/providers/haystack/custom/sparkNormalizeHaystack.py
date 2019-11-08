@@ -16,6 +16,15 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
 import uuid
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/haystack/custom/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3a://salusv/deliverable/haystack/{}/'
+
+
 def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=False):
     if test:
         incoming_path = file_utils.get_abs_path(
@@ -50,19 +59,19 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
 
     payload_loader.load(runner, matching_path, ['matchStatus', 'hvJoinKey', 'matchScore'])
     records_loader.load_and_clean_all(runner, incoming_path, transactions, 'csv', '|')
-    
+
     content = runner.run_spark_script('normalize.sql', return_output=True)
 
     schema = StructType([
         StructField(c, StringType(), True) for c in [
             'hvid', 'temporary_id', 'match_score', 'year_of_birth', 'age',
             'gender', 'zip3', 'state', 'status', 'symptoms', 'hcp_1_npi',
-            'hcp_1_first_name', 'hcp_1_last_name', 'hcp_1_address', 
+            'hcp_1_first_name', 'hcp_1_last_name', 'hcp_1_address',
             'hcp_1_city', 'hcp_1_state', 'hcp_1_zip_code', 'hcp_1_email',
             'hcp_1_role', 'hcp_2_npi', 'hcp_2_first_name', 'hcp_2_last_name',
             'hcp_2_address', 'hcp_2_city', 'hcp_2_state', 'hcp_2_zip_code',
             'hcp_2_email', 'hcp_2_role', 'treating_site_npi',
-            'treating_site_name', 'payer_id', 'payer_name', 'payer_plan_id', 
+            'treating_site_name', 'payer_id', 'payer_name', 'payer_plan_id',
             'payer_plan_name', 'data_source', 'crm_id_1', 'crm_id_2',
             'activity_date'
         ]
@@ -104,7 +113,18 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
             normalized_records_unloader.unload_delimited_file(
                 spark, runner, 'hdfs:///staging/' + group_id + '/', 'haystack_deliverable',
                 output_file_name=output_file_name)
-        
+
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Haystack_Mastering',
+            data_type=DataType.CUSTOM,
+            data_source_transaction_path=incoming_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION.format(channel),
+            run_type=RunType.MARKETPLACE,
+            input_date=date
+        )
+
 
 def main(args):
     # init
@@ -118,11 +138,11 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/haystack/custom/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        output_path = 's3a://salusv/deliverable/haystack/{}/'.format(args.channel)
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = \
+                normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION.format(args.channel))
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 #! /usr/bin/python
 import argparse
+import subprocess
 from datetime import datetime, timedelta
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -10,6 +11,11 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 from pyspark.sql.functions import lit
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 TEXT_FORMAT = """
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '|'
@@ -17,6 +23,10 @@ LINES TERMINATED BY '\\n'
 STORED AS TEXTFILE
 """
 PARQUET_FORMAT = "STORED AS PARQUET"
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -120,6 +130,17 @@ LOCATION '{}'
             'pharmacyclaims_common_model_final', 'date_service', date_input
         )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='ExpressScripts',
+            data_type=DataType.PHARMACY_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # init
@@ -133,9 +154,9 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/spark-output/'
+        output_path = OUTPUT_PATH_TEST
     else:
-        output_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+        output_path = OUTPUT_PATH_PRODUCTION
 
     # We can't selectively delete only the claims that were reversed
     # Instead, delete all the old normalized data and replace it with all the claims that were
@@ -147,7 +168,11 @@ def main(args):
         subprocess.check_call(['aws', 's3', 'rm', '--recursive',
             's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=express_scripts/part_best_date={}'.format(mo)])
 
-    normalized_records_unloader.distcp(output_path)
+    if args.airflow_test:
+        normalized_records_unloader.distcp(output_path)
+    else:
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

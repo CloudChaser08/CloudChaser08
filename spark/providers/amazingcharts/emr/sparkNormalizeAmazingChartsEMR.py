@@ -30,8 +30,16 @@ import spark.helpers.privacy.emr.vital_sign as vital_sign_priv
 from pyspark.sql.window import Window
 from pyspark.sql.functions import col, lit, row_number, split, explode
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 FEED_ID = '5'
 VENDOR_ID = '5'
+
+OUTPUT_PATH = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
+
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
@@ -307,6 +315,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             distribution_key='row_id'
         )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='AmazingCharts',
+            data_type=DataType.EMR,
+            data_source_transaction_path=','.join(input_paths.values()),
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 def main(args):
     spark, sqlContext = init('AmazingCharts EMR Normalization')
 
@@ -316,12 +335,9 @@ def main(args):
 
     spark.stop()
 
-    if args.airflow_test:
-        pass
-    else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
-    
-    normalized_records_unloader.distcp(output_path)
+    if not args.airflow_test:
+        hadoop_time = normalized_records_unloader.distcp(OUTPUT_PATH)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == '__main__':

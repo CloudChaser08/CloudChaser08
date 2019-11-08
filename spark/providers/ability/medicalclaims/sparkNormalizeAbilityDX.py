@@ -18,6 +18,15 @@ from pyspark.sql.utils import AnalysisException
 import logging
 import load_records
 
+from spark.common.utility import logger
+from spark.common.utility.run_recoder import RunRecorder
+from spark.common.utility.output_type import DataType, RunType
+
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/medicalclaims/ability/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
+
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
     spark.sparkContext.setCheckpointDir('hdfs:///tmp/checkpoints/')
@@ -124,7 +133,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         all_norm = product_norm if all_norm is None else all_norm.union(product_norm)
 
     all_norm.createOrReplaceTempView('medicalclaims_common_model')
-    
+
     if not test:
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'ability',
@@ -132,6 +141,16 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             hvm_historical_date = hvm_historical
         )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Ability',
+            data_type=DataType.MEDICAL_CLAIMS,
+            data_source_transaction_path=input_path_prefix,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
 
 def main(args):
     # init
@@ -145,11 +164,10 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/medicalclaims/ability/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == '__main__':

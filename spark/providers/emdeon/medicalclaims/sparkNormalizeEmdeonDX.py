@@ -8,7 +8,14 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.postprocessor as postprocessor
 from spark.helpers.privacy import medicalclaims as priv_medicalclaims
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
+S3_EMDEON_OUT = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
+
 
 def run(spark, runner, date_input, test=False):
     script_path = __file__
@@ -89,9 +96,19 @@ def run(spark, runner, date_input, test=False):
             'medicalclaims_common_model', 'date_service', date_input
         )
 
+    if not test:
+        logger.log_run_details(
+            provider_name='Emdeon',
+            data_type=DataType.MEDICAL_CLAIMS,
+            data_source_transaction_path=EMDEON_IN,
+            data_source_matching_path=EMDEON_MATCHING,
+            output_path=S3_EMDEON_OUT,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
-
     # init spark
     spark, sqlContext = init("Emdeon DX")
 
@@ -102,8 +119,11 @@ def main(args):
 
     spark.stop()
 
-    S3_EMDEON_OUT = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
-    normalized_records_unloader.distcp(S3_EMDEON_OUT)
+    if args.airflow_test:
+        normalized_records_unloader.distcp(S3_EMDEON_OUT)
+    else:
+        hadoop_time = normalized_records_unloader.timed_distcp(S3_EMDEON_OUT)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == '__main__':

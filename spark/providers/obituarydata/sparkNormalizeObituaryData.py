@@ -10,6 +10,14 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.constants as constants
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+S3_PATH = 's3://salusv/warehouse/parquet/consumer/2017-02-23/'
+
+
 # init
 spark, sqlContext = init("ObituaryData")
 
@@ -95,6 +103,18 @@ runner.run_spark_script('../../common/unload_common_model.sql', [
     ['distribution_key', 'record_id', False]
 ])
 
+if not args.debug:
+    logger.log_run_details(
+        provider_name='Obituary',
+        data_type=DataType.CONSUMER,
+        data_source_transaction_path=input_path,
+        data_source_matching_path=matching_path,
+        output_path=S3_PATH,
+        run_type=RunType.MARKETPLACE,
+        input_date=args.date
+    )
+
 spark.stop()
-S3_PATH = 's3://salusv/warehouse/parquet/consumer/2017-02-23/'
-normalized_records_unloader.distcp(S3_PATH, src=output_path)
+
+hadoop_time = normalized_records_unloader.timed_distcp(S3_PATH, src=output_path)
+RunRecorder().record_run_details(additional_time=hadoop_time)

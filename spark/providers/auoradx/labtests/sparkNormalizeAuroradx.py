@@ -1,4 +1,4 @@
-import argparse 
+import argparse
 import datetime
 import subprocess
 from spark.runner import Runner
@@ -13,8 +13,16 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers.auoradx.labtests.transactional_schemas as transactional_schemas
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 FEED_ID = '85'
 script_path = __file__
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
@@ -29,7 +37,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     elif end_to_end_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/out/2018/11/14/'
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/payload/2018/11/14/'
-    else: 
+    else:
         # reprocess the full data set every time
         input_path = 's3a://salusv/incoming/labtests/auroradx/*/*/*/'
         matching_path = 's3a://salusv/matching/payload/labtests/auroradx/*/*/*/'
@@ -74,13 +82,24 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
         normalized_records_unloader.unload(
             spark, runner, df, 'part_best_date', date_input, 'aurora_diagnostics',
-            columns=_columns, 
+            columns=_columns,
             hvm_historical_date=datetime.datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             )
         )
-    else: 
+    else:
         df.collect()
+
+    if not test and not end_to_end_test:
+        logger.log_run_details(
+            provider_name='Auroradx',
+            data_type=DataType.LAB_TESTS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
 
 
 def main(args):
@@ -90,18 +109,23 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
+    if args.end_to_end_test:
+        output_path = OUTPUT_PATH_TEST
+    else:
+        output_path = OUTPUT_PATH_PRODUCTION
+
     run(spark, runner, args.date, end_to_end_test=args.end_to_end_test)
 
     spark.stop()
 
-    if args.end_to_end_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/auroradx/labtests/spark-output/'
-    else:
-        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
-
     # the full data set is reprocessed every time
     subprocess.check_output(['aws', 's3', 'rm', '--recursive', output_path + 'part_provider=aurora_diagnostics'])
-    normalized_records_unloader.distcp(output_path)
+
+    if args.end_to_end_test:
+        normalized_records_unloader.distcp(output_path)
+    else:
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":
@@ -109,4 +133,4 @@ if __name__ == "__main__":
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_args()
-    main(args)    
+    main(args)

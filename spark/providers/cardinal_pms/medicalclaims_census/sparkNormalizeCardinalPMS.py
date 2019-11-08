@@ -19,6 +19,11 @@ import spark.helpers.privacy.medicalclaims as medical_priv
 
 import logging
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 # staging for deliverable
 DELIVERABLE_LOC = 'hdfs:///deliverable/'
 
@@ -186,6 +191,16 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
     if not test:
         normalized_records_unloader.unload(
             spark, runner, final_df, 'date_service', date_input, 'cardinal_pms'
+        )
+
+    if not test and not airflow_test:
+        logger.log_run(
+            provider_name='Cardinal_PMS',
+            data_type=DataType.MEDICAL_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            run_type=RunType.CENSUS,
+            input_date=date_input
         )
 
 

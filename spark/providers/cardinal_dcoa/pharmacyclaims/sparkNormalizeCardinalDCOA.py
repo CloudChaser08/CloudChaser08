@@ -9,7 +9,9 @@ import spark.helpers.file_utils as file_utils
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharmacy_priv
-
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
 
 def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
@@ -80,6 +82,17 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
         delivery_df = runner.sqlContext.sql('select * from pharmacyclaims_common_model')
         delivery_df.repartition(num_output_files).write.csv(path=output_path, compression="gzip", sep="|", quoteAll=True, header=True)
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Cardinal_DCOA',
+            data_type=DataType.PHARMACY_CLAIMS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path="",
+            output_path=output_path,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # Initialize Spark
@@ -91,6 +104,9 @@ def main(args):
     # Run the normalization routine
     run(spark, runner, args.date, airflow_test=args.airflow_test, \
             num_output_files=args.num_output_files)
+
+    if not args.airflow_test:
+        RunRecorder().record_run_details()
 
     # Tell spark to shutdown
     spark.stop()

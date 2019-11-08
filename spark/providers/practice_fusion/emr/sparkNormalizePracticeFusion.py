@@ -17,6 +17,12 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.providers.practice_fusion.emr.records_schemas as records_schemas
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility.spark_state import SparkState
+from spark.common.utility import logger, get_spark_runtime
+
+
 FEED_ID = '136'
 
 MODEL_SCHEMA = {
@@ -30,6 +36,16 @@ MODEL_SCHEMA = {
 
 MODELS = ['encounter', 'clinical_observation', 'diagnosis', 'lab_test',
           'medication', 'procedure']
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/practice_fusion/spark-output-3/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/opp_1186_warehouse/parquet/emr/2019-04-17/'
+
+
+transaction_paths = []
+matching_paths = []
+spark_runtimes = []
+hadoop_runtimes = []
+
 
 def run(spark, runner, date_input, model=None, custom_input_path=None, custom_matching_path=None,
         test=False, end_to_end_test=False):
@@ -98,6 +114,10 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
         else:
             df.collect()
 
+    if not test and not end_to_end_test:
+        transaction_paths.append(input_path)
+        matching_paths.append(matching_path)
+
 
 def main(args):
     models = MODELS
@@ -113,22 +133,46 @@ def main(args):
         run(spark, runner, args.date, model, custom_input_path=args.input_path,
             custom_matching_path=args.matching_path, end_to_end_test=args.end_to_end_test)
 
+        if not args.end_to_end_test:
+            spark_runtimes.append(get_spark_runtime(SparkState.get_current_state().active_endpoint))
+
         spark.stop()
 
         if args.end_to_end_test:
-            output_path = 's3://salusv/testing/dewey/airflow/e2e/practice_fusion/spark-output-3/'
-        else:
-            output_path = 's3://salusv/opp_1186_warehouse/parquet/emr/2019-04-17/'
-
-        if args.ouptut_path:
+            output_path = OUTPUT_PATH_TEST
+        elif args.output_path:
             output_path = args.output_path
+        else:
+            output_path = OUTPUT_PATH_PRODUCTION
 
         # the full data set is reprocessed every time
         backup_path = output_path.replace('salusv', 'salusv/backup')
         subprocess.check_output(['aws', 's3', 'rm', '--recursive', backup_path + model])
         subprocess.check_call(['aws', 's3', 'mv', '--recursive', output_path + model, backup_path + model])
 
-        normalized_records_unloader.distcp(output_path)
+        if args.end_to_end_test:
+            normalized_records_unloader.distcp(output_path)
+        else:
+            hadoop_runtimes.append(normalized_records_unloader.timed_distcp(output_path))
+
+    if not args.end_to_end_test:
+        combined_trans_paths = ','.join(transaction_paths)
+        combined_matching_paths = ','.join(matching_paths)
+
+        total_spark_time = sum(spark_runtimes)
+        total_hadoop_time = sum(hadoop_runtimes)
+
+        logger.log_run(
+            provider_name='Practice Fusion',
+            data_type=DataType.EMR,
+            data_source_transaction_path=combined_trans_paths,
+            data_source_matching_path=combined_matching_paths,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=args.date
+        )
+
+        RunRecorder().record_run_details(total_spark_time, total_hadoop_time)
 
 
 if __name__ == '__main__':

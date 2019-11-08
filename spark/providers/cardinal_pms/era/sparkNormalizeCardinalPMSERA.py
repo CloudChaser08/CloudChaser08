@@ -15,6 +15,15 @@ import spark.helpers.schema_enforcer as schema_enforcer
 
 import logging
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/era/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/deliverable/cardinal_pms_remit-0/'
+
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
 
@@ -126,6 +135,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 spark, runner, '/staging/' + conf['data_type'] + '/', conf['table'], num_files=50
             )
 
+    if not test and not airflow_test:
+        # TODO: Determine Matching path
+        logger.log_run(
+            provider_name='Cardinal_PMS',
+            data_type=DataType.ERA,
+            data_source_transaction_path=input_path_prefix,
+            data_source_matching_path="",
+            output_path=OUTPUT_PATH_PRODUCTION + date_input,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 def main(args):
     # init
     spark, sqlContext = init('Cardinal PMS')
@@ -133,16 +154,20 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
+    if args.airflow_test:
+        output_path = OUTPUT_PATH_TEST
+    else:
+        output_path = OUTPUT_PATH_PRODUCTION + args.date
+
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/era/spark-output/'
+        normalized_records_unloader.distcp(output_path)
     else:
-        output_path = 's3://salusv/deliverable/cardinal_pms_remit-0/' + args.date
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == '__main__':

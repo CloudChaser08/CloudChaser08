@@ -40,6 +40,11 @@ import pyspark.sql.functions as F
 
 import logging
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
 S3_ENCOUNTER_REFERENCE    = 's3://salusv/reference/nextgen/encounter_deduped/'
 S3_DEMOGRAPHICS_REFERENCE = 's3://salusv/reference/nextgen/demographics_orc/'
@@ -47,6 +52,10 @@ S3_CROSSWALK_REFERENCE    = 's3://salusv/reference/nextgen/crosswalk/'
 
 HDFS_ENCOUNTER_REFERENCE    = '/user/hive/warehouse/encounter_dedup'
 HDFS_DEMOGRAPHICS_REFERENCE = '/user/hive/warehouse/demographics_local'
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
+
 
 def run(spark, runner, date_input, input_file_path, payload_path, normalize_encounter=True,
         demo_ref=S3_DEMOGRAPHICS_REFERENCE, enc_ref=S3_ENCOUNTER_REFERENCE,
@@ -506,6 +515,17 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
         runner.sqlContext.table('demographics_local').coalesce(1000).write \
                 .orc(HDFS_DEMOGRAPHICS_REFERENCE, compression='zlib', mode='overwrite')
 
+    if not test and not airflow_test:
+        logger.log_run(
+            provider_name='NextGen',
+            data_type=DataType.EMR,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 def clean_and_union_cln_obs(sqlc, cln_obs1, cln_obs3):
     substanceusage_whitelists = [{
         'column_name': 'clin_obsn_typ_cd',
@@ -564,6 +584,13 @@ def main(args):
     # initialize runner
     runner = Runner(sqlContext)
 
+    if args.airflow_test:
+        output_path = OUTPUT_PATH_TEST
+    elif args.output_path:
+        output_path = args.output_path
+    else:
+        output_path = OUTPUT_PATH_PRODUCTION
+
     run(spark, runner, args.date, args.input_path,
         args.payload_path, normalize_encounter=args.normalize_encounter,
         demo_ref=args.input_demo_ref, enc_ref=args.input_enc_ref,
@@ -571,12 +598,7 @@ def main(args):
 
     spark.stop()
 
-    if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/spark-output/'
-    elif args.output_path:
-        output_path = args.output_path
-    else:
-        output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
+    if not args.airflow_test and not args.output_path:
         try:
             check_output(['hadoop', 'fs', '-ls', HDFS_ENCOUNTER_REFERENCE])
             if args.output_enc_ref.startswith('s3://'):
@@ -618,8 +640,11 @@ def main(args):
             except:
                 logging.warn("Something went wrong in removing the old normalized encounter data")
 
-
-    normalized_records_unloader.distcp(output_path)
+    if args.airflow_test:
+        normalized_records_unloader.distcp(output_path)
+    else:
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

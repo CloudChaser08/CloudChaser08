@@ -9,6 +9,13 @@ import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+OUTPUT_PATH = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
+
 
 def _get_rollup_vals(mapfile_broadcast, diagnosis_code_range):
     """
@@ -194,6 +201,16 @@ def run(spark, runner, date_input, diagnosis_mapfile, test=False):
             staging_subdir='diagnosis/', distribution_key='row_id',
             provider_partition='part_hvm_vdr_feed_id', date_partition='part_mth'
         )
+    if not test:
+        logger.log_run_details(
+            provider_name='Treato',
+            data_type=DataType.EMR,
+            data_source_transaction_path=input_path,
+            data_source_matching_path="",
+            output_path=OUTPUT_PATH,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
 
 
 def main(args):
@@ -207,9 +224,8 @@ def main(args):
 
     spark.stop()
 
-    output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
-
-    normalized_records_unloader.distcp(output_path)
+    hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH)
+    RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

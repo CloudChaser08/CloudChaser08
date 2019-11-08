@@ -43,10 +43,25 @@ import spark.helpers.privacy.emr.vital_sign as vital_sign_priv
 
 import spark.providers.allscripts.emr.udf as allscripts_udf
 
+from spark.common.utility import logger, get_spark_runtime
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility.spark_state import SparkState
+
+
 script_path = __file__
 
 FEED_ID = '25'
 VENDOR_ID = '35'
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
+
+transaction_paths = []
+matching_paths = []
+spark_runtimes = []
+hadoop_runtimes = []
+
 
 def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_path=None,
         model=None, test=False, airflow_test=False):
@@ -447,6 +462,10 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             distribution_key='row_id'
         )
 
+    if not test and not airflow_test:
+        transaction_paths.append(input_path)
+        matching_paths.append(matching_path)
+
 
 def main(args):
     # init
@@ -462,20 +481,43 @@ def main(args):
         # initialize runner
         runner = Runner(sqlContext)
 
+        if args.airflow_test:
+            output_path = OUTPUT_PATH_TEST
+        elif args.output_path:
+            output_path = args.output_path
+        else:
+            output_path = OUTPUT_PATH_PRODUCTION
+
         run(spark, runner, args.date, explicit_input_path=args.input_path,
             explicit_matching_path=args.matching_path, model=model,
             airflow_test=args.airflow_test)
 
-        spark.stop()
-
         if args.airflow_test:
-            output_path = 's3://salusv/testing/dewey/airflow/e2e/allscripts/emr/spark-output/'
-        elif args.output_path:
-            output_path = args.output_path
+            spark.stop()
+            normalized_records_unloader.distcp(output_path)
         else:
-            output_path = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
+            spark_runtimes.append(get_spark_runtime(SparkState().active_endpoint))
+            spark.stop()
+            hadoop_runtimes.append(normalized_records_unloader.timed_distcp(output_path))
 
-        normalized_records_unloader.distcp(output_path)
+    if not args.end_to_end_test:
+        combined_trans_paths = ','.join(transaction_paths)
+        combined_matching_paths = ','.join(matching_paths)
+
+        total_spark_time = sum(spark_runtimes)
+        total_hadoop_time = sum(hadoop_runtimes)
+
+        logger.log_run_details(
+            provider_name='AllScripts',
+            data_type=DataType.EMR,
+            data_source_transaction_path=combined_trans_paths,
+            data_source_matching_path=combined_matching_paths,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=args.date
+        )
+
+        RunRecorder().record_run_details(total_spark_time, total_hadoop_time)
 
 
 if __name__ == "__main__":

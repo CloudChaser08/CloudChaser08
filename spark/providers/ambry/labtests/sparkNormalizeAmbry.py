@@ -17,6 +17,15 @@ import spark.helpers.privacy.labtests as labtests_priv
 
 import logging
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/ambry/labtests/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
+
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
 
@@ -107,7 +116,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         runner.sqlContext.sql('select * from labtests_common_model')
     ).createTempView('labtests_common_model')
     logging.debug('Finished post-processing')
-    
+
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
                         runner.sqlContext,
@@ -124,6 +133,17 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                                            hvm_historical.day)
         )
 
+    if not test and not airflow_test:
+        logger.log_run_details(
+            provider_name='Ambry',
+            data_type=DataType.LAB_TESTS,
+            data_source_transaction_path=input_path,
+            data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
+            run_type=RunType.MARKETPLACE,
+            input_date=date_input
+        )
+
 
 def main(args):
     # init
@@ -137,11 +157,10 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/ambry/labtests/spark-output/'
+        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        output_path = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
-
-    normalized_records_unloader.distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == '__main__':

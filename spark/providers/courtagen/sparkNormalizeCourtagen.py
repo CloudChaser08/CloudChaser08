@@ -12,6 +12,11 @@ import spark.helpers.file_prefix as file_prefix
 import spark.helpers.constants as constants
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+from spark.common.utility import logger
+
+
 # init
 spark, sqlContext = init("Courtagen")
 
@@ -62,4 +67,16 @@ runner.run_spark_script('../../common/lab_post_normalization_cleanup_v2.sql')
 normalized_records_unloader.unload(spark, runner, 'labtests', 'lab_common_model_v2.sql',
     'courtagen', 'lab_common_model', 'date_service', args.date, S3_COURTAGEN_OUT)
 
+logger.log_run_details(
+    provider_name='Courtagen',
+    data_type=DataType.LAB_TESTS,
+    data_source_transaction_path=S3_COURTAGEN_IN,
+    data_source_matching_path=S3_COURTAGEN_MATCHING,
+    output_path=S3_COURTAGEN_OUT,
+    run_type=RunType.MARKETPLACE,
+    input_date=args.date
+)
+
 spark.sparkContext.stop()
+
+RunRecorder().record_run_details()

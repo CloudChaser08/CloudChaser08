@@ -11,6 +11,11 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from spark.common.event_common_model_v4 import schema
 from spark.runner import Runner
 
+from spark.common.utility import logger as log
+from spark.common.utility.output_type import DataType, RunType
+from spark.common.utility.run_recorder import RunRecorder
+
+
 date_input = sys.argv[1]
 
 payload_dir = 's3a://salusv/matching/payload/consumer/alliance/{}/'.format(date_input.replace('-', '/'))
@@ -43,6 +48,17 @@ postprocessed = postprocessor.compose(
 
 postprocessed.repartition(100).write.parquet('hdfs:///staging/')
 
-normalized_records_unloader.distcp(dest_dir)
+log.log_run_details(
+    provider_name='Alliance',
+    data_type=DataType.CONSUMER,
+    data_source_transaction_path="",
+    data_source_matching_path=payload_dir,
+    output_path=dest_dir,
+    run_type=RunType.MARKETPLACE,
+    input_date=date_input
+)
+
+hadoop_time = normalized_records_unloader.timed_distcp(dest_dir)
+RunRecorder().record_run_details(additional_time=hadoop_time)
 
 spark.stop()
