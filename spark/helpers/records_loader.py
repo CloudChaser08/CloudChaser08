@@ -68,5 +68,3 @@ def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitio
             .compose(postprocessor.trimmify, postprocessor.nullify)(df)
             .cache_and_track(table))
         df.createOrReplaceTempView(table)
-
-        df.count()  # to force computation

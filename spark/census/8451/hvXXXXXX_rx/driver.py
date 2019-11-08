@@ -73,7 +73,7 @@ class _8451CensusDriver(CensusDriver):
             def list_dir(path):
                 return [
                     f.split(' ')[-1].strip().split('/')[-1]
-                    for f in subprocess.check_output(['hdfs', 'dfs', '-ls', path]).split('\n')
+                    for f in str(subprocess.check_output(['hdfs', 'dfs', '-ls', path])).split('\n')
                     if f.split(' ')[-1].startswith('hdfs')
                 ]
 
@@ -91,4 +91,3 @@ class _8451CensusDriver(CensusDriver):
             part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
             new_name = output_file_name_template.format(part_number) + '.psv.gz'
             rename_file(output_path + filename, output_path + new_name)
-
