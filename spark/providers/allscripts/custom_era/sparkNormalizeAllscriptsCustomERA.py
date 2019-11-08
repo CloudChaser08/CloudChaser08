@@ -72,7 +72,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
         output_path = ','.join(output_locations.values())
 
-        logger.log_run(
+        logger.log_run_details(
             provider_name='AllScripts',
             data_type=DataType.CUSTOM,
             data_source_transaction_path=transaction_path,

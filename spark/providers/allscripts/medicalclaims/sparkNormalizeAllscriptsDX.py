@@ -148,7 +148,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
 
     if not test and not airflow_test:
-        logger.log_run(
+        logger.log_run_details(
             provider_name='AllScripts',
             data_type=DataType.MEDICAL_CLAIMS,
             data_source_transaction_path=input_path,
