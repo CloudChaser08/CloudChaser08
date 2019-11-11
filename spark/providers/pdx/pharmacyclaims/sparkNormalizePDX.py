@@ -140,7 +140,7 @@ def main(args):
     if args.end_to_end_test:
         output_path = OUTPUT_PATH_TEST
         tmp_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/temp/'
-    elif args.ouput_path:
+    elif args.output_path:
         output_path = args.output_path
     else:
         output_path = OUTPUT_PATH_PRODUCTION
@@ -157,7 +157,7 @@ def main(args):
         ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(prev_year_month), tmp_path + date_part.format(prev_year_month)]
     )
 
-    if args.airflow_test:
+    if args.end_to_end_test:
         normalized_records_unloader.distcp(output_path)
     else:
         hadoop_time = normalized_records_unloader.timed_distcp(output_path)

@@ -29,6 +29,9 @@ DELIVERABLE_LOC = 'hdfs:///deliverable/'
 
 DEOBFUSCATION_KEY = 'Cardinal_MPI-0'
 
+OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medicalclaims/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
+
 
 def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
     global DELIVERABLE_LOC
@@ -199,6 +202,7 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
             data_type=DataType.MEDICAL_CLAIMS,
             data_source_transaction_path=input_path,
             data_source_matching_path=matching_path,
+            output_path=OUTPUT_PATH_PRODUCTION,
             run_type=RunType.CENSUS,
             input_date=date_input
         )
@@ -216,12 +220,12 @@ def main(args):
     spark.stop()
 
     if args.airflow_test:
-        output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medicalclaims/spark-output/'
+        output_path = OUTPUT_PATH_TEST
         deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medicalclaims/delivery/{}/'.format(
             args.batch_id if args.batch_id else args.date.replace('-', '/')
         )
     else:
-        output_path = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
+        output_path = OUTPUT_PATH_PRODUCTION
         deliverable_path = 's3://salusv/deliverable/cardinal_pms-0/{}/'.format(
             args.batch_id if args.batch_id else args.date.replace('-', '/')
         )
