@@ -19,7 +19,7 @@ import logging
 import load_records
 
 from spark.common.utility import logger
-from spark.common.utility.run_recoder import RunRecorder
+from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
 
 
