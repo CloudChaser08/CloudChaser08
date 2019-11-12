@@ -554,6 +554,7 @@ schema_v11 = StructType([
     StructField('logical_delete_reason', StringType(), True)
 ])
 
+
 data_type = 'pharmacyclaims'
 output_directory = data_type + '/2018-11-26'
 schemas = {
