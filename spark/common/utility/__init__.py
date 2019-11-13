@@ -1,6 +1,7 @@
 import json
 import urllib.request
 from datetime import datetime
+from pyspark import SparkContext
 
 
 def get_spark_runtime(json_endpoint):
@@ -55,3 +56,29 @@ def format_time(seconds):
             result.append("{} {}".format(value, name))
 
     return ', '.join(result)
+
+
+def get_spark_time():
+    """Gets the total run time from the active SparkContext.
+
+    This function was created in order to maintain the immutablity of SparkState
+    while also working within the confides of Dewey. Ideally, SparkState should
+    be used instead of this function.
+
+    Returns:
+        total_runtime (int): The total amount of time it took to run all jobs.
+    """
+
+    context = SparkContext.getOrCreate()
+
+    conf = context.getConf()
+
+    base_web_url = context.uiWebUrl
+    app_name = context.appName.strip()
+
+    app_id = conf.get("spark.app.id")
+    history_ui_port = conf.get("spark.history.ui.port")
+
+    url = "{}/api/v1/applications/{}/jobs/".format(ui_url, app_id)
+
+    return get_spark_runtime(url)
