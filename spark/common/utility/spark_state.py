@@ -35,15 +35,12 @@ class SparkState(metaclass=Singleton):
             `SparkState`
         """
 
-        if SparkContext._active_spark_context:
-            sc = SparkContext._active_spark_context
-        else:
-            raise RuntimeError("Spark must be initialized in order to log application")
+        context = SparkContext.getOrCreate()
 
-        conf = sc.getConf()
+        conf = context.getConf()
+        base_web_url = context.uiWebUrl
+        app_name = context.appName.strip()
 
-        base_web_url = sc.uiWebUrl
-        app_name = sc.appName.strip()
         app_id = conf.get("spark.app.id")
         history_ui_port = conf.get("spark.history.ui.port")
 
