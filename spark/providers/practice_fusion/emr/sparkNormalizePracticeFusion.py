@@ -43,6 +43,8 @@ OUTPUT_PATH_PRODUCTION = 's3://salusv/opp_1186_warehouse/parquet/emr/2019-04-17/
 
 transaction_paths = []
 matching_paths = []
+hadoop_times = []
+spark_times = []
 
 
 def run(spark, runner, date_input, model=None, custom_input_path=None, custom_matching_path=None,
