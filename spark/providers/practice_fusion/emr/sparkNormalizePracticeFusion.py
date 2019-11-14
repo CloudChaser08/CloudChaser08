@@ -176,7 +176,7 @@ if __name__ == '__main__':
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     parser.add_argument('--input_path', help='Overwrite default input path with this value')
     parser.add_argument('--matching_path', help='Overwrite default matching path with this value')
-    parser.add_argument('--ouptut_path', help='Overwrite default output path with this value')
+    parser.add_argument('--output_path', help='Overwrite default output path with this value')
     parser.add_argument('--models', help='Comma-separated list of models to normalize instead of all models')
     args = parser.parse_args()
     main(args)
