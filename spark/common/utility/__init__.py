@@ -79,6 +79,6 @@ def get_spark_time():
     app_id = conf.get("spark.app.id")
     history_ui_port = conf.get("spark.history.ui.port")
 
-    url = "{}/api/v1/applications/{}/jobs/".format(ui_url, app_id)
+    url = "{}/api/v1/applications/{}/jobs/".format(base_web_url, app_id)
 
     return get_spark_runtime(url)
