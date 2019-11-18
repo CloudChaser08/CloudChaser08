@@ -149,7 +149,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--group_id', type=str)
     parser.add_argument('--date', type=str, default=None)
-    parser.add_argument('--channel', type=str, required=True, choices={'test', 'prod'})
+    parser.add_argument('--channel', type=str, required=True, choices={'dev', 'test', 'prod'})
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
