@@ -15,7 +15,7 @@ class Grocery8451CensusDriver(CensusDriver):
 
     CLIENT_NAME = '8451'
     OPPORTUNITY_ID = 'hvXXXXXX_grocery'
-    NUM_PARTITIONS = 20
+    NUM_PARTITIONS = 1000
     SALT = "hvid8451"
     LOADED_PAYLOADS = False
 
@@ -68,6 +68,31 @@ class Grocery8451CensusDriver(CensusDriver):
         content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT]])
         return content
 
+    def _clean_up_output(self):
+        if self._test:
+            subprocess.check_call(['rm', '-rf', output_path])
+        else:
+            subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
+
+    def _list_dir(self, path):
+        if self._test:
+            return os.listdir(path)
+        else:
+            log('path: ' + path)
+            files = [f.split(' ')[-1].strip().split('/')[-1]
+                        for f in
+                        str(subprocess.check_output(['hdfs', 'dfs', '-ls', path])).split('\\n')
+                        if f.split(' ')[-1].startswith('hdfs')
+                        ]
+            log('files: ' + ", ".join(files))
+            return [f.split(' ')[-1].strip().split('/')[-1] for f in files]
+
+    def _rename_file(self, old, new):
+        if self._test:
+            os.rename(old, new)
+        except:
+            subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
+
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
 
@@ -82,32 +107,7 @@ class Grocery8451CensusDriver(CensusDriver):
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
 
-        def clean_up_output(self):
-            if self._test:
-                subprocess.check_call(['rm', '-rf', output_path])
-            else:
-                subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
-
-        def list_dir(self, path):
-            if self._test:
-                return os.listdir(path)
-            else:
-                log('path: ' + path)
-                files = [f.split(' ')[-1].strip().split('/')[-1]
-                         for f in
-                         str(subprocess.check_output(['hdfs', 'dfs', '-ls', path])).split('\\n')
-                         if f.split(' ')[-1].startswith('hdfs')
-                         ]
-                log('files: ' + ", ".join(files))
-                return [f.split(' ')[-1].strip().split('/')[-1] for f in files]
-
-        def rename_file(self, old, new):
-            if self._test:
-                os.rename(old, new)
-            else:
-                subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
-
-        clean_up_output()
+        self._clean_up_output(self)
         log("Repartition and write files to hdfs")
         dataframe.repartition(self.NUM_PARTITIONS).write.csv(output_path, sep="|", header=True, compression="gzip")
 
@@ -116,9 +116,9 @@ class Grocery8451CensusDriver(CensusDriver):
         # e.g. part-00081-35b44b47-2b52-4430-a12a-c4ed31c7bfd5-c000.psv.gz becomes <date>_response00081.psv.gz
         #
         log("Renaming files")
-        for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
+        for filename in [f for f in self._list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
             part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
             if chunk_idx is not None:
                 part_number = int(part_number) + chunk_idx * self.NUM_PARTITIONS
             new_name = output_file_name_template.format(str(part_number).zfill(5)) + '.psv.gz'
-            rename_file(output_path + filename, output_path + new_name)
+            self._rename_file(output_path + filename, output_path + new_name)
