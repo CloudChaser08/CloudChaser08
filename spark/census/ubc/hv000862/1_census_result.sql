@@ -1,9 +1,9 @@
 SELECT
-    LOWER(obfuscate_hvid(matching_payload.hvid, {salt}))            AS HVID,
+    LOWER(obfuscate_hvid(matching_payload.hvid, {salt}))             AS HVID,
     matching_payload.personId                                        AS GUID,
-    transactions.ubcapp                                              AS UBCApp,
-    transactions.ubcdb                                               AS UBCDB,
-    transactions.ubcprogram                                          AS UBCProgram
+    transactions.UBCApp                                              AS UBCApp,
+    transactions.UBCDB                                               AS UBCDB,
+    transactions.UBCProgram                                          AS UBCProgram
 FROM transactions
     INNER JOIN matching_payload
         USING (hvjoinkey)
