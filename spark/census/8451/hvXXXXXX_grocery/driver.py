@@ -15,7 +15,7 @@ class Grocery8451CensusDriver(CensusDriver):
 
     CLIENT_NAME = '8451'
     OPPORTUNITY_ID = 'hvXXXXXX_grocery'
-    NUM_PARTITIONS = 1000
+    NUM_PARTITIONS = 100
     SALT = "hvid8451"
     LOADED_PAYLOADS = False
 
