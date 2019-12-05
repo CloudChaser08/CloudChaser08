@@ -137,7 +137,7 @@ SELECT
 	/* Laurie 6/5/19: Added the hashed household code. */
 	MD5(txn.hshd_code)                                                                      AS hshd_code
  FROM 8451_grocery_transactions txn
- LEFT OUTER JOIN deduplicated_payload pay
+ LEFT OUTER JOIN matching_payload pay
    --TODO: USE THE FOLLOWING LINE WHEN YOU GO TO AUTOMATE THIS METHOD
    --ON txn.card_code = pay.join_keys
-   ON txn.card_code = pay.claimId
+   ON txn.hvjoinkey = pay.hvjoinkey
