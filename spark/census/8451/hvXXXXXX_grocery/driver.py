@@ -68,7 +68,7 @@ class Grocery8451CensusDriver(CensusDriver):
         content = self._runner.run_all_spark_scripts(variables=[['SALT', self.SALT]])
         return content
 
-    def _clean_up_output(self):
+    def _clean_up_output(self, output_path):
         if self._test:
             subprocess.check_call(['rm', '-rf', output_path])
         else:
@@ -90,7 +90,7 @@ class Grocery8451CensusDriver(CensusDriver):
     def _rename_file(self, old, new):
         if self._test:
             os.rename(old, new)
-        except:
+        else:
             subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
 
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
@@ -106,8 +106,7 @@ class Grocery8451CensusDriver(CensusDriver):
         output_file_name_template = 'hv_effo_groc_' + str_date + '_{{}}'.format(
             year=batch_date.year, month=batch_date.month, day=batch_date.day
         )
-
-        self._clean_up_output(self)
+        self._clean_up_output(output_path)
         log("Repartition and write files to hdfs")
         dataframe.repartition(self.NUM_PARTITIONS).write.csv(output_path, sep="|", header=True, compression="gzip")
 
