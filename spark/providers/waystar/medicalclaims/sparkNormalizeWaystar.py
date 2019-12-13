@@ -6,7 +6,7 @@ from spark.common.medicalclaims_common_model import schema_v8 as medicalclaims_s
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.external_table_loader as external_table_loader
+from spark.helpers.external_table_loader import load_ref_gen_ref
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
@@ -50,12 +50,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         augment_path = 's3://salusv/incoming/medicalclaims/waystar/2018/08/31/augment/'
 
     if not test:
-        external_table_loader.load_ref_gen_ref(runner.sqlContext)
-        external_table_loader.load_analytics_db_table(
-            runner.sqlContext, 'dw', 'date_explode_indices', 'date_explode_indices'
-        )
-        spark.table('date_explode_indices').cache().createOrReplaceTempView('date_explode_indices')
-        spark.table('date_explode_indices').count()
+        load_ref_gen_ref(spark)
 
     records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
     payload_loader.load(runner, matching_path, table_name='waystar_payload',
@@ -64,15 +59,12 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     augment_df = records_loader.load(runner, augment_path,
                                         columns=['instanceid', 'accounttype'],
                                         file_type='csv', header=True)
+
     augment_df.createOrReplaceTempView('waystar_medicalclaims_augment')
 
     normalized_output = runner.run_all_spark_scripts([
         ['VDR_FILE_DT', date_input, False]
     ])
-
-    for t in ['waystar_dedup_lines', 'waystar_dedup_claims', 'waystar_norm02_norm_claims', 'waystar_norm01_norm_lines']:
-        spark.table(t).persist().createOrReplaceTempView(t)
-        spark.table(t).count()
 
     df = postprocessor.compose(
         lambda df: schema_enforcer.apply_schema(df, medicalclaims_schema, columns_to_keep=['part_provider', 'part_best_date'])
