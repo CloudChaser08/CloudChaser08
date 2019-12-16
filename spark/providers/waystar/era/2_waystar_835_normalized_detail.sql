@@ -157,8 +157,10 @@ SELECT
             ARRAY(line.adjustment_group_code_4,line.adjustment_reason_code_4, line.adjustment_amount_4),
             ARRAY(line.adjustment_group_code_5,line.adjustment_reason_code_5, line.adjustment_amount_5)
     ))[x.svcadjgrp][2]                                                                    AS svc_ln_adjmt_amt,
+----------
+    CAST(line.service_line_allowed AS FLOAT)			                                  AS svc_ln_suplmtl_amt,
 --------------------------------
-	'145'                                                                                    AS part_hvm_vdr_feed_id,
+	'145'                                                                                 AS part_hvm_vdr_feed_id,
     /* part_best_date */
 	CASE
 	    WHEN 0 = LENGTH(TRIM(COALESCE
@@ -178,28 +180,28 @@ SELECT
                     SUBSTR(COALESCE(line.service_from_date, clm.statement_from_date), 1, 2)
                 )
 	END                                                                                 AS part_mth
-FROM waystar_835_dedup_lines line
-LEFT OUTER JOIN waystar_835_dedup_claims  clm     ON clm.supplier_claim_payment_number = line.claim_payment_number
-LEFT OUTER JOIN matching_payload payload ON clm.hvjoinkey = payload.hvjoinkey
-CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4)) AS svcadjgrp) x
-LEFT OUTER JOIN
-(
-    SELECT gen_ref_1_dt
-     FROM ref_gen_ref
-    WHERE hvm_vdr_feed_id = 145
-      AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-    LIMIT 1
-) esdt
-ON 1 = 1
-LEFT OUTER JOIN
-(
-    SELECT gen_ref_1_dt
-     FROM ref_gen_ref
-    WHERE hvm_vdr_feed_id = 145
-      AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-    LIMIT 1
-) ahdt
-ON 1 = 1
+ FROM waystar_835_dedup_lines line
+ LEFT OUTER JOIN waystar_835_dedup_claims  clm     ON clm.supplier_claim_payment_number = line.claim_payment_number
+ LEFT OUTER JOIN matching_payload payload ON clm.hvjoinkey = payload.hvjoinkey
+ CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4)) AS svcadjgrp) x
+ LEFT OUTER JOIN
+    (
+        SELECT gen_ref_1_dt
+         FROM ref_gen_ref
+        WHERE hvm_vdr_feed_id = 145
+          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
+        LIMIT 1
+    ) esdt
+   ON 1 = 1
+ LEFT OUTER JOIN
+    (
+        SELECT gen_ref_1_dt
+         FROM ref_gen_ref
+        WHERE hvm_vdr_feed_id = 145
+          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
+        LIMIT 1
+    ) ahdt
+   ON 1 = 1
 WHERE
     (densify_2d_array
       (ARRAY(
@@ -210,3 +212,5 @@ WHERE
             ARRAY(line.adjustment_group_code_5,line.adjustment_reason_code_5, line.adjustment_amount_5)
         ))[x.svcadjgrp] != CAST(ARRAY(NULL, NULL,NULL) AS ARRAY<STRING>) OR x.svcadjgrp = 0
     )
+
+--AND line.claim_payment_number = '235585351.02'
