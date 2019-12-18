@@ -251,14 +251,14 @@ schema_v9 = StructType([
     StructField('vendor_record_id', StringType(), True),
     StructField('part_opportunity_id', StringType(), True)
 ])
-
-output_directory = '2018-02-09'
+data_type = 'labtests'
+output_directory = data_type + '/2017-02-16'
 schemas = {
     'schema_v9': Schema(name='schema_v9',
                         schema_structure=schema_v9,
                         output_directory=output_directory,
                         distribution_key='record_id',
-                        data_type='labtests',
+                        data_type=data_type,
                         provider_partition_column='part_provider',
                         date_partition_column='part_best_date')
 }
