@@ -130,10 +130,11 @@ SELECT
  other_payer_date,
  other_payer_coverage_code,
  logical_delete_reason,
- part_provider,
+ 'inmar' as part_provider,
  part_best_date
 FROM _temp_pharmacyclaims_nb
-    WHERE part_provider = 'inmar'
+    WHERE TRUE
+    -- part_provider = 'inmar'
     -- AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -1)
     -- AND part_best_date <= CAST('{VDR_FILE_DT}' AS DATE)
     ----- Changed to 3 months including current month and 2 month back per Sunil

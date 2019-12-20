@@ -43,7 +43,7 @@ if __name__ == "__main__":
     # manually step through the driver to allow for custom backup process
     driver.init_spark_context()
     logger.log('Loading external tables')
-    driver.spark.read.parquet(driver.output_path).createOrReplaceTempView('_temp_pharmacyclaims_nb')
+    driver.spark.read.parquet(driver.output_path + 'pharmacyclaims/2018-11-26/part_provider=inmar/').createOrReplaceTempView('_temp_pharmacyclaims_nb')
     driver.load()
     driver.transform()
     driver.save_to_disk()
