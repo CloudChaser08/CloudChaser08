@@ -66,6 +66,11 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         ['VDR_FILE_DT', date_input, False]
     ])
 
+    for t in ['waystar_dedup_lines', 'waystar_dedup_claims', 'waystar_norm02_norm_claims',
+              'waystar_norm01_norm_lines']:
+        spark.table(t).persist().createOrReplaceTempView(t)
+        spark.table(t).count()
+
     df = postprocessor.compose(
         lambda df: schema_enforcer.apply_schema(df, medicalclaims_schema, columns_to_keep=['part_provider', 'part_best_date'])
     )(normalized_output)
