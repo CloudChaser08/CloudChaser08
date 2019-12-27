@@ -238,7 +238,7 @@ SELECT
             ARRAY(clm.adjustment_group_code_5,clm.adjustment_reason_code_5, clm.adjustment_amount_5, clm.adjustment_quantity_5)
     ))[x.clmadjgrp][3]                                                                      AS clm_adjmt_qty,
     /* medcl_clm_lnk_txt */
-    payload.pcn	                                                                            AS medcl_clm_lnk_txt,
+    clm.field1	                                                                            AS medcl_clm_lnk_txt,
 --------------------------------
 	'145'                                                                                   AS part_hvm_vdr_feed_id,
     /* part_best_date */
@@ -247,19 +247,19 @@ SELECT
 	                            (
                                         (
                                             CASE
-                                                WHEN CAST(EXTRACT_DATE(clm.statement_from_date , '%m/%d/%Y') AS DATE)  > CAST(EXTRACT_DATE(min_max_dt.min_service_from_date ,'%m/%d/%Y') AS DATE)
-                                                    OR CAST(EXTRACT_DATE(clm.statement_from_date, '%m/%d/%Y') AS DATE) IS NULL
+                                                WHEN CAST(EXTRACT_DATE(clm.statement_to_date , '%m/%d/%Y') AS DATE)  < CAST(EXTRACT_DATE(min_max_dt.max_service_to_date ,'%m/%d/%Y') AS DATE)
+                                                    OR CAST(EXTRACT_DATE(clm.statement_to_date, '%m/%d/%Y') AS DATE) IS NULL
                                                 THEN
                                                 	CAP_DATE
                                                 	(
-                                                        CAST(EXTRACT_DATE(min_max_dt.min_service_from_date, '%m/%d/%Y') AS DATE),
+                                                        CAST(EXTRACT_DATE(min_max_dt.max_service_to_date, '%m/%d/%Y') AS DATE),
                                                         COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt, CAST(EXTRACT_DATE('1901-01-01', '%Y-%m-%d') AS DATE)),
                                                         CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
                                                     )
                                             ELSE
                                                 	CAP_DATE
                                                 	(
-                                                        CAST(EXTRACT_DATE(clm.statement_from_date, '%m/%d/%Y') AS DATE),
+                                                        CAST(EXTRACT_DATE(clm.statement_to_date, '%m/%d/%Y') AS DATE),
                                                         COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt, CAST(EXTRACT_DATE('1901-01-01', '%Y-%m-%d') AS DATE)),
                                                         CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
                                                     )
@@ -274,19 +274,19 @@ SELECT
 	                            (
                                         (
                                             CASE
-                                                WHEN CAST(EXTRACT_DATE(clm.statement_from_date , '%m/%d/%Y') AS DATE)  > CAST(EXTRACT_DATE(min_max_dt.min_service_from_date ,'%m/%d/%Y') AS DATE)
-                                                    OR CAST(EXTRACT_DATE(clm.statement_from_date, '%m/%d/%Y') AS DATE) IS NULL
+                                                WHEN CAST(EXTRACT_DATE(clm.statement_to_date , '%m/%d/%Y') AS DATE)  < CAST(EXTRACT_DATE(min_max_dt.max_service_to_date ,'%m/%d/%Y') AS DATE)
+                                                    OR CAST(EXTRACT_DATE(clm.statement_to_date, '%m/%d/%Y') AS DATE) IS NULL
                                                 THEN
                                                 	CAP_DATE
                                                 	(
-                                                        CAST(EXTRACT_DATE(min_max_dt.min_service_from_date, '%m/%d/%Y') AS DATE),
+                                                        CAST(EXTRACT_DATE(min_max_dt.max_service_to_date, '%m/%d/%Y') AS DATE),
                                                         COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt, CAST(EXTRACT_DATE('1901-01-01', '%Y-%m-%d') AS DATE)),
                                                         CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
                                                     )
                                             ELSE
                                                 	CAP_DATE
                                                 	(
-                                                        CAST(EXTRACT_DATE(clm.statement_from_date, '%m/%d/%Y') AS DATE),
+                                                        CAST(EXTRACT_DATE(clm.statement_to_date, '%m/%d/%Y') AS DATE),
                                                         COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt, CAST(EXTRACT_DATE('1901-01-01', '%Y-%m-%d') AS DATE)),
                                                         CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
                                                     )
@@ -299,19 +299,19 @@ SELECT
 	                            (
                                         (
                                             CASE
-                                                WHEN CAST(EXTRACT_DATE(clm.statement_from_date , '%m/%d/%Y') AS DATE)  > CAST(EXTRACT_DATE(min_max_dt.min_service_from_date ,'%m/%d/%Y') AS DATE)
-                                                    OR CAST(EXTRACT_DATE(clm.statement_from_date, '%m/%d/%Y') AS DATE) IS NULL
+                                                WHEN CAST(EXTRACT_DATE(clm.statement_to_date , '%m/%d/%Y') AS DATE)  < CAST(EXTRACT_DATE(min_max_dt.max_service_to_date ,'%m/%d/%Y') AS DATE)
+                                                    OR CAST(EXTRACT_DATE(clm.statement_to_date, '%m/%d/%Y') AS DATE) IS NULL
                                                 THEN
                                                 	CAP_DATE
                                                 	(
-                                                        CAST(EXTRACT_DATE(min_max_dt.min_service_from_date, '%m/%d/%Y') AS DATE),
+                                                        CAST(EXTRACT_DATE(min_max_dt.max_service_to_date, '%m/%d/%Y') AS DATE),
                                                         COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt, CAST(EXTRACT_DATE('1901-01-01', '%Y-%m-%d') AS DATE)),
                                                         CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
                                                     )
                                             ELSE
                                                 	CAP_DATE
                                                 	(
-                                                        CAST(EXTRACT_DATE(clm.statement_from_date, '%m/%d/%Y') AS DATE),
+                                                        CAST(EXTRACT_DATE(clm.statement_to_date, '%m/%d/%Y') AS DATE),
                                                         COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt, CAST(EXTRACT_DATE('1901-01-01', '%Y-%m-%d') AS DATE)),
                                                         CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
                                                     )
@@ -320,7 +320,7 @@ SELECT
                                     ''
                                 ),6, 2)
                 )
-     END                                                                                 AS part_mth
+     END                                                                                        AS part_mth
 FROM waystar_835_dedup_claims clm
 /* Get only the first row from the service line */
 LEFT OUTER JOIN
@@ -342,24 +342,24 @@ LEFT OUTER JOIN
     GROUP BY 1
 ) min_max_dt                                 ON clm.supplier_claim_payment_number = min_max_dt.claim_payment_number
 CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4)) AS clmadjgrp) x
-LEFT OUTER JOIN
-(
-    SELECT gen_ref_1_dt
-     FROM ref_gen_ref
-    WHERE hvm_vdr_feed_id = 145
-      AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-    LIMIT 1
-) esdt
-ON 1 = 1
-LEFT OUTER JOIN
-(
-    SELECT gen_ref_1_dt
-     FROM ref_gen_ref
-    WHERE hvm_vdr_feed_id = 145
-      AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-    LIMIT 1
-) ahdt
-ON 1 = 1
+ LEFT OUTER JOIN
+    (
+        SELECT gen_ref_1_dt
+         FROM ref_gen_ref
+        WHERE hvm_vdr_feed_id = 145
+          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
+        LIMIT 1
+    ) esdt
+   ON 1 = 1
+ LEFT OUTER JOIN
+    (
+        SELECT gen_ref_1_dt
+         FROM ref_gen_ref
+        WHERE hvm_vdr_feed_id = 145
+          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
+        LIMIT 1
+    ) ahdt
+   ON 1 = 1
 WHERE
     (densify_2d_array
       (ARRAY(
@@ -370,3 +370,4 @@ WHERE
             ARRAY(clm.adjustment_group_code_5,clm.adjustment_reason_code_5, clm.adjustment_amount_5, clm.adjustment_quantity_5)
         ))[x.clmadjgrp] != CAST(ARRAY(NULL, NULL, NULL, NULL) AS ARRAY<STRING>) OR x.clmadjgrp = 0
     )
+-- LIMIT 100

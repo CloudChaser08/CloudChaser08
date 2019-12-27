@@ -27,7 +27,7 @@ SELECT
     adjustment_amount_5             ,
     billed_units                    ,
     paid_units                      ,
-	MAX(input_file_name)  AS input_file_name
+    MAX(input_file_name)  AS input_file_name
  FROM servicepayment
 GROUP BY
     claim_payment_number            ,
