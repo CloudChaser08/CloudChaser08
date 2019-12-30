@@ -11,7 +11,8 @@ def generate(runner, start_date, end_date):
         for n in range(int((end_date - start_date).days))
     ]
 
-    with open('temp.csv', 'w') as output:
+    out_file = '/tmp/temp.csv'
+    with open(out_file, 'w') as output:
         for single_date in date_range:
             output.write(
                 single_date.strftime("%Y%m%d") + ',' +
@@ -26,5 +27,5 @@ def generate(runner, start_date, end_date):
         + 'LOCATION \'' + LOCATION + '\''
     )
     runner.run_spark_query(
-        'LOAD DATA INPATH \'temp.csv\' INTO TABLE dates'
+        """LOAD DATA LOCAL INPATH '""" + out_file + """' INTO TABLE dates"""
     )
