@@ -16,3 +16,4 @@ class DataType(Enum):
     MEDICAL_CLAIMS = "medicalclaims"
     PHARMACY_CLAIMS = "pharmacyclaims"
     TEST_CLAIMS = "TEST_CLAIMS"
+    ENROLLMENT_RECORDS = "enrollmentrecords"
