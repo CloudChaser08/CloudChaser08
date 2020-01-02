@@ -4,6 +4,7 @@ import re
 import subprocess
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.records_loader as records_loader
+from spark.common.utility.logger import log
 from .records_schemas import PDC_SCHEMA
 from spark.common.census_driver import CensusDriver, SAVE_PATH
 
@@ -11,7 +12,7 @@ from spark.common.census_driver import CensusDriver, SAVE_PATH
 class _8451CensusDriver(CensusDriver):
 
     CLIENT_NAME = '8451'
-    OPPORTUNITY_ID = 'hvXXXXXX'
+    OPPORTUNITY_ID = 'hvXXXXXX_rx'
     NUM_PARTITIONS = 20
     SALT = 'hvid8451'
     BAD_PDC_DATE = date(2019, 3, 30)
@@ -41,53 +42,55 @@ class _8451CensusDriver(CensusDriver):
     def transform(self, batch_date, batch_id):
         return self._runner.run_all_spark_scripts(variables=[['salt', self._salt]])
 
-    def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
-        if chunk_idx:
-            raise ValueError(
-                "Chunking is not currently supported in this module")
-        
-        output_path = SAVE_PATH + '{year}/{month:02d}/{day:02d}/'.format(
-                year=batch_date.year, month=batch_date.month, day=batch_date.day
-            )
-
-        output_file_name_template = '{year}{month:02d}{day:02d}_response{{}}'.format(
-            year=batch_date.year, month=batch_date.month, day=batch_date.day
-        )
-
+    def _clean_up_output(self, output_path):
         if self._test:
-
-            def clean_up_output():
-                subprocess.check_call(['rm', '-rf', output_path])
-
-            def list_dir(path):
-                return os.listdir(path)
-
-            def rename_file(old, new):
-                os.rename(old, new)
-
+            subprocess.check_call(['rm', '-rf', output_path])
         else:
+            subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
 
-            def clean_up_output():
-                subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
+    def _list_dir(self, path):
+        if self._test:
+            return os.listdir(path)
+        else:
+            log('path: ' + path)
+            files = [f.split(' ')[-1].strip().split('/')[-1]
+                        for f in
+                        str(subprocess.check_output(['hdfs', 'dfs', '-ls', path])).split('\\n')
+                        if f.split(' ')[-1].startswith('hdfs')
+                        ]
+            log('files: ' + ", ".join(files))
+            return [f.split(' ')[-1].strip().split('/')[-1] for f in files]
 
-            def list_dir(path):
-                return [
-                    f.split(' ')[-1].strip().split('/')[-1]
-                    for f in str(subprocess.check_output(['hdfs', 'dfs', '-ls', path])).split('\n')
-                    if f.split(' ')[-1].startswith('hdfs')
-                ]
+    def _rename_file(self, old, new):
+        if self._test:
+            os.rename(old, new)
+        else:
+            subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
 
-            def rename_file(old, new):
-                subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
+    def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
+        _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
 
-        clean_up_output()
+        # This customer wants this data delivered to their sftp in the following format:
+        #       <path_to_8451_sftp>/pickup/YYYYMMDD/
+        log("Running queries and collecting data")
+        output_path = SAVE_PATH + _batch_id_path + '/'
 
-        dataframe.repartition(self.NUM_PARTITIONS).write.csv(output_path, sep="|", header=True, compression='gzip')
+        output_file_name_template = '{batch_id}_response_{{}}'.format(
+            year=batch_date.year, month=batch_date.month, day=batch_date.day,
+            batch_id=_batch_id_value
+        )
+        self._clean_up_output(output_path)
+        log("Repartition and write files to hdfs")
+        dataframe.repartition(self.NUM_PARTITIONS).write.csv(output_path, sep="|", header=True, compression="gzip")
 
         # rename output files to desired name
         # this step removes the spark hash added to the name by default
-        # e.g. part-00000-746f59d5-b38f-4afc-b211-ff2e02e17b7c-c000.csv is renamed to <date>_response00000.psv.gz
-        for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
+        # e.g. part-00081-35b44b47-2b52-4430-a12a-c4ed31c7bfd5-c000.psv.gz becomes <batch_id>_response_00081.psv.gz
+        #
+        log("Renaming files")
+        for filename in [f for f in self._list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:
             part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
-            new_name = output_file_name_template.format(part_number) + '.psv.gz'
-            rename_file(output_path + filename, output_path + new_name)
+            if chunk_idx is not None:
+                part_number = int(part_number) + chunk_idx * self.NUM_PARTITIONS
+            new_name = output_file_name_template.format(str(part_number).zfill(5)) + '.psv.gz'
+            self._rename_file(output_path + filename, output_path + new_name)
