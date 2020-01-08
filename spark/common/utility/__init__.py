@@ -4,6 +4,9 @@ from datetime import datetime
 from pyspark import SparkContext
 
 
+class SparkJobNotCompleteException(Exception):
+    """Exception for when the history server doesn't think a Spark job is complete"""
+
 def get_spark_runtime(json_endpoint):
     """Returns the total runtime in seconds for all jobs in the current SparkContext.
 
@@ -27,6 +30,9 @@ def get_spark_runtime(json_endpoint):
     # The time stamps from the SparkWebUI contain extra information relating
     # to timezones that we dont' need, so we slice them out.
     for job in job_data:
+        if 'completionTime' not in job:
+            raise SparkJobNotCompleteException
+
         submit_time = \
                 datetime.strptime(job['submissionTime'][:19], datetime_pattern)
         completion_time = \
