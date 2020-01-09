@@ -201,6 +201,7 @@ class MarketplaceDriver(object):
                 distribution_key=schema_obj.distribution_key,
                 staging_subdir=schema_obj.output_directory
             )
+            output.unpersist()
 
     def stop_spark(self):
         """
