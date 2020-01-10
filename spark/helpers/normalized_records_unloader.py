@@ -268,17 +268,33 @@ def partition_custom(
     )
 
 
-def distcp(dest, src=constants.hdfs_staging_dir):
-    subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption',
-                           '--src', src,
-                           '--dest', dest])
-    subprocess.check_call([
-        'hdfs', 'dfs', '-rm', '-r', src
-    ])
+def distcp(dest, src=constants.hdfs_staging_dir, upload_in_chunks=False):
+    def upload_files(target_src, target_dest):
+        subprocess.check_call(['s3-dist-cp',
+                               '--s3ServerSideEncryption',
+                               '--deleteOnSuccess',
+                               '--src', target_src,
+                               '--dest', target_dest])
 
-def timed_distcp(dest, src=constants.hdfs_staging_dir):
+    if upload_in_chunks:
+        cmd = "hadoop fs -ls {} | awk '{{print $NF}}'".format(src)
+        dirs = subprocess.check_output([cmd], shell=True).decode().strip().split("\n")
+
+        for dir in dirs:
+            if 'part' in dir:
+                best_part_month = os.path.basename(dir)
+
+                target_dir = dir + "/"
+                target_dest_path = dest + best_part_month + '/'
+
+                upload_files(target_src=target_dir, target_dest=target_dest_path)
+
+    else:
+        upload_files(target_src=src, target_dest=dest)
+
+def timed_distcp(dest, src=constants.hdfs_staging_dir, upload_in_chunks=False):
     start = time.time()
-    distcp(dest, src)
+    distcp(dest, src, upload_in_chunks)
 
     return time.time() - start
 

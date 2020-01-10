@@ -185,8 +185,11 @@ def test_copy_to_s3(prod_driver, monkeypatch):
     prod_driver.copy_to_s3()
 
     # Should be an s3-dist-cp call
-    assert subprocess_calls[0] == ['s3-dist-cp', '--s3ServerSideEncryption', '--src',
-            '/staging/', '--dest', 's3a://salusv/deliverable/TEST/TEST123/']
-
-    # Should be an hdfs delete call
-    assert subprocess_calls[1] == ['hdfs', 'dfs', '-rm', '-r', '/staging/']
+    assert subprocess_calls[0] == [
+        's3-dist-cp',
+        '--s3ServerSideEncryption',
+        '--deleteOnSuccess',
+        '--src',
+        '/staging/',
+        '--dest',
+        's3a://salusv/deliverable/TEST/TEST123/']
