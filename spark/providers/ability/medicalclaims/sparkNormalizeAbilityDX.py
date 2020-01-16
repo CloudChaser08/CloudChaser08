@@ -18,7 +18,7 @@ from pyspark.sql.utils import AnalysisException
 import logging
 import load_records
 
-from spark.common.utility import logger
+from spark.common.utility import logger, get_spark_time
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
 
@@ -161,13 +161,15 @@ def main(args):
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
+    spark_runtime = get_spark_time()
+
     spark.stop()
 
     if args.airflow_test:
         normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
         hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
-        RunRecorder().record_run_details(additional_time=hadoop_time)
+        RunRecorder().record_run_details(spark_app_time=spark_runtime, additional_time=hadoop_time)
 
 
 if __name__ == '__main__':
