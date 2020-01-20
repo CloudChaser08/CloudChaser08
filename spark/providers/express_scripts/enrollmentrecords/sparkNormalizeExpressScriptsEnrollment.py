@@ -163,10 +163,6 @@ def main(args):
 
     output_destination = S3_EXPRESS_SCRIPTS_OUT + 'part_provider=express_scripts/'
 
-    # the full data set is reprocessed every time
-    logger.log('Delete existing enrollment data: ' + output_destination)
-    subprocess.check_output(['aws', 's3', 'rm', '--recursive', output_destination])
-
     logger.log('Copying the output to S3: ' + output_destination)
     hadoop_time = normalized_records_unloader.timed_distcp(S3_EXPRESS_SCRIPTS_OUT)
     RunRecorder().record_run_details(additional_time=hadoop_time)
