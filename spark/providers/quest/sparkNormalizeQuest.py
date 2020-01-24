@@ -20,8 +20,7 @@ from spark.common.utility import logger
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/spark-output/'
-#OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
-OUTPUT_PATH_PRODUCTION = OUTPUT_PATH_TEST
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
