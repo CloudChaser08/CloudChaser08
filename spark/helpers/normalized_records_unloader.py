@@ -297,12 +297,12 @@ def distcp(dest,
     """
     
     dist_cp_command = [
-                's3-dist-cp',
-   	            '--s3ServerSideEncryption',
-                '--deleteOnSuccess',
-                '--src', src,
-                '--dest', dest
-            ]
+        's3-dist-cp',
+        '--s3ServerSideEncryption',
+        '--deleteOnSuccess',
+        '--src', src,
+        '--dest', dest
+    ]
 
     if get_hdfs_file_count(src) > file_chunk_size:
         
