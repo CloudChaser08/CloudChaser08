@@ -295,45 +295,29 @@ def distcp(dest,
         file_chunk_size (int, optional): The number of files to upload at once to s3.
             Default is, 5000.
     """
+    
+    dist_cp_command = [
+                's3-dist-cp',
+   	            '--s3ServerSideEncryption',
+                '--deleteOnSuccess',
+                '--src', src,
+                '--dest', dest
+            ]
 
     if get_hdfs_file_count(src) > file_chunk_size:
+        
+        if not server_side_encryption:
+            dist_cp_command.remove('--s3ServerSideEncryption')
+            
         files = list_parquet_files(src)
-        write_manifests(files)
-
-        if server_side_encryption:
-            cmd_part_1 = [
-                's3-dist-cp',
-                '--s3ServerSideEncryption',
-                '--deleteOnSuccess',
-                '--src',
-                src,
-                '--dest',
-                dest
-            ]
-
-        else:
-            cmd_part_1 = [
-                's3-dist-cp',
-                '--deleteOnSuccess',
-                '--src',
-                src,
-                '--dest',
-                dest
-            ]
-
+        write_manifests(files)      
         file_names = list_manifest_files(OUTPUT_DIR)
 
         for file_name in file_names:
-            cmd_part_2 = ['--srcPrefixesFile', file_name]
-            cmd = cmd_part_1 + cmd_part_2
-
-            subprocess.check_call(cmd)
+            subprocess.check_call(dist_cp_command + ['--srcPrefixesFile', file_name])
+            
     else:
-        subprocess.check_call(['s3-dist-cp',
-                               '--s3ServerSideEncryption',
-                               '--deleteOnSuccess',
-                               '--src', src,
-                               '--dest', dest])
+        subprocess.check_call(dist_cp_command)
 
 
 def timed_distcp(dest,
