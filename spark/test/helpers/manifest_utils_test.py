@@ -1,9 +1,7 @@
 import pytest
 import subprocess
-import shutil
 import os
-from os import path
-from spark.helpers.manifests import write
+from spark.helpers.manifest_utils import write
 
 
 @pytest.mark.usefixtures("spark")

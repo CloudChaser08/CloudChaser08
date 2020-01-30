@@ -6,7 +6,7 @@ HDFS_PREFIX = "hdfs://"
 OUTPUT_DIR = "/tmp/split-files/"
 
 
-def list_manifest_files(src):
+def list(src):
     """Lists all manifest files that are contained within a given location.
 
     Args:
