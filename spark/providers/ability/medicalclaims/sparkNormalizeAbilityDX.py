@@ -169,7 +169,7 @@ def main(args):
         normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
         hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
-        RunRecorder().record_run_details(spark_app_time=spark_runtime, additional_time=hadoop_time)
+        RunRecorder().record_run_details(spark_app_runtime=spark_runtime, additional_time=hadoop_time)
 
 
 if __name__ == '__main__':
