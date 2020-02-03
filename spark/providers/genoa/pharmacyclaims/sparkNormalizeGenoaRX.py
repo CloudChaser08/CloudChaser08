@@ -6,7 +6,6 @@ import pyspark.sql.functions as func
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.helpers.hdfs_tools import get_hdfs_file_count
 import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
@@ -180,17 +179,7 @@ def main(args):
     if args.airflow_test:
         normalized_records_unloader.distcp(output_path)
     else:
-        target_src_path = "hdfs://" + constants.hdfs_staging_dir + "part_provider=genoa/"
-        base_dest_path = '{}part_provider=genoa/'.format(output_path)
-
-        file_count = get_hdfs_file_count(target_src_path)
-
-        if file_count > 5000:
-            hadoop_time = normalized_records_unloader.timed_distcp(dest=base_dest_path,
-                                                                   src=target_src_path,
-                                                                   upload_in_chunks=True)
-        else:
-            hadoop_time = normalized_records_unloader.timed_distcp(output_path)
+        hadoop_time = normalized_records_unloader.timed_distcp(output_path)
 
         RunRecorder().record_run_details(additional_time=hadoop_time)
 

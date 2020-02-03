@@ -5,6 +5,10 @@ import time
 import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 from spark.helpers.file_utils import FileSystemType
+from spark.helpers.hdfs_tools import get_hdfs_file_count, list_parquet_files
+from spark.helpers.manifest_utils import write as write_manifests
+from spark.helpers.manifest_utils import list as list_manifest_files
+from spark.helpers.manifest_utils import OUTPUT_DIR
 from pyspark.sql.functions import when, col, lit
 
 from datetime import datetime, date
@@ -268,33 +272,87 @@ def partition_custom(
     )
 
 
-def distcp(dest, src=constants.hdfs_staging_dir, upload_in_chunks=False):
-    def upload_files(target_src, target_dest):
-        subprocess.check_call(['s3-dist-cp',
-                               '--s3ServerSideEncryption',
-                               '--deleteOnSuccess',
-                               '--src', target_src,
-                               '--dest', target_dest])
+def distcp(dest,
+           src=constants.hdfs_staging_dir,
+           server_side_encryption=True,
+           file_chunk_size=1000):
+    """Uses s3-dist-cp to copy files from hdfs to s3.
+    In the case that more than `file_chunk_size` files are to be copied, then these files will
+    be uploaded in chunks. Where each chunk consists of no more than the value set
+    in `file_chunk_size`. Otherwise, all files will be uploaded in a single operation.
 
-    if upload_in_chunks:
-        cmd = "hadoop fs -ls {} | awk '{{print $NF}}'".format(src)
-        dirs = subprocess.check_output([cmd], shell=True).decode().strip().split("\n")
+    Args:
+        dest (str): A URI that points to where the files should be copied to.
+        src (str, optional): A URI that points to the source directory that
+            contains the files to be copied. Default is, /staging/.
+        server_side_encryption (bool, optional): Determines whether or
+            not the copied files should be encrypted once they're copied
+            to their target destination. Default is, Ture.
 
-        for dir in dirs:
-            if 'part' in dir:
-                best_part_month = os.path.basename(dir)
+            Note:
+                server_side_encryption only works when copying files over to
+                s3. In addition, the target bucket must require an encryption.
+                If the above two requirements are not met, the command will
+                fail.
+        file_chunk_size (int, optional): The number of files to upload at once to s3.
+            Default is, 5000.
+    """
+    
+    dist_cp_command = [
+        's3-dist-cp',
+        '--s3ServerSideEncryption',
+        '--deleteOnSuccess',
+        '--src', src,
+        '--dest', dest
+    ]
 
-                target_dir = dir + "/"
-                target_dest_path = dest + best_part_month + '/'
+    if get_hdfs_file_count(src) > file_chunk_size:
+        
+        if not server_side_encryption:
+            dist_cp_command.remove('--s3ServerSideEncryption')
+            
+        files = list_parquet_files(src)
+        write_manifests(files)      
+        file_names = list_manifest_files(OUTPUT_DIR)
 
-                upload_files(target_src=target_dir, target_dest=target_dest_path)
-
+        for file_name in file_names:
+            subprocess.check_call(dist_cp_command + ['--srcPrefixesFile', file_name])
+            
     else:
-        upload_files(target_src=src, target_dest=dest)
+        subprocess.check_call(dist_cp_command)
 
-def timed_distcp(dest, src=constants.hdfs_staging_dir, upload_in_chunks=False):
+
+def timed_distcp(dest,
+                 src=constants.hdfs_staging_dir,
+                 server_side_encryption=True,
+                 file_chunk_size=5000):
+    """Uses s3-dist-cp to copy files from hdfs to s3 and returns the commands runtime.
+    In the case that more than `file_chunk_size` files are to be copied, then these files will
+    be uploaded in chunks. Where each chunk consists of no more than the value set
+    in `file_chunk_size`. Otherwise, all files will be uploaded in a single operation.
+
+    Args:
+        dest (str): A URI that points to where the files should be copied to.
+        src (str, optional): A URI that points to the source directory that
+            contains the files to be copied. Default is, /staging/.
+        server_side_encryption (bool, optional): Determines whether or
+            not the copied files should be encrypted once they're copied
+            to their target destination. Default is, Ture.
+
+            Note:
+                server_side_encryption only works when copying files over to
+                s3. In addition, the target bucket must require an encryption.
+                If the above two requirements are not met, the command will
+                fail.
+        file_chunk_size (int, optional): The number of files to upload at once to s3.
+            Default is, 5000.
+
+    Returns:
+        run_time (int): The total time it took for s3-dist-cp to run in seconds.
+    """
+
     start = time.time()
-    distcp(dest, src, upload_in_chunks)
+    distcp(dest, src, server_side_encryption, file_chunk_size)
 
     return time.time() - start
 
