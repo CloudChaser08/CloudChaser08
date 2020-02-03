@@ -175,7 +175,7 @@ SELECT
     txn.reason_for_service                                                                  AS reason_for_service,
     txn.professional_service_code                                                           AS professional_service_code,
     txn.result_of_service_code                                                              AS result_of_service_code,
-    CLEAN_UP_NDC_CODE(txn.prov_prescribing_npi)                                             AS prov_prescribing_npi,
+    CLEAN_UP_NPI_CODE(txn.prov_prescribing_npi)                                             AS prov_prescribing_npi,
 
     /* prov_prescribing_tax_id */ 
     CASE 
