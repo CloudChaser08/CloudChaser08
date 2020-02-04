@@ -1,6 +1,6 @@
 import pytest
-import subprocess
 import os
+from spark.helpers.file_utils import clean_up_output_local
 from spark.helpers.manifest_utils import write
 
 
@@ -40,3 +40,5 @@ def test_write(spark):
                 actual_content = [str.strip() for str in content]
 
                 assert(actual_content == expected_content[file_name])
+
+    clean_up_output_local(dirpath)

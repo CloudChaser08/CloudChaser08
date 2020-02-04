@@ -4,7 +4,7 @@ import re
 import time
 import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
-from spark.helpers.file_utils import FileSystemType
+from spark.helpers.file_utils import FileSystemType, clean_up_output_hdfs
 from spark.helpers.hdfs_tools import get_hdfs_file_count, list_parquet_files
 from spark.helpers.manifest_utils import write as write_manifests
 from spark.helpers.manifest_utils import list as list_manifest_files
@@ -297,7 +297,7 @@ def distcp(dest,
         file_chunk_size (int, optional): The number of files to upload at once to s3.
             Default is, 5000.
     """
-    
+
     dist_cp_command = [
         's3-dist-cp',
         '--s3ServerSideEncryption',
@@ -307,17 +307,17 @@ def distcp(dest,
     ]
 
     if get_hdfs_file_count(src) > file_chunk_size:
-        
         if not server_side_encryption:
             dist_cp_command.remove('--s3ServerSideEncryption')
-            
+
         files = list_parquet_files(src)
-        write_manifests(files)      
+        write_manifests(files)
         file_names = list_manifest_files(OUTPUT_DIR)
 
         for file_name in file_names:
             subprocess.check_call(dist_cp_command + ['--srcPrefixesFile', file_name])
-            
+
+        clean_up_output_hdfs(''.join(['hdfs://', OUTPUT_DIR]))
     else:
         subprocess.check_call(dist_cp_command)
 

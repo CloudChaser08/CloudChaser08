@@ -12,8 +12,8 @@ def list(src):
     Args:
         src (str): The HDFS directory whose manifest files will be listed.
 
-        NOTE:
-            This is the directory name itself and not a URI.
+            NOTE:
+                This is the directory name itself and not a URI.
 
     Returns:
         files ([str]): The manifest files stored at the given directory.

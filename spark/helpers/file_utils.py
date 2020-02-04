@@ -1,5 +1,6 @@
 import os
 import subprocess
+from spark.common.utility import logger
 
 
 def get_abs_path(source_file, relative_filename):
@@ -28,7 +29,12 @@ def rename_file_local(old, new):
 
 
 def clean_up_output_hdfs(output_path):
-    subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
+    try:
+        subprocess.check_call(['hadoop', 'fs', '-rm', '-R', output_path])
+    except e:
+        logger.log(
+            "Unable to remove directory: {}\nError encountered: {}".format(output_path, str(e))
+        )
 
 
 def list_dir_hdfs(path):
