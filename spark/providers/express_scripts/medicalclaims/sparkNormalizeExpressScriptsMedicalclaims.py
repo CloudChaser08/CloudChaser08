@@ -120,11 +120,6 @@ if __name__ == "__main__":
 
     driver.stop_spark()
 
-    # the output path will be different for prod and e2e testing
-    output_destination = driver.output_path + PROVIDER_PATH
-    logger.log('Delete existing enrollment data: ' + output_destination)
-    subprocess.check_output(['aws', 's3', 'rm', '--recursive', output_destination])
-
     driver.copy_to_output_path()
 
     if not driver.end_to_end_test:
