@@ -31,7 +31,7 @@ def rename_file_local(old, new):
 def clean_up_output_hdfs(output_path):
     try:
         subprocess.check_call(['hadoop', 'fs', '-rm', '-R', output_path])
-    except e:
+    except Exception as e:
         logger.log(
             "Unable to remove directory: {}\nError encountered: {}".format(output_path, str(e))
         )
