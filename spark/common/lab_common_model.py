@@ -223,11 +223,11 @@ schema_v9 = StructType([
     StructField('payer_type', StringType(), True),
     StructField('lab_other_id', StringType(), True),
     StructField('lab_other_qual', StringType(), True),
-    StructField('lab_other_address_1', StringType(), True),
-    StructField('lab_other_address_2', StringType(), True),
-    StructField('lab_other_city', StringType(), True),
-    StructField('lab_other_state', StringType(), True),
-    StructField('lab_other_zip', StringType(), True),
+    StructField('lab_address_1', StringType(), True),
+    StructField('lab_address_2', StringType(), True),
+    StructField('lab_city', StringType(), True),
+    StructField('lab_state', StringType(), True),
+    StructField('lab_zip', StringType(), True),
     StructField('ordering_other_id', StringType(), True),
     StructField('ordering_other_qual', StringType(), True),
     StructField('ordering_name', StringType(), True),
@@ -251,6 +251,7 @@ schema_v9 = StructType([
     StructField('vendor_record_id', StringType(), True),
     StructField('part_opportunity_id', StringType(), True)
 ])
+
 data_type = 'labtests'
 output_directory = data_type + '/2017-02-16'
 schemas = {
