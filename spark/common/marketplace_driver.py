@@ -59,7 +59,8 @@ class MarketplaceDriver(object):
                  end_to_end_test=False,
                  test=False,
                  load_date_explode=True,
-                 output_to_transform_path=False):
+                 output_to_transform_path=False,
+                 unload_partition_count=20):
 
         # get directory and path for provider
         previous_stack_frame = inspect.currentframe().f_back
@@ -92,7 +93,7 @@ class MarketplaceDriver(object):
         self.output_table_names_to_schemas = output_table_names_to_schemas
         self.load_date_explode = load_date_explode
         self.output_to_transform_path = output_to_transform_path
-
+        self.unload_partition_count = unload_partition_count
         self.input_path = None
         self.matching_path = None
         self.output_path = None
@@ -200,7 +201,8 @@ class MarketplaceDriver(object):
                 provider_partition_name=schema_obj.provider_partition_column,
                 distribution_key=schema_obj.distribution_key,
                 staging_subdir=schema_obj.output_directory,
-                partition_by_part_file_date=self.output_to_transform_path
+                partition_by_part_file_date=self.output_to_transform_path,
+                unload_partition_count=self.unload_partition_count
             )
             output.unpersist()
 
