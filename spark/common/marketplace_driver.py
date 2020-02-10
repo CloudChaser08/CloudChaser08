@@ -18,6 +18,7 @@ GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 END_TO_END_TEST = 'end_to_end_test'
 TEST = 'test'
 PRODUCTION = 'production'
+TRANSFORM = 'transform'
 DRIVER_MODULE_NAME = 'driver'
 E2E_OUTPUT_PATH = 's3://salusv/testing/dewey/airflow/e2e/'
 RECORDS_PATH = 's3://salusv/incoming/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
@@ -26,19 +27,22 @@ MATCHING_PATH = 's3://salusv/matching/payload/{data_type}/{provider_name}/{year}
 MODE_RECORDS_PATH_TEMPLATE = {
     TEST: './test/marketplace/resources/records/',
     END_TO_END_TEST: RECORDS_PATH,
-    PRODUCTION: RECORDS_PATH
+    PRODUCTION: RECORDS_PATH,
+    TRANSFORM: RECORDS_PATH
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
     TEST: './test/marketplace/resources/matching/',
     END_TO_END_TEST: MATCHING_PATH,
-    PRODUCTION: MATCHING_PATH
+    PRODUCTION: MATCHING_PATH,
+    TRANSFORM: MATCHING_PATH
 }
 
 MODE_OUTPUT_PATH = {
     TEST: './test/marketplace/resources/output/',
     END_TO_END_TEST: E2E_OUTPUT_PATH,
-    PRODUCTION: 's3://salusv/warehouse/parquet/'
+    PRODUCTION: 's3://salusv/warehouse/parquet/',
+    TRANSFORM: 's3://salusv/warehouse/transformed/'
 }
 
 
@@ -53,7 +57,9 @@ class MarketplaceDriver(object):
                  output_table_names_to_schemas,
                  date_input,
                  end_to_end_test=False,
-                 test=False):
+                 test=False,
+                 load_date_explode=True,
+                 output_to_transform_path=False):
 
         # get directory and path for provider
         previous_stack_frame = inspect.currentframe().f_back
@@ -84,6 +90,8 @@ class MarketplaceDriver(object):
         self.source_table_schema = source_table_schema
 
         self.output_table_names_to_schemas = output_table_names_to_schemas
+        self.load_date_explode = load_date_explode
+        self.output_to_transform_path = output_to_transform_path
 
         self.input_path = None
         self.matching_path = None
@@ -98,6 +106,8 @@ class MarketplaceDriver(object):
             mode = TEST
         elif self.end_to_end_test:
             mode = END_TO_END_TEST
+        elif self.output_to_transform_path:
+            mode = TRANSFORM
         else:
             mode = PRODUCTION
 
@@ -129,18 +139,7 @@ class MarketplaceDriver(object):
         self.load()
         self.transform()
         self.save_to_disk()
-
-        if not self.test and not self.end_to_end_test:
-            logger.log_run_details(
-                self.provider_name,
-                self.data_type,
-                self.input_path,
-                self.matching_path,
-                self.output_path,
-                RunType.MARKETPLACE,
-                self.date_input
-            )
-
+        self.log_run()
         self.stop_spark()
         self.copy_to_output_path()
 
@@ -157,13 +156,14 @@ class MarketplaceDriver(object):
         if not self.test:
             logger.log(' -loading: ref_gen_ref')
             external_table_loader.load_ref_gen_ref(self.runner.sqlContext)
-            logger.log(' -loading: date_explode_indices')
-            external_table_loader.load_analytics_db_table(
-                self.runner.sqlContext, 'dw', 'date_explode_indices', 'date_explode_indices'
-            )
-            self.spark.table('date_explode_indices').cache() \
-                .createOrReplaceTempView('date_explode_indices')
-            self.spark.table('date_explode_indices').count()
+
+            if self.load_date_explode:
+                logger.log(' -loading: date_explode_indices')
+                external_table_loader.load_analytics_db_table(
+                    self.runner.sqlContext, 'dw', 'date_explode_indices', 'date_explode_indices'
+                )
+                self.spark.table('date_explode_indices').cache() \
+                    .createOrReplaceTempView('date_explode_indices')
 
     def transform(self):
         """
@@ -199,9 +199,23 @@ class MarketplaceDriver(object):
                 date_partition_name=schema_obj.date_partition_column,
                 provider_partition_name=schema_obj.provider_partition_column,
                 distribution_key=schema_obj.distribution_key,
-                staging_subdir=schema_obj.output_directory
+                staging_subdir=schema_obj.output_directory,
+                partition_by_part_file_date=self.output_to_transform_path
             )
             output.unpersist()
+
+    def log_run(self):
+        logger.log('Logging run details')
+        if not self.test and not self.end_to_end_test:
+            logger.log_run_details(
+                self.provider_name,
+                self.data_type,
+                self.input_path,
+                self.matching_path,
+                self.output_path,
+                RunType.MARKETPLACE,
+                self.date_input
+            )
 
     def stop_spark(self):
         """

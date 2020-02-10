@@ -44,7 +44,8 @@ def unload(
         spark, runner, df, date_column, partition_name_prefix, provider_partition_value,
         provider_partition_name='part_provider', date_partition_value=None, date_partition_name='part_best_date',
         hvm_historical_date=None, staging_subdir='', columns=None, unload_partition_count=20, test_dir=None,
-        skip_rename=False, distribution_key='record_id', substr_date_part=True
+        skip_rename=False, distribution_key='record_id', substr_date_part=True,
+        partition_by_part_file_date=False
 ):
     """
     Unload normalized data into partitions based on a date column
@@ -93,8 +94,17 @@ def unload(
     ])
 
     # repartition and unload
-    df.select(*columns).repartition(unload_partition_count, distribution_key).write.parquet(
-        staging_dir, partitionBy=[provider_partition_name, date_partition_name], compression='gzip', mode='append'
+    partition_by = [provider_partition_name, date_partition_name]
+    df = df.select(*columns)
+
+    if partition_by_part_file_date:
+        part_file_date = 'part_file_date'
+        df = df.withColumn(part_file_date, lit(partition_name_prefix))
+        partition_by.insert(1, part_file_date)
+
+    df.repartition(unload_partition_count, distribution_key).write.parquet(
+        staging_dir, partitionBy=partition_by, compression='gzip',
+        mode='append'
     )
 
     if not skip_rename:
