@@ -1,6 +1,6 @@
 SELECT --CACHE THIS
     rxc.rxclaimuid                                                                          AS claim_id,    
-    COALESCE(pay.hvid, CONCAT('543_', COALESCE(mbr.memberuid, 'UNAVAILABLE')))              AS hvid,
+    COALESCE(pay.hvid, CONCAT('543_', mbr.memberuid))                                       AS hvid,
     CURRENT_DATE()                                                                          AS created,
 	'11'                                                                                    AS model_version,
     SPLIT(rxc.input_file_name, '/')[SIZE(SPLIT(rxc.input_file_name, '/')) - 1]              AS data_set,
