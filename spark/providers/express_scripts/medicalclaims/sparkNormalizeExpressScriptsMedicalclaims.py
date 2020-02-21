@@ -31,6 +31,7 @@ if __name__ == "__main__":
     # Parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
+    parser.add_argument('--rx_phi_date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_args()
     date_input = args.date
@@ -46,7 +47,6 @@ if __name__ == "__main__":
         end_to_end_test
     )
     driver.init_spark_context()
-    input_date_path = date_input.replace('-', '/')
 
     logger.log('Setting up the local file system')
     subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '-f', LOCAL_REF_PHI])
@@ -75,7 +75,9 @@ if __name__ == "__main__":
     txn_df.createOrReplaceTempView('txn')
 
     logger.log('- Loading new PHI data')
-    new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING + input_date_path + '/'
+    # RX and DX data does not come in at the same time
+    rx_input_date_path = args.rx_phi_date.replace('-', '/')
+    new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING + rx_input_date_path + '/'
     payload_loader.load(driver.runner, new_phi_path, ['hvJoinKey', 'patientId'])
     driver.runner.run_spark_query('ALTER TABLE matching_payload RENAME TO new_phi')
 
