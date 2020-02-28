@@ -21,7 +21,7 @@ from spark.common.utility import logger
 FEED_ID = '65'
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/pdx/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-11-26/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/transformed/pharmacyclaims/2018-11-26/'
 
 
 def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=None, test=False,
@@ -109,7 +109,8 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
             hvm_historical_date=datetime(hvm_historical.year,
                                          hvm_historical.month,
                                          hvm_historical.day),
-            substr_date_part=False
+            substr_date_part=False,
+            partition_by_part_file_date=True
         )
 
     else:
