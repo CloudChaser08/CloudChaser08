@@ -1,8 +1,6 @@
 SELECT
     MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
-    -- This CONCAT is per mapping but it is not adding any values.
-    --CONCAT(txn.deidentified_id, '_', txn.genes_tested, '_', EXTRACT_DATE(txn.order_date, '%m/%d/%Y')) AS claim_id,
-    txn.deidentified_id                                                                     AS claim_id,    
+    txn.claim_id                                                                            AS claim_id,    
     COALESCE(pay.hvid,txn.deidentified_id)                                                  AS hvid,
     CURRENT_DATE()                                                                          AS created,
 	'08'                                                                                    AS model_version,
@@ -103,7 +101,7 @@ SELECT
                     SUBSTR(EXTRACT_DATE(txn.order_date, '%m/%d/%Y'), 6, 2), '-01'
                 )
 	END                                                                                 AS part_best_date
-FROM txn
+FROM ambry_transaction txn
 LEFT OUTER JOIN matching_payload pay ON txn.hvJoinKey = pay.hvJoinKey 
  LEFT OUTER JOIN
     (

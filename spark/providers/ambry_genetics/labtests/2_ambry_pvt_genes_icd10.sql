@@ -1,4 +1,5 @@
 SELECT
+    claim_id,
     deidentified_id,
     patient_last_name,
     patient_first_name,
@@ -7,7 +8,7 @@ SELECT
     patient_zip,
     patient_state,
     order_date,
-    EXPLODE(SPLIT(txn.genes_tested, ','))           AS genes_tested,
+    genes_tested,
     contact_name,
     npi,
     organization_name,
@@ -16,9 +17,8 @@ SELECT
     office_phone,
     organization_state,
     organization_zip,
-    icd_10_codes,
+    EXPLODE(SPLIT(icd_10_codes, ',')) icd_10_codes, 
     hvjoinkey
-FROM txn
-    WHERE UPPER(COALESCE(txn.deidentified_id, '')) <> 'DEIDENTIFIED ID' 
-    /* Eliminate non-U.S. transactions, for privacy. */ 
-    AND UPPER(COALESCE(txn.organization_state, '')) <> 'INTERNATIONAL'
+FROM ambry_pvt_genes txn
+
+
