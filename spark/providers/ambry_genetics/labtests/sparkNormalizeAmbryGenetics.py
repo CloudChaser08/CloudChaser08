@@ -28,9 +28,4 @@ if __name__ == '__main__':
         end_to_end_test
     )
 
-    driver.init_spark_context()
-
-    if not end_to_end_test:
-        external_table_loader.load_ref_gen_ref(runner.sqlContext)
-
     driver.run()
