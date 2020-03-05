@@ -30,9 +30,10 @@ FROM
                     ORDER BY 
                         deidentified_id,
                         order_date
-                ) AS row_num
+                ) AS row_num,
+        input_file_name
                 
-    FROM ambry_txn_rnd3_subset txn
+    FROM txn
         WHERE UPPER(COALESCE(txn.deidentified_id, '')) <> 'DEIDENTIFIED ID' 
         /* Eliminate non-U.S. transactions, for privacy. */ 
         AND UPPER(COALESCE(txn.organization_state, '')) <> 'INTERNATIONAL'

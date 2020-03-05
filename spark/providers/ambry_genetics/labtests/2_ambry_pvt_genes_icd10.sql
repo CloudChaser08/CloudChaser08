@@ -18,7 +18,8 @@ SELECT
     organization_state,
     organization_zip,
     EXPLODE(SPLIT(icd_10_codes, ',')) icd_10_codes, 
-    hvjoinkey
+    hvjoinkey,
+    input_file_name
 FROM ambry_pvt_genes txn
 
 

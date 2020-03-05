@@ -101,7 +101,7 @@ SELECT
                     SUBSTR(EXTRACT_DATE(txn.order_date, '%m/%d/%Y'), 6, 2), '-01'
                 )
 	END                                                                                 AS part_best_date
-FROM ambry_transaction txn
+FROM ambry_pvt_genes_icd10 txn
 LEFT OUTER JOIN matching_payload pay ON txn.hvJoinKey = pay.hvJoinKey 
  LEFT OUTER JOIN
     (

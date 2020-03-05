@@ -18,5 +18,6 @@ SELECT
     organization_state,
     organization_zip,
     icd_10_codes,
-    hvjoinkey 
+    hvjoinkey,
+    input_file_name
 FROM ambry_si txn
