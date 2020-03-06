@@ -32,7 +32,6 @@ CREATE EXTERNAL TABLE transactions
     transaction_code                STRING,
     hvjoinkey                       STRING
 )
-PARTITIONED BY (part_date_recv string)
 ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.RegexSerDe'
     WITH SERDEPROPERTIES
     (
