@@ -11,17 +11,20 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
+import spark.helpers.reject_reversal as rr
 import spark.providers.pdx.pharmacyclaims.load_transactions as load_transactions
 
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
-
 FEED_ID = '65'
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/pdx/spark-output/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/transformed/pharmacyclaims/2018-11-26/'
+PART_PROVIDER = 'part_provider'
+PART_BEST_DATE = 'part_best_date'
+PDX = 'pdx'
 
 
 def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=None, test=False,
@@ -43,7 +46,6 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/payload/{}/'.format(
             date_input.replace('-', '/')
         )
-        spark.table('dw._pharmacyclaims_nb').createOrReplaceTempView('_pharmacyclaims_nb')
     else:
         input_path = 's3://salusv/incoming/pharmacyclaims/pdx/{}/'.format(
             date_input.replace('-', '/')
@@ -51,7 +53,14 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
         matching_path = 's3://salusv/matching/payload/pharmacyclaims/pdx/{}/'.format(
             date_input.replace('-', '/')
         )
-        spark.table('dw._pharmacyclaims_nb').createOrReplaceTempView('_pharmacyclaims_nb')
+
+    rr.load_previous_run_from_transformed(spark,
+                                          date_input,
+                                          OUTPUT_PATH_PRODUCTION,
+                                          PART_PROVIDER,
+                                          PDX,
+                                          PART_BEST_DATE,
+                                          schema)
 
     if custom_input_path:
         input_path = custom_input_path
@@ -87,7 +96,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
     ])
 
     df = postprocessor.compose(
-        lambda df: schema_enforcer.apply_schema(df, schema, columns_to_keep=['part_provider', 'part_best_date'])
+        lambda df: schema_enforcer.apply_schema(df, schema, columns_to_keep=['part_provider', PART_BEST_DATE])
     )(normalized_output)
 
     if not test:
@@ -104,7 +113,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
         _columns.remove('part_best_date')
 
         normalized_records_unloader.unload(
-            spark, runner, df, 'part_best_date', date_input, 'pdx',
+            spark, runner, df, PART_BEST_DATE, date_input, PDX,
             columns=_columns,
             hvm_historical_date=datetime(hvm_historical.year,
                                          hvm_historical.month,
@@ -118,7 +127,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
 
     if not test and not end_to_end_test:
         logger.log_run_details(
-            provider_name='PDX',
+            provider_name=PDX,
             data_type=DataType.PHARMACY_CLAIMS,
             data_source_transaction_path=input_path,
             data_source_matching_path=matching_path,
@@ -140,23 +149,10 @@ def main(args):
 
     if args.end_to_end_test:
         output_path = OUTPUT_PATH_TEST
-        tmp_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/temp/'
     elif args.output_path:
         output_path = args.output_path
     else:
         output_path = OUTPUT_PATH_PRODUCTION
-        tmp_path = 's3://salusv/backup/pdx/{}/'.format(args.date)
-
-    current_year_month = args.date[:7] + '-01'
-    prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
-
-    date_part = 'part_provider=pdx/part_best_date={}/'
-    subprocess.check_call(
-        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(current_year_month), tmp_path + date_part.format(current_year_month)]
-    )
-    subprocess.check_call(
-        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(prev_year_month), tmp_path + date_part.format(prev_year_month)]
-    )
 
     if args.end_to_end_test:
         normalized_records_unloader.distcp(output_path)

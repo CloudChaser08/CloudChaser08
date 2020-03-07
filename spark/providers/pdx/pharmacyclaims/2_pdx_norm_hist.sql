@@ -64,7 +64,7 @@ SELECT
 	logical_delete_reason,
 	part_provider,
 	part_best_date
- FROM _pharmacyclaims_nb
+ FROM previous_run_from_transformed
 WHERE part_provider = 'pdx'
     AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VENDOR_FILE_DATE_FMT}' AS DATE), 'MONTH'), -1)
     AND part_best_date <= CAST('{VENDOR_FILE_DATE_FMT}' AS DATE)
