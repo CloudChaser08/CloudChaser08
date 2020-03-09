@@ -84,6 +84,8 @@ SELECT
     txn.other_coverage_code,
     txn.plan_description,
     txn.place_of_service_code,
+    /* JKS 12/19/19 -  txn.prescriber_id_duplicate was added */    
+    txn.prescriber_id_duplicate,
     pay.hvid,
     pay.threedigitzip,
     pay.yearofbirth,
@@ -92,9 +94,9 @@ SELECT
     pay.state,
     pay.RXNumber as rx_number,
     pay.privateIdOne as pharmacy_npi,
-    MAX(txn.hvjoinkey)                                         AS hvjoinkey,
-    MAX(txn.input_file_name)                                   AS input_file_name
- FROM txn
+    MAX(txn.hvjoinkey)                                                                      AS hvjoinkey,
+    MAX(txn.input_file_name)                                                                AS input_file_name
+FROM txn
 LEFT OUTER JOIN matching_payload pay ON txn.hvjoinkey = pay.hvjoinkey
 WHERE UPPER(COALESCE(txn.patient_gender_code, 'X')) <>  UPPER('patient_gender_code')
 GROUP BY 1,	2,	3,	4,	5,	6,	7,	8,	9,	10,
@@ -105,5 +107,5 @@ GROUP BY 1,	2,	3,	4,	5,	6,	7,	8,	9,	10,
         51,	52,	53,	54,	55,	56,	57,	58,	59,	60,
         61,	62,	63,	64,	65,	66,	67,	68,	69,	70,
         71,	72,	73,	74,	75,	76,	77,	78,	79,	80,
-        81,	82,	83,	84,	85,	86,	87,	88,	89,	90,
-        91, 92, 93
+        81,	82,	83,	84,	85,	86,	87,	88,	89,	90, 
+        91, 92, 93,94
