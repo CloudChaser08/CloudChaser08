@@ -4,6 +4,20 @@ import subprocess
 import re
 
 
+def create_empty_dataframe(spark,
+                         part_provider_field,
+                         date_partition_field,
+                         output_schema,
+                         table_name='previous_run_from_transformed'):
+
+    # Create an empty dataframe that matches the expected output schema
+    # This is useful for starting brand new providers who have reject and reversal logic.
+    st = StructType([StructField(date_partition_field, StringType(), True)] +
+                    [StructField(part_provider_field, StringType(), True)] +
+                    output_schema.fields)
+    spark.createDataFrame(spark.sparkContext.emptyRDD(), st).createOrReplaceTempView(table_name)
+
+
 def load_previous_run_from_transformed(spark,
                                        date_input,
                                        output_path,
@@ -15,14 +29,6 @@ def load_previous_run_from_transformed(spark,
 
     full_output_path = output_path + part_provider_field + '=' + part_provider + '/'
     s3_list_command = ['aws', 's3', 'ls', full_output_path]
-
-    def load_empty_dataframe():
-        # Create an empty dataframe that matches the expected output schema
-        # This is useful for starting brand new providers who have reject and reversal logic.
-        st = StructType([StructField(date_partition_field, StringType(), True)] +
-                        [StructField(part_provider_field, StringType(), True)] +
-                        output_schema.fields)
-        spark.createDataFrame(spark.sparkContext.emptyRDD(), st).createOrReplaceTempView(table_name)
 
     def load_previous_run(file_date):
         df = spark.read.parquet(full_output_path + 'part_file_date=' + file_date + '/')
@@ -53,6 +59,9 @@ def load_previous_run_from_transformed(spark,
         max_file_date = str(max(previous_part_file_dates).date())
         load_previous_run(max_file_date)
     else:
-        load_empty_dataframe()
-
-
+        create_empty_dataframe(
+            spark,
+            part_provider_field,
+            date_partition_field,
+            output_schema,
+            table_name)
