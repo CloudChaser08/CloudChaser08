@@ -135,7 +135,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test and not airflow_test:
         logger.log_run_details(
-            provider_name='Ambry',
+            provider_name='AmbryExome',
             data_type=DataType.LAB_TESTS,
             data_source_transaction_path=input_path,
             data_source_matching_path=matching_path,
@@ -147,7 +147,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init('Ambry')
+    spark, sqlContext = init('AmbryExome')
 
     # initialize runner
     runner = Runner(sqlContext)
