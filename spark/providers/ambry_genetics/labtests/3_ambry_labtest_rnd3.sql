@@ -8,23 +8,18 @@ SELECT
 	'43'                                                                                    AS data_feed,
 	'194'                                                                                   AS data_vendor,
 	/* patient_gender */
-	CLEAN_UP_GENDER
-    	(
-        	CASE
-        	    WHEN SUBSTR(UPPER(COALESCE(txn.gender,'')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(txn.gender), 1, 1)
-        	    WHEN SUBSTR(UPPER(COALESCE(pay.gender,'')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(pay.gender), 1, 1)
-        	    ELSE 'U' 
-        	END
-	    )                                                                                   AS patient_gender,
-	    
-	    
+  CASE
+      WHEN SUBSTR(UPPER(COALESCE(txn.gender,'')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(txn.gender), 1, 1)
+      WHEN SUBSTR(UPPER(COALESCE(pay.gender,'')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(pay.gender), 1, 1)
+      ELSE 'U'
+  END                                                                                     AS patient_gender,
 	/* patient_age - (Notes for me - Per our transformation - if the pay.age is NULL the patient_age becomes NULL)  */
 	CAP_AGE
 	(
 	VALIDATE_AGE
         (
             pay.age,
-            CAST(EXTRACT_DATE(txn.order_date, '%m/%d/%Y') AS DATE),
+            to_date(txn.order_date, 'mm/dd/yyyy'),
             COALESCE(txn.date_of_birth, pay.yearofbirth)
         )
     )                                                                                       AS patient_age,
@@ -32,7 +27,7 @@ SELECT
 	CAP_YEAR_OF_BIRTH
         (
             pay.age,
-            CAST(EXTRACT_DATE(txn.order_date, '%m/%d/%Y') AS DATE),
+            to_date(txn.order_date, 'mm/dd/yyyy'),
             COALESCE(txn.date_of_birth, pay.yearofbirth)
         )                                                                                   AS patient_year_of_birth,
     /* patient_zip3 */
@@ -48,9 +43,9 @@ SELECT
     /* date_service */
 	CAP_DATE
         (
-            CAST(EXTRACT_DATE(txn.order_date, '%m/%d/%Y') AS DATE),
+            to_date(txn.order_date, 'mm/dd/yyyy'),
             esdt.gen_ref_1_dt,
-            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
+            CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS date_service,
         
     /* test_ordered_name */
@@ -65,7 +60,7 @@ SELECT
                 txn.icd_10_codes
         END,
         '02',
-        CAST(EXTRACT_DATE(txn.order_date, '%m/%d/%Y') AS DATE)
+        to_date(txn.order_date, 'mm/dd/yyyy')
     )
                                                                                             AS diagnosis_code, 
     CASE
@@ -88,17 +83,17 @@ SELECT
 	                            (
 	                                CAP_DATE
                                         (
-                                            CAST(EXTRACT_DATE(txn.order_date, '%m/%d/%Y') AS DATE),
+                                            to_date(txn.order_date, 'mm/dd/yyyy'),
                                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
-                                            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
+                                            CAST('{VDR_FILE_DT}' AS DATE)
                                         ), 
                                     ''
                                 )))
 	        THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE CONCAT
 	            (
-                    SUBSTR(EXTRACT_DATE(txn.order_date, '%m/%d/%Y'), 1, 4), '-',
-                    SUBSTR(EXTRACT_DATE(txn.order_date, '%m/%d/%Y'), 6, 2), '-01'
+                    SUBSTR(to_date(txn.order_date, 'mm/dd/yyyy'), 1, 4), '-',
+                    SUBSTR(to_date(txn.order_date, 'mm/dd/yyyy'), 6, 2), '-01'
                 )
 	END                                                                                 AS part_best_date
 FROM ambry_pvt_genes_icd10 txn

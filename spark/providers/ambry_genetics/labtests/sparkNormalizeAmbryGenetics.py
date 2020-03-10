@@ -25,7 +25,8 @@ if __name__ == '__main__':
         source_table_schemas,
         output_table_names_to_schemas,
         date_input,
-        end_to_end_test
+        end_to_end_test,
+        output_to_transform_path=True
     )
 
     driver.run()
