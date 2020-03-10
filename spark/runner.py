@@ -98,9 +98,9 @@ class Runner:
         for s in scripts:
             table_name = '_'.join(s.replace('.sql', '').split('_')[1:])
             logger.log(' -loading:' + table_name)
-            df = self.run_spark_script(s, variables=copy.deepcopy(variables), source_file_path=directory_path, return_output=True)
-            df.createOrReplaceTempView(table_name)
-            print(table_name + ': ' + str(df.count()))
+            self.run_spark_script(s, variables=copy.deepcopy(variables), source_file_path=directory_path, return_output=True) \
+                .createOrReplaceTempView(table_name)
+
 
         last_table = '_'.join(scripts[-1].replace('.sql', '').split('_')[1:])
         return self.sqlContext.table(last_table)

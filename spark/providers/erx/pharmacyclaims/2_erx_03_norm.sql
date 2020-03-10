@@ -8,14 +8,11 @@ SELECT
 	'159'                                                                                   AS data_feed,
 	'515'                                                                                   AS data_vendor,
 	/* patient_gender */
-	CLEAN_UP_GENDER
-    	(
-        	CASE
-        	    WHEN SUBSTR(UPPER(COALESCE(txn.patient_gender_code, 'U')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(COALESCE(txn.patient_gender_code, 'U')), 1, 1)
-        	    WHEN SUBSTR(UPPER(COALESCE(txn.gender             , 'U')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(COALESCE(txn.gender             , 'U')), 1, 1)
-        	    ELSE 'U' 
-        	END
-	    )                                                                                   AS patient_gender,
+    CASE
+        WHEN SUBSTR(UPPER(COALESCE(txn.patient_gender_code, 'U')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(COALESCE(txn.patient_gender_code, 'U')), 1, 1)
+        WHEN SUBSTR(UPPER(COALESCE(txn.gender             , 'U')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(COALESCE(txn.gender             , 'U')), 1, 1)
+        ELSE 'U'
+    END                                                                                     AS patient_gender,
 	/* patient_year_of_birth */
 	CAP_YEAR_OF_BIRTH
         (
