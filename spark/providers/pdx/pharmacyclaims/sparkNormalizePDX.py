@@ -54,13 +54,16 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
             date_input.replace('-', '/')
         )
 
-    rr.load_previous_run_from_transformed(spark,
-                                          date_input,
-                                          OUTPUT_PATH_PRODUCTION,
-                                          PART_PROVIDER,
-                                          PDX,
-                                          PART_BEST_DATE,
-                                          schema)
+    if test:
+        rr.create_empty_dataframe(spark, PART_PROVIDER, PART_BEST_DATE, schema)
+    else:
+        rr.load_previous_run_from_transformed(spark,
+                                              date_input,
+                                              OUTPUT_PATH_PRODUCTION,
+                                              PART_PROVIDER,
+                                              PDX,
+                                              PART_BEST_DATE,
+                                              schema)
 
     if custom_input_path:
         input_path = custom_input_path
