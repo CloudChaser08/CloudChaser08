@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 from pyspark.sql.types import StringType, StructType, StructField
+from pyspark.sql.functions import lit
 import subprocess
 import re
 
@@ -32,7 +33,7 @@ def load_previous_run_from_transformed(spark,
 
     def load_previous_run(file_date):
         df = spark.read.parquet(full_output_path + 'part_file_date=' + file_date + '/')
-        df.createOrReplaceTempView(table_name)
+        df.withColumn(part_provider_field, lit(part_provider)).createOrReplaceTempView(table_name)
 
     def get_previous_part_file_dates():
         # create a datetime from date_input
