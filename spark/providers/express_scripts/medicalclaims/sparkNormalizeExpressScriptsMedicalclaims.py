@@ -89,8 +89,10 @@ if __name__ == "__main__":
         words = [line.split('/') for line in ls_output.split('\n') if '.json' in line]
 
         all_dates = set(
-            [datetime.strptime(word[4] + word[5] + word[6], '%Y%m%d') for word words]
+            [datetime.strptime(word[4] + word[5] + word[6], '%Y%m%d') for word in words]
         )
+
+        input_date = datetime.strptime(driver.input_date, "%Y-%m-%d")
 
         dates_less_than_input = [date for date in all_dates if date <= input_date]
 
