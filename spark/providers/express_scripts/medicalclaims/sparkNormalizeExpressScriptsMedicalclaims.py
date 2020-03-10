@@ -1,6 +1,7 @@
 import argparse
 import subprocess
 import re
+from datetime import datetime
 import spark.helpers.constants as constants
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
@@ -38,7 +39,6 @@ if __name__ == "__main__":
     parser.add_argument('--date', type=str)
     # RX and DX data does not come in at the same time.
     # This argument allows you to point to the correct Rx PHI date
-    parser.add_argument('--rx_phi_date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_args()
     date_input = args.date
@@ -69,39 +69,55 @@ if __name__ == "__main__":
         logger.log('- Loading Transactions')
         driver.runner.run_spark_script('sql_loaders/load_transactions.sql',
                                        [['input_path', driver.input_path]])
+
         driver.spark.table('transactions').withColumn('input_file_name', F.input_file_name())\
             .createOrReplaceTempView('txn')
 
         logger.log('- Loading new PHI data')
-        rx_input_date_path = args.rx_phi_date.replace('-', '/')
-        new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING + rx_input_date_path + '/'
+        # new_phi is the latest RX Matching
+
+        s3_list_command = [
+            'aws',
+            's3',
+            'ls',
+            S3_EXPRESS_SCRIPTS_RX_MATCHING,
+            '--recursive'
+        ]
+
+        ls_output = subprocess.check_output(s3_list_command)
+
+        words = [line.split('/') for line in ls_output.split('\n') if '.json' in line]
+
+        all_dates = set(
+            [datetime.strptime(word[4] + word[5] + word[6], '%Y%m%d') for word words]
+        )
+
+        dates_less_than_input = [date for date in all_dates if date <= input_date]
+
+        max_date = max(dates_less_than_input)
+        max_date_str = max_date.strftime('%Y/%m/%d/')
+
+        new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING + max_date_str
         payload_loader.load(driver.runner, new_phi_path, ['hvJoinKey', 'patientId'])
         driver.runner.run_spark_query('ALTER TABLE matching_payload RENAME TO new_phi')
 
         logger.log('- Loading matching_payload data')
+        # matching_payload is the associate input_date payload
         driver.runner.run_spark_script('sql_loaders/load_matching_payloads.sql',
                                        [['matching_path', S3_MATCHING_KEY]])
-        file_cmd = ['aws', 's3', 'ls', 's3://' + S3_MATCHING_KEY, '--recursive']
-        files = subprocess.check_output(file_cmd).decode().split("\n")
-        found_dates = [re.findall('20[0-9]{2}/../..', x)[0] for x in
-                       [x for x in files if re.search('20[0-9]{2}/../..', x)]]
-        found_dates = set(found_dates)
-        for found_date in found_dates:
-            location = 's3a://' + S3_MATCHING_KEY + found_date + '/'
-            driver.runner.run_spark_query(
-                """ALTER TABLE matching_payload
-                ADD PARTITION (part_date_recv='{}') LOCATION '{}'""".format(found_date, location)
-            )
-        logger.log('Done loading data')
 
-    def transform_data():
-        driver.transform()
         logger.log('Combining PHI data tables')
+        # This reads in the reference location matching data and combines it with new Rx matching
         driver.runner.run_spark_script('sql_loaders/load_and_combine_phi.sql', [
             ['local_phi_path', LOCAL_REF_PHI],
             ['s3_phi_path', S3A_REF_PHI],
             ['partitions', driver.spark.conf.get('spark.sql.shuffle.partitions'), False]
         ])
+
+        logger.log('Done loading data')
+
+    def transform_data():
+        driver.transform()
 
     def save_to_disk():
         # save matched transactions to disk
