@@ -12,13 +12,10 @@ SELECT
 	'155'                                                                                   AS data_feed, 
 	'17'                                                                                    AS data_vendor, 
 	/* patient_gender */
-	CLEAN_UP_GENDER
-    	(
-        	CASE
-        	    WHEN SUBSTR(UPPER(rx_pay.gender), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(rx_pay.gender), 1, 1)
-        	    ELSE 'U' 
-        	END
-	    )                                                                                   AS patient_gender, 
+  CASE
+      WHEN SUBSTR(UPPER(rx_pay.gender), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(rx_pay.gender), 1, 1)
+      ELSE 'U' 
+  END                                                                                   AS patient_gender, 
 	/* patient_year_of_birth */
 	cap_year_of_birth
         (
@@ -32,14 +29,14 @@ SELECT
 	CAP_DATE
         (
             to_date(txn.first_serviced_date, 'yyyymmdd'),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}'  AS DATE)
         )                                                                                   AS date_service,
     /* date_service_end */
 	CAP_DATE
         (
             to_date(txn.last_serviced_date, 'yyyymmdd'),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS date_service_end,
    /* inst_discharge_status_std_id */
@@ -252,7 +249,10 @@ SELECT
 	                                CAP_DATE
                                         (
                                             to_date(txn.first_serviced_date, 'yyyymmdd'),
-                                            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt), 
+                                            COALESCE(
+                                              CAST('{AVAILABLE_START_DATE}' AS DATE),
+                                              CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+                                            ),
                                             CAST('{VDR_FILE_DT}' AS DATE)
                                         ), 
                                     ''
@@ -269,22 +269,6 @@ FROM txn
 LEFT OUTER JOIN matching_payload dx_pay ON txn.hvjoinkey    = dx_pay.hvjoinkey
 LEFT OUTER JOIN local_phi rx_pay ON dx_pay.patientid = rx_pay.patient_id
 
-LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 155
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-    ) esdt
-   ON 1 = 1
- LEFT OUTER JOIN 
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 155
-          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-    ) ahdt
-   ON 1 = 1
 --------------  Dignosis Code + Proc + Revenue Code
 WHERE 
     --LPAD(txn.medical_qualifier_code, 2, 0) IN ('01', '02') 
