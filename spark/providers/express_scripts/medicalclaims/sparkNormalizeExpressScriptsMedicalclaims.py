@@ -11,7 +11,7 @@ import spark.helpers.external_table_loader as external_table_loader
 import pyspark.sql.functions as F
 
 S3_MATCHING_KEY = 'salusv/matching/payload/medicalclaims/express_scripts/'
-S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3a://salusv/matching/payload/pharmacyclaims/esi/'
+S3_EXPRESS_SCRIPTS_RX_MATCHING = '{}salusv/matching/payload/pharmacyclaims/esi/'
 S3 = 's3://'
 S3A = 's3a://'
 REF_PHI = 'salusv/reference/express_scripts_phi/'
@@ -80,7 +80,7 @@ if __name__ == "__main__":
             'aws',
             's3',
             'ls',
-            S3_EXPRESS_SCRIPTS_RX_MATCHING,
+            S3_EXPRESS_SCRIPTS_RX_MATCHING.format(S3),
             '--recursive'
         ]
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         max_date = max(dates_less_than_input)
         max_date_str = max_date.strftime('%Y/%m/%d/')
 
-        new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING + max_date_str
+        new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING.format(S3A) + max_date_str
         payload_loader.load(driver.runner, new_phi_path, ['hvJoinKey', 'patientId'])
         driver.runner.run_spark_query('ALTER TABLE matching_payload RENAME TO new_phi')
 
