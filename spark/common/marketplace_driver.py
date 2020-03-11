@@ -12,6 +12,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.common.utility.logger as logger
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
+import spark.helpers.postprocessor as pp
 
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
@@ -60,7 +61,10 @@ class MarketplaceDriver(object):
                  test=False,
                  load_date_explode=True,
                  output_to_transform_path=False,
-                 unload_partition_count=20):
+                 unload_partition_count=20,
+                 vdr_feed_id=None,
+                 use_ref_gen_values=False
+                 ):
 
         # get directory and path for provider
         previous_stack_frame = inspect.currentframe().f_back
@@ -77,27 +81,24 @@ class MarketplaceDriver(object):
 
         self.provider_name = provider_name
         self.provider_partition_name = provider_partition_name
-
         self.data_type = first_schema_obj.data_type
         self._data_type_str = DataType(self.data_type).value
-
         self.date_input = datetime.datetime.strptime(date_input, '%Y-%m-%d').date()
-
         self.provider_directory_path = provider_directory_path
-
         self.test = test
         self.end_to_end_test = end_to_end_test
-
         self.source_table_schema = source_table_schema
-
         self.output_table_names_to_schemas = output_table_names_to_schemas
         self.load_date_explode = load_date_explode
         self.output_to_transform_path = output_to_transform_path
         self.unload_partition_count = unload_partition_count
+        self.vdr_feed_id = vdr_feed_id
+        self.use_ref_gen_values = use_ref_gen_values
+        self.available_start_date = None
+        self.earliest_service_date = None
         self.input_path = None
         self.matching_path = None
         self.output_path = None
-
         self.spark = None
         self.sql_context = None
         self.runner = None
@@ -157,6 +158,8 @@ class MarketplaceDriver(object):
         if not self.test:
             logger.log(' -loading: ref_gen_ref')
             external_table_loader.load_ref_gen_ref(self.runner.sqlContext)
+            if self.use_ref_gen_values:
+                self.get_ref_gen_ref_values()
 
             if self.load_date_explode:
                 logger.log(' -loading: date_explode_indices')
@@ -166,13 +169,28 @@ class MarketplaceDriver(object):
                 self.spark.table('date_explode_indices').cache() \
                     .createOrReplaceTempView('date_explode_indices')
 
+    def get_ref_gen_ref_values(self):
+        if not self.vdr_feed_id:
+            self.stop_spark()
+            raise AttributeError("load_ref_gen_values requires a valid vdr_feed_id")
+
+        self.earliest_service_date = pp.get_gen_ref_date(self.spark,
+                                                         self.vdr_feed_id,
+                                                         'EARLIEST_VALID_SERVICE_DATE')
+        self.available_start_date = pp.get_gen_ref_date(self.spark,
+                                                        self.vdr_feed_id,
+                                                        'HVM_AVAILABLE_HISTORY_START_DATE')
+
     def transform(self):
         """
         Transform the loaded data
         """
         logger.log('Running the normalization SQL scripts')
-        self.runner.run_all_spark_scripts([['VDR_FILE_DT', str(self.date_input), False]],
-                                          directory_path=self.provider_directory_path)
+
+        variables = [['VDR_FILE_DT', str(self.date_input), False],
+                     ['AVAILABLE_START_DATE', self.available_start_date, False],
+                     ['EARLIEST_SERVICE_DATE', self.earliest_service_date, False]]
+        self.runner.run_all_spark_scripts(variables, directory_path=self.provider_directory_path)
 
     def save_to_disk(self):
         """

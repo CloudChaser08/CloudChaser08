@@ -1,5 +1,5 @@
 SELECT
-    MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
+
     CONCAT('159', '_', txn.switch_transaction_number,'_', txn.product_service_id)           AS claim_id,    
     txn.hvid                                                                                AS hvid,
     CURRENT_DATE()                                                                          AS created,
@@ -8,22 +8,16 @@ SELECT
 	'159'                                                                                   AS data_feed,
 	'515'                                                                                   AS data_vendor,
 	/* patient_gender */
-	CLEAN_UP_GENDER
-    	(
-        	CASE
-        	    WHEN SUBSTR(UPPER(COALESCE(txn.patient_gender_code, 'U')), 1, 1) IN ('F', 'M')
-        	        THEN SUBSTR(UPPER(COALESCE(txn.patient_gender_code, 'U')), 1, 1)
-        	    WHEN SUBSTR(UPPER(COALESCE(txn.gender             , 'U')), 1, 1) IN ('F', 'M')
-        	        THEN SUBSTR(UPPER(COALESCE(txn.gender             , 'U')), 1, 1)
-        	    ELSE 'U' 
-        	END
-	    )                                                                                   AS patient_gender,
+    CASE
+        WHEN SUBSTR(UPPER(COALESCE(txn.patient_gender_code, 'U')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(COALESCE(txn.patient_gender_code, 'U')), 1, 1)
+        WHEN SUBSTR(UPPER(COALESCE(txn.gender             , 'U')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(COALESCE(txn.gender             , 'U')), 1, 1)
+        ELSE 'U'
+    END                                                                                     AS patient_gender,
 	/* patient_year_of_birth */
-	/* ptnt_birth_yr */
 	CAP_YEAR_OF_BIRTH
         (
             txn.age,
-            COALESCE(CAST(EXTRACT_DATE(txn.date_of_fill,'%Y%m%d') AS DATE) , CAST(EXTRACT_DATE( '{VDR_FILE_DT}','%Y%m%d') AS DATE)),
+            COALESCE(to_date(txn.date_of_fill, 'yyyymmdd') , CAST('{VDR_FILE_DT}' AS DATE)),
             txn.yearofbirth
         )                                                                                   AS patient_year_of_birth,
     MASK_ZIP_CODE(SUBSTR(COALESCE(txn.pt_zip_address, txn.threedigitzip), 1, 3))            AS patient_zip3,
@@ -31,24 +25,24 @@ SELECT
     /* date_service */
 	CAP_DATE
         (
-            CAST(EXTRACT_DATE(txn.date_of_fill,'%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
-            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
+            to_date(txn.date_of_fill,'yyyymmdd'),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
+            CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS date_service,
     /* date_written */
 	CAP_DATE
         (
-            CAST(EXTRACT_DATE(txn.date_rx_written,'%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
-            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
+            to_date(txn.date_rx_written, 'yyyymmdd'),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
+            CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS date_written,
-    YEAR(CAST(EXTRACT_DATE(txn.date_of_injury,'%Y%m%d') AS DATE))                           AS year_of_injury,
+    YEAR(to_date(txn.date_of_injury, 'yyyymmdd'))                          AS year_of_injury,
     /* date_authorized */
 	CAP_DATE
         (
-            CAST(EXTRACT_DATE(SUBSTR(txn.date_switched,1,10),'%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
-            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
+            CAST(SUBSTR(txn.date_switched,1,10) AS DATE),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
+            CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS date_authorized,    
     SUBSTR(txn.date_switched,12,8)                                                          AS time_authorized,
     txn.type_column			                                                                AS transaction_code_std,
@@ -62,45 +56,46 @@ SELECT
     (
         txn.diagnosis_code,
         txn.diagnosis_code_qualifier,
-        CAST(EXTRACT_DATE(txn.date_of_fill,'%Y%m%d') AS DATE)
+        to_date(txn.date_of_fill, 'yyyymmdd')
     )                                                                                       AS diagnosis_code, 
     CASE
-        WHEN txn.diagnosis_code IS NULL 
-            THEN NULL
-        ELSE txn.diagnosis_code_qualifier
+        WHEN txn.diagnosis_code IS NULL THEN NULL
+    ELSE
+       txn.diagnosis_code_qualifier
     END                                                                                     AS diagnosis_code_qual,  
     -------------------- There are NDC with incorrect qualifier 
     /* procedure_code */
     CASE 
-        WHEN txn.product_service_qualifier IN ('07', '08') 
-         AND LENGTH(txn.product_service_id) <> 11
-            THEN txn.product_service_id 
-        ELSE NULL 
+        WHEN txn.product_service_qualifier IN ('07', '08') AND LENGTH(txn.product_service_id) <> 11
+        THEN txn.product_service_id 
+    ELSE 
+        NULL 
     END                                                                                     AS procedure_code,
    /* procedure_code_qual */    
     CASE 
-        WHEN txn.product_service_qualifier IN ('07', '08') 
-         AND LENGTH(txn.product_service_id) <> 11
-            THEN txn.product_service_qualifier 
-        ELSE NULL 
+        WHEN txn.product_service_qualifier IN ('07', '08') AND LENGTH(txn.product_service_id) <> 11
+        THEN txn.product_service_qualifier 
+    ELSE 
+        NULL 
     END                                                                                     AS procedure_code_qual,
       -------------------- There are NDC with incorrect qualifier 
     /* ndc_code */
     CLEAN_UP_NDC_CODE
     (
         CASE 
-            WHEN txn.product_service_qualifier IN ('00','03','07', '08') 
-              OR LENGTH(txn.product_service_id) = 11
-                THEN txn.product_service_id 
-            ELSE NULL 
+            WHEN txn.product_service_qualifier IN ('00','03','07', '08') OR LENGTH(txn.product_service_id) = 11
+            THEN txn.product_service_id 
+        ELSE 
+            NULL 
         END   
     )                                                                                       AS ndc_code,
- 
+                         
     txn.rx_number                                                   AS rx_number,
     CASE 
         WHEN txn.rx_number IS NOT NULL
-            THEN 'RX_NUMBER' 
-        ELSE NULL 
+        THEN 'RX_NUMBER' 
+    ELSE 
+        NULL 
     END                                                                                     AS rx_number_qual,
     txn.bin			                                                                        AS bin_number,
     txn.pcn			                                                                        AS processor_control_number,
@@ -112,6 +107,7 @@ SELECT
     ---- No cleanup needed as this is masked NPI
     pharmacy_npi                                                                            AS pharmacy_npi,
     CLEAN_UP_NPI_CODE(txn.service_number)	                                                AS prov_dispensing_npi,   
+
     txn.plan			                                                                    AS payer_plan_id,
     txn.plan_description                                                                    AS payer_plan_name,
     txn.compound_code			                                                            AS compound_code,
@@ -123,15 +119,18 @@ SELECT
    /* orig_prescribed_product_service_code_qual */    
     CASE 
         WHEN txn.orig_prescribed_prod_svc_code IS NOT NULL
-            THEN txn.orig_prescribed_prod_svc_qualifier 
-        ELSE NULL 
-    END                                                                                     AS orig_prescribed_product_service_code_qual,
+        THEN txn.orig_prescribed_prod_svc_qualifier 
+    ELSE 
+        NULL 
+    END                                                                                     AS orig_prescribed_product_service_code_qual,   
+    
     txn.original_prescribed_quantity			                                            AS orig_prescribed_quantity,
     /* level_of_service LPAD(str,len,padstr) */
     CASE 
         WHEN LPAD(txn.level_of_service, 2, 0) ='06'
-            THEN NULL
-        ELSE txn.level_of_service
+        THEN NULL
+    ELSE 
+        txn.level_of_service
     END                                                                                     AS level_of_service,
     txn.reason_for_service_code			                                                    AS reason_for_service,
     txn.professional_service_code			                                                AS professional_service_code,
@@ -144,12 +143,13 @@ SELECT
             THEN '99' 
         ELSE LPAD(txn.place_of_service_code, 2, 0) 
     END	                                                                                    AS place_of_service_std_id,
+    /* JKS 12/19/19 -  COALESCE(txn.prescriber_id, txn.prescriber_id_duplicate) was added per v03 mapping*/
     CLEAN_UP_NPI_CODE
     (
-        CASE 
-            WHEN LPAD(txn.place_of_service_code, 2, 0) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33')
-            THEN NULL 
-        ELSE txn.prescriber_id END    
+    CASE 
+        WHEN LPAD(txn.place_of_service_code, 2, 0) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33') THEN NULL
+        ELSE COALESCE(txn.prescriber_id, txn.prescriber_id_duplicate) 
+    END    
     ) 			                                                                            AS prov_prescribing_npi,
     CASE 
         WHEN LPAD(txn.level_of_service, 2, 0) ='06'                                                          THEN NULL
@@ -161,21 +161,25 @@ SELECT
         WHEN LPAD(txn.place_of_service_code, 2, 0) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33') THEN NULL
         ELSE txn.prescriber_first_name			
     END                                                                                     AS prov_prescribing_name_2,
+    
     CASE 
         WHEN LPAD(txn.level_of_service, 2, 0) ='06'                                                          THEN NULL
         WHEN LPAD(txn.place_of_service_code, 2, 0) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33') THEN NULL
         ELSE txn.prescriber_street_address			
     END                                                                                     AS prov_prescribing_address_1,
+    
     CASE 
         WHEN LPAD(txn.level_of_service, 2, 0) ='06'                                                          THEN NULL
         WHEN LPAD(txn.place_of_service_code, 2, 0) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33') THEN NULL
         ELSE txn.prescriber_city_address			
     END                                                                                     AS prov_prescribing_city,
+    
     CASE 
         WHEN LPAD(txn.level_of_service, 2, 0) ='06'                                                          THEN NULL
         WHEN LPAD(txn.place_of_service_code, 2, 0) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33') THEN NULL
         ELSE txn.prescriber_state_address			
     END                                                                                     AS prov_prescribing_state,
+
     CASE 
         WHEN LPAD(txn.level_of_service, 2, 0) ='06'                                                          THEN NULL
         WHEN LPAD(txn.place_of_service_code, 2, 0) IN ('05', '06', '07', '08', '09', '12', '13', '14', '33') THEN NULL
@@ -192,8 +196,8 @@ SELECT
     txn.amount_of_copay_coinsurance			                                                AS copay_coinsurance,
     CASE 
         WHEN 0 <> LENGTH(COALESCE(txn.basis_cost_determination, '')) 
-            THEN LPAD(txn.basis_cost_determination, 2,'0') 
-        ELSE NULL 
+        THEN LPAD(txn.basis_cost_determination, 2,'0') 
+    ELSE NULL 
     END                                                                                     AS basis_of_cost_determination,
     txn.ingredient_cost			                                                            AS submitted_ingredient_cost,
     txn.dispensing_fee			                                                            AS submitted_dispensing_fee,
@@ -203,8 +207,8 @@ SELECT
     txn.pt_paid_amount			                                                            AS submitted_patient_pay,   
     CASE 
         WHEN txn.other_amount_claimed_submitted IS NOT NULL
-            THEN txn.other_amount_claimed_qualifier
-        ELSE NULL
+        THEN txn.other_amount_claimed_qualifier
+    ELSE NULL
     END                                                                                     AS submitted_other_claimed_qual,    
     txn.other_amount_claimed_submitted			                                            AS submitted_other_claimed,
     txn.basis_of_reimbursement_determination		        	                            AS basis_of_reimbursement_determination,
@@ -216,8 +220,8 @@ SELECT
     txn.patient_pay_amount			                                                        AS paid_patient_pay,
     CASE 
         WHEN txn.other_amount_paid IS NOT NULL
-            THEN txn.other_amount_paid_qualifier
-        ELSE NULL
+        THEN txn.other_amount_paid_qualifier
+    ELSE NULL
     END                                                                                     AS paid_other_claimed_qual,    
     txn.other_amount_paid			                                                        AS paid_other_claimed,
     txn.tax_exempt_indicator			                                                    AS tax_exempt_indicator,
@@ -228,24 +232,22 @@ SELECT
     txn.other_payer_id			                                                            AS other_payer_coverage_id,
     CASE 
         WHEN txn.other_payer_id IS NOT NULL
-            THEN txn.other_payer_id_qualifier
-        ELSE NULL
+        THEN txn.other_payer_id_qualifier
+    ELSE NULL
     END                                                                                     AS other_payer_coverage_qual, 
     /* date_authorized */
 	CAP_DATE
         (
-            CAST(EXTRACT_DATE(SUBSTR(txn.other_payer_date,1,10),'%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
-            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
+            CAST(SUBSTR(txn.other_payer_date,1,10) AS DATE),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
+            CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS other_payer_date,
     txn.other_coverage_code			                                                        AS other_payer_coverage_code,
     --------------------
     CASE
-        WHEN transaction_response_status in ('R','C', 'D', 'Q') 
-            THEN 'Rejected'
+        WHEN transaction_response_status in ('R','C', 'D', 'Q') THEN 'Rejected'
         WHEN type_column = 'B2' AND transaction_response_status = 'A' THEN 'Reversal'
-        ELSE NULL 
-    END                                                                                     AS logical_delete_reason,
+    ELSE NULL END                                                                           AS logical_delete_reason,
 	'erx'                                                                                   AS part_provider,
 	
     /* part_best_date */
@@ -254,9 +256,9 @@ SELECT
 	                            (
 	                                CAP_DATE
                                         (
-                                            CAST(EXTRACT_DATE(txn.date_of_fill,'%Y%m%d') AS DATE),
-                                            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
-                                            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
+                                            to_date(txn.date_of_fill, 'yyyymmdd'),
+                                            COALESCE(CAST('{AVAILABLE_START_DATE}' AS DATE), CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
+                                            CAST('{VDR_FILE_DT}' AS DATE)
                                         ), 
                                     ''
                                 )))
@@ -266,21 +268,5 @@ SELECT
                     SUBSTR(txn.date_of_fill, 1, 4), '-',
                     SUBSTR(txn.date_of_fill, 5, 2), '-01'
                 )
-	END                                                                                     AS part_best_date
- FROM eRx_transaction_dedup txn
- LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id =159
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-    ) esdt
-   ON 1 = 1
- LEFT OUTER JOIN 
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 159
-          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-    ) ahdt
-   ON 1 = 1
+	END                                                                                 AS part_best_date
+ FROM erx_01_dedup txn
