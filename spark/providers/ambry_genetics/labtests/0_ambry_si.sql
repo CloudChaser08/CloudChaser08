@@ -1,5 +1,5 @@
 SELECT
-    CONCAT(deidentified_id, '_', to_date(order_date, 'mm/dd/yyyy'), '_',row_num ) AS claim_id,
+    CONCAT(deidentified_id, '_', to_date(order_date, 'MM/dd/yyyy'), '_',row_num ) AS claim_id,
     *
 FROM
 (
