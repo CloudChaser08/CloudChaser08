@@ -20,7 +20,7 @@ SELECT
 	cap_year_of_birth
         (
             NULL,
-           to_date(txn.first_serviced_date, 'yyyymmdd'),
+           to_date(txn.first_serviced_date, 'yyyyMMdd'),
             rx_pay.year_of_birth
         )                                                                                   AS patient_year_of_birth, 
     /* patient_zip3 */
@@ -28,14 +28,14 @@ SELECT
     /* date_service */
 	CAP_DATE
         (
-            to_date(txn.first_serviced_date, 'yyyymmdd'),
+            to_date(txn.first_serviced_date, 'yyyyMMdd'),
             CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}'  AS DATE)
         )                                                                                   AS date_service,
     /* date_service_end */
 	CAP_DATE
         (
-            to_date(txn.last_serviced_date, 'yyyymmdd'),
+            to_date(txn.last_serviced_date, 'yyyyMMdd'),
             CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS date_service_end,
@@ -70,7 +70,7 @@ SELECT
                     (
                         txn.medical_code,
                         txn.medical_qualifier_code,
-                        to_date(COALESCE(txn.last_serviced_date, txn.first_serviced_date), 'yyyymmdd')
+                        to_date(COALESCE(txn.last_serviced_date, txn.first_serviced_date), 'yyyyMMdd')
                     )
      ELSE CAST(NULL AS STRING)
     END                                                                                     AS diagnosis_code,
@@ -248,7 +248,7 @@ SELECT
 	                            (
 	                                CAP_DATE
                                         (
-                                            to_date(txn.first_serviced_date, 'yyyymmdd'),
+                                            to_date(txn.first_serviced_date, 'yyyyMMdd'),
                                             COALESCE(
                                               CAST('{AVAILABLE_START_DATE}' AS DATE),
                                               CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
