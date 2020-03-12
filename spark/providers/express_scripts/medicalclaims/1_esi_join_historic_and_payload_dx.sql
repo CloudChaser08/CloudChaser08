@@ -8,13 +8,10 @@ SELECT
      unmatched.data_feed,
      unmatched.data_vendor,
      /* patient_gender */
-     CLEAN_UP_GENDER
-            (
-                CASE
-                    WHEN SUBSTR(UPPER(rx_pay.gender), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(rx_pay.gender), 1, 1)
-                    ELSE 'U'
-                END
-            ) AS patient_gender,
+     CASE
+         WHEN SUBSTR(UPPER(rx_pay.gender), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(rx_pay.gender), 1, 1)
+         ELSE 'U'
+     END AS patient_gender,
      /* patient_year_of_birth */
         cap_year_of_birth
             (
