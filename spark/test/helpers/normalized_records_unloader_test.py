@@ -11,7 +11,7 @@ from functools import reduce
 from pyspark.sql.utils import AnalysisException
 
 script_path = __file__
-test_staging_dir  = file_utils.get_abs_path(
+test_staging_dir = file_utils.get_abs_path(
     script_path, './test-staging/'
 ) + '/'
 test_staging_dir2 = file_utils.get_abs_path(

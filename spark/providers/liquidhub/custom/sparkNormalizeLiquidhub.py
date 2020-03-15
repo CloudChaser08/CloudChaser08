@@ -130,7 +130,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
 
     small_bad_manus = [r.manu for r in small_bad_manus]
 
-    few_bad_rows  = bad_content.where(
+    few_bad_rows = bad_content.where(
                 F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus)
             ).groupBy('source_name', 'manufacturer') \
             .agg(F.collect_set('source_patient_id').alias('bad_patient_ids'), F.count('manufacturer').alias('bad_patient_count'))
@@ -148,7 +148,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # (1 for the first run of this group, 2 for the second, etc)
     # and then any file ID that HealthVerity wants, we'll use a combination
     # of the original group date and version number
-    output_file_name  = '_'.join([lh_version, manufacturer, source_name])
+    output_file_name = '_'.join([lh_version, manufacturer, source_name])
     if not test:
         output_file_name += '_' + datetime.now(tz.gettz('America/New York')).date().isoformat().replace('-', '')
     else:

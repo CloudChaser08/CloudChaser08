@@ -31,10 +31,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path,  '../../../test/providers/ambry/labtests/resources/input/'
+            script_path, '../../../test/providers/ambry/labtests/resources/input/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path,  '../../../test/providers/ambry/labtests/resources/payload/'
+            script_path, '../../../test/providers/ambry/labtests/resources/payload/'
         ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/ambry/out/{}'\
@@ -128,9 +128,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'labtests', 'lab_common_model_v4.sql', 'ambry',
             'labtests_common_model', 'date_service', date_input,
-            hvm_historical_date = datetime(hvm_historical.year,
-                                           hvm_historical.month,
-                                           hvm_historical.day)
+            hvm_historical_date=datetime(hvm_historical.year,
+                                         hvm_historical.month,
+                                         hvm_historical.day)
         )
 
     if not test and not airflow_test:

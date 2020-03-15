@@ -153,7 +153,7 @@ def test_save(test_driver, monkeypatch):
     with gzip.open('/tmp/2018/01/01/20180101_response_00000.csv.gz', 'rt') as fin:
         content = fin.readlines()
 
-    row           = content[0].strip()
+    row = content[0].strip()
     print(row)
     print(type(row))
     (hvid, rowid) = row.split('|')
@@ -165,7 +165,7 @@ def test_save(test_driver, monkeypatch):
     assert len(row.split('|')) == 2
 
     # First columns should be the hvid, 2nd the rowid. Both in quotes
-    assert hvid  == '"1"'
+    assert hvid == '"1"'
     assert rowid == '"2"'
 
 

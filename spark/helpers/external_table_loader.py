@@ -1,8 +1,8 @@
 import spark.helpers.udf.post_normalization_cleanup as post_normalization_cleanup
 from pyspark.sql.functions import col, lit, udf
 
-ANALYTICS_DB_CONN='jdbc:hive2://analytics.aws.healthverity.com:10000'
-HIVE_DRIVER='com.amazon.hive.jdbc41.HS2Driver'
+ANALYTICS_DB_CONN = 'jdbc:hive2://analytics.aws.healthverity.com:10000'
+HIVE_DRIVER = 'com.amazon.hive.jdbc41.HS2Driver'
 def _get_table_as_df(sqlContext, schema, table_name):
     return sqlContext.read.jdbc(
         url=ANALYTICS_DB_CONN + '/' + schema,

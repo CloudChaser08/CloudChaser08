@@ -9,7 +9,7 @@ schema_v1 = StructType([
     StructField('test5', StringType(), True)
 ])
 
-data_type='TEST_CLAIMS'
+data_type = 'TEST_CLAIMS'
 output_directory = data_type + '/2019-08-15/test'
 schemas = {
     'schema_v1': Schema(name='schema_v1',

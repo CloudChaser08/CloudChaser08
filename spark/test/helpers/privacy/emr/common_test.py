@@ -28,7 +28,7 @@ def test_filter(spark):
     old_transformer = Transformer(**dict(common_emr_priv.emr_transformer.transforms))
 
     # test with additional transforms
-    additional_transformer = Transformer( notransform=[
+    additional_transformer = Transformer(notransform=[
 					    TransformFunction(upper, ['notransform'], True)
 					])
     filtered_df = filter_helper(spark, ['100', '1880', 'F', '2017-01-01', 'dummyval'], additional_transformer)

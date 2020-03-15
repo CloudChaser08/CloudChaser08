@@ -376,5 +376,5 @@ def unload_delimited_file(
                 template = output_file_name_template
             else:
                 template = output_file_name_prefix + '{part_num}.gz'
-            new_name =  template.format(part_num=re.match('''part-([0-9]+)[.-].*''', filename).group(1))
+            new_name = template.format(part_num=re.match('''part-([0-9]+)[.-].*''', filename).group(1))
             rename_file(output_path + filename, output_path + new_name)

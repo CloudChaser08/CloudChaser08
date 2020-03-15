@@ -28,7 +28,7 @@ OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/genoa/spark-output/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
 
-def run(spark, runner, date_input, test = False, airflow_test = False):
+def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
 
     if test:
@@ -72,7 +72,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
                   .select(*not_historical.columns) 
     )
 
-    get_set_id = func.udf(lambda x: gen_helpers.remove_split_suffix(x).replace('Genoa_',''))
+    get_set_id = func.udf(lambda x: gen_helpers.remove_split_suffix(x).replace('Genoa_', ''))
 
     # On 2017-11-01, Genoa gave us a restatement of all the data from
     # 2015-05-31 on. If any batches before 2017-11-01 contain data from the
@@ -113,7 +113,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     # Apply clean up and privacy filtering
     postprocessor.compose(
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id = '21', vendor_id = '20', filename = None, model_version_number = '06'),
+        postprocessor.add_universal_columns(feed_id='21', vendor_id='20', filename=None, model_version_number='06'),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '21', 'EARLIEST_VALID_SERVICE_DATE'),
         pharm_priv.filter
     )(
@@ -133,9 +133,9 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
             'genoa', 'pharmacyclaims_common_model',
             'date_service', date_input,
-            hvm_historical_date = datetime(hvm_historical.year,
-                                           hvm_historical.month,
-                                           hvm_historical.day),
+            hvm_historical_date=datetime(hvm_historical.year,
+                                         hvm_historical.month,
+                                         hvm_historical.day),
             unload_partition_count=100
         )
 
@@ -156,7 +156,7 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test = args.airflow_test)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 

@@ -10,9 +10,9 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
     """
 
     if source_table_conf is not None:
-        schema      = source_table_conf.schema
-        delimiter   = source_table_conf.separator
-        file_type   = source_table_conf.file_type
+        schema = source_table_conf.schema
+        delimiter = source_table_conf.separator
+        file_type = source_table_conf.file_type
 
     if schema is None:
         schema = StructType([StructField(c, StringType(), True) for c in columns])

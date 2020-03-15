@@ -123,9 +123,9 @@ class CensusDriver(object):
             _batch_id_path = '{year}/{month:02d}/{day:02d}'.format(year=batch_date.year,
                                                                    month=batch_date.month,
                                                                    day=batch_date.day)
-            _batch_id_value ='{year}{month:02d}{day:02d}'.format(year=batch_date.year,
-                                                                 month=batch_date.month,
-                                                                 day=batch_date.day)
+            _batch_id_value = '{year}{month:02d}{day:02d}'.format(year=batch_date.year,
+                                                                  month=batch_date.month,
+                                                                  day=batch_date.day)
 
         return _batch_id_path, _batch_id_value
 

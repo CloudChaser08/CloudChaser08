@@ -424,7 +424,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 # rename defaults
                 record_id='row_id', created='crt_dt', data_set='data_set_nm',
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id',
-                model_version = 'mdl_vrsn_num'
+                model_version='mdl_vrsn_num'
             ),
             table['privacy'].filter(
                 runner.sqlContext, update_whitelists=table.get('update_whitelists', lambda x: x),

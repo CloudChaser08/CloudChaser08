@@ -16,60 +16,60 @@ def cleanup(spark):
 def test_init(spark):
     spark['spark'].sparkContext.parallelize([
         Row(
-            hvm_vdr_feed_id = al.FEED_ID,
-            gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE',
-            gen_ref_itm_nm = '',
-            gen_ref_cd = '',
-            gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = ''
+            hvm_vdr_feed_id=al.FEED_ID,
+            gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_cd='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
         ),
         Row(
-            hvm_vdr_feed_id = al.FEED_ID,
-            gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE',
-            gen_ref_itm_nm = '',
-            gen_ref_cd = '',
-            gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = ''
+            hvm_vdr_feed_id=al.FEED_ID,
+            gen_ref_domn_nm='HVM_AVAILABLE_HISTORY_START_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_cd='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
         ),
         Row(
-            hvm_vdr_feed_id = al.FEED_ID,
-            gen_ref_domn_nm = 'transaction.naics_code',
-            gen_ref_itm_nm = '',
-            gen_ref_cd = '448130',
-            gen_ref_1_dt = None,
-            whtlst_flg = 'Y'
+            hvm_vdr_feed_id=al.FEED_ID,
+            gen_ref_domn_nm='transaction.naics_code',
+            gen_ref_itm_nm='',
+            gen_ref_cd='448130',
+            gen_ref_1_dt=None,
+            whtlst_flg='Y'
         ),
         Row(
-            hvm_vdr_feed_id = al.FEED_ID,
-            gen_ref_domn_nm = 'transaction.naics_code',
-            gen_ref_itm_nm = '',
-            gen_ref_cd = '511210',
-            gen_ref_1_dt = None,
-            whtlst_flg = 'Y'
+            hvm_vdr_feed_id=al.FEED_ID,
+            gen_ref_domn_nm='transaction.naics_code',
+            gen_ref_itm_nm='',
+            gen_ref_cd='511210',
+            gen_ref_1_dt=None,
+            whtlst_flg='Y'
         ),
         Row(
-            hvm_vdr_feed_id = al.FEED_ID,
-            gen_ref_domn_nm = 'transaction.naics_code',
-            gen_ref_itm_nm = '',
-            gen_ref_cd = '444110',
-            gen_ref_1_dt = None,
-            whtlst_flg = 'Y'
+            hvm_vdr_feed_id=al.FEED_ID,
+            gen_ref_domn_nm='transaction.naics_code',
+            gen_ref_itm_nm='',
+            gen_ref_cd='444110',
+            gen_ref_1_dt=None,
+            whtlst_flg='Y'
         ),
         Row(
-            hvm_vdr_feed_id = al.FEED_ID,
-            gen_ref_domn_nm = 'transaction.naics_code',
-            gen_ref_itm_nm = '',
-            gen_ref_cd = '722110',
-            gen_ref_1_dt = None,
-            whtlst_flg = 'Y'
+            hvm_vdr_feed_id=al.FEED_ID,
+            gen_ref_domn_nm='transaction.naics_code',
+            gen_ref_itm_nm='',
+            gen_ref_cd='722110',
+            gen_ref_1_dt=None,
+            whtlst_flg='Y'
         ),
         Row(
-            hvm_vdr_feed_id = al.FEED_ID,
-            gen_ref_domn_nm = 'transaction.naics_code',
-            gen_ref_itm_nm = '',
-            gen_ref_cd = '813813',
-            gen_ref_1_dt = None,
-            whtlst_flg = 'Y'
+            hvm_vdr_feed_id=al.FEED_ID,
+            gen_ref_domn_nm='transaction.naics_code',
+            gen_ref_itm_nm='',
+            gen_ref_cd='813813',
+            gen_ref_1_dt=None,
+            whtlst_flg='Y'
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 

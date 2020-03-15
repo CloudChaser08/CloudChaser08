@@ -24,10 +24,10 @@ S3_REF_PHI = 's3://salusv/reference/express_scripts_phi/'
 LOCAL_REF_PHI = '/local_phi/'
 
 
-def run (spark, runner, date_input, test=False):
+def run(spark, runner, date_input, test=False):
     logger.log('Starting Express Scripts Enrollment: ' + date_input)
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
-    setid = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(date_input.replace('-',''))
+    setid = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(date_input.replace('-', ''))
 
     logger.log('Creating helper tables')
     runner.run_spark_script('../../../common/zip3_to_state.sql')
@@ -60,10 +60,10 @@ def run (spark, runner, date_input, test=False):
         )
         local_phi_path = '/tmp' + LOCAL_REF_PHI
     else:
-        input_path     = S3_EXPRESS_SCRIPTS_IN
-        matching_path  = S3_EXPRESS_SCRIPTS_ENROLLMENT_MATCHING
-        new_phi_path   = S3_EXPRESS_SCRIPTS_RX_MATCHING + date_path + '/'
-        ref_phi_path   = S3A_REF_PHI
+        input_path = S3_EXPRESS_SCRIPTS_IN
+        matching_path = S3_EXPRESS_SCRIPTS_ENROLLMENT_MATCHING
+        new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING + date_path + '/'
+        ref_phi_path = S3A_REF_PHI
         local_phi_path = 'hdfs://' + LOCAL_REF_PHI
 
     logger.log('Setting up the local file system')

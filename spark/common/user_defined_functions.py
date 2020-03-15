@@ -10,14 +10,14 @@ def get_diagnosis_with_priority(diags, pointers):
     if pointers.upper().find('A') > -1:
         ps = [x for x in [ord(x[0]) - 64 for x in ps] if x > 0 and x < 27]
     else:
-        ps = [int(x) for x in ps if re.search('[^\s\d]', x) is None and re.search('[^\s]',x) is not None]
+        ps = [int(x) for x in ps if re.search('[^\s\d]', x) is None and re.search('[^\s]', x) is not None]
     if 0 in ps:
         ps = [x+1 for x in ps]
     
     ps = [x for x in ps if x > 0 and x <= len(ds)]
     return ':'.join([ds[p-1] + '_' + str(i+1) for i, p in enumerate(ps)])
 
-def string_set_diff(s1,s2):
+def string_set_diff(s1, s2):
     if s1 is None:
         return None
     if s2 is None:

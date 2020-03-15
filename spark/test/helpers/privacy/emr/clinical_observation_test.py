@@ -63,8 +63,8 @@ def test_filter(spark):
             clin_obsn_nm=[
                 TransformFunction(lambda c: c.replace('bad', 'good'), ['clin_obsn_nm'])
             ]
-        ))(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, 'desc', 'desc'),
-                                   Row('90', '1927', '2017-01-01', None, 'GOODVAL', 'GOODVAL', 'desc', 'desc')]
+        ))(test_df).collect() == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, 'desc', 'desc'),
+                                  Row('90', '1927', '2017-01-01', None, 'GOODVAL', 'GOODVAL', 'desc', 'desc')]
 
     # assert original transformer and whitelist was not modified by
     # additional args

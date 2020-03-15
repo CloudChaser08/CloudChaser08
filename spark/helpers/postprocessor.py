@@ -17,7 +17,7 @@ def _apply_to_all_columns(f, df):
 def nullify(df, null_vals=None, preprocess_func=lambda c: c):
     """Convert all columns matching any value in null_vals to null"""
     if not null_vals:
-        null_vals = {"", "NULL" }
+        null_vals = {"", "NULL"}
     else:
         null_vals = set(null_vals)
 

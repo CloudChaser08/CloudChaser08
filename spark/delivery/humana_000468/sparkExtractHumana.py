@@ -50,7 +50,7 @@ def group_validity_check(group_dfs, group_ids):
         invalid_patient_count = 0
         if ('invalidReason', 'string') not in group_df.dtypes:
             invalid_patients = group_df.where(~group_df.invalidReason.isNull())
-            invalid_patients = invalid_patients.where(invalid_patients['invalidReason']['clusterA']== False).cache()
+            invalid_patients = invalid_patients.where(invalid_patients['invalidReason']['clusterA'] == False).cache()
 
             invalid_patient_count = invalid_patients.count()
 
@@ -66,10 +66,10 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     today = date.today()
 
     if airflow_test:
-        output_path_template   = '/staging/{}/'
+        output_path_template = '/staging/{}/'
         matching_path_template = 's3a://salusv/testing/dewey/airflow/e2e/humana/hv000468/payload/{}/'
-        list_cmd      = ['hadoop', 'fs', '-ls']
-        move_cmd      = ['hadoop', 'fs', '-mv']
+        list_cmd = ['hadoop', 'fs', '-ls']
+        move_cmd = ['hadoop', 'fs', '-mv']
     elif test:
         output_path_template = file_utils.get_abs_path(
             __file__, '../../test/delivery/humana/hv000468/out/{}/'
@@ -79,17 +79,17 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
         matching_path_template = file_utils.get_abs_path(
             __file__, '../../test/delivery/humana/hv000468/resources/matching/{}/'
         ) + '/'
-        list_cmd      = ['find']
-        move_cmd      = ['mv']
+        list_cmd = ['find']
+        move_cmd = ['mv']
 
         # Need to be able to test consistantly
         today = date(2018, 4, 26)
         ts = 1524690702.12345
     else:
-        output_path_template   = '/staging/{}/'
+        output_path_template = '/staging/{}/'
         matching_path_template = 's3a://salusv/matching/payload/custom/humana/hv000468/{}/'
-        list_cmd      = ['hadoop', 'fs', '-ls']
-        move_cmd      = ['hadoop', 'fs', '-mv']
+        list_cmd = ['hadoop', 'fs', '-ls']
+        move_cmd = ['hadoop', 'fs', '-mv']
 
 
     group_dfs = [
@@ -118,20 +118,20 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     matched_patients = all_patients.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'").cache()
 
     if today.day > 15:
-        end   = (today.replace(day=15) - timedelta(days=30)).replace(day=1) # The 1st about 1.5 months back
+        end = (today.replace(day=15) - timedelta(days=30)).replace(day=1) # The 1st about 1.5 months back
         start = (end - timedelta(days=455)).replace(day=1) # 15 months before end
     else:
-        end   = (today.replace(day=15) - timedelta(days=60)).replace(day=15) # The 15th about 1.5 months back
+        end = (today.replace(day=15) - timedelta(days=60)).replace(day=15) # The 15th about 1.5 months back
         start = (end - timedelta(days=455)).replace(day=15) # 15 months before end
 
-    group_all_patient_count       = \
+    group_all_patient_count = \
         {r.humana_group_id : r['count'] for r in all_patients.groupBy('humana_group_id').count().collect()}
-    group_matched_patient_count   = \
+    group_matched_patient_count = \
         {r.humana_group_id : r['count'] for r in matched_patients.groupBy('humana_group_id').count().collect()}
 
     if invalid_groups:
-        medical_extract    = spark.createDataFrame([("NONE",)], ['humana_group_id'])
-        pharmacy_extract   = spark.createDataFrame([("NONE",)], ['humana_group_id'])
+        medical_extract = spark.createDataFrame([("NONE",)], ['humana_group_id'])
+        pharmacy_extract = spark.createDataFrame([("NONE",)], ['humana_group_id'])
         enrollment_extract = spark.createDataFrame([("NONE",)], ['humana_group_id'])
 
     matched_patients = (matched_patients.where(F.col('humana_group_id').isin(valid_groups)))
@@ -142,11 +142,11 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
 
 #   This is comented out until Humana wants us to turn synthetic claims back on
         # prepare_emr.prepare(runner, matched_patients, start, is_prod)
-        medical_extract    = extract_medicalclaims.extract(
+        medical_extract = extract_medicalclaims.extract(
                 runner, matched_patients, ts,
                 start, end).repartition(5 if test else 100) \
                     .cache_and_track('medical_extract')
-        pharmacy_extract   = extract_pharmacyclaims.extract(
+        pharmacy_extract = extract_pharmacyclaims.extract(
                 runner, matched_patients, ts,
                 start, end).repartition(5 if test else 100) \
                     .cache_and_track('pharmacy_extract')
@@ -156,10 +156,10 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
                     .cache_and_track('enrollment_extract')
 
         # summary
-        med_summary    = get_extract_summary(medical_extract)
+        med_summary = get_extract_summary(medical_extract)
         pharma_summary = get_extract_summary(pharmacy_extract)
 
-        summary        = med_summary.union(pharma_summary)
+        summary = med_summary.union(pharma_summary)
         patient_w_records_counts = medical_extract \
                 .select('hvid', 'humana_group_id').union(
                     pharmacy_extract.select('hvid', 'humana_group_id')) \
@@ -197,8 +197,8 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
         local_summary[r['humana_group_id']].append((r['data_vendor'], r['count']))
 
     for group_id in group_ids:
-        all_patient_count       = group_all_patient_count.get(group_id, 0)
-        matched_patient_count   = group_matched_patient_count.get(group_id, 0)
+        all_patient_count = group_all_patient_count.get(group_id, 0)
+        matched_patient_count = group_matched_patient_count.get(group_id, 0)
         patient_w_records_count = group_patient_w_records_count.get(group_id, 0)
         summary_report = '\n'.join(['|'.join([
                 group_id, str(all_patient_count), str(matched_patient_count),
@@ -246,15 +246,15 @@ def main(args):
 
     if args.airflow_test:
         output_path = 's3a://salusv/testing/dewey/airflow/e2e/humana/hv000468/deliverable/'
-        in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-test'
+        in_queue = 'https://queue.amazonaws.com/581191604223/humana-inbox-test'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-test'
     elif args.is_prod:
         output_path = 's3a://salusv/deliverable/humana/hv000468/'
-        in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-prod'
+        in_queue = 'https://queue.amazonaws.com/581191604223/humana-inbox-prod'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-prod'
     else:
         output_path = 's3a://salusv/deliverable/humana/hv000468/'
-        in_queue  = 'https://queue.amazonaws.com/581191604223/humana-inbox-uat'
+        in_queue = 'https://queue.amazonaws.com/581191604223/humana-inbox-uat'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-uat'
 
     client = boto3.client('sqs')

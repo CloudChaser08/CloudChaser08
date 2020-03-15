@@ -15,7 +15,7 @@ def update_whitelist(whitelists, column_name, key, value):
 
 
 class TransformFunction:
-    def __init__(self, func, args, built_in = None):
+    def __init__(self, func, args, built_in=None):
         self.func = func
         self.args = args
         self.built_in = built_in

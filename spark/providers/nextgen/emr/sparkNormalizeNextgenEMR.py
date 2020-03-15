@@ -46,11 +46,11 @@ from spark.common.utility import logger
 
 
 LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
-S3_ENCOUNTER_REFERENCE    = 's3://salusv/reference/nextgen/encounter_deduped/'
+S3_ENCOUNTER_REFERENCE = 's3://salusv/reference/nextgen/encounter_deduped/'
 S3_DEMOGRAPHICS_REFERENCE = 's3://salusv/reference/nextgen/demographics_orc/'
-S3_CROSSWALK_REFERENCE    = 's3://salusv/reference/nextgen/crosswalk/'
+S3_CROSSWALK_REFERENCE = 's3://salusv/reference/nextgen/crosswalk/'
 
-HDFS_ENCOUNTER_REFERENCE    = '/user/hive/warehouse/encounter_dedup'
+HDFS_ENCOUNTER_REFERENCE = '/user/hive/warehouse/encounter_dedup'
 HDFS_DEMOGRAPHICS_REFERENCE = '/user/hive/warehouse/demographics_local'
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/spark-output/'
@@ -87,7 +87,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             date_input.replace('-', '/')
         )
         demo_reference_path = demo_ref
-        enc_reference_path  = enc_ref
+        enc_reference_path = enc_ref
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/payload/{}/'.format(
             date_input.replace('-', '/')
         )
@@ -97,7 +97,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             date_input.replace('-', '/')
         ) if input_file_path is None else input_file_path
         demo_reference_path = demo_ref
-        enc_reference_path  = enc_ref
+        enc_reference_path = enc_ref
         matching_path = 's3a://salusv/matching/payload/emr/nextgen/{}/'.format(
             date_input.replace('-', '/')
         ) if payload_path is None else payload_path
@@ -501,10 +501,10 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
                 spark, runner, df, table['date_column'], date_input,
                 provider_partition_value='35',
                 provider_partition_name='part_hvm_vdr_feed_id',
-                date_partition_name = 'part_mth', 
+                date_partition_name='part_mth', 
                 hvm_historical_date=historical_date,
                 staging_subdir='{}/'.format(table['data_type']),
-                columns = table['schema'].names, distribution_key='row_id',
+                columns=table['schema'].names, distribution_key='row_id',
                 unload_partition_count=table.get('partitions', 20)
             )
         logging.debug("Cleaned up {}".format(table['data_type']))

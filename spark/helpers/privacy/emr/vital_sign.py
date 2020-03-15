@@ -5,7 +5,7 @@ import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
 vital_sign_transformer = Transformer(
     vit_sign_msrmt=[
-        TransformFunction(post_norm_cleanup.clean_up_vital_sign,[
+        TransformFunction(post_norm_cleanup.clean_up_vital_sign, [
             'vit_sign_typ_cd', 'vit_sign_msrmt', 'vit_sign_uom', 'ptnt_gender_cd',
             'ptnt_age_num', 'ptnt_birth_yr', 'vit_sign_dt', 'enc_dt'
         ])

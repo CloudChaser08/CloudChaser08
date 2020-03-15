@@ -163,7 +163,7 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, in_parts = args.in_parts, airflow_test = args.airflow_test)
+    run(spark, runner, args.date, in_parts=args.in_parts, airflow_test=args.airflow_test)
 
     spark.stop()
 

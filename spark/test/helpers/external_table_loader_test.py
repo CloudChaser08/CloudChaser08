@@ -3,9 +3,9 @@ import spark.helpers.external_table_loader as external_table_loader
 
 icd_diag_results = []
 icd_proc_results = []
-cpt_results      = []
-hcpcs_results    = []
-gen_ref_results  = []
+cpt_results = []
+hcpcs_results = []
+gen_ref_results = []
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):

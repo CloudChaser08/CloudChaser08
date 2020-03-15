@@ -83,7 +83,7 @@ medical_transformer = priv_common.Transformer(
 )
 
 
-def filter(df, skip_pos_filter = False):
+def filter(df, skip_pos_filter=False):
     if skip_pos_filter:
         transformer = medical_transformer.overwrite(
             priv_common.Transformer(

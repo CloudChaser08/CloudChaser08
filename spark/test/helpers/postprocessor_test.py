@@ -29,7 +29,7 @@ def test_trimmify(spark):
     rdd = spark['spark'].sparkContext.parallelize([
         [' trim this', datetime.date(2016, 1, 1), 1, 1.1, 1.11, [1]],
         ['trim this ', datetime.date(2017, 1, 1), 2, 2.2, 2.22, [2]],
-        ['unchanged',  datetime.date(2018, 1, 1), 3, 3.3, 3.33, [3]],
+        ['unchanged', datetime.date(2018, 1, 1), 3, 3.3, 3.33, [3]],
     ])
 
     df = spark['spark'].createDataFrame(rdd, schema=schema_to_use)
@@ -59,11 +59,11 @@ def test_nullify(spark):
                     ])
 
     rdd = spark['spark'].sparkContext.parallelize([
-        [None,                datetime.date(2012, 1, 1), 1, 1.1, 1.11, [1]],
-        ['NULL',              datetime.date(2013, 1, 1), 2, 2.2, 2.22, [2]],
-        ['nUll',              datetime.date(2014, 1, 1), 3, 3.3, 3.33, [3]],
+        [None, datetime.date(2012, 1, 1), 1, 1.1, 1.11, [1]],
+        ['NULL', datetime.date(2013, 1, 1), 2, 2.2, 2.22, [2]],
+        ['nUll', datetime.date(2014, 1, 1), 3, 3.3, 3.33, [3]],
         ['this is also null', datetime.date(2015, 1, 1), 4, 4.4, 4.44, [4]],
-        ['NON NULL',          datetime.date(2016, 1, 1), 5, 5.5, 5.55, [5]],
+        ['NON NULL', datetime.date(2016, 1, 1), 5, 5.5, 5.55, [5]],
     ])
 
     df = spark['spark'].createDataFrame(rdd, schema=schema_to_use)
