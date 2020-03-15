@@ -1,0 +1,2 @@
+[TYPECHECK]
+ignored-modules=boto3,botocore,pyspark.sql.functions

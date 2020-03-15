@@ -83,6 +83,14 @@ test-python3: build-container clean-test build-notest
 		-x --ignore=/dewey/spark/test/providers/nextgen \
 		/dewey/spark/test
 
+lint-python: build-container
+	@docker run --rm -v "${PWD}:/dewey/spark" \
+		-e "AWS_DEFAULT_REGION=us-east-1" \
+		-e "PYSPARK_PYTHON=python3" \
+		-w "/dewey/spark" \
+		--entrypoint python3 dewey_spark:latest /root/spark/lint_all_packages.py \
+		--threshold ${PYLINT_THRESHOLD}
+
 dewey-spark-shell: build-container clean-test build-notest
 	@if [ -n "${AWS_ACCESS_KEY_ID}" ]; \
 	then \

@@ -27,8 +27,9 @@ RUN cd /usr/lib/ && \
      rm spark-${SPARK_VERSION}-bin-hadoop2.7.tgz
 
 COPY etc/dev_requirements.txt /dev_requirements.txt
+COPY etc/lint_all_packages.py /root/spark/lint_all_packages.py
+COPY etc/pylintrc /root/spark/pylintrc
 
-RUN python -m pip install -r /dev_requirements.txt --ignore-installed
 RUN python3.6 -m pip install -r /dev_requirements.txt --ignore-installed
 
 ENV SPARK_HOME /usr/lib/spark
