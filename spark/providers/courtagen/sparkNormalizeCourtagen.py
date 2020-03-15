@@ -8,7 +8,6 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
-import spark.helpers.file_prefix as file_prefix
 import spark.helpers.constants as constants
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 

@@ -35,6 +35,7 @@ def explode_dates(
         primary_key=None, max_days='365',
         explosion_filter_condition=None
 ):
+    # pylint: disable=invalid-unary-operand-type
     """
     This function will explode days into rows for all days between
     date_start_column and date_end_column on the given table

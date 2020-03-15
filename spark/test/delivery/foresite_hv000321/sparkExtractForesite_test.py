@@ -82,7 +82,7 @@ def test_init(spark):
             StructField('start_date', StringType(), True),
             StructField('end_date', StringType(), True)
         ])
-    ).write.saveAsTable("external_mkt_def_calendar".format(foresite.FORESITE_SCHEMA))
+    ).write.saveAsTable("external_mkt_def_calendar")
 
     # load ref_calendar
     spark['spark'].sparkContext.parallelize([
@@ -103,7 +103,7 @@ def test_init(spark):
         StructType([
             StructField('calendar_date', StringType(), True)
         ])
-    ).createTempView("external_ref_calendar".format(foresite.FORESITE_SCHEMA))
+    ).createTempView("external_ref_calendar")
 
     # load pharmacyclaims table
     spark['runner'].run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [

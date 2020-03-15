@@ -1,2 +1,4 @@
 [TYPECHECK]
+extension-pkg-whitelist=pyspark
+generated-members=pyspark.*
 ignored-modules=boto3,botocore,pyspark.sql.functions

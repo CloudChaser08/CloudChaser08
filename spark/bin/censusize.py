@@ -10,7 +10,7 @@ from spark.common.census_driver import CensusDriver
 
 def split_into_chunks(input_list, number_of_chunks):
     """Split a list into n chunks"""
-    for i in xrange(0, len(input_list), number_of_chunks):
+    for i in range(0, len(input_list), number_of_chunks):
         yield input_list[i:i + number_of_chunks]
 
 

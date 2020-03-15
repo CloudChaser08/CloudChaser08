@@ -15,7 +15,7 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'pointclickcare'
     output_table_names_to_schemas = {
-        'pcc_emr_norm_emr_clin_obsn': clinical_observation_schemas['schema_v11']
+        'pcc_emr_norm_emr_clin_obsn': clinical_observation_schemas['schema_v11'],
         'pcc_emr_norm_emr_diag': diagnosis_schemas['schema_v10'],
         'pcc_emr_norm_emr_enc': encounter_schemas['schema_v10'],
         'pcc_emr_norm_emr_medctn': medication_schemas['schema_v11'],

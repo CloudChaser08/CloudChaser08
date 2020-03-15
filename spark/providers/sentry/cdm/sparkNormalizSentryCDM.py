@@ -63,7 +63,7 @@ if __name__ == "__main__":
     driver.save_to_disk()
 
     if not end_to_end_test:
-        logger.log_run_detaisl(
+        logger.log_run_details(
             provider_name='Sentry',
             data_type=DataType.CDM,
             data_source_transaction_path=driver.input_path,

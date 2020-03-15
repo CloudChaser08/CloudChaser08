@@ -336,7 +336,7 @@ def main(args):
     spark.stop()
 
     if not args.airflow_test:
-        hadoop_time = normalized_records_unloader.distcp(OUTPUT_PATH)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH)
         RunRecorder().record_run_details(additional_time=hadoop_time)
 
 

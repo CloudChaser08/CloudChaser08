@@ -17,6 +17,7 @@ BACKOFF_INTERVAL = 10 # in seconds
 
 class RunRecorder(object):
     def __init__(self):
+        # pylint: disable=no-value-for-parameter
         """Records the details of a particular Spark ingest.
 
         Attributes:

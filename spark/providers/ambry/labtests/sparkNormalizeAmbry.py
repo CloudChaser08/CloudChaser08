@@ -106,7 +106,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.add_universal_columns(
             feed_id='43',
             vendor_id='194',
-            filename='plain.txt'.format(date_obj.strftime('%Y%m%d')),   #NOTE: will need to change once known
+            filename='plain.txt',   #NOTE: will need to change once known
             model_version_number='04'
         ),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '43', None, min_date),

@@ -1,13 +1,15 @@
-from spark.spark_setup import init
+import argparse
+import sys
+
 from pyspark.sql.functions import row_number 
 from pyspark.sql.window import Window
-import argparse
-import os
+
+from spark.spark_setup import init
 
 """ Compare two datasets stored in s3. 
 
-	:Example: 
-	$ spark-submit compare.py path1 path2 --drop colA, colB, colC
+    :Example: 
+    $ spark-submit compare.py path1 path2 --drop colA, colB, colC
 """
 
 def compare_schemas(source, target): 
@@ -91,17 +93,17 @@ if __name__ == '__main__':
 
     # Drop columns
     if args.drop: 
-	for col in args.drop: 
-    	    source = source.drop(drop)
-    	    target = target.drop(drop)
+        for col in args.drop: 
+            source = source.drop(col)
+            target = target.drop(col)
     
     # compare schemas.
     schema_match = compare_schemas(source, target)
     if schema_match:
-    	print("Schema Match: OK")
+        print("Schema Match: OK")
     else: 
-    	print("Schema Match: FAIL")
-    	os.exit(-1)
+        print("Schema Match: FAIL")
+        sys.exit(-1)
 
     # normalize source schema.
     source = normalize_schemas(source, target)
@@ -123,6 +125,6 @@ if __name__ == '__main__':
     print("Source Table Match: " + str(src_match))
     print("Target Table Match: " + str(trg_match))
     if (src_match != 1.0 or trg_match != 1.0):
-	print("Compare: FAIL")
+        print("Compare: FAIL")
     else:
-	print("Compare: OK")
+        print("Compare: OK")

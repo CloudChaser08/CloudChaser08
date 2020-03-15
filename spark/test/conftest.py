@@ -76,10 +76,10 @@ def patch_spark_init(spark, monkeypatch):
     for local testing
     """
     def spark_init(name):
-        return (spark, sqlContext)
+        return (spark['spark'], spark['sqlContext'])
 
     def runner_init(sqlCtx):
-        return runner
+        return spark['runner']
 
     monkeypatch.setattr(spark_setup, 'init', spark_init)
     monkeypatch.setattr(spark_runner, 'Runner', runner_init)

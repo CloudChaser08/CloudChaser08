@@ -171,7 +171,7 @@ def main(args):
     if args.airflow_test:
         normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        hadoop_time = normalized_records_unloader.distcp(OUTPUT_PATH_PRODUCTION)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
         RunRecorder().record_run_details(additional_time=hadoop_time)
 
 

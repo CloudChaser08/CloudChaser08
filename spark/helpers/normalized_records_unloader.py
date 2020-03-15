@@ -214,7 +214,7 @@ def partition_and_rename(
 
 def partition_custom(
         spark, runner, provider, table_name, date_column, file_date,
-        partition_value=None, test_dir=None, staging_subdir='',
+        partition_value, test_dir=None, staging_subdir='',
         provider_partition='part_provider', date_partition='part_best_date', columns=None
 ):
     """
@@ -241,39 +241,12 @@ def partition_custom(
         ['all_columns', model_columns, False]
     ])
 
-    if partition_value is None and hvm_historical_date is None:
-        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
-            ['select_statement', "SELECT {}, '0_PREDATES_HVM_HISTORY' as {} FROM {} WHERE {} is NULL".format(
-                ','.join(columns), date_partition, table_name, date_column
-            ), False],
-            ['partitions', '20', False]
-        ])
-        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
-            ['select_statement', "SELECT {0}, regexp_replace({2}, '-..$', '') as {3} FROM {1} WHERE {2} IS NOT NULL".format(
-                ','.join(columns), table_name, date_column, date_partition
-            ), False],
-            ['partitions', '20', False]
-        ])
-    elif partition_value is None and hvm_historical_date is not None:
-        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
-            ['select_statement', "SELECT {0}, regexp_replace({2}, '-..$', '') as {3} FROM {1} WHERE {2} IS NOT NULL AND {2} >= CAST('{4}' AS DATE)".format(
-                ','.join(columns), table_name, date_column, date_partition, hvm_historical_date_string
-            ), False],
-            ['partitions', '20', False]
-        ])
-        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
-            ['select_statement', "SELECT {0}, '0_PREDATES_HVM_HISTORY' as {3} FROM {1} WHERE {2} IS NULL OR {2} < CAST('{4}' AS DATE)".format(
-                ','.join(columns), table_name, date_column, date_partition, hvm_historical_date_string
-            ), False],
-            ['partitions', '20', False]
-        ])
-    else:
-        runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
-            ['select_statement', "SELECT {}, '{}' as {} FROM {}".format(
-                ','.join(columns), partition_value, date_partition, table_name
-            ), False],
-            ['partitions', '20', False]
-        ])
+    runner.run_spark_script(common_dirpath + 'unload_custom_model.sql', [
+        ['select_statement', "SELECT {}, '{}' as {} FROM {}".format(
+            ','.join(columns), partition_value, date_partition, table_name
+        ), False],
+        ['partitions', '20', False]
+    ])
 
     part_files = subprocess.check_output(part_files_cmd).decode().strip().split("\n")
 

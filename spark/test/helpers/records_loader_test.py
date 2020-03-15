@@ -72,7 +72,7 @@ def test_incomplete_csv(spark):
     assert record.prescribing_npi is None
     assert record.notes is None
 
-def test_incomplete_csv(spark):
+def test_empty_csv(spark):
     """
     Test that an empty CSV still creates a DataFrame
     """

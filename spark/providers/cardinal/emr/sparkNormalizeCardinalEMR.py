@@ -426,7 +426,7 @@ def main(args):
         normalized_records_unloader.distcp(deliverable_path, DELIVERABLE_LOC)
     else:
         hadoop_time = normalized_records_unloader.timed_distcp(deliverable_path, DELIVERABLE_LOC)
-        RunRecorder().record_run_detials(additional_time=hadoop_time)
+        RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
 if __name__ == "__main__":

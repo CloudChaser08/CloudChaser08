@@ -161,7 +161,7 @@ def main(args):
     # We can't selectively delete only the claims that were reversed
     # Instead, delete all the old normalized data and replace it with all the claims that were
     # reversed in the same time period
-    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
+    date_obj = datetime.strptime(args.date, '%Y-%m-%d')
     curr_mo = date_obj.strftime('%Y-%m')
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:
