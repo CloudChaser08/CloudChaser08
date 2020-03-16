@@ -5,9 +5,9 @@ from ..models.results import GenericStatsResult, GenericStatsResultSet
 def _get_s3_file_contents(bucket, key):
     s3_client = boto3.client('s3')
     response = s3_client.get_object(
-                        Bucket=bucket,
-                        Key=key
-             )
+        Bucket=bucket,
+        Key=key
+    )
     file_data = response['Body'].read()
     return file_data
 

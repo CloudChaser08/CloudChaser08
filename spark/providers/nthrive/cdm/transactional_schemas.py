@@ -40,14 +40,14 @@ TABLE_CONF = {
         'csv',
         separator='|',
         columns=[
-              'ms_drg_id',
-              'ms_drg_code',
-              'ms_drg_desc',
-              'ms_drg_mdc_code',
-              'ms_drg_mdc_desc',
-              'effective_date',
-              'expiration_date',
-              'extra_col'
+            'ms_drg_id',
+            'ms_drg_code',
+            'ms_drg_desc',
+            'ms_drg_mdc_code',
+            'ms_drg_mdc_desc',
+            'effective_date',
+            'expiration_date',
+            'extra_col'
         ]
     ),
 #    'cpt' : SourceTable(

@@ -53,11 +53,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     min_date = postprocessor.coalesce_dates(
-                    runner.sqlContext,
-                    '43',
-                    None,
-                    'EARLIEST_VALID_SERVICE_DATE'
-                )
+        runner.sqlContext,
+        '43',
+        None,
+        'EARLIEST_VALID_SERVICE_DATE'
+    )
     if min_date:
         min_date = min_date.isoformat()
 

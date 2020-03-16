@@ -165,8 +165,10 @@ def main(args):
     curr_mo = date_obj.strftime('%Y-%m')
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:
-        subprocess.check_call(['aws', 's3', 'rm', '--recursive',
-            's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=express_scripts/part_best_date={}'.format(mo)])
+        subprocess.check_call([
+            'aws', 's3', 'rm', '--recursive',
+            's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=express_scripts/part_best_date={}'.format(mo)
+        ])
 
     if args.airflow_test:
         normalized_records_unloader.distcp(output_path)

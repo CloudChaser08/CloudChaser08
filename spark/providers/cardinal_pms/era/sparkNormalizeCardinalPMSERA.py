@@ -42,11 +42,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     min_date = postprocessor.coalesce_dates(
-                    runner.sqlContext,
-                    '66',
-                    None,
-                    'EARLIEST_VALID_SERVICE_DATE'
-                )
+        runner.sqlContext,
+        '66',
+        None,
+        'EARLIEST_VALID_SERVICE_DATE'
+    )
     if min_date:
         min_date = min_date.isoformat()
 
@@ -96,11 +96,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ]
 
     hvm_historical = postprocessor.coalesce_dates(
-                    runner.sqlContext,
-                    '66',
-                    date(1901, 1, 1),
-                    'HVM_AVAILABLE_HISTORY_START_DATE',
-                    'EARLIEST_VALID_SERVICE_DATE'
+        runner.sqlContext,
+        '66',
+        date(1901, 1, 1),
+        'HVM_AVAILABLE_HISTORY_START_DATE',
+        'EARLIEST_VALID_SERVICE_DATE'
     )
     hvm_historical = datetime(hvm_historical.year, hvm_historical.month, hvm_historical.day)
 
@@ -123,8 +123,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                     'model_version' : 'mdl_vrsn_num'
                 }
             ),
-            *[postprocessor.apply_date_cap(runner.sqlContext, c, max_date, '66', None, min_date)
-                for c in conf['service_cap']]
+            *[
+                postprocessor.apply_date_cap(runner.sqlContext, c, max_date, '66', None, min_date)
+                for c in conf['service_cap']
+            ]
         )(
             conf['dataframe']
         ).createTempView(conf['table'])

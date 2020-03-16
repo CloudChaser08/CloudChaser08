@@ -719,10 +719,10 @@ data_type = DataType.EMR
 output_directory = DataType(data_type).value + '/2017-08-23/clinical_observation'
 schemas = {
     'schema_v11': Schema(name='schema_v11',
-                        schema_structure=schema_v11,
-                        distribution_key='row_id',
-                        data_type=data_type,
-                        provider_partition_column='part_hvm_vdr_feed_id',
-                        date_partition_column='part_mth',
-                        output_directory=output_directory)
+                         schema_structure=schema_v11,
+                         distribution_key='row_id',
+                         data_type=data_type,
+                         provider_partition_column='part_hvm_vdr_feed_id',
+                         date_partition_column='part_mth',
+                         output_directory=output_directory)
 }

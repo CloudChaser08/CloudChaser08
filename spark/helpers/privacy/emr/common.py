@@ -7,7 +7,7 @@ emr_transformer = priv_common.Transformer(
         priv_common.TransformFunction(post_norm_cleanup.validate_age, ['ptnt_age_num', 'enc_dt', 'ptnt_birth_yr'])
     ],
     ptnt_gender_cd=[
-	priv_common.TransformFunction(post_norm_cleanup.clean_up_gender, ['ptnt_gender_cd'])
+        priv_common.TransformFunction(post_norm_cleanup.clean_up_gender, ['ptnt_gender_cd'])
     ],
     ptnt_birth_yr=[
         priv_common.TransformFunction(post_norm_cleanup.cap_year_of_birth, ['ptnt_age_num', 'enc_dt', 'ptnt_birth_yr'])

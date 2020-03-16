@@ -89,7 +89,8 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
                                       [['source_patient_id_col', source_patient_id_col, False]],
                                       return_output=True)
 
-    schema = StructType([
+    schema = StructType(
+        [
             StructField('hvid', StringType(), True),
             StructField('source_patient_id', StringType(), True),
             StructField('source_name', StringType(), True),
@@ -131,15 +132,15 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     small_bad_manus = [r.manu for r in small_bad_manus]
 
     few_bad_rows = bad_content.where(
-                F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus)
-            ).groupBy('source_name', 'manufacturer') \
-            .agg(F.collect_set('source_patient_id').alias('bad_patient_ids'), F.count('manufacturer').alias('bad_patient_count'))
+        F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus)
+    ).groupBy('source_name', 'manufacturer') \
+    .agg(F.collect_set('source_patient_id').alias('bad_patient_ids'), F.count('manufacturer').alias('bad_patient_count'))
 
     lots_bad_rows = bad_content.where(
-                F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus) == False
-            ).groupBy('source_name', 'manufacturer') \
-            .agg(F.count('manufacturer').alias('bad_patient_count')) \
-            .select('source_name', 'manufacturer', F.lit(None).cast(ArrayType(StringType())).alias('bad_patient_ids'), 'bad_patient_count')
+        F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus) == False
+    ).groupBy('source_name', 'manufacturer') \
+    .agg(F.count('manufacturer').alias('bad_patient_count')) \
+    .select('source_name', 'manufacturer', F.lit(None).cast(ArrayType(StringType())).alias('bad_patient_ids'), 'bad_patient_count')
 
     few_bad_rows.union(lots_bad_rows).createOrReplaceTempView('liquidhub_error')
 

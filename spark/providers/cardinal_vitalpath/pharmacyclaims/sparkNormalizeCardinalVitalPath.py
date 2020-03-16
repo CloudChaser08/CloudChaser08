@@ -75,9 +75,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
         min_date = postprocessor.get_gen_ref_date(
-                    runner.sqlContext,
-                    '30',
-                    'EARLIEST_VALID_SERVICE_DATE'
+            runner.sqlContext,
+            '30',
+            'EARLIEST_VALID_SERVICE_DATE'
         ).isoformat()
 
     max_date = date_input

@@ -256,25 +256,25 @@ def cap_year_of_birth(age, date_service, year_of_birth):
     """ Cap year of birth if age is 85 and over """
     try:
         if (
-            isinstance(date_service, datetime.date)
-            and year_of_birth is not None
-            and year_of_birth != ''
+                isinstance(date_service, datetime.date)
+                and year_of_birth is not None
+                and year_of_birth != ''
         ):
             if (date_service.year - int(year_of_birth)) >= 85:
                 return 1927
             return year_of_birth
 
         elif (
-            age is not None
-            and age != ''
+                age is not None
+                and age != ''
         ):
             if int(age) >= 85 and year_of_birth is not None:
                 return 1927
             return year_of_birth
 
         elif (
-            year_of_birth is not None
-            and datetime.datetime.today().year - int(year_of_birth) >= 85
+                year_of_birth is not None
+                and datetime.datetime.today().year - int(year_of_birth) >= 85
         ):
             return 1927
 
@@ -346,12 +346,12 @@ gender_age_vital_sign_caps = {
         [63.0, 76.0, 111.5, 245.3, 19.0, 31.4, None, None] # 19 years up to, but not including, 20 years
     ] + \
         (10 * [[63.1, 74.8, 113.0, 270.3, 19.2, 38.9, None, None]] + #20-29
-        10 * [[64.1, 74.7, 137.9, 266.4, 21, 37.7, None, None]] +    #30-39
-        10 * [[65.2, 74.0, 145.4, 275.0, 22.1, 38.8, None, None]] +  #40-49
-        10 * [[65.0, 74.4, 142.2, 274.3, 21.1, 39.3, None, None]] +  #50-59
-        10 * [[64.2, 73.7, 140.7, 267.4, 21.5, 38.5, None, None]] +  #60-69
-        10 * [[63.8, 73.1, 135.4, 257.4, 21.1, 36.5, None, None]] +  #70-79
-        11 * [[62.7, 71.3, 122.1, 219.9, 19.7, 33.3, None, None]]),  #80-90
+         10 * [[64.1, 74.7, 137.9, 266.4, 21, 37.7, None, None]] +    #30-39
+         10 * [[65.2, 74.0, 145.4, 275.0, 22.1, 38.8, None, None]] +  #40-49
+         10 * [[65.0, 74.4, 142.2, 274.3, 21.1, 39.3, None, None]] +  #50-59
+         10 * [[64.2, 73.7, 140.7, 267.4, 21.5, 38.5, None, None]] +  #60-69
+         10 * [[63.8, 73.1, 135.4, 257.4, 21.1, 36.5, None, None]] +  #70-79
+         11 * [[62.7, 71.3, 122.1, 219.9, 19.7, 33.3, None, None]]),  #80-90
     'F' : [
         [17.7, 31.4, 5.1, 26.3, 12.1, 18.1, 12.9, 18.1],  # Birth up to, but not including, 1 year
         [26.8, 36.9, 15.0, 34.0, 15.0, 16.9, 17.2, 19.0], # 1 year up to, but not including, 2 years
@@ -375,12 +375,12 @@ gender_age_vital_sign_caps = {
         [58.4, 70.1, 94.5, 228.1, 18.3, 31.4, None, None], # 19 years up to, but not including, 20 years
     ] + \
         (10 * [[58.5, 68.0, 94.9, 244.2, 18.2, 41.3, None, None]] + #20-29
-        10 * [[60.0, 68.6, 112.8, 251.8, 19.4, 41.2, None, None]] + #30-39
-        10 * [[59.9, 68.5, 115.3, 257.7, 19.8, 43.5, None, None]] + #40-49
-        10 * [[59.3, 67.9, 114.1, 259.7, 20.2, 44.1, None, None]] + #50-59
-        10 * [[59.8, 67.5, 114.3, 248.8, 20.6, 42.0, None, None]] + #60-69
-        10 * [[58.6, 66.7, 109.0, 218.0, 19.6, 39.6, None, None]] + #70-79
-        11 * [[57.5, 65.4, 101.7, 190.5, 19.7, 34.3, None, None]])  #80-90
+         10 * [[60.0, 68.6, 112.8, 251.8, 19.4, 41.2, None, None]] + #30-39
+         10 * [[59.9, 68.5, 115.3, 257.7, 19.8, 43.5, None, None]] + #40-49
+         10 * [[59.3, 67.9, 114.1, 259.7, 20.2, 44.1, None, None]] + #50-59
+         10 * [[59.8, 67.5, 114.3, 248.8, 20.6, 42.0, None, None]] + #60-69
+         10 * [[58.6, 66.7, 109.0, 218.0, 19.6, 39.6, None, None]] + #70-79
+         11 * [[57.5, 65.4, 101.7, 190.5, 19.7, 34.3, None, None]])  #80-90
 }
 
 sign_units_cap_idxs = {

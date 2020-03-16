@@ -8,8 +8,8 @@ def extract(spark, runner, hvids, timestamp, start_dt, end_dt, pharmacy_extract)
     t2 = t2[t2.hvm_vdr_feed_id.isin(*SUPPLIER_FEED_IDS)]
 
     date_in_range = spark.createDataFrame(
-            [{'cal_date' : ((start_dt + timedelta(days=i)).isoformat())} for i in range((end_dt - start_dt).days + 1)],
-        ).select(F.col('cal_date').cast('date').alias('calendar_date')).repartition(1)
+        [{'cal_date' : ((start_dt + timedelta(days=i)).isoformat())} for i in range((end_dt - start_dt).days + 1)],
+    ).select(F.col('cal_date').cast('date').alias('calendar_date')).repartition(1)
 
     t3 = hvids.crossJoin(date_in_range)
     t4 = pharmacy_extract \

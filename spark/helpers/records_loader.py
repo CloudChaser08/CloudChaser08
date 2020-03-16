@@ -4,7 +4,7 @@ import pyspark.sql.functions as F
 import logging
 
 def load(runner, location, columns=None, file_type=None, delimiter=',', header=False,
-            schema=None, source_table_conf=None, load_file_name=False, file_name_col='input_file_name'):
+         schema=None, source_table_conf=None, load_file_name=False, file_name_col='input_file_name'):
     """
     Load transaction data for a provider
     """
@@ -55,7 +55,7 @@ def load_and_clean_all(runner, location_prefix, transactions_module, file_type, 
             .createOrReplaceTempView(table)
 
 def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitions=0,
-        load_file_name=False, file_name_col='input_file_name'):
+                          load_file_name=False, file_name_col='input_file_name'):
     for table in transactions_module.TABLE_CONF:
         loc = location_prefix if len(transactions_module.TABLE_CONF) == 1 else location_prefix + table
         conf = transactions_module.TABLE_CONF[table]
@@ -65,6 +65,6 @@ def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitio
             df = df.repartition(partitions)
 
         df = (postprocessor
-            .compose(postprocessor.trimmify, postprocessor.nullify)(df)
-            .cache_and_track(table))
+              .compose(postprocessor.trimmify, postprocessor.nullify)(df)
+              .cache_and_track(table))
         df.createOrReplaceTempView(table)

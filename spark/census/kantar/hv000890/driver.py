@@ -5,5 +5,7 @@ class KantarSSICensusDriver(CensusDriver):
     OPPORTUNITY = 'hv000890'
 
     def __init__(self, end_to_end_test=False):
-        super(KantarSSICensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY,
-                end_to_end_test=end_to_end_test)
+        super(KantarSSICensusDriver, self).__init__(
+            self.CLIENT_NAME, self.OPPORTUNITY,
+            end_to_end_test=end_to_end_test
+        )

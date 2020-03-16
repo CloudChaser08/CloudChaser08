@@ -48,7 +48,7 @@ def test_filter(spark):
         spark['sqlContext'],
         update_whitelists=whitelist_update,
     )(test_df).collect() == [Row('90', '1927', '2017-01-01', 'DUMMYVAL'),
-                              Row('90', '1927', '2017-01-01', None)]
+                             Row('90', '1927', '2017-01-01', None)]
 
     # assert original transformer and whitelist was not modified by
     # additional args

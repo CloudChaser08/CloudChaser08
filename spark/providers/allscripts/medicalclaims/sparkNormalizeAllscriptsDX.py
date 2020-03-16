@@ -69,11 +69,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     min_date = postprocessor.coalesce_dates(
-                    runner.sqlContext,
-                    FEED_ID,
-                    None,
-                    'EARLIEST_VALID_SERVICE_DATE'
-                )
+        runner.sqlContext,
+        FEED_ID,
+        None,
+        'EARLIEST_VALID_SERVICE_DATE'
+    )
     if min_date:
         min_date = min_date.isoformat()
 
@@ -142,8 +142,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     normalized_records_unloader.unload(
         spark, runner, postprocessed, 'date_service', date_input, 'allscripts',
         hvm_historical_date=datetime(hvm_historical.year,
-                                        hvm_historical.month,
-                                        hvm_historical.day),
+                                     hvm_historical.month,
+                                     hvm_historical.day),
         test_dir=(output_path if test else None)
     )
 

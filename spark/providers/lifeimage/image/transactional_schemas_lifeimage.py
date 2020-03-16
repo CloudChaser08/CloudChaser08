@@ -53,5 +53,5 @@ TABLE_CONF = {
             'reasonforstudy',
             'hvjoinkey'
         ]
-)
+    )
 }

@@ -56,4 +56,4 @@ def test_gen_ref_data():
     """Ensure the general reference table is loaded from the analytics DB"""
 
     assert len([r for r in gen_ref_results if r.gen_ref_domn_nm == 'VITAL_SIGN_TYPE'
-                        and r.gen_ref_cd == 'WEIGHT']) == 1
+                and r.gen_ref_cd == 'WEIGHT']) == 1

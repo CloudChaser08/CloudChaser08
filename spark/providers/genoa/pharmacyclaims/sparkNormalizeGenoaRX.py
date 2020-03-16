@@ -66,10 +66,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     old_col_name = historical.columns[-5]
     new_col_name = historical.columns[-2]
     historical_adjusted = (
-        historical.withColumnRenamed(old_col_name, 'tmp')
-                  .withColumnRenamed(historical.columns[-2], old_col_name)
-                  .withColumnRenamed('tmp', new_col_name)
-                  .select(*not_historical.columns) 
+        historical
+        .withColumnRenamed(old_col_name, 'tmp')
+        .withColumnRenamed(historical.columns[-2], old_col_name)
+        .withColumnRenamed('tmp', new_col_name)
+        .select(*not_historical.columns) 
     )
 
     get_set_id = func.udf(lambda x: gen_helpers.remove_split_suffix(x).replace('Genoa_', ''))
@@ -80,9 +81,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     historical_adjusted = historical_adjusted.where(historical_adjusted['date_of_service'] < '2015-05-31')
 
     (
-        historical_adjusted.union(not_historical)
-                           .withColumn('input_file_name', get_set_id('input_file_name'))
-                           .createOrReplaceTempView('genoa_rx_raw')
+        historical_adjusted
+        .union(not_historical)
+        .withColumn('input_file_name', get_set_id('input_file_name'))
+        .createOrReplaceTempView('genoa_rx_raw')
     )
 
     # Genoa sends 90 days of data in every batch, resulting in a lot of duplciates. Rather than
@@ -101,9 +103,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Deduplicate by every column except hv_join_key and input_file_name since those are unique to
     # a batch
     (
-        raw_table.groupBy(*grouping_cols)
-                 .agg(*final_columns)
-                 .createOrReplaceTempView("genoa_rx_raw")
+        raw_table
+        .groupBy(*grouping_cols)
+        .agg(*final_columns)
+        .createOrReplaceTempView("genoa_rx_raw")
     )
 
     norm_pharmacy = runner.run_spark_script('mapping.sql', return_output=True)

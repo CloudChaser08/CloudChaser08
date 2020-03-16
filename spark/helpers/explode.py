@@ -85,7 +85,7 @@ def explode_dates(
     # rest of the table
     full_exploded_table = with_new_date.select(*[
         col('new_date').alias(column)
-            if column in [date_start_column, date_end_column] else col(column)
+        if column in [date_start_column, date_end_column] else col(column)
         for column in
         [
             column for column in with_new_date.columns

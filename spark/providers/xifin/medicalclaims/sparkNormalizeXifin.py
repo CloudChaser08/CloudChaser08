@@ -61,11 +61,11 @@ def run(spark, runner, date_input, in_parts=False, test=False, airflow_test=Fals
     explode.generate_exploder_table(spark, 5, 'proc_diag_exploder')
     explode.generate_exploder_table(spark, 5, 'claim_transaction_amount_exploder')
     min_date = postprocessor.coalesce_dates(
-                    runner.sqlContext,
-                    FEED_ID,
-                    None,
-                    'EARLIEST_VALID_SERVICE_DATE'
-                )
+        runner.sqlContext,
+        FEED_ID,
+        None,
+        'EARLIEST_VALID_SERVICE_DATE'
+    )
     if min_date:
         min_date = min_date.isoformat()
 
@@ -140,8 +140,8 @@ def run(spark, runner, date_input, in_parts=False, test=False, airflow_test=Fals
             normalized_records_unloader.unload(
                 spark, runner, postprocessed, 'date_service', prefix, 'xifin',
                 hvm_historical_date=datetime(hvm_historical.year,
-                                            hvm_historical.month,
-                                            hvm_historical.day)
+                                             hvm_historical.month,
+                                             hvm_historical.day)
             )
         else:
             postprocessed.createOrReplaceTempView('xifin_medicalclaims')

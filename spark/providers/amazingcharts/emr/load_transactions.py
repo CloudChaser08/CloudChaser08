@@ -218,8 +218,7 @@ TABLE_COLS = {
         'date_resolved',
         'costar_key',
         'snomed'
-    ]
-    ,
+    ],
     'f_diagnosis_20180701_deprecated': [
         'date_key',
         'time_key',

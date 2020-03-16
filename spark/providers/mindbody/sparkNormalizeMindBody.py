@@ -90,9 +90,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-                spark, runner, 'consumer', 'event_common_model_v4.sql',
-                'mindbody', 'event_common_model', 'event_date', date_input
-            )
+            spark, runner, 'consumer', 'event_common_model_v4.sql',
+            'mindbody', 'event_common_model', 'event_date', date_input
+        )
 
     if not test and not airflow_test:
         logger.log_run_details(

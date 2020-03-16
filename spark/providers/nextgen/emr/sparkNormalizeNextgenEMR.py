@@ -173,15 +173,19 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
                             return_output=True
                            ).createOrReplaceTempView('procedure_order_real_actcode')
     normalized['procedure'] = schema_enforcer.apply_schema(
-            runner.run_spark_script('normalize_procedure_1.sql', [
-                ['min_date', min_date],
-                ['max_date', max_date]
-            ], return_output=True), procedure_schema) \
-        .union(schema_enforcer.apply_schema(
-            runner.run_spark_script('normalize_procedure_2.sql', [
-                ['min_date', min_date],
-                ['max_date', max_date],
-            ], return_output=True), procedure_schema))
+        runner.run_spark_script('normalize_procedure_1.sql', [
+            ['min_date', min_date],
+            ['max_date', max_date]
+        ], return_output=True), procedure_schema
+    ) \
+        .union(
+            schema_enforcer.apply_schema(
+                runner.run_spark_script('normalize_procedure_2.sql', [
+                    ['min_date', min_date],
+                    ['max_date', max_date],
+                ], return_output=True), procedure_schema
+            )
+        )
     logging.debug("Normalized procedure")
 
     normalized['lab_order'] = runner.run_spark_script('normalize_lab_order.sql', [
@@ -237,13 +241,13 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     logging.debug("Normalized provider order")
 
     cln_obs1 = runner.run_spark_script('normalize_clinical_observation_1.sql', [
-                ['min_date', min_date],
-                ['max_date', max_date]
-            ], return_output=True)
+        ['min_date', min_date],
+        ['max_date', max_date]
+    ], return_output=True)
     cln_obs3 = runner.run_spark_script('normalize_clinical_observation_3.sql', [
-                ['min_date', min_date],
-                ['max_date', max_date]
-            ], return_output=True)
+        ['min_date', min_date],
+        ['max_date', max_date]
+    ], return_output=True)
     normalized['clinical_observation'] = clean_and_union_cln_obs(runner.sqlContext, cln_obs1, cln_obs3)
     logging.debug("Normalized clinical observation")
 

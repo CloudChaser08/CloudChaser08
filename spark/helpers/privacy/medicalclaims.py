@@ -93,10 +93,10 @@ def filter(df, skip_pos_filter=False):
     else:
         transformer = medical_transformer.append(
             priv_common.Transformer(**dict([(c, [
-                    priv_common.TransformFunction(
-                        filter_due_to_pos_itb, [c, 'place_of_service_std_id', 'inst_type_of_bill_std_id', 'claim_type']
-                    )
-                ]) for c in columns_to_nullify]))
+                priv_common.TransformFunction(
+                    filter_due_to_pos_itb, [c, 'place_of_service_std_id', 'inst_type_of_bill_std_id', 'claim_type']
+                )
+            ]) for c in columns_to_nullify]))
         )
 
     return priv_common.filter(df, transformer)

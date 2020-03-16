@@ -18,13 +18,13 @@ def test_trimmify(spark):
     
     # Include columns with various types for testing that schema is not changed
     schema_to_use = StructType([
-                StructField('test_strings', StringType(), True),
-                StructField('test_dates', DateType(), True),
-                StructField('test_ints', IntegerType(), True),
-                StructField('test_doubles', DoubleType(), True),
-                StructField('test_floats', FloatType(), True),
-                StructField('test_arrays', ArrayType(IntegerType()), True)
-             ])    
+        StructField('test_strings', StringType(), True),
+        StructField('test_dates', DateType(), True),
+        StructField('test_ints', IntegerType(), True),
+        StructField('test_doubles', DoubleType(), True),
+        StructField('test_floats', FloatType(), True),
+        StructField('test_arrays', ArrayType(IntegerType()), True)
+    ])    
     
     rdd = spark['spark'].sparkContext.parallelize([
         [' trim this', datetime.date(2016, 1, 1), 1, 1.1, 1.11, [1]],
@@ -50,13 +50,13 @@ def test_nullify(spark):
     
     # Include columns with various types for testing that schema is not changed
     schema_to_use = StructType([
-                        StructField('test_strings', StringType(), True),
-                        StructField('test_dates', DateType(), True),
-                        StructField('test_ints', IntegerType(), True),
-                        StructField('test_doubles', DoubleType(), True),
-                        StructField('test_floats', FloatType(), True),
-                        StructField('test_arrays', ArrayType(IntegerType()), True)
-                    ])
+        StructField('test_strings', StringType(), True),
+        StructField('test_dates', DateType(), True),
+        StructField('test_ints', IntegerType(), True),
+        StructField('test_doubles', DoubleType(), True),
+        StructField('test_floats', FloatType(), True),
+        StructField('test_arrays', ArrayType(IntegerType()), True)
+    ])
 
     rdd = spark['spark'].sparkContext.parallelize([
         [None, datetime.date(2012, 1, 1), 1, 1.1, 1.11, [1]],

@@ -52,7 +52,7 @@ def test_filter(spark):
                 TransformFunction(lambda c: str(int(c) - 60), ['ptnt_age_num'])
             ]
         ))(test_df).collect() == [Row('40', '1927', '2017-01-01', 'DUMMYVAL'),
-                                   Row('40', '1927', '2017-01-01', None)]
+                                  Row('40', '1927', '2017-01-01', None)]
 
     # assert original transformer and whitelist was not modified by
     # additional args

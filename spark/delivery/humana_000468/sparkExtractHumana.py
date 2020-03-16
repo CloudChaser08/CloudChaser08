@@ -18,11 +18,13 @@ from spark.delivery.humana_000468 import extract_enrollmentrecords
 from spark.delivery.humana_000468 import prepare_emr
 
 def get_extract_summary(df):
-    return df.withColumn('claim',
-                F.when(
-                    F.length(F.trim(F.col('claim_id'))) > 0,
-                    F.col('claim_id')
-                ).otherwise(F.col('record_id'))) \
+    return df.withColumn(
+        'claim',
+        F.when(
+            F.length(F.trim(F.col('claim_id'))) > 0,
+            F.col('claim_id')
+        ).otherwise(F.col('record_id'))
+    ) \
         .select('data_vendor', 'claim', 'humana_group_id').distinct() \
         .groupBy('data_vendor', 'humana_group_id').count()
 
@@ -94,21 +96,21 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
 
     group_dfs = [
         payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus', 'invalidReason'], return_output=True,
-                partitions=10) \
+                            partitions=10) \
             .select('hvid', 'matchStatus', 'invalidReason') \
             .withColumn('humana_group_id', F.lit(group_id))
         for group_id in group_ids
-     ]
+    ]
 
     valid_groups, invalid_groups = group_validity_check(group_dfs, group_ids)
 
     all_patient_dfs = [
-            payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True,
-                    partitions=10) \
-                .select('hvid', 'matchStatus') \
-                .withColumn('humana_group_id', F.lit(group_id))
-            for group_id in group_ids
-        ]
+        payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True,
+                            partitions=10) \
+            .select('hvid', 'matchStatus') \
+            .withColumn('humana_group_id', F.lit(group_id))
+        for group_id in group_ids
+    ]
 
     all_patients = all_patient_dfs[0]
     for patients_df in all_patient_dfs[1:]:
@@ -143,16 +145,16 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
 #   This is comented out until Humana wants us to turn synthetic claims back on
         # prepare_emr.prepare(runner, matched_patients, start, is_prod)
         medical_extract = extract_medicalclaims.extract(
-                runner, matched_patients, ts,
-                start, end).repartition(5 if test else 100) \
+            runner, matched_patients, ts,
+            start, end).repartition(5 if test else 100) \
                     .cache_and_track('medical_extract')
         pharmacy_extract = extract_pharmacyclaims.extract(
-                runner, matched_patients, ts,
-                start, end).repartition(5 if test else 100) \
+            runner, matched_patients, ts,
+            start, end).repartition(5 if test else 100) \
                     .cache_and_track('pharmacy_extract')
         enrollment_extract = extract_enrollmentrecords.extract(
-                spark, runner, matched_patients, ts,
-                start, end, pharmacy_extract).repartition(5 if test else 100) \
+            spark, runner, matched_patients, ts,
+            start, end, pharmacy_extract).repartition(5 if test else 100) \
                     .cache_and_track('enrollment_extract')
 
         # summary
@@ -201,9 +203,9 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
         matched_patient_count = group_matched_patient_count.get(group_id, 0)
         patient_w_records_count = group_patient_w_records_count.get(group_id, 0)
         summary_report = '\n'.join(['|'.join([
-                group_id, str(all_patient_count), str(matched_patient_count),
-                str(patient_w_records_count), r[0], str(r[1])
-            ]) for r in local_summary.get(group_id, [('-', 0)])])
+            group_id, str(all_patient_count), str(matched_patient_count),
+            str(patient_w_records_count), r[0], str(r[1])
+        ]) for r in local_summary.get(group_id, [('-', 0)])])
 
         output_path = output_path_template.format(group_id)
         with open('/tmp/summary_report_{}.txt'.format(group_id), 'w') as outf:
