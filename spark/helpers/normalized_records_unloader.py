@@ -342,11 +342,10 @@ def timed_distcp(dest,
 
 def unload_delimited_file(
         spark, runner, output_path, table_name, test=False, num_files=1, delimiter='|',
-        output_file_name_prefix='part-', output_file_name=None, output_file_name_template=None
+        output_file_name_prefix='part-', output_file_name=None, output_file_name_template=None,
+        header=False
     ):
     "Unload a table to a delimited file at the specified location"
-    old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
-
     common_dirpath = "../common/" if test else "../../../../common/"
 
     file_type = FileSystemType.LOCAL if test else FileSystemType.HDFS
@@ -358,17 +357,15 @@ def unload_delimited_file(
     tbl = spark.table(table_name)
     tbl.select(*[col(c).cast('string').alias(c) for c in tbl.columns]).createOrReplaceTempView('for_delimited_output')
 
-    runner.run_spark_script(common_dirpath + 'unload_common_model_dsv.sql', [
-        ['num_files', str(num_files), False],
-        ['delimiter', delimiter, False],
-        ['location', output_path],
-        ['table_name', 'for_delimited_output', False],
-        ['original_partition_count', old_partition_count, False]
-    ])
+    (
+        spark.table('for_delimited_output')
+        .repartition(num_files)
+        .write.csv(output_path, sep=delimiter, header=header, quoteAll=True, compression='gzip')
+    )
 
     # rename output files to desired name
     # this step removes the spark hash added to the name by default
-    for filename in [f for f in list_dir(output_path) if f[0] != '.']:
+    for filename in [f for f in list_dir(output_path) if f[0] != '.' and f != '_SUCCESS']:
         if num_files == 1 and output_file_name is not None:
             rename_file(output_path + filename, output_path + output_file_name)
         else:
