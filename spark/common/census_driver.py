@@ -239,8 +239,7 @@ class CensusDriver(object):
         content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
                                                      directory_path=scripts_directory)
 
-        header = self._sqlContext.createDataFrame([content.columns], schema=content.schema)
-        return header.union(content).coalesce(1)
+        return content
 
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
         log("Saving results to the local file system")
@@ -254,7 +253,7 @@ class CensusDriver(object):
             output_file_name_template=self._output_file_name_template.format(
                 batch_id_value=_batch_id_value
             ),
-            test=self._test
+            test=self._test, header=True
         )
 
     def copy_to_s3(self, batch_date=None, batch_id=None):
