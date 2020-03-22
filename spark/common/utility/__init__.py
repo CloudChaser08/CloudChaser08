@@ -1,6 +1,7 @@
 import json
 import urllib.request
 from datetime import datetime
+from http.client import BadStatusLine
 from pyspark import SparkContext
 
 
@@ -21,8 +22,11 @@ def get_spark_runtime(json_endpoint):
         total_runtime (int): The total amount of time it took to run all jobs.
     """
 
-    with urllib.request.urlopen(json_endpoint) as url:
-        job_data = json.loads(url.read().decode())
+    try:
+        with urllib.request.urlopen(json_endpoint) as url:
+            job_data = json.loads(url.read().decode())
+    except BadStatusLine:
+        raise SparkJobNotCompleteException
 
     total_time = 0
     datetime_pattern = "%Y-%m-%dT%H:%M:%S"
