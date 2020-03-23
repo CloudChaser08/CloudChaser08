@@ -53,3 +53,8 @@ class CardinalPDSCensusDriver(CensusDriver):
         ).persist()
 
         return df.drop(*REMOVE_COLUMNS)
+
+    def save(self, dataframe, batch_date, batch_id, chunk_idx=None, header=True):
+        super(CardinalPDSCensusDriver, self).save(
+            dataframe, batch_date, batch_id, chunk_idx=chunk_idx, header=False
+        )

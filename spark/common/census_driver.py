@@ -241,7 +241,7 @@ class CensusDriver(object):
 
         return content
 
-    def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
+    def save(self, dataframe, batch_date, batch_id, chunk_idx=None, header=True):
         log("Saving results to the local file system")
         dataframe.createOrReplaceTempView('deliverable')
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
@@ -253,7 +253,7 @@ class CensusDriver(object):
             output_file_name_template=self._output_file_name_template.format(
                 batch_id_value=_batch_id_value
             ),
-            test=self._test, header=True
+            test=self._test, header=header
         )
 
     def copy_to_s3(self, batch_date=None, batch_id=None):
