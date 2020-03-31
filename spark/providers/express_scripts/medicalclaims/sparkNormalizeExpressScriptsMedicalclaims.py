@@ -53,17 +53,18 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         vdr_feed_id=155,
-        use_ref_gen_values=True
+        use_ref_gen_values=True,
+        count_transform_sql=True
     )
     driver.init_spark_context()
-
 
     def load_data():
         logger.log('Loading data:')
 
-        logger.log(' -Loading unmatched records')
-        driver.spark.read.parquet(S3_UNMATCHED_REFERENCE) \
-            .createOrReplaceTempView('historic_unmatched_records')
+        # BPM - We're going to ignore historic records for now
+        # logger.log(' -Loading unmatched records')
+        # driver.spark.read.parquet(S3_UNMATCHED_REFERENCE) \
+        #     .createOrReplaceTempView('historic_unmatched_records')
 
         logger.log(' -Loading ref_gen_ref table')
         external_table_loader.load_ref_gen_ref(driver.runner.sqlContext)
@@ -75,46 +76,54 @@ if __name__ == "__main__":
         driver.spark.table('transactions').withColumn('input_file_name', F.input_file_name())\
             .createOrReplaceTempView('txn')
 
-        logger.log('- Loading new PHI data')
-        # new_phi is the latest RX Matching
+        # BPM - This shouldn't need to happen - We should just pull in the Rx reference location
+        # logger.log('- Loading new PHI data')
+        # # new_phi is the latest RX Matching
+        #
+        # s3_list_command = [
+        #     'aws',
+        #     's3',
+        #     'ls',
+        #     S3_EXPRESS_SCRIPTS_RX_MATCHING.format(S3),
+        #     '--recursive'
+        # ]
+        #
+        # ls_output = subprocess.check_output(s3_list_command).decode().strip().split('\n')
+        #
+        # words = [line.split('/') for line in ls_output if '.json' in line]
+        #
+        # all_dates = set(
+        #     [datetime.strptime(word[4] + word[5] + word[6], '%Y%m%d') for word in words]
+        # )
+        #
+        # dates_less_than_input = [date for date in all_dates if date.date() <= driver.date_input]
+        #
+        # max_date = max(dates_less_than_input)
+        # max_date_str = max_date.strftime('%Y/%m/%d/')
+        #
+        # new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING.format(S3A) + max_date_str
+        # payload_loader.load(driver.runner, new_phi_path, ['hvJoinKey', 'patientId'])
+        # driver.runner.run_spark_query('ALTER TABLE matching_payload RENAME TO new_phi')
+        logger.log('Load Rx payload reference location')
+        driver.spark.read.parquet(S3_REF_PHI).createOrReplaceTempView('rx_payloads')
 
-        s3_list_command = [
-            'aws',
-            's3',
-            'ls',
-            S3_EXPRESS_SCRIPTS_RX_MATCHING.format(S3),
-            '--recursive'
-        ]
-
-        ls_output = subprocess.check_output(s3_list_command).decode().strip().split('\n')
-
-        words = [line.split('/') for line in ls_output if '.json' in line]
-
-        all_dates = set(
-            [datetime.strptime(word[4] + word[5] + word[6], '%Y%m%d') for word in words]
-        )
-
-        dates_less_than_input = [date for date in all_dates if date.date() <= driver.date_input]
-
-        max_date = max(dates_less_than_input)
-        max_date_str = max_date.strftime('%Y/%m/%d/')
-
-        new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING.format(S3A) + max_date_str
-        payload_loader.load(driver.runner, new_phi_path, ['hvJoinKey', 'patientId'])
-        driver.runner.run_spark_query('ALTER TABLE matching_payload RENAME TO new_phi')
-
-        logger.log('- Loading matching_payload data')
+        logger.log('- Loading Dx matching_payload data')
         # matching_payload is the associate input_date payload
-        driver.runner.run_spark_script('sql_loaders/load_matching_payloads.sql',
-                                       [['matching_path', S3_MATCHING_KEY]])
 
-        logger.log('Combining PHI data tables')
-        # This reads in the reference location matching data and combines it with new Rx matching
-        driver.runner.run_spark_script('sql_loaders/load_and_combine_phi.sql', [
-            ['local_phi_path', LOCAL_REF_PHI],
-            ['s3_phi_path', S3A_REF_PHI],
-            ['partitions', driver.spark.conf.get('spark.sql.shuffle.partitions'), False]
-        ])
+        # BPM - there shouldn't be a need to manually read in the Dx payload
+        # driver.runner.run_spark_script('sql_loaders/load_matching_payloads.sql',
+        #                                [['matching_path', S3_MATCHING_KEY]])
+        payload_loader.load(driver.runner, driver.matching_path, load_file_name=True)
+
+        # BPM - This doesn't need to happen because we're not bringing in the lates Rx payload
+        # BPM - local_phi won't exist anymore
+        # logger.log('Combining PHI data tables')
+        # # This reads in the reference location matching data and combines it with new Rx matching
+        # driver.runner.run_spark_script('sql_loaders/load_and_combine_phi.sql', [
+        #     ['local_phi_path', LOCAL_REF_PHI],
+        #     ['s3_phi_path', S3A_REF_PHI],
+        #     ['partitions', driver.spark.conf.get('spark.sql.shuffle.partitions'), False]
+        # ])
 
         logger.log('Done loading data')
 

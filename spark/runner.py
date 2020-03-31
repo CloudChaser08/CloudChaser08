@@ -26,7 +26,8 @@ class Runner:
         DataFrame.persist_and_track = persist_and_track
         DataFrame.cache_and_track   = persist_and_track
 
-    def run_spark_script(self, script, variables=None, source_file_path=None, return_output=False):
+    def run_spark_script(self, script, variables=None, source_file_path=None, return_output=False,
+                         print_counts=False):
         """
         Execute a spark sql script
         """
@@ -70,7 +71,8 @@ class Runner:
                 return self.run_spark_query(statement, return_output=True)
             self.run_spark_query(statement)
 
-    def run_all_spark_scripts(self, variables=None, directory_path=None):
+    def run_all_spark_scripts(self, variables=None, directory_path=None,
+                              count_transform_sql=False):
         if variables is None:
             variables = []
 
@@ -98,9 +100,10 @@ class Runner:
         for s in scripts:
             table_name = '_'.join(s.replace('.sql', '').split('_')[1:])
             logger.log(' -loading:' + table_name)
-            self.run_spark_script(s, variables=copy.deepcopy(variables), source_file_path=directory_path, return_output=True) \
-                .createOrReplaceTempView(table_name)
-
+            tbl_df = self.run_spark_script(s, variables=copy.deepcopy(variables), source_file_path=directory_path, return_output=True)
+            if count_transform_sql:
+                logger.log('Count ' + table_name + ': ' + str(tbl_df.count()))
+            tbl_df.createOrReplaceTempView(table_name)
 
         last_table = '_'.join(scripts[-1].replace('.sql', '').split('_')[1:])
         return self.sqlContext.table(last_table)

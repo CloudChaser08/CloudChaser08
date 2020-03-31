@@ -267,7 +267,7 @@ SELECT
 
 FROM txn
 LEFT OUTER JOIN matching_payload dx_pay ON txn.hvjoinkey    = dx_pay.hvjoinkey
-LEFT OUTER JOIN local_phi rx_pay ON dx_pay.patientid = rx_pay.patient_id
+LEFT OUTER JOIN rx_payloads rx_pay ON dx_pay.patientid = rx_pay.patient_id
 
 --------------  Dignosis Code + Proc + Revenue Code
 WHERE 

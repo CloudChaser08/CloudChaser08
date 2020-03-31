@@ -63,7 +63,8 @@ class MarketplaceDriver(object):
                  output_to_transform_path=False,
                  unload_partition_count=20,
                  vdr_feed_id=None,
-                 use_ref_gen_values=False
+                 use_ref_gen_values=False,
+                 count_transform_sql=False
                  ):
 
         # get directory and path for provider
@@ -94,6 +95,7 @@ class MarketplaceDriver(object):
         self.unload_partition_count = unload_partition_count
         self.vdr_feed_id = vdr_feed_id
         self.use_ref_gen_values = use_ref_gen_values
+        self.count_transform_sql = count_transform_sql
         self.available_start_date = None
         self.earliest_service_date = None
         self.input_path = None
@@ -190,7 +192,8 @@ class MarketplaceDriver(object):
         variables = [['VDR_FILE_DT', str(self.date_input), False],
                      ['AVAILABLE_START_DATE', self.available_start_date, False],
                      ['EARLIEST_SERVICE_DATE', self.earliest_service_date, False]]
-        self.runner.run_all_spark_scripts(variables, directory_path=self.provider_directory_path)
+        self.runner.run_all_spark_scripts(variables, directory_path=self.provider_directory_path,
+                                          count_transform_sql = self.count_transform_sql)
 
     def save_to_disk(self):
         """
