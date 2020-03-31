@@ -1,4 +1,5 @@
-SELECT --CACHE THIS
+SELECT /*+ BROADCAST (psp), BROADCAST(prv)
+ */
     rxc.rxclaimuid                                                                          AS claim_id,    
     COALESCE(pay.hvid, CONCAT('543_', mbr.memberuid))                                       AS hvid,
     CURRENT_DATE()                                                                          AS created,

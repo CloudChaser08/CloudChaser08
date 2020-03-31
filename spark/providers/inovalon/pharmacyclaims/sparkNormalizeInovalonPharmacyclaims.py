@@ -4,8 +4,10 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims_common_model import schemas as medicalclaims_schemas
 from pyspark.sql.functions import lit
 from pyspark.sql.types import StructField, StringType, StructType
+import spark.helpers.reject_reversal as rr
 
 if __name__ == "__main__":
+    OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/transformed/pharmacyclaims/2018-11-26/'
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'inovalon'
@@ -38,9 +40,13 @@ if __name__ == "__main__":
     )
     driver.init_spark_context()
 
-    df = driver.spark.read.parquet(
-        driver.output_path + 'pharmacyclaims/2018-11-26/part_provider=inovalon')
-    df = df.withColumn("part_provider", lit("inovalon"))
-    df.createOrReplaceTempView('_pharmacyclaims_nb')
+    schema = versioned_schema
+    rr.load_previous_run_from_transformed(driver.spark,
+                                          date_input,
+                                          OUTPUT_PATH_PRODUCTION,
+                                          schema.provider_partition_column,
+                                          driver.provider_name,
+                                          schema.date_partition_column,
+                                          schema.schema_structure)
 
     driver.run()
