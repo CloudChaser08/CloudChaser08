@@ -52,7 +52,6 @@ def load_and_clean_all(runner, location_prefix, transactions_module, file_type, 
             df = df.repartition(partitions)
         postprocessor \
             .compose(postprocessor.trimmify, postprocessor.nullify)(df) \
-            .cache_and_track(table) \
             .createOrReplaceTempView(table)
 
 
