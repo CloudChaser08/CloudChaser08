@@ -53,8 +53,7 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         vdr_feed_id=155,
-        use_ref_gen_values=True,
-        count_transform_sql=True
+        use_ref_gen_values=True
     )
     driver.init_spark_context()
 
@@ -75,6 +74,10 @@ if __name__ == "__main__":
 
         driver.spark.table('transactions').withColumn('input_file_name', F.input_file_name())\
             .createOrReplaceTempView('txn')
+
+        driver.spark.table('txn').write.mode('overwrite').format('orc').bucketBy(21, 'hvjoinkey').saveAsTable('txn_bucketed')
+
+        driver.spark.table('txn_bucketed').createOrReplaceTempView('txn')
 
         # BPM - This shouldn't need to happen - We should just pull in the Rx reference location
         # logger.log('- Loading new PHI data')
@@ -107,6 +110,10 @@ if __name__ == "__main__":
         logger.log('Load Rx payload reference location')
         driver.spark.read.parquet(S3_REF_PHI).createOrReplaceTempView('rx_payloads')
 
+        driver.spark.table('rx_payloads').write.mode('overwrite').format('orc').bucketBy(21, 'patient_id').saveAsTable('rx_bucketed')
+
+        driver.spark.table('rx_bucketed').createOrReplaceTempView('rx_payloads')
+
         logger.log('- Loading Dx matching_payload data')
         # matching_payload is the associate input_date payload
 
@@ -114,6 +121,10 @@ if __name__ == "__main__":
         # driver.runner.run_spark_script('sql_loaders/load_matching_payloads.sql',
         #                                [['matching_path', S3_MATCHING_KEY]])
         payload_loader.load(driver.runner, driver.matching_path, load_file_name=True)
+
+        driver.spark.table('matching_payload').write.mode('overwrite').format('orc').bucketBy(21, 'patientid').saveAsTable('payload_bucketed')
+
+        driver.spark.table('payload_bucketed').createOrReplaceTempView('matching_payload')
 
         # BPM - This doesn't need to happen because we're not bringing in the lates Rx payload
         # BPM - local_phi won't exist anymore
@@ -134,6 +145,7 @@ if __name__ == "__main__":
         # save matched transactions to disk
         driver.save_to_disk()
 
+        '''
         # output the matched historic records.
         # Ensure that the original file_date is maintained on the parquet file
         logger.log('Rename newly matched historic files:')
@@ -183,6 +195,7 @@ if __name__ == "__main__":
                                                                    partitionBy='part_best_date',
                                                                    compression='gzip',
                                                                    mode='overwrite')
+        '''
 
     def overwrite_reference_data():
         if not driver.end_to_end_test:
@@ -204,7 +217,7 @@ if __name__ == "__main__":
     load_data()
     transform_data()
     save_to_disk()
-    driver.log_run()
+    #driver.log_run()
     driver.stop_spark()
-    driver.copy_to_output_path()
-    overwrite_reference_data()
+    #driver.copy_to_output_path()
+    #overwrite_reference_data()

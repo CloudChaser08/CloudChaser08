@@ -1,30 +1,21 @@
 SELECT
     MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
-    COALESCE(dx_pay.privateidone, 'UNAVAILABLE')                                            AS claim_id,    
-    CASE 
-        WHEN rx_pay.hvid IS NOT NULL 
-            THEN rx_pay.hvid 
-        ELSE CONCAT('17_', dx_pay.patientid)
-    END                                                                                     AS hvid, 
-    CURRENT_DATE()                                                                          AS created, 
-	'09'                                                                                    AS model_version, 
-    SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set, 
-	'155'                                                                                   AS data_feed, 
-	'17'                                                                                    AS data_vendor, 
-	/* patient_gender */
-  CASE
-      WHEN SUBSTR(UPPER(rx_pay.gender), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(rx_pay.gender), 1, 1)
-      ELSE 'U' 
-  END                                                                                   AS patient_gender, 
-	/* patient_year_of_birth */
-	cap_year_of_birth
-        (
-            NULL,
-           to_date(txn.first_serviced_date, 'yyyyMMdd'),
-            rx_pay.year_of_birth
-        )                                                                                   AS patient_year_of_birth, 
+    joined.claim_id                                                                         AS claim_id,
+    joined.hvid                                                                             AS hvid,
+    CURRENT_DATE()                                                                          AS created,
+    '09'                                                                                    AS model_version, 
+    SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
+    '155'                                                                                   AS data_feed,
+    '17'                                                                                    AS data_vendor, 
+    joined.patient_gender                                                                   AS patient_gender,
+    /* patient_year_of_birth */
+    cap_year_of_birth(
+      NULL,
+      to_date(txn.first_serviced_date, 'yyyyMMdd'),
+      joined.year_of_birth
+    )                                                                                   AS patient_year_of_birth, 
     /* patient_zip3 */
-    MASK_ZIP_CODE(SUBSTR(rx_pay.zip, 1, 3))                                       AS patient_zip3,
+    joined.patient_zip3                                                                     AS patient_zip3,
     /* date_service */
 	CAP_DATE
         (
@@ -266,11 +257,11 @@ SELECT
 	END                                                                                 AS part_best_date
 
 FROM txn
-LEFT OUTER JOIN matching_payload dx_pay ON txn.hvjoinkey    = dx_pay.hvjoinkey
-LEFT OUTER JOIN rx_payloads rx_pay ON dx_pay.patientid = rx_pay.patient_id
+LEFT OUTER JOIN esi_join_payload_dx joined ON txn.hvjoinkey    = joined.hvjoinkey
 
 --------------  Dignosis Code + Proc + Revenue Code
 WHERE 
     --LPAD(txn.medical_qualifier_code, 2, 0) IN ('01', '02') 
       txn.medical_code IS NOT NULL 
   AND UPPER(COALESCE(txn.unique_patient_id, 'X')) <> UPPER('unique_patient_id')
+  --AND instr(joined.hvid, '_') = 0
