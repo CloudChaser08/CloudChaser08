@@ -6,6 +6,8 @@ import spark.helpers.constants as constants
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
 from spark.common.utility import logger
+from pyspark import StorageLevel
+from spark.helpers import normalized_records_unloader
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.external_table_loader as external_table_loader
 import pyspark.sql.functions as F
@@ -21,7 +23,7 @@ UNMATCHED_REFERENCE = 'salusv/reference/express_scripts_unmatched/'
 S3_UNMATCHED_REFERENCE = S3 + UNMATCHED_REFERENCE
 S3A_UNMATCHED_REFERENCE = S3A + UNMATCHED_REFERENCE
 LOCAL_REF_PHI = 'hdfs:///local_phi/'
-LOCAL_UNMATCHED = 'hdfs:///unmatched/'
+LOCAL_UNMATCHED = '/unmatched/'
 
 if __name__ == "__main__":
 
@@ -75,9 +77,9 @@ if __name__ == "__main__":
         driver.spark.table('transactions').withColumn('input_file_name', F.input_file_name())\
             .createOrReplaceTempView('txn')
 
-        driver.spark.table('txn').write.mode('overwrite').format('orc').bucketBy(21, 'hvjoinkey').saveAsTable('txn_bucketed')
+        #driver.spark.table('txn').write.mode('overwrite').format('orc').bucketBy(21, 'hvjoinkey').saveAsTable('txn_bucketed')
 
-        driver.spark.table('txn_bucketed').createOrReplaceTempView('txn')
+        #driver.spark.table('txn_bucketed').createOrReplaceTempView('txn')
 
         # BPM - This shouldn't need to happen - We should just pull in the Rx reference location
         # logger.log('- Loading new PHI data')
@@ -140,6 +142,7 @@ if __name__ == "__main__":
 
     def transform_data():
         driver.transform()
+        driver.spark.table('esi_join_transactions_and_payload_dx').persist(StorageLevel.MEMORY_AND_DISK)
 
     def save_to_disk():
         # save matched transactions to disk
@@ -189,35 +192,37 @@ if __name__ == "__main__":
         driver.spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
             mk_move_file_preserve_file_date()
         )
+        '''
 
         logger.log('Save unmatched reference records to: /unmatched/')
-        driver.spark.table('esi_final_unmatched_dx').write.parquet('/unmatched/',
-                                                                   partitionBy='part_best_date',
-                                                                   compression='gzip',
-                                                                   mode='overwrite')
-        '''
+        driver\
+                .spark\
+                .table('esi_final_unmatched_dx')\
+                .repartition(100)\
+                .write\
+                .parquet('/unmatched/', partitionBy='part_best_date', compression='gzip', mode='overwrite')
 
     def overwrite_reference_data():
         if not driver.end_to_end_test:
+            '''
             logger.log('Deleting the PHI reference data from s3: ' + S3_REF_PHI)
             subprocess.check_call(['aws', 's3', 'rm', '--recursive', S3_REF_PHI])
             logger.log('Rewriting the updated PHI reference data to s3: ' + S3A_REF_PHI)
             subprocess.check_call(
                 ['s3-dist-cp', '--s3ServerSideEncryption', '--src', LOCAL_REF_PHI, '--dest',
                  S3A_REF_PHI])
+            '''
 
             logger.log('Deleting the unmatched reference data from s3: ' + S3_UNMATCHED_REFERENCE)
             subprocess.check_call(['aws', 's3', 'rm', '--recursive', S3_UNMATCHED_REFERENCE])
-            logger.log('Rewrite the unmatched reference data to s3: ' + S3A_UNMATCHED_REFERENCE)
-            subprocess.check_call(
-                ['s3-dist-cp', '--s3ServerSideEncryption', '--src', LOCAL_UNMATCHED, '--dest',
-                 S3A_UNMATCHED_REFERENCE])
+            logger.log('Rewrite the unmatched reference data to s3: ' + S3_UNMATCHED_REFERENCE)
+            normalized_records_unloader.distcp(S3_UNMATCHED_REFERENCE, LOCAL_UNMATCHED)
 
     # Run the job
     load_data()
     transform_data()
     save_to_disk()
-    #driver.log_run()
+    driver.log_run()
     driver.stop_spark()
-    #driver.copy_to_output_path()
-    #overwrite_reference_data()
+    driver.copy_to_output_path()
+    overwrite_reference_data()

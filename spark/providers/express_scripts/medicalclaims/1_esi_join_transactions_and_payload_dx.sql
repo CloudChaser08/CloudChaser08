@@ -261,7 +261,6 @@ LEFT OUTER JOIN esi_join_payload_dx joined ON txn.hvjoinkey    = joined.hvjoinke
 
 --------------  Dignosis Code + Proc + Revenue Code
 WHERE 
-    --LPAD(txn.medical_qualifier_code, 2, 0) IN ('01', '02') 
+    --LPAD(txn.medical_qualifier_code, 2, 0) IN ('01', '02')
       txn.medical_code IS NOT NULL 
   AND UPPER(COALESCE(txn.unique_patient_id, 'X')) <> UPPER('unique_patient_id')
-  --AND instr(joined.hvid, '_') = 0
