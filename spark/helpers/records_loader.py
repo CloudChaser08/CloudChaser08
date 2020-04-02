@@ -38,6 +38,7 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
 
     return df
 
+
 # Simple way to load all transaction tables without writing any additional code
 # so long as the follow all our conventions
 # DEPRECATED in favor of load_and_clean_all_v2
@@ -54,17 +55,21 @@ def load_and_clean_all(runner, location_prefix, transactions_module, file_type, 
             .cache_and_track(table) \
             .createOrReplaceTempView(table)
 
+
 def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitions=0,
-        load_file_name=False, file_name_col='input_file_name'):
+                          load_file_name=False, file_name_col='input_file_name'):
     for table in transactions_module.TABLE_CONF:
         loc = location_prefix if len(transactions_module.TABLE_CONF) == 1 else location_prefix + table
         conf = transactions_module.TABLE_CONF[table]
-        df = load(runner, loc, source_table_conf=conf, load_file_name=load_file_name, file_name_col=file_name_col)
+        df = load(runner, loc, source_table_conf=conf, load_file_name=load_file_name,
+                  file_name_col=file_name_col)
 
         if partitions > 0:
             df = df.repartition(partitions)
 
-        df = (postprocessor
-            .compose(postprocessor.trimmify, postprocessor.nullify)(df)
-            .cache_and_track(table))
+        if conf.trimmify_nullify:
+            df = (postprocessor
+                  .compose(postprocessor.trimmify, postprocessor.nullify)(df)
+                  .cache_and_track(table))
+
         df.createOrReplaceTempView(table)
