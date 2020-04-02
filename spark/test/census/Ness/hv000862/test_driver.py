@@ -73,7 +73,7 @@ def test_run(driver, spark):
     for i in range(0, len(rows)):
         persons.append("person-{}".format(i))
         apps.append("UBCapp{}".format(i))
-        ubcdbs.append("DB".format(i))
+        ubcdbs.append("DB{}".format(i))
         programs.append("Prog{}".format(i))
 
     for index, row in enumerate(rows):
