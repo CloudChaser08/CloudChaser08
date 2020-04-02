@@ -65,7 +65,7 @@ def test_run(driver, spark):
     expected_hvid = ['8f3e12b9e985540963e5a5f2df5db86e', 'bd523724b25b27e122ba857ac5a1b10e',
                      'ad0d917fbb71843aeac366908539727f']
     for index, row in enumerate(rows):
-        assert row.HVID == expected_hvid[index]
+        assert row.HVID in expected_hvid
         assert row.GUID == "person-{}".format(index)
         assert row.UBCApp == "UBCapp{}".format(index)
         assert row.UBCDB == "DB{}".format(index)
