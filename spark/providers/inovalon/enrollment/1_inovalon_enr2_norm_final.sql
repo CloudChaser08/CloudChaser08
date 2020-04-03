@@ -1,4 +1,5 @@
-SELECT
+SELECT /*+ BROADCAST (ref_gen_ref)
+ */
     MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
     /* hvid */
     COALESCE
