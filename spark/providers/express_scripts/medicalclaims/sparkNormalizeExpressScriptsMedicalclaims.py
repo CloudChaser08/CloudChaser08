@@ -61,11 +61,6 @@ if __name__ == "__main__":
     def load_data():
         logger.log('Loading data:')
 
-        # BPM - We're going to ignore historic records for now
-        # logger.log(' -Loading unmatched records')
-        # driver.spark.read.parquet(S3_UNMATCHED_REFERENCE) \
-        #     .createOrReplaceTempView('historic_unmatched_records')
-
         num_buckets = int(driver.spark.sparkContext.getConf().get("spark.executor.instances"))
 
         logger.log(' -Loading ref_gen_ref table')
@@ -116,15 +111,6 @@ if __name__ == "__main__":
         # save matched transactions to disk
         driver.save_to_disk()
 
-        # output the matched historic records.
-        # Ensure that the original file_date is maintained on the parquet file
-        #logger.log('Rename newly matched historic files:')
-        #staging_dir = constants.hdfs_staging_dir + 'matched/'
-        #partition_by = ['file_date', 'part_provider', 'part_best_date']
-        #driver.spark.table('esi_final_matched_historic_dx').coalesce(20).write.parquet(
-            #staging_dir, partitionBy=partition_by, compression='gzip', mode='append'
-        #)
-
         def mk_move_file_preserve_file_date():
             mv_cmd = ['hadoop', 'fs', '-mv']
             mkdir_cmd = ['hadoop', 'fs', '-mkdir', '-p']
@@ -154,12 +140,6 @@ if __name__ == "__main__":
 
             return move_file
 
-        #part_files_cmd = ['hadoop', 'fs', '-ls', '-R', staging_dir]
-        #part_files = subprocess.check_output(part_files_cmd).decode().strip().split("\n")
-        #driver.spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
-            #mk_move_file_preserve_file_date()
-        #)
-
         logger.log('Save unmatched reference records to: /unmatched/')
         driver\
                 .spark\
@@ -170,16 +150,7 @@ if __name__ == "__main__":
 
     def overwrite_reference_data():
         if not driver.end_to_end_test:
-            #logger.log('Deleting the PHI reference data from s3: ' + S3_REF_PHI)
-            #subprocess.check_call(['aws', 's3', 'rm', '--recursive', S3_REF_PHI])
-            #logger.log('Rewriting the updated PHI reference data to s3: ' + S3A_REF_PHI)
-            #subprocess.check_call(
-                #['s3-dist-cp', '--s3ServerSideEncryption', '--src', LOCAL_REF_PHI, '--dest',
-                 #S3A_REF_PHI])
-
-            logger.log('Deleting the unmatched reference data from s3: ' + S3_UNMATCHED_REFERENCE)
-            subprocess.check_call(['aws', 's3', 'rm', '--recursive', S3_UNMATCHED_REFERENCE])
-            logger.log('Rewrite the unmatched reference data to s3: ' + S3_UNMATCHED_REFERENCE)
+            logger.log('Write the unmatched reference data to s3: ' + S3_UNMATCHED_REFERENCE)
             normalized_records_unloader.distcp(S3_UNMATCHED_REFERENCE, LOCAL_UNMATCHED)
 
     # Run the job

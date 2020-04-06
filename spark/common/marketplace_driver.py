@@ -147,14 +147,14 @@ class MarketplaceDriver(object):
         self.stop_spark()
         self.copy_to_output_path()
 
-    def load(self, extra_payload_cols=None):
+    def load(self, extra_payload_cols=None, cache_tables=True):
         """
         Load the input data into tables
         """
         logger.log('Loading the source data')
         logger.log(' -loading: transactions')
         records_loader.load_and_clean_all_v2(self.runner, self.input_path, self.source_table_schema,
-                                             load_file_name=True)
+                                             load_file_name=True, cache_table=cache_tables)
         logger.log(' -loading: payloads')
         payload_loader.load(self.runner, self.matching_path, load_file_name=True, extra_cols=extra_payload_cols)
         if not self.test:

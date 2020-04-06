@@ -71,4 +71,5 @@ def load_loinc_codes(sqlContext):
 
 def load_ref_gen_ref(sqlContext):
     _get_table_as_df(sqlContext, 'dw', 'ref_gen_ref') \
+        .cache() \
         .createOrReplaceTempView('ref_gen_ref')
