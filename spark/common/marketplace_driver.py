@@ -154,7 +154,7 @@ class MarketplaceDriver(object):
         logger.log('Loading the source data')
         logger.log(' -loading: transactions')
         records_loader.load_and_clean_all_v2(self.runner, self.input_path, self.source_table_schema,
-                                             load_file_name=True, cache_table=cache_tables)
+                                             load_file_name=True, cache_tables=cache_tables)
         logger.log(' -loading: payloads')
         payload_loader.load(self.runner, self.matching_path, load_file_name=True, extra_cols=extra_payload_cols)
         if not self.test:
