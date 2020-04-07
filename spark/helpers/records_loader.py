@@ -55,9 +55,13 @@ def load_and_clean_all(runner, location_prefix, transactions_module, file_type, 
             .cache_and_track(table) \
             .createOrReplaceTempView(table)
 
-
-def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitions=0,
-                          load_file_name=False, file_name_col='input_file_name'):
+def load_and_clean_all_v2(runner,
+                          location_prefix,
+                          transactions_module,
+                          partitions=0,
+                          load_file_name=False,
+                          file_name_col='input_file_name',
+                          cache_tables=True):
     for table in transactions_module.TABLE_CONF:
         loc = location_prefix if len(transactions_module.TABLE_CONF) == 1 else location_prefix + table
         conf = transactions_module.TABLE_CONF[table]
@@ -67,9 +71,14 @@ def load_and_clean_all_v2(runner, location_prefix, transactions_module, partitio
         if partitions > 0:
             df = df.repartition(partitions)
 
-        if conf.trimmify_nullify:
+        if conf.trimmify_nullify and cache_tables:
             df = (postprocessor
                   .compose(postprocessor.trimmify, postprocessor.nullify)(df)
                   .cache_and_track(table))
+        elif conf.trimmify_nullify and not cache_tables:
+            df = (postprocessor
+                  .compose(postprocessor.trimmify, postprocessor.nullify)(df))
+        elif cache_tables:
+            df = df.cache_and_tracke(table)
 
         df.createOrReplaceTempView(table)
