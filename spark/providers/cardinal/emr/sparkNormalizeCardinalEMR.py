@@ -105,7 +105,7 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
         postprocessor.compose(
             postprocessor.trimmify, lambda df: postprocessor.nullify(
                 df,
-                null_vals=['','NULL'],
+                null_vals=['', 'NULL'],
                 preprocess_func=lambda c: c.upper() if c else c
             )
         )(
@@ -352,7 +352,7 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
                 # rename defaults
                 record_id='row_id', created='crt_dt', data_set='data_set_nm',
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id',
-                model_version = 'mdl_vrsn_num'
+                model_version='mdl_vrsn_num'
             ),
             table['privacy_filter'].filter(
                 runner.sqlContext, additional_transformer=table.get('custom_privacy_transformer'),

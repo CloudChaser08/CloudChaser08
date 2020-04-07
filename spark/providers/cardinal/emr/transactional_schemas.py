@@ -86,6 +86,6 @@ order_dispense = StructType([
 enriched = StructType([
     StructField(column_name, StringType(), True)
     for column_name in [
-            'drug_group', 'practice_name', 'status', 'provider_name'
+        'drug_group', 'practice_name', 'status', 'provider_name'
     ]
 ])

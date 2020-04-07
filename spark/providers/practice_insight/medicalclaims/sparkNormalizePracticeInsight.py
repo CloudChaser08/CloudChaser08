@@ -127,29 +127,29 @@ def run_part(
     ])
 
     postprocessor.compose(
-            postprocessor.trimmify,
-            postprocessor.nullify
-        )(
-            runner.sqlContext.sql('SELECT * FROM transactional_raw')
-        ).createOrReplaceTempView('transactional_raw')
+        postprocessor.trimmify,
+        postprocessor.nullify
+    )(
+        runner.sqlContext.sql('SELECT * FROM transactional_raw')
+    ).createOrReplaceTempView('transactional_raw')
 
     # create explosion maps
     runner.run_spark_script('create_exploded_diagnosis_map.sql')
     runner.run_spark_script('create_exploded_procedure_map.sql')
 
     postprocessor.compose(
-            postprocessor.trimmify,
-            postprocessor.nullify
-        )(
-            runner.sqlContext.sql('SELECT * FROM exploded_diag_codes')
-        ).createOrReplaceTempView('exploded_diag_codes')
+        postprocessor.trimmify,
+        postprocessor.nullify
+    )(
+        runner.sqlContext.sql('SELECT * FROM exploded_diag_codes')
+    ).createOrReplaceTempView('exploded_diag_codes')
 
     postprocessor.compose(
-            postprocessor.trimmify,
-            postprocessor.nullify
-        )(
-            runner.sqlContext.sql('SELECT * FROM exploded_proc_codes')
-        ).createOrReplaceTempView('exploded_proc_codes')
+        postprocessor.trimmify,
+        postprocessor.nullify
+    )(
+        runner.sqlContext.sql('SELECT * FROM exploded_proc_codes')
+    ).createOrReplaceTempView('exploded_proc_codes')
 
     # normalize
     runner.run_spark_script('normalize.sql', [

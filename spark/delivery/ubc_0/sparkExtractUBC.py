@@ -31,12 +31,12 @@ def run(spark, runner, month, test=False):
 
     if test:
         enrollment_outpath = '/tmp/ubc_enrollment_data'
-        pharmacy_final     = '/tmp/ubc_pharmacy_final_data'
-        pharmacy_prelim    = '/tmp/ubc_pharmacy_prelim_data'
+        pharmacy_final = '/tmp/ubc_pharmacy_final_data'
+        pharmacy_prelim = '/tmp/ubc_pharmacy_prelim_data'
     else:
         enrollment_outpath = ENROLLMENT_OUT_LOC
-        pharmacy_final     = PHARMACY_FINAL_OUT_LOC
-        pharmacy_prelim    = PHARMACY_PRELIM_OUT_LOC
+        pharmacy_final = PHARMACY_FINAL_OUT_LOC
+        pharmacy_prelim = PHARMACY_PRELIM_OUT_LOC
 
     runner.run_spark_script('extract_enrollment_records.sql', [
         ['out_path', enrollment_outpath]

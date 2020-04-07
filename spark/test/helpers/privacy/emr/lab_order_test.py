@@ -57,8 +57,8 @@ def test_filter(spark):
     assert lab_order_priv.filter(
         spark['sqlContext'],
         update_whitelists=whitelist_update
-    )(test_df).collect()  == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, None, None),
-                              Row('90', '1927', '2017-01-01', None, None, 'GOODVAL', None, None)]
+    )(test_df).collect() == [Row('90', '1927', '2017-01-01', 'DUMMYVAL', 'GOODVAL', None, None, None),
+                             Row('90', '1927', '2017-01-01', None, None, 'GOODVAL', None, None)]
 
     # assert original transformer and whitelist was not modified by
     # additional args

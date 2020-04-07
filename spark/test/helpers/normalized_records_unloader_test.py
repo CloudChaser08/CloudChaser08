@@ -11,7 +11,7 @@ from functools import reduce
 from pyspark.sql.utils import AnalysisException
 
 script_path = __file__
-test_staging_dir  = file_utils.get_abs_path(
+test_staging_dir = file_utils.get_abs_path(
     script_path, './test-staging/'
 ) + '/'
 test_staging_dir2 = file_utils.get_abs_path(
@@ -173,18 +173,22 @@ def test_correct_dynamic_partitions_unload():
 
 def test_prefix():
     "Ensure prefix was added to part files"
-    part_files = [f for f in os.listdir(
+    part_files = [
+        f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if not f.endswith('.crc')]
+        ) if not f.endswith('.crc')
+    ]
     for f in part_files:
         assert f.startswith(prefix)
 
 
 def test_prefix_unload():
     "Ensure prefix was added to part files created by the 'unload' function"
-    part_files = [f for f in os.listdir(
+    part_files = [
+        f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if not f.endswith('.crc')]
+        ) if not f.endswith('.crc')
+    ]
     assert part_files
     for f in part_files:
         assert f.startswith(prefix)
@@ -235,16 +239,20 @@ def test_unload_separate_provider(spark):
     assert os.listdir(test_staging_dir + 'part_provider=test_provider2/')
 
     # ensure new data was prefixed
-    part_files = [f for f in os.listdir(
+    part_files = [
+        f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider2/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if not f.endswith('.crc')]
+        ) if not f.endswith('.crc')
+    ]
     for f in part_files:
         assert f.startswith(prefix)
 
     # ensure old data was not re-prefixed
-    part_files = [f for f in os.listdir(
+    part_files = [
+        f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if not f.endswith('.crc')]
+        ) if not f.endswith('.crc')
+    ]
     for f in part_files:
         assert f.startswith('{}_part'.format(prefix))
 
@@ -263,17 +271,21 @@ def test_unload_separate_provider_unload(spark):
     assert os.listdir(test_staging_dir_unload + 'part_provider=test_provider2/')
 
     # ensure new data was prefixed
-    part_files = [f for f in os.listdir(
+    part_files = [
+        f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider2/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if not f.endswith('.crc')]
+        ) if not f.endswith('.crc')
+    ]
     assert part_files
     for f in part_files:
         assert f.startswith(prefix)
 
     # ensure old data was not re-prefixed
-    part_files = [f for f in os.listdir(
+    part_files = [
+        f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if not f.endswith('.crc')]
+        ) if not f.endswith('.crc')
+    ]
     assert part_files
     for f in part_files:
         assert f.startswith('{}_part'.format(prefix))
@@ -288,14 +300,18 @@ def test_unload_new_prefix(spark):
     )
 
     # assert that new prefixes were added
-    assert [f for f in os.listdir(
+    assert [
+        f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if f.startswith(prefix + '_NEW_part')]
+        ) if f.startswith(prefix + '_NEW_part')
+    ]
 
     # assert that old prefixes were unchanged
-    assert [f for f in os.listdir(
+    assert [
+        f for f in os.listdir(
             test_staging_dir + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if f.startswith(prefix + '_part')]
+        ) if f.startswith(prefix + '_part')
+    ]
 
 
 def test_unload_new_prefix_unload(spark):
@@ -306,14 +322,18 @@ def test_unload_new_prefix_unload(spark):
     )
 
     # assert that new prefixes were added
-    assert [f for f in os.listdir(
+    assert [
+        f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if f.startswith(prefix + '_NEW_part')]
+        ) if f.startswith(prefix + '_NEW_part')
+    ]
 
     # assert that old prefixes were unchanged
-    assert [f for f in os.listdir(
+    assert [
+        f for f in os.listdir(
             test_staging_dir_unload + '/part_provider=test_provider/part_best_date=0_PREDATES_HVM_HISTORY/'
-        ) if f.startswith(prefix + '_part')]
+        ) if f.startswith(prefix + '_part')
+    ]
 
 
 def test_hvm_historical_date(spark):

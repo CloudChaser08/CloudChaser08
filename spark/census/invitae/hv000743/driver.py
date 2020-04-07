@@ -1,7 +1,7 @@
 from spark.common.census_driver import CensusDriver
 
 class InvitaeCensusDriver(CensusDriver):
-    CLIENT_NAME    = 'invitae'
+    CLIENT_NAME = 'invitae'
     OPPORTUNITY_ID = 'hv000743'
 
     def __init__(self, end_to_end_test=False):

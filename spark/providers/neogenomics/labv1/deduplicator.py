@@ -138,7 +138,7 @@ def load_and_deduplicate_transaction_table(
             postprocessor.add_input_filename('source_file_name', persisted_df_id='{}_{}'.format(entity, previous_date))(
                 runner.sqlContext.read.csv(
                     path=input_path.replace(
-                        date_input.replace('-','/'),
+                        date_input.replace('-', '/'),
                         previous_date.replace('-', '/')
                     ) + ('{}/'.format(entity) if previous_date >= RESULTS_START_DATE else ''),
                     schema=entity_schema, sep='|'

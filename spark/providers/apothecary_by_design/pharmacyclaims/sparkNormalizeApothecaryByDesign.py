@@ -23,7 +23,7 @@ OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/spa
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
 
-def run(spark, runner, date_input, test = False, airflow_test = False):
+def run(spark, runner, date_input, test=False, airflow_test=False):
     setid = 'hv_export_data_{}'.format(date_input.replace('-', ''))
 
     script_path = __file__
@@ -107,7 +107,7 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
     postprocessor.compose(
         lambda x: schema_enforcer.apply_schema(x, pharma_schema),
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id = '45', vendor_id = '204', filename = setid),
+        postprocessor.add_universal_columns(feed_id='45', vendor_id='204', filename=setid),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '45', 'EARLIEST_VALID_SERVICE_DATE'),
         pharm_priv.filter
     )(
@@ -133,9 +133,9 @@ def run(spark, runner, date_input, test = False, airflow_test = False):
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
             'apothecary_by_design', 'pharmacyclaims_common_model',
             'date_service', date_input,
-            hvm_historical_date = datetime(hvm_historical.year,
-                                           hvm_historical.month,
-                                           hvm_historical.day)
+            hvm_historical_date=datetime(hvm_historical.year,
+                                         hvm_historical.month,
+                                         hvm_historical.day)
         )
 
     if not test and not airflow_test:
@@ -155,7 +155,7 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test = args.airflow_test)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 

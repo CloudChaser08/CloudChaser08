@@ -119,13 +119,13 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
 
     for table in transaction_schemas.all_tables:
         if table.name in {'vitals_backfill_tier1', 'vitals_backfill_tier2',
-                'results_backfill_tier1', 'results_backfill_tier2'}:
+                          'results_backfill_tier1', 'results_backfill_tier2'}:
             raw_table = runner.sqlContext.read.csv(
                 backfill_path + table.name + '/', sep='|', schema=table.schema
             )
             postprocessor.compose(
-                    postprocessor.trimmify, postprocessor.nullify
-                )(raw_table).createOrReplaceTempView(table.name)
+                postprocessor.trimmify, postprocessor.nullify
+            )(raw_table).createOrReplaceTempView(table.name)
         elif table.name in {'providers', 'patientdemographics', 'clients', 'clients2'}:
             # In the 2019/02 batch, Allscript sent us a clients table with a different schema
             # For that batch only, use that schema for the clients table
@@ -141,8 +141,8 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 input_path + table.name + '/', sep='|', schema=table.schema
             )
             postprocessor.compose(
-                    postprocessor.trimmify, postprocessor.nullify
-                )(raw_table).createOrReplaceTempView('transactional_' + table.name)
+                postprocessor.trimmify, postprocessor.nullify
+            )(raw_table).createOrReplaceTempView('transactional_' + table.name)
         else:
             window = Window.partitionBy(*table.pk).orderBy(F.col('recordeddttm').desc())
             raw_table = runner.sqlContext.read.csv(
@@ -152,8 +152,8 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             raw_table = raw_table.withColumn('input_file_name', F.input_file_name()).persist()
 
             raw_table = postprocessor.compose(
-                    postprocessor.trimmify, postprocessor.nullify
-                )(raw_table)
+                postprocessor.trimmify, postprocessor.nullify
+            )(raw_table)
 
             # deduplicate based on natural key
             raw_table = raw_table.withColumn('row_num', F.row_number().over(window))\
@@ -424,7 +424,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 # rename defaults
                 record_id='row_id', created='crt_dt', data_set='data_set_nm',
                 data_feed='hvm_vdr_feed_id', data_vendor='hvm_vdr_id',
-                model_version = 'mdl_vrsn_num'
+                model_version='mdl_vrsn_num'
             ),
             table['privacy'].filter(
                 runner.sqlContext, update_whitelists=table.get('update_whitelists', lambda x: x),

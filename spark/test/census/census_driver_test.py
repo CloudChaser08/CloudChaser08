@@ -159,7 +159,7 @@ def test_save(test_driver, monkeypatch):
     assert len(row.split('|')) == 2
 
     # First columns should be the hvid, 2nd the rowid. Both in quotes
-    assert hvid  == '"1"'
+    assert hvid == '"1"'
     assert rowid == '"2"'
 
 

@@ -24,10 +24,10 @@ S3_REF_PHI = 's3://salusv/reference/express_scripts_phi/'
 LOCAL_REF_PHI = '/local_phi/'
 
 
-def run (spark, runner, date_input, test=False):
+def run(spark, runner, date_input, test=False):
     logger.log('Starting Express Scripts Enrollment: ' + date_input)
     org_num_partitions = spark.conf.get('spark.sql.shuffle.partitions')
-    setid = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(date_input.replace('-',''))
+    setid = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(date_input.replace('-', ''))
 
     logger.log('Creating helper tables')
     runner.run_spark_script('../../../common/zip3_to_state.sql')
@@ -60,10 +60,10 @@ def run (spark, runner, date_input, test=False):
         )
         local_phi_path = '/tmp' + LOCAL_REF_PHI
     else:
-        input_path     = S3_EXPRESS_SCRIPTS_IN
-        matching_path  = S3_EXPRESS_SCRIPTS_ENROLLMENT_MATCHING
-        new_phi_path   = S3_EXPRESS_SCRIPTS_RX_MATCHING + date_path + '/'
-        ref_phi_path   = S3A_REF_PHI
+        input_path = S3_EXPRESS_SCRIPTS_IN
+        matching_path = S3_EXPRESS_SCRIPTS_ENROLLMENT_MATCHING
+        new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING + date_path + '/'
+        ref_phi_path = S3A_REF_PHI
         local_phi_path = 'hdfs://' + LOCAL_REF_PHI
 
     logger.log('Setting up the local file system')
@@ -84,8 +84,10 @@ def run (spark, runner, date_input, test=False):
             """ALTER TABLE enrollment_records ADD PARTITION (part_date_recv='test') LOCATION '{}'""".format(input_path)
         )
     else:
-        files = subprocess.check_output(['aws', 's3', 'ls',
-            's3://salusv/incoming/enrollmentrecords/express_scripts/', '--recursive']).decode().split("\n")
+        files = subprocess.check_output([
+            'aws', 's3', 'ls',
+            's3://salusv/incoming/enrollmentrecords/express_scripts/', '--recursive'
+        ]).decode().split("\n")
         dates = [re.findall('20[0-9]{2}/../..', x)[0] for x in [x for x in files if re.search('20[0-9]{2}/../..', x)]]
         dates = list(set(dates))
         for d in dates:
@@ -107,8 +109,10 @@ def run (spark, runner, date_input, test=False):
             """ALTER TABLE matching_payload ADD PARTITION (part_date_recv='test') LOCATION '{}'""".format(matching_path)
         )
     else:
-        files = subprocess.check_output(['aws', 's3', 'ls',
-            's3://salusv/matching/payload/enrollmentrecords/express_scripts/', '--recursive']).decode().split("\n")
+        files = subprocess.check_output([
+            'aws', 's3', 'ls',
+            's3://salusv/matching/payload/enrollmentrecords/express_scripts/', '--recursive'
+        ]).decode().split("\n")
         dates = [re.findall('20[0-9]{2}/../..', x)[0] for x in [x for x in files if re.search('20[0-9]{2}/../..', x)]]
         dates = list(set(dates))
         for d in dates:
@@ -136,8 +140,10 @@ def run (spark, runner, date_input, test=False):
 
     logger.log('Writing the final output table to the local file system')
     if not test:
-        normalized_records_unloader.partition_and_rename(spark, runner, 'enrollmentrecords', 'enrollment_common_model.sql',
-            'express_scripts', 'enrollment_common_model', 'date_service', date_input[:-3], date_input[:-3])
+        normalized_records_unloader.partition_and_rename(
+            spark, runner, 'enrollmentrecords', 'enrollment_common_model.sql', 'express_scripts',
+            'enrollment_common_model', 'date_service', date_input[:-3], date_input[:-3]
+        )
 
     if not test:
         logger.log('Logging the run details')

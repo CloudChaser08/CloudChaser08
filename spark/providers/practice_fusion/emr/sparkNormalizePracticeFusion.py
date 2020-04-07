@@ -90,13 +90,13 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
 
     models = [model] if model else MODELS
     for mdl in models:
-        normalized_output = runner.run_all_spark_scripts([
-                ['VDR_FILE_DT', date_input, False],
-            ], directory_path=os.path.dirname(script_path) + '/' + mdl
+        normalized_output = runner.run_all_spark_scripts(
+            [['VDR_FILE_DT', date_input, False]],
+            directory_path=os.path.dirname(script_path) + '/' + mdl
         )
 
         df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
-                                        columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
+                                          columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
 
         if not test:
             _columns = df.columns

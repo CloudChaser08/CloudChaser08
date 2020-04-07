@@ -37,10 +37,10 @@ def actcode_cleanup(actcode):
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     encounter = spark.table('sample.cardinal_rheumatology_encounter_prelim')
-    lab       = spark.table('sample.cardinal_rheumatology_lab_prelim')
+    lab = spark.table('sample.cardinal_rheumatology_lab_prelim')
 
     encounter_schema = encounter.schema
-    lab_schema       = lab.schema
+    lab_schema = lab.schema
 
     encounter = encounter.withColumn('const_weight', F.lit('WEIGHT')) \
                     .withColumn('const_weight_pounds', F.lit('WEIGHT_POUNDS')) \
@@ -142,7 +142,7 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test = args.airflow_test)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     if not args.airflow_test:
         RunRecorder().record_run_details()

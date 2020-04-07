@@ -7,9 +7,14 @@ def prepare(spark, runner, s3_crosswalk_reference):
             .withColumn('patientpseudonym', F.lit(None).cast('string')) # NULL out this column. It can contain DeID data
     mat = spark.table('matching_payload') \
             .withColumn('reportingenterpriseid', F.regexp_extract('input_file_name', '(HV|NG)_LSSA_([^_]*)_[^\.]*.txt', 2))
-    dem_merged = dem.join(mat, ((dem.nextgengroupid == mat.hvJoinKey)
-                & (dem.reportingenterpriseid == mat.reportingenterpriseid)), 'left_outer') \
-        .select(*([dem[c] for c in dem.columns] + [mat['hvid']]))
+    dem_merged = dem.join(
+        mat,
+        (
+            (dem.nextgengroupid == mat.hvJoinKey)
+            & (dem.reportingenterpriseid == mat.reportingenterpriseid)
+        ),
+        'left_outer'
+    ).select(*([dem[c] for c in dem.columns] + [mat['hvid']]))
 
     cross = spark.read.parquet(s3_crosswalk_reference).select(*CROSSWALK_COLUMNS)
     dem_w_hvid = dem_merged.where("hvid is NOT NULL")

@@ -2,9 +2,9 @@ import pytest
 import datetime
 import spark.providers.express_scripts.pharmacyclaims.sparkNormalizeExpressScripts as esi
 
-results           = []
-transactions      = []
-matching          = []
+results = []
+transactions = []
+matching = []
 normalized_claims = []
 table = []
 
@@ -18,10 +18,10 @@ def test_init(spark):
     esi.run(spark['spark'], spark['runner'], '2017-05-06', True)
 
     global results, transactions, matching, normalized_claims
-    transactions      = spark['sqlContext'].sql('select * from transactions').collect()
-    matching          = spark['sqlContext'].sql('select * from matching_payload').collect()
+    transactions = spark['sqlContext'].sql('select * from transactions').collect()
+    matching = spark['sqlContext'].sql('select * from matching_payload').collect()
     normalized_claims = spark['sqlContext'].sql('select * from normalized_claims').collect()
-    results           = spark['sqlContext'].sql('select * from pharmacyclaims_common_model_final') \
+    results = spark['sqlContext'].sql('select * from pharmacyclaims_common_model_final') \
                                  .collect()
 
 def text_fixed_width_parsing():

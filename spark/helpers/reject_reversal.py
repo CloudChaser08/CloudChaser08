@@ -6,10 +6,10 @@ import re
 
 
 def create_empty_dataframe(spark,
-                         part_provider_field,
-                         date_partition_field,
-                         output_schema,
-                         table_name='previous_run_from_transformed'):
+                           part_provider_field,
+                           date_partition_field,
+                           output_schema,
+                           table_name='previous_run_from_transformed'):
 
     # Create an empty dataframe that matches the expected output schema
     # This is useful for starting brand new providers who have reject and reversal logic.

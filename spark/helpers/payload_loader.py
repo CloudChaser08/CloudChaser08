@@ -23,7 +23,7 @@ DEFAULT_ATTRS = [
 
 
 def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False, partitions=200, cache=False,
-        load_file_name=False, allow_empty=False):
+         load_file_name=False, allow_empty=False):
     """
     Load matching data for a provider
     """
@@ -86,4 +86,4 @@ def load_all(runner, location_prefix, matching_payloads_module):
             table_name = 'matching_payload_' + table
 
         load(runner, loc, extra_cols=table_conf[table].extra_columns, table_name=table_name,
-                partitions=5000, cache=True, load_file_name=True)
+             partitions=5000, cache=True, load_file_name=True)

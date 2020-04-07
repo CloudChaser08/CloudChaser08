@@ -17,7 +17,7 @@ def _apply_to_all_columns(f, df):
 def nullify(df, null_vals=None, preprocess_func=lambda c: c):
     """Convert all columns matching any value in null_vals to null"""
     if not null_vals:
-        null_vals = {"", "NULL" }
+        null_vals = {"", "NULL"}
     else:
         null_vals = set(null_vals)
 
@@ -61,8 +61,8 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
         except:
             logging.error(("Error occurred while loading min_cap data for hvm_vdr_feed_id='{}' AND gen_ref_domn_nm = '{}', "
                            "check to make sure ref_gen_ref was loaded before calling this function.").format(
-                              vdr_feed_id, domain_name
-                          ))
+                               vdr_feed_id, domain_name
+                           ))
             raise
 
         if not min_cap_results:
@@ -131,8 +131,8 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
     except:
         logging.error(("Error occurred while loading whitelist results for domain_name = '{}', "
                        "check to make sure ref_gen_ref was loaded before calling this function.").format(
-                          domain_name
-                      ))
+                           domain_name
+                       ))
         raise
 
     if not values:
@@ -145,8 +145,10 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
         )
         for comp_col_name in comp_col_names:
             df = df.withColumn(
-                comp_col_name, when(c.isin(values),
-                            col(comp_col_name)).otherwise(lit(None))
+                comp_col_name, when(
+                    c.isin(values),
+                    col(comp_col_name)
+                ).otherwise(lit(None))
             )
         return df
 
