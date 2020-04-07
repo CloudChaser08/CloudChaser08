@@ -61,7 +61,11 @@ if __name__ == "__main__":
     def load_data():
         logger.log('Loading data:')
 
-        num_buckets = int(driver.spark.sparkContext.getConf().get("spark.executor.instances"))
+        # The number of buckets was determined by the number of executors used
+        # in the Airflow job for this provider. Ideally, we should be getting the
+        # number of buckets dynamically, but there's currently not an easy way
+        # to do that in PySpark at the moment.
+        num_buckets = 21
 
         logger.log(' -Loading ref_gen_ref table')
         external_table_loader.load_ref_gen_ref(driver.runner.sqlContext)
