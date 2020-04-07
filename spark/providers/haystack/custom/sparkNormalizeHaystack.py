@@ -78,22 +78,19 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
     ])
 
     content = schema_enforcer.apply_schema(content, schema)
-    header = spark.createDataFrame(
-        [tuple([
-            'HVID', 'Temporary ID', 'Match Score', 'Year Of Birth', 'Age',
-            'Gender', 'Zip3', 'State', 'Status', 'Symptoms', 'HCP 1 NPI',
-            'HCP 1 First Name', 'HCP 1 Last Name', 'HCP 1 Address',
-            'HCP 1 City', 'HCP 1 State', 'HCP 1 Zip Code', 'HCP 1 Email',
-            'HCP 1 Role(s)', 'HCP 2 NPI', 'HCP 2 First Name',
-            'HCP 2 Last Name', 'HCP 2 Address', 'HCP 2 City', 'HCP 2 State',
-            'HCP 2 Zip Code', 'HCP 2 Email', 'HCP 2 Role(s)',
-            'Treating Site NPI', 'Treating Site Name', 'Payer ID', 'Payer Name',
-            'Payer Plan ID', 'Payer Plan Name', 'Data Source', 'CRM ID 1',
-            'CRM ID 2', 'Activity Date'
-        ])],
-        schema=schema
-    )
-    deliverable = header.union(content).coalesce(1)
+    header = [
+        'HVID', 'Temporary ID', 'Match Score', 'Year Of Birth', 'Age',
+        'Gender', 'Zip3', 'State', 'Status', 'Symptoms', 'HCP 1 NPI',
+        'HCP 1 First Name', 'HCP 1 Last Name', 'HCP 1 Address',
+        'HCP 1 City', 'HCP 1 State', 'HCP 1 Zip Code', 'HCP 1 Email',
+        'HCP 1 Role(s)', 'HCP 2 NPI', 'HCP 2 First Name',
+        'HCP 2 Last Name', 'HCP 2 Address', 'HCP 2 City', 'HCP 2 State',
+        'HCP 2 Zip Code', 'HCP 2 Email', 'HCP 2 Role(s)',
+        'Treating Site NPI', 'Treating Site Name', 'Payer ID', 'Payer Name',
+        'Payer Plan ID', 'Payer Plan Name', 'Data Source', 'CRM ID 1',
+        'CRM ID 2', 'Activity Date'
+    ]
+    deliverable = content.select(*[content[content.columns[i]].alias(header[i]) for i in range(len(header))])
 
     deliverable.createOrReplaceTempView('haystack_deliverable')
 
@@ -108,11 +105,11 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
         if date:
             normalized_records_unloader.unload_delimited_file(
                 spark, runner, 'hdfs:///staging/part_dt=' + date + '/', 'haystack_deliverable',
-                output_file_name=output_file_name)
+                output_file_name=output_file_name, header=True)
         else:
             normalized_records_unloader.unload_delimited_file(
                 spark, runner, 'hdfs:///staging/' + group_id + '/', 'haystack_deliverable',
-                output_file_name=output_file_name)
+                output_file_name=output_file_name, header=True)
 
     if not test and not airflow_test:
         logger.log_run_details(

@@ -1,10 +1,12 @@
 from pyspark.sql.types import StructType, StructField, StringType
 
+
 class SourceTable:
     """
     Configuration details for records tables
     """
-    def __init__(self, file_type, separator=None, columns=None, schema=None, input_path=None):
+    def __init__(self, file_type, separator=None, columns=None, schema=None, input_path=None,
+                 trimmify_nullify=True):
         if columns is None and schema is None:
             raise Exception('Must specify one of columns or schema')
         if columns is not None and schema is not None:
@@ -17,6 +19,7 @@ class SourceTable:
             raise Exception('Must specify a schema for a json file')
         self.file_type = file_type
         self.separator = separator
+        self.trimmify_nullify = trimmify_nullify
         if columns:
             self.schema = StructType([
                 StructField(f, StringType(), True) for f in columns
@@ -25,9 +28,9 @@ class SourceTable:
             self.schema = schema
         self.input_path = input_path
 
-
     def set_input_path(self, input_path):
         self.input_path = input_path
+
 
 class PayloadTable:
     """

@@ -131,13 +131,9 @@ def test_transform(test_driver):
 
     results = test_driver.transform(date(2018, 1, 1), None).collect()
 
-    # first row should be a header
-    assert results[0]['hvid'] == 'hvid'
-    assert results[0]['rowid'] == 'rowid'
-
     # content
-    assert results[1]['hvid'] == obfuscate_hvid('1', 'hvidTEST123')
-    assert results[1]['rowid'] == '2'
+    assert results[0]['hvid'] == obfuscate_hvid('1', 'hvidTEST123')
+    assert results[0]['rowid'] == '2'
 
 
 @pytest.mark.usefixtures("test_driver")
@@ -153,13 +149,11 @@ def test_save(test_driver, monkeypatch):
     with gzip.open('/tmp/2018/01/01/20180101_response_00000.csv.gz', 'rt') as fin:
         content = fin.readlines()
 
-    row = content[0].strip()
-    print(row)
-    print(type(row))
+    row = content[1].strip()
     (hvid, rowid) = row.split('|')
 
-    # Should only be 1 row of data
-    assert len(content) == 1
+    # Should only be 1 row of data, and a header row
+    assert len(content) == 2
 
     # Should be 2 columns, pipe separated
     assert len(row.split('|')) == 2

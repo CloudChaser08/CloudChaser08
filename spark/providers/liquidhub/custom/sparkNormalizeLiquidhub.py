@@ -107,14 +107,12 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     )
 
     content = schema_enforcer.apply_schema(content, schema)
-    header = spark.createDataFrame(
-        [tuple(
-            ['HVID', 'Source Patient Id', 'Source Name', 'Brand', 'Manufacturer'] +
-            ['Filler'] * 7 +
-            ['Weak Match', 'Custom HV ID', 'Provider Meta', 'Matching Meta'])],
-        schema=schema
+    header = (
+        ['HVID', 'Source Patient Id', 'Source Name', 'Brand', 'Manufacturer'] +
+        ['Filler ' + str(i) for i in range(1, 8)] +
+        ['Weak Match', 'Custom HV ID', 'Provider Meta', 'Matching Meta']
     )
-    deliverable = header.union(content).coalesce(1)
+    deliverable = content.select(*[content[content.columns[i]].alias(header[i]) for i in range(len(header))])
 
     deliverable.createOrReplaceTempView('liquidhub_deliverable')
 
@@ -162,7 +160,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     if not test:
         normalized_records_unloader.unload_delimited_file(
             spark, runner, 'hdfs:///staging/' + group_id + '/', 'liquidhub_deliverable',
-            output_file_name=output_file_name)
+            output_file_name=output_file_name, header=True)
         with open('/tmp/summary_report_' + group_id + '.txt', 'w') as fout:
             summ = spark.table('liquidhub_summary').collect()
             fout.write('\n'.join(['{}|{}'.format(r.source_name, r.manufacturer) for r in summ]))

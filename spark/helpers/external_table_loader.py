@@ -73,4 +73,3 @@ def load_ref_gen_ref(sqlContext):
     _get_table_as_df(sqlContext, 'dw', 'ref_gen_ref') \
         .cache() \
         .createOrReplaceTempView('ref_gen_ref')
-    sqlContext.table('ref_gen_ref').count()

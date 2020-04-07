@@ -1,4 +1,6 @@
-SELECT DISTINCT
+SELECT /*+ BROADCAST (ref_gen_ref)
+ */
+    DISTINCT
     enr.memberuid,
     CAST(enr.effectivedate AS DATE) as effectivedate,
     CAST(enr.terminationdate AS DATE) as terminationdate,

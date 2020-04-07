@@ -31,26 +31,26 @@ def test_init(spark):
 
 def test_hvid_obfuscation():
     # Manufacturer is Amgen, salt is just 'LHv2'
-    assert [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-1'][0] \
-        .hvid == str(obfuscate_hvid('206845800', 'LHv2'))
+    amgen_row = [r for r in results[GROUPS[2]] if r['Source Patient Id'] == 'claim-1'][0]
+    assert amgen_row['HVID'] == str(obfuscate_hvid('206845800', 'LHv2'))
 
     # Manufacturer is not Amgen, salt is a combination of 'LHv2' and manufacturer name
 
     # Manufacturer name in file content
-    assert [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-2'][0] \
-        .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'NOVARTIS'.lower()))
-    assert [r for r in results[GROUPS[0]] if r.source_patient_id == 'claim-2'][0] \
-        .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'NOVARTIS'.lower()))
+    novartis_row_lhv2 = [r for r in results[GROUPS[2]] if r['Source Patient Id'] == 'claim-2'][0]
+    assert novartis_row_lhv2['HVID'] == str(obfuscate_hvid('161340392', 'LHv2' + 'NOVARTIS'.lower()))
+    novartis_row_lhv1 = [r for r in results[GROUPS[0]] if r['Source Patient Id'] == 'claim-2'][0]
+    assert novartis_row_lhv1['HVID'] == str(obfuscate_hvid('161340392', 'LHv2' + 'NOVARTIS'.lower()))
 
     # Manufacturer name in file file
-    assert [r for r in results[GROUPS[3]] if r.source_patient_id == 'claim-2'][0] \
-        .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'Manufacturer1'.lower()))
-    assert [r for r in results[GROUPS[1]] if r.source_patient_id == 'claim-2'][0] \
-        .hvid == str(obfuscate_hvid('161340392', 'LHv2' + 'Manufacturer1'.lower()))
+    manu_row_lhv2 = [r for r in results[GROUPS[3]] if r['Source Patient Id'] == 'claim-2'][0]
+    assert manu_row_lhv2['HVID'] == str(obfuscate_hvid('161340392', 'LHv2' + 'Manufacturer1'.lower()))
+    manu_row_lhv1 = [r for r in results[GROUPS[1]] if r['Source Patient Id'] == 'claim-2'][0]
+    assert manu_row_lhv1['HVID'] == str(obfuscate_hvid('161340392', 'LHv2' + 'Manufacturer1'.lower()))
 
 def test_multimatch_candidates_present():
-    claim3 = [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-3'][0]
-    candidates = json.loads(claim3.matching_meta)
+    claim3 = [r for r in results[GROUPS[2]] if r['Source Patient Id'] == 'claim-3'][0]
+    candidates = json.loads(claim3['Matching Meta'])
     assert sorted(candidates, key=lambda x: x[0]) == \
             [
                 [obfuscate_hvid("95878097", 'LHv2').lower(), 0.0001113792],
@@ -61,32 +61,27 @@ def test_multimatch_candidates_present():
             ]
 
 def test_extact_match_candidates_empty():
-    claim8 = [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-8'][0]
-    assert 'matching_meta' in claim8
-    assert claim8.matching_meta == None
+    claim8 = [r for r in results[GROUPS[2]] if r['Source Patient Id'] == 'claim-8'][0]
+    assert 'Matching Meta' in claim8
+    assert claim8['Matching Meta'] == None
 
 def test_candidate_hvid_obfuscation():
-    claim4 = [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-4'][0]
-    claim4_candidate_hvids = [x[0] for x in json.loads(claim4.matching_meta)]
+    claim4 = [r for r in results[GROUPS[2]] if r['Source Patient Id'] == 'claim-4'][0]
+    claim4_candidate_hvids = [x[0] for x in json.loads(claim4['Matching Meta'])]
     assert str(obfuscate_hvid('36024084', 'LHv2')).lower() in claim4_candidate_hvids
-
-def test_header_row():
-    assert results[GROUPS[2]][0].source_patient_id == 'Source Patient Id'
-    assert results[GROUPS[2]][0].hvid == 'HVID'
-    assert results[GROUPS[2]][0].matching_meta == 'Matching Meta'
 
 def test_manufacturer_column():
     # Manufacturer name in file content
-    assert [r for r in results[GROUPS[2]] if r.source_patient_id == 'claim-2'][0] \
-        .manufacturer == "NOVARTIS"
-    assert [r for r in results[GROUPS[0]] if r.source_patient_id == 'claim-2'][0] \
-        .manufacturer == "NOVARTIS"
+    assert [r for r in results[GROUPS[2]] if r['Source Patient Id'] == 'claim-2'][0] \
+        ['Manufacturer'] == "NOVARTIS"
+    assert [r for r in results[GROUPS[0]] if r['Source Patient Id'] == 'claim-2'][0] \
+        ['Manufacturer'] == "NOVARTIS"
 
     # Manufacturer name in file file
-    assert [r for r in results[GROUPS[3]] if r.source_patient_id == 'claim-2'][0] \
-        .manufacturer == "Manufacturer1"
-    assert [r for r in results[GROUPS[1]] if r.source_patient_id == 'claim-2'][0] \
-        .manufacturer == "Manufacturer1"
+    assert [r for r in results[GROUPS[3]] if r['Source Patient Id'] == 'claim-2'][0] \
+        ['Manufacturer'] == "Manufacturer1"
+    assert [r for r in results[GROUPS[1]] if r['Source Patient Id'] == 'claim-2'][0] \
+        ['Manufacturer'] == "Manufacturer1"
 
 def test_file_name():
     for g in GROUPS:
