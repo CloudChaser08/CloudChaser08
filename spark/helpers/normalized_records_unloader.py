@@ -102,7 +102,7 @@ def unload(
         df = df.withColumn(part_file_date, lit(partition_name_prefix))
         partition_by.insert(1, part_file_date)
 
-    df.repartition(unload_partition_count).write.parquet(
+    df.repartition(unload_partition_count, distribution_key).write.parquet(
         staging_dir, partitionBy=partition_by, compression='gzip',
         mode='append'
     )
