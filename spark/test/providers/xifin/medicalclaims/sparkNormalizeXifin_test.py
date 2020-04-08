@@ -15,18 +15,18 @@ def test_init(spark):
     cleanup(spark)
     spark['spark'].sparkContext.parallelize([
         Row(
-            hvm_vdr_feed_id = xifin.FEED_ID,
-            gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE',
-            gen_ref_itm_nm = '',
-            gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = ''
+            hvm_vdr_feed_id=xifin.FEED_ID,
+            gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
         ),
         Row(
-            hvm_vdr_feed_id = xifin.FEED_ID,
-            gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE',
-            gen_ref_itm_nm = '',
-            gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = ''
+            hvm_vdr_feed_id=xifin.FEED_ID,
+            gen_ref_domn_nm='HVM_AVAILABLE_HISTORY_START_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 

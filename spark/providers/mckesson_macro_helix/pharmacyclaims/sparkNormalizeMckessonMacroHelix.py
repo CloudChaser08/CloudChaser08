@@ -58,11 +58,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     min_date = postprocessor.coalesce_dates(
-                    runner.sqlContext,
-                    FEED_ID,
-                    None,
-                    'HVM_AVAILABLE_HISTORY_START_DATE'
-                )
+        runner.sqlContext,
+        FEED_ID,
+        None,
+        'HVM_AVAILABLE_HISTORY_START_DATE'
+    )
     if min_date:
         min_date = min_date.isoformat()
 
@@ -142,7 +142,7 @@ def main(args):
 
     runner = Runner(sqlContext)
 
-    run(spark, runner, args.date, airflow_test = args.airflow_test)
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 

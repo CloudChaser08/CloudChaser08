@@ -10,7 +10,7 @@ def get_diagnosis_with_priority(diags, pointers):
     if pointers.upper().find('A') > -1:
         ps = [x for x in [ord(x[0]) - 64 for x in ps] if x > 0 and x < 27]
     else:
-        ps = [int(x) for x in ps if re.search('[^\s\d]', x) is None and re.search('[^\s]',x) is not None]
+        ps = [int(x) for x in ps if re.search('[^\s\d]', x) is None and re.search('[^\s]', x) is not None]
     if 0 in ps:
         ps = [x+1 for x in ps]
     

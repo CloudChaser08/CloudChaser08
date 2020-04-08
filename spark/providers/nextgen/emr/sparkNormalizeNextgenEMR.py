@@ -46,11 +46,11 @@ from spark.common.utility import logger
 
 
 LAST_RESORT_MIN_DATE = datetime(1900, 1, 1)
-S3_ENCOUNTER_REFERENCE    = 's3://salusv/reference/nextgen/encounter_deduped/'
+S3_ENCOUNTER_REFERENCE = 's3://salusv/reference/nextgen/encounter_deduped/'
 S3_DEMOGRAPHICS_REFERENCE = 's3://salusv/reference/nextgen/demographics_orc/'
-S3_CROSSWALK_REFERENCE    = 's3://salusv/reference/nextgen/crosswalk/'
+S3_CROSSWALK_REFERENCE = 's3://salusv/reference/nextgen/crosswalk/'
 
-HDFS_ENCOUNTER_REFERENCE    = '/user/hive/warehouse/encounter_dedup'
+HDFS_ENCOUNTER_REFERENCE = '/user/hive/warehouse/encounter_dedup'
 HDFS_DEMOGRAPHICS_REFERENCE = '/user/hive/warehouse/demographics_local'
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/spark-output/'
@@ -87,7 +87,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             date_input.replace('-', '/')
         )
         demo_reference_path = demo_ref
-        enc_reference_path  = enc_ref
+        enc_reference_path = enc_ref
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/nextgen/emr/payload/{}/'.format(
             date_input.replace('-', '/')
         )
@@ -97,7 +97,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             date_input.replace('-', '/')
         ) if input_file_path is None else input_file_path
         demo_reference_path = demo_ref
-        enc_reference_path  = enc_ref
+        enc_reference_path = enc_ref
         matching_path = 's3a://salusv/matching/payload/emr/nextgen/{}/'.format(
             date_input.replace('-', '/')
         ) if payload_path is None else payload_path
@@ -173,15 +173,19 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
                             return_output=True
                            ).createOrReplaceTempView('procedure_order_real_actcode')
     normalized['procedure'] = schema_enforcer.apply_schema(
-            runner.run_spark_script('normalize_procedure_1.sql', [
-                ['min_date', min_date],
-                ['max_date', max_date]
-            ], return_output=True), procedure_schema) \
-        .union(schema_enforcer.apply_schema(
-            runner.run_spark_script('normalize_procedure_2.sql', [
-                ['min_date', min_date],
-                ['max_date', max_date],
-            ], return_output=True), procedure_schema))
+        runner.run_spark_script('normalize_procedure_1.sql', [
+            ['min_date', min_date],
+            ['max_date', max_date]
+        ], return_output=True), procedure_schema
+    ) \
+        .union(
+            schema_enforcer.apply_schema(
+                runner.run_spark_script('normalize_procedure_2.sql', [
+                    ['min_date', min_date],
+                    ['max_date', max_date],
+                ], return_output=True), procedure_schema
+            )
+        )
     logging.debug("Normalized procedure")
 
     normalized['lab_order'] = runner.run_spark_script('normalize_lab_order.sql', [
@@ -237,13 +241,13 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     logging.debug("Normalized provider order")
 
     cln_obs1 = runner.run_spark_script('normalize_clinical_observation_1.sql', [
-                ['min_date', min_date],
-                ['max_date', max_date]
-            ], return_output=True)
+        ['min_date', min_date],
+        ['max_date', max_date]
+    ], return_output=True)
     cln_obs3 = runner.run_spark_script('normalize_clinical_observation_3.sql', [
-                ['min_date', min_date],
-                ['max_date', max_date]
-            ], return_output=True)
+        ['min_date', min_date],
+        ['max_date', max_date]
+    ], return_output=True)
     normalized['clinical_observation'] = clean_and_union_cln_obs(runner.sqlContext, cln_obs1, cln_obs3)
     logging.debug("Normalized clinical observation")
 
@@ -501,10 +505,10 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
                 spark, runner, df, table['date_column'], date_input,
                 provider_partition_value='35',
                 provider_partition_name='part_hvm_vdr_feed_id',
-                date_partition_name = 'part_mth', 
+                date_partition_name='part_mth', 
                 hvm_historical_date=historical_date,
                 staging_subdir='{}/'.format(table['data_type']),
-                columns = table['schema'].names, distribution_key='row_id',
+                columns=table['schema'].names, distribution_key='row_id',
                 unload_partition_count=table.get('partitions', 20)
             )
         logging.debug("Cleaned up {}".format(table['data_type']))

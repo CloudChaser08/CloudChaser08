@@ -19,9 +19,11 @@ def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):
         whtlsts = update_whitelists(whitelists)
         return postprocessor.compose(
             *[
-                postprocessor.apply_whitelist(sqlc, whitelist['column_name'],
-                    whitelist['domain_name'], whitelist.get('comp_col_names'),
-                    whitelist.get('whitelist_col_name'), whitelist.get('clean_up_freetext_fn'))
+                postprocessor.apply_whitelist(
+                    sqlc, whitelist['column_name'], whitelist['domain_name'],
+                    whitelist.get('comp_col_names'), whitelist.get('whitelist_col_name'),
+                    whitelist.get('clean_up_freetext_fn')
+                )
                 for whitelist in whtlsts
             ]
         )(

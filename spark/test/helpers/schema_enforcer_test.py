@@ -5,10 +5,10 @@ from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 from pyspark.sql import Row
 
 master_schema = StructType([
-    StructField('patient_id',     IntegerType(), True),
+    StructField('patient_id', IntegerType(), True),
     StructField('diagnosis_code', StringType(), True),
     StructField('procedure_code', StringType(), True),
-    StructField('rendering_npi',  IntegerType(), True)
+    StructField('rendering_npi', IntegerType(), True)
 ])
 
 record = Row(*master_schema.names)

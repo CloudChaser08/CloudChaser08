@@ -75,9 +75,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
         min_date = postprocessor.get_gen_ref_date(
-                    runner.sqlContext,
-                    '30',
-                    'EARLIEST_VALID_SERVICE_DATE'
+            runner.sqlContext,
+            '30',
+            'EARLIEST_VALID_SERVICE_DATE'
         ).isoformat()
 
     max_date = date_input
@@ -128,9 +128,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql', 'cardinal_vitalpath',
             'pharmacyclaims_common_model', 'date_service', date_input,
-            hvm_historical_date = datetime(hvm_historical.year,
-                                           hvm_historical.month,
-                                           hvm_historical.day)
+            hvm_historical_date=datetime(hvm_historical.year,
+                                         hvm_historical.month,
+                                         hvm_historical.day)
         )
 
     if not test and not airflow_test:

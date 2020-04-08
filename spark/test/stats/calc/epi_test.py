@@ -7,12 +7,12 @@ import spark.stats.calc.epi as epi
 @pytest.fixture(scope='module', name='results')
 def _get_results(provider_conf):
     with patch.object(
-        epi, '_get_s3_file_contents',
-        return_value=(
-            'part-00001;82;515151;0-17\n'
-            'part-00002;82;2727;18-44\n'
-            'part-00003;127;8;45-64;extra woops!\n'
-        )
+            epi, '_get_s3_file_contents',
+            return_value=(
+                'part-00001;82;515151;0-17\n'
+                'part-00002;82;2727;18-44\n'
+                'part-00003;127;8;45-64;extra woops!\n'
+            )
     ):
         yield epi.calculate_epi(provider_conf, 'age').results
 

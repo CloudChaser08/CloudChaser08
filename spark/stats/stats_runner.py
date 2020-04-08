@@ -137,10 +137,10 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--feed_ids', type = str, nargs='+')
-    parser.add_argument('--version', type = str)
-    parser.add_argument('--start_date', type = str)
-    parser.add_argument('--end_date', type = str)
-    parser.add_argument('--stats', nargs = '+', default = None)
+    parser.add_argument('--feed_ids', type=str, nargs='+')
+    parser.add_argument('--version', type=str)
+    parser.add_argument('--start_date', type=str)
+    parser.add_argument('--end_date', type=str)
+    parser.add_argument('--stats', nargs='+', default=None)
     args = parser.parse_args()
     main(args)

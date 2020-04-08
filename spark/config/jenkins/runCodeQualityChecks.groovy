@@ -13,7 +13,7 @@ pipeline {
         STAGE = "test"
 
         // The lowest-allowable pylint score
-        PYLINT_THRESHOLD="1.00"
+        PYLINT_THRESHOLD="4.80"
     }
 
     stages {

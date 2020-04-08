@@ -73,8 +73,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not args.client_name and not args.opportunity_id and not args.census_module:
-        print ("Client name and opportunity ID (standard Census) or census "
-               "module name is required")
+        print("Client name and opportunity ID (standard Census) or census "
+              "module name is required")
         parser.print_help()
         sys.exit(1)
 

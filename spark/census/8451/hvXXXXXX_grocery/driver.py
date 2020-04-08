@@ -79,11 +79,12 @@ class Grocery8451CensusDriver(CensusDriver):
             return os.listdir(path)
         else:
             log('path: ' + path)
-            files = [f.split(' ')[-1].strip().split('/')[-1]
-                        for f in
-                        str(subprocess.check_output(['hdfs', 'dfs', '-ls', path])).split('\\n')
-                        if f.split(' ')[-1].startswith('hdfs')
-                        ]
+            files = [
+                f.split(' ')[-1].strip().split('/')[-1]
+                for f in
+                str(subprocess.check_output(['hdfs', 'dfs', '-ls', path])).split('\\n')
+                if f.split(' ')[-1].startswith('hdfs')
+            ]
             log('files: ' + ", ".join(files))
             return [f.split(' ')[-1].strip().split('/')[-1] for f in files]
 

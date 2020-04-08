@@ -56,9 +56,9 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
     payload_loader.load(runner, matching_path, table_name='waystar_payload',
                         extra_cols=['pcn'], load_file_name=True)
 
-    augment_df = records_loader.load(runner, augment_path,
-                                        columns=['instanceid', 'accounttype'],
-                                        file_type='csv', header=True)
+    augment_df = records_loader.load(
+        runner, augment_path, columns=['instanceid', 'accounttype'], file_type='csv', header=True
+    )
 
     augment_df.createOrReplaceTempView('waystar_medicalclaims_augment')
 

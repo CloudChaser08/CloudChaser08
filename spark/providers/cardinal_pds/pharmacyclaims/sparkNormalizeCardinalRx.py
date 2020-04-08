@@ -123,7 +123,7 @@ LOCATION '{}'
     tbl = spark.table('pharmacyclaims_common_model')
     (
         tbl.select(*[col(c).cast('string').alias(c) for c in tbl.columns])
-            .createOrReplaceTempView('pharmacyclaims_common_model_strings')
+        .createOrReplaceTempView('pharmacyclaims_common_model_strings')
     )
 
     # Remove the ids Cardinal created for their own purposes and de-obfuscate the HVIDs
@@ -152,15 +152,15 @@ LOCATION '{}'
 
     new_reversed = runner.sqlContext.sql(
         "SELECT * FROM pharmacyclaims_common_model WHERE concat_ws(':', record_id, data_set) IN (SELECT * from reversed)").withColumn(
-        'logical_delete_reason', lit('Reversed Claim'))
+            'logical_delete_reason', lit('Reversed Claim'))
     old_reversed = runner.sqlContext.sql(
         "SELECT * FROM normalized_claims WHERE concat_ws(':', record_id, data_set) IN (SELECT * from reversed)").drop(
-        'part_best_date').withColumn('logical_delete_reason', lit('Reversed Claim'))
+            'part_best_date').withColumn('logical_delete_reason', lit('Reversed Claim'))
     new_not_reversed = runner.sqlContext.sql(
         "SELECT * FROM pharmacyclaims_common_model WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)")
     old_not_reversed = runner.sqlContext.sql(
         "SELECT * FROM normalized_claims WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)").drop(
-        'part_best_date')
+            'part_best_date')
 
     new_reversed.union(old_reversed).union(new_not_reversed).union(old_not_reversed).createTempView(
         'pharmacyclaims_common_model_final')
@@ -203,7 +203,7 @@ def main(args):
     curr_mo = args.date[:7]
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:
-       subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
+        subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
 
     logger.log("Moving files to s3")
     if args.airflow_test:

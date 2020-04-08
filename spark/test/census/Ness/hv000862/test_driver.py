@@ -64,12 +64,24 @@ def test_run(driver, spark):
     rows = rows_for_table(spark, 'census_result')
     expected_hvid = ['8f3e12b9e985540963e5a5f2df5db86e', 'bd523724b25b27e122ba857ac5a1b10e',
                      'ad0d917fbb71843aeac366908539727f']
+
+    persons = []
+    apps = []
+    ubcdbs = []
+    programs = []
+
+    for i in range(0, len(rows)):
+        persons.append("person-{}".format(i))
+        apps.append("UBCapp{}".format(i))
+        ubcdbs.append("DB{}".format(i))
+        programs.append("Prog{}".format(i))
+
     for index, row in enumerate(rows):
-        assert row.HVID == expected_hvid[index]
-        assert row.GUID == "person-{}".format(index)
-        assert row.UBCApp == "UBCapp{}".format(index)
-        assert row.UBCDB == "DB{}".format(index)
-        assert row.UBCProgram == "Prog{}".format(index)
+        assert row.HVID in expected_hvid
+        assert row.GUID in persons
+        assert row.UBCApp in apps
+        assert row.UBCDB in ubcdbs
+        assert row.UBCProgram in programs
 
 
 if __name__ == "__main__":

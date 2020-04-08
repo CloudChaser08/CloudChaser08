@@ -3,9 +3,9 @@ import spark.helpers.external_table_loader as external_table_loader
 
 icd_diag_results = []
 icd_proc_results = []
-cpt_results      = []
-hcpcs_results    = []
-gen_ref_results  = []
+cpt_results = []
+hcpcs_results = []
+gen_ref_results = []
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
@@ -56,4 +56,4 @@ def test_gen_ref_data():
     """Ensure the general reference table is loaded from the analytics DB"""
 
     assert len([r for r in gen_ref_results if r.gen_ref_domn_nm == 'VITAL_SIGN_TYPE'
-                        and r.gen_ref_cd == 'WEIGHT']) == 1
+                and r.gen_ref_cd == 'WEIGHT']) == 1

@@ -20,11 +20,11 @@ def cleanup(spark):
 def test_init(spark):
     spark['spark'].sparkContext.parallelize([
         Row(
-            hvm_vdr_feed_id = '43',
-            gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE',
-            gen_ref_itm_nm = '',
-            gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = '' 
+            hvm_vdr_feed_id='43',
+            gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg='' 
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
     ambry.run(spark['spark'], spark['runner'], '2018-01-01', test=True)

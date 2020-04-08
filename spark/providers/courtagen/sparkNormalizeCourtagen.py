@@ -63,8 +63,10 @@ runner.run_spark_script('normalize.sql', [
 
 runner.run_spark_script('../../common/lab_post_normalization_cleanup_v2.sql')
 
-normalized_records_unloader.unload(spark, runner, 'labtests', 'lab_common_model_v2.sql',
-    'courtagen', 'lab_common_model', 'date_service', args.date, S3_COURTAGEN_OUT)
+normalized_records_unloader.unload(
+    spark, runner, 'labtests', 'lab_common_model_v2.sql', 'courtagen', 'lab_common_model',
+    'date_service', args.date, S3_COURTAGEN_OUT
+)
 
 logger.log_run_details(
     provider_name='Courtagen',

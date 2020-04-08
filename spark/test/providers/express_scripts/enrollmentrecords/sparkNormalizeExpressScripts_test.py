@@ -2,13 +2,13 @@ import pytest
 import datetime
 import spark.providers.express_scripts.enrollmentrecords.sparkNormalizeExpressScriptsEnrollment as esi
 
-results  = []
+results = []
 ref_data = []
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     esi.run(spark['spark'], spark['runner'], '2017-05-01', True)
     global results
-    results  = spark['sqlContext'].sql('select * from enrollment_common_model') \
+    results = spark['sqlContext'].sql('select * from enrollment_common_model') \
                                  .collect()
     global ref_data
     ref_data = spark['sqlContext'].sql('select * from local_phi') \
