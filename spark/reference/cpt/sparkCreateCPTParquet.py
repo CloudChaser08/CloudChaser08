@@ -36,9 +36,24 @@ def run(spark, runner, year):
            of cpt_codes
         5. Filter out any codes that are not of length 2 (modifiers) or length 5 (codes)
 
-    NOTE: This logic IS subject to change year by year, so make sure to always verify with
+    NOTES: This logic IS subject to change year by year, so make sure to always verify with
           analytics that the logic remains the same based on the files we recived.
+         
+        The 2020 'short' file was not tab seperated. We had to manually update the file to match the
+        expected format. 
+        
+        Once the parquet is in place, run the following to create the table:
+        CREATE EXTERNAL TABLE ref_cpt(`code` STRING, `short_description` STRING, `long_description` STRING)
+            ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
+            WITH SERDEPROPERTIES (
+              'serialization.format' = '1'
+            )
+            STORED AS
+              INPUTFORMAT 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
+              OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
+            LOCATION '<path_to_output_parquet>'
     '''
+
     cpt_short_long = cpt_long.join(cpt_short, cpt_long.long_code == cpt_short.short_code, 'full') \
                              .select(F.col('short_code').alias('code'), F.col('short_description'),
                                      F.col('long_description')
