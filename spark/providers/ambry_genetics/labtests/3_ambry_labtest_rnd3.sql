@@ -19,7 +19,7 @@ SELECT
 	VALIDATE_AGE
         (
             pay.age,
-            to_date(txn.order_date, 'mm/dd/yyyy'),
+            to_date(txn.order_date, 'MM/dd/yyyy'),
             COALESCE(txn.date_of_birth, pay.yearofbirth)
         )
     )                                                                                       AS patient_age,
@@ -27,7 +27,7 @@ SELECT
 	CAP_YEAR_OF_BIRTH
         (
             pay.age,
-            to_date(txn.order_date, 'mm/dd/yyyy'),
+            to_date(txn.order_date, 'MM/dd/yyyy'),
             COALESCE(txn.date_of_birth, pay.yearofbirth)
         )                                                                                   AS patient_year_of_birth,
     /* patient_zip3 */
@@ -43,7 +43,7 @@ SELECT
     /* date_service */
 	CAP_DATE
         (
-            to_date(txn.order_date, 'mm/dd/yyyy'),
+            to_date(txn.order_date, 'MM/dd/yyyy'),
             esdt.gen_ref_1_dt,
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                   AS date_service,
@@ -60,7 +60,7 @@ SELECT
                 txn.icd_10_codes
         END,
         '02',
-        to_date(txn.order_date, 'mm/dd/yyyy')
+        to_date(txn.order_date, 'MM/dd/yyyy')
     )
                                                                                             AS diagnosis_code, 
     CASE
@@ -83,7 +83,7 @@ SELECT
 	                            (
 	                                CAP_DATE
                                         (
-                                            to_date(txn.order_date, 'mm/dd/yyyy'),
+                                            to_date(txn.order_date, 'MM/dd/yyyy'),
                                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
                                             CAST('{VDR_FILE_DT}' AS DATE)
                                         ), 
@@ -92,8 +92,8 @@ SELECT
 	        THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE CONCAT
 	            (
-                    SUBSTR(to_date(txn.order_date, 'mm/dd/yyyy'), 1, 4), '-',
-                    SUBSTR(to_date(txn.order_date, 'mm/dd/yyyy'), 6, 2), '-01'
+                    SUBSTR(to_date(txn.order_date, 'MM/dd/yyyy'), 1, 4), '-',
+                    SUBSTR(to_date(txn.order_date, 'MM/dd/yyyy'), 6, 2), '-01'
                 )
 	END                                                                                 AS part_best_date
 FROM ambry_pvt_genes_icd10 txn
