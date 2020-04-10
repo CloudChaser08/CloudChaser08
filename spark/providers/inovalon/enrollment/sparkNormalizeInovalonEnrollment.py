@@ -32,7 +32,7 @@ if __name__ == "__main__":
         end_to_end_test,
         load_date_explode=False,
         output_to_transform_path=True,
-        unload_partition_count=20
+        unload_partition_count=40
     )
 
     driver.run()
