@@ -32,13 +32,12 @@ SELECT
         ELSE CAST(txn.sample_collection_date AS DATE)
     END                                                                                     AS date_specimen,
     CASE 
-        WHEN CAST(txn.report_creation_date AS DATE) < CAST('{}' AS DATE)
+        WHEN CAST(txn.report_creation_date AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(txn.report_creation_date AS DATE) > CAST('{VDR_FILE_DT}'           AS DATE) THEN NULL
         ELSE CAST(txn.report_creation_date AS DATE)
-    END                                                                                      AS date_report, 
+    END                                                                                      AS date_report,
     txn.result	                                                                             AS result,
     txn.target_name	                                                                         AS result_name,
-    CLEAN_UP_NPI_CODE(txn.physician_npi)                                                     AS ordering_npi,
     txn.payor_name                                                                           AS payer_name,
     txn.care_site_name                                                                       AS ordering_other_id,
     'CLIENTNAME_ORDERING_PRACTICE'                                                           AS ordering_other_qual,
