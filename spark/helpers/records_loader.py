@@ -71,7 +71,7 @@ def load_and_clean_all_v2(runner,
 
         if partitions > 0:
             df = df.repartition(partitions)
-            
+
         if conf.trimmify_nullify and cache_tables:
             df = (postprocessor
                   .compose(postprocessor.trimmify, postprocessor.nullify)(df)
@@ -80,6 +80,6 @@ def load_and_clean_all_v2(runner,
             df = (postprocessor
                   .compose(postprocessor.trimmify, postprocessor.nullify)(df))
         elif cache_tables:
-            df = df.cache_and_tracke(table)
+            df = df.cache_and_track(table)
 
         df.createOrReplaceTempView(table)
