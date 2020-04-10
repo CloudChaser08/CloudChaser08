@@ -178,10 +178,12 @@ class MarketplaceDriver(object):
 
         self.earliest_service_date = pp.get_gen_ref_date(self.spark,
                                                          self.vdr_feed_id,
-                                                         'EARLIEST_VALID_SERVICE_DATE')
+                                                         'EARLIEST_VALID_SERVICE_DATE',
+                                                         get_as_string=True)
         self.available_start_date = pp.get_gen_ref_date(self.spark,
                                                         self.vdr_feed_id,
-                                                        'HVM_AVAILABLE_HISTORY_START_DATE')
+                                                        'HVM_AVAILABLE_HISTORY_START_DATE',
+                                                        get_as_string=True)
 
     def transform(self):
         """
