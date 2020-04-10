@@ -1,4 +1,4 @@
-SELECT 
+SELECT /*+ BROADCAST(ref1) */
     /* hv_clin_obsn_id */
     CONCAT
         (
