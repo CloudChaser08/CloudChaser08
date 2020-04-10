@@ -10,6 +10,7 @@ import logging
 import time
 import datetime
 
+
 def _apply_to_all_columns(f, df):
     return df.select(*[f(c) for c in df.columns])
 
@@ -25,6 +26,7 @@ def nullify(df, null_vals=None, preprocess_func=lambda c: c):
         null_vals.add("NULL")
 
     do_preprocess = udf(preprocess_func)
+
     def convert_to_null(column_name):
         return when(upper(do_preprocess(col(column_name))).isin(null_vals), lit(None)) \
             .otherwise(col(column_name)).alias(column_name)
@@ -34,6 +36,7 @@ def nullify(df, null_vals=None, preprocess_func=lambda c: c):
 
 def trimmify(df):
     "Trim all string columns"
+
     def get_type(col_name):
         return str([f for f in df.schema.fields if f.name == col_name][0].dataType)
 
@@ -46,7 +49,8 @@ def trimmify(df):
     return _apply_to_all_columns(trim_col, df)
 
 
-def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min_cap=None, date_function=None):
+def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min_cap=None,
+                   date_function=None):
     """
     Apply date cap defined for this provider in the ref_gen_ref table
     """
@@ -59,15 +63,18 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
             WHERE hvm_vdr_feed_id='{}' AND gen_ref_domn_nm = '{}'
             """.format(vdr_feed_id, domain_name)).collect()
         except:
-            logging.error(("Error occurred while loading min_cap data for hvm_vdr_feed_id='{}' AND gen_ref_domn_nm = '{}', "
-                           "check to make sure ref_gen_ref was loaded before calling this function.").format(
-                               vdr_feed_id, domain_name
-                           ))
+            logging.error((
+                "Error occurred while loading min_cap data for hvm_vdr_feed_id='{}' AND "
+                "gen_ref_domn_nm = '{}', "
+                "check to make sure ref_gen_ref was loaded before calling this function.").format(
+                vdr_feed_id, domain_name
+            ))
             raise
 
         if not min_cap_results:
             logging.warning(
-                "No min cap found at for hvm_vdr_feed_id='{}' and gen_ref_domn_nm='{}', min capping was not applied.".format(
+                "No min cap found at for hvm_vdr_feed_id='{}' and gen_ref_domn_nm='{}', "
+                "min capping was not applied.".format(
                     vdr_feed_id, domain_name
                 )
             )
@@ -85,7 +92,8 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
 
     def out(df):
         return df.withColumn(
-            date_col, udf(gen_helpers.cap_date, DateType())(col(date_col), lit(min_cap), lit(max_cap))
+            date_col,
+            udf(gen_helpers.cap_date, DateType())(col(date_col), lit(min_cap), lit(max_cap))
         )
 
     return out
@@ -98,7 +106,8 @@ def default_clean_up_freetext_fn(x):
         return None
 
 
-def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_col_name='gen_ref_itm_nm', clean_up_freetext_fn=None, feed_id=None):
+def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None,
+                    whitelist_col_name='gen_ref_itm_nm', clean_up_freetext_fn=None, feed_id=None):
     """
     Apply whitelist defined for this provider in the ref_gen_ref table.
     """
@@ -130,9 +139,10 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None, whitelist_
         ).collect()]
     except:
         logging.error(("Error occurred while loading whitelist results for domain_name = '{}', "
-                       "check to make sure ref_gen_ref was loaded before calling this function.").format(
-                           domain_name
-                       ))
+                       "check to make sure ref_gen_ref was loaded before calling this "
+                       "function.").format(
+            domain_name
+        ))
         raise
 
     if not values:
@@ -159,8 +169,10 @@ def add_null_column(col_name):
     """
     Add a column of null values with the name col_name to a dataframe
     """
+
     def out(df):
         return df.withColumn(col_name, lit(None).cast(StringType()))
+
     return out
 
 
@@ -189,29 +201,30 @@ def add_universal_columns(feed_id, vendor_id, filename,
     model_version = alternate_column_names.get('model_version', 'model_version')
 
     def add(df):
-        return df.withColumn(record_id, monotonically_increasing_id())                   \
-                 .alias(record_id)                                                       \
-                 .withColumn(created, current_date())  \
-                 .alias(created)                                                         \
-                 .withColumn(data_set, coalesce(lit(filename), col(data_set)))           \
-                 .alias(data_set)                                                        \
-                 .withColumn(data_feed, lit(feed_id))                                    \
-                 .alias(data_feed)                                                       \
-                 .withColumn(data_vendor, lit(vendor_id))                                \
-                 .alias(data_vendor)                                                     \
-                 .withColumn(model_version,
-                             coalesce(lit(model_version_number), col(model_version)))    \
-                 .alias(model_version)
+        return df.withColumn(record_id, monotonically_increasing_id()) \
+            .alias(record_id) \
+            .withColumn(created, current_date()) \
+            .alias(created) \
+            .withColumn(data_set, coalesce(lit(filename), col(data_set))) \
+            .alias(data_set) \
+            .withColumn(data_feed, lit(feed_id)) \
+            .alias(data_feed) \
+            .withColumn(data_vendor, lit(vendor_id)) \
+            .alias(data_vendor) \
+            .withColumn(model_version,
+                        coalesce(lit(model_version_number), col(model_version))) \
+            .alias(model_version)
 
     return add
 
 
-def get_gen_ref_date(sqlc, feed_id, domain_name):
-    res = sqlc.sql(
-        "SELECT gen_ref_1_dt FROM ref_gen_ref WHERE hvm_vdr_feed_id = {} AND gen_ref_domn_nm = '{}'".format(
-            feed_id, domain_name
-        )
-    ).collect()
+def get_gen_ref_date(sqlc, feed_id, domain_name, get_as_string=False):
+    select_query = "SELECT gen_ref_1_dt "
+    if get_as_string:
+        select_query = "SELECT date_format(gen_ref_1_dt, 'yyyy-MM-dd') as gen_ref_1_dt "
+
+    query = select_query + "FROM ref_gen_ref WHERE hvm_vdr_feed_id = {} AND gen_ref_domn_nm = '{}'"
+    res = sqlc.sql(query.format(feed_id, domain_name)).collect()
 
     if res:
         return res[0].gen_ref_1_dt
@@ -264,17 +277,22 @@ def deobfuscate_hvid(project_name, hvid_col='hvid', nullify_non_integers=False):
             hvid_col,
             udf(gen_helpers.slightly_deobfuscate_hvid)(column, lit(project_name))
         )
+
     return out
 
 
-def add_input_filename(column_name, include_parent_dirs=False, persisted_df_id='df_with_input_filename'):
+def add_input_filename(column_name, include_parent_dirs=False,
+                       persisted_df_id='df_with_input_filename'):
     "Add the input file name to a dataframe, removing the split suffix"
+
     def out(df):
         return df.withColumn(
             column_name, input_file_name()
         ).cache_and_track(persisted_df_id).withColumn(
-            column_name, udf(gen_helpers.remove_split_suffix)(col(column_name), lit(include_parent_dirs))
+            column_name,
+            udf(gen_helpers.remove_split_suffix)(col(column_name), lit(include_parent_dirs))
         )
+
     return out
 
 
