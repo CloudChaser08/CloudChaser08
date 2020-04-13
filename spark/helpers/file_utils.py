@@ -30,7 +30,7 @@ def rename_file_local(old, new):
 
 def clean_up_output_hdfs(output_path):
     try:
-        subprocess.check_call(['hadoop', 'fs', '-rm', '-R', output_path])
+        subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
     except Exception as e:
         logger.log(
             "Unable to remove directory: {}\nError encountered: {}".format(output_path, str(e))
@@ -62,3 +62,11 @@ def util_functions_factory(type=FileSystemType.LOCAL):
     }
 
     return util_funcs[type]
+
+
+def create_manifest_file(output_path, file_name):
+    local_path = '/tmp/'
+    output_file_name = local_path + file_name
+    with open(output_file_name, 'w') as output_file:
+        subprocess.check_call(['aws', 's3', 'ls', output_path], stdout=output_file)
+    subprocess.check_call(['aws', 's3', 'cp', output_file_name, output_path])

@@ -154,9 +154,11 @@ class MarketplaceDriver(object):
         logger.log('Loading the source data')
         logger.log(' -loading: transactions')
         records_loader.load_and_clean_all_v2(self.runner, self.input_path, self.source_table_schema,
-                                             load_file_name=True, cache_tables=cache_tables)
+                                             load_file_name=True, cache_tables=cache_tables,
+                                             spark_context=self.spark)
         logger.log(' -loading: payloads')
-        payload_loader.load(self.runner, self.matching_path, load_file_name=True, extra_cols=extra_payload_cols)
+        payload_loader.load(self.runner, self.matching_path, load_file_name=True,
+                            extra_cols=extra_payload_cols)
         if not self.test:
             logger.log(' -loading: ref_gen_ref')
             external_table_loader.load_ref_gen_ref(self.runner.sqlContext)
@@ -207,9 +209,9 @@ class MarketplaceDriver(object):
             schema_obj = self.output_table_names_to_schemas[table]
             output = schema_enforcer.apply_schema(data_frame,
                                                   schema_obj.schema_structure,
-                                                  columns_to_keep=[schema_obj.provider_partition_column,
-                                                                   schema_obj.date_partition_column])
-
+                                                  columns_to_keep=[
+                                                      schema_obj.provider_partition_column,
+                                                      schema_obj.date_partition_column])
             _columns = data_frame.columns
             _columns.remove(schema_obj.provider_partition_column)
             _columns.remove(schema_obj.date_partition_column)
@@ -227,6 +229,7 @@ class MarketplaceDriver(object):
                 partition_by_part_file_date=self.output_to_transform_path,
                 unload_partition_count=self.unload_partition_count
             )
+            data_frame.unpersist()
             output.unpersist()
 
     def log_run(self):
@@ -249,15 +252,18 @@ class MarketplaceDriver(object):
         logger.log('Stopping the spark context')
         self.spark.stop()
 
-    def copy_to_output_path(self):
+    def copy_to_output_path(self, output_location=None):
         """
         Copy data from local file system to output destination
         """
-        logger.log('Copying data to the output location: {}'.format(self.output_path))
+        if not output_location:
+            output_location = self.output_path
+
+        logger.log('Copying data to the output location: {}'.format(output_location))
 
         if not self.test and not self.end_to_end_test:
-            hadoop_time = normalized_records_unloader.timed_distcp(self.output_path)
+            hadoop_time = normalized_records_unloader.timed_distcp(output_location)
             RunRecorder().record_run_details(additional_time=hadoop_time)
 
         else:
-            normalized_records_unloader.distcp(self.output_path)
+            normalized_records_unloader.distcp(output_location)
