@@ -36,9 +36,9 @@ if __name__ == "__main__":
     subprocess.check_call(['hadoop', 'fs', '-mkdir', tmp_location])
     ref_claims_location = 's3://salusv/reference/inovalon/medicalclaims/claims2/'
 
-    # non-historic runs on inovalon are stable if run in 3 chunks. This routine chunks the data by
+    # non-historic runs on inovalon are stable if run in chunks. This routine chunks the data by
     # looking at the last 2 characters of claimuid in clams and claimcode
-    chunks = ['0', '33', '66']
+    chunks = ['00', '20', '40', '60', '80']
     for chunk in chunks:
 
         # Create and run driver
@@ -59,9 +59,7 @@ if __name__ == "__main__":
 
         # create a range to compare the last 2 characters of claim and claimcode against
         # example: 0-32, 33-65, 66-99
-        top = int(chunk) + 33
-        if chunk == chunks[-1]:
-            top += 1
+        top = int(chunk) + 20
         rng = [str(i).zfill(2) for i in range(int(chunk), top)]
         logger.log('running: ' + str(rng))
 
@@ -130,10 +128,7 @@ if __name__ == "__main__":
         driver.stop_spark()
         driver.copy_to_output_path()
 
-        try:
-            # Copy claims to reference location
-            logger.log("Writing claims to the reference location for future duplication checking")
-            normalized_records_unloader.distcp(ref_claims_location, src=tmp_location)
-        except Exception as e:
-            logger.log('Failed to log the run.')
-            logger.log(e)
+        # Copy claims to reference location
+        logger.log("Writing claims to the reference location for future duplication checking")
+        normalized_records_unloader.distcp(ref_claims_location, src=tmp_location)
+

@@ -1,5 +1,4 @@
-SELECT /*+ BROADCAST (psp), BROADCAST(prv)
- */
+SELECT
     rxc.rxclaimuid                                                                          AS claim_id,    
     COALESCE(pay.hvid, CONCAT('543_', mbr.memberuid))                                       AS hvid,
     CURRENT_DATE()                                                                          AS created,
