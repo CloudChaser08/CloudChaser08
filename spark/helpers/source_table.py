@@ -7,11 +7,11 @@ class SourceTable:
     """
     def __init__(self, file_type, separator=None, columns=None, schema=None, input_path=None,
                  trimmify_nullify=True):
-        if columns is None and schema is None:
+        if file_type != 'parquet' and columns is None and schema is None:
             raise Exception('Must specify one of columns or schema')
         if columns is not None and schema is not None:
             raise Exception('Both columns and schema are declared')
-        if file_type not in ['csv', 'json']:
+        if file_type not in ['csv', 'json', 'parquet']:
             raise Exception('Unsupported file type: {}'.format(file_type))
         if file_type == 'csv' and separator is None:
             raise Exception('Must specify a separator for a csv file')

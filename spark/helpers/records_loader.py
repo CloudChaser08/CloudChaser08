@@ -4,15 +4,27 @@ import pyspark.sql.functions as F
 import logging
 
 def load(runner, location, columns=None, file_type=None, delimiter=',', header=False,
-         schema=None, source_table_conf=None, load_file_name=False, file_name_col='input_file_name'):
+         schema=None, source_table_conf=None, load_file_name=False, file_name_col='input_file_name',
+         spark_context=None):
     """
     Load transaction data for a provider
     """
+    if source_table_conf is not None:
+        file_type = source_table_conf.file_type
+
+    if file_type == 'parquet':
+        df = spark_context.read.parquet(location)
+        if load_file_name:
+            df = df.withColumn(file_name_col, F.input_file_name())
+        cols = [
+            df[c.name].cast('string').alias(c.name) if c.dataType.typeName() == 'binary' else df[
+                c.name] for c in df.schema]
+        df = df.select(cols)
+        return df
 
     if source_table_conf is not None:
         schema = source_table_conf.schema
         delimiter = source_table_conf.separator
-        file_type = source_table_conf.file_type
 
     if schema is None:
         schema = StructType([StructField(c, StringType(), True) for c in columns])
@@ -62,12 +74,13 @@ def load_and_clean_all_v2(runner,
                           partitions=0,
                           load_file_name=False,
                           file_name_col='input_file_name',
-                          cache_tables=True):
+                          cache_tables=True,
+                          spark_context=None):
     for table in transactions_module.TABLE_CONF:
         loc = location_prefix if len(transactions_module.TABLE_CONF) == 1 else location_prefix + table
         conf = transactions_module.TABLE_CONF[table]
         df = load(runner, loc, source_table_conf=conf, load_file_name=load_file_name,
-                  file_name_col=file_name_col)
+                  file_name_col=file_name_col, spark_context=spark_context)
 
         if partitions > 0:
             df = df.repartition(partitions)
