@@ -119,21 +119,24 @@ class RunRecorder(object):
         # to s3 via s3-dist-cp. It might be worth looking into alternative
         # methods as the copying to hdfs and then to s3 takes a bit of time.
         hdfs_path = "hdfs:///"
+        try:
+            subprocess.check_call(['hdfs',
+                                   'dfs',
+                                   '-copyFromLocal',
+                                   local_output_path,
+                                   hdfs_path]
+                                  )
 
-        subprocess.check_call(['hdfs',
-                               'dfs',
-                               '-copyFromLocal',
-                               local_output_path,
-                               hdfs_path]
-                              )
-
-        subprocess.check_call(['s3-dist-cp',
-                               '--s3ServerSideEncryption',
-                               '--src',
-                               '{hdfs_prefix}{file_name}'.format(
-                                   hdfs_prefix=hdfs_path,
-                                   file_name=file_name
-                               ),
-                               '--dest',
-                               S3_OUTPUT_PATH + file_name]
-                              )
+            subprocess.check_call(['s3-dist-cp',
+                                   '--s3ServerSideEncryption',
+                                   '--src',
+                                   '{hdfs_prefix}{file_name}'.format(
+                                       hdfs_prefix=hdfs_path,
+                                       file_name=file_name
+                                   ),
+                                   '--dest',
+                                   S3_OUTPUT_PATH + file_name]
+                                  )
+        except subprocess.CalledProcessError as e:
+            print('Failed to log the run.')
+            print(e)
