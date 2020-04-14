@@ -39,6 +39,8 @@ SELECT
     txn.result	                                                                             AS result,
     txn.target_name	                                                                         AS result_name,
     txn.payor_name                                                                           AS payer_name,
+        ---------- care site zip added on 4/13/2020
+    txn.care_site_zip                                                                        AS lab_zip,
     txn.care_site_name                                                                       AS ordering_other_id,
     'CLIENTNAME_ORDERING_PRACTICE'                                                           AS ordering_other_qual,
     ---------- CASE added to exclude NPI Number with 000000000 2020-04-08 Jugal S
