@@ -2,6 +2,7 @@ import argparse
 import spark.providers.quest_rinse.labtests.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.lab_common_model import schemas as labtests_schemas
+import spark.helpers.hdfs_tools as hdfs_utils
 import spark.helpers.file_utils as file_utils
 import re
 import spark.helpers.constants as constants
@@ -9,6 +10,7 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.common.utility.logger as logger
 from spark.common.utility.run_recorder import RunRecorder
+from pyspark.sql.functions import col
 
 if __name__ == "__main__":
 
@@ -50,27 +52,32 @@ if __name__ == "__main__":
     driver.load()
     driver.transform()
 
-    logger.log('Saving data to the local file system')
+    logger.log('Convert all fields to string per vendor request')
+    output_table = driver.spark.table("labtest_quest_rinse_census_final")
+    output_table = output_table.select([col(c).cast("string") for c in output_table.columns])
+
     # This data goes right to the provider. They want the data in parquet without
     # column partitions.
+    logger.log('Saving data to the local file system')
     delivery_date = date_input.replace('-', '')
-    delivery_path='s3://salusv/tmp/questrinse/{}/'.format(delivery_date)
-    hdfs_output_path = constants.hdfs_staging_dir
-    df = driver.spark.table('labtest_quest_rinse_census_final')
+    delivery_path='s3://salusv/deliverable/questrinse/{}/'.format(delivery_date)
+    hdfs_output_path = 'hdfs:///staging/'
     file_utils.clean_up_output_hdfs(hdfs_output_path)
-    df.repartition(100).write.parquet(hdfs_output_path, compression='gzip', mode='append')
+    output_table.repartition(100).write.parquet(hdfs_output_path, compression='gzip', mode='append')
 
     driver.log_run()
     driver.stop_spark()
 
     logger.log("Renaming files")
     output_file_name_template = '{}_response_{{}}'.format(delivery_date)
-    for filename in [f for f in file_utils.list_dir_hdfs(hdfs_output_path) if f[0] != '.' and f != "_SUCCESS"]:
+
+    for filename in [f for f in hdfs_utils.get_files_from_hdfs_path(hdfs_output_path)
+                     if f[0] != '.' and f != "_SUCCESS"]:
         part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
         new_name = output_file_name_template.format(str(part_number).zfill(5)) + '.gz.parquet'
         file_utils.rename_file_hdfs(hdfs_output_path + filename, hdfs_output_path + new_name)
 
-    driver.copy_to_output_path(delivery_path)
+    driver.copy_to_output_path(output_location=delivery_path)
 
     manifest_file_name = '{delivery_date}_manifest.tsv'.format(delivery_date=delivery_date)
     file_utils.create_manifest_file(delivery_path, manifest_file_name)
