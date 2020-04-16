@@ -24,6 +24,7 @@ def list_parquet_files(src):
 
     return result.decode().strip().split("\n")
 
+
 def get_hdfs_file_count(src):
     """Returns the count of all files within a directory on HDFS.
     In order to determine the file count, this function will recursively list out
@@ -44,3 +45,14 @@ def get_hdfs_file_count(src):
             .split('\n')
 
     return int(file_count[0])
+
+
+def get_files_from_hdfs_path(path):
+    files = [
+        f.split(' ')[-1].strip().split('/')[-1]
+        for f in
+        str(subprocess.check_output(['hdfs', 'dfs', '-ls', path])).split('\\n')
+        if f.split(' ')[-1].startswith('hdfs')
+    ]
+
+    return [f.split(' ')[-1].strip().split('/')[-1] for f in files]
