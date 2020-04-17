@@ -17,6 +17,7 @@ TABLE_CONF = {
             'patient_city',
             'patient_state',
             'care_site_name',
+            'care_site_zip',
             'physician_name',
             'physician_npi',
             'test_type_name',
