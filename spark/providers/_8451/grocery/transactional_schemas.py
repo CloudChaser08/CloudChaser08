@@ -29,7 +29,8 @@ TABLE_CONF = {
             "agg_total_visits",
             "agg_total_spend",
             "period_start_dt",
-            "period_end_dt"
+            "period_end_dt",
+            "hvjoinkey"
         ]
     )
 }
