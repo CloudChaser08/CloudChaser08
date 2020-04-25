@@ -1,7 +1,7 @@
 import pyspark.sql.functions as F
 
 def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table, filter_by_part_processdate=False):
-    claims = runner.sqlContext.table(claims_table).where("part_provider != 'xifin'")
+    claims = runner.sqlContext.table(claims_table).where("part_provider != 'xifin' and part_provider != 'inovalon'")
     ref_vdr_feed = runner.sqlContext.table('dw.ref_vdr_feed')
     ref_vdr_feed = ref_vdr_feed[ref_vdr_feed.hvm_vdr_feed_id.isin(*SUPPLIER_FEED_IDS)]
     
