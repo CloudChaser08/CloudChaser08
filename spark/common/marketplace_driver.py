@@ -147,7 +147,7 @@ class MarketplaceDriver(object):
         self.stop_spark()
         self.copy_to_output_path()
 
-    def load(self, extra_payload_cols=None, cache_tables=True):
+    def load(self, extra_payload_cols=None, cache_tables=True, payloads=True):
         """
         Load the input data into tables
         """
@@ -155,10 +155,11 @@ class MarketplaceDriver(object):
         logger.log(' -loading: transactions')
         records_loader.load_and_clean_all_v2(self.runner, self.input_path, self.source_table_schema,
                                              load_file_name=True, cache_tables=cache_tables,
-                                             spark_context=self.spark)
-        logger.log(' -loading: payloads')
-        payload_loader.load(self.runner, self.matching_path, load_file_name=True,
-                            extra_cols=extra_payload_cols)
+                                             spark_context=self.spark, single_source=single_source)
+        if payloads:
+            logger.log(' -loading: payloads')
+            payload_loader.load(self.runner, self.matching_path, load_file_name=True,
+                                extra_cols=extra_payload_cols)
         if not self.test:
             logger.log(' -loading: ref_gen_ref')
             external_table_loader.load_ref_gen_ref(self.runner.sqlContext)
