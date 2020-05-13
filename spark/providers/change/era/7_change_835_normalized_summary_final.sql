@@ -44,7 +44,7 @@ SELECT
     CASE
 	    WHEN 
 	    (
-	         clm_stmt_perd_start_dt < CAST(${AVAILABLE_HISTORY_START_DATE} AS DATE)
+	         clm_stmt_perd_start_dt < CAST('{AVAILABLE_START_DATE}' AS DATE)
 		OR   clm_stmt_perd_start_dt > CAST('{VDR_FILE_DT}'                  AS DATE) 
 		) THEN '0_PREDATES_HVM_HISTORY'
 	ELSE

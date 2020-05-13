@@ -22,13 +22,13 @@ SELECT
               OR TO_DATE(clm.statement_from_date, 'yyyyMMdd') IS NULL
             THEN 
                 CASE
-                  WHEN TO_DATE(min_max_dt.min_service_from_date, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                  WHEN TO_DATE(min_max_dt.min_service_from_date, 'yyyyMMdd') < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                     OR TO_DATE(min_max_dt.min_service_from_date, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                   ELSE TO_DATE(min_max_dt.min_service_from_date, 'yyyyMMdd')
                 END
         ELSE
                 CASE
-                  WHEN TO_DATE(clm.statement_from_date, 'yyyyMMdd')  < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                  WHEN TO_DATE(clm.statement_from_date, 'yyyyMMdd')  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                     OR TO_DATE(clm.statement_from_date, 'yyyyMMdd')  > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                   ELSE TO_DATE(clm.statement_from_date, 'yyyyMMdd')  
                 END
@@ -47,13 +47,13 @@ SELECT
                  )
             THEN
                 CASE
-                  WHEN TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                  WHEN TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                     OR TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                 ELSE   TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd')
                 END
         ELSE
                 CASE
-                  WHEN TO_DATE(clm.statement_to_date, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                  WHEN TO_DATE(clm.statement_to_date, 'yyyyMMdd') < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                     OR TO_DATE(clm.statement_to_date, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                 ELSE   TO_DATE(clm.statement_to_date, 'yyyyMMdd')
                 END
@@ -62,7 +62,7 @@ SELECT
         
     /* payr_clm_recpt_dt - clm.claim_received_by_payer_date */
     CASE
-      WHEN TO_DATE(clm.claim_received_by_payer_date, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+      WHEN TO_DATE(clm.claim_received_by_payer_date, 'yyyyMMdd') < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
         OR TO_DATE(clm.claim_received_by_payer_date, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
       ELSE TO_DATE(clm.claim_received_by_payer_date, 'yyyyMMdd')
     END                                                                                  AS payr_clm_recpt_dt,
@@ -253,13 +253,13 @@ clm."
                                                      
                                                 THEN 
                                                     CASE
-                                                      WHEN TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd')  < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                                                      WHEN TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd')  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                                                         OR TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd')  > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                                                     ELSE   TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') 
                                                     END
                                             ELSE
                                                 CASE
-                                                  WHEN TO_DATE(clm.statement_to_date, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                                                  WHEN TO_DATE(clm.statement_to_date, 'yyyyMMdd') < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                                                     OR TO_DATE(clm.statement_to_date, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                                                 ELSE   TO_DATE(clm.statement_to_date, 'yyyyMMdd')
                                                 END
@@ -280,13 +280,13 @@ clm."
                                                      
                                                 THEN 
                                                     CASE
-                                                      WHEN TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                                                      WHEN TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                                                         OR TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                                                     ELSE   TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd')
                                                     END
                                             ELSE
                                                 CASE
-                                                  WHEN TO_DATE(clm.statement_to_date, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                                                  WHEN TO_DATE(clm.statement_to_date, 'yyyyMMdd') < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                                                     OR TO_DATE(clm.statement_to_date, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                                                 ELSE   TO_DATE(clm.statement_to_date, 'yyyyMMdd')
                                                 END
@@ -305,13 +305,13 @@ clm."
                                                      
                                                 THEN 
                                                     CASE
-                                                      WHEN TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                                                      WHEN TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                                                         OR TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                                                     ELSE   TO_DATE(min_max_dt.max_service_to_date, 'yyyyMMdd')
                                                     END
                                             ELSE
                                                 CASE
-                                                  WHEN TO_DATE(clm.statement_to_date, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+                                                  WHEN TO_DATE(clm.statement_to_date, 'yyyyMMdd') < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
                                                     OR TO_DATE(clm.statement_to_date, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
                                                 ELSE   TO_DATE(clm.statement_to_date, 'yyyyMMdd')
                                                 END
@@ -321,13 +321,13 @@ clm."
                                 ),6, 2), '-01'
                 )
      END                                                                                        AS part_mth
-FROM change_835_claims clm
+FROM change_835_claim_sample_2 clm
 /* Get only the first row from the service line */
 LEFT OUTER JOIN
     (
         SELECT * FROM
             (SELECT *, row_number()  OVER (PARTITION BY claim_payment_number ORDER BY CAST(line_number AS FLOAT)  ) as rownum 
-                FROM change_835_lines
+                FROM change_835_serviceline_sample
             ) WHERE rownum = 1
     ) line ON clm.claim_payment_number = line.claim_payment_number
 LEFT OUTER JOIN
@@ -337,7 +337,7 @@ LEFT OUTER JOIN
         line_1.claim_payment_number,
         MIN(line_1.service_from_date)                                   AS min_service_from_date,
         MAX(COALESCE(line_1.service_to_date, line_1.service_from_date)) AS max_service_to_date
-    FROM change_835_lines line_1
+    FROM change_835_serviceline_sample line_1
     GROUP BY 1
 ) min_max_dt                                 ON clm.claim_payment_number = min_max_dt.claim_payment_number
 CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4)) AS clmadjgrp) x 

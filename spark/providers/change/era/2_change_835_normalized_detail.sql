@@ -18,13 +18,13 @@ SELECT
     ELSE NULL END                                                                           AS vdr_medcl_clm_pymt_dtl_id_qual,     
     /* svc_ln_start_dt  */
     CASE 
-        WHEN TO_DATE(COALESCE(line.service_from_date, clm.statement_from_date), 'yyyyMMdd')  < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+        WHEN TO_DATE(COALESCE(line.service_from_date, clm.statement_from_date), 'yyyyMMdd')  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR TO_DATE(COALESCE(line.service_from_date, clm.statement_from_date), 'yyyyMMdd')  > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
         ELSE TO_DATE(COALESCE(line.service_from_date, clm.statement_from_date), 'yyyyMMdd') 
     END                                                                                      AS svc_ln_start_dt,
     /* svc_ln_end_dt  */
     CASE 
-        WHEN TO_DATE(COALESCE(line.service_to_date, clm.statement_to_date), 'yyyyMMdd')  < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
+        WHEN TO_DATE(COALESCE(line.service_to_date, clm.statement_to_date), 'yyyyMMdd')  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR TO_DATE(COALESCE(line.service_to_date, clm.statement_to_date), 'yyyyMMdd')  > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
         ------------------------------------------------------------------------------------------------------------------------------------------
         --------- If the service line end date is NULL and claim_line end date < service_from_date (service line START date) then do not populate
@@ -167,7 +167,7 @@ SELECT
 	           CAP_DATE
                 (
                   TO_DATE(COALESCE(line.service_from_date, clm.statement_from_date), 'yyyyMMdd')              ,
-                  CAST(COALESCE(${AVAILABLE_HISTORY_START_DATE}, ${EARLIEST_VALID_SERVICE_DATE})      AS DATE), 
+                  CAST(COALESCE('{AVAILABLE_START_DATE}', '{EARLIEST_SERVICE_DATE}')      AS DATE), 
                   CAST('{VDR_FILE_DT}'                                                                 AS DATE)
                 ), 
                 ''
@@ -180,8 +180,8 @@ SELECT
                     SUBSTR(COALESCE(line.service_from_date, clm.statement_from_date), 5, 2), '-01'
                 )
 	END                                                                                     AS part_mth
- FROM change_835_lines line
- LEFT OUTER JOIN change_835_claims  clm     ON clm.claim_payment_number = line.claim_payment_number  
+ FROM change_835_serviceline_sample line
+ LEFT OUTER JOIN change_835_claim_sample_2  clm     ON clm.claim_payment_number = line.claim_payment_number  
 
  CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4)) AS svcadjgrp) x
 WHERE

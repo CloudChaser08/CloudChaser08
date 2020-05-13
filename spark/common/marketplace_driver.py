@@ -22,7 +22,7 @@ PRODUCTION = 'production'
 TRANSFORM = 'transform'
 DRIVER_MODULE_NAME = 'driver'
 E2E_OUTPUT_PATH = 's3://salusv/testing/dewey/airflow/e2e/'
-RECORDS_PATH = 's3://salusv/incoming/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
+RECORDS_PATH = 's3://salusv/incoming/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/2015*'
 MATCHING_PATH = 's3://salusv/matching/payload/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
@@ -43,7 +43,8 @@ MODE_OUTPUT_PATH = {
     TEST: './test/marketplace/resources/output/',
     END_TO_END_TEST: E2E_OUTPUT_PATH,
     PRODUCTION: 's3://salusv/warehouse/parquet/',
-    TRANSFORM: 's3://salusv/warehouse/transformed/'
+    #TRANSFORM: 's3://salusv/warehouse/transformed/'
+    TRANSFORM: 's3://salusv/tmp/change/835/'
 }
 
 
@@ -155,7 +156,7 @@ class MarketplaceDriver(object):
         logger.log(' -loading: transactions')
         records_loader.load_and_clean_all_v2(self.runner, self.input_path, self.source_table_schema,
                                              load_file_name=True, cache_tables=cache_tables,
-                                             spark_context=self.spark, single_source=single_source)
+                                             spark_context=self.spark)
         if payloads:
             logger.log(' -loading: payloads')
             payload_loader.load(self.runner, self.matching_path, load_file_name=True,
@@ -206,6 +207,7 @@ class MarketplaceDriver(object):
         """
         logger.log('Saving data to the local file system')
         for table in self.output_table_names_to_schemas.keys():
+            #if table != 'change_835_normalized_detail_final':
             data_frame = self.spark.table(table)
             schema_obj = self.output_table_names_to_schemas[table]
             output = schema_enforcer.apply_schema(data_frame,

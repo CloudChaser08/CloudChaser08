@@ -43,7 +43,7 @@ SELECT
     CASE
 	    WHEN 
 	    (
-	    svc_ln_end_dt < CAST(${AVAILABLE_HISTORY_START_DATE} AS DATE)
+	    svc_ln_end_dt < CAST('{AVAILABLE_START_DATE}' AS DATE)
 		OR   svc_ln_end_dt > CAST('{VDR_FILE_DT}'              AS DATE) 
 		) THEN '0_PREDATES_HVM_HISTORY'
 	ELSE
