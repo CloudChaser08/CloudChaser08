@@ -28,7 +28,7 @@ FEED_ID = '26'
 VENDOR_ID = '35'
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/allscripts/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2018-06-06/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/transformed/medicalclaims/2018-06-06/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
