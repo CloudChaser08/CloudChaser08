@@ -36,7 +36,7 @@ SELECT
     part_provider,
     part_best_date
  
-FROM previous_run_from_transformed
+FROM _temp_pharmacyclaims_nb
     WHERE part_provider = 'inovalon'
     ----- Look current month and 3 month back
     AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2) 

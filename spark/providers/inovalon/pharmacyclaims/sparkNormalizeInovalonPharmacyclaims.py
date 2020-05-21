@@ -1,17 +1,16 @@
 import argparse
 import spark.providers.inovalon.pharmacyclaims.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.pharmacyclaims_common_model import schemas as medicalclaims_schemas
-from pyspark.sql.functions import lit
-from pyspark.sql.types import StructField, StringType, StructType
-import spark.helpers.reject_reversal as rr
+from spark.common.pharmacyclaims_common_model import schemas as pharmacyclaims_schema
+import spark.common.utility.logger as logger
+
 
 if __name__ == "__main__":
     OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/transformed/pharmacyclaims/2018-11-26/'
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'inovalon'
-    versioned_schema = medicalclaims_schemas['schema_v11']
+    versioned_schema = pharmacyclaims_schema['schema_v11']
     output_table_names_to_schemas = {
         'inovalon_05_norm_final': versioned_schema
     }
@@ -36,18 +35,11 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         load_date_explode=False,
-        output_to_transform_path=True,
         unload_partition_count=40
     )
     driver.init_spark_context()
-
-    schema = versioned_schema
-    rr.load_previous_run_from_transformed(driver.spark,
-                                          date_input,
-                                          OUTPUT_PATH_PRODUCTION,
-                                          schema.provider_partition_column,
-                                          driver.provider_name,
-                                          schema.date_partition_column,
-                                          schema.schema_structure)
+    logger.log('Loading external tables')
+    output_path = driver.output_path + 'pharmacyclaims/2018-11-26/part_provider=inovalon/'
+    driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
     driver.run()

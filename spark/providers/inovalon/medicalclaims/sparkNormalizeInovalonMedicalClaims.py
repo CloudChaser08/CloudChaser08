@@ -50,7 +50,6 @@ if __name__ == "__main__":
             date_input,
             end_to_end_test,
             load_date_explode=False,
-            output_to_transform_path=True,
             unload_partition_count=200,
             vdr_feed_id=176,
             use_ref_gen_values=True
