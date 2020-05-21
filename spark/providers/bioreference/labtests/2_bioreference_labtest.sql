@@ -36,21 +36,21 @@ SELECT
 	CAP_DATE
         (
             CAST(EXTRACT_DATE(SUBSTR(txn.userdatetime,1,8), '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
         )                                                                                   AS date_service,
     /* date_specimen */
 	CAP_DATE
         (
             CAST(EXTRACT_DATE(SUBSTR(txn.drawdate_drawtime,1,8), '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
         )                                                                                   AS date_specimen,
      /* date_report */
 	CAP_DATE
         (
             CAST(EXTRACT_DATE(SUBSTR(txn.reportfinal,1,8), '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
         )                                                                                   AS date_report,
     SUBSTR(txn.reportfinal,9,5)                                                             AS time_report,
@@ -144,7 +144,7 @@ SELECT
 	                                CAP_DATE
                                         (
                                             CAST(EXTRACT_DATE(SUBSTR(txn.userdatetime,1,8), '%Y%m%d') AS DATE),
-                                            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
+                                            COALESCE(CAST('{AVAILABLE_START_DATE}' AS DATE), CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
                                             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
                                         ),
                                     ''
@@ -158,19 +158,3 @@ SELECT
 	END                                                                                 AS part_best_date
 FROM bioreference_pvt_diag_cd_cpt txn
 LEFT OUTER JOIN matching_payload pay ON txn.hvJoinKey = pay.hvJoinKey
- LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 153
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-    ) esdt
-   ON 1 = 1
- LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 153
-          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-    ) ahdt
-   ON 1 = 1
