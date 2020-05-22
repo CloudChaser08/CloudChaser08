@@ -50,6 +50,4 @@ if __name__ == "__main__":
         driver.sql_context, 'dw', 'ref_geo_state', 'ref_geo_state'
     )
 
-    driver.spark.table('ref_geo_state').createOrReplaceTempView('ref_geo_stateref_geo_state')
-
     driver.run()

@@ -39,7 +39,5 @@ if __name__ == "__main__":
     external_table_loader.load_analytics_db_table(
         driver.sql_context, 'dw', 'ref_geo_state', 'ref_geo_state'
     )
-    driver.spark.table('ref_geo_state').cache().createOrReplaceTempView('ref_geo_stateref_geo_state')
-    driver.spark.table('ref_geo_state').count()
 
     driver.run()
