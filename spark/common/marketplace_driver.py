@@ -127,12 +127,12 @@ class MarketplaceDriver(object):
 
         self.output_path = MODE_OUTPUT_PATH[mode]
 
-    def init_spark_context(self):
+    def init_spark_context(self, conf_parameters=None):
         if not self.spark:
             context_list = [str(self.date_input), self.provider_name, self._data_type_str, 'HVM']
             context_name = ' '.join(context_list)
             logger.log('Starting {context_name}'.format(context_name=context_name))
-            self.spark, self.sql_context = init(context_name, self.test)
+            self.spark, self.sql_context = init(context_name, self.test, conf_parameters)
             self.runner = Runner(self.sql_context)
 
     def run(self):
