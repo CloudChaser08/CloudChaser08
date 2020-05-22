@@ -1,3 +1,4 @@
+from pyspark import SparkConf
 from pyspark.sql import SQLContext, SparkSession
 from pyspark.sql.types import ArrayType, StringType, DateType, MapType, IntegerType
 from spark.helpers.udf.post_normalization_cleanup import *
@@ -7,23 +8,43 @@ import spark.helpers.file_utils as file_utils
 from spark.common.utility import logger
 
 
-def init(provider, local=False):
-    spark = SparkSession.builder                                              \
-                    .master("local[*]" if local else "yarn")                  \
-                    .appName(provider + " Normalization")                     \
-                    .config('spark.sql.catalogImplementation', 'hive')        \
-                    .config('spark.sql.crossJoin.enabled', 'true')            \
-                    .config('spark.driver.extraClassPath', '{}:{}'.format(
-                        file_utils.get_abs_path(
-                            __file__,
-                            'common/json-serde-1.3.7-jar-with-dependencies.jar'
-                        ),
-                        file_utils.get_abs_path(
-                            __file__,
-                            'common/HiveJDBC41.jar'
-                        )
-                    ))                                                        \
-                    .getOrCreate()
+JSON_SERDE_JAR_PATH = \
+        file_utils.get_abs_path(
+            __file__,
+            'common/json-serde-1.3.7-jar-with-dependencies.jar'
+        )
+
+HIVE_JDBC_JAR_PATH = \
+        file_utils.get_abs_path(
+            __file__,
+            'common/HiveJDBC41.jar'
+        )
+
+DEFAULT_SPARK_PARAMETERS = {
+    'spark.sql.catalogImplementation': 'hive',
+    'spark.sql.crossJoin.enabled': 'true',
+    'spark.driver.extraClassPath': "{}:{}".format(JSON_SERDE_JAR_PATH, HIVE_JDBC_JAR_PATH)
+}
+
+
+def init(provider, local=False, conf_parameters=None):
+    if conf_parameters:
+        # This is a bad way to combine the dicts as it makes DEFAULT_SPARK_PARAMETERS
+        # mutable. We should be using the ** syntax instead, but that's not
+        # supported by the Python version the cluster uses.
+        DEFAULT_SPARK_PARAMETERS.update(conf_parameters)
+
+    parameters = DEFAULT_SPARK_PARAMETERS
+
+    formatted_parameters = [(k, v) for k, v in parameters.items()]
+
+    spark_conf = \
+            SparkConf() \
+            .setMaster("local[*]" if local else "yarn") \
+            .setAppName(provider + " Normalization") \
+            .setAll(formatted_parameters)
+
+    spark = SparkSession.builder.config(conf=spark_conf).getOrCreate()
 
     sqlContext = SQLContext(spark.sparkContext)
 

@@ -31,15 +31,23 @@ if __name__ == "__main__":
         source_table_schemas,
         output_table_names_to_schemas,
         date_input,
-        end_to_end_test
+        end_to_end_test,
+        use_ref_gen_values=True,
+        vdr_feed_id=153
     )
-    driver.init_spark_context()
+
+    conf_parameters = {
+        'spark.default.parallelism': 160,
+        'spark.sql.shuffle.partitions': 160,
+        'spark.sql.autoBroadcastJoinThreshold': 10485760,
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC'
+    }
+
+    driver.init_spark_context(conf_parameters=conf_parameters)
 
     logger.log('Loading external table: ref_geo_state')
     external_table_loader.load_analytics_db_table(
         driver.sql_context, 'dw', 'ref_geo_state', 'ref_geo_state'
     )
-    driver.spark.table('ref_geo_state').cache().createOrReplaceTempView('ref_geo_stateref_geo_state')
-    driver.spark.table('ref_geo_state').count()
 
     driver.run()
