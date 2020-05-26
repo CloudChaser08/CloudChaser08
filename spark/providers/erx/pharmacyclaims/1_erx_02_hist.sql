@@ -100,7 +100,8 @@ SELECT
     'erx' as part_provider,
     part_best_date
 FROM _temp_pharmacyclaims_nb
-    WHERE part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2)
+    WHERE FALSE
+      AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2)
       AND part_best_date <= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'),  0)
     ---- This code is introduced to not get any data from DW (This must be removed on PROD implementation)
     --- AND 1 = 0
