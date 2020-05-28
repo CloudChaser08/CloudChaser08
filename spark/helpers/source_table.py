@@ -6,7 +6,7 @@ class SourceTable:
     Configuration details for records tables
     """
     def __init__(self, file_type, separator=None, columns=None, schema=None, input_path=None,
-                 trimmify_nullify=True):
+                 trimmify_nullify=True, confirm_schema=False):
         if file_type != 'parquet' and columns is None and schema is None:
             raise Exception('Must specify one of columns or schema')
         if columns is not None and schema is not None:
@@ -17,6 +17,7 @@ class SourceTable:
             raise Exception('Must specify a separator for a csv file')
         if file_type == 'json' and schema is None:
             raise Exception('Must specify a schema for a json file')
+        self.confirm_schema = confirm_schema
         self.file_type = file_type
         self.separator = separator
         self.trimmify_nullify = trimmify_nullify

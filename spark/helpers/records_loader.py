@@ -5,7 +5,7 @@ import logging
 
 def load(runner, location, columns=None, file_type=None, delimiter=',', header=False,
          schema=None, source_table_conf=None, load_file_name=False, file_name_col='input_file_name',
-         spark_context=None):
+         spark_context=None, confirm_schema=False):
     """
     Load transaction data for a provider
     """
@@ -25,6 +25,7 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
     if source_table_conf is not None:
         schema = source_table_conf.schema
         delimiter = source_table_conf.separator
+        confirm_schema = source_table_conf.confirm_schema
 
     if schema is None:
         schema = StructType([StructField(c, StringType(), True) for c in columns])
@@ -34,10 +35,18 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
         temp_df = runner.sqlContext.read.csv(location, sep=delimiter, header=header)
         if len(temp_df.schema) > len(schema):
             raise Exception(
-                "Number of columns in data file ({}) exceeds expected schema ({})".format(
-                    len(temp_df.schema), len(schema)
+                "Error: Table {} - Number of columns in data file ({}) exceeds expected schema ({})".format(
+                    location, len(temp_df.schema), len(schema)
                 )
             )
+        if confirm_schema:
+            if len(temp_df.schema) < len(schema):
+                raise Exception(
+                    "Error: Table {} - Number of columns in data file ({}) is less than expected schema ({})".format(
+                        location, len(temp_df.schema), len(schema)
+                    )
+                )
+
     elif file_type == 'orc':
         df = runner.sqlContext.read.schema(schema).orc(location)
     elif file_type == 'json':
