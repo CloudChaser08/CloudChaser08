@@ -28,8 +28,7 @@ FEED_ID = '26'
 VENDOR_ID = '35'
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/allscripts/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/transformed/medicalclaims/2018-06-06/'
-
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2018-06-06/'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
@@ -160,7 +159,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Allscripts')
+
+    # Placeholder to Override Spark Conf. properties (after spark launch)
+    spark_conf_parameters = {
+        'spark.default.parallelism': 5000,
+        'spark.sql.shuffle.partitions': 5000
+    }
+
+    spark, sqlContext = init('Allscripts', False, spark_conf_parameters)
 
     runner = Runner(sqlContext)
 
