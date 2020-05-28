@@ -151,6 +151,12 @@ def main(args):
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
+    logger.log('Update reference location with new phi rows for use in Dx and Enrollment routines')
+    ref_rx_phi = 's3://salusv/reference/express_scripts/pharmacyclaims/phi/'
+    spark.read.parquet(ref_rx_phi).createOrReplaceTempView('esi_rx_phi')
+    query = 'SELECT * FROM matching_payload EXCEPT SELECT  * FROM esi_rx_phi'
+    spark.sql(query).repartition(50).write.parquet(ref_rx_phi, compression='gzip', mode='append')
+
     spark.stop()
 
     if args.airflow_test:
