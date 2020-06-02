@@ -1,5 +1,8 @@
 import argparse
-import spark.providers.inovalon.medicalclaims.transactional_schemas as source_table_schemas
+import spark.providers.inovalon.medicalclaims.transactional_schemas_v1 as historic_source_table_schemas
+import spark.providers.inovalon.medicalclaims.transactional_schemas_v2 as jan_feb_2020_schemas
+import spark.providers.inovalon.medicalclaims.transactional_schemas_v3 as mar_2020_schemas
+
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
 import pyspark.sql.functions as F
@@ -7,6 +10,8 @@ import spark.common.utility.logger as logger
 import subprocess
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
+
+from pyspark.sql.functions import lit
 
 if __name__ == "__main__":
     # This script has a custom run.sh -> inovalon_run.sh to account memory requirements
@@ -24,7 +29,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
-    parser.add_argument('--chunk', type=str)
     parser.add_argument('--skip_filter_duplicates', default=False, action='store_true')
 
     args = parser.parse_args()
@@ -36,16 +40,29 @@ if __name__ == "__main__":
     subprocess.check_call(['hadoop', 'fs', '-mkdir', tmp_location])
     ref_claims_location = 's3://salusv/reference/inovalon/medicalclaims/claims2/'
 
+    # the vendor sent a different schema for the following dates
+    is_schema_v2 = date_input in ['2020-03-03', '2020-03-04']
+    is_schema_v3 = date_input == '2020-03-25'
+
+    if is_schema_v2:
+        logger.log('Using the Jan/Feb 2020 refresh schema (v2)')
+        source_table_schema = jan_feb_2020_schemas
+    elif is_schema_v3:
+        logger.log('Using the Mar 2020 refresh schema (v3)')
+        source_table_schema = mar_2020_schemas
+    else:
+        logger.log('Using the historic schema (v1)')
+        source_table_schema = historic_source_table_schemas
+
     # non-historic runs on inovalon are stable if run in chunks. This routine chunks the data by
     # looking at the last 2 characters of claimuid in clams and claimcode
     chunks = ['00', '20', '40', '60', '80']
     for chunk in chunks:
-
         # Create and run driver
         driver = MarketplaceDriver(
             provider_name,
             provider_partition_name,
-            source_table_schemas,
+            source_table_schema,
             output_table_names_to_schemas,
             date_input,
             end_to_end_test,
@@ -63,9 +80,23 @@ if __name__ == "__main__":
         logger.log('running: ' + str(rng))
 
         driver.load()
-
         logger.log('Chunking input tables')
         clm = driver.spark.table('clm')
+
+        if is_schema_v2:
+            logger.log('Adding missing Jan/Feb 2020 columns')
+            clm = clm.withColumn('billedamount', lit('')) \
+                .withColumn('allowedamount', lit('')) \
+                .withColumn('copayamount', lit('')) \
+                .withColumn('costamount', lit('')) \
+                .withColumn('paidamount', lit(''))
+        elif is_schema_v3:
+            logger.log('Adding missing Mar 2020 columns')
+            clm = clm.withColumn('billedamount', lit('')) \
+                .withColumn('allowedamount', lit('')) \
+                .withColumn('copayamount', lit('')) \
+                .withColumn('costamount', lit(''))
+
         clm = clm.filter(F.substring(clm.claimuid, -2, 2).isin(rng))
 
         ccd = driver.spark.table('ccd')
@@ -104,6 +135,7 @@ if __name__ == "__main__":
             'matching_payload').createOrReplaceTempView('matching_payload')
 
         logger.log('Running the normalization SQL scripts')
+        logger.log(chunk)
         driver.runner.run_all_spark_scripts([
             ['VDR_FILE_DT', str(driver.date_input), False],
             ['AVAILABLE_START_DATE', driver.available_start_date, False],

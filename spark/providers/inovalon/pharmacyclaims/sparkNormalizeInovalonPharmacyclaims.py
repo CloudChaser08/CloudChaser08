@@ -1,5 +1,10 @@
 import argparse
-import spark.providers.inovalon.pharmacyclaims.transactional_schemas as source_table_schemas
+import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v1 as historic_schemas
+import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v2 as jan_feb_2020_schemas
+import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v3 as mar_2020_schemas
+
+from pyspark.sql.types import StringType
+from pyspark.sql.functions import lit
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims_common_model import schemas as pharmacyclaims_schema
 import spark.common.utility.logger as logger
@@ -26,11 +31,25 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
+    # the vendor sent a different schema for the following dates
+    is_schema_v2 = date_input in ['2020-03-03', '2020-03-04']
+    is_schema_v3 = date_input == '2020-03-25'
+
+    if is_schema_v2:
+        logger.log('Using the Jan/Feb 2020 refresh schema (v2)')
+        source_table_schema = jan_feb_2020_schemas
+    elif is_schema_v3:
+        logger.log('Using the Mar 2020 refresh schema (v3)')
+        source_table_schema = mar_2020_schemas
+    else:
+        logger.log('Using the historic schema (v1)')
+        source_table_schema = historic_schemas
+
     # Create and run driver
     driver = MarketplaceDriver(
         provider_name,
         provider_partition_name,
-        source_table_schemas,
+        source_table_schema,
         output_table_names_to_schemas,
         date_input,
         end_to_end_test,
@@ -42,4 +61,29 @@ if __name__ == "__main__":
     output_path = driver.output_path + 'pharmacyclaims/2018-11-26/part_provider=inovalon/'
     driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
-    driver.run()
+    driver.init_spark_context()
+    driver.load()
+
+    if is_schema_v2:
+        logger.log('Adding missing Jan/Feb 2020 columns')
+        rxc = driver.spark.table('rxc')
+        rxc = rxc.withColumn('billedamount', lit(None).cast(StringType())) \
+            .withColumn('allowedamount', lit(None).cast(StringType())) \
+            .withColumn('copayamount', lit(None).cast(StringType())) \
+            .withColumn('costamount', lit(None).cast(StringType())) \
+            .withColumn('paidamount', lit(None).cast(StringType()))
+        rxc.createOrReplaceTempView('rxc')
+    elif is_schema_v3:
+        logger.log('Adding missing Mar 2020 columns')
+        rxc = driver.spark.table('rxc')
+        rxc = rxc.withColumn('billedamount', lit(None).cast(StringType())) \
+            .withColumn('allowedamount', lit(None).cast(StringType())) \
+            .withColumn('copayamount', lit(None).cast(StringType())) \
+            .withColumn('costamount', lit(None).cast(StringType()))
+        rxc.createOrReplaceTempView('rxc')
+
+    driver.transform()
+    driver.save_to_disk()
+    driver.log_run()
+    driver.stop_spark()
+    driver.copy_to_output_path()
