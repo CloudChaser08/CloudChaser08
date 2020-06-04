@@ -35,7 +35,6 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         load_date_explode=False,
-        output_to_transform_path=True,
         unload_partition_count=50,
         vdr_feed_id=186,
         use_ref_gen_values=True
@@ -44,10 +43,6 @@ if __name__ == "__main__":
     driver.init_spark_context()
     driver.load(cache_tables=False, payloads=False)
     driver.transform()
-    #driver.spark.table('change_835_raw').persist()
-
-    #driver.spark.table('change_835_serviceline_sample').write.bucketBy(81, 'claim_payment_number').format('orc').mode('overwrite').saveAsTable('lines_bucketed')
-    #driver.spark.table('change_835_claim_sample_2').write.bucketBy(81, 'claim_payment_number').format('orc').mode('overwrite').saveAsTable('claims_bucketed')
 
     driver.save_to_disk()
     driver.log_run()
