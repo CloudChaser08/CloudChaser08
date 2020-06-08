@@ -52,18 +52,15 @@ if __name__ == "__main__":
     driver.load()
     driver.transform()
 
-    logger.log('Convert all fields to string per vendor request')
-    output_table = driver.spark.table("labtest_quest_rinse_census_final")
-    output_table = output_table.select([col(c).cast("string") for c in output_table.columns])
-
     # This data goes right to the provider. They want the data in parquet without
     # column partitions.
     logger.log('Saving data to the local file system')
+    output_table = driver.spark.table("labtest_quest_rinse_census_final")
     delivery_date = date_input.replace('-', '')
     delivery_path='s3://salusv/deliverable/questrinse/{}/'.format(delivery_date)
     hdfs_output_path = 'hdfs:///staging/'
     file_utils.clean_up_output_hdfs(hdfs_output_path)
-    output_table.repartition(100).write.parquet(hdfs_output_path, compression='gzip', mode='append')
+    output_table.repartition(20).write.parquet(hdfs_output_path, compression='gzip', mode='append')
 
     driver.log_run()
     driver.stop_spark()
