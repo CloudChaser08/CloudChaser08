@@ -33,11 +33,11 @@ SELECT
 	prov_prescribing_id,
 	prov_prescribing_qual,  
     logical_delete_reason,
-    part_provider,
+    'inovalon' as part_provider,
     part_best_date
  
 FROM _temp_pharmacyclaims_nb
-    WHERE part_provider = 'inovalon'
+    WHERE
     ----- Look current month and 3 month back
-    AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2) 
+    part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2)
     AND part_best_date <= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'),  0)
