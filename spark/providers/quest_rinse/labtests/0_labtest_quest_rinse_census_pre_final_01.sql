@@ -266,10 +266,10 @@ SELECT
     rslt.phy_middle_name              AS phy_middle_name          ,
     rslt.acct_state                   AS acct_state
 
-FROM rinse_result rslt
-LEFT OUTER JOIN rinse_diag diag ON rslt.unique_accession_id = diag.unique_accession_id 
-LEFT OUTER JOIN rinse_did  ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id
-LEFT OUTER JOIN rinse_pay  pay  ON ptnt.hvjoinkey           = pay.hvJoinKey 
+FROM order_result rslt
+LEFT OUTER JOIN diagnosis diag ON rslt.unique_accession_id = diag.unique_accession_id
+LEFT OUTER JOIN transactions ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id
+LEFT OUTER JOIN matching_payload pay  ON ptnt.hvjoinkey           = pay.hvJoinKey
 
 WHERE EXISTS
 /* Select only valid U.S. states and territories. Added PA as default state if there is no state found*/
