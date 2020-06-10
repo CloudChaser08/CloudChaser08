@@ -21,7 +21,7 @@ from spark.common.utility import logger
 FEED_ID = '65'
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/pdx/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/transformed/pharmacyclaims/2018-11-26/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-11-26/'
 PART_PROVIDER = 'part_provider'
 PART_BEST_DATE = 'part_best_date'
 PDX = 'pdx'
@@ -54,17 +54,6 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
             date_input.replace('-', '/')
         )
 
-    if test:
-        rr.create_empty_dataframe(spark, PART_PROVIDER, PART_BEST_DATE, schema)
-    else:
-        rr.load_previous_run_from_transformed(spark,
-                                              date_input,
-                                              OUTPUT_PATH_PRODUCTION,
-                                              PART_PROVIDER,
-                                              PDX,
-                                              PART_BEST_DATE,
-                                              schema)
-
     if custom_input_path:
         input_path = custom_input_path
 
@@ -72,9 +61,10 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
         matching_path = custom_matching_path
 
     if not test:
+        logger.log('Loading external tables')
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
-    else:
-        pass
+        spark.read.parquet(OUTPUT_PATH_PRODUCTION).createOrReplaceTempView(
+            '_temp_pharmacyclaims_nb')
 
     min_date = postprocessor.coalesce_dates(
         runner.sqlContext,
@@ -121,8 +111,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
             hvm_historical_date=datetime(hvm_historical.year,
                                          hvm_historical.month,
                                          hvm_historical.day),
-            substr_date_part=False,
-            partition_by_part_file_date=True
+            substr_date_part=False
         )
 
     else:
@@ -152,10 +141,26 @@ def main(args):
 
     if args.end_to_end_test:
         output_path = OUTPUT_PATH_TEST
+        tmp_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/temp/'
     elif args.output_path:
         output_path = args.output_path
     else:
         output_path = OUTPUT_PATH_PRODUCTION
+        tmp_path = 's3://salusv/backup/pdx/{}/'.format(args.date)
+
+    current_year_month = args.date[:7] + '-01'
+    prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime(
+        '%Y-%m-01')
+
+    date_part = 'part_provider=pdx/part_best_date={}/'
+    subprocess.check_call(
+        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(current_year_month),
+         tmp_path + date_part.format(current_year_month)]
+    )
+    subprocess.check_call(
+        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(prev_year_month),
+         tmp_path + date_part.format(prev_year_month)]
+    )
 
     if args.end_to_end_test:
         normalized_records_unloader.distcp(output_path)

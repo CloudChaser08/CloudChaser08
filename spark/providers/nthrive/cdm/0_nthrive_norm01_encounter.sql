@@ -328,10 +328,16 @@ SELECT
     epi.admission_source                                                                    AS admsn_src_std_cd,
     epi.admission_type                                                                      AS admsn_typ_std_cd,
     /* dischg_stat_cd */
-	CASE
-	    WHEN COALESCE(epi.discharge_status, '') IN ('20', '21', '40', '41', '42', '69', '87')
-	        THEN '0'
-        ELSE epi.discharge_status
+    CASE WHEN CAST('{VDR_FILE_DT}' AS DATE) >= '2020-01-01' THEN
+        CASE
+            WHEN COALESCE(epi.discharge_status, '') IN ('21', '69', '87') THEN '0'
+            ELSE epi.discharge_status
+        END
+	ELSE
+    	CASE
+    	    WHEN COALESCE(epi.discharge_status, '') IN ('20', '21', '40', '41', '42', '69', '87') THEN '0'
+            ELSE epi.discharge_status
+    	END
 	END                                                                                     AS dischg_stat_std_cd,
 	/* bill_typ_std_cd */
 	CASE

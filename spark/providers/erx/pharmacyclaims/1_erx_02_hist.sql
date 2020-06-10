@@ -97,13 +97,11 @@ SELECT
     other_payer_date,
     other_payer_coverage_code,
     logical_delete_reason,
-    part_provider,
+    'erx' as part_provider,
     part_best_date
- 
-FROM previous_run_from_transformed
-    WHERE part_provider = '8451'
-    ----- Look current month and 2 month back (3 months in total)
-    AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2) 
-    AND part_best_date <= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'),  0)
+FROM _temp_pharmacyclaims_nb
+    WHERE FALSE
+      AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2)
+      AND part_best_date <= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'),  0)
     ---- This code is introduced to not get any data from DW (This must be removed on PROD implementation)
     --- AND 1 = 0

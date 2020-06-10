@@ -9,12 +9,8 @@ SELECT
     UPPER(
         COALESCE(t.patient_state_address, mp.state)
     )                                         AS patient_state,
-    extract_date(
-        t.date_of_service, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
-        )                                     AS date_service,
-    extract_date(
-        t.date_prescription_written, '%Y-%m-%d', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
-        )                                     AS date_written,
+    extract_date(t.date_of_service, '%Y-%m-%d')                                     AS date_service,
+    extract_date(t.date_prescription_written, '%Y-%m-%d')                           AS date_written,
     t.transaction_code                        AS transaction_code_std,
     t.transaction_response_status             AS response_code_std,
     t.diagnosis_code_qualifier                AS diagnosis_code_qual,

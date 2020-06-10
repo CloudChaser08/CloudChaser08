@@ -31,7 +31,6 @@ if __name__ == "__main__":
         output_table_names_to_schemas,
         date_input,
         end_to_end_test,
-        output_to_transform_path=True,
         vdr_feed_id=188,
         use_ref_gen_values=True
     )

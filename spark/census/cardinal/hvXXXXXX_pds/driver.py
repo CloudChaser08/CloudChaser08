@@ -35,13 +35,7 @@ class CardinalPDSCensusDriver(CensusDriver):
 
         setid = 'PDS.' + batch_id
 
-        min_date = '2011-01-01'
-        max_date = batch_date.isoformat()
-
-        normalized_output = self._runner.run_all_spark_scripts([
-            ["min_date", min_date],
-            ["max_date", max_date]
-        ])
+        normalized_output = self._runner.run_all_spark_scripts()
 
         df = postprocessor.compose(
             schema_enforcer.apply_schema_func(pharma_schema, cols_to_keep=EXTRA_COLUMNS),
