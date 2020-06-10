@@ -85,9 +85,12 @@ SELECT
         WHEN ref_range_alpha IS NULL     AND rslt.ref_range_low IS NOT NULL AND rslt.ref_range_high IS     NULL
             THEN  rslt.ref_range_low
     END                                                                                      AS HV_ref_range_alpha,
+    --------------------------------------------------------------------------------------------------------------
+    ------------------- Add COALESCE U (2020-05-28) This is request from QUEST via Will V
+    --------------------------------------------------------------------------------------------------------------
     CASE 
-        WHEN COALESCE(rslt.fasting_ind,'') IN ('Y', 'N', 'U') THEN rslt.fasting_ind
-        ELSE 'U'
+        WHEN COALESCE(rslt.fasting_ind,'') IN ('Y', 'N', 'U') THEN rslt.fasting_ind 
+        ELSE 'U' 
     END	                                                                                     AS HV_fasting_status,
     --------------------------------------------------------------------------------------------------------------
     ------------------- Keep the format for diagnosis_code (2020-05-06)
@@ -136,13 +139,13 @@ SELECT
     rslt.company                                                                             AS payer_name,
     rslt.perf_lab_code                                                                       AS lab_other_id,
 	'PERFORMINGLAB_PERFORMED'                                                                AS HV_lab_other_qual,
-	------------- NAME
+	------------- NAME  --- JKS 2020-06-08
 	CONCAT
     (
         COALESCE(CONCAT(      rslt.phy_last_name), ''),        
         COALESCE(CONCAT(', ', rslt.phy_first_name), ''),
         COALESCE(CONCAT(', ', rslt.phy_middle_name), '')
-    )                                                                                        AS HV_ordering_name,
+    )                                                                                        AS HV_phy_name, --- JKS 2020-06-08
     rslt.market_type                                                                         AS ordering_market_type,
     rslt.client_specialty                                                                    AS ordering_specialty,
     rslt.cmdm_licnum                                                                         AS ordering_state_license,
@@ -194,7 +197,7 @@ SELECT
     rslt.non_physician_name           AS  non_physician_name      ,
     rslt.non_physician_id             AS  non_physician_id        ,
     rslt.long_description             AS  long_description        ,
-    rslt.phy_name                     AS  phy_first_name          ,
+    rslt.phy_name                     AS  phy_name                , --- JKS 2020-06-08
     rslt.suffix                       AS  suffix                  ,
     rslt.degree                       AS  degree                  ,
     rslt.idw_analyte_code             AS  idw_analyte_code        ,
@@ -249,13 +252,24 @@ SELECT
     rslt.date_reported                AS date_reported            ,
     rslt.ref_range_low                AS ref_range_low            ,
     rslt.ref_range_high               AS ref_range_high           ,
-    rslt.ref_range_alpha              As ref_range_alpha          
-	
+    rslt.ref_range_alpha              As ref_range_alpha          , 
+-------------------------------------------------------------------------------------------------
+---------- New fields added per request from QUEST 2020-06-08
+-------------------------------------------------------------------------------------------------
+    rslt.requisition_number           AS requisition_number       ,
+    rslt.fasting_ind                  AS fasting_ind              ,
+    diag.s_diag_code                  AS s_diag_code              ,
+    rslt.cpt_code                     AS cpt_code                 ,
+    rslt.npi                          AS npi                      ,
+    rslt.phy_last_name                AS phy_last_name            ,
+    rslt.phy_first_name               AS phy_first_name           ,
+    rslt.phy_middle_name              AS phy_middle_name          ,
+    rslt.acct_state                   AS acct_state
 
-FROM order_result rslt
-LEFT OUTER JOIN diagnosis diag ON rslt.unique_accession_id = diag.unique_accession_id
-LEFT OUTER JOIN transactions  ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id
-LEFT OUTER JOIN matching_payload  pay  ON ptnt.hvjoinkey           = pay.hvJoinKey
+FROM rinse_result rslt
+LEFT OUTER JOIN rinse_diag diag ON rslt.unique_accession_id = diag.unique_accession_id 
+LEFT OUTER JOIN rinse_did  ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id
+LEFT OUTER JOIN rinse_pay  pay  ON ptnt.hvjoinkey           = pay.hvJoinKey 
 
 WHERE EXISTS
 /* Select only valid U.S. states and territories. Added PA as default state if there is no state found*/
