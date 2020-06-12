@@ -1,7 +1,7 @@
 import os
 import subprocess
 from spark.common.utility import logger
-
+from datetime import date
 
 def get_abs_path(source_file, relative_filename):
     return os.path.abspath(
@@ -70,3 +70,29 @@ def create_manifest_file(output_path, file_name):
     with open(output_file_name, 'w') as output_file:
         subprocess.check_call(['aws', 's3', 'ls', output_path], stdout=output_file)
     subprocess.check_call(['aws', 's3', 'cp', output_file_name, output_path])
+
+
+def create_parquet_row_count_file(spark, output_path, file_name):
+    local_path = '/tmp/'
+    local_output_file = local_path + file_name
+
+    list_hdfs_cmd = ['aws', 's3', 'ls', output_path]
+    hdfs_cmd_output = subprocess.check_output(list_hdfs_cmd)
+    date_today = date.today()
+    files = [
+        row.split(' ')[-1] for row in
+        hdfs_cmd_output.decode().split("\n")
+        if '.parquet' in row
+    ]
+
+    with open(local_output_file, 'w') as output_file:
+        for file in files:
+            cnt = str(spark.read.parquet(output_path + file).count())
+            output_file.write(
+                "{file}|{cnt}|{date_today}".format(file=file, cnt=cnt, date_today=date_today))
+
+    subprocess.check_call(['aws', 's3', 'cp', local_output_file, output_path])
+
+
+def delete_success_file(s3_path):
+    subprocess.check_call(['aws', 's3', 'rm', s3_path + '_SUCCESS'])

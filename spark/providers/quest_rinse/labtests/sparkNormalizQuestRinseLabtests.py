@@ -76,5 +76,15 @@ if __name__ == "__main__":
 
     driver.copy_to_output_path(output_location=delivery_path)
 
+    # Re-initialize spark in order to provide parquet row counts in manifest file
+    logger.log('Creating manifest file with counts')
+    driver.init_spark_context()
     manifest_file_name = '{delivery_date}_manifest.tsv'.format(delivery_date=delivery_date)
-    file_utils.create_manifest_file(delivery_path, manifest_file_name)
+    file_utils.create_parquet_row_count_file(driver.spark, delivery_path, manifest_file_name)
+    driver.stop_spark()
+
+    # Quest doesn't want to see the _SUCCESS file that spark prints out
+    logger.log('Deleting _SUCCESS file')
+    file_utils.delete_success_file(delivery_path)
+
+    logger.log('Done')
