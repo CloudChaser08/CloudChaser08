@@ -21,7 +21,7 @@ args = parser.parse_args()
 FNULL = open(os.devnull, 'w')
 OUT_ERR_REDIRECT = None if args.debug else FNULL
 if args.command == 'create' or args.command == 'create-no-wait':
-    node = args.node_type if args.node_type else 'dc1.large'
+    node = args.node_type if args.node_type else 'dc2.large'
     user = args.rs_user or 'hvuser'
     password = args.rs_password or 'HV1user2'
     num_nodes = args.num_nodes or 10
