@@ -27,7 +27,7 @@ SELECT
         WHEN txn.abnormal_flags = 'A' THEN 'Y'
         WHEN txn.abnormal_flags = 'N' THEN 'N'
     ELSE NULL
-    END                                                                                     AS abnormal_flags,
+    END                                                                                     AS abnormal_flag,
 	'luminate'                                                                              AS part_provider,
     /* part_best_date */
     CASE 
@@ -39,10 +39,9 @@ SELECT
                     SUBSTR(txn.date_of_service,6, 2), '-01'
                 )
 	END                                                                                 AS part_best_date
-FROM luminate_txn txn
-LEFT OUTER JOIN luminate_pay pay ON txn.hvJoinKey = pay.hvJoinKey 
+FROM txn
+LEFT OUTER JOIN matching_payload pay ON txn.hvJoinKey = pay.hvJoinKey
 WHERE COALESCE(UPPER(txn.test_name), 'X') <> 'TEST_NAME'
 
-        
 
 --LIMIT 100
