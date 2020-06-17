@@ -166,7 +166,7 @@ SELECT
             ELSE NULL
     END                                                                                     AS orig_prescribed_product_service_code_qual,
     txn.prescribed_quantity                                                                 AS orig_prescribed_quantity,
-    CAST(NULL AS STRING)                                                                    AS prov_prescribing_npi,
+    CLEAN_UP_NPI_CODE(txn.prescriber_code)                                                  AS prov_prescribing_npi,
     /* cob_count */
     CASE
             WHEN txn.primary_processor_control_number_code IS NULL
