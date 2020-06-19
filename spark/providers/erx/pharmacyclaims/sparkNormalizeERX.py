@@ -60,24 +60,5 @@ if __name__ == "__main__":
     
     driver.transform()
     driver.save_to_disk()
-
-    if not end_to_end_test:
-        tmp_path = 's3://salusv/backup/erx/pharmacyclaims/{}/'.format(date_input)
-        date_part = 'part_provider=erx/part_best_date={}/'
-
-        current_year_month = date_input[:7] + '-01'
-
-        one_month_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime(
-            '%Y-%m-01')
-        two_months_prior = (
-                    datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime(
-            '%Y-%m-01')
-
-        for month in [current_year_month, one_month_prior, two_months_prior]:
-            subprocess.check_call(
-                ['aws', 's3', 'mv', '--recursive', driver.output_path + date_part.format(month),
-                 tmp_path + date_part.format(month)]
-            )
-
     driver.stop_spark()
     driver.copy_to_output_path()
