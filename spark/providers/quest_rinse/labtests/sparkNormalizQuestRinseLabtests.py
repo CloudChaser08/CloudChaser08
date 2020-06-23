@@ -44,6 +44,7 @@ if __name__ == "__main__":
     )
 
     driver.init_spark_context()
+
     logger.log('Loading external table: ref_geo_state')
     external_table_loader.load_analytics_db_table(
         driver.sql_context, 'dw', 'ref_geo_state', 'ref_geo_state'
@@ -63,7 +64,6 @@ if __name__ == "__main__":
     output_table.repartition(20).write.parquet(hdfs_output_path, compression='gzip', mode='append')
 
     driver.log_run()
-    driver.stop_spark()
 
     logger.log("Renaming files")
     output_file_name_template = '{}_response_{{}}'.format(delivery_date)
@@ -74,14 +74,13 @@ if __name__ == "__main__":
         new_name = output_file_name_template.format(str(part_number).zfill(5)) + '.gz.parquet'
         file_utils.rename_file_hdfs(hdfs_output_path + filename, hdfs_output_path + new_name)
 
-    driver.copy_to_output_path(output_location=delivery_path)
-
     # Re-initialize spark in order to provide parquet row counts in manifest file
     logger.log('Creating manifest file with counts')
-    driver.init_spark_context()
     manifest_file_name = '{delivery_date}_manifest.tsv'.format(delivery_date=delivery_date)
-    file_utils.create_parquet_row_count_file(driver.spark, delivery_path, manifest_file_name)
+    file_utils.create_parquet_row_count_file(driver.spark, '/staging/', delivery_path, manifest_file_name)
     driver.stop_spark()
+
+    driver.copy_to_output_path(output_location=delivery_path)
 
     # Quest doesn't want to see the _SUCCESS file that spark prints out
     logger.log('Deleting _SUCCESS file')
