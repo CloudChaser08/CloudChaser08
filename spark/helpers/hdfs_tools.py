@@ -1,7 +1,7 @@
 import subprocess
 
 
-def list_parquet_files(src):
+def list_parquet_files(src, pattern='(part\-|c000)'):
     """Recursively lists all parquet files that are contained within a given location.
 
     Args:
@@ -15,7 +15,7 @@ def list_parquet_files(src):
     """
 
     list_hdfs_cmd = ['hadoop', 'fs', '-ls', '-R', 'hdfs://{}'.format(src)]
-    grep_cmd = ['grep', '-E', '(part\-|c000)']
+    grep_cmd = ['grep', '-E', pattern]
     awk_cmd = ['awk', '{ print $8 }']
 
     ls = subprocess.Popen(list_hdfs_cmd, stdout=subprocess.PIPE)
