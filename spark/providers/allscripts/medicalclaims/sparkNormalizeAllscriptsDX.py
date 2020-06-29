@@ -89,9 +89,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     runner.run_spark_script('pre_normalization_1.sql', return_output=True) \
             .createOrReplaceTempView('tmp')
-    normalized_related = runner.run_spark_script('normalize_1.sql', return_output=True).cache()
+    normalized_related = runner.run_spark_script('normalize_1.sql', return_output=True)
     normalized_related.createOrReplaceTempView('related_diagnoses_records')
-    normalized_related.count()
     runner.run_spark_script('pre_normalization_2.sql', return_output=True) \
             .createOrReplaceTempView('tmp')
     normalized_unrelated = runner.run_spark_script('normalize_2.sql', return_output=True)
@@ -162,8 +161,8 @@ def main(args):
 
     # Placeholder to Override Spark Conf. properties (after spark launch)
     spark_conf_parameters = {
-        'spark.default.parallelism': 5000,
-        'spark.sql.shuffle.partitions': 5000
+        'spark.default.parallelism': 640,
+        'spark.sql.shuffle.partitions': 640
     }
 
     spark, sqlContext = init('Allscripts', False, spark_conf_parameters)
