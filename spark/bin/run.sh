@@ -6,6 +6,11 @@ function get_optimal_memory_config()
         then
             instance=$(aws emr describe-cluster --cluster-id $cid | jq '.Cluster.InstanceGroups[] | if (.Name == "CORE") then .InstanceType else empty end' | sed 's/"//g' | cut -d'.' -f1)
             mult=$(aws emr describe-cluster --cluster-id $cid | jq '.Cluster.InstanceGroups[] | if (.Name == "CORE") then .InstanceType else empty end' | sed 's/"//g' | cut -d'.' -f2 | cut -d'x' -f1)
+            if [ -z $instance ]
+            then
+               instance=$(aws emr describe-cluster --cluster-id $cid | jq '.Cluster.InstanceFleets[] | if (.InstanceFleetType == "CORE") then .InstanceTypeSpecifications[0].InstanceType else empty end' | sed 's/"//g' | cut -d'.' -f1)
+               mult=$(aws emr describe-cluster --cluster-id $cid | jq '.Cluster.InstanceFleets[] | if (.InstanceFleetType == "CORE") then .InstanceTypeSpecifications[0].InstanceType else empty end' | sed 's/"//g' | cut -d'.' -f2 | cut -d'x' -f1)
+            fi
             #Default multiplier of 1
             mult=$(if [ -z $mult ]; then echo 1; else echo $mult; fi)
             #These numbers were derived based documented Hadoop memory allocation and a 10% overhead per executor
