@@ -62,8 +62,9 @@ SELECT
 	pharmacy_postal_code,
 	logical_delete_reason_date,
 	logical_delete_reason,
-	'pdx' as part_provider,
+	part_provider,
 	part_best_date
  FROM _temp_pharmacyclaims_nb
 WHERE  part_best_date >= ADD_MONTHS(TRUNC(CAST('{VENDOR_FILE_DATE_FMT}' AS DATE), 'MONTH'), -1)
    AND part_best_date <= CAST('{VENDOR_FILE_DATE_FMT}' AS DATE)
+   AND part_provider = 'pdx'
