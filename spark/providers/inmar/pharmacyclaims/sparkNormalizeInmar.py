@@ -41,7 +41,11 @@ if __name__ == "__main__":
     # ------------------------ Provider specific run sequence -----------------------
 
     # manually step through the driver to allow for custom backup process
-    driver.init_spark_context()
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 4096,
+        'spark.driver.memoryOverhead': 4096
+    }
+    driver.init_spark_context(conf_parameters=conf_parameters)
     logger.log('Loading external tables')
     driver.spark.read.parquet(driver.output_path + 'pharmacyclaims/2018-11-26/part_provider=inmar/').createOrReplaceTempView('_temp_pharmacyclaims_nb')
     driver.load()
@@ -72,7 +76,8 @@ if __name__ == "__main__":
 
     for month in [current_year_month, one_month_prior, two_months_prior]:
         subprocess.check_call(
-            ['aws', 's3', 'mv', '--recursive', driver.output_path + date_part.format(month),
+            ['aws', 's3', 'mv', '--recursive',
+             driver.output_path + 'pharmacyclaims/2018-11-26/' + date_part.format(month),
              tmp_path + date_part.format(month)]
         )
 
