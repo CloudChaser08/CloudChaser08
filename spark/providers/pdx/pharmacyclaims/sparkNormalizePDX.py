@@ -63,7 +63,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
     if not test:
         logger.log('Loading external tables')
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
-        spark.read.parquet(OUTPUT_PATH_PRODUCTION).createOrReplaceTempView(
+        spark.read.parquet(OUTPUT_PATH_PRODUCTION + 'part_provider=pdx/').createOrReplaceTempView(
             '_temp_pharmacyclaims_nb')
 
     min_date = postprocessor.coalesce_dates(
