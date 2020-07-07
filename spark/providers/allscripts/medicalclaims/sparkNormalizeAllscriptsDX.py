@@ -164,7 +164,11 @@ def main(args):
         'spark.default.parallelism': 640,
         'spark.sql.shuffle.partitions': 640,
         'spark.executor.memoryOverhead': 4096,
-        'spark.driver.memoryOverhead': 4096
+        'spark.driver.memoryOverhead': 4096,
+        'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.task.maxFailures': 8,
+        'spark.max.executor.failures': 800
     }
 
     spark, sqlContext = init('Allscripts', False, spark_conf_parameters)
