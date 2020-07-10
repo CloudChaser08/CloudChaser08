@@ -12,6 +12,16 @@ def run(spark, runner, year):
     CPT_INPUT = 's3://salusv/incoming/reference/cpt/{}/'.format(year)
     CPT_OUTPUT = 's3://salusv/reference/parquet/cpt/{}/{}/'.format(year, timestamp)
 
+    '''
+        NOTE: To prep SHORTU.txt, you need to convert to utf-8, replace the first space with a tab,
+        then convert back to latin-1 (the default encoding).
+        Steps from shell:
+        1. mv SHORTU orig_SHORTU.txt
+        2. iconv -f latin1 -t utf-8 orig_SHORTU.txt | sed 's/ /<press Ctrl-V then Tab>/' | iconv 
+        -f utf-8 -t latin1 > SHORTU.txt 
+        "\t" will not work to input tabs
+    '''
+
     records_loader.load_and_clean_all_v2(runner, CPT_INPUT, file_schemas)
     external_table_loader.load_analytics_db_table(
         runner.sqlContext,
