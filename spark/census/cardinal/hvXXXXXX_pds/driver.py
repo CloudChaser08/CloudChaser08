@@ -1,8 +1,13 @@
+from datetime import datetime
 from spark.common.census_driver import CensusDriver
 from spark.common.pharmacyclaims_common_model_census_v6 import schema as pharma_schema
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
+
+
+cutoff_date = datetime.strptime('2020-07-14', '%Y-%m-%d')
+
 
 class CardinalPDSCensusDriver(CensusDriver):
     def __init__(self, client_name, opportunity_id, end_to_end_test=False, test=False):
@@ -18,7 +23,13 @@ class CardinalPDSCensusDriver(CensusDriver):
     def load(self, batch_date, batch_id, chunk_records_files=None):
         super(CardinalPDSCensusDriver, self).load(batch_date, batch_id, chunk_records_files)
 
-        df = self._spark.table('cardinal_pds_transactions')
+        cutoff_date = datetime.strptime('2020-07-14', '%Y-%m-%d')
+
+        if batch_date >= cutoff_date:
+            df = self._spark.table('cardinal_pds_transactions_v2')
+        else:
+            df = self._spark.table('cardinal_pds_transactions')
+
         df = postprocessor.nullify(df, ['NULL', 'Unknown', '-1', '-2'])
         df.createOrReplaceTempView('cardinal_pds_transactions')
 
@@ -35,7 +46,10 @@ class CardinalPDSCensusDriver(CensusDriver):
 
         setid = 'PDS.' + batch_id
 
-        normalized_output = self._runner.run_all_spark_scripts()
+        if batch_date >= cutoff_date:
+            normalized_output = self._runner.run_spark_script('0_normalize_v2')
+        else:
+            normalized_output = self._runner.run_spark_script('0_normalize')
 
         df = postprocessor.compose(
             schema_enforcer.apply_schema_func(pharma_schema, cols_to_keep=EXTRA_COLUMNS),
