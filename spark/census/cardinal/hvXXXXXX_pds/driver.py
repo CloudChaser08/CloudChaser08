@@ -17,7 +17,7 @@ class CardinalPDSCensusDriver(CensusDriver):
         )
 
         self._output_file_name_template = 'cardinal_pds_normalized_{batch_id_value}.psv.gz'
-        self._v1_cutoff_date = datetime.strptime(V1_CUTOFF, '%Y-%m-%d')
+        self._v1_cutoff_date = datetime.strptime(V1_CUTOFF, '%Y-%m-%d').date()
 
     def load(self, batch_date, batch_id, chunk_records_files=None):
         if batch_date >= self._v1_cutoff_date:
