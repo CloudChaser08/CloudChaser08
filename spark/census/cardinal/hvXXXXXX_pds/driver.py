@@ -21,7 +21,7 @@ class CardinalPDSCensusDriver(CensusDriver):
 
     def load(self, batch_date, batch_id, chunk_records_files=None):
         if batch_date >= self._v1_cutoff_date:
-            self.records_schema_name = 'records_schema_v2'
+            self.records_schema_name = 'records_schemas_v2'
 
         super(CardinalPDSCensusDriver, self).load(batch_date, batch_id, chunk_records_files)
 
@@ -44,9 +44,9 @@ class CardinalPDSCensusDriver(CensusDriver):
         setid = 'PDS.' + batch_id
 
         if batch_date >= self._v1_cutoff_date:
-            normalized_output = self._runner.run_spark_script('0_normalize_v2')
+            normalized_output = self._runner.run_spark_script('0_normalize_v2.sql')
         else:
-            normalized_output = self._runner.run_spark_script('0_normalize')
+            normalized_output = self._runner.run_spark_script('0_normalize.sql')
 
         df = postprocessor.compose(
             schema_enforcer.apply_schema_func(pharma_schema, cols_to_keep=EXTRA_COLUMNS),
