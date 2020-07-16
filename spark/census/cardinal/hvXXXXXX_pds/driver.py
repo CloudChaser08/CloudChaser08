@@ -5,7 +5,7 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
-V1_CUTOFF = '2020-07-16'
+V1_CUTOFF = '2020-07-22'
 
 class CardinalPDSCensusDriver(CensusDriver):
     def __init__(self, client_name, opportunity_id, end_to_end_test=False, test=False):
