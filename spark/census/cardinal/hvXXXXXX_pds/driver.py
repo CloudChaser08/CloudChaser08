@@ -5,9 +5,7 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
-
-cutoff_date = datetime.strptime('2020-07-14', '%Y-%m-%d')
-
+V1_CUTOFF = '2020-07-16'
 
 class CardinalPDSCensusDriver(CensusDriver):
     def __init__(self, client_name, opportunity_id, end_to_end_test=False, test=False):
@@ -21,7 +19,7 @@ class CardinalPDSCensusDriver(CensusDriver):
         self._output_file_name_template = 'cardinal_pds_normalized_{batch_id_value}.psv.gz'
 
     def load(self, batch_date, batch_id, chunk_records_files=None):
-        cutoff_date = datetime.strptime('2020-07-14', '%Y-%m-%d')
+        cutoff_date = datetime.strptime(V1_CUTOFF, '%Y-%m-%d')
         if batch_date >= cutoff_date:
             self.records_schema_name = 'records_schema_v2'
 
