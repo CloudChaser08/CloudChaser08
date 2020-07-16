@@ -17,10 +17,10 @@ class CardinalPDSCensusDriver(CensusDriver):
         )
 
         self._output_file_name_template = 'cardinal_pds_normalized_{batch_id_value}.psv.gz'
+        self._v1_cutoff_date = datetime.strptime(V1_CUTOFF, '%Y-%m-%d')
 
     def load(self, batch_date, batch_id, chunk_records_files=None):
-        cutoff_date = datetime.strptime(V1_CUTOFF, '%Y-%m-%d')
-        if batch_date >= cutoff_date:
+        if batch_date >= self._v1_cutoff_date:
             self.records_schema_name = 'records_schema_v2'
 
         super(CardinalPDSCensusDriver, self).load(batch_date, batch_id, chunk_records_files)
@@ -43,7 +43,7 @@ class CardinalPDSCensusDriver(CensusDriver):
 
         setid = 'PDS.' + batch_id
 
-        if batch_date >= cutoff_date:
+        if batch_date >= self._v1_cutoff_date:
             normalized_output = self._runner.run_spark_script('0_normalize_v2')
         else:
             normalized_output = self._runner.run_spark_script('0_normalize')
