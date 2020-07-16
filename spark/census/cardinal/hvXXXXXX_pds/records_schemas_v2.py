@@ -91,6 +91,7 @@ TABLE_CONF = {
             'row_id',
             'tenant_id',
             'hvm_approved',
+            'diagnosis_code',
             'hv_join_key'
         ]
     )

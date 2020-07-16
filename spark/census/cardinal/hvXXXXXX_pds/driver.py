@@ -21,14 +21,13 @@ class CardinalPDSCensusDriver(CensusDriver):
         self._output_file_name_template = 'cardinal_pds_normalized_{batch_id_value}.psv.gz'
 
     def load(self, batch_date, batch_id, chunk_records_files=None):
+        cutoff_date = datetime.strptime('2020-07-14', '%Y-%m-%d')
+        if batch_date >= cutoff_date:
+            self.records_schema_name = 'records_schema_v2'
+
         super(CardinalPDSCensusDriver, self).load(batch_date, batch_id, chunk_records_files)
 
-        cutoff_date = datetime.strptime('2020-07-14', '%Y-%m-%d')
-
-        if batch_date >= cutoff_date:
-            df = self._spark.table('cardinal_pds_transactions_v2')
-        else:
-            df = self._spark.table('cardinal_pds_transactions')
+        df = self._spark.table('cardinal_pds_transactions')
 
         df = postprocessor.nullify(df, ['NULL', 'Unknown', '-1', '-2'])
         df.createOrReplaceTempView('cardinal_pds_transactions')
