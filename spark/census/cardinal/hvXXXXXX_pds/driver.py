@@ -1,6 +1,8 @@
 from datetime import datetime
 from spark.common.census_driver import CensusDriver
 from spark.common.pharmacyclaims_common_model_census_v6 import schema as pharma_schema
+from spark.runner import PACKAGE_PATH
+import spark.helpers.file_utils as file_utils
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
@@ -44,9 +46,15 @@ class CardinalPDSCensusDriver(CensusDriver):
         setid = 'PDS.' + batch_id
 
         if batch_date >= self._v1_cutoff_date:
-            normalized_output = self._runner.run_spark_script('0_normalize_v2.sql')
+            normalized_output = self._runner.run_spark_script(
+                file_utils.get_abs_path(__file__.replace(PACKAGE_PATH, ""), '0_normalize_v2.sql'),
+                return_output=True
+            )
         else:
-            normalized_output = self._runner.run_spark_script('0_normalize.sql')
+            normalized_output = self._runner.run_spark_script(
+                file_utils.get_abs_path(__file__.replace(PACKAGE_PATH, ""), '0_normalize.sql'),
+                return_output=True
+            )
 
         df = postprocessor.compose(
             schema_enforcer.apply_schema_func(pharma_schema, cols_to_keep=EXTRA_COLUMNS),
