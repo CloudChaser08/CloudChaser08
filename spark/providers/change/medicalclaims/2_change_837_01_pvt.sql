@@ -15,8 +15,8 @@ SELECT
     -- UDF-cap_year_of_birth(age, date_service, year_of_birth)
     CAP_YEAR_OF_BIRTH
     (
-    NULL, 
-    TO_DATE(COALESCE(sln.service_to_date, sln.service_from_date), 'yyyyMMdd') ,
+    NULL,
+    CAST(EXTRACT_DATE(COALESCE(sln.service_to_date, sln.service_from_date), 'yyyyMMdd') AS DATE),
     COALESCE(clm.patient_birth_year, clm.member_birth_year, sln.pay_yearofbirth)
     )                                                                                         AS patient_year_of_birth,
     MASK_ZIP_CODE(COALESCE(clm.patient_zip3, sln.pay_threedigitzip))                              AS patient_zip3,

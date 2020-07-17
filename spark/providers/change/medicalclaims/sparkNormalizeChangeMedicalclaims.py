@@ -1,8 +1,12 @@
 import argparse
-import spark.providers.change.medicalclaims.transactional_schemas as source_table_schemas
+from datetime import datetime
+import spark.providers.change.medicalclaims.transactional_schemas as historic_source_table_schemas
+import spark.providers.change.medicalclaims.transactional_schemas_v2 as future_source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
+import spark.common.utility.logger as logger
 
+PASSTHROUGH_CUTTOF = '2020-03-31'
 
 if __name__ == "__main__":
 
@@ -23,6 +27,15 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
+    if datetime.strptime(date_input, '%Y-%m-%d').date() <= datetime.strptime(PASSTHROUGH_CUTTOF, '%Y-%m-%d').date():
+        logger.log('Historic Load using Passthrough table to get PCN')
+        source_table_schemas = historic_source_table_schemas
+        pas_tiny_table_name = 'passthrough'
+    else:
+        logger.log('Future Load using matching_payload table to get PCN')
+        source_table_schemas = future_source_table_schemas
+        pas_tiny_table_name = 'matching_payload'
+
     # Create and run driver
     driver = MarketplaceDriver(
         provider_name,
@@ -37,13 +50,25 @@ if __name__ == "__main__":
         unload_partition_count=40,
         load_date_explode=False
     )
-    driver.init_spark_context()
+
+    conf_parameters = {
+        'spark.default.parallelism': 6000,
+        'spark.sql.shuffle.partitions': 6000,
+        'spark.executor.memoryOverhead': 4096,
+        'spark.driver.memoryOverhead': 4096,
+        'spark.shuffle.service.enabled': 'true',
+        'spark.shuffle.sasl.timeout': 60000
+    }
+
+    driver.init_spark_context(conf_parameters=conf_parameters)
     driver.load()
 
     # only 2 columns are needed from the following 2 tables.
     # Select only the columns we need, then broadcast in the sql
-    driver.spark.sql('select pcn, UPPER(claimid) as claimid from passthrough group by 1, 2')\
+
+    driver.spark.sql('select pcn, UPPER(claimid) as claimid from {} group by 1, 2').format(pas_tiny_table_name)\
         .createOrReplaceTempView('pas_tiny')
+
     driver.spark.sql('select patient_gender, UPPER(claim_number) as claim_number from plainout group by 1, 2')\
         .createOrReplaceTempView('pln_tiny')
 
