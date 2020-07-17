@@ -23,7 +23,7 @@ class CardinalPDSCensusDriver(CensusDriver):
 
     def load(self, batch_date, batch_id, chunk_records_files=None):
         if batch_date >= self._v1_cutoff_date:
-            self.records_schema_name = 'records_schemas_v2'
+            self.records_module_name = 'records_schemas_v2'
 
         super(CardinalPDSCensusDriver, self).load(batch_date, batch_id, chunk_records_files)
 
