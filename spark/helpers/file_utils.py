@@ -74,7 +74,7 @@ def create_manifest_file(output_path, file_name):
     subprocess.check_call(['aws', 's3', 'cp', output_file_name, output_path])
 
 
-def create_parquet_row_count_file(spark, input_path, output_path, file_name):
+def create_parquet_row_count_file(spark, input_path, output_path, file_name, include_header=True):
     local_path = '/tmp/'
     local_output_file = local_path + file_name
 
@@ -82,10 +82,12 @@ def create_parquet_row_count_file(spark, input_path, output_path, file_name):
     files = list_parquet_files(input_path, pattern="*.parquet")
 
     with open(local_output_file, 'w') as output_file:
+        if include_header:
+            output_file.write("filename|rowcount|moddate\n")
         for file in files:
             cnt = str(spark.read.parquet(file).count())
             output_file.write(
-                "{file}|{cnt}|{date_today}".format(file=ntpath.basename(file), cnt=cnt, date_today=date_today))
+                "{file}|{cnt}|{date_today}\n".format(file=ntpath.basename(file), cnt=cnt, date_today=date_today))
 
     subprocess.check_call(['aws', 's3', 'cp', local_output_file, output_path])
 
