@@ -14,15 +14,15 @@ SELECT
     date_service            ,
     date_specimen           ,
     HV_date_report          ,
-    time_report             ,
     loinc_code              ,
+    hv_loinc_code           ,
     lab_id                  ,
     test_id                 ,
     HV_test_number          ,
     test_battery_local_id   ,
     test_battery_std_id     ,
     test_battery_name       ,
-    test_ordered_local_id   ,    
+    test_ordered_local_id   ,
     test_ordered_std_id     ,
     test_ordered_name       ,
     result_id               ,
@@ -32,7 +32,6 @@ SELECT
     result_desc             ,
     HV_ref_range_alpha      ,
     HV_fasting_status       ,
-    diagnosis_code_qual     ,
     HV_procedure_code       ,
     HV_procedure_code_qual  ,
     HV_ordering_npi         ,
@@ -40,7 +39,7 @@ SELECT
     payer_name              ,
     lab_other_id            ,
     HV_lab_other_qual       ,
-    HV_phy_name             , --- JKS 2020-06-08    
+--  HV_phy_name             , --- JKS 2020-06-08    Removed on 2020-07-10
     ordering_market_type    ,
     ordering_specialty      ,
     ordering_state_license  ,
@@ -58,7 +57,6 @@ SELECT
     diag_lab_code           ,
     acct_id                 ,
     acct_number             ,
-    icd_codeset_ind         ,
     diag_dos_yyyymm         ,
     rslt_accn_id            ,
     lab_code                ,
@@ -136,30 +134,33 @@ SELECT
     date_reported           ,
     ref_range_low           ,
     ref_range_high          ,
-    ref_range_alpha         ,    
+    ref_range_alpha         ,
 -------------------------------------------------------------------------------------------------
 ---------- New fields added per request from QUEST 2020-06-08
 -------------------------------------------------------------------------------------------------
     requisition_number      ,
     fasting_ind             ,
---    s_diag_code             ,
     cpt_code                ,
     npi                     ,
     phy_last_name           ,
     phy_first_name          ,
     phy_middle_name         ,
     acct_state              ,
-    CONCAT_WS(' | ', COLLECT_SET(s_diag_code ))          as s_diag_code,
-    CONCAT_WS(' | ', COLLECT_SET(HV_ONE_diagnosis_code)) as HV_diagnosis_code,
-    CONCAT_WS(' | ', COLLECT_SET(diag_code))             as diag_code    
+-------------------------------------------------------------------------------------------------
+---------- New fields added per request from QUEST 2020-06-17
+-------------------------------------------------------------------------------------------------
+    date_final_report       ,
+    CONCAT_WS(' | ', COLLECT_SET(HV_ONE_diagnosis_code)) as HV_diagnosis_code
 FROM labtest_quest_rinse_census_pre_final_01
-GROUP BY
-    1,     2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  
-    20,   21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  
-    40,   41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59, 
-    60,   61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79, 
-    80,   81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  96,  97,  98,  99, 
-    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 
-    120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
-    140, 141, 142, 143
+--WHERE
+--HV_claim_id = 'TM877351C~TMP~2014-11-21~2017-06-19 00:18:19_1716101979_2_3_1'
 
+GROUP BY
+    1,     2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,
+    20,   21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,
+    40,   41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,
+    60,   61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79,
+    80,   81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  96,  97,  98,  99,
+    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
+    120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
+    140, 141

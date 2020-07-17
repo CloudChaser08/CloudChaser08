@@ -35,16 +35,25 @@ if __name__ == "__main__":
         source_table_schemas,
         output_table_names_to_schemas,
         date_input,
-        end_to_end_test
+        end_to_end_test,
+        vdr_feed_id=147,
+        use_ref_gen_values=True
     )
 
     # ------------------------ Provider specific run sequence -----------------------
 
     # manually step through the driver to allow for custom backup process
+    # 'spark.driver.maxResultSize': '10G',
+
     conf_parameters = {
+        'spark.max.executor.failures': 800,
+        'spark.task.maxFailures': 8,
+        'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
         'spark.executor.memoryOverhead': 4096,
         'spark.driver.memoryOverhead': 4096
     }
+
     driver.init_spark_context(conf_parameters=conf_parameters)
     logger.log('Loading external tables')
     driver.spark.read.parquet(driver.output_path + 'pharmacyclaims/2018-11-26/part_provider=inmar/').createOrReplaceTempView('_temp_pharmacyclaims_nb')

@@ -43,7 +43,25 @@ if __name__ == "__main__":
         use_ref_gen_values=True
     )
 
-    driver.init_spark_context()
+    # init
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 4096,
+        'spark.driver.memoryOverhead': 4096,
+        'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.files.maxPartitionBytes': 3221225472,
+        'spark.reducer.maxBlocksInFlightPerAddress': 64,
+        'spark.reducer.maxReqsInFlight': 192,
+        'spark.shuffle.service.enabled': 'true',
+        'spark.shuffle.sasl.timeout': 60000,
+        'spark.network.timeout': '480s',
+        'spark.port.maxRetries': 64,
+        'spark.yarn.maxAppAttempts': 1,
+        'spark.task.maxFailures': 8,
+        'spark.max.executor.failures': 800
+    }
+
+    driver.init_spark_context(conf_parameters=conf_parameters)
 
     logger.log('Loading external table: ref_geo_state')
     external_table_loader.load_analytics_db_table(
@@ -77,7 +95,7 @@ if __name__ == "__main__":
     # Re-initialize spark in order to provide parquet row counts in manifest file
     logger.log('Creating manifest file with counts')
     manifest_file_name = '{delivery_date}_manifest.tsv'.format(delivery_date=delivery_date)
-    file_utils.create_parquet_row_count_file(driver.spark, '/staging/', delivery_path, manifest_file_name)
+    file_utils.create_parquet_row_count_file(driver.spark, '/staging/', delivery_path, manifest_file_name, True)
     driver.stop_spark()
 
     driver.copy_to_output_path(output_location=delivery_path)

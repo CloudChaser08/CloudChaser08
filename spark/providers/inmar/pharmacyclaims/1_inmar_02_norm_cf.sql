@@ -1,6 +1,6 @@
 SELECT
     MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
-    txn.claim_id                                                                            AS claim_id,    
+    txn.claim_id                                                                            AS claim_id,
     payload.hvid                                                                            AS hvid,
     CURRENT_DATE()                                                                          AS created,
 	'11'                                                                                    AS model_version,
@@ -14,10 +14,10 @@ SELECT
         	CASE
         	    WHEN SUBSTR(UPPER(COALESCE(txn.patient_gender,'')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(COALESCE(txn.patient_gender, '')), 1, 1)
         	    WHEN SUBSTR(UPPER(COALESCE(payload.gender    ,'')), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(COALESCE(payload.gender    , '')), 1, 1)
-        	    ELSE 'U' 
+        	    ELSE 'U'
         	END
 	    )   AS patient_gender,
-	    
+
 	/* patient_age */
 	VALIDATE_AGE
         (
@@ -44,7 +44,7 @@ SELECT
 	CAP_DATE
         (
             CAST(EXTRACT_DATE(txn.date_service, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
         )                                                                                   AS date_service,
 
@@ -52,7 +52,7 @@ SELECT
 	CAP_DATE
         (
             CAST(EXTRACT_DATE(txn.date_written, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
         )                                                                                   AS date_written,
 
@@ -63,21 +63,21 @@ SELECT
 	CAP_DATE
         (
             CAST(EXTRACT_DATE(txn.date_authorized, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
         )                                                                                   AS date_authorized,
- 
-     /* time_authorized */   
+
+     /* time_authorized */
     txn.time_authorized                                                                     AS time_authorized,
 
     /* discharge_date */
 	CAP_DATE
         (
             CAST(EXTRACT_DATE(txn.discharge_date, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
         )                                                                                   AS discharge_date,
- 
+
     txn.transaction_code_std                                                                AS transaction_code_std,
     txn.transaction_code_vendor                                                             AS transaction_code_vendor,
     txn.response_code_std                                                                   AS response_code_std,
@@ -87,8 +87,8 @@ SELECT
     txn.reject_reason_code_3                                                                AS reject_reason_code_3,
     txn.reject_reason_code_4                                                                AS reject_reason_code_4,
     txn.reject_reason_code_5                                                                AS reject_reason_code_5,
-    
-    /* diagnosis_code */   
+
+    /* diagnosis_code */
     CLEAN_UP_DIAGNOSIS_CODE
        (
           txn.diagnosis_code,
@@ -96,30 +96,30 @@ SELECT
     	  CAST(EXTRACT_DATE(txn.date_service, '%Y-%m-%d') AS DATE)
     	)                                                                                   AS diagnosis_code,
 
-    /* diagnosis_code_qual */   	
-	CASE WHEN LENGTH(COALESCE(txn.diagnosis_code,'')) > 0 AND COALESCE(txn.diagnosis_code_qual ,'XX') IN ('01', '02') 
-	       THEN txn.diagnosis_code_qual 
+    /* diagnosis_code_qual */
+	CASE WHEN LENGTH(COALESCE(txn.diagnosis_code,'')) > 0 AND COALESCE(txn.diagnosis_code_qual ,'XX') IN ('01', '02')
+	       THEN txn.diagnosis_code_qual
 	ELSE NULL END                                                                            AS diagnosis_code_qual,
 
     CLEAN_UP_PROCEDURE_CODE(procedure_code)                                                  AS procedure_code,
 
-    /* procedure_code_qual */   	
-	CASE WHEN LENGTH(COALESCE(txn.procedure_code,'')) > 0  
-	            THEN txn.procedure_code_qual 
-	ELSE NULL END                                                                            AS procedure_code_qual,	
-	
+    /* procedure_code_qual */
+	CASE WHEN LENGTH(COALESCE(txn.procedure_code,'')) > 0
+	            THEN txn.procedure_code_qual
+	ELSE NULL END                                                                            AS procedure_code_qual,
+
     CLEAN_UP_NDC_CODE(ndc_code)                                                              AS ndc_code,
     txn.product_service_id                                                                   AS product_service_id,
 
-   /* product_service_id_qual */ 	
-	CASE WHEN LENGTH(COALESCE(txn.product_service_id,'')) > 0 
-	    THEN txn.product_service_id_qual 
+   /* product_service_id_qual */
+	CASE WHEN LENGTH(COALESCE(txn.product_service_id,'')) > 0
+	    THEN txn.product_service_id_qual
 	ELSE NULL END                                                                           AS product_service_id_qual,
 
     MD5(txn.rx_number)                                                                      AS rx_number,
    /* rx_number_qual */
-    CASE WHEN LENGTH(COALESCE(txn.rx_number,'')) > 0  
-	            THEN '1' 
+    CASE WHEN LENGTH(COALESCE(txn.rx_number,'')) > 0
+	            THEN '1'
 	ELSE NULL END                                                                           AS rx_number_qual,
     txn.bin_number                                                                          AS bin_number,
     txn.processor_control_number                                                            AS processor_control_number,
@@ -131,8 +131,8 @@ SELECT
     CLEAN_UP_NPI_CODE(txn.pharmacy_npi)                                                     AS pharmacy_npi,
     CLEAN_UP_NPI_CODE(txn.prov_dispensing_npi)                                              AS prov_dispensing_npi,
     txn.payer_id                                                                            AS payer_id,
-    CASE WHEN LENGTH(COALESCE(txn.payer_id,'')) > 0  
-	            THEN txn.payer_id_qual 
+    CASE WHEN LENGTH(COALESCE(txn.payer_id,'')) > 0
+	            THEN txn.payer_id_qual
 	ELSE NULL END                                                                           AS payer_id_qual,
 
     txn.payer_name                                                                          AS payer_name,
@@ -143,8 +143,8 @@ SELECT
     txn.payer_type                                                                          AS payer_type,
 
     /* compound_code */
-    CASE 
-        WHEN txn.compound_code IN ('0','1', '2') 
+    CASE
+        WHEN txn.compound_code IN ('0','1', '2')
             THEN txn.compound_code
     ELSE NULL END                                                                           AS compound_code,
 
@@ -153,20 +153,20 @@ SELECT
     txn.prescription_origin                                                                 AS prescription_origin,
 
     /* submission_clarification */
-    CASE 
-    WHEN CLEAN_UP_NUMERIC_CODE(txn.submission_clarification) BETWEEN 1 AND 99 
+    CASE
+    WHEN CLEAN_UP_NUMERIC_CODE(txn.submission_clarification) BETWEEN 1 AND 99
         THEN CLEAN_UP_NUMERIC_CODE(txn.submission_clarification)
     ELSE NULL END                                                                            AS submission_clarification,
 
-    /* orig_prescribed_product_service_code JKS - Additional transformation addded 9/5/2019 */ 
+    /* orig_prescribed_product_service_code JKS - Additional transformation addded 9/5/2019 */
     CASE
         WHEN txn.orig_prescribed_product_service_code ='00000000000' THEN NULL
         ELSE txn.orig_prescribed_product_service_code END                                   AS orig_prescribed_product_service_code,
 
-    /* orig_prescribed_product_service_code_qual JKS - Additional transformation addded 9/5/2019 */ 
-    CASE WHEN LENGTH(COALESCE(txn.orig_prescribed_product_service_code,'')) > 0 
+    /* orig_prescribed_product_service_code_qual JKS - Additional transformation addded 9/5/2019 */
+    CASE WHEN LENGTH(COALESCE(txn.orig_prescribed_product_service_code,'')) > 0
             AND txn.orig_prescribed_product_service_code <> '00000000000'
-	            THEN txn.orig_prescribed_product_service_code_qual 
+	            THEN txn.orig_prescribed_product_service_code_qual
 	ELSE NULL END                                                                           AS orig_prescribed_product_service_code_qual,
 
     txn.orig_prescribed_quantity                                                            AS orig_prescribed_quantity,
@@ -177,82 +177,82 @@ SELECT
     txn.result_of_service_code                                                              AS result_of_service_code,
     CLEAN_UP_NPI_CODE(txn.prov_prescribing_npi)                                             AS prov_prescribing_npi,
 
-    /* prov_prescribing_tax_id */ 
-    CASE 
+    /* prov_prescribing_tax_id */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
         ELSE txn.prov_prescribing_tax_id
     END                                                                                     AS prov_prescribing_tax_id,
-    /* prov_prescribing_dea_id */ 
-    CASE 
+    /* prov_prescribing_dea_id */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
         ELSE txn.prov_prescribing_dea_id
     END                                                                                     AS prov_prescribing_dea_id,
 
-    /* prov_prescribing_ssn */ 
-    CASE 
+    /* prov_prescribing_ssn */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE txn.prov_prescribing_ssn   
+        ELSE txn.prov_prescribing_ssn
     END                                                                                     AS prov_prescribing_ssn,
 
-    /* prov_prescribing_state_license */ 
-    CASE 
+    /* prov_prescribing_state_license */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE txn.prov_prescribing_state_license   
+        ELSE txn.prov_prescribing_state_license
     END                                                                                     AS prov_prescribing_state_license,
 
-    /* prov_prescribing_upin */ 
-    CASE 
+    /* prov_prescribing_upin */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE txn.prov_prescribing_upin   
+        ELSE txn.prov_prescribing_upin
     END                                                                                     AS prov_prescribing_upin,
 
-    /* prov_prescribing_commercial_id */ 
-    CASE 
+    /* prov_prescribing_commercial_id */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE txn.prov_prescribing_commercial_id   
+        ELSE txn.prov_prescribing_commercial_id
     END                                                                                     AS prov_prescribing_commercial_id,
 
-    /* prov_prescribing_name_1 */ 
-    CASE 
+    /* prov_prescribing_name_1 */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE txn.prov_prescribing_name_1   
+        ELSE txn.prov_prescribing_name_1
     END                                                                                     AS prov_prescribing_name_1,
 
-    /* prov_prescribing_name_2 */ 
-    CASE 
+    /* prov_prescribing_name_2 */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE txn.prov_prescribing_name_2   
+        ELSE txn.prov_prescribing_name_2
     END                                                                                     AS prov_prescribing_name_2,
 
-    /* prov_prescribing_address_1 */ 
-    CASE 
+    /* prov_prescribing_address_1 */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE txn.prov_prescribing_address_1   
+        ELSE txn.prov_prescribing_address_1
     END                                                                                     AS prov_prescribing_address_1,
 
-    /* prov_prescribing_address_2 */ 
-    CASE 
+    /* prov_prescribing_address_2 */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE txn.prov_prescribing_address_2   
+        ELSE txn.prov_prescribing_address_2
     END                                                                                     AS prov_prescribing_address_2,
 
-    /* prov_prescribing_city */ 
-    CASE 
+    /* prov_prescribing_city */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE txn.prov_prescribing_city   
+        ELSE txn.prov_prescribing_city
     END                                                                                     AS prov_prescribing_city,
 
-    /* prov_prescribing_state */ 
-    CASE 
+    /* prov_prescribing_state */
+    CASE
         WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' THEN NULL
-        ELSE  VALIDATE_STATE_CODE(UPPER(COALESCE(txn.prov_prescribing_state,'')))   
+        ELSE  VALIDATE_STATE_CODE(UPPER(COALESCE(txn.prov_prescribing_state,'')))
     END                                                                                     AS prov_prescribing_state,
 
-    /* prov_prescribing_zip JKS - Additional transformation addded 9/5/2019 */ 
-    CASE 
-        WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6' 
+    /* prov_prescribing_zip JKS - Additional transformation addded 9/5/2019 */
+    CASE
+        WHEN SUBSTR(COALESCE(txn.level_of_service,'XXX'),1,1) ='6'
         AND prov_prescribing_zip ='00000' THEN NULL
-        ELSE  txn.prov_prescribing_zip   
+        ELSE  txn.prov_prescribing_zip
     END                                                                                     AS prov_prescribing_zip,
 
     txn.prov_prescribing_std_taxonomy                                                       AS prov_prescribing_std_taxonomy,
@@ -269,9 +269,9 @@ SELECT
     txn.remaining_benefit                                                                   AS remaining_benefit,
     txn.copay_coinsurance                                                                   AS copay_coinsurance,
 
-    /* basis_of_cost_determination */ 
-    CASE WHEN 0 <> LENGTH(COALESCE(txn.basis_of_cost_determination, '')) 
-        THEN SUBSTR(CONCAT('0', txn.basis_of_cost_determination), -2) 
+    /* basis_of_cost_determination */
+    CASE WHEN 0 <> LENGTH(COALESCE(txn.basis_of_cost_determination, ''))
+        THEN SUBSTR(CONCAT('0', txn.basis_of_cost_determination), -2)
     ELSE NULL END                                                                           AS basis_of_cost_determination,
 
     txn.submitted_ingredient_cost                                                           AS submitted_ingredient_cost,
@@ -280,10 +280,10 @@ SELECT
     txn.submitted_gross_due                                                                 AS submitted_gross_due,
     txn.submitted_professional_service_fee                                                  AS submitted_professional_service_fee,
     txn.submitted_patient_pay                                                               AS submitted_patient_pay,
-    
-    /* submitted_other_claimed_qual */ 
-    CASE WHEN LENGTH(COALESCE(txn.submitted_other_claimed,'')) > 0  
-	            THEN txn.submitted_other_claimed_qual 
+
+    /* submitted_other_claimed_qual */
+    CASE WHEN LENGTH(COALESCE(txn.submitted_other_claimed,'')) > 0
+	            THEN txn.submitted_other_claimed_qual
 	ELSE NULL END                                                                           AS submitted_other_claimed_qual,
 
     txn.submitted_other_claimed                                                             AS submitted_other_claimed,
@@ -294,10 +294,10 @@ SELECT
     txn.paid_gross_due                                                                      AS paid_gross_due,
     txn.paid_professional_service_fee                                                       AS paid_professional_service_fee,
     txn.paid_patient_pay                                                                    AS paid_patient_pay,
-    
-    /* paid_other_claimed_qual */ 
-    CASE WHEN LENGTH(COALESCE(txn.paid_other_claimed,'')) > 0  
-	            THEN txn.paid_other_claimed_qual 
+
+    /* paid_other_claimed_qual */
+    CASE WHEN LENGTH(COALESCE(txn.paid_other_claimed,'')) > 0
+	            THEN txn.paid_other_claimed_qual
 	ELSE NULL END                                                                           AS paid_other_claimed_qual,
 
     txn.paid_other_claimed                                                                  AS paid_other_claimed,
@@ -306,48 +306,48 @@ SELECT
     txn.coupon_number                                                                       AS coupon_number,
     txn.coupon_value                                                                        AS coupon_value,
     txn.pharmacy_other_id                                                                   AS pharmacy_other_id,
-    
-    /* pharmacy_other_qual */ 
-    CASE WHEN LENGTH(COALESCE(txn.pharmacy_other_id,'')) > 0  
-	            THEN txn.pharmacy_other_qual 
+
+    /* pharmacy_other_qual */
+    CASE WHEN LENGTH(COALESCE(txn.pharmacy_other_id,'')) > 0
+	            THEN txn.pharmacy_other_qual
 	ELSE NULL END                                                                           AS pharmacy_other_qual,
     txn.pharmacy_postal_code                                                                AS pharmacy_postal_code,
     txn.prov_dispensing_id                                                                  AS prov_dispensing_id,
 
-    /* prov_dispensing_qual */ 
-    CASE WHEN LENGTH(COALESCE(txn.prov_dispensing_id,'')) > 0  
-	            THEN txn.prov_dispensing_qual 
-	ELSE NULL END                                                                           AS prov_dispensing_qual,    
+    /* prov_dispensing_qual */
+    CASE WHEN LENGTH(COALESCE(txn.prov_dispensing_id,'')) > 0
+	            THEN txn.prov_dispensing_qual
+	ELSE NULL END                                                                           AS prov_dispensing_qual,
 
     txn.prov_prescribing_id                                                                 AS prov_prescribing_id,
-    
-    /* prov_prescribing_qual */ 
-    CASE WHEN LENGTH(COALESCE(txn.prov_prescribing_id,'')) > 0  
-	            THEN txn.prov_prescribing_qual 
+
+    /* prov_prescribing_qual */
+    CASE WHEN LENGTH(COALESCE(txn.prov_prescribing_id,'')) > 0
+	            THEN txn.prov_prescribing_qual
 	ELSE NULL END                                                                           AS prov_prescribing_qual,
 
     txn.prov_primary_care_id                                                                AS prov_primary_care_id,
 
-    /* prov_primary_care_qual */ 
-    CASE WHEN LENGTH(COALESCE(txn.prov_primary_care_id,'')) > 0  
-	            THEN txn.prov_primary_care_qual 
+    /* prov_primary_care_qual */
+    CASE WHEN LENGTH(COALESCE(txn.prov_primary_care_id,'')) > 0
+	            THEN txn.prov_primary_care_qual
 	ELSE NULL END                                                                           AS prov_primary_care_qual,
 
     txn.other_payer_coverage_type                                                           AS other_payer_coverage_type,
     txn.other_payer_coverage_id                                                             AS other_payer_coverage_id,
-    
-   /* other_payer_coverage_qual */ 
-    CASE WHEN LENGTH(COALESCE(txn.other_payer_coverage_id,'')) > 0  
-	            THEN txn.other_payer_coverage_qual 
+
+   /* other_payer_coverage_qual */
+    CASE WHEN LENGTH(COALESCE(txn.other_payer_coverage_id,'')) > 0
+	            THEN txn.other_payer_coverage_qual
 	ELSE NULL END                                                                           AS other_payer_coverage_qual,
 
     txn.other_payer_date                                                                    AS other_payer_date,
     txn.other_payer_coverage_code                                                           AS other_payer_coverage_code,
- 
-    /* logical_delete_reason */    
+
+    /* logical_delete_reason */
     CASE WHEN txn.transaction_code_std = 'B2' AND COALESCE(txn.response_code_std,'X') NOT IN ( 'R','S')
             THEN 'Reversal' ELSE NULL END                                                   AS  logical_delete_reason,
-            
+
 	'inmar'                                                                                 AS part_provider,
     /* part_best_date */
 	CASE
@@ -356,9 +356,9 @@ SELECT
 	                                CAP_DATE
                                         (
                                             CAST(EXTRACT_DATE(txn.date_service, '%Y-%m-%d') AS DATE),
-                                            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
+                                            COALESCE(CAST('{AVAILABLE_START_DATE}'  AS DATE), CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)),
                                             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
-                                        ), 
+                                        ),
                                     ''
                                 ))
 	        THEN '0_PREDATES_HVM_HISTORY'
@@ -367,25 +367,9 @@ SELECT
                     SUBSTR(txn.date_service, 1, 4), '-',
                     SUBSTR(txn.date_service, 6, 2), '-01'
                 )
-	END                                                                                 AS part_best_date 
-	
+	END                                                                                 AS part_best_date
+
 FROM transaction txn
 LEFT OUTER JOIN matching_payload payload ON txn.hvjoinkey = payload.hvjoinkey
-LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 147
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-    ) esdt
-   ON 1 = 1
-LEFT OUTER JOIN 
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 147
-          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-    ) ahdt
-   ON 1 = 1
 WHERE UPPER(txn.claim_id)  <>  'CLAIM_ID'
 --LIMIT 10

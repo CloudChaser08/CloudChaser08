@@ -15,8 +15,8 @@ SELECT
     date_service                                            ,
     date_specimen                                           ,
     HV_date_report                                          ,
-    time_report                                             ,
     loinc_code                                              ,
+    hv_loinc_code                                           ,
     lab_id                                                  ,
     test_id                                                 ,
     HV_test_number                                          ,
@@ -34,7 +34,6 @@ SELECT
     HV_ref_range_alpha                                      ,
     HV_fasting_status                                       ,
     HV_diagnosis_code                                       ,
-    diagnosis_code_qual                                     ,
     HV_procedure_code                                       ,
     HV_procedure_code_qual                                  ,
     HV_ordering_npi                                         ,
@@ -42,7 +41,7 @@ SELECT
     payer_name                                              ,
     lab_other_id                                            ,
     HV_lab_other_qual                                       ,
-    HV_phy_name                                             , --- JKS 2020-06-08        
+--  HV_phy_name                                             , --- JKS 2020-06-08   - Remove 2020-07-10
     ordering_market_type                                    ,
     ordering_specialty                                      ,
     ordering_state_license                                  ,
@@ -60,8 +59,6 @@ SELECT
     diag_lab_code                                           ,
     acct_id                                                 ,
     acct_number                                             ,
-    diag_code                                               ,
-    icd_codeset_ind                                         ,
     diag_dos_yyyymm                                         ,
     rslt_accn_id                                            ,
     lab_code                                                ,
@@ -84,7 +81,7 @@ SELECT
     non_physician_name                                      ,
     non_physician_id                                        ,
     long_description                                        ,
-    phy_name                                                , --- JKS 2020-06-08    
+    phy_name                                                , --- JKS 2020-06-08
     suffix                                                  ,
     degree                                                  ,
     idw_analyte_code                                        ,
@@ -123,7 +120,7 @@ SELECT
     species                                                 ,
     pat_country                                             ,
     external_patient_id                                     ,
-    CAST(pat_master_id AS BIGINT)      AS pat_master_id     ,    
+    CAST(pat_master_id AS BIGINT)      AS pat_master_id     ,
     lab_reference_number                                    ,
     room_number                                             ,
     bed_number                                              ,
@@ -131,7 +128,7 @@ SELECT
     ward                                                    ,
     admission_date                                          ,
     health_id                                               ,
-    CAST(pm_eid AS BIGINT)             AS pm_eid            ,   
+    CAST(pm_eid AS BIGINT)             AS pm_eid            ,
     CAST(idw_pm_email_address AS STRING) AS idw_pm_email_address ,
     CAST(date_reported   AS STRING)    AS date_reported     ,
     ----------------- 2020-05-28
@@ -144,14 +141,14 @@ SELECT
 -------------------------------------------------------------------------------------------------
     requisition_number                                      ,
     fasting_ind                                             ,
-    s_diag_code                                             ,
     cpt_code                                                ,
     npi                                                     ,
     phy_last_name                                           ,
     phy_first_name                                          ,
     phy_middle_name                                         ,
-    acct_state                                                  
-    
-FROM labtest_quest_rinse_census_pre_final_02    
-
-
+    acct_state                                              ,
+-------------------------------------------------------------------------------------------------
+---------- New fields added per request from QUEST 2020-06-17
+-------------------------------------------------------------------------------------------------
+    date_final_report
+FROM labtest_quest_rinse_census_pre_final_02

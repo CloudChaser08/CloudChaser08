@@ -167,6 +167,10 @@ def main(args):
         'spark.driver.memoryOverhead': 4096,
         'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
         'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.files.maxPartitionBytes': 3221225472,
+        'spark.reducer.maxBlocksInFlightPerAddress': 64,
+        'spark.reducer.maxReqsInFlight': 192,
+        'spark.shuffle.service.enabled': 'true',
         'spark.task.maxFailures': 8,
         'spark.max.executor.failures': 800
     }
