@@ -37,10 +37,16 @@ if __name__ == "__main__":
         load_date_explode=False,
         unload_partition_count=50,
         vdr_feed_id=186,
-        use_ref_gen_values=True
+        use_ref_gen_values=True,
+        output_to_transform_path=True
     )
 
-    driver.init_spark_context()
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 4096,
+        'spark.driver.memoryOverhead': 4096
+    }
+
+    driver.init_spark_context(conf_parameters=conf_parameters)
     driver.load(cache_tables=False, payloads=False)
     driver.transform()
 
