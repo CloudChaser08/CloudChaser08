@@ -117,7 +117,7 @@ SELECT DISTINCT
     header_teritary_payer_insurance_type_code
                                             AS cob_ins_type_code_2,
     pcn                                     AS medical_claim_link_text
-FROM tmp
+FROM tmp2
     CROSS JOIN diag_exploder x
 WHERE all_diagnoses[x.n] IS NOT NULL
     AND NOT array_contains(linked_diagnoses, all_diagnoses[x.n])

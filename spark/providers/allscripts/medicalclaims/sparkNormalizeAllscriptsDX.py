@@ -77,7 +77,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         min_date = min_date.isoformat()
 
     max_date = date_input
-    payload_loader.load(runner, matching_path, ['PCN', 'hvJoinKey'])
+    payload_loader.load(runner, matching_path, ['PCN', 'hvJoinKey'], cache=True)
 
     # New layout after 2018-07-25, but we already got it once on 2018-07-24
     if date_input > '2018-07-25' or date_input == '2018-07-24':
@@ -87,12 +87,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     explode.generate_exploder_table(spark, 8, 'diag_exploder')
 
-    runner.run_spark_script('pre_normalization_1.sql', return_output=True) \
-            .createOrReplaceTempView('tmp')
+    runner.run_spark_script('pre_normalization_1.sql', return_output=True).createOrReplaceTempView('tmp')
     normalized_related = runner.run_spark_script('normalize_1.sql', return_output=True)
     normalized_related.createOrReplaceTempView('related_diagnoses_records')
-    runner.run_spark_script('pre_normalization_2.sql', return_output=True) \
-            .createOrReplaceTempView('tmp')
+    runner.run_spark_script('pre_normalization_2.sql', return_output=True).createOrReplaceTempView('tmp2')
     normalized_unrelated = runner.run_spark_script('normalize_2.sql', return_output=True)
 
     normalized = schema_enforcer.apply_schema(normalized_related, schema) \
