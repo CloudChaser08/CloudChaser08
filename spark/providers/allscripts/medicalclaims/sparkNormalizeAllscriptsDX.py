@@ -77,7 +77,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         min_date = min_date.isoformat()
 
     max_date = date_input
-    payload_loader.load(runner, matching_path, ['PCN', 'hvJoinKey'], cache=True)
+    payload_loader.load(runner, matching_path, ['PCN', 'hvJoinKey'])
 
     # New layout after 2018-07-25, but we already got it once on 2018-07-24
     if date_input > '2018-07-25' or date_input == '2018-07-24':
