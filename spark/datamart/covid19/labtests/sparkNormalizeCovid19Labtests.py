@@ -30,7 +30,14 @@ _datamart_stage_path = context.LAB_DATAMART_STAGE_PATH
 _datamart_archive_path = context.LAB_DATAMART_ARCHIVE_PATH
 
 """
-
+Package will build COVID19 Datamart. Sourced from LabTests providers and Covid19 Result Table.
+This normalization routine run on daily and refresh most recent 6 months.
+Before s3-refresh(transform) existing dataset will be moved into archive location.
+Final Output S3 Location: s3a://salusv/warehouse/datamart/covid19/lab/
+First Start Part Month is 2018-01
+Partitioned table's number of parquet files are pre-configured and compressed by gzip
+This module will create production external table (if not exists)
+publish covid datamart dataset status (v_mdata)
 """
 
 
@@ -197,8 +204,6 @@ def main(args):
     requested_list_of_months = []
     if start_month != end_month:
         logger.log('[{}] Requested to refresh months between {} and {}'.format(_datamart_name, start_month, end_month))
-        # start_ts, end_ts = [datetime.strptime(_, '%Y-%m') for _ in [start_month, end_month]]
-        # requested_list_of_months = dmutil.get_list_of_months(start_ts, end_ts)
         requested_list_of_months = dmutil.get_list_of_months_v1(start_month, end_month)
     else:
         logger.log('[{}] Requested to refresh month = {}'.format(_datamart_name, start_month))

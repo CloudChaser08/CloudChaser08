@@ -2,15 +2,20 @@ import spark.common.utility.logger as logger
 import spark.datamart.covid19.context as context
 import spark.datamart.datamart_util as dmutil
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-"""
 
+"""
+Publisher module will 
+    handle publish external table and covid data status
+    Steps:    
+        -Create external tables if not exist
+        -apply msck repair for partitioned tables
+        -refresh table for non-partitioned tables
+        -collect datamart max dataset date and publish metrics and datastatus
+            Status Objects: Table: dw.mdata   View :   dw.v_mdata
 """
 
 
 class Covid19LabPublisher:
-    """
-
-    """
     def __init__(self,
                  refresh_time_id,
                  requested_list_of_months,

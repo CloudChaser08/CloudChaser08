@@ -4,17 +4,20 @@ import spark.datamart.datamart_util as dmutil
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import subprocess
 import re
-from datetime import datetime
-from datetime import date, datetime, timedelta
-"""
+from datetime import datetime, timedelta
 
+"""
+Transfer Module will move data from HDFS to S3 Location
+The core steps are:
+    -create _stage on datamart location and copy all the data from HDFS to S3(stage)
+    --Requested Months
+        -Copy existing production dataset into Datmart Archive location (if available)
+        -Remove existing production dataset (if available)
+        -Move data from S3-stage location into S3-prouction location
 """
 
 
 class Covid19LabTransformer:
-    """
-
-    """
     def __init__(self,
                  requested_list_of_months,
                  output_path,
@@ -23,7 +26,6 @@ class Covid19LabTransformer:
                  archive_timeid,
                  test=False
                  ):
-
         self.requested_list_of_months = requested_list_of_months
         self.output_path = output_path
         self.output_stage_path = output_stage_path
@@ -53,22 +55,18 @@ class Covid19LabTransformer:
         """
         ops_status = True
         try:
-            if action == 'sync' and len(src_path) > 0 and len(target_path) > 0:
-                subprocess.check_call(['aws', 's3', 'sync', '--recursive', src_path, target_path])
-            if action == 'cp' and len(src_path) > 0 and len(target_path) > 0:
-                subprocess.check_call(['aws', 's3', 'cp', '--recursive', src_path, target_path])
-            elif action == 'mv' and len(src_path) > 0 and len(target_path) > 0:
-                subprocess.check_call(['aws', 's3', 'mv', '--recursive', src_path, target_path])
-            elif action == 'sw' and len(src_path) > 0 and len(target_path) > 0:
-                subprocess.check_call(['aws', 's3', 'rm', '--recursive', target_path])
-                subprocess.check_call(['aws', 's3', 'mv', '--recursive', src_path, target_path])
+            if len(src_path) > 0 and len(target_path) > 0:
+                if action in ['sync', 'cp', 'mv']:
+                    subprocess.check_call(['aws', 's3', action, '--recursive', src_path, target_path])
+                elif action == 'sw':
+                    subprocess.check_call(['aws', 's3', 'rm', '--recursive', target_path])
+                    subprocess.check_call(['aws', 's3', 'mv', '--recursive', src_path, target_path])
             elif action == 'rm' and len(src_path) > 0:
                 subprocess.check_call(['aws', 's3', 'rm', '--recursive', src_path])
         except Exception as e:
             ops_status = False
-            logger.log(
-                '           -part_files_ops failed to execute command: aws s3 {} --recursive {}'.format(action,
-                                                                                                        src_path))
+            logger.log('           -part_files_ops failed to execute command: '
+                       'aws s3 {} --recursive {}'.format(action, src_path))
         return ops_status
 
     def cleanup_stage_if_exists(self):
@@ -246,4 +244,5 @@ class Covid19LabTransformer:
 
         runner.run_spark_query('msck repair table {}.{}'.format(db, table))
         logger.log('           -table_location_switch: Completed')
+
 

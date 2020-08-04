@@ -79,12 +79,14 @@ def table_repair(spark, runner, db, table, is_partitioned):
 
 
 def get_nbr_of_buckets(asset_name, part_provider):
-    if asset_name.lower() in ['labtests']:
-        if part_provider.lower() in context.LAB_BIG_PART_PROVIDER:
+    part_provider_lower = part_provider.lower()
+    asset_name_lower = asset_name.lower()
+    if asset_name_lower in ['labtests']:
+        if part_provider_lower in context.LAB_BIG_PART_PROVIDER:
             nbr_of_buckets = 50
-        elif part_provider.lower() in context.LAB_MEDIUM_PART_PROVIDER:
+        elif part_provider_lower in context.LAB_MEDIUM_PART_PROVIDER:
             nbr_of_buckets = 5
-        elif part_provider.lower() in context.LAB_SMALL_PART_PROVIDER:
+        elif part_provider_lower in context.LAB_SMALL_PART_PROVIDER:
             nbr_of_buckets = 1
         else:
             nbr_of_buckets = context.LAB_NBR_OF_BUCKETS

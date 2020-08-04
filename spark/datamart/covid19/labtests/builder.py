@@ -5,8 +5,14 @@ import spark.datamart.datamart_util as dmutil
 import os
 
 """
-
+Builder will construct Covid19 Datamart Facts and References
+The Core functionalities are: 
+    -extract source data from S3 into HDFS Location
+    -run pre-defined Covid19 SQL
+        -to build snapshot or reference, history data extract from s3 datamart
+    -create external tables on HDFS Location
 """
+
 script_path = __file__
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -56,11 +62,12 @@ class Covid19LabBuilder:
         :param part_provider: standard part providers
         :return: number of buckets
         """
-        if part_provider.lower() in context.LAB_BIG_PART_PROVIDER:
+        part_provider_lower = part_provider.lower()
+        if part_provider_lower in context.LAB_BIG_PART_PROVIDER:
             nbr_of_buckets = 100
-        elif part_provider.lower() in context.LAB_MEDIUM_PART_PROVIDER:
+        elif part_provider_lower in context.LAB_MEDIUM_PART_PROVIDER:
             nbr_of_buckets = 10
-        elif part_provider.lower() in context.LAB_SMALL_PART_PROVIDER:
+        elif part_provider_lower in context.LAB_SMALL_PART_PROVIDER:
             nbr_of_buckets = 1
         else:
             nbr_of_buckets = context.LAB_NBR_OF_BUCKETS
@@ -99,12 +106,13 @@ class Covid19LabBuilder:
                             , self._lab_result_is_partitioned_table)
 
         for part_provider in self._lab_part_provider_list:
+            part_provider_lower = part_provider.lower()
             current_part_mth = []
             for part_mth in self.requested_list_of_months:
                 current_part_mth.append(part_mth)
                 idx_cnt = self.requested_list_of_months.index(part_mth) + 1
                 if (idx_cnt == len(self.requested_list_of_months) or
-                        (part_provider.lower() in self._lab_big_part_provider_list
+                        (part_provider_lower in self._lab_big_part_provider_list
                          and idx_cnt % self._number_of_months_per_extract == 0)
                 ):
                     list_of_part_mth = "','".join(current_part_mth)
@@ -136,12 +144,7 @@ class Covid19LabBuilder:
                     self.runner.run_spark_script('3_lab_build_all_tests.sql'
                                                  , source_file_path=self.sql_path
                                                  , return_output=True).createOrReplaceTempView(local_all_tests_view)
-                    # dmutil.table_repair(self.spark, self.runner, self._lab_db, self._lab_table
-                    #                     , self._lab_is_partitioned_table)
-                    #
-                    # dmutil.table_repair(self.spark, self.runner, self._lab_result_db, self._lab_result_table
-                    #                     , self._lab_result_is_partitioned_table)
-                    #
+
                     output_table = self.spark.table(local_all_tests_view)
                     logger.log('        -loading: writing provider = {} part months [''{}'']'.format(
                         part_provider, list_of_part_mth))
