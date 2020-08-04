@@ -18,44 +18,45 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 class Covid19LabBuilder:
+    path_prefix_pos = dir_path.find('/spark/target/')
+    path_suffix_pos = dir_path.find('/datamart/covid19/labtests')
+    sql_path = '{}/spark{}/sql/'.format(dir_path[:path_prefix_pos], dir_path[path_suffix_pos:])
+
+    _lab_part_provider_list = context.LAB_PART_PROVIDER_LIST
+    _lab_big_part_provider_list = context.LAB_BIG_PART_PROVIDER
+    _number_of_months_per_extract = context.NUMBER_OF_MONTHS_PER_EXTRACT
+    _number_of_months_per_extract_in_hdfs = context.NUMBER_OF_MONTHS_PER_EXTRACT_IN_HDFS
+
+    _lab_db = context.LAB_DW_SCHEMA
+    _lab_table = context.LAB_DW_TABLE_NAME
+    _lab_is_partitioned_table = context.LAB_DW_TABLE_IS_PARTITIONED
+    _lab_result_db = context.LAB_RESULTS_SCHEMA
+    _lab_result_table = context.LAB_RESULTS_TABLE_NAME
+    _lab_result_is_partitioned_table = context.LAB_RESULTS_TABLE_IS_PARTITIONED
+    _lab_partitions = context.LAB_PARTITIONS
+
+    _hdfs_output_path = context.HDFS_OUTPUT_PATH
+    _lab_fact_all_tests = '{}{}/'.format(_hdfs_output_path, context.LAB_FACT_ALL_TESTS)
+    _lab_fact_covid_tests = '{}{}/'.format(_hdfs_output_path, context.LAB_FACT_COVID_TESTS)
+    _lab_fact_covid_cleansed = '{}{}/'.format(_hdfs_output_path, context.LAB_FACT_COVID_CLEANSED)
+    _lab_ref_covid = '{}{}/'.format(_hdfs_output_path, context.LAB_REF_COVID)
+    _lab_covid_snapshot = '{}{}/'.format(_hdfs_output_path, context.LAB_COVID_SNAPSHOT)
+    _lab_covid_sum = '{}{}/'.format(_hdfs_output_path, context.LAB_COVID_SUM)
+
+    _lab_datamart_db = context.LAB_DW_SCHEMA
+    _lab_fact_covid_cleansed_table = context.LAB_DW_COVID_CLEANSED_TABLE_NAME
+    _lab_fact_covid_cleansed_is_partitioned_table = context.LAB_DW_COVID_CLEANSED_TABLE_IS_PARTITIONED
+
     def __init__(self,
                  spark,
                  runner,
                  requested_list_of_months,
                  test=False
                  ):
-        path_prefix_pos = dir_path.find('/spark/target/')
-        path_suffix_pos = dir_path.find('/datamart/covid19/labtests')
-        self.sql_path = '{}/spark{}/sql/'.format(dir_path[:path_prefix_pos],  dir_path[path_suffix_pos:])
         self.spark = spark
         self.runner = runner
         self.requested_list_of_months = requested_list_of_months
         self.test = test
-
-        self._lab_part_provider_list = context.LAB_PART_PROVIDER_LIST
-        self._lab_big_part_provider_list = context.LAB_BIG_PART_PROVIDER
-        self._number_of_months_per_extract = context.NUMBER_OF_MONTHS_PER_EXTRACT
-        self._number_of_months_per_extract_in_hdfs = context.NUMBER_OF_MONTHS_PER_EXTRACT_IN_HDFS
-
-        self._lab_db = context.LAB_DW_SCHEMA
-        self._lab_table = context.LAB_DW_TABLE_NAME
-        self._lab_is_partitioned_table = context.LAB_DW_TABLE_IS_PARTITIONED
-        self._lab_result_db = context.LAB_RESULTS_SCHEMA
-        self._lab_result_table = context.LAB_RESULTS_TABLE_NAME
-        self._lab_result_is_partitioned_table = context.LAB_RESULTS_TABLE_IS_PARTITIONED
-        self._lab_partitions = context.LAB_PARTITIONS
-
-        self._hdfs_output_path = context.HDFS_OUTPUT_PATH
-        self._lab_fact_all_tests = '{}{}/'.format(self._hdfs_output_path, context.LAB_FACT_ALL_TESTS)
-        self._lab_fact_covid_tests = '{}{}/'.format(self._hdfs_output_path, context.LAB_FACT_COVID_TESTS)
-        self._lab_fact_covid_cleansed = '{}{}/'.format(self._hdfs_output_path, context.LAB_FACT_COVID_CLEANSED)
-        self._lab_ref_covid = '{}{}/'.format(self._hdfs_output_path, context.LAB_REF_COVID)
-        self._lab_covid_snapshot = '{}{}/'.format(self._hdfs_output_path, context.LAB_COVID_SNAPSHOT)
-        self._lab_covid_sum = '{}{}/'.format(self._hdfs_output_path, context.LAB_COVID_SUM)
-
-        self._lab_datamart_db = context.LAB_DW_SCHEMA
-        self._lab_fact_covid_cleansed_table = context.LAB_DW_COVID_CLEANSED_TABLE_NAME
-        self._lab_fact_covid_cleansed_is_partitioned_table = context.LAB_DW_COVID_CLEANSED_TABLE_IS_PARTITIONED
 
     def get_nbr_of_buckets(self, part_provider):
         """

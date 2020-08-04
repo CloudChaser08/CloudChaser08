@@ -16,6 +16,29 @@ Publisher module will
 
 
 class Covid19LabPublisher:
+    part_mth = ['part_mth']
+
+    _tables_list = context.LAB_TABLES_LIST
+    _datamart_path_full = '{}{}/'.format(context.PRODUCTION, context.LAB_DATAMART_PATH)
+    _partitioned_tables_list = context.LAB_PARTTITIONED_TABLES_LIST
+
+    _dw_db = context.DW_SCHEMA
+
+    _mdata_table_location = context.MDATA_TABLE_LOCATION
+    _mdata_table = context.MDATA_TABLE
+    _mdata_view = context.MDATA_VIEW
+    _mdata_db_table = '{}.{}'.format(_dw_db, _mdata_table)
+    _mdata_db_view = '{}.{}'.format(_dw_db, _mdata_view)
+
+    _hdfs_output_path = context.HDFS_OUTPUT_PATH
+    _mdata_hdfs_location = '{}{}/'.format(_hdfs_output_path, _mdata_table)
+
+    _all_tests_table = context.LAB_FACT_ALL_TESTS
+    _all_tests_db_table = '{}.{}'.format(_dw_db, _all_tests_table)
+
+    _covid_tests_table = context.LAB_FACT_COVID_TESTS
+    _covid_tests_db_table = '{}.{}'.format(_dw_db, _covid_tests_table)
+
     def __init__(self,
                  refresh_time_id,
                  requested_list_of_months,
@@ -33,29 +56,8 @@ class Covid19LabPublisher:
         self.data_typ = data_typ
         self.load_ind = load_ind
         self.datamart_desc = datamart_desc
-        self.part_mth = ['part_mth']
         self.test = test
 
-        self._tables_list = context.LAB_TABLES_LIST
-        self._datamart_path_full = '{}{}/'.format(context.PRODUCTION, context.LAB_DATAMART_PATH)
-        self._partitioned_tables_list = context.LAB_PARTTITIONED_TABLES_LIST
-
-        self._dw_db = context.DW_SCHEMA
-
-        self._mdata_table_location = context.MDATA_TABLE_LOCATION
-        self._mdata_table = context.MDATA_TABLE
-        self._mdata_view = context.MDATA_VIEW
-        self._mdata_db_table = '{}.{}'.format(self._dw_db, self._mdata_table)
-        self._mdata_db_view = '{}.{}'.format(self._dw_db, self._mdata_view)
-
-        self._hdfs_output_path = context.HDFS_OUTPUT_PATH
-        self._mdata_hdfs_location = '{}{}/'.format(self._hdfs_output_path, self._mdata_table)
-
-        self._all_tests_table = context.LAB_FACT_ALL_TESTS
-        self._all_tests_db_table = '{}.{}'.format(self._dw_db, self._all_tests_table)
-
-        self._covid_tests_table = context.LAB_FACT_COVID_TESTS
-        self._covid_tests_db_table = '{}.{}'.format(self._dw_db, self._covid_tests_table)
 
     def create_table_if_not_and_repair(self, spark, runner):
         """

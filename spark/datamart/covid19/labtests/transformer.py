@@ -18,6 +18,14 @@ The core steps are:
 
 
 class Covid19LabTransformer:
+    _hdfs_output_path = context.HDFS_OUTPUT_PATH
+    _tables_list = context.LAB_TABLES_LIST
+    _partitioned_tables_list = context.LAB_PARTTITIONED_TABLES_LIST
+    _pat_mth_pattern = context.PART_MTH_PATTERN
+    _full_archive_requested_days = context.FULL_ARCHIVE_REQUESTED_DAYS
+    _full_archive_suffix_key = context.FULL_ARCHIVE_SUFFIX_KEY
+    _incremental_archive_suffix_key = context.INCREMENTAL_ARCHIVE_SUFFIX_KEY
+
     def __init__(self,
                  requested_list_of_months,
                  output_path,
@@ -32,14 +40,6 @@ class Covid19LabTransformer:
         self.output_archive_path = output_archive_path
         self.archive_timeid = archive_timeid
         self.test = test
-
-        self._hdfs_output_path = context.HDFS_OUTPUT_PATH
-        self._tables_list = context.LAB_TABLES_LIST
-        self._partitioned_tables_list = context.LAB_PARTTITIONED_TABLES_LIST
-        self._pat_mth_pattern = context.PART_MTH_PATTERN
-        self._full_archive_requested_days = context.FULL_ARCHIVE_REQUESTED_DAYS
-        self._full_archive_suffix_key = context.FULL_ARCHIVE_SUFFIX_KEY
-        self._incremental_archive_suffix_key = context.INCREMENTAL_ARCHIVE_SUFFIX_KEY
 
     def part_files_ops(self, action, src_path, target_path=''):
         """
