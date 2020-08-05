@@ -1,3 +1,4 @@
+import os
 import spark.common.utility.logger as logger
 import spark.datamart.covid19.context as context
 import spark.datamart.datamart_util as dmutil
@@ -14,8 +15,15 @@ Publisher module will
             Status Objects: Table: dw.mdata   View :   dw.v_mdata
 """
 
+script_path = __file__
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
 
 class Covid19LabPublisher:
+    path_prefix_pos = dir_path.find('/spark/target/')
+    path_suffix_pos = dir_path.find('/datamart/covid19/labtests')
+    sql_path = '{}/spark{}/sql/'.format(dir_path[:path_prefix_pos], dir_path[path_suffix_pos:])
+
     part_mth = ['part_mth']
 
     _tables_list = context.LAB_TABLES_LIST
@@ -58,7 +66,6 @@ class Covid19LabPublisher:
         self.datamart_desc = datamart_desc
         self.test = test
 
-
     def create_table_if_not_and_repair(self, spark, runner):
         """
         :return:
@@ -75,11 +82,26 @@ class Covid19LabPublisher:
         """
         logger.log('    -create_table_if_not_and_repair: started')
         for table in self._tables_list:
+            table_sql = 'xt_{}_{}.sql'.format(self._dw_db, table)
             table_location = self._datamart_path_full
             if table in [self._all_tests_table, self._covid_tests_table]:
                 table_location = table_location.replace('s3:', 's3a:')
 
-            table_status = dmutil.create_table_if_not(spark, runner, self._dw_db, table, table_location)
+            """
+                1. Validate given table is exist or not
+                2. if table is not exist
+                        run external table create SQL file
+                3. apply table refresh and get table exist status
+            """
+            logger.log('    -table re-create if not exist {}.{}: started'.format(self._dw_db, table))
+            if not dmutil.has_table(spark, self._dw_db, table):
+                runner.run_spark_script(table_sql, [
+                    ['table_location', table_location.rstrip('/') + '/']
+                ], source_file_path=self.sql_path, return_output=False)
+                logger.log('        -table does not exist and re-created')
+
+            runner.run_spark_query('refresh {}.{}'.format(self._dw_db, table))
+            table_status = dmutil.has_table(spark, self._dw_db, table)
 
             repair_status = False
             if table_status:

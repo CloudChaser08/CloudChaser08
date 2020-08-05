@@ -58,12 +58,11 @@ class Covid19LabBuilder:
         self.requested_list_of_months = requested_list_of_months
         self.test = test
 
-    def get_nbr_of_buckets(self, part_provider):
+    def get_nbr_of_buckets(self, part_provider_lower=''):
         """
-        :param part_provider: standard part providers
+        :param part_provider_lower: standard part providers
         :return: number of buckets
         """
-        part_provider_lower = part_provider.lower()
         if part_provider_lower in context.LAB_BIG_PART_PROVIDER:
             nbr_of_buckets = 100
         elif part_provider_lower in context.LAB_MEDIUM_PART_PROVIDER:
@@ -81,10 +80,11 @@ class Covid19LabBuilder:
         """
         Build All Lab Tests:
             1. Get requested Months and Collect pre-configured covid19 Lab providers
-            2. Extract LabTests data from DW and create HDFS table [sql/1_lab_collect_tests.sql]
-            3. Extract Results data from aet2575 and create HDFS local table [sql/2_lab_collect_results2575.sql]
-            4. Merge LabTests and Results [sql/3_lab_build_all_tests.sql]
-            5. Build all Tests HDFS Local Table (partitioned)
+            2. Apply MSCK Repair for both input/source tables (external partitioned)
+            3. Extract LabTests data from DW and create HDFS table [sql/1_lab_collect_tests.sql]
+            4. Extract Results data from aet2575 and create HDFS local table [sql/2_lab_collect_results2575.sql]
+            5. Merge LabTests and Results [sql/3_lab_build_all_tests.sql]
+            6. Build all Tests HDFS Local Table (partitioned)
 
         Input/Dependency - Production Tables:
             dw._labtests_nbc
@@ -100,11 +100,21 @@ class Covid19LabBuilder:
         logger.log('    -build_all_tests: started')
         file_utils.clean_up_output_hdfs(self._lab_fact_all_tests)
 
+        """
+        (Sometimes we lost MSCK repair applied on source tables. So better
+        apply msck repair on source tables before start extract)
+        
+        Apply MSCK repair for the source/input tables to catch-up
+        all loaded new dataset
+        """
         dmutil.table_repair(self.spark, self.runner, self._lab_db, self._lab_table
                             , self._lab_is_partitioned_table)
 
         dmutil.table_repair(self.spark, self.runner, self._lab_result_db, self._lab_result_table
                             , self._lab_result_is_partitioned_table)
+        """
+        msck repair DONE
+        """
 
         for part_provider in self._lab_part_provider_list:
             part_provider_lower = part_provider.lower()
@@ -122,7 +132,7 @@ class Covid19LabBuilder:
                     logger.log('        -loading: extracting provider={} part months=[''{}'']'.format(
                         part_provider, list_of_part_mth))
 
-                    nbr_of_buckets = self.get_nbr_of_buckets(part_provider)
+                    nbr_of_buckets = self.get_nbr_of_buckets(part_provider_lower)
                     if not self.test:
                         self.runner.run_spark_script(
                             '1_lab_collect_tests.sql', [
@@ -179,8 +189,20 @@ class Covid19LabBuilder:
         logger.log('    -build_covid_tests: started')
         file_utils.clean_up_output_hdfs(self._lab_fact_covid_tests)
 
-        self.spark.sql("SET spark.default.parallelism=700")
-        self.spark.sql("SET spark.shuffle.partitions=700")
+        """
+        For Optimization and fast data shuffle, 
+            Please reset spark parallelism and partitions based on input parameters
+            nbr_of_part_parallel is greater than or equal to from the below calculations
+                number-of-buckets * requested-list-of-months * number-of-providers
+            Ex:
+                20 buckets * 7 months refresh * 5 providers = set 700 partitions/parallelism
+                20 buckets * 8 months refresh * 5 providers = set 800 partitions/parallelism
+                20 buckets * 7 months refresh * 6 providers = set 840 partitions/parallelism
+        """
+        nbr_of_part_parallel = \
+            self.requested_list_of_months * self.get_nbr_of_buckets() * len(self._lab_part_provider_list)
+        self.spark.sql("SET spark.default.parallelism={}".format(nbr_of_part_parallel))
+        self.spark.sql("SET spark.shuffle.partitions={}".format(nbr_of_part_parallel))
 
         local_all_tests_view = '_temp_lab_all_tests'
         local_covid_tests_view = '_temp_lab_covid_tests'
@@ -351,11 +373,16 @@ class Covid19LabBuilder:
 
         logger.log('        -loading: lab covid snapshot - reading covid ref')
         covid_ref_df = self.spark.read.parquet(self._lab_ref_covid)
+
+        covid_ref_df.repartition(
+            'part_provider', 'test_ordered_name', 'result_name', 'hv_method_flag', 'result_comments', 'result')
         covid_ref_df.cache().createOrReplaceTempView(local_covid_ref_view)
 
         logger.log('        -loading: lab covid snapshot - reading covid tests cleansed')
         covid_tests_cleansed_master_df = self.spark.read.parquet(self._lab_fact_covid_cleansed)
-        covid_tests_cleansed_master_df.repartition('part_mth', 'part_provider', 'claim_bucket_id')
+        # covid_tests_cleansed_master_df.repartition('part_mth', 'part_provider', 'claim_bucket_id')
+        covid_tests_cleansed_master_df.repartition(
+            'part_provider', 'test_ordered_name', 'result_name', 'hv_method_flag', 'result_comments', 'result')
         covid_tests_cleansed_master_df.cache().createOrReplaceTempView(local_covid_tests_cleansed_view)
 
         self.runner.run_spark_script('7_lab_build_covid_snapshot.sql', source_file_path=self.sql_path
