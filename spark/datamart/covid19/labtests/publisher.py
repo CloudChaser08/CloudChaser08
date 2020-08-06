@@ -203,21 +203,17 @@ class Covid19LabPublisher:
         data_end_id = str(data_id[0].end_id)
         data_part_mth = self.refresh_time_id[:7]
 
-        mdata_temp_df = \
-            runner.run_spark_query(
-                ins_sql.format(mdata_db_table=self._mdata_db_table
-                               , asset_typ=self.asset_typ
-                               , data_typ=self.data_typ
-                               , load_ind=self.load_ind
-                               , last_refresh_time_id=self.refresh_time_id
-                               , data_start_id=data_start_id
-                               , data_end_id=data_end_id
-                               , datamart_desc=self.datamart_desc
-                               , part_mth=data_part_mth
-                               ), return_output=True).createOrReplaceTempView('_mdata_temp')
-
-        # directly writing into s3
-        # spark.table('_mdata_temp').write.parquet(self._mdata_table_location, compression='gzip', mode='append')
+        runner.run_spark_query(
+            ins_sql.format(mdata_db_table=self._mdata_db_table
+                           , asset_typ=self.asset_typ
+                           , data_typ=self.data_typ
+                           , load_ind=self.load_ind
+                           , last_refresh_time_id=self.refresh_time_id
+                           , data_start_id=data_start_id
+                           , data_end_id=data_end_id
+                           , datamart_desc=self.datamart_desc
+                           , part_mth=data_part_mth
+                           ), return_output=True).createOrReplaceTempView('_mdata_temp')
 
         # writing into local then transfer into s3
         spark.table('_mdata_temp').repartition(1).write.parquet(
