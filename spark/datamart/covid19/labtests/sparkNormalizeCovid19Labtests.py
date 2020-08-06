@@ -254,32 +254,32 @@ def main(args):
     spark.stop()
 
     # ================================================================================================
-    #
-    # # ------------------------------------------------------------------------------------------------
-    # # transfer data:
-    # #   - transfer data from hdfs to s3-stage
-    # #   - copy all data from s3-prod to s3-archive (if requested)
-    # #   - remove requested months data from s3-prod
-    # #   - move s3-stage into s3-prod
-    # #   done.
-    # # ------------------------------------------------------------------------------------------------
-    #
-    # transform(requested_list_of_months, output_to_transform_path, this_archive_dir, end_to_end_test)
-    #
-    # # ================================================================================================
-    #
-    # # ------------------------------------------------------------------------------------------------
-    # # publish
-    # #   - if prod environment,
-    # #           create external table if not there
-    # #           repair external table
-    # #           update refresh status
-    # #   - notify data ops
-    # # ------------------------------------------------------------------------------------------------
-    # refresh_time_id = str((datetime.utcnow() - timedelta(hours=4)).strftime("%Y-%m-%d %H:%M:%S"))
-    # publish(refresh_time_id, requested_list_of_months, output_to_transform_path, conf_parameters, end_to_end_test)
-    #
-    # # ================================================================================================
+
+    # ------------------------------------------------------------------------------------------------
+    # transfer data:
+    #   - transfer data from hdfs to s3-stage
+    #   - copy all data from s3-prod to s3-archive (if requested)
+    #   - remove requested months data from s3-prod
+    #   - move s3-stage into s3-prod
+    #   done.
+    # ------------------------------------------------------------------------------------------------
+
+    transform(requested_list_of_months, output_to_transform_path, this_archive_dir, end_to_end_test)
+
+    # ================================================================================================
+
+    # ------------------------------------------------------------------------------------------------
+    # publish
+    #   - if prod environment,
+    #           create external table if not there
+    #           repair external table
+    #           update refresh status
+    #   - notify data ops
+    # ------------------------------------------------------------------------------------------------
+    refresh_time_id = str((datetime.utcnow() - timedelta(hours=4)).strftime("%Y-%m-%d %H:%M:%S"))
+    publish(refresh_time_id, requested_list_of_months, output_to_transform_path, conf_parameters, end_to_end_test)
+
+    # ================================================================================================
 
 
 if __name__ == "__main__":

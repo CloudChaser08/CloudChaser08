@@ -89,65 +89,28 @@ SELECT
 FROM
 (
     SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_0} AS INT)
+    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1
+        AND ct1.claim_bucket_id BETWEEN CAST({claim_bucket_id_low_1} AS INT) AND CAST({claim_bucket_id_up_1} AS INT)
 UNION ALL
     SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_1} AS INT)
+    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1
+        AND ct1.claim_bucket_id BETWEEN CAST({claim_bucket_id_low_2} AS INT) AND CAST({claim_bucket_id_up_2} AS INT)
 UNION ALL
     SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_2} AS INT)
+    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1
+        AND ct1.claim_bucket_id BETWEEN CAST({claim_bucket_id_low_3} AS INT) AND CAST({claim_bucket_id_up_3} AS INT)
 UNION ALL
     SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_3} AS INT)
+    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1
+        AND ct1.claim_bucket_id BETWEEN CAST({claim_bucket_id_low_4} AS INT) AND CAST({claim_bucket_id_up_4} AS INT)
 UNION ALL
     SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_4} AS INT)
+    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1
+        AND ct1.claim_bucket_id BETWEEN CAST({claim_bucket_id_low_5} AS INT) AND CAST({claim_bucket_id_up_5} AS INT)
 UNION ALL
     SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_5} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_6} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_7} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_8} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_9} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_10} AS INT)
-UNION ALL
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_11} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_12} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_13} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_14} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_15} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_16} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_17} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_18} AS INT)
-UNION ALL
-    SELECT ct1.* FROM _temp_lab_all_tests ct1
-    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1 AND ct1.claim_bucket_id = CAST({claim_bucket_id_low_19} AS INT)
+    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1
+        AND ct1.claim_bucket_id BETWEEN CAST({claim_bucket_id_low_6} AS INT) AND CAST({claim_bucket_id_up_6} AS INT)
 ) ct
 GROUP BY
     ct.record_id
