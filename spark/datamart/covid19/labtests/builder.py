@@ -223,7 +223,27 @@ class Covid19LabBuilder:
 
                 self.runner.run_spark_script(
                     '4_lab_build_covid_tests.sql', [
-                        ['list_of_part_mth', list_of_part_mth]
+                        ['list_of_part_mth', list_of_part_mth],
+                        ['claim_bucket_id_0', '0'],
+                        ['claim_bucket_id_1', '1'],
+                        ['claim_bucket_id_2', '2'],
+                        ['claim_bucket_id_3', '4'],
+                        ['claim_bucket_id_4', '5'],
+                        ['claim_bucket_id_5', '6'],
+                        ['claim_bucket_id_6', '6'],
+                        ['claim_bucket_id_7', '7'],
+                        ['claim_bucket_id_8', '8'],
+                        ['claim_bucket_id_9', '9'],
+                        ['claim_bucket_id_10', '10'],
+                        ['claim_bucket_id_11', '11'],
+                        ['claim_bucket_id_12', '12'],
+                        ['claim_bucket_id_13', '13'],
+                        ['claim_bucket_id_14', '14'],
+                        ['claim_bucket_id_15', '15'],
+                        ['claim_bucket_id_16', '16'],
+                        ['claim_bucket_id_17', '17'],
+                        ['claim_bucket_id_18', '18'],
+                        ['claim_bucket_id_19', '19']
                     ], source_file_path=self.sql_path, return_output=True).createOrReplaceTempView(
                     local_covid_tests_view)
 
@@ -380,12 +400,19 @@ class Covid19LabBuilder:
 
         logger.log('        -loading: lab covid snapshot - reading covid tests cleansed')
         covid_tests_cleansed_master_df = self.spark.read.parquet(self._lab_fact_covid_cleansed)
-        # covid_tests_cleansed_master_df.repartition('part_mth', 'part_provider', 'claim_bucket_id')
         covid_tests_cleansed_master_df.repartition(
-            'part_provider', 'test_ordered_name', 'result_name', 'hv_method_flag', 'result_comments', 'result')
+            'claim_bucket_id', 'date_service', 'part_provider', 'test_ordered_name', 'result_name'
+            , 'hv_method_flag', 'result_comments', 'result')
         covid_tests_cleansed_master_df.cache().createOrReplaceTempView(local_covid_tests_cleansed_view)
 
-        self.runner.run_spark_script('7_lab_build_covid_snapshot.sql', source_file_path=self.sql_path
+        self.runner.run_spark_script('7_lab_build_covid_snapshot.sql', [
+            ['claim_bucket_id_low_1', '0'], ['claim_bucket_id_up_1', '1'],
+            ['claim_bucket_id_low_2', '2'], ['claim_bucket_id_up_2', '3'],
+            ['claim_bucket_id_low_3', '4'], ['claim_bucket_id_up_3', '5'],
+            ['claim_bucket_id_low_4', '6'], ['claim_bucket_id_up_4', '7'],
+            ['claim_bucket_id_low_5', '8'], ['claim_bucket_id_up_5', '9'],
+            ['claim_bucket_id_low_6', '10'], ['claim_bucket_id_up_6', '19'],
+        ], source_file_path=self.sql_path
                                      , return_output=True).createOrReplaceTempView(local_covid_snapshot_view)
 
         output_table = self.spark.table(local_covid_snapshot_view)
