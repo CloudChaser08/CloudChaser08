@@ -11,8 +11,6 @@ import spark.common.utility.logger as logger
 
 
 if __name__ == "__main__":
-    OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/transformed/pharmacyclaims/2018-11-26/'
-
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'inovalon'
     versioned_schema = pharmacyclaims_schema['schema_v11']
@@ -54,14 +52,21 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         load_date_explode=False,
-        unload_partition_count=40
+        unload_partition_count=40,
+        vdr_feed_id=177,
+        use_ref_gen_values=True
     )
-    driver.init_spark_context()
+
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 4096,
+        'spark.driver.memoryOverhead': 4096
+    }
+
+    driver.init_spark_context(conf_parameters=conf_parameters)
     logger.log('Loading external tables')
     output_path = driver.output_path + 'pharmacyclaims/2018-11-26/part_provider=inovalon/'
     driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
-    driver.init_spark_context()
     driver.load()
 
     if is_schema_v2:
