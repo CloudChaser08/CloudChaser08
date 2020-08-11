@@ -35,7 +35,6 @@ TABLE_CONF = {
             , 'specialty_code'
             , 'report_zip'
             , 'hvjoinkey'
-            , 'input_file_name'
         ]
     )
 }
