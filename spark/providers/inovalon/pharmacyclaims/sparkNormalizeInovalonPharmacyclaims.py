@@ -64,7 +64,7 @@ if __name__ == "__main__":
         'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
         'spark.task.maxFailures': 8,
         'spark.max.executor.failures': 800,
-        'spark.sql.autoBroadcastJoinThreshold': 10485760
+        'spark.sql.autoBroadcastJoinThreshold': -1
     }
 
     driver.init_spark_context(conf_parameters=conf_parameters)
