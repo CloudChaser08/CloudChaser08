@@ -91,7 +91,7 @@ SELECT
     ,medication_dose
     ,logical_delete_reason
     ,vendor_record_id
-    ,CAST(mod(case when claim_id is null then 0.0 else substring(claim_id,1,instr(claim_id,'_')-1) end, CAST({nbr_of_buckets} AS INT)) AS INT) as claim_bucket_id
+    ,CAST(mod(case when claim_id is null then 0.0 when instr(claim_id,'_')>0 then substring(claim_id,1,instr(claim_id,'_')-1) else claim_id end, CAST({nbr_of_buckets} AS INT)) AS INT) as claim_bucket_id
     ,part_provider
 	,CASE
 	    WHEN COALESCE(part_best_date, 'NULL') NOT IN ('NULL', '0_PREDATES_HVM_HISTORY')
