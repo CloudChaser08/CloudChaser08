@@ -38,8 +38,7 @@ class Covid19LabPublisher:
     _mdata_db_table = '{}.{}'.format(_dw_db, _mdata_table)
     _mdata_db_view = '{}.{}'.format(_dw_db, _mdata_view)
 
-    _hdfs_output_path = context.HDFS_OUTPUT_PATH
-    _mdata_hdfs_location = '{}{}/'.format(_hdfs_output_path, _mdata_table)
+    _mdata_hdfs_location = '{}{}/'.format(context.HDFS_OUTPUT_PATH, _mdata_table)
 
     _all_tests_table = context.LAB_FACT_ALL_TESTS
     _all_tests_db_table = '{}.{}'.format(_dw_db, _all_tests_table)

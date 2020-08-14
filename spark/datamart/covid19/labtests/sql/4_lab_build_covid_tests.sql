@@ -90,6 +90,10 @@ FROM
 (
     SELECT ct1.* FROM _temp_lab_all_tests ct1
     WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1
+        AND ct1.claim_bucket_id is null
+UNION ALL
+    SELECT ct1.* FROM _temp_lab_all_tests ct1
+    WHERE ct1.part_mth IN ({list_of_part_mth}) AND ct1.covid19_ind=1
         AND ct1.claim_bucket_id BETWEEN CAST({claim_bucket_id_low_1} AS INT) AND CAST({claim_bucket_id_up_1} AS INT)
 UNION ALL
     SELECT ct1.* FROM _temp_lab_all_tests ct1

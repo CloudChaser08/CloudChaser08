@@ -129,7 +129,7 @@ class Covid19LabBuilder:
                     list_of_part_mth = "','".join(current_part_mth)
                     del current_part_mth[:]
 
-                    logger.log('        -loading: extracting provider={} part months=[''{}'']'.format(
+                    logger.log("        -loading: extracting provider={} part months=['{}']".format(
                         part_provider, list_of_part_mth))
 
                     nbr_of_buckets = self.get_nbr_of_buckets(part_provider_lower)
@@ -157,7 +157,7 @@ class Covid19LabBuilder:
                                                  , return_output=True).createOrReplaceTempView(local_all_tests_view)
 
                     output_table = self.spark.table(local_all_tests_view)
-                    logger.log('        -loading: writing provider = {} part months [''{}'']'.format(
+                    logger.log("        -loading: writing provider = {} part months ['{}']".format(
                         part_provider, list_of_part_mth))
 
                     output_table.repartition(
@@ -195,9 +195,9 @@ class Covid19LabBuilder:
             nbr_of_part_parallel is greater than or equal to from the below calculations
                 number-of-buckets * requested-list-of-months * number-of-providers
             Ex:
-                20 buckets * 7 months refresh * 5 providers = set 700 partitions/parallelism
-                20 buckets * 8 months refresh * 5 providers = set 800 partitions/parallelism
-                20 buckets * 7 months refresh * 6 providers = set 840 partitions/parallelism
+                100 buckets * 7 months refresh * 5 providers = set 3500 partitions/parallelism
+                100 buckets * 8 months refresh * 5 providers = set 4000 partitions/parallelism
+                100 buckets * 7 months refresh * 6 providers = set 4160 partitions/parallelism
         """
         nbr_of_part_parallel = \
             self.requested_list_of_months * self.get_nbr_of_buckets() * len(self._lab_part_provider_list)
@@ -218,8 +218,7 @@ class Covid19LabBuilder:
                 list_of_part_mth = "','".join(current_part_mth)
                 del current_part_mth[:]
 
-                logger.log(
-                    '        -loading: extracting covid tests part months [''{}'']'.format(list_of_part_mth))
+                logger.log("        -loading: extracting covid tests part months ['{}']".format(list_of_part_mth))
 
                 last_bucket_id = self.get_nbr_of_buckets() - 1
                 self.runner.run_spark_script(
@@ -231,14 +230,12 @@ class Covid19LabBuilder:
                         ['claim_bucket_id_low_4', '6'], ['claim_bucket_id_up_4', '7'],
                         ['claim_bucket_id_low_5', '8'], ['claim_bucket_id_up_5', '9'],
                         ['claim_bucket_id_low_6', '10'], ['claim_bucket_id_up_6', str(last_bucket_id)]
-                ], source_file_path=self.sql_path, return_output=True).createOrReplaceTempView(
+                    ], source_file_path=self.sql_path, return_output=True).createOrReplaceTempView(
                     local_covid_tests_view)
 
                 output_table = self.spark.table(local_covid_tests_view)
 
-                logger.log(
-                    '        -loading: writing covid tests for part months [''{}'']'.format(list_of_part_mth))
-
+                logger.log("        -loading: writing covid tests for part months ['{}']".format(list_of_part_mth))
                 output_table.repartition(10).write.parquet(self._lab_fact_covid_tests
                                                           , compression='gzip', mode='append'
                                                           , partitionBy=self._lab_partitions)
@@ -281,10 +278,10 @@ class Covid19LabBuilder:
         if dmutil.has_table(self.spark, self._lab_datamart_db, self._lab_fact_covid_cleansed_table):
             list_of_part_mth = "','".join(self.requested_list_of_months)
 
-            logger.log('        -loading: lab covid ref -reading cleansed HISTORY '
-                       'data from [{}.{}] except part months  [''{}''] '.format(self._lab_datamart_db
-                                                                                , self._lab_fact_covid_cleansed_table
-                                                                                , list_of_part_mth))
+            logger.log("        -loading: lab covid ref -reading cleansed HISTORY "
+                       "data from [{}.{}] except part months  ['{}']".format(self._lab_datamart_db
+                                                                             , self._lab_fact_covid_cleansed_table
+                                                                             , list_of_part_mth))
 
             dmutil.table_repair(self.spark, self.runner, self._lab_datamart_db, self._lab_fact_covid_cleansed_table
                                 , self._lab_fact_covid_cleansed_is_partitioned_table)
@@ -308,10 +305,6 @@ class Covid19LabBuilder:
 
         output_table.write.parquet(
             self._lab_fact_covid_cleansed, compression='gzip', mode='append', partitionBy=self._lab_partitions)
-
-        # output_table.repartition(
-        #     'part_mth', 'part_provider', 'claim_bucket_id').write.parquet(
-        #     self._lab_fact_covid_cleansed, compression='gzip', mode='append', partitionBy=self._lab_partitions)
 
         self.runner.run_spark_query('drop view {}'.format(local_covid_tests_view))
         self.runner.run_spark_query('drop view {}'.format(local_covid_tests_cleansed_view))
@@ -392,21 +385,13 @@ class Covid19LabBuilder:
             , 'hv_method_flag', 'result_comments', 'result')
         covid_tests_cleansed_master_df.cache().createOrReplaceTempView(local_covid_tests_cleansed_view)
 
-        last_bucket_id = self.get_nbr_of_buckets()-1
-        self.runner.run_spark_script('7_lab_build_covid_snapshot.sql', [
-            ['claim_bucket_id_low_1', '0'], ['claim_bucket_id_up_1', '1'],
-            ['claim_bucket_id_low_2', '2'], ['claim_bucket_id_up_2', '3'],
-            ['claim_bucket_id_low_3', '4'], ['claim_bucket_id_up_3', '5'],
-            ['claim_bucket_id_low_4', '6'], ['claim_bucket_id_up_4', '7'],
-            ['claim_bucket_id_low_5', '8'], ['claim_bucket_id_up_5', '9'],
-            ['claim_bucket_id_low_6', '10'], ['claim_bucket_id_up_6', str(last_bucket_id)]
-        ], source_file_path=self.sql_path
+        self.runner.run_spark_script('7_lab_build_covid_snapshot.sql'
+                                     ,  source_file_path=self.sql_path
                                      , return_output=True).createOrReplaceTempView(local_covid_snapshot_view)
 
         output_table = self.spark.table(local_covid_snapshot_view)
 
-        # output_table.write.parquet(self._lab_covid_snapshot, compression='gzip', mode='append')
-        output_table.repartition(10).write.parquet(self._lab_covid_snapshot, compression='gzip', mode='append')
+        output_table.repartition(20).write.parquet(self._lab_covid_snapshot, compression='gzip', mode='append')
 
         covid_tests_cleansed_master_df.unpersist()
         covid_ref_df.unpersist()

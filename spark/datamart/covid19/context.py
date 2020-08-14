@@ -25,7 +25,7 @@ MDATA_VIEW = 'v_mdata'
 """
 HDFS Temp Location
 """
-HDFS_OUTPUT_PATH = 'hdfs:///staging/'
+HDFS_OUTPUT_PATH = '/staging/'
 
 
 """
@@ -34,7 +34,7 @@ Datamart Configuration for...........LabTests
 LAB_PART_PROVIDER_LIST = ['quest', 'bioreference', 'ovation', 'luminate']
 LAB_PARTITIONS = ['part_mth', 'part_provider']
 LAB_FIRST_RUN_MONTH = '2018-01'
-LAB_REFRESH_NBR_OF_MONTHS = 5
+LAB_REFRESH_NBR_OF_MONTHS = 7
 LAB_SKIP_ARCHIVE = False
 
 FULL_ARCHIVE_REQUESTED_DAYS = ['Sunday']
@@ -125,8 +125,7 @@ LAB_PARTTITIONED_TABLES_LIST = [LAB_FACT_ALL_TESTS,
 """
 DATAMART Operational Configuration for...........LabTests
 """
-LAB_NBR_OF_BUCKETS = 20
-NUMBER_OF_PAETITIONS = 100
+LAB_NBR_OF_BUCKETS = 100
 PART_MTH_PATTERN = 'part_mth='
 PART_PROVIDER_PATTERN = 'part_provider='
 FILE_NAME_PATTERN = '.gz.parquet'

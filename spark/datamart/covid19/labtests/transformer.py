@@ -91,12 +91,9 @@ class Covid19LabTransformer:
         transfer data from local (HDFS) to Datamart S3 Stage location
             -use distcp to transfer with delete on success True
         """
-        logger.log('    -trans_local_to_s3stage: started')
-        for table in self._tables_list:
-            src_path = self._hdfs_output_path + table + '/'
-            outpt_path = self.output_stage_path + table + '/'
-            logger.log("        -trans_local_to_s3stage: Moving files hdfs {}-> s3 {}".format(src_path, outpt_path))
-            normalized_records_unloader.distcp(outpt_path, src_path)
+        logger.log("    -trans_local_to_s3stage: Moving files hdfs {}-> s3 {}".format(
+            self._hdfs_output_path, self.output_stage_path))
+        normalized_records_unloader.distcp(self.output_stage_path, self._hdfs_output_path)
         logger.log('    -trans_local_to_s3stage: completed')
 
     def archive_current_prod(self):
