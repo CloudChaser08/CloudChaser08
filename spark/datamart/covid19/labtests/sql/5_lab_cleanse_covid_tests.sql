@@ -2,7 +2,7 @@
         test.*
         , 2 as hv_method_flag
     FROM
-        _temp_lab_covid_tests test
+        lab_build_covid_tests test
     WHERE
         part_provider IN ('quest' , 'bioreference')
         AND
@@ -24,7 +24,7 @@
         -- ----------------------------------------------------
         AND
         (
-           LOWER(test.result) LIKE 'see com%'
+            LOWER(test.result) LIKE 'see com%'
             OR LOWER(test.result) LIKE 'see note%'
             OR LOWER(test.result) LIKE 'see below%'
             OR LOWER(test.result) IS NULL
@@ -58,7 +58,7 @@ UNION ALL
         test.*
         , 1 as hv_method_flag
     FROM
-        _temp_lab_covid_tests test
+        lab_build_covid_tests test
     WHERE
         part_provider IN ( 'quest' , 'bioreference')
     AND
@@ -97,7 +97,7 @@ UNION ALL
         test.*
         , 1 as hv_method_flag
     FROM
-        _temp_lab_covid_tests test
+        lab_build_covid_tests test
     WHERE
         part_provider IN ('luminate')
         AND result_name is NULL
@@ -132,7 +132,7 @@ UNION ALL
         test.*
         , 1 as hv_method_flag
     FROM
-        _temp_lab_covid_tests test
+        lab_build_covid_tests test
     WHERE
         part_provider IN ('ovation')
         AND test_ordered_name is NULL
@@ -157,3 +157,29 @@ UNION ALL
             AND LOWER(test.result) NOT LIKE 'dnr%'
             AND LOWER(test.result) NOT IN ('dnp','invaild')
         )
+----------------------------------------------------<<<<<
+-------------- UNION Labcorp PS 77
+----------------------------------------------------<<<<<
+----------------------------------------------------<<<<<
+UNION ALL
+    SELECT
+        test.*
+        , 1 as hv_method_flag
+    FROM
+        lab_build_covid_tests test
+    WHERE
+        part_provider IN ( 'labcorp_covid')
+        -- ----------------------------------------------------
+        -- -------------- Result (exclude)
+        -- ----------------------------------------------------
+        AND UPPER(result) NOT IN
+        (
+            'C'     ,'CANC'  ,'COMMNT','EXPIRE','ICTR' ,'INVALI','LA11'  ,'LIP1'  ,'LOST11',
+            'METH1' ,'METH2' ,'METH3' ,'METH4' ,'MLEAK','MSPLIT','NFSR'  ,'NG6'   ,'NOMAT5',
+            'NOSR'  ,'NSER'  ,'NSR'   ,'NVT'   ,'QNS'  ,'QNSRP' ,'REFERT','REJ5'  ,'SPHEMO','SPRCS','TNP',
+            'TNPOLD','TNPVIA','VISC5' ,'XNOSR1','XNVT' ,'XQNS'  ,'XREJ'  ,'XSPHEM'
+            'EMPTY6','XNSER1','EMPTY6','FMAIL2','SCREC','EMPTY6','Q'     ,'QNSR'  ,'S'     ,'SOMFAX'
+        )
+
+
+

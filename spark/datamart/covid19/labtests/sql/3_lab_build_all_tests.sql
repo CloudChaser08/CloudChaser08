@@ -31,22 +31,22 @@ SELECT
     --------------------------------------------------
     ---- Merge with Quest Result
     --------------------------------------------------
-    ,COALESCE(rslt.result_value_a, test.result) AS result
-    ,test.result_name  AS result_name
-    ,COALESCE(rslt.units, test.result_unit_of_measure) AS result_unit_of_measure
-    ,test.result_desc AS result_desc
-    ,COALESCE(rslt.hipaa_comment, test.result_comments) AS result_comments
+    ,COALESCE(rslt.result_value_a, test.result)            AS result
+    ,test.result_name                                      AS result_name
+    ,COALESCE(rslt.units, test.result_unit_of_measure)     AS result_unit_of_measure
+    ,test.result_desc                                      AS result_desc
+    ,COALESCE(rslt.hipaa_comment, test.result_comments)    AS result_comments
     /* ref_range */
     ,COALESCE
-    (
-      COALESCE
-      (
-      	CONCAT(rslt.ref_range_low, ' - ', rslt.ref_range_high),
-      	rslt.ref_range_alpha
-      ),
-      test.ref_range
-    ) AS ref_range
-    ,COALESCE(rslt.abnormal_ind, test.abnormal_flag) AS abnormal_flag
+     (
+        COALESCE
+        (
+      	    CONCAT(rslt.ref_range_low, ' - ', rslt.ref_range_high),
+      	    rslt.ref_range_alpha
+        ),
+        test.ref_range
+     )                                                     AS ref_range
+    ,COALESCE(rslt.abnormal_ind, test.abnormal_flag)       AS abnormal_flag
     ,COALESCE(rslt.fasting_indicator, test.fasting_status) AS fasting_status
     ------------------------------------------------
     ,test.diagnosis_code
@@ -107,29 +107,27 @@ SELECT
             OR lower(test.result_name)       LIKE '%covid%19%'
             OR lower(test.test_ordered_name) LIKE '%sars%cov%2%'
             OR lower(test.result_name)       LIKE '%sars%cov%2%'
-            ) THEN
-                CASE WHEN test.part_provider = 'quest' THEN
-                    CASE WHEN COALESCE(test.test_ordered_local_id, test.claim_id ) = COALESCE(rslt.local_order_code , rslt.claim_id) THEN 1 ELSE 0 END
-                ELSE 1 END
+            ) THEN 1
         ELSE 0 END AS INT) AS covid19_ind
     ,test.claim_bucket_id
     ,test.part_provider
     ,test.part_mth
 FROM
-    _temp_lab_tests test
+    lab_collect_tests test
     LEFT OUTER JOIN
-        _temp_lab_results rslt
+        lab_collect_results2575 rslt
             ON test.part_provider = rslt.part_provider
             AND test.part_mth = rslt.part_mth
             AND test.claim_bucket_id = rslt.claim_bucket_id
             AND test.claim_id = rslt.claim_id
             AND COALESCE(test.test_ordered_local_id, test.claim_id ) = COALESCE(rslt.local_order_code , rslt.claim_id)
+            AND COALESCE(test.result_id            , test.claim_id ) = COALESCE(rslt.local_result_code, rslt.claim_id)
                 ----------------- If both fields are not populated skip the check----------------  -- AND a.test_ordered_std_id=c.standard_order_code
             AND CASE WHEN (test.test_ordered_std_id IS NOT NULL OR LENGTH(TRIM(COALESCE(test.test_ordered_std_id,''))) > 0  )
                     AND (rslt.standard_order_code IS NOT NULL OR LENGTH(TRIM(COALESCE(rslt.standard_order_code,''))) > 0  )
                         THEN  test.test_ordered_std_id   ELSE 1  END
-                = CASE WHEN (test.test_ordered_std_id IS NOT NULL OR LENGTH(TRIM(COALESCE(test.test_ordered_std_id,''))) > 0  )
+                =
+                CASE WHEN (test.test_ordered_std_id IS NOT NULL OR LENGTH(TRIM(COALESCE(test.test_ordered_std_id,''))) > 0  )
                     AND (rslt.standard_order_code IS NOT NULL OR LENGTH(TRIM(COALESCE(rslt.standard_order_code,''))) > 0  )
                         THEN rslt.standard_order_code   ELSE 1  END
-
 
