@@ -31,10 +31,10 @@ HDFS_OUTPUT_PATH = '/staging/'
 """
 Datamart Configuration for...........LabTests
 """
-LAB_PART_PROVIDER_LIST = ['quest', 'bioreference', 'ovation', 'luminate']
+LAB_PART_PROVIDER_LIST = ['quest', 'bioreference', 'ovation', 'luminate', 'labcorp_covid']
 LAB_PARTITIONS = ['part_mth', 'part_provider']
 LAB_FIRST_RUN_MONTH = '2018-01'
-LAB_REFRESH_NBR_OF_MONTHS = 7
+LAB_REFRESH_NBR_OF_MONTHS = 6
 LAB_SKIP_ARCHIVE = False
 
 FULL_ARCHIVE_REQUESTED_DAYS = ['Sunday']
@@ -47,7 +47,7 @@ Identify providers to balance
     number of partitions and read data from S3
 """
 LAB_BIG_PART_PROVIDER = ['quest']
-LAB_MEDIUM_PART_PROVIDER = ['bioreference']
+LAB_MEDIUM_PART_PROVIDER = ['bioreference', 'labcorp_covid']
 LAB_SMALL_PART_PROVIDER = ['ovation', 'luminate']
 
 
@@ -130,8 +130,8 @@ PART_MTH_PATTERN = 'part_mth='
 PART_PROVIDER_PATTERN = 'part_provider='
 FILE_NAME_PATTERN = '.gz.parquet'
 
-NUMBER_OF_MONTHS_PER_EXTRACT = 6
-NUMBER_OF_MONTHS_PER_EXTRACT_IN_HDFS = 6
+NUMBER_OF_MONTHS_PER_EXTRACT = 7
+NUMBER_OF_MONTHS_PER_EXTRACT_IN_HDFS = 7
 
 
 """
