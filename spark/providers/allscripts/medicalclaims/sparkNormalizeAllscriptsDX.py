@@ -170,7 +170,8 @@ def main(args):
         'spark.reducer.maxReqsInFlight': 192,
         'spark.shuffle.service.enabled': 'true',
         'spark.task.maxFailures': 8,
-        'spark.max.executor.failures': 800
+        'spark.max.executor.failures': 800,
+        'spark.sql.autoBroadcastJoinThreshold': 10485760
     }
 
     spark, sqlContext = init('Allscripts', False, spark_conf_parameters)
