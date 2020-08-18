@@ -33,7 +33,7 @@ SELECT
     result_desc                                             ,
     HV_ref_range_alpha                                      ,
     HV_fasting_status                                       ,
-    HV_diagnosis_code                                       ,
+    HV_s_diag_code_codeset_ind                              ,
     HV_procedure_code                                       ,
     HV_procedure_code_qual                                  ,
     HV_ordering_npi                                         ,
@@ -150,5 +150,7 @@ SELECT
 -------------------------------------------------------------------------------------------------
 ---------- New fields added per request from QUEST 2020-06-17
 -------------------------------------------------------------------------------------------------
-    date_final_report
+    date_final_report                                       ,
+    s_diag_code_codeset_ind
 FROM labtest_quest_rinse_census_pre_final_02
+

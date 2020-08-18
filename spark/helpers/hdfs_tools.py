@@ -56,3 +56,24 @@ def get_files_from_hdfs_path(path):
     ]
 
     return [f.split(' ')[-1].strip().split('/')[-1] for f in files]
+
+
+def get_hdfs_file_path_size(path):
+    """Returns the size(in bytes) of file OR all files within a directory on HDFS.
+    Displays sizes of files and directories contained in the
+    given directory or the size of a file in case its just a file.
+    Args:
+        path (string): /staging
+
+    Returns:
+        int: The size(bytes) files that are within the given directory or given file
+    """
+
+    file_count = \
+        subprocess \
+            .check_output(['hadoop fs -du -s {}'.format(path)], shell=True) \
+            .decode() \
+            .strip() \
+            .split(' ')
+
+    return int(file_count[0])
