@@ -1,3 +1,4 @@
+
 SELECT
     CONCAT
         (
@@ -9,8 +10,6 @@ SELECT
         )                                                                               AS HV_claim_id,
     CASE
         WHEN pay.hvid           IS NOT NULL THEN obfuscate_hvid(pay.hvid, 'questrinse')
-        WHEN pay.patientid      IS NOT NULL THEN CONCAT('7_', pay.patientid)
-        WHEN ptnt.pat_master_id IS NOT NULL THEN CONCAT('7_', ptnt.pat_master_id)
         ELSE NULL
     END                                                                                     AS hvid,
 
@@ -95,9 +94,20 @@ SELECT
     END	                                                                                     AS HV_fasting_status,
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- ------------------- Changed on 2020-07-06
+    -- ------------------- Changed on 2020-07-24 "clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service)"
+    -- ------------------- Changed on 2020-07-28 diagnosis_code_qual needs to be 01 or 02 (MAS)
     -- --------------------------------------------------------------------------------------------------------------
-    CONCAT(diag.s_icd_codeset_ind, '^', UPPER(diag.s_diag_code))                             AS HV_ONE_diagnosis_code , --HV_s_diag_code_codeset_ind,
+    CASE
+        WHEN diag.s_diag_code IS NULL THEN NULL
+        WHEN CLEAN_UP_DIAGNOSIS_CODE(diag.s_diag_code,
+            CASE
+                WHEN diag.s_icd_codeset_ind = '9' THEN '01'
+                WHEN diag.s_icd_codeset_ind = '0' THEN '02'
+                ELSE NULL
+            END, CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)) IS NULL THEN NULL
+    ELSE
+        CONCAT(diag.s_icd_codeset_ind, '^', UPPER(diag.s_diag_code))
+    END                                                                                      AS HV_ONE_diagnosis_code ,
     CLEAN_UP_PROCEDURE_CODE(rslt.cpt_code)                                                   AS HV_procedure_code     ,
     'CPT'                                                                                    AS HV_procedure_code_qual,
     CLEAN_UP_NPI_CODE(rslt.npi)                                                              AS HV_ordering_npi       ,
@@ -136,7 +146,7 @@ SELECT
     rslt.lab_code                     AS  lab_code                ,
     rslt.phy_id                       AS  phy_id                  ,
     rslt.accession_number             AS  rslt_accession_number   ,
-    rslt.accn_dom_id                  AS  accn_dom_id             ,
+    CAST(rslt.accn_dom_id AS BIGINT)  AS  accn_dom_id             ,
     rslt.cmdm_spclty_cd               AS  cmdm_spclty_cd          ,
     rslt.acct_name                    AS  acct_name               ,
     rslt.cmdm_licstate                AS  cmdm_licstate           ,
@@ -224,7 +234,11 @@ SELECT
 -------------------------------------------------------------------------------------------------
 ---------- New fields added per request from QUEST 2020-06-17
 -------------------------------------------------------------------------------------------------
-    rslt.date_final_report            AS date_final_report
+    rslt.date_final_report            AS date_final_report        ,
+    CASE
+        WHEN diag.s_diag_code IS NULL THEN NULL
+    ELSE CONCAT(diag.s_icd_codeset_ind, '^', UPPER(diag.s_diag_code))
+    END                              AS s_diag_code_codeset_ind
 FROM order_result rslt
 LEFT OUTER JOIN diagnosis diag ON rslt.unique_accession_id = diag.unique_accession_id
 LEFT OUTER JOIN transactions  ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id

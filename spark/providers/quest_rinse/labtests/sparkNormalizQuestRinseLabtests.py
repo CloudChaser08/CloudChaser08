@@ -12,6 +12,10 @@ import spark.common.utility.logger as logger
 from spark.common.utility.run_recorder import RunRecorder
 from pyspark.sql.functions import col
 
+_parquet_file_split_size = 1024 * 1024 * 1024
+_ref_loinc_schema = 'darch'
+_ref_loinc_table = 'hv_loinc_20191204_hardcoded_final'
+
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
@@ -63,11 +67,20 @@ if __name__ == "__main__":
 
     driver.init_spark_context(conf_parameters=conf_parameters)
 
+    # ------------------------ Load Reference Tables -----------------------
     logger.log('Loading external table: ref_geo_state')
     external_table_loader.load_analytics_db_table(
         driver.sql_context, 'dw', 'ref_geo_state', 'ref_geo_state'
     )
     driver.spark.table('ref_geo_state').cache().createOrReplaceTempView('ref_geo_state')
+
+    logger.log('Loading external table: {}.{}'.format(_ref_loinc_schema, _ref_loinc_table))
+    external_table_loader.load_analytics_db_table(
+        driver.sql_context, _ref_loinc_schema, _ref_loinc_table, 'loinc'
+    )
+    driver.spark.table('loinc').cache().createOrReplaceTempView('loinc')
+    # ------------------------ End Reference Tables Load -----------------------
+
     driver.load()
     driver.transform()
 
@@ -79,7 +92,23 @@ if __name__ == "__main__":
     delivery_path='s3://salusv/deliverable/questrinse/{}/'.format(delivery_date)
     hdfs_output_path = 'hdfs:///staging/'
     file_utils.clean_up_output_hdfs(hdfs_output_path)
-    output_table.repartition(20).write.parquet(hdfs_output_path, compression='gzip', mode='append')
+
+    """
+    requirement to delivery with 1 GB (1024 * 1024 * 1024) per file
+    (split into 1GB files)
+    """
+    hdfs_output_temp_path = 'hdfs:///staging_temp/'
+    file_utils.clean_up_output_hdfs(hdfs_output_temp_path)
+    output_table.repartition(20).write.parquet(hdfs_output_temp_path, compression='gzip', mode='append')
+
+    # Collect total files size
+    repartition_cnt = int(round(hdfs_utils.get_hdfs_file_path_size(hdfs_output_temp_path) / _parquet_file_split_size))
+
+    logger.log('Repartition with given specific file size.')
+    driver.spark.read.parquet(hdfs_output_temp_path).repartition(repartition_cnt).write.parquet(
+        hdfs_output_path, compression='gzip', mode='append')
+
+    file_utils.clean_up_output_hdfs(hdfs_output_temp_path)
 
     driver.log_run()
 

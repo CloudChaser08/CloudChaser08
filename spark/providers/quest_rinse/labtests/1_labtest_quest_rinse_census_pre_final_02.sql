@@ -150,7 +150,8 @@ SELECT
 ---------- New fields added per request from QUEST 2020-06-17
 -------------------------------------------------------------------------------------------------
     date_final_report       ,
-    CONCAT_WS(' | ', COLLECT_SET(HV_ONE_diagnosis_code)) as HV_diagnosis_code
+    CONCAT_WS(' | ', COLLECT_SET(s_diag_code_codeset_ind)) as s_diag_code_codeset_ind,
+    CONCAT_WS(' | ', COLLECT_SET(HV_ONE_diagnosis_code)) as HV_s_diag_code_codeset_ind
 FROM labtest_quest_rinse_census_pre_final_01
 --WHERE
 --HV_claim_id = 'TM877351C~TMP~2014-11-21~2017-06-19 00:18:19_1716101979_2_3_1'
@@ -164,3 +165,4 @@ GROUP BY
     100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
     120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
     140, 141
+
