@@ -5,7 +5,7 @@ import shutil
 import os
 import logging
 
-import spark.providers.mckesson.pharmacyclaims.sparkNormalizeMcKessonRx as mckesson
+import spark.providers.mckesson.pharmacyclaims.normalize as mckesson
 import spark.helpers.file_utils as file_utils
 
 unrestricted_results = []
