@@ -41,7 +41,6 @@ SELECT
     payer_name                                              ,
     lab_other_id                                            ,
     HV_lab_other_qual                                       ,
---  HV_phy_name                                             , --- JKS 2020-06-08   - Remove 2020-07-10
     ordering_market_type                                    ,
     ordering_specialty                                      ,
     ordering_state_license                                  ,
@@ -152,5 +151,6 @@ SELECT
 -------------------------------------------------------------------------------------------------
     date_final_report                                       ,
     s_diag_code_codeset_ind
-FROM labtest_quest_rinse_census_pre_final_02
+FROM labtest_quest_rinse_census_pre_final_03
+
 

@@ -14,7 +14,7 @@ from pyspark.sql.functions import col
 
 _parquet_file_split_size = 1024 * 1024 * 1024
 _ref_loinc_schema = 'darch'
-_ref_loinc_table = 'hv_loinc_20191204_hardcoded_final'
+_ref_loinc_table = 'hv_loinc_20191204'
 
 if __name__ == "__main__":
 
@@ -49,8 +49,11 @@ if __name__ == "__main__":
 
     # init
     conf_parameters = {
-        'spark.executor.memoryOverhead': 4096,
-        'spark.driver.memoryOverhead': 4096,
+        'spark.default.parallelism': 1000,
+        'spark.sql.shuffle.partitions': 1000,
+        'spark.sql.autoBroadcastJoinThreshold': 10485760,
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024,
         'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
         'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
         'spark.files.maxPartitionBytes': 3221225472,
@@ -103,10 +106,14 @@ if __name__ == "__main__":
 
     # Collect total files size
     repartition_cnt = int(round(hdfs_utils.get_hdfs_file_path_size(hdfs_output_temp_path) / _parquet_file_split_size))
+    driver.spark.sql("SET spark.default.parallelism={}".format(repartition_cnt))
+    driver.spark.sql("SET spark.shuffle.partitions={}".format(repartition_cnt))
 
-    logger.log('Repartition with given specific file size.')
-    driver.spark.read.parquet(hdfs_output_temp_path).repartition(repartition_cnt).write.parquet(
-        hdfs_output_path, compression='gzip', mode='append')
+    logger.log('Repartition with given specific file size. New number of files {}'.format(str(repartition_cnt)))
+    driver.spark.read.parquet(hdfs_output_temp_path).createOrReplaceTempView('staging_temp_view')
+    output_table = driver.spark.sql('select * from staging_temp_view order by 1')
+
+    output_table.repartition(repartition_cnt).write.parquet(hdfs_output_path, compression='gzip', mode='append')
 
     file_utils.clean_up_output_hdfs(hdfs_output_temp_path)
 

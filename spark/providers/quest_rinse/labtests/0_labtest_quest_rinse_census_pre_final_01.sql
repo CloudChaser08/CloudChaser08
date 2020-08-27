@@ -1,4 +1,3 @@
-
 SELECT
     CONCAT
         (
@@ -48,12 +47,18 @@ SELECT
     rslt.date_of_service                                                                     AS date_service,
     rslt.date_of_collection                                                                  AS date_specimen,
     COALESCE(rslt.date_final_report,rslt.date_reported)                                      AS HV_date_report,
-    --rslt.date_final_report                                                                 AS time_report,                      <--- removed JKS 2020-06-17
-
     rslt.loinc_code	                                                                         AS loinc_code,
     ----------------------------------------------------------------------------------------------------------------> LOINC From HV
+    --When the rslt.loinc_code is NULL or starts with the letter L, or when the lab_id is liste code
+    --then populate target with hv_loinc.loinc_code where available. Else populate rslt.loinc_code
+     ----------------------------------------------------------------------------------------------------------------> LOINC From HV
     CASE
-        WHEN rslt.loinc_code IS NULL OR rslt.lab_id = '14' OR SUBSTR(UPPER(rslt.loinc_code),1, 1) ='L'  THEN loinc.loinc_code
+        WHEN (
+               LPAD(rslt.lab_id , 2, '0') IN ('01', '03', '04',	'08', '09', '10', '11', '13', '14', '35', '37', '42', '43', '47', '48', '53', '54' )
+                        OR SUBSTR(UPPER(rslt.loinc_code),1, 1) ='L' OR rslt.loinc_code IS NULL
+             )
+                                 AND loinc.loinc_code IS NOT NULL       THEN loinc.loinc_code
+
     ELSE rslt.loinc_code
     END                                                                                      AS hv_loinc_code,
     ---------------------------------------------------------------------------------------------------------------->
@@ -95,21 +100,23 @@ SELECT
 
     -- --------------------------------------------------------------------------------------------------------------
     -- ------------------- Changed on 2020-07-24 "clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service)"
-    -- ------------------- Changed on 2020-07-28 diagnosis_code_qual needs to be 01 or 02 (MAS)
     -- --------------------------------------------------------------------------------------------------------------
     CASE
         WHEN diag.s_diag_code IS NULL THEN NULL
         WHEN CLEAN_UP_DIAGNOSIS_CODE(diag.s_diag_code,
             CASE
-                WHEN diag.s_icd_codeset_ind = '9' THEN '01'
-                WHEN diag.s_icd_codeset_ind = '0' THEN '02'
-                ELSE NULL
+                WHEN diag.s_icd_codeset_ind = '9'  THEN '01'
+                WHEN diag.s_icd_codeset_ind = '10' THEN '02'
+            ELSE NULL
             END, CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)) IS NULL THEN NULL
     ELSE
         CONCAT(diag.s_icd_codeset_ind, '^', UPPER(diag.s_diag_code))
     END                                                                                      AS HV_ONE_diagnosis_code ,
     CLEAN_UP_PROCEDURE_CODE(rslt.cpt_code)                                                   AS HV_procedure_code     ,
-    'CPT'                                                                                    AS HV_procedure_code_qual,
+    CASE
+        WHEN CLEAN_UP_PROCEDURE_CODE(rslt.cpt_code)  IS NOT NULL THEN 'CPT'
+    ELSE NULL
+    END                                                                                      AS HV_procedure_code_qual,
     CLEAN_UP_NPI_CODE(rslt.npi)                                                              AS HV_ordering_npi       ,
     rslt.ins_id                                                                              AS payer_id              ,
     rslt.company                                                                             AS payer_name            ,
@@ -122,7 +129,9 @@ SELECT
     rslt.acct_address_1                                                                      AS ordering_address_1    ,
     rslt.acct_address_2                                                                      AS ordering_address_2    ,
     rslt.acct_city                                                                           AS ordering_city         ,
-    VALIDATE_STATE_CODE(UPPER(COALESCE(rslt.acct_state,pay.state)))                          AS HV_ordering_state     ,
+
+    VALIDATE_STATE_CODE(UPPER(rslt.acct_state))                                              AS HV_ordering_state     ,
+
     rslt.acct_zip                                                                            AS ordering_zip          ,
     'quest_rinse'                                                                            AS part_provider         ,
     /* part_best_date */
@@ -239,21 +248,30 @@ SELECT
         WHEN diag.s_diag_code IS NULL THEN NULL
     ELSE CONCAT(diag.s_icd_codeset_ind, '^', UPPER(diag.s_diag_code))
     END                              AS s_diag_code_codeset_ind
+
 FROM order_result rslt
 LEFT OUTER JOIN diagnosis diag ON rslt.unique_accession_id = diag.unique_accession_id
 LEFT OUTER JOIN transactions  ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id
 LEFT OUTER JOIN matching_payload  pay  ON ptnt.hvjoinkey           = pay.hvJoinKey
 LEFT OUTER JOIN loinc           ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)  = CAST(TO_DATE(loinc.date_of_service, 'yyyy-MM-dd') AS DATE)
                                        AND UPPER(rslt.result_name) = UPPER(loinc.upper_result_name)
-                                       AND  rslt.local_result_code = loinc.local_result_code
+                                       AND rslt.local_result_code = loinc.local_result_code
+                                       AND rslt.units = loinc.units
 WHERE EXISTS
 /* Select only valid U.S. states and territories. Added PA as default state if there is no state found*/
     (
         SELECT 1
-         FROM ref_geo_state sts
+        FROM ref_geo_state sts
         WHERE UPPER(COALESCE(ptnt.pat_state, pay.state, 'PA')) = sts.geo_state_pstl_cd
     )
 /* Eliminate column heade rows */
 AND LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
 ------- Eliminate Non US patient
 AND UPPER(COALESCE(SUBSTR(ptnt.pat_country,1,2),'US')) = 'US'
+------- Eliminate Non US patient from result
+AND EXISTS
+    (
+        SELECT 1
+        FROM ref_geo_state sts
+        WHERE UPPER(COALESCE(rslt.acct_state, 'PA')) = sts.geo_state_pstl_cd
+    )
