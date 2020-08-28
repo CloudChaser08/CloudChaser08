@@ -31,6 +31,7 @@ schema_v1 = StructType([
     StructField('data_src_cd', StringType(), True),
     StructField('data_captr_dt', DateType(), True),
     StructField('rec_stat_cd', StringType(), True),
+    StructField('prsnt_on_admsn_cd', StringType(), True),
     StructField('prmy_src_tbl_nm', StringType(), True)
 ])
 

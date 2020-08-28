@@ -13,7 +13,7 @@ SELECT
         ELSE NULL
     END                                                                                     AS hv_diag_id,
     CURRENT_DATE()                                                                          AS crt_dt,
-	'01'                                                                                    AS mdl_vrsn_num,
+	'02'                                                                                    AS mdl_vrsn_num,
     SPLIT(ptn_dgn.input_file_name, '/')[SIZE(SPLIT(ptn_dgn.input_file_name, '/')) - 1]      AS data_set_nm,
 	492                                                                                     AS hvm_vdr_id,
 	149                                                                                     AS hvm_vdr_feed_id,
@@ -25,12 +25,11 @@ SELECT
             pay.hvid, 
             CONCAT
                 (
-                    '149_', 
+                    '492_', 
                     COALESCE
                         (
                             epi.unique_patient_id, 
-                            ptn.unique_patient_id,
-                            'UNAVAILABLE'
+                            ptn.unique_patient_id
                         )
                 )
         )                                                                                   AS hvid,
@@ -38,14 +37,14 @@ SELECT
 	CAP_YEAR_OF_BIRTH
 	    (
             COALESCE(epi.age, pay.age),
-            CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
+            to_date(epi.discharge_dt, 'yyyyMMdd'),
             SUBSTR(COALESCE(ptn.patientdob, pay.yearofbirth), 1, 4)
         )                                                                                   AS ptnt_birth_yr,
     /* ptnt_age_num */
 	VALIDATE_AGE
 	    (
             COALESCE(epi.age, pay.age),
-            CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
+            to_date(epi.discharge_dt, 'yyyyMMdd'),
             SUBSTR(COALESCE(ptn.patientdob, pay.yearofbirth), 1, 4)
 	    )                                                                                   AS ptnt_age_num,
 	/* ptnt_gender_cd */
@@ -86,15 +85,15 @@ SELECT
 	/* enc_start_dt */
 	CAP_DATE
 	    (
-            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            to_date(epi.admit_dt, 'yyyyMMdd'),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_start_dt,
 	/* enc_end_dt */
 	CAP_DATE
 	    (
-            CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            to_date(epi.discharge_dt, 'yyyyMMdd'),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_end_dt,
 	/* diag_cd */
@@ -184,14 +183,20 @@ SELECT
                         ), 4
                 )
 	END			                                                                            AS diag_grp_txt,
+    /*------------------------------ column added(JKS 2020-08-13) -----------------------------*/
+	CASE 
+	    WHEN UPPER(COALESCE(ptn_dgn.present_on_admit, 'X')) IN ('Y', 'N', 'U', 'W') THEN UPPER(ptn_dgn.present_on_admit)
+	ELSE NULL
+	END                                                                                     AS prsnt_on_admsn_cd,
+    /*------------------------------ -----------------------------------------------------------*/
     'patient_diagnosis'                                                                     AS prmy_src_tbl_nm,
 	'149'                                                                                   AS part_hvm_vdr_feed_id,
 	/* part_mth */
 	CASE
 	    WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE
                                         (
-                                            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), 
-                                            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
+                                            to_date(epi.admit_dt, 'yyyyMMdd'),
+                                            COALESCE(CAST('{AVAILABLE_START_DATE}' AS DATE), CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
                                             CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
 	        THEN '0_PREDATES_HVM_HISTORY'
@@ -203,32 +208,9 @@ SELECT
 	END                                                                                     AS part_mth
  FROM nthrive_norm_temp01_diag_temp ptn_dgn
 /* Join to the admit diagnosis flag. */
- LEFT OUTER JOIN nthrive_norm_temp02_diag_temp ptn_dgn_adm
-   ON COALESCE(ptn_dgn.record_id, 'EMPTY') = COALESCE(ptn_dgn_adm.record_id, 'DUMMY')
-  AND COALESCE(ptn_dgn.icd_diagnosis_code, 'EMPTY') = COALESCE(ptn_dgn_adm.icd_diagnosis_code, 'DUMMY')
- LEFT OUTER JOIN episodes epi
-   ON ptn_dgn.record_id = epi.record_id
- LEFT OUTER JOIN patient ptn
-   ON COALESCE(epi.record_id, 'EMPTY') = COALESCE(ptn.record_id, 'EMPTY')
- LEFT OUTER JOIN matching_payload pay
-   ON COALESCE(ptn.hvjoinkey, 'EMPTY') = COALESCE(pay.hvjoinkey, 'EMPTY')
- LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 149
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-        LIMIT 1
-    ) esdt
-   ON 1 = 1
- LEFT OUTER JOIN 
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 149
-          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-        LIMIT 1
-    ) ahdt
-   ON 1 = 1
+LEFT OUTER JOIN nthrive_norm_temp02_diag_temp ptn_dgn_adm ON COALESCE(ptn_dgn.record_id, 'EMPTY') = COALESCE(ptn_dgn_adm.record_id, 'DUMMY') AND COALESCE(ptn_dgn.icd_diagnosis_code, 'EMPTY') = COALESCE(ptn_dgn_adm.icd_diagnosis_code, 'DUMMY')
+LEFT OUTER JOIN episodes epi                            ON ptn_dgn.record_id = epi.record_id
+LEFT OUTER JOIN patient ptn                             ON COALESCE(epi.record_id, 'EMPTY') = COALESCE(ptn.record_id, 'EMPTY')
+LEFT OUTER JOIN matching_payload pay                             ON COALESCE(ptn.hvjoinkey, 'EMPTY') = COALESCE(pay.hvjoinkey, 'EMPTY')
 /* Eliminate column headers. */
 WHERE UPPER(COALESCE(ptn_dgn.record_id, '')) <> 'RECORD_ID'
