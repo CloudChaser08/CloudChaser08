@@ -1,4 +1,3 @@
-/* Retrieve all diagnosis codes that aren't admitting diagnosis codes. */
 SELECT
     *
  FROM patient_diagnosis dgn1

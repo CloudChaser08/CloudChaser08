@@ -135,11 +135,11 @@ class MarketplaceDriver(object):
             self.spark, self.sql_context = init(context_name, self.test, conf_parameters)
             self.runner = Runner(self.sql_context)
 
-    def run(self):
+    def run(self, conf_parameters=None):
         """
         Run all driver steps in the appropriate order
         """
-        self.init_spark_context()
+        self.init_spark_context(conf_parameters)
         self.load()
         self.transform()
         self.save_to_disk()

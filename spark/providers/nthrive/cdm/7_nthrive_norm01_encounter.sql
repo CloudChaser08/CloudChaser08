@@ -13,7 +13,7 @@ SELECT
         ELSE NULL
     END                                                                                     AS hv_enc_id,
     CURRENT_DATE()                                                                          AS crt_dt,
-	'01'                                                                                    AS mdl_vrsn_num,
+	'04'                                                                                    AS mdl_vrsn_num,
     SPLIT(epi.input_file_name, '/')[SIZE(SPLIT(epi.input_file_name, '/')) - 1]              AS data_set_nm,
 	492                                                                                     AS hvm_vdr_id,
 	149                                                                                     AS hvm_vdr_feed_id,
@@ -25,12 +25,11 @@ SELECT
             pay.hvid, 
             CONCAT
                 (
-                    '149_', 
+                    '492_', 
                     COALESCE
                         (
                             epi.unique_patient_id, 
-                            ptn.unique_patient_id,
-                            'UNAVAILABLE'
+                            ptn.unique_patient_id
                         )
                 )
         )                                                                                   AS hvid,
@@ -38,14 +37,14 @@ SELECT
 	CAP_YEAR_OF_BIRTH
 	    (
             COALESCE(epi.age, pay.age),
-            CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
+            to_date(epi.discharge_dt, 'yyyyMMdd'),
             SUBSTR(COALESCE(ptn.patientdob, pay.yearofbirth), 1, 4)
         )                                                                                   AS ptnt_birth_yr,
     /* ptnt_age_num */
 	VALIDATE_AGE
 	    (
             COALESCE(epi.age, pay.age),
-            CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
+            to_date(epi.discharge_dt, 'yyyyMMdd'),
             SUBSTR(COALESCE(ptn.patientdob, pay.yearofbirth), 1, 4)
 	    )                                                                                   AS ptnt_age_num,
 	/* ptnt_gender_cd */
@@ -74,15 +73,15 @@ SELECT
 	/* enc_start_dt */
 	CAP_DATE
 	    (
-            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            to_date(epi.admit_dt, 'yyyyMMdd'),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_start_dt,
 	/* enc_end_dt */
 	CAP_DATE
 	    (
-            CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            to_date(epi.discharge_dt, 'yyyyMMdd'),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_end_dt,
     CLEAN_UP_NPI_CODE(prv.provider_npi)                                                     AS enc_fclty_npi,
@@ -211,51 +210,6 @@ SELECT
             THEN 'SERVING_PROVIDER_NPI'
         ELSE NULL
     END                                                                                     AS enc_prov_id_qual,
-    /*---------------------------------------------------------- Rendering Provider ----------------------------------------------------------*/
-    CLEAN_UP_NPI_CODE(epi.attendingphysiciannpi)                                            AS enc_rndrg_prov_npi,
-    MD5(epi.attendingphysiciannpi)                                                          AS enc_rndrg_prov_id,
-    /* enc_rndrg_prov_id_qual */
-    CASE
-        WHEN epi.attendingphysiciannpi IS NULL
-            THEN NULL
-        ELSE 'RENDERING_PROVIDER_NPI'
-    END                                                                                     AS enc_rndrg_prov_id_qual,
-    /*---------------------------------------------------------- Admitting Provider ----------------------------------------------------------*/
-    CLEAN_UP_NPI_CODE(epi.admittingphysiciannpi)                                            AS enc_admtg_prov_npi,
-    MD5(epi.admittingphysiciannpi)                                                          AS enc_admtg_prov_id,
-    /* enc_admtg_prov_id_qual */
-    CASE
-        WHEN epi.admittingphysiciannpi IS NULL
-            THEN NULL
-        ELSE 'ADMITTING_PROVIDER_NPI'
-    END                                                                                     AS enc_admtg_prov_id_qual,
-    /*---------------------------------------------------------- Operating Provider ----------------------------------------------------------*/
-    CLEAN_UP_NPI_CODE(epi.operatingphysiciannpi)                                            AS enc_operg_prov_npi,
-    MD5(epi.operatingphysiciannpi)                                                          AS enc_operg_prov_id,
-    /* enc_operg_prov_id_qual */
-    CASE
-        WHEN epi.operatingphysiciannpi IS NULL
-            THEN NULL
-        ELSE 'OPERATING_PROVIDER_NPI'
-    END                                                                                     AS enc_operg_prov_id_qual,
-    /*---------------------------------------------------------- Serving Provider ----------------------------------------------------------*/
-    CLEAN_UP_NPI_CODE(epi.servingphysiciannpi)                                              AS enc_svg_prov_npi,
-    MD5(epi.servingphysiciannpi)                                                            AS enc_svg_prov_id,
-    /* enc_svg_prov_id_qual */
-    CASE
-        WHEN epi.servingphysiciannpi IS NULL
-            THEN NULL
-        ELSE 'SERVING_PROVIDER_NPI'
-    END                                                                                     AS enc_svg_prov_id_qual,
-    /*---------------------------------------------------------- Referring Provider ----------------------------------------------------------*/
-    CLEAN_UP_NPI_CODE(epi.referringphysiciannpi)                                            AS enc_rfrg_prov_npi,
-    MD5(epi.referringphysiciannpi)                                                          AS enc_rfrg_prov_id,
-    /* enc_rfrg_prov_id_qual */
-    CASE
-        WHEN epi.referringphysiciannpi IS NULL
-            THEN NULL
-        ELSE 'REFERRING_PROVIDER_NPI'
-    END                                                                                     AS enc_rfrg_prov_id_qual,
     COALESCE(epi.unique_patient_id, ptn.unique_patient_id)                                  AS vdr_ptnt_id,
     /* enc_grp_txt */
     CASE
@@ -327,18 +281,18 @@ SELECT
     END                                                                                     AS los_txt,
     epi.admission_source                                                                    AS admsn_src_std_cd,
     epi.admission_type                                                                      AS admsn_typ_std_cd,
-    /* dischg_stat_cd */
-    CASE WHEN CAST('{VDR_FILE_DT}' AS DATE) >= '2020-01-01' THEN
-        CASE
-            WHEN COALESCE(epi.discharge_status, '') IN ('21', '69', '87') THEN '0'
+    CASE
+        WHEN CAST('{VDR_FILE_DT}' AS DATE) >= '2020-01-01' THEN
+        	CASE
+        	    WHEN COALESCE(epi.discharge_status, '') IN ('21', '69', '87') THEN '0'
             ELSE epi.discharge_status
-        END
+        	END   
 	ELSE
     	CASE
     	    WHEN COALESCE(epi.discharge_status, '') IN ('20', '21', '40', '41', '42', '69', '87') THEN '0'
             ELSE epi.discharge_status
-    	END
-	END                                                                                     AS dischg_stat_std_cd,
+    	END  	
+	END                  AS dischg_stat_std_cd,
 	/* bill_typ_std_cd */
 	CASE
 	    WHEN epi.bill_type IS NULL
@@ -500,14 +454,30 @@ SELECT
                         ), 4
                 )
     END                                                                                     AS payr_grp_txt,
+    /*------------------------------ New death indicator only avaialbe in the special views (JKS 2020-08-13) -----------------------------*/
+    CASE
+        WHEN epi.mortality = '0' THEN 'Y'
+        WHEN epi.mortality = '1' THEN 'N'
+    ELSE NULL
+    END                                                                                     AS ptnt_lvg_flg,
+    CASE
+        WHEN epi.mortality = '1' 
+         AND TO_DATE(epi.discharge_dt, 'yyyyMMdd') IS NOT NULL THEN TO_DATE(CONCAT(SUBSTR(epi.discharge_dt,1,6),'01'),'yyyyMMdd')
+    ELSE NULL 
+    END                                                                                     AS ptnt_dth_dt,
+    CASE 
+        WHEN CAST(epi.icu_ccu_days AS INT) > 0 THEN epi.icu_ccu_days
+    ELSE NULL
+    END                                                                                     AS icu_ccu_days_cnt,
+    /*-------------------------------------------------------------------------------------------------------------------------------------*/
     'episodes'                                                                              AS prmy_src_tbl_nm,
 	'149'                                                                                   AS part_hvm_vdr_feed_id,
 	/* part_mth */
 	CASE
 	    WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE
                                         (
-                                            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), 
-                                            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
+                                            to_date(epi.admit_dt, 'yyyyMMdd'),
+                                            COALESCE(CAST('{AVAILABLE_START_DATE}' AS DATE), CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
                                             CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
 	        THEN '0_PREDATES_HVM_HISTORY'
@@ -562,23 +532,5 @@ SELECT
    ON ref2.gen_ref_domn_nm = 'ms_drg_code_blacklist'
   AND ref2.whtlst_flg = 'N'
   AND COALESCE(ms_drg.ms_drg_code, 'EMPTY') = COALESCE(ref2.gen_ref_cd, 'EMPTY')
- LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 149
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-        LIMIT 1
-    ) esdt
-   ON 1 = 1
- LEFT OUTER JOIN 
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 149
-          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-        LIMIT 1
-    ) ahdt
-   ON 1 = 1
 /* Eliminate column headers. */
 WHERE UPPER(COALESCE(epi.record_id, '')) <> 'RECORD_ID'
