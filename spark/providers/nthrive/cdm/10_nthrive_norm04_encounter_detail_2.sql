@@ -96,17 +96,6 @@ SELECT
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_end_dt,
 	/* proc_dt */
--- 	CASE
--- 	    WHEN CAST(COALESCE(ptn_prc.procedure_day, 'X') AS INTEGER) IS NULL
--- 	        THEN NULL
---         ELSE CAP_DATE
---         	    (
---         	        DATE_ADD(CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), CAST(ptn_prc.procedure_day AS INTEGER)),
---                     esdt.gen_ref_1_dt,
---                     CAST('{VDR_FILE_DT}' AS DATE)
---         	    )
--- 	END                                                                                     AS proc_dt,
-	
 	/* Change in Logic for proc_dt population 2020-08-14 */
     CAP_DATE
     (

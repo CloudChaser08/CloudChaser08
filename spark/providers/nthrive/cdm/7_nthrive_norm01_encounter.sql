@@ -281,19 +281,7 @@ SELECT
     END                                                                                     AS los_txt,
     epi.admission_source                                                                    AS admsn_src_std_cd,
     epi.admission_type                                                                      AS admsn_typ_std_cd,
-    
-     
---     -----------------------------------------------------------------------
---     --- Removed the deceased indicator per new decision from AK 2020-04-09 - JKS 2020-06-02
---     --- Code removed from supression ('20', '40', '41', '42') in the views from '20', '21', '40', '41', '42', '69', '87')
---     -----------------------------------------------------------------------
---     /* dischg_stat_cd */
--- 	CASE
--- 	    WHEN COALESCE(epi.discharge_status, '') IN ('20', '21', '40', '41', '42', '69', '87')
--- 	        THEN '0'
---         ELSE epi.discharge_status
--- 	END                                                                                     AS dischg_stat_std_cd,
-    CASE 
+    CASE
         WHEN CAST('{VDR_FILE_DT}' AS DATE) >= '2020-01-01' THEN
         	CASE
         	    WHEN COALESCE(epi.discharge_status, '') IN ('21', '69', '87') THEN '0'

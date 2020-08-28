@@ -12,8 +12,8 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'nthrive'
     output_table_names_to_schemas = {
-        'nthrive_norm01_encounter': encounter_schema['schema_v1'],
-        'nthrive_norm02_diagnosis': diagnosis_schema['schema_v1'],
+        'nthrive_norm01_encounter': encounter_schema['schema_v2'],
+        'nthrive_norm02_diagnosis': diagnosis_schema['schema_v2'],
         'nthrive_norm06_encounter_detail': encounter_detail_schema['schema_v1'],
         'nthrive_norm07_encounter_provider': encounter_provider_schema['schema_v1']
     }
