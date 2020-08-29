@@ -39,7 +39,7 @@ if __name__ == "__main__":
         end_to_end_test,
         use_ref_gen_values=True,
         vdr_feed_id=provider_partition_name,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {
