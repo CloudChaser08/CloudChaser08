@@ -13,7 +13,7 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
         file_type = source_table_conf.file_type
 
     if file_type == 'parquet':
-        df = spark_context.read.parquet(location)
+        df = runner.sqlContext.read.parquet(location)
         if load_file_name:
             df = df.withColumn(file_name_col, F.input_file_name())
         cols = [
