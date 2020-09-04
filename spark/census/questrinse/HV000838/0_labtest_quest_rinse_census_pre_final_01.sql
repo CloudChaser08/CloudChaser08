@@ -14,7 +14,11 @@ SELECT
 
     CAST(CURRENT_DATE() AS STRING)                                                          AS created,
 	'09'                                                                                    AS model_version,
-    SPLIT(rslt.input_file_name, '/')[SIZE(SPLIT(rslt.input_file_name, '/')) - 1]            AS data_set,
+    replace(
+        SPLIT(rslt.input_file_name, '/')[SIZE(SPLIT(rslt.input_file_name, '/')) - 1],
+        'order_result_',
+        ''
+    )                                                                                           AS data_set,
 	'187'                                                                                   AS data_feed,
 	'7'                                                                                     AS data_vendor,
 	/* patient_gender */
