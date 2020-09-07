@@ -15,7 +15,7 @@ def _apply_to_all_columns(f, df):
     return df.select(*[f(c) for c in df.columns])
 
 
-def nullify(df, null_vals=None, preprocess_func=lambda c: c):
+def nullify(df, null_vals=None, preprocess_func=None):
     """Convert all columns matching any value in null_vals to null"""
     if not null_vals:
         null_vals = {"", "NULL"}
@@ -25,11 +25,27 @@ def nullify(df, null_vals=None, preprocess_func=lambda c: c):
     if "NULL" not in null_vals:
         null_vals.add("NULL")
 
-    do_preprocess = udf(preprocess_func)
+    column_types = {f.name: str(f.dataType) for f in df.schema.fields}
 
-    def convert_to_null(column_name):
-        return when(upper(do_preprocess(col(column_name))).isin(null_vals), lit(None)) \
-            .otherwise(col(column_name)).alias(column_name)
+    # While this code footprint can be reduced by having a default
+    # preprocess_func, even a simple Python UDF adds significant serialization
+    # and deserialization overhead
+    if preprocess_func is None:
+        def convert_to_null(column_name):
+            if column_types[column_name] == 'StringType':
+                return when(upper(col(column_name)).isin(null_vals), lit(None)) \
+                    .otherwise(col(column_name)).alias(column_name)
+            else:
+                return col(column_name)
+    else:
+        do_preprocess = udf(preprocess_func)
+
+        def convert_to_null(column_name):
+            if column_types[column_name] == 'StringType':
+                return when(upper(do_preprocess(col(column_name))).isin(null_vals), lit(None)) \
+                    .otherwise(col(column_name)).alias(column_name)
+            else:
+                return col(column_name)
 
     return _apply_to_all_columns(convert_to_null, df)
 
@@ -37,11 +53,10 @@ def nullify(df, null_vals=None, preprocess_func=lambda c: c):
 def trimmify(df):
     "Trim all string columns"
 
-    def get_type(col_name):
-        return str([f for f in df.schema.fields if f.name == col_name][0].dataType)
+    column_types = {f.name: str(f.dataType) for f in df.schema.fields}
 
     def trim_col(column_name):
-        if get_type(column_name) == 'StringType':
+        if column_types[column_name] == 'StringType':
             return trim(col(column_name)).alias(column_name)
         else:
             return col(column_name)
