@@ -23,7 +23,7 @@ class QuestRinseCensusDriver(CensusDriver):
         self._spark.table('loinc').count()
 
         df = self._spark.table('order_result')
-        df = df.repartition(df.rdd.getNumPartitions())
+        df = df.repartition(int(self._spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'unique_accession_id')
         df = df.cache_and_track('order_result')
         df.createOrReplaceTempView('order_result')
         df.count()
@@ -48,7 +48,7 @@ class QuestRinseCensusDriver(CensusDriver):
         logger.log("Renaming files")
         output_file_name_template = 'Data_Set_{}_response_{{:05d}}.gz.parquet'.format(batch_id)
 
-        for filename in [f for f in hdfs_utils.get_files_from_hdfs_path(local_output_path)
+        for filename in [f for f in hdfs_utils.get_files_from_hdfs_path('hdfs://' + local_output_path)
                          if not f.startswith('.') and f != "_SUCCESS"]:
             part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
             new_name = output_file_name_template.format(int(part_number))
@@ -58,7 +58,7 @@ class QuestRinseCensusDriver(CensusDriver):
         manifest_file_name = 'Data_Set_{}_manifest.tsv'.format(batch_id)
         file_utils.create_parquet_row_count_file(
             self._spark, local_output_path,
-            self._output_path + '{batch_id_path}/'.format(batch_id_path=_batch_id_path),
+            self._output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(batch_id_path=_batch_id_path),
             manifest_file_name, True
         )
 
@@ -68,4 +68,4 @@ class QuestRinseCensusDriver(CensusDriver):
         # Quest doesn't want to see the _SUCCESS file that spark prints out
         logger.log('Deleting _SUCCESS file')
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
-        file_utils.delete_success_file(self._output_path + '{batch_id_path}/'.format(batch_id_path=_batch_id_path))
+        file_utils.delete_success_file(self._output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(batch_id_path=_batch_id_path))
