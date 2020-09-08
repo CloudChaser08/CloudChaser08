@@ -6,8 +6,6 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.common.utility.logger as logger
 
 PARQUET_FILE_SIZE = 1024 * 1024 * 1024
-REF_LOINC_SCHEMA = 'darch'
-REF_LOINC_TABLE = 'hv_loinc_20191204'
 
 class QuestRinseCensusDriver(CensusDriver):
     def load(self, batch_date, batch_id, chunk_records_files=None):
@@ -20,11 +18,8 @@ class QuestRinseCensusDriver(CensusDriver):
         self._spark.table('ref_geo_state').cache().createOrReplaceTempView('ref_geo_state')
         self._spark.table('ref_geo_state').count()
 
-        logger.log('Loading external table: {}.{}'.format(REF_LOINC_SCHEMA, REF_LOINC_TABLE))
-        external_table_loader.load_analytics_db_table(
-            self._sqlContext, REF_LOINC_SCHEMA, REF_LOINC_TABLE, 'loinc'
-        )
-        self._spark.table('loinc').cache().createOrReplaceTempView('loinc')
+        logger.log('Loading LOINC reference data from S3')
+        self._spark.read.parquet('s3://salusv/reference/questrinse/loinc_ref/').cache().createOrReplaceTempView('loinc')
         self._spark.table('loinc').count()
 
         df = self._spark.table('order_result')
