@@ -26,5 +26,5 @@ LEFT JOIN
     (SELECT claim_id, collect_set(diagnosis_code) linked_diagnoses,
         MIN(date_service) as earliest_service_date,
         MAX(date_service_end) as latest_service_date FROM 
-        related_diagnoses_records GROUP BY claim_id) ldr
+        normalize_1 GROUP BY claim_id) ldr
     ON clm.header_entity_id = ldr.claim_id
