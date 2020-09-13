@@ -1,9 +1,11 @@
+from math import ceil
+import re
+
 from spark.common.census_driver import CensusDriver
+import spark.common.utility.logger as logger
 import spark.helpers.hdfs_tools as hdfs_utils
 import spark.helpers.file_utils as file_utils
-import re
 import spark.helpers.external_table_loader as external_table_loader
-import spark.common.utility.logger as logger
 
 PARQUET_FILE_SIZE = 1024 * 1024 * 1024
 
@@ -40,7 +42,7 @@ class QuestRinseCensusDriver(CensusDriver):
 
         # Delivery requirement: max file size of 1GB
         # Calculate number of partitions required to maintain a max file size of 1GB
-        repartition_cnt = int(round(hdfs_utils.get_hdfs_file_path_size(local_output_path) / PARQUET_FILE_SIZE))
+        repartition_cnt = int(ceil(hdfs_utils.get_hdfs_file_path_size(local_output_path) / PARQUET_FILE_SIZE))
         logger.log('Repartition into {} partitions'.format(repartition_cnt))
 
         dataframe.repartition(repartition_cnt).write.parquet(local_output_path, compression='gzip', mode='overwrite')
