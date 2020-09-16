@@ -36,7 +36,7 @@ def run(date_input, end_to_end_test=False, test=False):
         load_date_explode=False,
         vdr_feed_id=26,
         use_ref_gen_values=True,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     # Placeholder to Override Spark Conf. properties (after spark launch)
