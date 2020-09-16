@@ -16,7 +16,7 @@ def cleanup(spark):
     spark['sqlContext'].dropTempTable('ref_gen_ref')
 
     try:
-        shutil.rmtree(file_utils.get_abs_path(script_path, './output/'))
+        shutil.rmtree('./test/marketplace/resources/output/')
     except:
         pass
 
@@ -29,23 +29,27 @@ def test_init(spark):
         Row(
             hvm_vdr_feed_id='26',
             gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
-            gen_ref_itm_nm='',
             gen_ref_cd='',
-            gen_ref_1_dt=datetime.date(2016, 1, 1),
-            gen_ref_1_txt='',
-            gen_ref_2_txt='',
-            gen_ref_itm_desc='',
-            whtlst_flg=''
+            whtlst_flg='',
+            gen_ref_1_dt=datetime.date(2012, 1, 1),
+            gen_ref_2_dt=''
+        ),
+        Row(
+            hvm_vdr_feed_id='26',
+            gen_ref_domn_nm='HVM_AVAILABLE_HISTORY_START_DATE',
+            gen_ref_cd='',
+            whtlst_flg='',
+            gen_ref_1_dt=datetime.date(2015, 1, 1),
+            gen_ref_2_dt=''
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    allscripts_dx.run(spark['spark'], spark['runner'], '2016-12-01', test=True)
+    allscripts_dx.run(date_input='2016-12-01', test=True)
 
     global results
 
-    results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './output/*/*')
-    ).collect()
+    results = spark['sqlContext'].read.parquet('./test/marketplace/resources/output/*/*').collect()
+
 
 def test_cleanup(spark):
     cleanup(spark)

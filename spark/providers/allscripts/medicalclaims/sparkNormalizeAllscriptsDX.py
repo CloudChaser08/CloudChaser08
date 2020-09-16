@@ -9,7 +9,7 @@ from pyspark.sql.types import ArrayType, StringType
 import spark.helpers.explode as explode
 
 
-if __name__ == "__main__":
+def run(date_input, end_to_end_test=False, test=False):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'allscripts'
     output_table_names_to_schemas = {
@@ -18,15 +18,6 @@ if __name__ == "__main__":
     provider_partition_name = provider_name
 
     # ------------------------ Common for all providers -----------------------
-    # Parse input arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--date', type=str)
-    parser.add_argument('--end_to_end_test', default=False, action='store_true')
-
-    args = parser.parse_args()
-    date_input = args.date
-    end_to_end_test = args.end_to_end_test
-
     # New layout after 2018-07-25, but we already got it once on 2018-07-24
     if date_input > '2018-07-25' or date_input == '2018-07-24':
         source_table_schemas = transactions_v2
@@ -41,10 +32,11 @@ if __name__ == "__main__":
         output_table_names_to_schemas,
         date_input,
         end_to_end_test,
+        test=test,
         load_date_explode=False,
         vdr_feed_id=26,
         use_ref_gen_values=True,
-        output_to_transform_path=False
+        output_to_transform_path=True
     )
 
     # Placeholder to Override Spark Conf. properties (after spark launch)
@@ -68,4 +60,13 @@ if __name__ == "__main__":
     driver.save_to_disk()
     driver.log_run()
     driver.stop_spark()
-    driver.copy_to_output_path()
+    if not test:
+        driver.copy_to_output_path()
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--date', type=str)
+    parser.add_argument('--end_to_end_test', default=False, action='store_true')
+    args = parser.parse_args()
+    run(args.date, args.end_to_end_test)
