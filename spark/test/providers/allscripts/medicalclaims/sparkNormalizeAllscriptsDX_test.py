@@ -44,7 +44,7 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    allscripts_dx.run(date_input='2016-12-01', test=True)
+    allscripts_dx.run(date_input='2016-12-01', test=True, spark=spark['spark'], runner=spark['runner'])
 
     global results
 

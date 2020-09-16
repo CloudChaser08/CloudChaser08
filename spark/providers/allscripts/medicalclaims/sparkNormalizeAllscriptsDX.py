@@ -9,7 +9,7 @@ from pyspark.sql.types import ArrayType, StringType
 import spark.helpers.explode as explode
 
 
-def run(date_input, end_to_end_test=False, test=False):
+def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'allscripts'
     output_table_names_to_schemas = {
@@ -50,17 +50,22 @@ def run(date_input, end_to_end_test=False, test=False):
         'spark.sql.autoBroadcastJoinThreshold': 52428800
     }
 
-    driver.init_spark_context(conf_parameters=conf_parameters)
+    if not test:
+        driver.init_spark_context(conf_parameters=conf_parameters)
+    else:
+        driver.spark = spark
+        driver.runner = runner
+
     explode.generate_exploder_table(driver.spark, 8, 'diag_exploder')
     driver.load(extra_payload_cols=['PCN'])
-    driver.runner.sqlContext.registerFunction(
+    driver.spark.udf.register(
         'linked_and_unlinked_diagnoses', allscripts_udf.linked_and_unlinked_diagnoses, ArrayType(ArrayType(StringType()))
-    )
+        )
     driver.transform()
     driver.save_to_disk()
     driver.log_run()
-    driver.stop_spark()
     if not test:
+        driver.stop_spark()
         driver.copy_to_output_path()
 
 
