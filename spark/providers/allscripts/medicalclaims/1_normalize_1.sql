@@ -8,41 +8,46 @@ SELECT
     COALESCE(SUBSTR(header_patient_dob, 1, 4), yearOfBirth)
                                             AS patient_year_of_birth,
     SUBSTR(COALESCE(header_patient_zip_code, threeDigitZip), 1, 3)
-                                            AS patient_zip3, 
+                                            AS patient_zip3,
     UPPER(COALESCE(header_patient_state, state, ''))
                                             AS patient_state,
     'P'                                     AS claim_type,
-    extract_date(
-        substring(header_create_date, length(header_create_date) - 5, 8), '%y%m%d'
-    )                                       AS date_received,
-    extract_date(
-        substring(service_service_from_date, 1, 8), '%Y%m%d'
-    )                                       AS date_service,
-    extract_date(
-        substring(service_service_to_date, 1, 8), '%Y%m%d'
-    )                                       AS date_service_end,
-    service_place_of_service                AS place_of_service_std_id,
+    CAST(extract_date(substring(header_create_date, length(header_create_date) - 5, 8), '%y%m%d') AS DATE)
+                                            AS date_received,
+    CAST(extract_date(substring(service_service_from_date, 1, 8), '%Y%m%d') AS DATE) AS date_service,
+    CAST(extract_date(substring(service_service_to_date, 1, 8), '%Y%m%d') AS DATE) AS date_service_end,
+    obscure_place_of_service(service_place_of_service)
+                                            AS place_of_service_std_id,
     service_charge_line_number              AS service_line_number,
     linked_diagnoses[x.n][0]                AS diagnosis_code,
     linked_diagnoses[x.n][1]                AS diagnosis_priority,
     service_std_chg_line_hcpcs_procedure_code
                                             AS procedure_code,
     service_units_of_service                AS procedure_units_billed,
-    service_hcpcs_modifier_1                AS procedure_modifier_1,
-    service_hcpcs_modifier_2                AS procedure_modifier_2,
-    service_hcpcs_modifier_3                AS procedure_modifier_3,
-    service_hcpcs_modifier_4                AS procedure_modifier_4,
+    SUBSTR(CLEAN_UP_ALPHANUMERIC_CODE(service_hcpcs_modifier_1), 1, 2)
+                                            AS procedure_modifier_1,
+    SUBSTR(CLEAN_UP_ALPHANUMERIC_CODE(service_hcpcs_modifier_2), 1, 2)
+                                            AS procedure_modifier_2,
+    SUBSTR(CLEAN_UP_ALPHANUMERIC_CODE(service_hcpcs_modifier_3), 1, 2)
+                                            AS procedure_modifier_3,
+    SUBSTR(CLEAN_UP_ALPHANUMERIC_CODE(service_hcpcs_modifier_4), 1, 2)
+                                            AS procedure_modifier_4,
     service_ndc_code                        AS ndc_code,
     header_source_of_payment                AS medical_coverage_type,
     service_line_charges                    AS line_charge,
     header_total_claim_charge_amount        AS total_charge,
-    COALESCE(service_rendering_provider_npi, header_rendering_provider_npi)
-                                            AS prov_rendering_npi,
-    header_billing_prov_npi                 AS prov_billing_npi,
-    COALESCE(service_referring_provider_npi, header_referring_prov_npi_)
-                                            AS prov_referring_npi,
-    COALESCE(service_service_facility_npi, header_facility_lab_npi)
-                                            AS prov_facility_npi,
+    CLEAN_UP_NPI_CODE(
+        COALESCE(service_rendering_provider_npi, header_rendering_provider_npi)
+        )                                   AS prov_rendering_npi,
+    CLEAN_UP_NPI_CODE(
+        header_billing_prov_npi
+        )                                   AS prov_billing_npi,
+    CLEAN_UP_NPI_CODE(
+        COALESCE(service_referring_provider_npi, header_referring_prov_npi_)
+        )                                   AS prov_referring_npi,
+    CLEAN_UP_NPI_CODE(
+        COALESCE(service_service_facility_npi, header_facility_lab_npi)
+        )                                   AS prov_facility_npi,
     header_primary_payer_name               AS payer_name,
     header_primary_payer_tspid              AS payer_plan_id,
     header_insurance_type_code              AS payer_type,
@@ -81,7 +86,9 @@ SELECT
     header_billing_providers_address_1      AS prov_billing_address_1,
     header_billing_providers_address_2      AS prov_billing_address_2,
     header_billing_providers_city           AS prov_billing_city,
-    header_billing_providers_state          AS prov_billing_state,
+    VALIDATE_STATE_CODE(
+        header_billing_providers_state
+        )                                   AS prov_billing_state,
     header_billing_providers_zip            AS prov_billing_zip,
     header_billing_or_pay_to_provider_taxonomy_code
                                             AS prov_billing_std_taxonomy,
@@ -116,8 +123,9 @@ SELECT
                                             AS prov_facility_address_2,
     COALESCE(service_service_facility_city, header_facility_laboratory_city)
                                             AS prov_facility_city,
-    UPPER(COALESCE(service_service_facility_state, header_facility_laboratory_state))
-                                            AS prov_facility_state,
+    VALIDATE_STATE_CODE(
+        UPPER(COALESCE(service_service_facility_state, header_facility_laboratory_state))
+        )                                   AS prov_facility_state,
     COALESCE(service_service_facility_zip_code, header_facility_laboratory_zip_code)
                                             AS prov_facility_zip,
     header_2nd_payer_primary_id             AS cob_payer_vendor_id_1,
@@ -132,7 +140,7 @@ SELECT
     header_teritary_payer_insurance_type_code
                                             AS cob_ins_type_code_2,
     pcn                                     AS medical_claim_link_text
-FROM tmp
+FROM pre_normalization_1
     CROSS JOIN diag_exploder x
 WHERE x.n < size(linked_diagnoses) AND
     (linked_diagnoses[x.n][0] IS NULL

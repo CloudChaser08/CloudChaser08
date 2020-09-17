@@ -228,7 +228,8 @@ class MarketplaceDriver(object):
                 distribution_key=schema_obj.distribution_key,
                 staging_subdir=schema_obj.output_directory,
                 partition_by_part_file_date=self.output_to_transform_path,
-                unload_partition_count=self.unload_partition_count
+                unload_partition_count=self.unload_partition_count,
+                test_dir=(self.output_path if self.test else None)
             )
             data_frame.unpersist()
             output.unpersist()
