@@ -72,6 +72,13 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
     matching_date = '2017-09' if date_input <= '2017-09' else date_input
 
     max_cap = (date_obj + relativedelta(months=1) - relativedelta(days=1)).strftime('%Y-%m-%d')
+    """
+    HV will remove the MAX CAP scrubbing for the “data_captr_dt”  and remove the transformation 
+    for “rec_stat_cd” from all the EMR tables.  This way the table will have the original source 
+    data. These changes are reflected in the latest mapping document.  These changes are applicable 
+    to Veradigm(Allscripts) EMR only
+    """
+    max_of_max_cap = '9999-12-31'
     BACKFILL_MAX_CAP = '2018-09-30'
 
     if test:
@@ -287,7 +294,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 ('medctn_admin_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)
             ]
         }, {
             'name': 'lab_result',
@@ -300,7 +307,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31') # Max cap is applied in SQL
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap) # Max cap is applied in SQL
             ]
         }, {
             'name': 'encounter',
@@ -312,7 +319,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             'date_caps': [
                 ('enc_start_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31'),
                 ('enc_end_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31'),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)
             ]
         }, {
             'name': 'diagnosis',
@@ -326,7 +333,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 ('diag_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
                 ('diag_onset_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
                 ('diag_resltn_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)
             ],
             'update_whitelists': lambda whitelists: whitelists + [{
                 'column_name': 'diag_snomed_cd',
@@ -343,7 +350,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('proc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)
             ],
             'update_whitelists': lambda whitelists: whitelists + [{
                 'column_name': 'proc_snomed_cd',
@@ -361,7 +368,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('prov_ord_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('prov_ord_complt_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)
             ]
         }, {
             'name': 'lab_order',
@@ -373,7 +380,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_ord_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)
             ],
             'additional_transformer': priv_common.Transformer(
                 lab_ord_alt_cd=[
@@ -391,7 +398,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('clin_obsn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('clin_obsn_onset_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)
             ],
             'update_whitelists': lambda whitelists: whitelists + [{
                 'column_name': 'clin_obsn_snomed_cd',
@@ -408,7 +415,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', '9999-12-31') # Max cap is applied in SQL
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap) # Max cap is applied in SQL
             ]
         }
     ]

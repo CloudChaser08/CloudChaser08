@@ -34,10 +34,7 @@ SELECT
     vac.bodysite                                                               AS proc_admin_site_cd,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     vac.recordeddttm                                                           AS data_captr_dt,
-    CASE
-    WHEN TRIM(COALESCE(enc.auditdataflag, '')) = '0' THEN 'Current Record'
-    WHEN TRIM(COALESCE(enc.auditdataflag, '')) = '1' THEN 'Historical Record'
-    END                                                                        AS rec_stat_cd,
+    enc.auditdataflag                                                          AS rec_stat_cd,
     'vaccines'                                                                 AS prmy_src_tbl_nm,
     EXTRACT_DATE(
         SUBSTRING(enc.encounterdttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE)

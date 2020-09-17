@@ -30,9 +30,7 @@ SELECT
     CASE WHEN enc.type IS NOT NULL THEN 'ENCOUNTER_TYPE' END                   AS enc_typ_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     enc.recordeddttm                                                           AS data_captr_dt,
-    CASE WHEN enc.auditdataflag = '0' THEN 'Current Record'
-    WHEN enc.auditdataflag = '1' THEN 'Historical Record'
-    END                                                                        AS rec_stat_cd,
+    enc.auditdataflag                                                          AS rec_stat_cd,
     'encounters'                                                               AS prmy_src_tbl_nm,
     EXTRACT_DATE(
         SUBSTRING(enc.encounterdttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE)

@@ -10,6 +10,7 @@ from spark.spark_setup import init
 
 TEST_PATIENTS_DRIVER_S3_KEY = 'incoming/allscripts/Tier1_Patients_For_Removal.csv.gz'
 
+
 def gen_scrubbing_func(dryrun):
     """This is a wrapper so that we can run this in dryrun mode (do everything
         except for replacing the origin files"""
@@ -81,6 +82,7 @@ def gen_scrubbing_func(dryrun):
 
     return scrub
 
+
 def run(spark, dryrun):
     """Execute the spark job"""
     # S3 API only returns 1000 results at a time. It's easier to use the cli to
@@ -120,6 +122,7 @@ def run(spark, dryrun):
     # out 100%, we should expect to see 1000s scrubbed from each key
     for r in res.collect():
         logging.warn("%s", r)
+
 
 def main(args):
     # init
