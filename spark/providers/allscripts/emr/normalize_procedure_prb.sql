@@ -90,21 +90,7 @@ SELECT
     END                                                                        AS proc_stat_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     prb.recordeddttm                                                           AS data_captr_dt,
-    REMOVE_LAST_CHARS(
-        CONCAT(
-            CASE
-            WHEN TRIM(COALESCE(prb.auditdataflag, '')) = '0'
-            THEN 'Current Record: '
-            WHEN TRIM(COALESCE(prb.auditdataflag, '')) = '1'
-            THEN 'Historical Record: ' ELSE ''
-            END,
-            CASE
-            WHEN TRIM(UPPER(prb.errorflag)) = 'Y'
-            THEN 'Entered in Error: '
-            ELSE ''
-            END
-            ), 2
-        )                                                                      AS rec_stat_cd,
+    prb.auditdataflag                                                          AS rec_stat_cd,
     'problems'                                                                 AS prmy_src_tbl_nm,
     EXTRACT_DATE(
         SUBSTRING(enc.encounterdttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE)

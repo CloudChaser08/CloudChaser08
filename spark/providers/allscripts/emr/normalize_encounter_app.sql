@@ -55,12 +55,7 @@ SELECT
     END                                                                        AS enc_stat_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     app.recordeddttm                                                           AS data_captr_dt,
-    CASE
-    WHEN COALESCE(app.auditdataflag, '') = '0'
-    THEN 'Current Record'
-    WHEN COALESCE(app.auditdataflag, '') = '1'
-    THEN 'Historical Record'
-    END                                                                        AS rec_stat_cd,
+    app.auditdataflag                                                          AS rec_stat_cd,
     'appointments'                                                             AS prmy_src_tbl_nm,
     EXTRACT_DATE(
         SUBSTRING(enc.encounterdttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE)

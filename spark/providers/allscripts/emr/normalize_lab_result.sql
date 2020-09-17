@@ -55,17 +55,7 @@ SELECT
         THEN EXTRACT_DATE(SUBSTRING(rbf.recordeddttm, 1, 10), '%Y-%m-%d', NULL, CAST({backfill_max_cap} AS DATE))
         ELSE EXTRACT_DATE(SUBSTRING(res.recordeddttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE))
     END                                                                        AS data_captr_dt,
-    REMOVE_LAST_CHARS(
-        CONCAT(
-            CASE
-            WHEN TRIM(COALESCE(res.auditdataflag, '')) = '0' THEN 'Current Record: '
-            WHEN TRIM(COALESCE(res.auditdataflag, '')) = '1' THEN 'Historical Record: ' ELSE ''
-            END,
-            CASE
-            WHEN TRIM(UPPER(res.errorflag)) = 'Y' THEN 'Entered in Error: ' ELSE ''
-            END
-            ), 2
-        )                                                                      AS rec_stat_cd,
+    res.auditdataflag                                                          AS rec_stat_cd,
     'results'                                                                  AS prmy_src_tbl_nm,
     EXTRACT_DATE(
         SUBSTRING(enc.encounterdttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE)

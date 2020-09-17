@@ -86,12 +86,7 @@ SELECT
     CASE WHEN ord.status IS NOT NULL THEN 'ORDER_STATUS' END                   AS proc_stat_cd_qual,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     ord.recordeddttm                                                           AS data_captr_dt,
-    CASE
-    WHEN TRIM(COALESCE(ord.auditdataflag, '')) = '0'
-    THEN 'Current Record'
-    WHEN TRIM(COALESCE(ord.auditdataflag, '')) = '1'
-    THEN 'Historical Record'
-    END                                                                        AS rec_stat_cd,
+    ord.auditdataflag                                                          AS rec_stat_cd,
     'orders'                                                                   AS prmy_src_tbl_nm,
     EXTRACT_DATE(
         SUBSTRING(enc.encounterdttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE)

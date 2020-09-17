@@ -88,17 +88,7 @@ SELECT
     CASE WHEN TRIM(UPPER(med.erxtransmittedflag)) IN ('N', 'Y') THEN med.erxtransmittedflag END  AS medctn_elect_rx_flg,
     UPPER(clt.sourcesystemcode)                                                                  AS data_src_cd,
     med.recordeddttm                                                                             AS data_captr_dt,
-    REMOVE_LAST_CHARS(
-        CONCAT(
-            CASE
-            WHEN TRIM(COALESCE(med.auditdataflag, '')) = '0' THEN 'Current Record: '
-            WHEN TRIM(COALESCE(med.auditdataflag, '')) = '1' THEN 'Historical Record: ' ELSE ''
-            END,
-            CASE
-            WHEN TRIM(UPPER(med.errorflag)) = 'Y' THEN 'Entered in Error: ' ELSE ''
-            END
-            ), 2
-        )                                                                                        AS rec_stat_cd,
+    med.auditdataflag                                                                            AS rec_stat_cd,
     'medications'                                                                                AS prmy_src_tbl_nm,
     EXTRACT_DATE(
         SUBSTRING(enc.encounterdttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE)

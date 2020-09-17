@@ -62,12 +62,7 @@ SELECT
     END                                                                        AS clin_obsn_verfd_by_prov_flg,
     UPPER(clt.sourcesystemcode)                                                AS data_src_cd,
     alg.recordeddttm                                                           AS data_captr_dt,
-    CASE
-    WHEN TRIM(COALESCE(alg.auditdataflag, '')) = '0'
-    THEN 'Current Record'
-    WHEN TRIM(COALESCE(alg.auditdataflag, '')) = '1'
-    THEN 'Historical Record'
-    END                                                                        AS rec_stat_cd,
+    alg.auditdataflag                                                          AS rec_stat_cd,
     'allergies'                                                                AS prmy_src_tbl_nm,
     EXTRACT_DATE(
         SUBSTRING(enc.encounterdttm, 1, 10), '%Y-%m-%d', NULL, CAST({max_cap} AS DATE)
