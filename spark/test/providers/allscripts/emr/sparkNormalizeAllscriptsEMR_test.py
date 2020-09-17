@@ -161,9 +161,9 @@ def test_lab_result_rec_stat_cd():
     assert sorted(
         [(res.hv_lab_result_id, res.rec_stat_cd) for res in lab_result_results]
     ) == [
-        ('25_gen2patientid-0_resid-0_0', 'Current Record'),
-        ('25_gen2patientid-1_resid-1_0', 'Historical Record: Entered in Error'),
-        ('25_gen2patientid-2_resid-2_0', 'Entered in Error')
+        ('25_gen2patientid-0_resid-0_0', '0'),
+        ('25_gen2patientid-1_resid-1_0', '1'),
+        ('25_gen2patientid-2_resid-2_0', None)
     ]
 
 
