@@ -4,6 +4,7 @@ nppes/nppes_data
 _SUCCESS
 **/tmp/**/*.gz
 **/out/**/*.psv
+**/output/**/*.parquet
 .cache/
 derby.log
 metastore_db/
