@@ -1,7 +1,7 @@
 import pytest
 from pyspark.sql import Row
 import datetime
-import spark.providers._8451.pharmacyclaims.normalize as _8451
+import spark.providers.waystar.medicalclaims.normalize as waystar
 
 
 @pytest.mark.usefixtures("spark")
@@ -11,7 +11,7 @@ def test_init(spark):
     """
     spark['spark'].sparkContext.parallelize([
         Row(
-            hvm_vdr_feed_id=_8451.FEED_ID,
+            hvm_vdr_feed_id=waystar.FEED_ID,
             gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
             gen_ref_itm_nm='',
             gen_ref_1_dt=datetime.date(1901, 1, 1),
@@ -21,9 +21,8 @@ def test_init(spark):
 
     spark['spark'].sparkContext.parallelize([
         Row(
-            geo_state_pstl_cd='191'
+            d=0
         )
-    ]).toDF().createOrReplaceTempView('ref_geo_state')
+    ]).toDF().createOrReplaceTempView('date_explode_indices')
 
-    _8451.run(spark['spark'], spark['runner'], '2019-01-15', test=True)
-
+    waystar.run(spark['spark'], spark['runner'], '2019-01-15', test=True)
