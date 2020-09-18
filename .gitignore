@@ -1,5 +1,6 @@
 nppes/nppes_data
 *.pyc
+*.crc
 .cache/
 derby.log
 metastore_db/
