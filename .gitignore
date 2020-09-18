@@ -1,6 +1,9 @@
 nppes/nppes_data
 *.pyc
 *.crc
+_SUCCESS
+**/tmp/**/*.gz
+**/out/**/*.psv
 .cache/
 derby.log
 metastore_db/
