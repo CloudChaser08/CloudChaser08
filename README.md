@@ -15,6 +15,22 @@ Please have the following environment variables:
 - RS_USER
 - RS_PASS
 
+## Testing
+To run all the tests run the following:
+
+```Shell
+cd spark
+make test-python3
+```
+
+To access the shell and run a subset of the tests, run the following:
+```Shell
+cd spark
+make dewey-spark-shell
+
+pytest <your test>
+```
+
 ## Run
 
 Runtime follows this pattern:
