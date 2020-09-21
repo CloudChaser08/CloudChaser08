@@ -1,5 +1,5 @@
 import argparse
-import spark.providers.inovalon.enrollment.transactional_schemas as source_table_schemas
+import spark.providers.inovalon.enrollmentrecords.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.enrollment_common_model import schemas as enrollment_schemas
 
