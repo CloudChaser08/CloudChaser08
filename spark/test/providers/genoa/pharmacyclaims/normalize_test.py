@@ -2,7 +2,7 @@ import datetime
 import pytest
 
 from pyspark.sql import Row
-import spark.providers.genoa.pharmacyclaims.sparkNormalizeGenoaRX as genoa
+import spark.providers.genoa.pharmacyclaims.normalize as genoa
 
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')

@@ -1,7 +1,7 @@
 import pytest
 from pyspark.sql import Row
 import datetime
-import spark.providers.waystar.medicalclaims.sparkNormalizeWaystar as waystar
+import spark.providers.waystar.medicalclaims.normalize as waystar
 
 
 @pytest.mark.usefixtures("spark")

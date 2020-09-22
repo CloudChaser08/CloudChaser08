@@ -3,7 +3,7 @@ import pytest
 import shutil
 import datetime
 
-import spark.providers.allscripts.emr.sparkNormalizeAllscriptsEMR as allscripts_emr
+import spark.providers.allscripts.emr.normalize as allscripts_emr
 import spark.providers.allscripts.emr.udf as allscripts_emr_udf
 import spark.helpers.file_utils as file_utils
 

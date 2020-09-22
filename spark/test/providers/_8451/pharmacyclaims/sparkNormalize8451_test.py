@@ -1,7 +1,7 @@
 import pytest
 from pyspark.sql import Row
 import datetime
-import spark.providers._8451.pharmacyclaims.sparkNormalize8451Rx as _8451
+import spark.providers._8451.pharmacyclaims.normalize as _8451
 
 
 @pytest.mark.usefixtures("spark")

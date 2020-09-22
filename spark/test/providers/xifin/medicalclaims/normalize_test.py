@@ -2,7 +2,7 @@ import datetime
 import pytest
 
 from pyspark.sql import Row
-import spark.providers.xifin.medicalclaims.sparkNormalizeXifin as xifin
+import spark.providers.xifin.medicalclaims.normalize as xifin
 
 results = None
 

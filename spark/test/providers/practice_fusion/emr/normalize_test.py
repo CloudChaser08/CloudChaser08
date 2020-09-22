@@ -2,7 +2,7 @@ import pytest
 from pyspark.sql import Row
 import datetime
 
-import spark.providers.practice_fusion.emr.sparkNormalizePracticeFusion as practice_fusion
+import spark.providers.practice_fusion.emr.normalize as practice_fusion
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
