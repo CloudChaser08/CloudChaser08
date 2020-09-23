@@ -1,5 +1,6 @@
 import argparse
-import spark.providers.ovation.labtests.transactional_schemas as source_table_schemas
+import spark.providers.ovation.labtests.transactional_schemas as source_schema
+import spark.providers.ovation.labtests.transactional_schemas_v2 as source_schema_v2
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.lab_common_model import schemas as labtest_schemas
 
@@ -22,6 +23,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     date_input = args.date
     end_to_end_test = args.end_to_end_test
+
+    # ------------------------ Common for all providers -----------------------
+    if date_input >= '2020-09-21':
+        source_table_schemas = source_schema_v2
+    else:
+        source_table_schemas = source_schema
 
     # Create and run driver
     driver = MarketplaceDriver(
