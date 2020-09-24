@@ -108,7 +108,7 @@ SELECT
 	           CAP_DATE
                 (
                   CAST(txn.sample_collection_date                                                AS DATE), 
-                  CAST(COALESCE(${AVAILABLE_HISTORY_START_DATE}, '{EARLIEST_SERVICE_DATE}') AS DATE), 
+                  CAST(COALESCE('{AVAILABLE_START_DATE}', '{EARLIEST_SERVICE_DATE}') AS DATE),
                   CAST('{VDR_FILE_DT}'                                                            AS DATE)
                 ), 
                 ''
