@@ -7,16 +7,18 @@ SELECT
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
 	'188'                                                                                   AS data_feed,
 	'548'                                                                                   AS data_vendor,
-	/* patient_gender */
+	/* --------------------------------  patient_gender  -----------------------------------------------*/
     CASE
-        WHEN SUBSTR(UPPER(txn.gender), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(txn.gender), 1, 1)
-        WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(pay.gender), 1, 1)
-        ELSE 'U' 
-    END                                                                                     AS patient_gender,
-   ---------------- Patient age target field was missed
-    CASE
-        WHEN  pay.age IS NULL THEN NULL
-        ELSE
+        WHEN SUBSTR(UPPER(txn.gender), 1, 1) IN ('F', 'M', 'U') THEN SUBSTR(UPPER(txn.gender), 1, 1)
+        WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M')      THEN SUBSTR(UPPER(pay.gender), 1, 1)
+        ELSE NULL
+    END                                                                                    AS patient_gender,
+	/* --------------------------------  patient_age  -----------------------------------------------*/    
+    /* -------------------- Adding a CASE STATEMENT just to save processing time --------------------*/
+    CASE 
+        WHEN CAST(pay.age AS INTEGER) IS NULL THEN NULL
+        WHEN CAST(pay.age AS INTEGER) = 0 AND (txn.sample_collection_date IS NULL OR txn.year_of_birth IS NULL) THEN NULL
+        ELSE 
             CASE
                 WHEN
                     VALIDATE_AGE
@@ -31,62 +33,82 @@ SELECT
                             pay.age,
                             CAST(txn.sample_collection_date AS DATE),
                             COALESCE(txn.year_of_birth, pay.yearofbirth)
-                        )
+                        ) 
             END
-
+                                                                                           
     END                                                                                    AS patient_age,
-
-
-	CAP_YEAR_OF_BIRTH
-	(
-	    pay.age,
-	    CAST(txn.sample_collection_date AS DATE),
-	    COALESCE(txn.year_of_birth,pay.yearofbirth)
-	)                                                                                       AS patient_year_of_birth,
-	MASK_ZIP_CODE(SUBSTR(COALESCE(txn.patient_zip3,pay.threedigitzip), 1, 3))               AS patient_zip3,
+	/* --------------------------------  patient_year_of_birth  ----------------------------------------*/    
+    CASE
+        WHEN CAST(COALESCE(txn.year_of_birth, pay.yearofbirth) AS INTEGER) = 0     THEN NULL 
+        WHEN CAST(COALESCE(txn.year_of_birth, pay.yearofbirth) AS INTEGER) IS NULL THEN NULL
+    ELSE
+    	CAP_YEAR_OF_BIRTH
+    	(
+    	    pay.age,
+    	    CAST(txn.sample_collection_date AS DATE),
+    	    COALESCE(txn.year_of_birth, pay.yearofbirth)
+    	)                                                                                      
+	END                                                                                   AS patient_year_of_birth,
+	/* --------------------------------  patient_zip3 --------------------------------------------------*/    
+	CASE 
+	    WHEN txn.patient_zip3 IS NULL AND pay.threedigitzip IS NULL THEN NULL
+	    WHEN LENGTH(txn.patient_zip3) >= 3 AND CAST(txn.patient_zip3 AS INTEGER) <> 0 THEN 	MASK_ZIP_CODE(SUBSTR(txn.patient_zip3,1,3))
+	ELSE MASK_ZIP_CODE(SUBSTR(pay.threedigitzip, 1, 3))
+	END                                                                                     AS patient_zip3,
+	
     VALIDATE_STATE_CODE(UPPER(COALESCE(txn.patient_state, pay.state)))                      AS patient_state,
-    CASE
+	/* --------------------------------  date_service --------------------------------------------------*/    
+    CASE 
         WHEN CAST(txn.sample_collection_date AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(txn.sample_collection_date AS DATE) > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
         ELSE CAST(txn.sample_collection_date AS DATE)
-    END                                                                                      AS date_service,
-    CASE
+    END                                                                                      AS date_service,  
+	/* --------------------------------  date_specimen --------------------------------------------------*/    
+    CASE 
         WHEN CAST(txn.sample_collection_date AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(txn.sample_collection_date AS DATE) > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
         ELSE CAST(txn.sample_collection_date AS DATE)
-    END                                                                                      AS date_specimen,
-    CASE
+    END                                                                                      AS date_specimen, 
+	/* --------------------------------  date_report ----------------------------------------------------*/    
+    CASE 
         WHEN CAST(txn.report_creation_date AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(txn.report_creation_date AS DATE) > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
         ELSE CAST(txn.report_creation_date AS DATE)
-    END                                                                                      AS date_report,
+    END                                                                                      AS date_report, 
+    CLEAN_UP_NUMERIC_CODE(txn.loinc_code)                                                    AS loinc_code,
+    txn.lab_id                                                                               AS lab_id,
     txn.result	                                                                             AS result,
     txn.target_name	                                                                         AS result_name,
-    ---------- CASE added to exclude NPI Number with 000000000 2020-04-08 Jugal S
+	/* --------------------------------  result_desc ---------------------------------------------------*/    
     CASE
+    WHEN txn.kit_name   IS NOT NULL AND txn.instrument IS NOT NULL THEN CONCAT(txn.kit_name, ' : ', txn.instrument)
+    WHEN txn.kit_name   IS NOT NULL THEN txn.kit_name
+    WHEN txn.instrument IS NOT NULL THEN txn.instrument
+    ELSE NULL
+    END                                                                                        AS result_desc,
+
+	/* --------------------------------  ordering_npi ---------------------------------------------------*/    
+    CASE 
         WHEN CAST(txn.physician_npi AS INT) = 0  THEN NULL
         ELSE CLEAN_UP_NPI_CODE(txn.physician_npi)
     END                                                                                      AS ordering_npi,
     txn.payor_name                                                                           AS payer_name,
-    ---------- care site zip added on 4/13/2020
     txn.care_site_zip                                                                        AS lab_zip,
-    txn.care_site_name                                                                       AS ordering_other_id,
-    'CLIENTNAME_ORDERING_PRACTICE'                                                           AS ordering_other_qual,
-    ---------- CASE added to exclude Physician Name with "Test" 2020-04-08 Jugal S
-    CASE
+	/* --------------------------------  ordering_name --------------------------------------------------*/    
+    CASE 
         WHEN SUBSTR(UPPER(txn.physician_name),1, 5) = 'TEST ' THEN NULL
         ELSE txn.physician_name
     END                                                                                      AS ordering_name,
     'ovation'                                                                                AS part_provider,
-    /* part_best_date */
+	/* --------------------------------  part_mth -------------------------------------------------------*/    
 	CASE
 	    WHEN 0 = LENGTH
 	        (COALESCE
 	            (
 	           CAP_DATE
                 (
-                  CAST(txn.sample_collection_date                                                AS DATE),
-                  CAST(COALESCE('{AVAILABLE_START_DATE}', '{EARLIEST_SERVICE_DATE}') AS DATE),
+                  CAST(txn.sample_collection_date                                                AS DATE), 
+                  CAST(COALESCE(${AVAILABLE_HISTORY_START_DATE}, '{EARLIEST_SERVICE_DATE}') AS DATE), 
                   CAST('{VDR_FILE_DT}'                                                            AS DATE)
                 ), 
                 ''
@@ -100,6 +122,6 @@ SELECT
                 )
 	END                                                                                     AS part_best_date       
 
+
 FROM txn
 LEFT OUTER JOIN matching_payload pay ON txn.hvjoinkey  = pay.hvJoinKey 
-
