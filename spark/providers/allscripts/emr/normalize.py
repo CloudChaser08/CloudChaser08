@@ -128,7 +128,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
         if table.name in {'vitals_backfill_tier1', 'vitals_backfill_tier2',
                           'results_backfill_tier1', 'results_backfill_tier2'}:
             raw_table = runner.sqlContext.read.csv(
-                backfill_path + table.name + '/', sep='|', schema=table.schema
+                backfill_path + table.name + '/', sep='|', quote='', schema=table.schema
             )
             postprocessor.compose(
                 postprocessor.trimmify, postprocessor.nullify
@@ -145,7 +145,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 continue
 
             raw_table = runner.sqlContext.read.csv(
-                input_path + table.name + '/', sep='|', schema=table.schema
+                input_path + table.name + '/', sep='|', quote='', schema=table.schema
             )
             postprocessor.compose(
                 postprocessor.trimmify, postprocessor.nullify
@@ -153,7 +153,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
         else:
             window = Window.partitionBy(*table.pk).orderBy(F.col('recordeddttm').desc())
             raw_table = runner.sqlContext.read.csv(
-                input_path + table.name + '/', sep='|', schema=table.schema
+                input_path + table.name + '/', sep='|', quote='', schema=table.schema
             )
 
             raw_table = raw_table.withColumn('input_file_name', F.input_file_name()).persist()
