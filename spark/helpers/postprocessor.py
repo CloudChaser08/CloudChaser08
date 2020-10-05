@@ -5,10 +5,12 @@ from pyspark.sql.types import StringType, DateType
 from pyspark.storagelevel import StorageLevel
 from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, \
     coalesce, input_file_name, upper, current_date
+from pyspark.sql import DataFrame
 import functools
 import logging
 import time
 import datetime
+from typing import List, Tuple
 
 
 def _apply_to_all_columns(f, df):
@@ -323,3 +325,27 @@ def compose(*functions):
         functions,
         lambda x: x
     )
+
+
+def parse_fixed_width_columns(df: DataFrame, columns: List[Tuple[str, int, int, str]]) -> DataFrame:
+    """
+    Parses fixed width rows given a spark dataframe and the column specification. Returns the parsed dataframe.
+    
+    Columns are specified with a list of tuples containing (column name, column start, column length, column type)
+    """
+    
+    df_mas_cols = []
+   
+    for row in columns: 
+        col_name = row[0].strip()
+        col_start = int(row[1])
+        col_length = int(row[2])
+        col_type = row[3].strip()
+
+        col_def = df.value.substr(col_start, col_length).cast(col_type).alias(col_name)
+
+        df_mas_cols.append(col_def)
+
+    res_df = compose(trimmify, nullify)(df.select(*df_mas_cols))
+
+    return res_df
