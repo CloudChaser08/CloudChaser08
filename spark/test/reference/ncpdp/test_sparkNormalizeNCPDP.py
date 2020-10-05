@@ -10,7 +10,6 @@ import logging
 import spark.reference.ncpdp.sparkNormalizeNCPDP as normalize
 import spark.helpers.file_utils as file_utils
 from pyspark.sql.types import DateType
-from pyspark.sql import SparkSession, SQLContext
 
 # test that a few special columns are of the correct type
 # test that a few date columns were parsed correctly
@@ -28,8 +27,8 @@ TABLES = [
 ]
 
 def cleanup(spark):
-    sql_context: SQLContext = spark['sqlContext'] 
-    spark_session: SparkSession = spark["spark"]
+    sql_context = spark['sqlContext'] 
+    spark_session = spark["spark"]
     
     for table in TABLES:
         sql_context.dropTempTable(table)
@@ -43,8 +42,8 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_write(spark):
     cleanup(spark)
-    sql_context: SQLContext = spark['sqlContext'] 
-    spark_session: SparkSession = spark['spark']
+    sql_context = spark['sqlContext'] 
+    spark_session = spark['spark']
     
     normalize.run(spark=spark_session, input_path=INPUT_PATH, output_path=OUTPUT_PATH, date_in=TEST_DATE)
     
@@ -60,8 +59,8 @@ def test_file_output(spark):
     """
     master_mas_location = file_utils.get_abs_path(__file__, './tmp/output/20200901/master/mas/')
     
-    sql_context: SQLContext = spark['sqlContext'] 
-    spark_session: SparkSession = spark["spark"]
+    sql_context = spark['sqlContext'] 
+    spark_session = spark["spark"]
 
     df = None
     try:

@@ -10,7 +10,6 @@ import functools
 import logging
 import time
 import datetime
-from typing import List, Tuple
 
 
 def _apply_to_all_columns(f, df):
@@ -327,7 +326,7 @@ def compose(*functions):
     )
 
 
-def parse_fixed_width_columns(df: DataFrame, columns: List[Tuple[str, int, int, str]]) -> DataFrame:
+def parse_fixed_width_columns(df, columns):
     """
     Parses fixed width rows given a spark dataframe and the column specification. Returns the parsed dataframe.
     
