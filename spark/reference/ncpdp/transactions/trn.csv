@@ -1,0 +1,56 @@
+name                   | start | length | type   | description
+ncpdp_prov_id          |     1 |      7 | string |  NCPDP Number of the provider
+legal_business_nm      |     8 |     60 | string | Legal Business Name
+dba_nm                 |    68 |     60 | string | The DBA (Doing Business As) name of the provider
+doctor_nm              |   128 |     60 | string | Doctor's Name - Only set if the Primary Provider Type = 7 (Non-Pharmacy Dispensing Site), and the Provider Class = 7 (Alternate Dispensing Site)
+store_num              |   188 |     10 | string | The store number (usually assigned by parent company) associated with the provider.
+phys_loc_addr_1        |   198 |     55 | string | The physical location of the store and first line of the address.
+phys_loc_addr_2        |   253 |     55 | string | The physical location and second address line.
+phys_loc_city          |   308 |     30 | string | Physical location city of provider. 
+phys_loc_state_cd      |   338 |      2 | string | The two-digit state code.
+phys_loc_zip           |   340 |      9 | string | This field identifies the 5 or 9 digit zip code of the provider, less dash marks.
+phys_loc_phone_num     |   349 |     10 | string | The physical site phone number.
+phys_loc_phone_ext     |   359 |      5 | string | The physical site phone extension.
+phys_loc_phone_fax     |   364 |     10 | string | The physical site FAX number. 
+phys_loc_email         |   374 |     50 | string | E-mail address of pharmacy.
+phys_loc_dir_txt       |   424 |     50 | string | Text stating cross street or directions for physical location of provider.
+phys_loc_cnty_cd       |   474 |      5 | string | 5-digit FIPS code. The County FIPS code field and the County Name field identify the “most prevalent” county for the 5-digit ZIP code listed in a given record. 
+phys_loc_msa_cd        |   479 |      4 | string | 4-digit MSA field contains the Metropolitan Statistical Area code, if any, in which some or all of the ZIP code lies. 
+phys_loc_pmsa_cd       |   483 |      4 | string | 4-digit PMSA field contains the Primary Metropolitan Statistical Area code, if any, in which some or all of the ZIP code lies. 
+phys_loc_24_hr_flg     |   487 |      1 | string | This field indicates whether this provider operates 24 hours a day. "Y" = Yes, "N" = No
+phys_loc_prov_hrs_cd   |   488 |     35 | string | Operating hours in seven segments (DOOCC). D = Day of the Week (Sunday = 1, Saturday = 7), OO = 2 digit Open Code, CC = 2 digit Close Code
+phys_loc_vote_cd       |   523 |      4 | string | Congressional voting district code.
+phys_loc_lang_cd_1     |   527 |      2 | string | Language Spoken Code (ISO 639-1 codes)
+phys_loc_lang_cd_2     |   529 |      2 | string | Language Spoken Code (ISO 639-1 codes)
+phys_loc_lang_cd_3     |   531 |      2 | string | Language Spoken Code (ISO 639-1 codes)
+phys_loc_lang_cd_4     |   533 |      2 | string | Language Spoken Code (ISO 639-1 codes)
+phys_loc_lang_cd_5     |   535 |      2 | string | Language Spoken Code (ISO 639-1 codes)
+phys_loc_open_dt       |   537 |      8 | date   | Date of store opening. Zero if unknown
+phys_loc_close_dt      |   545 |      8 | date   | Last business day of the site. Zeroes if not closed.
+mail_addr_1            |   553 |     55 | string | The first line of the mailing address.
+mail_addr_2            |   608 |     55 | string | The second line of the mailing address
+mail_addr_city         |   663 |     30 | string | Mailing Address City
+mail_addr_state_cd     |   693 |      2 | string | Mailing Address State code
+mail_addr_zip_cd       |   695 |      9 | string | This field identifies the 5 or 9 digit zip code of the mailing address, less dash marks.
+contact_last_nm        |   704 |     20 | string | Last name of primary contact person
+contact_frst_nm        |   724 |     20 | string | First name of primary contact person
+contact_midl_nm        |   744 |      1 | string | Middle initial of primary contact person
+contact_title          |   745 |     30 | string | Title of primary contact person
+contact_phone_nm       |   775 |     10 | string | Contact's phone number with area code
+contact_phone_ext      |   785 |      5 | string | Contact's phone extension
+contact_email          |   790 |     50 | string | Contact's email address
+disp_cls_cd            |   840 |      2 | string | The class code associated with this provider. The Dispenser Class Code is self-designated and is not related to taxonomy codes.
+prmy_prov_typ_cd       |   842 |      2 | string | This field contains the provider’s Provider type code. Blanks are not allowed.
+secdy_prov_typ_cd      |   844 |      2 | string | This field contains the provider’s Provider type code. blanks = none/not specified or not applicable in this field (provider does not specify a secondary type)
+tertiary_prov_typ_cd   |   846 |      2 | string | This field contains the provider’s dispenser type code. blanks = none/not specified or not applicable in this field (provider does not specify a tertiary type)
+mdcr_prov_id           |   848 |     10 | string | Medicare Provider (supplier) ID. The National Supplier Clearinghouse (NSC) is the organizational entity contracted by the Centers for Medicare & Medicaid Services (CMS) to issue Medicare billing privileges to suppliers of Durable Medical Equipment, Prosthetics, Orthotics and Supplies (DMEPOS) and to maintain a supplier file that contains information collected via the CMS 855S enrollment form.
+npi                    |   858 |     10 | string | National Provider ID (NPI) - The standard unique health identifier for health care providers to use in filing and processing health care claims and other transactions. At the pharmacy or alternate dispensing site level.
+dea_reg_id             |   868 |     12 | string | DEA registration ID - This field contains the Drug Enforcement Administration (DEA) Number of the provider. Formerly called the Federal License Number on this file.
+dea_exprtn_dt          |   880 |      8 | date   | The date the Drug Enforcement Administration (DEA) requires the federal license be renewed by.
+tin                    |   888 |     15 | string | Federal Tax ID Number
+state_tax_id_num       |   903 |     15 | string | State Income Tax ID Number
+deactivation_cd        |   918 |      2 | string | Deactivation code - Code with reason for deactivation
+reinstatement_cd       |   920 |      2 | string | Reinstatement code - code with reason for reactivation of record
+reinstatement_dt       |   922 |      8 | date   | Reinstatement date
+transaction_cd         |   930 |      1 | string | Transaction Code ("A" = add, "D" = Delete, "C" = change) - Transaction file only
+transaction_dt         |   931 |      8 | date   | Date of Transaction Entry - Date - Transaction file only
