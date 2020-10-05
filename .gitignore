@@ -19,3 +19,4 @@ pylint_output.txt
 spark/.DS_Store
 spark/target/
 venv/
+.vscode/
