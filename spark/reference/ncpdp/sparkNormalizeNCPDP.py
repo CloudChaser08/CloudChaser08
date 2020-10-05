@@ -9,10 +9,14 @@ import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 from pyspark.sql import DataFrame, SparkSession
 
+# This is the normalization script for the NCPDP reference data. 
+# Right now, only the `Provider Information` (mas.txt) and `Provider Information Transactions` (trn.txt) files are being parsed.
+# These contain data on pharmacy and non-pharmacy dispensing site records with geographic and licensing information.
+# More information can be found in "s3://salusv/sample/ncpdp/NCPDP dataQ Implementation Guide v3.1.pdf"
+
 INCOMING_DATEFORMAT = "%Y%m%d"
 
-
-# we'll eventually have like 12 of these files to parse
+# We can't use a generalized fixed width file parser because the first and last rows have different content.
 def ncpdp_fixed_width_to_parquet(spark: SparkSession, input_filename: str, output_path: str, parse_path: str):
     """
     Converts a fixed width file found in `input_filename` to a parquet file in `output_path` using the parsing params found in `parse_path`.
@@ -44,6 +48,7 @@ def ncpdp_fixed_width_to_parquet(spark: SparkSession, input_filename: str, outpu
 
     res_df = spark.sql(sql)
 
+    # The output paths are templated by date, so if it runs again for the same date, it should overwrite the old version for that date. 
     res_df.repartition(1).write.parquet(output_path, mode='overwrite')
 
 
