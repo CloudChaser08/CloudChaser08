@@ -43,7 +43,7 @@ class QuestRinseCensusDriver(CensusDriver):
             logger.log("        -loading: writing {}".format(table_name))
             repart_num = 20 if table_name == 'lqrc_order_result_trans' else 1
             sql_stmnt = str(table_conf['sql_stmnt']).strip()
-            if len(sql_stmnt) == 0:
+            if not sql_stmnt:
                 continue
             self._runner.run_spark_query(sql_stmnt, return_output=True).createOrReplaceTempView(table_name)
             if table_name == REFERENCE_LOINC_DELTA:
