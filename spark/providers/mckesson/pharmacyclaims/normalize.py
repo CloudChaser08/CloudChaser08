@@ -168,7 +168,7 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
 
     if not test and not airflow_test:
         logger.log_run_details(
-            provider_name='McKessonRx',
+            provider_name='McKessonRx{}'.format('-Restricted' if mode == 'restricted' else ''),
             data_type=DataType.PHARMACY_CLAIMS,
             data_source_transaction_path=unres_input_path,
             data_source_matching_path=unres_matching_path,
