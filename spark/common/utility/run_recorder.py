@@ -122,8 +122,8 @@ class RunRecorder(object):
         try:
             subprocess.check_call(['hdfs',
                                    'dfs',
-                                   '-f',
                                    '-copyFromLocal',
+                                   '-f',
                                    local_output_path,
                                    hdfs_path]
                                   )
