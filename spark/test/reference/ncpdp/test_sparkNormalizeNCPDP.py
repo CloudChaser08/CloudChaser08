@@ -19,7 +19,8 @@ from pyspark.sql.types import DateType
 # test that top and bottom rows are removed
 INPUT_PATH = file_utils.get_abs_path(__file__, './tmp/input/{date}')
 OUTPUT_PATH = file_utils.get_abs_path(__file__, './tmp/output/{date}')
-TEST_DATE = '2020-09-01'
+TEST_DATE = datetime.datetime(2020, 9, 1)
+PREV_MAS_DATE = datetime.datetime(2020, 8, 1)
 
 TABLES = [
     'ref_ncpdp_master_mas', 
@@ -34,7 +35,7 @@ def cleanup(spark):
         sql_context.dropTempTable(table)
 
     try:
-        shutil.rmtree(file_utils.get_abs_path(__file__, './tmp/output'))
+        shutil.rmtree(file_utils.get_abs_path(__file__, './tmp/output/20200901'))
     except:
         logging.warning('No output directory.')
 
@@ -45,7 +46,7 @@ def test_write(spark):
     sql_context = spark['sqlContext'] 
     spark_session = spark['spark']
     
-    normalize.run(spark=spark_session, input_path=INPUT_PATH, output_path=OUTPUT_PATH, date_in=TEST_DATE)
+    normalize.run(spark=spark_session, input_path=INPUT_PATH, output_path=OUTPUT_PATH, date_in=TEST_DATE, date_prev=PREV_MAS_DATE)
     
     exist_tables = [table.name for table in spark_session.catalog.listTables()]
 
@@ -74,7 +75,7 @@ def test_file_output(spark):
     assert isinstance(df.schema['phys_loc_open_dt'].dataType, DateType)
 
 
-def test_cleanup(spark):
-    cleanup(spark)
+# def test_cleanup(spark):
+#     cleanup(spark)
     
 
