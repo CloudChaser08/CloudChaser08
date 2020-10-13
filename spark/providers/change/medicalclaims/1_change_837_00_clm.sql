@@ -1,4 +1,4 @@
-SELECT /*+ BROADCAST(pln), BROADCAST(pas) */
+SELECT
     clm.claim_tcn_id	                        AS	claim_tcn_id                     ,
     clm.record_type                             AS	record_type	                     ,
     clm.payer_id                                AS	payer_id	                     ,

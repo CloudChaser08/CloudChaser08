@@ -5,6 +5,7 @@ import spark.providers.change.medicalclaims.transactional_schemas_v2 as future_s
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
+import spark.helpers.file_utils as file_utils
 
 PASSTHROUGH_CUTTOF = '2020-03-31'
 
@@ -61,19 +62,25 @@ if __name__ == "__main__":
     }
 
     driver.init_spark_context(conf_parameters=conf_parameters)
-    driver.load()
+    driver.load(extra_payload_cols=['PCN', 'claimId'])
 
     # only 2 columns are needed from the following 2 tables.
     # Select only the columns we need, then broadcast in the sql
+    logger.log('Build passthrough and plainout refernce tables')
+    driver.spark.sql('select PCN as pcn, UPPER(claimId) as claimid from {} group by 1, 2'.format(pas_tiny_table_name)) \
+        .cache().createOrReplaceTempView('pas_tiny')
+    driver.spark.sql('select patient_gender, UPPER(claim_number) as claim_number from plainout group by 1, 2') \
+        .cache().createOrReplaceTempView('pln_tiny')
 
-    driver.spark.sql('select pcn, UPPER(claimid) as claimid from {} group by 1, 2').format(pas_tiny_table_name)\
-        .createOrReplaceTempView('pas_tiny')
+    for table in ['pas_tiny', 'pln_tiny']:
+        file_utils.clean_up_output_hdfs('/reference/{}/'.format(table))
+        driver.spark.table(table).repartition(20).write.parquet('/reference/{}/'.format(table), compression='gzip', mode='append')
+        driver.spark.read.parquet('/reference/{}/'.format(table)).cache().createOrReplaceTempView(table)
 
-    driver.spark.sql('select patient_gender, UPPER(claim_number) as claim_number from plainout group by 1, 2')\
-        .createOrReplaceTempView('pln_tiny')
-
+    logger.log('Start transform')
     driver.transform()
     driver.save_to_disk()
     driver.log_run()
     driver.stop_spark()
     driver.copy_to_output_path()
+    file_utils.clean_up_output_hdfs('/reference/')
