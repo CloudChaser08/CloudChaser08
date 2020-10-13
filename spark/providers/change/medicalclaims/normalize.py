@@ -67,9 +67,9 @@ if __name__ == "__main__":
     # Select only the columns we need, then broadcast in the sql
     logger.log('Build passthrough and plainout refernce tables')
     driver.spark.sql('select PCN as pcn, UPPER(claimId) as claimid from {} group by 1, 2'.format(pas_tiny_table_name)) \
-        .cache().createOrReplaceTempView('pas_tiny')
+        .createOrReplaceTempView('pas_tiny')
     driver.spark.sql('select patient_gender, UPPER(claim_number) as claim_number from plainout group by 1, 2') \
-        .cache().createOrReplaceTempView('pln_tiny')
+        .createOrReplaceTempView('pln_tiny')
 
     logger.log('Start transform')
     driver.transform()
