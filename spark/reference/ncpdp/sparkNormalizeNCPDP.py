@@ -3,7 +3,6 @@ import argparse
 import csv
 import datetime
 import os
-import calendar
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.postprocessor as postprocessor
@@ -14,16 +13,11 @@ from spark.spark_setup import init
 # These contain data on pharmacy and non-pharmacy dispensing site records with geographic and licensing information.
 # More information can be found in "s3://salusv/sample/ncpdp/NCPDP dataQ Implementation Guide v3.1.pdf"
 
-# Copy old output files to backup
-# Load old master into temp view
-# Modify old master using new transaction files
-
 # create temp master
 # insert added (A), changed (C), deleted (D) transaction records into temp master
 # insert old master excluding all entries from transaction records into temp master
 # delete old master
 # export new master
-
 
 
 INCOMING_DATEFORMAT = "%Y%m%d"
