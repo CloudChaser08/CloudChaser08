@@ -2,7 +2,7 @@ import datetime
 import pytest
 
 from pyspark.sql import Row
-import spark.providers.acxiom.events.sparkNormalizeAcxiom as ac
+import spark.providers.acxiom.events.normalize as ac
 
 source = None
 results = None
