@@ -88,7 +88,7 @@ def ncpdp_fixed_width_to_parquet(spark, input_path, output_path, transaction_tab
     final_df.repartition(1).write.parquet(master_output, mode='overwrite')
 
 
-def run(spark, input_path, output_path, date, date_prev):
+def run(spark, input_path, output_path, date, date_prev, prev_master_path=None):
     
     date_format = date.strftime(INCOMING_DATEFORMAT)
     prev_date_format = date_prev.strftime(INCOMING_DATEFORMAT)
@@ -96,10 +96,12 @@ def run(spark, input_path, output_path, date, date_prev):
     master_tables = [
         "mas"
     ]
-
+    if prev_master_path is None:
+        prev_master_path = output_path
+     
     # load all the old master tables. should be in the same location as the output
     for table in master_tables:
-        old_master_path = os.path.join(output_path, "master/{table}/").format(date=prev_date_format, table=table)
+        old_master_path = os.path.join(prev_master_path, "master/{table}/").format(date=prev_date_format, table=table)
         df = spark.read.format("parquet").load(old_master_path)
         df.createOrReplaceTempView("ref_ncpdp_master_{table}".format(table=table))
 
@@ -119,11 +121,6 @@ def run(spark, input_path, output_path, date, date_prev):
             transaction_table=transaction_table, 
             master_table=master_table
         )
-
-    # delete all the old master tables
-    # for table in master_tables:
-    #     old_master_path = os.path.join(input_path, "master/{table}/").format(date=date_prev, table=table)
-      
 
   
 def main(args):

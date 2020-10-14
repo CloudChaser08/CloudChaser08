@@ -17,7 +17,8 @@ from pyspark.sql.types import DateType
 # query from parquet files
 
 # test that top and bottom rows are removed
-INPUT_PATH = file_utils.get_abs_path(__file__, './tmp/input/{date}')
+INPUT_PATH = file_utils.get_abs_path(__file__, './resources/input/{date}')
+PREV_MAS_PATH = file_utils.get_abs_path(__file__, './resources/old_master/{date}')
 OUTPUT_PATH = file_utils.get_abs_path(__file__, './tmp/output/{date}')
 TEST_DATE = datetime.datetime(2020, 9, 1)
 PREV_MAS_DATE = datetime.datetime(2020, 8, 1)
@@ -35,7 +36,7 @@ def cleanup(spark):
         sql_context.dropTempTable(table)
 
     try:
-        shutil.rmtree(file_utils.get_abs_path(__file__, './tmp/output/20200901'))
+        shutil.rmtree(file_utils.get_abs_path(__file__, './tmp'))
     except:
         logging.warning('No output directory.')
 
@@ -46,7 +47,7 @@ def test_write(spark):
     sql_context = spark['sqlContext'] 
     spark_session = spark['spark']
     
-    normalize.run(spark=spark_session, input_path=INPUT_PATH, output_path=OUTPUT_PATH, date=TEST_DATE, date_prev=PREV_MAS_DATE)
+    normalize.run(spark=spark_session, input_path=INPUT_PATH, output_path=OUTPUT_PATH, date=TEST_DATE, date_prev=PREV_MAS_DATE, prev_master_path=PREV_MAS_PATH)
     
     exist_tables = [table.name for table in spark_session.catalog.listTables()]
 
