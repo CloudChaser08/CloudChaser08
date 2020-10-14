@@ -17,14 +17,13 @@ from spark.common.utility import logger
 
 FEED_ID = '214'
 VENDOR_ID = '665'
+PROVIDER_NAME = 'adstra'
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/adstra/spark-output/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/consumer/2017-08-02/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
-    setid = 'adstra'
-
     script_path = __file__
 
     transaction_path = ''
@@ -32,14 +31,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/adstra/events/resources/matching/'
         )
-        ids_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/adstra/events/resources/ids/'
-        )
     elif airflow_test:
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/adstra/payload/{}/'.format(
             date_input.replace('-', '/')
         )
-        ids_path = 's3://salusv/testing/dewey/airflow/e2e/adstra/ids/'
     else:
         matching_path = 's3://salusv/matching/payload/consumer/adstra/{}/'.format(
             date_input.replace('-', '/')
@@ -48,18 +43,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    min_date = postprocessor.coalesce_dates(
-        runner.sqlContext,
-        FEED_ID,
-        None,
-        'HVM_AVAILABLE_HISTORY_START_DATE'
-    )
-    if min_date:
-        min_date = min_date.isoformat()
-
-    max_date = date_input
-
-    payload_loader.load(runner, matching_path, ['claimId'])
+    payload_loader.load(runner, matching_path, ['claimId'], load_file_name=True)
 
     normalized_df = runner.run_spark_script(
         'normalize.sql',
@@ -69,12 +53,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     events_df = postprocessor.compose(
         schema_enforcer.apply_schema_func(schema),
-        postprocessor.add_universal_columns(
-            feed_id=FEED_ID,
-            vendor_id=VENDOR_ID,
-            filename=setid,
-            model_version_number='11'
-        ),
         postprocessor.nullify,
         event_priv.filter
     )(
@@ -95,11 +73,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         file_utils.clean_up_output_hdfs('/staging/')
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'events', 'event_common_model_v4.sql',
-            'adstra', 'event_common_model',
+            PROVIDER_NAME, 'event_common_model',
             'source_record_date', date_input,
+            partition_value=date_input,
             hvm_historical_date=datetime(hvm_historical.year,
-                                         hvm_historical.month,
-                                         hvm_historical.day)
+                                     hvm_historical.month,
+                                     hvm_historical.day)
         )
 
     if not test and not airflow_test:
