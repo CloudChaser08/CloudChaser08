@@ -78,24 +78,20 @@ def ncpdp_fixed_width_to_parquet(spark, input_path, output_path, transaction_tab
     temp_master_name = "ref_ncpdp_master_{table}_temp".format(table=master_table)
     master_df.createOrReplaceTempView(temp_master_name)
 
-    # select things in the master that aren't already in the transaction files
+    # select things in the master that aren't already in the transaction 
+    # union with transaction data
     old_master_sql = """
-        select * from ref_ncpdp_master_{table} as mas 
+        select mas.* from ref_ncpdp_master_{table} as mas 
         left join {temp_master_name} as trn on trn.ncpdp_prov_id=mas.ncpdp_prov_id 
         where trn.ncpdp_prov_id is NULL
+        UNION
+        select * from {temp_master_name}
     """.format(table=master_table, temp_master_name=temp_master_name)
 
-    diff_df = spark.sql(old_master_sql)
+    final_df = spark.sql(old_master_sql)
 
-    # now add those items back into the temp master
-    diff_df.write.insertInto(temp_master_name, overwrite=False)
-
-    # get all the items from that temp master
-    final_master_sql = "select * from {temp_master_name}".format(temp_master_name=temp_master_name)
-    final_df = spark.sql(final_master_sql)
+    # now add those items into the master output
     final_df.repartition(1).write.parquet(master_output, mode='overwrite')
-
-
 
 
 def run(spark, input_path, output_path, date, date_prev):
@@ -107,9 +103,9 @@ def run(spark, input_path, output_path, date, date_prev):
         "mas"
     ]
 
-    # load all the old master tables
+    # load all the old master tables. should be in the same location as the output
     for table in master_tables:
-        old_master_path = os.path.join(input_path, "master/{table}/").format(date=prev_date_format, table=table)
+        old_master_path = os.path.join(output_path, "master/{table}/").format(date=prev_date_format, table=table)
         df = spark.read.format("parquet").load(old_master_path)
         df.createOrReplaceTempView("ref_ncpdp_master_{table}".format(table=table))
 

@@ -46,7 +46,7 @@ def test_write(spark):
     sql_context = spark['sqlContext'] 
     spark_session = spark['spark']
     
-    normalize.run(spark=spark_session, input_path=INPUT_PATH, output_path=OUTPUT_PATH, date_in=TEST_DATE, date_prev=PREV_MAS_DATE)
+    normalize.run(spark=spark_session, input_path=INPUT_PATH, output_path=OUTPUT_PATH, date=TEST_DATE, date_prev=PREV_MAS_DATE)
     
     exist_tables = [table.name for table in spark_session.catalog.listTables()]
 
@@ -75,7 +75,7 @@ def test_file_output(spark):
     assert isinstance(df.schema['phys_loc_open_dt'].dataType, DateType)
 
 
-# def test_cleanup(spark):
-#     cleanup(spark)
+def test_cleanup(spark):
+    cleanup(spark)
     
 
