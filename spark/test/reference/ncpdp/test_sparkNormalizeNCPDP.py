@@ -71,7 +71,7 @@ def test_file_output(spark):
         logging.error('No output file.')
 
     assert df is not None
-    assert df.count() == 81801
+    assert df.count() == 54
     # Make sure dates are dates
     assert isinstance(df.schema['phys_loc_open_dt'].dataType, DateType)
 
