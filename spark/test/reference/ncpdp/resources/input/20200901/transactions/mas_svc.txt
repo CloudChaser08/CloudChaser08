@@ -1,0 +1,22 @@
+9999999M110901202079471 Copyright 2020 National Council for Prescription Drug Programs, All Rights Reserved                                           
+0100052Y02Y05N06N11N13N19N23N28Y33Y35N36N40                                                                                                           
+0100381Y02N03N06N11N13N19N23N28N31Y35N36N40                                                                                                           
+0100622Y02N03Y07Y12Y18N19N23Y29Y33Y35Y37N40                                                                                                           
+0100886Y02Y04Y07Y12Y14N19Y26Y30Y33Y35N36N40                                                                                                           
+0100949Y02Y05N06N11Y14N19N23Y29Y33Y35N36N40                                                                                                           
+0101143Y02Y05Y10Y12Y16N19Y26Y29Y33Y35Y37N40                                                                                                           
+0101155Y02N03Y07Y12Y14N19N23Y29Y33Y35N36N40                                                                                                           
+0101232Y02Y04N06Y12Y15N19N23Y30Y33Y35N36N40                                                                                                           
+0101369Y02Y04N06N11N13N19N23N28Y32Y35N36N40                                                                                                           
+0101511Y02Y05Y07Y12Y14N19N23Y30Y33Y35N36N40                                                                                                           
+0101535Y02Y05N06Y12N13N19Y26Y30N31Y35N36N40                                                                                                           
+0101775Y02Y05Y07N11Y16N19N23N28N31Y35Y37N40                                                                                                           
+0101915Y02N03N06N11N13N19N23N28N31Y35N36N40                                                                                                           
+0102020Y02Y04N06N11N13N19Y25Y29Y33Y35N36N40                                                                                                           
+0102044Y02Y05Y07N11N13N19N23N28N31Y35N36N40                                                                                                           
+0102309Y02Y04Y07N11Y14N19Y26Y30Y33Y35N36N40                                                                                                           
+0102311Y02N03Y07Y12Y18N19Y24N28Y33Y35N36N40                                                                                                           
+0102323Y02N03Y07Y12Y18N19Y24N28Y33Y35N36N40                                                                                                           
+0102397Y02N03N06N11Y16N19N23N28Y33Y35N36N40                                                                                                           
+0102436Y02N03N06Y12Y16N19N23N28Y33Y35N36N40                                                                                                           
+9999999M110901202079471 Copyright 2020 National Council for Prescription Drug Programs, All Rights Reserved                                           

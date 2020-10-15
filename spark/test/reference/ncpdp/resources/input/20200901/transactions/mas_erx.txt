@@ -1,0 +1,22 @@
+9999999M080901202070419 Copyright 2020 National Council for Prescription Drug Programs, All Rights Reserved                                           
+0100052SSXNEW|REF|CHG|CAN                                                                                     1114201700000000                        
+0100381SSXNEW|REF                                                                                             0801200700000000                        
+0100622SSXNEW|REF|CHG|CAN                                                                                     0621201600000000                        
+0100886SSXNEW|REF                                                                                             0519200900000000                        
+0100949SSXNEW|REF                                                                                             0110200600000000                        
+0101143SSXNEW|REF                                                                                             0212200900000000                        
+0101155SSXNEW|REF                                                                                             0119200900000000                        
+0101232SSXNEW|REF                                                                                             0521201000000000                        
+0101369SSXNEW|REF|CHG|CAN                                                                                     0830201600000000                        
+0101511SSXNEW|REF                                                                                             1019200700000000                        
+0101535SSXNEW|REF                                                                                             1008200800000000                        
+0101775SSXNEW|REF                                                                                             0801200700000000                        
+0101915SSXNEW|REF                                                                                             1112201000000000                        
+0102020SSXNEW|REF                                                                                             0820200800000000                        
+0102309SSXNEW|REF                                                                                             0907201200000000                        
+0102311SSXNEW|REF|CHG|CAN                                                                                     1217200400000000                        
+0102323SSXNEW|REF|CHG|CAN                                                                                     1217200400000000                        
+0102397SSXNEW|REF                                                                                             0303201000000000                        
+0102436SSXNEW|REF                                                                                             0213200900000000                        
+0102462SSXNEW|REF|CHG|CAN                                                                                     0909200900000000                        
+9999999M080901202070419 Copyright 2020 National Council for Prescription Drug Programs, All Rights Reserved                                           
