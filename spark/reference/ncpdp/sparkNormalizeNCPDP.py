@@ -122,7 +122,14 @@ def run(spark, input_path, output_path, date, date_prev, prev_master_path=None):
             master_table=master_table
         )
 
-  
+def get_last_month(date):
+    # get last month, fixed day since timedelta doesn't do months
+    year, month, day = date.timetuple()[:3]
+    new_month = ((month - 1) % 12) or 12
+    date_prev = datetime.date(year - (new_month // 12), new_month, 1)
+    
+    return date_prev
+
 def main(args):
     spark, sqlContext = init('Reference NCPDP')
     
@@ -130,12 +137,8 @@ def main(args):
     output_path = 's3://salusv/reference/parquet/ncpdp/{date}/'
     
     date = datetime.datetime.strptime(args.date, '%Y-%m-%d').date()
+    date_prev = get_last_month(date=date)
 
-    # get last month since timedelta doesn't do months
-    year, month, day = date.timetuple()[:3]
-    new_month = month - 1
-    date_prev = datetime.date(year + (new_month / 12), (new_month % 12) or 12, day)
-    
     run(spark, input_path=input_path, output_path=output_path, date=date, date_prev=date_prev)
 
     spark.stop()
