@@ -1,6 +1,7 @@
 import argparse
 import os
 import subprocess
+from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.emr.encounter import schema_v8 as encounter_schema
@@ -16,6 +17,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.providers.practice_fusion.emr.records_schemas as records_schemas
+import spark.providers.practice_fusion.emr.records_schemas_v1 as records_schemas_v1
 
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
@@ -85,8 +87,18 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
     else:
         pass
 
-    records_loader.load_and_clean_all_v2(runner, input_path, records_schemas, load_file_name=True)
+    # New layout after 2020-10-01 (LABORDER supplied as LAB_RESULT name)
+    has_template_v1 = datetime.strptime(date_input, '%Y-%m-%d').date() >= datetime.strptime('2020-10-01', '%Y-%m-%d').date()
+    if has_template_v1:
+        source_table_schemas = records_schemas_v1
+    else:
+        source_table_schemas = records_schemas
+
+    records_loader.load_and_clean_all_v2(runner, input_path, source_table_schemas, load_file_name=True)
     payload_loader.load(runner, matching_path, ['claimId', 'patientId', 'hvJoinKey'], table_name='payload')
+
+    if has_template_v1:
+        spark.table('lab_result').createOrReplaceTempView('laborder')
 
     models = [model] if model else MODELS
     for mdl in models:
