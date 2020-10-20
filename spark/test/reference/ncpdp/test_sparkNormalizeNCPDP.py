@@ -40,6 +40,10 @@ def cleanup(spark):
     except:
         logging.warning('No output directory.')
 
+def test_get_last_month():
+
+    assert normalize.get_last_month(datetime.date(2020, 1, 1)) == datetime.date(2019, 12, 1)
+    assert normalize.get_last_month(datetime.date(2020, 10, 23)) == datetime.date(2020, 9, 1)
 
 @pytest.mark.usefixtures("spark")
 def test_write(spark):
