@@ -48,6 +48,8 @@ matching_paths = []
 hadoop_times = []
 spark_times = []
 
+NEW_LAYOUT_DATE = '2020-10-01'
+
 
 def run(spark, runner, date_input, model=None, custom_input_path=None, custom_matching_path=None,
         test=False, end_to_end_test=False):
@@ -88,7 +90,7 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
         pass
 
     # New layout after 2020-10-01 (LABORDER supplied as LAB_RESULT name)
-    has_template_v1 = datetime.strptime(date_input, '%Y-%m-%d').date() >= datetime.strptime('2020-10-01', '%Y-%m-%d').date()
+    has_template_v1 = datetime.strptime(date_input, '%Y-%m-%d').date() >= datetime.strptime(NEW_LAYOUT_DATE, '%Y-%m-%d').date()
     if has_template_v1:
         source_table_schemas = records_schemas_v1
     else:
