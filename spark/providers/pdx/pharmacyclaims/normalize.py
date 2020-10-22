@@ -1,10 +1,11 @@
+import os
 import argparse
 import subprocess
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model import schema_v7 as schema
+from spark.common.pharmacyclaims_common_model import schemas 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -18,12 +19,14 @@ from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
-FEED_ID = '65'
+schema_obj = schemas['schema_v7']
+schema = schema_obj.schema_structure
 
+OUTPUT_PATH_PRODUCTION = os.path.join('s3://salusv/warehouse/parquet/', schema_obj.output_directory)
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/pdx/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-11-26/'
-PART_PROVIDER = 'part_provider'
-PART_BEST_DATE = 'part_best_date'
+PART_PROVIDER = schema_obj.provider_partition_column
+PART_BEST_DATE = schema_obj.date_partition_column
+FEED_ID = '65'
 PDX = 'pdx'
 
 
@@ -88,9 +91,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
         ['VENDOR_FILE_DATE_FMT', vendor_file_date_format, False],
     ])
 
-    df = postprocessor.compose(
-        lambda df: schema_enforcer.apply_schema(df, schema, columns_to_keep=['part_provider', PART_BEST_DATE])
-    )(normalized_output)
+    df = schema_enforcer.apply_schema(normalized_output, schema, columns_to_keep=['part_provider', PART_BEST_DATE])
 
     if not test:
         hvm_historical = postprocessor.coalesce_dates(
