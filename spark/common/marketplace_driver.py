@@ -2,6 +2,7 @@
 import os
 import inspect
 import datetime
+
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.schema_enforcer as schema_enforcer
@@ -200,6 +201,37 @@ class MarketplaceDriver(object):
         self.runner.run_all_spark_scripts(variables, directory_path=self.provider_directory_path,
                                           count_transform_sql = self.count_transform_sql)
 
+    def apply_schema(self, data_frame, schema_obj):
+        output = schema_enforcer.apply_schema(
+            data_frame,
+            schema_obj.schema_structure,
+            columns_to_keep=[
+                schema_obj.provider_partition_column,
+                schema_obj.date_partition_column
+            ]
+        )
+
+        return output
+
+    def unload(self, data_frame, schema_obj, columns, table):
+        normalized_records_unloader.unload(
+            self.spark, 
+            self.runner, 
+            data_frame,
+            schema_obj.date_partition_column,
+            str(self.date_input),
+            self.provider_partition_name,
+            substr_date_part=False,
+            columns=columns,
+            date_partition_name=schema_obj.date_partition_column,
+            provider_partition_name=schema_obj.provider_partition_column,
+            distribution_key=schema_obj.distribution_key,
+            staging_subdir=schema_obj.output_directory,
+            partition_by_part_file_date=self.output_to_transform_path,
+            unload_partition_count=self.unload_partition_count,
+            test_dir=(self.output_path if self.test else None)
+        )
+
     def save_to_disk(self):
         """
         Ensure the transformed data conforms to a known data schema and unload the data locally
@@ -208,29 +240,15 @@ class MarketplaceDriver(object):
         for table in self.output_table_names_to_schemas.keys():
             data_frame = self.spark.table(table)
             schema_obj = self.output_table_names_to_schemas[table]
-            output = schema_enforcer.apply_schema(data_frame,
-                                                  schema_obj.schema_structure,
-                                                  columns_to_keep=[
-                                                      schema_obj.provider_partition_column,
-                                                      schema_obj.date_partition_column])
+            
+            output = self.apply_schema(data_frame, schema_obj)
+
             _columns = data_frame.columns
             _columns.remove(schema_obj.provider_partition_column)
             _columns.remove(schema_obj.date_partition_column)
-            normalized_records_unloader.unload(
-                self.spark, self.runner, output,
-                schema_obj.date_partition_column,
-                str(self.date_input),
-                self.provider_partition_name,
-                substr_date_part=False,
-                columns=_columns,
-                date_partition_name=schema_obj.date_partition_column,
-                provider_partition_name=schema_obj.provider_partition_column,
-                distribution_key=schema_obj.distribution_key,
-                staging_subdir=schema_obj.output_directory,
-                partition_by_part_file_date=self.output_to_transform_path,
-                unload_partition_count=self.unload_partition_count,
-                test_dir=(self.output_path if self.test else None)
-            )
+
+            self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=table)
+            
             data_frame.unpersist()
             output.unpersist()
 
@@ -266,6 +284,6 @@ class MarketplaceDriver(object):
         if not self.test and not self.end_to_end_test:
             hadoop_time = normalized_records_unloader.timed_distcp(output_location)
             RunRecorder().record_run_details(additional_time=hadoop_time)
-
-        else:
+        
+        elif self.end_to_end_test:
             normalized_records_unloader.distcp(output_location)
