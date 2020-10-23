@@ -4,7 +4,7 @@ import argparse
 from spark.common.utility.output_type import DataType, RunType
 import spark.common.utility.logger as logger
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.pharmacyclaims_common_model import schemas as pharmacy_claims_schema
+from spark.common.pharmacyclaims import schemas as pharmacy_claims_schema
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 

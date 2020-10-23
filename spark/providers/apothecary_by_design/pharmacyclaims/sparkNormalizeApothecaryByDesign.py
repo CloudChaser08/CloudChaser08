@@ -5,7 +5,7 @@ import argparse
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.schema_enforcer as schema_enforcer
@@ -105,7 +105,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Apply clean up and privacy filtering
     postprocessor.compose(
-        lambda x: schema_enforcer.apply_schema(x, pharma_schema),
+        lambda x: schema_enforcer.apply_schema(x, pharma_schemas['schema_v6'].schema_structure),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='45', vendor_id='204', filename=setid),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '45', 'EARLIEST_VALID_SERVICE_DATE'),
@@ -130,7 +130,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             hvm_historical = date(1901, 1, 1)
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
             'apothecary_by_design', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,

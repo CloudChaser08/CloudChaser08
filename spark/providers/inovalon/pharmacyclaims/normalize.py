@@ -6,7 +6,7 @@ import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v3 as mar_2
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import lit
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.pharmacyclaims_common_model import schemas as pharmacyclaims_schema
+from spark.common.pharmacyclaims import schemas as pharmacyclaims_schema
 import spark.common.utility.logger as logger
 
 

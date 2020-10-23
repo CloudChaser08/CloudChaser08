@@ -5,7 +5,7 @@ import subprocess
 from pyspark.sql.functions import lit, md5, col
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
@@ -97,7 +97,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ], return_output=True)
 
     postprocessor.compose(
-        schema_enforcer.apply_schema_func(pharma_schema, cols_to_keep=EXTRA_COLUMNS),
+        schema_enforcer.apply_schema_func(pharma_schemas['schema_v6'].schema_structure, cols_to_keep=EXTRA_COLUMNS),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='39', vendor_id='42', filename=setid),
         pharm_priv.filter
@@ -113,7 +113,7 @@ PARTITIONED BY (part_best_date string)
 LOCATION '{}'
 """.format(table_format, normalized_path)
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v6.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql', [
         ['external', 'EXTERNAL', False],
         ['additional_columns', [], False],
         ['table_name', 'normalized_claims', False],
@@ -167,7 +167,7 @@ LOCATION '{}'
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql', 'cardinal_pds',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql', 'cardinal_pds',
             'pharmacyclaims_common_model_final', 'date_service', date_input
         )
 

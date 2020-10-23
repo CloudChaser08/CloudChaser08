@@ -3,7 +3,7 @@ import spark.common.utility.logger as logger
 from spark.common.utility.output_type import DataType, RunType
 import spark.providers.erx.pharmacyclaims.transactional_schemas_erx as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.pharmacyclaims_common_model import schemas
+from spark.common.pharmacyclaims import schemas
 import spark.helpers.reject_reversal as rr
 import subprocess
 from datetime import date, datetime

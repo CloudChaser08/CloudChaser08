@@ -126,7 +126,7 @@ LOCATION '{}'
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql', 'express_scripts',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql', 'express_scripts',
             'pharmacyclaims_common_model_final', 'date_service', date_input
         )
 
