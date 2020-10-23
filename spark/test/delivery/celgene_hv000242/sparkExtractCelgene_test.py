@@ -31,7 +31,7 @@ def test_init(spark):
     cleanup(spark)
 
     # load pharmacyclaims table
-    spark['runner'].run_spark_script('../../../common/pharmacyclaims_common_model_v4.sql', [
+    spark['runner'].run_spark_script('../../../common/pharmacyclaims/sql/pharmacyclaims_common_model_v4.sql', [
         ['table_name', 'pharmacyclaims', False],
         ['properties', "PARTITIONED BY (part_provider string, part_best_date string) "
          + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' "

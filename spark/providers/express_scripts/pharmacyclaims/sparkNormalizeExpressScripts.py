@@ -69,7 +69,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     min_date = '2008-09-01'
     max_date = date_input
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql', [
         ['external', '', False],
         ['table_name', 'pharmacyclaims_common_model', False],
         ['properties', '', False]
@@ -104,7 +104,7 @@ PARTITIONED BY (part_best_date string)
 LOCATION '{}'
 """.format(table_format, normalized_path)
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql', [
         ['external', 'EXTERNAL', False],
         ['table_name', 'normalized_claims', False],
         ['properties', properties, False]
