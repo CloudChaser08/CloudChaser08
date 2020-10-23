@@ -14,7 +14,7 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 import spark.helpers.records_loader as records_loader
-import spark.common.pharmacyclaims_common_model_v6 as pharmacyclaims_common_model
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.udf.general_helpers as gen_helpers
 import spark.providers.genoa.pharmacyclaims.transactional_schemas as transactional_schemas
@@ -110,7 +110,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
 
     norm_pharmacy = runner.run_spark_script('mapping.sql', return_output=True)
-    schema_enforcer.apply_schema(norm_pharmacy, pharmacyclaims_common_model.schema) \
+    schema_enforcer.apply_schema(norm_pharmacy, pharma_schemas['schema_v6'].schema_structure) \
         .createOrReplaceTempView('pharmacyclaims_common_model')
 
     # Apply clean up and privacy filtering
