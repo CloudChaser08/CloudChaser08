@@ -9,15 +9,16 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
-
+schema = pharma_schemas['schema_v3']
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + schema.output_directory
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):

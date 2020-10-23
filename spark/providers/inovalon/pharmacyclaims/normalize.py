@@ -1,3 +1,4 @@
+import os
 import argparse
 import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v1 as historic_schemas
 import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v2 as jan_feb_2020_schemas
@@ -69,7 +70,7 @@ if __name__ == "__main__":
 
     driver.init_spark_context(conf_parameters=conf_parameters)
     logger.log('Loading external tables')
-    output_path = driver.output_path + 'pharmacyclaims/2018-11-26/part_provider=inovalon/'
+    output_path = os.path.join(driver.output_path, versioned_schema.output_directory, 'part_provider=inovalon/')
     driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
     driver.load()

@@ -18,9 +18,9 @@ from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
-
+schema = pharma_schemas['schema_v6']
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + schema.output_directory
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -105,7 +105,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Apply clean up and privacy filtering
     postprocessor.compose(
-        lambda x: schema_enforcer.apply_schema(x, pharma_schemas['schema_v6'].schema_structure),
+        lambda x: schema_enforcer.apply_schema(x, schema.schema_structure),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='45', vendor_id='204', filename=setid),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '45', 'EARLIEST_VALID_SERVICE_DATE'),

@@ -22,9 +22,10 @@ from spark.common.utility import logger
 
 FEED_ID = '51'
 VENDOR_ID = '86'
-
+pharma_schema = pharma_schemas['schema_v6']
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + pharma_schema.output_directory
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
+
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -86,7 +87,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
 
     postprocessor.compose(
-        schema_enforcer.apply_schema_func(pharma_schemas['schema_v6'].schema_structure),
+        schema_enforcer.apply_schema_func(pharma_schema.schema_structure),
         postprocessor.add_universal_columns(
             feed_id=FEED_ID,
             vendor_id=VENDOR_ID,

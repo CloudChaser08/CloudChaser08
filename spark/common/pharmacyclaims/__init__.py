@@ -1,3 +1,4 @@
+from spark.common.pharmacyclaims import pharmacyclaims_common_model_v3
 from spark.common.pharmacyclaims import pharmacyclaims_common_model_v4
 from spark.common.pharmacyclaims import pharmacyclaims_common_model_v6
 from spark.common.pharmacyclaims import pharmacyclaims_common_model_v7
@@ -8,6 +9,7 @@ from spark.common.pharmacyclaims import pharmacyclaims_common_model_v11
 
 
 schemas = {
+    'schema_v3': pharmacyclaims_common_model_v3.schema,
     'schema_v4': pharmacyclaims_common_model_v4.schema,
     'schema_v6': pharmacyclaims_common_model_v6.schema,
     'schema_v7': pharmacyclaims_common_model_v7.schema,

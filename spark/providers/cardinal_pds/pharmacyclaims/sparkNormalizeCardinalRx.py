@@ -28,8 +28,9 @@ PARQUET_FORMAT = "STORED AS PARQUET"
 DELIVERABLE_LOC = 'hdfs:///cardinal_pds_deliverable/'
 EXTRA_COLUMNS = ['tenant_id', 'hvm_approved']
 
+schema = pharma_schemas['schema_v6']
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + schema.output_directory
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -67,7 +68,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3a://salusv/matching/payload/pharmacyclaims/cardinal_pds/{}/'.format(
             date_input.replace('-', '/')
         )
-        normalized_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
+        normalized_path = OUTPUT_PATH_PRODUCTION + '/part_provider=cardinal_pds/'
         table_format = PARQUET_FORMAT
 
     min_date = '2011-01-01'
@@ -97,7 +98,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     ], return_output=True)
 
     postprocessor.compose(
-        schema_enforcer.apply_schema_func(pharma_schemas['schema_v6'].schema_structure, cols_to_keep=EXTRA_COLUMNS),
+        schema_enforcer.apply_schema_func(schema.schema_structure, cols_to_keep=EXTRA_COLUMNS),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='39', vendor_id='42', filename=setid),
         pharm_priv.filter
@@ -199,7 +200,7 @@ def main(args):
 
     spark.stop()
 
-    normalized_path = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/part_provider=cardinal_pds/'
+    normalized_path = OUTPUT_PATH_PRODUCTION + '/part_provider=cardinal_pds/'
     curr_mo = args.date[:7]
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:

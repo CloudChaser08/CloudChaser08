@@ -11,6 +11,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 from pyspark.sql.functions import lit
 
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
@@ -24,8 +25,9 @@ STORED AS TEXTFILE
 """
 PARQUET_FORMAT = "STORED AS PARQUET"
 
+schema = pharma_schemas['schema_v3']
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/express_scripts/pharmacyclaims/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + schema.output_directory
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -63,7 +65,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3a://salusv/matching/payload/pharmacyclaims/esi/{}/'.format(
             date_input.replace('-', '/')
         )
-        normalized_path = 's3a://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=express_scripts/'
+        normalized_path = OUTPUT_PATH_PRODUCTION + '/part_provider=express_scripts/'
         table_format = PARQUET_FORMAT
 
     min_date = '2008-09-01'
@@ -173,7 +175,7 @@ def main(args):
     for mo in [curr_mo, prev_mo]:
         subprocess.check_call([
             'aws', 's3', 'rm', '--recursive',
-            's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/part_provider=express_scripts/part_best_date={}'.format(mo)
+            OUTPUT_PATH_PRODUCTION + '/part_provider=express_scripts/part_best_date={}'.format(mo)
         ])
 
     if args.airflow_test:

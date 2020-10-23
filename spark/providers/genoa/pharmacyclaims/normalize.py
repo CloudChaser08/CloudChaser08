@@ -24,8 +24,9 @@ from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
 
+pharma_schema = pharma_schemas['schema_v6']
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + pharma_schema.output_directory
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/genoa/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -110,7 +111,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
 
     norm_pharmacy = runner.run_spark_script('mapping.sql', return_output=True)
-    schema_enforcer.apply_schema(norm_pharmacy, pharma_schemas['schema_v6'].schema_structure) \
+    schema_enforcer.apply_schema(norm_pharmacy, pharma_schema.schema_structure) \
         .createOrReplaceTempView('pharmacyclaims_common_model')
 
     # Apply clean up and privacy filtering

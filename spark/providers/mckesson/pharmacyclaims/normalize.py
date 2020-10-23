@@ -20,9 +20,10 @@ from spark.common.utility import logger
 
 runner = None
 spark = None
+pharma_schema = pharma_schemas['schema_v6']
 
+OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/' + pharma_schema.output_directory
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
 
 def load(input_path, restriction_level):
@@ -150,7 +151,7 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
         ], return_output=True)
 
         schema_enforcer.apply_schema(
-            normalized_output, pharma_schemas['schema_v6'].schema_structure
+            normalized_output, pharma_schema.schema_structure
         ).createOrReplaceTempView('{}_pharmacyclaims_common_model'.format(restriction_level))
 
         test_dir = file_utils.get_abs_path(
