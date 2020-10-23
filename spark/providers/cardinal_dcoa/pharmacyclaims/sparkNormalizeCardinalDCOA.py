@@ -32,7 +32,7 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
         input_path = 's3://salusv/incoming/pharmacyclaims/cardinal_dcoa/{}/'\
                         .format(date_path)
 
-    dcoa_schema = StructType(pharma_schemas['schems_v6'].schema_structure.fields + [
+    dcoa_schema = StructType(pharma_schemas['schema_v6'].schema_structure.fields + [
         StructField('patient_type_vendor', StringType(), True),
         StructField('outlier_vendor', StringType(), True),
         StructField('monthly_patient_days_vendor', StringType(), True),
