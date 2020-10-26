@@ -5,7 +5,7 @@ import argparse
 from pyspark.sql.functions import lit, col
 from spark.common.utility import logger
 
-from spark.common.pharmacyclaims_common_model import schemas
+from spark.common.pharmacyclaims import schemas
 import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v1 as old_schema
 import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v2 as new_schema
 from spark.common.marketplace_driver import MarketplaceDriver
