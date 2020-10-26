@@ -1,8 +1,9 @@
 """Normalization routine for 84.51 Rx"""
+import os
 import argparse
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model import schema_v9 as pharmacyclaims_schema
+from spark.common.pharmacyclaims import schemas
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
@@ -18,9 +19,12 @@ from spark.common.utility.run_recorder import RunRecorder
 
 FEED_ID = '86'
 SCRIPT_PATH = __file__
+schema = schemas['schema_v9']
+pharmacyclaims_schema = schema.schema_structure
+
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/8451/pharmacyclaims/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-11-26/'
+OUTPUT_PATH_PRODUCTION = os.path.join('s3://salusv/warehouse/parquet/', schema.output_directory)
 
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):

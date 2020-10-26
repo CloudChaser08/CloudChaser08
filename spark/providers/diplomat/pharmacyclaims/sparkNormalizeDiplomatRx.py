@@ -9,15 +9,16 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
-
+schema = pharma_schemas['schema_v3']
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2017-06-02/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + schema.output_directory
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -53,7 +54,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     min_date_written = '2004-01-01'
     max_date = date_input
 
-    runner.run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql', [
         ['table_name', 'pharmacyclaims_common_model', False],
         ['external', '', False],
         ['properties', '', False]
@@ -92,7 +93,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v3.sql', 'diplomat',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql', 'diplomat',
             'pharmacyclaims_common_model', 'date_service', date_input
         )
 

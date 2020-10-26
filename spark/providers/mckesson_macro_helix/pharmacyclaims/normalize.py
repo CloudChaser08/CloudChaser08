@@ -3,7 +3,7 @@ import argparse
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model_v6 import schema as model_schema
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -22,9 +22,10 @@ from spark.common.utility import logger
 
 FEED_ID = '51'
 VENDOR_ID = '86'
-
+pharma_schema = pharma_schemas['schema_v6']
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + pharma_schema.output_directory
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
+
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -86,7 +87,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
 
     postprocessor.compose(
-        schema_enforcer.apply_schema_func(model_schema),
+        schema_enforcer.apply_schema_func(pharma_schema.schema_structure),
         postprocessor.add_universal_columns(
             feed_id=FEED_ID,
             vendor_id=VENDOR_ID,
@@ -117,7 +118,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
             'mckesson_macro_helix', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,

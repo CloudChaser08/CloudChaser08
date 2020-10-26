@@ -1,11 +1,11 @@
+import os
 import argparse
 import spark.common.utility.logger as logger
 from spark.common.utility.output_type import DataType, RunType
 import spark.providers.erx.pharmacyclaims.transactional_schemas_erx as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.pharmacyclaims_common_model import schemas
+from spark.common.pharmacyclaims import schemas
 import spark.helpers.reject_reversal as rr
-import subprocess
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
@@ -13,8 +13,9 @@ if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'erx'
+    schema = schemas['schema_v11']
     output_table_names_to_schemas = {
-        'erx_08_final': schemas['schema_v11']
+        'erx_08_final': schema
     }
     provider_partition_name = provider_name
 
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     driver.load(extra_payload_cols=['RXNumber', 'privateIdOne'])
     logger.log('Loading external tables')
 
-    output_path = driver.output_path + 'pharmacyclaims/2018-11-26/part_provider=erx/'
+    output_path = os.path.join(driver.output_path, schema.output_directory, 'part_provider=erx/')
     driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_pharmacyclaims_nb')
     
     driver.transform()

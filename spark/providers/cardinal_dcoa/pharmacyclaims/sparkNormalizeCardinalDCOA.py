@@ -4,7 +4,7 @@ from datetime import datetime
 from pyspark.sql.types import StructType, StructField, StringType
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.helpers.file_utils as file_utils
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
@@ -32,7 +32,7 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
         input_path = 's3://salusv/incoming/pharmacyclaims/cardinal_dcoa/{}/'\
                         .format(date_path)
 
-    dcoa_schema = StructType(pharma_schema.fields + [
+    dcoa_schema = StructType(pharma_schemas['schema_v6'].schema_structure.fields + [
         StructField('patient_type_vendor', StringType(), True),
         StructField('outlier_vendor', StringType(), True),
         StructField('monthly_patient_days_vendor', StringType(), True),

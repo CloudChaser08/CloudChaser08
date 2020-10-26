@@ -14,7 +14,7 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 import spark.helpers.records_loader as records_loader
-import spark.common.pharmacyclaims_common_model_v6 as pharmacyclaims_common_model
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.udf.general_helpers as gen_helpers
 import spark.providers.genoa.pharmacyclaims.transactional_schemas as transactional_schemas
@@ -24,8 +24,9 @@ from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
 
+pharma_schema = pharma_schemas['schema_v6']
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + pharma_schema.output_directory
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/genoa/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -110,7 +111,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
 
     norm_pharmacy = runner.run_spark_script('mapping.sql', return_output=True)
-    schema_enforcer.apply_schema(norm_pharmacy, pharmacyclaims_common_model.schema) \
+    schema_enforcer.apply_schema(norm_pharmacy, pharma_schema.schema_structure) \
         .createOrReplaceTempView('pharmacyclaims_common_model')
 
     # Apply clean up and privacy filtering
@@ -133,7 +134,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql',
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
             'genoa', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,

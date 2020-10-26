@@ -106,7 +106,7 @@ def test_init(spark):
     ).createTempView("external_ref_calendar")
 
     # load pharmacyclaims table
-    spark['runner'].run_spark_script('../../../common/pharmacyclaims_common_model_v3.sql', [
+    spark['runner'].run_spark_script('../../../common/pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql', [
         ['table_name', 'external_pharmacyclaims', False],
         ['properties', "PARTITIONED BY (part_provider string, part_processdate string) "
          + "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' "

@@ -4,7 +4,7 @@ from datetime import datetime
 from pyspark.sql.functions import lit, col
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.pharmacyclaims_common_model_v6 import schema as pharma_schema
+from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.helpers.file_utils as file_utils
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.payload_loader as payload_loader
@@ -20,9 +20,10 @@ from spark.common.utility import logger
 
 runner = None
 spark = None
+pharma_schema = pharma_schemas['schema_v6']
 
+OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/' + pharma_schema.output_directory
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
 
 
 def load(input_path, restriction_level):
@@ -77,7 +78,7 @@ def postprocess_and_unload(date_input, restricted, test_dir):
     ).createOrReplaceTempView('{}_pharmacyclaims_common_model'.format(restriction_level))
 
     normalized_records_unloader.partition_and_rename(
-        spark, runner, 'pharmacyclaims', 'pharmacyclaims_common_model_v6.sql', provider,
+        spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql', provider,
         '{}_pharmacyclaims_common_model'.format(restriction_level), 'date_service', date_input,
         test_dir=test_dir
     )
@@ -150,7 +151,7 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
         ], return_output=True)
 
         schema_enforcer.apply_schema(
-            normalized_output, pharma_schema
+            normalized_output, pharma_schema.schema_structure
         ).createOrReplaceTempView('{}_pharmacyclaims_common_model'.format(restriction_level))
 
         test_dir = file_utils.get_abs_path(
