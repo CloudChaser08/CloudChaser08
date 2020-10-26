@@ -7,4 +7,4 @@ pylint_score=$(cat pylint_output.txt)
 echo "Got pylint score of $pylint_score"
 
 # shoot it into datadog
-echo "pylint.score.dewey:${pylint_score}|g"| nc -v -q2 -u localhost 8125
+echo "pylint.score.dewey:${pylint_score}|g"| nc -w5 -v -q2 -u localhost 8125
