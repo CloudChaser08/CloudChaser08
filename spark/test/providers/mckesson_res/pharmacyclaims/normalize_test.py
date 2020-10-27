@@ -1,13 +1,12 @@
-import pytest
-
 import datetime
 import shutil
 import logging
 
+from pyspark.sql import Row
 import spark.providers.mckesson_res.pharmacyclaims.normalize as mckesson
 import spark.helpers.file_utils as file_utils
 
-from pyspark.sql import Row
+import pytest
 
 restricted_results = []
 
@@ -43,10 +42,10 @@ def test_init(spark):
             gen_ref_2_dt=''
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
-    
+
     mckesson.run(spark_in=spark, date_input='2016-12-31', test=True)
     global restricted_results
- 
+
     restricted_results = spark['sqlContext'].sql('select * from mckesson_res_pharmacyclaims') \
                                             .collect()
 
@@ -61,7 +60,7 @@ def test_date_parsing():
 
 
 def test_transaction_code_vendor():
-    "Ensure that dates are correctly parsed"
+    "Ensure that transaction codes are correctly parsed"
     sample_row_orig = [r for r in restricted_results if r.claim_id == 'prescription-key-1'][0]
     sample_row_rebill = [r for r in restricted_results if r.claim_id == 'prescription-key-5'][0]
 
@@ -70,12 +69,11 @@ def test_transaction_code_vendor():
 
 
 def test_claim_rejected():
-    
+    "Ensure rejected claims are correctly parsed"
     claim_rejected = [
         'prescription-key-6', 'prescription-key-7',
         'prescription-key-8', 'prescription-key-9',
-        'res-prescription-key-10', 'res-prescription-key-11',
-        
+        'res-prescription-key-10', 'res-prescription-key-11', 
     ]
 
     claim_not_rejected = [
@@ -96,32 +94,42 @@ def test_claim_rejected():
 
 
 def test_ndc_codes_populated():
+    "Test that all entries have ndc codes"
     for r in restricted_results:
         assert r.ndc_code is not None
 
 
 def test_restricted_count():
-    assert len(restricted_results) == 12
-    assert [r.claim_id for r in restricted_results] == ['prescription-key-0', 'prescription-key-1', 'prescription-key-2',
-                                                        'prescription-key-3', 'prescription-key-4', 'prescription-key-5',
-                                                        'prescription-key-6', 'prescription-key-7', 'prescription-key-8',
-                                                        'prescription-key-9', 'res-prescription-key-10', 'res-prescription-key-11']
+    "Test the number of restricted results"
+    expected_restricted_results = [
+        'prescription-key-0', 'prescription-key-1', 'prescription-key-2',
+        'prescription-key-3', 'prescription-key-4', 'prescription-key-5',
+        'prescription-key-6', 'prescription-key-7', 'prescription-key-8',
+        'prescription-key-9', 'res-prescription-key-10', 'res-prescription-key-11'
+    ]
+    assert len(restricted_results) == len(expected_restricted_results)
+    assert [r.claim_id for r in restricted_results] == expected_restricted_results
 
 
 def test_prescription_number_hash():
+    "Test prescription numbers and hashing"
+
+    prescription_key_5 = [r for r in restricted_results if r.claim_id == 'prescription-key-5'][0]
+
     # assert that prescription-key-5 had the correct rx_number
     # MD5(PRESCRIPTIONNUMBER) == '2eef6c6aa75adcbd0c2df418c5838d91'
-    assert [r for r in restricted_results if r.claim_id == 'prescription-key-5'][0].rx_number == '2eef6c6aa75adcbd0c2df418c5838d91'
+    assert prescription_key_5.rx_number == '2eef6c6aa75adcbd0c2df418c5838d91'
 
     # assert that all of the other rx_number values are null
-    for r in [r for r in restricted_results if r.claim_id != 'prescription-key-5']:
-        assert not r.rx_number
+    for entry in [r for r in restricted_results if r.claim_id != 'prescription-key-5']:
+        assert not entry.rx_number
 
 
 def test_no_empty_hvjoinkeys():
-    # prescription-key-12 has a newline in it
-    assert len([r for r in restricted_results if r.claim_id == 'prescription-key-12' or r.claim_id == 'line']) == 0
-
+    "Test that prescription-key-12 has a newline in it, make sure that doesn't interfere"
+    keys = [r for r in restricted_results if r.claim_id == 'prescription-key-12' or r.claim_id == 'line']
+    assert len(keys) == 0
 
 def test_cleanup(spark):
+    "Cleanup spark tables"
     cleanup(spark)

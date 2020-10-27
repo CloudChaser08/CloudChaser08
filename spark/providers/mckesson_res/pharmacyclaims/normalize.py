@@ -1,24 +1,24 @@
 #! /usr/bin/python
-import spark.helpers.privacy.pharmacyclaims as pharm_priv
-
 import argparse
-from pyspark.sql.functions import lit, col
-from spark.common.utility import logger
 
+from pyspark.sql.functions import lit, col
+
+from spark.common.utility import logger
 from spark.common.pharmacyclaims import schemas
-import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v1 as old_schema
-import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v2 as new_schema
 from spark.common.marketplace_driver import MarketplaceDriver
 
+import spark.helpers.privacy.pharmacyclaims as pharm_priv
+import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v1 as old_schema
+import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v2 as new_schema
 
 class MckessonMarketplaceDriver(MarketplaceDriver):
     schema_type: str = "new_schema"
 
-    def load(self, **kwargs):
-        # I feel like this can be done more efficiently. 
+    def load(self, extra_payload_cols=None, cache_tables=True, payloads=True):
+        # I feel like this can be done more efficiently
         # We just neeed the first row, after all
         unlabeled_input = self.runner.sqlContext.read.csv(self.input_path, sep='|')
-        
+
         """
         Mckesson has 2 schemas - the old schema had 119 columns, the
         new schema has 118. There is no date cutoff for when the new
@@ -30,9 +30,13 @@ class MckessonMarketplaceDriver(MarketplaceDriver):
         elif len(unlabeled_input.columns) == 119:
             self.schema_type, self.source_table_schema = 'old_schema', old_schema
         else:
-            raise ValueError('Unexpected column length in transaction data: {}'.format(str(len(unlabeled_input.columns))))
-        
-        super().load(extra_payload_cols=['hvJoinKey', 'claimId'], **kwargs)
+            raise ValueError('Unexpected column length in transaction: {}'.format(str(len(unlabeled_input.columns))))
+
+        super().load(
+            extra_payload_cols=['hvJoinKey', 'claimId'], 
+            cache_tables=cache_tables, 
+            payloads=payloads
+        )
 
         # txn is the name of the table inside 0_mckesson_res.sql
         if self.schema_type == "new_schema":
@@ -45,19 +49,18 @@ class MckessonMarketplaceDriver(MarketplaceDriver):
                 'FillerTransactionTime', col('ClaimTransactionTime')
             )
             txn.createOrReplaceTempView('txn')
-    
+
     def unload(self, data_frame, schema_obj, columns, table):
-        
+
         new_output = pharm_priv.filter(data_frame)
 
         new_output.createOrReplaceTempView(table)
 
         super().unload(new_output, schema_obj, columns, table)
-        
-        
+
 
 def run(date_input, end_to_end_test=False, test=False, spark_in=None):
-    
+    "Runs the normalization function"
     provider_name = 'mckesson_res'
     output_table_names_to_schemas = {
         'mckesson_res_pharmacyclaims': schemas['schema_v6'],
@@ -99,9 +102,7 @@ if __name__ == "__main__":
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_args()
 
-    date_input = args.date
-    end_to_end_test = args.end_to_end_test
+    _date_input = args.date
+    _end_to_end_test = args.end_to_end_test
 
-    run(date_input, end_to_end_test)
-    
-
+    run(_date_input, _end_to_end_test)
