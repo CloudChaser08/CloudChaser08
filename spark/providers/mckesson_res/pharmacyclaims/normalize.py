@@ -11,7 +11,7 @@ import spark.helpers.privacy.pharmacyclaims as pharm_priv
 import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v1 as old_schema
 import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v2 as new_schema
 
-class MckessonMarketplaceDriver(MarketplaceDriver):
+class MckessonResMarketplaceDriver(MarketplaceDriver):
     schema_type: str = "new_schema"
 
     def load(self, extra_payload_cols=None, cache_tables=True, payloads=True):
@@ -71,7 +71,7 @@ def run(date_input, end_to_end_test=False, test=False, spark_in=None):
     source_table_schemas = None
 
     # Create and run driver
-    driver = MckessonMarketplaceDriver(
+    driver = MckessonResMarketplaceDriver(
         provider_name=provider_name,
         provider_partition_name=provider_partition_name,
         source_table_schema=source_table_schemas,
