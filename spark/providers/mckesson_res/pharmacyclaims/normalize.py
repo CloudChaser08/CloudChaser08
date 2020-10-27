@@ -11,38 +11,6 @@ import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v2 as new
 from spark.common.marketplace_driver import MarketplaceDriver
 
 
-schema = schemas['schema_v6']
-schema_obj = schema.schema_structure
-
-# OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson_res/pharmacyclaims/spark-output/'
-# OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/pharmacyclaims/2018-02-05/'
-FEED_ID = '36'
-VENDOR_ID = '119'
-
-
-# 1. get paths 
-
-# 2. normalize 
-# - a. load 
-#   - 1. fill in columns
-#   - 2. check columns
-#   - 3. compose trimmify nullify
-#   - 4. createOrReplaceTempView
-
-# - b. payloader load  
-# - c. run normalize sql
-# - d. schema enforcer apply schema
-
-# - e. process and unload 
-#   - 1. compose 
-#           nullify,
-#           add universal columns, 
-#           pharm_priv filter
-#   - 2. normalized_records_unloader partition and rename vs unload
-
-# 3. logger log run details
-# 4. normalized_records_unloader distcp 
-
 class MckessonMarketplaceDriver(MarketplaceDriver):
     schema_type: str = "new_schema"
 
@@ -89,7 +57,6 @@ class MckessonMarketplaceDriver(MarketplaceDriver):
         
 
 def run(date_input, end_to_end_test=False, test=False, spark_in=None):
-    # ------------------------ Provider specific configuration -----------------------
     
     provider_name = 'mckesson_res'
     output_table_names_to_schemas = {
@@ -126,9 +93,6 @@ def run(date_input, end_to_end_test=False, test=False, spark_in=None):
 
 
 if __name__ == "__main__":
-
-    # ------------------------ Common for all providers -----------------------
-
     # Parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
