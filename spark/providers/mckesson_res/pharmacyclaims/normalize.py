@@ -12,7 +12,39 @@ import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v1 as old
 import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v2 as new_schema
 
 class MckessonResMarketplaceDriver(MarketplaceDriver):
-    schema_type: str = "new_schema"
+
+    def __init__(
+            self,
+            provider_name,
+            provider_partition_name,
+            source_table_schema,
+            output_table_names_to_schemas,
+            date_input,
+            end_to_end_test=False,
+            test=False,
+            load_date_explode=True,
+            output_to_transform_path=False,
+            unload_partition_count=20,
+            vdr_feed_id=None,
+            use_ref_gen_values=False,
+            count_transform_sql=False
+    ):
+        self.schema_type = None
+        super(MckessonResMarketplaceDriver, self).__init__(
+            provider_name,
+            provider_partition_name,
+            source_table_schema,
+            output_table_names_to_schemas,
+            date_input,
+            end_to_end_test,
+            test,
+            load_date_explode,
+            output_to_transform_path,
+            unload_partition_count,
+            vdr_feed_id,
+            use_ref_gen_values,
+            count_transform_sql
+        )
 
     def load(self, extra_payload_cols=None, cache_tables=True, payloads=True):
         # I feel like this can be done more efficiently
