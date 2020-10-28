@@ -33,7 +33,7 @@ def run(spark, runner, date_input, test=False):
     runner.run_spark_script('../../../common/zip3_to_state.sql')
 
     logger.log('Staging output table')
-    runner.run_spark_script('../../../common/enrollment_common_model.sql', [
+    runner.run_spark_script('../../../common/enrollmentrecords/sql/enrollment_common_model.sql', [
         ['table_name', 'enrollment_common_model', False],
         ['properties', '', False]
     ])

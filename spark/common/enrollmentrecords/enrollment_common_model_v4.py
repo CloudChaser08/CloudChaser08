@@ -1,14 +1,13 @@
 """
-Specification for the schema_v5 enrollment_common_model
+Specification for the schema_v4 enrollment_common_model
 """
 from pyspark.sql.types import StructType, StructField, LongType, StringType, DateType
 from spark.common.schema import Schema
 
 
-
 schema = Schema(
     name='schema_v4',
-    data_type="enrollmentrecords",
+    data_type='enrollmentrecords',
     output_directory='enrollmentrecords/2017-03-22',
     provider_partition_column='part_provider',
     date_partition_column='part_best_date',
