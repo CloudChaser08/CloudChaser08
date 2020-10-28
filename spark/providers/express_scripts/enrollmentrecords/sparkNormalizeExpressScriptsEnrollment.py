@@ -141,7 +141,7 @@ def run(spark, runner, date_input, test=False):
     logger.log('Writing the final output table to the local file system')
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'enrollmentrecords', 'enrollment_common_model.sql', 'express_scripts',
+            spark, runner, 'enrollmentrecords', 'enrollmentrecords/sql/enrollment_common_model.sql', 'express_scripts',
             'enrollment_common_model', 'date_service', date_input[:-3], date_input[:-3]
         )
 
