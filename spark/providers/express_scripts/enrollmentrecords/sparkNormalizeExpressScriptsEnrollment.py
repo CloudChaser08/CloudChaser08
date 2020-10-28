@@ -142,7 +142,7 @@ def run(spark, runner, date_input, test=False):
     if not test:
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'enrollmentrecords', 'enrollment_common_model.sql', 'express_scripts',
-            'enrollment_common_model', 'date_service', date_input[:-3], date_input[:-3]
+            'enrollment_common_model', 'date_service', date_input, date_input
         )
 
     if not test:
