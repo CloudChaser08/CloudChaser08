@@ -56,18 +56,18 @@ def load(input_path, restriction_level):
     )(labeled_input).createOrReplaceTempView('{}_transactions'.format(restriction_level))
 
 
-def postprocess_and_unload(date_input, restricted, test_dir):
+def postprocess_and_unload(date_input, test_dir):
     """
     Function for unloading normalized data
     """
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     setid_template = '{}.Record.' + date_obj.strftime('%Y%m%d')
-    setid = setid_template.format('HVRes' if restricted else 'HVUnRes')
-    provider = 'mckesson_res' if restricted else 'mckesson'
-    restriction_level = 'restricted' if restricted else 'unrestricted'
-    feed_id = '36' if restricted else '33'
-    vendor_id = '119' if restricted else '86'
+    setid = setid_template.format('HVUnRes')
+    provider = 'mckesson'
+    restriction_level = 'unrestricted'
+    feed_id = '33'
+    vendor_id = '86'
 
     postprocessor.compose(
         postprocessor.nullify,
@@ -84,7 +84,7 @@ def postprocess_and_unload(date_input, restricted, test_dir):
     )
 
 
-def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
+def run(spark_in, runner_in, date_input, test=False, airflow_test=False):
     script_path = __file__
 
     global spark, runner
@@ -98,12 +98,7 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
         unres_matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/matching/'
         ) + '/'
-        res_input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/input-res/'
-        ) + '/'
-        res_matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/matching-res/'
-        ) + '/'
+  
     elif airflow_test:
         unres_input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/out/{}/'.format(
             date_input.replace('-', '/')
@@ -111,34 +106,24 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
         unres_matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/payload/{}/'.format(
             date_input.replace('-', '/')
         )
-        res_input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_res/pharmacyclaims/out/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        res_matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_res/pharmacyclaims/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+
     else:
         unres_input_path = 's3a://salusv/incoming/pharmacyclaims/mckesson/{}/'.format(
             date_input.replace('-', '/')
-        )
-        res_input_path = 's3a://salusv/incoming/pharmacyclaims/mckesson_res/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        )    
         unres_matching_path = 's3a://salusv/matching/payload/pharmacyclaims/mckesson/{}/'.format(
             date_input.replace('-', '/')
         )
-        res_matching_path = 's3a://salusv/matching/payload/pharmacyclaims/mckesson_res/{}/'.format(
-            date_input.replace('-', '/')
-        )
+ 
 
     min_date = '2010-03-01'
     max_date = date_input
 
-    def normalize(input_path, matching_path, restricted=False):
+    def normalize(input_path, matching_path):
         """
         Generic function for running normalization in any mode
         """
-        restriction_level = 'restricted' if restricted else 'unrestricted'
+        restriction_level = 'unrestricted'
 
         load(input_path, restriction_level)
 
@@ -158,18 +143,14 @@ def run(spark_in, runner_in, date_input, mode, test=False, airflow_test=False):
             script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/output/'
         ) + '/' if test else None
 
-        postprocess_and_unload(date_input, restricted, test_dir)
+        postprocess_and_unload(date_input, test_dir)
 
     # run normalization for appropriate mode(s)
-    if mode in ['restricted', 'both']:
-        normalize(res_input_path, res_matching_path, True)
-
-    if mode in ['unrestricted', 'both']:
-        normalize(unres_input_path, unres_matching_path)
+    normalize(unres_input_path, unres_matching_path)
 
     if not test and not airflow_test:
         logger.log_run_details(
-            provider_name='McKessonRx{}'.format('-Restricted' if mode == 'restricted' else ''),
+            provider_name='McKessonRx',
             data_type=DataType.PHARMACY_CLAIMS,
             data_source_transaction_path=unres_input_path,
             data_source_matching_path=unres_matching_path,
@@ -186,16 +167,8 @@ def main(args):
 
     # initialize runner
     runner = Runner(sqlContext)
-
-    # figure out what mode we're in
-    if args.restricted == args.unrestricted:
-        mode = 'both'
-    elif args.restricted:
-        mode = 'restricted'
-    elif args.unrestricted:
-        mode = 'unrestricted'
-
-    run(spark, runner, args.date, mode, airflow_test=args.airflow_test)
+    
+    run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     spark.stop()
 
@@ -210,7 +183,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
-    parser.add_argument('--restricted', default=False, action='store_true')
-    parser.add_argument('--unrestricted', default=False, action='store_true')
     args = parser.parse_args()
     main(args)
