@@ -74,7 +74,7 @@ class MckessonResMarketplaceDriver(MarketplaceDriver):
         if self.schema_type == "new_schema":
             logger.log('Adding columns for new schema')
 
-            txn = self.spark.table('mckesson_res_pharmacyclaims')
+            txn = self.spark.table('txn')
             txn = txn.withColumn(
                 'DispensingFeePaid', lit(None)
             ).withColumn(
