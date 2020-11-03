@@ -63,10 +63,12 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
     if custom_matching_path:
         matching_path = custom_matching_path
 
+    s3_output_part_provider = os.path.join(OUTPUT_PATH_PRODUCTION, 'part_provider=pdx')
+
     if not test:
         logger.log('Loading external tables')
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
-        spark.read.parquet(OUTPUT_PATH_PRODUCTION + 'part_provider=pdx/').createOrReplaceTempView(
+        spark.read.parquet(s3_output_part_provider).createOrReplaceTempView(
             '_temp_pharmacyclaims_nb')
 
     min_date = postprocessor.coalesce_dates(
@@ -155,12 +157,12 @@ def main(args):
 
     date_part = 'part_provider=pdx/part_best_date={}/'
     subprocess.check_call(
-        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(current_year_month),
-         tmp_path + date_part.format(current_year_month)]
+        ['aws', 's3', 'mv', '--recursive', os.path.join(output_path, date_part.format(current_year_month)),
+         os.path.join(tmp_path, date_part.format(current_year_month))]
     )
     subprocess.check_call(
-        ['aws', 's3', 'mv', '--recursive', output_path + date_part.format(prev_year_month),
-         tmp_path + date_part.format(prev_year_month)]
+        ['aws', 's3', 'mv', '--recursive', os.path.join(output_path, date_part.format(prev_year_month)),
+         os.path.join(tmp_path, date_part.format(prev_year_month))]
     )
 
     if args.end_to_end_test:
