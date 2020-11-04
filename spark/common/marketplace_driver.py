@@ -65,8 +65,7 @@ class MarketplaceDriver(object):
                  unload_partition_count=20,
                  vdr_feed_id=None,
                  use_ref_gen_values=False,
-                 count_transform_sql=False,
-                 trim_day_part_best_date=False
+                 count_transform_sql=False
                  ):
 
         # get directory and path for provider
@@ -100,7 +99,6 @@ class MarketplaceDriver(object):
         self.count_transform_sql = count_transform_sql
         self.available_start_date = None
         self.earliest_service_date = None
-        self.trim_day_part_best_date = trim_day_part_best_date
         self.input_path = None
         self.matching_path = None
         self.output_path = None
@@ -223,7 +221,7 @@ class MarketplaceDriver(object):
             schema_obj.date_partition_column,
             str(self.date_input),
             self.provider_partition_name,
-            substr_date_part=self.trim_day_part_best_date,
+            substr_date_part=False,
             columns=columns,
             date_partition_name=schema_obj.date_partition_column,
             provider_partition_name=schema_obj.provider_partition_column,
