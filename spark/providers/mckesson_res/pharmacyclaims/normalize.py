@@ -27,7 +27,8 @@ class MckessonResMarketplaceDriver(MarketplaceDriver):
             unload_partition_count=20,
             vdr_feed_id=None,
             use_ref_gen_values=False,
-            count_transform_sql=False
+            count_transform_sql=False,
+            trim_day_part_best_date=False
     ):
         self.schema_type = None
         super(MckessonResMarketplaceDriver, self).__init__(
@@ -43,7 +44,8 @@ class MckessonResMarketplaceDriver(MarketplaceDriver):
             unload_partition_count,
             vdr_feed_id,
             use_ref_gen_values,
-            count_transform_sql
+            count_transform_sql,
+            trim_day_part_best_date
         )
 
     def load(self, extra_payload_cols=None, cache_tables=True, payloads=True):
@@ -111,7 +113,10 @@ def run(date_input, end_to_end_test=False, test=False, spark_in=None):
         date_input=date_input,
         end_to_end_test=end_to_end_test,
         test=test,
-        vdr_feed_id=vdr_feed_id
+        vdr_feed_id=vdr_feed_id,
+        use_ref_gen_values=True,
+        trim_day_part_best_date=True,
+        output_to_transform_path=True
     )
 
     if spark_in is not None:

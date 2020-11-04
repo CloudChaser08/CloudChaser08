@@ -139,11 +139,7 @@ SELECT
                                     ''
                                 )))
 	        THEN '0_PREDATES_HVM_HISTORY'
-	    ELSE CONCAT
-	            (
-	                SUBSTR(t.datefilled, 7, 4), '-',
-	                SUBSTR(t.datefilled, 1, 2), '-01'
-	            )
+	    ELSE SUBSTR(CAST(EXTRACT_DATE(t.datefilled, '%m/%d/%Y') AS DATE), 1, 7)
 	END                                                                                 AS part_best_date
 FROM txn t
     LEFT JOIN matching_payload mp ON t.hvjoinkey = mp.hvjoinkey
