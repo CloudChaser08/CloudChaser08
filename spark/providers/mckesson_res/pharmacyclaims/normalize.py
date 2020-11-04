@@ -111,7 +111,8 @@ def run(date_input, end_to_end_test=False, test=False, spark_in=None):
         date_input=date_input,
         end_to_end_test=end_to_end_test,
         test=test,
-        vdr_feed_id=vdr_feed_id
+        vdr_feed_id=vdr_feed_id,
+        use_ref_gen_values=True
     )
 
     if spark_in is not None:
