@@ -75,7 +75,7 @@ if __name__ == "__main__":
     driver.spark.table('ref_geo_state').cache().createOrReplaceTempView('ref_geo_state')
 
     logger.log('Loading LOINC reference data from S3')
-    driver.spark.read.parquet(REFERENCE_OUTPUT_PATH).cache().createOrReplaceTempView('loinc')
+    driver.spark.read.parquet(REFERENCE_OUTPUT_PATH).createOrReplaceTempView('loinc')
 
     driver.load()
     df = driver.spark.table('order_result')
@@ -104,11 +104,10 @@ if __name__ == "__main__":
 
     if hdfs_utils.list_parquet_files(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)[0].strip():
         logger.log('Loading Delta LOINC reference data from HDFS')
-        driver.spark.read.parquet(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA).cache().createOrReplaceTempView(REFERENCE_LOINC_DELTA)
+        driver.spark.read.parquet(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA).createOrReplaceTempView(REFERENCE_LOINC_DELTA)
     else:
         logger.log('No Delta LOINC reference data for this cycle')
         driver.spark.table("loinc").cache().createOrReplaceTempView(REFERENCE_LOINC_DELTA)
-    driver.spark.table(REFERENCE_LOINC_DELTA).count()
 
     driver.transform()
 
