@@ -227,13 +227,6 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
         ), procedure_schema, columns_to_keep=['allscripts_date_partition']
     ).union(schema_enforcer.apply_schema(
         runner.run_spark_script(
-            'normalize_procedure_prb.sql', [
-                ['max_cap', max_cap],
-                ['batch_id', batch_id, False]
-            ], return_output=True, source_file_path=script_path
-        ), procedure_schema, columns_to_keep=['allscripts_date_partition']
-    )).union(schema_enforcer.apply_schema(
-        runner.run_spark_script(
             'normalize_procedure_vac.sql', [
                 ['max_cap', max_cap],
                 ['batch_id', batch_id, False]
