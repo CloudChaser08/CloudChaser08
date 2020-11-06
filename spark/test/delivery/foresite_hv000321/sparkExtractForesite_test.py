@@ -119,7 +119,7 @@ def test_init(spark):
     spark['sqlContext'].sql('msck repair table external_pharmacyclaims')
 
     # load enrollmentrecords table
-    spark['runner'].run_spark_script('../../../common/enrollment_common_model.sql', [
+    spark['runner'].run_spark_script('../../../common/enrollment/sql/enrollment_common_model.sql', [
         ['table_name', 'external_enrollmentrecords', False],
         ['properties', "PARTITIONED BY (part_provider string, part_processdate string) "
          + "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' "
