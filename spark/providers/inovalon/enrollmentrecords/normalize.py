@@ -1,7 +1,7 @@
 import argparse
 import spark.providers.inovalon.enrollmentrecords.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.enrollmentrecords import schemas as enrollment_schemas
+from spark.common.enrollment import schemas as enrollment_schemas
 
 if __name__ == "__main__":
 

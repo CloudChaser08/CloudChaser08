@@ -1,8 +1,8 @@
 """
 Enrollment Records common models
 """
-from spark.common.enrollmentrecords import enrollment_common_model_v4
-from spark.common.enrollmentrecords import enrollment_common_model_v5
+from spark.common.enrollment import enrollment_common_model_v4
+from spark.common.enrollment import enrollment_common_model_v5
 
 
 schemas = {

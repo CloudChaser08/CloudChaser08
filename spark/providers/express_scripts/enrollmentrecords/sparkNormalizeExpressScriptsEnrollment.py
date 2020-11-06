@@ -33,7 +33,7 @@ def run(spark, runner, date_input, test=False):
     runner.run_spark_script('../../../common/zip3_to_state.sql')
 
     logger.log('Staging output table')
-    runner.run_spark_script('../../../common/enrollmentrecords/sql/enrollment_common_model.sql', [
+    runner.run_spark_script('../../../common/enrollment/sql/enrollment_common_model.sql', [
         ['table_name', 'enrollment_common_model', False],
         ['properties', '', False]
     ])
@@ -141,7 +141,7 @@ def run(spark, runner, date_input, test=False):
     logger.log('Writing the final output table to the local file system')
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'enrollmentrecords', 'enrollmentrecords/sql/enrollment_common_model.sql', 'express_scripts',
+            spark, runner, 'enrollmentrecords', 'enrollment/sql/enrollment_common_model.sql', 'express_scripts',
             'enrollment_common_model', 'date_service', date_input, date_input[:-3]
         )
 
