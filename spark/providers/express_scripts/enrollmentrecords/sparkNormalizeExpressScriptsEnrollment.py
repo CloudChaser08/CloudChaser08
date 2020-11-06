@@ -15,7 +15,7 @@ from spark.common.utility import logger
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 S3_EXPRESS_SCRIPTS_IN = 's3a://salusv/incoming/enrollmentrecords/express_scripts/'
-S3_EXPRESS_SCRIPTS_OUT = 's3a://salusv/warehouse/parquet/enrollmentrecords/2017-03-22/'
+S3_EXPRESS_SCRIPTS_OUT = 's3a://salusv/warehouse/transformed/enrollmentrecords/2017-03-22/'
 S3_EXPRESS_SCRIPTS_ENROLLMENT_MATCHING = 's3a://salusv/matching/payload/enrollmentrecords/express_scripts/'
 S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3a://salusv/matching/payload/pharmacyclaims/esi/'
 
@@ -142,7 +142,7 @@ def run(spark, runner, date_input, test=False):
     if not test:
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'enrollmentrecords', 'enrollment_common_model.sql', 'express_scripts',
-            'enrollment_common_model', 'date_service', date_input, date_input
+            'enrollment_common_model', 'date_service', date_input, date_input[:-3]
         )
 
     if not test:
