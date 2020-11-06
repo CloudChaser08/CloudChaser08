@@ -70,7 +70,7 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
         return final_payload
     else:
         runner.sqlContext.sql('DROP TABLE IF EXISTS {}'.format(table_name))
-        final_payload.registerTempTable(table_name)
+        final_payload.createOrReplaceTempView(table_name)
 
 def load_all(runner, location_prefix, matching_payloads_module):
     """

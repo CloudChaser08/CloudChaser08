@@ -146,12 +146,20 @@ def main(args):
     else:
         output_path = OUTPUT_PATH_PRODUCTION
 
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 4096,
+        'spark.driver.memoryOverhead': 4096
+    }
     for model in models:
-        spark, sqlContext = init('Practice Fusion {} Normalization'.format(model))
+        spark, sqlContext = init('Practice Fusion {} Normalization'.format(model), conf_parameters=conf_parameters)
         runner = Runner(sqlContext)
 
         run(spark, runner, args.date, model, custom_input_path=args.input_path,
             custom_matching_path=args.matching_path, end_to_end_test=args.end_to_end_test)
+        spark.stop()
+
+        if not args.end_to_end_test:
+            spark_times.append(get_spark_time())
 
         # the full data set is reprocessed every time
         backup_path = output_path.replace('salusv', 'salusv/backup')
@@ -159,11 +167,8 @@ def main(args):
         subprocess.check_call(['aws', 's3', 'mv', '--recursive', output_path + model, backup_path + model])
 
         if args.end_to_end_test:
-            spark.stop()
             normalized_records_unloader.distcp(output_path)
         else:
-            spark_times.append(get_spark_time())
-            spark.stop()
             hadoop_times.append(normalized_records_unloader.timed_distcp(output_path))
 
     if not args.end_to_end_test:
