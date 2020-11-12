@@ -7,7 +7,7 @@ from spark.common.emr.diagnosis import schemas as diagnosis_schemas
 from spark.common.emr.encounter import schemas as encounter_schemas
 from spark.common.emr.medication import schemas as medication_schemas
 from spark.common.emr.procedure import schemas as procedure_schemas
-from spark.common.utility.output_type import RunType
+from spark.common.emr.lab_test import schemas as lab_test_schema
 import spark.common.utility.logger as logger
 
 if __name__ == "__main__":
@@ -19,7 +19,8 @@ if __name__ == "__main__":
         'pcc_emr_norm_emr_diag': diagnosis_schemas['schema_v10'],
         'pcc_emr_norm_emr_enc': encounter_schemas['schema_v10'],
         'pcc_emr_norm_emr_medctn': medication_schemas['schema_v11'],
-        'pcc_emr_norm_emr_proc': procedure_schemas['schema_v12']
+        'pcc_emr_norm_emr_proc': procedure_schemas['schema_v12'],
+        'pcc_emr_norm_emr_labtest': lab_test_schema['schema_v3']
     }
     provider_partition_name = '156'
 
@@ -40,41 +41,34 @@ if __name__ == "__main__":
         source_table_schemas,
         output_table_names_to_schemas,
         date_input,
-        end_to_end_test
+        end_to_end_test,
+        unload_partition_count=20,
+        use_ref_gen_values=True,
+        vdr_feed_id=156,
+        output_to_transform_path=True
     )
 
-    driver.init_spark_context()
+    # init
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024
+    }
+
+    driver.init_spark_context(conf_parameters=conf_parameters)
     driver.load()
 
-    logger.log('Loading external table: ref_geo_state')
+    logger.log('Loading external table: ref_ndc_ddid')
     external_table_loader.load_analytics_db_table(
-        driver.sql_context, 'dw', 'ref_geo_state', 'ref_geo_state'
+        driver.sql_context, 'dw', 'ref_ndc_ddid', 'ref_ndc_ddid'
     )
-    driver.spark.table('ref_geo_state').cache().createOrReplaceTempView('ref_geo_state')
-
-    logger.log('Caching tables to improve performance of clinical observation tables')
-    logger.log('1 of 3 - Caching obs table')
-    driver.spark.table('obs').cache().createOrReplaceTempView('obs')
-
-    logger.log('2 of 3  - Caching alg table')
-    driver.spark.table('alg').cache().createOrReplaceTempView('alg')
-
-    logger.log('3 of 3 - Caching dclt table')
-    driver.spark.table('dclt').cache().createOrReplaceTempView('dclt')
+    driver.spark.table('ref_ndc_ddid').cache().createOrReplaceTempView('ref_ndc_ddid')
 
     driver.transform()
     driver.save_to_disk()
-
-    if not driver.test and not driver.end_to_end_test:
-        logger.log_run_details(
-            driver.provider_name,
-            driver.data_type,
-            driver.input_path,
-            driver.matching_path,
-            driver.output_path,
-            RunType.MARKETPLACE,
-            driver.date_input
-        )
-
+    driver.log_run()
     driver.stop_spark()
     driver.copy_to_output_path()
+    logger.log('Done')
+
+
+
