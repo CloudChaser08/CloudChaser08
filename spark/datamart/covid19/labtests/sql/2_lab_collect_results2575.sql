@@ -92,3 +92,4 @@ GROUP BY -- Remove duplicates based on these columns from aet2575 staging source
     ,abnormal_ind
     ,hipaa_comment
     ,fasting_indicator
+    
