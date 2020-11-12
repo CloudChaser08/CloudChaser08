@@ -1,417 +1,401 @@
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
-    'vis': SourceTable(
+    'factallergy': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'fact_visit_id',
-            'admit_fact_census_id',
-            'discharge_fact_census_id',
-            'discharge_staff_id',
-            'discharge_transfer_outcome_id',
-            'discharge_transfer_reason_id',
-            'transfer_staff_id',
-            'organization_id',
-            'facility_id',
-            'client_id',
-            'admit_date_time',
-            'admit_date_id',
-            'discharge_date_time',
-            'discharge_date_id',
-            'admit_from_ext_facility_id',
-            'discharge_to_ext_facility_id',
-            'admit_payer_id',
-            'latest_payer_id',
-            'is_visit_completed_ind',
-            'is_readmit_ind',
-            'length_of_stay'
+            'allergenid',
+            'allergyattributeid',
+            'allergycategoryid',
+            'allergyreactionid',
+            'clientid',
+            'duration',
+            'facilityid',
+            'factallergyid',
+            'onsetdateid',
+            'onsetdatetime',
+            'residentid',
+            'organizationid'
         ]
     ),
-    'obs': SourceTable(
+    'factcensus': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'fact_observation_id',
-            'organization_id',
-            'facility_id',
-            'client_id',
-            'resident_id',
-            'observation_method_id',
-            'strike_out_id',
-            'observation_id',
-            'observation_date_time',
-            'observation_date_id',
-            'observation_systolic',
-            'observation_diastolic',
-            'observation_value_metric',
-            'observation_value_imperial'
+            'censusactionid',
+            'censuseffectivedateid',
+            'censuseffectivedatetime',
+            'censusstatusid',
+            'clientid',
+            'dischargestatusid',
+            'facilityid',
+            'factcensusid',
+            'fromtoextfacilityid',
+            'fromtotypeid',
+            'hospitalstayfromdateid',
+            'hospitalstayfromdatetime',
+            'hospitalstaytodateid',
+            'hospitalstaytodatetime',
+            'iscensuscompleteind',
+            'organizationid',
+            'payerid',
+            'residentid',
+            'transferoutcomeid',
+            'transferreasonid',
+            'transferstaffid'
         ]
     ),
-    'med': SourceTable(
+    'factcareprofile': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'fact_medication_order_id',
-            'organization_id',
-            'client_id',
-            'facility_id',
-            'physician_staff_id',
-            'pharmacy_facility_id',
-            'medication_order_date_time',
-            'ddid',
-            'hold_date_time',
-            'hold_date_id',
-            'discontinued_date_time',
-            'discontinued_date_id',
-            'start_date_time',
-            'start_date_id',
-            'end_date_time',
-            'end_date_id',
-            'completed_date_time',
-            'completed_date_id',
-            'medication_order_date_id',
-            'load_id'
+            'careprofilequestionid',
+            'clientid',
+            'facilityid',
+            'factcareprofileid',
+            'organizationid',
+            'residentid'
         ]
     ),
-    'dgn': SourceTable(
+    'dimallergyattribute': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'fact_diagnosis_id',
-            'organization_id',
-            'facility_id',
-            'client_id',
-            'diagnosis_id',
-            'diagnosis_rank_id',
-            'is_principal_diagnosis_ind',
-            'is_admission_diagnosis_ind',
-            'diagnosis_classification_id',
-            'onset_date_time',
-            'onset_date_id',
-            'resolved_date_time',
-            'resolved_date_id'
+            'allergyattributeid',
+            'allergyseverity',
+            'allergystatus',
+            'allergytype'
         ]
     ),
-    'cen': SourceTable(
+    'dimallergycategory': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'fact_census_id',
-            'census_effective_date_id',
-            'facility_id',
-            'client_id',
-            'organization_id',
-            'payer_id',
-            'transfer_staff_id',
-            'census_action_id',
-            'census_status_id',
-            'transfer_outcome_id',
-            'transfer_reason_id',
-            'is_census_complete_ind',
-            'from_to_ext_facility_id',
-            'hospital_stay_from_date_id',
-            'hospital_stay_from_date_time',
-            'hospital_stay_to_date_id',
-            'hospital_stay_to_date_time',
-            'discharge_status_id',
-            'census_effective_date_time',
-            'from_to_type_id'
+            'allergycategory',
+            'allergycategoryid',
+            'allergysubcategory'
         ]
     ),
-    'alg': SourceTable(
+    'dimallergen': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'fact_allergy_id',
-            'onset_date_id',
-            'onset_date_time',
-            'allergy_attribute_id',
-            'allergy_reaction_id',
-            'allergy_category_id',
-            'allergen_id',
-            'facility_id',
-            'client_id',
-            'organization_id',
-            'duration'
-        ]
-    ),
-    'imm': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
-            'fact_immunization_id',
-            'immunization_date_id',
-            'immunization_date_time',
-            'immunization_id',
-            'facility_id',
-            'client_id',
-            'organization_id',
-            'consent',
-            'consent_date_id',
-            'consent_date_time',
-            'vaccine_id'
-        ]
-    ),
-    'dalg': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
-            'allergen_id',
             'allergen',
-            'load_id'
+            'allergenid'
         ]
     ),
-    'dala': SourceTable(
+    'dimallergyreaction': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'allergy_attribute_id',
-            'allergy_status',
-            'allergy_type',
-            'allergy_severity'
+            'allergyreaction',
+            'allergyreactionid',
+            'allergysubreaction'
         ]
     ),
-    'dalc': SourceTable(
+    'dimcareprofilequestion': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'allergy_category_id',
-            'allergy_category',
-            'allergy_subcategory'
+            'careprofilequestionid',
+            'category',
+            'question',
+            'response'
         ]
     ),
-    'dalr': SourceTable(
+    'dimdiagnosisclassification': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'allergy_reaction_id',
-            'allergy_reaction',
-            'allergy_subreaction'
+            'diagnosisclassification',
+            'diagnosisclassificationid'
         ]
     ),
-    'dcna': SourceTable(
+    'dimdiagnosis': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'census_action_id',
-            'census_action_type',
-            'census_action_short',
-            'census_action_long'
+            'clinicalconditioncategory',
+            'clinicalconditioncategorydesc',
+            'clinicalconditionlevel1',
+            'clinicalconditionlevel1desc',
+            'clinicalconditionlevel2',
+            'clinicalconditionlevel2desc',
+            'diagnosisid',
+            'icdcode',
+            'icddesc',
+            'mdsdiagnosisgroup',
+            'mdsdiagnosisgroupdesc'
         ]
     ),
-    'dcft': SourceTable(
+    'dimdiagnosisrank': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'census_from_to_type_id',
-            'census_from_to_type'
+            'diagnosisrank',
+            'diagnosisrankid'
         ]
     ),
-    'dcns': SourceTable(
+    'dimdrug': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'census_status_id',
-            'census_status_type',
-            'census_status_short',
-            'census_status_long'
-        ]
-    ),
-    'dclt': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
-            'client_id',
-            'client_id_number',
-            'admission_date',
-            'discharge_date',
-            'original_admission_date',
-            'outpatient',
-            'resident_id',
-            'facility_id',
-            'primary_physician_id'
-        ]
-    ),
-    'ddgn': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
-            'diagnosis_id',
-            'icd_code',
-            'icd_desc',
-            'mds_diagnosis_group',
-            'mds_diagnosis_group_desc',
-            'clinical_condition_category',
-            'clinical_condition_category_desc',
-            'clinical_condition_level_1',
-            'clinical_condition_level_1_desc',
-            'clinical_condition_level_2',
-            'clinical_condition_level_2_desc'
-        ]
-    ),
-    'ddgc': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
-            'diagnosis_classification',
-            'diagnosis_classification_id'
-        ]
-    ),
-    'ddgr': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
-            'diagnosis_rank_id',
-            'diagnosis_rank'
-        ]
-    ),
-    'ddsc': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
-            'discharge_status_id',
-            'discharge_status',
-            'is_discharge_ind'
-        ]
-    ),
-    'ddru': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
+            'controlsubstancecode',
             'ddid',
-            'pnid',
-            'gpi',
-            'drug_strength',
-            'lvl_7_drug_strength',
-            'drug_form',
-            'lvl_6_drug_form',
-            'drug_name',
-            'lvl_5_drug_name',
-            'drug_base_name',
-            'lvl_4_drug_base_name',
-            'drug_subclass',
-            'lvl_3_drug_subclass',
-            'drug_class',
-            'lvl_2_drug_class',
-            'drug_group',
-            'lvl_1_drug_group',
+            'drugbasename',
+            'drugclass',
+            'drugform',
+            'druggroup',
+            'drugname',
+            'drugstrength',
+            'drugsubclass',
             'form',
+            'gpi',
+            'lvl1druggroup',
+            'lvl2drugclass',
+            'lvl3drugsubclass',
+            'lvl4drugbasename',
+            'lvl5drugname',
+            'lvl6drugform',
+            'lvl7drugstrength',
+            'narcotic',
+            'pnid',
             'strength',
-            'strength_unit',
-            'control_status_code',
-            'narcotic'
+            'strengthunit'
         ]
     ),
-    'dfcl': SourceTable(
+    'factdiagnosis': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'facility_id',
-            'facility_name',
-            'facility_type',
-            'is_external_ind',
-            'is_inactive_ind',
-            'address1',
-            'address2',
-            'city',
-            'prov_state',
-            'country_id',
-            'health_type',
-            'facility_start_date',
-            'ccn',
-            'postal_zip_code',
-            'facility_npi'
+            'clientid',
+            'diagnosisclassificationid',
+            'diagnosisid',
+            'diagnosisrankid',
+            'facilityid',
+            'factdiagnosisid',
+            'isadmissiondiagnosisind',
+            'isprincipaldiagnosisind',
+            'onsetdateid',
+            'onsetdatetime',
+            'organizationid',
+            'residentid',
+            'resolveddateid',
+            'resolveddatetime'
         ]
     ),
-    'dimm': SourceTable(
+    'dimimmunization': SourceTable(
         'csv',
         separator='|',
         columns=[
             'immunization',
-            'immunization_id'
+            'immunizationid'
         ]
     ),
-    'dobs': SourceTable(
+    'dimlabreportstatus': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'observation_id',
+            'labreportstatusid',
+            'statuscode',
+            'statusdescription'
+        ]
+    ),
+    'dimlabtest': SourceTable(
+        'csv',
+        separator='|',
+        columns=[
+            'categorycode',
+            'categorydescription',
+            'iscategoryactiveind',
+            'istestactiveind',
+            'labtestid',
+            'loinccode',
+            'testdescription'
+        ]
+    ),
+    'dimobservation': SourceTable(
+        'csv',
+        separator='|',
+        columns=[
+            'imperialuom',
+            'metricuom',
             'observation',
-            'metric_uom',
-            'imperial_uom',
-            'observation_short'
+            'observationid',
+            'observationshort'
         ]
     ),
-    'dorg': SourceTable(
+    'dimorganization': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'organization_id',
-            'organization_code',
-            'organization_type',
-            'organization_group',
+            'countrycode',
             'organization',
-            'country_code'
+            'organizationcode',
+            'organizationgroup',
+            'organizationid',
+            'organizationtype'
         ]
     ),
-    'dpyr': SourceTable(
+    'dimlabresultuom': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'payer_id',
-            'payer_label',
-            'payer_type',
-            'payer_type_code'
+            'labresultuomid',
+            'resultuom'
         ]
     ),
-    'droa': SourceTable(
+    'dimlabtestabnormality': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'route_of_admin_id',
-            'route_of_admin',
-            'medispan_route_of_admin',
-            'abbreviation',
-            'require_location',
-            'prefix'
+            'abnormalitycode',
+            'abnormalitydescription',
+            'isactiveind',
+            'labtestabnormalityid'
         ]
     ),
-    'dstf': SourceTable(
+    'dimlabtestcondition': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'staff_id',
-            'person_name',
-            'npi',
-            'profession_type'
+            'conditioncode',
+            'conditiondescription',
+            'isactiveind',
+            'labtestconditionid'
         ]
     ),
-    'dxoc': SourceTable(
+    'dimvaccine': SourceTable(
         'csv',
         separator='|',
         columns=[
-            'transfer_outcome',
-            'transfer_outcome_id'
-        ]
-    ),
-    'dxrs': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
-            'transfer_reason',
-            'transfer_reason_id'
-        ]
-    ),
-    'dvcx': SourceTable(
-        'csv',
-        separator='|',
-        columns=[
-            'vaccine_id',
-            'vaccine_code',
-            'vaccine_short',
             'vaccine',
-            'vaccine_status'
+            'vaccinecode',
+            'vaccineid',
+            'vaccineshort',
+            'vaccinestatus'
+        ]
+    ),
+    'factimmunization': SourceTable(
+        'csv',
+        separator='|',
+        columns=[
+            'clientid',
+            'consent',
+            'consentdateid',
+            'consentdatetime',
+            'facilityid',
+            'factimmunizationid',
+            'immunizationdateid',
+            'immunizationdatetime',
+            'immunizationid',
+            'organizationid',
+            'residentid',
+            'vaccineid'
+        ]
+    ),
+    'factlabtest': SourceTable(
+        'csv',
+        separator='|',
+        columns=[
+            'clientid',
+            'facilityid',
+            'factlabtestid',
+            'labreportseverityid',
+            'labreportstatusid',
+            'labresultuomid',
+            'labtestabnormalityid',
+            'labtestconditionid',
+            'labtestid',
+            'refrange',
+            'reporteddate',
+            'reporteddateid',
+            'reportinglabextfactid',
+            'residentid',
+            'resultdatetime',
+            'resultdatetimeid',
+            'resultvalue',
+            'specimencollectiondate',
+            'specimencollectiondateid'
+        ]
+    ),
+    'factmedicationorder': SourceTable(
+        'csv',
+        separator='|',
+        columns=[
+            'clientid',
+            'ddid',
+            'facilityid',
+            'factmedicationorderid',
+            'ordercompleteddateid',
+            'ordercompleteddatetime',
+            'orderdiscontinueddateid',
+            'orderdiscontinueddatetime',
+            'orderenddateid',
+            'orderenddatetime',
+            'orderholddateid',
+            'orderholddatetime',
+            'orderholdenddateid',
+            'orderholdenddatetime',
+            'orderstartdateid',
+            'orderstartdatetime',
+            'organizationid',
+            'pharmacyfacilityid',
+            'physicianstaffid',
+            'residentid',
+            'routeofadminid',
+            'scheduleenddateid',
+            'scheduleenddatetime',
+            'schedulestartdateid',
+            'schedulestartdatetime'
+        ]
+    ),
+    'factobservation': SourceTable(
+        'csv',
+        separator='|',
+        columns=[
+            'factobservationid',
+            'organizationid',
+            'facilityid',
+            'clientid',
+            'residentid',
+            'observationmethodid',
+            'observationid',
+            'observationdatetime',
+            'observationdateid',
+            'observationsystolic',
+            'observationdiastolic',
+            'observationvaluemetric',
+            'observationvalueimperial'
+        ]
+    ),
+    'factvisit': SourceTable(
+        'csv',
+        separator='|',
+        columns=[
+            'admitdateid',
+            'admitdatetime',
+            'admitfactcensusid',
+            'admitfromextfacilityid',
+            'admitpayerid',
+            'clientid',
+            'dischargedateid',
+            'dischargedatetime',
+            'dischargefactcensusid',
+            'dischargestaffid',
+            'dischargetoextfacilityid',
+            'dischargetransferoutcomeid',
+            'dischargetransferreasonid',
+            'facilityid',
+            'factvisitid',
+            'isreadmitind',
+            'isvisitcompletedind',
+            'latestpayerid',
+            'lengthofstay',
+            'organizationid',
+            'residentid',
+            'transferstaffid'
         ]
     )
 }

@@ -1,5 +1,5 @@
-SELECT 
-    MONOTONICALLY_INCREASING_ID()                                                           AS row_id,
+SELECT
+    MONOTONICALLY_INCREASING_ID()  AS row_id,
     sub.*
  FROM
 (
