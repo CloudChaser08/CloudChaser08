@@ -182,7 +182,6 @@ schema_v3 = StructType([
 ])
 
 data_type = DataType.EMR
-output_directory = DataType(data_type).value + '/2017-08-23/lab_test'
 provider_partition_column = 'part_hvm_vdr_feed_id'
 date_partition_column = 'part_mth'
 distribution_key = 'row_id'
@@ -198,7 +197,7 @@ schemas = {
     'schema_v3': Schema(name='schema_v3',
                         schema_structure=schema_v3,
                         distribution_key=distribution_key,
-                        output_directory=output_directory,
+                        output_directory=DataType(data_type).value + '/2017-08-23/lab_test',
                         data_type=data_type,
                         provider_partition_column=provider_partition_column,
                         date_partition_column=date_partition_column
