@@ -43,6 +43,8 @@ from ref_icd10_diagnosis a
     )
 where
     a.header = 1 -- indicates billable
+or
+    trim(b.code) = 'U07' -- allow covid emergency codes, even if not billable
 """
 
 
