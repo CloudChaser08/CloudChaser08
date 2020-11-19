@@ -45,7 +45,7 @@ if __name__ == "__main__":
         unload_partition_count=20,
         use_ref_gen_values=True,
         vdr_feed_id=156,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     # init
