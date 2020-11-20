@@ -6,6 +6,7 @@ CREATE EXTERNAL TABLE matching_payload (
 PARTITIONED BY (part_date_recv string)
 ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
 WITH SERDEPROPERTIES (
+    "ignore.malformed.json" = "true",
     'mapping.patientId' = 'patientId',
     'mapping.hvJoinKey' = 'hvJoinKey'
 )
