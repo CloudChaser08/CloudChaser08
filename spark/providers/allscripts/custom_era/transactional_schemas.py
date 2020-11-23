@@ -1,37 +1,4 @@
-from pyspark.sql.types import StructType, StructField, StringType
 from spark.helpers.source_table import SourceTable
-import pyspark.sql.functions as F
-import spark.helpers.postprocessor as postprocessor
-import spark.helpers.records_loader as records_loader
-
-def load(spark, runner, input_paths):
-    for table, input_path in input_paths.items():
-        if table == 'payload':
-            source_table = TABLE_CONF[table]
-            df = records_loader.load(runner, input_path, None,
-                                     source_table.file_type, schema=source_table.schema,
-                                     delimiter=source_table.separator)
-
-            postprocessor.compose(
-                postprocessor.trimmify,
-                postprocessor.nullify
-            )(df).createOrReplaceTempView(table)
-        else:
-            # Read in data as lines of text
-            raw_df = spark.read.text(input_path)
-            for t in set(TABLE_CONF.keys()) - set(['payload']):
-                # Get the columns for each source table we expect
-                cols = [x.name for x in TABLE_CONF[t].schema]
-                # Filter based on the length of columns
-                raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(cols)))
-                # Extract the line into a dataframe with one column for each element in the array
-                split = raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                           .select(*[F.col('split')[i].alias(cols[i]) for i in range(len(cols))])
-                # Trimmify and Nullify the data
-                postprocessor.compose(
-                    postprocessor.trimmify,
-                    postprocessor.nullify
-                )(split).createOrReplaceTempView(t)
 
 
 TABLE_CONF = {
@@ -622,13 +589,5 @@ TABLE_CONF = {
             'patient_first_name',
             'hvjoinkey'
         ]
-    ),
-    'payload': SourceTable(
-        'json',
-        schema=StructType([
-            StructField('claimId', StringType(), True),
-            StructField('PCN', StringType(), True),
-            StructField('hvJoinKey', StringType(), True)
-        ])
     )
 }
