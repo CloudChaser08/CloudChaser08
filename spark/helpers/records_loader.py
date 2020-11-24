@@ -26,6 +26,8 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
         schema = source_table_conf.schema
         delimiter = source_table_conf.separator
         confirm_schema = source_table_conf.confirm_schema
+        if columns is None:
+            columns = source_table_conf.columns
 
     if schema is None:
         schema = StructType([StructField(c, StringType(), True) for c in columns])
@@ -51,6 +53,14 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
         df = runner.sqlContext.read.schema(schema).orc(location)
     elif file_type == 'json':
         df = runner.sqlContext.read.schema(schema).json(location)
+    elif file_type == 'fixedwidth':
+        df = runner.sqlContext.read.text(location)
+        cols = []
+        index = 1
+        for col, width in columns:
+            cols.append(df.value.substr(index, width).alias(col))
+            index = index + width
+        df = df.select(*cols)
     else:
         raise ValueError("Unsupported file type: {}".format(file_type))
 

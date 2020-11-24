@@ -114,23 +114,14 @@ SELECT
     txn.fill_number                                                                         AS fill_number,
     txn.number_of_refills_authorized                                                        AS refill_auth_amount,
 
-    --    CAST(CASE WHEN (LENGTH(txn.quantity_dispensed)-length(replace(txn.quantity_dispensed,'.',''))) = 1
-    --        THEN ('0' || CLEAN_UP_NUMERIC_CODE_DECIMAL(txn.quantity_dispensed) || '0')
-    --            ELSE ('0' || CLEAN_UP_NUMERIC_CODE(txn.quantity_dispensed))
-    --        END AS STRING) AS dispensed_quantity,
     txn.quantity_dispensed                                                                  AS dispensed_quantity,
 
     txn.unit_of_measure                                                                     AS unit_of_measure,
 
-    --    CAST(CASE WHEN (LENGTH(txn.days_supply)-length(replace(txn.days_supply,'.',''))) = 1
-    --        THEN ('0' || CLEAN_UP_NUMERIC_CODE_DECIMAL(txn.days_supply) || '0')
-    --            ELSE ('0' || CLEAN_UP_NUMERIC_CODE(txn.days_supply))
-    --        END AS STRING) AS days_supply,
     txn.days_supply                                                                         AS days_supply,
 
     CASE WHEN (txn.service_provider_id_qualifier in ('1','01'))
             OR (txn.service_provider_id_qualifier in ('5', '05')
-                --AND CLEAN_UP_NPI_CODE(ltrim(txn.service_provider_id))
                 AND regexp_replace(txn.service_provider_id, '^[0-9]{{10}}$', '') = '')
             THEN txn.service_provider_id
     ELSE NULL END                                                                           AS pharmacy_npi,
@@ -170,7 +161,6 @@ SELECT
 
     CASE WHEN (txn.prescriber_id_qualifier in ('1','01'))
                 OR (txn.prescriber_id_qualifier in ('5', '05')
-                    --AND CLEAN_UP_NPI_CODE(txn.prescriber_id)
                     AND regexp_replace(txn.prescriber_id_qualifier, '^[0-9]{{10}}$', '') = '')
         THEN txn.prescriber_id
     ELSE NULL END AS prov_prescribing_npi,
@@ -211,14 +201,12 @@ SELECT
 
     CASE WHEN (txn.service_provider_id_qualifier not in ('1','01'))
                 AND (txn.service_provider_id_qualifier not in ('5', '05')
-                    --OR CLEAN_UP_NPI_CODE(txn.service_provider_id)
                     OR regexp_replace(txn.service_provider_id, '^[0-9]{{10}}$', '') != '')
         THEN txn.service_provider_id
     ELSE NULL END AS pharmacy_other_id,
 
     CASE WHEN (txn.service_provider_id_qualifier not in ('1','01'))
                 AND (txn.service_provider_id_qualifier not in ('5', '05')
-                    --OR CLEAN_UP_NPI_CODE(txn.service_provider_id))
                     OR regexp_replace(txn.service_provider_id, '^[0-9]{{10}}$', '') != '')
         THEN txn.service_provider_id_qualifier
     ELSE NULL END AS pharmacy_other_qual,
@@ -229,14 +217,12 @@ SELECT
 
     CASE WHEN (txn.prescriber_id_qualifier not in ('1','01'))
                 AND (txn.prescriber_id_qualifier not in ('5', '05')
-                    --OR CLEAN_UP_NPI_CODE(txn.prescriber_id))
                     OR regexp_replace(txn.prescriber_id_qualifier, '^[0-9]{{10}}$', '') != '')
         THEN txn.prescriber_id
     ELSE NULL END AS prov_prescribing_id,
 
     CASE WHEN (txn.prescriber_id_qualifier not in ('1','01'))
                 AND (txn.prescriber_id_qualifier not in ('5', '05')
-                    --OR CLEAN_UP_NPI_CODE(txn.prescriber_id))
                     OR regexp_replace(txn.prescriber_id_qualifier, '^[0-9]{{10}}$', '') != '')
         THEN txn.prescriber_id_qualifier
     ELSE NULL END                                                                               AS prov_prescribing_qual,
