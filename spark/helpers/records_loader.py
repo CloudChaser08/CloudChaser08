@@ -54,12 +54,13 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
     elif file_type == 'json':
         df = runner.sqlContext.read.schema(schema).json(location)
     elif file_type == 'fixedwidth':
+        # fixed width start position from position 1
         df = runner.sqlContext.read.text(location)
         cols = []
-        index = 1
+        start_pos = 1
         for col, width in columns:
-            cols.append(df.value.substr(index, width).alias(col))
-            index = index + width
+            cols.append(df.value.substr(start_pos, width).alias(col))
+            start_pos += width
         df = df.select(*cols)
     else:
         raise ValueError("Unsupported file type: {}".format(file_type))
