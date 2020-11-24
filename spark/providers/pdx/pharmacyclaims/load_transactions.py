@@ -7,12 +7,12 @@ def load(runner, input_path_prefix):
     '''
     for table, columns in TABLES.items():
         df = runner.sqlContext.read.text(input_path_prefix)
-
+        # fixed width start position from position 1
         cols = []
-        index = 1
+        start_pos = 1
         for col, width in columns:
-            cols.append(df.value.substr(index, width).alias(col))
-            index = index + width
+            cols.append(df.value.substr(start_pos, width).alias(col))
+            start_pos += width
 
         df = df.select(*cols).withColumn('data_set', input_file_name()).cache()
         df.count()
