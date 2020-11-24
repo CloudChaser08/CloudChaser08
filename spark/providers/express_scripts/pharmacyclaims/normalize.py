@@ -63,11 +63,18 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
     normalized_path = ""
     input_path_prev = ""
     if test:
-        test_resources_path = '../../../test/providers/express_scripts/pharmacyclaims/resources/'
-        input_path_prev = file_utils.get_abs_path(script_path, '{}input_prev/'.format(test_resources_path)) + '/'
-        driver.input_path = file_utils.get_abs_path(script_path, '{]input/'.format(test_resources_path)) + '/'
-        driver.matching_path = file_utils.get_abs_path(script_path, '{}matching/'.format(test_resources_path)) + '/'
-        normalized_path = file_utils.get_abs_path(script_path, '{}normalized/'.format(test_resources_path)) + '/'
+        input_path_prev = file_utils.get_abs_path(
+            script_path, '../../../test/providers/express_scripts/pharmacyclaims/resources/input_prev/'
+        ) + '/'
+        driver.input_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/express_scripts/pharmacyclaims/resources/input/'
+        ) + '/'
+        driver.matching_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/express_scripts/pharmacyclaims/resources/matching/'
+        ) + '/'
+        normalized_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/express_scripts/pharmacyclaims/resources/normalized/'
+        ) + '/'
 
     driver.load(extra_payload_cols=['RXNumber', 'hvJoinKey'])
 
