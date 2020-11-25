@@ -11,8 +11,8 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'allscripts'
     output_table_names_to_schemas = {
-        'allscripts_era_detail': detail_schemas['schema_v5'],
-        'allscripts_era_summary': summary_schemas['schema_v5']
+        'veradigm_era_detail': detail_schemas['schema_v5'],
+        'veradigm_era_summary': summary_schemas['schema_v5']
     }
     provider_partition_name = 'allscripts'
 
@@ -37,21 +37,5 @@ if __name__ == "__main__":
         use_ref_gen_values=True,
         vdr_feed_id=83
     )
-
-    '''
-    conf_parameters = {
-        'spark.default.parallelism': 160,
-        'spark.sql.shuffle.partitions': 160,
-        'spark.sql.autoBroadcastJoinThreshold': 10485760,
-        'spark.executor.extraJavaOptions': '-XX:+UseG1GC'
-    }
-
-    driver.init_spark_context(conf_parameters=conf_parameters)
-
-    logger.log('Loading external table: ref_geo_state')
-    external_table_loader.load_analytics_db_table(
-        driver.sql_context, 'dw', 'ref_geo_state', 'ref_geo_state'
-    )
-    '''
 
     driver.run()

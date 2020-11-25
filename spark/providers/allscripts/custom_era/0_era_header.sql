@@ -1,0 +1,46 @@
+SELECT 
+ column1 AS Header_Indicator
+,column2 AS Batch_ID
+,column3 AS X12_Version
+,column4 AS Receiver_ID_Number_Qualifier
+,column5 AS Receiver_ID
+,column6 AS Version_Code_Qualifier
+,column7 AS Adjudication_Version_ID_Code
+,column8 AS Process_Date_Qual
+,column9 AS Process_Date
+,column10 AS Payer_Entity_ID_Code
+,column11 AS Payer_Name
+,column12 AS Payer_ID_Code_Qualifier
+,column13 AS TSPID
+,column14 AS Payer_ID
+,column15 AS Payer_Address_Line_1
+,column16 AS Payer_Address_Line_2
+,column17 AS Payer_City_Name
+,column18 AS Payer_State_Code
+,column19 AS Payer_Postal_Zone_or_ZIP_Code
+,column20 AS Reference_Identification_Qualifier
+,column21 AS Medicare_Fiscal_Intermediary_or_BCBS_Number
+,column22 AS Reference_Identification_Qualifier_1
+,column23 AS Submitter_ID_Number
+,column24 AS Reference_Identification_Qualifier_2
+,column25 AS Heallth_Industry_Number_HIN
+,column26 AS Reference_Identification_Qualifier_3
+,column27 AS NAIC_Code
+,column28 AS Payer_Contact_Function_Code
+,column29 AS Primary_Payer_Phone
+,column30 AS Payee_Entity_ID_Code
+,column31 AS Payee_Name
+,column32 AS Payee_ID_Code_Qual
+,column33 AS Payee_Tax_ID
+,column34 AS Payee_NPI
+,column35 AS Payee_Address_Line
+,column36 AS Payee_Address_Line_2
+,column37 AS Payee_City_Name
+,column38 AS Payee_State_Code
+,column39 AS Payee_Postal_Zone_or_ZIP_Code
+,column40 AS Payee_Country_Code
+,column41 AS State_License_Number
+,column42 AS National_Association_of_Boards_of_Pharmacy_Number
+,column43 AS Payee_Addtl_Identification
+,column44 AS Federal_Taxpayers_ID_Number
+FROM rest WHERE column1 = 'HDR'

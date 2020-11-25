@@ -1,6 +1,7 @@
 SELECT
+MONOTONICALLY_INCREASING_ID()                                                           AS row_id,
   CONCAT('83_', header.batch_id)                                            AS hv_medcl_clm_pymt_sumry_id,
-  CURRENT_DATE()                                                              AS crt_dt,
+  CURRENT_DATE                                                              AS crt_dt,
   '03'                                                                      AS mdl_vrsn_num,
   35                                                                        AS hvm_vdr_id,
   83                                                                        AS hvm_vdr_feed_id,
@@ -18,7 +19,7 @@ SELECT
                         ) AS DATE 
             ),
                  esdt.gen_ref_1_dt,
-                 '{VDR_FILE_DT}'
+                  CAST('{VDR_FILE_DT}' AS DATE)
             )                                                               AS clm_stmt_perd_start_dt,
   CAP_DATE(
         CAST(EXTRACT_DATE(
@@ -30,7 +31,7 @@ SELECT
                         ) AS DATE
                 ),
                  esdt.gen_ref_1_dt,
-                 '{VDR_FILE_DT}'
+                  CAST('{VDR_FILE_DT}' AS DATE)
               )                                                            AS clm_stmt_perd_end_dt,
   CAP_DATE(
         CAST(EXTRACT_DATE(
@@ -38,7 +39,7 @@ SELECT
                           ) AS DATE
             ),
              esdt.gen_ref_1_dt,
-             '{VDR_FILE_DT}'
+              CAST('{VDR_FILE_DT}' AS DATE)
               )                                                             AS payr_clm_recpt_dt,
   header.TSPID                                                              AS payr_id,
   (CASE WHEN  0 <> LENGTH(TRIM(COALESCE(header.TSPID, '')))
@@ -191,28 +192,28 @@ SELECT
   claimpayment.clmpvt_clm_qty_qual                                          AS clm_qty_qual,
   claimpayment.clmpvt_clm_adjmt_seq_num                                     AS clm_adjmt_seq_num,
   claimpayment.clmpvt_clm_adjmt_grp_cd                                      AS clm_adjmt_grp_cd,
-  claimpayment.clmpvt_clm_adjmt_rsn_cd                                      AS clm_adjmt_rsn_cd,
+  claimpayment.clmpvt_clm_adjmt_rsn_txt                                      AS clm_adjmt_rsn_cd,
   claimpayment.clmpvt_clm_adjmt_amt                                         AS clm_adjmt_amt,
   claimpayment.clmpvt_clm_adjmt_qty                                         AS clm_adjmt_qty,
   payload.pcn                                                               AS medcl_clm_lnk_txt,
    '83'                                                                     AS part_hvm_vdr_feed_id,
     CASE WHEN 0 = LENGTH(TRIM(COALESCE(
                             CAP_DATE(
-                            COALESCE(CAST(EXTRACT_DATE(claimpayment.Claim_Statement_Period_End, '%Y%m%d') AS DATE), '{VDR_FILE_DT}'),   -- Replace w/vendor's file date.
+                            COALESCE(CAST(EXTRACT_DATE(claimpayment.Claim_Statement_Period_End, '%Y%m%d') AS DATE),  CAST('{VDR_FILE_DT}' AS DATE)),   -- Replace w/vendor's file date.
                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt,CAST('1901-01-01' as date)),
-                            '{VDR_FILE_DT}' )  -- Replace w/vendor's file date.
+                             CAST('{VDR_FILE_DT}' AS DATE) )  -- Replace w/vendor's file date.
                         ,''))) 
          THEN  '0_PREDATES_HVM_HISTORY'
-         ELSE CONCAT(SUBSTR(COALESCE(CAST(EXTRACT_DATE(claimpayment.Claim_Statement_Period_End, '%Y%m%d') AS DATE), '{VDR_FILE_DT}'), 1, 4), '-',
-                     SUBSTR(COALESCE(CAST(EXTRACT_DATE(claimpayment.Claim_Statement_Period_End, '%Y%m%d') AS DATE), '{VDR_FILE_DT}'), 6, 2)) 
+         ELSE CONCAT(SUBSTR(COALESCE(CAST(EXTRACT_DATE(claimpayment.Claim_Statement_Period_End, '%Y%m%d') AS DATE),  CAST('{VDR_FILE_DT}' AS DATE)), 1, 4), '-',
+                     SUBSTR(COALESCE(CAST(EXTRACT_DATE(claimpayment.Claim_Statement_Period_End, '%Y%m%d') AS DATE),  CAST('{VDR_FILE_DT}' AS DATE)), 6, 2)) 
         END                                                                 AS part_mth
-FROM allscripts_era_header header
-LEFT OUTER JOIN payload                  payload          ON header.Batch_ID = payload.claimid 
-LEFT OUTER JOIN allscripts_era_claimpayment_pivot_final claimpayment     ON payload.hvJoinKey = claimpayment.hvJoinKey
+FROM era_header header 
+LEFT OUTER JOIN matching_payload payload                                          ON header.Batch_ID = payload.claimid 
+LEFT OUTER JOIN veradigm_era_claimpayment_pivot_final claimpayment     ON payload.hvJoinKey = claimpayment.hvJoinKey
 LEFT OUTER JOIN (SELECT sl.Batch_ID AS Batch_ID, sl.claim_id, MAX(sl.Service_to_Date) AS Service_to_Date,
                         MIN(sl.Service_From_Date) AS Service_From_Date 
-                   FROM svc sl 
-                     INNER JOIN hdr hdr ON  hdr.Batch_ID = sl.Batch_ID GROUP BY 1,2) serviceLine
+                   FROM era_service_line sl 
+                     INNER JOIN era_header hdr ON  hdr.Batch_ID = sl.Batch_ID GROUP BY 1,2) serviceLine
    ON claimpayment.Batch_ID = serviceLine.Batch_ID 
   AND claimpayment.Payer_Claim_Control_Number = serviceLine.claim_id
  LEFT OUTER JOIN ref_gen_ref esdt
@@ -224,3 +225,4 @@ LEFT OUTER JOIN (SELECT sl.Batch_ID AS Batch_ID, sl.claim_id, MAX(sl.Service_to_
   AND ahdt.hvm_vdr_feed_id = 83
   AND ahdt.gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE' 
 WHERE header.Header_Indicator='HDR' 
+-- AND header.batch_id  IN ('201707281308100400000004000879')

@@ -86,8 +86,7 @@ SELECT
     Service_Line_Supplemental_Quantity_Identifier_Informational_4,
     Federal_Medicare_or_Medicaid_Payment_Mandate_Category_4,
     Service_Line_Supplemental_Quantity_Identifier_Informational_5,
-    Federal_Medicare_or_Medicaid_Payment_Mandate_Category_5,
-    part_processdate,
+
     svcpvt_svc_ln_suplmtl_amt,
     svcpvt_svc_ln_suplmtl_amt_qual,
     svcpvt_svc_ln_rmrk_cd_seq_num,
@@ -128,7 +127,7 @@ SELECT
             ARRAY(serviceline.svcpvt_svc_ln_adjmt_seq_num_4, serviceline.svcpvt_svc_ln_adjmt_grp_cd_4, serviceline.svcpvt_svc_ln_adjmt_rsn_cd_4, serviceline.svcpvt_svc_ln_adjmt_amt_4, serviceline.svcpvt_svc_ln_adjmt_qty_4 ),
             ARRAY(serviceline.svcpvt_svc_ln_adjmt_seq_num_5, serviceline.svcpvt_svc_ln_adjmt_grp_cd_5, serviceline.svcpvt_svc_ln_adjmt_rsn_cd_5, serviceline.svcpvt_svc_ln_adjmt_amt_5, serviceline.svcpvt_svc_ln_adjmt_qty_5 )
             ))[x.AdjSvcLnGrp][4]                                      AS  svcpvt_svc_ln_adjmt_qty
-FROM allscripts_era_serviceline_pivot_pre serviceline
+FROM veradigm_era_serviceline_pivot_pre serviceline
  CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4)) AS AdjSvcLnGrp) x 
 WHERE 
         (densify_2d_array(ARRAY(

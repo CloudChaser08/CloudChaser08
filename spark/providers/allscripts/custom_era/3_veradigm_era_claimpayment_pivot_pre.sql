@@ -321,13 +321,11 @@ SELECT
             ARRAY(claimpayment.Adj_Group_5_Reason_5, claimpayment.Adj_Group_5_Amt_5, claimpayment.Adj_Group_5_Qty_5),
             ARRAY(claimpayment.Adj_Group_5_Reason_6, claimpayment.Adj_Group_5_Amt_6, claimpayment.Adj_Group_5_Qty_6)
     ))[x.AdjGrp_5][2]                                      AS clmpvt_clm_adjmt_qty_5
-
-
-FROM hdr header
-  LEFT OUTER JOIN payload era_payload
-    ON header.Batch_ID = era_payload.claimid
-  LEFT OUTER JOIN clp claimpayment
-    ON matching_payload.hvJoinKey = claimpayment.hvJoinKey
+   
+ 
+FROM era_header header 
+LEFT OUTER JOIN matching_payload payload           ON header.Batch_ID = payload.claimid 
+LEFT OUTER JOIN era_claim_payment claimpayment ON payload.hvJoinKey = claimpayment.hvJoinKey
   CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)) AS n) RemarkCodeEx
   CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) AS AmountEx) x
   CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14)) AS QtyEx) x2
@@ -335,8 +333,8 @@ FROM hdr header
   CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5)) AS AdjGrp_2) x
   CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5)) AS AdjGrp_3) x
   CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5)) AS AdjGrp_4) x
-  CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5)) AS AdjGrp_5) x
-WHERE header.Header_Indicator='HDR'
+  CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5)) AS AdjGrp_5) x 
+WHERE header.Header_Indicator='HDR' 
 AND
         (
           LENGTH(TRIM(COALESCE(ARRAY
@@ -467,3 +465,7 @@ AND
         ))[x.AdjGrp_5] != CAST(ARRAY(NULL, NULL,NULL) AS ARRAY<STRING>) OR x.AdjGrp_5 = 0
     )
 
+
+--AND
+--header.batch_id  IN ('201707171118261600000001000879' , '201707201911567400000050000879','201707011222349000000051000979')
+--header.batch_id  IN ('201707281308100400000004000879')

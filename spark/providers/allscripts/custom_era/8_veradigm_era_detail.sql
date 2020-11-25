@@ -1,6 +1,7 @@
 SELECT
+MONOTONICALLY_INCREASING_ID()                                                           AS row_id,
   CONCAT('83_', header.batch_id)                                                                    AS hv_medcl_clm_pymt_dtl_id,
-  CURRENT_DATE()                                                              AS crt_dt,
+  CURRENT_DATE                                                                                      AS crt_dt,
   '03'                                                                                              AS mdl_vrsn_num,
   35                                                                                                AS hvm_vdr_id,
   83                                                                                                AS hvm_vdr_feed_id,
@@ -19,7 +20,7 @@ SELECT
                          ) AS DATE 
             ),
                  esdt.gen_ref_1_dt,
-                 '{VDR_FILE_DT}'
+                 CAST('{VDR_FILE_DT}' AS DATE)
             )                                                                                       AS svc_ln_start_dt,
   CAP_DATE(
         CAST(EXTRACT_DATE(
@@ -28,7 +29,7 @@ SELECT
                          ) AS DATE
                 ),
                  esdt.gen_ref_1_dt,
-                 '{VDR_FILE_DT}'
+                 CAST('{VDR_FILE_DT}' AS DATE)
               )                                                                                     AS svc_ln_end_dt,
   CASE WHEN claim.clmpvt_pos_cd = '99' OR SUBSTR(claim.clmpvt_pos_cd_instnl_typ_of_bll_cd, 1, 1) = 'X' THEN NULL 
        WHEN serviceline.Rendering_Provider_ID_Qual_1_ = 'HPI' AND 0 <> LENGTH(TRIM(COALESCE(serviceline.Rendering_Provider_ID__1, ''))) THEN serviceline.Rendering_Provider_ID__1 
@@ -140,23 +141,23 @@ SELECT
   '83'                                                                                             AS part_hvm_vdr_feed_id,
  CASE WHEN 0 = LENGTH(TRIM(COALESCE(
                             CAP_DATE(
-                            COALESCE(CAST(EXTRACT_DATE(serviceline.Service_From_Date, '%Y%m%d') AS DATE), '{VDR_FILE_DT}'),   -- Replace w/vendor's file date.
+                            COALESCE(CAST(EXTRACT_DATE(serviceline.Service_From_Date, '%Y%m%d') AS DATE),  CAST('{VDR_FILE_DT}' AS DATE)),   -- Replace w/vendor's file date.
                             COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt,CAST('1901-01-01' as date)),
-                            '{VDR_FILE_DT}' )  -- Replace w/vendor's file date.
+                             CAST('{VDR_FILE_DT}' AS DATE) )  -- Replace w/vendor's file date.
                         ,''))) 
       THEN  '0_PREDATES_HVM_HISTORY'
-      ELSE CONCAT(SUBSTR(COALESCE(CAST(EXTRACT_DATE(serviceline.Service_From_Date, '%Y%m%d') AS DATE), '{VDR_FILE_DT}'), 1, 4), '-',
-                     SUBSTR(COALESCE(CAST(EXTRACT_DATE(serviceline.Service_From_Date, '%Y%m%d') AS DATE), '{VDR_FILE_DT}'), 6, 2)) 
+      ELSE CONCAT(SUBSTR(COALESCE(CAST(EXTRACT_DATE(serviceline.Service_From_Date, '%Y%m%d') AS DATE),  CAST('{VDR_FILE_DT}' AS DATE)), 1, 4), '-',
+                     SUBSTR(COALESCE(CAST(EXTRACT_DATE(serviceline.Service_From_Date, '%Y%m%d') AS DATE),  CAST('{VDR_FILE_DT}' AS DATE)), 6, 2)) 
       END                                                                                          AS part_mth 
-FROM hdr header
-LEFT OUTER JOIN allscripts_era_serviceline_pivot_final serviceline ON header.Batch_ID = serviceline.Batch_ID    
+FROM era_header header
+LEFT OUTER JOIN veradigm_era_serviceline_pivot_final serviceline ON header.Batch_ID = serviceline.Batch_ID  
 LEFT OUTER JOIN (SELECT clm.Batch_ID AS Batch_ID, clm.Payer_Claim_Control_Number AS Payer_Claim_Control_Number, 
                         MAX(clm.Claim_Statement_Period_Start) AS Claim_Statement_Period_Start,
                         MIN(clm.Claim_Statement_Period_End) AS Claim_Statement_Period_End,
                         MAX(clm.clmpvt_pos_cd) AS clmpvt_pos_cd,
                         MAX(clm.clmpvt_pos_cd_instnl_typ_of_bll_cd) AS clmpvt_pos_cd_instnl_typ_of_bll_cd
-                   FROM allscripts_era_claimpayment_pivot_final clm
-                   INNER JOIN allscripts_era_header hdr ON  hdr.Batch_ID = clm.Batch_ID GROUP BY 1,2) claim
+                   FROM veradigm_era_claimpayment_pivot_final clm
+                   INNER JOIN era_header hdr ON  hdr.Batch_ID = clm.Batch_ID GROUP BY 1,2) claim
    ON serviceline.Batch_ID = claim.Batch_ID 
   AND serviceline.claim_id = claim.Payer_Claim_Control_Number
  LEFT OUTER JOIN ref_gen_ref esdt

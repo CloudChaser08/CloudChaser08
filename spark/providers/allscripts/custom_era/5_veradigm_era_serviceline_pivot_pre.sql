@@ -87,7 +87,6 @@ SELECT
     serviceline.Federal_Medicare_or_Medicaid_Payment_Mandate_Category_4,
     serviceline.Service_Line_Supplemental_Quantity_Identifier_Informational_5,
     serviceline.Federal_Medicare_or_Medicaid_Payment_Mandate_Category_5,
-    serviceline.part_processdate,
     CASE WHEN serviceline.Svc_Line_Adjustment_Group_Code_1 IS NOT NULL
     THEN 1
     ELSE NULL END                                         AS svcpvt_svc_ln_adjmt_seq_num_1, 
@@ -267,9 +266,8 @@ SELECT
             ARRAY(ServiceLine.Remark_Code_4, ServiceLine.Remark_Qual_4),
             ARRAY(ServiceLine.Remark_Code_5, ServiceLine.Remark_Qual_5)
     ))[x.SvcRemarkCd][1]                                AS svcpvt_svc_ln_remrk_cd_qual   
-FROM hdr header
-  LEFT OUTER JOIN svc serviceline  
-  ON header.batch_id = serviceline.batch_id
+FROM era_header header
+LEFT OUTER JOIN era_service_line serviceline  ON header.batch_id = serviceline.batch_id
 CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5)) AS SvcAdjGrp_1) x
 CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5)) AS SvcAdjGrp_2) x
 CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5)) AS SvcAdjGrp_3) x
@@ -359,3 +357,5 @@ AND
             ARRAY(ServiceLine.Remark_Code_5, ServiceLine.Remark_Qual_5)
         ))[x.SvcRemarkCd] != CAST(ARRAY(NULL, NULL) AS ARRAY<STRING>) OR x.SvcRemarkCd = 0
     )
+--AND
+--claim_id  IN ('02017068507923P0X00') --  ('201707140951023600000005000979')

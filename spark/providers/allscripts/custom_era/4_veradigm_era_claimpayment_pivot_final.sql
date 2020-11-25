@@ -92,9 +92,10 @@ SELECT
             ARRAY(claimpayment.clmpvt_clm_adjmt_seq_num_4, claimpayment.clmpvt_clm_adjmt_grp_cd_4, claimpayment.clmpvt_clm_adjmt_rsn_cd_4, claimpayment.clmpvt_clm_adjmt_amt_4, claimpayment.clmpvt_clm_adjmt_qty_4 ),
             ARRAY(claimpayment.clmpvt_clm_adjmt_seq_num_5, claimpayment.clmpvt_clm_adjmt_grp_cd_5, claimpayment.clmpvt_clm_adjmt_rsn_cd_5, claimpayment.clmpvt_clm_adjmt_amt_5, claimpayment.clmpvt_clm_adjmt_qty_5 )               
     ))[x.AdjGrp][4]                                      AS  clmpvt_clm_adjmt_qty
-FROM allscripts_era_claimpayment_pivot_pre claimpayment
+FROM veradigm_era_claimpayment_pivot_pre claimpayment
  CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4)) AS AdjGrp) x 
 WHERE 
+--header.batch_id  IN ('201707171118261600000001000879' , '201707201911567400000050000879','201707011222349000000051000979')
         (densify_2d_array(ARRAY(
             ARRAY(claimpayment.clmpvt_clm_adjmt_seq_num_1, claimpayment.clmpvt_clm_adjmt_grp_cd_1, claimpayment.clmpvt_clm_adjmt_rsn_cd_1, claimpayment.clmpvt_clm_adjmt_amt_1, claimpayment.clmpvt_clm_adjmt_qty_1 ),
             ARRAY(claimpayment.clmpvt_clm_adjmt_seq_num_2, claimpayment.clmpvt_clm_adjmt_grp_cd_2, claimpayment.clmpvt_clm_adjmt_rsn_cd_2, claimpayment.clmpvt_clm_adjmt_amt_2, claimpayment.clmpvt_clm_adjmt_qty_2 ),
@@ -102,3 +103,5 @@ WHERE
             ARRAY(claimpayment.clmpvt_clm_adjmt_seq_num_4, claimpayment.clmpvt_clm_adjmt_grp_cd_4, claimpayment.clmpvt_clm_adjmt_rsn_cd_4, claimpayment.clmpvt_clm_adjmt_amt_4, claimpayment.clmpvt_clm_adjmt_qty_4 ),
             ARRAY(claimpayment.clmpvt_clm_adjmt_seq_num_5, claimpayment.clmpvt_clm_adjmt_grp_cd_5, claimpayment.clmpvt_clm_adjmt_rsn_cd_5, claimpayment.clmpvt_clm_adjmt_amt_5, claimpayment.clmpvt_clm_adjmt_qty_5 )            
         ))[x.AdjGrp] != CAST(ARRAY(NULL, NULL, NULL, NULL, NULL) AS ARRAY<STRING>) OR x.AdjGrp = 0)
+-- AND 
+-- batch_id  IN ('201707281308100400000004000879')
