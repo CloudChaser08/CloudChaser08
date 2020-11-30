@@ -3,8 +3,6 @@ import spark.providers.allscripts.custom_era.transactional_schemas as source_tab
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.era.detail import schemas as detail_schemas
 from spark.common.era.summary import schemas as summary_schemas
-import spark.helpers.external_table_loader as external_table_loader
-import spark.common.utility.logger as logger
 
 if __name__ == "__main__":
 
