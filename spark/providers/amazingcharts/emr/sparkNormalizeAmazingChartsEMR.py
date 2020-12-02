@@ -45,6 +45,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
     max_cap = date_input
     max_cap_obj = datetime.strptime(max_cap, '%Y-%m-%d')
+    month_input = date_input.replace('-', '/')[:-3]  # amazingcharts match payload is delivered to a monthly location, so strip the day off date_input
 
     input_tables = [
         'd_costar',
@@ -79,18 +80,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 date_input.replace('-', '/'), t
             )
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/payload/{}/'.format(
-            date_input.replace('-', '/')
+            month_input
         )
     else:
         for t in input_tables:
             input_paths[t] = 's3://salusv/incoming/emr/amazingcharts/{}/{}/'.format(
-                date_input.replace('-', '/')[:-3], t
+                month_input, t
             )
         input_paths['d_multum_to_ndc'] = 's3://salusv/incoming/emr/amazingcharts/{}/{}/'.format(
             date_input[:-6], 'd_multum_to_ndc'
         )
         matching_path = 's3://salusv/matching/payload/emr/amazingcharts/{}/'.format(
-            date_input.replace('-', '/')
+            month_input
         )
 
     if not test:
