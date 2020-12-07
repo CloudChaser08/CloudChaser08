@@ -129,3 +129,36 @@ def get_nbr_of_buckets(asset_name, part_provider):
         nbr_of_buckets = context.LAB_NBR_OF_BUCKETS
 
     return nbr_of_buckets
+
+
+def has_data(spark, db_table):
+    """
+    This is spark module to check db.table has data or not.
+        input: spark, database  name and table name
+        output: True /False
+    """
+    data_status = False
+    v_sql = """select count(*) as cnt from (select * from {} a limit 1) b""".format(db_table)
+    df_cnt = spark.sql(v_sql).collect()[0][0]
+
+    if int(df_cnt) == 1:
+        data_status = True
+    return data_status
+
+
+def get_record_cnt(spark, db_table, distinct=False, column=""):
+    """
+    This is spark module to collect db.table record counts.
+        default all columns without distinct.
+        input: spark, database table name, distinct boolean value
+                , list of columns counts
+        output: int of record(s) count
+    """
+    column_stmt = column if len(column) > 0 else "a.*"
+    distinct_stmt = "distinct " if distinct else ""
+    v_sql = """select count(*) from (select {distinct}{column} from {db_table} a) b""".format(
+        distinct=distinct_stmt, column=column_stmt, db_table=db_table)
+
+    df_cnt = spark.sql(v_sql).collect()[0][0]
+
+    return int(df_cnt)
