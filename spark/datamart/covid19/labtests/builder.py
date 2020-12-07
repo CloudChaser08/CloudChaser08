@@ -2,7 +2,9 @@ import spark.common.utility.logger as logger
 import spark.helpers.file_utils as file_utils
 import spark.datamart.covid19.context as context
 import spark.datamart.datamart_util as dmutil
+from spark.runner import PACKAGE_PATH
 import os
+import inspect
 
 """
 Builder will construct Covid19 Datamart Facts and References
@@ -13,14 +15,11 @@ The Core functionalities are:
     -create external tables on HDFS Location
 """
 
-script_path = __file__
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
 
 class Covid19LabBuilder:
-    path_prefix_pos = dir_path.find('/spark/target/')
-    path_suffix_pos = dir_path.find('/datamart/covid19/labtests')
-    sql_path = '{}/spark{}/sql/'.format(dir_path[:path_prefix_pos], dir_path[path_suffix_pos:])
+    previous_stack_frame = inspect.currentframe().f_back
+    provider_directory_path = os.path.dirname(inspect.getframeinfo(previous_stack_frame).filename)
+    sql_path = provider_directory_path.replace(PACKAGE_PATH, "") + '/sql/'
 
     _lab_part_provider_list = context.LAB_PART_PROVIDER_LIST
     _lab_big_part_provider_list = context.LAB_BIG_PART_PROVIDER
