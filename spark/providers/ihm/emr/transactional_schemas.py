@@ -1,0 +1,138 @@
+from spark.helpers.source_table import SourceTable
+
+TABLE_CONF = {
+    'pln': SourceTable(
+        'csv',
+        separator=',',
+        confirm_schema=True,
+        columns=[
+            'hospital_id',
+            'encounter_id',
+            'patient_id',
+            'start_date',
+            'end_date',
+            'discharge_location',
+            'discharge_code',
+            'drug_code',
+            'race_code',
+            'status',
+            'age',
+            'race',
+            'sex',
+            'family_name',
+            'given_name',
+            'date_of_birth',
+            'zip',
+            'ssn',
+            'hvjoinkey'
+        ]
+    ),
+    'cpt': SourceTable(
+        'csv',
+        separator=',',
+        confirm_schema=True,
+        columns=[
+            'hospital_id',
+            'encounter_id',
+            'seq',
+            'cpt'
+        ]
+    ),
+    'diag': SourceTable(
+        'csv',
+        separator=',',
+        confirm_schema=True,
+        columns=[
+            'hospital_id',
+            'encounter_id',
+            'diagnosis',
+            'sequence_number'
+        ]
+    ),
+    'drug': SourceTable(
+        'csv',
+        separator=',',
+        confirm_schema=True,
+        columns=[
+            'hospital_id',
+            'encounter_id',
+            'ndc_number',
+            'mnemonic',
+            'route',
+            'meds',
+            'provider_name',
+            'doses',
+            'units',
+            'start_date',
+            'date_given'
+        ]
+    ),
+    'ins': SourceTable(
+        'csv',
+        separator=',',
+        confirm_schema=True,
+        columns=[
+            'hospital_id',
+            'encounter_id',
+            'sequence_number',
+            'group_name'
+        ]
+    ),
+    'loc': SourceTable(
+        'csv',
+        separator=',',
+        confirm_schema=True,
+        columns=[
+            'hospital_id',
+            'encounter_id',
+            'location_name',
+            'location_group',
+            'sequence_number',
+            'arrival_date'
+        ]
+    ),
+    'proc': SourceTable(
+        'csv',
+        separator=',',
+        confirm_schema=True,
+        columns=[
+            'hospital_id',
+            'encounter_id',
+            'procedure_name',
+            'sequence_number',
+            'surgeon',
+            'surgeon_npi_number',
+            'date_performed'
+        ]
+    ),
+    'prv': SourceTable(
+        'csv',
+        separator=',',
+        confirm_schema=True,
+        columns=[
+            'hospital_id',
+            'encounter_id',
+            'provider_role',
+            'provider_name',
+            'provider_npi'
+        ]
+    ),
+    'rslt': SourceTable(
+        'csv',
+        separator=',',
+        confirm_schema=True,
+        columns=[
+            'hospital_id',
+            'encounter_id',
+            'test_name',
+            'name',
+            'results',
+            'units',
+            'normal_range',
+            'provider_name',
+            'result_time',
+            'test_code',
+            'provider_npi'
+        ]
+    )
+}
