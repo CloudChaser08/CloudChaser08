@@ -14,11 +14,15 @@ SELECT
 
     CAST(CURRENT_DATE() AS STRING)                                                          AS created,
 	'09'                                                                                    AS model_version,
-    replace(
+    ---------------------------------------------------------------------------------------------------------------------
+    ------- This is a boiler plate code needed for every census feed (added after consultation with Ilia JKS 2020-09-08 )
+    ---------------------------------------------------------------------------------------------------------------------
+    REPLACE
+    (
         SPLIT(rslt.input_file_name, '/')[SIZE(SPLIT(rslt.input_file_name, '/')) - 1],
         'order_result_',
         ''
-    )                                                                                           AS data_set,
+    )                                                                                       AS data_set,
 	'187'                                                                                   AS data_feed,
 	'7'                                                                                     AS data_vendor,
 	/* patient_gender */
@@ -60,12 +64,9 @@ SELECT
         WHEN (
                LPAD(rslt.lab_id , 2, '0') IN ('01', '03', '04',	'08', '09', '10', '11', '13', '14', '35', '37', '42', '43', '47', '48', '53', '54' )
                         OR SUBSTR(UPPER(rslt.loinc_code),1, 1) ='L' OR rslt.loinc_code IS NULL
-             ) THEN
-                    CASE
-                        WHEN loinc_delta.loinc_code IS NOT NULL       THEN loinc_delta.loinc_code
-                        WHEN loinc.loinc_code IS NOT NULL       THEN loinc.loinc_code
-                    ELSE rslt.loinc_code
-                    END
+             )
+                                 AND loinc.loinc_code IS NOT NULL       THEN loinc.loinc_code
+
     ELSE rslt.loinc_code
     END                                                                                      AS hv_loinc_code,
     ---------------------------------------------------------------------------------------------------------------->
@@ -260,14 +261,10 @@ FROM order_result rslt
 LEFT OUTER JOIN diagnosis diag ON rslt.unique_accession_id = diag.unique_accession_id
 LEFT OUTER JOIN transactions  ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id
 LEFT OUTER JOIN matching_payload  pay  ON ptnt.hvjoinkey           = pay.hvJoinKey
-LEFT OUTER JOIN loinc_delta   ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)  = CAST(TO_DATE(loinc_delta.date_of_service, 'yyyy-MM-dd') AS DATE)
-                                       AND UPPER(rslt.result_name) = UPPER(loinc_delta.upper_result_name)
-                                       AND rslt.local_result_code = loinc_delta.local_result_code
-                                       AND rslt.units = loinc_delta.units
 LEFT OUTER JOIN loinc           ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)  = CAST(TO_DATE(loinc.date_of_service, 'yyyy-MM-dd') AS DATE)
                                        AND UPPER(rslt.result_name) = UPPER(loinc.upper_result_name)
-                                       AND rslt.local_result_code = loinc.local_result_code
-                                       AND rslt.units = loinc.units
+                                       AND  rslt.local_result_code = loinc.local_result_code
+                                       AND  rslt.units             = loinc.units
 WHERE EXISTS
 /* Select only valid U.S. states and territories. Added PA as default state if there is no state found*/
     (
