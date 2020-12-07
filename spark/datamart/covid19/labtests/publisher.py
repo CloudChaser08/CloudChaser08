@@ -3,6 +3,8 @@ import spark.common.utility.logger as logger
 import spark.datamart.covid19.context as context
 import spark.datamart.datamart_util as dmutil
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+from spark.runner import PACKAGE_PATH
+import inspect
 
 """
 Publisher module will 
@@ -15,14 +17,11 @@ Publisher module will
             Status Objects: Table: dw.mdata   View :   dw.v_mdata
 """
 
-script_path = __file__
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
 
 class Covid19LabPublisher:
-    path_prefix_pos = dir_path.find('/spark/target/')
-    path_suffix_pos = dir_path.find('/datamart/covid19/labtests')
-    sql_path = '{}/spark{}/sql/'.format(dir_path[:path_prefix_pos], dir_path[path_suffix_pos:])
+    previous_stack_frame = inspect.currentframe().f_back
+    provider_directory_path = os.path.dirname(inspect.getframeinfo(previous_stack_frame).filename)
+    sql_path = provider_directory_path.replace(PACKAGE_PATH, "") + '/sql/'
 
     part_mth = ['part_mth']
 
