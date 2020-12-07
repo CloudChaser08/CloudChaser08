@@ -7,6 +7,7 @@ import spark.helpers.hdfs_tools as hdfs_utils
 import spark.helpers.file_utils as file_utils
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+import spark.helpers.postprocessor as postprocessor
 import spark.census.questrinse.HV000838.refbuild_loinc_delta_sql as refbuild_loinc_delta
 
 PARQUET_FILE_SIZE = 1024 * 1024 * 1024
@@ -18,6 +19,13 @@ REFERENCE_LOINC_DELTA = "loinc_delta"
 class QuestRinseCensusDriver(CensusDriver):
     def load(self, batch_date, batch_id, chunk_records_files=None):
         super().load(batch_date, batch_id, chunk_records_files)
+
+        matching_payload_df = self._spark.table('matching_payload')
+
+        cleaned_matching_payload_df = \
+                (postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+
+        cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
         logger.log('Loading external table: ref_geo_state')
         external_table_loader.load_analytics_db_table(
