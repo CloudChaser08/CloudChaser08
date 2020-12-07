@@ -84,7 +84,6 @@ CREATE EXTERNAL TABLE IF NOT EXISTS dw.lab_fact_covid_cleansed
     ,medication_dose	        string
     ,logical_delete_reason	    string
     ,vendor_record_id	        string
-    ,covid19_ind                int
     ,claim_bucket_id            int
     ,hv_method_flag             int
 )
