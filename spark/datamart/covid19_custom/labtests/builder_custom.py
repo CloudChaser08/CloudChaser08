@@ -35,19 +35,22 @@ class Covid19LabBuilder:
     _lab_partitions = context.LAB_PARTITIONS
 
     _hdfs_output_path = context.HDFS_OUTPUT_PATH
-    _lab_fact_all_tests = '{}{}/'.format(_hdfs_output_path, context.LAB_FACT_ALL_TESTS)
-    _lab_fact_all_tests_custom_interim = '{}{}/'.format(_hdfs_output_path, context.LAB_FACT_ALL_TESTS_CUSTOM + '_interim')
-    _lab_fact_all_tests_custom = '{}{}/'.format(_hdfs_output_path, context.LAB_FACT_ALL_TESTS_CUSTOM)
-    _lab_fact_covid_tests_custom = '{}{}/'.format(_hdfs_output_path, context.LAB_FACT_COVID_TESTS_CUSTOM)
-    _lab_fact_covid_cleansed_custom = '{}{}/'.format(_hdfs_output_path, context.LAB_FACT_COVID_CLEANSED_CUSTOM)
-    _lab_fact_covid_cleansed_custom_interim = '{}{}/'.format(_hdfs_output_path, context.LAB_FACT_COVID_CLEANSED_CUSTOM + '_interim')
-    _lab_ref_covid_custom = '{}{}/'.format(_hdfs_output_path, context.LAB_REF_COVID_CUSTOM)
-    _lab_covid_snapshot_custom = '{}{}/'.format(_hdfs_output_path, context.LAB_COVID_SNAPSHOT_CUSTOM)
-    _lab_covid_sum_custom = '{}{}/'.format(_hdfs_output_path, context.LAB_COVID_SUM_CUSTOM)
+    _lab_fact_all_tests = os.path.join(_hdfs_output_path, context.LAB_FACT_ALL_TESTS)
+    _lab_fact_all_tests_custom_interim = os.path.join(_hdfs_output_path, context.LAB_FACT_ALL_TESTS_CUSTOM + '_interim')
+    _lab_fact_all_tests_custom = os.path.join(_hdfs_output_path, context.LAB_FACT_ALL_TESTS_CUSTOM)
+    _lab_fact_covid_tests_custom = os.path.join(_hdfs_output_path, context.LAB_FACT_COVID_TESTS_CUSTOM)
+    _lab_fact_covid_cleansed_custom = os.path.join(_hdfs_output_path, context.LAB_FACT_COVID_CLEANSED_CUSTOM)
+    _lab_fact_covid_cleansed_custom_interim = os.path.join(_hdfs_output_path, context.LAB_FACT_COVID_CLEANSED_CUSTOM + '_interim')
+    _lab_ref_covid_custom = os.path.join(_hdfs_output_path, context.LAB_REF_COVID_CUSTOM)
+    _lab_covid_snapshot_custom = os.path.join(_hdfs_output_path, context.LAB_COVID_SNAPSHOT_CUSTOM)
+    _lab_covid_sum_custom = os.path.join(_hdfs_output_path, context.LAB_COVID_SUM_CUSTOM)
 
     _lab_datamart_db = context.LAB_DW_SCHEMA
     _lab_fact_covid_cleansed_table_custom = context.LAB_DW_COVID_CLEANSED_TABLE_NAME_CUSTOM
     _lab_fact_covid_cleansed_is_partitioned_table = context.LAB_DW_COVID_CLEANSED_TABLE_IS_PARTITIONED
+
+    b_custom_interim = False
+    b_run_lab_build_all_tests = True
 
     def __init__(self,
                  spark,
@@ -100,8 +103,6 @@ class Covid19LabBuilder:
                 Later this will be transferred to S3 for Reporting
         """
         logger.log('    -build_all_tests: started')
-        b_custom_interim = False
-        b_run_lab_build_all_tests = True
 
         if b_run_lab_build_all_tests:
             file_utils.clean_up_output_hdfs(self._lab_fact_all_tests)
