@@ -158,7 +158,7 @@ class Covid19LabBuilder:
                                 ['list_of_part_mth', list_of_part_mth],
                                 ['nbr_of_buckets', str(nbr_of_buckets)]
                             ], source_file_path=self.sql_path, return_output=True).repartition(
-                            'part_mth', 'claim_bucket_id').createOrReplaceTempView('lab_collect_results2575')
+                            'part_mth', 'claim_bucket_id').cache().createOrReplaceTempView('lab_collect_results2575')
 
                     if self.b_run_lab_build_all_tests:
                         lab_build_all_tests_view = 'lab_build_all_tests'
