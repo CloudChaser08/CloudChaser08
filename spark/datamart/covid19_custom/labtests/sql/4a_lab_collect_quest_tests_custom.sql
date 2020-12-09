@@ -107,14 +107,14 @@ FROM
             AND dwlab.part_mth = quest.part_mth
             AND dwlab.claim_bucket_id = quest.claim_bucket_id
             AND dwlab.claim_id = quest.claim_id
-            AND dwlab.patient_gender	    = quest.gender
-            AND dwlab.patient_year_of_birth	= quest.hipaa_dob
-            AND dwlab.patient_zip3	        = quest.hipaa_zip
-            AND dwlab.date_service	        = to_date(from_unixtime(unix_timestamp(quest.DOS,'yyyyMMdd')))  -- CAST(quest.DOS AS DATE)
-            AND dwlab.lab_id	            = quest.lab_code
-            AND dwlab.test_ordered_local_id	= quest.local_order_code
-            AND dwlab.test_ordered_std_id   = quest.standard_order_code
-            AND dwlab.test_ordered_name     = quest.order_name
+            AND CASE WHEN LENGTH(TRIM(COALESCE(dwlab.patient_gender       ,''))) <> 0 AND LENGTH(TRIM(COALESCE(quest.gender              ,''))) <> 0 AND dwlab.patient_gender  <> 'U'  THEN dwlab.patient_gender       = quest.gender   ELSE 1 = 1   END
+            AND CASE WHEN LENGTH(TRIM(COALESCE(dwlab.patient_year_of_birth,''))) <> 0 AND LENGTH(TRIM(COALESCE(quest.hipaa_dob           ,''))) <> 0 THEN dwlab.patient_year_of_birth= quest.hipaa_dob                                  ELSE 1 = 1   END
+            AND CASE WHEN LENGTH(TRIM(COALESCE(dwlab.patient_zip3         ,''))) <> 0 AND LENGTH(TRIM(COALESCE(quest.hipaa_zip           ,''))) <> 0 THEN dwlab.patient_zip3         = quest.hipaa_zip                                  ELSE 1 = 1   END
+            AND CASE WHEN LENGTH(TRIM(COALESCE(dwlab.date_service         ,''))) <> 0 AND LENGTH(TRIM(COALESCE(quest.DOS                 ,''))) <> 0 THEN dwlab.date_service	     = to_date(from_unixtime(unix_timestamp(quest.DOS,'yyyyMMdd')))  ELSE 1 = 1   END
+            AND CASE WHEN LENGTH(TRIM(COALESCE(dwlab.lab_id               ,''))) <> 0 AND LENGTH(TRIM(COALESCE(quest.lab_code            ,''))) <> 0 THEN dwlab.lab_id	             = quest.lab_code                                   ELSE 1 = 1   END
+            AND CASE WHEN LENGTH(TRIM(COALESCE(dwlab.test_ordered_local_id,''))) <> 0 AND LENGTH(TRIM(COALESCE(quest.local_order_code    ,''))) <> 0 THEN dwlab.test_ordered_local_id= quest.local_order_code                           ELSE 1 = 1   END
+            AND CASE WHEN LENGTH(TRIM(COALESCE(dwlab.test_ordered_std_id  ,''))) <> 0 AND LENGTH(TRIM(COALESCE(quest.standard_order_code ,''))) <> 0 THEN dwlab.test_ordered_std_id	 = quest.standard_order_code                        ELSE 1 = 1   END
+            AND CASE WHEN LENGTH(TRIM(COALESCE(dwlab.test_ordered_name    ,''))) <> 0 AND LENGTH(TRIM(COALESCE(quest.order_name          ,''))) <> 0 THEN dwlab.test_ordered_name	 = quest.order_name                                 ELSE 1 = 1   END
             AND dwlab.part_provider = 'quest'
 WHERE
     quest.part_provider = 'quest'
