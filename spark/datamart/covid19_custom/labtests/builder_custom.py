@@ -104,9 +104,9 @@ class Covid19LabBuilder:
         """
         logger.log('    -build_all_tests: started')
 
-        if b_run_lab_build_all_tests:
+        if self.b_run_lab_build_all_tests:
             file_utils.clean_up_output_hdfs(self._lab_fact_all_tests)
-        if not b_custom_interim:
+        if not self.b_custom_interim:
             file_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom_interim)
             file_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom)
 
@@ -160,7 +160,7 @@ class Covid19LabBuilder:
                             ], source_file_path=self.sql_path, return_output=True).repartition(
                             'part_mth', 'claim_bucket_id').createOrReplaceTempView('lab_collect_results2575')
 
-                    if b_run_lab_build_all_tests:
+                    if self.b_run_lab_build_all_tests:
                         lab_build_all_tests_view = 'lab_build_all_tests'
 
                         self.runner.run_spark_script('3_lab_build_all_tests.sql'
@@ -188,12 +188,12 @@ class Covid19LabBuilder:
                         output_table.repartition(
                             'part_mth', 'claim_bucket_id').write.parquet(
                             self._lab_fact_all_tests_custom_interim, compression='gzip', mode='append', partitionBy=self._lab_partitions)
-                        b_custom_interim = True
+                        self.b_custom_interim = True
                         self.runner.run_spark_query('drop view {}'.format(lab_collect_tests_custom_view))
                     # --------------------interim table end------------------------------------
 
         self.runner.sqlContext.clearCache()
-        if b_custom_interim:
+        if self.b_custom_interim:
             lab_collect_all_tests_custom_view = 'lab_collect_all_tests_custom'
             self.spark.read.parquet(
                 self._lab_fact_all_tests_custom_interim).createOrReplaceTempView(lab_collect_all_tests_custom_view)
