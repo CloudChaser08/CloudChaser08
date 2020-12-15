@@ -104,9 +104,9 @@ LAB_COVID_SUM_CUSTOM = 'lab_covid_sum_custom'
 Added below List for Operational Purpose
 ..to extract data from source (provider level extract)
 """
+LAB_TABLES_LIST_CUSTOM_INACTIVE = [LAB_FACT_ALL_TESTS]
 
-LAB_TABLES_LIST_CUSTOM = [LAB_FACT_ALL_TESTS,
-                          LAB_FACT_ALL_TESTS_CUSTOM,
+LAB_TABLES_LIST_CUSTOM = [LAB_FACT_ALL_TESTS_CUSTOM,
                           LAB_FACT_COVID_TESTS_CUSTOM,
                           LAB_FACT_COVID_CLEANSED_CUSTOM,
                           LAB_REF_COVID_CUSTOM,
@@ -116,8 +116,10 @@ LAB_TABLES_LIST_CUSTOM = [LAB_FACT_ALL_TESTS,
 """
 List of Partitioned Target Tabels
 """
-LAB_PARTTITIONED_TABLES_LIST_CUSTOM = [LAB_FACT_ALL_TESTS,
-                                       LAB_FACT_ALL_TESTS_CUSTOM,
+
+LAB_PARTTITIONED_TABLES_LIST_CUSTOM_INACTIVE = [LAB_FACT_ALL_TESTS]
+
+LAB_PARTTITIONED_TABLES_LIST_CUSTOM = [LAB_FACT_ALL_TESTS_CUSTOM,
                                        LAB_FACT_COVID_TESTS_CUSTOM,
                                        LAB_FACT_COVID_CLEANSED_CUSTOM]
 

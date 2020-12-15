@@ -105,8 +105,9 @@ Added below List for Operational Purpose
 ..to extract data from source (provider level extract)
 """
 
-LAB_TABLES_LIST = [LAB_FACT_ALL_TESTS,
-                   LAB_FACT_COVID_TESTS,
+LAB_TABLES_LIST = [LAB_FACT_ALL_TESTS]
+
+LAB_TABLES_LIST_INACTIVE = [LAB_FACT_COVID_TESTS,
                    LAB_FACT_COVID_CLEANSED,
                    LAB_REF_COVID,
                    LAB_COVID_SNAPSHOT,
@@ -115,11 +116,10 @@ LAB_TABLES_LIST = [LAB_FACT_ALL_TESTS,
 """
 List of Partitioned Target Tabels
 """
-LAB_PARTTITIONED_TABLES_LIST = [LAB_FACT_ALL_TESTS,
-                                LAB_FACT_COVID_TESTS,
+LAB_PARTTITIONED_TABLES_LIST = [LAB_FACT_ALL_TESTS]
+
+LAB_PARTTITIONED_TABLES_LIST_INACTIVE = [LAB_FACT_COVID_TESTS,
                                 LAB_FACT_COVID_CLEANSED]
-
-
 
 
 """

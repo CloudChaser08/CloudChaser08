@@ -50,7 +50,9 @@ class Covid19LabBuilder:
     _lab_fact_covid_cleansed_is_partitioned_table = context.LAB_DW_COVID_CLEANSED_TABLE_IS_PARTITIONED
 
     b_custom_interim = False
-    b_run_lab_build_all_tests = True
+
+    # Disable Aetion Loading - Old pipeline will continue support on that
+    b_run_lab_build_all_tests = False
 
     def __init__(self,
                  spark,
