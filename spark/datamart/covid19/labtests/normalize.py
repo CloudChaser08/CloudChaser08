@@ -66,11 +66,16 @@ def build(spark, runner, requested_list_of_months, test=False):
         )
 
     covid19LabBuilder.build_all_tests()
-    covid19LabBuilder.build_covid_tests()
-    covid19LabBuilder.build_covid_tests_cleansed()
-    covid19LabBuilder.build_covid_ref()
-    covid19LabBuilder.build_covid_snapshot()
-    covid19LabBuilder.build_covid_sum()
+
+    # -------------------------------------------
+    # This pipeline support Aetion Delivery only
+    # Disabled below process and CUSTOM-covid19 pipeline will continue support.
+    # -------------------------------------------
+    # covid19LabBuilder.build_covid_tests()
+    # covid19LabBuilder.build_covid_tests_cleansed()
+    # covid19LabBuilder.build_covid_ref()
+    # covid19LabBuilder.build_covid_snapshot()
+    # covid19LabBuilder.build_covid_sum()
 
     logger.log(' -build: completed')
 
