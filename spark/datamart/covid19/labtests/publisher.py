@@ -193,7 +193,7 @@ class Covid19LabPublisher:
         did_sql = "select " \
                   "date_format(min(date_service), 'yyyy-MM-dd') as start_id" \
                   ", date_format(max(date_service), 'yyyy-MM-dd') as end_id " \
-                  "from {} ".format(self._covid_tests_db_table)
+                  "from {} ".format(self._all_tests_db_table)
 
         data_id = spark.sql(did_sql).select('start_id', 'end_id').collect()
 
