@@ -15,21 +15,6 @@ conf_parameters = {
     'spark.max.executor.failures': 800
 }
 
-# def dedup_table(df, dup_ids):
-#     order_by_ids = dup_ids + [
-#         'data_captr_dt',
-#         'data_set_nm_dt',
-#         'crt_dt'
-#     ]
-#     # HV_May12_01
-#     df = df.withColumn('data_set_nm_dt', f.to_date(df['data_set_nm'].substr(3, 5), 'MMMyy'))
-#     return df.orderBy(
-#         order_by_ids,
-#         ascending=[0]*len(order_by_ids)
-#     ).dropDuplicates(
-#         subset=dup_ids
-#     ).select('*')
-
 def dedup_table(df, dup_ids):
     # HV_May12_01
     df = df.withColumn('data_set_nm_dt', f.to_date(df['data_set_nm'].substr(3, 5), 'MMMyy'))
