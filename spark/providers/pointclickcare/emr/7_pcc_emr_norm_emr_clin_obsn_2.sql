@@ -99,3 +99,4 @@ WHERE
     --- Select only where there's a measurement.
     --------------------------------------------------------------------------------------------------
   AND obs.observationvalueimperial IS NOT NULL
+  AND TRIM(lower(COALESCE(obs.observationdateid, 'empty'))) <> 'observationdateid'

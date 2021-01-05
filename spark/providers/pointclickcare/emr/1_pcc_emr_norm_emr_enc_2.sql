@@ -88,5 +88,5 @@ SELECT
  FROM factcensus cen
  LEFT OUTER JOIN matching_payload pay       ON cen.residentid             = pay.personid         AND COALESCE(cen.residentid, '0') <> '0'
  LEFT OUTER JOIN dimorganization dorg       ON cen.organizationid         = dorg.organizationid  AND COALESCE(cen.organizationid, '0') <> '0'
-
+ WHERE TRIM(lower(COALESCE(cen.censuseffectivedateid, 'empty'))) <> 'censuseffectivedateid'
 

@@ -112,3 +112,4 @@ LEFT OUTER JOIN dimlabtest dlts                 ON lts.labtestid           = dlt
 LEFT OUTER JOIN dimlabtestcondition dtcd        ON lts.labtestconditionid  = dtcd.labtestconditionid   AND COALESCE(lts.labtestconditionid, '0')   <> '0'
 LEFT OUTER JOIN dimlabtestabnormality dtan      ON lts.labtestabnormalityid= dtan.labtestabnormalityid AND COALESCE(lts.labtestabnormalityid, '0') <> '0'
 LEFT OUTER JOIN dimlabresultuom drum            ON lts.labresultuomid      = drum.labresultuomid       AND COALESCE(lts.labresultuomid, '0')       <> '0'
+WHERE TRIM(lower(COALESCE(lts.specimencollectiondateid, 'empty'))) <> 'specimencollectiondateid'

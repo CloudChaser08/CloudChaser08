@@ -98,3 +98,4 @@ LEFT OUTER JOIN matching_payload pay        ON imm.residentid       = pay.person
 LEFT OUTER JOIN dimorganization dorg        ON imm.organizationid   = dorg.organizationid AND COALESCE(imm.organizationid, '0') <> '0'
 LEFT OUTER JOIN dimimmunization dimm        ON imm.immunizationid   = dimm.immunizationid AND COALESCE(imm.immunizationid, '0') <> '0'
 LEFT OUTER JOIN dimvaccine dvcx             ON imm.vaccineid        = dvcx.vaccineid      AND COALESCE(imm.vaccineid, '0') <> '0'
+WHERE TRIM(lower(COALESCE(imm.immunizationdateid, 'empty'))) <> 'immunizationdateid'

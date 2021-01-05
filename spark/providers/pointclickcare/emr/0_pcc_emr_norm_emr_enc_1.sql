@@ -114,3 +114,4 @@ SELECT
 FROM factvisit vis
 LEFT OUTER JOIN matching_payload pay        ON vis.residentid     = pay.personid			AND COALESCE(vis.residentid, '0') <> '0'
 LEFT OUTER JOIN dimorganization dorg        ON vis.organizationid = dorg.organizationid	AND COALESCE(vis.organizationid, '0') <> '0'
+WHERE TRIM(lower(COALESCE(vis.admitdateid, 'empty'))) <> 'admitdateid'

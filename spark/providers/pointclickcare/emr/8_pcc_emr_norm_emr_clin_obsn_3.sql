@@ -102,3 +102,4 @@ FROM
     ) obs
 LEFT OUTER JOIN matching_payload pay            ON obs.residentid           = pay.personid         AND COALESCE(obs.residentid, '0') <> '0'
 LEFT OUTER JOIN dimorganization dorg            ON obs.organizationid       = dorg.organizationid AND COALESCE(obs.organizationid, '0') <> '0'
+WHERE TRIM(lower(COALESCE(obs.observationdateid, 'empty'))) <> 'observationdateid'
