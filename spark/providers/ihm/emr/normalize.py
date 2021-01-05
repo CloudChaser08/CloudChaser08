@@ -20,7 +20,7 @@ if __name__ == "__main__":
         'ihm_emr_norm_emr_labtest': lab_test_schemas['schema_v3'],
         'ihm_emr_norm_emr_medication': medication_schemas['schema_v11']
     }
-    provider_partition_name = 'ihm'
+    provider_partition_name = '210'
 
     # ------------------------ Common for all providers -----------------------
 
@@ -41,7 +41,8 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         use_ref_gen_values=True,
-        vdr_feed_id=210
+        vdr_feed_id=210,
+        output_to_transform_path=False
     )
 
     driver.run()
