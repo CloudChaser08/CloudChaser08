@@ -132,5 +132,4 @@ LEFT OUTER JOIN dimorganization dorg            ON med.organizationid       = do
 LEFT OUTER JOIN dimdrug ddru                    ON med.ddid                 = ddru.ddid                     AND COALESCE(med.ddid, '0') <> '0'
 LEFT OUTER JOIN ref_ndc_ddid                    ON CAST(med.ddid AS INT)    = CAST(ref_ndc_ddid.drug_descriptor_id AS INT)  AND COALESCE(med.ddid, '0') <> '0'
                                                                       AND ref_ndc_ddid.id_number_format_code IN ('1', '2', '3', '6')
-
-
+WHERE TRIM(lower(COALESCE(med.orderstartdateid, 'empty'))) <> 'orderstartdateid'

@@ -140,3 +140,4 @@ LEFT OUTER JOIN dimallergen dalg                ON alg.allergenid          = dal
 LEFT OUTER JOIN dimallergyattribute dala              ON alg.allergyattributeid  = dala.allergyattributeid AND COALESCE(alg.allergyattributeid, '0') <> '0'
 LEFT OUTER JOIN dimallergycategory dalc         ON alg.allergycategoryid   = dalc.allergycategoryid  AND COALESCE(alg.allergycategoryid, '0') <> '0'
 LEFT OUTER JOIN dimallergyreaction dalr         ON alg.allergyreactionid   = dalr.allergyreactionid  AND COALESCE(alg.allergyreactionid, '0') <> '0'
+WHERE TRIM(lower(COALESCE(alg.onsetdateid, 'empty'))) <> 'onsetdateid'

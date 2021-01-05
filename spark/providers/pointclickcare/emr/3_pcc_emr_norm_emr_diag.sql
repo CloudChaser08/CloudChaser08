@@ -132,4 +132,4 @@ LEFT OUTER JOIN dimorganization dorg                ON dgn.organizationid       
 LEFT OUTER JOIN dimdiagnosis ddgn                   ON dgn.diagnosisid                  = ddgn.diagnosisid    AND COALESCE(dgn.diagnosisid, '0') <> '0'
 LEFT OUTER JOIN dimdiagnosisrank ddgr               ON dgn.diagnosisrankid              = ddgr.diagnosisrankid  AND COALESCE(dgn.diagnosisrankid, '0') <> '0'
 LEFT OUTER JOIN dimdiagnosisclassification ddgc     ON dgn.diagnosisclassificationid    = ddgc.diagnosisclassificationid  AND COALESCE(dgn.diagnosisclassificationid, '0') <> '0'
-
+WHERE TRIM(lower(COALESCE(dgn.onsetdateid, 'empty'))) <> 'onsetdateid'
