@@ -1,5 +1,5 @@
 import logging
-from pyspark.sql.functions import coalesce, col, input_file_name
+from pyspark.sql.functions import coalesce, col, input_file_name, lit
 import spark.helpers.postprocessor as postprocessor
 
 HVID = [
@@ -18,8 +18,10 @@ DEFAULT_ATTRS = [
     'recordId',
     'personId',
     'claimId',
-    'hvJoinKey'
+    'hvJoinKey',
+    'matchStatus'
 ]
+USED_FLEXIBLE_MATCHING = 'usedFlexibleMatching'
 
 
 def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False, partitions=200, cache=False,
@@ -55,9 +57,15 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
         logging.warning("No HVID columns found in this payload.")
         final_payload = postprocessor.add_null_column('hvid')(raw_payload)
     else:
-        final_payload = raw_payload.select([
+        cols_to_select = [
             coalesce(*[col(x) for x in relevant_hvid_columns]).alias('hvid')
-        ] + [col(x) for x in total_attrs])
+        ] + [col(x) for x in total_attrs]
+        if USED_FLEXIBLE_MATCHING in raw_payload.columns:
+            cols_to_select.append(col(USED_FLEXIBLE_MATCHING))
+        final_payload = raw_payload.select()
+
+    if USED_FLEXIBLE_MATCHING not in final_payload.columns:
+        final_payload = final_payload.withColumn(USED_FLEXIBLE_MATCHING, lit(False))
 
     if load_file_name:
         final_payload = final_payload.withColumn('input_file_name', input_file_name())
