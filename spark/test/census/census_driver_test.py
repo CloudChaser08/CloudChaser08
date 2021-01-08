@@ -135,7 +135,6 @@ def test_load_with_used_flexible_matching(test_driver):
     assert 'matchStatus' in matching_tbl.columns
 
 
-# TODO parameterize this to cover test cases that are currently diff functions
 @pytest.mark.usefixtures("test_driver")
 @pytest.mark.parametrize(
     'match_status,used_flexible_matching,expected_hvid',
