@@ -1,5 +1,5 @@
 import logging
-from pyspark.sql.functions import coalesce, col, input_file_name, lit
+from pyspark.sql.functions import coalesce, col, input_file_name
 import spark.helpers.postprocessor as postprocessor
 
 HVID = [
