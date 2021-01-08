@@ -121,9 +121,10 @@ def test_load(test_driver):
     assert 'claimId' in matching_tbl.columns
     assert 'matchStatus' in matching_tbl.columns
 
+
 @pytest.mark.usefixtures("test_driver")
 def test_load_with_used_flexible_matching(test_driver):
-    test_driver._matching_path_template = '../test/resources/used_flexible_matching_payload/'
+    test_driver._matching_path_template = '../test/resources/flexible_matching_payload/'
     test_driver.load(date(2018, 1, 1), None)
 
     matching_tbl = test_driver._spark.table('matching_payload')
@@ -131,7 +132,7 @@ def test_load_with_used_flexible_matching(test_driver):
     assert len(matching_tbl.collect()) == 10
     assert 'hvid' in matching_tbl.columns
     assert 'claimId' in matching_tbl.columns
-    assert 'usedFlexibleMatching' in matching_tbl.columns
+    assert 'flexibleMatchingUsed' in matching_tbl.columns
     assert 'matchStatus' in matching_tbl.columns
 
 
@@ -154,7 +155,7 @@ def test_transform(match_status, used_flexible_matching, expected_hvid, test_dri
     Ensure that the matching_payload table is transformed into one of hvid-rowid
     pairs. hvids should be obfuscated
     """
-    query_template = "SELECT '1' as hvid, {used_flexible_matching} as usedFlexibleMatching, '{match_status}' as matchStatus, '2' as claimId"
+    query_template = "SELECT '1' as hvid, {used_flexible_matching} as flexibleMatchingUsed, '{match_status}' as matchStatus, '2' as claimId"
     query = query_template.format(used_flexible_matching=used_flexible_matching,match_status=match_status)
 
     test_driver._spark.sql(query).createOrReplaceTempView('matching_payload')

@@ -1,7 +1,7 @@
 SELECT
     claimId                                                                 AS rowid,
     -- if matched using flexible matching AND matchStatus is multi_match, null out the HVID
-    (CASE usedFlexibleMatching
+    (CASE flexibleMatchingUsed
         WHEN TRUE THEN
             (CASE matchStatus
             WHEN 'multi_match' THEN
