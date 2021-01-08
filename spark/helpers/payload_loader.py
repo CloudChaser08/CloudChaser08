@@ -19,9 +19,9 @@ DEFAULT_ATTRS = [
     'personId',
     'claimId',
     'hvJoinKey',
-    'matchStatus'
+    'matchStatus',
+    'usedFlexibleMatching'
 ]
-USED_FLEXIBLE_MATCHING = 'usedFlexibleMatching'
 
 
 def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False, partitions=200, cache=False,
@@ -60,12 +60,7 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
         cols_to_select = [
             coalesce(*[col(x) for x in relevant_hvid_columns]).alias('hvid')
         ] + [col(x) for x in total_attrs]
-        if USED_FLEXIBLE_MATCHING in raw_payload.columns:
-            cols_to_select.append(col(USED_FLEXIBLE_MATCHING))
-        final_payload = raw_payload.select()
-
-    if USED_FLEXIBLE_MATCHING not in final_payload.columns:
-        final_payload = final_payload.withColumn(USED_FLEXIBLE_MATCHING, lit(False))
+        final_payload = raw_payload.select(cols_to_select)
 
     if load_file_name:
         final_payload = final_payload.withColumn('input_file_name', input_file_name())

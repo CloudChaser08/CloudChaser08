@@ -1,9 +1,15 @@
 SELECT
-    CASE
-        WHEN usedFlexibleMatching = TRUE AND matchStatus = 'multi_match'
-            NULL                                                        AS hvid
+    claimId                                                                 AS rowid,
+    -- if matched using flexible matching AND matchStatus is multi_match, null out the HVID
+    (CASE usedFlexibleMatching
+        WHEN TRUE THEN
+            (CASE matchStatus
+            WHEN 'multi_match' THEN
+                NULL
+            ELSE
+                obfuscate_hvid(hvid, CONCAT('hvid', {salt}))
+            END)
         ELSE
-            obfuscate_hvid(hvid, CONCAT('hvid', {salt}))                AS hvid
-    END
-claimId                                                                 AS rowid
+            obfuscate_hvid(hvid, CONCAT('hvid', {salt}))
+    END)                                                                    AS hvid
 FROM matching_payload
