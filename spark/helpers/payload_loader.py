@@ -18,7 +18,9 @@ DEFAULT_ATTRS = [
     'recordId',
     'personId',
     'claimId',
-    'hvJoinKey'
+    'hvJoinKey',
+    'matchStatus',
+    'flexibleMatchingUsed'
 ]
 
 
@@ -55,9 +57,10 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
         logging.warning("No HVID columns found in this payload.")
         final_payload = postprocessor.add_null_column('hvid')(raw_payload)
     else:
-        final_payload = raw_payload.select([
+        cols_to_select = [
             coalesce(*[col(x) for x in relevant_hvid_columns]).alias('hvid')
-        ] + [col(x) for x in total_attrs])
+        ] + [col(x) for x in total_attrs]
+        final_payload = raw_payload.select(cols_to_select)
 
     if load_file_name:
         final_payload = final_payload.withColumn('input_file_name', input_file_name())
