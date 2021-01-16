@@ -588,6 +588,6 @@ SELECT
                 )
 	END                                                                                     AS part_best_date
 
-FROM transaction txn
+FROM claim txn
 LEFT OUTER JOIN matching_payload payload ON txn.claim_id = payload.claimid
 WHERE TRIM(lower(COALESCE(txn.claim_id, 'empty'))) <> 'CLAIM_ID'

@@ -1,7 +1,7 @@
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
-    'transaction': SourceTable(
+    'claim': SourceTable(
         'fixedwidth',
         columns=[
             ('record_id', 1),
