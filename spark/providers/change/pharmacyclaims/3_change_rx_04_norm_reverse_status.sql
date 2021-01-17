@@ -16,7 +16,7 @@ FROM
         AND m.date_service = s.date_service
         AND (m.date_authorized < s.date_authorized
             OR (m.date_authorized = s.date_authorized AND m.time_authorized <= s.time_authorized))
-where
+WHERE
     m.logical_delete_reason IS NULL
     AND UPPER(m.transaction_code_std) = 'B1'
     AND UPPER(m.response_code_std) = 'P'
