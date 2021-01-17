@@ -18,3 +18,5 @@ FROM
         AND hist.logical_delete_reason IS NULL
         AND (hist.date_authorized < cf.date_authorized
             OR (hist.date_authorized = cf.date_authorized AND hist.time_authorized <= cf.time_authorized))
+GROUP BY
+    hist.record_id

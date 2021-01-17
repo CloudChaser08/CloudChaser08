@@ -1,5 +1,5 @@
 SELECT
-    MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
+    --MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
     txn.claim_id                                                                            AS claim_id,
     payload.hvid                                                                            AS hvid,
     CURRENT_DATE()                                                                          AS created,
