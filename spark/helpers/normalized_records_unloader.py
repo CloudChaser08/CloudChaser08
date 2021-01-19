@@ -343,7 +343,7 @@ def timed_distcp(dest,
 def unload_delimited_file(
         spark, runner, output_path, table_name, test=False, num_files=1, delimiter='|',
         output_file_name_prefix='part-', output_file_name=None, output_file_name_template=None,
-        header=False
+        header=False, quote=True, compression='gzip'
     ):
     "Unload a table to a delimited file at the specified location"
     common_dirpath = "../common/" if test else "../../../../common/"
@@ -360,7 +360,7 @@ def unload_delimited_file(
     (
         spark.table('for_delimited_output')
         .repartition(num_files)
-        .write.csv(output_path, sep=delimiter, header=header, quoteAll=True, compression='gzip')
+        .write.csv(output_path, sep=delimiter, header=header, quoteAll=quote, compression=compression)
     )
 
     # rename output files to desired name
