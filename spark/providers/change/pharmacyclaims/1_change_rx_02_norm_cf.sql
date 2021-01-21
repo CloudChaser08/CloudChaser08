@@ -590,4 +590,4 @@ SELECT
 
 FROM claim txn
 LEFT OUTER JOIN matching_payload payload ON txn.claim_id = payload.claimid AND payload.hvid IS NOT NULL
-WHERE TRIM(lower(COALESCE(txn.claim_id, 'empty'))) <> 'CLAIM_ID'
+WHERE TRIM(UPPER(COALESCE(txn.claim_id, 'empty'))) <> 'CLAIM_ID'
