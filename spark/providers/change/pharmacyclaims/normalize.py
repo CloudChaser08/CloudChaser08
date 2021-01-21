@@ -40,7 +40,8 @@ if __name__ == "__main__":
         vdr_feed_id=11,
         load_date_explode=False,
         use_ref_gen_values=True,
-        output_to_transform_path=True
+        output_to_transform_path=True,
+        unload_partition_count=500
     )
 
     # ------------------------ Provider specific run sequence -----------------------
