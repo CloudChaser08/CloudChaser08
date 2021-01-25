@@ -12,7 +12,7 @@ from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.providers.express_scripts.pharmacyclaims.transactional_schemas as source_table_schemas
 import pyspark.sql.functions as f
 
-ACCREDO_PREFIX     = '10130X001_HV_ODS_Claims'
+ACCREDO_PREFIX = '10130X001_HV_ODS_Claims'
 NON_ACCREDO_PREFIX = '10130X001_HV_RX_Claims'
 
 STAGE_REVERSE_TRANS_PATH = '/temp_stage/'
@@ -108,7 +108,8 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
     else:
         if first_run:
             logger.log('-loading: requested first run and not required to apply reversals')
-            driver.spark.sql(sql_stmnt.format("transaction where 1 = 2")).createOrReplaceTempView('_temp_rev_transaction')
+            driver.spark.sql(
+                sql_stmnt.format("transaction where 1 = 2")).createOrReplaceTempView('_temp_rev_transaction')
             driver.spark.sql("select * from transaction where 1=2").createOrReplaceTempView('_temp_pharmacyclaims_nb')
         else:
             # ----------load incoming data to identify rejects and reversals----------
@@ -142,7 +143,8 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
                 driver.spark.read.parquet(STAGE_REVERSE_TRANS_PATH).createOrReplaceTempView('_temp_rev_transaction')
             else:
                 logger.log('    -loading: there is no transaction data for reversal apply. '
-                           'create empty external table {} from existing transaction table'.format('_temp_rev_transaction'))
+                           'create empty external table {} from '
+                           'existing transaction table'.format('_temp_rev_transaction'))
                 driver.spark.sql(
                     sql_stmnt.format("transaction where 1 = 2")).createOrReplaceTempView('_temp_rev_transaction')
 
@@ -180,7 +182,8 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
             # existing data will be moved into backup location
             logger.log('Backup historical data')
             if end_to_end_test:
-                tmp_path = 's3://salusv/testing/dewey/airflow/e2e/{}/pharmacyclaims/backup/'.format(provider_partition_name)
+                tmp_path = \
+                    's3://salusv/testing/dewey/airflow/e2e/{}/pharmacyclaims/backup/'.format(provider_partition_name)
             else:
                 tmp_path = 's3://salusv/backup/{}/pharmacyclaims/{}/{}={}/'.format(
                     provider_partition_name, date_input, schema.provider_partition_column, provider_partition_name)

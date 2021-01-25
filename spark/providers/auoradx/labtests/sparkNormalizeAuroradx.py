@@ -57,7 +57,8 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         min_date = min_date.isoformat()
 
     records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
-    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId', 'hvJoinKey'], table_name='auroradx_payload', load_file_name=True)
+    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId', 'hvJoinKey']
+                        , table_name='auroradx_payload', load_file_name=True)
 
     normalized_output = runner.run_all_spark_scripts([
         ['file_date', date_input, False]

@@ -1,10 +1,11 @@
 import spark.helpers.postprocessor as postprocessor
 from pyspark.sql.functions import input_file_name
 
+
 def load(runner, input_path_prefix):
-    '''
+    """
     Load in the transactions to an in memory table.
-    '''
+    """
     for table, columns in TABLES.items():
         df = runner.sqlContext.read.text(input_path_prefix)
         # fixed width start position from position 1

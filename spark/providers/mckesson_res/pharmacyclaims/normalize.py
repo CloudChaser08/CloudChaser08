@@ -11,6 +11,7 @@ import spark.helpers.privacy.pharmacyclaims as pharm_priv
 import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v1 as old_schema
 import spark.providers.mckesson_res.pharmacyclaims.transaction_schemas_v2 as new_schema
 
+
 class MckessonResMarketplaceDriver(MarketplaceDriver):
 
     def __init__(
@@ -92,7 +93,7 @@ class MckessonResMarketplaceDriver(MarketplaceDriver):
 
 
 def run(date_input, end_to_end_test=False, test=False, spark_in=None):
-    "Runs the normalization function"
+    """Runs the normalization function"""
     provider_name = 'mckesson_res'
     output_table_names_to_schemas = {
         'mckesson_res_pharmacyclaims': schemas['schema_v6'],

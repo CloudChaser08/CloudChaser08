@@ -1,12 +1,14 @@
 import spark.helpers.records_loader as records_loader
 import pyspark.sql.functions as F
 
+
 # Append HVIDs to the demographics table
 def prepare(spark, runner, s3_crosswalk_reference):
     dem = spark.table('new_demographics') \
-            .withColumn('patientpseudonym', F.lit(None).cast('string')) # NULL out this column. It can contain DeID data
+            .withColumn('patientpseudonym', F.lit(None).cast('string'))
+    # NULL out this column. It can contain DeID data
     mat = spark.table('matching_payload') \
-            .withColumn('reportingenterpriseid', F.regexp_extract('input_file_name', '(HV|NG)_LSSA_([^_]*)_[^\.]*.txt', 2))
+        .withColumn('reportingenterpriseid', F.regexp_extract('input_file_name', r'(HV|NG)_LSSA_([^_]*)_[^\.]*.txt', 2))
     dem_merged = dem.join(
         mat,
         (
@@ -32,8 +34,8 @@ def prepare(spark, runner, s3_crosswalk_reference):
     dem_xwalked = dem_xwalked.select(*dem_w_hvid.columns)
     dem_w_hvid.union(dem_xwalked).createOrReplaceTempView('new_demographics')
 
+
 CROSSWALK_COLUMNS = [
     'hvid',
     'ngid'
 ]
-

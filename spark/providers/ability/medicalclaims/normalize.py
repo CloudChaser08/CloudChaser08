@@ -16,8 +16,7 @@ import spark.helpers.privacy.medicalclaims as medical_priv
 from pyspark.sql.utils import AnalysisException
 
 import logging
-import load_records
-
+from spark.providers.ability.medicalclaims.load_records import load as load_records_load
 from spark.common.utility import logger, get_spark_time
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
@@ -66,20 +65,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         set_id = date_input.replace('-', '_') + '_' + product
 
         input_pth_prefix = input_path_prefix.format(date_input.replace('-', '/')) + set_id + '_'
-        matching_pth     = matching_path.format(date_input.replace('-', '/')) + set_id + '_*'
+        matching_pth = matching_path.format(date_input.replace('-', '/')) + set_id + '_*'
 
         try:
-            load_records.load(runner, input_pth_prefix, product, date_input, test=test)
+            load_records_load(runner, input_pth_prefix, product, date_input, test=test)
         except AnalysisException as e:
             if 'Path does not exist' in str(e):
                 continue
             else:
-                raise(e)
+                raise e
 
         payload_loader.load(runner, matching_pth, ['claimId'], partitions=1 if test else 500, cache=True)
-        runner.sqlContext.sql('SELECT * FROM matching_payload') \
-                .distinct() \
-                .createOrReplaceTempView('matching_payload')
+        runner.sqlContext.sql('SELECT * FROM matching_payload').distinct().createOrReplaceTempView('matching_payload')
 
         # Normalize
         norm1 = schema_enforcer.apply_schema(
@@ -98,8 +95,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             runner.run_spark_script('mapping_3.sql', [['min_date', min_date]], return_output=True),
             medicalclaims_schema
         ).distinct()
-
-
 
         product_norm = norm1.union(norm2).union(norm3).checkpoint()
         logging.debug('Finished normalizing')
@@ -138,7 +133,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql', 'ability',
             'medicalclaims_common_model', 'date_service', date_input,
-            hvm_historical_date = hvm_historical
+            hvm_historical_date=hvm_historical
         )
 
     if not test and not airflow_test:
@@ -151,6 +146,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             run_type=RunType.MARKETPLACE,
             input_date=date_input
         )
+
 
 def main(args):
     # init

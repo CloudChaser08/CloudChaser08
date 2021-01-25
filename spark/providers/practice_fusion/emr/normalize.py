@@ -28,12 +28,12 @@ from spark.common.utility import logger, get_spark_runtime, get_spark_time
 FEED_ID = '136'
 
 MODEL_SCHEMA = {
-    'clinical_observation' : clinical_observation_schema,
-    'diagnosis' : diagnosis_schema,
-    'encounter' : encounter_schema,
-    'lab_test' : lab_test_schema,
-    'medication' : medication_schema,
-    'procedure' : procedure_schema
+    'clinical_observation': clinical_observation_schema,
+    'diagnosis': diagnosis_schema,
+    'encounter': encounter_schema,
+    'lab_test': lab_test_schema,
+    'medication': medication_schema,
+    'procedure': procedure_schema
 }
 
 MODELS = ['encounter', 'clinical_observation', 'diagnosis', 'lab_test',
@@ -90,7 +90,8 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
         pass
 
     # New layout after 2020-10-01 (LABORDER supplied as LAB_RESULT name)
-    has_template_v1 = datetime.strptime(date_input, '%Y-%m-%d').date() >= datetime.strptime(NEW_LAYOUT_DATE, '%Y-%m-%d').date()
+    has_template_v1 = \
+        datetime.strptime(date_input, '%Y-%m-%d').date() >= datetime.strptime(NEW_LAYOUT_DATE, '%Y-%m-%d').date()
     if has_template_v1:
         source_table_schemas = records_schemas_v1
     else:

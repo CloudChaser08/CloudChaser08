@@ -6,6 +6,7 @@ from pyspark.sql import Window
 from pyspark.sql.functions import col
 import spark.helpers.payload_loader as payload_loader
 
+
 def run(spark, runner, nextgen_source, crosswalk_source):
     nextgen_df = runner.sqlContext.read.parquet(nextgen_source)
     crosswalk_df = runner.sqlContext.read.parquet(crosswalk_source).withColumnRenamed('hvid', 'crosswalk_hvid')

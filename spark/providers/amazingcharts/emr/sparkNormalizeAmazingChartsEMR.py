@@ -45,7 +45,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
     max_cap = date_input
     max_cap_obj = datetime.strptime(max_cap, '%Y-%m-%d')
-    month_input = date_input.replace('-', '/')[:-3]  # amazingcharts match payload is delivered to a monthly location, so strip the day off date_input
+    month_input = date_input.replace('-', '/')[:-3]
+    #  amazingcharts match payload is delivered to a monthly location, so strip the day off date_input
 
     input_tables = [
         'd_costar',
@@ -154,8 +155,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         [], return_output=True
     )
 
-    normalized_procedure_1 = normalized_procedure_1.withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))) \
-            .where("length(proc_cd) != 0").cache()
+    normalized_procedure_1 = normalized_procedure_1.withColumn('proc_cd', explode(split(col('proc_cd'), '\s+')))\
+        .where("length(proc_cd) != 0").cache()
 
     join_keys = [
         normalized_procedure_1.proc_dt == normalized_procedure_3.proc_dt,
@@ -326,6 +327,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             run_type=RunType.MARKETPLACE,
             input_date=date_input
         )
+
 
 def main(args):
     spark, sqlContext = init('AmazingCharts EMR Normalization')

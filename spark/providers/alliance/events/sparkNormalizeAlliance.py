@@ -56,7 +56,7 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
             project_id, date_input.replace('-', '/')
         ) if project_id else 's3://salusv/incoming/consumer/alliance/2018/03/12/onemillion/'
         matching_path = 's3://salusv/matching/payload/consumer/alliance/*/*/*'
-        #NOTE: alliance sends a full refresh of actives each time (mostly on an ad-hoc basis)
+        #  NOTE: alliance sends a full refresh of actives each time (mostly on an ad-hoc basis)
         #      You will need to swap the warehouse data each time this is ran
         actives_path = 's3://salusv/incoming/consumer/alliance/actives/{}/'.format(
             LATEST_ACTIVES_DATE.replace('-', '/')
@@ -162,6 +162,7 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
             run_type=RunType.MARKETPLACE,
             input_date=date_input
         )
+
 
 def main(args):
     spark, sqlContext = init('Alliance Normalization')

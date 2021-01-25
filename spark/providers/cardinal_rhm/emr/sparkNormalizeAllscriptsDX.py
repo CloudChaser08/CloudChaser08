@@ -35,6 +35,7 @@ def actcode_cleanup(actcode):
         return actcode
     return None
 
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
     encounter = spark.table('sample.cardinal_rheumatology_encounter_prelim')
     lab = spark.table('sample.cardinal_rheumatology_lab_prelim')
@@ -42,13 +43,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     encounter_schema = encounter.schema
     lab_schema = lab.schema
 
-    encounter = encounter.withColumn('const_weight', F.lit('WEIGHT')) \
-                    .withColumn('const_weight_pounds', F.lit('WEIGHT_POUNDS')) \
-                    .withColumn('const_null', F.lit(None)) \
-                    .withColumn('const_height', F.lit('HEIGHT')) \
-                    .withColumn('const_height_inches', F.lit('HEIGHT_INCHES')) \
-                    .withColumn('const_bmi', F.lit('BMI')) \
-                    .withColumn('const_bmi_index', F.lit('BMI_INDEX'))
+    encounter = \
+        encounter.withColumn('const_weight', F.lit('WEIGHT')) \
+        .withColumn('const_weight_pounds', F.lit('WEIGHT_POUNDS')) \
+        .withColumn('const_null', F.lit(None)) \
+        .withColumn('const_height', F.lit('HEIGHT')) \
+        .withColumn('const_height_inches', F.lit('HEIGHT_INCHES')) \
+        .withColumn('const_bmi', F.lit('BMI')) \
+        .withColumn('const_bmi_index', F.lit('BMI_INDEX'))
 
     encounter_transformer = Transformer(
         ptnt_birth_yr=[
@@ -68,16 +70,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             TransformFunction(post_norm_cleanup.mask_zip_code, ['ptnt_zip3_cd'])
         ],
         weight_lb=[
-            TransformFunction(post_norm_cleanup.clean_up_vital_sign, ['const_weight', 'weight_lb', 'const_weight_pounds', 'ptnt_gender_cd', 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
+            TransformFunction(post_norm_cleanup.clean_up_vital_sign,
+                              ['const_weight', 'weight_lb', 'const_weight_pounds', 'ptnt_gender_cd'
+                                  , 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
         ],
         height_in=[
-            TransformFunction(post_norm_cleanup.clean_up_vital_sign, ['const_height', 'height_in', 'const_height_inches', 'ptnt_gender_cd', 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
+            TransformFunction(post_norm_cleanup.clean_up_vital_sign,
+                              ['const_height', 'height_in', 'const_height_inches', 'ptnt_gender_cd',
+                               'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
         ],
         bmi_calc=[
-            TransformFunction(post_norm_cleanup.clean_up_vital_sign, ['const_bmi', 'bmi_calc', 'const_bmi_index', 'ptnt_gender_cd', 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
+            TransformFunction(post_norm_cleanup.clean_up_vital_sign,
+                              ['const_bmi', 'bmi_calc', 'const_bmi_index', 'ptnt_gender_cd', 'ptnt_age_num',
+                               'ptnt_birth_yr', 'const_null', 'enc_date'])
         ],
         primary_diagnosis_code_id=[
-            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['primary_diagnosis_code_id', 'const_null', 'enc_date'])
+            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                              ['primary_diagnosis_code_id', 'const_null', 'enc_date'])
         ],
         med_ndc_id=[
             TransformFunction(post_norm_cleanup.clean_up_ndc_code, ['med_ndc_id'])
@@ -118,12 +127,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     enc3.repartition(10).write.parquet('s3a://salusv/tmp/cardinal_rhm/processed/encounter/', compression='gzip')
     lab3.repartition(10).write.parquet('s3a://salusv/tmp/cardinal_rhm/processed/lab/', compression='gzip')
 
-    output_paths = \
-            ','.join(
-                [
-                    's3a://salusv/tmp/cardinal_rhm/processed/encounter/',
-                    's3a://salusv/tmp/cardinal_rhm/processed/lab/'
-                ])
+    output_paths = ','.join(
+        [
+            's3a://salusv/tmp/cardinal_rhm/processed/encounter/',
+            's3a://salusv/tmp/cardinal_rhm/processed/lab/'
+        ])
 
     if not test and not airflow_test:
         logger.log_run_details(
@@ -146,6 +154,7 @@ def main(args):
 
     if not args.airflow_test:
         RunRecorder().record_run_details()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

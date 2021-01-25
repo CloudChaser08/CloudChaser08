@@ -2,6 +2,7 @@ from pyspark.sql.types import StructType, StructField, StringType, ArrayType
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
+
 def load(runner, input_paths):
     for table, input_path in input_paths.items():
         df = records_loader.load(runner, input_path, TABLE_CONF[table]['columns'],

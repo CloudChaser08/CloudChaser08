@@ -163,8 +163,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             )(raw_table)
 
             # deduplicate based on natural key
-            raw_table = raw_table.withColumn('row_num', F.row_number().over(window))\
-                    .where(F.col('row_num') == 1)
+            raw_table = raw_table.withColumn('row_num', F.row_number().over(window)).where(F.col('row_num') == 1)
 
             # add non-skewed provider columns
             for column in table.skewed_columns:
@@ -300,7 +299,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap) # Max cap is applied in SQL
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)  # Max cap is applied in SQL
             ]
         }, {
             'name': 'encounter',
@@ -408,7 +407,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap) # Max cap is applied in SQL
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)  # Max cap is applied in SQL
             ]
         }
     ]

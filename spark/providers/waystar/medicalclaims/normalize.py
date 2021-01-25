@@ -72,7 +72,8 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         spark.table(t).count()
 
     df = postprocessor.compose(
-        lambda df: schema_enforcer.apply_schema(df, medicalclaims_schema, columns_to_keep=['part_provider', 'part_best_date'])
+        lambda df: schema_enforcer.apply_schema(df, medicalclaims_schema
+                                                , columns_to_keep=['part_provider', 'part_best_date'])
     )(normalized_output)
 
     if not test:

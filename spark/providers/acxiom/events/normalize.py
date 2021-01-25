@@ -94,7 +94,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     valid_aid = events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftsemi')
     non_valid_aid = events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftanti') \
-                                 .withColumn('logical_delete_reason', lit('DELETE'))
+                             .withColumn('logical_delete_reason', lit('DELETE'))
 
     validated_data = valid_aid.union(non_valid_aid).createOrReplaceTempView('event_common_model')
 

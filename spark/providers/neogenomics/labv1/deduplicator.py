@@ -154,7 +154,8 @@ def load_and_deduplicate_transaction_table(
     deduplicated_data = reduce(DataFrame.unionAll, previous_data + [
         postprocessor.add_input_filename('source_file_name', persisted_df_id='{}_{}'.format(entity, date_input))(
             runner.sqlContext.read.csv(
-                path=input_path + ('{}/'.format(entity) if date_input >= RESULTS_START_DATE else ''), schema=entity_schema, sep='|'
+                path=input_path + ('{}/'.format(entity) if date_input >= RESULTS_START_DATE else '')
+                , schema=entity_schema, sep='|'
             )
         ).dropDuplicates(primary_key).withColumn(
             'vendor_date', lit(date_input)

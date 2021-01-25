@@ -6,6 +6,7 @@ from pyspark.sql.functions import lit
 from pyspark.sql.types import *
 from pyspark.sql.utils import AnalysisException
 
+
 def get_tablename_for_date(table, batch_date):
     table = table.lower()
     tns = sorted([tn for tn in TABLE_COLS.keys() if tn.startswith(table)])

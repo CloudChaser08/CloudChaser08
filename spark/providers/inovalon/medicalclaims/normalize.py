@@ -155,7 +155,8 @@ if __name__ == "__main__":
 
         # save transactions to disk. They will be added to the s3 reference location
         logger.log('Saving filtered input tables to hdfs')
-        query = "SELECT distinct clm.claimuid, RIGHT(clm.claimuid, 2) as last_char_claim_id, '{}' as date_input FROM clm" \
+        query = "SELECT distinct " \
+                "clm.claimuid, RIGHT(clm.claimuid, 2) as last_char_claim_id, '{}' as date_input FROM clm" \
             .format(date_input)
 
         partition = ['date_input', 'last_char_claim_id']

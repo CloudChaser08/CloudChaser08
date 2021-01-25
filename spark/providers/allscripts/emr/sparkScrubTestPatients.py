@@ -78,7 +78,7 @@ def gen_scrubbing_func(dryrun):
             # S3 upload new file
             subprocess.check_call(['aws', 's3', 'cp', new_local_path, 's3://salusv/' + new_s3_key])
 
-        return (s3_key, len(test_patients_removed))
+        return s3_key, len(test_patients_removed)
 
     return scrub
 

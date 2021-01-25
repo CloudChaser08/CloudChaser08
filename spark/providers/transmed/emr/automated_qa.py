@@ -10,7 +10,8 @@ spark_sql_runner = Runner(sqlContext)
 
 TRANSMED_SRC_DATA_LOCATION = 's3a://salusv/incoming/emr/transmed/2017/11/29/'
 TRANSMED_MATCHING_PAYLOAD_LOCATION = 's3a://salusv/matching/payload/emr/transmed/2017/11/29/'
-TRANSMED_TARGET_DATA_LOCATION_TEMPLATE = 's3a://salusv/warehouse/parquet/emr/2018-01-05/{}/part_hvm_vdr_feed_id=54/part_mth=2017-11/'
+TRANSMED_TARGET_DATA_LOCATION_TEMPLATE = \
+    's3a://salusv/warehouse/parquet/emr/2018-01-05/{}/part_hvm_vdr_feed_id=54/part_mth=2017-11/'
 
 payload_loader.load(spark_sql_runner, TRANSMED_MATCHING_PAYLOAD_LOCATION, extra_cols=['claimId'])
 
@@ -27,7 +28,8 @@ source_data = {
 }
 
 # load target data
-clinical_observation_target_data = sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('clinical_observation'))
+clinical_observation_target_data = \
+    sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('clinical_observation'))
 diagnosis_target_data = sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('diagnosis'))
 procedure_target_data = sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('procedure'))
 lab_result_target_data = sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('lab_result'))

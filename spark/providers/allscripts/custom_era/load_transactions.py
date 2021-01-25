@@ -4,6 +4,7 @@ import pyspark.sql.functions as F
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
+
 def load(spark, runner, input_paths):
     for table, input_path in input_paths.items():
         if table == 'payload':

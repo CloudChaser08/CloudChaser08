@@ -59,7 +59,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     explode.generate_exploder_table(driver.spark, 8, 'diag_exploder')
     driver.load(extra_payload_cols=['PCN'])
     driver.spark.udf.register(
-        'linked_and_unlinked_diagnoses', allscripts_udf.linked_and_unlinked_diagnoses, ArrayType(ArrayType(StringType()))
+        'linked_and_unlinked_diagnoses'
+        , allscripts_udf.linked_and_unlinked_diagnoses, ArrayType(ArrayType(StringType()))
         )
     driver.transform()
     driver.save_to_disk()

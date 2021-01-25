@@ -76,9 +76,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             PROVIDER_NAME, 'event_common_model',
             'source_record_date', date_input,
             partition_value=date_input,
-            hvm_historical_date=datetime(hvm_historical.year,
-                                     hvm_historical.month,
-                                     hvm_historical.day)
+            hvm_historical_date=datetime(hvm_historical.year, hvm_historical.month, hvm_historical.day)
         )
 
     if not test and not airflow_test:

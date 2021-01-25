@@ -71,7 +71,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     def create_and_preprocess_transaction_table(table_name, table_input_path, table_schema):
         postprocessor.compose(
-            postprocessor.add_input_filename('source_file_name', persisted_df_id='{}_with_input_filename'.format(table_name)),
+            postprocessor.add_input_filename(
+                'source_file_name', persisted_df_id='{}_with_input_filename'.format(table_name)),
             postprocessor.trimmify, postprocessor.nullify
         )(runner.sqlContext.read.csv(
             table_input_path, schema=table_schema, sep='\t'
@@ -135,7 +136,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'model_version': '04',
             'custom_transformer': Transformer(
                 clin_obsn_diag_cd=[
-                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['clin_obsn_diag_cd', 'clin_obsn_diag_cd_qual', 'date_input'])
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                                      ['clin_obsn_diag_cd', 'clin_obsn_diag_cd_qual', 'date_input'])
                 ]
             )
         },
@@ -147,7 +149,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'model_version': '05',
             'custom_transformer': Transformer(
                 diag_cd=[
-                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['diag_cd', 'diag_cd_qual', 'date_input'])
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                                      ['diag_cd', 'diag_cd_qual', 'date_input'])
                 ]
             )
         },
@@ -159,7 +162,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'model_version': '04',
             'custom_transformer': Transformer(
                 proc_diag_cd=[
-                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['proc_diag_cd', 'proc_diag_cd_qual', 'date_input'])
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                                      ['proc_diag_cd', 'proc_diag_cd_qual', 'date_input'])
                 ],
                 proc_cd=[
                     TransformFunction(lambda cd: cd, ['proc_cd'])
@@ -174,7 +178,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'model_version': '04',
             'custom_transformer': Transformer(
                 lab_test_diag_cd=[
-                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['lab_test_diag_cd', 'lab_test_diag_cd_qual', 'date_input'])
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                                      ['lab_test_diag_cd', 'lab_test_diag_cd_qual', 'date_input'])
                 ]
             )
         }
@@ -199,7 +204,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ).createOrReplaceTempView(table['table_name'])
 
         common_model_columns = [
-            column.name for column in runner.sqlContext.sql('SELECT * FROM {}'.format(table['table_name'])).schema.fields
+            column.name for column in runner.sqlContext.sql(
+                'SELECT * FROM {}'.format(table['table_name'])).schema.fields
             if column.name not in ['date_input', 'part_mth']
         ]
 
@@ -224,6 +230,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             run_type=RunType.MARKETPLACE,
             input_date=date_input
         )
+
 
 def main(args):
     # init

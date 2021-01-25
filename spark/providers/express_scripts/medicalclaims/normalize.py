@@ -81,13 +81,13 @@ if __name__ == "__main__":
         driver.spark.read.parquet(S3_REF_PHI).createOrReplaceTempView('rx_payloads')
 
         driver\
-                .spark\
-                .table('rx_payloads')\
-                .write\
-                .mode('overwrite')\
-                .format('orc')\
-                .bucketBy(num_buckets, 'patient_id')\
-                .saveAsTable('rx_bucketed')
+            .spark\
+            .table('rx_payloads')\
+            .write\
+            .mode('overwrite')\
+            .format('orc')\
+            .bucketBy(num_buckets, 'patient_id')\
+            .saveAsTable('rx_bucketed')
 
         driver.spark.table('rx_bucketed').createOrReplaceTempView('rx_payloads')
 
@@ -95,13 +95,13 @@ if __name__ == "__main__":
         payload_loader.load(driver.runner, driver.matching_path, load_file_name=True)
 
         driver\
-                .spark\
-                .table('matching_payload')\
-                .write\
-                .mode('overwrite')\
-                .format('orc')\
-                .bucketBy(num_buckets, 'patientid')\
-                .saveAsTable('payload_bucketed')
+            .spark\
+            .table('matching_payload')\
+            .write\
+            .mode('overwrite')\
+            .format('orc')\
+            .bucketBy(num_buckets, 'patientid')\
+            .saveAsTable('payload_bucketed')
 
         driver.spark.table('payload_bucketed').createOrReplaceTempView('matching_payload')
 
@@ -125,9 +125,7 @@ if __name__ == "__main__":
                     old_pf = part_file.split(' ')[-1].strip()
                     old_pf_split = old_pf.split('/')
                     new_filename = old_pf_split[3].split('=')[1] + '_' + old_pf_split[-1]
-                    new_pf_array = ['', 'staging', 'medicalclaims', '2018-06-06'] + \
-                                   old_pf_split[4:-1] + \
-                                   [new_filename]
+                    new_pf_array = ['', 'staging', 'medicalclaims', '2018-06-06'] + old_pf_split[4:-1] + [new_filename]
                     new_directory = '/'.join(new_pf_array[:-1])
                     new_pf = '/'.join(new_pf_array)
                     try:
@@ -146,11 +144,11 @@ if __name__ == "__main__":
 
         logger.log('Save unmatched reference records to: /unmatched/')
         driver\
-                .spark\
-                .table('esi_final_unmatched_dx')\
-                .repartition(100)\
-                .write\
-                .parquet('/unmatched/', partitionBy='part_best_date', compression='gzip', mode='overwrite')
+            .spark\
+            .table('esi_final_unmatched_dx')\
+            .repartition(100)\
+            .write\
+            .parquet('/unmatched/', partitionBy='part_best_date', compression='gzip', mode='overwrite')
 
     def overwrite_reference_data():
         if not driver.end_to_end_test:

@@ -54,7 +54,8 @@ if __name__ == "__main__":
     driver.init_spark_context(conf_parameters=conf_parameters)
 
     logger.log('Loading previous history')
-    driver.spark.read.parquet(os.path.join(driver.output_path, schema.output_directory, 'part_provider=emdeon/')).createOrReplaceTempView('_temp_pharmacyclaims_nb')
+    driver.spark.read.parquet(os.path.join(driver.output_path, schema.output_directory, 'part_provider=emdeon/'))\
+        .createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
     driver.load()
     driver.transform()

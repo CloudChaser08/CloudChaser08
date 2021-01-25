@@ -4,7 +4,7 @@ import argparse
 import time
 from datetime import timedelta, datetime, date
 from spark.runner import Runner
-from spark.spark import init
+from spark.spark_setup import init
 import subprocess
 import spark.helpers.create_date_validation_table \
     as date_validator
@@ -18,6 +18,7 @@ def get_rel_path(relative_filename):
             relative_filename
         )
     )
+
 
 # init
 spark, sqlContext = init("Emdeon RX")
@@ -40,44 +41,48 @@ runner.run_spark_script(get_rel_path('load_warehouse_data.sql'), [
 sqlContext.sql("CREATE TEMPORARY FUNCTION extract_date2 AS 'generalUdfs.extractDate'")
 sqlContext.sql('DROP TABLE IF EXISTS java_udf')
 sqlContext.sql('CREATE TABLE java_udf (d date)')
-print time.time()
+print(time.time())
 sqlContext.sql("INSERT INTO java_udf SELECT date_service FROM normalized_claims")
-print time.time()
+print(time.time())
 sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DESC LIMIT 10').show()
 
 sqlContext.sql('DROP TABLE IF EXISTS java_udf')
 sqlContext.sql('CREATE TABLE java_udf (d date)')
-print time.time()
+print(time.time())
 sqlContext.sql("INSERT INTO java_udf SELECT date_service FROM normalized_claims")
-print time.time()
+print(time.time())
 sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DESC LIMIT 10').show()
 
 sqlContext.sql('DROP TABLE IF EXISTS java_udf')
 sqlContext.sql('CREATE TABLE java_udf (d date)')
-print time.time()
-sqlContext.sql("INSERT INTO java_udf SELECT extract_date(date_service, '%Y-%m-%d', cast('2012-01-01' as date), cast('2013-02-01' as date)) FROM normalized_claims")
-print time.time()
+print(time.time())
+sqlContext.sql("INSERT INTO java_udf SELECT extract_date(date_service, '%Y-%m-%d', cast('2012-01-01' as date), "
+               "cast('2013-02-01' as date)) FROM normalized_claims")
+print(time.time())
 sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DESC LIMIT 10').show()
 
 sqlContext.sql('DROP TABLE IF EXISTS java_udf')
 sqlContext.sql('CREATE TABLE java_udf (d date)')
-print time.time()
-sqlContext.sql("INSERT INTO java_udf SELECT extract_date(date_service, '%Y-%m-%d', cast('2012-01-01' as date), cast('2013-02-01' as date)) FROM normalized_claims")
-print time.time()
+print(time.time())
+sqlContext.sql("INSERT INTO java_udf SELECT extract_date(date_service, '%Y-%m-%d', "
+               "cast('2012-01-01' as date), cast('2013-02-01' as date)) FROM normalized_claims")
+print(time.time())
 sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DESC LIMIT 10').show()
 
 sqlContext.sql('DROP TABLE IF EXISTS java_udf')
 sqlContext.sql('CREATE TABLE java_udf (d date)')
-print time.time()
-sqlContext.sql("INSERT INTO java_udf SELECT extract_date2(date_service, 'yyyy-MM-dd', cast('2012-01-01' as date), cast('2013-02-01' as date)) FROM normalized_claims")
-print time.time()
+print(time.time())
+sqlContext.sql("INSERT INTO java_udf SELECT extract_date2(date_service, 'yyyy-MM-dd', cast('2012-01-01' as date)"
+               ", cast('2013-02-01' as date)) FROM normalized_claims")
+print(time.time())
 sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DESC LIMIT 10').show()
 
 sqlContext.sql('DROP TABLE IF EXISTS java_udf')
 sqlContext.sql('CREATE TABLE java_udf (d date)')
-print time.time()
-sqlContext.sql("INSERT INTO java_udf SELECT extract_date2(date_service, 'yyyy-MM-dd', cast('2012-01-01' as date), cast('2013-02-01' as date)) FROM normalized_claims")
-print time.time()
+print(time.time())
+sqlContext.sql("INSERT INTO java_udf SELECT extract_date2(date_service, 'yyyy-MM-dd', cast('2012-01-01' as date)"
+               ", cast('2013-02-01' as date)) FROM normalized_claims")
+print(time.time())
 sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DESC LIMIT 10').show()
 
 spark.sparkContext.stop()

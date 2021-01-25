@@ -114,7 +114,6 @@ def run(spark_in, runner_in, date_input, test=False, airflow_test=False):
         unres_matching_path = 's3a://salusv/matching/payload/pharmacyclaims/mckesson/{}/'.format(
             date_input.replace('-', '/')
         )
- 
 
     min_date = '2010-03-01'
     max_date = date_input

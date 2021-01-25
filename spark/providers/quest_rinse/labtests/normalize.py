@@ -79,7 +79,8 @@ if __name__ == "__main__":
 
     driver.load()
     df = driver.spark.table('order_result')
-    df = df.repartition(int(driver.spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'unique_accession_id')
+    df = df.repartition(int(
+        driver.spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'unique_accession_id')
     df = df.cache_and_track('order_result')
     df.createOrReplaceTempView('order_result')
 
@@ -104,7 +105,8 @@ if __name__ == "__main__":
 
     if hdfs_utils.list_parquet_files(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)[0].strip():
         logger.log('Loading Delta LOINC reference data from HDFS')
-        driver.spark.read.parquet(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA).createOrReplaceTempView(REFERENCE_LOINC_DELTA)
+        driver.spark.read.parquet(
+            REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA).createOrReplaceTempView(REFERENCE_LOINC_DELTA)
     else:
         logger.log('No Delta LOINC reference data for this cycle')
         driver.spark.table("loinc").createOrReplaceTempView(REFERENCE_LOINC_DELTA)
@@ -117,7 +119,8 @@ if __name__ == "__main__":
     logger.log('Saving data to the local file system')
     output_table = driver.spark.table("labtest_quest_rinse_census_final")
     file_utils.clean_up_output_hdfs(local_output_path)
-    output_table.repartition(driver.unload_partition_count).write.parquet(local_output_path, compression='gzip', mode='overwrite')
+    output_table.repartition(
+        driver.unload_partition_count).write.parquet(local_output_path, compression='gzip', mode='overwrite')
 
     # file renaming
     logger.log("Renaming files")

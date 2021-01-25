@@ -76,8 +76,7 @@ def run_part(
                 str(date_obj.month).zfill(2)
             )
 
-            max_date = date_obj.strftime('%Y-%m-') \
-                       + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
+            max_date = date_obj.strftime('%Y-%m-') + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
             matching_path = AIRFLOW_TEST_DIR + 'payload/{}/{}/'.format(
                 str(date_obj.year),
                 str(date_obj.month).zfill(2)

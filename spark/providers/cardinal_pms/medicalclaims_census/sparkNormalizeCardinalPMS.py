@@ -128,11 +128,11 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
     # Create a table that contains a each unique
     # diagnosis code and claim id
     service_lines                                                               \
-          .groupby(F.col('claim_id'))                                             \
-          .agg(F.collect_set(F.col('diagnosis_code')).alias('diagnosis_codes'))     \
-          .withColumn('diagnosis_code', F.explode(F.col('diagnosis_codes')))        \
-          .select(F.col('claim_id'), F.col('diagnosis_code'))                       \
-          .createOrReplaceTempView('service_line_diags')
+        .groupby(F.col('claim_id'))                                             \
+        .agg(F.collect_set(F.col('diagnosis_code')).alias('diagnosis_codes'))     \
+        .withColumn('diagnosis_code', F.explode(F.col('diagnosis_codes')))        \
+        .select(F.col('claim_id'), F.col('diagnosis_code'))                       \
+        .createOrReplaceTempView('service_line_diags')
 
     # Create exploder table for claim
     exploder.generate_exploder_table(spark, 12, 'claim_exploder')
@@ -185,8 +185,7 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
         spark, runner, DELIVERABLE_LOC, 'medicalclaims', test=test
     )
 
-
-    # deobfuscate hvid
+    #  deobfuscate hvid
     final_df = postprocessor.deobfuscate_hvid(DEOBFUSCATION_KEY, nullify_non_integers=True)(
         final_df
     )

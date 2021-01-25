@@ -68,7 +68,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Remove leading and trailing whitespace from any strings
     postprocessor.trimmify(runner.sqlContext.sql('select * from transactional_mindbody'))\
-                    .createTempView('transactional_mindbody')
+        .createTempView('transactional_mindbody')
 
     # Normalize the transaction data into the
     # event common model using transaction

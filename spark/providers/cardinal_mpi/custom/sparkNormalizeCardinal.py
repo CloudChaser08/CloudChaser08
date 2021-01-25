@@ -70,6 +70,7 @@ def run(spark, runner, batch_id, test=False, airflow_test=False):
             input_date=batch_id
         )
 
+
 def main(args):
     if args.date is not None:
         batch_id = args.date.replace('-', '/')

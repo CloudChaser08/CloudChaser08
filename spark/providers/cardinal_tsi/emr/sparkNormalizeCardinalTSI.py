@@ -145,7 +145,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
             table['privacy_filter'].filter(runner.sqlContext, additional_transformer=table.get('custom_transformer')),
             *[
-                postprocessor.apply_date_cap(runner.sqlContext, date_col, date_input, '31', domain_name, date_function=date_fn)
+                postprocessor.apply_date_cap(
+                    runner.sqlContext, date_col, date_input, '31', domain_name, date_function=date_fn)
                 for (date_col, domain_name, date_fn) in table['date_caps']
             ]
         )(

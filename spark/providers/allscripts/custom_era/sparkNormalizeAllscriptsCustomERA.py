@@ -82,6 +82,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             input_date=date_input
         )
 
+
 def main(args):
     spark, sqlContext = init('Allscripts ERA Custom Normalization')
 

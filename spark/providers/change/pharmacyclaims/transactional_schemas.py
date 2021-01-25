@@ -1,5 +1,7 @@
 from spark.helpers.source_table import SourceTable
 
+# ('product_service_id_qualifier', 2),  #  will indicate what kind of ProductServiceID it is  "03" indicates NDC code
+
 TABLE_CONF = {
     'claim': SourceTable(
         'fixedwidth',
@@ -61,7 +63,7 @@ TABLE_CONF = {
             ('prescription_origin', 1),
             ('submission_clarification', 2),
             ('unit_dose_indicator', 1),
-            ('product_service_id_qualifier', 2),   # will indicate what kind of ProductServiceID it is  "03" indicates NDC code
+            ('product_service_id_qualifier', 2),
             ('dispensed_quantity', 11),
             ('orig_prescribed_product_service_code', 19),
             ('orig_prescribed_quantity', 11),

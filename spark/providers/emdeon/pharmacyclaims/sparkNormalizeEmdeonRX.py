@@ -19,6 +19,7 @@ def get_rel_path(relative_filename):
         )
     )
 
+
 # init
 spark, sqlContext = init("Emdeon RX")
 
@@ -71,9 +72,9 @@ if not args.sample:
 runner.run_spark_script(get_rel_path('../../../common/pharmacyclaims/sql/pharmacyclaims_common_model_v1.sql'))
 if args.sample:
     print("running load_transactions_v2")
-    date_path = args.date.replace('-', '_') # this was modified for the sample
+    date_path = args.date.replace('-', '_')  # this was modified for the sample
     runner.run_spark_script(get_rel_path('load_transactions_v2.sql'), [
-        ['input_path', S3_EMDEON_IN + date_path + '/RX_DEID_CF_ON/'] # note this was added for the sample
+        ['input_path', S3_EMDEON_IN + date_path + '/RX_DEID_CF_ON/']  # note this was added for the sample
     ])
 else:
     date_path = args.date.replace('-', '/')
@@ -141,7 +142,8 @@ runner.run_spark_script(get_rel_path('../../../common/pharmacyclaims_unload_tabl
 old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
 print("running unload_common_model")
 runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'), [
-    ['select_statement', "SELECT *, 'NULL' as part_best_date FROM pharmacyclaims_common_model WHERE date_service is NULL", False],
+    ['select_statement',
+     "SELECT *, 'NULL' as part_best_date FROM pharmacyclaims_common_model WHERE date_service is NULL", False],
     ['unload_partition_count', 20, False],
     ['original_partition_count', old_partition_count, False],
     ['distribution_key', 'record_id', False]
@@ -149,19 +151,24 @@ runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'),
 
 print("running unload_common_model again")
 runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'), [
-    ['select_statement', "SELECT *, regexp_replace(date_service, '-..$', '') as part_best_date FROM pharmacyclaims_common_model WHERE date_service IS NOT NULL", False],
+    ['select_statement',  "SELECT *, regexp_replace(date_service, '-..$', '') as part_best_date "
+     "FROM pharmacyclaims_common_model WHERE date_service IS NOT NULL", False],
     ['unload_partition_count', 20, False],
     ['original_partition_count', old_partition_count, False],
     ['distribution_key', 'record_id', False]
 ])
 
 print("running list files")
-part_files = subprocess.check_output(['hadoop', 'fs', '-ls', '-R', '/text/pharmacyclaims/emdeon/']).decode('utf8').strip().split("\n")
+part_files = subprocess.check_output(
+    ['hadoop', 'fs', '-ls', '-R', '/text/pharmacyclaims/emdeon/']).decode('utf8').strip().split("\n")
+
+
 def move_file(part_file):
     if part_file[-3:] == ".gz":
         old_pf = part_file.split(' ')[-1].strip()
         new_pf = '/'.join(old_pf.split('/')[:-1] + [args.date + '_' + old_pf.split('/')[-1]])
         subprocess.check_call(['hadoop', 'fs', '-mv', old_pf, new_pf])
+
 
 print("running move files")
 spark.sparkContext.parallelize(part_files).foreach(move_file)

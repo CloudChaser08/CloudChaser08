@@ -27,7 +27,6 @@ OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + pharma_schema.output
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/spark-output/'
 
 
-
 def run(spark, runner, date_input, test=False, airflow_test=False):
     setid = 'MHHealthVerity.Record.{}'.format(date_input.replace('-', ''))
 

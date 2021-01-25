@@ -16,6 +16,7 @@ from spark.spark_setup import init
 
 HIDDEN_PHI_DRIVER_S3_KEY = 'incoming/ng-lssa/HiddenPHIHandling/DriverFile/LSDXPHIThru20180717-HV.txt'
 
+
 def gen_scrubbing_func(dryrun):
     """This is a wrapper so that we can run this in dryrun mode (do everything
         except for replacing the origin files"""
@@ -110,9 +111,10 @@ def gen_scrubbing_func(dryrun):
         for (k, v) in value_metas_by_row.items():
             not_scrubbed += len(v)
 
-        return (s3_key, not_scrubbed)
+        return s3_key, not_scrubbed
 
     return scrub
+
 
 def run(spark, dryrun):
     """Execute the spark job"""
@@ -123,7 +125,7 @@ def run(spark, dryrun):
 
     # In the "hidden PHI driver file", files are identified by enterprise id and
     # batch date
-    identifier_to_key = {re.search('LSSA_(....._......)', ngk).groups()[0] : ngk for ngk in ng_keys}
+    identifier_to_key = {re.search('LSSA_(....._......)', ngk).groups()[0]: ngk for ngk in ng_keys}
 
     s3 = boto3.resource('s3')
     obj = s3.Object('healthverity', HIDDEN_PHI_DRIVER_S3_KEY)
@@ -171,6 +173,7 @@ def run(spark, dryrun):
     # everything works out 100%, we should expect to see 0s for every s3 key
     for r in res.collect():
         logging.info("%s", r)
+
 
 def main(args):
     # init

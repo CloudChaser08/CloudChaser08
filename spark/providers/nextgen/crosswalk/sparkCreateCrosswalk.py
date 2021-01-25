@@ -6,15 +6,18 @@ from spark.runner import Runner
 from spark.spark_setup import init
 from pyspark.sql import Window
 
+
 def get_enterprise_id(filename):
     filename = filename.replace('.xwalk', '')
     filename = filename.replace('NG_HV', 'HV_LSSA')
     return filename.split('/')[-1].split('.')[0].split('_')[2]
 
+
 def get_batch_date(filename):
     filename = filename.replace('.xwalk', '')
     filename = filename.replace('NG_HV', 'HV_LSSA')
     return filename.split('/')[-1].split('.')[0].split('_')[3]
+
 
 def run(spark, runner):
     SOURCE_1 = 's3://salusv/matching/payload/emr/nextgen/{2017/12,2018/01,2018/02,2018/03,2018/04,2018/05}/*/recurring/'

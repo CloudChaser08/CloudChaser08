@@ -2,7 +2,7 @@ from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
 
-    'patient' : SourceTable(
+    'patient': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -22,7 +22,7 @@ TABLE_CONF = {
             'hvjoinkey'
         ]
     ),
-    'master_drg' : SourceTable(
+    'master_drg': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -36,7 +36,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'master_ms_drg' : SourceTable(
+    'master_ms_drg': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -50,23 +50,23 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-#    'cpt' : SourceTable(
-#        'csv',
-#        separator='|',
-#        columns=[
-#            'cpt_code',
-#           'cpt_desc'
-#        ]
-#    ),
-#    'mod' : SourceTable(
-#        'csv',
-#        separator='|',
-#        columns=[
-#            'cpt_modifier_code',
-#            'cpt_modifier_desc'
-#        ]
-#    ),
-    'chargemaster' : SourceTable(
+    #    'cpt': SourceTable(
+    #        'csv',
+    #        separator='|',
+    #        columns=[
+    #            'cpt_code',
+    #           'cpt_desc'
+    #        ]
+    #    ),
+    #    'mod': SourceTable(
+    #        'csv',
+    #        separator='|',
+    #        columns=[
+    #            'cpt_modifier_code',
+    #            'cpt_modifier_desc'
+    #        ]
+    #    ),
+    'chargemaster': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -83,7 +83,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'standard_chargemaster' : SourceTable(
+    'standard_chargemaster': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -105,7 +105,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'providers' : SourceTable(
+    'providers': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -124,7 +124,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'provider_county' : SourceTable(
+    'provider_county': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -133,7 +133,7 @@ TABLE_CONF = {
             'county_res_ratio'
         ]
     ),
-    'provider_cbsa' : SourceTable(
+    'provider_cbsa': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -142,7 +142,7 @@ TABLE_CONF = {
             'cbsa_res_ratio'
         ]
     ),
-    'episodes' : SourceTable(
+    'episodes': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -201,7 +201,7 @@ TABLE_CONF = {
             'servingphysiciannpi'
         ]
     ),
-    'patient_payer' : SourceTable(
+    'patient_payer': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -215,7 +215,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'patient_charges' : SourceTable(
+    'patient_charges': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -229,7 +229,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'patient_diagnosis' : SourceTable(
+    'patient_diagnosis': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -248,7 +248,7 @@ TABLE_CONF = {
             'ahrq_version'
         ]
     ),
-    'patient_procedure' : SourceTable(
+    'patient_procedure': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -263,7 +263,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'patient_cpt' : SourceTable(
+    'patient_cpt': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -277,7 +277,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'weights' : SourceTable(
+    'weights': SourceTable(
         'csv',
         separator='|',
         columns=[

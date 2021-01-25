@@ -53,7 +53,8 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
 
     (lh_version, manufacturer, source_name, batch_date, batch_version) = group_id.split('_')[:5]
 
-    payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
+    payload_loader.load(
+        runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
     if 'LHV1' in group_id:
         records_loader.load_and_clean_all(runner, incoming_path, transactions_lhv1, 'csv', '|')
         source_patient_id_col = 'source_patient_id'
@@ -116,29 +117,34 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
 
     deliverable.createOrReplaceTempView('liquidhub_deliverable')
 
-    content.select('source_name', 'manufacturer').distinct() \
-            .createOrReplaceTempView('liquidhub_summary')
+    content.select('source_name', 'manufacturer').distinct().createOrReplaceTempView('liquidhub_summary')
 
     # Identify data from unexpected manufacturers
-    bad_content = content.select('source_patient_id', 'source_name', F.coalesce(F.col('manufacturer'), F.lit('UNKNOWN')).alias('manufacturer')) \
-            .where((F.lower(F.col('manufacturer')).isin(VALID_MANUFACTURERS) == False) | F.isnull(F.col('manufacturer')))
+    bad_content = content.select('source_patient_id', 'source_name', F.coalesce(F.col('manufacturer'), F.lit('UNKNOWN'))
+                                 .alias('manufacturer'))\
+        .where((F.lower(F.col('manufacturer')).isin(VALID_MANUFACTURERS) == False) | F.isnull(F.col('manufacturer')))
 
-    small_bad_manus = bad_content \
-            .groupBy(F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu')) \
-            .count().where('count <= 5').collect()
+    small_bad_manus = bad_content\
+        .groupBy(F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer')))
+                 .alias('manu'))\
+        .count().where('count <= 5').collect()
 
     small_bad_manus = [r.manu for r in small_bad_manus]
 
-    few_bad_rows = bad_content.where(
-        F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus)
-    ).groupBy('source_name', 'manufacturer') \
-    .agg(F.collect_set('source_patient_id').alias('bad_patient_ids'), F.count('manufacturer').alias('bad_patient_count'))
+    few_bad_rows = bad_content\
+        .where(F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer')))
+               .alias('manu').isin(small_bad_manus))\
+        .groupBy('source_name', 'manufacturer')\
+        .agg(F.collect_set('source_patient_id')
+             .alias('bad_patient_ids'), F.count('manufacturer').alias('bad_patient_count'))
 
-    lots_bad_rows = bad_content.where(
-        F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus) == False
-    ).groupBy('source_name', 'manufacturer') \
-    .agg(F.count('manufacturer').alias('bad_patient_count')) \
-    .select('source_name', 'manufacturer', F.lit(None).cast(ArrayType(StringType())).alias('bad_patient_ids'), 'bad_patient_count')
+    lots_bad_rows = bad_content\
+        .where(F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer')))
+               .alias('manu').isin(small_bad_manus) == False)\
+        .groupBy('source_name', 'manufacturer')\
+        .agg(F.count('manufacturer').alias('bad_patient_count'))\
+        .select('source_name', 'manufacturer', F.lit(None).cast(ArrayType(StringType()))
+                .alias('bad_patient_ids'), 'bad_patient_count')
 
     few_bad_rows.union(lots_bad_rows).createOrReplaceTempView('liquidhub_error')
 
@@ -164,12 +170,17 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
         with open('/tmp/summary_report_' + group_id + '.txt', 'w') as fout:
             summ = spark.table('liquidhub_summary').collect()
             fout.write('\n'.join(['{}|{}'.format(r.source_name, r.manufacturer) for r in summ]))
-        subprocess.check_call(['hadoop', 'fs', '-put', '/tmp/summary_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/summary_report_' + group_id + '.txt'])
+        subprocess.check_call(
+            ['hadoop', 'fs', '-put', '/tmp/summary_report_'
+             + group_id + '.txt', 'hdfs:///staging/' + group_id + '/summary_report_' + group_id + '.txt'])
         err = spark.table('liquidhub_error').collect()
         if len(err) != 0:
             with open('/tmp/error_report_' + group_id + '.txt', 'w') as fout:
-                fout.write('\n'.join(['{}|{}|{}|{}'.format(r.source_name, r.manufacturer, r.bad_patient_count, json.dumps(r.bad_patient_ids)) for r in err]))
-            subprocess.check_call(['hadoop', 'fs', '-put', '/tmp/error_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/error_report_' + group_id + '.txt'])
+                fout.write('\n'.join(['{}|{}|{}|{}'.format(
+                    r.source_name, r.manufacturer, r.bad_patient_count, json.dumps(r.bad_patient_ids)) for r in err]))
+            subprocess.check_call(
+                ['hadoop', 'fs', '-put', '/tmp/error_report_'
+                 + group_id + '.txt', 'hdfs:///staging/' + group_id + '/error_report_' + group_id + '.txt'])
 
     if not test and not airflow_test:
         logger.log_run_details(
@@ -181,6 +192,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
             run_type=RunType.MARKETPLACE,
             input_date=batch_date
         )
+
 
 def main(args):
     # init
