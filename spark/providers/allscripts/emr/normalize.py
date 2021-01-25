@@ -2,11 +2,9 @@
 import argparse
 import datetime
 from dateutil.relativedelta import relativedelta
-import subprocess
-import logging
 
-import pyspark.sql.functions as F
-from pyspark.sql.utils import AnalysisException
+import pyspark.sql.functions as FN
+# from pyspark.sql.utils import AnalysisException
 from pyspark.sql import Window
 
 from spark.runner import Runner
@@ -23,7 +21,7 @@ from spark.common.emr.clinical_observation import schema_v7 as clinical_observat
 from spark.common.emr.vital_sign import schema_v7 as vital_sign_schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.explode as explode
-import spark.helpers.multithreaded_s3_transfer as multi_s3_transfer
+# import spark.helpers.multithreaded_s3_transfer as multi_s3_transfer
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.external_table_loader as external_table_loader
@@ -43,10 +41,10 @@ import spark.helpers.privacy.emr.vital_sign as vital_sign_priv
 
 import spark.providers.allscripts.emr.udf as allscripts_udf
 
-from spark.common.utility import logger, get_spark_runtime, get_spark_time
+from spark.common.utility import logger, get_spark_time # , get_spark_runtime
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
-from spark.common.utility.spark_state import SparkState
+# from spark.common.utility.spark_state import SparkState
 
 
 script_path = __file__
@@ -79,7 +77,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
     to Veradigm(Allscripts) EMR only
     """
     max_of_max_cap = '9999-12-31'
-    BACKFILL_MAX_CAP = '2018-09-30'
+    max_of_backfill_cap = '2018-09-30'
 
     if test:
         input_path = file_utils.get_abs_path(
@@ -151,27 +149,27 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 postprocessor.trimmify, postprocessor.nullify
             )(raw_table).createOrReplaceTempView('transactional_' + table.name)
         else:
-            window = Window.partitionBy(*table.pk).orderBy(F.col('recordeddttm').desc())
+            window = Window.partitionBy(*table.pk).orderBy(FN.col('recordeddttm').desc())
             raw_table = runner.sqlContext.read.csv(
                 input_path + table.name + '/', sep='|', quote='', schema=table.schema
             )
 
-            raw_table = raw_table.withColumn('input_file_name', F.input_file_name()).persist()
+            raw_table = raw_table.withColumn('input_file_name', FN.input_file_name()).persist()
 
             raw_table = postprocessor.compose(
                 postprocessor.trimmify, postprocessor.nullify
             )(raw_table)
 
             # deduplicate based on natural key
-            raw_table = raw_table.withColumn('row_num', F.row_number().over(window)).where(F.col('row_num') == 1)
+            raw_table = raw_table.withColumn('row_num', FN.row_number().over(window)).where(FN.col('row_num') == 1)
 
             # add non-skewed provider columns
             for column in table.skewed_columns:
                 raw_table = raw_table.withColumn(
-                    'hv_{}'.format(column), F.when(
-                        F.col(column).isNull(),
-                        F.concat(F.lit('nojoin_'), F.rand())
-                    ).otherwise(F.col(column))
+                    'hv_{}'.format(column), FN.when(
+                        FN.col(column).isNull(),
+                        FN.concat(FN.lit('nojoin_'), FN.rand())
+                    ).otherwise(FN.col(column))
                 )
 
             raw_table.createOrReplaceTempView('transactional_' + table.name)
@@ -249,7 +247,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
     normalized_lab_result = runner.run_spark_script(
         'normalize_lab_result.sql', [
             ['max_cap', max_cap],
-            ['backfill_max_cap', BACKFILL_MAX_CAP],
+            ['backfill_max_cap', max_of_backfill_cap],
             ['batch_id', batch_id, False]
         ], return_output=True, source_file_path=script_path
     )
@@ -268,7 +266,7 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
     normalized_vital_sign = runner.run_spark_script(
         'normalize_vital_sign.sql', [
             ['max_cap', max_cap],
-            ['backfill_max_cap', BACKFILL_MAX_CAP],
+            ['backfill_max_cap', max_of_backfill_cap],
             ['batch_id', batch_id, False]
         ], return_output=True, source_file_path=script_path
     )
@@ -481,8 +479,8 @@ def main(args):
         output_path = OUTPUT_PATH_PRODUCTION
 
     for model in models:
-        spark, sqlContext = init("Allscripts EMR {}".format(model))
-        runner = Runner(sqlContext)
+        spark, sql_context = init("Allscripts EMR {}".format(model))
+        runner = Runner(sql_context)
 
         run(spark, runner, args.date, explicit_input_path=args.input_path,
             explicit_matching_path=args.matching_path, model=model,

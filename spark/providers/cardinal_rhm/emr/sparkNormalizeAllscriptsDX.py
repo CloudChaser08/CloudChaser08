@@ -1,18 +1,12 @@
 import argparse
 import re
-from datetime import datetime, date
-
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.medicalclaims_common_model import schema_v6 as schema
+# from spark.common.medicalclaims_common_model import schema_v6 as schema
 from spark.helpers.privacy.common import Transformer, TransformFunction
-import spark.helpers.file_utils as file_utils
-import spark.helpers.payload_loader as payload_loader
-import spark.helpers.records_loader as records_loader
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.external_table_loader as external_table_loader
+# import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.privacy.common as common_priv
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
@@ -44,13 +38,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     lab_schema = lab.schema
 
     encounter = \
-        encounter.withColumn('const_weight', F.lit('WEIGHT')) \
-        .withColumn('const_weight_pounds', F.lit('WEIGHT_POUNDS')) \
-        .withColumn('const_null', F.lit(None)) \
-        .withColumn('const_height', F.lit('HEIGHT')) \
-        .withColumn('const_height_inches', F.lit('HEIGHT_INCHES')) \
-        .withColumn('const_bmi', F.lit('BMI')) \
-        .withColumn('const_bmi_index', F.lit('BMI_INDEX'))
+        encounter.withColumn('const_weight', FN.lit('WEIGHT')) \
+        .withColumn('const_weight_pounds', FN.lit('WEIGHT_POUNDS')) \
+        .withColumn('const_null', FN.lit(None)) \
+        .withColumn('const_height', FN.lit('HEIGHT')) \
+        .withColumn('const_height_inches', FN.lit('HEIGHT_INCHES')) \
+        .withColumn('const_bmi', FN.lit('BMI')) \
+        .withColumn('const_bmi_index', FN.lit('BMI_INDEX'))
 
     encounter_transformer = Transformer(
         ptnt_birth_yr=[
@@ -146,9 +140,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Cardinal Rheumatology EMR')
+    spark, sql_context = init('Cardinal Rheumatology EMR')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

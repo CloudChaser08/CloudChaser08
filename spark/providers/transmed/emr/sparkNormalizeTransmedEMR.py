@@ -1,5 +1,4 @@
 import argparse
-from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.providers.transmed.emr.transaction_schemas as transaction_schemas
@@ -234,10 +233,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Transmed EMR")
+    spark, sql_context = init("Transmed EMR")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

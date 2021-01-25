@@ -187,10 +187,10 @@ LOCATION '{}'
 
 def main(args):
     # init
-    spark, sqlContext = init("CardinalRx")
+    spark, sql_context = init("CardinalRx")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.airflow_test:
         output_path = OUTPUT_PATH_TEST

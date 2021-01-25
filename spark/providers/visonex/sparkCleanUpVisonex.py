@@ -1,5 +1,4 @@
 import argparse
-from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.payload_loader as payload_loader
@@ -7,7 +6,7 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.file_utils as file_utils
 import spark.common.utility.logger as logger
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 
 TABLES = \
     ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment',
@@ -99,17 +98,17 @@ def run(spark, runner, args, test=False, airflow_test=False):
     if date_input >= V2_START_DATE:
         logger.log('Adding columns to account for mismatched schema')
         spark.table('patientdata') \
-            .withColumn('resuscitationcode', F.lit(None)) \
-            .withColumn('advdirresuscitationcode', F.lit(None)) \
-            .withColumn('advdirpowerofatty', F.lit(None)) \
-            .withColumn('advdirlivingwill', F.lit(None)) \
-            .withColumn('advdirpatientdeclines', F.lit(None)) \
-            .withColumn('advrevdate', F.lit(None)) \
+            .withColumn('resuscitationcode', FN.lit(None)) \
+            .withColumn('advdirresuscitationcode', FN.lit(None)) \
+            .withColumn('advdirpowerofatty', FN.lit(None)) \
+            .withColumn('advdirlivingwill', FN.lit(None)) \
+            .withColumn('advdirpatientdeclines', FN.lit(None)) \
+            .withColumn('advrevdate', FN.lit(None)) \
             .createOrReplaceTempView('patientdata')
 
         spark.table('patientmasterscheduleheader') \
-            .withColumn('patientidnumber2', F.lit('')) \
-            .withColumn('patientstatus2', F.lit('')) \
+            .withColumn('patientidnumber2', FN.lit('')) \
+            .withColumn('patientstatus2', FN.lit('')) \
             .createOrReplaceTempView('patientmasterscheduleheader')
 
     logger.log('Trimmify and nullify all tables')
@@ -154,10 +153,10 @@ def run(spark, runner, args, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Visonex EMR")
+    spark, sql_context = init("Visonex EMR")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args, airflow_test=args.airflow_test)
 

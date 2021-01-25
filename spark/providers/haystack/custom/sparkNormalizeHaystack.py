@@ -1,7 +1,5 @@
 #! /usr/bin/python
 import argparse
-from datetime import datetime
-import dateutil.tz as tz
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -10,10 +8,8 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.constants as constants
 from pyspark.sql.types import StringType, StructType, StructField
-from pyspark.sql.functions import udf, lit
 from spark.providers.haystack.custom import transactions
 import spark.helpers.schema_enforcer as schema_enforcer
-import subprocess
 import uuid
 
 from spark.common.utility.output_type import DataType, RunType
@@ -128,10 +124,10 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
 
 def main(args):
     # init
-    spark, sqlContext = init("Haystack Mastering")
+    spark, sql_context = init("Haystack Mastering")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.channel, args.group_id, date=args.date, airflow_test=args.airflow_test)
 

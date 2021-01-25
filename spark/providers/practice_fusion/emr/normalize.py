@@ -21,8 +21,8 @@ import spark.providers.practice_fusion.emr.records_schemas_v1 as records_schemas
 
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
-from spark.common.utility.spark_state import SparkState
-from spark.common.utility import logger, get_spark_runtime, get_spark_time
+# from spark.common.utility.spark_state import SparkState
+from spark.common.utility import logger, get_spark_time  # , get_spark_runtime
 
 
 FEED_ID = '136'
@@ -152,8 +152,8 @@ def main(args):
         'spark.driver.memoryOverhead': 4096
     }
     for model in models:
-        spark, sqlContext = init('Practice Fusion {} Normalization'.format(model), conf_parameters=conf_parameters)
-        runner = Runner(sqlContext)
+        spark, sql_context = init('Practice Fusion {} Normalization'.format(model), conf_parameters=conf_parameters)
+        runner = Runner(sql_context)
 
         run(spark, runner, args.date, model, custom_input_path=args.input_path,
             custom_matching_path=args.matching_path, end_to_end_test=args.end_to_end_test)

@@ -6,7 +6,7 @@ import pyspark.sql.functions as func
 
 from spark.runner import Runner
 from spark.spark_setup import init
-import spark.helpers.constants as constants
+# import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -158,9 +158,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Genoa')
+    spark, sql_context = init('Genoa')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

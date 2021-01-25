@@ -165,9 +165,9 @@ def run(spark, runner, date_input, project_id, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Alliance Normalization')
+    spark, sql_context = init('Alliance Normalization')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.airflow_test:
         output_path = OUTPUT_PATH_TEST

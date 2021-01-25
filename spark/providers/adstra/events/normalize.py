@@ -92,9 +92,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Adstra')
+    spark, sql_context = init('Adstra')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

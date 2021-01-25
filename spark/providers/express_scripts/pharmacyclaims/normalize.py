@@ -119,9 +119,9 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
             has_data = False
             # collect incoming data(3 columns) and save into local
             file_utils.clean_up_output_hdfs(STAGE_REVERSE_TRANS_PATH)
-            S3_EXPRESS_SCRIPTS_IN = "s3://salusv/incoming/{}/{}/".format(driver.data_type, provider_name)
             for i in range(delta.days + 1):
-                s3_esi_path_in = S3_EXPRESS_SCRIPTS_IN + (start_date + timedelta(days=i)).strftime('%Y/%m/%d')
+                s3_esi_path_in = "s3://salusv/incoming/{}/{}/".format(driver.data_type, provider_name) + \
+                                 (start_date + timedelta(days=i)).strftime('%Y/%m/%d')
                 try:
                     subprocess.check_call(['aws', 's3', 'ls', s3_esi_path_in])
                     has_data = True

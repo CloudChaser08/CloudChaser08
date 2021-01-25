@@ -145,10 +145,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init('AmbryExome')
+    spark, sql_context = init('AmbryExome')
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

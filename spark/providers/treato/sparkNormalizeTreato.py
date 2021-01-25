@@ -217,10 +217,10 @@ def run(spark, runner, date_input, diagnosis_mapfile, test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Treato")
+    spark, sql_context = init("Treato")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, args.diagnosis_mapfile)
 

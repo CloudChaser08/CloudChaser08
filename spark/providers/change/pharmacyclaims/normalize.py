@@ -2,11 +2,10 @@ import os
 import spark.providers.change.pharmacyclaims.transactional_schemas as source_table_schemas
 import subprocess
 import argparse
-from spark.common.utility.output_type import DataType, RunType
 import spark.common.utility.logger as logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
-from datetime import date, datetime
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 if __name__ == "__main__":

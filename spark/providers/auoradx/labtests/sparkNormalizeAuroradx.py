@@ -105,10 +105,10 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("auroradx")
+    spark, sql_context = init("auroradx")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.end_to_end_test:
         output_path = OUTPUT_PATH_TEST

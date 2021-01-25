@@ -98,10 +98,10 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
 
 def main(args):
     # Initialize Spark
-    spark, sqlContext = init("Cardinal DCOA")
+    spark, sql_context = init("Cardinal DCOA")
 
     # Initialize the Spark Runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     # Run the normalization routine
     run(spark, runner, args.date, airflow_test=args.airflow_test, num_output_files=args.num_output_files)

@@ -160,10 +160,10 @@ def run(spark, runner, date_input, test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Express Scripts")
+    spark, sql_context = init("Express Scripts")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
     run(spark, runner, args.date)
     spark.stop()
 

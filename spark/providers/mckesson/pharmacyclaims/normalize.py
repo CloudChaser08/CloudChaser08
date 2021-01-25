@@ -162,10 +162,10 @@ def run(spark_in, runner_in, date_input, test=False, airflow_test=False):
 def main(args):
 
     # init spark
-    spark, sqlContext = init("McKessonRx")
+    spark, sql_context = init("McKessonRx")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
     
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

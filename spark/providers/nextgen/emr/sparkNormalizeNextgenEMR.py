@@ -1,7 +1,6 @@
 import argparse
-import time as time_module
 from subprocess import check_output
-from datetime import datetime, date, time
+from datetime import datetime, time
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -36,7 +35,7 @@ from spark.common.emr.procedure import schema_v11 as procedure_schema
 from spark.common.emr.provider_order import schema_v9 as provider_order_schema
 from spark.common.emr.vital_sign import schema_v4 as vital_sign_schema
 
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 
 import logging
 
@@ -208,7 +207,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     logging.debug("Normalized lab result")
 
     runner.sqlContext.table('medicationorder') \
-        .withColumn('row_num', F.monotonically_increasing_id()) \
+        .withColumn('row_num', FN.monotonically_increasing_id()) \
         .createOrReplaceTempView('medicationorder')
     icd_diag_codes = runner.sqlContext.table('icd_diag_codes')
     tmp_medication = runner.run_spark_script('normalize_medication.sql', [
@@ -228,7 +227,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     # script in order to ensure that when we run a distinct to remove
     # duplicates, we maintain at least 1 normalized row per source row
     normalized['medication'] = p1.union(p2).distinct().drop('row_num') \
-        .withColumn('medctn_diag_dt', F.coalesce(F.col('medctn_ord_dt'), F.col('enc_dt')))  # For whitelisting purposes
+        .withColumn('medctn_diag_dt', FN.coalesce(FN.col('medctn_ord_dt'), FN.col('enc_dt')))  # For whitelisting purposes
     logging.debug("Normalized medication")
 
     runner.run_spark_script('normalize_provider_order_prenorm.sql', [
@@ -239,7 +238,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
         ['min_date', min_date],
         ['max_date', max_date]
     ], return_output=True) \
-        .withColumn('prov_ord_diag_dt', F.coalesce(F.col('prov_ord_dt'), F.col('enc_dt')))  # For whitelisting purposes
+        .withColumn('prov_ord_diag_dt', FN.coalesce(FN.col('prov_ord_dt'), FN.col('enc_dt')))  # For whitelisting purposes
     logging.debug("Normalized provider order")
 
     cln_obs1 = runner.run_spark_script('normalize_clinical_observation_1.sql', [

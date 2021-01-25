@@ -407,10 +407,10 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
 
 def main(args):
     # init
-    spark, sqlContext = init("Cardinal Rain Tree EMR")
+    spark, sql_context = init("Cardinal Rain Tree EMR")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.airflow_test:
         output_path = OUTPUT_PATH_TEST

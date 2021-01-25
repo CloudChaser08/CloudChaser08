@@ -2,9 +2,7 @@ import argparse
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from pyspark.sql import Window
 from pyspark.sql.functions import col
-import spark.helpers.payload_loader as payload_loader
 
 
 def run(spark, runner, nextgen_source, crosswalk_source):
@@ -19,14 +17,14 @@ def run(spark, runner, nextgen_source, crosswalk_source):
 
 def main(args):
     # init
-    spark, sqlContext = init("Nextgen EMR Crosswalk")
+    spark, sql_context = init("Nextgen EMR Crosswalk")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.nextgen_source, args.crosswalk_source)
 
-    sqlContext.sql('select * from new_nextgen_output') \
+    sql_context.sql('select * from new_nextgen_output') \
               .repartition(20) \
               .write.parquet(args.nextgen_output)
 
@@ -38,4 +36,3 @@ if __name__ == '__main__':
     parser.add_argument('--nextgen_output', type=str)
     args = parser.parse_args()
     main(args)
-

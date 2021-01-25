@@ -2,13 +2,10 @@
 import os
 import argparse
 import time
-from datetime import timedelta, datetime, date
+from datetime import timedelta, datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import subprocess
-import spark.helpers.create_date_validation_table \
-    as date_validator
-import logging
 
 
 def get_rel_path(relative_filename):

@@ -1,5 +1,4 @@
-import csv
-
+# import csv
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 from pyspark.sql.functions import lit
@@ -35,6 +34,7 @@ def validate_header(df, tn):
 
 
 def load(spark, runner, table_locs, batch_date, test=False):
+    tn = None
     for table, input_path in table_locs.items():
         try:
             tn = get_tablename_for_date(table, batch_date)

@@ -192,10 +192,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 def main(args):
 
     # init spark
-    spark, sqlContext = init("HealthJump")
+    spark, sql_context = init("HealthJump")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

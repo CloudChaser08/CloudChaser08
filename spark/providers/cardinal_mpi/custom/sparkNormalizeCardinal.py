@@ -77,10 +77,10 @@ def main(args):
     else:
         batch_id = args.batch_id
     # init
-    spark, sqlContext = init("CardinalRx")
+    spark, sql_context = init("CardinalRx")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, batch_id, airflow_test=args.airflow_test)
 

@@ -126,7 +126,7 @@ def run(spark, dryrun):
 
 def main(args):
     # init
-    spark, sqlContext = init("Scrub Allscripts Test Patients")
+    spark, sql_context = init("Scrub Allscripts Test Patients")
 
     run(spark, args.dryrun)
 

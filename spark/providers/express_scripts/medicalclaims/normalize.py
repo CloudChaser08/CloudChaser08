@@ -1,8 +1,5 @@
 import argparse
 import subprocess
-import re
-from datetime import datetime
-import spark.helpers.constants as constants
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
 from spark.common.utility import logger
@@ -10,7 +7,7 @@ from pyspark import StorageLevel
 from spark.helpers import normalized_records_unloader
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.external_table_loader as external_table_loader
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 
 S3_MATCHING_KEY = 'salusv/matching/payload/medicalclaims/express_scripts/'
 S3_EXPRESS_SCRIPTS_RX_MATCHING = '{}salusv/matching/payload/pharmacyclaims/esi/'
@@ -74,7 +71,7 @@ if __name__ == "__main__":
         driver.runner.run_spark_script('sql_loaders/load_transactions.sql',
                                        [['input_path', driver.input_path]])
 
-        driver.spark.table('transactions').withColumn('input_file_name', F.input_file_name())\
+        driver.spark.table('transactions').withColumn('input_file_name', FN.input_file_name())\
             .createOrReplaceTempView('txn')
 
         logger.log('Load Rx payload reference location')

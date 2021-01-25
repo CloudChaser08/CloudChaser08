@@ -177,7 +177,7 @@ def run(spark, dryrun):
 
 def main(args):
     # init
-    spark, sqlContext = init("Scrub Nextgen")
+    spark, sql_context = init("Scrub Nextgen")
 
     run(spark, args.dryrun)
 

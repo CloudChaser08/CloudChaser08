@@ -10,7 +10,7 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.constants as constants
 from pyspark.sql.types import StringType, StructType, StructField, ArrayType
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 from spark.providers.liquidhub.custom import transactions_lhv1, transactions_lhv2
 import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
@@ -67,13 +67,13 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     if 'accredo' == source_name.lower() and no_transactional:
         # This version of the feed doesn't have an hvJoinKey, so create one to reduce
         # downstream burden
-        df = spark.table('matching_payload').withColumn('hvJoinKey', F.monotonically_increasing_id()).cache()
+        df = spark.table('matching_payload').withColumn('hvJoinKey', FN.monotonically_increasing_id()).cache()
         df.createOrReplaceTempView('matching_payload')
         df.count()
 
-        df = spark.table('matching_payload').select(F.col('hvJoinKey').alias('hvjoinkey')) \
-            .withColumn('manufacturer', F.lit(manufacturer)) \
-            .withColumn('source_name', F.lit(source_name)) \
+        df = spark.table('matching_payload').select(FN.col('hvJoinKey').alias('hvjoinkey')) \
+            .withColumn('manufacturer', FN.lit(manufacturer)) \
+            .withColumn('source_name', FN.lit(source_name)) \
 
         source_patient_id_col = 'personId'
 
@@ -83,7 +83,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # If the manufacturer name is not in the data, it will be in the group id
     if 'PatDemo' not in group_id:
         spark.table('liquidhub_raw') \
-            .withColumn('manufacturer', F.lit(manufacturer)) \
+            .withColumn('manufacturer', FN.lit(manufacturer)) \
             .createOrReplaceTempView('liquidhub_raw')
 
     content = runner.run_spark_script('normalize.sql',
@@ -120,30 +120,31 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     content.select('source_name', 'manufacturer').distinct().createOrReplaceTempView('liquidhub_summary')
 
     # Identify data from unexpected manufacturers
-    bad_content = content.select('source_patient_id', 'source_name', F.coalesce(F.col('manufacturer'), F.lit('UNKNOWN'))
-                                 .alias('manufacturer'))\
-        .where((F.lower(F.col('manufacturer')).isin(VALID_MANUFACTURERS) == False) | F.isnull(F.col('manufacturer')))
+    bad_content = content.select('source_patient_id', 'source_name'
+                                 , FN.coalesce(FN.col('manufacturer'), FN.lit('UNKNOWN')).alias('manufacturer'))\
+        .where((FN.lower(FN.col('manufacturer')).isin(VALID_MANUFACTURERS) == False)
+               | FN.isnull(FN.col('manufacturer')))
 
     small_bad_manus = bad_content\
-        .groupBy(F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer')))
+        .groupBy(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'), FN.lower(FN.col('manufacturer')))
                  .alias('manu'))\
         .count().where('count <= 5').collect()
 
     small_bad_manus = [r.manu for r in small_bad_manus]
 
     few_bad_rows = bad_content\
-        .where(F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer')))
+        .where(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'), FN.lower(FN.col('manufacturer')))
                .alias('manu').isin(small_bad_manus))\
         .groupBy('source_name', 'manufacturer')\
-        .agg(F.collect_set('source_patient_id')
-             .alias('bad_patient_ids'), F.count('manufacturer').alias('bad_patient_count'))
+        .agg(FN.collect_set('source_patient_id')
+             .alias('bad_patient_ids'), FN.count('manufacturer').alias('bad_patient_count'))
 
     lots_bad_rows = bad_content\
-        .where(F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer')))
+        .where(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'), FN.lower(FN.col('manufacturer')))
                .alias('manu').isin(small_bad_manus) == False)\
         .groupBy('source_name', 'manufacturer')\
-        .agg(F.count('manufacturer').alias('bad_patient_count'))\
-        .select('source_name', 'manufacturer', F.lit(None).cast(ArrayType(StringType()))
+        .agg(FN.count('manufacturer').alias('bad_patient_count'))\
+        .select('source_name', 'manufacturer', FN.lit(None).cast(ArrayType(StringType()))
                 .alias('bad_patient_ids'), 'bad_patient_count')
 
     few_bad_rows.union(lots_bad_rows).createOrReplaceTempView('liquidhub_error')
@@ -196,10 +197,10 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Liquidhub Mastering")
+    spark, sql_context = init("Liquidhub Mastering")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.group_id, args.run_version, airflow_test=args.airflow_test)
 

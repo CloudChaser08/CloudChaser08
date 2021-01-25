@@ -1,6 +1,6 @@
 from pyspark.sql.functions import col, udf
-from spark.helpers.udf.general_helpers import extract_date
-from datetime import datetime
+# from spark.helpers.udf.general_helpers import extract_date
+# from datetime import datetime
 
 
 def map_whitelist(df):

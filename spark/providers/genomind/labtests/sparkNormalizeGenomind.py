@@ -154,9 +154,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Genomind Normalization')
+    spark, sql_context = init('Genomind Normalization')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

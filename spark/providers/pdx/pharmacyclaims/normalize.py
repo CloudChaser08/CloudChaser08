@@ -12,7 +12,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.reject_reversal as rr
+# import spark.helpers.reject_reversal as rr
 import spark.providers.pdx.pharmacyclaims.load_transactions as load_transactions
 
 from spark.common.utility.output_type import DataType, RunType
@@ -133,23 +133,22 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
 
 
 def main(args):
-    spark, sqlContext = init('PDX Normalization')
+    spark, sql_context = init('PDX Normalization')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, custom_input_path=args.input_path,
         custom_matching_path=args.matching_path, end_to_end_test=args.end_to_end_test)
 
     spark.stop()
 
+    output_path = OUTPUT_PATH_PRODUCTION
+    tmp_path = 's3://salusv/backup/pdx/{}/'.format(args.date)
     if args.end_to_end_test:
         output_path = OUTPUT_PATH_TEST
         tmp_path = 's3://salusv/testing/dewey/airflow/e2e/pdx/temp/'
     elif args.output_path:
         output_path = args.output_path
-    else:
-        output_path = OUTPUT_PATH_PRODUCTION
-        tmp_path = 's3://salusv/backup/pdx/{}/'.format(args.date)
 
     current_year_month = args.date[:7] + '-01'
     prev_year_month = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime(

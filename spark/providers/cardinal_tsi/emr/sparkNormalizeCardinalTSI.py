@@ -1,5 +1,4 @@
 import argparse
-import time
 import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -176,10 +175,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Cardinal TSI EMR")
+    spark, sql_context = init("Cardinal TSI EMR")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
