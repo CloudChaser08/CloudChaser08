@@ -39,8 +39,9 @@ if __name__ == "__main__":
         vdr_feed_id=11,
         load_date_explode=False,
         use_ref_gen_values=True,
-        output_to_transform_path=True,
-        unload_partition_count=500
+        output_to_transform_path=False,
+        unload_partition_count=20,
+        restricted_private_source=True
     )
 
     # ------------------------ Provider specific run sequence -----------------------

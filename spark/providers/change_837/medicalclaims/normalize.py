@@ -1,7 +1,7 @@
 import argparse
 from datetime import datetime
-import spark.providers.change.medicalclaims.transactional_schemas as historic_source_table_schemas
-import spark.providers.change.medicalclaims.transactional_schemas_v2 as future_source_table_schemas
+import spark.providers.change_837.medicalclaims.transactional_schemas as historic_source_table_schemas
+import spark.providers.change_837.medicalclaims.transactional_schemas_v2 as future_source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
@@ -11,11 +11,11 @@ _passthrough_cutoff = '2020-03-31'
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
-    provider_name = 'change_relay'
+    provider_name = 'change_837'
     output_table_names_to_schemas = {
-        'change_relay_05_norm_final': medicalclaims_schemas['schema_v10'],
+        'change_837_05_norm_final': medicalclaims_schemas['schema_v10'],
     }
-    provider_partition_name = 'relay'
+    provider_partition_name = 'change'
 
     # ------------------------ Common for all providers -----------------------
 
@@ -44,12 +44,11 @@ if __name__ == "__main__":
         output_table_names_to_schemas,
         date_input,
         end_to_end_test,
-        output_to_transform_path=False,
+        output_to_transform_path=True,
         vdr_feed_id=185,
         use_ref_gen_values=True,
         unload_partition_count=40,
-        load_date_explode=False,
-        restricted_private_source=True
+        load_date_explode=False
     )
 
     conf_parameters = {

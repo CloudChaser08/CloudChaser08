@@ -1,7 +1,7 @@
 SELECT
     --MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
     txn.claim_id                                                                            AS claim_id,
-    payload.hvid                                                                            AS hvid,
+    txn.hvid                                                                            AS hvid,
     CURRENT_DATE()                                                                          AS created,
 	'11'                                                                                    AS model_version,
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
@@ -17,8 +17,8 @@ SELECT
         	CASE
         	    WHEN SUBSTR(UPPER(COALESCE(txn.gender_code,'')), 1, 1) IN ('1', 'M') THEN 'M'
         	    WHEN SUBSTR(UPPER(COALESCE(txn.gender_code,'')), 1, 1) IN ('2', 'F') THEN 'F'
-        	    WHEN SUBSTR(UPPER(COALESCE(payload.gender    ,'')), 1, 1) IN ('F', 'M')
-        	        THEN SUBSTR(UPPER(COALESCE(payload.gender    , '')), 1, 1)
+        	    WHEN SUBSTR(UPPER(COALESCE(txn.gender    ,'')), 1, 1) IN ('F', 'M')
+        	        THEN SUBSTR(UPPER(COALESCE(txn.gender    , '')), 1, 1)
         	    ELSE 'U'
         	END
 	    )                                                                                   AS patient_gender,
@@ -26,26 +26,26 @@ SELECT
 	/* patient_age */
 	VALIDATE_AGE
         (
-            payload.age,
+            txn.age,
             CAST(EXTRACT_DATE(txn.date_service, '%Y%m%d') AS DATE),
-            COALESCE(YEAR(CAST(EXTRACT_DATE(txn.year_of_birth , '%Y%m%d') AS DATE)), payload.yearofbirth)
+            COALESCE(YEAR(CAST(EXTRACT_DATE(txn.year_of_birth , '%Y%m%d') AS DATE)), txn.yearofbirth)
         )                                                                                   AS patient_age,
 
 	/* patient_year_of_birth */
 	CAP_YEAR_OF_BIRTH
         (
-            payload.age,
+            txn.age,
             CAST(EXTRACT_DATE(txn.date_service, '%Y%m%d') AS DATE),
-            COALESCE(YEAR(CAST(EXTRACT_DATE(txn.year_of_birth , '%Y%m%d') AS DATE)), payload.yearofbirth, YEAR(CAST(EXTRACT_DATE('1900-01-01', '%Y-%m-%d') AS DATE)))
+            COALESCE(YEAR(CAST(EXTRACT_DATE(txn.year_of_birth , '%Y%m%d') AS DATE)), txn.yearofbirth, YEAR(CAST(EXTRACT_DATE('1900-01-01', '%Y-%m-%d') AS DATE)))
         )                                                                                   AS patient_year_of_birth,
 
     /* patient_zip3 */
     MASK_ZIP_CODE(
-        COALESCE(SUBSTR(payload.threedigitzip, 1, 3), SUBSTR(txn.patient_zip3, 1, 3))
+        COALESCE(SUBSTR(txn.threedigitzip, 1, 3), SUBSTR(txn.patient_zip3, 1, 3))
         )                                                                                   AS patient_zip3,
 
     /* patient_state */
-    VALIDATE_STATE_CODE(UPPER(COALESCE(txn.patient_state_province, payload.state, '')))     AS patient_state,
+    VALIDATE_STATE_CODE(UPPER(COALESCE(txn.patient_state_province, txn.state, '')))     AS patient_state,
 
     /* date_service */
 	CAP_DATE
@@ -202,7 +202,7 @@ SELECT
     CLEAN_UP_NPI_CODE
         (
             CASE WHEN (txn.prov_dispensing_qual IN ('1','01')
-                    OR (prov_dispensing_qual IN ('5', '05') AND regexp_extract(provider_id, '^[0-9]{{10}}$', 0) <> '')
+                    OR (txn.prov_dispensing_qual IN ('5', '05') AND regexp_extract(txn.provider_id, '^[0-9]{{10}}$', 0) <> '')
                 ) THEN provider_id
                 ELSE NULL
             END
@@ -588,6 +588,4 @@ SELECT
                 )
 	END                                                                                     AS part_best_date
 
-FROM claim txn
-LEFT OUTER JOIN matching_payload payload ON txn.claim_id = payload.claimid AND payload.hvid IS NOT NULL
-WHERE TRIM(UPPER(COALESCE(txn.claim_id, 'empty'))) <> 'CLAIM_ID'
+FROM change_rx_00_dedup txn

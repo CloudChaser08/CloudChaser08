@@ -21,6 +21,7 @@ END_TO_END_TEST = 'end_to_end_test'
 TEST = 'test'
 PRODUCTION = 'production'
 TRANSFORM = 'transform'
+RESTRICTED = 'restricted'
 DRIVER_MODULE_NAME = 'driver'
 E2E_OUTPUT_PATH = 's3://salusv/testing/dewey/airflow/e2e/'
 RECORDS_PATH = 's3://salusv/incoming/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
@@ -30,21 +31,24 @@ MODE_RECORDS_PATH_TEMPLATE = {
     TEST: './test/marketplace/resources/records/',
     END_TO_END_TEST: RECORDS_PATH,
     PRODUCTION: RECORDS_PATH,
-    TRANSFORM: RECORDS_PATH
+    TRANSFORM: RECORDS_PATH,
+    RESTRICTED: RECORDS_PATH
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
     TEST: './test/marketplace/resources/matching/',
     END_TO_END_TEST: MATCHING_PATH,
     PRODUCTION: MATCHING_PATH,
-    TRANSFORM: MATCHING_PATH
+    TRANSFORM: MATCHING_PATH,
+    RESTRICTED: MATCHING_PATH
 }
 
 MODE_OUTPUT_PATH = {
     TEST: './test/marketplace/resources/output/',
     END_TO_END_TEST: E2E_OUTPUT_PATH,
     PRODUCTION: 's3://salusv/warehouse/parquet/',
-    TRANSFORM: 's3://salusv/warehouse/transformed/'
+    TRANSFORM: 's3://salusv/warehouse/transformed/',
+    RESTRICTED: 's3://salusv/warehouse/restricted/'
 }
 
 
@@ -65,7 +69,8 @@ class MarketplaceDriver(object):
                  unload_partition_count=20,
                  vdr_feed_id=None,
                  use_ref_gen_values=False,
-                 count_transform_sql=False
+                 count_transform_sql=False,
+                 restricted_private_source=False
                  ):
 
         # get directory and path for provider
@@ -96,6 +101,7 @@ class MarketplaceDriver(object):
         self.vdr_feed_id = vdr_feed_id
         self.use_ref_gen_values = use_ref_gen_values
         self.count_transform_sql = count_transform_sql
+        self.restricted_private_source = restricted_private_source
         self.available_start_date = None
         self.earliest_service_date = None
         self.input_path = None
@@ -112,6 +118,8 @@ class MarketplaceDriver(object):
             mode = END_TO_END_TEST
         elif self.output_to_transform_path:
             mode = TRANSFORM
+        elif self.restricted_private_source:
+            mode = RESTRICTED
         else:
             mode = PRODUCTION
 
