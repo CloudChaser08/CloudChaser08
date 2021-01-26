@@ -1,5 +1,5 @@
 import argparse
-import spark.providers.change.era.transactional_schemas as source_table_schemas
+import spark.providers.change_835.era.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.era.detail import schemas as detail_schemas
 from spark.common.era.summary import schemas as summary_schemas
@@ -7,12 +7,12 @@ from spark.common.era.summary import schemas as summary_schemas
 
 if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
-    provider_name = 'change'
+    provider_name = 'change_835'
     output_table_names_to_schemas = {
         'change_835_normalized_detail_final': detail_schemas['schema_v6'],
         'change_835_normalized_summary_final': summary_schemas['schema_v6']
     }
-    provider_partition_name = provider_name
+    provider_partition_name = 'change'
 
     # ------------------------ Common for all providers -----------------------
 
