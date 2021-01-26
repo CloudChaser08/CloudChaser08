@@ -5,7 +5,7 @@ import spark.providers.inovalon.medicalclaims.transactional_schemas_v3 as mar_20
 
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 import spark.common.utility.logger as logger
 import subprocess
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -88,26 +88,29 @@ if __name__ == "__main__":
 
         driver.load()
         logger.log('Chunking input tables')
-        clm = driver.spark.table('clm')
 
         if is_schema_v2:
             logger.log('Adding missing Jan/Feb 2020 columns')
-            clm = clm.withColumn('billedamount', lit('')) \
+            clm = driver.spark.table('clm')\
+                .withColumn('billedamount', lit('')) \
                 .withColumn('allowedamount', lit('')) \
                 .withColumn('copayamount', lit('')) \
                 .withColumn('costamount', lit('')) \
                 .withColumn('paidamount', lit(''))
         elif is_schema_v3:
             logger.log('Adding missing Mar 2020 columns')
-            clm = clm.withColumn('billedamount', lit('')) \
+            clm = driver.spark.table('clm')\
+                .withColumn('billedamount', lit('')) \
                 .withColumn('allowedamount', lit('')) \
                 .withColumn('copayamount', lit('')) \
                 .withColumn('costamount', lit(''))
+        else:
+            clm = driver.spark.table('clm')
 
-        clm = clm.filter(F.substring(clm.claimuid, -2, 2).isin(rng))
+        clm = clm.filter(FN.substring(clm.claimuid, -2, 2).isin(rng))
 
         ccd = driver.spark.table('ccd')
-        ccd = ccd.filter(F.substring(ccd.claimuid, -2, 2).isin(rng))
+        ccd = ccd.filter(FN.substring(ccd.claimuid, -2, 2).isin(rng))
 
         # Inovalon sends duplicate claims from one package to the next. We have to dedup the claims
         # when ingesting. Run with the skip_filter_duplicates argument to skip
@@ -155,7 +158,8 @@ if __name__ == "__main__":
 
         # save transactions to disk. They will be added to the s3 reference location
         logger.log('Saving filtered input tables to hdfs')
-        query = "SELECT distinct clm.claimuid, RIGHT(clm.claimuid, 2) as last_char_claim_id, '{}' as date_input FROM clm" \
+        query = "SELECT distinct " \
+                "clm.claimuid, RIGHT(clm.claimuid, 2) as last_char_claim_id, '{}' as date_input FROM clm" \
             .format(date_input)
 
         partition = ['date_input', 'last_char_claim_id']

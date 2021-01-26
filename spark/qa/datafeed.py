@@ -179,10 +179,10 @@ def standard_datafeed(
         skip_unique_match_pairs = []
 
     if not source_claim_id_full_name:
-        logging.warn('No source claim provided, claim test will be skipped')
+        logging.warning('No source claim provided, claim test will be skipped')
 
     if not source_hvid_full_name:
-        logging.warn('No source hvid provided, hvid test will be skipped')
+        logging.warning('No source hvid provided, hvid test will be skipped')
 
     return Datafeed(
         datatype, source_data, target_data,
@@ -192,7 +192,7 @@ def standard_datafeed(
         validations=build_test_list([
             gender_validation('patient_gender'), state_validation('patient_state'), age_validation('patient_age')
         ], skip_validations, additional_validations),
-        unique_match_pairs = build_test_list([
+        unique_match_pairs=build_test_list([
             Comparison(source_claim_id_full_name, 'claim_id') if source_claim_id_full_name else None,
             Comparison(source_hvid_full_name, 'hvid') if source_hvid_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs)
@@ -484,10 +484,10 @@ def emr_datafeed(
         skip_unique_match_pairs = []
 
     if not source_enc_id_full_name:
-        logging.warn('No source enc_id provided, enc_id test will be skipped')
+        logging.warning('No source enc_id provided, enc_id test will be skipped')
 
     if not source_hvid_full_name:
-        logging.warn('No source hvid provided, hvid test will be skipped')
+        logging.warning('No source hvid provided, hvid test will be skipped')
 
     return Datafeed(
         datatype, source_data, target_data,

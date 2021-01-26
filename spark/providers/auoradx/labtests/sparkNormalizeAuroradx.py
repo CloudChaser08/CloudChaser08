@@ -57,7 +57,8 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         min_date = min_date.isoformat()
 
     records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
-    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId', 'hvJoinKey'], table_name='auroradx_payload', load_file_name=True)
+    payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId', 'hvJoinKey']
+                        , table_name='auroradx_payload', load_file_name=True)
 
     normalized_output = runner.run_all_spark_scripts([
         ['file_date', date_input, False]
@@ -104,10 +105,10 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("auroradx")
+    spark, sql_context = init("auroradx")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.end_to_end_test:
         output_path = OUTPUT_PATH_TEST

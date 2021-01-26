@@ -5,6 +5,7 @@ from pyspark.sql import Row
 import spark.helpers.file_utils as file_utils
 import spark.helpers.stats.utils as stats_utils
 
+
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('actual_table')
     spark['sqlContext'].sql('DROP SCHEMA custom_schema CASCADE')
@@ -46,7 +47,8 @@ def test_default(spark):
 
 
 def test_custom_table(spark):
-    assert stats_utils.get_provider_data(spark['sqlContext'], 'acutal_table', 'a', custom_schema='custom_schema', custom_table='custom_table').count() == 5
+    assert stats_utils.get_provider_data(spark['sqlContext'], 'acutal_table', 'a', custom_schema='custom_schema'
+                                         , custom_table='custom_table').count() == 5
 
 
 def test_cleanup(spark):

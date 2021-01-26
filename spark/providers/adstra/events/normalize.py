@@ -76,9 +76,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             PROVIDER_NAME, 'event_common_model',
             'source_record_date', date_input,
             partition_value=date_input,
-            hvm_historical_date=datetime(hvm_historical.year,
-                                     hvm_historical.month,
-                                     hvm_historical.day)
+            hvm_historical_date=datetime(hvm_historical.year, hvm_historical.month, hvm_historical.day)
         )
 
     if not test and not airflow_test:
@@ -94,9 +92,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Adstra')
+    spark, sql_context = init('Adstra')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

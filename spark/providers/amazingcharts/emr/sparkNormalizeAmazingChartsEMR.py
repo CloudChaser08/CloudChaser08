@@ -5,7 +5,7 @@ from spark.spark_setup import init
 from spark.common.emr.encounter import schema_v7 as encounter_schema
 from spark.common.emr.diagnosis import schema_v7 as diagnosis_schema
 from spark.common.emr.procedure import schema_v8 as procedure_schema
-from spark.common.emr.provider_order import schema_v7 as provider_order_schema
+# from spark.common.emr.provider_order import schema_v7 as provider_order_schema
 from spark.common.emr.lab_result import schema_v7 as lab_result_schema
 from spark.common.emr.medication import schema_v7 as medication_schema
 from spark.common.emr.clinical_observation import schema_v7 as clinical_observation_schema
@@ -17,11 +17,11 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.privacy.common as priv_common
+# import spark.helpers.privacy.common as priv_common
 import spark.helpers.privacy.emr.encounter as encounter_priv
 import spark.helpers.privacy.emr.diagnosis as diagnosis_priv
 import spark.helpers.privacy.emr.procedure as procedure_priv
-import spark.helpers.privacy.emr.provider_order as provider_order_priv
+# import spark.helpers.privacy.emr.provider_order as provider_order_priv
 import spark.helpers.privacy.emr.lab_result as lab_result_priv
 import spark.helpers.privacy.emr.medication as medication_priv
 import spark.helpers.privacy.emr.clinical_observation as clinical_observation_priv
@@ -45,7 +45,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
     max_cap = date_input
     max_cap_obj = datetime.strptime(max_cap, '%Y-%m-%d')
-    month_input = date_input.replace('-', '/')[:-3]  # amazingcharts match payload is delivered to a monthly location, so strip the day off date_input
+    month_input = date_input.replace('-', '/')[:-3]
+    #  amazingcharts match payload is delivered to a monthly location, so strip the day off date_input
 
     input_tables = [
         'd_costar',
@@ -154,8 +155,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         [], return_output=True
     )
 
-    normalized_procedure_1 = normalized_procedure_1.withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))) \
-            .where("length(proc_cd) != 0").cache()
+    normalized_procedure_1 = normalized_procedure_1.withColumn('proc_cd', explode(split(col('proc_cd'), '\s+')))\
+        .where("length(proc_cd) != 0").cache()
 
     join_keys = [
         normalized_procedure_1.proc_dt == normalized_procedure_3.proc_dt,
@@ -327,10 +328,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             input_date=date_input
         )
 
-def main(args):
-    spark, sqlContext = init('AmazingCharts EMR Normalization')
 
-    runner = Runner(sqlContext)
+def main(args):
+    spark, sql_context = init('AmazingCharts EMR Normalization')
+
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

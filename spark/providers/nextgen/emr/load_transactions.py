@@ -1,14 +1,15 @@
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 
 RAW_COLUMN_COUNT = 38
+
 
 def load(runner, input_path, s3_encounter_reference, s3_demographics_reference, test=False):
     df = records_loader \
         .load(runner, input_path, ['_c' + str(i) for i in range(RAW_COLUMN_COUNT)], 'csv', '|') \
-        .withColumn('tbl_type', F.col('_c3')) \
-        .withColumn('input_file_name', F.input_file_name()) \
+        .withColumn('tbl_type', FN.col('_c3')) \
+        .withColumn('input_file_name', FN.input_file_name()) \
         .repartition(1 if test else 5000, '_c1') \
         .where("_c0 = '5'")
 
@@ -21,11 +22,14 @@ def load(runner, input_path, s3_encounter_reference, s3_demographics_reference, 
     for t in TABLES:
         df.select(
             *([df['_c' + str(i)].alias(TABLE_COLUMNS[t][i]) for i in range(len(TABLE_COLUMNS[t]))] + [
-                F.regexp_extract('input_file_name', '(NG|HV)_LSSA_([^_]*)_[^\.]*.txt', 2).alias('reportingenterpriseid'),
-                F.regexp_extract('input_file_name', '(NG|HV)_LSSA_[^_]*_([^\.]*).txt', 2).alias('recorddate'),
-                F.regexp_extract('input_file_name', '((NG|HV)_LSSA_[^_]*_[^\.]*.txt)', 1).alias('dataset')
+                FN.regexp_extract(
+                    'input_file_name', r'(NG|HV)_LSSA_([^_]*)_[^\.]*.txt', 2).alias('reportingenterpriseid'),
+                FN.regexp_extract(
+                    'input_file_name', r'(NG|HV)_LSSA_[^_]*_([^\.]*).txt', 2).alias('recorddate'),
+                FN.regexp_extract(
+                    'input_file_name', r'((NG|HV)_LSSA_[^_]*_[^\.]*.txt)', 1).alias('dataset')
             ])
-        ).where(F.col('tbl_type').isin(*TABLE_TYPE[t])) \
+        ).where(FN.col('tbl_type').isin(*TABLE_TYPE[t])) \
             .createOrReplaceTempView(t)
 
     records_loader \
@@ -36,12 +40,13 @@ def load(runner, input_path, s3_encounter_reference, s3_demographics_reference, 
         .load(runner, s3_demographics_reference, TABLE_COLUMNS['old_demographics'], 'orc') \
         .createOrReplaceTempView('old_demographics')
 
+
 TABLES = ['new_encounter', 'new_demographics', 'vitalsigns', 'lipidpanel',
           'allergy', 'substanceusage', 'diagnosis', 'order', 'laborder',
           'labresult', 'medicationorder', 'procedure', 'extendeddata']
 
 TABLE_COLUMNS = {
-    'new_encounter' : [
+    'new_encounter': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -54,7 +59,7 @@ TABLE_COLUMNS = {
         'hcpprimarytaxonomy',
         'renderinghcpnpi'
     ],
-    'new_demographics' : [
+    'new_demographics': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -68,7 +73,7 @@ TABLE_COLUMNS = {
         'coveredbymedicarepartbflag',
         'patientpseudonym'
     ],
-    'vitalsigns' : [
+    'vitalsigns': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -96,7 +101,7 @@ TABLE_COLUMNS = {
         'weightkg',
         'weightlb'
     ],
-    'lipidpanel' : [
+    'lipidpanel': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -109,7 +114,7 @@ TABLE_COLUMNS = {
         'triglycerides',
         'totalcholesterol'
     ],
-    'allergy' : [
+    'allergy': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -125,7 +130,7 @@ TABLE_COLUMNS = {
         'reportedsymptoms',
         'intolerenceind'
     ],
-    'substanceusage' : [
+    'substanceusage': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -138,7 +143,7 @@ TABLE_COLUMNS = {
         'datadate',
         'emrcode'
     ],
-    'diagnosis' : [
+    'diagnosis': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -154,7 +159,7 @@ TABLE_COLUMNS = {
         'dxpriority',
         'snomedconceptid'
     ],
-    'order' : [
+    'order': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -194,7 +199,7 @@ TABLE_COLUMNS = {
         'orderinghcpprimarytaxonomy',
         'orderinghcpnpi'
     ],
-    'laborder' : [
+    'laborder': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -213,7 +218,7 @@ TABLE_COLUMNS = {
         'diagnosiscount',
         'diagnoses'
     ],
-    'labresult' : [
+    'labresult': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -234,7 +239,7 @@ TABLE_COLUMNS = {
         'referencerange',
         'normalabnormalflag'
     ],
-    'medicationorder' : [
+    'medicationorder': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -259,7 +264,7 @@ TABLE_COLUMNS = {
         'orgrefills',
         'datelastrefilled'
     ],
-    'procedure' : [
+    'procedure': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -269,7 +274,7 @@ TABLE_COLUMNS = {
         'emrcode',
         'datadatetime'
     ],
-    'extendeddata' : [
+    'extendeddata': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -284,7 +289,7 @@ TABLE_COLUMNS = {
         'emrcode',
         'result'
     ],
-    'old_encounter' : [
+    'old_encounter': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',
@@ -301,7 +306,7 @@ TABLE_COLUMNS = {
         'dataset',
         'nextrecorddate'
     ],
-    'old_demographics' : [
+    'old_demographics': [
         'preambleformatcode',
         'nextgengroupid',
         'referencedatetime',

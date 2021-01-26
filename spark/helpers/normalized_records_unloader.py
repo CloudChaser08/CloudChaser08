@@ -1,5 +1,4 @@
 import subprocess
-import os
 import re
 import time
 import spark.helpers.constants as constants
@@ -11,7 +10,7 @@ from spark.helpers.manifest_utils import list as list_manifest_files
 from spark.helpers.manifest_utils import OUTPUT_DIR
 from pyspark.sql.functions import when, col, lit
 
-from datetime import datetime, date
+from datetime import datetime
 
 
 def mk_move_file(prefix, test=False):
@@ -151,41 +150,46 @@ def partition_and_rename(
 
     runner.run_spark_script(common_dirpath + common_model_script, [
         ['table_name', 'final_unload', False],
-        ['properties', constants.unload_properties_template.format(provider_partition, date_partition, staging_dir), False],
+        ['properties'
+            , constants.unload_properties_template.format(provider_partition, date_partition, staging_dir), False],
         ['external', '', False],
         ['additional_columns', '', False]
     ])
 
     if partition_value is None and hvm_historical_date is None:
         runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-            ['select_statement', "SELECT {}, '{}' as {}, '0_PREDATES_HVM_HISTORY' as {} FROM {} WHERE {} is NULL".format(
-                ','.join(columns), provider, provider_partition, date_partition, table_name, date_column
-            ), False],
+            ['select_statement',
+             "SELECT {}, '{}' as {}, '0_PREDATES_HVM_HISTORY' as {} FROM {} WHERE {} is NULL".format(
+                 ','.join(columns), provider, provider_partition, date_partition, table_name, date_column), False],
             ['unload_partition_count', str(unload_partition_count), False],
             ['original_partition_count', old_partition_count, False],
             ['distribution_key', distribution_key, False]
         ])
         runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-            ['select_statement', "SELECT {0}, '{1}' as {4}, regexp_replace({3}, '-..$', '') as {5} FROM {2} WHERE {3} IS NOT NULL".format(
-                ','.join(columns), provider, table_name, date_column, provider_partition, date_partition
-            ), False],
+            ['select_statement',
+             "SELECT {0}, '{1}' as {4}, regexp_replace({3}, '-..$', '') as {5} FROM {2} WHERE {3} IS NOT NULL".format(
+                 ','.join(columns), provider, table_name, date_column, provider_partition, date_partition), False],
             ['unload_partition_count', str(unload_partition_count), False],
             ['original_partition_count', old_partition_count, False],
             ['distribution_key', distribution_key, False]
         ])
     elif partition_value is None and hvm_historical_date is not None:
         runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-            ['select_statement', "SELECT {0}, '{1}' as {4}, regexp_replace({3}, '-..$', '') as {5} FROM {2} WHERE {3} IS NOT NULL AND {3} >= CAST('{6}' AS DATE)".format(
-                ','.join(columns), provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
-            ), False],
+            ['select_statement',
+             "SELECT {0}, '{1}' as {4}, regexp_replace({3}, '-..$', '') as {5} FROM {2} "
+             "WHERE {3} IS NOT NULL AND {3} >= CAST('{6}' AS DATE)".format(
+                 ','.join(columns), provider, table_name, date_column, provider_partition,
+                 date_partition, hvm_historical_date_string), False],
             ['unload_partition_count', str(unload_partition_count), False],
             ['original_partition_count', old_partition_count, False],
             ['distribution_key', distribution_key, False]
         ])
         runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
-            ['select_statement', "SELECT {0}, '{1}' as {4}, '0_PREDATES_HVM_HISTORY' as {5} FROM {2} WHERE {3} IS NULL OR {3} < CAST('{6}' AS DATE)".format(
-                ','.join(columns), provider, table_name, date_column, provider_partition, date_partition, hvm_historical_date_string
-            ), False],
+            ['select_statement',
+             "SELECT {0}, '{1}' as {4}, '0_PREDATES_HVM_HISTORY' as {5} FROM {2} "
+             "WHERE {3} IS NULL OR {3} < CAST('{6}' AS DATE)".format(
+                ','.join(columns), provider, table_name, date_column, provider_partition
+                , date_partition, hvm_historical_date_string), False],
             ['unload_partition_count', str(unload_partition_count), False],
             ['original_partition_count', old_partition_count, False],
             ['distribution_key', distribution_key, False]
@@ -233,7 +237,8 @@ def partition_custom(
         part_files_cmd = ['hadoop', 'fs', '-ls', '-R', staging_dir]
         common_dirpath = '../../../../common/'
 
-    model_columns = [[f['name'], f['type']] for f in runner.sqlContext.sql('SELECT * FROM {}'.format(table_name)).schema.jsonValue()['fields']]
+    model_columns = [[f['name'], f['type']] for f in runner.sqlContext.sql(
+        'SELECT * FROM {}'.format(table_name)).schema.jsonValue()['fields']]
 
     runner.run_spark_script(common_dirpath + 'custom_model.sql', [
         ['table_name', 'final_unload', False],
@@ -343,9 +348,8 @@ def timed_distcp(dest,
 def unload_delimited_file(
         spark, runner, output_path, table_name, test=False, num_files=1, delimiter='|',
         output_file_name_prefix='part-', output_file_name=None, output_file_name_template=None,
-        header=False, quote=True, compression='gzip'
-    ):
-    "Unload a table to a delimited file at the specified location"
+        header=False, quote=True, compression='gzip'):
+    """Unload a table to a delimited file at the specified location"""
     common_dirpath = "../common/" if test else "../../../../common/"
 
     file_type = FileSystemType.LOCAL if test else FileSystemType.HDFS

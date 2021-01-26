@@ -20,7 +20,8 @@ S3_CONF = {
 }
 
 
-spark = SparkSession.builder.master("yarn").appName("marketplace-pull-hcpcs").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
+spark = SparkSession.builder.master("yarn").appName(
+    "marketplace-pull-hcpcs").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
 
 
 def pull_hcpcs():
@@ -38,6 +39,7 @@ def pull_hcpcs():
         shutil.copyfileobj(f_in, f_out)
 
     s3.meta.client.upload_file('proc.psv.gz', **S3_CONF)
+
 
 if __name__ == "__main__":
     sys.exit(pull_hcpcs())

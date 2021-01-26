@@ -91,7 +91,6 @@ schema_v1 = StructType([
 ])
 
 
-
 schema_v3 = StructType([
     StructField('row_id', LongType(), True),
     StructField('hv_lab_test_id', StringType(), True),

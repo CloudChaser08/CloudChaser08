@@ -1,7 +1,7 @@
 TABLES = ['haystack_raw']
 
 TABLE_COLUMNS = {
-    'haystack_raw' : [
+    'haystack_raw': [
         'first_name',
         'last_name',
         'date_of_birth',

@@ -11,7 +11,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
-import spark.helpers.explode as explode
+# import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.events as event_priv
 
@@ -94,7 +94,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     valid_aid = events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftsemi')
     non_valid_aid = events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftanti') \
-                                 .withColumn('logical_delete_reason', lit('DELETE'))
+                             .withColumn('logical_delete_reason', lit('DELETE'))
 
     validated_data = valid_aid.union(non_valid_aid).createOrReplaceTempView('event_common_model')
 
@@ -130,9 +130,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Acxiom')
+    spark, sql_context = init('Acxiom')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

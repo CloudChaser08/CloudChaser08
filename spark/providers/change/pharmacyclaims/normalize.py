@@ -2,11 +2,10 @@ import os
 import spark.providers.change.pharmacyclaims.transactional_schemas as source_table_schemas
 import subprocess
 import argparse
-from spark.common.utility.output_type import DataType, RunType
 import spark.common.utility.logger as logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
-from datetime import date, datetime
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 if __name__ == "__main__":
@@ -54,7 +53,8 @@ if __name__ == "__main__":
     driver.init_spark_context(conf_parameters=conf_parameters)
 
     logger.log('Loading previous history')
-    driver.spark.read.parquet(os.path.join(driver.output_path, schema.output_directory, 'part_provider=emdeon/')).createOrReplaceTempView('_temp_pharmacyclaims_nb')
+    driver.spark.read.parquet(os.path.join(driver.output_path, schema.output_directory, 'part_provider=emdeon/'))\
+        .createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
     driver.load()
     driver.transform()

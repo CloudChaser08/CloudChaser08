@@ -1,7 +1,6 @@
 from spark.spark_setup import init
 from spark.runner import Runner
 import spark.helpers.payload_loader as payload_loader
-import spark.helpers.file_utils as file_utils
 import spark.qa.datafeed as datafeed
 
 spark, sqlContext = init("Mckesson Macrohelix")

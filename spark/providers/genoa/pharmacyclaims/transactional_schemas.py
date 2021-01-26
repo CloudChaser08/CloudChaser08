@@ -1,7 +1,7 @@
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
-    'genoa_rx_raw' : SourceTable(
+    'genoa_rx_raw': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -47,9 +47,9 @@ TABLE_CONF = {
             'payer_id_qualifier',
             'plan_identification',
             'plan_name',
-            'transaction_code', # new column 2017-11-01 
-            'response_code', # new column 2017-11-01 
-            'sales_key', # new column 2017-11-01 
+            'transaction_code',  # new column 2017-11-01
+            'response_code',  # new column 2017-11-01
+            'sales_key',  # new column 2017-11-01
             'hv_join_key'
         ]
     ),

@@ -74,8 +74,7 @@ class MarketplaceDriver(object):
         provider_directory_path = os.path.dirname(
             inspect.getframeinfo(previous_stack_frame).filename)
 
-        provider_directory_path = \
-                provider_directory_path.replace('spark/target/dewey.zip/', "") + '/'
+        provider_directory_path = provider_directory_path.replace('spark/target/dewey.zip/', "") + '/'
 
         # set global variables
         first_schema_name = list(output_table_names_to_schemas.keys())[0]
@@ -199,7 +198,7 @@ class MarketplaceDriver(object):
                      ['AVAILABLE_START_DATE', self.available_start_date, False],
                      ['EARLIEST_SERVICE_DATE', self.earliest_service_date, False]]
         self.runner.run_all_spark_scripts(variables, directory_path=self.provider_directory_path,
-                                          count_transform_sql = self.count_transform_sql)
+                                          count_transform_sql=self.count_transform_sql)
 
     def apply_schema(self, data_frame, schema_obj):
         output = schema_enforcer.apply_schema(

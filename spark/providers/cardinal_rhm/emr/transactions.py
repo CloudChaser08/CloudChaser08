@@ -1,7 +1,7 @@
 TABLES = ['header', 'serviceline']
 
 TABLE_COLUMNS = {
-    'header' : [
+    'header': [
         'header_record_type',
         'header_client_number',
         'header_client_name',
@@ -417,7 +417,7 @@ TABLE_COLUMNS = {
         'header_patient_city',
         'header_hvjoinkey'
     ],
-    'serviceline' : [
+    'serviceline': [
         'service_record_type',
         'service_entity_id',
         'service_charge_line_number',

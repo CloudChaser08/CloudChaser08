@@ -12,20 +12,24 @@ def filter_due_to_pos_itb(
 
 
 # columns to nullify depending on place of service or inst type of bill
-columns_to_nullify = [
-    'prov_rendering_npi', 'prov_rendering_tax_id', 'prov_rendering_ssn', 'prov_rendering_state_license', 'prov_rendering_upin',
-    'prov_rendering_commercial_id', 'prov_rendering_name_1', 'prov_rendering_name_2', 'prov_rendering_address_1', 'prov_rendering_address_2',
-    'prov_rendering_city', 'prov_rendering_state', 'prov_rendering_zip', 'prov_rendering_vendor_id', 'prov_rendering_dea_id',
-    'prov_billing_npi', 'prov_billing_tax_id', 'prov_billing_ssn', 'prov_billing_state_license', 'prov_billing_upin',
-    'prov_billing_commercial_id', 'prov_billing_name_1', 'prov_billing_name_2', 'prov_billing_address_1', 'prov_billing_address_2',
-    'prov_billing_city', 'prov_billing_state', 'prov_billing_zip', 'prov_billing_vendor_id', 'prov_billing_dea_id', 'prov_referring_npi',
-    'prov_referring_tax_id', 'prov_referring_ssn', 'prov_referring_state_license', 'prov_referring_upin', 'prov_referring_commercial_id',
-    'prov_referring_name_1', 'prov_referring_name_2', 'prov_referring_address_1', 'prov_referring_address_2', 'prov_referring_city',
-    'prov_referring_state', 'prov_referring_zip', 'prov_referring_vendor_id', 'prov_referring_dea_id', 'prov_facility_npi',
-    'prov_facility_tax_id', 'prov_facility_ssn', 'prov_facility_state_license', 'prov_facility_upin', 'prov_facility_commercial_id',
-    'prov_facility_name_1', 'prov_facility_name_2', 'prov_facility_address_1', 'prov_facility_address_2', 'prov_facility_city',
-    'prov_facility_state', 'prov_facility_zip', 'prov_facility_vendor_id', 'prov_facility_dea_id'
-]
+columns_to_nullify = \
+    [
+        'prov_rendering_npi', 'prov_rendering_tax_id', 'prov_rendering_ssn', 'prov_rendering_state_license',
+        'prov_rendering_upin', 'prov_rendering_commercial_id', 'prov_rendering_name_1', 'prov_rendering_name_2',
+        'prov_rendering_address_1', 'prov_rendering_address_2', 'prov_rendering_city', 'prov_rendering_state',
+        'prov_rendering_zip', 'prov_rendering_vendor_id', 'prov_rendering_dea_id', 'prov_billing_npi',
+        'prov_billing_tax_id', 'prov_billing_ssn', 'prov_billing_state_license', 'prov_billing_upin',
+        'prov_billing_commercial_id', 'prov_billing_name_1', 'prov_billing_name_2', 'prov_billing_address_1',
+        'prov_billing_address_2', 'prov_billing_city', 'prov_billing_state', 'prov_billing_zip',
+        'prov_billing_vendor_id', 'prov_billing_dea_id', 'prov_referring_npi', 'prov_referring_tax_id',
+        'prov_referring_ssn', 'prov_referring_state_license', 'prov_referring_upin', 'prov_referring_commercial_id',
+        'prov_referring_name_1', 'prov_referring_name_2', 'prov_referring_address_1', 'prov_referring_address_2',
+        'prov_referring_city', 'prov_referring_state', 'prov_referring_zip', 'prov_referring_vendor_id',
+        'prov_referring_dea_id', 'prov_facility_npi', 'prov_facility_tax_id', 'prov_facility_ssn',
+        'prov_facility_state_license', 'prov_facility_upin', 'prov_facility_commercial_id', 'prov_facility_name_1',
+        'prov_facility_name_2', 'prov_facility_address_1', 'prov_facility_address_2', 'prov_facility_city',
+        'prov_facility_state', 'prov_facility_zip', 'prov_facility_vendor_id', 'prov_facility_dea_id'
+    ]
 
 medical_transformer = priv_common.Transformer(
     inst_discharge_status_std_id=[

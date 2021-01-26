@@ -1,7 +1,5 @@
 #! /usr/bin/python
 import argparse
-from datetime import datetime
-import dateutil.tz as tz
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -10,10 +8,8 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.constants as constants
 from pyspark.sql.types import StringType, StructType, StructField
-from pyspark.sql.functions import udf, lit
 from spark.providers.haystack.custom import transactions
 import spark.helpers.schema_enforcer as schema_enforcer
-import subprocess
 import uuid
 
 from spark.common.utility.output_type import DataType, RunType
@@ -36,17 +32,20 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
         output_dir = '/tmp/staging/' + group_id + '/'
     elif airflow_test:
         if date:
-            matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'.format(date.replace('-', '/'))
-            matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'.format(date.replace('-', '/'))
+            matching_path = \
+                's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'.format(date.replace('-', '/'))
+            incoming_path = \
+                's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'.format(date.replace('-', '/'))
             output_dir = '/tmp/staging/' + date.replace('-', '/') + '/'
         else:
             matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'.format(group_id)
-            matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'.format(group_id)
+            incoming_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'.format(group_id)
             output_dir = '/tmp/staging/' + group_id + '/'
     else:
         if date:
             incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
-            matching_path = 's3a://salusv/matching/payload/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
+            matching_path = \
+                's3a://salusv/matching/payload/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
             output_dir = constants.hdfs_staging_dir + date.replace('-', '/') + '/'
         else:
             incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, group_id)
@@ -125,10 +124,10 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
 
 def main(args):
     # init
-    spark, sqlContext = init("Haystack Mastering")
+    spark, sql_context = init("Haystack Mastering")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.channel, args.group_id, date=args.date, airflow_test=args.airflow_test)
 

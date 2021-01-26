@@ -5,6 +5,7 @@ from spark.common.utility import logger
 from spark.helpers.hdfs_tools import list_parquet_files
 from datetime import date
 
+
 def get_abs_path(source_file, relative_filename):
     return os.path.abspath(
         os.path.join(

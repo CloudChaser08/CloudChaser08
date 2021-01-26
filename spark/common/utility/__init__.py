@@ -8,6 +8,7 @@ from pyspark import SparkContext
 class SparkJobNotCompleteException(Exception):
     """Exception for when the history server doesn't think a Spark job is complete"""
 
+
 def get_spark_runtime(json_endpoint):
     """Returns the total runtime in seconds for all jobs in the current SparkContext.
 
@@ -37,14 +38,13 @@ def get_spark_runtime(json_endpoint):
         if 'completionTime' not in job:
             raise SparkJobNotCompleteException
 
-        submit_time = \
-                datetime.strptime(job['submissionTime'][:19], datetime_pattern)
-        completion_time = \
-                datetime.strptime(job['completionTime'][:19], datetime_pattern)
+        submit_time = datetime.strptime(job['submissionTime'][:19], datetime_pattern)
+        completion_time = datetime.strptime(job['completionTime'][:19], datetime_pattern)
 
         total_time += (completion_time - submit_time).total_seconds()
 
     return total_time
+
 
 def format_time(seconds):
     intervals = (

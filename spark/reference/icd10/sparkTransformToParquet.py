@@ -21,7 +21,7 @@ def run(spark, runner, execution_date):
 
     pcs = spark.read.text(PCS_INPUT)
     cm = spark.read.text(CM_INPUT)
-    '''
+    """
     Fixed Width Layout for ICD10 Reference Data:
 
     Position | Length | Contents
@@ -35,11 +35,13 @@ def run(spark, runner, execution_date):
        17    |    60  |  Short description
        77    |     1  |  Blank
        78    |   323  |  Long description
-    '''
+    """
 
     external_table_loader.load_icd_diag_codes(runner.sqlContext)
-    external_table_loader.load_analytics_db_table(runner.sqlContext, "default", "ref_icd10_diagnosis", "ref_icd10_diagnosis")
-    external_table_loader.load_analytics_db_table(runner.sqlContext, "default", "ref_icd10_procedure", "ref_icd10_procedure")
+    external_table_loader.load_analytics_db_table(
+        runner.sqlContext, "default", "ref_icd10_diagnosis", "ref_icd10_diagnosis")
+    external_table_loader.load_analytics_db_table(
+        runner.sqlContext, "default", "ref_icd10_procedure", "ref_icd10_procedure")
 
     trimmed_pcs = (postprocessor.compose(
         postprocessor.trimmify,
@@ -68,8 +70,7 @@ def run(spark, runner, execution_date):
         postprocessor.compose(
             postprocessor.trimmify,
             postprocessor.nullify
-        )
-            (
+        )(
             cm.select(
                 cm.value.substr(1, 5).alias('ordernum'),
                 cm.value.substr(7, 7).alias('code'),
@@ -82,7 +83,8 @@ def run(spark, runner, execution_date):
 
     current_cm_codes_table = spark.table('ref_icd10_diagnosis')
 
-    missing_cm_codes = current_cm_codes_table.join(trimmed_cm, current_cm_codes_table.code == trimmed_cm.code, 'leftanti')
+    missing_cm_codes = current_cm_codes_table.join(
+        trimmed_cm, current_cm_codes_table.code == trimmed_cm.code, 'leftanti')
 
     all_cm_codes = trimmed_cm.union(missing_cm_codes)
 
@@ -125,9 +127,9 @@ def run(spark, runner, execution_date):
 
 
 def main(args):
-    spark, sqlContext = init('Reference ICD10')
+    spark, sql_context = init('Reference ICD10')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
     run(spark, runner, args.year)
 
     spark.stop()

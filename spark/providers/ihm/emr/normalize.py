@@ -6,7 +6,7 @@ from spark.common.emr.diagnosis import schemas as diagnosis_schemas
 from spark.common.emr.procedure import schemas as procedure_schemas
 from spark.common.emr.lab_test import schemas as lab_test_schemas
 from spark.common.emr.medication import schemas as medication_schemas
-import spark.helpers.external_table_loader as external_table_loader
+# import spark.helpers.external_table_loader as external_table_loader
 
 
 if __name__ == "__main__":

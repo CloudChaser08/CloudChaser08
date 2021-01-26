@@ -9,7 +9,8 @@ import spark.helpers.postprocessor as postprocessor
 from spark.spark_setup import init
 
 # This is the normalization script for the NCPDP reference data. 
-# Right now, only the `Provider Information` (mas.txt) and `Provider Information Transactions` (trn.txt) files are being parsed.
+# Right now, only the `Provider Information` (mas.txt)
+# and `Provider Information Transactions` (trn.txt) files are being parsed.
 # These contain data on pharmacy and non-pharmacy dispensing site records with geographic and licensing information.
 # More information can be found in "s3://salusv/sample/ncpdp/NCPDP dataQ Implementation Guide v3.1.pdf"
 
@@ -22,11 +23,12 @@ from spark.spark_setup import init
 
 INCOMING_DATEFORMAT = "%Y%m%d"
 
+
 # We can't use a generalized fixed width file parser because the first and last rows have different content.
 def ncpdp_fixed_width_to_parquet(spark, input_path, output_path, transaction_table, master_table):
     """
-    Converts a fixed width file found in `input_filename` to a parquet file in `output_path` using the parsing params found in `parse_path`.
-    Also deletes the first and last rows which are special to NCPDP and are not standard.
+    Converts a fixed width file found in `input_filename` to a parquet file in `output_path` using the parsing
+    params found in `parse_path`. Also deletes the first and last rows which are special to NCPDP and are not standard.
     """
     
     master_output = os.path.join(output_path, "master", master_table)
@@ -50,7 +52,6 @@ def ncpdp_fixed_width_to_parquet(spark, input_path, output_path, transaction_tab
         cleaned = [(row[0].strip(), int(row[1]), int(row[2]), row[3].strip()) for row in parsing_data]
         df = postprocessor.parse_fixed_width_columns(df=df, columns=cleaned)
 
-
     internal_table_name = "ref_ncpdp_transactions_{table}".format(table=transaction_table)
     df.createOrReplaceTempView(internal_table_name)
 
@@ -58,10 +59,12 @@ def ncpdp_fixed_width_to_parquet(spark, input_path, output_path, transaction_tab
     # but have pseudo id of 9999999
     # "9999999M010901202081801 Copyright 2020 National Council for Prescription Drug Programs, All Rights Reserved "
     # Where "09012020" is the date and 81801 is the row count
-    sql = "select * from {internal_table_name} where ncpdp_prov_id != '9999999'".format(internal_table_name=internal_table_name)
+    sql = "select * from {internal_table_name} where ncpdp_prov_id != '9999999'".format(
+        internal_table_name=internal_table_name)
     res_df = spark.sql(sql)
 
-    # The output paths are templated by date, so if it runs again for the same date, it should overwrite the old version for that date. 
+    # The output paths are templated by date, so if it runs again for the same date,
+    # it should overwrite the old version for that date.
     res_df.repartition(1).write.parquet(transaction_output, mode='overwrite')
 
     # drop the columns only relevant to the transaction table
@@ -122,6 +125,7 @@ def run(spark, input_path, output_path, date, date_prev, prev_master_path=None):
             master_table=master_table
         )
 
+
 def get_last_month(date):
     # get last month, fixed day since timedelta doesn't do months
     year, month, day = date.timetuple()[:3]
@@ -130,8 +134,9 @@ def get_last_month(date):
     
     return date_prev
 
+
 def main(args):
-    spark, sqlContext = init('Reference NCPDP')
+    spark, sql_context = init('Reference NCPDP')
     
     input_path = 's3://salusv/incoming/reference/ncpdp/{date}/'
     output_path = 's3://salusv/reference/parquet/ncpdp/{date}/'

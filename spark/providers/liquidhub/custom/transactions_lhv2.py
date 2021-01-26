@@ -1,7 +1,7 @@
 TABLES = ['liquidhub_raw']
 
 TABLE_COLUMNS = {
-    'liquidhub_raw' : [
+    'liquidhub_raw': [
         'source_patient_id',
         'first_name',
         'middle_name',

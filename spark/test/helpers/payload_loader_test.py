@@ -90,6 +90,7 @@ def test_custom_table_created(spark):
             table_created = True
     assert table_created
 
+
 def test_file_name_loaded(spark):
     """
     Test that the file name(s) appear in an 'input_file_name' column in the

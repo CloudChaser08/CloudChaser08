@@ -1,7 +1,6 @@
 import argparse
-import time as time_module
 from subprocess import check_output
-from datetime import datetime, date, time
+from datetime import datetime, time
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
@@ -36,7 +35,7 @@ from spark.common.emr.procedure import schema_v11 as procedure_schema
 from spark.common.emr.provider_order import schema_v9 as provider_order_schema
 from spark.common.emr.vital_sign import schema_v4 as vital_sign_schema
 
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 
 import logging
 
@@ -60,7 +59,8 @@ OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 def run(spark, runner, date_input, input_file_path, payload_path, normalize_encounter=True,
         demo_ref=S3_DEMOGRAPHICS_REFERENCE, enc_ref=S3_ENCOUNTER_REFERENCE,
         test=False, airflow_test=False):
-    runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
+    runner.sqlContext.sql(
+        'SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
     runner.sqlContext.sql('SET hive.exec.compress.output=true')
     runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress=true')
 
@@ -146,7 +146,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             postprocessor.trimmify, postprocessor.nullify
         )(runner.sqlContext.table(table)).createOrReplaceTempView(table)
 
-    runner.sqlContext.table('demographics_local').cache_and_track('demographics_local').createOrReplaceTempView('demographics_local')
+    runner.sqlContext.table(
+        'demographics_local').cache_and_track('demographics_local').createOrReplaceTempView('demographics_local')
 
     runner.sqlContext.table('demographics_local').count()
 
@@ -170,8 +171,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
                                 ['min_date', min_date],
                                 ['max_date', max_date]
                             ],
-                            return_output=True
-                           ).createOrReplaceTempView('procedure_order_real_actcode')
+                            return_output=True).createOrReplaceTempView('procedure_order_real_actcode')
     normalized['procedure'] = schema_enforcer.apply_schema(
         runner.run_spark_script('normalize_procedure_1.sql', [
             ['min_date', min_date],
@@ -207,7 +207,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     logging.debug("Normalized lab result")
 
     runner.sqlContext.table('medicationorder') \
-        .withColumn('row_num', F.monotonically_increasing_id()) \
+        .withColumn('row_num', FN.monotonically_increasing_id()) \
         .createOrReplaceTempView('medicationorder')
     icd_diag_codes = runner.sqlContext.table('icd_diag_codes')
     tmp_medication = runner.run_spark_script('normalize_medication.sql', [
@@ -220,13 +220,14 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
         .select(*(
             [tmp_medication[c] for c in tmp_medication.columns if c != 'medctn_diag_cd'] + 
             [icd_diag_codes.code.alias('medctn_diag_cd')]
-        )).select(*p1.columns) # Re-order or else the union will not work correctly
+        )).select(*p1.columns)
+    #  Re-order or else the union will not work correctly
 
     # The row_num column is generated inside the normalize_medication.sql
     # script in order to ensure that when we run a distinct to remove
     # duplicates, we maintain at least 1 normalized row per source row
     normalized['medication'] = p1.union(p2).distinct().drop('row_num') \
-        .withColumn('medctn_diag_dt', F.coalesce(F.col('medctn_ord_dt'), F.col('enc_dt'))) # For whitelisting purposes
+        .withColumn('medctn_diag_dt', FN.coalesce(FN.col('medctn_ord_dt'), FN.col('enc_dt')))  # For whitelisting purposes
     logging.debug("Normalized medication")
 
     runner.run_spark_script('normalize_provider_order_prenorm.sql', [
@@ -237,7 +238,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
         ['min_date', min_date],
         ['max_date', max_date]
     ], return_output=True) \
-        .withColumn('prov_ord_diag_dt', F.coalesce(F.col('prov_ord_dt'), F.col('enc_dt'))) # For whitelisting purposes
+        .withColumn('prov_ord_diag_dt', FN.coalesce(FN.col('prov_ord_dt'), FN.col('enc_dt')))  # For whitelisting purposes
     logging.debug("Normalized provider order")
 
     cln_obs1 = runner.run_spark_script('normalize_clinical_observation_1.sql', [
@@ -295,7 +296,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             'column_name': 'prov_ord_rsn_cd',
             'domain_name': 'emr_prov_ord.prov_ord_rsn_cd',
             'whitelist_col_name': 'gen_ref_cd',
-            'comp_col_names' : ['prov_ord_rsn_cd_qual']
+            'comp_col_names': ['prov_ord_rsn_cd_qual']
         }, {
             'column_name': 'prov_ord_rsn_nm',
             'domain_name': 'emr_prov_ord.prov_ord_rsn_nm',
@@ -304,7 +305,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             'column_name': 'prov_ord_stat_cd',
             'domain_name': 'emr_prov_ord.prov_ord_stat_cd',
             'whitelist_col_name': 'gen_ref_cd',
-            'comp_col_names' : ['prov_ord_stat_cd_qual']
+            'comp_col_names': ['prov_ord_stat_cd_qual']
         }, {
             'column_name': 'prov_ord_complt_rsn_cd',
             'domain_name': 'emr_prov_ord.prov_ord_complt_rsn_cd',
@@ -321,12 +322,12 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             'column_name': 'prov_ord_trtmt_typ_cd',
             'domain_name': 'emr_prov_ord.prov_ord_trtmt_typ_cd',
             'whitelist_col_name': 'gen_ref_cd',
-            'comp_col_names' : ['prov_ord_trtmt_typ_cd_qual']
+            'comp_col_names': ['prov_ord_trtmt_typ_cd_qual']
         }, {
             'column_name': 'prov_ord_rfrd_speclty_cd',
             'domain_name': 'emr_prov_ord.prov_ord_rfrd_speclty_cd',
             'whitelist_col_name': 'gen_ref_cd',
-            'comp_col_names' : ['prov_ord_rfrd_speclty_cd_qual']
+            'comp_col_names': ['prov_ord_rfrd_speclty_cd_qual']
         }, {
             'column_name': 'prov_ord_specl_instrs_desc',
             'domain_name': 'emr_prov_ord.prov_ord_specl_instrs_desc',
@@ -335,7 +336,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
 
     provider_order_transformer = Transformer(
         prov_ord_diag_cd=[
-            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['prov_ord_diag_cd', 'prov_ord_diag_cd_qual', 'prov_ord_diag_dt'])
+            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                              ['prov_ord_diag_cd', 'prov_ord_diag_cd_qual', 'prov_ord_diag_dt'])
         ]
     )
 
@@ -346,7 +348,6 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             'whitelist_col_name': 'gen_ref_cd',
             'comp_col_names': ['proc_stat_cd_qual']
         }]
-
 
     def update_lab_order_whitelists(whitelists):
         return whitelists + [{
@@ -390,80 +391,81 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
 
     medication_transformer = Transformer(
         medctn_diag_cd=[
-            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['medctn_diag_cd', 'medctn_diag_cd_qual', 'medctn_diag_dt'])
+            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                              ['medctn_diag_cd', 'medctn_diag_cd_qual', 'medctn_diag_dt'])
         ]
     )
 
     normalized_tables = [
         {
-            'schema'        : clinical_observation_schema,
-            'data_type'     : 'clinical_observation',
-            'date_column'   : 'part_mth',
+            'schema': clinical_observation_schema,
+            'data_type': 'clinical_observation',
+            'date_column': 'part_mth',
             'privacy_filter': priv_clinical_observation,
-            'partitions'    : 100
+            'partitions': 100
         },
         {
-            'schema'        : diagnosis_schema,
-            'data_type'     : 'diagnosis',
-            'date_column'   : 'enc_dt',
+            'schema': diagnosis_schema,
+            'data_type': 'diagnosis',
+            'date_column': 'enc_dt',
             'privacy_filter': priv_diagnosis,
-            'filter_args'   : [update_diagnosis_whitelists]
+            'filter_args': [update_diagnosis_whitelists]
         },
         {
-            'schema'        : medication_schema,
-            'data_type'     : 'medication',
-            'date_column'   : 'part_mth',
+            'schema': medication_schema,
+            'data_type': 'medication',
+            'date_column': 'part_mth',
             'privacy_filter': priv_medication,
-            'filter_args'   : [update_medication_whitelists, medication_transformer],
-            'cols_to_keep'  : ['medctn_diag_dt'],
-            'cols_to_drop'  : 'medctn_diag_dt'
+            'filter_args': [update_medication_whitelists, medication_transformer],
+            'cols_to_keep': ['medctn_diag_dt'],
+            'cols_to_drop': 'medctn_diag_dt'
         },
         {
-            'schema'        : procedure_schema,
-            'data_type'     : 'procedure',
-            'date_column'   : 'proc_dt',
+            'schema': procedure_schema,
+            'data_type': 'procedure',
+            'date_column': 'proc_dt',
             'privacy_filter': priv_procedure,
-            'filter_args'   : [update_procedure_whitelists]
+            'filter_args': [update_procedure_whitelists]
         },
         {
-            'schema'        : lab_result_schema,
-            'data_type'     : 'lab_result',
-            'date_column'   : 'part_mth',
+            'schema': lab_result_schema,
+            'data_type': 'lab_result',
+            'date_column': 'part_mth',
             'privacy_filter': priv_lab_result,
-            'filter_args'   : [update_lab_result_whitelists]
+            'filter_args': [update_lab_result_whitelists]
         },
         {
-            'schema'        : lab_order_schema,
-            'data_type'     : 'lab_order',
-            'date_column'   : 'part_mth',
+            'schema': lab_order_schema,
+            'data_type': 'lab_order',
+            'date_column': 'part_mth',
             'privacy_filter': priv_lab_order,
-            'filter_args'   : [update_lab_order_whitelists]
+            'filter_args': [update_lab_order_whitelists]
         },
         {
-            'schema'        : provider_order_schema,
-            'data_type'     : 'provider_order',
-            'date_column'   : 'part_mth',
+            'schema': provider_order_schema,
+            'data_type': 'provider_order',
+            'date_column': 'part_mth',
             'privacy_filter': priv_provider_order,
-            'filter_args'   : [update_provider_order_whitelists, provider_order_transformer],
-            'cols_to_keep'  : ['prov_ord_diag_dt'],
-            'cols_to_drop'  : 'prov_ord_diag_dt',
-            'partitions'    : 40
+            'filter_args': [update_provider_order_whitelists, provider_order_transformer],
+            'cols_to_keep': ['prov_ord_diag_dt'],
+            'cols_to_drop': 'prov_ord_diag_dt',
+            'partitions': 40
         },
         {
-            'schema'        : vital_sign_schema,
-            'data_type'     : 'vital_sign',
-            'date_column'   : 'part_mth',
+            'schema': vital_sign_schema,
+            'data_type': 'vital_sign',
+            'date_column': 'part_mth',
             'privacy_filter': priv_vital_sign
         }
     ]
 
     if normalize_encounter:
         normalized_tables.append({
-            'schema'        : encounter_schema,
-            'data_type'     : 'encounter',
-            'date_column'   : 'enc_start_dt',
+            'schema': encounter_schema,
+            'data_type': 'encounter',
+            'date_column': 'enc_start_dt',
             'privacy_filter': priv_encounter,
-            'filter_args'   : [update_encounter_whitelists]
+            'filter_args': [update_encounter_whitelists]
         })
 
     min_hvm_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'HVM_AVAILABLE_HISTORY_START_DATE')
@@ -514,10 +516,10 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
         logging.debug("Cleaned up {}".format(table['data_type']))
 
     if not test:
-        runner.sqlContext.table('encounter_dedup').coalesce(1000).write \
-                .orc(HDFS_ENCOUNTER_REFERENCE, compression='zlib', mode='overwrite')
-        runner.sqlContext.table('demographics_local').coalesce(1000).write \
-                .orc(HDFS_DEMOGRAPHICS_REFERENCE, compression='zlib', mode='overwrite')
+        runner.sqlContext.table('encounter_dedup').coalesce(1000).write.orc(
+            HDFS_ENCOUNTER_REFERENCE, compression='zlib', mode='overwrite')
+        runner.sqlContext.table('demographics_local').coalesce(1000).write.orc(
+            HDFS_DEMOGRAPHICS_REFERENCE, compression='zlib', mode='overwrite')
 
     if not test and not airflow_test:
         logger.log_run_details(
@@ -529,6 +531,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             run_type=RunType.MARKETPLACE,
             input_date=date_input
         )
+
 
 def clean_and_union_cln_obs(sqlc, cln_obs1, cln_obs3):
     substanceusage_whitelists = [{
@@ -579,7 +582,9 @@ def clean_and_union_cln_obs(sqlc, cln_obs1, cln_obs3):
         ]
     )(cln_obs3)
 
-    return p2.union(p1.select(*[p1[c] for c in p2.columns])) # Reorder before unioning
+    # Reorder before unioning
+    return p2.union(p1.select(*[p1[c] for c in p2.columns]))
+
 
 def main(args):
     # init
@@ -617,7 +622,7 @@ def main(args):
                 raise ValueError("Unexpected protocol in encounter output path")
             check_output(['hadoop', 'fs', '-rm', '-r', '-f', HDFS_ENCOUNTER_REFERENCE])
         except:
-            logging.warn("Something went wrong in persisting the new distinct encounter data")
+            logging.warning("Something went wrong in persisting the new distinct encounter data")
 
         try:
             check_output(['hadoop', 'fs', '-ls', HDFS_DEMOGRAPHICS_REFERENCE])
@@ -633,8 +638,7 @@ def main(args):
                 raise ValueError("Unexpected protocol in demographics output path")
             check_output(['hadoop', 'fs', '-rm', '-r', '-f', HDFS_DEMOGRAPHICS_REFERENCE])
         except:
-            logging.warn("Something went wrong in persisting the new demographics data")
-
+            logging.warning("Something went wrong in persisting the new demographics data")
 
         if args.normalize_encounter:
             try:
@@ -642,7 +646,7 @@ def main(args):
                 check_output(['aws', 's3', 'rm', '--recursive',
                               output_path + 'encounter/part_hvm_vdr_feed_id=35/'])
             except:
-                logging.warn("Something went wrong in removing the old normalized encounter data")
+                logging.warning("Something went wrong in removing the old normalized encounter data")
 
     if args.airflow_test:
         normalized_records_unloader.distcp(output_path)

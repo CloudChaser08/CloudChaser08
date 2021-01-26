@@ -10,7 +10,7 @@ import spark.helpers.records_loader as records_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.constants as constants
 from pyspark.sql.types import StringType, StructType, StructField, ArrayType
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 from spark.providers.liquidhub.custom import transactions_lhv1, transactions_lhv2
 import spark.helpers.schema_enforcer as schema_enforcer
 import subprocess
@@ -28,6 +28,8 @@ OUTPUT_PATH_PRODUCTION = 's3a://salusv/deliverable/lhv2/'
 
 
 def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
+
+    incoming_path, matching_path, output_dir = None, None, None
     if test:
         incoming_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/liquidhub/custom/resources/incoming/'
@@ -38,7 +40,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
         output_dir = '/tmp/staging/' + group_id + '/'
     elif airflow_test:
         matching_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/payload/{}/'.format(group_id)
-        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/incoming/{}/'.format(group_id)
+        incoming_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/incoming/{}/'.format(group_id)
         output_dir = '/tmp/staging/' + group_id + '/'
     else:
         incoming_path = 's3a://salusv/incoming/custom/lhv2/{}/'.format(group_id)
@@ -53,7 +55,8 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
 
     (lh_version, manufacturer, source_name, batch_date, batch_version) = group_id.split('_')[:5]
 
-    payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
+    payload_loader.load(
+        runner, matching_path, ['claimId', 'topCandidates', 'matchStatus', 'hvJoinKey', 'isWeak', 'providerMatchId'])
     if 'LHV1' in group_id:
         records_loader.load_and_clean_all(runner, incoming_path, transactions_lhv1, 'csv', '|')
         source_patient_id_col = 'source_patient_id'
@@ -66,13 +69,13 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     if 'accredo' == source_name.lower() and no_transactional:
         # This version of the feed doesn't have an hvJoinKey, so create one to reduce
         # downstream burden
-        df = spark.table('matching_payload').withColumn('hvJoinKey', F.monotonically_increasing_id()).cache()
+        df = spark.table('matching_payload').withColumn('hvJoinKey', FN.monotonically_increasing_id()).cache()
         df.createOrReplaceTempView('matching_payload')
         df.count()
 
-        df = spark.table('matching_payload').select(F.col('hvJoinKey').alias('hvjoinkey')) \
-            .withColumn('manufacturer', F.lit(manufacturer)) \
-            .withColumn('source_name', F.lit(source_name)) \
+        df = spark.table('matching_payload').select(FN.col('hvJoinKey').alias('hvjoinkey')) \
+            .withColumn('manufacturer', FN.lit(manufacturer)) \
+            .withColumn('source_name', FN.lit(source_name)) \
 
         source_patient_id_col = 'personId'
 
@@ -82,7 +85,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
     # If the manufacturer name is not in the data, it will be in the group id
     if 'PatDemo' not in group_id:
         spark.table('liquidhub_raw') \
-            .withColumn('manufacturer', F.lit(manufacturer)) \
+            .withColumn('manufacturer', FN.lit(manufacturer)) \
             .createOrReplaceTempView('liquidhub_raw')
 
     content = runner.run_spark_script('normalize.sql',
@@ -116,29 +119,35 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
 
     deliverable.createOrReplaceTempView('liquidhub_deliverable')
 
-    content.select('source_name', 'manufacturer').distinct() \
-            .createOrReplaceTempView('liquidhub_summary')
+    content.select('source_name', 'manufacturer').distinct().createOrReplaceTempView('liquidhub_summary')
 
     # Identify data from unexpected manufacturers
-    bad_content = content.select('source_patient_id', 'source_name', F.coalesce(F.col('manufacturer'), F.lit('UNKNOWN')).alias('manufacturer')) \
-            .where((F.lower(F.col('manufacturer')).isin(VALID_MANUFACTURERS) == False) | F.isnull(F.col('manufacturer')))
+    bad_content = content.select('source_patient_id', 'source_name'
+                                 , FN.coalesce(FN.col('manufacturer'), FN.lit('UNKNOWN')).alias('manufacturer'))\
+        .where((FN.lower(FN.col('manufacturer')).isin(VALID_MANUFACTURERS) == False)
+               | FN.isnull(FN.col('manufacturer')))
 
-    small_bad_manus = bad_content \
-            .groupBy(F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu')) \
-            .count().where('count <= 5').collect()
+    small_bad_manus = bad_content\
+        .groupBy(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'), FN.lower(FN.col('manufacturer')))
+                 .alias('manu'))\
+        .count().where('count <= 5').collect()
 
     small_bad_manus = [r.manu for r in small_bad_manus]
 
-    few_bad_rows = bad_content.where(
-        F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus)
-    ).groupBy('source_name', 'manufacturer') \
-    .agg(F.collect_set('source_patient_id').alias('bad_patient_ids'), F.count('manufacturer').alias('bad_patient_count'))
+    few_bad_rows = bad_content\
+        .where(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'), FN.lower(FN.col('manufacturer')))
+               .alias('manu').isin(small_bad_manus))\
+        .groupBy('source_name', 'manufacturer')\
+        .agg(FN.collect_set('source_patient_id')
+             .alias('bad_patient_ids'), FN.count('manufacturer').alias('bad_patient_count'))
 
-    lots_bad_rows = bad_content.where(
-        F.concat(F.lower(F.col('source_name')), F.lit('|'), F.lower(F.col('manufacturer'))).alias('manu').isin(small_bad_manus) == False
-    ).groupBy('source_name', 'manufacturer') \
-    .agg(F.count('manufacturer').alias('bad_patient_count')) \
-    .select('source_name', 'manufacturer', F.lit(None).cast(ArrayType(StringType())).alias('bad_patient_ids'), 'bad_patient_count')
+    lots_bad_rows = bad_content\
+        .where(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'), FN.lower(FN.col('manufacturer')))
+               .alias('manu').isin(small_bad_manus) == False)\
+        .groupBy('source_name', 'manufacturer')\
+        .agg(FN.count('manufacturer').alias('bad_patient_count'))\
+        .select('source_name', 'manufacturer', FN.lit(None).cast(ArrayType(StringType()))
+                .alias('bad_patient_ids'), 'bad_patient_count')
 
     few_bad_rows.union(lots_bad_rows).createOrReplaceTempView('liquidhub_error')
 
@@ -164,12 +173,17 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
         with open('/tmp/summary_report_' + group_id + '.txt', 'w') as fout:
             summ = spark.table('liquidhub_summary').collect()
             fout.write('\n'.join(['{}|{}'.format(r.source_name, r.manufacturer) for r in summ]))
-        subprocess.check_call(['hadoop', 'fs', '-put', '/tmp/summary_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/summary_report_' + group_id + '.txt'])
+        subprocess.check_call(
+            ['hadoop', 'fs', '-put', '/tmp/summary_report_'
+             + group_id + '.txt', 'hdfs:///staging/' + group_id + '/summary_report_' + group_id + '.txt'])
         err = spark.table('liquidhub_error').collect()
         if len(err) != 0:
             with open('/tmp/error_report_' + group_id + '.txt', 'w') as fout:
-                fout.write('\n'.join(['{}|{}|{}|{}'.format(r.source_name, r.manufacturer, r.bad_patient_count, json.dumps(r.bad_patient_ids)) for r in err]))
-            subprocess.check_call(['hadoop', 'fs', '-put', '/tmp/error_report_' + group_id + '.txt', 'hdfs:///staging/' + group_id + '/error_report_' + group_id + '.txt'])
+                fout.write('\n'.join(['{}|{}|{}|{}'.format(
+                    r.source_name, r.manufacturer, r.bad_patient_count, json.dumps(r.bad_patient_ids)) for r in err]))
+            subprocess.check_call(
+                ['hadoop', 'fs', '-put', '/tmp/error_report_'
+                 + group_id + '.txt', 'hdfs:///staging/' + group_id + '/error_report_' + group_id + '.txt'])
 
     if not test and not airflow_test:
         logger.log_run_details(
@@ -182,12 +196,13 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
             input_date=batch_date
         )
 
+
 def main(args):
     # init
-    spark, sqlContext = init("Liquidhub Mastering")
+    spark, sql_context = init("Liquidhub Mastering")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.group_id, args.run_version, airflow_test=args.airflow_test)
 

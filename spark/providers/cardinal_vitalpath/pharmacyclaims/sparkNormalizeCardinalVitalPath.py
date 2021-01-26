@@ -59,7 +59,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         patient_input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/patient/'.format(
             date_input.replace('-', '/')[:-3]
         )
-        patient_matching_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/patient_passthrough/'.format(
+        patient_matching_path = \
+            's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/patient_passthrough/'.format(
             date_input.replace('-', '/')[:-3]
         )
         medical_input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/med/'.format(
@@ -126,8 +127,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             hvm_historical = date('1901', '1', '1')
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql', 'cardinal_vitalpath',
-            'pharmacyclaims_common_model', 'date_service', date_input,
+            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
+            'cardinal_vitalpath', 'pharmacyclaims_common_model', 'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,
                                          hvm_historical.month,
                                          hvm_historical.day)
@@ -147,10 +148,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Cardinal_VitalPath")
+    spark, sql_context = init("Cardinal_VitalPath")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

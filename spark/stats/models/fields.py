@@ -14,6 +14,7 @@ from .converters import (
 )
 from .validators import optional_instance_of, is_bool, is_list_of_strs
 
+
 def create_model_field(model_cls, optional=True):
     """
         Creates a model field that converts values to an instance of the model
@@ -53,12 +54,14 @@ def create_required_str_field():
         validator=attr.validators.instance_of(string_types)
     )
 
+
 def create_optional_str_field():
     """ Creates a field that requires a string value, but defaults to None """
     return attr.ib(
         validator=optional_instance_of(string_types),
         default=None
     )
+
 
 def create_optional_bool_field():
     """ Creates a field that requires a bool value, but defaults to False """

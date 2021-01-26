@@ -1,6 +1,7 @@
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
+
 def load(runner, input_path_prefix, test=False):
 
     for t in TABLES:
@@ -13,10 +14,11 @@ def load(runner, input_path_prefix, test=False):
             .cache_and_track(t) \
             .createOrReplaceTempView(t)
 
+
 TABLES = ['remit_claim', 'remit_claim_adjustment', 'serviceline', 'serviceline_adjustment']
 
 TABLE_COLUMNS = {
-    'remit_claim' : [
+    'remit_claim': [
         'master_patient_id',
         'claimdisproportionateshareamount',
         'claimdrgamount',
@@ -269,7 +271,7 @@ TABLE_COLUMNS = {
         'securityinformationqualifier',
         'usageindicator'
     ],
-    'remit_claim_adjustment' : [
+    'remit_claim_adjustment': [
         'adjustmentamountfive',
         'adjustmentamountfour',
         'adjustmentamountone',
@@ -292,7 +294,7 @@ TABLE_COLUMNS = {
         'id',
         'remitclaim_id'
     ],
-    'serviceline' : [
+    'serviceline': [
         'healthcarepolicyidentificationfive',
         'healthcarepolicyidentificationfour',
         'healthcarepolicyidentificationone',
@@ -353,7 +355,7 @@ TABLE_COLUMNS = {
         'servicedatetimequalifier',
         'allowed_amt'
     ],
-    'serviceline_adjustment' : [
+    'serviceline_adjustment': [
         'adjustmentamountfive',
         'adjustmentamountfour',
         'adjustmentamountone',

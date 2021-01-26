@@ -1,8 +1,9 @@
 from pyspark.sql.types import StructType, StructField, StringType
 from spark.helpers.source_table import SourceTable
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
+
 
 def load(spark, runner, input_paths):
     for table, input_path in input_paths.items():
@@ -19,14 +20,14 @@ def load(spark, runner, input_paths):
         else:
             # Read in data as lines of text
             raw_df = spark.read.text(input_path)
-            for t in set(TABLE_CONF.keys()) - set(['payload']):
+            for t in set(TABLE_CONF.keys()) - {'payload'}:
                 # Get the columns for each source table we expect
                 cols = [x.name for x in TABLE_CONF[t].schema]
                 # Filter based on the length of columns
-                raw = raw_df.where(F.size(F.split(F.col('value'), '\|')) == F.lit(len(cols)))
+                raw = raw_df.where(FN.size(FN.split(FN.col('value'), '\|')) == FN.lit(len(cols)))
                 # Extract the line into a dataframe with one column for each element in the array
-                split = raw.select(F.split(F.col('value'), '\|').alias('split')) \
-                           .select(*[F.col('split')[i].alias(cols[i]) for i in range(len(cols))])
+                split = raw.select(FN.split(FN.col('value'), '\|').alias('split')) \
+                           .select(*[FN.col('split')[i].alias(cols[i]) for i in range(len(cols))])
                 # Trimmify and Nullify the data
                 postprocessor.compose(
                     postprocessor.trimmify,

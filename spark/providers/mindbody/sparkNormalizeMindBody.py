@@ -1,6 +1,5 @@
 #! /usr/bin/python
 import argparse
-import time
 from datetime import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -9,7 +8,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.events as event_priv
-from spark.providers.mindbody import mindbodyPrivacy as mindbody_priv
+from spark.providers.mindbody import mindbodyPrivacy as mindbodyPriv
 
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
@@ -68,7 +67,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Remove leading and trailing whitespace from any strings
     postprocessor.trimmify(runner.sqlContext.sql('select * from transactional_mindbody'))\
-                    .createTempView('transactional_mindbody')
+        .createTempView('transactional_mindbody')
 
     # Normalize the transaction data into the
     # event common model using transaction
@@ -82,7 +81,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     postprocessor.compose(
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='38', vendor_id='133', filename=setid),
-        mindbody_priv.map_whitelist,
+        mindbodyPriv.map_whitelist,
         event_priv.filter
     )(
         runner.sqlContext.sql('select * from event_common_model')
@@ -108,10 +107,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # Initialize Spark
-    spark, sqlContext = init("MindBody")
+    spark, sql_context = init("MindBody")
 
     # Initialize the Spark Runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     # Run the normalization routine
     run(spark, runner, args.date, airflow_test=args.airflow_test)

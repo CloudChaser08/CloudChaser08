@@ -5,11 +5,13 @@ from spark.common.utility.run_details import RunDetails
 def log(message):
     print(message)
 
+
 def log_spark_state():
     """Captures the running Spark application's state in a
     `SparkState` instance.
     """
     SparkState.get_current_state()
+
 
 def log_run_details(provider_name,
                     data_type,

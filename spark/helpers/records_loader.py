@@ -3,6 +3,7 @@ import spark.helpers.postprocessor as postprocessor
 import pyspark.sql.functions as F
 import logging
 
+
 def load(runner, location, columns=None, file_type=None, delimiter=',', header=False,
          schema=None, source_table_conf=None, load_file_name=False, file_name_col='input_file_name',
          spark_context=None, confirm_schema=False):
@@ -75,7 +76,7 @@ def load(runner, location, columns=None, file_type=None, delimiter=',', header=F
 # so long as the follow all our conventions
 # DEPRECATED in favor of load_and_clean_all_v2
 def load_and_clean_all(runner, location_prefix, transactions_module, file_type, delimiter=',', header=False, partitions=0):
-    logging.warn("load_and_clean_all is deprecated in favor of load_and_clean_all_v2")
+    logging.warning("load_and_clean_all is deprecated in favor of load_and_clean_all_v2")
     for table in transactions_module.TABLES:
         loc = location_prefix if len(transactions_module.TABLES) == 1 else location_prefix + table
         df = load(runner, loc, transactions_module.TABLE_COLUMNS[table], file_type, delimiter, header)

@@ -160,10 +160,10 @@ def run(spark, runner, date_input, test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Express Scripts")
+    spark, sql_context = init("Express Scripts")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
     run(spark, runner, args.date)
     spark.stop()
 
@@ -176,7 +176,8 @@ def main(args):
     logger.log('Saving PHI to s3: ' + S3A_REF_PHI)
     # offload reference data
     subprocess.check_call(['aws', 's3', 'rm', '--recursive', S3_REF_PHI])
-    subprocess.check_call(['s3-dist-cp', '--s3ServerSideEncryption', '--src', 'hdfs://' + LOCAL_REF_PHI, '--dest', S3A_REF_PHI])
+    subprocess.check_call(
+        ['s3-dist-cp', '--s3ServerSideEncryption', '--src', 'hdfs://' + LOCAL_REF_PHI, '--dest', S3A_REF_PHI])
 
 
 if __name__ == "__main__":

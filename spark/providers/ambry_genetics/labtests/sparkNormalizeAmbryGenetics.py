@@ -2,7 +2,6 @@ import argparse
 
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.lab_common_model import schemas as labtest_schemas
-import spark.helpers.external_table_loader as external_table_loader
 import spark.providers.ambry_genetics.labtests.transactional_schemas as source_table_schemas
 
 

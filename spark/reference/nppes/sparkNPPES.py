@@ -6,7 +6,7 @@ from spark.spark_setup import init
 
 def run(spark, runner, input_file_path, output_location, partitions, test=False, airflow_test=False):
     # Load current warehouse table into dataframe
-    nppes_warehouse = external_table_loader._get_table_as_df(runner.sqlContext, 'default', 'ref_nppes')
+    nppes_warehouse = external_table_loader.get_table_as_df(runner.sqlContext, 'default', 'ref_nppes')
 
     # get current table schema
     nppes_schema = nppes_warehouse.schema
@@ -27,10 +27,10 @@ def run(spark, runner, input_file_path, output_location, partitions, test=False,
 
 def main(args):
     # Initialize Spark
-    spark, sqlContext = init("NPPES")
+    spark, sql_context = init("NPPES")
 
     # Initialize the Spark Runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     # Run the spark routine
     run(spark, runner, input_file_path=args.nppes_csv_path,

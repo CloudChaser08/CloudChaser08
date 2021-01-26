@@ -24,7 +24,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     script_path = __file__
-
+    input_path, matching_path, addon_path = None, None, None
     if test:
         if date_input <= '2017-04-01':
             input_path = file_utils.get_abs_path(
@@ -118,10 +118,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Caris")
+    spark, sql_context = init("Caris")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.airflow_test:
         output_path = AIRFLOW_E2E_BASE + 'spark-output/'

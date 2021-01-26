@@ -8,14 +8,14 @@ from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
-from pyspark.sql.types import StructType, StructField, StringType
 import pyspark.sql.functions as F
 import boto3
 
 from spark.delivery.humana_000468 import extract_medicalclaims
 from spark.delivery.humana_000468 import extract_pharmacyclaims
 from spark.delivery.humana_000468 import extract_enrollmentrecords
-from spark.delivery.humana_000468 import prepare_emr
+# from spark.delivery.humana_000468 import prepare_emr
+
 
 def get_extract_summary(df):
     return df.withColumn(
@@ -28,12 +28,14 @@ def get_extract_summary(df):
         .select('data_vendor', 'claim', 'humana_group_id').distinct() \
         .groupBy('data_vendor', 'humana_group_id').count()
 
+
 def get_part_file_path(list_cmd, directory):
     for row in subprocess.check_output(list_cmd + [directory]).decode().split('\n'):
         file_path = row.split(' ')[-1].replace('//', '/')
         prefix = (directory + 'part-00000')
         if file_path.startswith(prefix):
             return file_path
+
 
 def group_validity_check(group_dfs, group_ids):
     """
@@ -62,6 +64,7 @@ def group_validity_check(group_dfs, group_ids):
             valid_groups.append(group_id)
 
     return valid_groups, invalid_groups
+
 
 def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False):
     ts = time.time()
@@ -93,22 +96,19 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
         list_cmd = ['hadoop', 'fs', '-ls']
         move_cmd = ['hadoop', 'fs', '-mv']
 
-
     group_dfs = [
-        payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus', 'invalidReason'], return_output=True,
-                            partitions=10) \
-            .select('hvid', 'matchStatus', 'invalidReason') \
-            .withColumn('humana_group_id', F.lit(group_id))
+        payload_loader.load(runner, matching_path_template.format(group_id),
+                            ['matchStatus', 'invalidReason'], return_output=True, partitions=10).select(
+            'hvid', 'matchStatus', 'invalidReason').withColumn('humana_group_id', F.lit(group_id))
         for group_id in group_ids
     ]
 
     valid_groups, invalid_groups = group_validity_check(group_dfs, group_ids)
 
     all_patient_dfs = [
-        payload_loader.load(runner, matching_path_template.format(group_id), ['matchStatus'], return_output=True,
-                            partitions=10) \
-            .select('hvid', 'matchStatus') \
-            .withColumn('humana_group_id', F.lit(group_id))
+        payload_loader.load(runner, matching_path_template.format(group_id),
+                            ['matchStatus'], return_output=True, partitions=10).select(
+            'hvid', 'matchStatus').withColumn('humana_group_id', F.lit(group_id))
         for group_id in group_ids
     ]
 
@@ -120,16 +120,16 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     matched_patients = all_patients.where("matchStatus = 'exact_match' or matchStatus = 'inexact_match'").cache()
 
     if today.day > 15:
-        end = (today.replace(day=15) - timedelta(days=30)).replace(day=1) # The 1st about 1.5 months back
-        start = (end - timedelta(days=455)).replace(day=1) # 15 months before end
+        end = (today.replace(day=15) - timedelta(days=30)).replace(day=1)  # The 1st about 1.5 months back
+        start = (end - timedelta(days=455)).replace(day=1)  # 15 months before end
     else:
-        end = (today.replace(day=15) - timedelta(days=60)).replace(day=15) # The 15th about 1.5 months back
-        start = (end - timedelta(days=455)).replace(day=15) # 15 months before end
+        end = (today.replace(day=15) - timedelta(days=60)).replace(day=15)  # The 15th about 1.5 months back
+        start = (end - timedelta(days=455)).replace(day=15)  # 15 months before end
 
     group_all_patient_count = \
-        {r.humana_group_id : r['count'] for r in all_patients.groupBy('humana_group_id').count().collect()}
+        {r.humana_group_id: r['count'] for r in all_patients.groupBy('humana_group_id').count().collect()}
     group_matched_patient_count = \
-        {r.humana_group_id : r['count'] for r in matched_patients.groupBy('humana_group_id').count().collect()}
+        {r.humana_group_id: r['count'] for r in matched_patients.groupBy('humana_group_id').count().collect()}
 
     if invalid_groups:
         medical_extract = spark.createDataFrame([("NONE",)], ['humana_group_id'])
@@ -141,31 +141,28 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     group_patient_w_records_count = {}
     summary = None
     if valid_groups:
-
-#   This is comented out until Humana wants us to turn synthetic claims back on
+        # This is comented out until Humana wants us to turn synthetic claims back on
         # prepare_emr.prepare(runner, matched_patients, start, is_prod)
         medical_extract = extract_medicalclaims.extract(
             runner, matched_patients, ts,
             start, end).repartition(5 if test else 100) \
                     .cache_and_track('medical_extract')
         pharmacy_extract = extract_pharmacyclaims.extract(
-            runner, matched_patients, ts,
-            start, end).repartition(5 if test else 100) \
-                    .cache_and_track('pharmacy_extract')
+            runner, matched_patients, ts, start, end).repartition(5 if test else 100)\
+            .cache_and_track('pharmacy_extract')
         enrollment_extract = extract_enrollmentrecords.extract(
-            spark, runner, matched_patients, ts,
-            start, end, pharmacy_extract).repartition(5 if test else 100) \
-                    .cache_and_track('enrollment_extract')
+            spark, runner, matched_patients, ts, start, end, pharmacy_extract).repartition(5 if test else 100)\
+            .cache_and_track('enrollment_extract')
 
         # summary
         med_summary = get_extract_summary(medical_extract)
         pharma_summary = get_extract_summary(pharmacy_extract)
 
         summary = med_summary.union(pharma_summary)
-        patient_w_records_counts = medical_extract \
-                .select('hvid', 'humana_group_id').union(
-                    pharmacy_extract.select('hvid', 'humana_group_id')) \
-                .distinct().groupBy('humana_group_id').count().collect()
+        patient_w_records_counts = medical_extract.select('hvid', 'humana_group_id')\
+            .union(pharmacy_extract.select('hvid', 'humana_group_id'))\
+            .distinct().groupBy('humana_group_id').count()\
+            .collect()
 
         for r in patient_w_records_counts:
             if r['humana_group_id'] in valid_groups:
@@ -239,12 +236,13 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
             cmd = ['hadoop', 'fs', '-put', '/tmp/summary_report_{}.txt'.format(group_id), output_path + 'summary_report_{0}.txt'.format(group_id)]
             subprocess.check_call(cmd)
 
+
 def main(args):
     # init
-    spark, sqlContext = init("Extract for Humana")
+    spark, sql_context = init("Extract for Humana")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.airflow_test:
         output_path = 's3a://salusv/testing/dewey/airflow/e2e/humana/hv000468/deliverable/'
@@ -283,10 +281,11 @@ def main(args):
         for m in set([m[0] for m in msgs]):
             client.send_message(QueueUrl=out_queue, MessageBody=m)
 
-        spark, sqlContext = init("Extract for Humana")
-        runner = Runner(sqlContext)
+        spark, sql_context = init("Extract for Humana")
+        runner = Runner(sql_context)
 
     spark.stop()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

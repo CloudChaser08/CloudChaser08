@@ -1,4 +1,4 @@
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 from pyspark.sql import Window
 
 import spark.helpers.postprocessor as postprocessor
@@ -159,9 +159,9 @@ MATCHING_TABLES = {
 
 
 def load(runner, input_path_prefix):
-    '''
+    """
     Load in the transactions to in-memory tables.
-    '''
+    """
     for table, columns in TABLES.items():
         df = records_loader.load(
             runner, input_path_prefix + table, columns, 'csv', '|'
@@ -174,14 +174,14 @@ def load(runner, input_path_prefix):
             postprocessor.trimmify,
             postprocessor.nullify
         )(df).withColumn(
-            'client_id', F.regexp_extract(F.col('xifin_input_file_name'), '_([^_.]*)\.pout', 1)
+            'client_id', FN.regexp_extract(FN.col('xifin_input_file_name'), r'_([^_.]*)\.pout', 1)
         ).createOrReplaceTempView(table)
 
 
 def load_matching_payloads(runner, matching_path_prefix):
-    '''
+    """
     Load in the payloads into in-memory tables.
-    '''
+    """
     for table, columns in MATCHING_TABLES.items():
         payload_loader.load(
             runner, matching_path_prefix + table, extra_cols=columns, table_name='{}_payload'.format(table)
@@ -189,31 +189,34 @@ def load_matching_payloads(runner, matching_path_prefix):
 
 
 def reconstruct_records(runner, partitions, part1=None, part2=None):
-    '''
+    """
     Combine the transactional and payload data back into complete records
-    '''
+    """
     for table in TABLES:
         # deduplicate transactional table
 
         transactional = runner.sqlContext.table(table)
         payload = runner.sqlContext.table(table + '_payload')
 
-        combined = transactional.join(payload, 'hvJoinKey', 'inner') \
-                .withColumn('full_accn_id', F.concat(transactional['client_id'], F.lit('_'), payload['patientId'])) \
-                .withColumn('accn_id', payload['patientId'])
+        combined = transactional.join(payload, 'hvJoinKey', 'inner')\
+            .withColumn('full_accn_id', FN.concat(transactional['client_id'], FN.lit('_'), payload['patientId'])) \
+            .withColumn('accn_id', payload['patientId'])
 
         if part1 is not None:
-            combined = combined.where((F.md5(F.col('full_accn_id')).cast('string').substr(1, 1) >= F.lit(part1)) & (F.md5(F.col('full_accn_id')).cast('string').substr(1, 1) < F.lit(part2)))
+            combined = combined\
+                .where((FN.md5(FN.col('full_accn_id'))
+                        .cast('string').substr(1, 1) >= FN.lit(part1)) & (FN.md5(FN.col('full_accn_id'))
+                                                                         .cast('string').substr(1, 1) < FN.lit(part2)))
 
-        combined = combined.repartition(partitions, F.col('full_accn_id'))
+        combined = combined.repartition(partitions, FN.col('full_accn_id'))
 
         deduplication_window = Window.partitionBy(
             *[field for field in combined.columns if field != 'hvJoinKey']
         ).orderBy('accn_id', 'client_id')
 
         deduplicated = combined.select(
-            combined.columns + [F.row_number().over(deduplication_window).alias('row_num')]
-        ).where(F.col('row_num') == 1).drop('row_num')
+            combined.columns + [FN.row_number().over(deduplication_window).alias('row_num')]
+        ).where(FN.col('row_num') == 1).drop('row_num')
 
         deduplicated.cache_and_track(table + '_complete')
         deduplicated.createOrReplaceTempView(table + '_complete')

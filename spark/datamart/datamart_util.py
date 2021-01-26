@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from collections import OrderedDict
 from dateutil.relativedelta import relativedelta
 from functools import reduce

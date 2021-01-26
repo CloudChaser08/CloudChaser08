@@ -64,7 +64,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 df.repartition(20) \
                   .write.parquet(output_location, mode='append')
             else:
-                logging.warn('Table {} had 0 rows'.format(table))
+                logging.warning('Table {} had 0 rows'.format(table))
 
     if not test and not airflow_test:
         transaction_path = input_paths.get("raw", "")
@@ -82,10 +82,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             input_date=date_input
         )
 
-def main(args):
-    spark, sqlContext = init('Allscripts ERA Custom Normalization')
 
-    runner = Runner(sqlContext)
+def main(args):
+    spark, sql_context = init('Allscripts ERA Custom Normalization')
+
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

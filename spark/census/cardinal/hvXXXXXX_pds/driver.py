@@ -9,6 +9,7 @@ import spark.helpers.privacy.pharmacyclaims as pharm_priv
 
 V1_CUTOFF = '2020-07-17'
 
+
 class CardinalPDSCensusDriver(CensusDriver):
     def __init__(self, client_name, opportunity_id, end_to_end_test=False, test=False):
         super(CardinalPDSCensusDriver, self).__init__(

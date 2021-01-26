@@ -76,8 +76,7 @@ def run_part(
                 str(date_obj.month).zfill(2)
             )
 
-            max_date = date_obj.strftime('%Y-%m-') \
-                       + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
+            max_date = date_obj.strftime('%Y-%m-') + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
             matching_path = AIRFLOW_TEST_DIR + 'payload/{}/{}/'.format(
                 str(date_obj.year),
                 str(date_obj.month).zfill(2)
@@ -241,10 +240,10 @@ def run_part(
 
 def main(args):
     # init
-    spark, sqlContext = init("Practice Insight")
+    spark, sql_context = init("Practice Insight")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     for part in ['1', '2', '3', '4']:
         run_part(

@@ -1,5 +1,6 @@
 import pyspark.sql.functions as F
 
+
 def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table, filter_by_part_processdate=False):
     claims = runner.sqlContext.table(claims_table).where("part_provider != 'xifin' and part_provider != 'inovalon'")
     ref_vdr_feed = runner.sqlContext.table('dw.ref_vdr_feed')
@@ -16,18 +17,27 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
 
     ext = ext \
         .where((claims['date_service'] <= end_dt.isoformat()) & (claims['date_service'] >= start_dt.isoformat())) \
-        .select(*[claims[c] for c in claims.columns] + [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
+        .select(*[claims[c] for c in claims.columns] +
+                 [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
 
     # Hashing
-    ext = ext.withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_rendering_npi', F.md5(F.concat(F.col('prov_rendering_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_billing_npi', F.md5(F.concat(F.col('prov_billing_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_referring_npi', F.md5(F.concat(F.col('prov_referring_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_facility_npi', F.md5(F.concat(F.col('prov_facility_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id'))))
+    ext = ext\
+        .withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp))
+                                             , F.col('humana_group_id'))))\
+        .withColumn('prov_rendering_npi', F.md5(F.concat(F.col('prov_rendering_npi'), F.lit('npi')
+                                                           , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                           , F.col('humana_group_id'))))\
+        .withColumn('prov_billing_npi', F.md5(F.concat(F.col('prov_billing_npi'), F.lit('npi'), F.lit('hv000468')
+                                                         , F.lit(repr(timestamp)), F.col('humana_group_id')))) \
+        .withColumn('prov_referring_npi', F.md5(F.concat(F.col('prov_referring_npi'), F.lit('npi')
+                                                           , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                           , F.col('humana_group_id')))) \
+        .withColumn('prov_facility_npi', F.md5(F.concat(F.col('prov_facility_npi'), F.lit('npi')
+                                                          , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                          , F.col('humana_group_id'))))
 
     # Rename columns
-    ext = ext.withColumn('data_feed', F.col('hvm_vdr_feed_id')) \
-            .withColumn('data_vendor', F.col('hvm_tile_nm'))
+    ext = ext.withColumn('data_feed', F.col('hvm_vdr_feed_id')).withColumn('data_vendor', F.col('hvm_tile_nm'))
 
     # NULL columns
     for c in NULL_COLUMNS:
@@ -36,10 +46,12 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
     # Reorder
     return ext.select(*EXTRACT_COLUMNS)
 
+
 def extract(runner, hvids, timestamp, start_dt, end_dt):
     return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'dw.hvm_medicalclaims_v08', True)
-            #NOTE: 2019-11-04 - Removing synthetic claims until told to turn back on.
-            # .union(extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_medicalclaims', False))
+    # NOTE: 2019-11-04 - Removing synthetic claims until told to turn back on.
+    # .union(extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_medicalclaims', False))
+
 
 EXTRACT_COLUMNS = [
     'record_id',
@@ -126,7 +138,7 @@ EXTRACT_COLUMNS = [
     'prov_rendering_state',            # NULL per Austin
     'prov_rendering_zip',              # NULL per Austin
     'prov_rendering_std_taxonomy',     # NULL per Austin
-    'prov_rendering_vendor_specialty', # NULL per Austin
+    'prov_rendering_vendor_specialty',  # NULL per Austin
     'prov_billing_vendor_id',          # NULL per Austin
     'prov_billing_tax_id',             # NULL per Austin
     'prov_billing_dea_id',             # NULL per Austin
@@ -158,7 +170,7 @@ EXTRACT_COLUMNS = [
     'prov_referring_state',            # NULL per Austin
     'prov_referring_zip',              # NULL per Austin
     'prov_referring_std_taxonomy',     # NULL per Austin
-    'prov_referring_vendor_specialty', # NULL per Austin
+    'prov_referring_vendor_specialty',  # NULL per Austin
     'prov_facility_vendor_id',         # NULL per Austin
     'prov_facility_tax_id',            # NULL per Austin
     'prov_facility_dea_id',            # NULL per Austin
@@ -190,12 +202,12 @@ EXTRACT_COLUMNS = [
 
 # Feed tile names as of 09/05
 SUPPLIER_FEED_IDS = [
-    '26', # Veradigm Health
-    '25', # Veradigm Health
-    '22', # Private Source 12
-    '15', # Private Source 14
-    '24', # Private Source 34
-    '35' # Private Source 42
+    '26',  # Veradigm Health
+    '25',  # Veradigm Health
+    '22',  # Private Source 12
+    '15',  # Private Source 14
+    '24',  # Private Source 34
+    '35'  # Private Source 42
 ]
 
 NULL_COLUMNS = [

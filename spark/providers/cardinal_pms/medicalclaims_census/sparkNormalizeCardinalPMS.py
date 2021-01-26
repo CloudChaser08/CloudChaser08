@@ -3,7 +3,7 @@ import argparse
 from datetime import datetime
 
 from pyspark.sql import Window
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -20,7 +20,6 @@ import spark.helpers.privacy.medicalclaims as medical_priv
 import logging
 
 from spark.common.utility.output_type import DataType, RunType
-from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
 
@@ -69,12 +68,12 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
             ['input_path', input_path]
         ])
         runner.sqlContext.sql('select * from transactional_cardinal_pms_temp') \
-                         .withColumn('product_service_id_qualifier', F.lit(None)) \
-                         .withColumn('product_service_id', F.lit(None)) \
-                         .withColumn('diagnosisnine', F.lit(None)) \
-                         .withColumn('diagnosisten', F.lit(None)) \
-                         .withColumn('diagnosiseleven', F.lit(None)) \
-                         .withColumn('diagnosistwelve', F.lit(None)) \
+                         .withColumn('product_service_id_qualifier', FN.lit(None)) \
+                         .withColumn('product_service_id', FN.lit(None)) \
+                         .withColumn('diagnosisnine', FN.lit(None)) \
+                         .withColumn('diagnosisten', FN.lit(None)) \
+                         .withColumn('diagnosiseleven', FN.lit(None)) \
+                         .withColumn('diagnosistwelve', FN.lit(None)) \
                          .withColumnRenamed('claim_lines_id', 'id_3') \
                          .createOrReplaceTempView('transactional_cardinal_pms')
     elif input_column_length == 92:
@@ -82,10 +81,10 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
             ['input_path', input_path]
         ])
         runner.sqlContext.sql('select * from transactional_cardinal_pms_temp') \
-                         .withColumn('diagnosisnine', F.lit(None)) \
-                         .withColumn('diagnosisten', F.lit(None)) \
-                         .withColumn('diagnosiseleven', F.lit(None)) \
-                         .withColumn('diagnosistwelve', F.lit(None)) \
+                         .withColumn('diagnosisnine', FN.lit(None)) \
+                         .withColumn('diagnosisten', FN.lit(None)) \
+                         .withColumn('diagnosiseleven', FN.lit(None)) \
+                         .withColumn('diagnosistwelve', FN.lit(None)) \
                          .withColumnRenamed('claim_lines_id', 'id_3') \
                          .createOrReplaceTempView('transactional_cardinal_pms')
     elif input_column_length == 96:
@@ -118,21 +117,21 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
 
     # Create a table that contains one row for each claim
     # where the service line is the lowest number
-    window = Window.partitionBy(F.col('ediclaim_id')).orderBy(F.col('linesequencenumber').desc())
+    window = Window.partitionBy(FN.col('ediclaim_id')).orderBy(FN.col('linesequencenumber').desc())
     runner.sqlContext.sql('select * from transactional_cardinal_pms')           \
-          .withColumn('first', F.first(F.col('linesequencenumber')).over(window))   \
-          .where(F.col('linesequencenumber') == F.col('first'))                     \
-          .drop(F.col('first'))                                                   \
+          .withColumn('first', FN.first(FN.col('linesequencenumber')).over(window))   \
+          .where(FN.col('linesequencenumber') == FN.col('first'))                     \
+          .drop(FN.col('first'))                                                   \
           .createOrReplaceTempView('limited_transactional_cardinal_pms')
 
     # Create a table that contains a each unique
     # diagnosis code and claim id
     service_lines                                                               \
-          .groupby(F.col('claim_id'))                                             \
-          .agg(F.collect_set(F.col('diagnosis_code')).alias('diagnosis_codes'))     \
-          .withColumn('diagnosis_code', F.explode(F.col('diagnosis_codes')))        \
-          .select(F.col('claim_id'), F.col('diagnosis_code'))                       \
-          .createOrReplaceTempView('service_line_diags')
+        .groupby(FN.col('claim_id'))                                             \
+        .agg(FN.collect_set(FN.col('diagnosis_code')).alias('diagnosis_codes'))     \
+        .withColumn('diagnosis_code', FN.explode(FN.col('diagnosis_codes')))        \
+        .select(FN.col('claim_id'), FN.col('diagnosis_code'))                       \
+        .createOrReplaceTempView('service_line_diags')
 
     # Create exploder table for claim
     exploder.generate_exploder_table(spark, 12, 'claim_exploder')
@@ -147,20 +146,20 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
     service_lines_schema = schema_enforcer.apply_schema(service_lines, schema)
     claim_lines_schema = schema_enforcer.apply_schema(claim_lines, schema)
 
-    claim_window = Window.partitionBy(F.col('claim_id'))
+    claim_window = Window.partitionBy(FN.col('claim_id'))
     pms_data = service_lines_schema.union(claim_lines_schema)
 
     # modify date_service and date_service_end columns to use the
     # min(date_service) or max(date_service), respectively, over the
     # entire claim for claim-level rows
     pms_data = pms_data.withColumn(
-        'date_service_end', F.when(
-            F.col('service_line_number').isNull(), F.max('date_service').over(claim_window)
-        ).otherwise(F.col('date_service_end'))
+        'date_service_end', FN.when(
+            FN.col('service_line_number').isNull(), FN.max('date_service').over(claim_window)
+        ).otherwise(FN.col('date_service_end'))
     ).withColumn(
-        'date_service', F.when(
-            F.col('service_line_number').isNull(), F.min('date_service').over(claim_window)
-        ).otherwise(F.col('date_service'))
+        'date_service', FN.when(
+            FN.col('service_line_number').isNull(), FN.min('date_service').over(claim_window)
+        ).otherwise(FN.col('date_service'))
     )
 
     # Postprocessing
@@ -185,8 +184,7 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
         spark, runner, DELIVERABLE_LOC, 'medicalclaims', test=test
     )
 
-
-    # deobfuscate hvid
+    #  deobfuscate hvid
     final_df = postprocessor.deobfuscate_hvid(DEOBFUSCATION_KEY, nullify_non_integers=True)(
         final_df
     )
@@ -210,10 +208,10 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init('Cardinal PMS')
+    spark, sql_context = init('Cardinal PMS')
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, args.batch_id, airflow_test=args.airflow_test)
 

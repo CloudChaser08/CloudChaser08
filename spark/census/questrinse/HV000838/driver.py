@@ -22,8 +22,8 @@ class QuestRinseCensusDriver(CensusDriver):
 
         matching_payload_df = self._spark.table('matching_payload')
 
-        cleaned_matching_payload_df = \
-                (postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+        cleaned_matching_payload_df = (
+            postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
 
         cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
@@ -39,7 +39,8 @@ class QuestRinseCensusDriver(CensusDriver):
         self._spark.table('loinc').count()
 
         df = self._spark.table('order_result')
-        df = df.repartition(int(self._spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'unique_accession_id')
+        df = df.repartition(int(
+            self._spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'unique_accession_id')
         df = df.cache_and_track('order_result')
         df.createOrReplaceTempView('order_result')
         df.count()
@@ -65,7 +66,8 @@ class QuestRinseCensusDriver(CensusDriver):
 
         if hdfs_utils.list_parquet_files(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)[0].strip():
             logger.log('Loading Delta LOINC reference data from HDFS')
-            self._spark.read.parquet(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA).cache().createOrReplaceTempView(REFERENCE_LOINC_DELTA)
+            self._spark.read.parquet(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)\
+                .cache().createOrReplaceTempView(REFERENCE_LOINC_DELTA)
         else:
             logger.log('No Delta LOINC reference data for this cycle')
             self._spark.table("loinc").cache().createOrReplaceTempView(REFERENCE_LOINC_DELTA)
@@ -110,11 +112,13 @@ class QuestRinseCensusDriver(CensusDriver):
 
         if hdfs_utils.list_parquet_files(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)[0].strip():
             logger.log("Copying reference files to: " + REFERENCE_OUTPUT_PATH)
-            normalized_records_unloader.distcp(REFERENCE_OUTPUT_PATH, REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)
+            normalized_records_unloader.distcp(
+                REFERENCE_OUTPUT_PATH, REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)
         logger.log('Deleting ' + REFERENCE_HDFS_OUTPUT_PATH)
         file_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
 
         # Quest doesn't want to see the _SUCCESS file that spark prints out
         logger.log('Deleting _SUCCESS file')
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
-        file_utils.delete_success_file(self._output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(batch_id_path=_batch_id_path))
+        file_utils.delete_success_file(
+            self._output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(batch_id_path=_batch_id_path))

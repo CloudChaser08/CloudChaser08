@@ -1,7 +1,6 @@
 import argparse
 import spark.providers.change.era.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
 from spark.common.era.detail import schemas as detail_schemas
 from spark.common.era.summary import schemas as summary_schemas
 

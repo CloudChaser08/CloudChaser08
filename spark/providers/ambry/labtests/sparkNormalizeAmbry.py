@@ -80,10 +80,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Explode on genes_tested field
     runner.sqlContext.sql('select * from ambry_transactions')   \
-          .withColumn('genes_tested',                           \
-                       explode(split(col('genes_tested'), ',')) \
-                     )                                          \
-          .createTempView('ambry_transactions_gene_exploded')
+          .withColumn('genes_tested', explode(split(col('genes_tested'), ',')))\
+        .createTempView('ambry_transactions_gene_exploded')
     logging.debug('Exploded transactions on gene_tested field.')
 
     # Remove leading and trailing whitespace from any strings
@@ -106,7 +104,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         postprocessor.add_universal_columns(
             feed_id='43',
             vendor_id='194',
-            filename='plain.txt',   #NOTE: will need to change once known
+            filename='plain.txt',   # NOTE: will need to change once known
             model_version_number='04'
         ),
         postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '43', None, min_date),
@@ -147,10 +145,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init('AmbryExome')
+    spark, sql_context = init('AmbryExome')
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

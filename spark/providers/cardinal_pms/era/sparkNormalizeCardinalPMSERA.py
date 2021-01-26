@@ -72,26 +72,26 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Postprocessing
     postprocessing = [
         {
-            'data_type' : 'summary',
-            'filename_template' : 'remit_claim_record_data_{}',
-            'dataframe' : summary,
-            'table' : 'era_summary_common_model',
-            'model_script' : 'era/summary_v1.sql',
-            'date_column' : 'clm_stmt_perd_end_dt',
-            'service_cap' : ['clm_stmt_perd_start_dt', 'clm_stmt_perd_end_dt'],
-            'privacy' : summary_privacy.apply_privacy,
-            'schema' : summary_schema
+            'data_type': 'summary',
+            'filename_template': 'remit_claim_record_data_{}',
+            'dataframe': summary,
+            'table': 'era_summary_common_model',
+            'model_script': 'era/summary_v1.sql',
+            'date_column': 'clm_stmt_perd_end_dt',
+            'service_cap': ['clm_stmt_perd_start_dt', 'clm_stmt_perd_end_dt'],
+            'privacy': summary_privacy.apply_privacy,
+            'schema': summary_schema
         },
         {
-            'data_type' : 'detail_line',
-            'filename_template' : 'remit_service_line_record_data_{}',
-            'dataframe' : detail_line,
-            'table' : 'era_detail_line_common_model',
-            'model_script' : 'era/detail_v1.sql',
-            'date_column' : 'svc_ln_start_dt',
-            'service_cap' : ['svc_ln_start_dt', 'svc_ln_end_dt'],
-            'privacy' : lambda x: x,
-            'schema' : detail_schema
+            'data_type': 'detail_line',
+            'filename_template': 'remit_service_line_record_data_{}',
+            'dataframe': detail_line,
+            'table': 'era_detail_line_common_model',
+            'model_script': 'era/detail_v1.sql',
+            'date_column': 'svc_ln_start_dt',
+            'service_cap': ['svc_ln_start_dt', 'svc_ln_end_dt'],
+            'privacy': lambda x: x,
+            'schema': detail_schema
         }
     ]
 
@@ -115,12 +115,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 filename=conf['filename_template'].format(date_obj.strftime('%Y%m%d')),
                 model_version_number='01',
                 **{
-                    'record_id' : 'row_id',
-                    'created' : 'crt_dt',
-                    'data_set' : 'data_set_nm',
-                    'data_feed' : 'hvm_vdr_feed_id',
-                    'data_vendor' : 'hvm_vdr_id',
-                    'model_version' : 'mdl_vrsn_num'
+                    'record_id': 'row_id',
+                    'created': 'crt_dt',
+                    'data_set': 'data_set_nm',
+                    'data_feed': 'hvm_vdr_feed_id',
+                    'data_vendor': 'hvm_vdr_id',
+                    'model_version': 'mdl_vrsn_num'
                 }
             ),
             *[
@@ -148,12 +148,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             input_date=date_input
         )
 
+
 def main(args):
     # init
-    spark, sqlContext = init('Cardinal PMS')
+    spark, sql_context = init('Cardinal PMS')
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.airflow_test:
         output_path = OUTPUT_PATH_TEST

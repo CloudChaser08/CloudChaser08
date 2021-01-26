@@ -2,7 +2,7 @@ from spark.helpers.source_table import SourceTable
 
 
 TABLE_CONF = {
-    'claimpayment' : SourceTable(
+    'claimpayment': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -59,7 +59,7 @@ TABLE_CONF = {
             'hvJoinKey'
         ]
     ),
-    'servicepayment' : SourceTable(
+    'servicepayment': SourceTable(
         'csv',
         separator='|',
         columns=[

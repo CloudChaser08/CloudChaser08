@@ -6,7 +6,7 @@ import pyspark.sql.functions as func
 
 from spark.runner import Runner
 from spark.spark_setup import init
-import spark.helpers.constants as constants
+# import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -61,8 +61,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Genoa sent historical data (before 2017-11-01) in one schema, and then
     # added 3 new columns later on. We load everything as though it's in the
     # new schema, so the historical data columns need to be adjusted
-    historical = spark.table('genoa_rx_raw').where(func.regexp_extract('input_file_name', '(..../../..)/[^/]*$', 1) < '2017/11/01')
-    not_historical = spark.table('genoa_rx_raw').where(func.regexp_extract('input_file_name', '(..../../..)/[^/]*$', 1) >= '2017/11/01')
+    historical = spark.table('genoa_rx_raw')\
+        .where(func.regexp_extract('input_file_name', '(..../../..)/[^/]*$', 1) < '2017/11/01')
+    not_historical = spark.table('genoa_rx_raw')\
+        .where(func.regexp_extract('input_file_name', '(..../../..)/[^/]*$', 1) >= '2017/11/01')
 
     old_col_name = historical.columns[-5]
     new_col_name = historical.columns[-2]
@@ -156,9 +158,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Genoa')
+    spark, sql_context = init('Genoa')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

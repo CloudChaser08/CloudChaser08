@@ -1,6 +1,7 @@
 from pyspark.sql.functions import col, udf
-from spark.helpers.udf.general_helpers import extract_date
-from datetime import datetime
+# from spark.helpers.udf.general_helpers import extract_date
+# from datetime import datetime
+
 
 def map_whitelist(df):
     """
@@ -12,7 +13,7 @@ def map_whitelist(df):
     - event_val_uom: The type of class evant_val is
     """
     def convert(name):
-        #TODO: term mapping will be done here, return None for now
+        # TODO: term mapping will be done here, return None for now
         #      until we recieve the list.
         return None
 

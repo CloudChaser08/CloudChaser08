@@ -29,7 +29,7 @@ OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__
-    setid = 'PatientData.out'       #TODO: fill in correctly when known
+    setid = 'PatientData.out'  # TODO: fill in correctly when known
     max_cap = date_input
     max_cap_obj = datetime.strptime(max_cap, '%Y-%m-%d')
 
@@ -154,9 +154,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Genomind Normalization')
+    spark, sql_context = init('Genomind Normalization')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

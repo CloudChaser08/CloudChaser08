@@ -50,8 +50,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, "29", "HVM_AVAILABLE_HISTORY_START_DATE")
-    earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, "29", "EARLIEST_VALID_SERVICE_DATE")
+    hvm_available_history_date = \
+        postprocessor.get_gen_ref_date(runner.sqlContext, "29", "HVM_AVAILABLE_HISTORY_START_DATE")
+    earliest_valid_service_date = \
+        postprocessor.get_gen_ref_date(runner.sqlContext, "29", "EARLIEST_VALID_SERVICE_DATE")
     hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
         earliest_valid_service_date if earliest_valid_service_date else datetime.date(1901, 1, 1)
     max_date = date_input
@@ -91,8 +93,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             filename='RCM_Claims_{}.open'.format(date_obj.strftime('%Y%m%d'))
         ),
         medical_priv.filter,
-        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'),
-        postprocessor.apply_date_cap(runner.sqlContext, 'date_service_end', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE')
+        postprocessor.apply_date_cap(
+            runner.sqlContext, 'date_service', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'),
+        postprocessor.apply_date_cap(
+            runner.sqlContext, 'date_service_end', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE')
     )(
         runner.sqlContext.sql('select * from medicalclaims_common_model')
     ).createTempView('medicalclaims_common_model')
@@ -123,10 +127,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 def main(args):
 
     # init spark
-    spark, sqlContext = init("Cardinal RCM")
+    spark, sql_context = init("Cardinal RCM")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

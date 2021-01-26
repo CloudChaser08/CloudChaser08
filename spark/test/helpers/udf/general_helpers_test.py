@@ -10,9 +10,11 @@ def test_extract_number():
     assert gh.extract_number('$1.90') == 1.9
     assert gh.extract_number('$.1.90') == 190
 
+
 def test_clean_up_freetext():
     assert "3123LLL &&&" == gh.clean_up_freetext("3123LLL   ,,,&&&   ", remove_periods=True)
     assert gh.clean_up_freetext(None) is None
+
 
 def test_cap_date():
     test_date = datetime.date(1990, 6, 1)
@@ -22,20 +24,17 @@ def test_cap_date():
     assert not gh.cap_date(test_date, datetime.date(1995, 6, 1), None)
     assert not gh.cap_date(test_date, None, datetime.date(1985, 6, 1))
 
+
 def test_extract_date():
     assert gh.extract_date(None, None) is None
 
     assert gh.extract_date('1990-Jun-01', '%Y-%b-%d') == datetime.date(1990, 6, 1)
 
     # max date cap
-    assert gh.extract_date(
-        '1990-Jun-01', '%Y-%b-%d', max_date=datetime.date(1990, 1, 1)
-    ) == None
+    assert gh.extract_date('1990-Jun-01', '%Y-%b-%d', max_date=datetime.date(1990, 1, 1)) == None
 
     # min date cap
-    assert gh.extract_date(
-        '1990-Jun-01', '%Y-%b-%d', min_date=datetime.date(2000, 1, 1)
-    ) == None
+    assert gh.extract_date('1990-Jun-01', '%Y-%b-%d', min_date=datetime.date(2000, 1, 1)) == None
 
 
 def test_extract_currency():
@@ -100,6 +99,7 @@ def test_uniquify():
     assert gh.uniquify('10:10:10') == '10'
     assert sorted(gh.uniquify('10:10:20').split(':')) == sorted('10:20'.split(':'))
 
+
 def test_is_int():
     assert gh.is_int('1')
     assert gh.is_int(1)
@@ -108,6 +108,7 @@ def test_is_int():
     assert not gh.is_int(1.1)
     assert not gh.is_int('string')
     assert not gh.is_int(None)
+
 
 def test_obfuscate_hvid():
     assert gh.obfuscate_hvid('1234567', 'CPQ-013') == 'ceb8f9b33421e4deb16ce7fe1358d554'
@@ -118,6 +119,7 @@ def test_obfuscate_hvid():
     assert gh.obfuscate_hvid('    ', 'CPQ-013') is None
     assert gh.obfuscate_hvid(None, 'CPQ-013') is None
 
+
 def test_slightly_obfuscate_hvid():
     assert gh.slightly_obfuscate_hvid(1234567, 'CPQ-013') == 2004332781
     assert gh.slightly_obfuscate_hvid(None, 'CPQ-013') is None
@@ -127,6 +129,7 @@ def test_slightly_obfuscate_hvid():
     with pytest.raises(ValueError) as excinfo:
         gh.slightly_obfuscate_hvid('1234567', 'CPQ-013')
     assert str(excinfo.value) == 'Only integer HVIDs are expected'
+
 
 def test_slightly_deobfuscate_hvid():
     assert gh.slightly_deobfuscate_hvid(2004332781, 'CPQ-013') == 1234567
@@ -139,21 +142,25 @@ def test_remove_split_suffix():
     assert gh.remove_split_suffix('/parent/dir/myfile.txt', True) == '/parent/dir/myfile.txt'
     assert gh.remove_split_suffix('/parent/dir/myfile.txt.aa.bz2', True) == '/parent/dir/myfile.txt'
 
+
 def test_densify_scalar_array():
     assert gh.densify_scalar_array([1, None, 2, None, 3]) == [1, 2, 3]
     assert gh.densify_scalar_array([None, None]) == []
     assert gh.densify_scalar_array([[1], [None]]) == [[1], [None]]
+
 
 def test_densify_2d_array():
     assert gh.densify_2d_array([[1], [None]]) == [[1]]
     assert gh.densify_2d_array([[1, None, 2], [None, None, None]]) == [[1, None, 2]]
     assert gh.densify_2d_array([[None, None, None], [None, None, None]]) == [[None, None, None]]
 
+
 def test_densify_2d_array_by_key():
     assert gh.densify_2d_array_by_key([[1, 2, 3], [4, 5, 6]]) == [[1, 2, 3], [4, 5, 6]]
     assert gh.densify_2d_array_by_key([[None, 2, 3], [4, 5, 6]]) == [[4, 5, 6]]
     assert gh.densify_2d_array_by_key([[1, None, 3], [None, 5, 6]]) == [[1, None, 3]]
     assert gh.densify_2d_array_by_key([[None, 2, 3], [None, 5, None]]) == [[None, 2, 3]]
+
 
 def test_obfuscate_candidate_hvids():
     assert gh.obfuscate_candidate_hvids([['1234567', 1]], 'CPQ-013') == [['ceb8f9b33421e4deb16ce7fe1358d554', 1]]

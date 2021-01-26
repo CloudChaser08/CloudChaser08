@@ -13,6 +13,7 @@ from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
+
 def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
     date_path = date_input.replace('-', '/')
@@ -56,7 +57,7 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
 
     # Remove leading and trailing whitespace from any strings
     postprocessor.trimmify(runner.sqlContext.sql('select * from cardinal_dcoa_transactions'))\
-                    .createTempView('cardinal_dcoa_transactions')
+        .createTempView('cardinal_dcoa_transactions')
 
     # Normalize the transaction data into the
     # pharmacyclaims common model using transaction data
@@ -74,13 +75,15 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
 
     if not test:
         # Create the delivery
+        output_path = None
         if airflow_test:
             output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/delivery/{}/'.format(date_path)
         else:
             output_path = 's3://salusv/deliverable/cardinal_dcoa/{}/'.format(date_path)
 
         delivery_df = runner.sqlContext.sql('select * from pharmacyclaims_common_model')
-        delivery_df.repartition(num_output_files).write.csv(path=output_path, compression="gzip", sep="|", quoteAll=True, header=True)
+        delivery_df.repartition(num_output_files).write.csv(
+            path=output_path, compression="gzip", sep="|", quoteAll=True, header=True)
 
     if not test and not airflow_test:
         logger.log_run_details(
@@ -96,20 +99,20 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
 
 def main(args):
     # Initialize Spark
-    spark, sqlContext = init("Cardinal DCOA")
+    spark, sql_context = init("Cardinal DCOA")
 
     # Initialize the Spark Runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     # Run the normalization routine
-    run(spark, runner, args.date, airflow_test=args.airflow_test, \
-            num_output_files=args.num_output_files)
+    run(spark, runner, args.date, airflow_test=args.airflow_test, num_output_files=args.num_output_files)
 
     if not args.airflow_test:
         RunRecorder().record_run_details()
 
     # Tell spark to shutdown
     spark.stop()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

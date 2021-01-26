@@ -64,7 +64,7 @@ def _get_rollup_vals(mapfile_broadcast, diagnosis_code_range):
         # current max, then this line is exactly as good of a
         # rollup to use as the current max, append the rollup to
         # the list
-        elif maximum_matches > 0 and matches == maximum_matches:
+        elif 0 < maximum_matches == matches:
             rollups.append(line[0])
 
     return rollups
@@ -82,10 +82,12 @@ def _enumerate_range(range_string):
         if range_string[0] != range_string.split('-')[1][0]:
             char_range = list(range(ord(range_string[0]), ord(range_string.split('-')[1][0]) + 1))
             beginning = [
-                range_string[0] + str(range_element).zfill(2) for range_element in range(int(range_string.split('-')[0][1:]), 100)
+                range_string[0] +
+                str(range_element).zfill(2) for range_element in range(int(range_string.split('-')[0][1:]), 100)
             ]
             end = [
-                range_string.split('-')[1][0] + str(range_element).zfill(2) for range_element in range(0, int(range_string.split('-')[1][1:]) + 1)
+                range_string.split('-')[1][0] +
+                str(range_element).zfill(2) for range_element in range(0, int(range_string.split('-')[1][1:]) + 1)
             ]
             middle = [
                 chr(char) + str(range_element).zfill(2) for char in char_range[1:-1] for range_element in range(0, 100)
@@ -215,10 +217,10 @@ def run(spark, runner, date_input, diagnosis_mapfile, test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Treato")
+    spark, sql_context = init("Treato")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, args.diagnosis_mapfile)
 

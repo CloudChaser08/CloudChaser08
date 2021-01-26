@@ -80,7 +80,8 @@ column_transformer = Transformer(
         TransformFunction(post_norm_cleanup.cap_year_of_birth, ['patient_age', 'date_service', 'patient_year_of_birth'])
     ],
     diagnosis_code=[
-        TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['diagnosis_code', 'diagnosis_code_qual', 'date_service'])
+        TransformFunction(post_norm_cleanup.clean_up_diagnosis_code
+                          , ['diagnosis_code', 'diagnosis_code_qual', 'date_service'])
     ],
     procedure_code=[
         TransformFunction(post_norm_cleanup.clean_up_procedure_code, ['procedure_code'])

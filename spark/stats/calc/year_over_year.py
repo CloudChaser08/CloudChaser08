@@ -7,12 +7,13 @@ from ..models.results import YearOverYearResult
 
 PATIENT_IDENTIFIER = 'hvid'
 
+
 def _parse_year(s):
     return datetime.strptime(s, "%Y-%m-%d").year
 
 
 def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
-    '''
+    """
     Calculate patient year over year on the data set
     Input:
         -df: a pyspark.sql.DataFrame
@@ -21,7 +22,7 @@ def calculate_year_over_year(df, earliest_date, end_date, provider_conf):
         -provider_conf: a dict of the providers config
     Output:
         yoy_stats: a Dictionary of the stats
-    '''
+    """
 
     patient_identifier = PATIENT_IDENTIFIER
     date_field = 'coalesced_date'

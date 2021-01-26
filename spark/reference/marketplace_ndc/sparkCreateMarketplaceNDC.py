@@ -5,6 +5,7 @@ from spark.spark_setup import init
 
 import spark.helpers.file_utils as file_utils
 
+
 def run(spark, runner, output_location):
     script_path = __file__
 
@@ -23,9 +24,9 @@ def run(spark, runner, output_location):
 
 
 def main(args):
-    spark, sqlContext = init('Marketplace NDC')
+    spark, sql_context = init('Marketplace NDC')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.output_loc)
 

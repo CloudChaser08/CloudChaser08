@@ -56,7 +56,7 @@ def get_provider_config(sql_context, feed_id):
         file and combine them into one provider config object.
         :param sql_context: A Spark SQLContext object
         :param feed_id: The id of the provider feed
-        :param providers_conf_file: Absolute path of the location of the
+        :paramproviders_conf_file: Absolute path of the location of the
                                     config file with all provider configs
         :return: A Provider config object
     """

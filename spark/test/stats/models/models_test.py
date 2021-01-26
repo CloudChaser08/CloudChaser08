@@ -4,6 +4,7 @@
 
 from spark.stats.models import Provider, ProviderModel
 
+
 def test_merge():
     """ Tests the Provider.merge_provider_model method """
     prov = Provider(

@@ -36,7 +36,8 @@ class Grocery8451CensusDriver(CensusDriver):
             client=self.CLIENT_NAME, opp_id=self.OPPORTUNITY_ID, batch_id_path=_batch_id_path
         )
 
-        matching_payloads_schemas_module = self.__module__.replace(DRIVER_MODULE_NAME, self._matching_payloads_module_name)
+        matching_payloads_schemas_module = \
+            self.__module__.replace(DRIVER_MODULE_NAME, self._matching_payloads_module_name)
         matching_payloads_schemas = importlib.import_module(matching_payloads_schemas_module)
 
         # _column_length should only be set the first time load is called.

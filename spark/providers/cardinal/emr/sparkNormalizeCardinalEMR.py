@@ -85,8 +85,10 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
-    hvm_available_history_date = postprocessor.get_gen_ref_date(runner.sqlContext, FEED_ID, "HVM_AVAILABLE_HISTORY_DATE")
-    earliest_valid_service_date = postprocessor.get_gen_ref_date(runner.sqlContext, FEED_ID, "EARLIEST_VALID_SERVICE_DATE")
+    hvm_available_history_date = \
+        postprocessor.get_gen_ref_date(runner.sqlContext, FEED_ID, "HVM_AVAILABLE_HISTORY_DATE")
+    earliest_valid_service_date = \
+        postprocessor.get_gen_ref_date(runner.sqlContext, FEED_ID, "EARLIEST_VALID_SERVICE_DATE")
     hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
         earliest_valid_service_date if earliest_valid_service_date else date(1901, 1, 1)
     max_date = date_input
@@ -123,8 +125,10 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
       ) upi ON dem.patient_id = upi.patient_id AND dem.hvJoinKey = upi.hvJoinKey
     """).createOrReplaceTempView('transactions_demographics')
 
-    normalized_encounter = runner.run_spark_script('normalize_encounter.sql', return_output=True, source_file_path=script_path)
-    normalized_diagnosis = runner.run_spark_script('normalize_diagnosis.sql', return_output=True, source_file_path=script_path)
+    normalized_encounter = \
+        runner.run_spark_script('normalize_encounter.sql', return_output=True, source_file_path=script_path)
+    normalized_diagnosis = \
+        runner.run_spark_script('normalize_diagnosis.sql', return_output=True, source_file_path=script_path)
     normalized_procedure = schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_procedure_enc.sql', return_output=True, source_file_path=script_path
@@ -346,7 +350,8 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
             lambda df: schema_enforcer.apply_schema(df, table['schema']),
             postprocessor.add_universal_columns(
                 feed_id=FEED_ID, vendor_id=VENDOR_ID,
-                filename='EMR.{}.zip'.format(batch_id if batch_id is not None else datetime.strptime(date_input, '%Y-%m-%d').strftime('%m%d%Y')),
+                filename='EMR.{}.zip'.format(
+                    batch_id if batch_id is not None else datetime.strptime(date_input, '%Y-%m-%d').strftime('%m%d%Y')),
                 model_version_number=table['model_version'],
 
                 # rename defaults
@@ -399,12 +404,13 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
             input_date=date_input
         )
 
+
 def main(args):
     # init
-    spark, sqlContext = init("Cardinal Rain Tree EMR")
+    spark, sql_context = init("Cardinal Rain Tree EMR")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.airflow_test:
         output_path = OUTPUT_PATH_TEST

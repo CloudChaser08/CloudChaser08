@@ -1,5 +1,4 @@
 import argparse
-import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.medicalclaims_common_model import schema_v8 as medicalclaims_schema
@@ -72,7 +71,8 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         spark.table(t).count()
 
     df = postprocessor.compose(
-        lambda df: schema_enforcer.apply_schema(df, medicalclaims_schema, columns_to_keep=['part_provider', 'part_best_date'])
+        lambda df: schema_enforcer.apply_schema(df, medicalclaims_schema
+                                                , columns_to_keep=['part_provider', 'part_best_date'])
     )(normalized_output)
 
     if not test:
@@ -101,10 +101,10 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("waystar")
+    spark, sql_context = init("waystar")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, end_to_end_test=args.end_to_end_test)
 

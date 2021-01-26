@@ -1,5 +1,6 @@
 from spark.common.census_driver import CensusDriver
 
+
 class SimpleExampleCensusDriver(CensusDriver):
     """
     Simple example census driver that follows default behavior

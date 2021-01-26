@@ -66,7 +66,7 @@ class Covid19LabTransformer:
         except Exception as e:
             ops_status = False
             logger.log('           -part_files_ops failed to execute command: '
-                       'aws s3 {} --recursive {}'.format(action, src_path))
+                       'aws s3 {} --recursive {} \n Error: {}'.format(action, src_path, e))
         return ops_status
 
     def cleanup_stage_if_exists(self):
@@ -82,7 +82,7 @@ class Covid19LabTransformer:
             if len(failed_stage_path) > 0:
                 self.part_files_ops('rm', self.output_stage_path)
         except Exception as e:
-            logger.log('           -stage does not exist ' + self.output_stage_path)
+            logger.log('           -stage does not exist {} \n Error: {}'.format(self.output_stage_path, e))
 
         logger.log('        -cleanup_stage_if_exists: completed')
 
@@ -144,7 +144,8 @@ class Covid19LabTransformer:
                 if len(get_s3_path_list) > 0:
                     b_s3_path_exist = True
             except Exception as e:
-                logger.log('           -archive_current_prod: files does not exist in ' + s3_path)
+                logger.log('           -archive_current_prod: '
+                           'files does not exist in {}  \n Error: {}'.format(s3_path, e))
 
             if b_s3_path_exist:
                 if table in self._partitioned_tables_list:
@@ -158,9 +159,9 @@ class Covid19LabTransformer:
                         for part_mth in part_mth_list:
                             if RUN_FULL_ARCHIVE or part_mth.strftime('%Y-%m') in self.requested_list_of_months:
                                 self.part_files_ops(
-                                    'cp'
-                                    , '{}{}{}/'.format(s3_path, self._pat_mth_pattern, part_mth.strftime('%Y-%m'))
-                                    , '{}{}{}/'.format(s3_archive_path, self._pat_mth_pattern, part_mth.strftime('%Y-%m'))
+                                    'cp', '{}{}{}/'.format(s3_path, self._pat_mth_pattern, part_mth.strftime('%Y-%m'))
+                                    , '{}{}{}/'.format(s3_archive_path
+                                                       , self._pat_mth_pattern, part_mth.strftime('%Y-%m'))
                                     )
                 else:
                     self.part_files_ops('cp', s3_path, s3_archive_path)
@@ -169,7 +170,7 @@ class Covid19LabTransformer:
                            'archive. process skipped for {}'.format(table))
         logger.log('    -archive_current_prod: completed')
 
-    def move_stage_to_prod (self):
+    def move_stage_to_prod(self):
         """
             Move Stage to Prod:
                 1. Collect list of covid tables [self._tables_list]
@@ -197,7 +198,7 @@ class Covid19LabTransformer:
                     if len(get_s3_stage_path_list) > 0:
                         b_s3_stage_path_exist = True
                 except Exception as e:
-                    logger.log('           -files does not exist in ' + s3_stage_path)
+                    logger.log('           -files does not exist in {} \n Error: {}'.format(s3_stage_path, e))
 
                 if b_s3_stage_path_exist:
                     part_mth_list = [
@@ -208,9 +209,9 @@ class Covid19LabTransformer:
 
                     if len(part_mth_list) > 0:
                         for part_mth in part_mth_list:
-                            self.part_files_ops('sw',
-                                           s3_stage_path + self._pat_mth_pattern + part_mth.strftime('%Y-%m') + '/',
-                                           s3_path + self._pat_mth_pattern + part_mth.strftime('%Y-%m') + '/')
+                            self.part_files_ops(
+                                'sw', s3_stage_path + self._pat_mth_pattern + part_mth.strftime('%Y-%m') + '/',
+                                s3_path + self._pat_mth_pattern + part_mth.strftime('%Y-%m') + '/')
                 else:
                     logger.log('           -there is no files to archive. process skipped for {}'.format(table))
             else:

@@ -87,10 +87,10 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Neogenomics")
+    spark, sql_context = init("Neogenomics")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, end_to_end_test=args.end_to_end_test)
 

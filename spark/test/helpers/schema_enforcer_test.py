@@ -15,11 +15,11 @@ record = Row(*master_schema.names)
 
 @pytest.mark.usefixtures("spark")
 def test_apply_schema_no_aliases(spark):
-    '''
+    """
         Check that when the original DataFrame has the same number of columns
         as the target schema but the columns names are different, the new
         DataFrame has the correct column names
-    '''
+    """
     global master_schema
 
     org_df = spark['sqlContext'].sql("SELECT '1', 'I10', '49999', '1231232123'")
@@ -30,12 +30,12 @@ def test_apply_schema_no_aliases(spark):
 
 @pytest.mark.usefixtures("spark")
 def test_apply_schema_aliased_subset(spark):
-    '''
+    """
         Check that when the original DataFrame uses the same column names as
         the target schema but only has a subset of the columns in the schema,
         the new DataFrame has all the columns with the missing columns filled
         with NULLs
-    '''
+    """
     global master_schema
 
     org_df = spark['sqlContext'].sql("""
@@ -51,12 +51,12 @@ def test_apply_schema_aliased_subset(spark):
 
 @pytest.mark.usefixtures("spark")
 def test_apply_schema_explicit_subset(spark):
-    '''
+    """
         Check that when the original DataFrame only has a subset of the columns
         in the schema and a list of which columns are in the original DataFrame
         is supplied to apply_schema, the new DataFrame has all the columns with
         the missing columns filled with NULLs
-    '''
+    """
     global master_schema
 
     org_df = spark['sqlContext'].sql("SELECT '1', '49999', '1231232123'")
@@ -70,11 +70,11 @@ def test_apply_schema_explicit_subset(spark):
 
 @pytest.mark.usefixtures("spark")
 def test_apply_schema_out_of_order(spark):
-    '''
+    """
         Check that when the original DataFrame has a subset of the columns in
         the schema in a different order than the schema, the target schema is
         still applied correctly
-    '''
+    """
     global master_schema
 
     org_df = spark['sqlContext'].sql("SELECT '49999', '1231232123', 'I10'")
@@ -96,12 +96,12 @@ def test_apply_schema_out_of_order(spark):
 
 @pytest.mark.usefixtures("spark")
 def test_apply_schema_fails_extra_column(spark):
-    '''
+    """
         Check that when the original DataFrame has a different number of
         columns than the schema, there is no explicit list of columns to
         use, and at least one of the columns is not in the schema, an
         exception is thrown
-    '''
+    """
     global master_schema
 
     org_df = spark['sqlContext'].sql("""
@@ -116,13 +116,13 @@ def test_apply_schema_fails_extra_column(spark):
 
 
 def test_apply_schema_cols_to_keep(spark):
-    '''
+    """
         Check that when the original DataFrame has a different number of
         columns than the schema, there is no explicit list of columns
         to use, and at least one of the columns is not in the schema,
         but that column exists in cols_to_keep, the column is in the
         resulting df
-    '''
+    """
     global master_schema
 
     org_df = spark['sqlContext'].sql("""
@@ -137,10 +137,10 @@ def test_apply_schema_cols_to_keep(spark):
 
 @pytest.mark.usefixtures("spark")
 def test_apply_schema_type_casting(spark):
-    '''
+    """
         Check that when the target schema is applied to the original DataFrame
         columns are cast into the target type
-    '''
+    """
     global master_schema
 
     org_df = spark['sqlContext'].sql("""
@@ -151,12 +151,13 @@ def test_apply_schema_type_casting(spark):
 
     assert type(new_df.collect()[0].rendering_npi) == int
 
+
 @pytest.mark.usefixtures("spark")
 def test_apply_schema_func(spark):
-    '''
+    """
         Check that a schema applying function can be set up independently
         and then applied to a data frame
-    '''
+    """
     global master_schema
 
     org_df = spark['sqlContext'].sql("SELECT '1', 'I10', '49999', '1231232123'")

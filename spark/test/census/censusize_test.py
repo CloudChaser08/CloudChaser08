@@ -16,6 +16,7 @@ def test_driver_init(patch_spark_init, monkeypatch):
     parameters
     """
     driver_class = [None]
+
     def capture_call(self, *args, **kwargs):
         driver_class[0] = self.__class__.__name__
         return
@@ -47,6 +48,7 @@ def test_subclass_not_found_error(patch_spark_init, monkeypatch):
 
     assert msg == "Module spark.test.resources.census.empty_module does not contain a CensusDriver subclass"
 
+
 @pytest.mark.usefixtures("patch_spark_init")
 def test_step_order(patch_spark_init, monkeypatch):
     """
@@ -54,6 +56,7 @@ def test_step_order(patch_spark_init, monkeypatch):
     order
     """
     called_steps = []
+
     def capture_step_name_func(step):
         def capture_call(self, *args, **kwargs):
             called_steps.append(step)
@@ -73,6 +76,7 @@ def test_step_order(patch_spark_init, monkeypatch):
     censusize.main('2018-01-01', client_name='TEST', opportunity_id='TEST123')
     assert called_steps == CENSUS_STEPS
 
+
 @pytest.mark.userfixtures("patch_spark_init")
 def test_driver_with_extra_params(patch_spark_init):
     """
@@ -89,6 +93,7 @@ def test_driver_with_extra_params(patch_spark_init):
 
     assert 'nonstandard_param' in msg
 
+
 @pytest.mark.usefixtures("patch_spark_init")
 def test_all_param_driver_runs(patch_spark_init, monkeypatch):
     """
@@ -96,6 +101,7 @@ def test_all_param_driver_runs(patch_spark_init, monkeypatch):
     it runs w/o issue
     """
     called_steps = []
+
     def capture_step_name_func(step):
         def capture_call(self, *args, **kwargs):
             called_steps.append(step)

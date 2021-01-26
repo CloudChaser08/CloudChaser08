@@ -2,6 +2,7 @@ import pytest
 import spark.helpers.privacy.labtests as lab_priv
 from pyspark.sql.types import StructField, StructType, StringType, Row
 
+
 @pytest.mark.usefixtures("spark")
 def test_filter(spark):
     # test df including commonly filtered fields

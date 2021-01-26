@@ -90,14 +90,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # - Additional: Difference is the ticket_dt, we want to keep
     #               the row with the most recent ticket_dt
     runner.sqlContext.sql('select * from abd_transactions_with_dupes') \
-            .dropDuplicates(['sales_id']) \
-            .createTempView('abd_transactions')
+        .dropDuplicates(['sales_id']) \
+        .createTempView('abd_transactions')
     window = Window.orderBy('ticket_dt').partitionBy('sales_cd')
     runner.sqlContext.sql('select * from abd_additional_data_with_dupes') \
-            .withColumn('next_ticket_dt', lead('ticket_dt', 1).over(window)) \
-            .where(isnull('next_ticket_dt')) \
-            .drop('next_ticket_dt') \
-            .createTempView('abd_additional_data')
+        .withColumn('next_ticket_dt', lead('ticket_dt', 1).over(window)) \
+        .where(isnull('next_ticket_dt')) \
+        .drop('next_ticket_dt') \
+        .createTempView('abd_additional_data')
 
     # Run the normalization script on the transaction data
     # and matching payload
@@ -151,9 +151,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Apothecary_By_Design')
+    spark, sql_context = init('Apothecary_By_Design')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

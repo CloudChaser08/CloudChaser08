@@ -11,6 +11,7 @@ CLIENT_NAME = 'TEST'
 OPPORTUNITY_ID = 'TEST123'
 CUSTOM_SALT = 'custom_salt'
 
+
 @pytest.fixture
 @pytest.mark.usefixtures("patch_spark_init")
 def test_driver(patch_spark_init):
@@ -155,8 +156,9 @@ def test_transform(match_status, used_flexible_matching, expected_hvid, test_dri
     Ensure that the matching_payload table is transformed into one of hvid-rowid
     pairs. hvids should be obfuscated
     """
-    query_template = "SELECT '1' as hvid, {used_flexible_matching} as flexibleMatchingUsed, '{match_status}' as matchStatus, '2' as claimId"
-    query = query_template.format(used_flexible_matching=used_flexible_matching,match_status=match_status)
+    query_template = "SELECT '1' as hvid, {used_flexible_matching} as flexibleMatchingUsed" \
+                     ", '{match_status}' as matchStatus, '2' as claimId"
+    query = query_template.format(used_flexible_matching=used_flexible_matching, match_status=match_status)
 
     test_driver._spark.sql(query).createOrReplaceTempView('matching_payload')
 
@@ -201,6 +203,7 @@ def test_copy_to_s3(prod_driver, monkeypatch):
     that following the s3 copy, the source directory is removed
     """
     subprocess_calls = []
+
     def capture_subprocess_calls(params):
         subprocess_calls.append(params)
         return

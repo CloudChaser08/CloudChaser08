@@ -1,7 +1,7 @@
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
-    'ALLERGEN' : SourceTable(
+    'ALLERGEN': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -9,7 +9,7 @@ TABLE_CONF = {
             'description'
         ]
     ),
-    'ALLERGY' : SourceTable(
+    'ALLERGY': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -23,7 +23,7 @@ TABLE_CONF = {
             'is_active'
         ]
     ),
-    'APPOINTMENT' : SourceTable(
+    'APPOINTMENT': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -37,7 +37,7 @@ TABLE_CONF = {
             'appointment_type'
         ]
     ),
-    'DIAGNOSIS' : SourceTable(
+    'DIAGNOSIS': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -53,7 +53,7 @@ TABLE_CONF = {
             'created_at'
         ]
     ),
-    'DIAGNOSIS_ICD10' : SourceTable(
+    'DIAGNOSIS_ICD10': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -61,7 +61,7 @@ TABLE_CONF = {
             'icd10'
         ]
     ),
-    'DIAGNOSIS_ICD9' : SourceTable(
+    'DIAGNOSIS_ICD9': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -69,7 +69,7 @@ TABLE_CONF = {
             'icd9'
         ]
     ),
-    'DIAGNOSIS_SNOMED' : SourceTable(
+    'DIAGNOSIS_SNOMED': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -78,7 +78,7 @@ TABLE_CONF = {
             'source'
         ]
     ),
-    'ENCCAT' : SourceTable(
+    'ENCCAT': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -86,7 +86,7 @@ TABLE_CONF = {
             'name'
         ]
     ),
-    'ENCOUNTER' : SourceTable(
+    'ENCOUNTER': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -99,7 +99,7 @@ TABLE_CONF = {
             'created_at'
         ]
     ),
-    'ENCOUNTEREVENTREASONCODE' : SourceTable(
+    'ENCOUNTEREVENTREASONCODE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -108,7 +108,7 @@ TABLE_CONF = {
             'concept_id'
         ]
     ),
-    'ENCOUNTEREVENTRESULTCODE' : SourceTable(
+    'ENCOUNTEREVENTRESULTCODE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -117,7 +117,7 @@ TABLE_CONF = {
             'concept_id'
         ]
     ),
-    'ENCTYPE' : SourceTable(
+    'ENCTYPE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -130,7 +130,7 @@ TABLE_CONF = {
             'name'
         ]
     ),
-    'E_ICD10' : SourceTable(
+    'E_ICD10': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -142,7 +142,7 @@ TABLE_CONF = {
             'vers'
         ]
     ),
-    'E_ICD9' : SourceTable(
+    'E_ICD9': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -154,7 +154,7 @@ TABLE_CONF = {
             'vers'
         ]
     ),
-    'E_LOINC' : SourceTable(
+    'E_LOINC': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -203,7 +203,7 @@ TABLE_CONF = {
             'hl7_attachment_structure'
         ]
     ),
-    'E_SNOMED_CONCEPT' : SourceTable(
+    'E_SNOMED_CONCEPT': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -215,7 +215,7 @@ TABLE_CONF = {
             'isprimitive'
         ]
     ),
-    'INSURANCE' : SourceTable(
+    'INSURANCE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -230,7 +230,7 @@ TABLE_CONF = {
             'last_modified'
         ]
     ),
-    'INSURANCEPLAN' : SourceTable(
+    'INSURANCEPLAN': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -243,7 +243,7 @@ TABLE_CONF = {
             'is_active'
         ]
     ),
-    'LABORDER' : SourceTable(
+    'LABORDER': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -264,14 +264,14 @@ TABLE_CONF = {
             'transcript_id'
         ]
     ),
-    'LASTUPDATED' : SourceTable(
+    'LASTUPDATED': SourceTable(
         'csv',
         separator='|',
         columns=[
             'lastupdated'
         ]
     ),
-    'MEDCLASS' : SourceTable(
+    'MEDCLASS': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -280,7 +280,7 @@ TABLE_CONF = {
             'level_code'
         ]
     ),
-    'MEDICATION' : SourceTable(
+    'MEDICATION': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -296,7 +296,7 @@ TABLE_CONF = {
             'doseform'
         ]
     ),
-    'MED_MEDCLASS' : SourceTable(
+    'MED_MEDCLASS': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -304,7 +304,7 @@ TABLE_CONF = {
             'medclass_id'
         ]
     ),
-    'PATIENT' : SourceTable(
+    'PATIENT': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -326,7 +326,7 @@ TABLE_CONF = {
             'consistent_patient_id'
         ]
     ),
-    'PATIENT_RACE' : SourceTable(
+    'PATIENT_RACE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -336,7 +336,7 @@ TABLE_CONF = {
             'last_modified'
         ]
     ),
-    'PATIENT_SMOKE' : SourceTable(
+    'PATIENT_SMOKE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -348,7 +348,7 @@ TABLE_CONF = {
             'created_at'
         ]
     ),
-    'PAYER' : SourceTable(
+    'PAYER': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -359,7 +359,7 @@ TABLE_CONF = {
             'last_modified'
         ]
     ),
-    'PHARMACY' : SourceTable(
+    'PHARMACY': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -372,7 +372,7 @@ TABLE_CONF = {
             'last_modified'
         ]
     ),
-    'PRACTICE' : SourceTable(
+    'PRACTICE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -382,7 +382,7 @@ TABLE_CONF = {
             'created_at'
         ]
     ),
-    'PRESCRIPTION' : SourceTable(
+    'PRESCRIPTION': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -421,7 +421,7 @@ TABLE_CONF = {
             'created_at'
         ]
     ),
-    'PROVIDER' : SourceTable(
+    'PROVIDER': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -440,7 +440,7 @@ TABLE_CONF = {
             'consistent_provider_id'
         ]
     ),
-    'RACE' : SourceTable(
+    'RACE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -448,7 +448,7 @@ TABLE_CONF = {
             'race_name'
         ]
     ),
-    'SMOKE' : SourceTable(
+    'SMOKE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -457,7 +457,7 @@ TABLE_CONF = {
             'description'
         ]
     ),
-    'SPECIALTY' : SourceTable(
+    'SPECIALTY': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -467,7 +467,7 @@ TABLE_CONF = {
             'npi_classification'
         ]
     ),
-    'TRANSCRIPT' : SourceTable(
+    'TRANSCRIPT': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -488,7 +488,7 @@ TABLE_CONF = {
             'last_modified'
         ]
     ),
-    'TRANSCRIPT_ALLERGY' : SourceTable(
+    'TRANSCRIPT_ALLERGY': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -498,7 +498,7 @@ TABLE_CONF = {
             'last_modified'
         ]
     ),
-    'TRANSCRIPT_DIAGNOSIS' : SourceTable(
+    'TRANSCRIPT_DIAGNOSIS': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -509,7 +509,7 @@ TABLE_CONF = {
             'last_modified'
         ]
     ),
-    'TRANSCRIPT_PRESCRIPTION' : SourceTable(
+    'TRANSCRIPT_PRESCRIPTION': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -520,7 +520,7 @@ TABLE_CONF = {
             'last_modified'
         ]
     ),
-    'VACCINATION' : SourceTable(
+    'VACCINATION': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -536,7 +536,7 @@ TABLE_CONF = {
             'created_at'
         ]
     ),
-    'VACCINE' : SourceTable(
+    'VACCINE': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -546,7 +546,7 @@ TABLE_CONF = {
             'cvx_code'
         ]
     ),
-    'VACCINEMANUFACTURER' : SourceTable(
+    'VACCINEMANUFACTURER': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -555,7 +555,7 @@ TABLE_CONF = {
             'mvx_code'
         ]
     ),
-    'VENDOR' : SourceTable(
+    'VENDOR': SourceTable(
         'csv',
         separator='|',
         columns=[

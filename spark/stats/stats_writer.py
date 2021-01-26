@@ -8,8 +8,8 @@ S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"
 KEYSTATS_UPDATE_SQL_TEMPLATE = "UPDATE marketplace_datafeed SET {} = '{}' WHERE id = '{}';"
 
 LONGITUDINALITY_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_longitudinalityreportitem WHERE datafeed_id = '{}';"
-LONGITUDINALITY_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_longitudinalityreportitem " \
-                                      "(duration, value, average, std_dev, datafeed_id) values ('{}', '{}', '{}', '{}', '{}');"
+LONGITUDINALITY_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_longitudinalityreportitem (duration, value, " \
+                                      "average, std_dev, datafeed_id) values ('{}', '{}', '{}', '{}', '{}');"
 
 YOY_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_yearoveryearreportitem WHERE datafeed_id = '{}';"
 YOY_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_yearoveryearreportitem " \
@@ -35,7 +35,8 @@ EPI_REGION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_regionreportitem (valu
 
 FILL_RATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
                                 "(name, sequence, datafield_id, data_feed_id, fill_rate, unique_to_data_feed) " \
-                                "VALUES ('{name}', '{sequence}', '{datafield_id}', '{data_feed_id}', '{fill_rate}', false) " \
+                                "VALUES ('{name}', '{sequence}', '{datafield_id}'" \
+                                ", '{data_feed_id}', '{fill_rate}', false) " \
                                 "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                 "SET fill_rate = '{fill_rate}';"
 
@@ -44,7 +45,8 @@ TOP_VALS_DELETE_SQL_TEMPLATE = "UPDATE marketplace_datafeedfield SET top_values 
 
 TOP_VALS_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
                                "(name, sequence, datafield_id, data_feed_id, top_values, unique_to_data_feed) " \
-                               "VALUES ('{name}', '{sequence}', '{datafield_id}', '{data_feed_id}', '{top_values}', false) " \
+                               "VALUES ('{name}', '{sequence}', '{datafield_id}'" \
+                               ", '{data_feed_id}', '{top_values}', false) " \
                                "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                "SET top_values = '{top_values}';"
 
@@ -207,9 +209,7 @@ def _generate_queries(stats, provider_conf):
             # append to queries list
             for epi_stat in stat_value:
                 epi_stat['datafeed_id'] = provider_conf['datafeed_id']
-                stat_queries.append(
-                    query.format(**epi_stat)
-                )
+                stat_queries.append(query.format(**epi_stat))
 
         elif stat_name == 'top_values' and stat_value:
             columns = set([r['column'] for r in stat_value])
@@ -229,8 +229,9 @@ def _generate_queries(stats, provider_conf):
                 ])
 
                 stat_queries.append(TOP_VALS_INSERT_SQL_TEMPLATE.format(
-                    name=column, datafield_id=name_id_dict[column]['field_id'], sequence=name_id_dict[column]['sequence'],
-                    data_feed_id=provider_conf['datafeed_id'], top_values=top_values_string
+                    name=column, datafield_id=name_id_dict[column]['field_id']
+                    , sequence=name_id_dict[column]['sequence']
+                    , data_feed_id=provider_conf['datafeed_id'], top_values=top_values_string
                 ))
 
         elif stat_name == 'fill_rate' and stat_value:

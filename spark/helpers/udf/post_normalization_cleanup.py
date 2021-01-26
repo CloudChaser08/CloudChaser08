@@ -394,7 +394,7 @@ def clean_up_vital_sign(sign_type, sign_measurement, sign_units, gender, age, ye
         return sign_measurement
 
     if sign_units not in vital_sign_units.get(sign_type, []):
-        logging.warn("Unknown unit of measure, {}".format(sign_units))
+        logging.warning("Unknown unit of measure, {}".format(sign_units))
         return None
 
     if gender not in ['M', 'F']:
@@ -421,7 +421,7 @@ def clean_up_vital_sign(sign_type, sign_measurement, sign_units, gender, age, ye
         return None
 
     if sign_units == 'PERCENT':
-        if float(sign_measurement) > 1.0 and float(sign_measurement) < 99.0:
+        if 1.0 < float(sign_measurement) < 99.0:
             return sign_measurement
         else:
             return None
@@ -437,7 +437,7 @@ def clean_up_vital_sign(sign_type, sign_measurement, sign_units, gender, age, ye
     except TypeError:
         return None
 
-    if float(sign_measurement) > caps[0] and float(sign_measurement) < caps[1]:
+    if caps[0] < float(sign_measurement) < caps[1]:
         return sign_measurement
     else:
         return None

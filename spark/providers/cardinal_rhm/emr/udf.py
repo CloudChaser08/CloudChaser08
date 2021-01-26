@@ -1,5 +1,7 @@
 # diags - array of diagnoses in order (diag_1, diag_2, ... diag_8)
 # pointers - array of diagnosis pointers in order (ptr_1, ptr_2 .. ptr_4)
+
+
 def linked_and_unlinked_diagnoses(diags, pointers):
     """Using a list of diagnoses and diagnosis_pointers from a claim/service line,
     identify all diagnoses linked to the procedure and their priority, as well as
@@ -14,7 +16,7 @@ def linked_and_unlinked_diagnoses(diags, pointers):
         if p is not None and p.isdigit() and int(p) <= len(diags) \
                 and diags[int(p) - 1] is not None \
                 and diags[int(p) - 1] not in diag_priority:
-            diag_priority[diags[int(p) - 1]] = str(i + 1) # priority is the pointer number (index + 1)
+            diag_priority[diags[int(p) - 1]] = str(i + 1)  # priority is the pointer number (index + 1)
 
     res = []
     # We need at least one pair in order to make sure we don't lose the procedure
@@ -26,6 +28,6 @@ def linked_and_unlinked_diagnoses(diags, pointers):
     # are not duplicates of a linked diagnosis 
     for d in diags:
         if d is not None and d not in diag_priority:
-            diag_priority[d] = None # diagnoses without priority
+            diag_priority[d] = None  # diagnoses without priority
 
     return res + list(diag_priority.items())

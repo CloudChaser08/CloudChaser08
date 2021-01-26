@@ -1,5 +1,4 @@
 import argparse
-import time
 import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -145,7 +144,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
             table['privacy_filter'].filter(runner.sqlContext, additional_transformer=table.get('custom_transformer')),
             *[
-                postprocessor.apply_date_cap(runner.sqlContext, date_col, date_input, '31', domain_name, date_function=date_fn)
+                postprocessor.apply_date_cap(
+                    runner.sqlContext, date_col, date_input, '31', domain_name, date_function=date_fn)
                 for (date_col, domain_name, date_fn) in table['date_caps']
             ]
         )(
@@ -175,10 +175,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Cardinal TSI EMR")
+    spark, sql_context = init("Cardinal TSI EMR")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

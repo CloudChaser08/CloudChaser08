@@ -1,18 +1,12 @@
 import argparse
 import re
-from datetime import datetime, date
-
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.medicalclaims_common_model import schema_v6 as schema
+# from spark.common.medicalclaims_common_model import schema_v6 as schema
 from spark.helpers.privacy.common import Transformer, TransformFunction
-import spark.helpers.file_utils as file_utils
-import spark.helpers.payload_loader as payload_loader
-import spark.helpers.records_loader as records_loader
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.external_table_loader as external_table_loader
+# import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.privacy.common as common_priv
 import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
@@ -35,6 +29,7 @@ def actcode_cleanup(actcode):
         return actcode
     return None
 
+
 def run(spark, runner, date_input, test=False, airflow_test=False):
     encounter = spark.table('sample.cardinal_rheumatology_encounter_prelim')
     lab = spark.table('sample.cardinal_rheumatology_lab_prelim')
@@ -42,13 +37,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     encounter_schema = encounter.schema
     lab_schema = lab.schema
 
-    encounter = encounter.withColumn('const_weight', F.lit('WEIGHT')) \
-                    .withColumn('const_weight_pounds', F.lit('WEIGHT_POUNDS')) \
-                    .withColumn('const_null', F.lit(None)) \
-                    .withColumn('const_height', F.lit('HEIGHT')) \
-                    .withColumn('const_height_inches', F.lit('HEIGHT_INCHES')) \
-                    .withColumn('const_bmi', F.lit('BMI')) \
-                    .withColumn('const_bmi_index', F.lit('BMI_INDEX'))
+    encounter = \
+        encounter.withColumn('const_weight', FN.lit('WEIGHT')) \
+        .withColumn('const_weight_pounds', FN.lit('WEIGHT_POUNDS')) \
+        .withColumn('const_null', FN.lit(None)) \
+        .withColumn('const_height', FN.lit('HEIGHT')) \
+        .withColumn('const_height_inches', FN.lit('HEIGHT_INCHES')) \
+        .withColumn('const_bmi', FN.lit('BMI')) \
+        .withColumn('const_bmi_index', FN.lit('BMI_INDEX'))
 
     encounter_transformer = Transformer(
         ptnt_birth_yr=[
@@ -68,16 +64,23 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             TransformFunction(post_norm_cleanup.mask_zip_code, ['ptnt_zip3_cd'])
         ],
         weight_lb=[
-            TransformFunction(post_norm_cleanup.clean_up_vital_sign, ['const_weight', 'weight_lb', 'const_weight_pounds', 'ptnt_gender_cd', 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
+            TransformFunction(post_norm_cleanup.clean_up_vital_sign,
+                              ['const_weight', 'weight_lb', 'const_weight_pounds', 'ptnt_gender_cd'
+                                  , 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
         ],
         height_in=[
-            TransformFunction(post_norm_cleanup.clean_up_vital_sign, ['const_height', 'height_in', 'const_height_inches', 'ptnt_gender_cd', 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
+            TransformFunction(post_norm_cleanup.clean_up_vital_sign,
+                              ['const_height', 'height_in', 'const_height_inches', 'ptnt_gender_cd',
+                               'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
         ],
         bmi_calc=[
-            TransformFunction(post_norm_cleanup.clean_up_vital_sign, ['const_bmi', 'bmi_calc', 'const_bmi_index', 'ptnt_gender_cd', 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
+            TransformFunction(post_norm_cleanup.clean_up_vital_sign,
+                              ['const_bmi', 'bmi_calc', 'const_bmi_index', 'ptnt_gender_cd', 'ptnt_age_num',
+                               'ptnt_birth_yr', 'const_null', 'enc_date'])
         ],
         primary_diagnosis_code_id=[
-            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['primary_diagnosis_code_id', 'const_null', 'enc_date'])
+            TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                              ['primary_diagnosis_code_id', 'const_null', 'enc_date'])
         ],
         med_ndc_id=[
             TransformFunction(post_norm_cleanup.clean_up_ndc_code, ['med_ndc_id'])
@@ -118,12 +121,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     enc3.repartition(10).write.parquet('s3a://salusv/tmp/cardinal_rhm/processed/encounter/', compression='gzip')
     lab3.repartition(10).write.parquet('s3a://salusv/tmp/cardinal_rhm/processed/lab/', compression='gzip')
 
-    output_paths = \
-            ','.join(
-                [
-                    's3a://salusv/tmp/cardinal_rhm/processed/encounter/',
-                    's3a://salusv/tmp/cardinal_rhm/processed/lab/'
-                ])
+    output_paths = ','.join(
+        [
+            's3a://salusv/tmp/cardinal_rhm/processed/encounter/',
+            's3a://salusv/tmp/cardinal_rhm/processed/lab/'
+        ])
 
     if not test and not airflow_test:
         logger.log_run_details(
@@ -138,14 +140,15 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Cardinal Rheumatology EMR')
+    spark, sql_context = init('Cardinal Rheumatology EMR')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 
     if not args.airflow_test:
         RunRecorder().record_run_details()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

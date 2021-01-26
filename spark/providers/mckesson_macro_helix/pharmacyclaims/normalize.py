@@ -13,7 +13,7 @@ import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 from spark.providers.mckesson_macro_helix.pharmacyclaims import load_transactions
-from spark.providers.mckesson_macro_helix.pharmacyclaims.load_transactions import Schema as transactions_schema
+from spark.providers.mckesson_macro_helix.pharmacyclaims.load_transactions import Schema as TransactionsSchema
 
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
@@ -25,7 +25,6 @@ VENDOR_ID = '86'
 pharma_schema = pharma_schemas['schema_v6']
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + pharma_schema.output_directory
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/spark-output/'
-
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -74,9 +73,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     cutoff_date = datetime(2018, 9, 30)
 
     if datetime.strptime(date_input, '%Y-%m-%d') < cutoff_date:
-        load_transactions.load(runner, input_path, transactions_schema.v1)
+        load_transactions.load(runner, input_path, TransactionsSchema.v1)
     else:
-        load_transactions.load(runner, input_path, transactions_schema.v2)
+        load_transactions.load(runner, input_path, TransactionsSchema.v2)
 
     explode.generate_exploder_table(spark, 24, 'exploder')
 
@@ -139,9 +138,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 
 def main(args):
-    spark, sqlContext = init('Mckesson_Macro_Helix')
+    spark, sql_context = init('Mckesson_Macro_Helix')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

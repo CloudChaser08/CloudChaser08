@@ -46,11 +46,13 @@ def cap_date(d, min_date, max_date):
     max_date = max_date or d.max
     return d if d and max_date >= d >= min_date else None
 
+
 def extract_date(text, pattern, min_date=None, max_date=None):
     try:
         return cap_date(datetime.strptime(text, pattern).date(), min_date, max_date)
     except (ValueError, TypeError):
         return None
+
 
 def extract_currency(text):
     try:
@@ -72,6 +74,7 @@ def convert_value(value, conversion):
         return converters[conversion](value)
     except (KeyError, TypeError):
         return None
+
 
 def convert_kg_to_lb(value):
     try:
@@ -131,7 +134,7 @@ def uniquify(with_dupes):
 
 
 def is_int(val):
-    "Test whether input value can be parsed to an integer"
+    """Test whether input value can be parsed to an integer"""
     if type(val) is int:
         return True
     elif type(val) is float:
@@ -181,9 +184,9 @@ def slightly_deobfuscate_hvid(hvid, key):
 
 
 def remove_split_suffix(filename, include_parent_dirs=False):
-    "Remove suffix added by the split_push_files subdag"
+    """Remove suffix added by the split_push_files subdag"""
     # remove suffix if found
-    if re.search('\.[a-z]{2}\.[^.]+$', filename):
+    if re.search(r'\.[a-z]{2}\.[^.]+$', filename):
         filename = '.'.join(filename.split('.')[:-2])
 
     # strip parent dirs if option is specified

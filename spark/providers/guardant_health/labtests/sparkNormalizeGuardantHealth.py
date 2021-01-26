@@ -22,7 +22,6 @@ OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
-
     FEED_ID = '58'
     VENDOR_ID = '249'
 
@@ -115,10 +114,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Guardant Health")
+    spark, sql_context = init("Guardant Health")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, airflow_test=args.airflow_test)
 

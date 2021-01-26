@@ -2,7 +2,7 @@ from datetime import datetime, date
 from functools import reduce
 import argparse
 
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 from pyspark.sql import Window
 
 from spark.runner import Runner
@@ -95,13 +95,13 @@ def run(spark, runner, date_input, in_parts=False, test=False, airflow_test=Fals
             ]
         ).distinct()
 
-        normalized_with_priority_rank = normalized.where(F.col("diagnosis_priority_unranked").isNotNull()).withColumn(
-            'diagnosis_priority', F.dense_rank().over(
+        normalized_with_priority_rank = normalized.where(FN.col("diagnosis_priority_unranked").isNotNull()).withColumn(
+            'diagnosis_priority', FN.dense_rank().over(
                 Window.partitionBy("vendor_test_id", "claim_id").orderBy("diagnosis_priority_unranked")
             )
         ).unionAll(
-            normalized.where(F.col("diagnosis_priority_unranked").isNull()).withColumn(
-                'diagnosis_priority', F.lit(None)
+            normalized.where(FN.col("diagnosis_priority_unranked").isNull()).withColumn(
+                'diagnosis_priority', FN.lit(None)
             )
         ).drop("diagnosis_priority_unranked")
 
@@ -159,9 +159,9 @@ def run(spark, runner, date_input, in_parts=False, test=False, airflow_test=Fals
 
 
 def main(args):
-    spark, sqlContext = init('Xifin')
+    spark, sql_context = init('Xifin')
 
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, in_parts=args.in_parts, airflow_test=args.airflow_test)
 

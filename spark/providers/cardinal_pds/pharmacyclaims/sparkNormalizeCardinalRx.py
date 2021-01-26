@@ -87,7 +87,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ])
         has_hvm_approved = True
 
-
     df = runner.sqlContext.sql('select * from transactions')
     df = postprocessor.nullify(df, ['NULL', 'Unknown', '-1', '-2'])
     postprocessor.trimmify(df).createTempView('transactions')
@@ -138,30 +137,32 @@ LOCATION '{}'
 
     df = runner.sqlContext.sql(clean_hvid_sql).drop(*EXTRA_COLUMNS)
 
-    df.withColumn('hvid', df.clear_hvid).drop('clear_hvid') \
-         .withColumn('pharmacy_other_id', md5(df.pharmacy_other_id)) \
-         .createOrReplaceTempView('pharmacyclaims_common_model')
+    df.withColumn('hvid', df.clear_hvid).drop('clear_hvid')\
+        .withColumn('pharmacy_other_id', md5(df.pharmacy_other_id))\
+        .createOrReplaceTempView('pharmacyclaims_common_model')
 
     curr_mo = date_obj.strftime('%Y-%m')
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:
         runner.run_spark_query(
-            "ALTER TABLE normalized_claims ADD PARTITION (part_best_date='{0}') LOCATION '{1}part_best_date={0}/'".format(
-                mo, normalized_path))
+            "ALTER TABLE normalized_claims "
+            "ADD PARTITION (part_best_date='{0}') LOCATION '{1}part_best_date={0}/'".format(mo, normalized_path))
 
     runner.run_spark_script('clean_out_reversed_claims.sql')
 
     new_reversed = runner.sqlContext.sql(
-        "SELECT * FROM pharmacyclaims_common_model WHERE concat_ws(':', record_id, data_set) IN (SELECT * from reversed)").withColumn(
+        "SELECT * FROM pharmacyclaims_common_model "
+        "WHERE concat_ws(':', record_id, data_set) IN (SELECT * from reversed)").withColumn(
             'logical_delete_reason', lit('Reversed Claim'))
     old_reversed = runner.sqlContext.sql(
         "SELECT * FROM normalized_claims WHERE concat_ws(':', record_id, data_set) IN (SELECT * from reversed)").drop(
             'part_best_date').withColumn('logical_delete_reason', lit('Reversed Claim'))
     new_not_reversed = runner.sqlContext.sql(
-        "SELECT * FROM pharmacyclaims_common_model WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)")
+        "SELECT * FROM pharmacyclaims_common_model "
+        "WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)")
     old_not_reversed = runner.sqlContext.sql(
-        "SELECT * FROM normalized_claims WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)").drop(
-            'part_best_date')
+        "SELECT * FROM normalized_claims "
+        "WHERE concat_ws(':', record_id, data_set) NOT IN (SELECT * from reversed)").drop('part_best_date')
 
     new_reversed.union(old_reversed).union(new_not_reversed).union(old_not_reversed).createTempView(
         'pharmacyclaims_common_model_final')
@@ -186,10 +187,10 @@ LOCATION '{}'
 
 def main(args):
     # init
-    spark, sqlContext = init("CardinalRx")
+    spark, sql_context = init("CardinalRx")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     if args.airflow_test:
         output_path = OUTPUT_PATH_TEST
@@ -212,7 +213,6 @@ def main(args):
     else:
         hadoop_time = normalized_records_unloader.timed_distcp(output_path)
         RunRecorder().record_run_details(additional_time=hadoop_time)
-
 
 
 if __name__ == "__main__":

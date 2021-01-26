@@ -6,7 +6,6 @@ from spark.runner import Runner
 from spark.spark_setup import init
 from spark.common.lab_common_model import schema_v7 as lab_schema
 import spark.helpers.file_utils as file_utils
-import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
@@ -109,10 +108,10 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Neogenomics")
+    spark, sql_context = init("Neogenomics")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date, end_to_end_test=args.end_to_end_test)
 

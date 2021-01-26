@@ -12,7 +12,8 @@ spark_sql_runner = Runner(sqlContext)
 # select a subset of their data if this is undesireable
 GUARDANT_HEALTH_SRC_DATA_LOCATION = 's3a://salusv/incoming/labtests/guardant_health/*/*/*'
 GUARDANT_HEALTH_MATCHING_PAYLOAD_LOCATION = 's3a://salusv/matching/payload/labtests/guardant_health/*/*/*'
-GUARDANT_HEALTH_TARGET_DATA_LOCATION = 's3a://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=guardant_health/*'
+GUARDANT_HEALTH_TARGET_DATA_LOCATION = \
+    's3a://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=guardant_health/*'
 
 payload_loader.load(spark_sql_runner, GUARDANT_HEALTH_MATCHING_PAYLOAD_LOCATION, extra_cols=['hvJoinKey'])
 

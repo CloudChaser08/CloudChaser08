@@ -4,7 +4,7 @@ def apply_schema(df, schema, columns_to_fill=None, columns_to_keep=None):
     return apply_schema_func(schema, columns_to_fill, columns_to_keep)(df)
 
 def apply_schema_func(schema, cols_to_fill=None, cols_to_keep=None):
-    '''
+    """
         Apply/enforce a schema on df using one of 3 strategies:
             1. The input DataFrame column names match a subset of the schema
                column names
@@ -25,7 +25,7 @@ def apply_schema_func(schema, cols_to_fill=None, cols_to_keep=None):
         output
             DataFrame with the schema applied. Any columns not specified in the
             input DataFrame are filld with nulls
-    '''
+    """
 
     def out(df):
         columns_to_fill = cols_to_fill

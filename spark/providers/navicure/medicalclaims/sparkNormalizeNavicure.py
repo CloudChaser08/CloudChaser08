@@ -12,7 +12,7 @@ import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
 import spark.providers.navicure.medicalclaims.transactional_schemas as transactional_schemas
-import pyspark.sql.functions as F
+import pyspark.sql.functions as FN
 
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
@@ -79,7 +79,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         ) for t in target_tables])
 
     output = postprocessor.compose(
-        lambda df: df.withColumn('record_id', F.monotonically_increasing_id()),
+        lambda df: df.withColumn('record_id', FN.monotonically_increasing_id()),
         schema_enforcer.apply_schema_func(
             medicalclaims_schema,
             cols_to_keep=['part_provider', 'part_best_date']
