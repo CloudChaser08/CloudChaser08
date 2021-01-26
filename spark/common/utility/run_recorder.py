@@ -5,14 +5,14 @@ import time
 from spark.common.utility.logger import log
 
 from spark.common.utility import get_spark_runtime, format_time, SparkJobNotCompleteException
-from spark.common.utility.singleton import Singleton
+# from spark.common.utility.singleton import Singleton
 from spark.common.utility.spark_state import SparkState
 from spark.common.utility.run_details import RunDetails
 
 
 S3_OUTPUT_PATH = "s3://salusv/normalization/logs/"
 RETRIES = 5
-BACKOFF_INTERVAL = 10 # in seconds
+BACKOFF_INTERVAL = 10  # in seconds
 
 
 class RunRecorder(object):
@@ -49,7 +49,7 @@ class RunRecorder(object):
                 to represent the total run time.
         """
         log("Recording run details")
-
+        spark_runtime = None
         if spark_app_runtime is None:
             retries = RETRIES
             while retries:
@@ -106,8 +106,7 @@ class RunRecorder(object):
 
         file_name = "{name}-{app_id}.csv".format(name=app_name, app_id=app_id).replace(" ", "_")
 
-        local_output_path = \
-                "/tmp/{file_name}".format(file_name=file_name)
+        local_output_path = "/tmp/{file_name}".format(file_name=file_name)
 
         with open(local_output_path, 'wt') as f:
             csv_writer = DictWriter(f, fieldnames=header)

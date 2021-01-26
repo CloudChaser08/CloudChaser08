@@ -12,6 +12,7 @@ from spark.spark_setup import init
     $ spark-submit compare.py path1 path2 --drop colA, colB, colC
 """
 
+
 def compare_schemas(source, target): 
     """ Compare schemas of two dataframes. 
         
@@ -22,8 +23,8 @@ def compare_schemas(source, target):
         :type target: pyspark.sql.DataFrame
         :rtype: boolean  
     """
-    for col in target.dtypes:
-        if col not in source.dtypes:
+    for column in target.dtypes:
+        if column not in source.dtypes:
             return False
     else:
         return True
@@ -39,9 +40,9 @@ def normalize_schemas(source, target):
     :type target: pyspark.sql.DataFrame
     :rtype: pyspark.sql.DataFrame
     """
-    for col in target.columns:
-        if col not in target.columns: 
-            source = source.drop(col)
+    for column in target.columns:
+        if column not in target.columns:
+            source = source.drop(column)
     return source
 
 
@@ -67,8 +68,10 @@ def percent_match(source, target):
     :type target: pyspark.sql.DataFrame
     :rtype: (float, float)
     """
-    source = source.withColumn("row_count", row_number().over(Window.partitionBy(source.columns).orderBy(source.columns)))
-    target = target.withColumn("row_count", row_number().over(Window.partitionBy(target.columns).orderBy(target.columns)))
+    source = \
+        source.withColumn("row_count", row_number().over(Window.partitionBy(source.columns).orderBy(source.columns)))
+    target = \
+        target.withColumn("row_count", row_number().over(Window.partitionBy(target.columns).orderBy(target.columns)))
     intersection = source.intersect(target)
     source_percent_match = intersection.count() / float(source.count())
     target_percent_match = intersection.count() / float(target.count())
@@ -88,17 +91,17 @@ if __name__ == '__main__':
     spark, sqlContext = init("Comparison")
 
     # load data into dataframes.
-    source = spark.read.parquet(args.src_loc)
-    target = spark.read.parquet(args.trg_loc)
+    in_source = spark.read.parquet(args.src_loc)
+    in_target = spark.read.parquet(args.trg_loc)
 
     # Drop columns
     if args.drop: 
-        for col in args.drop: 
-            source = source.drop(col)
-            target = target.drop(col)
+        for col in args.drop:
+            in_source = in_source.drop(col)
+            in_target = in_target.drop(col)
     
     # compare schemas.
-    schema_match = compare_schemas(source, target)
+    schema_match = compare_schemas(in_source, in_target)
     if schema_match:
         print("Schema Match: OK")
     else: 
@@ -106,25 +109,25 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     # normalize source schema.
-    source = normalize_schemas(source, target)
+    in_source = normalize_schemas(in_source, in_target)
 
     # Compare row counts.
-    source_row_count = source.count()
-    target_row_count = target.count()
+    source_row_count = in_source.count()
+    target_row_count = in_target.count()
     print("Source row count: " + str(source_row_count))
     print("Target row count: " + str(target_row_count))
 
     # compare duplicate counts.
-    source_unique_row_count = source.distinct().count()
-    target_unique_row_count = target.distinct().count()
+    source_unique_row_count = in_source.distinct().count()
+    target_unique_row_count = in_target.distinct().count()
     print("Source Duplicate Row Count: " + str(source_row_count - source_unique_row_count))
     print("Target Duplicate Row Count: " + str(target_row_count - target_unique_row_count))
 
     # compare data content.
-    src_match, trg_match = percent_match(source, target)
+    src_match, trg_match = percent_match(in_source, in_target)
     print("Source Table Match: " + str(src_match))
     print("Target Table Match: " + str(trg_match))
-    if (src_match != 1.0 or trg_match != 1.0):
+    if src_match != 1.0 or trg_match != 1.0:
         print("Compare: FAIL")
     else:
         print("Compare: OK")

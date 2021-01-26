@@ -4,7 +4,7 @@ from pyspark.sql.functions import col, sum, isnan, count, trim, lit, upper
 from ..models.results import FillRateResult
 
 def _col_fill_rate(c, row_count):
-    '''
+    """
     Calculate the fill rate for a given column.
     "null" values can be the following:
         - NULL
@@ -17,7 +17,7 @@ def _col_fill_rate(c, row_count):
         - row_count: the number of rows in the column as an int
     Output:
         - fr: the fill rate for that column of type pyspark.sql.Column
-    '''
+    """
     is_not_null = col(c).isNotNull() & (trim(col(c)) != '')
     if c in ['patient_gender', 'ptnt_gender_cd']:
         is_not_null = is_not_null & (upper(trim(col(c))) != 'U')
@@ -26,13 +26,13 @@ def _col_fill_rate(c, row_count):
 
 
 def calculate_fill_rate(df):
-    '''
+    """
     Calculates the fill rate for a dataframe.
     Input:
         - df: a pyspark.sql.DataFrame
     Output:
         fr_df: the fill rates for each column as a pyspark.sql.DataFrame
-    '''
+    """
     row_count = df.count()
 
     # Empirical data shows that 16 columns leads to optimal performance

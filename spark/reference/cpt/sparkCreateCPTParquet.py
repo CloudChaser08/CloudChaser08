@@ -12,7 +12,7 @@ def run(spark, runner, year):
     CPT_INPUT = 's3://salusv/incoming/reference/cpt/{}/'.format(year)
     CPT_OUTPUT = 's3://salusv/reference/parquet/cpt/{}/{}/'.format(year, timestamp)
 
-    '''
+    """
         NOTE: To prep SHORTU.txt, you need to convert to utf-8, replace the first space with a tab,
         then convert back to latin-1 (the default encoding).
         Steps from shell:
@@ -20,7 +20,7 @@ def run(spark, runner, year):
         2. iconv -f latin1 -t utf-8 orig_SHORTU.txt | sed 's/ /<press Ctrl-V then Tab>/' | iconv 
         -f utf-8 -t latin1 > SHORTU.txt 
         "\t" will not work to input tabs
-    '''
+    """
 
     records_loader.load_and_clean_all_v2(runner, CPT_INPUT, file_schemas)
     external_table_loader.load_analytics_db_table(
@@ -35,7 +35,7 @@ def run(spark, runner, year):
     cpt_pla = spark.table('pla')
     cpt_mod = spark.table('mod')
 
-    '''
+    """
     The rules for creating the cpt table are as follows:
         1. Start with the long description and short description table.  Join them on the cpt code to
            get a base set of cpt_codes that contain: code, short_desc, long_desc
@@ -62,7 +62,7 @@ def run(spark, runner, year):
               INPUTFORMAT 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
               OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
             LOCATION '<path_to_output_parquet>'
-    '''
+    """
 
     cpt_short_long = cpt_long.join(cpt_short, cpt_long.long_code == cpt_short.short_code, 'full') \
                              .select(F.col('short_code').alias('code'), F.col('short_description'),

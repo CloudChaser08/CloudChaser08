@@ -1,5 +1,6 @@
 from spark.common.census_driver import CensusDriver
 
+
 class KantarLightSpeedCensusDriver(CensusDriver):
     CLIENT_NAME = 'kantar'
     OPPORTUNITY = 'hv000889'

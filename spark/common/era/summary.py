@@ -1,5 +1,6 @@
 from pyspark.sql.types import StructType, StructField, LongType, FloatType, IntegerType, StringType, DateType
 from spark.common.schema import Schema
+
 schema_v1 = StructType([
     StructField('row_id', LongType(), True),
     StructField('hv_medcl_clm_pymt_sumry_id', StringType(), True),

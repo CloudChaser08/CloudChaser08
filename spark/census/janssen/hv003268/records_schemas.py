@@ -1,6 +1,6 @@
-'''
+"""
 Janseen HV003268 record table definitions (eConsent and StudyHub)
-'''
+"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {

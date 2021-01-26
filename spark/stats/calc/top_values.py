@@ -5,7 +5,7 @@ from pyspark.sql.functions import col, countDistinct, lit, trim, round
 from ..models.results import TopValuesResult
 
 def _col_top_values(df, c, num, total, distinct_column=None):
-    '''
+    """
     Calculate the top values for a given column
     Input:
         - df: the dataframe to calculate the top value on.
@@ -28,7 +28,7 @@ def _col_top_values(df, c, num, total, distinct_column=None):
               |       ...      |    ...    |      ...     |      ...    |
               |      name      |    val_n  |       1      |     0.009   |
               +----------------+--------------------------+-------------+
-    '''
+    """
 
     # Group the DataFrame by the column we want to calculate
     # top values for.
@@ -52,7 +52,7 @@ def _col_top_values(df, c, num, total, distinct_column=None):
 
 
 def calculate_top_values(df, max_top_values, distinct_column=None, threshold=0.01):
-    '''
+    """
     Calculate the top values of a dataframe
     Input:
         - df: a pyspark.sql.DataFrame
@@ -65,7 +65,7 @@ def calculate_top_values(df, max_top_values, distinct_column=None, threshold=0.0
     Output:
         - tv_df: a pyspark.sql.DataFrame of each columns top values
                  and its associated counts
-    '''
+    """
     if distinct_column:
         columns = df.drop(distinct_column).columns
     else:

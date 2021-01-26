@@ -54,8 +54,7 @@ class SparkState(metaclass=Singleton):
             str
         """
 
-        url = "{base_url}/api/v1/applications/{id}/jobs/"\
-                .format(base_url=self.ui_url, id=self.app_id)
+        url = "{base_url}/api/v1/applications/{id}/jobs/".format(base_url=self.ui_url, id=self.app_id)
 
         return url
 
@@ -69,7 +68,7 @@ class SparkState(metaclass=Singleton):
 
         base_url = ':'.join(self.ui_url.split(':', 2)[:2])
 
-        url = "{base_url}:{port}/api/v1/applications/{id}/jobs"\
-                .format(base_url=base_url, port=self.history_ui_port, id=self.app_id)
+        url = "{base_url}:{port}/api/v1/applications/{id}/jobs".format(
+            base_url=base_url, port=self.history_ui_port, id=self.app_id)
 
         return url

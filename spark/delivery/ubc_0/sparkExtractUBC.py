@@ -5,7 +5,6 @@ import subprocess
 from datetime import timedelta, datetime
 from spark.runner import Runner
 from spark.spark_setup import init
-import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
@@ -19,6 +18,8 @@ PHARMACY_PRELIM_OUT_LOC = 'hdfs:///ubc_pharmacy_prelim_data/'
 # version of the data from 2 months ago, and a 'preliminary' version of
 # the previous month's data. We will also send them a complete update of
 # the enrollment data
+
+
 def run(spark, runner, month, test=False):
     month_prelim = datetime.strftime(
         datetime.strptime(month, '%Y-%m') - timedelta(days=1),
@@ -79,12 +80,13 @@ def run(spark, runner, month, test=False):
         normalized_records_unloader.mk_move_file(prefix, test)
     )
 
+
 def main(args):
     # init
-    spark, sqlContext = init("ESI export for UBC")
+    spark, sql_context = init("ESI export for UBC")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.month)
 
@@ -104,6 +106,7 @@ def main(args):
         's3-dist-cp', '--s3ServerSideEncryption', '--src',
         ENROLLMENT_OUT_LOC, '--dest', S3_UBC_OUT + 'enrollmentrecords/' + args.month + '/'
     ])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

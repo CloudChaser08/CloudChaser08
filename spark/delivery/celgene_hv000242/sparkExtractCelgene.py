@@ -52,16 +52,17 @@ def run(spark, runner, date_input, test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Celgene Delivery")
+    spark, sql_context = init("Celgene Delivery")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date)
 
     spark.stop()
 
     normalized_records_unloader.distcp(S3_CELGENE_DEST_TEMPLATE.format(args.date.replace('-', '')))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -41,6 +41,7 @@ MODE_OUTPUT_PATH = {
     PRODUCTION: 's3a://salusv/deliverable/{client}/{opp_id}/'
 }
 
+
 class SetterProperty(object):
     def __init__(self, func, doc=None):
         self.func = func
@@ -70,6 +71,8 @@ class BotoParser:
 #           records_schemas.py
 #           *.sql -- See runner.py for sql script naming conventions
 #
+
+
 class CensusDriver(object):
     """
     Base class for census routine drivers
@@ -193,6 +196,7 @@ class CensusDriver(object):
 
     def load(self, batch_date, batch_id, chunk_records_files=None):
         log("Loading input")
+
         if self.__class__.__name__ == CensusDriver.__name__:
             records_schemas = std_census.records_schemas
             matching_payloads_schemas = std_census.matching_payloads_schemas

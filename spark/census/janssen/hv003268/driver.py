@@ -2,12 +2,14 @@ from spark.common.census_driver import CensusDriver
 from spark.common.utility.logger import log
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+
 class JanssenCensusDriver(CensusDriver):
     CLIENT_NAME = 'janssen'
     OPPORTUNITY_ID = 'hv003268'
 
     def __init__(self, salt, end_to_end_test=False):
-        super(JanssenCensusDriver, self).__init__(self.CLIENT_NAME, self.OPPORTUNITY_ID, end_to_end_test=end_to_end_test, salt=salt)
+        super(JanssenCensusDriver, self).__init__(
+            self.CLIENT_NAME, self.OPPORTUNITY_ID, end_to_end_test=end_to_end_test, salt=salt)
 
         self._output_file_name_template = 'ec_sh_{batch_id_value}_{date}_response.csv.bz2'
 

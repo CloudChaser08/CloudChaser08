@@ -249,7 +249,7 @@ def get_gen_ref_date(sqlc, feed_id, domain_name, get_as_string=False):
 
 
 def coalesce_dates(sqlc, feed_id, fallback_date, *dates):
-    '''
+    """
       - Note: *dates must be input in order of importance.
               i.e.
               get_min_date(sqlc,
@@ -258,7 +258,7 @@ def coalesce_dates(sqlc, feed_id, fallback_date, *dates):
                            date_pick_me_first,
                            date_pick_me_second,
                            ...)
-    '''
+    """
     for d in dates:
         date = get_gen_ref_date(
             sqlc,

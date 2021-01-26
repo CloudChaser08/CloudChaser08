@@ -1,12 +1,13 @@
-'''
+"""
 HV000892 Kantar Lightspeed census driver
-'''
+"""
 from spark.common.census_driver import CensusDriver
 
+
 class KantarLightspeedCensusDriver(CensusDriver):
-    '''
+    """
     Lightspeed census driver
-    '''
+    """
     CLIENT_NAME = 'kantar'
     OPPORTUNITY = 'hv000892_lightspeed'
     SALT = 'hvidKAN'

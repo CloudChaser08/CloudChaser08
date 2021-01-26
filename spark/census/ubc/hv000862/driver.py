@@ -1,12 +1,13 @@
-'''
+"""
 HV000862 UBC census driver
-'''
+"""
 from spark.common.census_driver import CensusDriver
 
+
 class UbcCensusDriver(CensusDriver):
-    '''
+    """
     UBC driver
-    '''
+    """
     CLIENT_NAME = 'ubc'
     OPPORTUNITY_ID = 'hv000862'
 

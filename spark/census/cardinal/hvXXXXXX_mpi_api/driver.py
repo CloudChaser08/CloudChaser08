@@ -1,11 +1,11 @@
-from spark.common.census_driver import CensusDriver, DRIVER_MODULE_NAME
+from spark.common.census_driver import CensusDriver  # --, DRIVER_MODULE_NAME
 from spark.helpers.file_utils import FileSystemType, util_functions_factory
 
-import spark.helpers.payload_loader as payload_loader
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.records_loader as records_loader
-
-import importlib
+# import spark.helpers.payload_loader as payload_loader
+# import spark.helpers.normalized_records_unloader as normalized_records_unloader
+# import spark.helpers.records_loader as records_loader
+#
+# import importlib
 
 SAVE_PATH = "hdfs:///staging/{batch_id}/"
 LOCAL_SAVE_PATH = "/tmp/staging/{batch_id}/"
@@ -97,7 +97,8 @@ class CardinalAPICensusDriver(CensusDriver):
 
         clean_up_output(save_path)
 
-        df.repartition(self.NUM_PARTITIONS).write.option("dropFieldIfAllNull", False).json(save_path, compression="gzip")
+        df.repartition(self.NUM_PARTITIONS)\
+            .write.option("dropFieldIfAllNull", False).json(save_path, compression="gzip")
 
         # rename file
         # part-{part_number}-{uuid}.json.gzip becomes {batch_id}_response.json.gz

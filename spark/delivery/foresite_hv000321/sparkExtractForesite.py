@@ -25,12 +25,15 @@ def run(spark, runner, date, test=False):
         external_table_loader.load_analytics_db_tables(
             runner.sqlContext, [
                 {'schema': 'default', 'table_name': 'ref_ndc_code', 'local_alias': 'external_ref_ndc_code'},
-                {'schema': 'default', 'table_name': 'ref_icd10_diagnosis', 'local_alias': 'external_ref_icd10_diagnosis'},
-                {'schema': 'default', 'table_name': 'ref_marketplace_to_warehouse', 'local_alias': 'external_ref_marketplace_to_warehouse'},
+                {'schema': 'default', 'table_name': 'ref_icd10_diagnosis'
+                    , 'local_alias': 'external_ref_icd10_diagnosis'},
+                {'schema': 'default', 'table_name': 'ref_marketplace_to_warehouse'
+                    , 'local_alias': 'external_ref_marketplace_to_warehouse'},
                 {'schema': 'default', 'table_name': 'ref_calendar', 'local_alias': 'external_ref_calendar'},
                 {'schema': 'default', 'table_name': 'pharmacyclaims', 'local_alias': 'external_pharmacyclaims'},
                 {'schema': 'default', 'table_name': 'enrollmentrecords', 'local_alias': 'external_enrollmentrecords'},
-                {'schema': FORESITE_SCHEMA, 'table_name': 'mkt_def_calendar', 'local_alias': 'external_mkt_def_calendar'},
+                {'schema': FORESITE_SCHEMA, 'table_name': 'mkt_def_calendar'
+                    , 'local_alias': 'external_mkt_def_calendar'},
             ]
         )
 
@@ -70,16 +73,17 @@ def run(spark, runner, date, test=False):
 
 def main(args):
     # init
-    spark, sqlContext = init("Foresite Capital Delivery")
+    spark, sql_context = init("Foresite Capital Delivery")
 
     # initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     run(spark, runner, args.date)
 
     spark.stop()
 
     normalized_records_unloader.distcp(S3_FORESITE_DEST_TEMPLATE.format(args.date.replace('-', '')))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

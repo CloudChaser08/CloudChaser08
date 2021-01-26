@@ -1,12 +1,13 @@
-'''
+"""
 HV000892 Kantar SSI census driver
-'''
+"""
 from spark.common.census_driver import CensusDriver
 
+
 class KantarSSICensusDriver(CensusDriver):
-    '''
+    """
     SSI census driver
-    '''
+    """
     CLIENT_NAME = 'kantar'
     OPPORTUNITY = 'hv000892_ssi'
     SALT = 'hvidKAN'

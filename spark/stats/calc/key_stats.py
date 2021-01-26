@@ -4,7 +4,7 @@ from pyspark.sql.functions import col, trim
 from ..models.results import GenericStatsResult
 
 def _get_row_count(df, start_date, end_date, attribute, date_col, index_null_dates=False):
-    '''
+    """
     Get the row count for the attribute between the start and end date
     Input:
         - df: a pyspark.sql.DataFrame
@@ -12,7 +12,7 @@ def _get_row_count(df, start_date, end_date, attribute, date_col, index_null_dat
         - start_date: beginning of date range
         - end_date: end of date range
         - date_col: the name of the column that conains the dates
-    '''
+    """
     filter_by_date = ((col(date_col) >= start_date) & (col(date_col) <= end_date))
     if index_null_dates:
         filter_by_date = filter_by_date | (col(date_col).isNull() | (trim(col(date_col)) == ''))
@@ -25,7 +25,7 @@ def _get_row_count(df, start_date, end_date, attribute, date_col, index_null_dat
 
 
 def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
-    '''
+    """
     Calculate the key stats for a given provider
     Input:
         - df: a pyspark.sql.DataFrame
@@ -36,7 +36,7 @@ def calculate_key_stats(df, earliest_date, start_date, end_date, provider_conf):
     Output:
         - key_stats: a Dictionary of the key stats for
                      patient, record, and row
-    '''
+    """
     date_col = 'coalesced_date'
     index_all_dates = provider_conf.index_all_dates
     index_null_dates = provider_conf.index_null_dates

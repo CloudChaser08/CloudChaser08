@@ -123,14 +123,14 @@ def run(spark, runner, args, test=False, airflow_test=False):
     runner.run_spark_script(clean_patient_data_table)
 
     logger.log('Add demographics info to all delivery tables except patientdata')
-    query = '''
+    query = """
                 SELECT  hvid, a.age as pat_age, UPPER(LEFT(a.sex, 1)) as pat_sex, b.*
                 FROM clean_patientdata a
                 INNER JOIN {table_name} b 
                         ON a.clinicorganizationidnumber = b.clinicorganizationidnumber 
                        AND a.patientidnumber = b.patientidnumber
                 WHERE a.analyticrowidnumber=regexp_replace(lower(a.analyticrowidnumber),'[a-z]+','')
-            '''
+            """
     for table in JOIN_TO_PATIENT_DATA:
         logger.log('Adding payload data to table: ' + table)
         if table != 'patientdata':

@@ -175,24 +175,24 @@ def publish(refresh_time_id, requested_list_of_months, output_to_transform_path,
     logger.log(' -publish: completed')
 
 
-def main(args):
+def main(argv):
     """
     resolve arguments
         construct target location and refresh time-period
     """
-    end_month = args.month[:7]  # YYYY-MM
-    nbr_of_hist_months = int(args.nbr_of_hist_months) if args.nbr_of_hist_months else _refresh_nbr_of_months
+    end_month = argv.month[:7]  # YYYY-MM
+    nbr_of_hist_months = int(argv.nbr_of_hist_months) if argv.nbr_of_hist_months else _refresh_nbr_of_months
 
     # YYYY-MM
-    start_month = args.start_month if args.start_month \
+    start_month = argv.start_month if argv.start_month \
         else (datetime.strptime(end_month, '%Y-%m') - relativedelta(months=nbr_of_hist_months)).strftime('%Y-%m')
 
-    if args.first_run:
+    if argv.first_run:
         logger.log('[{}] Requested to start from first month {}'.format(_datamart_name, _first_run_month))
         start_month = _first_run_month
 
     output_to_transform_path = False
-    if args.output_to_transform_path:
+    if argv.output_to_transform_path:
         logger.log('[{}] Requested to load into TRANSFORMED location {}'.format(_datamart_name, _transform))
         output_to_transform_path = True
     else:
@@ -200,7 +200,7 @@ def main(args):
 
     # ENABLE THIS ONCE TEST CASES ADDED
     end_to_end_test = False
-    if args.end_to_end_test:
+    if argv.end_to_end_test:
         logger.log('[{}] Requested to run test'.format(_datamart_name))
         end_to_end_test = True
 
@@ -237,11 +237,11 @@ def main(args):
     # ------------------------------------------------------------------------------------------------
 
     logger.log('Initialize the spark context')
-    spark, sqlContext = init("{} Refresh {}-{}".format(
+    spark, sql_context = init("{} Refresh {}-{}".format(
         _datamart_name, start_month, end_month), conf_parameters=conf_parameters)
 
     # -- initialize runner
-    runner = Runner(sqlContext)
+    runner = Runner(sql_context)
 
     build(spark, runner, requested_list_of_months, end_to_end_test)
 

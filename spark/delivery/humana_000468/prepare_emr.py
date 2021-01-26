@@ -4,6 +4,7 @@ from spark.common.pharmacyclaims import schemas as pharma_schemas
 from datetime import timedelta
 import pyspark.sql.functions as F
 
+
 def prepare(runner, hvids, start_dt, is_prod=False):
     for table_name in ['hvm_emr_diag_v08', 'hvm_emr_enc_v08', 'hvm_emr_medctn_v09', 'hvm_emr_proc_v10']:
         # Because this is EMR data, we are going back an additional year in the

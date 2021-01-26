@@ -1,12 +1,13 @@
-'''
+"""
 HV000892 Kantar MarketCube census driver
-'''
+"""
 from spark.common.census_driver import CensusDriver
 
+
 class KantarMarketCubeCensusDriver(CensusDriver):
-    '''
+    """
     MarketCube census driver
-    '''
+    """
     CLIENT_NAME = 'kantar'
     OPPORTUNITY = 'hv000892_marketcube'
     SALT = 'hvidKAN'

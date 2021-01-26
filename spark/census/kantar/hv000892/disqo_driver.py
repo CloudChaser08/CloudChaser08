@@ -1,12 +1,13 @@
-'''
+"""
 HV000892 Kantar DISQO census driver
-'''
+"""
 from spark.common.census_driver import CensusDriver
 
+
 class KantarDISQOCensusDriver(CensusDriver):
-    '''
+    """
     DISQO census driver
-    '''
+    """
     CLIENT_NAME = 'kantar'
     OPPORTUNITY = 'hv000892_disqo'
     SALT = 'hvidKAN'

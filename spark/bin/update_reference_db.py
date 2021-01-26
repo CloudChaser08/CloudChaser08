@@ -67,8 +67,8 @@ def create_mapping(spark_files, census_files, standard_files):
                         usage_output = usage_output.decode()
                     except (UnicodeDecodeError, AttributeError):
                         pass
-                    usage_output = re.sub('[^a-zA-Z: \.\'\-\[\]]', '', usage_output)
-                    usage_output = re.sub(' +', ' ', usage_output)
+                    usage_output = re.sub(r'[^a-zA-Z: \.\'\-\[\]]', '', usage_output)
+                    usage_output = re.sub(r' +', ' ', usage_output)
                     usage_output = re.sub('optional arguments', '', usage_output)
 
                 except subprocess.CalledProcessError:
@@ -89,9 +89,9 @@ def create_mapping(spark_files, census_files, standard_files):
     _mapping[census_name] = {}
     _mapping[census_name]['script_path'] = 'spark/bin/censusize.py'
     _mapping[census_name]['script_args'] = '[--batch_id BATCH_ID] [--client_name CLIENT_NAME] ' \
-                                            '[--opportunity_id OPPORTUNITY_ID] [--salt SALT] ' \
-                                            '[--census_module CENSUS_MODULE] ' \
-                                            '[--end_to_end_test] [--test] date'
+                                           '[--opportunity_id OPPORTUNITY_ID] [--salt SALT] ' \
+                                           '[--census_module CENSUS_MODULE] ' \
+                                           '[--end_to_end_test] [--test] date'
 
     return _mapping
 
@@ -152,7 +152,8 @@ if __name__ == '__main__':
 
     # TODO: add support for dryrun
     parser.add_argument('--dryrun',
-                        help='show what updates would be applied to the reference database, but do not actually apply them \n \
+                        help='show what updates would be applied to the reference database, '
+                             'but do not actually apply them \n \
                   [WARNING] dryrun is not yet supported. this flag is currently a placeholder',
                         action='store_true',
                         default=True)

@@ -1,12 +1,13 @@
-'''
+"""
 HV000710 HC1/MPH census driver
-'''
+"""
 from spark.common.census_driver import CensusDriver
 
+
 class Hc1CensusDriver(CensusDriver):
-    '''
+    """
     HC1/MPH census driver
-    '''
+    """
     CLIENT_NAME = 'hc1'
     OPPORTUNITY_ID = 'hv000710'
 

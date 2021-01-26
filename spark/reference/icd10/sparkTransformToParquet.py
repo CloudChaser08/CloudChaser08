@@ -21,7 +21,7 @@ def run(spark, runner, execution_date):
 
     pcs = spark.read.text(PCS_INPUT)
     cm = spark.read.text(CM_INPUT)
-    '''
+    """
     Fixed Width Layout for ICD10 Reference Data:
 
     Position | Length | Contents
@@ -35,7 +35,7 @@ def run(spark, runner, execution_date):
        17    |    60  |  Short description
        77    |     1  |  Blank
        78    |   323  |  Long description
-    '''
+    """
 
     external_table_loader.load_icd_diag_codes(runner.sqlContext)
     external_table_loader.load_analytics_db_table(runner.sqlContext, "default", "ref_icd10_diagnosis", "ref_icd10_diagnosis")

@@ -124,7 +124,6 @@ LAB_PARTTITIONED_TABLES_LIST_CUSTOM = [LAB_FACT_ALL_TESTS_CUSTOM,
                                        LAB_FACT_COVID_CLEANSED_CUSTOM]
 
 
-
 """
 DATAMART Operational Configuration for...........LabTests
 """

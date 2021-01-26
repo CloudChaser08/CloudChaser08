@@ -15,14 +15,14 @@ def _years(s):
 
 
 def calculate_longitudinality(df, provider_conf):
-    '''
+    """
     Calculate the longitudinality for a given set of data
     Input:
         -df: a pyspark.sql.DataFrame
         -provider_conf: A dict of the providers config
     Output:
         - long_stats: the longitudinal stats for the data
-    '''
+    """
     # Get the field names we need
     patient_identifier = PATIENT_IDENTIFIER
     date_field = 'coalesced_date'

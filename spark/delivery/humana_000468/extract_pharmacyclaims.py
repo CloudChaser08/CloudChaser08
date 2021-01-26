@@ -1,5 +1,6 @@
 import pyspark.sql.functions as F
 
+
 def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table, filter_by_date_partition=False):
     claims = runner.sqlContext.table(claims_table)
     ref_vdr_feed = runner.sqlContext.table('dw.ref_vdr_feed')
@@ -18,18 +19,27 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
     ext = ext \
         .where(F.coalesce(claims['date_service'], claims['date_written']) <= end_dt.isoformat()) \
         .where(F.coalesce(claims['date_service'], claims['date_written']) >= start_dt.isoformat()) \
-        .select(*[claims[c] for c in claims.columns] + [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
+        .select(*[claims[c] for c in claims.columns] +
+                 [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
 
     # Hashing
-    ext = ext.withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('pharmacy_npi', F.md5(F.concat(F.col('pharmacy_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_dispensing_npi', F.md5(F.concat(F.col('prov_dispensing_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_prescribing_npi', F.md5(F.concat(F.col('prov_prescribing_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id')))) \
-            .withColumn('prov_primary_care_npi', F.md5(F.concat(F.col('prov_primary_care_npi'), F.lit('npi'), F.lit('hv000468'), F.lit(repr(timestamp)), F.col('humana_group_id'))))
+    ext = ext\
+        .withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468')
+                                             , F.lit(repr(timestamp)), F.col('humana_group_id')))) \
+        .withColumn('pharmacy_npi', F.md5(F.concat(F.col('pharmacy_npi'), F.lit('npi'), F.lit('hv000468')
+                                                     , F.lit(repr(timestamp)), F.col('humana_group_id')))) \
+        .withColumn('prov_dispensing_npi', F.md5(F.concat(F.col('prov_dispensing_npi'), F.lit('npi')
+                                                            , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                            , F.col('humana_group_id')))) \
+        .withColumn('prov_prescribing_npi', F.md5(F.concat(F.col('prov_prescribing_npi'), F.lit('npi')
+                                                             , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                             , F.col('humana_group_id')))) \
+        .withColumn('prov_primary_care_npi', F.md5(F.concat(F.col('prov_primary_care_npi'), F.lit('npi')
+                                                              , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                              , F.col('humana_group_id'))))
 
     # Rename columns
-    ext = ext.withColumn('data_feed', F.col('hvm_vdr_feed_id')) \
-            .withColumn('data_vendor', F.col('hvm_tile_nm'))
+    ext = ext.withColumn('data_feed', F.col('hvm_vdr_feed_id')).withColumn('data_vendor', F.col('hvm_tile_nm'))
 
     # NULL columns
     for c in NULL_COLUMNS:
@@ -38,10 +48,11 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
     # Reorder
     return ext.select(*EXTRACT_COLUMNS)
 
+
 def extract(runner, hvids, timestamp, start_dt, end_dt):
     return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'dw.hvm_pharmacyclaims_v07', True)
-            #NOTE: 2019-11-04 - Removing synthetic claims until told to turn back on.
-            # .union(extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_pharmacyclaims', False))
+    # NOTE: 2019-11-04 - Removing synthetic claims until told to turn back on.
+    # .union(extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_pharmacyclaims', False))
 
 
 EXTRACT_COLUMNS = [
@@ -82,7 +93,7 @@ EXTRACT_COLUMNS = [
     'rx_number',
     'rx_number_qual',
     'bin_number',               # NULL per AG
-    'processor_control_number', # NULL per AG
+    'processor_control_number',  # NULL per AG
     'fill_number',
     'refill_auth_amount',
     'dispensed_quantity',
@@ -154,22 +165,22 @@ EXTRACT_COLUMNS = [
     'prov_prescribing_qual',    # NULL per Austin
     'prov_primary_care_id',     # NULL per Austin
     'prov_primary_care_qual',   # NULL per Austin
-    'other_payer_coverage_type',# NULL per AG
+    'other_payer_coverage_type',  # NULL per AG
     'other_payer_coverage_id',  # NULL per AG
-    'other_payer_coverage_qual',# NULL per AG
+    'other_payer_coverage_qual',  # NULL per AG
     'other_payer_date',         # NULL per AG
-    'other_payer_coverage_code',# NULL per AG
+    'other_payer_coverage_code',  # NULL per AG
     'logical_delete_reason',
     'humana_group_id'
 ]
 
 # Feed tile names as of 09/05
 SUPPLIER_FEED_IDS = [
-    '16', # Private Source 17
-    '36', # Private Source 22
-    '65', # PDX, Inc.
-    '25', # Veradigm Health
-    '35' # Private Source 42
+    '16',  # Private Source 17
+    '36',  # Private Source 22
+    '65',  # PDX, Inc.
+    '25',  # Veradigm Health
+    '35'  # Private Source 42
 ]
 
 NULL_COLUMNS = [

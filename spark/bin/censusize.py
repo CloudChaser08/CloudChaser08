@@ -2,9 +2,8 @@ import argparse
 import sys
 import importlib
 import inspect
-import math
 
-from datetime import datetime, date
+from datetime import datetime
 from spark.common.census_driver import CensusDriver
 
 
@@ -67,7 +66,8 @@ if __name__ == "__main__":
     parser.add_argument('--opportunity_id', type=str, default=None, help="Opportunity ID")
     parser.add_argument('--salt', type=str, default=None, help="HVID obfuscation salt")
     parser.add_argument('--census_module', type=str, default=None, help="Census module name")
-    parser.add_argument('--num_input_files', type=int, default=-1, help="Number of input files in each chunk of census data we will process in a loop")
+    parser.add_argument('--num_input_files', type=int, default=-1
+                        , help="Number of input files in each chunk of census data we will process in a loop")
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     parser.add_argument('--test', default=False, action='store_true')
     args = parser.parse_args()

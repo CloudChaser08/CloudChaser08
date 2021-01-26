@@ -5,6 +5,7 @@ class RunType(Enum):
     MARKETPLACE = "marketplace"
     CENSUS = "census"
 
+
 class DataType(Enum):
     CDM = "cdm"
     CONSUMER = "consumer"

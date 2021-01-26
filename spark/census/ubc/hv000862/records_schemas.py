@@ -1,6 +1,6 @@
-'''
+"""
 HV000862 UBC record table definitions
-'''
+"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {

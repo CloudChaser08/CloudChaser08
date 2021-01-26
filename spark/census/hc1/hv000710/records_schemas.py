@@ -1,6 +1,6 @@
-'''
+"""
 HV000710 HC1/MPH record table definitions
-'''
+"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {

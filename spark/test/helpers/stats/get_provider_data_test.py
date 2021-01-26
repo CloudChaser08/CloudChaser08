@@ -5,6 +5,7 @@ from pyspark.sql import Row
 import spark.helpers.file_utils as file_utils
 import spark.helpers.stats.utils as stats_utils
 
+
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('actual_table')
     spark['sqlContext'].sql('DROP SCHEMA custom_schema CASCADE')
