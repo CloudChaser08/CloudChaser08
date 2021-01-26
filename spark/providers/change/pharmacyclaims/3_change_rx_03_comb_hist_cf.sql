@@ -6,4 +6,3 @@ FROM (
     UNION ALL
     SELECT c.* FROM change_rx_02_norm_cf c
 ) uf
-
