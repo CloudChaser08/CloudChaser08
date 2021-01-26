@@ -622,7 +622,7 @@ def main(args):
                 raise ValueError("Unexpected protocol in encounter output path")
             check_output(['hadoop', 'fs', '-rm', '-r', '-f', HDFS_ENCOUNTER_REFERENCE])
         except:
-            logging.warn("Something went wrong in persisting the new distinct encounter data")
+            logging.warning("Something went wrong in persisting the new distinct encounter data")
 
         try:
             check_output(['hadoop', 'fs', '-ls', HDFS_DEMOGRAPHICS_REFERENCE])
@@ -638,7 +638,7 @@ def main(args):
                 raise ValueError("Unexpected protocol in demographics output path")
             check_output(['hadoop', 'fs', '-rm', '-r', '-f', HDFS_DEMOGRAPHICS_REFERENCE])
         except:
-            logging.warn("Something went wrong in persisting the new demographics data")
+            logging.warning("Something went wrong in persisting the new demographics data")
 
         if args.normalize_encounter:
             try:
@@ -646,7 +646,7 @@ def main(args):
                 check_output(['aws', 's3', 'rm', '--recursive',
                               output_path + 'encounter/part_hvm_vdr_feed_id=35/'])
             except:
-                logging.warn("Something went wrong in removing the old normalized encounter data")
+                logging.warning("Something went wrong in removing the old normalized encounter data")
 
     if args.airflow_test:
         normalized_records_unloader.distcp(output_path)

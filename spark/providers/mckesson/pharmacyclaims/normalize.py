@@ -26,7 +26,7 @@ OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/' + pharma_schema.outpu
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/spark-output/'
 
 
-def load(input_path, restriction_level):
+def load(input_path, restriction_level, runner):
     """
     Function for loading transactional data.
 
@@ -56,7 +56,7 @@ def load(input_path, restriction_level):
     )(labeled_input).createOrReplaceTempView('{}_transactions'.format(restriction_level))
 
 
-def postprocess_and_unload(date_input, test_dir):
+def postprocess_and_unload(date_input, test_dir, runner):
     """
     Function for unloading normalized data
     """
@@ -124,7 +124,7 @@ def run(spark_in, runner_in, date_input, test=False, airflow_test=False):
         """
         restriction_level = 'unrestricted'
 
-        load(input_path, restriction_level)
+        load(input_path, restriction_level, runner)
 
         payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
@@ -142,7 +142,7 @@ def run(spark_in, runner_in, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/mckesson/pharmacyclaims/resources/output/'
         ) + '/' if test else None
 
-        postprocess_and_unload(date_input, test_dir)
+        postprocess_and_unload(date_input, test_dir, runner)
 
     # run normalization for appropriate mode(s)
     normalize(unres_input_path, unres_matching_path)

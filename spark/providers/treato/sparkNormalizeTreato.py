@@ -64,7 +64,7 @@ def _get_rollup_vals(mapfile_broadcast, diagnosis_code_range):
         # current max, then this line is exactly as good of a
         # rollup to use as the current max, append the rollup to
         # the list
-        elif maximum_matches > 0 and matches == maximum_matches:
+        elif 0 < maximum_matches == matches:
             rollups.append(line[0])
 
     return rollups

@@ -168,7 +168,7 @@ def main(args):
     spark, sql_context = init('Alliance Normalization')
 
     runner = Runner(sql_context)
-
+    output_path = None
     if args.airflow_test:
         output_path = OUTPUT_PATH_TEST
     else:

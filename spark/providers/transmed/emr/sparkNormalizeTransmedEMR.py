@@ -216,8 +216,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 distribution_key='row_id', provider_partition='part_hvm_vdr_feed_id',
                 date_partition='part_mth', columns=common_model_columns
             )
-            for table in ['transactions_cancerepisode', 'transactions_treatmentsite']:
-                runner.unpersist('{}_with_input_filename'.format(table))
+            for table_up in ['transactions_cancerepisode', 'transactions_treatmentsite']:
+                runner.unpersist('{}_with_input_filename'.format(table_up))
 
     if not test and not airflow_test:
         logger.log_run_details(

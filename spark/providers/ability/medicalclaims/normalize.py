@@ -60,6 +60,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     date_obj = datetime.strptime(date_input, '%Y-%m-%d')
 
     all_norm = None
+    hvm_historical = None
     for product in ['ap', 'ses', 'ease']:
 
         set_id = date_input.replace('-', '_') + '_' + product

@@ -64,7 +64,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 df.repartition(20) \
                   .write.parquet(output_location, mode='append')
             else:
-                logging.warn('Table {} had 0 rows'.format(table))
+                logging.warning('Table {} had 0 rows'.format(table))
 
     if not test and not airflow_test:
         transaction_path = input_paths.get("raw", "")

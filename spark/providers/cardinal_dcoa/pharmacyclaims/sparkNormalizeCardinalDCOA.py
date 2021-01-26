@@ -75,6 +75,7 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
 
     if not test:
         # Create the delivery
+        output_path = None
         if airflow_test:
             output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/delivery/{}/'.format(date_path)
         else:

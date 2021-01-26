@@ -20,7 +20,7 @@ def load(spark, runner, input_paths):
         else:
             # Read in data as lines of text
             raw_df = spark.read.text(input_path)
-            for t in set(TABLE_CONF.keys()) - set(['payload']):
+            for t in set(TABLE_CONF.keys()) - {'payload'}:
                 # Get the columns for each source table we expect
                 cols = [x.name for x in TABLE_CONF[t].schema]
                 # Filter based on the length of columns

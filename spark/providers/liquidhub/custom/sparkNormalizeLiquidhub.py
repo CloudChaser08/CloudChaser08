@@ -28,6 +28,8 @@ OUTPUT_PATH_PRODUCTION = 's3a://salusv/deliverable/lhv2/'
 
 
 def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
+
+    incoming_path, matching_path, output_dir = None, None, None
     if test:
         incoming_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/liquidhub/custom/resources/incoming/'
@@ -38,7 +40,7 @@ def run(spark, runner, group_id, run_version, test=False, airflow_test=False):
         output_dir = '/tmp/staging/' + group_id + '/'
     elif airflow_test:
         matching_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/payload/{}/'.format(group_id)
-        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/incoming/{}/'.format(group_id)
+        incoming_path = 's3a://salusv/testing/dewey/airflow/e2e/lhv2/custom/incoming/{}/'.format(group_id)
         output_dir = '/tmp/staging/' + group_id + '/'
     else:
         incoming_path = 's3a://salusv/incoming/custom/lhv2/{}/'.format(group_id)

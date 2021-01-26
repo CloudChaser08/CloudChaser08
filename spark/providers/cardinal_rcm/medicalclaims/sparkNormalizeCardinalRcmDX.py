@@ -1,6 +1,6 @@
 #! /usr/bin/python
 import argparse
-from datetime import datetime
+import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
