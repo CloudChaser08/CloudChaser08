@@ -2,7 +2,7 @@
 import argparse
 import time
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
