@@ -5,7 +5,8 @@ import spark.helpers.udf.post_normalization_cleanup as post_norm_cleanup
 
 lab_order_transformer = Transformer(
     lab_ord_diag_cd=[
-        TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['lab_ord_diag_cd', 'lab_ord_diag_cd_qual', 'enc_dt'])
+        TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                          ['lab_ord_diag_cd', 'lab_ord_diag_cd_qual', 'enc_dt'])
     ],
     lab_ord_loinc_cd=[
         TransformFunction(post_norm_cleanup.clean_up_numeric_code, ['lab_ord_loinc_cd'])
@@ -16,6 +17,7 @@ lab_order_transformer = Transformer(
 )
 
 whitelists = []
+
 
 def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):
     def out(df):

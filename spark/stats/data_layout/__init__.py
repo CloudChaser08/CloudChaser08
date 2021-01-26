@@ -9,6 +9,7 @@ from ..models.layout import (
     Layout
 )
 
+
 def generate_data_layout_version_sql(stats, version_name):
     """
         Given a single DataFeed's config and generated stats, create a runnable SQL file that

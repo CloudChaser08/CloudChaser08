@@ -34,7 +34,7 @@ def multithreaded_copy(src, dest):
     s3 = boto3.resource('s3')
 
     for f in s3.Bucket(src_bucket).objects.filter(Prefix=src_prefix):
-        files.append({'key' : f.key, 'size' : f.size})
+        files.append({'key': f.key, 'size': f.size})
 
     # Sort the keys we want to copy in reverse order by files size
     # This helps even out the workload across different threads

@@ -3,6 +3,7 @@ import spark.helpers.privacy.common as common_priv
 from pyspark.sql.functions import upper
 from pyspark.sql.types import StructField, StructType, StringType, Row
 
+
 @pytest.mark.usefixtures("spark")
 def test_transform(spark):
 

@@ -21,7 +21,8 @@ S3_CONF = {
 }
 
 
-spark = SparkSession.builder.master("yarn").appName("marketplace-ndc-pull").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
+spark = SparkSession.builder.master("yarn").appName(
+    "marketplace-ndc-pull").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
 
 
 def pull_ndc():
@@ -42,6 +43,7 @@ def pull_ndc():
         shutil.copyfileobj(f_in, f_out)
 
     s3.meta.client.upload_file('ndc.psv.gz', **S3_CONF)
+
 
 if __name__ == "__main__":
     sys.exit(pull_ndc())

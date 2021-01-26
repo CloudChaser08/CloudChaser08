@@ -28,8 +28,10 @@ def filter(sqlc, update_whitelists=lambda x: x, additional_transformer=None):
         return postprocessor.compose(
             *[
                 postprocessor.apply_whitelist(
-                    sqlc, whitelist['column_name'], whitelist['domain_name'], comp_col_names=whitelist.get('comp_col_names'),
-                    whitelist_col_name=whitelist.get('whitelist_col_name'), clean_up_freetext_fn=whitelist.get('clean_up_freetext_fn')
+                    sqlc, whitelist['column_name'], whitelist['domain_name']
+                    , comp_col_names=whitelist.get('comp_col_names')
+                    , whitelist_col_name=whitelist.get('whitelist_col_name')
+                    , clean_up_freetext_fn=whitelist.get('clean_up_freetext_fn')
                 ) for whitelist in whtlsts
             ]
         )(

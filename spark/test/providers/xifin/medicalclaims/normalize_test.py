@@ -6,6 +6,7 @@ import spark.providers.xifin.medicalclaims.normalize as xifin
 
 results = None
 
+
 def cleanup(spark):
     pass
 

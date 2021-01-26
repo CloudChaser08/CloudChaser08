@@ -31,7 +31,6 @@ def test_init(spark):
                                               .collect()
  
 
-
 def test_date_parsing():
     """
     Ensure that dates are correctly parsed

@@ -20,8 +20,11 @@ S3_CONF = {
 }
 
 sql = """
-select distinct trim(a.icd10order), trim(a.icd10code), trim(a.icd10desc), trim(b.section_desc) as level1_desc, trim(c.position_description) as level2_desc, trim(d.position_description) as level3_desc, trim(e.position_description) as level4_desc, trim(f.position_description) as level5_desc, trim(g.position_description) as level6_desc,
-    CASE WHEN h.icd9='NoPx' then NULL else h.icd9 end as icd9code, upper(i.long_description) as icd9desc
+select distinct trim(a.icd10order), trim(a.icd10code), trim(a.icd10desc)
+        , trim(b.section_desc) as level1_desc, trim(c.position_description) as level2_desc
+        , trim(d.position_description) as level3_desc, trim(e.position_description) as level4_desc
+        , trim(f.position_description) as level5_desc, trim(g.position_description) as level6_desc
+        , CASE WHEN h.icd9='NoPx' then NULL else h.icd9 end as icd9code, upper(i.long_description) as icd9desc
 from
     (select ordernum as icd10order, code as icd10code, upper(long_description) as icd10desc,
             substring(code, 1, 1) as section,
@@ -32,18 +35,25 @@ from
             substring(code, 6, 1) as pos6
     from ref_icd10_procedure
     ) a
-    left join (select distinct section, section_desc from ref_icd10_procedure_groups) b on a.section=b.section
-    left join (select * from ref_icd10_procedure_groups where position_num=2) c on a.section=c.section and a.pos2=c.position_value
-    left join (select * from ref_icd10_procedure_groups where position_num=3) d on a.section=d.section and a.pos3=d.position_value
-    left join (select * from ref_icd10_procedure_groups where position_num=4) e on a.section=e.section and a.pos4=e.position_value
-    left join (select * from ref_icd10_procedure_groups where position_num=5) f on a.section=f.section and a.pos5=f.position_value
-    left join (select * from ref_icd10_procedure_groups where position_num=6) g on a.section=g.section and a.pos6=g.position_value
+    left join (select distinct section, section_desc from ref_icd10_procedure_groups) b 
+        on a.section=b.section
+    left join (select * from ref_icd10_procedure_groups where position_num=2) c 
+        on a.section=c.section and a.pos2=c.position_value
+    left join (select * from ref_icd10_procedure_groups where position_num=3) d 
+        on a.section=d.section and a.pos3=d.position_value
+    left join (select * from ref_icd10_procedure_groups where position_num=4) e 
+        on a.section=e.section and a.pos4=e.position_value
+    left join (select * from ref_icd10_procedure_groups where position_num=5) f 
+        on a.section=f.section and a.pos5=f.position_value
+    left join (select * from ref_icd10_procedure_groups where position_num=6) g 
+        on a.section=g.section and a.pos6=g.position_value
     left join ref_icd10_to_icd9_procedure h on a.icd10code=h.icd10
     left join (select * from ref_icd9_procedure) i on h.icd9=i.code
 """
 
 
-spark = SparkSession.builder.master("yarn").appName("marketplace-procedure-pull").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
+spark = SparkSession.builder.master("yarn")\
+    .appName("marketplace-procedure-pull").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
 
 
 def pull_procedure_icd10():
@@ -57,6 +67,7 @@ def pull_procedure_icd10():
         shutil.copyfileobj(f_in, f_out)
 
     s3.meta.client.upload_file('proc_icd10.psv.gz', **S3_CONF)
+
 
 if __name__ == "__main__":
     sys.exit(pull_procedure_icd10())

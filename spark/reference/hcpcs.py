@@ -94,8 +94,9 @@ def combine_new_and_old_tables(hcpcs, current_hcpcs_codes_table):
 
 def concatenate_multiline_descriptions(all_hcpcs_codes):
     """
-    First we combine all descriptions in the list, so max seqnum will have maximum of descriptions combines (full description).
-    See this example https://stackoverflow.com/questions/45131481/aggregation-function-collect-list-or-collect-set-over-window
+    First we combine all descriptions in the list, so max seqnum will have maximum of
+    descriptions combines (full description).  See this example
+    https://stackoverflow.com/questions/45131481/aggregation-function-collect-list-or-collect-set-over-window
     Then we filter only rows with max seqnum dropping other rows
     And finally convert arrays to strings, returning just codes, max seqnums and descriptions
     """
@@ -128,7 +129,6 @@ def get_first_rows(all_hcpcs_codes):
 def run(spark, runner, args):
     """
     Schema source: https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS-Items/2018-HCPCS-Record-Layout-.html
-
     File: https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS-Items/2018-Alpha-Numeric-HCPCS-File-.html?DLPage=1&DLEntries=10&DLSort=0&DLSortDir=descending
     """
     hcpcs = spark.read.text(args.incoming)
@@ -149,8 +149,8 @@ def run(spark, runner, args):
 
 
 def main(args):
-    spark, sqlContext = init('Reference HCPCS')
-    runner = Runner(sqlContext)
+    spark, sql_context = init('Reference HCPCS')
+    runner = Runner(sql_context)
     run(spark, runner, args)
 
     spark.stop()

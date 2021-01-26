@@ -20,6 +20,7 @@ def _get_dataframe(spark):
         data_row('2016-12-16', 'z', 'a', 'b', 'c')
     ]).toDF()
 
+
 @pytest.fixture(scope='module', name='results')
 def _get_results(dataframe, provider_conf):
     conf = provider_conf.copy_with(
@@ -42,7 +43,7 @@ def test_num_of_patients_per_group_correct(results):
     assert _get_field_val(results, '1 months') == 1
     assert _get_field_val(results, '2 years') == 1
     assert _get_field_val(results, '41 years') == 1
-    assert not _get_field_values(results, '42 years') # should get minimized
+    assert not _get_field_values(results, '42 years')  # should get minimized
 
 
 def _get_field_val(results, duration):

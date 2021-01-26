@@ -34,7 +34,8 @@ from ref_icd10_diagnosis a
     ) b on substring(a.code, 1,  3)=b.code
     left join ref_icd10_to_icd9_diagnosis c on a.code=c.icd10
     left join ref_icd10_diagnosis d on c.icd9=d.code
-    left join (select * from ref_icd10_diagnosis_groups where level_num=1) f on b.code between f.start_num and f.stop_num
+    left join (select * from ref_icd10_diagnosis_groups where level_num=1) f 
+        on b.code between f.start_num and f.stop_num
     left join (select * from ref_icd10_diagnosis_groups where level_num=2) g on (
         (b.code between g.start_num and g.stop_num) or
         (b.code = 'M1A' and g.start_num = 'M05' and g.stop_num = 'M14') or
@@ -48,7 +49,8 @@ or
 """
 
 
-spark = SparkSession.builder.master("yarn").appName("marketplace-pull-diagnosis").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
+spark = SparkSession.builder.master("yarn").appName(
+    "marketplace-pull-diagnosis").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
 
 
 def pull_diagnosis():
@@ -62,6 +64,7 @@ def pull_diagnosis():
         shutil.copyfileobj(f_in, f_out)
 
     s3.meta.client.upload_file('diag.psv.gz', **S3_CONF)
+
 
 if __name__ == "__main__":
     sys.exit(pull_diagnosis())

@@ -10,6 +10,7 @@ PATIENT_IDENTIFIER = 'hvid'
 # earliest date
 MINIMIZED_DATE_FIELD = 'minimized_date'
 
+
 def _years(s):
     return s / 12
 
@@ -34,35 +35,26 @@ def calculate_longitudinality(df, provider_conf):
     # Select the columns we care about
     patient_dates = df.select(col(patient_identifier), col(MINIMIZED_DATE_FIELD)).distinct()
     # Calculate the min_date, max_date, and num_visits for each patient
-    patient_visits = patient_dates.groupby(col(patient_identifier)) \
-                                      .agg(
-                                          min(col(MINIMIZED_DATE_FIELD)).alias('min_date'),
-                                          max((MINIMIZED_DATE_FIELD)).alias('max_date'),
-                                          countDistinct(MINIMIZED_DATE_FIELD).alias('visits')
-                                      )
+    patient_visits = patient_dates.groupby(col(patient_identifier))\
+        .agg(min(col(MINIMIZED_DATE_FIELD)).alias('min_date')
+             , max(col(MINIMIZED_DATE_FIELD)).alias('max_date')
+             , countDistinct(col(MINIMIZED_DATE_FIELD)).alias('visits'))
     # Calculate the stats
-    dates = patient_visits.withColumn('months',                             \
-                                    months_between(                         \
-                                        patient_visits.max_date,            \
-                                        patient_visits.min_date             \
-                                        ).cast(IntegerType())               \
-                                    )
+    dates = patient_visits.withColumn('months',
+                                      months_between(patient_visits.max_date, patient_visits.min_date)
+                                      .cast(IntegerType()))
     dates = dates.withColumn("years", _years(dates.months).cast(IntegerType()))
 
-    months = dates.where('months < 24')                                     \
-                  .groupby('months')                                        \
-                  .agg(count('*').alias('patients'),                        \
-                       mean('visits').cast('int').alias('avg'),             \
-                       stddev('visits').cast('int').alias('stddev'))        \
-                  .orderBy('months', ascending=False)                       \
-                  .collect()
-    years_long = dates.where('months >= 24')                                \
-                      .groupby('years')                                     \
-                      .agg(count('*').alias('patients'),                    \
-                           mean('visits').cast('int').alias('avg'),         \
-                           stddev('visits').cast('int').alias('stddev'))    \
-                      .orderBy('years', ascending=False)                    \
-                      .collect()
+    months = dates.where('months < 24')\
+        .groupby('months').agg(count('*')
+                               .alias('patients'), mean('visits').cast('int')
+                               .alias('avg'), stddev('visits').cast('int')
+                               .alias('stddev')).orderBy('months', ascending=False).collect()
+    years_long = dates.where('months >= 24')\
+        .groupby('years').agg(count('*')
+                              .alias('patients'), mean('visits').cast('int')
+                              .alias('avg'), stddev('visits').cast('int')
+                              .alias('stddev')).orderBy('years', ascending=False).collect()
     # Write out to dict
     long_stats = []
     fieldnames = ['duration', 'value', 'average', 'std_dev']

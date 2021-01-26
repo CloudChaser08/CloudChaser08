@@ -7,6 +7,7 @@ cpt_results = []
 hcpcs_results = []
 gen_ref_results = []
 
+
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     external_table_loader.load_icd_diag_codes(spark['sqlContext'])
@@ -22,6 +23,7 @@ def test_init(spark):
     hcpcs_results = spark['sqlContext'].sql('SELECT * FROM hcpcs_codes').collect()
     gen_ref_results = spark['sqlContext'].sql('SELECT * FROM ref_gen_ref').collect()
 
+
 def test_icd_diag_codes():
     """Ensure a list of ICD diagnosis codes (9 and 10) is loaded that contains
     no blacklisted codes"""
@@ -35,6 +37,7 @@ def test_icd_diag_codes():
     # Valid, but blacklisted ICD10 code
     assert len([r for r in icd_diag_results if r.code == 'V200XXA']) == 0
 
+
 def test_icd_proc_codes():
     """Ensure a list of ICD procedure codes (9 and 10) is loaded"""
 
@@ -42,15 +45,18 @@ def test_icd_proc_codes():
 
     assert len([r for r in icd_proc_results if r.code == '05N53ZZ']) == 1
 
+
 def test_cpt_codes():
     """Ensure a list of CPT procedure codes is loaded"""
 
     assert len([r for r in cpt_results if r.code == '90634']) == 1
 
+
 def test_hcpcs_codes():
     """Ensure a list of HCPCS procedure codes is loaded"""
 
     assert len([r for r in hcpcs_results if r.hcpc == 'A4282']) == 1
+
 
 def test_gen_ref_data():
     """Ensure the general reference table is loaded from the analytics DB"""

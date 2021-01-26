@@ -7,6 +7,7 @@ from ..models.results import YearOverYearResult
 
 PATIENT_IDENTIFIER = 'hvid'
 
+
 def _parse_year(s):
     return datetime.strptime(s, "%Y-%m-%d").year
 

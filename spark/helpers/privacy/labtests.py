@@ -16,5 +16,6 @@ lab_transformer = priv_common.Transformer(
     ]
 )
 
+
 def filter(df, additional_transformer=None):
     return priv_common.filter(df, additional_transformer=lab_transformer.overwrite(additional_transformer))

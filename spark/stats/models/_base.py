@@ -5,6 +5,7 @@
 
 import attr
 
+
 class BaseModel(object):
     """ Base model for stats """
 

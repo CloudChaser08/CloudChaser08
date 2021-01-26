@@ -47,7 +47,8 @@ def test_default(spark):
 
 
 def test_custom_table(spark):
-    assert stats_utils.get_provider_data(spark['sqlContext'], 'acutal_table', 'a', custom_schema='custom_schema', custom_table='custom_table').count() == 5
+    assert stats_utils.get_provider_data(spark['sqlContext'], 'acutal_table', 'a', custom_schema='custom_schema'
+                                         , custom_table='custom_table').count() == 5
 
 
 def test_cleanup(spark):

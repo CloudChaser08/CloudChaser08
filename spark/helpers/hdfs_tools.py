@@ -38,11 +38,7 @@ def get_hdfs_file_count(src):
     """
 
     file_count = \
-            subprocess \
-            .check_output(['hadoop fs -ls -R {} | wc -l'.format(src)], shell=True) \
-            .decode() \
-            .strip() \
-            .split('\n')
+        subprocess.check_output(['hadoop fs -ls -R {} | wc -l'.format(src)], shell=True).decode().strip().split('\n')
 
     return int(file_count[0])
 
@@ -70,10 +66,6 @@ def get_hdfs_file_path_size(path):
     """
 
     file_count = \
-        subprocess \
-            .check_output(['hadoop fs -du -s {}'.format(path)], shell=True) \
-            .decode() \
-            .strip() \
-            .split(' ')
+        subprocess.check_output(['hadoop fs -du -s {}'.format(path)], shell=True).decode().strip().split(' ')
 
     return int(file_count[0])

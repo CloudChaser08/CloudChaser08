@@ -24,8 +24,8 @@ DEFAULT_ATTRS = [
 ]
 
 
-def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False, partitions=200, cache=False,
-         load_file_name=False, allow_empty=False):
+def load(runner, location, extra_cols=None, table_name='matching_payload', return_output=False,
+         partitions=200, cache=False, load_file_name=False, allow_empty=False):
     """
     Load matching data for a provider
     """
@@ -74,6 +74,7 @@ def load(runner, location, extra_cols=None, table_name='matching_payload', retur
     else:
         runner.sqlContext.sql('DROP TABLE IF EXISTS {}'.format(table_name))
         final_payload.createOrReplaceTempView(table_name)
+
 
 def load_all(runner, location_prefix, matching_payloads_module):
     """

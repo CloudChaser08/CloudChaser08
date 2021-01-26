@@ -7,6 +7,7 @@ import spark.providers.acxiom.events.normalize as ac
 source = None
 results = None
 
+
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('event_common_model')
     spark['sqlContext'].dropTempTable('ref_gen_ref')
@@ -33,9 +34,7 @@ def test_init(spark):
 
     ac.run(spark['spark'], spark['runner'], '2017-10-06', test=True)
     global results
-    results = spark['sqlContext'] \
-                .sql('select * from event_common_model') \
-                .collect()
+    results = spark['sqlContext'].sql('select * from event_common_model').collect()
 
 
 def test_all_rows_are_normalized():

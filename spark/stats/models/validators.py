@@ -7,6 +7,7 @@ from six import string_types
 
 import attr
 
+
 def is_date_str(_, __, value):
     """ Validates that the value is a string in the YYYY-MM-DD format """
     datetime.strptime(value, '%Y-%M-%d')

@@ -2,13 +2,12 @@
 
 import spark.helpers.udf.general_helpers as gen_helpers
 from pyspark.sql.types import StringType, DateType
-from pyspark.storagelevel import StorageLevel
+# from pyspark.storagelevel import StorageLevel
 from pyspark.sql.functions import col, lit, when, trim, monotonically_increasing_id, udf, \
     coalesce, input_file_name, upper, current_date
-from pyspark.sql import DataFrame
+# from pyspark.sql import DataFrame
 import functools
 import logging
-import time
 import datetime
 
 
@@ -52,7 +51,7 @@ def nullify(df, null_vals=None, preprocess_func=None):
 
 
 def trimmify(df):
-    "Trim all string columns"
+    """Trim all string columns"""
 
     column_types = {f.name: str(f.dataType) for f in df.schema.fields}
 
@@ -162,7 +161,7 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None,
         raise
 
     if not values:
-        logging.warn("No whitelist specified for {}".format(domain_name))
+        logging.warning("No whitelist specified for {}".format(domain_name))
 
     def out(df):
         c = udf(clean_up_freetext_fn)(col(col_name))
@@ -299,7 +298,7 @@ def deobfuscate_hvid(project_name, hvid_col='hvid', nullify_non_integers=False):
 
 def add_input_filename(column_name, include_parent_dirs=False,
                        persisted_df_id='df_with_input_filename'):
-    "Add the input file name to a dataframe, removing the split suffix"
+    """Add the input file name to a dataframe, removing the split suffix"""
 
     def out(df):
         return df.withColumn(

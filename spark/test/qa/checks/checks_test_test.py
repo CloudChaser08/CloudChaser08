@@ -7,6 +7,7 @@ import spark.qa.checks.checks_test as checks_test
 
 sample_datafeed = None
 
+
 @pytest.mark.usefixtures("spark")
 def test_gender_validation(spark):
     working = qa_datafeed.standard_medicalclaims_datafeed(

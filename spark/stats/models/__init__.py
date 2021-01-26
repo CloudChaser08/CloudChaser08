@@ -40,7 +40,6 @@ VALID_DATATYPES = {
 }
 
 
-
 class _DateFieldsMixin(object):
     """ A mixin that provides a default date_fields value
         based on the datatype

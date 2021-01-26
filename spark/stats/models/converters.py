@@ -1,6 +1,8 @@
 """
     Converters for use in models
 """
+
+
 def model_converter(model_cls, optional=True):
     """
         Generates a converter that casts the field value to an instance of
@@ -30,6 +32,7 @@ def model_list_converter(model_cls):
         Note that if the field value is None, it will be cast to an empty list
     """
     _model_converter = model_converter(model_cls)
+
     def _converter(val):
         return convert_model_list(_model_converter, val)
     return _converter
@@ -43,6 +46,7 @@ def model_map_converter(model):
         Note that if the field value is None, it will be cast to an empty dict
     """
     _model_converter = model_converter(model)
+
     def _converter(val):
         if not val:
             return {}

@@ -6,7 +6,8 @@ from pyspark.sql.functions import md5
 
 medication_transformer = Transformer(
     medctn_diag_cd=[
-        TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['medctn_diag_cd', 'medctn_diag_cd_qual', 'enc_dt'])
+        TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                          ['medctn_diag_cd', 'medctn_diag_cd_qual', 'enc_dt'])
     ],
     medctn_ndc=[
         TransformFunction(post_norm_cleanup.clean_up_ndc_code, ['medctn_ndc'])

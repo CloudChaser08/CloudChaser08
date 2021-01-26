@@ -4,6 +4,7 @@ from pyspark.sql.functions import col, countDistinct, lit, trim, round
 
 from ..models.results import TopValuesResult
 
+
 def _col_top_values(df, c, num, total, distinct_column=None):
     """
     Calculate the top values for a given column
@@ -37,7 +38,7 @@ def _col_top_values(df, c, num, total, distinct_column=None):
                   .groupBy('col')
     # Aggregate the DataFrame based on whether or not
     # to count based on a distinct value or not
-    if (distinct_column):
+    if distinct_column:
         result_df = result_df.agg(countDistinct(col(distinct_column)).alias('count'))
     else:
         result_df = result_df.count()
@@ -85,7 +86,6 @@ def calculate_top_values(df, max_top_values, distinct_column=None, threshold=0.0
             [_col_top_values(df, c, max_top_values, total, distinct_column) for c in columns[i:i+BATCH_SIZE]]
         ).collect()
         i = i + BATCH_SIZE
-
 
     stats = [
         TopValuesResult(field=r.name, value=r.col, count=r['count'], percentage=r['percentage'])

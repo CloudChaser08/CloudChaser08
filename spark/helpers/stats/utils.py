@@ -3,7 +3,7 @@ from functools import reduce
 
 
 def select_distinct_values_from_column(column_name):
-    '''
+    """
     For each distinct value in the column column_name,
     Create a row with the distinct value and a list for each
     other column containing all the values from rows where
@@ -14,7 +14,7 @@ def select_distinct_values_from_column(column_name):
     Output:
         out: function that inputs a dataframe and returns the distinct rows
              for each distinct value in the column_name column
-    '''
+    """
     def out(df):
         is_not_null = lambda c: col(c).isNotNull() & (trim(col(c)) != '')
         non_distinct_columns = [x for x in df.columns if x != column_name]
@@ -36,7 +36,7 @@ def select_distinct_values_from_column(column_name):
 
 
 def select_data_in_date_range(start_date, end_date, date_column_name, include_nulls=False):
-    '''
+    """
     Filters the dataframe to contains rows between the inputed date range
     for the specified date column
     Input:
@@ -47,7 +47,7 @@ def select_data_in_date_range(start_date, end_date, date_column_name, include_nu
     Output:
         - out: function that inputs a dataframe and returns a dataframe
                within the specified date range
-    '''
+    """
     def out(df):
         is_in_range = ((col(date_column_name) >= start_date) & (col(date_column_name) < end_date))
         if include_nulls:
@@ -60,7 +60,7 @@ def select_data_in_date_range(start_date, end_date, date_column_name, include_nu
 
 
 def select_data_sample_in_date_range(start_date, end_date, date_column_name, include_nulls=False, max_sample_size=7000000, record_field=None):
-    '''
+    """
     Filters the dataframe to contains rows between the inputed date range
     for the specified date column
     Input:
@@ -78,7 +78,7 @@ def select_data_sample_in_date_range(start_date, end_date, date_column_name, inc
         - out: function that inputs a dataframe and returns a (1) multiplication factor
                for projecting how much data should be in the full set based on the sample
                and (2) dataframe with a random sample within the specified date range
-    '''
+    """
     def out(df):
         limited_date_df = select_data_in_date_range(start_date, end_date, date_column_name, include_nulls)(df)
         if record_field:
@@ -111,7 +111,7 @@ def select_data_sample_in_date_range(start_date, end_date, date_column_name, inc
 
 
 def get_provider_data(sqlContext, table_name, provider_partition, custom_schema=None, custom_table=None):
-    '''
+    """
     Fetch all the provider data for a provider from the warehouse.
     Input:
         - sqlContext:                   Spark SqlContext for accessing warehouse
@@ -121,7 +121,7 @@ def get_provider_data(sqlContext, table_name, provider_partition, custom_schema=
         - custom_table (Optional):      The custom table where the data can be found
     Output:
         - df:   pyspark.sql.DataFrame of the data
-    '''
+    """
     table_in_new_schema = table_name.startswith(('emr', 'pharmacyclaims', 'medicalclaims'))
 
     data_schema = custom_schema if custom_schema else 'dw' if table_in_new_schema else 'default'

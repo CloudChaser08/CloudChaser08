@@ -3,6 +3,7 @@ from pyspark.sql.functions import col, trim
 
 from ..models.results import GenericStatsResult
 
+
 def _get_row_count(df, start_date, end_date, attribute, date_col, index_null_dates=False):
     """
     Get the row count for the attribute between the start and end date

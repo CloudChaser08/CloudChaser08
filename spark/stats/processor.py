@@ -174,6 +174,7 @@ def run_top_values(provider_conf, df_provider):
         r.copy_with(count=int(r.count * multiplier)) for r in results
     ]
 
+
 def run_key_stats(provider_conf, start_date, end_date, df_provider):
     """
         Runs key stats using the provider's top_values configuration, between
@@ -190,6 +191,7 @@ def run_key_stats(provider_conf, start_date, end_date, df_provider):
             provider_conf
         )
     return None
+
 
 def run_longitudinality(provider_conf, end_date, df_provider):
     """
@@ -211,6 +213,7 @@ def run_longitudinality(provider_conf, end_date, df_provider):
             )
     return None
 
+
 def run_year_over_year(provider_conf, end_date, df_provider):
     """
         Runs longitudinality using the provider's longitudinality
@@ -226,7 +229,7 @@ def run_year_over_year(provider_conf, end_date, df_provider):
             )
         else:
             return year_over_year.calculate_year_over_year(
-                df_provider.all_data.select("hvid", "coalesced_date"),\
+                df_provider.all_data.select("hvid", "coalesced_date"),
                 provider_conf.earliest_date,
                 end_date,
                 provider_conf

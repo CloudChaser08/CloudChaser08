@@ -1,5 +1,5 @@
 import argparse
-import inspect
+# import inspect
 import json
 import os
 
@@ -22,6 +22,7 @@ EMR_ENCOUNTER_STATS = {'longitudinality', 'year_over_year'}
 
 S3_OUTPUT_BUCKET = "healthveritydev"
 S3_OUTPUT_KEY = "marketplace_stats/json/{}/{}/{}"
+
 
 def run(spark, sql_context, start_date, end_date, provider_config):
     """ Runs all stats for a provider between the start and end dates,
@@ -48,21 +49,11 @@ def run(spark, sql_context, start_date, end_date, provider_config):
     # Run common stats
     results = StatsResult(
         epi_calcs=processor.get_epi_calcs(provider_config),
-        key_stats=processor.run_key_stats(
-            provider_config, start_date, end_date, df_provider
-        ),
-        top_values=processor.run_top_values(
-            provider_config, df_provider
-        ),
-        fill_rate=processor.run_fill_rates(
-            provider_config, df_provider
-        ),
-        longitudinality=processor.run_longitudinality(
-            enc_prov_config, end_date, enc_df_provider # use encounter config/dataframe
-        ),
-        year_over_year=processor.run_year_over_year(
-            enc_prov_config, end_date, enc_df_provider  # use encounter config/dataframe
-        )
+        key_stats=processor.run_key_stats(provider_config, start_date, end_date, df_provider),
+        top_values=processor.run_top_values(provider_config, df_provider),
+        fill_rate=processor.run_fill_rates(provider_config, df_provider),
+        longitudinality=processor.run_longitudinality(enc_prov_config, end_date, enc_df_provider),
+        year_over_year=processor.run_year_over_year(enc_prov_config, end_date, enc_df_provider)
     )
 
     # Calculate fill rate and top values for nested models
@@ -128,7 +119,7 @@ def main(args):
         # Calculate stats
         stats = run(spark, sql_context, start_date, end_date, provider_conf)
 
-        #generate and write json summary to s3
+        # generate and write json summary to s3
         write_summary_file_to_s3(stats, version)
 
         # Generate SQL for new data_layout version.

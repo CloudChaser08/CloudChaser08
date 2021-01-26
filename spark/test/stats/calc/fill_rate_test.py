@@ -6,6 +6,7 @@ import spark.stats.calc.fill_rate as fill_rate
 
 EXPECTED_RESULTS = [0.5, 0.0, 0.75, 0.25, 0.75]
 
+
 @pytest.fixture(scope='module', name='dataframe')
 def _get_dataframe(spark):
     data_row = Row('a', 'b', 'c', 'd', 'e')
@@ -53,7 +54,7 @@ def test_gender_unknown_filetered(spark):
         data_row('1', 'F', 'M'),
         data_row('2', 'F', 'F'),
         data_row('3', 'M', None),
-        data_row('4', 'U', 'U') # should be filtered out
+        data_row('4', 'U', 'U')  # should be filtered out
     ]).toDF()
 
     assert [r.fill for r in fill_rate.calculate_fill_rate(dataframe)] == [1.0, 0.75, 0.5]
