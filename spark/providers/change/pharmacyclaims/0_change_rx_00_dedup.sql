@@ -5,7 +5,7 @@ SELECT
     txn.bin_number,
     txn.claim_id,
     txn.cob_count,
-    txn.compound_code
+    txn.compound_code,
     txn.copay_coinsurance,
     txn.coupon_number,
     txn.coupon_type,
@@ -37,7 +37,7 @@ SELECT
     txn.paid_gross_due,
     txn.paid_ingredient_cost,
     txn.paid_other_claimed,
-    txn.paid_other_claimed_qual
+    txn.paid_other_claimed_qual,
     txn.paid_patient_pay,
     txn.paid_professional_service_fee,
     txn.patient_state_province,
@@ -54,16 +54,16 @@ SELECT
     txn.prescriber_id,
     txn.prescriber_last_name,
     txn.prescription_origin,
-    txn.primary_care_provider_id
+    txn.primary_care_provider_id,
     txn.prior_auth_type_code,
     txn.processor_control_number,
     txn.product_selection_attributed,
-    txn.product_service_id
+    txn.product_service_id,
     txn.product_service_id_qualifier,
     txn.professional_service_code,
     txn.prov_dispensing_qual,
     txn.prov_prescribing_qual,
-    txn.prov_primary_care_qual
+    txn.prov_primary_care_qual,
     txn.provider_id,
     txn.reason_for_service,
     txn.refill_auth_amount,
