@@ -1,5 +1,4 @@
 from spark.helpers.source_table import SourceTable
-from pyspark.sql.types import StructType, StructField, StringType
 
 TABLE_CONF = {
     'plainout': SourceTable(
@@ -26,12 +25,6 @@ TABLE_CONF = {
             'subscriber_id',
             'hvjoinkey'
         ]
-    ),
-    'passthrough': SourceTable(
-        'json',
-        schema=StructType([
-            StructField(f, StringType(), True) for f in ['claimId', 'PCN']
-        ])
     ),
     'claim': SourceTable(
         'csv',
