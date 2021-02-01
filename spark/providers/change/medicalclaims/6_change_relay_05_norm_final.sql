@@ -195,5 +195,3 @@ posexplode(split(space(datediff(clm.date_service_end,clm.date_service)),' ')) dt
     AND DATEDIFF(COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE)), COALESCE(clm.date_service, CAST('1900-01-01' AS DATE))) <= 365
     AND DATE_ADD (clm.date_service,dtexplode.i) <= COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE))
 )
-
-

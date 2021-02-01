@@ -4,8 +4,8 @@ SELECT
     CURRENT_DATE()                                                                          AS created,
 	'10'                                                                                    AS model_version,
     SPLIT(clm.input_file_name, '/')[SIZE(SPLIT(clm.input_file_name, '/')) - 1]              AS data_set,
-	'185'                                                                                   AS data_feed,
-	'576'                                                                                   AS data_vendor,
+	'10'                                                                                   AS data_feed,
+	'11'                                                                                   AS data_vendor,
     CASE
         WHEN SUBSTR(UPPER(clm.patient_gender_code), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(clm.patient_gender_code), 1, 1)
         WHEN SUBSTR(UPPER(clm.pln_patient_gender     ), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(clm.pln_patient_gender     ), 1, 1)
@@ -288,7 +288,7 @@ SELECT
         ELSE clm.facility_zip
     END                                                                         AS prov_facility_zip,
     clm.pas_pcn                                                                     AS medical_claim_link_text,
-    'change'                                                                    AS part_provider,
+    'emdeon'                                                                    AS part_provider,
     CASE
         WHEN TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  < '{AVAILABLE_START_DATE}'
          -- OR TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  > '{VDR_FILE_DT}'
