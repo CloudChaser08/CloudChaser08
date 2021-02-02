@@ -54,7 +54,7 @@ MODE_OUTPUT_PATH = {
 
 class MarketplaceDriver(object):
     """
-    Marketplace Diver to load, transform and save provider data.
+    Marketplace Driver to load, transform and save provider data.
     """
     def __init__(self,
                  provider_name,
@@ -70,7 +70,9 @@ class MarketplaceDriver(object):
                  vdr_feed_id=None,
                  use_ref_gen_values=False,
                  count_transform_sql=False,
-                 restricted_private_source=False
+                 restricted_private_source=False,
+                 additional_output_path=None,
+                 additional_output_schema=None
                  ):
 
         # get directory and path for provider
@@ -83,7 +85,7 @@ class MarketplaceDriver(object):
 
         # set global variables
         first_schema_name = list(output_table_names_to_schemas.keys())[0]
-        first_schema_obj = output_table_names_to_schemas[first_schema_name]
+        first_schema_obj = output_table_names_to_schemas[first_schema_name] 
 
         self.provider_name = provider_name
         self.provider_partition_name = provider_partition_name
@@ -102,6 +104,8 @@ class MarketplaceDriver(object):
         self.use_ref_gen_values = use_ref_gen_values
         self.count_transform_sql = count_transform_sql
         self.restricted_private_source = restricted_private_source
+        self.additional_output_path = additional_output_path
+        self.additional_output_schema = additional_output_schema
         self.available_start_date = None
         self.earliest_service_date = None
         self.input_path = None
@@ -220,7 +224,7 @@ class MarketplaceDriver(object):
 
         return output
 
-    def unload(self, data_frame, schema_obj, columns, table):
+    def unload(self, data_frame, schema_obj, columns):
         normalized_records_unloader.unload(
             self.spark, 
             self.runner, 
@@ -239,6 +243,21 @@ class MarketplaceDriver(object):
             test_dir=(self.output_path if self.test else None)
         )
 
+    def save_schema_to_disk(self, data_frame, schema_obj):
+        """
+        Saves another version of the table to disk defined & partitioned with a specified schema.
+        """
+        logger.log('Saving data to local file system with schema {}'.format(schema_obj.name))
+
+        output = self.apply_schema(data_frame, schema_obj)
+
+        _columns = data_frame.columns
+        _columns.remove(schema_obj.provider_partition_column)
+        _columns.remove(schema_obj.date_partition_column)
+
+        self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns)
+        output.unpersist()        
+
     def save_to_disk(self):
         """
         Ensure the transformed data conforms to a known data schema and unload the data locally
@@ -254,10 +273,12 @@ class MarketplaceDriver(object):
             _columns.remove(schema_obj.provider_partition_column)
             _columns.remove(schema_obj.date_partition_column)
 
-            self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=table)
+            self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns)
             
+            output.unpersist()    
+            if self.additional_output_path and self.additional_output_schema: self.save_schema_to_disk(data_frame, self.additional_output_schema)
             data_frame.unpersist()
-            output.unpersist()
+            
 
     def log_run(self):
         logger.log('Logging run details')
