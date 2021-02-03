@@ -15,7 +15,6 @@ from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
 import spark.helpers.postprocessor as pp
 
-
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 END_TO_END_TEST = 'end_to_end_test'
 TEST = 'test'
@@ -300,10 +299,33 @@ class MarketplaceDriver(object):
         logger.log('Stopping the spark context')
         self.spark.stop()
 
+    def copy_to_multiple_output_paths(self):
+        output_schema = self.output_table_names_to_schemas.values()[0]
+        default_src = output_schema.output_directory
+        default_dest = self.output_path + default_src
+
+        additional_src = self.additional_output_schema.output_directory
+        additional_dest = self.additional_output_path + additional_src
+
+        if not self.test and not self.end_to_end_test:
+            hadoop_time = normalized_records_unloader.timed_distcp(dest=default_dest, src=default_src)
+            RunRecorder().record_run_details(additional_time=hadoop_time)
+
+            hadoop_time = normalized_records_unloader.timed_distcp(dest=additional_dest, src=additional_src)
+            RunRecorder().record_run_details(additional_time=hadoop_time)          
+        
+        elif self.end_to_end_test:
+            normalized_records_unloader.distcp(dest=default_dest, src=default_src)
+            normalized_records_unloader.distcp(dest=additional_dest, src=additional_src)    
+
     def copy_to_output_path(self, output_location=None):
         """
         Copy data from local file system to output destination
         """
+        if self.output_path and self.additional_output_path and self.additional_output_schema:
+            self.copy_to_multiple_output_paths()
+            return
+
         if not output_location:
             output_location = self.output_path
 
