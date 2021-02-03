@@ -301,10 +301,10 @@ class MarketplaceDriver(object):
 
     def copy_to_multiple_output_paths(self):
         default_src = constants.hdfs_staging_dir + self.first_schema_obj.output_directory
-        default_dest = self.output_path + default_src
+        default_dest = self.output_path + self.first_schema_obj.output_directory
 
         additional_src = constants.hdfs_staging_dir + self.additional_output_schemas[self.first_schema_name].output_directory
-        additional_dest = self.additional_output_path + additional_src
+        additional_dest = self.additional_output_path + self.additional_output_schemas[self.first_schema_name].output_directory
 
         if not self.test and not self.end_to_end_test:
             hadoop_time = normalized_records_unloader.timed_distcp(dest=default_dest, src=default_src)
