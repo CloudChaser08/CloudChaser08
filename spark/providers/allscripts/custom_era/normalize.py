@@ -12,7 +12,7 @@ if __name__ == "__main__":
         'veradigm_era_detail': detail_schemas['schema_v5'],
         'veradigm_era_summary': summary_schemas['schema_v5']
     }
-    provider_partition_name = 'allscripts'
+    provider_partition_name = '83'
 
     # ------------------------ Common for all providers -----------------------
 
