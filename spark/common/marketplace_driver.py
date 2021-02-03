@@ -14,6 +14,7 @@ import spark.common.utility.logger as logger
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
 import spark.helpers.postprocessor as pp
+import spark.helpers.constants as constants
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 END_TO_END_TEST = 'end_to_end_test'
@@ -222,7 +223,7 @@ class MarketplaceDriver(object):
 
         return output
 
-    def unload(self, data_frame, schema_obj, columns):
+    def unload(self, data_frame, schema_obj, columns, table):
         normalized_records_unloader.unload(
             self.spark, 
             self.runner, 
@@ -253,7 +254,7 @@ class MarketplaceDriver(object):
         _columns.remove(schema_obj.provider_partition_column)
         _columns.remove(schema_obj.date_partition_column)
 
-        self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns)
+        self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=None)
         output.unpersist()        
 
     def save_to_disk(self):
@@ -271,7 +272,7 @@ class MarketplaceDriver(object):
             _columns.remove(schema_obj.provider_partition_column)
             _columns.remove(schema_obj.date_partition_column)
 
-            self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns)
+            self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=table)
             
             output.unpersist()    
             if self.additional_output_path and self.additional_output_schemas: self.save_schema_to_disk(data_frame, self.additional_output_schemas[table])
@@ -299,10 +300,10 @@ class MarketplaceDriver(object):
         self.spark.stop()
 
     def copy_to_multiple_output_paths(self):
-        default_src = self.first_schema_obj.output_directory
+        default_src = constants.hdfs_staging_dir + self.first_schema_obj.output_directory
         default_dest = self.output_path + default_src
 
-        additional_src = self.additional_output_schemas[self.first_schema_name].output_directory
+        additional_src = constants.hdfs_staging_dir + self.additional_output_schemas[self.first_schema_name].output_directory
         additional_dest = self.additional_output_path + additional_src
 
         if not self.test and not self.end_to_end_test:
