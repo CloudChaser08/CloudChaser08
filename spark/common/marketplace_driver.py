@@ -70,8 +70,8 @@ class MarketplaceDriver(object):
                  use_ref_gen_values=False,
                  count_transform_sql=False,
                  restricted_private_source=False,
-                 additional_output_path=None,
-                 additional_output_schema=None
+                 additional_output_path=None, # additional_output_schemas are written to this exact s3 key
+                 additional_output_schemas=None # dict with same keys as output_table_names_to_schemas
                  ):
 
         # get directory and path for provider
@@ -82,13 +82,12 @@ class MarketplaceDriver(object):
 
         provider_directory_path = provider_directory_path.replace('spark/target/dewey.zip/', "") + '/'
 
-        # set global variables
-        first_schema_name = list(output_table_names_to_schemas.keys())[0]
-        first_schema_obj = output_table_names_to_schemas[first_schema_name] 
+        self.first_schema_name = list(output_table_names_to_schemas.keys())[0]
+        self.first_schema_obj = output_table_names_to_schemas[self.first_schema_name]
 
         self.provider_name = provider_name
         self.provider_partition_name = provider_partition_name
-        self.data_type = first_schema_obj.data_type
+        self.data_type = self.first_schema_obj.data_type
         self._data_type_str = DataType(self.data_type).value
         self.date_input = datetime.datetime.strptime(date_input, '%Y-%m-%d').date()
         self.provider_directory_path = provider_directory_path
@@ -104,7 +103,7 @@ class MarketplaceDriver(object):
         self.count_transform_sql = count_transform_sql
         self.restricted_private_source = restricted_private_source
         self.additional_output_path = additional_output_path
-        self.additional_output_schema = additional_output_schema
+        self.additional_output_schemas = additional_output_schemas
         self.available_start_date = None
         self.earliest_service_date = None
         self.input_path = None
@@ -275,7 +274,7 @@ class MarketplaceDriver(object):
             self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns)
             
             output.unpersist()    
-            if self.additional_output_path and self.additional_output_schema: self.save_schema_to_disk(data_frame, self.additional_output_schema)
+            if self.additional_output_path and self.additional_output_schemas: self.save_schema_to_disk(data_frame, self.additional_output_schemas[table])
             data_frame.unpersist()
             
 
@@ -300,11 +299,10 @@ class MarketplaceDriver(object):
         self.spark.stop()
 
     def copy_to_multiple_output_paths(self):
-        output_schema = self.output_table_names_to_schemas.values()[0]
-        default_src = output_schema.output_directory
+        default_src = self.first_schema_obj.output_directory
         default_dest = self.output_path + default_src
 
-        additional_src = self.additional_output_schema.output_directory
+        additional_src = self.additional_output_schemas[self.first_schema_name].output_directory
         additional_dest = self.additional_output_path + additional_src
 
         if not self.test and not self.end_to_end_test:
@@ -322,7 +320,7 @@ class MarketplaceDriver(object):
         """
         Copy data from local file system to output destination
         """
-        if self.output_path and self.additional_output_path and self.additional_output_schema:
+        if self.output_path and self.additional_output_path and self.additional_output_schemas:
             self.copy_to_multiple_output_paths()
             return
 
