@@ -294,6 +294,9 @@ def distcp(dest,
         '--dest', dest
     ]
 
+    if src and src[-1] != '/': src = src + '/'
+    if dest[-1] != '/': dest = dest + '/'
+
     if get_hdfs_file_count(src) > file_chunk_size:
         if not server_side_encryption:
             dist_cp_command.remove('--s3ServerSideEncryption')
