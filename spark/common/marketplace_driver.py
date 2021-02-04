@@ -242,7 +242,7 @@ class MarketplaceDriver(object):
             test_dir=(self.output_path if self.test else None)
         )
 
-    def save_schema_to_disk(self, data_frame, schema_obj):
+    def save_schema_to_disk(self, data_frame, schema_obj, table):
         """
         Saves another version of the table to disk defined & partitioned with a specified schema.
         """
@@ -254,7 +254,7 @@ class MarketplaceDriver(object):
         _columns.remove(schema_obj.provider_partition_column)
         _columns.remove(schema_obj.date_partition_column)
 
-        self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=None)
+        self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=table)
         output.unpersist()        
 
     def save_to_disk(self):
@@ -266,10 +266,10 @@ class MarketplaceDriver(object):
             data_frame = self.spark.table(table)
             schema_obj = self.output_table_names_to_schemas[table]
 
-            self.save_schema_to_disk(data_frame, schema_obj)
-            
+            self.save_schema_to_disk(data_frame, schema_obj, table)
+
             if self.additional_output_path and self.additional_output_schemas:
-                self.save_schema_to_disk(data_frame, self.additional_output_schemas[table])
+                self.save_schema_to_disk(data_frame, self.additional_output_schemas[table], table)
 
             data_frame.unpersist()
             
