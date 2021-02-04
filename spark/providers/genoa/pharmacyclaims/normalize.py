@@ -25,7 +25,7 @@ from spark.common.utility import logger
 
 
 pharma_schema = pharma_schemas['schema_v6']
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + pharma_schema.output_directory
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + pharma_schema.output_directory + '/'
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/genoa/spark-output/'
 
 
@@ -174,12 +174,12 @@ def main(args):
     backup_path = output_path.replace('salusv', 'salusv/backup')
 
     subprocess.check_call(
-        ['aws', 's3', 'rm', '--recursive', '{}/part_provider=genoa/'.format(backup_path)]
+        ['aws', 's3', 'rm', '--recursive', '{}part_provider=genoa/'.format(backup_path)]
     )
 
     subprocess.check_call([
-        'aws', 's3', 'mv', '--recursive', '{}/part_provider=genoa/'.format(output_path),
-        '{}/part_provider=genoa/'.format(backup_path)
+        'aws', 's3', 'mv', '--recursive', '{}part_provider=genoa/'.format(output_path),
+        '{}part_provider=genoa/'.format(backup_path)
     ])
 
     if args.airflow_test:
