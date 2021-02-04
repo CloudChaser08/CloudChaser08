@@ -12,10 +12,16 @@ if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change'
+    existing_output = 's3://salusv/warehouse/restricted/'
     schema = pharma_schemas['schema_v11']
+    additional_schema = pharma_schemas['schema_v11_daily']
     output_table_names_to_schemas = {
         'change_rx_05_norm_final': schema
     }
+    additional_output_schemas = {
+        'change_rx_05_norm_final': additional_schema
+    }
+    additional_output_path = 's3://salusv/warehouse/datamart/definitive_hv002886/'
     provider_partition_name = 'emdeon'
 
     # ------------------------ Common for all providers -----------------------
@@ -41,7 +47,9 @@ if __name__ == "__main__":
         use_ref_gen_values=True,
         output_to_transform_path=False,
         unload_partition_count=20,
-        restricted_private_source=True
+        restricted_private_source=True,
+        additional_output_path=additional_output_path,
+        additional_output_schemas=additional_output_schemas
     )
 
     # ------------------------ Provider specific run sequence -----------------------
@@ -54,7 +62,7 @@ if __name__ == "__main__":
     driver.init_spark_context(conf_parameters=conf_parameters)
 
     logger.log('Loading previous history')
-    driver.spark.read.parquet(os.path.join(driver.output_path, schema.output_directory, 'part_provider=emdeon/'))\
+    driver.spark.read.parquet(os.path.join(existing_output, schema.output_directory, 'part_provider=emdeon/'))\
         .createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
     driver.load()

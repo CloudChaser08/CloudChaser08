@@ -14,7 +14,7 @@ import spark.common.utility.logger as logger
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
 import spark.helpers.postprocessor as pp
-
+import spark.helpers.constants as constants
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 END_TO_END_TEST = 'end_to_end_test'
@@ -54,7 +54,7 @@ MODE_OUTPUT_PATH = {
 
 class MarketplaceDriver(object):
     """
-    Marketplace Diver to load, transform and save provider data.
+    Marketplace Driver to load, transform and save provider data.
     """
     def __init__(self,
                  provider_name,
@@ -70,7 +70,9 @@ class MarketplaceDriver(object):
                  vdr_feed_id=None,
                  use_ref_gen_values=False,
                  count_transform_sql=False,
-                 restricted_private_source=False
+                 restricted_private_source=False,
+                 additional_output_path=None, # additional_output_schemas are written to this exact s3 key
+                 additional_output_schemas=None # dict with same keys as output_table_names_to_schemas
                  ):
 
         # get directory and path for provider
@@ -81,13 +83,12 @@ class MarketplaceDriver(object):
 
         provider_directory_path = provider_directory_path.replace('spark/target/dewey.zip/', "") + '/'
 
-        # set global variables
-        first_schema_name = list(output_table_names_to_schemas.keys())[0]
-        first_schema_obj = output_table_names_to_schemas[first_schema_name]
+        self.first_schema_name = list(output_table_names_to_schemas.keys())[0]
+        self.first_schema_obj = output_table_names_to_schemas[self.first_schema_name]
 
         self.provider_name = provider_name
         self.provider_partition_name = provider_partition_name
-        self.data_type = first_schema_obj.data_type
+        self.data_type = self.first_schema_obj.data_type
         self._data_type_str = DataType(self.data_type).value
         self.date_input = datetime.datetime.strptime(date_input, '%Y-%m-%d').date()
         self.provider_directory_path = provider_directory_path
@@ -102,6 +103,8 @@ class MarketplaceDriver(object):
         self.use_ref_gen_values = use_ref_gen_values
         self.count_transform_sql = count_transform_sql
         self.restricted_private_source = restricted_private_source
+        self.additional_output_path = additional_output_path
+        self.additional_output_schemas = additional_output_schemas
         self.available_start_date = None
         self.earliest_service_date = None
         self.input_path = None
@@ -239,6 +242,21 @@ class MarketplaceDriver(object):
             test_dir=(self.output_path if self.test else None)
         )
 
+    def save_schema_to_disk(self, data_frame, schema_obj, table):
+        """
+        Saves another version of the table to disk defined & partitioned with a specified schema.
+        """
+        logger.log('Saving data to local file system with schema {}'.format(schema_obj.name))
+
+        output = self.apply_schema(data_frame, schema_obj)
+
+        _columns = data_frame.columns
+        _columns.remove(schema_obj.provider_partition_column)
+        _columns.remove(schema_obj.date_partition_column)
+
+        self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=table)
+        output.unpersist()        
+
     def save_to_disk(self):
         """
         Ensure the transformed data conforms to a known data schema and unload the data locally
@@ -247,17 +265,14 @@ class MarketplaceDriver(object):
         for table in self.output_table_names_to_schemas.keys():
             data_frame = self.spark.table(table)
             schema_obj = self.output_table_names_to_schemas[table]
-            
-            output = self.apply_schema(data_frame, schema_obj)
 
-            _columns = data_frame.columns
-            _columns.remove(schema_obj.provider_partition_column)
-            _columns.remove(schema_obj.date_partition_column)
+            self.save_schema_to_disk(data_frame, schema_obj, table)
 
-            self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=table)
-            
+            if self.additional_output_path and self.additional_output_schemas:
+                self.save_schema_to_disk(data_frame, self.additional_output_schemas[table], table)
+
             data_frame.unpersist()
-            output.unpersist()
+            
 
     def log_run(self):
         logger.log('Logging run details')
@@ -279,10 +294,32 @@ class MarketplaceDriver(object):
         logger.log('Stopping the spark context')
         self.spark.stop()
 
+    def copy_to_multiple_output_paths(self):
+        default_src = constants.hdfs_staging_dir + self.first_schema_obj.output_directory
+        default_dest = self.output_path + self.first_schema_obj.output_directory
+
+        additional_src = constants.hdfs_staging_dir + self.additional_output_schemas[self.first_schema_name].output_directory
+        additional_dest = self.additional_output_path + self.additional_output_schemas[self.first_schema_name].output_directory
+
+        if not self.test and not self.end_to_end_test:
+            hadoop_time = normalized_records_unloader.timed_distcp(dest=default_dest, src=default_src)
+            RunRecorder().record_run_details(additional_time=hadoop_time)
+
+            hadoop_time = normalized_records_unloader.timed_distcp(dest=additional_dest, src=additional_src)
+            RunRecorder().record_run_details(additional_time=hadoop_time)          
+        
+        elif self.end_to_end_test:
+            normalized_records_unloader.distcp(dest=default_dest, src=default_src)
+            normalized_records_unloader.distcp(dest=additional_dest, src=additional_src)    
+
     def copy_to_output_path(self, output_location=None):
         """
         Copy data from local file system to output destination
         """
+        if self.output_path and self.additional_output_path and self.additional_output_schemas:
+            self.copy_to_multiple_output_paths()
+            return
+
         if not output_location:
             output_location = self.output_path
 

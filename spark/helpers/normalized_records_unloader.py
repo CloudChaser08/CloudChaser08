@@ -286,6 +286,9 @@ def distcp(dest,
             Default is, 5000.
     """
 
+    if src and src[-1] != '/': src = src + '/'
+    if dest[-1] != '/': dest = dest + '/'
+
     dist_cp_command = [
         's3-dist-cp',
         '--s3ServerSideEncryption',
