@@ -1,6 +1,6 @@
 import pytest
 
-import spark.providers.nextgen.emr.sparkNormalizeNextgenEMR as nextgen
+import spark.providers.nextgen.emr.normalize as nextgen
 
 results = {}
 deduped_encounter = []

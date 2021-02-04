@@ -2,7 +2,7 @@ import pytest
 from pyspark.sql import Row
 import datetime
 
-import spark.providers.auoradx.labtests.sparkNormalizeAuroradx as auroradx
+import spark.providers.auroradx.labtests.normalize as auroradx
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):

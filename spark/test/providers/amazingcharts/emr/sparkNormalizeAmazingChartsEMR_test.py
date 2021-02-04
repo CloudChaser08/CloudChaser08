@@ -3,7 +3,7 @@ import pytest
 import shutil
 import datetime
 
-import spark.providers.amazingcharts.emr.sparkNormalizeAmazingChartsEMR as amazingcharts_emr
+import spark.providers.amazingcharts.emr.normalize as amazingcharts_emr
 import spark.helpers.file_utils as file_utils
 
 from pyspark.sql import Row

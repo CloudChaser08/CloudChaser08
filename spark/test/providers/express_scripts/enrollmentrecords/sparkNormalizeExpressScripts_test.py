@@ -1,6 +1,6 @@
 import pytest
 import datetime
-import spark.providers.express_scripts.enrollmentrecords.sparkNormalizeExpressScriptsEnrollment as esi
+import spark.providers.express_scripts.enrollmentrecords.normalize as esi
 
 results = []
 ref_data = []
