@@ -12,9 +12,14 @@ if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change'
+    existing_output = 's3://salusv/warehouse/restricted/'
     schema = pharma_schemas['schema_v11']
+    additional_schema = pharma_schemas['schema_v11_daily']
     output_table_names_to_schemas = {
         'change_rx_05_norm_final': schema
+    }
+    additional_output_schemas = {
+        'change_rx_05_norm_final': additional_schema
     }
     provider_partition_name = 'emdeon'
 
@@ -24,9 +29,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
+    parser.add_argument('--additional_output_path', default=None, type=str)
     args = parser.parse_args()
     date_input = args.date
     end_to_end_test = args.end_to_end_test
+    additional_output_path = args.additional_output_path
+    if not additional_output_path: additional_output_schemas = None
 
     # Create and run driver
     driver = MarketplaceDriver(
@@ -41,7 +49,9 @@ if __name__ == "__main__":
         use_ref_gen_values=True,
         output_to_transform_path=False,
         unload_partition_count=20,
-        restricted_private_source=True
+        restricted_private_source=True,
+        additional_output_path=additional_output_path,
+        additional_output_schemas=additional_output_schemas
     )
 
     # ------------------------ Provider specific run sequence -----------------------
@@ -54,7 +64,7 @@ if __name__ == "__main__":
     driver.init_spark_context(conf_parameters=conf_parameters)
 
     logger.log('Loading previous history')
-    driver.spark.read.parquet(os.path.join(driver.output_path, schema.output_directory, 'part_provider=emdeon/'))\
+    driver.spark.read.parquet(os.path.join(existing_output, schema.output_directory, 'part_provider=emdeon/'))\
         .createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
     driver.load()
