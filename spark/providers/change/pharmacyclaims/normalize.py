@@ -21,6 +21,7 @@ if __name__ == "__main__":
     additional_output_schemas = {
         'change_rx_05_norm_final': additional_schema
     }
+    additional_output_path = 's3://salusv/warehouse/datamart/definitive_hv002886/'
     provider_partition_name = 'emdeon'
 
     # ------------------------ Common for all providers -----------------------
@@ -29,12 +30,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
-    parser.add_argument('--additional_output_path', default=None, type=str)
     args = parser.parse_args()
     date_input = args.date
     end_to_end_test = args.end_to_end_test
-    additional_output_path = args.additional_output_path
-    if not additional_output_path: additional_output_schemas = None
 
     # Create and run driver
     driver = MarketplaceDriver(

@@ -4,7 +4,7 @@ from spark.common.schema import Schema
 schema = Schema(
     name='schema_v11_daily',
     data_type='pharmacyclaims',
-    output_directory='pharmacyclaims_daily',
+    output_directory='daily/pharmacyclaims',
     distribution_key='record_id',
     date_partition_column='created',
     provider_partition_column='part_provider',
