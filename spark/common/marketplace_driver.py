@@ -265,16 +265,8 @@ class MarketplaceDriver(object):
         for table in self.output_table_names_to_schemas.keys():
             data_frame = self.spark.table(table)
             schema_obj = self.output_table_names_to_schemas[table]
-            
-            output = self.apply_schema(data_frame, schema_obj)
 
-            _columns = data_frame.columns
-            _columns.remove(schema_obj.provider_partition_column)
-            _columns.remove(schema_obj.date_partition_column)
-
-            self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=table)
-            
-            output.unpersist()
+            self.save_schema_to_disk(data_frame, schema_obj)
             
             if self.additional_output_path and self.additional_output_schemas:
                 self.save_schema_to_disk(data_frame, self.additional_output_schemas[table])
