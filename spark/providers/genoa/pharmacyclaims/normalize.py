@@ -174,12 +174,12 @@ def main(args):
     backup_path = output_path.replace('salusv', 'salusv/backup')
 
     subprocess.check_call(
-        ['aws', 's3', 'rm', '--recursive', '{}part_provider=genoa/'.format(backup_path)]
+        ['aws', 's3', 'rm', '--recursive', '{}/part_provider=genoa/'.format(backup_path)]
     )
 
     subprocess.check_call([
-        'aws', 's3', 'mv', '--recursive', '{}part_provider=genoa/'.format(output_path),
-        '{}part_provider=genoa/'.format(backup_path)
+        'aws', 's3', 'mv', '--recursive', '{}/part_provider=genoa/'.format(output_path),
+        '{}/part_provider=genoa/'.format(backup_path)
     ])
 
     if args.airflow_test:
