@@ -274,8 +274,11 @@ class MarketplaceDriver(object):
 
             self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=table)
             
-            output.unpersist()    
-            if self.additional_output_path and self.additional_output_schemas: self.save_schema_to_disk(data_frame, self.additional_output_schemas[table])
+            output.unpersist()
+            
+            if self.additional_output_path and self.additional_output_schemas:
+                self.save_schema_to_disk(data_frame, self.additional_output_schemas[table])
+
             data_frame.unpersist()
             
 
