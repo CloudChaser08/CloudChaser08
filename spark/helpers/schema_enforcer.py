@@ -1,4 +1,5 @@
 from pyspark.sql.functions import col, lit
+from pyspark.sql.utils import AnalysisException
 
 def has_column(df, col):
     try:
