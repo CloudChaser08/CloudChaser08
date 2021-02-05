@@ -14,6 +14,21 @@ master_schema = StructType([
 record = Row(*master_schema.names)
 
 @pytest.mark.usefixtures("spark")
+def test_apply_schema_no_aliases(spark):
+    """
+        Check that when the original DataFrame has the same number of columns
+        as the target schema but the columns names are different, the new
+        DataFrame has the correct column names
+    """
+    global master_schema
+
+    org_df = spark['sqlContext'].sql("SELECT '1', 'I10', '49999', '1231232123'")
+
+    new_df = schema_enforcer.apply_schema(org_df, master_schema)
+
+    assert master_schema.names == new_df.columns
+
+@pytest.mark.usefixtures("spark")
 def test_apply_schema_aliased_subset(spark):
     """
         Check that when the original DataFrame uses the same column names as
