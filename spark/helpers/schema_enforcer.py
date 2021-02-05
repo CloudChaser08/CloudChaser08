@@ -5,15 +5,13 @@ def apply_schema(df, schema, columns_to_fill=None, columns_to_keep=None):
 
 def apply_schema_func(schema, cols_to_fill=None, cols_to_keep=None):
     """
-        Apply/enforce a schema on df using one of 3 strategies:
+        Apply/enforce a schema on df using one of 2 strategies:
             1. The input DataFrame column names match a subset of the schema
                column names
             2. The input DataFrame contains n columns, the schema contains N
                columns (where N >= n), the columns_to_fill list contains the
                names of the n columns from the schema that are populated by
                the input DataFrame
-            3. The input DataFrame contains N columns, which matches the number
-               of columns in the schema
         input
             df - DataFrame with an implicit schema (probably the result of a sql select)
             schema - The schema to enforce. A schema is a StructType object
