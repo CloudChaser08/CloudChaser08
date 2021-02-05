@@ -1,6 +1,5 @@
 import pytest
 import spark.helpers.schema_enforcer as schema_enforcer
-
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 from pyspark.sql import Row
 
