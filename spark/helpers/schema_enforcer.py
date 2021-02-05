@@ -53,7 +53,7 @@ def apply_schema_func(schema, cols_to_fill=None, cols_to_keep=None):
         new_columns = []
         for field in schema:
             if field.name in columns_to_fill:
-                col_value = col(df.columns[columns_to_fill.index(field.name)])
+                col_value = col(df.select(field.name))
             else:
                 col_value = lit(None)
             new_columns.append(col_value.cast(field.dataType).alias(field.name))
