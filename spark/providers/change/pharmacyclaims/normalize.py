@@ -89,5 +89,8 @@ if __name__ == "__main__":
         )
 
     driver.stop_spark()
+
+    existing_delivery_location = additional_output_path + "daily/pharmacyclaims/part_provider=emdeon/"
+    driver.move_output_to_backup(existing_delivery_location) # daily delivery location should only have data from most recent run
     driver.copy_to_output_path()
     logger.log('Done')
