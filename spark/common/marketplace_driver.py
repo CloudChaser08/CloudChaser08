@@ -15,6 +15,7 @@ from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
 import spark.helpers.postprocessor as pp
 import spark.helpers.constants as constants
+import subprocess
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 END_TO_END_TEST = 'end_to_end_test'
@@ -331,3 +332,15 @@ class MarketplaceDriver(object):
         
         elif self.end_to_end_test:
             normalized_records_unloader.distcp(output_location)
+
+    def move_output_to_backup(self, output_location, backup_location=None):
+        """
+        Moves existing data on S3 to a backup location, usually before driver.copy_to_output_path()
+        NOTE: This function clears out the backup location before moving data there, so make sure backup_path isn't an important location!
+        """
+        if not backup_location:
+            backup_location = output_location.replace('salusv', 'salusv/backup')
+        
+        subprocess.check_call(['aws', 's3', 'rm', '--recursive', backup_location])
+        subprocess.check_call(['aws', 's3', 'mv', '--recursive', output_location, backup_location])
+        
