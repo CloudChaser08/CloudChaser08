@@ -63,6 +63,7 @@ schema_v1 = StructType([
 schema_v5 = StructType([
     StructField('row_id', LongType(), True),
     StructField('hv_medcl_clm_pymt_dtl_id', StringType(), True),
+    StructField('crt_dt', DateType(), True),
     StructField('mdl_vrsn_num', StringType(), True),
     StructField('data_set_nm', StringType(), True),
     StructField('src_vrsn_id', StringType(), True),
