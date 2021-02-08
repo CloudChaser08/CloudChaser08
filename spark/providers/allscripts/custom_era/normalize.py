@@ -12,6 +12,11 @@ if __name__ == "__main__":
         'veradigm_era_detail': detail_schemas['schema_v5'],
         'veradigm_era_summary': summary_schemas['schema_v5']
     }
+    additional_output_schemas = {
+        'veradigm_era_detail': detail_schemas['schema_v5_daily'],
+        'veradigm_era_summary': summary_schemas['schema_v5_daily']        
+    }
+    additional_output_path = 's3://salusv/warehouse/datamart/allscripts/'
     provider_partition_name = 'allscripts'
 
     # ------------------------ Common for all providers -----------------------
@@ -33,7 +38,20 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         use_ref_gen_values=True,
-        vdr_feed_id=83
+        vdr_feed_id=83,
+        additional_output_path=additional_output_path,
+        additional_output_schemas=additional_output_schemas
     )
 
-    driver.run()
+    driver.init_spark_context()
+    driver.load()
+    driver.transform()
+    driver.save_to_disk()
+    driver.log_run()
+    driver.stop_spark()
+
+    existing_detail_location = additional_output_path + "daily/era/detail/"
+    existing_summary_location = additional_output_path + "daily/era/summary/"
+    driver.move_output_to_backup(existing_detail_location)
+    driver.move_output_to_backup(existing_summary_location)
+    driver.copy_to_output_path()
