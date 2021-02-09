@@ -205,5 +205,7 @@ SELECT
 FROM drug
 LEFT OUTER JOIN pln ON drug.hospital_id = pln.hospital_id AND  drug.encounter_id = pln.encounter_id
 LEFT OUTER JOIN matching_payload  pay ON pln.hvjoinkey = pay.hvjoinkey
+WHERE
+    TRIM(UPPER(COALESCE(drug.hospital_id, 'empty'))) <> 'HOSPITALID'
 
 --LIMIT 10

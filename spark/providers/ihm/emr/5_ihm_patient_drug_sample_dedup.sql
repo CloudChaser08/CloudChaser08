@@ -11,6 +11,8 @@ SELECT
 , drug.date_given
 
 FROM drug
+WHERE
+    TRIM(UPPER(COALESCE(drug.hospital_id, 'empty'))) <> 'HOSPITALID'
 GROUP BY
   drug.hospital_id
 , drug.encounter_id

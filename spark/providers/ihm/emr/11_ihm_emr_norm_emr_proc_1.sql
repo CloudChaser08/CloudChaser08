@@ -167,4 +167,6 @@ LEFT OUTER JOIN  pln ON cpt.hospital_id = pln.hospital_id AND  cpt.encounter_id 
 LEFT OUTER JOIN matching_payload  pay ON pln.hvjoinkey = pay.hvjoinkey
 -- Filter so that valid CPT Codes are returned
 
-WHERE  cpt.cpt  IS NOT NULL 
+WHERE
+    TRIM(UPPER(COALESCE(cpt.hospital_id, 'empty'))) <> 'HOSPITALID'
+    AND cpt.cpt  IS NOT NULL
