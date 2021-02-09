@@ -11,7 +11,7 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
-import spark.providers.auoradx.labtests.transactional_schemas as transactional_schemas
+import spark.providers.auroradx.labtests.transactional_schemas as transactional_schemas
 
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder

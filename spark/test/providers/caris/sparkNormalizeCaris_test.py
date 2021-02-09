@@ -2,7 +2,7 @@ import pytest
 
 import datetime
 
-import spark.providers.caris.sparkNormalizeCaris as caris
+import spark.providers.caris.labtests.normalize as caris
 
 legacy_results = []
 results = []

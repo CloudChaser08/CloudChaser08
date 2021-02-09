@@ -37,10 +37,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/quest/resources/input/year/month/day/'
+            script_path, '../../../test/providers/quest/resources/input/year/month/day/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../test/providers/quest/resources/matching/year/month/day/'
+            script_path, '../../../test/providers/quest/resources/matching/year/month/day/'
         ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/out/{}/'.format(
@@ -81,7 +81,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # create helper tables
     runner.run_spark_script('create_helper_tables.sql')
 
-    runner.run_spark_script('../../common/lab_common_model_v3.sql', [
+    runner.run_spark_script('../../../common/lab_common_model_v3.sql', [
         ['table_name', 'lab_common_model', False],
         ['properties', '', False]
     ])

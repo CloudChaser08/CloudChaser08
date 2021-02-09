@@ -2,7 +2,7 @@ import pytest
 import shutil
 import datetime
 
-import spark.providers.allscripts.medicalclaims.sparkNormalizeAllscriptsDX as allscripts_dx
+import spark.providers.allscripts.medicalclaims.normalize as allscripts_dx
 import spark.helpers.file_utils as file_utils
 
 from pyspark.sql import Row

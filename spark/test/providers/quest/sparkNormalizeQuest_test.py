@@ -6,7 +6,7 @@ import shutil
 import logging
 
 import spark.helpers.file_utils as file_utils
-import spark.providers.quest.sparkNormalizeQuest as quest
+import spark.providers.quest.labtests.normalize as quest
 
 results = []
 
