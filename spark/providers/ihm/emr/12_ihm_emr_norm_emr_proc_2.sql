@@ -171,5 +171,7 @@ SELECT
 FROM proc
 LEFT OUTER JOIN pln ON proc.hospital_id = pln.hospital_id AND  proc.encounter_id = pln.encounter_id
 LEFT OUTER JOIN matching_payload  pay ON pln.hvjoinkey = pay.hvjoinkey
-WHERE proc.procedure_name IS NOT NULL
+WHERE
+    TRIM(UPPER(COALESCE(proc.hospital_id, 'empty'))) <> 'HOSPITALID'
+    AND proc.procedure_name IS NOT NULL
 

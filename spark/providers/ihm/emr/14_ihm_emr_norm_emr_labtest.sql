@@ -184,4 +184,5 @@ SELECT
 FROM rslt
 LEFT OUTER JOIN pln ON rslt.hospital_id = pln.hospital_id AND  rslt.encounter_id = pln.encounter_id
 LEFT OUTER JOIN matching_payload  pay ON pln.hvjoinkey = pay.hvjoinkey
-
+WHERE
+    TRIM(UPPER(COALESCE(rslt.hospital_id, 'empty'))) <> 'HOSPITALID'

@@ -10,6 +10,8 @@ SELECT
     pln.sex         ,
     MAX(hvjoinkey) AS  hvjoinkey
 FROM pln
+WHERE
+    TRIM(UPPER(COALESCE(pln.hospital_id, 'empty'))) <> 'HOSPITALID'
 GROUP BY
     pln.hospital_id ,
     pln.encounter_id,

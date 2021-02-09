@@ -10,6 +10,8 @@ SELECT
 , rslt.test_code
 
 FROM rslt
+WHERE
+    TRIM(UPPER(COALESCE(rslt.hospital_id, 'empty'))) <> 'HOSPITALID'
 GROUP BY
   rslt.hospital_id
 , rslt.encounter_id
