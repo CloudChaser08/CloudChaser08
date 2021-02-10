@@ -226,8 +226,8 @@ class MarketplaceDriver(object):
 
     def unload(self, data_frame, schema_obj, columns, table):
         normalized_records_unloader.unload(
-            self.spark, 
-            self.runner, 
+            self.spark,
+            self.runner,
             data_frame,
             schema_obj.date_partition_column,
             str(self.date_input),
@@ -251,12 +251,12 @@ class MarketplaceDriver(object):
 
         output = self.apply_schema(data_frame, schema_obj)
 
-        _columns = data_frame.columns
+        _columns = output.columns
         _columns.remove(schema_obj.provider_partition_column)
         _columns.remove(schema_obj.date_partition_column)
 
         self.unload(data_frame=output, schema_obj=schema_obj, columns=_columns, table=table)
-        output.unpersist()        
+        output.unpersist()
 
     def save_to_disk(self):
         """

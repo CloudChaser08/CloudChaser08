@@ -8,16 +8,19 @@ if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'allscripts'
+    provider_partition_name = '83'
+    additional_output_path = 's3://salusv/warehouse/datamart/definitive_hv002886/'
+    existing_detail_location = additional_output_path + "daily/era/detail/"
+    existing_summary_location = additional_output_path + "daily/era/summary/"
+
     output_table_names_to_schemas = {
         'veradigm_era_detail': detail_schemas['schema_v5'],
         'veradigm_era_summary': summary_schemas['schema_v5']
     }
     additional_output_schemas = {
         'veradigm_era_detail': detail_schemas['schema_v5_daily'],
-        'veradigm_era_summary': summary_schemas['schema_v5_daily']        
+        'veradigm_era_summary': summary_schemas['schema_v5_daily']
     }
-    additional_output_path = 's3://salusv/warehouse/datamart/allscripts/'
-    provider_partition_name = 'allscripts'
 
     # ------------------------ Common for all providers -----------------------
 
@@ -50,8 +53,6 @@ if __name__ == "__main__":
     driver.log_run()
     driver.stop_spark()
 
-    existing_detail_location = additional_output_path + "daily/era/detail/"
-    existing_summary_location = additional_output_path + "daily/era/summary/"
     driver.move_output_to_backup(existing_detail_location)
     driver.move_output_to_backup(existing_summary_location)
     driver.copy_to_output_path()
