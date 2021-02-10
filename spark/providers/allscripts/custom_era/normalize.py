@@ -17,6 +17,8 @@ if __name__ == "__main__":
         'veradigm_era_detail': detail_schemas['schema_v5'],
         'veradigm_era_summary': summary_schemas['schema_v5']
     }
+    provider_partition_name = '83'
+
     additional_output_schemas = {
         'veradigm_era_detail': detail_schemas['schema_v5_daily'],
         'veradigm_era_summary': summary_schemas['schema_v5_daily']

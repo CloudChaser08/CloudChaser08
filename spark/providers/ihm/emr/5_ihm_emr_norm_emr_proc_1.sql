@@ -1,13 +1,15 @@
 SELECT 
+
     --------------------------------------------------------------------------------------------------
     ---  hv_enc_id
+    -- CONCAT('210_', cpt.hospital_id, '_', cpt.encounter_id, '_', cpt.cpt, '_', cpt.seq)
     --------------------------------------------------------------------------------------------------
     CASE
         WHEN COALESCE
                 (
-                    proc.hospital_id, 
-                    proc.encounter_id, 
-                    proc.procedure_name
+                    cpt.hospital_id, 
+                    cpt.encounter_id, 
+                    cpt.cpt
                 ) IS NULL
             THEN NULL
         ELSE TRIM(SUBSTR
@@ -15,14 +17,14 @@ SELECT
                     CONCAT
                         (   '210_',
                             CASE
-                                WHEN COALESCE(proc.hospital_id, proc.encounter_id) IS NULL
+                                WHEN COALESCE(cpt.hospital_id, cpt.encounter_id) IS NULL
                                     THEN ''
-                                ELSE CONCAT(COALESCE(proc.hospital_id, ''), '_', COALESCE(proc.encounter_id, ''))
+                                ELSE CONCAT(COALESCE(cpt.hospital_id, ''), '_', COALESCE(cpt.encounter_id, ''))
                             END,
                             CASE
-                                WHEN proc.procedure_name IS NULL OR CLEAN_UP_PROCEDURE_CODE(UPPER(proc.procedure_name)) IS NULL
+                                WHEN cpt.cpt IS NULL OR CLEAN_UP_PROCEDURE_CODE(cpt.cpt) IS NULL
                                     THEN ''
-                                ELSE CONCAT('_', proc.procedure_name)
+                                ELSE CONCAT('_', cpt.cpt)
                             END,
                             CASE
                                 WHEN pln.start_date IS NULL
@@ -35,17 +37,16 @@ SELECT
                                                )
                                             )
                             END                            
-                            
                         ), 1
                 ))
     END                                                                                     AS hv_proc_id,
     
     CURRENT_DATE()                                                                          AS crt_dt,
 	'12'                                                                                    AS mdl_vrsn_num,
-    SPLIT(proc.input_file_name, '/')[SIZE(SPLIT(proc.input_file_name, '/')) - 1]            AS data_set_nm,
+    SPLIT(cpt.input_file_name, '/')[SIZE(SPLIT(cpt.input_file_name, '/')) - 1]              AS data_set_nm,
 	555                                                                                     AS hvm_vdr_id,
 	210                                                                                     AS hvm_vdr_feed_id,
-	proc.hospital_id                                                                         AS vdr_org_id,
+	cpt.hospital_id                                                                         AS vdr_org_id,
     --------------------------------------------------------------------------------------------------
     --- hvid
     --------------------------------------------------------------------------------------------------
@@ -122,54 +123,50 @@ SELECT
                     )
                 )
     END                                                                                   AS enc_dt,
-    --------------------------------------------------------------------------------------------------
-    --- proc_dt
-    --------------------------------------------------------------------------------------------------	
-    CASE 
-        WHEN CAST(proc.date_performed AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-          OR CAST(proc.date_performed AS DATE)  > '{VDR_FILE_DT}' THEN NULL
-    ELSE                     
-    CONCAT(
-            SUBSTR(date_performed,  1, 10),' ',
-            SUBSTR(date_performed, 12, 08),'.',
-            SUBSTR(date_performed, 21, 01)
-            )
-    END                                                                                     AS proc_dt,    
+    CAST(NULL AS STRING)                                                                    AS proc_dt, 
     --------------------------------------------------------------------------------------------------
     --- proc_cd and proc_cd_qual
     --------------------------------------------------------------------------------------------------
-    CLEAN_UP_PROCEDURE_CODE(UPPER(proc.procedure_name))                                     AS proc_cd,
+    CLEAN_UP_PROCEDURE_CODE(UPPER(SUBSTR(cpt.cpt,1,5)))                                     AS proc_cd,
     CASE
-        WHEN proc.procedure_name IS NOT NULL  THEN 'ICDCODE'
-    ELSE NULL END	                                                                        AS proc_cd_qual,
-	'patient_procedure'															            AS prmy_src_tbl_nm,
+        WHEN CLEAN_UP_PROCEDURE_CODE(UPPER(SUBSTR(cpt.cpt,1,5))) IS NOT NULL THEN 'HCPCS'                                                                         
+        ELSE NULL
+    END                                                                                     AS proc_cd_qual,
+	'patient_cpt'															                AS prmy_src_tbl_nm,
 	'210'																			        AS part_hvm_vdr_feed_id,
     --------------------------------------------------------------------------------------------------
     --- part_mth
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	
     CASE 
-        WHEN 
+        WHEN UPPER(pln.status) IN ('IN' , 'INO', 'ER') AND 
             (
-              CAST(COALESCE(proc.date_performed, pln.start_date, pln.end_date) AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
-            OR CAST(COALESCE(proc.date_performed, pln.start_date, pln.end_date) AS DATE)  > '{VDR_FILE_DT}'
+              CAST(pln.start_date AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
+            OR CAST(pln.start_date AS DATE)  > '{VDR_FILE_DT}' 
+            )                                                                       THEN '0_PREDATES_HVM_HISTORY'
+        WHEN UPPER(pln.status) NOT IN ('IN' , 'INO', 'ER') AND 
+            (
+              CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
+            OR CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  > '{VDR_FILE_DT}'
             )                                                                       THEN '0_PREDATES_HVM_HISTORY'
 
         WHEN UPPER(pln.status) IN ('IN' , 'INO', 'ER') THEN 
                  CONCAT
                    (
-	                SUBSTR(COALESCE(proc.date_performed, pln.start_date), 1, 4), '-',
-	                SUBSTR(COALESCE(proc.date_performed, pln.start_date), 6, 2)
+	                SUBSTR(pln.start_date, 1, 4), '-',
+	                SUBSTR(pln.start_date, 6, 2)
                    )
     ELSE  CONCAT
 	            (
-	                SUBSTR(COALESCE(proc.date_performed, pln.start_date, pln.end_date), 1, 4), '-',
-	                SUBSTR(COALESCE(proc.date_performed, pln.start_date, pln.end_date), 6, 2)
+	                SUBSTR(COALESCE(pln.start_date, pln.end_date), 1, 4), '-',
+	                SUBSTR(COALESCE(pln.start_date, pln.end_date), 6, 2)
                 )
     END                                                                         AS part_mth 
-    
 
-FROM proc
-LEFT OUTER JOIN pln ON proc.hospital_id = pln.hospital_id AND  proc.encounter_id = pln.encounter_id
+FROM cpt
+LEFT OUTER JOIN  pln ON cpt.hospital_id = pln.hospital_id AND  cpt.encounter_id = pln.encounter_id
 LEFT OUTER JOIN matching_payload  pay ON pln.hvjoinkey = pay.hvjoinkey
-WHERE proc.procedure_name IS NOT NULL
+-- Filter so that valid CPT Codes are returned
 
+WHERE
+    TRIM(UPPER(COALESCE(cpt.hospital_id, 'empty'))) <> 'HOSPITALID'
+    AND cpt.cpt  IS NOT NULL

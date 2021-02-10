@@ -182,5 +182,7 @@ SELECT
 FROM diag
 LEFT OUTER JOIN pln ON diag.hospital_id = pln.hospital_id AND  diag.encounter_id = pln.encounter_id
 LEFT OUTER JOIN matching_payload  pay ON pln.hvjoinkey = pay.hvjoinkey
-WHERE diag.diagnosis IS NOT NULL AND LENGTH(diag.diagnosis) < 9 
+WHERE
+    TRIM(UPPER(COALESCE(diag.hospital_id, 'empty'))) <> 'HOSPITALID'
+    AND diag.diagnosis IS NOT NULL AND LENGTH(diag.diagnosis) < 9
 --LIMIT 10
