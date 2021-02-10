@@ -1,10 +1,25 @@
-SELECT /*+ BROADCAST (ref_gen_ref)
- */
-    DISTINCT
+SELECT DISTINCT
     enr.memberuid,
-    CAST(enr.effectivedate AS DATE) as effectivedate,
-    CAST(enr.terminationdate AS DATE) as terminationdate,
-    CAST(CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31') AS DATE) AS max_terminationdate,
+    enr.effectivedate                                                                   AS orig_effectivedate,
+    enr.terminationdate                                                                 AS orig_terminationdate,
+    /* effectivedate */
+    CASE
+        WHEN enr.effectivedate > DATE_ADD('{VDR_FILE_DT}', 365)
+            THEN NULL
+        WHEN enr.effectivedate < CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)
+            THEN NULL
+        ELSE enr.effectivedate
+    END                                                                                 AS effectivedate,
+    /* terminationdate */
+    CASE
+        WHEN enr.effectivedate > DATE_ADD('{VDR_FILE_DT}', 365)
+            THEN NULL
+        WHEN enr.effectivedate < CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)
+            THEN NULL
+        WHEN enr.terminationdate > CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31')
+            THEN CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31')
+        ELSE enr.terminationdate
+    END                                                                                 AS terminationdate,
     enr.createddate,
     enr.productcode,
     enr.groupplantypecode,
@@ -13,6 +28,7 @@ SELECT /*+ BROADCAST (ref_gen_ref)
     enr.acaonexchangeindicator,
     enr.acaactuarialvalue,
     enr.payergroupcode,
+    enr.payertypecode,
     enr.input_file_name,
 	mbr.statecode,
     mbr.birthyear,
@@ -30,23 +46,31 @@ SELECT /*+ BROADCAST (ref_gen_ref)
               ON enr.memberuid = mbr.memberuid
  LEFT OUTER JOIN matching_payload pay
               ON enr.memberuid = pay.claimid
- LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 179
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-        LIMIT 1
-    ) esdt
-   ON 1 = 1
 WHERE UPPER(COALESCE(enr.memberuid, 'X')) <> 'MEMBERUID'
   AND COALESCE(medicalindicator, 'X') = '1'
 UNION ALL
 SELECT DISTINCT
     enr.memberuid,
-    CAST(enr.effectivedate AS DATE) as effectivedate,
-    CAST(enr.terminationdate AS DATE) as terminationdate,
-    CAST(CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31') AS DATE) AS max_terminationdate,
+    enr.effectivedate                                                                   AS orig_effectivedate,
+    enr.terminationdate                                                                 AS orig_terminationdate,
+    /* effectivedate */
+    CASE
+        WHEN enr.effectivedate > DATE_ADD('{VDR_FILE_DT}', 365)
+            THEN NULL
+        WHEN enr.effectivedate < CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)
+            THEN NULL
+        ELSE enr.effectivedate
+    END                                                                                 AS effectivedate,
+    /* terminationdate */
+    CASE
+        WHEN enr.effectivedate > DATE_ADD('{VDR_FILE_DT}', 365)
+            THEN NULL
+        WHEN enr.effectivedate < CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)
+            THEN NULL
+        WHEN enr.terminationdate > CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31')
+            THEN CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31')
+        ELSE enr.terminationdate
+    END                                                                                 AS terminationdate,
     enr.createddate,
     enr.productcode,
     enr.groupplantypecode,
@@ -55,6 +79,7 @@ SELECT DISTINCT
     enr.acaonexchangeindicator,
     enr.acaactuarialvalue,
     enr.payergroupcode,
+    enr.payertypecode,
     enr.input_file_name,
 	mbr.statecode,
     mbr.birthyear,
@@ -67,19 +92,8 @@ SELECT DISTINCT
     pay.threedigitzip,
     pay.gender,
 	'PHARMACY'                                                                          AS benefit_type
- FROM enr
- LEFT OUTER JOIN mbr
-              ON enr.memberuid = mbr.memberuid
- LEFT OUTER JOIN matching_payload pay
-              ON enr.memberuid = pay.claimid
- LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 179
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-        LIMIT 1
-    ) esdt
-   ON 1 = 1
+FROM enr
+LEFT OUTER JOIN mbr ON enr.memberuid = mbr.memberuid
+LEFT OUTER JOIN matching_payload pay ON enr.memberuid = pay.claimid
 WHERE UPPER(COALESCE(enr.memberuid, 'X')) <> 'MEMBERUID'
   AND COALESCE(rxindicator, 'X') = '1'

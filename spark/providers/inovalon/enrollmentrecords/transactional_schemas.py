@@ -3,6 +3,7 @@ from spark.helpers.source_table import SourceTable
 TABLE_CONF = {
     'enr': SourceTable(
         'csv',
+        trimmify_nullify=True,
         separator='|',
         columns=[
             'memberuid',
@@ -27,6 +28,7 @@ TABLE_CONF = {
     ),
     'mbr': SourceTable(
         'csv',
+        trimmify_nullify=True,
         separator='|',
         columns=[
             'memberuid',
