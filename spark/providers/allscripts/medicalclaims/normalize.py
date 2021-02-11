@@ -20,6 +20,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         'normalize_final': medicalclaims_schemas['schema_v6_daily']
     }
     provider_partition_name = provider_name
+    
     # ------------------------ Common for all providers -----------------------
     # New layout after 2018-07-25, but we already got it once on 2018-07-24
     if date_input > '2018-07-25' or date_input == '2018-07-24':
