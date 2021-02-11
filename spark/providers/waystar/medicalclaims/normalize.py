@@ -57,10 +57,10 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         driver.runner = runner
         
         driver.input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/waystar/medicalclaims/resources/input/'	
+            __file__, '../../../test/providers/waystar/medicalclaims/resources/input/'	
         ) + '/'	
         driver.matching_path = file_utils.get_abs_path(	
-            script_path, '../../../test/providers/waystar/medicalclaims/resources/matching/'	
+            __file__, '../../../test/providers/waystar/medicalclaims/resources/matching/'	
         ) + '/'
 
         augment_path = file_utils.get_abs_path(
