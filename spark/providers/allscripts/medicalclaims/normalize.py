@@ -12,8 +12,12 @@ import spark.helpers.explode as explode
 def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'allscripts'
+    additional_output_path = 's3://salusv/warehouse/datamart/definitive_hv002886/'
     output_table_names_to_schemas = {
         'normalize_final': medicalclaims_schemas['schema_v6']
+    }
+    additional_output_schemas = {
+        'normalize_final': medicalclaims_schemas['schema_v6_daily']
     }
     provider_partition_name = provider_name
 
@@ -36,7 +40,9 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         load_date_explode=False,
         vdr_feed_id=26,
         use_ref_gen_values=True,
-        output_to_transform_path=False
+        output_to_transform_path=False,
+        additional_output_path=additional_output_path,
+        additional_output_schemas=additional_output_schemas
     )
 
     # Placeholder to Override Spark Conf. properties (after spark launch)
