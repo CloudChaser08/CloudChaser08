@@ -48,7 +48,7 @@ def test_init(spark):
 
     global results
 
-    results = spark['sqlContext'].read.parquet('./test/marketplace/resources/output/*/*').collect()
+    results = spark['sqlContext'].read.parquet('./test/marketplace/resources/output/medicalclaims/*').collect()
 
 
 def test_cleanup(spark):
