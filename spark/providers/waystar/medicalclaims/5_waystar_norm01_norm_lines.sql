@@ -45,21 +45,21 @@ SELECT
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(COALESCE(sln.service_from, clm.statement_from), '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{AVAILABLE_START_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS date_service,
 	/* date_service_end */
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(COALESCE(sln.service_to, clm.statement_to), '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{AVAILABLE_START_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS date_service_end,
 	/* inst_date_admitted */
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(clm.admission_date, '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{AVAILABLE_START_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS inst_date_admitted,
 	clm.admit_type_code																		AS inst_admit_type_std_id,
@@ -628,7 +628,7 @@ SELECT
 	    WHEN CAP_DATE
 	            (
 	                CAST(EXTRACT_DATE(COALESCE(sln.service_from, clm.statement_from), '%Y%m%d') AS DATE),
-                    ahdt.gen_ref_1_dt,
+                    CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
                     CAST('{VDR_FILE_DT}' AS DATE)
 	            ) IS NULL
 	         THEN '0_PREDATES_HVM_HISTORY'
@@ -641,7 +641,7 @@ SELECT
  FROM waystar_dedup_lines sln 
  LEFT OUTER JOIN waystar_dedup_claims clm 
    ON clm.claim_number = sln.claim_number 
- LEFT OUTER JOIN waystar_payload pay 
+ LEFT OUTER JOIN matching_payload pay 
    ON clm.hvjoinkey = pay.hvjoinkey
  /* Deduplicate the source name columns without trimming and nullifying. */
  /* The source columns sometimes contain trailing blanks (1) and leading */
@@ -661,22 +661,6 @@ SELECT
          FROM claims
     ) clmnms
   ON sln.claim_number = clmnms.claim_number
-CROSS JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref
-        WHERE hvm_vdr_feed_id = 24
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-        LIMIT 1
-    ) esdt
-CROSS JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM ref_gen_ref 
-        WHERE hvm_vdr_feed_id = 24
-          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-        LIMIT 1
-    ) ahdt
  CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7)) AS n) diag_explode
 WHERE
 ---------- Diagnosis code explosion
