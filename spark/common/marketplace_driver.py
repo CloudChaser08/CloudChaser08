@@ -296,22 +296,26 @@ class MarketplaceDriver(object):
         self.spark.stop()
 
     def copy_to_multiple_output_paths(self):
-        default_src = constants.hdfs_staging_dir + self.first_schema_obj.output_directory
-        default_dest = self.output_path + self.first_schema_obj.output_directory
+        for table in self.output_table_names_to_schemas.keys():
+            schema_obj = self.output_table_names_to_schemas[table]
+            additional_schema_obj = self.additional_output_schemas[table]
 
-        additional_src = constants.hdfs_staging_dir + self.additional_output_schemas[self.first_schema_name].output_directory
-        additional_dest = self.additional_output_path + self.additional_output_schemas[self.first_schema_name].output_directory
+            default_src = constants.hdfs_staging_dir + schema_obj.output_directory
+            default_dest = self.output_path + schema_obj.output_directory
 
-        if not self.test and not self.end_to_end_test:
-            hadoop_time = normalized_records_unloader.timed_distcp(dest=default_dest, src=default_src)
-            RunRecorder().record_run_details(additional_time=hadoop_time)
+            additional_src = constants.hdfs_staging_dir + additional_schema_obj.output_directory
+            additional_dest = self.additional_output_path + additional_schema_obj.output_directory
 
-            hadoop_time = normalized_records_unloader.timed_distcp(dest=additional_dest, src=additional_src)
-            RunRecorder().record_run_details(additional_time=hadoop_time)          
-        
-        elif self.end_to_end_test:
-            normalized_records_unloader.distcp(dest=default_dest, src=default_src)
-            normalized_records_unloader.distcp(dest=additional_dest, src=additional_src)    
+            if not self.test and not self.end_to_end_test:
+                hadoop_time = normalized_records_unloader.timed_distcp(dest=default_dest, src=default_src)
+                RunRecorder().record_run_details(additional_time=hadoop_time)
+
+                hadoop_time = normalized_records_unloader.timed_distcp(dest=additional_dest, src=additional_src)
+                RunRecorder().record_run_details(additional_time=hadoop_time)          
+            
+            elif self.end_to_end_test:
+                normalized_records_unloader.distcp(dest=default_dest, src=default_src)
+                normalized_records_unloader.distcp(dest=additional_dest, src=additional_src)    
 
     def copy_to_output_path(self, output_location=None):
         """
