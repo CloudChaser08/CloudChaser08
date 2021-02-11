@@ -16,6 +16,13 @@ def test_init(spark):
             gen_ref_itm_nm='',
             gen_ref_1_dt=datetime.date(1901, 1, 1),
             whtlst_flg=''
+        ),
+        Row(
+            hvm_vdr_feed_id=waystar.FEED_ID,
+            gen_ref_domn_nm='HVM_AVAILABLE_HISTORY_START_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(2015, 1, 1),
+            whtlst_flg=''
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
@@ -25,4 +32,4 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('date_explode_indices')
 
-    waystar.run(spark['spark'], spark['runner'], '2019-01-15', test=True)
+    waystar.run('2019-01-15', spark=spark['spark'], runner=spark['runner'], test=True)
