@@ -15,8 +15,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     Run normalization for waystar
     """
     # ------------------------ Provider specific configuration -----------------------
-    provider_name = 'navicure'
-    provider_partition_name = provider_name
+    provider_name = 'waystar'
+    provider_partition_name = 'navicure'
     schema = medicalclaims_schemas['schema_v8']
 
     additional_schema = medicalclaims_schemas['schema_v8_daily']
@@ -49,8 +49,12 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         additional_output_schemas=additional_output_schemas
     )
 
+    conf_parameters = {        
+        'spark.sql.autoBroadcastJoinThreshold': '-1'
+    }
+
     if not test:
-        driver.init_spark_context()
+        driver.init_spark_context(conf_parameters=conf_parameters)
         augment_path = 's3://salusv/incoming/medicalclaims/waystar/2018/08/31/augment/'
     else:
         driver.spark = spark
