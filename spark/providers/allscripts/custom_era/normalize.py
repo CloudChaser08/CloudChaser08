@@ -55,6 +55,4 @@ if __name__ == "__main__":
     driver.log_run()
     driver.stop_spark()
 
-    driver.move_output_to_backup(existing_detail_location)
-    driver.move_output_to_backup(existing_summary_location)
     driver.copy_to_output_path()
