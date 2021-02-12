@@ -4,7 +4,7 @@ import spark.providers.inovalon.medicalclaims.transactional_schemas_v2 as jan_fe
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v3 as mar_2020_schemas
 
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
+from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import pyspark.sql.functions as FN
 import spark.common.utility.logger as logger
 import subprocess

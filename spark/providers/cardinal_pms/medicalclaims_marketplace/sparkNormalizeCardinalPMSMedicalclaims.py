@@ -4,7 +4,7 @@ import argparse
 #     ------------------------ Provider specific configuration -----------------------
 import spark.providers.cardinal_pms.medicalclaims_marketplace.transactional_schemas as source_schema
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.medicalclaims_common_model import schemas as claims_schemas
+from spark.common.medicalclaims import schemas as claims_schemas
 
 if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------

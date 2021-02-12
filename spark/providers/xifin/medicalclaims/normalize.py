@@ -7,7 +7,7 @@ from pyspark.sql import Window
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.medicalclaims_common_model import schema_v4 as schema
+from spark.common.medicalclaims import schemas
 import spark.helpers.file_utils as file_utils
 import spark.helpers.explode as explode
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -24,7 +24,7 @@ from spark.common.utility import logger
 
 FEED_ID = '55'
 VENDOR_ID = '239'
-
+schema = schemas["schema_v4"].schema_structure
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/xifin/spark-output/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2018-06-06/'
 
