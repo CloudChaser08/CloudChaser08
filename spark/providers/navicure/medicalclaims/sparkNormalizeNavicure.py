@@ -3,7 +3,7 @@ import argparse
 from functools import reduce
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.medicalclaims_common_model import schema_v8 as medicalclaims_schema
+from spark.common.medicalclaims import schemas
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
@@ -21,6 +21,8 @@ from spark.common.utility import logger
 
 FEED_ID = '24'
 SCRIPT_PATH = __file__
+
+medicalclaims_schema = schemas["schema_v8"].schema_structure
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/navicure/medicalclaims/spark-output/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2018-06-06/'

@@ -5,7 +5,7 @@ import argparse
 import spark.helpers.file_utils as file_utils
 import spark.helpers.records_loader as records_loader
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
+from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.providers.waystar.medicalclaims.transactional_schemas as transactional_schemas
 
 FEED_ID = '24'

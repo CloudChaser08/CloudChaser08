@@ -3,7 +3,7 @@ import argparse
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.medicalclaims_common_model_v2 import schema
+from spark.common.medicalclaims import schemas
 import spark.helpers.file_utils as file_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
@@ -21,6 +21,7 @@ VENDOR_ID = '244'
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/careset/spark-output/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/custom/careset/'
 
+schema = schemas["schema_v2"].schema_structure
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     setid = 'hcpcs_careset_npi_{}.csv'.format(date_input.replace('-', '_'))

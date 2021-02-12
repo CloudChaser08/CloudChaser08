@@ -3,7 +3,7 @@ from datetime import datetime
 import spark.providers.change_837.medicalclaims.transactional_schemas as historic_source_table_schemas
 import spark.providers.change_837.medicalclaims.transactional_schemas_v2 as future_source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
+from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
 
 _passthrough_cutoff = '2020-03-31'
