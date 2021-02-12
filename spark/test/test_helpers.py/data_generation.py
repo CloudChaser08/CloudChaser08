@@ -11,15 +11,19 @@ def rand_col(data_type, max_val=100000, choices=None, date_range=None):
     parse_info = data_type.jsonValue()
     choices = choices if choices else ["item" + str(item) for item in range(100)]
     date_range = date_range if date_range else ["2018-01-01", "2020-12-31"]
-    start_date, end_date = [datetime.datetime.strptime(x, "%Y-%m-%d") for x in date_range]
-    date_choices = [start_date + datetime.timedelta(days=x) for x in range((end_date - start_date).days + 1)]
+    start_date, end_date = [
+        datetime.datetime.strptime(x, "%Y-%m-%d")
+        for x in date_range
+    ]
+    date_choices = [
+        start_date + datetime.timedelta(days=x)
+        for x in range((end_date - start_date).days + 1)
+    ]
 
-    if parse_info == "long":
-        return f.round(f.rand(seed=42) * max_val).cast(parse_info)
-    elif parse_info == "integer":
-        return f.round(f.rand(seed=42) * max_val).cast(parse_info)
-    elif parse_info == "float":
-        return (f.rand(seed=42) * max_val).cast(parse_info)
+    if parse_info == "long" or parse_info == "integer":
+        return f.round(f.rand() * max_val).cast(parse_info)
+    elif parse_info == "float" or parse_info == "double":
+        return (f.rand() * max_val).cast(parse_info)
     elif parse_info == "string":
         array_col = f.array([f.lit(x) for x in choices])
         return array_col[(f.rand() * f.size(array_col)).cast("int")]
