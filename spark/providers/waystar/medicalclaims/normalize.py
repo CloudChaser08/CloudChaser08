@@ -50,7 +50,10 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     )
 
     conf_parameters = {        
-        'spark.sql.autoBroadcastJoinThreshold': '-1'
+        'spark.default.parallelism': 160,
+        'spark.sql.shuffle.partitions': 160,
+        'spark.sql.autoBroadcastJoinThreshold': 10485760,
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC'
     }
 
     if not test:
