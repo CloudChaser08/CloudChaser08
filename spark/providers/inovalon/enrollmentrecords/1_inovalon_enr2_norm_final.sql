@@ -21,24 +21,23 @@ SELECT
 	            (
 	                txn.age,
 	                txn.effectivedate,
-	                COALESCE
-	                    (
-	                        txn.birthyear,
-	                        txn.yearofbirth
-	                    )
+                    txn.yearofbirth
 	            )
 	    )                                                                                   AS patient_age,
 	/* patient_year_of_birth */
 	/* per AK: null out patient_year_of_birth if YEAR(effectivedate) = patient_year_of_birth */
+    ------------------------------------------------------------------------------------------
+    -- txn.birthyear is removed and ONLY yearofbirth from PAYLOAD is been considered 2021-02-11
+    ------------------------------------------------------------------------------------------    
 	CASE
-	    WHEN  YEAR(effectivedate) = COALESCE(txn.birthyear, txn.yearofbirth) THEN NULL
+	    WHEN  YEAR(effectivedate) =  txn.yearofbirth THEN NULL
 	ELSE
     	CAP_YEAR_OF_BIRTH
                 (
                     txn.age,
                     txn.effectivedate,
-                    COALESCE(txn.birthyear, txn.yearofbirth)
-                )
+                    txn.yearofbirth
+                )                                                                               
     END                                                                                     AS patient_year_of_birth,
     /* patient_zip3 */
     MASK_ZIP_CODE
@@ -57,12 +56,9 @@ SELECT
 	/* patient_gender */
 	CLEAN_UP_GENDER
     	(
-        	CASE
-        	    WHEN SUBSTR(UPPER(TRIM(COALESCE(txn.gendercode, 'U'))), 1, 1) IN ('F', 'M')
-        	        THEN SUBSTR(UPPER(TRIM(COALESCE(txn.gendercode, 'U'))), 1, 1)
-        	    WHEN SUBSTR(UPPER(TRIM(COALESCE(txn.gender, 'U'))), 1, 1) IN ('F', 'M')
-        	        THEN SUBSTR(UPPER(TRIM(COALESCE(txn.gender, 'U'))), 1, 1)
-        	    ELSE 'U'
+       	    CASE
+        	    WHEN txn.gender IN ('F', 'M', 'U') THEN txn.gender
+        	    ELSE NULL 
         	END
 	    )                                                                                   AS patient_gender,
 	/* source_record_date */
@@ -83,11 +79,11 @@ SELECT
         WHEN  txn.payergroupcode IS NULL THEN NULL
         ELSE
             CASE
-                WHEN txn.payergroupcode = 'C' THEN 'Commercial'
-                WHEN txn.payergroupcode = 'D' THEN 'Dual Eligible'
-                WHEN txn.payergroupcode = 'M' THEN 'Medicaid'
-                WHEN txn.payergroupcode = 'R' THEN 'Medicare Advantage'
-                WHEN txn.payergroupcode = 'U' THEN 'Unknown'
+                WHEN txn.payergroupcode = 'C' THEN 'Commercial' 
+                WHEN txn.payergroupcode = 'D' THEN 'Dual Eligible' 
+                WHEN txn.payergroupcode = 'M' THEN 'Medicaid' 
+                WHEN txn.payergroupcode = 'R' THEN 'Medicare Advantage' 
+                WHEN txn.payergroupcode = 'U' THEN 'Unknown' 
             ELSE txn.payergroupcode
             END
         END                                                                                 AS payer_type,
@@ -112,7 +108,7 @@ SELECT
                             CASE
                                 WHEN UPPER(txn.payertypecode) = 'C'  THEN 'Commercial'
                                 WHEN UPPER(txn.payertypecode) = 'CM' THEN 'Commercial and Medicaid'
-                                WHEN UPPER(txn.payertypecode) = 'CR' THEN 'Commercial and Medicare'
+                                WHEN UPPER(txn.payertypecode) = 'CR' THEN 'Commercial and Medicare' 
                                 WHEN UPPER(txn.payertypecode) = 'CS' THEN 'Commercial and SNP'
                                 WHEN UPPER(txn.payertypecode) = 'D'  THEN 'Dual Eligible'
                                 WHEN UPPER(txn.payertypecode) = 'F'  THEN 'Family Care'
@@ -120,21 +116,21 @@ SELECT
                                 WHEN UPPER(txn.payertypecode) = 'K'  THEN 'Marketplace'
                                 WHEN UPPER(txn.payertypecode) = 'M'  THEN 'Medicaid'
                                 WHEN UPPER(txn.payertypecode) = 'MD' THEN 'Medicaid Disabled'
-                                WHEN UPPER(txn.payertypecode) = 'ML' THEN 'Medicaid Low Income'
-                                WHEN UPPER(txn.payertypecode) = 'MR' THEN 'Medicaid Restricted'
+                                WHEN UPPER(txn.payertypecode) = 'ML' THEN 'Medicaid Low Income' 
+                                WHEN UPPER(txn.payertypecode) = 'MR' THEN 'Medicaid Restricted' 
                                 WHEN UPPER(txn.payertypecode) = 'NC' THEN 'Special Needs Plan - Chronic Condition'
                                 WHEN UPPER(txn.payertypecode) = 'ND' THEN 'Special Needs Plan - Dual Eligible'
                                 WHEN UPPER(txn.payertypecode) = 'NI' THEN 'Special Needs Plan - Institutionalized'
                                 WHEN UPPER(txn.payertypecode) = 'NM' THEN 'Special Needs Plan- Medicaid only'
-                                WHEN UPPER(txn.payertypecode) = 'NR' THEN 'Special Needs Plan - Medicare only'
+                                WHEN UPPER(txn.payertypecode) = 'NR' THEN 'Special Needs Plan - Medicare only' 
                                 WHEN UPPER(txn.payertypecode) = 'O'  THEN 'Other'
-                                WHEN UPPER(txn.payertypecode) = 'R'  THEN 'Medicare'
-                                WHEN UPPER(txn.payertypecode) = 'RC' THEN 'Medicare Cost'
-                                WHEN UPPER(txn.payertypecode) = 'RM' THEN 'Medicare - Medicaid'
+                                WHEN UPPER(txn.payertypecode) = 'R'  THEN 'Medicare' 
+                                WHEN UPPER(txn.payertypecode) = 'RC' THEN 'Medicare Cost' 
+                                WHEN UPPER(txn.payertypecode) = 'RM' THEN 'Medicare - Medicaid' 
                                 WHEN UPPER(txn.payertypecode) = 'RR' THEN 'Medicare Risk'
                                 WHEN UPPER(txn.payertypecode) = 'S'  THEN 'Self Insured'
                             ELSE txn.payertypecode
-                            END,
+                            END,                        
                             CASE
                                 WHEN txn.productcode IS NULL THEN ''
                                 ELSE CONCAT
@@ -213,22 +209,16 @@ SELECT
     'inovalon'                                                                              AS part_provider,
     /* part_best_date */
     /* bpm - capping was not included: */
-
+    
     CASE
-	    WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE
-                                        (
-                                             CAST(txn.effectivedate AS DATE),
-                                             COALESCE(CAST('{AVAILABLE_START_DATE}'  AS DATE), CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)),
-                                             CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
-                                        ),  '')))
-	        THEN '0_PREDATES_HVM_HISTORY'
+        WHEN CAST(txn.effectivedate AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
+            OR CAST(txn.effectivedate AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                           THEN '0_PREDATES_HVM_HISTORY'
 	    WHEN CAP_YEAR_OF_BIRTH
             (
                 txn.age,
                 txn.effectivedate,
-                COALESCE(txn.birthyear, txn.yearofbirth)
-            ) = YEAR(txn.effectivedate)
-            THEN '0_PREDATES_HVM_HISTORY'
+                txn.yearofbirth
+            ) = YEAR(txn.effectivedate)                                                   THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE CONCAT(SUBSTR(TRIM(txn.effectivedate), 1, 7), '-01')
-	END                                                                                     AS part_best_date
+	END                                                                                     AS part_best_date 
  FROM inovalon_enr2_norm_enr txn
