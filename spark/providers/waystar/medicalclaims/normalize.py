@@ -23,7 +23,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
 
     additional_schema = medicalclaims_schemas['schema_v8_daily']
     additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
-    additional_output_path.format(opportunity_id)
+    additional_output_path = additional_output_path.format(opportunity_id)
 
     output_table_names_to_schemas = {
         'waystar_norm03_norm_final': schema
