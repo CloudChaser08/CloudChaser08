@@ -45,21 +45,21 @@ SELECT
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(COALESCE(sln.service_from, clm.statement_from), '%Y%m%d') AS DATE),
-            CAST('{AVAILABLE_START_DATE}' AS DATE),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS date_service,
 	/* date_service_end */
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(COALESCE(sln.service_to, clm.statement_to), '%Y%m%d') AS DATE),
-            CAST('{AVAILABLE_START_DATE}' AS DATE),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS date_service_end,
 	/* inst_date_admitted */
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(clm.admission_date, '%Y%m%d') AS DATE),
-            CAST('{AVAILABLE_START_DATE}' AS DATE),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS inst_date_admitted,
 	clm.admit_type_code																		AS inst_admit_type_std_id,
@@ -628,7 +628,7 @@ SELECT
 	    WHEN CAP_DATE
 	            (
 	                CAST(EXTRACT_DATE(COALESCE(sln.service_from, clm.statement_from), '%Y%m%d') AS DATE),
-                    CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
+                    CAST('{AVAILABLE_START_DATE}' AS DATE),
                     CAST('{VDR_FILE_DT}' AS DATE)
 	            ) IS NULL
 	         THEN '0_PREDATES_HVM_HISTORY'
