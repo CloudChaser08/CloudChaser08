@@ -53,7 +53,11 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     )
 
     conf_parameters = {
-        'spark.sql.autoBroadcastJoinThreshold': -1
+        'spark.default.parallelism': 200,
+        'spark.sql.shuffle.partitions': 200,
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024,
+        'spark.sql.autoBroadcastJoinThreshold': 5242880
     }
 
     if not test:
