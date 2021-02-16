@@ -10,9 +10,12 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'allscripts'
     provider_partition_name = '83'
+    opportunity_id = 'definitive_hv002886'
+
     additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
-    existing_detail_location = additional_output_path + "definitive_hv002886/daily/era/detail/"
-    existing_summary_location = additional_output_path + "definitive_hv002886/daily/era/summary/"
+    additional_output_path.format(opportunity_id)
+    existing_detail_location = additional_output_path + "daily/era/detail/"
+    existing_summary_location = additional_output_path + "daily/era/summary/"
 
     output_table_names_to_schemas = {
         'veradigm_era_detail': detail_schemas['schema_v5'],

@@ -13,6 +13,9 @@ if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change'
+    provider_partition_name = 'emdeon'
+    opportunity_id = 'definitive_hv002886'
+
     existing_output = RESTRICTED_PATH
     schema = pharma_schemas['schema_v11']
     additional_schema = pharma_schemas['schema_v11_daily']
@@ -23,7 +26,7 @@ if __name__ == "__main__":
         'change_rx_05_norm_final': additional_schema
     }
     additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
-    provider_partition_name = 'emdeon'
+    additional_output_path.format(opportunity_id)
 
     # ------------------------ Common for all providers -----------------------
 
@@ -91,7 +94,7 @@ if __name__ == "__main__":
 
     driver.stop_spark()
 
-    existing_delivery_location = additional_output_path + "definitive_hv002886/daily/pharmacyclaims/part_provider=emdeon/"
+    existing_delivery_location = additional_output_path + "daily/pharmacyclaims/part_provider=emdeon/"
     driver.move_output_to_backup(existing_delivery_location) # daily delivery location should only have data from most recent run
     driver.copy_to_output_path()
     logger.log('Done')

@@ -439,7 +439,7 @@ schema_v6 = StructType([
 
 data_type = 'era'
 output_directory = data_type + '/2018-02-13/summary'
-output_directory_daily = "definitive_hv002886/daily/" + data_type + "/summary"
+output_directory_daily = "daily/" + data_type + "/summary"
 distribution_key = 'row_id'
 
 schemas = {

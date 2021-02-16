@@ -8,7 +8,7 @@ from spark.common.schema import Schema
 schema = Schema(
     name='schema_v6_daily',
     data_type='medicalclaims',
-    output_directory='definitive_hv002886/daily/medicalclaims/',
+    output_directory='daily/medicalclaims/',
     date_partition_column='created',
     provider_partition_column='part_provider',
     schema_structure=StructType([
