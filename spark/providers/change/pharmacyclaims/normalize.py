@@ -7,13 +7,13 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
+from spark.helpers.s3_constants import RESTRICTED_PATH, DATAMART_PATH, E2E_DATAMART_PATH
 
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change'
-    existing_output = 's3://salusv/warehouse/restricted/'
+    existing_output = RESTRICTED_PATH
     schema = pharma_schemas['schema_v11']
     additional_schema = pharma_schemas['schema_v11_daily']
     output_table_names_to_schemas = {
