@@ -1,7 +1,7 @@
 import argparse
 import subprocess
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
+from spark.common.medicalclaims import schemas as medicalclaims_schemas
 from spark.common.utility import logger
 from pyspark import StorageLevel
 from spark.helpers import normalized_records_unloader

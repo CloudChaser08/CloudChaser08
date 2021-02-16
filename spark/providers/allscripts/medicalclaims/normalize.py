@@ -4,7 +4,7 @@ import spark.providers.allscripts.medicalclaims.transactions_v2 as transactions_
 import spark.providers.allscripts.medicalclaims.udf as allscripts_udf
 
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
+from spark.common.medicalclaims import schemas as medicalclaims_schemas
 from pyspark.sql.types import ArrayType, StringType
 import spark.helpers.explode as explode
 from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH

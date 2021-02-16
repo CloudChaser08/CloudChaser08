@@ -7,7 +7,7 @@ import pyspark.sql.functions as FN
 
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.common.medicalclaims_common_model import schema_v8 as schema
+from spark.common.medicalclaims import schemas
 
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
@@ -22,6 +22,7 @@ import logging
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility import logger
 
+schema = schemas["schema_v8"].schema_structure
 
 # staging for deliverable
 DELIVERABLE_LOC = 'hdfs:///deliverable/'

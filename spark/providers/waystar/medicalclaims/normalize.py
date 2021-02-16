@@ -5,7 +5,7 @@ import argparse
 import spark.helpers.file_utils as file_utils
 import spark.helpers.records_loader as records_loader
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
+from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.providers.waystar.medicalclaims.transactional_schemas as transactional_schemas
 from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
@@ -51,7 +51,10 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     )
 
     conf_parameters = {        
-        'spark.sql.autoBroadcastJoinThreshold': '-1'
+        'spark.default.parallelism': 160,
+        'spark.sql.shuffle.partitions': 160,
+        'spark.sql.autoBroadcastJoinThreshold': 10485760,
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC'
     }
 
     if not test:

@@ -10,7 +10,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.external_table_loader as external_table_loader
-from spark.common.medicalclaims_common_model import schema_v2 as medicalclaims_schema
+from spark.common.medicalclaims import schemas
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.helpers.privacy.medicalclaims as medical_priv
 from pyspark.sql.utils import AnalysisException
@@ -22,9 +22,9 @@ from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
 
 
+medicalclaims_schema = schemas['schema_v2'].schema_structure
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/medicalclaims/ability/spark-output/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
-
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
     script_path = __file__

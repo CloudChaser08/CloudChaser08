@@ -1,5 +1,5 @@
 import spark.helpers.schema_enforcer as schema_enforcer
-from spark.common.medicalclaims_common_model import schema_v7 as med_schema
+from spark.common.medicalclaims import schemas as med_schemas
 from spark.common.pharmacyclaims import schemas as pharma_schemas
 from datetime import timedelta
 import pyspark.sql.functions as F
@@ -29,7 +29,7 @@ def prepare(runner, hvids, start_dt, is_prod=False):
     runner.run_all_spark_scripts()
     df = schema_enforcer.apply_schema(
         runner.sqlContext.table('synthetic_medicalclaims').repartition(100),
-        med_schema,
+        med_schemas['schema_v7'].schema_structure,
         columns_to_keep=['part_provider', 'part_best_date']
     ).checkpoint()
 

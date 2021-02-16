@@ -1,7 +1,7 @@
 import argparse
 import spark.providers.change.medicalclaims.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
+from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
 
 if __name__ == "__main__":
