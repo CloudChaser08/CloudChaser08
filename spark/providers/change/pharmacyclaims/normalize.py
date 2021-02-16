@@ -10,7 +10,6 @@ from dateutil.relativedelta import relativedelta
 from spark.helpers.s3_constants import RESTRICTED_PATH, DATAMART_PATH, E2E_DATAMART_PATH
 
 if __name__ == "__main__":
-    
     # Parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)

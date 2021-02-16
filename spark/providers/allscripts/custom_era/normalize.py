@@ -6,7 +6,6 @@ from spark.common.era.summary import schemas as summary_schemas
 from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
 if __name__ == "__main__":
-
     # Parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
