@@ -10,6 +10,14 @@ from dateutil.relativedelta import relativedelta
 from spark.helpers.s3_constants import RESTRICTED_PATH, DATAMART_PATH, E2E_DATAMART_PATH
 
 if __name__ == "__main__":
+    
+    # Parse input arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--date', type=str)
+    parser.add_argument('--end_to_end_test', default=False, action='store_true')
+    args = parser.parse_args()
+    date_input = args.date
+    end_to_end_test = args.end_to_end_test
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change'
@@ -29,14 +37,6 @@ if __name__ == "__main__":
     additional_output_path.format(opportunity_id)
 
     # ------------------------ Common for all providers -----------------------
-
-    # Parse input arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--date', type=str)
-    parser.add_argument('--end_to_end_test', default=False, action='store_true')
-    args = parser.parse_args()
-    date_input = args.date
-    end_to_end_test = args.end_to_end_test
 
     # Create and run driver
     driver = MarketplaceDriver(
