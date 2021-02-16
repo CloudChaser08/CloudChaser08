@@ -7,12 +7,16 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from spark.helpers.s3_constants import RESTRICTED_PATH, DATAMART_PATH, E2E_DATAMART_PATH
 
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change'
-    existing_output = 's3://salusv/warehouse/restricted/'
+    provider_partition_name = 'emdeon'
+    opportunity_id = 'definitive_hv002886'
+
+    existing_output = RESTRICTED_PATH
     schema = pharma_schemas['schema_v11']
     additional_schema = pharma_schemas['schema_v11_daily']
     output_table_names_to_schemas = {
@@ -21,8 +25,8 @@ if __name__ == "__main__":
     additional_output_schemas = {
         'change_rx_05_norm_final': additional_schema
     }
-    additional_output_path = 's3://salusv/warehouse/datamart/definitive_hv002886/'
-    provider_partition_name = 'emdeon'
+    additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
+    additional_output_path.format(opportunity_id)
 
     # ------------------------ Common for all providers -----------------------
 

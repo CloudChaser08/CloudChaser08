@@ -15,6 +15,7 @@ from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility.output_type import DataType, RunType
 import spark.helpers.postprocessor as pp
 import spark.helpers.constants as constants
+import spark.helpers.s3_constants as s3_constants
 import subprocess
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
@@ -24,32 +25,29 @@ PRODUCTION = 'production'
 TRANSFORM = 'transform'
 RESTRICTED = 'restricted'
 DRIVER_MODULE_NAME = 'driver'
-E2E_OUTPUT_PATH = 's3://salusv/testing/dewey/airflow/e2e/'
-RECORDS_PATH = 's3://salusv/incoming/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
-MATCHING_PATH = 's3://salusv/matching/payload/{data_type}/{provider_name}/{year}/{month:02d}/{day:02d}/'
 
 MODE_RECORDS_PATH_TEMPLATE = {
     TEST: './test/marketplace/resources/records/',
-    END_TO_END_TEST: RECORDS_PATH,
-    PRODUCTION: RECORDS_PATH,
-    TRANSFORM: RECORDS_PATH,
-    RESTRICTED: RECORDS_PATH
+    END_TO_END_TEST: s3_constants.RECORDS_PATH,
+    PRODUCTION: s3_constants.RECORDS_PATH,
+    TRANSFORM: s3_constants.RECORDS_PATH,
+    RESTRICTED: s3_constants.RECORDS_PATH
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
     TEST: './test/marketplace/resources/matching/',
-    END_TO_END_TEST: MATCHING_PATH,
-    PRODUCTION: MATCHING_PATH,
-    TRANSFORM: MATCHING_PATH,
-    RESTRICTED: MATCHING_PATH
+    END_TO_END_TEST: s3_constants.MATCHING_PATH,
+    PRODUCTION: s3_constants.MATCHING_PATH,
+    TRANSFORM: s3_constants.MATCHING_PATH,
+    RESTRICTED: s3_constants.MATCHING_PATH
 }
 
 MODE_OUTPUT_PATH = {
     TEST: './test/marketplace/resources/output/',
-    END_TO_END_TEST: E2E_OUTPUT_PATH,
-    PRODUCTION: 's3://salusv/warehouse/parquet/',
-    TRANSFORM: 's3://salusv/warehouse/transformed/',
-    RESTRICTED: 's3://salusv/warehouse/restricted/'
+    END_TO_END_TEST: s3_constants.E2E_OUTPUT_PATH,
+    PRODUCTION: s3_constants.PRODUCTION_PATH,
+    TRANSFORM: s3_constants.TRANSFORM_PATH,
+    RESTRICTED: s3_constants.RESTRICTED_PATH
 }
 
 

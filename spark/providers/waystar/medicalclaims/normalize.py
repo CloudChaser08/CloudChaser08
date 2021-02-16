@@ -7,6 +7,7 @@ import spark.helpers.records_loader as records_loader
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.providers.waystar.medicalclaims.transactional_schemas as transactional_schemas
+from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
 FEED_ID = '24'
 
@@ -17,10 +18,12 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'waystar'
     provider_partition_name = 'navicure'
+    opportunity_id = 'definitive_hv002886'
     schema = medicalclaims_schemas['schema_v8']
 
     additional_schema = medicalclaims_schemas['schema_v8_daily']
-    additional_output_path = 's3://salusv/warehouse/datamart/definitive_hv002886/'
+    additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
+    additional_output_path.format(opportunity_id)
 
     output_table_names_to_schemas = {
         'waystar_norm03_norm_final': schema
