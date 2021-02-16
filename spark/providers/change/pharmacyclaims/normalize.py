@@ -7,6 +7,7 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
 if __name__ == "__main__":
 
@@ -21,7 +22,7 @@ if __name__ == "__main__":
     additional_output_schemas = {
         'change_rx_05_norm_final': additional_schema
     }
-    additional_output_path = 's3://salusv/warehouse/datamart/definitive_hv002886/'
+    additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
     provider_partition_name = 'emdeon'
 
     # ------------------------ Common for all providers -----------------------
@@ -90,7 +91,7 @@ if __name__ == "__main__":
 
     driver.stop_spark()
 
-    existing_delivery_location = additional_output_path + "daily/pharmacyclaims/part_provider=emdeon/"
+    existing_delivery_location = additional_output_path + "definitive_hv002886/daily/pharmacyclaims/part_provider=emdeon/"
     driver.move_output_to_backup(existing_delivery_location) # daily delivery location should only have data from most recent run
     driver.copy_to_output_path()
     logger.log('Done')

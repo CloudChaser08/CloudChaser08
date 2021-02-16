@@ -7,12 +7,13 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims_common_model import schemas as medicalclaims_schemas
 from pyspark.sql.types import ArrayType, StringType
 import spark.helpers.explode as explode
+from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
 
 def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'allscripts'
-    additional_output_path = 's3://salusv/warehouse/datamart/definitive_hv002886/'
+    additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
     output_table_names_to_schemas = {
         'normalize_final': medicalclaims_schemas['schema_v6']
     }
