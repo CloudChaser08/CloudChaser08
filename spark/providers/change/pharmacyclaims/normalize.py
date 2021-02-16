@@ -9,8 +9,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from spark.helpers.s3_constants import RESTRICTED_PATH, DATAMART_PATH, E2E_DATAMART_PATH
 
-if __name__ == "__main__":
-
+def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change'
     provider_partition_name = 'emdeon'
@@ -29,14 +28,6 @@ if __name__ == "__main__":
     additional_output_path.format(opportunity_id)
 
     # ------------------------ Common for all providers -----------------------
-
-    # Parse input arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--date', type=str)
-    parser.add_argument('--end_to_end_test', default=False, action='store_true')
-    args = parser.parse_args()
-    date_input = args.date
-    end_to_end_test = args.end_to_end_test
 
     # Create and run driver
     driver = MarketplaceDriver(
@@ -98,3 +89,10 @@ if __name__ == "__main__":
     driver.move_output_to_backup(existing_delivery_location) # daily delivery location should only have data from most recent run
     driver.copy_to_output_path()
     logger.log('Done')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--date', type=str)
+    parser.add_argument('--end_to_end_test', default=False, action='store_true')
+    args = parser.parse_args()
+    run(args.date, args.end_to_end_test)

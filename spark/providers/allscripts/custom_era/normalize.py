@@ -5,8 +5,7 @@ from spark.common.era.detail import schemas as detail_schemas
 from spark.common.era.summary import schemas as summary_schemas
 from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
-if __name__ == "__main__":
-
+def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'allscripts'
     provider_partition_name = '83'
@@ -14,14 +13,11 @@ if __name__ == "__main__":
 
     additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
     additional_output_path.format(opportunity_id)
-    existing_detail_location = additional_output_path + "daily/era/detail/"
-    existing_summary_location = additional_output_path + "daily/era/summary/"
 
     output_table_names_to_schemas = {
         'veradigm_era_detail': detail_schemas['schema_v5'],
         'veradigm_era_summary': summary_schemas['schema_v5']
     }
-    provider_partition_name = '83'
 
     additional_output_schemas = {
         'veradigm_era_detail': detail_schemas['schema_v5_daily'],
@@ -29,14 +25,6 @@ if __name__ == "__main__":
     }
 
     # ------------------------ Common for all providers -----------------------
-
-    # Parse input arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--date', type=str)
-    parser.add_argument('--end_to_end_test', default=False, action='store_true')
-    args = parser.parse_args()
-    date_input = args.date
-    end_to_end_test = args.end_to_end_test
 
     # Create and run driver
     driver = MarketplaceDriver(
@@ -60,3 +48,10 @@ if __name__ == "__main__":
     driver.stop_spark()
 
     driver.copy_to_output_path()
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--date', type=str)
+    parser.add_argument('--end_to_end_test', default=False, action='store_true')
+    args = parser.parse_args()
+    run(args.date, args.end_to_end_test)
