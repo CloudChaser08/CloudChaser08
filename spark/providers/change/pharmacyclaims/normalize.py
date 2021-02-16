@@ -25,7 +25,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         'change_rx_05_norm_final': additional_schema
     }
     additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
-    additional_output_path.format(opportunity_id)
+    additional_output_path = additional_output_path.format(opportunity_id)
 
     # ------------------------ Common for all providers -----------------------
 
