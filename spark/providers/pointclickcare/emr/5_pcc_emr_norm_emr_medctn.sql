@@ -129,7 +129,7 @@ SELECT
 FROM factmedicationorder med
 LEFT OUTER JOIN matching_payload pay            ON med.residentid           = pay.personid            AND COALESCE(med.residentid, '0') <> '0'
 LEFT OUTER JOIN dimorganization dorg            ON med.organizationid       = dorg.organizationid AND COALESCE(med.organizationid, '0') <> '0'
-LEFT OUTER JOIN dimdrug ddru                    ON med.ddid                 = ddru.ddid                     AND COALESCE(med.ddid, '0') <> '0'
-LEFT OUTER JOIN ref_ndc_ddid                    ON CAST(med.ddid AS INT)    = CAST(ref_ndc_ddid.drug_descriptor_id AS INT)  AND COALESCE(med.ddid, '0') <> '0'
+LEFT OUTER JOIN dimdrug ddru                    ON med.drugid               = ddru.drugid                     AND COALESCE(med.drugid, '0') <> '0'
+LEFT OUTER JOIN ref_ndc_ddid                    ON CAST(ddru.ddid AS INT)   = CAST(ref_ndc_ddid.drug_descriptor_id AS INT)  AND COALESCE(ddru.ddid, '0') <> '0'
                                                                       AND ref_ndc_ddid.id_number_format_code IN ('1', '2', '3', '6')
 WHERE TRIM(lower(COALESCE(med.orderstartdateid, 'empty'))) <> 'orderstartdateid'
