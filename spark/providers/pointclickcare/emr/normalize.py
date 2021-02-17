@@ -2,7 +2,7 @@ import argparse
 from datetime import datetime
 import spark.helpers.external_table_loader as external_table_loader
 import spark.providers.pointclickcare.emr.transactional_schemas as historic_source_table_schemas
-import spark.providers.pointclickcare.emr.transactional_schemas_v1 as source_table_schemas
+import spark.providers.pointclickcare.emr.transactional_schemas_v1 as transactions_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schemas
 from spark.common.emr.diagnosis import schemas as diagnosis_schemas
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         source_table_schemas = historic_source_table_schemas
     else:
         logger.log('Future Load using new schema -drugid')
-        source_table_schemas = source_table_schemas
+        source_table_schemas = transactions_v1
 
     # Create and run driver
     driver = MarketplaceDriver(
