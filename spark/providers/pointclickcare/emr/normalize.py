@@ -1,6 +1,8 @@
 import argparse
+from datetime import datetime
 import spark.helpers.external_table_loader as external_table_loader
-import spark.providers.pointclickcare.emr.transactional_schemas as source_table_schemas
+import spark.providers.pointclickcare.emr.transactional_schemas as historic_source_table_schemas
+import spark.providers.pointclickcare.emr.transactional_schemas_v1 as transactions_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schemas
 from spark.common.emr.diagnosis import schemas as diagnosis_schemas
@@ -9,6 +11,8 @@ from spark.common.emr.medication import schemas as medication_schemas
 from spark.common.emr.procedure import schemas as procedure_schemas
 from spark.common.emr.lab_test import schemas as lab_test_schema
 import spark.common.utility.logger as logger
+
+v_cutoff_date = '2021-02-01'
 
 if __name__ == "__main__":
 
@@ -34,6 +38,13 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
+    if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
+        logger.log('Historic Load schema with ddid column')
+        source_table_schemas = historic_source_table_schemas
+    else:
+        logger.log('Future Load using new schema with drugid column')
+        source_table_schemas = transactions_v1
+
     # Create and run driver
     driver = MarketplaceDriver(
         provider_name,
@@ -45,7 +56,7 @@ if __name__ == "__main__":
         unload_partition_count=20,
         use_ref_gen_values=True,
         vdr_feed_id=156,
-        output_to_transform_path=False
+        output_to_transform_path=True
     )
 
     # init
