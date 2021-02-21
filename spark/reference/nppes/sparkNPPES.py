@@ -6,7 +6,7 @@ from spark.spark_setup import init
 
 def run(spark, runner, input_file_path, output_location, partitions, test=False, airflow_test=False):
     # Load current warehouse table into dataframe
-    nppes_warehouse = external_table_loader.get_table_as_df(runner.sqlContext, 'default', 'ref_nppes')
+    nppes_warehouse = external_table_loader._get_table_as_df(runner.sqlContext, 'default', 'ref_nppes')
 
     # get current table schema
     nppes_schema = nppes_warehouse.schema
