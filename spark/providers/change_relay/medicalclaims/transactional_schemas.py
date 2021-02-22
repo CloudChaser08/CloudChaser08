@@ -23,6 +23,7 @@ TABLE_CONF = {
             'patient_control',
             'subscriber_gender',
             'subscriber_id',
+            'date_service',
             'hvjoinkey'
         ]
     ),
