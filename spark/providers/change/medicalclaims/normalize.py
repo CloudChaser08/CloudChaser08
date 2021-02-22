@@ -11,7 +11,7 @@ if __name__ == "__main__":
     output_table_names_to_schemas = {
         'change_05_norm_final': medicalclaims_schemas['schema_v10'],
     }
-    provider_partition_name = 'emdeon'
+    provider_partition_name = 'change'
 
     # ------------------------ Common for all providers -----------------------
 

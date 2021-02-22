@@ -280,12 +280,12 @@ SELECT
     ---------------------------------------------------------------------------------------------------------------------------
     'end'
 
-FROM change_relay_00_clm clm
+FROM change_00_clm clm
 LEFT OUTER JOIN
     (
         SELECT * FROM
             (SELECT *, row_number()  OVER (PARTITION BY claim_number ORDER BY CAST(service_line_number  AS FLOAT)  ) as rownum
-                FROM change_relay_00_srv
+                FROM change_00_srv
             ) WHERE rownum = 1
     ) sln ON UPPER(clm.claim_tcn_id) = UPPER(sln.claim_number)
 
@@ -297,12 +297,12 @@ LEFT OUTER JOIN
         line_1.claim_number,
         MIN(line_1.service_from_date)                                   AS min_service_from_date,
         MAX(COALESCE(line_1.service_to_date, line_1.service_from_date)) AS max_service_to_date
-    FROM change_relay_00_srv line_1
+    FROM change_00_srv line_1
     GROUP BY 1
 ) min_max_dt    ON UPPER(clm.claim_tcn_id) = UPPER(min_max_dt.claim_number)
--- LEFT OUTER JOIN change_relay_payload   pay ON  UPPER(clm.claim_tcn_id) = UPPER(pay.claimid)
--- LEFT OUTER JOIN change_relay_passthrough pas ON  UPPER(clm.claim_tcn_id) = UPPER(pas.claimid)
--- LEFT OUTER JOIN change_relay_plainout    pln ON  UPPER(clm.claim_tcn_id) = UPPER(pln.claim_number)
+-- LEFT OUTER JOIN change_payload   pay ON  UPPER(clm.claim_tcn_id) = UPPER(pay.claimid)
+-- LEFT OUTER JOIN change_passthrough pas ON  UPPER(clm.claim_tcn_id) = UPPER(pas.claimid)
+-- LEFT OUTER JOIN change_plainout    pln ON  UPPER(clm.claim_tcn_id) = UPPER(pln.claim_number)
 
 CROSS JOIN (SELECT EXPLODE(ARRAY(0, 1, 2, 3, 4, 5, 6, 7, 8)) AS n) claim_explode
 WHERE
@@ -340,7 +340,7 @@ WHERE
     AND NOT EXISTS
     (
         SELECT 1
-        FROM change_relay_01_pvt norm_01
+        FROM change_01_pvt norm_01
         WHERE clm.claim_tcn_id = norm_01.claim_id
           AND norm_01.procedure_code =
             ARRAY

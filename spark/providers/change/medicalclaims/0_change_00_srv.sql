@@ -29,7 +29,7 @@ SELECT
     --- From Payload
     --------------------------------------------------------
     CASE
-        WHEN pay.hvid is not null THEN obfuscate_hvid(pay.hvid, 'changerelay')
+        WHEN pay.hvid is not null THEN obfuscate_hvid(pay.hvid, 'change')
     ELSE NULL
     END               AS pay_hvid,
     pay.gender        AS pay_gender,
@@ -45,7 +45,7 @@ SELECT
     --------------------------------------------------------
     pln.patient_gender AS pln_patient_gender
 
-FROM claim clm
+FROM claims clm
 LEFT OUTER JOIN matching_payload     pay ON  UPPER(clm.claim_tcn_id) = UPPER(pay.claimid)
 LEFT OUTER JOIN pas_tiny pas ON  UPPER(clm.claim_tcn_id) = pas.claimid
 LEFT OUTER JOIN pln_tiny    pln ON  UPPER(clm.claim_tcn_id) = pln.claim_number

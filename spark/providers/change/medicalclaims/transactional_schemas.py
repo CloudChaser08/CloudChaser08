@@ -23,10 +23,11 @@ TABLE_CONF = {
             'patient_control',
             'subscriber_gender',
             'subscriber_id',
+            'date_service', # this field is currently not mapped
             'hvjoinkey'
         ]
     ),
-    'claim': SourceTable(
+    'claims': SourceTable(
         'csv',
         separator='|',
         columns=[
