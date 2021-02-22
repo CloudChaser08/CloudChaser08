@@ -7,11 +7,11 @@ import spark.common.utility.logger as logger
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
-    provider_name = 'change'
+    provider_name = 'change_relay'
     output_table_names_to_schemas = {
-        'change_05_norm_final': medicalclaims_schemas['schema_v10'],
+        'change_relay_05_norm_final': medicalclaims_schemas['schema_v10'],
     }
-    provider_partition_name = 'change'
+    provider_partition_name = 'emdeon'
 
     # ------------------------ Common for all providers -----------------------
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         output_table_names_to_schemas,
         date_input,
         end_to_end_test,
-        output_to_transform_path=True,
+        output_to_transform_path=False,
         vdr_feed_id=10,
         use_ref_gen_values=True,
         unload_partition_count=20,
