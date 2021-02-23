@@ -8,9 +8,9 @@ ROW_NUMBER() OVER (
                 src.ndc_code                ,           
                 src.days_supply             ,          
                 ABS(src.dispensed_quantity) ,   
-                ABS(src.submitted_gross_due),        
-                ABS(src.copay_coinsurance)  ,         
-                ABS(src.paid_gross_due) 
+                ABS(src.submitted_gross_due)        
+--              ABS(src.copay_coinsurance)  ,         
+--              ABS(src.paid_gross_due) 
             ORDER BY 
                 src.hvid                    ,       
                 src.prov_prescribing_id     ,  
@@ -18,9 +18,9 @@ ROW_NUMBER() OVER (
                 src.ndc_code                ,           
                 src.days_supply             ,          
                 ABS(src.dispensed_quantity) ,   
-                ABS(src.submitted_gross_due),        
-                ABS(src.copay_coinsurance)  ,         
-                ABS(src.paid_gross_due)     ,
+                ABS(src.submitted_gross_due),
+--              ABS(src.copay_coinsurance)  ,         
+--              ABS(src.paid_gross_due)     ,
                 CASE 
                     WHEN UPPER(transaction_code_vendor) = 'INITIAL PAY CLAIM'            THEN '1'
                     WHEN UPPER(transaction_code_vendor) = 'ADJUSTMENT TO ORIGINAL CLAIM' THEN '2'

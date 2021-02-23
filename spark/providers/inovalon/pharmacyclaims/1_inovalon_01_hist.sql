@@ -1,5 +1,5 @@
 SELECT 
-   -- Notice Record ID is not brought from history
+--    record_id, --- (remove)
     claim_id,
     hvid,
     created,
@@ -17,7 +17,8 @@ SELECT
     ndc_code,
     dispensed_quantity,
     days_supply,
-    prov_dispensing_npi,
+    pharmacy_npi,    
+--    prov_dispensing_npi,
     prov_prescribing_npi,
     prov_prescribing_name_1,
     prov_prescribing_address_1,
@@ -27,17 +28,20 @@ SELECT
     prov_prescribing_zip,
     prov_prescribing_std_taxonomy,
     prov_prescribing_vendor_specialty,
-    copay_coinsurance,      
+    ---------- Mapping removed 2021-01-24    
+--  copay_coinsurance,      
     submitted_gross_due,
+    ---------- Mapping removed 2021-01-24   Added 2021-02-15 
     paid_gross_due,
 	prov_prescribing_id,
 	prov_prescribing_qual,  
     logical_delete_reason,
     'inovalon' as part_provider,
     part_best_date
- 
+
 FROM _temp_pharmacyclaims_nb
     WHERE
+    TRUE
     ----- Look current month and 3 month back
-    part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2)
+    AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2)
     AND part_best_date <= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'),  0)
