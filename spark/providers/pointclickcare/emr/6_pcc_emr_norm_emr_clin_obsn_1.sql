@@ -64,8 +64,8 @@ SELECT
     --- clin_obsn_onset_dt
     --------------------------------------------------------------------------------------------------
     CASE
-        WHEN CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)
     END                                                                                   AS clin_obsn_onset_dt,
     --------------------------------------------------------------------------------------------------
@@ -125,8 +125,8 @@ SELECT
     --- part_mth
     --------------------------------------------------------------------------------------------------
     CASE
-        WHEN CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  < '{AVAILABLE_START_DATE}'
-          OR CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}'                    THEN '0_PREDATES_HVM_HISTORY'
+        WHEN CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                    THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
 	            (
 	                SUBSTR(alg.onsetdateid, 1, 4), '-',

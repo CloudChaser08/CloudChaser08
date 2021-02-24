@@ -175,8 +175,8 @@ SELECT
     medical_claim_link_text,
     part_provider,
     CASE
-        WHEN DATE_ADD (clm.date_service,dtexplode.i)  < '{AVAILABLE_START_DATE}'
-          -- OR DATE_ADD (clm.date_service,dtexplode.i)  > '{VDR_FILE_DT}'
+        WHEN DATE_ADD (clm.date_service,dtexplode.i)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
+          -- OR DATE_ADD (clm.date_service,dtexplode.i)  > CAST('{VDR_FILE_DT}' AS DATE)
             THEN '0_PREDATES_HVM_HISTORY'
         ELSE CONCAT
                 (

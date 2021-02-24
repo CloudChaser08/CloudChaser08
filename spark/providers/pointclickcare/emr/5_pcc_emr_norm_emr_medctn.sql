@@ -43,7 +43,7 @@ SELECT
         CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
-	        COALESCE( CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE), '{VDR_FILE_DT}') ,
+	        COALESCE( CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE), CAST('{VDR_FILE_DT}' AS DATE)) ,
 	        pay.yearofbirth
 	    )
       AS INT)                                                                               AS ptnt_birth_yr,
@@ -60,24 +60,24 @@ SELECT
     --- medctn_ord_dt
     --------------------------------------------------------------------------------------------------
     CASE
-        WHEN CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)  < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)
     END                                                                                   AS medctn_ord_dt,
     --------------------------------------------------------------------------------------------------
     --- medctn_start_dt
     --------------------------------------------------------------------------------------------------
     CASE
-        WHEN CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)  < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE)
     END                                                                                   AS medctn_start_dt,
     --------------------------------------------------------------------------------------------------
     --- medctn_end_dt
     --------------------------------------------------------------------------------------------------
     CASE
-        WHEN CAST(EXTRACT_DATE(med.orderenddateid, '%Y%m%d') AS DATE)  < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(med.orderenddateid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(med.orderenddateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(med.orderenddateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(med.orderenddateid, '%Y%m%d') AS DATE)
     END                                                                                   AS medctn_end_dt,
 
@@ -117,8 +117,8 @@ SELECT
     CASE
         WHEN med.Orderstartdateid = ''
           OR med.Orderstartdateid IS NULL
-          OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}'
+          OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)
         THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
              (

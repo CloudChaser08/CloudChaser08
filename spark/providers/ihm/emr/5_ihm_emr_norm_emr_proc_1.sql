@@ -100,7 +100,7 @@ SELECT
     --------------------------------------------------------------------------------------------------	
     CASE 
         WHEN CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-          OR CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+          OR CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
         --------------- For Inpatient we could not update NULL start date with end date  
     	WHEN UPPER(pln.status) IN ('IN' , 'INO', 'ER') THEN
                 CONCAT(
@@ -141,12 +141,12 @@ SELECT
         WHEN UPPER(pln.status) IN ('IN' , 'INO', 'ER') AND 
             (
               CAST(pln.start_date AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
-            OR CAST(pln.start_date AS DATE)  > '{VDR_FILE_DT}' 
+            OR CAST(pln.start_date AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)
             )                                                                       THEN '0_PREDATES_HVM_HISTORY'
         WHEN UPPER(pln.status) NOT IN ('IN' , 'INO', 'ER') AND 
             (
               CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
-            OR CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  > '{VDR_FILE_DT}'
+            OR CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)
             )                                                                       THEN '0_PREDATES_HVM_HISTORY'
 
         WHEN UPPER(pln.status) IN ('IN' , 'INO', 'ER') THEN 
