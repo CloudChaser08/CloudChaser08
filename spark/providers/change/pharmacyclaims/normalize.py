@@ -76,14 +76,14 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     one_month_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
     two_months_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m-01')
 
+    driver.stop_spark()
+
     for month in [current_year_month, one_month_prior, two_months_prior]:
         subprocess.check_call(
             ['aws', 's3', 'mv', '--recursive',
              driver.output_path + 'pharmacyclaims/2018-11-26/' + date_part.format(month),
              tmp_path + date_part.format(month)]
         )
-
-    driver.stop_spark()
 
     existing_delivery_location = additional_output_path + "daily/pharmacyclaims/part_provider=emdeon/"
     driver.move_output_to_backup(existing_delivery_location) # daily delivery location should only have data from most recent run
