@@ -8,9 +8,9 @@ ROW_NUMBER() OVER (
                 src.ndc_code                ,           
                 src.days_supply             ,          
                 ABS(src.dispensed_quantity) ,   
-                ABS(src.submitted_gross_due),        
-                ABS(src.copay_coinsurance)  ,         
-                ABS(src.paid_gross_due)          
+                ABS(src.submitted_gross_due)       
+--              ABS(src.copay_coinsurance)  ,         
+--              ABS(src.paid_gross_due)          
             ORDER BY 
                 src.hvid                    ,       
                 src.prov_prescribing_id     ,  
@@ -18,11 +18,9 @@ ROW_NUMBER() OVER (
                 src.ndc_code                ,           
                 src.days_supply             ,          
                 ABS(src.dispensed_quantity) ,   
-                ABS(src.submitted_gross_due),        
-                ABS(src.copay_coinsurance)  ,         
-                ABS(src.paid_gross_due)           
+                ABS(src.submitted_gross_due)        
+--              ABS(src.copay_coinsurance)  ,         
+--              ABS(src.paid_gross_due)           
         ) AS row_num
 FROM  inovalon_03_norm_comb_hist_cf src
 WHERE UPPER(COALESCE(logical_delete_reason,'')) = 'REVERSAL'
-
---LIMIT 10

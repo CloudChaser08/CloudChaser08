@@ -1,15 +1,21 @@
 import os
 import argparse
+import subprocess
 import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v1 as historic_schemas
 import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v2 as jan_feb_2020_schemas
 import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v3 as mar_2020_schemas
+import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v4 as full_hist_restate_schemas
 
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import lit
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharmacyclaims_schema
+import spark.helpers.postprocessor as postprocessor
 import spark.common.utility.logger as logger
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
+v_cutoff_date = '2021-02-01'
 
 if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
@@ -40,9 +46,12 @@ if __name__ == "__main__":
     elif is_schema_v3:
         logger.log('Using the Mar 2020 refresh schema (v3)')
         source_table_schema = mar_2020_schemas
-    else:
+    elif datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
         logger.log('Using the historic schema (v1)')
         source_table_schema = historic_schemas
+    else:
+        logger.log('Using the future restate schema (v4)')
+        source_table_schema = full_hist_restate_schemas
 
     # Create and run driver
     driver = MarketplaceDriver(
@@ -55,7 +64,8 @@ if __name__ == "__main__":
         load_date_explode=False,
         unload_partition_count=40,
         vdr_feed_id=177,
-        use_ref_gen_values=True
+        use_ref_gen_values=True,
+        output_to_transform_path=False
     )
 
     conf_parameters = {
@@ -74,6 +84,11 @@ if __name__ == "__main__":
     driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
     driver.load()
+
+    matching_payload_df = driver.spark.table('matching_payload')
+    cleaned_matching_payload_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+    cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
     if is_schema_v2:
         logger.log('Adding missing Jan/Feb 2020 columns')
@@ -97,4 +112,24 @@ if __name__ == "__main__":
     driver.save_to_disk()
     driver.log_run()
     driver.stop_spark()
+
+    logger.log('Backup historical data')
+    if end_to_end_test:
+        tmp_path = 's3://salusv/testing/dewey/airflow/e2e/inovalon/pharmacyclaims/backup/'
+    else:
+        tmp_path = 's3://salusv/backup/inovalon/pharmacyclaims/{}/'.format(args.date)
+    date_part = 'part_provider=inovalon/part_best_date={}/'
+
+    current_year_month = args.date[:7] + '-01'
+    one_month_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
+    two_months_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m-01')
+
+    for month in [current_year_month, one_month_prior, two_months_prior]:
+        subprocess.check_call(
+            ['aws', 's3', 'mv', '--recursive',
+             driver.output_path + 'pharmacyclaims/2018-11-26/' + date_part.format(month),
+             tmp_path + date_part.format(month)]
+        )
+
     driver.copy_to_output_path()
+    logger.log('Done')

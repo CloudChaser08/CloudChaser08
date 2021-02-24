@@ -1,9 +1,9 @@
 SELECT
-    rxc.rxclaimuid                                                                          AS claim_id,    
-    COALESCE(pay.hvid, CONCAT('543_', mbr.memberuid))                                       AS hvid,
+    txn.rxclaimuid                                                                          AS claim_id,    
+    COALESCE(pay.hvid, CONCAT('543_', mbr.memberuid))              AS hvid,
     CURRENT_DATE()                                                                          AS created,
 	'11'                                                                                    AS model_version,
-    SPLIT(rxc.input_file_name, '/')[SIZE(SPLIT(rxc.input_file_name, '/')) - 1]              AS data_set,
+    SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
 	'177'                                                                                   AS data_feed,
 	'543'                                                                                   AS data_vendor,
 
@@ -11,9 +11,8 @@ SELECT
 	CLEAN_UP_GENDER
     	(
         	CASE
-        	    WHEN SUBSTR(UPPER(mbr.gendercode), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(mbr.gendercode), 1, 1)
-        	    WHEN SUBSTR(UPPER(pay.gender)    , 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(pay.gender)    , 1, 1)
-        	    ELSE 'U' 
+         	    WHEN SUBSTR(UPPER(pay.gender)    , 1, 1) IN ('F', 'M', 'U') THEN SUBSTR(UPPER(pay.gender)    , 1, 1)
+        	    ELSE NULL
         	END
 	    )                                                                                   AS patient_gender,
 
@@ -23,7 +22,7 @@ SELECT
 	    VALIDATE_AGE
             (
                 pay.age,
-                CAST(EXTRACT_DATE(rxc.filldate, '%Y-%m-%d') AS DATE),
+                CAST(EXTRACT_DATE(txn.filldate, '%Y-%m-%d') AS DATE),
                 COALESCE(mbr.birthyear,pay.yearofbirth)
             )
         )                                                                                   AS patient_age,
@@ -31,8 +30,8 @@ SELECT
 	CAP_YEAR_OF_BIRTH
         (
             pay.age,
-            CAST(EXTRACT_DATE(rxc.filldate, '%Y-%m-%d') AS DATE),
-            COALESCE(mbr.birthyear,pay.yearofbirth)
+            CAST(EXTRACT_DATE(txn.filldate, '%Y-%m-%d') AS DATE),
+            pay.yearofbirth
         )                                                                                   AS patient_year_of_birth,
     /* patient_zip3 */
    MASK_ZIP_CODE
@@ -45,27 +44,30 @@ SELECT
     /* patient_state */
     VALIDATE_STATE_CODE(UPPER(COALESCE(mbr.statecode, pay.state, '')))                      AS patient_state,
     /* date_service */
-	CAP_DATE
-        (
-            CAST(EXTRACT_DATE(rxc.filldate, '%Y-%m-%d') AS DATE),
-            CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
-            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
-        )                                                                                   AS date_service,
+    CASE
+        WHEN CAST(TO_DATE(txn.filldate, 'yyyy-MM-dd') AS DATE) < CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)
+          OR CAST(TO_DATE(txn.filldate, 'yyyy-MM-dd') AS DATE) > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
+        ELSE CAST(TO_DATE(txn.filldate, 'yyyy-MM-dd') AS DATE)
+    END                                                                                      AS date_service,
    /* transaction_code_vendor */
     CASE 
-        WHEN rxc.claimstatuscode = 'A' THEN 'ADJUSTMENT TO ORIGINAL CLAIM'
-        WHEN rxc.claimstatuscode = 'D' THEN 'DENIED CLAIMS'
-        WHEN rxc.claimstatuscode = 'I' THEN 'INITIAL PAY CLAIM'
-        WHEN rxc.claimstatuscode = 'P' THEN 'PENDED FOR ADJUDICATION'
-        WHEN rxc.claimstatuscode = 'R' THEN 'REVERSAL TO ORIGINAL CLAIM'
-        WHEN rxc.claimstatuscode = 'U' THEN 'UNKNOWN'
+        WHEN txn.claimstatuscode = 'A' THEN 'ADJUSTMENT TO ORIGINAL CLAIM'
+        WHEN txn.claimstatuscode = 'D' THEN 'DENIED CLAIMS'
+        WHEN txn.claimstatuscode = 'I' THEN 'INITIAL PAY CLAIM'
+        WHEN txn.claimstatuscode = 'P' THEN 'PENDED FOR ADJUDICATION'
+        WHEN txn.claimstatuscode = 'R' THEN 'REVERSAL TO ORIGINAL CLAIM'
+        WHEN txn.claimstatuscode = 'U' THEN 'UNKNOWN'
         ELSE NULL 
     END                                                                                     AS transaction_code_vendor,    
-    CLEAN_UP_NDC_CODE(rxc.ndc11code)                                                        AS ndc_code,
-    rxc.dispensedquantity                                                                   AS dispensed_quantity,
-    rxc.supplydayscount	                                                                    AS days_supply,
-    CLEAN_UP_NPI_CODE(rxc.dispensingnpi)                                                    AS prov_dispensing_npi, 
-    CLEAN_UP_NPI_CODE(COALESCE(rxc.dispensingnpi, prv.npi1))                                AS prov_prescribing_npi,    
+    CLEAN_UP_NDC_CODE(txn.ndc11code)                                                        AS ndc_code,
+    txn.dispensedquantity                                                                   AS dispensed_quantity,
+    txn.supplydayscount	                                                                    AS days_supply,
+---- Mapping added
+    CLEAN_UP_NPI_CODE(txn.dispensingnpi)                                                    AS pharmacy_npi, 
+---- Mapping removed
+--  CLEAN_UP_NPI_CODE(txn.dispensingnpi)                                                    AS prov_dispensing_npi,     
+    ---------- Mapping update 2021-01-24  prescribingnpi 2021-02-15   
+    CLEAN_UP_NPI_CODE(COALESCE(txn.prescribingnpi, prv.npi1, psp.npinumber))                AS prov_prescribing_npi,    
 -----------------------------------------------------------------------------------------
 ------------------------------------ Name and address
 ----------------------------------------------------------------------------------------- 
@@ -125,47 +127,56 @@ SELECT
     END                                                                                     AS prov_prescribing_zip,
     prv.taxonomycode1                                                                       AS prov_prescribing_std_taxonomy,
     prv.taxonomyspecialization1                                                             AS prov_prescribing_vendor_specialty,
-    rxc.copayamount                                                                         AS copay_coinsurance,      
-    COALESCE( rxc.billedamount, rxc.costamount, rxc.allowedamount)                          AS submitted_gross_due,
-    rxc.paidamount                                                                          AS paid_gross_due,
-	rxc.provideruid	                                                                        AS prov_prescribing_id,
+    ---------- Mapping removed 2021-01-24
+    -- txn.copayamount                                                                      AS copay_coinsurance,   
+    ---------- Mapping update 2021-01-24    
+    COALESCE(txn.costamount, txn.allowedamount)                                             AS submitted_gross_due,
+    ---------- Mapping removed 2021-01-24 b-- Added 2021-02-14
+    rxcc.unadjustedprice                                                                    AS paid_gross_due,
+    
+	txn.provideruid	                                                                        AS prov_prescribing_id,
 	CASE 
-	    WHEN rxc.provideruid IS NULL THEN NULL
+	    WHEN txn.provideruid IS NULL THEN NULL
 	    ELSE 'Prescriber ID'
 	END                                                                                     AS prov_prescribing_qual,
     /* logical_delete_reason */    
     CASE 
-        WHEN rxc.claimstatuscode = 'R' THEN 'Reversal'
-        WHEN rxc.claimstatuscode = 'D' THEN 'Claim Rejected'
-        WHEN rxc.claimstatuscode = 'P' THEN 'Pending'
+        WHEN txn.claimstatuscode = 'R' THEN 'Reversal'
+        WHEN txn.claimstatuscode = 'D' THEN 'Claim Rejected'
+        WHEN txn.claimstatuscode = 'P' THEN 'Pending'
     ELSE NULL
     END                                                                                     AS  logical_delete_reason,
-                
 	'inovalon'                                                                              AS part_provider,
 
     /* part_best_date */
-	CASE
-	    WHEN 0 = LENGTH(COALESCE
-	                            (
-	                                CAP_DATE
-                                        (
-                                            CAST(EXTRACT_DATE(rxc.filldate, '%Y-%m-%d') AS DATE),
-                                            COALESCE(CAST('{AVAILABLE_START_DATE}'  AS DATE), CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)),
-                                            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
-                                        ), 
-                                    ''
-                                ))
-	        THEN '0_PREDATES_HVM_HISTORY'
-	    ELSE CONCAT
-	            (
-                    SUBSTR(rxc.filldate, 1, 4), '-',
-                    SUBSTR(rxc.filldate, 6, 2), '-01'
-                )
-	END                                                                                     AS part_best_date 
-	
-FROM rxc
-LEFT OUTER JOIN matching_payload pay ON rxc.memberuid    = pay.claimid
-LEFT OUTER JOIN prv ON rxc.provideruid  = prv.provideruid
-LEFT OUTER JOIN psp ON rxc.provideruid  = psp.provideruid
-LEFT OUTER JOIN mbr ON rxc.memberuid    = mbr.memberuid
-WHERE lower(rxc.rxclaimuid)  <>  'rxclaimuid'
+    CASE
+        WHEN 0 = LENGTH(COALESCE
+                                (
+                                    CAP_DATE
+                                           (
+                                               CAST(TO_DATE(txn.filldate, 'yyyy-MM-dd') AS DATE),
+                                               COALESCE(CAST('{AVAILABLE_START_DATE}'  AS DATE), CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)),
+                                               CAST('{VDR_FILE_DT}' AS DATE)
+                                           ),
+                                       ''
+                                   ))
+            THEN '0_PREDATES_HVM_HISTORY'
+        ELSE CONCAT
+                (
+                       SUBSTR(txn.filldate, 1, 4), '-',
+                       SUBSTR(txn.filldate, 6, 2), '-01'
+                   )
+    END                                                                                     AS part_best_date
+
+FROM inovalon_00_dedup txn
+LEFT OUTER JOIN (SELECT DISTINCT hvid, claimid, threedigitzip, yearofbirth, gender, age, state from matching_payload) pay   ON txn.memberuid    = pay.claimid
+LEFT OUTER JOIN prv    ON txn.provideruid  = prv.provideruid
+LEFT OUTER JOIN psp    ON txn.provideruid  = psp.provideruid
+LEFT OUTER JOIN mbr    ON txn.memberuid    = mbr.memberuid
+-- ---------------Proxy Amount
+LEFT OUTER JOIN (SELECT DISTINCT rxclaimuid , rxfilluid FROM rxcw) cw ON txn.rxclaimuid = cw.rxclaimuid
+LEFT OUTER JOIN rxcc ON cw.rxfilluid = rxcc.rxfilluid
+
+
+
+WHERE lower(txn.rxclaimuid)  <>  'rxclaimuid'
