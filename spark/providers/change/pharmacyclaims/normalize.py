@@ -64,6 +64,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     driver.transform()
     driver.save_to_disk()
     driver.log_run()
+    driver.stop_spark()
 
     logger.log('Backup historical data')
     if end_to_end_test:
@@ -83,12 +84,11 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
              tmp_path + date_part.format(month)]
         )
 
-    driver.stop_spark()
-
     existing_delivery_location = additional_output_path + "daily/pharmacyclaims/part_provider=emdeon/"
     driver.move_output_to_backup(existing_delivery_location) # daily delivery location should only have data from most recent run
     driver.copy_to_output_path()
     logger.log('Done')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

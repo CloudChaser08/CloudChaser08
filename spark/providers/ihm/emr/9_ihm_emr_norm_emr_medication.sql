@@ -118,7 +118,7 @@ SELECT
     --------------------------------------------------------------------------------------------------	
     CASE 
         WHEN CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-          OR CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+          OR CAST(COALESCE(pln.start_date, pln.end_date) AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
         --------------- For Inpatient we could not update NULL start date with end date  
     	WHEN UPPER(pln.status) IN ('IN' , 'INO', 'ER') THEN
                 CONCAT(
@@ -146,7 +146,7 @@ SELECT
     --------------------------------------------------------------------------------------------------	
     CASE 
         WHEN CAST(drug.start_date AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-          OR CAST(drug.start_date AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+          OR CAST(drug.start_date AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     
                 CONCAT(
                         SUBSTR(drug.start_date,  1, 10),' ',
@@ -159,7 +159,7 @@ SELECT
     --------------------------------------------------------------------------------------------------	
     CASE 
         WHEN CAST(drug.date_given AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-          OR CAST(drug.date_given AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+          OR CAST(drug.date_given AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     
                 CONCAT(
                         SUBSTR(drug.date_given,  1, 10),' ',
@@ -185,7 +185,7 @@ SELECT
         WHEN 
             (
              CAST(COALESCE(drug.start_date, drug.date_given, pln.start_date, pln.end_date) AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
-          OR CAST(COALESCE(drug.start_date, drug.date_given, pln.start_date, pln.end_date) AS DATE)  > '{VDR_FILE_DT}' 
+          OR CAST(COALESCE(drug.start_date, drug.date_given, pln.start_date, pln.end_date) AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)
             )                                                                       THEN '0_PREDATES_HVM_HISTORY'
 
         WHEN UPPER(pln.status) IN ('IN' , 'INO', 'ER') THEN 

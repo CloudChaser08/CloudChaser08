@@ -49,16 +49,16 @@ SELECT
     --- lab_test_smpl_collctn_dt
     --------------------------------------------------------------------------------------------------
     CASE
-        WHEN CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)
     END                                                                                   AS lab_test_smpl_collctn_dt,
     --------------------------------------------------------------------------------------------------
     --- lab_result_dt
     --------------------------------------------------------------------------------------------------
     CASE
-        WHEN CAST(EXTRACT_DATE(lts.resultdatetimeid, '%Y%m%d') AS DATE)  < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(lts.resultdatetimeid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(lts.resultdatetimeid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(lts.resultdatetimeid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(lts.resultdatetimeid, '%Y%m%d') AS DATE)
     END                                                                                   AS lab_result_dt,
     --------------------------------------------------------------------------------------------------
@@ -86,8 +86,8 @@ SELECT
     --- data_captr_dt
     --------------------------------------------------------------------------------------------------
     CASE
-        WHEN CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE)  < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE)
     END                                                                                   AS data_captr_dt,
 	'fact_lab_test'																		  AS prmy_src_tbl_nm,
@@ -96,8 +96,8 @@ SELECT
     --- part_mth
     --------------------------------------------------------------------------------------------------
     CASE
-        WHEN CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  < '{AVAILABLE_START_DATE}'
-          OR CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  > '{VDR_FILE_DT}'                    THEN '0_PREDATES_HVM_HISTORY'
+        WHEN CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                    THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
 	            (
 	                SUBSTR(lts.specimencollectiondateid, 1, 4), '-',

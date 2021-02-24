@@ -74,6 +74,7 @@ if __name__ == "__main__":
             run_type=RunType.MARKETPLACE,
             input_date=date_input
         )
+    driver.stop_spark()
 
     logger.log('Backup historical data')
     if end_to_end_test:
@@ -93,5 +94,4 @@ if __name__ == "__main__":
              tmp_path + date_part.format(month)]
         )
 
-    driver.stop_spark()
     driver.copy_to_output_path()
