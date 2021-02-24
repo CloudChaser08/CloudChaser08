@@ -44,10 +44,10 @@ SELECT
     /* patient_state */
     VALIDATE_STATE_CODE(UPPER(COALESCE(mbr.statecode, pay.state, '')))                      AS patient_state,
     /* date_service */
-    CASE 
-        WHEN CAST(txn.filldate AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)
-          OR CAST(txn.filldate AS DATE) > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
-        ELSE CAST(txn.filldate AS DATE)
+    CASE
+        WHEN CAST(TO_DATE(txn.filldate, 'yyyy-MM-dd') AS DATE) < CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)
+          OR CAST(TO_DATE(txn.filldate, 'yyyy-MM-dd') AS DATE) > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
+        ELSE CAST(TO_DATE(txn.filldate, 'yyyy-MM-dd') AS DATE)
     END                                                                                      AS date_service,
    /* transaction_code_vendor */
     CASE 
@@ -150,15 +150,23 @@ SELECT
 
     /* part_best_date */
     CASE
-        WHEN CAST(txn.filldate AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
-          OR CAST(txn.filldate AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                           THEN '0_PREDATES_HVM_HISTORY'
-	    ELSE CONCAT
-	            (
-                    SUBSTR(txn.filldate, 1, 4), '-',
-                    SUBSTR(txn.filldate, 6, 2), '-01'
-                )
-
-	END                                                                                     AS part_best_date 
+        WHEN 0 = LENGTH(COALESCE
+                                (
+                                    CAP_DATE
+                                           (
+                                               CAST(TO_DATE(txn.filldate, 'yyyy-MM-dd') AS DATE),
+                                               COALESCE(CAST('{AVAILABLE_START_DATE}'  AS DATE), CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)),
+                                               CAST('{VDR_FILE_DT}' AS DATE)
+                                           ),
+                                       ''
+                                   ))
+            THEN '0_PREDATES_HVM_HISTORY'
+        ELSE CONCAT
+                (
+                       SUBSTR(txn.filldate, 1, 4), '-',
+                       SUBSTR(txn.filldate, 6, 2), '-01'
+                   )
+    END                                                                                     AS part_best_date
 
 FROM inovalon_00_dedup txn
 LEFT OUTER JOIN (SELECT DISTINCT hvid, claimid, threedigitzip, yearofbirth, gender, age, state from matching_payload) pay   ON txn.memberuid    = pay.claimid

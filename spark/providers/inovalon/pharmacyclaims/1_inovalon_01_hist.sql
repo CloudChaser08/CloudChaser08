@@ -40,7 +40,7 @@ SELECT
     part_best_date
 
 FROM _temp_pharmacyclaims_nb
-    WHERE
+WHERE
     TRUE
     ----- Look current month and 3 month back
     AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2)
