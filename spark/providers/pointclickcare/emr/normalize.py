@@ -1,5 +1,6 @@
 import argparse
 from datetime import datetime
+import spark.helpers.file_utils as file_utils
 import spark.helpers.external_table_loader as external_table_loader
 import spark.providers.pointclickcare.emr.transactional_schemas as historic_source_table_schemas
 import spark.providers.pointclickcare.emr.transactional_schemas_v1 as transactions_v1
@@ -11,8 +12,10 @@ from spark.common.emr.medication import schemas as medication_schemas
 from spark.common.emr.procedure import schemas as procedure_schemas
 from spark.common.emr.lab_test import schemas as lab_test_schema
 import spark.common.utility.logger as logger
+import spark.helpers.postprocessor as postprocessor
 
 v_cutoff_date = '2021-02-01'
+v_ref_hdfs_output_path = '/reference/'
 
 if __name__ == "__main__":
 
@@ -72,13 +75,26 @@ if __name__ == "__main__":
     external_table_loader.load_analytics_db_table(
         driver.sql_context, 'dw', 'ref_ndc_ddid', 'ref_ndc_ddid'
     )
-    driver.spark.table('ref_ndc_ddid').cache().createOrReplaceTempView('ref_ndc_ddid')
+
+    logger.log('Building ref_ndc_ddid reference data')
+    file_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
+    table_name = 'ref_ndc_ddid'
+    driver.spark.table(table_name).repartition(1).write.parquet(
+        v_ref_hdfs_output_path + table_name, compression='gzip', mode='append')
+    driver.spark.read.parquet(v_ref_hdfs_output_path + table_name).cache().createOrReplaceTempView(table_name)
+
+    logger.log('Apply custom nullify trimmify')
+    for table in driver.source_table_schema.TABLE_CONF:
+        postprocessor.nullify(
+            postprocessor.trimmify(driver.spark.table(table))
+            , ['NULL', 'Null', 'null', 'unknown', 'Unknown', 'UNKNOWN', '19000101', '']).createOrReplaceTempView(table)
 
     driver.transform()
     driver.save_to_disk()
     driver.log_run()
     driver.stop_spark()
     driver.copy_to_output_path()
+    file_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
     logger.log('Done')
 
 

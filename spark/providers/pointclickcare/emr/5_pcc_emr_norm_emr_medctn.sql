@@ -117,7 +117,7 @@ SELECT
     CASE
         WHEN med.Orderstartdateid = ''
           OR med.Orderstartdateid IS NULL
-          OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)
         THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
