@@ -151,7 +151,7 @@ SELECT
         WHEN 
             (
               CAST(COALESCE(proc.date_performed, pln.start_date, pln.end_date) AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
-            OR CAST(COALESCE(proc.date_performed, pln.start_date, pln.end_date) AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)'
+            OR CAST(COALESCE(proc.date_performed, pln.start_date, pln.end_date) AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)
             )                                                                       THEN '0_PREDATES_HVM_HISTORY'
 
         WHEN UPPER(pln.status) IN ('IN' , 'INO', 'ER') THEN 
