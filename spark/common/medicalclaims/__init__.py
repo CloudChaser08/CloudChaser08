@@ -10,6 +10,7 @@ from spark.common.medicalclaims import medicalclaims_common_model_v8
 from spark.common.medicalclaims import medicalclaims_common_model_v8_daily
 from spark.common.medicalclaims import medicalclaims_common_model_v9
 from spark.common.medicalclaims import medicalclaims_common_model_v10
+from spark.common.medicalclaims import medicalclaims_common_model_v10_daily
 
 
 schemas = {
@@ -23,5 +24,6 @@ schemas = {
     'schema_v8': medicalclaims_common_model_v8.schema,
     'schema_v8_daily': medicalclaims_common_model_v8_daily.schema,
     'schema_v9': medicalclaims_common_model_v9.schema,
-    'schema_v10': medicalclaims_common_model_v10.schema
+    'schema_v10': medicalclaims_common_model_v10.schema,
+    'schema_v10_daily': medicalclaims_common_model_v10_daily.schema
 }
