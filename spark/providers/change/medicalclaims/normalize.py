@@ -18,8 +18,6 @@ if __name__ == "__main__":
     }
     provider_partition_name = 'change'
 
-    additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
-    additional_output_path = additional_output_path.format(opportunity_id)
 
     # ------------------------ Common for all providers -----------------------
 
@@ -31,6 +29,9 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
+    additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
+    additional_output_path = additional_output_path.format(opportunity_id)
+    
     logger.log('Future Load using matching_payload table to get PCN')
 
     # Create and run driver
