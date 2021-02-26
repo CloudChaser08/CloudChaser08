@@ -34,7 +34,7 @@ TABLE_CONF = {
             , 'npi'
             , 'specialty_code'
             , 'report_zip'
-            , 'accession_id'
+            , 'accession_id' # this field is not yet mapped
             , 'hvjoinkey'
         ]
     )
