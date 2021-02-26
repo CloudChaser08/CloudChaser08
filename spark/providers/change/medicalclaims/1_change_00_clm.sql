@@ -116,7 +116,7 @@ SELECT
     --- From Payload
     --------------------------------------------------------
     CASE
-        WHEN pay.hvid is not null THEN obfuscate_hvid(pay.hvid, 'change')
+        WHEN pay.hvid is not null THEN pay.hvid
     ELSE NULL
     END               AS pay_hvid,
     pay.gender        AS pay_gender,
