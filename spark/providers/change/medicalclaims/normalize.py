@@ -3,15 +3,21 @@ import spark.providers.change.medicalclaims.transactional_schemas as source_tabl
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
+from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change'
+    opportunity_id = 'definitive_hv002886'
     output_table_names_to_schemas = {
         'change_05_norm_final': medicalclaims_schemas['schema_v10'],
     }
+    additional_output_schemas = {
+        'change_05_norm_final' : medicalclaims_schemas['schema_v10_daily']
+    }
     provider_partition_name = 'change'
+
 
     # ------------------------ Common for all providers -----------------------
 
@@ -23,6 +29,9 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
+    additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
+    additional_output_path = additional_output_path.format(opportunity_id)
+    
     logger.log('Future Load using matching_payload table to get PCN')
 
     # Create and run driver
@@ -33,12 +42,14 @@ if __name__ == "__main__":
         output_table_names_to_schemas,
         date_input,
         end_to_end_test,
-        output_to_transform_path=True,
+        output_to_transform_path=False,
         vdr_feed_id=10,
         use_ref_gen_values=True,
         unload_partition_count=20,
         load_date_explode=False,
-        restricted_private_source=True
+        restricted_private_source=True,
+        additional_output_path=additional_output_path,
+        additional_output_schemas=additional_output_schemas
     )
 
     conf_parameters = {
@@ -49,7 +60,9 @@ if __name__ == "__main__":
         'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
         'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
         'spark.sql.autoBroadcastJoinThreshold': 10485760,
-        'spark.shuffle.sasl.timeout': 60000
+        'spark.shuffle.sasl.timeout': 60000,
+        'spark.task.maxFailures': 8,
+        'spark.max.executor.failures': 800
     }
 
     driver.init_spark_context(conf_parameters=conf_parameters)
