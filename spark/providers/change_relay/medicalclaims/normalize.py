@@ -4,6 +4,7 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
 from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
+from datetime import datetime
 
 if __name__ == "__main__":
 
@@ -17,6 +18,7 @@ if __name__ == "__main__":
         'change_relay_05_norm_final': medicalclaims_schemas['schema_v10_daily']
     }
     provider_partition_name = 'change_relay'
+    additional_output_start_date = "2021-02-28" # only write to DDE beginning on this date
 
     # ------------------------ Common for all providers -----------------------
 
@@ -31,7 +33,9 @@ if __name__ == "__main__":
     additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
     additional_output_path = additional_output_path.format(opportunity_id)
 
-    logger.log('Future Load using matching_payload table to get PCN')
+    if datetime.strptime(date_input, '%Y-%m-%d') < datetime.strptime(additional_output_start_date, '%Y-%m-%d'):
+        additional_output_schemas = None
+        additional_output_path = None
 
     # Create and run driver
     driver = MarketplaceDriver(
@@ -63,6 +67,8 @@ if __name__ == "__main__":
     }
 
     driver.init_spark_context(conf_parameters=conf_parameters)
+
+    logger.log('Future Load using matching_payload table to get PCN')
     driver.load(extra_payload_cols=['PCN', 'claimId'])
 
     # only 2 columns are needed from the following 2 tables.
