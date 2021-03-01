@@ -33,7 +33,7 @@ if __name__ == "__main__":
     additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
     additional_output_path = additional_output_path.format(opportunity_id)
 
-    if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(additional_output_start_date, '%Y-%m-%d').date():
+    if datetime.strptime(date_input, '%Y-%m-%d') < datetime.strptime(additional_output_start_date, '%Y-%m-%d'):
         additional_output_schemas = None
         additional_output_path = None
 
