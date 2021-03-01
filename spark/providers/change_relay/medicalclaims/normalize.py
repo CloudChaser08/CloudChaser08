@@ -1,5 +1,5 @@
 import argparse
-import spark.providers.change_reay.medicalclaims.transactional_schemas as source_table_schemas
+import spark.providers.change_relay.medicalclaims.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
