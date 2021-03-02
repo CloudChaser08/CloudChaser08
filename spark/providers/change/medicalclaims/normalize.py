@@ -17,7 +17,7 @@ if __name__ == "__main__":
     additional_output_schemas = {
         'change_05_norm_final' : medicalclaims_schemas['schema_v10_daily']
     }
-    provider_partition_name = 'change'
+    provider_partition_name = 'change_dx'
     additional_output_start_date = "2021-02-28" # only write to DDE beginning on this date
 
     # ------------------------ Common for all providers -----------------------
@@ -46,9 +46,9 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         output_to_transform_path=False,
-        vdr_feed_id=10,
+        vdr_feed_id=219,
         use_ref_gen_values=True,
-        unload_partition_count=20,
+        unload_partition_count=2,
         load_date_explode=False,
         restricted_private_source=True,
         additional_output_path=additional_output_path,
