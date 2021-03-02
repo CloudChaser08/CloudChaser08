@@ -4,8 +4,8 @@ SELECT
     CURRENT_DATE()                                                                           AS created,
  	'10'                                                                                     AS model_version,
     SPLIT(sln.input_file_name, '/')[SIZE(SPLIT(sln.input_file_name, '/')) - 1]               AS data_set,
- 	'185'                                                                                    AS data_feed,
- 	'576'                                                                                    AS data_vendor,
+ 	'10'                                                                                    AS data_feed,
+ 	'11'                                                                                    AS data_vendor,
     CASE
         WHEN SUBSTR(UPPER(clm.patient_gender_code), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(clm.patient_gender_code), 1, 1)
         WHEN SUBSTR(UPPER(sln.pln_patient_gender     ), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(sln.pln_patient_gender     ), 1, 1)
