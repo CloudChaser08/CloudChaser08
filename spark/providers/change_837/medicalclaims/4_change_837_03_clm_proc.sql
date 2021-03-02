@@ -28,19 +28,19 @@ SELECT
     COALESCE(TO_DATE(clm.received_date, 'yyyyMMdd'), CAST(clm.received_date AS DATE))         AS date_received,
     CASE 
         WHEN TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-       --   OR TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  > CAST('{VDR_FILE_DT}' AS DATE)
+          OR TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  > CAST('{VDR_FILE_DT}' AS DATE)
           THEN NULL
         ELSE TO_DATE(COALESCE(clm.statement_from_date ,min_max_dt.min_service_from_date), 'yyyyMMdd')
     END                                                                                      AS date_service,
     CASE 
         WHEN TO_DATE(COALESCE(clm.statement_to_date,min_max_dt.max_service_to_date), 'yyyyMMdd')  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-        --  OR TO_DATE(COALESCE(clm.statement_to_date,min_max_dt.max_service_to_date), 'yyyyMMdd') > CAST('{VDR_FILE_DT}' AS DATE)
+          OR TO_DATE(COALESCE(clm.statement_to_date,min_max_dt.max_service_to_date), 'yyyyMMdd') > CAST('{VDR_FILE_DT}' AS DATE)
           THEN NULL
         ELSE TO_DATE(COALESCE(clm.statement_to_date,min_max_dt.max_service_to_date), 'yyyyMMdd')
     END                                                                                      AS date_service_end,
     CASE 
         WHEN TO_DATE(clm.admission_date, 'yyyyMMdd')  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-        --  OR TO_DATE(clm.admission_date, 'yyyyMMdd')  > CAST('{VDR_FILE_DT}' AS DATE)
+          OR TO_DATE(clm.admission_date, 'yyyyMMdd')  > CAST('{VDR_FILE_DT}' AS DATE)
           THEN NULL
     ELSE TO_DATE(clm.admission_date, 'yyyyMMdd')                                             
     END                                                                                      AS inst_date_admitted, 
@@ -269,7 +269,7 @@ SELECT
     'change'                                                                    AS part_provider,
     CASE 
         WHEN TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  < CAST('{AVAILABLE_START_DATE}' AS DATE)
-        --  OR TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  > CAST('{VDR_FILE_DT}' AS DATE)
+          OR TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  > CAST('{VDR_FILE_DT}' AS DATE)
           THEN '0_PREDATES_HVM_HISTORY'
         ELSE CONCAT
                 (
