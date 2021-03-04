@@ -170,6 +170,43 @@ def test_transform(match_status, used_flexible_matching, expected_hvid, test_dri
 
 
 @pytest.mark.usefixtures("test_driver")
+@pytest.mark.parametrize(
+    'match_status,used_flexible_matching,expected_hvid',
+    [
+        # no flexible matching, non-multimatch
+        ('exact_match', 'NULL', obfuscate_hvid('1', 'hvidTEST123')),
+        # with flexible matching, non-multimatch
+        ('exact_match', 'TRUE', obfuscate_hvid('1', 'hvidTEST123')),
+        # no flexible matching, multimatch
+        ('multi_match', 'NULL', obfuscate_hvid('1', 'hvidTEST123')),
+        # with flexible matching, multimatch
+        ('multi_match', 'TRUE', None),
+    ]
+)
+def test_transform_no_row_id(match_status, used_flexible_matching, expected_hvid, test_driver):
+    """
+    Ensure that the matching_payload table is transformed into list of hvids.
+    hvids should be obfuscated.
+    """
+    test_driver._no_row_id = True
+    query_template = "SELECT '1' as hvid, {used_flexible_matching} as flexibleMatchingUsed" \
+                     ", '{match_status}' as matchStatus, '2' as claimId"
+    query = query_template.format(used_flexible_matching=used_flexible_matching, match_status=match_status)
+
+    test_driver._spark.sql(query).createOrReplaceTempView('matching_payload')
+
+    results_df = test_driver.transform(date(2018, 1, 1), None)
+
+    assert len(results_df.columns) == 1
+    assert results_df.columns[0] == "hvid"
+
+    results = results_df.collect()
+
+    # content
+    assert results[0]['hvid'] == expected_hvid
+
+
+@pytest.mark.usefixtures("test_driver")
 def test_save(test_driver, monkeypatch):
     """
     Ensure that the output file and path are of the expected formats

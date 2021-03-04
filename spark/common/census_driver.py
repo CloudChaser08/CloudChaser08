@@ -77,10 +77,11 @@ class CensusDriver(object):
     """
     Base class for census routine drivers
     """
-    def __init__(self, client_name, opportunity_id, salt=None, test=False, end_to_end_test=False):
+    def __init__(self, client_name, opportunity_id, salt=None, no_row_id=False, test=False, end_to_end_test=False):
         self._client_name = client_name
         self._opportunity_id = opportunity_id
         self._salt = salt
+        self._no_row_id = no_row_id
         self._test = test
         self._end_to_end_test = end_to_end_test
         log("Starting Census Routine - {}: {}".format(client_name, opportunity_id))
@@ -242,6 +243,8 @@ class CensusDriver(object):
         scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
         content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
                                                      directory_path=scripts_directory)
+        if self._no_row_id:
+            content = content.drop("rowid")
 
         return content
 
