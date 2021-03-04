@@ -48,7 +48,7 @@ if __name__ == "__main__":
         output_to_transform_path=False,
         vdr_feed_id=219,
         use_ref_gen_values=True,
-        unload_partition_count=2,
+        unload_partition_count=1,
         load_date_explode=False,
         restricted_private_source=True,
         additional_output_path=additional_output_path,
