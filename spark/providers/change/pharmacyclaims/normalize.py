@@ -90,6 +90,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     driver.copy_to_output_path()
     logger.log('Done')
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
