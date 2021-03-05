@@ -270,6 +270,7 @@ SELECT
     CASE
         WHEN TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  < CAST('{AVAILABLE_START_DATE}' AS DATE)
           OR TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd')  > CAST('{VDR_FILE_DT}' AS DATE)
+          OR TO_DATE(COALESCE(clm.statement_from_date, min_max_dt.min_service_from_date), 'yyyyMMdd') IS NULL
           THEN '0_PREDATES_HVM_HISTORY'
         ELSE CONCAT
                 (
