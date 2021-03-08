@@ -1,5 +1,7 @@
 import argparse
-import spark.providers.labcorp_covid.labtests.transactional_schemas as source_table_schemas
+from datetime import datetime
+import spark.providers.labcorp_covid.labtests.transactional_schemas as historic_source_table_schemas
+import spark.providers.labcorp_covid.labtests.transactional_schemas_v1 as transactions_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.lab_common_model import schemas as labtest_schemas
 import spark.helpers.external_table_loader as external_table_loader
@@ -7,6 +9,7 @@ import spark.common.utility.logger as logger
 
 _ref_schema = 'darch'
 _ref_table = 'labcorp_specialty_crosswalk'
+v_cutoff_date = '2021-03-02'
 
 if __name__ == "__main__":
 
@@ -26,6 +29,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     date_input = args.date
     end_to_end_test = args.end_to_end_test
+
+    if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
+        logger.log('Historic Load schema')
+        source_table_schemas = historic_source_table_schemas
+    else:
+        logger.log('Future Load using new schema with accession_id column')
+        source_table_schemas = transactions_v1
 
     # Create and run driver
     driver = MarketplaceDriver(
