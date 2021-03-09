@@ -14,7 +14,8 @@ def split_into_chunks(input_list, number_of_chunks):
 
 
 def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=None,
-         census_module=None, end_to_end_test=False, test=False, num_input_files=-1):
+         census_module=None, end_to_end_test=False, test=False, no_row_id=False,
+         num_input_files=-1):
     """
     Run standard census driver script or one from the provided census module
     """
@@ -36,7 +37,7 @@ def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=
         if not driver:
             raise AttributeError("Module {} does not contain a CensusDriver subclass".format(census_module))
     else:
-        driver = CensusDriver(client_name, opportunity_id, salt=salt,
+        driver = CensusDriver(client_name, opportunity_id, salt=salt, no_row_id=no_row_id,
                               end_to_end_test=end_to_end_test, test=test)
 
     batch_date = datetime.strptime(batch_date, '%Y-%m-%d').date()
@@ -66,6 +67,8 @@ if __name__ == "__main__":
     parser.add_argument('--opportunity_id', type=str, default=None, help="Opportunity ID")
     parser.add_argument('--salt', type=str, default=None, help="HVID obfuscation salt")
     parser.add_argument('--census_module', type=str, default=None, help="Census module name")
+    parser.add_argument('--no-row-id', type=bool, default=False,
+                        help="If provided, will omit the row-id column from the output")
     parser.add_argument('--num_input_files', type=int, default=-1
                         , help="Number of input files in each chunk of census data we will process in a loop")
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
