@@ -11,6 +11,7 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.providers.express_scripts.pharmacyclaims.transactional_schemas as source_table_schemas
 import pyspark.sql.functions as f
+import spark.helpers.postprocessor as postprocessor
 
 ACCREDO_PREFIX = '10130X001_HV_ODS_Claims'
 NON_ACCREDO_PREFIX = '10130X001_HV_RX_Claims'
@@ -45,7 +46,7 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
         vdr_feed_id=16,
         load_date_explode=False,
         use_ref_gen_values=True,
-        output_to_transform_path=False
+        output_to_transform_path=True
     )
 
     conf_parameters = {
@@ -77,11 +78,17 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
         ) + '/'
 
     driver.load(extra_payload_cols=['RXNumber', 'hvJoinKey'])
+    matching_payload_df = driver.spark.table('matching_payload')
+
+    cleaned_matching_payload_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+
+    cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
     # ----------------------------------------------------------------------------------------
     # load raw source and parquet source for [recent 2 months + current month]
     # ----------------------------------------------------------------------------------------
-    logger.log('-loading: external tables')
+    logger.log(' -loading: external tables')
     # reversal identification columns
     sql_stmnt = "select date_of_service, pharmacy_claim_id, pharmacy_claim_ref_id from {}"
     normalized_output_provider_path = os.path.join(driver.output_path, schema.output_directory,
@@ -96,7 +103,7 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
     for i in range(delta.days + 1):
         d_path = (start_date + timedelta(days=i)).strftime('%Y-%m')
         list_of_months[d_path.replace('-', '')] = d_path
-    logger.log('-loading: list of months {}'.format(list_of_months.values()))
+    logger.log(' -loading: list of months {}'.format(list_of_months.values()))
 
     if test:
         logger.log('    -loading: prev transaction files from {}'.format(input_path_prev))
@@ -138,8 +145,8 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
 
             # final temp table
             if has_data:
-                logger.log('    -loading: '
-                           'create external table {} from {}'.format('_temp_rev_transaction', STAGE_REVERSE_TRANS_PATH))
+                logger.log('    -loading: create external '
+                           'table {} from {}'.format('_temp_rev_transaction', STAGE_REVERSE_TRANS_PATH))
                 driver.spark.read.parquet(STAGE_REVERSE_TRANS_PATH).createOrReplaceTempView('_temp_rev_transaction')
             else:
                 logger.log('    -loading: there is no transaction data for reversal apply. '
@@ -149,8 +156,8 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
                     sql_stmnt.format("transaction where 1 = 2")).createOrReplaceTempView('_temp_rev_transaction')
 
             # ----------load parquet from warehouse to apply rejects and reversals----------
-            logger.log('    -loading:  create external table {} from warehouse '
-                       'normalized data path {}'.format('_temp_pharmacyclaims_nb', STAGE_REVERSE_TRANS_PATH))
+            logger.log('    -loading: create external table {} from warehouse '
+                       'normalized data path'.format('_temp_pharmacyclaims_nb'))
 
             driver.spark.read.parquet(normalized_output_provider_path) \
                 .filter((f.col('part_best_date') >= '{}'.format(min(list_of_months.values())))

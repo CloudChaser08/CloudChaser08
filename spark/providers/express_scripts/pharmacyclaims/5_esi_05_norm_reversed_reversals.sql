@@ -50,13 +50,18 @@ SELECT
             THEN CAST('REVERSED' AS STRING)
         WHEN reversal.pharmacy_claim_id IS NOT NULL
             THEN CAST('REVERSAL' AS STRING)
-    ELSE NULL END AS logical_delete_reason,
+        ELSE NULL
+    END AS logical_delete_reason,
 	part_provider,
     part_best_date
 FROM
     esi_04_comb_hist_cf txn
-    LEFT OUTER JOIN esi_02_raw_hist reversed
+    LEFT OUTER JOIN (select distinct pharmacy_claim_ref_id
+                        from esi_02_raw_hist where pharmacy_claim_ref_id is not null
+                    ) reversed
         ON txn.claim_id = reversed.pharmacy_claim_ref_id
-    LEFT OUTER JOIN esi_02_raw_hist reversal
+    LEFT OUTER JOIN (select distinct pharmacy_claim_id
+                        from esi_02_raw_hist where pharmacy_claim_id is not null
+                    ) reversal
         ON txn.claim_id = reversal.pharmacy_claim_id
 

@@ -1,7 +1,7 @@
 SELECT
-    MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
-    LTRIM(txn.pharmacy_claim_id)                                                            AS claim_id,
-    payload.hvid                                                                            AS hvid,
+    --    MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
+    TRIM(txn.pharmacy_claim_id)                                                             AS claim_id,
+    txn.hvid                                                                            AS hvid,
     CURRENT_DATE()                                                                          AS created,
     '3'                                                                                     AS model_version,
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
@@ -12,8 +12,8 @@ SELECT
 	CLEAN_UP_GENDER
     	(
         	CASE
-        	    WHEN SUBSTR(UPPER(COALESCE(payload.gender,'')), 1, 1) IN ('F', 'M')
-        	        THEN SUBSTR(UPPER(COALESCE(payload.gender , '')), 1, 1)
+        	    WHEN SUBSTR(UPPER(COALESCE(txn.gender,'')), 1, 1) IN ('F', 'M')
+        	        THEN SUBSTR(UPPER(COALESCE(txn.gender , '')), 1, 1)
         	    ELSE 'U'
         	END
 	    )   AS patient_gender,
@@ -23,16 +23,16 @@ SELECT
 	/* patient_year_of_birth */
 	CAP_YEAR_OF_BIRTH
         (
-            payload.age,
+            txn.age,
             CAST(EXTRACT_DATE(txn.date_of_service, '%Y%m%d') AS DATE),
-            COALESCE(payload.yearOfBirth, YEAR(CAST(EXTRACT_DATE('1900-01-01', '%Y-%m-%d') AS DATE)))
+            COALESCE(txn.yearOfBirth, YEAR(CAST(EXTRACT_DATE('1900-01-01', '%Y-%m-%d') AS DATE)))
         )                                                                                   AS patient_year_of_birth,
 
     /* patient_zip3 */
-    MASK_ZIP_CODE(SUBSTR(payload.threeDigitZip, 1, 3))                                      AS patient_zip3,
+    MASK_ZIP_CODE(SUBSTR(txn.threeDigitZip, 1, 3))                                      AS patient_zip3,
 
     /* patient_state */
-    VALIDATE_STATE_CODE(UPPER(COALESCE(txn.patient_state, payload.state, '')))              AS patient_state,
+    VALIDATE_STATE_CODE(UPPER(COALESCE(txn.patient_state, txn.state, '')))              AS patient_state,
 
     /* date_service */
 	CAP_DATE
@@ -104,7 +104,7 @@ SELECT
 	    THEN product_service_id_qualifier
 	ELSE NULL END                                                                           AS product_service_id_qual,
 
-    MD5(payload.rxnumber)                                                                   AS rx_number,
+    MD5(txn.rxnumber)                                                                   AS rx_number,
    /* rx_number_qual */
     txn.prescription_service_reference_number_qualifier                                     AS rx_number_qual,
 
@@ -258,7 +258,4 @@ SELECT
                     SUBSTR(txn.date_of_service, 5, 2)
                 )
 	END                                                                                         AS part_best_date
-FROM transaction txn
-    LEFT OUTER JOIN matching_payload payload
-        ON txn.hvjoinkey = payload.hvjoinkey
-WHERE UPPER(txn.pharmacy_claim_id)  <>  'CLAIM_ID'
+FROM esi_00_dedup txn

@@ -3,6 +3,7 @@ from spark.helpers.source_table import SourceTable
 TABLE_CONF = {
     'transaction': SourceTable(
         'fixedwidth',
+        trimmify_nullify=True,
         columns=[
             ('creation_date', 8),
             ('creation_time', 6),
