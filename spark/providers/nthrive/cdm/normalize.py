@@ -1,16 +1,19 @@
 
-import spark.providers.nthrive.cdm.transactional_schemas as source_table_schemas
+from spark.providers.nthrive.cdm import transactional_schemas, transactional_schemas_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.cdm.diagnosis import schemas as diagnosis_schema
 from spark.common.cdm.encounter import schemas as encounter_schema
 from spark.common.cdm.encounter_detail import schemas as encounter_detail_schema
 from spark.common.cdm.encounter_provider import schemas as encounter_provider_schema
+import spark.common.utility.logger as logger
+from datetime import datetime
 import argparse
 
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'nthrive'
+    v_cutoff_date = "2021-03-10"
     output_table_names_to_schemas = {
         'nthrive_norm01_encounter': encounter_schema['schema_v2'],
         'nthrive_norm02_diagnosis': diagnosis_schema['schema_v2'],
@@ -29,6 +32,13 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
+    if datetime.strptime(date_input, '%Y-%m-%d') < datetime.strptime(v_cutoff_date, '%Y-%m-%d'):
+        logger.log('Historic Load schema')
+        source_table_schemas = transactional_schemas
+    else:
+        logger.log('Future Load using new schema with icu_indicator column')
+        source_table_schemas = transactional_schemas_v1
+    
     # Create and run driver
     driver = MarketplaceDriver(
         provider_name,
