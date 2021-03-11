@@ -5,6 +5,7 @@ from spark.common.cdm.diagnosis import schemas as diagnosis_schema
 from spark.common.cdm.encounter import schemas as encounter_schema
 from spark.common.cdm.encounter_detail import schemas as encounter_detail_schema
 from spark.common.cdm.encounter_provider import schemas as encounter_provider_schema
+import spark.common.utility.logger as logger
 from datetime import datetime
 import argparse
 
