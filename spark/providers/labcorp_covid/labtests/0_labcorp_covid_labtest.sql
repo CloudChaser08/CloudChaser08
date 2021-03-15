@@ -30,7 +30,7 @@ SELECT
         WHEN TO_DATE(txn.pat_dos, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
           OR TO_DATE(txn.pat_dos, 'yyyyMMdd') > CAST(${VDR_FILE_DT}                 AS DATE) THEN NULL
         ELSE TO_DATE(txn.pat_dos, 'yyyyMMdd')
-    END                                                                                      AS date_service,  
+    END                                                                                      AS date_service,
     CLEAN_UP_LOINC_CODE(txn.loinc_code)                                                      AS loinc_code,
     txn.test_number                                                                          AS test_number,
     txn.test_ordered_code                                                                    AS test_ordered_std_id,
@@ -45,7 +45,7 @@ SELECT
         THEN 'Critical' 
         ELSE NULL
     END                                                                                      AS result_desc,
-    CLEAN_UP_NPI_CODE(txn.npi)                                                               AS ordering_npi,    
+    CLEAN_UP_NPI_CODE(txn.npi)                                                               AS ordering_npi,
     txn.perf_lab_code                                                                        AS lab_other_id,
         /* lab_other_qual */
     CASE
