@@ -15,7 +15,7 @@ SELECT
     CASE
         WHEN SUBSTR(UPPER(txn.patient_sex), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(txn.patient_sex), 1, 1)
         WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M') THEN SUBSTR(UPPER(pay.gender), 1, 1)
-        ELSE 'U' 
+        ELSE 'U'
     END   AS patient_gender,
 	CAP_YEAR_OF_BIRTH
 	(
@@ -24,9 +24,9 @@ SELECT
 	    pay.yearofbirth
 	)                                                                                       AS patient_year_of_birth,
 	MASK_ZIP_CODE(SUBSTR(pay.threedigitzip, 1, 3))                                          AS patient_zip3,
-	
+
     VALIDATE_STATE_CODE(UPPER(COALESCE(txn.patient_st, pay.state)))                         AS patient_state,
-    CASE 
+    CASE
         WHEN TO_DATE(txn.pat_dos, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
           OR TO_DATE(txn.pat_dos, 'yyyyMMdd') > CAST(${VDR_FILE_DT}                 AS DATE) THEN NULL
         ELSE TO_DATE(txn.pat_dos, 'yyyyMMdd')
@@ -38,10 +38,10 @@ SELECT
     txn.result_abbrev	                                                                     AS result,
     txn.test_name                                                                            AS result_name,
     	/* result_desc */
-    CASE 
-        WHEN txn.result_abn_code = 'A' 
+    CASE
+        WHEN txn.result_abn_code = 'A'
         THEN 'Alert' 
-        WHEN txn.result_abn_code = 'C' 
+        WHEN txn.result_abn_code = 'C'
         THEN 'Critical' 
         ELSE NULL
     END                                                                                      AS result_desc,
@@ -57,7 +57,7 @@ SELECT
     txn.report_zip                                                                           AS ordering_zip,
     'labcorp_covid'                                                                          AS part_provider,
     /* part_best_date */
-        CASE 
+        CASE
             WHEN TO_DATE(txn.pat_dos, 'yyyyMMdd') < CAST(${HVM_AVAILABLE_HISTORY_START_DATE} AS DATE)
               OR TO_DATE(txn.pat_dos, 'yyyyMMdd') > CAST(${VDR_FILE_DT}                 AS DATE) THEN '0_PREDATES_HVM_HISTORY'
         ELSE CONCAT
@@ -67,6 +67,6 @@ SELECT
         )
         END                                                                                     AS part_best_date 
 
-FROM labcorp_txn txn
+FROM txn
 LEFT OUTER JOIN matching_payload pay  ON txn.hvjoinkey      = pay.hvjoinkey 
 LEFT OUTER JOIN labcorp_spec spec ON txn.specialty_code = spec.spec_code
