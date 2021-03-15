@@ -65,7 +65,7 @@ SELECT
             SUBSTR(txn.pat_dos, 1, 4), '-',
             SUBSTR(txn.pat_dos, 5, 2), '-01'
         )
-        END                                                                                     AS part_best_date 
+        END                                                                                     AS part_best_date
 FROM txn
 LEFT OUTER JOIN matching_payload pay ON txn.hvJoinKey = pay.hvJoinKey 
 LEFT OUTER JOIN labcorp_spec spec ON txn.specialty_code = spec.spec_code
