@@ -6,6 +6,7 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.lab_common_model import schemas as labtest_schemas
 import spark.helpers.external_table_loader as external_table_loader
 import spark.common.utility.logger as logger
+import spark.helpers.postprocessor as postprocessor
 
 _ref_schema = 'darch'
 _ref_table = 'labcorp_specialty_crosswalk'
@@ -30,7 +31,8 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
-    if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
+    b_history_load = datetime.strptime(date_input, '%Y-%m-%d') < datetime.strptime(v_cutoff_date, '%Y-%m-%d')
+    if b_history_load:
         logger.log('Historic Load schema')
         source_table_schemas = historic_source_table_schemas
     else:
@@ -62,6 +64,10 @@ if __name__ == "__main__":
     driver.spark.table('labcorp_spec').cache().createOrReplaceTempView('labcorp_spec')
 
     driver.load()
+    if b_history_load:
+        txn_df = driver.spark.table('txn')
+        txn_df = postprocessor.add_null_column('accession_id')(txn_df)
+        txn_df.createOrReplaceTempView("txn")
 
     driver.transform()
     driver.save_to_disk()
