@@ -67,5 +67,5 @@ SELECT
         )
         END                                                                                     AS part_best_date 
 FROM txn
-LEFT OUTER JOIN matching_payload pay  ON txn.hvjoinkey = pay.hvjoinkey 
+LEFT OUTER JOIN matching_payload pay ON txn.hvjoinkey = pay.hvjoinkey 
 LEFT OUTER JOIN labcorp_spec spec ON txn.specialty_code = spec.spec_code
