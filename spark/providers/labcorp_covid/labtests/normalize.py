@@ -30,7 +30,10 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
-    if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
+    b_history_load = False
+    if datetime.strptime(date_input, '%Y-%m-%d') < datetime.strptime(v_cutoff_date, '%Y-%m-%d'):
+        b_history_load = True
+    if b_history_load:
         logger.log('Historic Load schema')
         source_table_schemas = historic_source_table_schemas
     else:
@@ -62,6 +65,10 @@ if __name__ == "__main__":
     driver.spark.table('labcorp_spec').cache().createOrReplaceTempView('labcorp_spec')
 
     driver.load()
+    if b_history_load:
+        txn_df = driver.spark.table('txn')
+        txn_df = postprocessor.add_null_column('accession_id')(txn_df)
+        txn_df.createOrReplaceTempView("txn")
 
     driver.transform()
     driver.save_to_disk()
