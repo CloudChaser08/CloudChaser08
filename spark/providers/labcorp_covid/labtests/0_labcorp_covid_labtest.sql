@@ -27,8 +27,8 @@ SELECT
 
     VALIDATE_STATE_CODE(UPPER(COALESCE(txn.patient_st, pay.state)))                         AS patient_state,
     CASE
-        WHEN TO_DATE(txn.pat_dos, 'yyyyMMdd') < CAST(${EARLIEST_VALID_SERVICE_DATE} AS DATE)
-          OR TO_DATE(txn.pat_dos, 'yyyyMMdd') > CAST(${VDR_FILE_DT}                 AS DATE) THEN NULL
+        WHEN TO_DATE(txn.pat_dos, 'yyyyMMdd') < CAST('{EARLIEST_VALID_SERVICE_DATE}' AS DATE)
+          OR TO_DATE(txn.pat_dos, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
         ELSE TO_DATE(txn.pat_dos, 'yyyyMMdd')
     END                                                                                      AS date_service,
     CLEAN_UP_LOINC_CODE(txn.loinc_code)                                                      AS loinc_code,
@@ -58,8 +58,8 @@ SELECT
     'labcorp_covid'                                                                          AS part_provider,
     /* part_best_date */
         CASE
-            WHEN TO_DATE(txn.pat_dos, 'yyyyMMdd') < CAST(${HVM_AVAILABLE_HISTORY_START_DATE} AS DATE)
-              OR TO_DATE(txn.pat_dos, 'yyyyMMdd') > CAST(${VDR_FILE_DT}                 AS DATE) THEN '0_PREDATES_HVM_HISTORY'
+            WHEN TO_DATE(txn.pat_dos, 'yyyyMMdd') < CAST('{HVM_AVAILABLE_HISTORY_START_DATE}' AS DATE)
+              OR TO_DATE(txn.pat_dos, 'yyyyMMdd') > CAST('{VDR_FILE_DT}'                 AS DATE) THEN '0_PREDATES_HVM_HISTORY'
         ELSE CONCAT
         (
             SUBSTR(txn.pat_dos, 1, 4), '-',
