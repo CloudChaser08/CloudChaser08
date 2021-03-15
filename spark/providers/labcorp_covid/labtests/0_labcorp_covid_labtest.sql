@@ -40,9 +40,9 @@ SELECT
     	/* result_desc */
     CASE
         WHEN txn.result_abn_code = 'A'
-        THEN 'Alert' 
+        THEN 'Alert'
         WHEN txn.result_abn_code = 'C'
-        THEN 'Critical' 
+        THEN 'Critical'
         ELSE NULL
     END                                                                                      AS result_desc,
     CLEAN_UP_NPI_CODE(txn.npi)                                                               AS ordering_npi,
