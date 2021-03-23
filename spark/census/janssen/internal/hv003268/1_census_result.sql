@@ -1,5 +1,5 @@
 SELECT
-    obfuscate_hvid(mp.hvid, CONCAT('hvid', {salt})) as hvid
+    mp.hvid AS hvid
 FROM records r
     INNER JOIN matching_payload mp ON r.hvJoinKey = mp.hvJoinKey
 WHERE

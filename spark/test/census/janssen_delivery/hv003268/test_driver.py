@@ -31,4 +31,4 @@ def test_run(driver, spark):
     assert "census_result" in tables
     results = spark["sqlContext"].sql("select * from census_result").collect()
     assert len(results) == 1
-    assert results[0]["hvid"] == "de14ab9729c5211ca7ebea8350dcd06a"
+    assert results[0]["hvid"] == "999"
