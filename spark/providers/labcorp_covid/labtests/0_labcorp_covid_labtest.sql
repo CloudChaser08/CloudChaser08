@@ -1,5 +1,10 @@
 SELECT
     MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
+    /* claim_id */
+    CASE
+        WHEN txn.accession_id IS NOT NULL THEN txn.accession_id
+        ELSE NULL
+    END                                                                                     AS claim_id,
     pay.hvid                                                                                AS hvid,
     CURRENT_DATE()                                                                          AS created,
 	'09'                                                                                    AS model_version,
@@ -62,6 +67,5 @@ SELECT
         )
         END                                                                                     AS part_best_date
 FROM txn
-LEFT OUTER JOIN matching_payload pay ON txn.hvJoinKey = pay.hvJoinKey
-LEFT OUTER JOIN labcorp_spec spec ON txn.specialty_code = spec.spec_code and spec.spec_code != 'Spec Code'
-
+LEFT OUTER JOIN matching_payload pay ON txn.hvJoinKey = pay.hvJoinKey 
+LEFT OUTER JOIN labcorp_spec spec ON txn.specialty_code = spec.spec_code

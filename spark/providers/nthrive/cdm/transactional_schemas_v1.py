@@ -81,7 +81,8 @@ TABLE_CONF = {
             'chg_in_time',
             'effective_date',
             'end_date',
-            'extra_col'
+            'extra_col',
+            'icu_indicator'
         ]
     ),
     'standard_chargemaster': SourceTable(

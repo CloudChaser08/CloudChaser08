@@ -1,5 +1,5 @@
-SELECT 
-	record_id,
+SELECT
+	--record_id,
 	claim_id,
 	hvid,
 	created,
