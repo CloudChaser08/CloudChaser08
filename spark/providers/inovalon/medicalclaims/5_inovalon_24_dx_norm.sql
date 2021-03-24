@@ -45,8 +45,7 @@ SELECT
     procedure_units_billed,
     procedure_modifier_1,   
     revenue_code,
-    line_charge,
-    line_allowed,
+    total_charge,  --- new field
     prov_rendering_npi,
     prov_billing_npi,
     prov_rendering_vendor_id,
@@ -67,17 +66,16 @@ SELECT
     part_provider,
     part_best_date
  FROM  inovalon_23_dx_norm_cf
-             
+
 WHERE COALESCE(claim_type, 'X') <> 'P'
    OR date_service IS NULL
    OR date_service_end IS NULL
    OR DATEDIFF (COALESCE(date_service_end, CAST('1900-01-01' AS DATE)),COALESCE(date_service, CAST('1900-01-01' AS DATE))) = 0
    OR DATEDIFF (COALESCE(date_service_end, CAST('1900-01-01' AS DATE)),COALESCE(date_service, CAST('1900-01-01' AS DATE))) > 365
 
-   
 UNION ALL
 ------------------------------------------------------------------------------------------------
---  Data that needs to have the dates exploded		
+--  Data that needs to have the dates exploded
 ------------------------------------------------------------------------------------------------
 SELECT
     hv_enc_id,
@@ -98,7 +96,7 @@ SELECT
         DATE_ADD (clm.date_service,dtexplode.i)   as date_service,
         --service_to,
         DATE_ADD (clm.date_service,dtexplode.i)   as date_service_end,
-        
+
     inst_discharge_status_std_id,
     inst_type_of_bill_std_id,
     inst_drg_std_id,
@@ -112,10 +110,9 @@ SELECT
     procedure_code,
     procedure_code_qual,
     procedure_units_billed,
-    procedure_modifier_1,  
+    procedure_modifier_1,
     revenue_code,
-    line_charge,
-    line_allowed,
+    total_charge, --- New fields 2021-03-16
     prov_rendering_npi,
     prov_billing_npi,
     prov_rendering_vendor_id,
@@ -147,18 +144,15 @@ SELECT
                     SUBSTR(CAST(DATE_ADD (clm.date_service,dtexplode.i)  AS STRING), 1, 7), '-01'
                 )
     END 								AS part_best_date
-    
+
 
 FROM  inovalon_23_dx_norm_cf clm
-lateral view 
-posexplode(split(space(datediff(clm.date_service_end,clm.date_service)),' ')) dtexplode as i,x
-    WHERE
-     COALESCE(clm.claim_type, 'X') = 'P'
+    lateral view
+        posexplode(split(space(datediff(clm.date_service_end,clm.date_service)),' ')) dtexplode as i,x
+WHERE
+    COALESCE(clm.claim_type, 'X') = 'P'
     AND clm.date_service IS NOT NULL
     AND clm.date_service_end IS NOT NULL
     AND DATEDIFF(COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE)), COALESCE(clm.date_service, CAST('1900-01-01' AS DATE))) <> 0
     AND DATEDIFF(COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE)), COALESCE(clm.date_service, CAST('1900-01-01' AS DATE))) <= 365
     AND DATE_ADD (clm.date_service,dtexplode.i) <= COALESCE(clm.date_service_end, CAST('1900-01-01' AS DATE))
-     
-       
-
