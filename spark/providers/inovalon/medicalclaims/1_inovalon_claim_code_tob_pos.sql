@@ -9,7 +9,7 @@
         ccd.claimuid,
         ccd.ordinalposition,
         ccd.codetype ,
-        (CASE WHEN ccd.codetype = '10'  THEN  ccd.codevalue  END) AS pos_code,
+        ccd.codevalue AS pos_code,
         CAST(NULL AS STRING) AS tob_code,
         ROW_NUMBER() OVER (PARTITION BY claimuid, createddate ORDER BY ordinalposition) AS row_num    ,
         'end'
@@ -23,7 +23,7 @@ FULL OUTER JOIN
         ccd.ordinalposition,
         ccd.codetype ,
         CAST(NULL AS STRING) AS pos_code,
-        (CASE WHEN ccd.codetype = '13'  THEN  ccd.codevalue  END) AS tob_code,
+        ccd.codevalue AS tob_code,
         ROW_NUMBER() OVER (PARTITION BY claimuid, createddate ORDER BY ordinalposition) AS row_num    ,
         'end'
     FROM ccd
