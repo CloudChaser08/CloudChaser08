@@ -236,13 +236,17 @@ SELECT
           SUBSTR(HV_result_value_numeric,8,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,9,1) rlike '[0-9]'
          )                                                        THEN NULL
+        ------------- Exception for mg/dL 
+        WHEN LOCATE(' mg/dL ', norm_pre01.HV_result_value_alpha) <> 0 
+        AND norm_pre01.HV_result_value_operator IS NOT NULL       THEN TRIM(norm_pre01.HV_result_value_alpha)
+        -------- Exception for mcg/ML 2021-03-29
+        WHEN LOCATE(' mcgmL ', norm_pre01.HV_result_value_alpha) <> 0 THEN REPLACE(norm_pre01.HV_result_value_alpha, ' mcgmL ', ' mcg/mL ')   
           
         WHEN LENGTH(TRIM(COALESCE(norm_pre01.HV_result_value_numeric ,''))) <> 0 
          AND LENGTH(TRIM(COALESCE(norm_pre01.HV_result_value_operator,''))) <> 0
          AND norm_pre01.HV_result_value_alpha NOT IN ( 'IN' , 'TO')               ---- Exception disregard IN TO
                 THEN norm_pre01.HV_result_value_alpha
-        ------------- Exception for mg/dL 
-        WHEN LOCATE(' mg/dL ', norm_pre01.HV_result_value_alpha) <> 0 THEN TRIM(norm_pre01.HV_result_value_alpha)
+        
     ELSE NULL
     END AS HV_result_value_alpha       ,  
     norm_pre01.date_final_report       ,
