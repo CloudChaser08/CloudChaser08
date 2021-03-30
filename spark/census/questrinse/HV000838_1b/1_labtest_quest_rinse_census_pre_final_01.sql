@@ -246,10 +246,11 @@ SELECT
     END                              AS s_diag_code_codeset_ind   ,
 ---------- New fields added per Operator
      CASE 
-        --  WHEN (SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' )                AND SUBSTR(REPLACE(rslt.result_value,' ',''), 2, 1) NOT RLIKE '[0-9]' )
-        --   OR (SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN' , 'LESSTHAN' )  AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) NOT RLIKE '[0-9]' )
-        --      THEN NULL      
+        --- Check if more than one opeators
         WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z(),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
+         --- Check first opeators and 2nd is not a number then NULL
+         WHEN (SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' )                AND SUBSTR(REPLACE(rslt.result_value,' ',''), 2, 1) NOT RLIKE '[0-9]' )
+           OR (SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN' , 'LESSTHAN' )  AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) NOT RLIKE '[0-9]' ) THEN NULL      
         WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) THEN '>='        
         WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) THEN '<=' 
         WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) THEN '>'       
@@ -261,7 +262,7 @@ SELECT
         WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<'      ) THEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1)
      END AS HV_result_value_operator,
      ------------- TRIM and compare  (CASE sequence is important)
-           CONCAT('[',TRIM(         
+            CONCAT('[',TRIM(         
           CASE
             --- Check if more than one opeators
             WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z(),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL 
@@ -272,8 +273,10 @@ SELECT
              WHEN   (SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<') 
               AND SUBSTR(REVERSE(rslt.result_value),2,1) = 'E') 
               AND SUBSTR(REVERSE(rslt.result_value),1,1)  RLIKE '[0-9]' THEN CAST(SUBSTR(rslt.result_value,2) AS DECIMAL(18,0))  
+  
             ---- E notation with operator
              WHEN CAST(rslt.result_value AS DECIMAL(18,0))  > 1000000 THEN CAST(rslt.result_value AS DECIMAL(18,0))  
+             
           -------- hardcode for  mg/dL
             WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<'             ) 
              AND LOCATE(' mg/dL ', rslt.result_value) <> 0 THEN REGEXP_REPLACE(SUBSTR(TRIM(rslt.result_value),2 ,LOCATE(' mg/dL ', TRIM(rslt.result_value))-1),'[A-Za-z(),=~*%]','')
@@ -316,10 +319,10 @@ SELECT
 
             WHEN LOCATE(' IN ', UPPER(rslt.result_value)) <> 0 AND rslt.result_value RLIKE '[0-9]'  AND LENGTH(TRIM(rslt.result_value)) < 20  
                         AND  CAST(REGEXP_REPLACE(rslt.result_value,'[ A-Za-z(),=~*]','') AS FLOAT) IS NOT NULL
-                                                                                                         THEN rslt.result_value
+                                                                                    THEN rslt.result_value
             WHEN LOCATE(' TO ', UPPER(rslt.result_value)) <> 0 AND rslt.result_value RLIKE '[0-9]'  AND LENGTH(TRIM(rslt.result_value)) < 20  
                         AND  CAST(REGEXP_REPLACE(rslt.result_value,'[ A-Za-z(),=~*]','') AS FLOAT) IS NOT NULL            
-                                                                                                         THEN rslt.result_value                 
+                                                                                    THEN rslt.result_value                 
                 
             ---------Start with numbers and it ia number and it is not a date
             WHEN  SUBSTR(rslt.result_value, 1, 1) rlike '[.0-9]+'
@@ -339,12 +342,13 @@ SELECT
                     )                                                                               
                      AND UPPER(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','')) <> 'D'            THEN REGEXP_REPLACE(rslt.result_value ,'[A-Za-z(),=~*]','')
           ---------Start with decimal 
-            WHEN  SUBSTR(rslt.result_value, 1, 1) = '.'                                                  THEN NULL
+            WHEN  SUBSTR(rslt.result_value, 1, 1) = '.'                                             THEN NULL
             ------------------- one word neither a number or alpha
             WHEN LOCATE(' ', UPPER(rslt.result_value)) = 0 
                   AND  CAST(rslt.result_value AS INT)    IS NULL 
                   AND  CAST(rslt.result_value AS FLOAT)  IS NULL
-                  AND  rslt.result_value NOT RLIKE '^[a-z]|[A-Z]$'                                       THEN NULL
+                  AND  rslt.result_value NOT RLIKE '^[a-z]|[A-Z]$'                                  THEN NULL
+  
             ---------Start with -ve (Negate if there are opearators)
             WHEN  SUBSTR(rslt.result_value, 1, 1) = '-' AND rslt.result_value rlike '[0-9]' AND rslt.result_value NOT RLIKE '[>, <]' THEN rslt.result_value
 
@@ -353,23 +357,22 @@ SELECT
 
      ------------- TRIM and compare  (CASE sequence is important)`
     CASE
-        --  --- Check first opeators and 2nd is not a number then NULL 2021-03-29
-        --  WHEN (SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' )                AND SUBSTR(REPLACE(rslt.result_value,' ',''), 2, 1) NOT RLIKE '[0-9]' )
-        --   OR (SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN' , 'LESSTHAN' )  AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) NOT RLIKE '[0-9]' )             THEN NULL      
         --- Check if more than one opeators
         WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z(),~*%/0-9:.,~-]',''),' ' ,'')) > 1      THEN NULL    
         -------- hardcode for  mg/dL
-        WHEN LOCATE(' mg/dL ', rslt.result_value) <> 0                                                         THEN SUBSTR(rslt.result_value,LOCATE(' mg/dL ', rslt.result_value)-5)         
+          WHEN LOCATE(' mg/dL ', rslt.result_value) <> 0    
+          AND (
+                SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' ) 
+             OR SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN' , 'LESSTHAN' )
+              )                                                                                                THEN SUBSTR(rslt.result_value,LOCATE(' mg/dL ', rslt.result_value)-5) 
          -------- hardcode for COPIES (Remove operator if present)
-         WHEN LOCATE('COPIES', rslt.result_value) <> 0 AND LENGTH(TRIM(rslt.result_value)) < 20 THEN  SUBSTR(TRIM(rslt.result_value), LOCATE('COPIES', TRIM(rslt.result_value))-1)
+         WHEN LOCATE('COPIES', rslt.result_value) <> 0 AND LENGTH(TRIM(rslt.result_value)) < 20  THEN  SUBSTR(TRIM(rslt.result_value), LOCATE('COPIES', TRIM(rslt.result_value))-1)
          --- softcode
          WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<' ) 
              AND SPLIT(rslt.result_value,' ')[1] RLIKE '[A-Za-z]'
              AND SPLIT(rslt.result_value,' ')[2] RLIKE '[A-Za-z]'  
              AND LOCATE(' IN ', UPPER(rslt.result_value)) = 0                                                  THEN REGEXP_REPLACE(SUBSTR(rslt.result_value, LOCATE( SPLIT(rslt.result_value,' ')[1] , rslt.result_value)), '[<>]','')           
-
-        
-         ------------------- If the result is complete alpha and relate 
+       ------------------- If the result is complete alpha and relate 
         WHEN gold.gen_ref_desc IS NOT NULL                                                                     THEN gold.gen_ref_desc  
         --- Check if more than one opeators
         WHEN REPLACE(REGEXP_REPLACE(rslt.result_value,'[A-Za-z(),~*%/0-9:.,~-]',''),' ' ,'')  IN ('<<', '>>' ) THEN NULL
@@ -410,7 +413,6 @@ SELECT
     ELSE
             rslt.result_value
     END 
-
    AS HV_result_value_alpha,
    CAST(NULL AS STRING)   AS HV_result_value,   
     CASE
