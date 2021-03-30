@@ -173,5 +173,3 @@ SELECT
     loinc_number_qtim                                       
     
 FROM labtest_quest_rinse_census_pre_final_05    
-
-
