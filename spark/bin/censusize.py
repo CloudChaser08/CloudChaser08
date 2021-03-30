@@ -67,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument('--opportunity_id', type=str, default=None, help="Opportunity ID")
     parser.add_argument('--salt', type=str, default=None, help="HVID obfuscation salt")
     parser.add_argument('--census_module', type=str, default=None, help="Census module name")
-    parser.add_argument('--no-row-id', type=bool, default=False, action='store_true',
+    parser.add_argument('--no-row-id', default=False, action='store_true',
                         help="If provided, will omit the row-id column from the output")
     parser.add_argument('--num_input_files', type=int, default=-1
                         , help="Number of input files in each chunk of census data we will process in a loop")
