@@ -248,18 +248,15 @@ SELECT
      CASE 
         --- Check if more than one opeators
         WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z(),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
-         --- Check first opeators and 2nd is not a number then NULL
-         WHEN (SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' )                AND SUBSTR(REPLACE(rslt.result_value,' ',''), 2, 1) NOT RLIKE '[0-9]' )
-           OR (SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN' , 'LESSTHAN' )  AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) NOT RLIKE '[0-9]' ) THEN NULL      
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) THEN '>='        
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) THEN '<=' 
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) THEN '>'       
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('LESSTHAN'     ) THEN '<'         
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) IN ('<=','>=','<>' ) THEN SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 2)   
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('</='          ) THEN '<='       
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('>/='          ) THEN '>='       
-            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<<', '>>' ) THEN NULL        
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<'      ) THEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1)
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.]' THEN '>='        
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.]' THEN '<=' 
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.]' THEN '>'       
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('LESSTHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.]' THEN '<'         
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) IN ('<=','>=','<>' ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 3, 1) RLIKE '[0-9.]' THEN SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 2)   
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('</='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.]' THEN '<='       
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('>/='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.]' THEN '>='       
+        WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<<', '>>'     ) THEN NULL 
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<'      ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 2, 1) RLIKE '[0-9.]' THEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1)
      END AS HV_result_value_operator,
      ------------- TRIM and compare  (CASE sequence is important)
             CONCAT('[',TRIM(         
