@@ -240,7 +240,9 @@ SELECT
         WHEN LOCATE(' mg/dL ', norm_pre01.HV_result_value_alpha) <> 0 
         AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN TRIM(norm_pre01.HV_result_value_alpha)
         -------- Exception for mcg/ML 2021-03-29
-        WHEN LOCATE('mL', norm_pre01.HV_result_value_alpha) <> 0 THEN REPLACE(norm_pre01.HV_result_value_alpha, 'mL', '/mL') 
+        WHEN LOCATE('mL', norm_pre01.HV_result_value_alpha) <> 0 
+         AND LOCATE('/mL', norm_pre01.HV_result_value_alpha) = 0 
+        AND norm_pre01.HV_result_value_operator IS NOT NULL           THEN REPLACE(norm_pre01.HV_result_value_alpha, 'mL', '/mL') 
           
         WHEN LENGTH(TRIM(COALESCE(norm_pre01.HV_result_value_numeric ,''))) <> 0 
          AND LENGTH(TRIM(COALESCE(norm_pre01.HV_result_value_operator,''))) <> 0
