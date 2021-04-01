@@ -2,6 +2,7 @@ import argparse
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v1 as historic_source_table_schemas
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v2 as jan_feb_2020_schemas
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v3 as mar_2020_schemas
+import spark.providers.inovalon.medicalclaims.transactional_schemas_v4 as full_hist_restate_schemas
 
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
@@ -10,8 +11,12 @@ import spark.common.utility.logger as logger
 import subprocess
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 from pyspark.sql.functions import lit
+
+v_cutoff_date = '2021-02-01'
 
 if __name__ == "__main__":
     # This script has a custom run.sh -> inovalon_run.sh to account memory requirements
@@ -44,11 +49,14 @@ if __name__ == "__main__":
         subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '-f', this_location])
         subprocess.check_call(['hadoop', 'fs', '-mkdir', this_location])
 
-    ref_claims_location = 's3://salusv/reference/inovalon/medicalclaims/claims2/'
+    ref_claims_location = 's3://salusv/reference/inovalon/medicalclaims/claims/'
 
     # the vendor sent a different schema for the following dates
     is_schema_v2 = date_input in ['2020-03-03', '2020-03-04']
     is_schema_v3 = date_input == '2020-03-25'
+    is_schema_v1 = \
+        not is_schema_v2 and not is_schema_v3 \
+        and datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date()
 
     if is_schema_v2:
         logger.log('Using the Jan/Feb 2020 refresh schema (v2)')
@@ -56,9 +64,12 @@ if __name__ == "__main__":
     elif is_schema_v3:
         logger.log('Using the Mar 2020 refresh schema (v3)')
         source_table_schema = mar_2020_schemas
-    else:
+    elif is_schema_v1:
         logger.log('Using the historic schema (v1)')
         source_table_schema = historic_source_table_schemas
+    else:
+        logger.log('Using the future restate schema (v4)')
+        source_table_schema = full_hist_restate_schemas
 
     # non-historic runs on inovalon are stable if run in chunks. This routine chunks the data by
     # looking at the last 2 characters of claimuid in clams and claimcode
@@ -76,9 +87,14 @@ if __name__ == "__main__":
             unload_partition_count=200,
             vdr_feed_id=176,
             use_ref_gen_values=True,
-            output_to_transform_path=False
+            output_to_transform_path=True
         )
-        driver.init_spark_context()
+
+        conf_parameters = {
+            'spark.executor.memoryOverhead': 4096,
+            'spark.driver.memoryOverhead': 4096
+        }
+        driver.init_spark_context(conf_parameters=conf_parameters)
 
         # create a range to compare the last 2 characters of claim and claimcode against
         # example: 0-32, 33-65, 66-99
