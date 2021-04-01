@@ -262,8 +262,11 @@ SELECT
             CONCAT('[',TRIM(         
           CASE
             ---- hard code
-            WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ' ) THEN NULL
-            --- Check if more than one opeators
+         --WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ' , '= SAME AS 1ST READ W/MLF’S ALSO 10/29/18', '=E.FACIUM? REISO 12/16/18') THEN NULL
+            WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ') THEN NULL            
+            WHEN TRIM(UPPER(rslt.result_value)) LIKE ('=E.FACIUM? REISO%') THEN NULL
+            WHEN TRIM(UPPER(rslt.result_value)) LIKE ( '= SAME AS 1ST READ W/ML%') THEN NULL
+             --- Check if more than one opeators
             WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
             --- Check the number is fraction and there is no opearator in the beginning
             WHEN LOCATE('/'   , SPLIT(rslt.result_value,' ')[0]) <> 0  AND SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 1) NOT IN ('>' , '<' ,'=' ) THEN NULL
@@ -356,8 +359,11 @@ SELECT
      ------------- TRIM and compare  (CASE sequence is important)`
     CASE
         ---- hard code
-        WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ' , '= SAME AS 1ST READ W/MLF’S ALSO 10/29/18', '=E.FACIUM? REISO 12/16/18') THEN NULL        
-        --- Check if more than one opeators
+         --WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ' , '= SAME AS 1ST READ W/MLF’S ALSO 10/29/18', '=E.FACIUM? REISO 12/16/18') THEN NULL
+            WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ') THEN NULL            
+            WHEN TRIM(UPPER(rslt.result_value)) LIKE ('=E.FACIUM? REISO%') THEN NULL
+            WHEN TRIM(UPPER(rslt.result_value)) LIKE ( '= SAME AS 1ST READ W/ML%') THEN NULL
+         --- Check if more than one opeators
         WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
         -------- hardcode for  mg/dL
           WHEN LOCATE(' mg/dL ', rslt.result_value) <> 0    
