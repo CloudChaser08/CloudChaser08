@@ -178,6 +178,9 @@ SELECT
     ELSE     norm_pre01.HV_result_value_operator 
     END AS HV_result_value_operator,
     CASE
+        ----- if the numeric value has one word and that is alphabet - nullify it
+        WHEN SPLIT(HV_result_value_numeric,' ')[0]  rlike '[A-Za-z]' AND SPLIT(HV_result_value_numeric,' ')[1]  IS NULL THEN NULL
+        
         ----- if the numeric value is date, nullify it  (HV_result_value_numeric)
         WHEN 
         (
@@ -216,6 +219,8 @@ SELECT
         -----------------------------Nullify alfa
     CASE
         WHEN gold.gen_ref_desc IS NOT NULL                      THEN gold.gen_ref_desc 
+        ---- nullify if only - is present
+        WHEN TRIM(norm_pre01.HV_result_value_alpha) = '-' THEN NULL    
         ------------- NEW CODE (if there is date in the numberic column make the alfa NULL)
         WHEN 
         (

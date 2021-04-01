@@ -247,22 +247,24 @@ SELECT
 ---------- New fields added per Operator
      CASE 
         --- Check if more than one opeators
-        WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z(),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.]' THEN '>='        
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.]' THEN '<=' 
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.]' THEN '>'       
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('LESSTHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.]' THEN '<'         
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) IN ('<=','>=','<>' ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 3, 1) RLIKE '[0-9.]' THEN SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 2)   
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('</='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.]' THEN '<='       
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('>/='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.]' THEN '>='       
+        WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.-]' THEN '>='        
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.-]' THEN '<=' 
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.-]' THEN '>'       
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('LESSTHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.-]' THEN '<'         
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) IN ('<=','>=','<>' ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 3, 1) RLIKE '[0-9.-]' THEN SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 2)   
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('</='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.-]' THEN '<='       
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('>/='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.-]' THEN '>='       
         WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<<', '>>'     ) THEN NULL 
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<'      ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 2, 1) RLIKE '[0-9.]' THEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1)
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' ,'='     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 2, 1) RLIKE '[0-9.-]' THEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1)
      END AS HV_result_value_operator,
      ------------- TRIM and compare  (CASE sequence is important)
             CONCAT('[',TRIM(         
           CASE
+            ---- hard code
+            WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ' ) THEN NULL
             --- Check if more than one opeators
-            WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z(),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL 
+            WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
             --- Check the number is fraction and there is no opearator in the beginning
             WHEN LOCATE('/'   , SPLIT(rslt.result_value,' ')[0]) <> 0  AND SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 1) NOT IN ('>' , '<' ,'=' ) THEN NULL
             WHEN rslt.result_value = '.' THEN NULL    
@@ -307,7 +309,7 @@ SELECT
             WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<=','>=','<>'        ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,3),'[A-Za-z(),=~*%]','')              
             WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 3) IN ('</=', '>/='          ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,4),'[A-Za-z(),=~*%]','')
             WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<<', '>>'            ) THEN NULL
-            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<'             ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,2),'[A-Za-z(),=~*%]','')
+            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<' ,'='        ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,2),'[A-Za-z(),=~*%]','')
          ------------------- one word neither a number or alpha
           WHEN LOCATE(' ', UPPER(rslt.result_value)) = 0 
               AND  CAST(rslt.result_value AS INT)    IS NULL 
@@ -351,11 +353,12 @@ SELECT
 
           END), ']') 
    AS HV_result_value_numeric,
-
      ------------- TRIM and compare  (CASE sequence is important)`
     CASE
+        ---- hard code
+        WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ' , '= SAME AS 1ST READ W/MLF’S ALSO 10/29/18', '=E.FACIUM? REISO 12/16/18') THEN NULL        
         --- Check if more than one opeators
-        WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z(),~*%/0-9:.,~-]',''),' ' ,'')) > 1      THEN NULL    
+        WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
         -------- hardcode for  mg/dL
           WHEN LOCATE(' mg/dL ', rslt.result_value) <> 0    
           AND (
@@ -398,7 +401,7 @@ SELECT
         WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('>/='          ) THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') 
         WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) IN ('<=','>=','<>' ) THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') 
         WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<<', '>>'     ) THEN NULL
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<'      ) THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>,~]','') 
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' ,'=' ) THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') 
         ---------Start with numbers and it is not a date
          WHEN  to_date(from_unixtime(unix_timestamp(SUBSTR(rslt.result_value, 1, 10),'MM/dd/yyyy')))  IS NULL  
           AND  CAST(SUBSTR(rslt.result_value, 1, 2) AS INT) <> 0
@@ -441,41 +444,44 @@ LEFT OUTER JOIN labtest_quest_rinse_result_gold_alpha gold          ON UPPER(TRI
 
 WHERE 
  LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
-AND 
-(
-     ---------------- 1. The COUNTRY is NOT NULL  (from patient) ------------------------------
-        LENGTH(TRIM(COALESCE(ptnt.pat_country , ''))) <> 0 
-     ---------------- 2a. The state is NOT NULL   (from patient) ------------------------------  
-     OR LENGTH(TRIM(COALESCE(ptnt.pat_state   , ''))) <> 0 
-     ---------------- 2b. The state is NOT NULL  (from result) --------------------------------  
-     OR LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0
-     ---------------- 2c. The state is NOT NULL   (from pay load) -----------------------------  
-     OR LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0    
-     ---------------- 3a. The Zip code is NOT NULL  (from result)------------------------------  
-     OR LENGTH(TRIM(COALESCE(rslt.acct_zip    , ''))) <> 0 
-     ---------------- 3b. The Zip code is NOT NULL  from patient)------------------------------  
-     OR LENGTH(TRIM(COALESCE(ptnt.pat_zip     , ''))) <> 0 
-     ---------------- 3c. The Zip code is NOT NULL  (from payload)-----------------------------  
-     OR LENGTH(TRIM(COALESCE(pay.threedigitzip, ''))) <> 0   
-     
- )
-
 AND
- (
-     ---------------- 1. The COUNTRY is Valid (from patient) --------------------------------------
-     UPPER(COALESCE(SUBSTR(ptnt.pat_country,1,2),'US')) = 'US'
-     ---------------- 2a. The state is NULL or Valid  (from patient) ------------------------------  
-     OR EXISTS (SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(ptnt.pat_state, 'PA')) = sts.geo_state_pstl_cd)
-     ---------------- 2b. The state is NULL or Valid  (from result) ------------------------------  
-     OR EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(rslt.acct_state, 'PA')) = sts.geo_state_pstl_cd)
-     ---------------- 2c. The state is NULL or Valid  (from pay load) ------------------------------  
-     OR EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(pay.state, 'PA')) = sts.geo_state_pstl_cd)     
-     ---------------- 3a. The Zip code is NULL or Valid (from result)------------------------------  
-     OR rslt.acct_zip IS NULL OR CAST(rslt.acct_zip AS INT) <> 0
-     ---------------- 3b. The Zip code is NULL or Valid (from patient)------------------------------  
-     OR ptnt.pat_zip IS NULL OR CAST(ptnt.pat_zip AS INT) <> 0
-     ---------------- 3c. The Zip code is NULL or Valid (from payload)------------------------------  
-     OR pay.threedigitzip IS NULL OR CAST(pay.threedigitzip AS INT) <> 0
+-- (
+--      ---------------- 1. The COUNTRY is NOT NULL  (from patient) ------------------------------
+--         LENGTH(TRIM(COALESCE(ptnt.pat_country , ''))) <> 0 
+--      ---------------- 2a. The state is NOT NULL   (from patient) ------------------------------  
+--      OR LENGTH(TRIM(COALESCE(ptnt.pat_state   , ''))) <> 0 
+--      ---------------- 2b. The state is NOT NULL  (from result) --------------------------------  
+--      OR LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0
+--      ---------------- 2c. The state is NOT NULL   (from pay load) -----------------------------  
+--      OR LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0    
+--      ---------------- 3a. The Zip code is NOT NULL  (from result)------------------------------  
+--      OR LENGTH(TRIM(COALESCE(rslt.acct_zip    , ''))) <> 0 
+--      ---------------- 3b. The Zip code is NOT NULL  from patient)------------------------------  
+--      OR LENGTH(TRIM(COALESCE(ptnt.pat_zip     , ''))) <> 0 
+--      ---------------- 3c. The Zip code is NOT NULL  (from payload)-----------------------------  
+--      OR LENGTH(TRIM(COALESCE(pay.threedigitzip, ''))) <> 0   
      
- )  
+--  )
+
+--  AND
+  (
+      ---------------- 1. The COUNTRY is Valid (from patient) --------------------------------------
+        ( LENGTH(TRIM(COALESCE(ptnt.pat_country , ''))) <> 0  AND UPPER(COALESCE(SUBSTR(ptnt.pat_country,1,2),'US')) = 'US')
+      ---------------- 2a. The state is NULL or Valid  (from patient) ------------------------------  
+      OR ( LENGTH(TRIM(COALESCE(ptnt.pat_state   , ''))) <> 0 AND EXISTS (SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(ptnt.pat_state, 'PA')) = sts.geo_state_pstl_cd) )
+      ---------------- 2b. The state is NULL or Valid  (from result) ------------------------------  
+      OR ( LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0 AND EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(rslt.acct_state, 'PA')) = sts.geo_state_pstl_cd) )
+      ---------------- 2c. The state is NULL or Valid  (from pay load) ------------------------------  
+      OR ( LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0 AND  EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(pay.state, 'PA')) = sts.geo_state_pstl_cd)      ) 
+      ---------------- 3a. The Zip code is NULL or Valid (from result)------------------------------  
+    --  OR rslt.acct_zip IS NULL 
+    --  OR CAST(rslt.acct_zip AS INT) <> 0 
+    --   ---------------- 3b. The Zip code is NULL or Valid (from patient)------------------------------  
+    --   OR ptnt.pat_zip IS NULL 
+    --   OR CAST(ptnt.pat_zip AS INT) <> 0
+    --   ---------------- 3c. The Zip code is NULL or Valid (from payload)------------------------------  
+    --   OR pay.threedigitzip IS NULL 
+    --   OR CAST(pay.threedigitzip AS INT) <> 0
+     
+  ) 
 
