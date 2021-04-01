@@ -68,7 +68,7 @@ class _8451CensusDriver(CensusDriver):
         else:
             subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
 
-    def save(self, dataframe, batch_date, batch_id, chunk_idx=None):
+    def save(self, dataframe, batch_date, batch_id, chunk_idx=None, header=True):
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
 
         # This customer wants this data delivered to their sftp in the following format:
