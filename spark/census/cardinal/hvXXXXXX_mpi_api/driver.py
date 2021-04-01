@@ -81,7 +81,7 @@ class CardinalAPICensusDriver(CensusDriver):
 
         return content
 
-    def save(self, df, batch_date, batch_id):
+    def save(self, df, batch_date, batch_id, chunk_idx=None, header=True):
 
         # Use local file system if test, else use HDFS
         if self._test:
