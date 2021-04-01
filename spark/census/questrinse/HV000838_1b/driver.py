@@ -40,7 +40,32 @@ class QuestRinseCensusDriver(CensusDriver):
         self._spark.table('ref_geo_state').count()
 
         logger.log('Loading LOINC reference data from S3')
-        self._spark.read.parquet(REFERENCE_OUTPUT_PATH).cache().createOrReplaceTempView('loinc')
+        self._spark.read.parquet(REFERENCE_OUTPUT_PATH).cache().createOrReplaceTempView('quest_loinc')
+
+        loinc_dedup_sql = """
+        SELECT
+            date_of_service,
+            upper_result_name,
+            local_result_code,
+            units,
+            MAX(loinc_code) AS loinc_code,
+            year
+        FROM quest_loinc
+
+        GROUP BY 
+            date_of_service,
+            upper_result_name,
+            local_result_code,
+            units,
+            year
+        ORDER BY 
+            date_of_service,
+            upper_result_name,
+            local_result_code,
+            units,
+            year
+        """
+        self._spark.sql(loinc_dedup_sql).createOrReplaceTempView('loinc')
         self._spark.table('loinc').count()
 
         logger.log('Loading QTIM1 dim data from S3')
