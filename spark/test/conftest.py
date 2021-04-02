@@ -1,4 +1,5 @@
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 import spark.spark_setup as spark_setup
 import spark.runner as spark_runner
@@ -68,9 +69,15 @@ def spark(spark_session):
 
     return spark_session
 
-@pytest.fixture
+@pytest.fixture(scope="module")
+def monkeymodule(request):
+    mp = MonkeyPatch()
+    request.addfinalizer(mp.undo)
+    yield mp
+
+@pytest.fixture(scope="module")
 @pytest.mark.usefixtures("spark")
-def patch_spark_init(spark, monkeypatch):
+def patch_spark_init(spark, monkeymodule):
     """
     Patch the spark init and runner instantion to use a spark session
     for local testing
@@ -81,8 +88,8 @@ def patch_spark_init(spark, monkeypatch):
     def runner_init(sqlCtx):
         return spark['runner']
 
-    monkeypatch.setattr(spark_setup, 'init', spark_init)
-    monkeypatch.setattr(spark_runner, 'Runner', runner_init)
+    monkeymodule.setattr(spark_setup, 'init', spark_init)
+    monkeymodule.setattr(spark_runner, 'Runner', runner_init)
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
