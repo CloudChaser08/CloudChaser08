@@ -12,6 +12,7 @@ import spark.helpers.hdfs_tools as hdfs_utils
 
 S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3a://salusv/matching/payload/pharmacyclaims/esi/'
 S3A_REF_PHI = 's3a://salusv/reference/express_scripts_phi/'
+S3A_REF_PHI_BACKUP = 's3://salusv/backup/reference/express_scripts_phi/date_input={}/'
 LOCAL_REF_PHI = '/local_phi/'
 PARQUET_FILE_SIZE = 1024 * 1024 * 250
 
@@ -113,10 +114,11 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
 
     v_combine_sql = """
     SELECT DISTINCT a.* FROM (
-        SELECT hvid, zip, gender, year_of_birth, patient_id FROM ref_phi 
+        SELECT hvid, zip, gender, year_of_birth, patient_id FROM ref_phi
         UNION ALL 
         SELECT hvid, threeDigitZip, gender, yearOfBirth, patientId FROM new_phi
         ) a
+        WHERE patient_id is not null
     """
     logger.log(' -Writing and Loading local_phi data')
     if not test:
@@ -139,6 +141,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         driver.copy_to_output_path()
         logger.log('- Saving PHI to s3: ' + S3A_REF_PHI)
         # offload reference data
+        subprocess.check_call(
+            ['aws', 's3', 'mv', '--recursive', S3A_REF_PHI, S3A_REF_PHI_BACKUP.format(date_input=date_input)])
         subprocess.check_call(
             ['aws', 's3', 'rm', '--recursive', S3A_REF_PHI.replace('s3a:', 's3:')])
         subprocess.check_call(

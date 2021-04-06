@@ -24,7 +24,7 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
                "and re-write output (warehouse) data for "
                "most recent <REVERSAL_APPLY_HIST_MONTHS> months + current month. ")
     # ------------------------ Provider specific configuration -----------------------
-    provider_name = 'esi'
+    provider_name = 'express_scripts'
     schema = pharma_schemas['schema_v4']
     output_table_names_to_schemas = {
         'esi_06_norm_final': schema
