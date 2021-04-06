@@ -3,7 +3,6 @@ import argparse
 import subprocess
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility import logger
 import spark.helpers.file_utils as file_utils
 import spark.helpers.records_loader as records_loader
@@ -170,19 +169,8 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
     if not test:
         driver.save_to_disk()
         driver.stop_spark()
+        driver.log_run()
 
-    if not end_to_end_test and not test:
-        logger.log_run_details(
-            provider_name=provider_partition_name,
-            data_type=DataType.PHARMACY_CLAIMS,
-            data_source_transaction_path=driver.input_path,
-            data_source_matching_path=driver.matching_path,
-            output_path=driver.output_path,
-            run_type=RunType.MARKETPLACE,
-            input_date=date_input
-        )
-
-    if not test:
         if first_run:
             logger.log('first_run!! Historical Backup NOT required')
         else:
@@ -195,13 +183,11 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
                 tmp_path = 's3://salusv/backup/{}/pharmacyclaims/{}/{}={}/'.format(
                     provider_partition_name, date_input, schema.provider_partition_column, provider_partition_name)
             date_part = 'part_best_date={}/'
-
             for month in list_of_months.values():
                 subprocess.check_call(
                     ['aws', 's3', 'mv', '--recursive', normalized_output_provider_path + date_part.format(month)
                         , tmp_path + date_part.format(month)]
                 )
-
         driver.copy_to_output_path()
         if not first_run:
             file_utils.clean_up_output_hdfs(STAGE_REVERSE_TRANS_PATH)

@@ -1,9 +1,6 @@
-#! /usr/bin/python
-import os
 import argparse
 import subprocess
 from math import ceil
-from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility import logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.enrollment import schemas as enrollment_schemas
@@ -137,20 +134,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     driver.transform()
     if not test:
         driver.save_to_disk()
+        driver.log_run()
         driver.stop_spark()
-
-    if not end_to_end_test and not test:
-        logger.log_run_details(
-            provider_name=provider_partition_name,
-            data_type=DataType.ENROLLMENT_RECORDS,
-            data_source_transaction_path=this_input_path,
-            data_source_matching_path=this_matching_path,
-            output_path=driver.output_path,
-            run_type=RunType.MARKETPLACE,
-            input_date=date_input
-        )
-
-    if not test:
         driver.copy_to_output_path()
         logger.log('- Saving PHI to s3: ' + S3A_REF_PHI)
         # offload reference data
@@ -158,7 +143,6 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
             ['aws', 's3', 'rm', '--recursive', S3A_REF_PHI.replace('s3a:', 's3:')])
         subprocess.check_call(
             ['s3-dist-cp', '--s3ServerSideEncryption', '--src', 'hdfs://' + LOCAL_REF_PHI, '--dest', S3A_REF_PHI])
-
     logger.log("Done")
 
 

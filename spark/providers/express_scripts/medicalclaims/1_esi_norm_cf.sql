@@ -1,21 +1,21 @@
 SELECT
     MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
-    joined.claim_id                                                                         AS claim_id,
-    joined.hvid                                                                             AS hvid,
+    mp.claim_id                                                                         AS claim_id,
+    mp.hvid                                                                             AS hvid,
     CURRENT_DATE()                                                                          AS created,
     '09'                                                                                    AS model_version, 
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
     '155'                                                                                   AS data_feed,
     '17'                                                                                    AS data_vendor, 
-    joined.patient_gender                                                                   AS patient_gender,
+    mp.patient_gender                                                                   AS patient_gender,
     /* patient_year_of_birth */
     cap_year_of_birth(
       NULL,
       to_date(txn.first_serviced_date, 'yyyyMMdd'),
-      joined.year_of_birth
-    )                                                                                   AS patient_year_of_birth, 
+      mp.year_of_birth
+    )                                                                                       AS patient_year_of_birth,
     /* patient_zip3 */
-    joined.patient_zip3                                                                     AS patient_zip3,
+    mp.patient_zip3                                                                     AS patient_zip3,
     /* date_service */
 	CAP_DATE
         (
@@ -254,11 +254,10 @@ SELECT
                     SUBSTR(txn.first_serviced_date, 1, 4), '-', 
                     SUBSTR(txn.first_serviced_date, 5, 2), '-01'
                 )
-	END                                                                                 AS part_best_date
+	END                                                                                     AS part_best_date
 
-FROM txn
-LEFT OUTER JOIN esi_join_payload_dx joined ON txn.hvjoinkey    = joined.hvjoinkey
-
+FROM transaction txn
+LEFT OUTER JOIN esi_payload mp ON txn.hvjoinkey    = mp.hvjoinkey
 --------------  Dignosis Code + Proc + Revenue Code
 WHERE 
     --LPAD(txn.medical_qualifier_code, 2, 0) IN ('01', '02')

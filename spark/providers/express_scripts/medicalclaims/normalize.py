@@ -1,25 +1,15 @@
 import argparse
 import subprocess
+from spark.common.utility import logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
-from spark.common.utility import logger
-from pyspark import StorageLevel
+import spark.providers.express_scripts.medicalclaims.transactional_schemas as source_table_schemas
+import spark.helpers.postprocessor as postprocessor
+import spark.helpers.file_utils as file_utils
 from spark.helpers import normalized_records_unloader
-import spark.helpers.payload_loader as payload_loader
-import spark.helpers.external_table_loader as external_table_loader
-import pyspark.sql.functions as FN
 
-S3_MATCHING_KEY = 'salusv/matching/payload/medicalclaims/express_scripts/'
-S3_EXPRESS_SCRIPTS_RX_MATCHING = '{}salusv/matching/payload/pharmacyclaims/esi/'
-S3 = 's3://'
-S3A = 's3a://'
-REF_PHI = 'salusv/reference/express_scripts_phi/'
-S3_REF_PHI = S3 + REF_PHI
-S3A_REF_PHI = S3A + REF_PHI
-UNMATCHED_REFERENCE = 'salusv/reference/express_scripts_unmatched/'
-S3_UNMATCHED_REFERENCE = S3 + UNMATCHED_REFERENCE
-S3A_UNMATCHED_REFERENCE = S3A + UNMATCHED_REFERENCE
-LOCAL_REF_PHI = 'hdfs:///local_phi/'
+S3A_REF_PHI = 's3a://salusv/reference/express_scripts_phi/'
+S3_UNMATCHED_REFERENCE = 's3://salusv/reference/express_scripts_unmatched/'
 LOCAL_UNMATCHED = '/unmatched/'
 
 if __name__ == "__main__":
@@ -27,7 +17,7 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'express_scripts'
     output_table_names_to_schemas = {
-        'esi_final_matched_transactions_dx': medicalclaims_schemas['schema_v9']
+        'esi_norm_final_matched': medicalclaims_schemas['schema_v9']
     }
     provider_partition_name = 'express_scripts'
 
@@ -47,117 +37,48 @@ if __name__ == "__main__":
     driver = MarketplaceDriver(
         provider_name,
         provider_partition_name,
-        '',
+        source_table_schemas,
         output_table_names_to_schemas,
         date_input,
         end_to_end_test,
+        unload_partition_count=10,
         vdr_feed_id=155,
-        use_ref_gen_values=True
+        load_date_explode=False,
+        use_ref_gen_values=True,
+        output_to_transform_path=True
     )
 
-    def load_data():
-        logger.log('Loading data:')
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024
+    }
 
-        # The number of buckets was determined by the number of executors used
-        # in the Airflow job for this provider. Ideally, we should be getting the
-        # number of buckets dynamically, but there's currently not an easy way
-        # to do that in PySpark at the moment.
-        num_buckets = 21
+    logger.log(' -Setting up input/output paths')
+    date_path = date_input.replace('-', '/')
+    file_utils.clean_up_output_hdfs(LOCAL_UNMATCHED)
+    subprocess.check_call(['hadoop', 'fs', '-mkdir', LOCAL_UNMATCHED])
 
-        logger.log(' -Loading ref_gen_ref table')
-        external_table_loader.load_ref_gen_ref(driver.runner.sqlContext)
+    driver.init_spark_context(conf_parameters=conf_parameters)
 
-        logger.log('- Loading Transactions')
-        driver.runner.run_spark_script('sql_loaders/load_transactions.sql',
-                                       [['input_path', driver.input_path]])
+    driver.load()
+    logger.log(' -trimmify-nullify matching_payload data')
+    matching_payload_df = driver.spark.table('matching_payload')
+    cleaned_matching_payload_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+    cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
-        driver.spark.table('transactions').withColumn('input_file_name', FN.input_file_name())\
-            .createOrReplaceTempView('txn')
+    logger.log('Load Rx payload reference location')
+    driver.spark.read.parquet(S3A_REF_PHI).createOrReplaceTempView('rx_payloads')
 
-        logger.log('Load Rx payload reference location')
-        driver.spark.read.parquet(S3_REF_PHI).createOrReplaceTempView('rx_payloads')
-
-        driver\
-            .spark\
-            .table('rx_payloads')\
-            .write\
-            .mode('overwrite')\
-            .format('orc')\
-            .bucketBy(num_buckets, 'patient_id')\
-            .saveAsTable('rx_bucketed')
-
-        driver.spark.table('rx_bucketed').createOrReplaceTempView('rx_payloads')
-
-        logger.log('- Loading Dx matching_payload data')
-        payload_loader.load(driver.runner, driver.matching_path, load_file_name=True)
-
-        driver\
-            .spark\
-            .table('matching_payload')\
-            .write\
-            .mode('overwrite')\
-            .format('orc')\
-            .bucketBy(num_buckets, 'patientid')\
-            .saveAsTable('payload_bucketed')
-
-        driver.spark.table('payload_bucketed').createOrReplaceTempView('matching_payload')
-
-        logger.log('Done loading data')
-
-    def transform_data():
-        driver.transform()
-        driver.spark.table('esi_join_transactions_and_payload_dx').persist(StorageLevel.MEMORY_AND_DISK)
-
-    def save_to_disk():
-        # save matched transactions to disk
-        driver.save_to_disk()
-
-        def mk_move_file_preserve_file_date():
-            mv_cmd = ['hadoop', 'fs', '-mv']
-            mkdir_cmd = ['hadoop', 'fs', '-mkdir', '-p']
-            ls_cmd = ['hadoop', 'fs', '-ls']
-
-            def move_file(part_file):
-                if part_file.find("/part-") > -1:
-                    old_pf = part_file.split(' ')[-1].strip()
-                    old_pf_split = old_pf.split('/')
-                    new_filename = old_pf_split[3].split('=')[1] + '_' + old_pf_split[-1]
-                    new_pf_array = ['', 'staging', 'medicalclaims', '2018-06-06'] + old_pf_split[4:-1] + [new_filename]
-                    new_directory = '/'.join(new_pf_array[:-1])
-                    new_pf = '/'.join(new_pf_array)
-                    try:
-                        subprocess.check_call(mkdir_cmd + [new_directory])
-                        subprocess.check_call(mv_cmd + [old_pf, new_pf])
-                    except Exception as e:
-                        # The move command will fail if the final has already
-                        # been moved. Check here if the destination file exist
-                        # and ignore the error if it does
-                        try:
-                            subprocess.check_call(ls_cmd + [new_pf])
-                        except:
-                            raise e
-
-            return move_file
-
-        logger.log('Save unmatched reference records to: /unmatched/')
-        driver\
-            .spark\
-            .table('esi_final_unmatched_dx')\
-            .repartition(100)\
-            .write\
-            .parquet('/unmatched/', partitionBy='part_best_date', compression='gzip', mode='overwrite')
-
-    def overwrite_reference_data():
-        if not driver.end_to_end_test:
-            logger.log('Write the unmatched reference data to s3: ' + S3_UNMATCHED_REFERENCE)
-            normalized_records_unloader.distcp(S3_UNMATCHED_REFERENCE, LOCAL_UNMATCHED)
-
-    # Run the job
-    driver.init_spark_context()
-    load_data()
-    transform_data()
-    save_to_disk()
+    driver.transform()
+    driver.save_to_disk()
+    logger.log('Save unmatched reference records to: ' + LOCAL_UNMATCHED)
+    driver.spark.table('esi_norm_final_unmatched').repartition(2).write.parquet(
+        LOCAL_UNMATCHED, partitionBy='part_best_date', compression='gzip', mode='overwrite')
     driver.log_run()
     driver.stop_spark()
     driver.copy_to_output_path()
-    overwrite_reference_data()
+    if not end_to_end_test:
+        logger.log('Write the unmatched reference data to s3: ' + S3_UNMATCHED_REFERENCE)
+        normalized_records_unloader.distcp(S3_UNMATCHED_REFERENCE, LOCAL_UNMATCHED)
+    logger.log("Done")
