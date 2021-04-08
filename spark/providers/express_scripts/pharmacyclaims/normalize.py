@@ -25,7 +25,7 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
                "most recent <REVERSAL_APPLY_HIST_MONTHS> months + current month. ")
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'express_scripts'
-    schema = pharma_schemas['schema_v4']
+    schema = pharma_schemas['schema_v6']
     output_table_names_to_schemas = {
         'esi_06_norm_final': schema
     }
@@ -78,10 +78,8 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
 
     driver.load(extra_payload_cols=['RXNumber', 'hvJoinKey'])
     matching_payload_df = driver.spark.table('matching_payload')
-
     cleaned_matching_payload_df = (
         postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
-
     cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
     # ----------------------------------------------------------------------------------------

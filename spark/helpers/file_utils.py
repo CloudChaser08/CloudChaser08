@@ -99,6 +99,16 @@ def delete_success_file(s3_path):
 
 
 def get_list_of_2c_subdir(s3_path, include_parent_dir = False):
+    """Returns the subdirectory paths within a directory on s3
+       start from number 2 (2nd century).
+    Args:
+        path (string): s3://../incoming/
+    Returns:
+        include_parent_dir=False
+            ['/2017/01/21/','/2017/02/05/' ]
+        include_parent_dir=True
+            ['<s3_path>/2017/01/21/','<s3_path>/2017/02/05/' ]
+    """
     s3_path_full = s3_path + '/' if s3_path[-1] != '/' else s3_path
     input_path = s3_path_full.replace('s3a:', 's3:')
     dates_full = []
