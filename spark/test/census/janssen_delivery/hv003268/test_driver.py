@@ -32,3 +32,4 @@ def test_run(driver, spark):
     results = spark["sqlContext"].sql("select * from census_result").collect()
     assert len(results) == 1
     assert results[0]["hvid"] == "999"
+    assert results[0]["claimId"] == "10"
