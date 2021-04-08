@@ -45,7 +45,7 @@ if __name__ == "__main__":
         logger.log('Historic Load schema with ddid column')
         source_table_schemas = historic_source_table_schemas
     else:
-        logger.log('Future Load using new schema with drugid column')
+        logger.log('Future Load using new schema with drugid column, and new labtest schema')
         source_table_schemas = transactions_v1
 
     # Create and run driver
