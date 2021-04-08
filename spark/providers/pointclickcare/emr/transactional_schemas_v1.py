@@ -300,25 +300,26 @@ TABLE_CONF = {
         'csv',
         separator='|',
         columns=[
+            'factlabtestid',
             'clientid',
             'facilityid',
-            'factlabtestid',
             'labreportseverityid',
             'labreportstatusid',
             'labresultuomid',
             'labtestabnormalityid',
             'labtestconditionid',
             'labtestid',
+            'loadid',
             'refrange',
             'reporteddate',
             'reporteddateid',
             'reportinglabextfactid',
-            'residentid',
             'resultdatetime',
             'resultdatetimeid',
             'resultvalue',
             'specimencollectiondate',
-            'specimencollectiondateid'
+            'specimencollectiondateid',
+            'residentid'
         ]
     ),
     'factmedicationorder': SourceTable(
