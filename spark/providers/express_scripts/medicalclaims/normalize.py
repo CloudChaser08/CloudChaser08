@@ -45,7 +45,7 @@ if __name__ == "__main__":
         vdr_feed_id=155,
         load_date_explode=False,
         use_ref_gen_values=True,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {

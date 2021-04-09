@@ -42,10 +42,11 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
         date_input,
         end_to_end_test,
         test=test,
+        unload_partition_count=10,
         vdr_feed_id=16,
         load_date_explode=False,
         use_ref_gen_values=True,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {
