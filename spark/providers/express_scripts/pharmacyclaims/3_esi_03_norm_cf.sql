@@ -1,7 +1,7 @@
 SELECT
     --    MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
     TRIM(txn.pharmacy_claim_id)                                                             AS claim_id,
-    txn.hvid                                                                            AS hvid,
+    txn.hvid                                                                                AS hvid,
     CURRENT_DATE()                                                                          AS created,
     '3'                                                                                     AS model_version,
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
@@ -104,21 +104,21 @@ SELECT
 	    THEN product_service_id_qualifier
 	ELSE NULL END                                                                           AS product_service_id_qual,
 
-    MD5(txn.rxnumber)                                                                   AS rx_number,
+    MD5(txn.rxnumber)                                                                       AS rx_number,
    /* rx_number_qual */
     txn.prescription_service_reference_number_qualifier                                     AS rx_number_qual,
 
 	CAST(NULL AS STRING) AS bin_number,
 
     txn.processor_control_number                                                            AS processor_control_number,
-    txn.fill_number                                                                         AS fill_number,
+    CAST(txn.fill_number AS INTEGER)                                                        AS fill_number,
     txn.number_of_refills_authorized                                                        AS refill_auth_amount,
 
-    txn.quantity_dispensed                                                                  AS dispensed_quantity,
+    CAST(txn.quantity_dispensed AS FLOAT)                                                 AS dispensed_quantity,
 
     txn.unit_of_measure                                                                     AS unit_of_measure,
 
-    txn.days_supply                                                                         AS days_supply,
+    CAST(txn.days_supply AS INTEGER)                                                        AS days_supply,
 
     CASE WHEN (txn.service_provider_id_qualifier in ('1','01'))
             OR (txn.service_provider_id_qualifier in ('5', '05')
@@ -165,6 +165,21 @@ SELECT
         THEN txn.prescriber_id
     ELSE NULL END AS prov_prescribing_npi,
 
+    CAST(NULL AS STRING) AS prov_prescribing_tax_id,
+    CAST(NULL AS STRING) AS prov_prescribing_dea_id,
+    CAST(NULL AS STRING) AS prov_prescribing_ssn,
+    CAST(NULL AS STRING) AS prov_prescribing_state_license,
+    CAST(NULL AS STRING) AS prov_prescribing_upin,
+    CAST(NULL AS STRING) AS prov_prescribing_commercial_id,
+    CAST(NULL AS STRING) AS prov_prescribing_name_1,
+    CAST(NULL AS STRING) AS prov_prescribing_name_2,
+    CAST(NULL AS STRING) AS prov_prescribing_address_1,
+    CAST(NULL AS STRING) AS prov_prescribing_address_2,
+    CAST(NULL AS STRING) AS prov_prescribing_city,
+    CAST(NULL AS STRING) AS prov_prescribing_state,
+    CAST(NULL AS STRING) AS prov_prescribing_zip,
+    CAST(NULL AS STRING) AS prov_prescribing_std_taxonomy,
+    CAST(NULL AS STRING) AS prov_prescribing_vendor_specialty,
 	CAST(NULL AS STRING) AS prov_primary_care_npi,
 	CAST(NULL AS STRING) AS cob_count,
 	CAST(NULL AS FLOAT) AS usual_and_customary_charge,
