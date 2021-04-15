@@ -48,7 +48,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
 
     conf_parameters = {
         'spark.executor.memoryOverhead': 1024,
-        'spark.driver.memoryOverhead': 1024
+        'spark.driver.memoryOverhead': 1024,
+        'spark.network.timeout': '600s'
     }
 
     logger.log(' -Setting up input/output paths')
