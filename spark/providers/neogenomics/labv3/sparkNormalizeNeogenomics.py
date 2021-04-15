@@ -27,7 +27,7 @@ SCRIPT_PATH = __file__
 
 # OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
 # OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/testing/dewey/airflow/e2e/neogenomics-2021/labtests/spark-output/'
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
