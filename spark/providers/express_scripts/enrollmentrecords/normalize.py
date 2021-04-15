@@ -1,4 +1,5 @@
 import argparse
+from spark.helpers.normalized_records_unloader import distcp
 import subprocess
 from math import ceil
 from spark.common.utility import logger
@@ -10,7 +11,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils
 import spark.helpers.hdfs_tools as hdfs_utils
 
-S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3a://salusv/matching/payload/pharmacyclaims/esi/'
+S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3a://salusv/matching/payload/pharmacyclaims/express_scripts/'
 S3A_REF_PHI = 's3a://salusv/reference/express_scripts_phi/'
 S3A_REF_PHI_BACKUP = 's3://salusv/backup/reference/express_scripts_phi/date_input={}/'
 LOCAL_REF_PHI = '/local_phi/'
@@ -66,24 +67,34 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     this_matching_path = driver.matching_path
     if test:
         driver.input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/express_scripts/enrollmentrecords/resources/input/'
+            script_path,
+            '../../../test/providers/express_scripts/enrollmentrecords/resources/input/'
         ) + '/'
         driver.matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/express_scripts/enrollmentrecords/resources/matching/'
+            script_path,
+            '../../../test/providers/express_scripts/enrollmentrecords/resources/matching/'
         ) + '/'
         new_phi_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/express_scripts/enrollmentrecords/resources/new_phi/'
+            script_path,
+            '../../../test/providers/express_scripts/enrollmentrecords/resources/new_phi/'
         ) + '/'
         ref_phi_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/express_scripts/enrollmentrecords/resources/ref_phi/'
+            script_path,
+            '../../../test/providers/express_scripts/enrollmentrecords/resources/ref_phi/'
         ) + '/'
         local_phi_path = '/tmp' + LOCAL_REF_PHI
     else:
         new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING + date_path + '/'
         ref_phi_path = S3A_REF_PHI
         local_phi_path = 'hdfs://' + LOCAL_REF_PHI
-        driver.input_path = file_utils.get_list_of_2c_subdir(this_input_path.replace(date_path + '/', ''), True)
-        driver.matching_path = file_utils.get_list_of_2c_subdir(this_matching_path.replace(date_path + '/', ''), True)
+        driver.input_path = file_utils.get_list_of_2c_subdir(
+            this_input_path.replace(date_path + '/', ''),
+            True
+        )
+        driver.matching_path = file_utils.get_list_of_2c_subdir(
+            this_matching_path.replace(date_path + '/', ''),
+            True
+        )
 
     logger.log(' -Setting up the local file system')
     if test:
@@ -122,7 +133,10 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     """
     logger.log(' -Writing and Loading local_phi data')
     if not test:
-        repartition_cnt = int(ceil(hdfs_utils.get_s3_file_path_size(S3A_REF_PHI) / PARQUET_FILE_SIZE)) or 1
+        repartition_cnt = file_utils.get_optimal_s3_partition_count(
+            s3_path=S3A_REF_PHI,
+            expected_file_size=PARQUET_FILE_SIZE
+        )
     else:
         repartition_cnt = 1
     logger.log(' -Repartition into {} partitions'.format(repartition_cnt))
@@ -141,12 +155,25 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         driver.copy_to_output_path()
         logger.log('- Saving PHI to s3: ' + S3A_REF_PHI)
         # offload reference data
-        subprocess.check_call(
-            ['aws', 's3', 'mv', '--recursive', S3A_REF_PHI, S3A_REF_PHI_BACKUP.format(date_input=date_input)])
-        subprocess.check_call(
-            ['aws', 's3', 'rm', '--recursive', S3A_REF_PHI.replace('s3a:', 's3:')])
-        subprocess.check_call(
-            ['s3-dist-cp', '--s3ServerSideEncryption', '--src', 'hdfs://' + LOCAL_REF_PHI, '--dest', S3A_REF_PHI])
+        subprocess.check_call([
+            'aws',
+            's3',
+            'mv',
+            '--recursive',
+            S3A_REF_PHI,
+            S3A_REF_PHI_BACKUP.format(date_input=date_input)
+        ])
+        subprocess.check_call([
+            'aws',
+            's3',
+            'rm',
+            '--recursive',
+            S3A_REF_PHI.replace('s3a:', 's3:')
+        ])
+        distcp(
+            dest=S3A_REF_PHI,
+            src='hdfs://' + LOCAL_REF_PHI
+        )
     logger.log("Done")
 
 
