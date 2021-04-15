@@ -1,11 +1,17 @@
+from math import ceil
 import os
 import ntpath
 import subprocess
 import re
 from spark.common.utility import logger
-from spark.helpers.hdfs_tools import list_parquet_files
+
+import spark.helpers.hdfs_tools as hdfs_tools
 from datetime import date
 
+# optimal parquet file size is 500mb - 1gb
+# smaller means faster writing (to a point)
+# larger means faster reading (to a point)
+PARQUET_FILE_SIZE = 1024 * 1024 * 500
 
 def get_abs_path(source_file, relative_filename):
     return os.path.abspath(
@@ -81,7 +87,7 @@ def create_parquet_row_count_file(spark, input_path, output_path, file_name, inc
     local_output_file = local_path + file_name
 
     date_today = date.today()
-    files = list_parquet_files(input_path, pattern="*.parquet")
+    files = hdfs_tools.list_parquet_files(input_path, pattern="*.parquet")
 
     with open(local_output_file, 'w') as output_file:
         if include_header:
@@ -93,12 +99,35 @@ def create_parquet_row_count_file(spark, input_path, output_path, file_name, inc
 
     subprocess.check_call(['aws', 's3', 'cp', local_output_file, output_path])
 
+def get_optimal_partition_count(data_size, expected_file_size=PARQUET_FILE_SIZE):
+    """
+    Calculates the optimal partition count for a given data size and expected file size
+    """
+    return int(ceil(data_size / expected_file_size)) or 1
+
+def get_optimal_s3_partition_count(s3_path, expected_file_size=PARQUET_FILE_SIZE):
+    """
+    Calculates the optimal partition count for a given s3 data path and expected file size
+    """
+    return get_optimal_partition_count(
+        hdfs_tools.get_s3_file_path_size(s3_path),
+        expected_file_size=expected_file_size
+    )
+
+def get_optimal_hdfs_partition_count(hdfs_path, expected_file_size=PARQUET_FILE_SIZE):
+    """
+    Calculates the optimal partition count for a given hdfs data path and expected file size
+    """
+    return get_optimal_partition_count(
+        hdfs_tools.get_hdfs_file_path_size(hdfs_path),
+        expected_file_size=expected_file_size
+    )
 
 def delete_success_file(s3_path):
     subprocess.check_call(['aws', 's3', 'rm', s3_path + '_SUCCESS'])
 
 
-def get_list_of_2c_subdir(s3_path, include_parent_dir = False):
+def get_list_of_2c_subdir(s3_path, include_parent_dir=False):
     """Returns the subdirectory paths within a directory on s3
        start from number 2 (2nd century).
     Args:
