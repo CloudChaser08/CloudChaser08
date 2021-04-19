@@ -13,7 +13,7 @@ import spark.helpers.hdfs_tools as hdfs_utils
 
 S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3a://salusv/matching/payload/pharmacyclaims/express_scripts/'
 S3A_REF_PHI = 's3a://salusv/reference/express_scripts_phi/'
-S3A_REF_PHI_BACKUP = 's3://salusv/backup/reference/express_scripts_phi/date_input={}/'
+S3_REF_PHI_BACKUP = 's3://salusv/backup/reference/express_scripts_phi/date_input={date_input}/'
 LOCAL_REF_PHI = '/local_phi/'
 PARQUET_FILE_SIZE = 1024 * 1024 * 250
 
@@ -48,8 +48,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
 
     conf_parameters = {
         'spark.executor.memoryOverhead': 1024,
-        'spark.driver.memoryOverhead': 1024,
-        'spark.network.timeout': '600s'
+        'spark.driver.memoryOverhead': 1024
     }
 
     logger.log(' -Setting up input/output paths')
@@ -162,7 +161,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
             'mv',
             '--recursive',
             S3A_REF_PHI,
-            S3A_REF_PHI_BACKUP.format(date_input=date_input)
+            S3_REF_PHI_BACKUP.format(date_input=date_input)
         ])
         subprocess.check_call([
             'aws',
