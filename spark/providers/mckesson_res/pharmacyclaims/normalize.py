@@ -35,7 +35,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         vdr_feed_id=36,
         load_date_explode=False,
         use_ref_gen_values=True,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {
