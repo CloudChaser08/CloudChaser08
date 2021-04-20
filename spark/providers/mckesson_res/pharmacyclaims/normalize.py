@@ -59,9 +59,6 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
             script_path,
             '../../../test/providers/mckesson_res/pharmacyclaims/resources/matching-res/'
         ) + '/'
-    else:
-        driver.input_path = "s3://salusv/sample/mckessonrx/transactions/2021-02-24/"
-        driver.matching_path = "s3://salusv/sample/mckessonrx/payload/2021-03-02/"
 
     column_length = len(driver.spark.read.csv(driver.input_path, sep='|').columns)
     if column_length == 118:
