@@ -33,17 +33,29 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            SCRIPT_PATH, '../../../test/providers/neogenomics/resources/input/*/*/*/'
+            SCRIPT_PATH, '../../../test/providers/neogenomics/resources/input/{}/'.format(
+            date_input.replace('-', '/')
+        )
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            SCRIPT_PATH, '../../../test/providers/neogenomics/resources/matching/*/*/*/'
+            SCRIPT_PATH, '../../../test/providers/neogenomics/resources/matching/{}/'.format(
+            date_input.replace('-', '/')
+        )
         ) + '/'
     elif end_to_end_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v3/out/*/*/*/'
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v3/payload/*/*/*/'
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v3/out/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests_v3/payload/{}/'.format(
+            date_input.replace('-', '/')
+        )
     else:
-        input_path = 's3a://salusv/incoming/labtests/neogenomics/*/*/*/'
-        matching_path = 's3a://salusv/matching/payload/labtests/neogenomics/*/*/*/'
+        input_path = 's3a://salusv/incoming/labtests/neogenomics/{}/'.format(
+            date_input.replace('-', '/')
+        )
+        matching_path = 's3a://salusv/matching/payload/labtests/neogenomics/{}/'.format(
+            date_input.replace('-', '/')
+        )
 
     records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
     payload_loader.load(runner, matching_path, ['claimId', 'personId', 'patientId'], load_file_name=True)
