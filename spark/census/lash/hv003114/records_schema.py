@@ -26,7 +26,6 @@ TABLE_CONF = {
             "_13",
             "consentee_name",
             "consentee_type",
-            "consenter_id",
             "caregiver_id",
             "consenter_region",
             "consenter_type",
@@ -40,8 +39,7 @@ TABLE_CONF = {
             "expiry_date",
             "status",
             "document_id",
-            "document_location",
-            "document_sinature",
+            "docid",
             "source_system",
             "record_id",
             "hvjoinkey"
