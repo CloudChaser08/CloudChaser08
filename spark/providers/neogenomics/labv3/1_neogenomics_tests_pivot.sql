@@ -74,8 +74,8 @@ SELECT
     test_report_date,
     test_status,
     upstream_reflux,
-    EXTRACT_DATE(REGEXP_EXTRACT(input_file_name, '(..../../..)/meta', 1), '%Y/%m/%d') AS vendor_file_date    
-FROM meta
+    EXTRACT_DATE(REGEXP_EXTRACT(input_file_name, '(..../../..)/tests', 1), '%Y/%m/%d') AS vendor_file_date    
+FROM tests
 WHERE 0 <> LENGTH(TRIM(COALESCE(billing_icd_codes, '')))
 UNION ALL
 SELECT 
@@ -155,6 +155,6 @@ SELECT
     test_report_date,
     test_status,
     upstream_reflux,
-    EXTRACT_DATE(REGEXP_EXTRACT(input_file_name, '(..../../..)/meta', 1), '%Y/%m/%d') AS vendor_file_date    
-FROM meta
+    EXTRACT_DATE(REGEXP_EXTRACT(input_file_name, '(..../../..)/tests', 1), '%Y/%m/%d') AS vendor_file_date    
+FROM tests
 WHERE 0 = LENGTH(TRIM(COALESCE(billing_icd_codes, '')))

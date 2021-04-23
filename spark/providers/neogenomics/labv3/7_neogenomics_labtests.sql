@@ -222,7 +222,7 @@ SELECT DISTINCT
                     SUBSTR(txn.test_created_date, 1, 2), '-01'
                 )
 	END                                                                                 AS part_best_date
- FROM neogenomics_meta_dedup txn
+ FROM neogenomics_tests_dedup txn
  LEFT OUTER JOIN neogenomics_results_dedup res
         ON txn.test_orderid_hashed = res.test_orderid_hashed
  LEFT OUTER JOIN neogenomics_payload_lag pay
