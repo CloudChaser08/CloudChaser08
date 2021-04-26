@@ -26,8 +26,7 @@ GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
 SCRIPT_PATH = __file__
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
-# OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2018-02-09/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/testing/dewey/airflow/e2e/neogenomics-2021/labtests/spark-output/'
+OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
@@ -82,7 +81,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
         normalized_records_unloader.unload(
             spark, runner, df, 'part_best_date', date_input, 'neogenomics',
-            substr_date_part=False, columns=_columns
+            substr_date_part=False, columns=_columns, unload_partition_count=2
         )
 
     if not test and not end_to_end_test:
@@ -112,17 +111,6 @@ def main(args):
         output_path = OUTPUT_PATH_TEST
     else:
         output_path = OUTPUT_PATH_PRODUCTION
-
-    backup_path = output_path.replace('salusv', 'salusv/backup')
-
-    subprocess.check_call(
-        ['aws', 's3', 'rm', '--recursive', '{}part_provider=neogenomics/'.format(backup_path)]
-    )
-
-    subprocess.check_call([
-        'aws', 's3', 'mv', '--recursive', '{}part_provider=neogenomics/'.format(output_path),
-        '{}part_provider=neogenomics/'.format(backup_path)
-    ])
 
     if args.end_to_end_test:
         normalized_records_unloader.distcp(output_path)
