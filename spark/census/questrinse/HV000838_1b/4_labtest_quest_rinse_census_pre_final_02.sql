@@ -13,4 +13,3 @@ SELECT
 FROM labtest_quest_rinse_census_pre_final_01
 
 GROUP BY 1
-

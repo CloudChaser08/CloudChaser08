@@ -155,10 +155,10 @@ SELECT
 ---------- New fields added per request from QUEST 2020-10-27
 -------------------------------------------------------------------------------------------------
     TRIM(HV_result_value_operator) AS HV_result_value_operator   ,
-    -- TRIM(HV_result_value_numeric)  AS HV_result_value_numeric ,
-    --------------- ONLY FOR AUTOMATION
-    REPLACE(REPLACE(TRIM(HV_result_value_numeric), '[',''),']','') AS HV_result_value_numeric , 
-    TRIM(REPLACE(HV_result_value_alpha, '"','')) AS HV_result_value_alpha,     
+    TRIM(HV_result_value_numeric)  AS HV_result_value_numeric ,
+    --------------- ONLY FOR AUTOATION
+    --REPLACE(REPLACE(TRIM(HV_result_value_numeric), '[',''),']','') AS HV_result_value_numeric ,
+    TRIM(REPLACE(HV_result_value_alpha, '"','')) AS HV_result_value_alpha,
     TRIM(HV_result_value) AS   HV_result_value                   ,
 -------------------------------------------------------------------------------------------------
 ---------- QTIM
@@ -169,8 +169,6 @@ SELECT
     methodology_qtim                                        ,
     result_name_qtim                                        ,
     unit_of_measure_qtim                                    ,
-    loinc_number_qtim                                       
-    
-FROM labtest_quest_rinse_census_pre_final_05    
+    loinc_number_qtim
 
-
+FROM labtest_quest_rinse_census_pre_final_05
