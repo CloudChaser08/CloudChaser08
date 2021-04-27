@@ -60,18 +60,22 @@ SELECT
     COALESCE(rslt.date_final_report,rslt.date_reported)                                      AS HV_date_report,
     rslt.loinc_code	                                                                         AS loinc_code,    
     ----------------------------------------------------------------------------------------------------------------> LOINC From HV
-    --When the rslt.loinc_code is NULL or starts with the letter L, or when the lab_id is liste code 
-    --then populate target with hv_loinc.loinc_code where available. Else populate rslt.loinc_code (2021-03-24 JKS - scope change Excep only NUMERIC LOINC code)
+    --When the rslt.loinc_code is NULL or starts with the letter L, or when the lab_id is liste code
+    --then populate target with hv_loinc.loinc_code where available. Else populate rslt.loinc_code
      ----------------------------------------------------------------------------------------------------------------> LOINC From HV
-            CASE
-                WHEN (
-                       LPAD(rslt.lab_id , 2, '0') IN ('01', '03', '04',	'08', '09', '10', '11', '13', '14', '35', '37', '42', '43', '47', '48', '53', '54' )
-                                OR SUBSTR(UPPER(rslt.loinc_code),1, 1) ='L' OR rslt.loinc_code IS NULL
-                     ) 
-                                         AND loinc.loinc_code IS NOT NULL                THEN loinc.loinc_code
-              
-            ELSE rslt.loinc_code	                                                                         
-            END                                                                              AS hv_loinc_code        ,
+    CASE
+        WHEN (
+               LPAD(rslt.lab_id , 2, '0') IN ('01', '03', '04',	'08', '09', '10', '11', '13', '14', '35', '37', '42', '43', '47', '48', '53', '54' )
+                        OR SUBSTR(UPPER(rslt.loinc_code),1, 1) ='L' OR rslt.loinc_code IS NULL
+             ) THEN
+                    CASE
+                        WHEN loinc_delta.loinc_code IS NOT NULL THEN loinc_delta.loinc_code
+                        WHEN loinc.loinc_code IS NOT NULL THEN loinc.loinc_code
+                    ELSE rslt.loinc_code
+                    END
+    ELSE rslt.loinc_code
+    END                                                                                      AS hv_loinc_code,
+    ---------------------------------------------------------------------------------------------------------------->
     rslt.lab_id                                                                              AS lab_id                ,
     rslt.obs_id                                                                              AS test_id               ,   
     CASE
@@ -247,180 +251,184 @@ SELECT
 ---------- New fields added per Operator
      CASE 
         --- Check if more than one opeators
-        WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.-]' THEN '>='        
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.-]' THEN '<=' 
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.-]' THEN '>'       
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('LESSTHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.-]' THEN '<'         
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) IN ('<=','>=','<>' ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 3, 1) RLIKE '[0-9.-]' THEN SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 2)   
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('</='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.-]' THEN '<='       
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('>/='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.-]' THEN '>='       
-        WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<<', '>>'     ) THEN NULL 
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' ,'='     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 2, 1) RLIKE '[0-9.-]' THEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1)
+        WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1
+         AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')                                                                  THEN  NULL
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.-]' THEN '>='
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.-]' THEN '<='
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.-]' THEN '>'
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('LESSTHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.-]' THEN '<'
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 6) IN ('EQUALS'       ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 7, 1) RLIKE '[0-9.-]' THEN '='   --- New
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) IN ('<=','>=','<>' ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 3, 1) RLIKE '[0-9.-]' THEN SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 2)
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('</='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.-]' THEN '<='
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('>/='          ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 4, 1) RLIKE '[0-9.-]' THEN '>='
+        WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<<', '>>'     ) THEN NULL
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' ,'=' ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 2, 1) RLIKE '[0-9.-]' THEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1)
      END AS HV_result_value_operator,
      ------------- TRIM and compare  (CASE sequence is important)
-            CONCAT('[',TRIM(         
+           CONCAT('[',TRIM(
           CASE
             ---- hard code
-         --WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ' , '= SAME AS 1ST READ W/MLF’S ALSO 10/29/18', '=E.FACIUM? REISO 12/16/18') THEN NULL
-            WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ') THEN NULL            
+            WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ') THEN NULL
             WHEN TRIM(UPPER(rslt.result_value)) LIKE ('=E.FACIUM? REISO%') THEN NULL
-            WHEN TRIM(UPPER(rslt.result_value)) LIKE ( '= SAME AS 1ST READ W/ML%') THEN NULL
-             --- Check if more than one opeators
-            WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
+            WHEN TRIM(UPPER(rslt.result_value)) LIKE ('= SAME AS 1ST READ W/ML%') THEN NULL
+            --- Check if more than one opeators
+            WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1
+             AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')                                                         THEN  NULL
             --- Check the number is fraction and there is no opearator in the beginning
             WHEN LOCATE('/'   , SPLIT(rslt.result_value,' ')[0]) <> 0  AND SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 1) NOT IN ('>' , '<' ,'=' ) THEN NULL
-            WHEN rslt.result_value = '.' THEN NULL    
+            WHEN rslt.result_value = '.' THEN NULL
           ---- E notation with operator
-             WHEN   (SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<') 
-              AND SUBSTR(REVERSE(rslt.result_value),2,1) = 'E') 
-              AND SUBSTR(REVERSE(rslt.result_value),1,1)  RLIKE '[0-9]' THEN CAST(SUBSTR(rslt.result_value,2) AS DECIMAL(18,0))  
-  
+             WHEN   (SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<')
+              AND SUBSTR(REVERSE(rslt.result_value),2,1) = 'E')
+              AND SUBSTR(REVERSE(rslt.result_value),1,1)  RLIKE '[0-9]' THEN CAST(SUBSTR(rslt.result_value,2) AS DECIMAL(18,0))
+
             ---- E notation with operator
-             WHEN CAST(rslt.result_value AS DECIMAL(18,0))  > 1000000 THEN CAST(rslt.result_value AS DECIMAL(18,0))  
-             
+             WHEN CAST(rslt.result_value AS DECIMAL(18,0))  > 1000000 THEN CAST(rslt.result_value AS DECIMAL(18,0))
+
           -------- hardcode for  mg/dL
-            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<'             ) 
+            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<'             )
              AND LOCATE(' mg/dL ', rslt.result_value) <> 0 THEN REGEXP_REPLACE(SUBSTR(TRIM(rslt.result_value),2 ,LOCATE(' mg/dL ', TRIM(rslt.result_value))-1),'[A-Za-z(),=~*%]','')
          -------- hardcode for COPIES (Remove operator if present)
-            WHEN LOCATE(' COPIES ', rslt.result_value) <> 0 AND LENGTH(TRIM(rslt.result_value)) < 20 THEN REGEXP_REPLACE(SUBSTR(TRIM(rslt.result_value),1 ,LOCATE(' COPIES ', TRIM(rslt.result_value))-1), '[<>=]','') 
+            WHEN LOCATE(' COPIES ', rslt.result_value) <> 0 AND LENGTH(TRIM(rslt.result_value)) < 20 THEN REGEXP_REPLACE(SUBSTR(TRIM(rslt.result_value),1 ,LOCATE(' COPIES ', TRIM(rslt.result_value))-1), '[<>=]','')
             --- softcode
-            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<' ) 
+            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<' )
              AND SPLIT(rslt.result_value,' ')[1] RLIKE '[A-Za-z]'
-             AND SPLIT(rslt.result_value,' ')[2] RLIKE '[A-Za-z]'  
-             AND  LOCATE(' IN ', UPPER(rslt.result_value)) = 0                                       THEN  REGEXP_REPLACE(SUBSTR(rslt.result_value, 1, LOCATE( SPLIT(rslt.result_value,' ')[1] , rslt.result_value)-1 ),  '[<>=]','')              
+             AND SPLIT(rslt.result_value,' ')[2] RLIKE '[A-Za-z]'
+             AND  LOCATE(' IN ', UPPER(rslt.result_value)) = 0                                       THEN  REGEXP_REPLACE(SUBSTR(rslt.result_value, 1, LOCATE( SPLIT(rslt.result_value,' ')[1] , rslt.result_value)-1 ),  '[<>=]','')
 
           --------- If the 1st word is number and 2nd word is alphabet then make the target NULL
-          WHEN SPLIT(rslt.result_value,' ')[0] RLIKE '[0-9]' 
-            AND SPLIT(rslt.result_value,' ')[1] RLIKE '[A-Za-z]' 
-            AND SPLIT(rslt.result_value,' ')[1] NOT IN ('IN', 'TO') 
-            AND SPLIT(rslt.result_value,' ')[0] RLIKE '<>'                                         THEN NULL            
+          WHEN SPLIT(rslt.result_value,' ')[0] RLIKE '[0-9]'
+            AND SPLIT(rslt.result_value,' ')[1] RLIKE '[A-Za-z]'
+            AND SPLIT(rslt.result_value,' ')[1] NOT IN ('IN', 'TO')
+            AND SPLIT(rslt.result_value,' ')[0] RLIKE '<>'                                         THEN NULL
             --------  IN or TO and first is not an operator MAke it NULL
-            WHEN  
+            WHEN
                 (
                     LOCATE(' IN ', UPPER(rslt.result_value)) <> 0 OR LOCATE(' TO ', UPPER(rslt.result_value)) <> 0
-                )                     
-             AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) NOT IN ('>' , '<'      )   THEN NULL   
+                )
+             AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) NOT IN ('>' , '<'      )   THEN NULL
             ----------------IN, start with an Operator, 2nd number , 3rd is IN Put all in NUMBER 2021-03-16
-            WHEN LOCATE(' IN ', UPPER(rslt.result_value)) <> 0 
+            WHEN LOCATE(' IN ', UPPER(rslt.result_value)) <> 0
              AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' )             THEN REGEXP_REPLACE(CONCAT(SPLIT(rslt.result_value,' ')[0], ' ',SPLIT(rslt.result_value,' ')[1], ' ',SPLIT(rslt.result_value,' ')[2]),'[<>]','')
-            WHEN LOCATE(' TO ', UPPER(rslt.result_value)) <> 0 
+            WHEN LOCATE(' TO ', UPPER(rslt.result_value)) <> 0
              AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' )             THEN REGEXP_REPLACE(CONCAT(SPLIT(rslt.result_value,' ')[0], ' ',SPLIT(rslt.result_value,' ')[1], ' ',SPLIT(rslt.result_value,' ')[2]),'[<>]','')
-  
-            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 4) IN ('>OR='    , '<OR='    ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,5),'[A-Za-z(),=~*%]','')  
+
+            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 4) IN ('>OR='    , '<OR='    ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,5),'[A-Za-z(),=~*%]','')
             WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 8) IN ('MORETHAN', 'LESSTHAN') THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,9),'[A-Za-z(),=~*%]','')
-            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<=','>=','<>'        ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,3),'[A-Za-z(),=~*%]','')              
+            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 6) IN ('EQUALS'              ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,7),'[A-Za-z(),=~*%]','') --- New
+            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<=','>=','<>'        ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,3),'[A-Za-z(),=~*%]','')
             WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 3) IN ('</=', '>/='          ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,4),'[A-Za-z(),=~*%]','')
             WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<<', '>>'            ) THEN NULL
-            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<' ,'='        ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,2),'[A-Za-z(),=~*%]','')
+            WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<'   ,'='      ) THEN REGEXP_REPLACE(SUBSTR(rslt.result_value,2),'[A-Za-z(),=~*%]','')
+
          ------------------- one word neither a number or alpha
-          WHEN LOCATE(' ', UPPER(rslt.result_value)) = 0 
-              AND  CAST(rslt.result_value AS INT)    IS NULL 
+          WHEN LOCATE(' ', UPPER(rslt.result_value)) = 0
+              AND  CAST(rslt.result_value AS INT)    IS NULL
               AND  CAST(rslt.result_value AS FLOAT)  IS NULL
               AND  rslt.result_value NOT RLIKE '[0-9]+'                         THEN NULL
 
-            WHEN LOCATE(' IN ', UPPER(rslt.result_value)) <> 0 AND rslt.result_value RLIKE '[0-9]'  AND LENGTH(TRIM(rslt.result_value)) < 20  
+            WHEN LOCATE(' IN ', UPPER(rslt.result_value)) <> 0 AND rslt.result_value RLIKE '[0-9]'  AND LENGTH(TRIM(rslt.result_value)) < 20
                         AND  CAST(REGEXP_REPLACE(rslt.result_value,'[ A-Za-z(),=~*]','') AS FLOAT) IS NOT NULL
                                                                                     THEN rslt.result_value
-            WHEN LOCATE(' TO ', UPPER(rslt.result_value)) <> 0 AND rslt.result_value RLIKE '[0-9]'  AND LENGTH(TRIM(rslt.result_value)) < 20  
-                        AND  CAST(REGEXP_REPLACE(rslt.result_value,'[ A-Za-z(),=~*]','') AS FLOAT) IS NOT NULL            
-                                                                                    THEN rslt.result_value                 
-                
+            WHEN LOCATE(' TO ', UPPER(rslt.result_value)) <> 0 AND rslt.result_value RLIKE '[0-9]'  AND LENGTH(TRIM(rslt.result_value)) < 20
+                        AND  CAST(REGEXP_REPLACE(rslt.result_value,'[ A-Za-z(),=~*]','') AS FLOAT) IS NOT NULL
+                                                                                    THEN rslt.result_value
+
             ---------Start with numbers and it ia number and it is not a date
             WHEN  SUBSTR(rslt.result_value, 1, 1) rlike '[.0-9]+'
-                AND to_date(from_unixtime(unix_timestamp(SUBSTR(rslt.result_value, 1, 10),'MM/dd/yyyy')))  IS NULL 
-                AND 
+                AND to_date(from_unixtime(unix_timestamp(SUBSTR(rslt.result_value, 1, 10),'MM/dd/yyyy')))  IS NULL
+                AND
                     (
-                        CAST(rslt.result_value AS INT)     IS NOT NULL 
+                        CAST(rslt.result_value AS INT)     IS NOT NULL
                      OR  CAST(rslt.result_value AS FLOAT)  IS NOT NULL
                     )
-                     AND UPPER(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','')) <> 'D'           THEN rslt.result_value 
-                                                                                                    
-             WHEN  rslt.result_value RLIKE '^[.0-9]+'                                              
-                AND 
+                     AND UPPER(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','')) <> 'D'           THEN rslt.result_value
+
+             WHEN  rslt.result_value RLIKE '^[.0-9]+'
+                AND
                     (
-                        CAST(rslt.result_value AS INT)     IS NOT NULL 
+                        CAST(rslt.result_value AS INT)     IS NOT NULL
                      OR  CAST(rslt.result_value AS FLOAT)  IS NOT NULL
-                    )                                                                               
+                    )
                      AND UPPER(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','')) <> 'D'            THEN REGEXP_REPLACE(rslt.result_value ,'[A-Za-z(),=~*]','')
-          ---------Start with decimal 
+          ---------Start with decimal
             WHEN  SUBSTR(rslt.result_value, 1, 1) = '.'                                             THEN NULL
             ------------------- one word neither a number or alpha
-            WHEN LOCATE(' ', UPPER(rslt.result_value)) = 0 
-                  AND  CAST(rslt.result_value AS INT)    IS NULL 
+            WHEN LOCATE(' ', UPPER(rslt.result_value)) = 0
+                  AND  CAST(rslt.result_value AS INT)    IS NULL
                   AND  CAST(rslt.result_value AS FLOAT)  IS NULL
                   AND  rslt.result_value NOT RLIKE '^[a-z]|[A-Z]$'                                  THEN NULL
-  
+
             ---------Start with -ve (Negate if there are opearators)
             WHEN  SUBSTR(rslt.result_value, 1, 1) = '-' AND rslt.result_value rlike '[0-9]' AND rslt.result_value NOT RLIKE '[>, <]' THEN rslt.result_value
 
-          END), ']') 
+          END), ']')
    AS HV_result_value_numeric,
+
      ------------- TRIM and compare  (CASE sequence is important)`
     CASE
-        ---- hard code
-         --WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ' , '= SAME AS 1ST READ W/MLF’S ALSO 10/29/18', '=E.FACIUM? REISO 12/16/18') THEN NULL
-            WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ') THEN NULL            
-            WHEN TRIM(UPPER(rslt.result_value)) LIKE ('=E.FACIUM? REISO%') THEN NULL
-            WHEN TRIM(UPPER(rslt.result_value)) LIKE ( '= SAME AS 1ST READ W/ML%') THEN NULL
-         --- Check if more than one opeators
-        WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[=A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1 THEN NULL
+         ---- hard code
+        WHEN TRIM(UPPER(rslt.result_value)) IN ('===>NOT PROVIDED' , '= SAME AS 1ST READ')                 THEN NULL
+        WHEN TRIM(UPPER(rslt.result_value)) LIKE ('=E.FACIUM? REISO%')                                     THEN NULL
+        WHEN TRIM(UPPER(rslt.result_value)) LIKE ( '= SAME AS 1ST READ W/ML%')                             THEN NULL
+        --- Check if more than one opeators
+        WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1
+         AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')                THEN  NULL
         -------- hardcode for  mg/dL
-          WHEN LOCATE(' mg/dL ', rslt.result_value) <> 0    
+        WHEN LOCATE(' mg/dL ', rslt.result_value) <> 0
           AND (
-                SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' ) 
+                SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' )
              OR SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN' , 'LESSTHAN' )
-              )                                                                                                THEN SUBSTR(rslt.result_value,LOCATE(' mg/dL ', rslt.result_value)-5) 
+              )                                                                                           THEN SUBSTR(rslt.result_value,LOCATE(' mg/dL ', rslt.result_value)-5)
          -------- hardcode for COPIES (Remove operator if present)
-         WHEN LOCATE('COPIES', rslt.result_value) <> 0 AND LENGTH(TRIM(rslt.result_value)) < 20  THEN  SUBSTR(TRIM(rslt.result_value), LOCATE('COPIES', TRIM(rslt.result_value))-1)
+        WHEN LOCATE('COPIES', rslt.result_value) <> 0 AND LENGTH(TRIM(rslt.result_value)) < 20            THEN  SUBSTR(TRIM(rslt.result_value), LOCATE('COPIES', TRIM(rslt.result_value))-1)
          --- softcode
-         WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<' ) 
+        WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 1) IN ('>' , '<' )
              AND SPLIT(rslt.result_value,' ')[1] RLIKE '[A-Za-z]'
-             AND SPLIT(rslt.result_value,' ')[2] RLIKE '[A-Za-z]'  
-             AND LOCATE(' IN ', UPPER(rslt.result_value)) = 0                                                  THEN REGEXP_REPLACE(SUBSTR(rslt.result_value, LOCATE( SPLIT(rslt.result_value,' ')[1] , rslt.result_value)), '[<>]','')           
-       ------------------- If the result is complete alpha and relate 
-        WHEN gold.gen_ref_desc IS NOT NULL                                                                     THEN gold.gen_ref_desc  
+             AND SPLIT(rslt.result_value,' ')[2] RLIKE '[A-Za-z]'
+             AND LOCATE(' IN ', UPPER(rslt.result_value)) = 0                                             THEN REGEXP_REPLACE(SUBSTR(rslt.result_value, LOCATE( SPLIT(rslt.result_value,' ')[1] , rslt.result_value)), '[<>]','')
+        ------------------ If the result is complete alpha and relate
+        WHEN gold.gen_ref_desc IS NOT NULL                                                                THEN gold.gen_ref_desc
         --- Check if more than one opeators
         WHEN REPLACE(REGEXP_REPLACE(rslt.result_value,'[A-Za-z(),~*%/0-9:.,~-]',''),' ' ,'')  IN ('<<', '>>' ) THEN NULL
-        
-         ------------------- one word neither a number or alpha
-        WHEN LOCATE(' ', UPPER(rslt.result_value)) = 0 
-               AND  CAST(rslt.result_value AS INT)    IS NULL 
-               AND  CAST(rslt.result_value AS FLOAT)  IS NULL
-               AND  rslt.result_value NOT RLIKE '^[a-z]|[A-Z]$'              THEN NULL            
-         --------  IN and first is not an operator MAke it NULL
+        ------------------- one word neither a number or alpha and last character not %
+        WHEN LOCATE(' ', UPPER(rslt.result_value)) = 0
+               AND  CAST(rslt.result_value AS INT)    IS NULL    AND CAST(rslt.result_value AS FLOAT)  IS NULL
+               AND  rslt.result_value NOT RLIKE '^[a-z]|[A-Z]$'  AND SUBSTR(REVERSE(rslt.result_value),1,1) <> '%'   --- New condition
+                                                                                                          THEN NULL
+         --------  IN and first is not an operator Make it NULL
          WHEN (
                  LOCATE(' IN ', UPPER(rslt.result_value)) <> 0 OR LOCATE(' TO ', UPPER(rslt.result_value)) <> 0
               )
           AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) NOT IN ('>' , '<' )  THEN NULL
-        WHEN LOCATE(' IN ', UPPER(rslt.result_value)) <> 0 
+        WHEN LOCATE(' IN ', UPPER(rslt.result_value)) <> 0
          AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' )      THEN REGEXP_REPLACE(SUBSTR(rslt.result_value, LOCATE( SPLIT(rslt.result_value,' ')[3], rslt.result_value )),'[/)(0-9:.<>,~-]','')  --- GET THE 4th place data and onwaoard
-        WHEN LOCATE(' TO ', UPPER(rslt.result_value)) <> 0 
+        WHEN LOCATE(' TO ', UPPER(rslt.result_value)) <> 0
          AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' )      THEN REGEXP_REPLACE(SUBSTR(rslt.result_value, LOCATE( SPLIT(rslt.result_value,' ')[3], rslt.result_value )),'[/)(0-9:.<>,~-]','')  --- GET THE 4th place data and onwaoard
-    
-    -------------
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) THEN REGEXP_REPLACE(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') ,'[ORor]'   ,'')
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) THEN REGEXP_REPLACE(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') ,'[ORor]'   ,'')
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) THEN REGEXP_REPLACE(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>,~]','') ,'MORE THAN','')
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('LESSTHAN'     ) THEN REGEXP_REPLACE(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>,~]','') ,'LESS THAN','')
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('</='          ) THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') 
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('>/='          ) THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') 
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) IN ('<=','>=','<>' ) THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') 
+
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) THEN REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') ,'OR'   ,''   ), 'or'       ,'')
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) THEN REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') ,'OR'   ,''   ), 'or'       ,'')
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) THEN REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>,~]','') ,'MORE THAN',''), 'More than','')
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('LESSTHAN'     ) THEN REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>,~]','') ,'LESS THAN',''), 'Less than','')
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 6) IN ('EQUALS'       ) THEN REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>,~]','') ,'EQUALS',''   ), 'Equals'   ,'')
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('</='          ) THEN                        REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','')
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 3) IN ('>/='          ) THEN                        REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','')
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) IN ('<=','>=','<>' ) THEN                        REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','')
         WHEN SUBSTR(UPPER(REPLACE(rslt.result_value,' ','')), 1, 2) IN ('<<', '>>'     ) THEN NULL
-        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<' ,'=' ) THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','') 
+        WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 1) IN ('>' , '<','='  ) THEN                        REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>=,~]','')
         ---------Start with numbers and it is not a date
-         WHEN  to_date(from_unixtime(unix_timestamp(SUBSTR(rslt.result_value, 1, 10),'MM/dd/yyyy')))  IS NULL  
+         WHEN  to_date(from_unixtime(unix_timestamp(SUBSTR(rslt.result_value, 1, 10),'MM/dd/yyyy')))  IS NULL
           AND  CAST(SUBSTR(rslt.result_value, 1, 2) AS INT) <> 0
           AND  CAST(SUBSTR(rslt.result_value, 1, 2) AS FLOAT) <> 0    THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>,~-]','')
         WHEN SUBSTR(rslt.result_value, 1, 1) rlike '[0-9]+'           THEN REGEXP_REPLACE(rslt.result_value,'[/)(0-9:.<>,~-]','')
-       ---------Start with decimal 
+       ---------Start with decimal
         WHEN  SUBSTR(rslt.result_value, 1, 1) = '.'                   THEN NULL
-       
+
     ELSE
             rslt.result_value
-    END 
+    END
    AS HV_result_value_alpha,
-   CAST(NULL AS STRING)   AS HV_result_value,   
+   CAST(NULL AS STRING)   AS HV_result_value,
     CASE
         WHEN UPPER(qtim1.profile_ind) ='Y' THEN qtim1.lab_reprt_titles_concat
     ELSE NULL
@@ -432,62 +440,61 @@ SELECT
     qtim2.unit_of_measure                                   AS unit_of_measure_qtim,
     qtim2.loinc_number                                      AS loinc_number_qtim
 FROM order_result rslt
-LEFT OUTER JOIN diagnosis diag ON rslt.unique_accession_id = diag.unique_accession_id 
+LEFT OUTER JOIN diagnosis diag ON rslt.unique_accession_id = diag.unique_accession_id
 LEFT OUTER JOIN transactions  ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id
-LEFT OUTER JOIN matching_payload  pay  ON ptnt.hvjoinkey           = pay.hvJoinKey 
--- LEFT OUTER JOIN loinc as loinc_delta   ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)  = CAST(TO_DATE(loinc_delta.date_of_service, 'yyyy-MM-dd') AS DATE)
---                                       AND UPPER(rslt.result_name) = UPPER(loinc_delta.upper_result_name) 
---                                       AND rslt.local_result_code = loinc_delta.local_result_code
---                                       AND rslt.units             = loinc_delta.units
+LEFT OUTER JOIN matching_payload  pay  ON ptnt.hvjoinkey           = pay.hvJoinKey
+LEFT OUTER JOIN loinc as loinc_delta   ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)  = CAST(TO_DATE(loinc_delta.date_of_service, 'yyyy-MM-dd') AS DATE)
+                                       AND UPPER(rslt.result_name) = UPPER(loinc_delta.upper_result_name)
+                                       AND rslt.local_result_code = loinc_delta.local_result_code
+                                       AND rslt.units             = loinc_delta.units
 LEFT OUTER JOIN loinc           ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)  = CAST(TO_DATE(loinc.date_of_service, 'yyyy-MM-dd') AS DATE)
-                                       AND UPPER(rslt.result_name) = UPPER(loinc.upper_result_name) 
+                                       AND UPPER(rslt.result_name) = UPPER(loinc.upper_result_name)
                                        AND rslt.local_result_code = loinc.local_result_code
                                        AND rslt.units             = loinc.units
-LEFT OUTER JOIN qtim1 qtim1 ON rslt.lab_code = qtim1.compendium_code AND rslt.local_profile_code = qtim1.unit_code
-LEFT OUTER JOIN qtim2 qtim2 ON rslt.lab_code = qtim2.compendium_code AND rslt.local_result_code = COALESCE(qtim2.standard_result_code, qtim2.analyte_code) 
+LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim1 qtim1 ON rslt.lab_code = qtim1.compendium_code AND rslt.local_profile_code = qtim1.unit_code
+LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim2 qtim2 ON rslt.lab_code = qtim2.compendium_code AND rslt.local_result_code = COALESCE(qtim2.standard_result_code, qtim2.analyte_code)
                              AND rslt.local_profile_code = qtim2.unit_code
 LEFT OUTER JOIN labtest_quest_rinse_result_gold_alpha gold          ON UPPER(TRIM(gold.gen_ref_cd)) = UPPER(TRIM(rslt.result_value))
 
-WHERE 
+WHERE
  LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
 AND
 -- (
 --      ---------------- 1. The COUNTRY is NOT NULL  (from patient) ------------------------------
---         LENGTH(TRIM(COALESCE(ptnt.pat_country , ''))) <> 0 
---      ---------------- 2a. The state is NOT NULL   (from patient) ------------------------------  
---      OR LENGTH(TRIM(COALESCE(ptnt.pat_state   , ''))) <> 0 
---      ---------------- 2b. The state is NOT NULL  (from result) --------------------------------  
+--         LENGTH(TRIM(COALESCE(ptnt.pat_country , ''))) <> 0
+--      ---------------- 2a. The state is NOT NULL   (from patient) ------------------------------
+--      OR LENGTH(TRIM(COALESCE(ptnt.pat_state   , ''))) <> 0
+--      ---------------- 2b. The state is NOT NULL  (from result) --------------------------------
 --      OR LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0
---      ---------------- 2c. The state is NOT NULL   (from pay load) -----------------------------  
---      OR LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0    
---      ---------------- 3a. The Zip code is NOT NULL  (from result)------------------------------  
---      OR LENGTH(TRIM(COALESCE(rslt.acct_zip    , ''))) <> 0 
---      ---------------- 3b. The Zip code is NOT NULL  from patient)------------------------------  
---      OR LENGTH(TRIM(COALESCE(ptnt.pat_zip     , ''))) <> 0 
---      ---------------- 3c. The Zip code is NOT NULL  (from payload)-----------------------------  
---      OR LENGTH(TRIM(COALESCE(pay.threedigitzip, ''))) <> 0   
-     
+--      ---------------- 2c. The state is NOT NULL   (from pay load) -----------------------------
+--      OR LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0
+--      ---------------- 3a. The Zip code is NOT NULL  (from result)------------------------------
+--      OR LENGTH(TRIM(COALESCE(rslt.acct_zip    , ''))) <> 0
+--      ---------------- 3b. The Zip code is NOT NULL  from patient)------------------------------
+--      OR LENGTH(TRIM(COALESCE(ptnt.pat_zip     , ''))) <> 0
+--      ---------------- 3c. The Zip code is NOT NULL  (from payload)-----------------------------
+--      OR LENGTH(TRIM(COALESCE(pay.threedigitzip, ''))) <> 0
+
 --  )
 
 --  AND
   (
       ---------------- 1. The COUNTRY is Valid (from patient) --------------------------------------
         ( LENGTH(TRIM(COALESCE(ptnt.pat_country , ''))) <> 0  AND UPPER(COALESCE(SUBSTR(ptnt.pat_country,1,2),'US')) = 'US')
-      ---------------- 2a. The state is NULL or Valid  (from patient) ------------------------------  
-      OR ( LENGTH(TRIM(COALESCE(ptnt.pat_state   , ''))) <> 0 AND EXISTS (SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(ptnt.pat_state, 'PA')) = sts.geo_state_pstl_cd) )
-      ---------------- 2b. The state is NULL or Valid  (from result) ------------------------------  
-      OR ( LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0 AND EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(rslt.acct_state, 'PA')) = sts.geo_state_pstl_cd) )
-      ---------------- 2c. The state is NULL or Valid  (from pay load) ------------------------------  
-      OR ( LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0 AND  EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(pay.state, 'PA')) = sts.geo_state_pstl_cd)      ) 
-      ---------------- 3a. The Zip code is NULL or Valid (from result)------------------------------  
-    --  OR rslt.acct_zip IS NULL 
-    --  OR CAST(rslt.acct_zip AS INT) <> 0 
-    --   ---------------- 3b. The Zip code is NULL or Valid (from patient)------------------------------  
-    --   OR ptnt.pat_zip IS NULL 
+      ---------------- 2a. The state is NULL or Valid  (from patient) ------------------------------
+      OR ( LENGTH(TRIM(COALESCE(ptnt.pat_state   , ''))) <> 0 AND EXISTS (SELECT 1 FROM ref_geo_state sts WHERE UPPER(COALESCE(ptnt.pat_state, 'PA')) = sts.geo_state_pstl_cd) )
+      ---------------- 2b. The state is NULL or Valid  (from result) ------------------------------
+      OR ( LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0 AND EXISTS(SELECT 1 FROM ref_geo_state sts WHERE UPPER(COALESCE(rslt.acct_state, 'PA')) = sts.geo_state_pstl_cd) )
+      ---------------- 2c. The state is NULL or Valid  (from pay load) ------------------------------
+      OR ( LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0 AND  EXISTS(SELECT 1 FROM ref_geo_state sts WHERE UPPER(COALESCE(pay.state, 'PA')) = sts.geo_state_pstl_cd)      )
+      ---------------- 3a. The Zip code is NULL or Valid (from result)------------------------------
+    --  OR rslt.acct_zip IS NULL
+    --  OR CAST(rslt.acct_zip AS INT) <> 0
+    --   ---------------- 3b. The Zip code is NULL or Valid (from patient)------------------------------
+    --   OR ptnt.pat_zip IS NULL
     --   OR CAST(ptnt.pat_zip AS INT) <> 0
-    --   ---------------- 3c. The Zip code is NULL or Valid (from payload)------------------------------  
-    --   OR pay.threedigitzip IS NULL 
+    --   ---------------- 3c. The Zip code is NULL or Valid (from payload)------------------------------
+    --   OR pay.threedigitzip IS NULL
     --   OR CAST(pay.threedigitzip AS INT) <> 0
-     
-  ) 
 
+  )

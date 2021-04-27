@@ -12,13 +12,18 @@ import spark.census.questrinse.HV000838_1b.refbuild_loinc_delta_sql as refbuild_
 
 PARQUET_FILE_SIZE = 1024 * 1024 * 1024
 REFERENCE_OUTPUT_PATH = 's3://salusv/reference/questrinse/loinc_ref/'
-QTIM1_DIM_OUTPUT_PATH = 's3://salusv/reference/questrinse/qtim1/'
-QTIM2_DIM_OUTPUT_PATH = 's3://salusv/reference/questrinse/qtim2/'
+
+
+# QTIM1_DIM_OUTPUT_PATH = 's3://salusv/reference/questrinse/qtim1/'
+# QTIM2_DIM_OUTPUT_PATH = 's3://salusv/reference/questrinse/qtim2/'
+
+
 REFERENCE_HDFS_OUTPUT_PATH = '/reference/'
 REFERENCE_LOINC_DELTA = "loinc_delta"
 
 POC_1B = True
-poc_output_path = 's3a://salusv/deliverable/1b_test/questrinse/HV000838/'
+poc_output_path = 's3a://salusv/deliverable/1b_test_qtim/questrinse/HV000838/'
+# poc_output_path = 's3a://salusv/deliverable/1b_test_qtim/questrinse/HV000838/sample_source/'
 
 
 class QuestRinseCensusDriver(CensusDriver):
@@ -68,14 +73,47 @@ class QuestRinseCensusDriver(CensusDriver):
         self._spark.sql(loinc_dedup_sql).createOrReplaceTempView('loinc')
         self._spark.table('loinc').count()
 
-        logger.log('Loading QTIM1 dim data from S3')
-        self._spark.read.parquet(QTIM1_DIM_OUTPUT_PATH).cache().createOrReplaceTempView('qtim1')
-        postprocessor.nullify(postprocessor.trimmify(self._spark.table('qtim1')), ['NULL', 'Null', 'null', 'N/A', ''])
-        # self._spark.table('qtim1').count()
+        # logger.log('Loading external table: ref_questrinse_qtim')
+        # external_table_loader.load_analytics_db_table(
+        #     self._sqlContext, 'default', 'ref_questrinse_qtim', 'ref_questrinse_qtim'
+        # )
+        # cleaned_ref_questrinse_qtim_df = postprocessor.nullify(postprocessor.trimmify(self._spark.table('ref_questrinse_qtim')), ['NULL', 'Null', 'null', 'N/A', ''])
+        # cleaned_ref_questrinse_qtim_df.createOrReplaceTempView("ref_questrinse_qtim")
 
-        logger.log('Loading QTIM2 dim data from S3')
-        self._spark.read.parquet(QTIM2_DIM_OUTPUT_PATH).cache().createOrReplaceTempView('qtim2')
-        postprocessor.nullify(postprocessor.trimmify(self._spark.table('qtim2')), ['NULL', 'Null', 'null', 'N/A', ''])
+        logger.log('Loading external table: ref_questrinse_qtim1')
+        self._spark.sql("refresh table default.ref_questrinse_qtim1")
+        external_table_loader.load_analytics_db_table(
+            self._sqlContext, 'default', 'ref_questrinse_qtim1', 'ref_questrinse_qtim1'
+        )
+        self._spark.table('ref_questrinse_qtim1').cache().createOrReplaceTempView('qtim1')
+
+        logger.log('Loading external table: ref_questrinse_qtim2')
+        self._spark.sql("refresh table default.ref_questrinse_qtim2")
+        external_table_loader.load_analytics_db_table(
+            self._sqlContext, 'default', 'ref_questrinse_qtim2', 'ref_questrinse_qtim2'
+        )
+        self._spark.table('ref_questrinse_qtim2').cache().createOrReplaceTempView('qtim2')
+
+
+
+
+        # postprocessor.nullify(postprocessor.trimmify(self._spark.table('qtim1')), ['NULL', 'Null', 'null', 'N/A', ''])
+
+        # logger.log('Loading external table: ref_questrinse_qtim2')
+        # external_table_loader.load_analytics_db_table(
+        #     self._sqlContext, 'default', 'ref_questrinse_qtim2', 'ref_questrinse_qtim2'
+        # )
+        # self._spark.table('ref_questrinse_qtim2').cache().createOrReplaceTempView('qtim2')
+        # postprocessor.nullify(postprocessor.trimmify(self._spark.table('qtim2')), ['NULL', 'Null', 'null', 'N/A', ''])
+
+        # logger.log('Loading QTIM1 dim data from S3')
+        # self._spark.read.parquet(QTIM1_DIM_OUTPUT_PATH).cache().createOrReplaceTempView('qtim1')
+        # postprocessor.nullify(postprocessor.trimmify(self._spark.table('qtim1')), ['NULL', 'Null', 'null', 'N/A', ''])
+        # # self._spark.table('qtim1').count()
+        #
+        # logger.log('Loading QTIM2 dim data from S3')
+        # self._spark.read.parquet(QTIM2_DIM_OUTPUT_PATH).cache().createOrReplaceTempView('qtim2')
+        # postprocessor.nullify(postprocessor.trimmify(self._spark.table('qtim2')), ['NULL', 'Null', 'null', 'N/A', ''])
 
         df = self._spark.table('order_result')
         df = df.repartition(int(
@@ -116,6 +154,48 @@ class QuestRinseCensusDriver(CensusDriver):
         # This data goes right to the provider. They want the data in parquet without
         # column partitions.
         logger.log('Saving data to the local file system')
+        # lop = '/staging/'
+            #
+            # logger.log('writing ...order_result')
+            # df1 = self._spark.table("order_result")
+            # df1.repartition(40).write.parquet(lop+"order_result/", compression='gzip', mode='overwrite')
+            #
+            # logger.log('writing ...diagnosis')
+            # df2 = self._spark.table("diagnosis")
+            # df2.repartition(40).write.parquet(lop+"diagnosis/", compression='gzip', mode='overwrite')
+            #
+            # logger.log('writing ...transactions')
+            # df3 = self._spark.table("transactions")
+            # df3.repartition(40).write.parquet(lop+"transactions/", compression='gzip', mode='overwrite')
+            #
+            # logger.log('writing ...matching_payload')
+            # df4 = self._spark.table("matching_payload")
+            # df4.repartition(40).write.parquet(lop+"matching_payload/", compression='gzip', mode='overwrite')
+
+            # logger.log('writing ...ref_questrinse_qtim')
+            # df5 = self._spark.table("ref_questrinse_qtim")
+            # df5.repartition(5).write.parquet(lop+"ref_questrinse_qtim/", compression='gzip', mode='overwrite')
+            #
+            # logger.log('writing ...labtest_quest_rinse_ref_questrinse_qtim1')
+            # df5 = self._spark.table("labtest_quest_rinse_ref_questrinse_qtim1")
+            # df5.repartition(1).write.parquet(lop+"labtest_quest_rinse_ref_questrinse_qtim1/", compression='gzip', mode='overwrite')
+            #
+            # logger.log('writing ...labtest_quest_rinse_ref_questrinse_qtim2')
+            # df6 = self._spark.table("labtest_quest_rinse_ref_questrinse_qtim2")
+            # df6.repartition(1).write.parquet(lop+"labtest_quest_rinse_ref_questrinse_qtim2/", compression='gzip', mode='overwrite')
+
+            # logger.log('writing ...labtest_quest_rinse_result_gold_alpha')
+            # df7 = self._spark.table("labtest_quest_rinse_result_gold_alpha")
+            # df7.repartition(1).write.parquet(lop+"labtest_quest_rinse_result_gold_alpha/", compression='gzip', mode='overwrite')
+            #
+            # logger.log('writing ...ref_geo_state')
+            # df8 = self._spark.table("ref_geo_state")
+            # df8.repartition(1).write.parquet(lop+"ref_geo_state/", compression='gzip', mode='overwrite')
+            #
+            # logger.log('writing ...labtest_quest_rinse_census_pre_final_01')
+            # df9 = self._spark.table("labtest_quest_rinse_census_pre_final_01")
+            # df9.repartition(20).write.parquet(lop+"labtest_quest_rinse_census_pre_final_01/", compression='gzip', mode='overwrite')
+
         dataframe.persist()
         dataframe.count()
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
@@ -148,14 +228,16 @@ class QuestRinseCensusDriver(CensusDriver):
         else:
             manifest_file_name = 'Test_Data_Set_{}_manifest.tsv'.format(batch_id)
             manifest_file_path = poc_output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(batch_id_path=_batch_id_path)
-        
+
         file_utils.create_parquet_row_count_file(
             self._spark, local_output_path,
             manifest_file_path,
             manifest_file_name, True
         )
 
+
     def copy_to_s3(self, batch_date=None, batch_id=None):
+        # normalized_records_unloader.distcp(poc_output_path)
         if not POC_1B:
             super().copy_to_s3(batch_date, batch_id)
         else:

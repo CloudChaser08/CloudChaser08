@@ -220,15 +220,15 @@ SELECT
     CASE
         WHEN gold.gen_ref_desc IS NOT NULL                      THEN gold.gen_ref_desc 
         ---- nullify if only - is present
-        WHEN TRIM(norm_pre01.HV_result_value_alpha) = '-' THEN NULL    
+        WHEN TRIM(norm_pre01.HV_result_value_alpha) IN ( '-' , '*') THEN NULL
         ------------- NEW CODE (if there is date in the numberic column make the alfa NULL)
-        WHEN 
+        WHEN
         (
           SUBSTR(HV_result_value_numeric,2,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,3,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,4,1) = '/'         AND
           SUBSTR(HV_result_value_numeric,5,1) rlike '[0-9]' AND
-          SUBSTR(HV_result_value_numeric,6,1) rlike '[0-9]' 
+          SUBSTR(HV_result_value_numeric,6,1) rlike '[0-9]'
         )
          OR
         (
@@ -241,21 +241,21 @@ SELECT
           SUBSTR(HV_result_value_numeric,8,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,9,1) rlike '[0-9]'
          )                                                        THEN NULL
-        ------------- Exception for mg/dL 
-        WHEN LOCATE(' mg/dL ', norm_pre01.HV_result_value_alpha) <> 0 
+        ------------- Exception for mg/dL
+        WHEN LOCATE(' mg/dL ', norm_pre01.HV_result_value_alpha) <> 0
         AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN TRIM(norm_pre01.HV_result_value_alpha)
         -------- Exception for mcg/ML 2021-03-29
-        WHEN LOCATE('mL', norm_pre01.HV_result_value_alpha) <> 0 
-         AND LOCATE('/mL', norm_pre01.HV_result_value_alpha) = 0 
-        AND norm_pre01.HV_result_value_operator IS NOT NULL           THEN REPLACE(norm_pre01.HV_result_value_alpha, 'mL', '/mL') 
-          
-        WHEN LENGTH(TRIM(COALESCE(norm_pre01.HV_result_value_numeric ,''))) <> 0 
+        WHEN LOCATE('mL', norm_pre01.HV_result_value_alpha) <> 0
+         AND LOCATE('/mL', norm_pre01.HV_result_value_alpha) = 0
+        AND norm_pre01.HV_result_value_operator IS NOT NULL           THEN REPLACE(norm_pre01.HV_result_value_alpha, 'mL', '/mL')
+
+        WHEN LENGTH(TRIM(COALESCE(norm_pre01.HV_result_value_numeric ,''))) <> 0
          AND LENGTH(TRIM(COALESCE(norm_pre01.HV_result_value_operator,''))) <> 0
          AND norm_pre01.HV_result_value_alpha NOT IN ( 'IN' , 'TO')               ---- Exception disregard IN TO
                 THEN norm_pre01.HV_result_value_alpha
-        
+
     ELSE NULL
-    END AS HV_result_value_alpha       ,  
+    END AS HV_result_value_alpha       ,
     norm_pre01.date_final_report       ,
     norm_pre01.profile_name_qtim,
     norm_pre01.order_name_qtim,
@@ -267,17 +267,17 @@ SELECT
 
     norm_pre02.s_diag_code_codeset_ind ,
     norm_pre02.HV_s_diag_code_codeset_ind
-    
+
            FROM labtest_quest_rinse_census_pre_final_01 norm_pre01
 LEFT OUTER JOIN labtest_quest_rinse_census_pre_final_02 norm_pre02  ON norm_pre01.unique_accession_id = norm_pre02.unique_accession_id
 LEFT OUTER JOIN labtest_quest_rinse_result_gold_alpha gold          ON UPPER(TRIM(gold.gen_ref_cd)) = UPPER(TRIM(norm_pre01.HV_result_value_alpha))
 
 GROUP BY
-    1,     2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  
-    20,   21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  
-    40,   41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59, 
-    60,   61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79, 
-    80,   81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  96,  97,  98,  99, 
-    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 
+    1,     2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,
+    20,   21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,
+    40,   41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,
+    60,   61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79,
+    80,   81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  96,  97,  98,  99,
+    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
     120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
     140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153
