@@ -70,19 +70,3 @@ def get_hdfs_file_path_size(path):
 
     return int(file_count[0])
 
-
-def get_s3_file_path_size(path):
-    """Returns the size(in bytes) of file OR all files within a directory on s3.
-    Displays sizes of files and directories contained in the
-    given directory or the size of a file in case its just a file.
-    Args:
-        path (string): /staging
-
-    Returns:
-        int: The size(bytes) files that are within the given directory or given file
-    """
-    file_count = \
-        subprocess.check_output(
-            ['aws s3 ls --summarize {}'.format(path.replace('s3a:', 's3:'))], shell=True).decode().strip().split('Total Size: ', 1)
-
-    return int(file_count[1])

@@ -5,6 +5,7 @@ from spark.common.census_driver import CensusDriver
 import spark.common.utility.logger as logger
 import spark.helpers.hdfs_tools as hdfs_utils
 import spark.helpers.file_utils as file_utils
+import spark.helpers.s3_utils as s3_utils
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
@@ -120,5 +121,5 @@ class QuestRinseCensusDriver(CensusDriver):
         # Quest doesn't want to see the _SUCCESS file that spark prints out
         logger.log('Deleting _SUCCESS file')
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
-        file_utils.delete_success_file(
+        s3_utils.delete_success_file(
             self._output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(batch_id_path=_batch_id_path))
