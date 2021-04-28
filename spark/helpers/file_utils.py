@@ -2,10 +2,11 @@ from math import ceil
 import os
 import ntpath
 import subprocess
-import re
+
 from spark.common.utility import logger
 
 import spark.helpers.hdfs_tools as hdfs_tools
+import spark.helpers.s3_utils as s3_utils
 from datetime import date
 
 # optimal parquet file size is 500mb - 1gb
@@ -110,7 +111,7 @@ def get_optimal_s3_partition_count(s3_path, expected_file_size=PARQUET_FILE_SIZE
     Calculates the optimal partition count for a given s3 data path and expected file size
     """
     return get_optimal_partition_count(
-        hdfs_tools.get_s3_file_path_size(s3_path),
+        s3_utils.get_file_path_size(s3_path),
         expected_file_size=expected_file_size
     )
 
@@ -122,36 +123,3 @@ def get_optimal_hdfs_partition_count(hdfs_path, expected_file_size=PARQUET_FILE_
         hdfs_tools.get_hdfs_file_path_size(hdfs_path),
         expected_file_size=expected_file_size
     )
-
-def delete_success_file(s3_path):
-    subprocess.check_call(['aws', 's3', 'rm', s3_path + '_SUCCESS'])
-
-
-def get_list_of_2c_subdir(s3_path, include_parent_dir=False):
-    """Returns the subdirectory paths within a directory on s3
-       start from number 2 (2nd century).
-    Args:
-        path (string): s3://../incoming/
-    Returns:
-        include_parent_dir=False
-            ['/2017/01/21/','/2017/02/05/' ]
-        include_parent_dir=True
-            ['<s3_path>/2017/01/21/','<s3_path>/2017/02/05/' ]
-    """
-    s3_path_full = s3_path + '/' if s3_path[-1] != '/' else s3_path
-    input_path = s3_path_full.replace('s3a:', 's3:')
-    dates_full = []
-    try:
-        files = subprocess.check_output(['aws', 's3', 'ls', input_path, '--recursive']).decode().split("\n")
-        dates = [re.findall('2[0-9][0-9]{2}/../..', x)[0]
-                 for x in [x for x in files if re.search('[2][0-9][0-9]{2}/../..', x)]]
-        dates = list(set(dates))
-        if include_parent_dir:
-            dates_full = ["{}{}/".format(s3_path_full, sub) for sub in dates]
-        else:
-            dates_full = ["{}/".format(sub) for sub in dates]
-    except Exception as e:
-        logger.log(
-            "Unable to collect list of subdir: {}\nError encountered: {}".format(s3_path, str(e))
-        )
-    return sorted(dates_full)

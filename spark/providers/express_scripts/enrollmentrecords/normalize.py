@@ -9,6 +9,7 @@ import spark.providers.express_scripts.enrollmentrecords.transactional_schemas a
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils
+import spark.helpers.s3_utils as s3_utils
 import spark.helpers.hdfs_tools as hdfs_utils
 
 S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3://salusv/matching/payload/pharmacyclaims/express_scripts/'
@@ -87,11 +88,11 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         new_phi_path = S3_EXPRESS_SCRIPTS_RX_MATCHING + date_path + '/'
         ref_phi_path = S3_REF_PHI
         local_phi_path = 'hdfs://' + LOCAL_REF_PHI
-        driver.input_path = file_utils.get_list_of_2c_subdir(
+        driver.input_path = s3_utils.get_list_of_2c_subdir(
             this_input_path.replace(date_path + '/', ''),
             True
         )
-        driver.matching_path = file_utils.get_list_of_2c_subdir(
+        driver.matching_path = s3_utils.get_list_of_2c_subdir(
             this_matching_path.replace(date_path + '/', ''),
             True
         )
