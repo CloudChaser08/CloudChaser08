@@ -6,7 +6,7 @@ SELECT
     c.caregiver_id as caregiver_id,
     c.consenter_region as region,
     c.consenter_type as consenter_type,
-    c.franchise as franchise,''
+    c.franchise as franchise,
     c.brand as brand,
     c.program as program_name,
     c.service as service_name,
