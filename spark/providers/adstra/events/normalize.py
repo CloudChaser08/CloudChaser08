@@ -70,7 +70,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'EARLIST_VALID_SERVICE_DATE'
         )
 
-        file_utils.clean_up_output_hdfs('/staging/')
+        hdfs_utils.clean_up_output_hdfs('/staging/')
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'events', 'event_common_model_v4.sql',
             PROVIDER_NAME, 'event_common_model',
