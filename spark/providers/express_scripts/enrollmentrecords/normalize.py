@@ -10,7 +10,6 @@ import spark.helpers.postprocessor as postprocessor
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils
 import spark.helpers.s3_utils as s3_utils
-import spark.helpers.hdfs_tools as hdfs_utils
 
 S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3://salusv/matching/payload/pharmacyclaims/express_scripts/'
 S3_REF_PHI = 's3://salusv/reference/express_scripts_phi/'

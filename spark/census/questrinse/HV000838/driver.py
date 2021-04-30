@@ -3,7 +3,7 @@ import re
 
 from spark.common.census_driver import CensusDriver
 import spark.common.utility.logger as logger
-import spark.helpers.hdfs_tools as hdfs_utils
+import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.file_utils as file_utils
 import spark.helpers.s3_utils as s3_utils
 import spark.helpers.external_table_loader as external_table_loader

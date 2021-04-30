@@ -5,7 +5,7 @@ import subprocess
 
 from spark.common.utility import logger
 
-import spark.helpers.hdfs_tools as hdfs_tools
+import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.s3_utils as s3_utils
 from datetime import date
 
@@ -88,7 +88,7 @@ def create_parquet_row_count_file(spark, input_path, output_path, file_name, inc
     local_output_file = local_path + file_name
 
     date_today = date.today()
-    files = hdfs_tools.list_parquet_files(input_path, pattern="*.parquet")
+    files = hdfs_utils.list_parquet_files(input_path, pattern="*.parquet")
 
     with open(local_output_file, 'w') as output_file:
         if include_header:
@@ -120,6 +120,6 @@ def get_optimal_hdfs_partition_count(hdfs_path, expected_file_size=PARQUET_FILE_
     Calculates the optimal partition count for a given hdfs data path and expected file size
     """
     return get_optimal_partition_count(
-        hdfs_tools.get_hdfs_file_path_size(hdfs_path),
+        hdfs_utils.get_hdfs_file_path_size(hdfs_path),
         expected_file_size=expected_file_size
     )

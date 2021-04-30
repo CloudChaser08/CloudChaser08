@@ -4,7 +4,7 @@ import time
 import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 from spark.helpers.file_utils import FileSystemType, clean_up_output_hdfs
-from spark.helpers.hdfs_tools import get_hdfs_file_count, list_parquet_files
+from spark.helpers.hdfs_utils import get_hdfs_file_count, list_parquet_files
 from spark.helpers.manifest_utils import write as write_manifests
 from spark.helpers.manifest_utils import list as list_manifest_files
 from spark.helpers.manifest_utils import OUTPUT_DIR
