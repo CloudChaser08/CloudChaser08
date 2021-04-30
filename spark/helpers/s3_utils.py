@@ -1,6 +1,11 @@
-import boto3
+"""
+Set of utility functions for interacting with s3
+"""
+
 import os
 import re
+import subprocess
+import boto3
 from spark.common.utility import logger
 
 
@@ -151,3 +156,9 @@ def delete_success_file(s3_path):
     Delete success file from s3
     """
     delete_file(s3_path + '_SUCCESS')
+
+def copy_file_from_local(src, dest):
+    """
+    Stop gap for copying files from local file systion to s3 location
+    """
+    subprocess.check_call(['aws', 's3', 'cp', src, dest])

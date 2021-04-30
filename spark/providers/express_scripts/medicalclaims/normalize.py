@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     logger.log(' -Setting up input/output paths')
     date_path = date_input.replace('-', '/')
-    file_utils.clean_up_output_hdfs(LOCAL_UNMATCHED)
+    hdfs_utils.clean_up_output_hdfs(LOCAL_UNMATCHED)
     subprocess.check_call(['hadoop', 'fs', '-mkdir', LOCAL_UNMATCHED])
 
     driver.init_spark_context(conf_parameters=conf_parameters)

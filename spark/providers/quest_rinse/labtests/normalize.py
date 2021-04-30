@@ -6,7 +6,6 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.lab_common_model import schemas as labtests_schemas
 import spark.common.utility.logger as logger
 import spark.helpers.hdfs_utils as hdfs_utils
-import spark.helpers.file_utils as file_utils
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
@@ -85,7 +84,7 @@ if __name__ == "__main__":
     df.createOrReplaceTempView('order_result')
 
     logger.log('Building LOINC delta reference data')
-    file_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
+    hdfs_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
     for table_conf in refbuild_loinc_delta.TABLE_CONF:
         table_name = str(table_conf['table_name'])
         logger.log("        -loading: writing {}".format(table_name))
@@ -118,7 +117,7 @@ if __name__ == "__main__":
     # column partitions.
     logger.log('Saving data to the local file system')
     output_table = driver.spark.table("labtest_quest_rinse_census_final")
-    file_utils.clean_up_output_hdfs(local_output_path)
+    hdfs_utils.clean_up_output_hdfs(local_output_path)
     output_table.repartition(
         driver.unload_partition_count).write.parquet(local_output_path, compression='gzip', mode='overwrite')
 
@@ -129,7 +128,7 @@ if __name__ == "__main__":
                      if f[0] != '.' and f != "_SUCCESS"]:
         part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
         new_name = output_file_name_template.format(str(part_number).zfill(5)) + '.gz.parquet'
-        file_utils.rename_file_hdfs(local_output_path + filename, local_output_path + new_name)
+        hdfs_utils.rename_file_hdfs(local_output_path + filename, local_output_path + new_name)
 
     driver.log_run()
     driver.stop_spark()
@@ -138,5 +137,5 @@ if __name__ == "__main__":
         logger.log("Copying reference files to: " + REFERENCE_OUTPUT_PATH)
         normalized_records_unloader.distcp(REFERENCE_OUTPUT_PATH, REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)
     logger.log('Deleting ' + REFERENCE_HDFS_OUTPUT_PATH)
-    file_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
+    hdfs_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
     logger.log('Done')

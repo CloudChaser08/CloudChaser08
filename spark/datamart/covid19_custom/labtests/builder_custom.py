@@ -108,10 +108,10 @@ class Covid19LabBuilder:
         logger.log('    -build_all_tests: started')
 
         if self.b_run_lab_build_all_tests:
-            file_utils.clean_up_output_hdfs(self._lab_fact_all_tests)
+            hdfs_utils.clean_up_output_hdfs(self._lab_fact_all_tests)
         if not self.b_custom_interim:
-            file_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom_interim)
-            file_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom)
+            hdfs_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom_interim)
+            hdfs_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom)
 
         """
         (Sometimes we lost MSCK repair applied on source tables. So better
@@ -216,7 +216,7 @@ class Covid19LabBuilder:
                         , partitionBy=self._lab_partitions)
                     self.runner.run_spark_query('drop view {}'.format(lab_build_all_tests_custom_view))
                     self.runner.run_spark_query('drop view {}'.format(lab_collect_all_tests_custom_view))
-                    file_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom_interim)
+                    hdfs_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom_interim)
                 else:
                     logger.log("        -loading: Alert!!! there is no data on ['{}']".format(
                         lab_build_all_tests_custom_view))
@@ -244,7 +244,7 @@ class Covid19LabBuilder:
         """
 
         logger.log('    -build_covid_tests: started')
-        file_utils.clean_up_output_hdfs(self._lab_fact_covid_tests_custom)
+        hdfs_utils.clean_up_output_hdfs(self._lab_fact_covid_tests_custom)
 
         """
         For Optimization and fast data shuffle, 
@@ -332,8 +332,8 @@ class Covid19LabBuilder:
         lab_build_covid_tests_custom_view = 'lab_build_covid_tests_custom'
         lab_cleanse_covid_tests_all_custom_view = 'lab_cleanse_covid_tests_all_custom'
 
-        file_utils.clean_up_output_hdfs(self._lab_fact_covid_cleansed_custom)
-        file_utils.clean_up_output_hdfs(self._lab_fact_covid_cleansed_custom_interim)
+        hdfs_utils.clean_up_output_hdfs(self._lab_fact_covid_cleansed_custom)
+        hdfs_utils.clean_up_output_hdfs(self._lab_fact_covid_cleansed_custom_interim)
 
         logger.log('        -loading: lab covid tests cleansed - reading DELTA')
         self.spark.read.parquet(self._lab_fact_covid_tests_custom).createOrReplaceTempView(
@@ -409,7 +409,7 @@ class Covid19LabBuilder:
         lab_build_covid_ref_custom_view = 'lab_build_covid_ref_custom'
         lab_cleanse_covid_tests_all_custom_view = 'lab_cleanse_covid_tests_all_custom'
 
-        file_utils.clean_up_output_hdfs(self._lab_ref_covid_custom)
+        hdfs_utils.clean_up_output_hdfs(self._lab_ref_covid_custom)
 
         logger.log('        -loading: lab covid ref -reading cleansed (DELTA + HISTORY) data')
         lab_cleanse_covid_tests_all_custom_df = self.spark.read.parquet(self._lab_fact_covid_cleansed_custom_interim)
@@ -449,7 +449,7 @@ class Covid19LabBuilder:
         """
         logger.log('    -build_covid_snapshot: started')
 
-        file_utils.clean_up_output_hdfs(self._lab_covid_snapshot_custom)
+        hdfs_utils.clean_up_output_hdfs(self._lab_covid_snapshot_custom)
 
         lab_cleanse_covid_tests_all_custom_view = 'lab_cleanse_covid_tests_all_custom'
         lab_build_covid_ref_custom_view = 'lab_build_covid_ref_custom'
@@ -509,7 +509,7 @@ class Covid19LabBuilder:
                            .format(lab_cleanse_covid_tests_all_custom_view))
         else:
             logger.log("        -loading: Alert!!! there is no data on ['{}']".format(lab_build_covid_ref_custom_view))
-        file_utils.clean_up_output_hdfs(self._lab_fact_covid_cleansed_custom_interim)
+        hdfs_utils.clean_up_output_hdfs(self._lab_fact_covid_cleansed_custom_interim)
         self.runner.sqlContext.clearCache()
         logger.log('    -build_covid_snapshot: completed')
 
@@ -528,7 +528,7 @@ class Covid19LabBuilder:
                 Later this will be transferred to S3 for Reporting (full refresh)
         """
         logger.log('    -build_covid_sum: started')
-        file_utils.clean_up_output_hdfs(self._lab_covid_sum_custom)
+        hdfs_utils.clean_up_output_hdfs(self._lab_covid_sum_custom)
 
         lab_build_covid_sum_custom_view = 'lab_build_covid_sum_custom'
         lab_build_covid_snapshot_custom_view = 'lab_build_covid_snapshot_custom'

@@ -101,7 +101,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         file_utils.clean_up_output_local(local_phi_path)
         subprocess.check_call(['mkdir', '-p', local_phi_path])
     else:
-        file_utils.clean_up_output_hdfs(local_phi_path)
+        hdfs_utils.clean_up_output_hdfs(local_phi_path)
         subprocess.check_call(['hadoop', 'fs', '-mkdir', local_phi_path])
 
     logger.log(' -Loading new PHI data')
