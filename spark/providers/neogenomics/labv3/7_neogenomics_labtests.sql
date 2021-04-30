@@ -137,7 +137,7 @@ SELECT DISTINCT
                             )                                                               AS diagnosis_code,
     /* diagnosis_code_priority */
     CASE WHEN txn.diagnosis_priority IS NOT NULL
-            THEN 1 + txn.diagnosis_priority
+            THEN CAST((1 + CAST(txn.diagnosis_priority AS INT)) AS STRING)
     ELSE NULL
     END                                                                                     AS diagnosis_code_priority,
     /* procedure_code */

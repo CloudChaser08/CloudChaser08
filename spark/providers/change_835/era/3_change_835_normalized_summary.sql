@@ -5,7 +5,7 @@ SELECT
 	'06'                                                                                    AS mdl_vrsn_num,
     SPLIT(clm.input_file_name, '/')[SIZE(SPLIT(clm.input_file_name, '/')) - 1]              AS data_set_nm,
 	'576'                                                                                   AS hvm_vdr_id,
-	'186'                                                                                   AS hvm_vdr_feed_id,
+	186                                                                                     AS hvm_vdr_feed_id,
     clm.claim_payment_number                                                                AS vdr_medcl_clm_pymt_sumry_id,
     CASE 
         WHEN clm.claim_payment_number IS NOT NULL
