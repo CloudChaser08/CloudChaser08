@@ -49,7 +49,7 @@ def list_path_pages(bucket, key, recursive=False):
     for page in response_iterator:
         yield page
 
-def list_folders(path, recursive=False):
+def list_folders(path, recursive=False, full_path=False):
     """
     Get a list of folders on s3 for a path.
 
@@ -67,10 +67,10 @@ def list_folders(path, recursive=False):
         for prefix in prefixes:
             prefix_name = prefix['Prefix']
             if prefix_name.endswith('/'):
-                yield "s3://{}/{}".format(bucket, prefix_name)
+                yield "s3://{}/{}".format(bucket, prefix_name) if full_path else prefix_name
 
 
-def list_files(path, keys=None, recursive=False):
+def list_files(path, keys=None, recursive=False, full_path=False):
     """
     Get a list of files on s3 for a path. If `keys` is empty, just returns path else returns
     a tuple of path, List[expected key values]
@@ -87,15 +87,16 @@ def list_files(path, keys=None, recursive=False):
     bucket, key = parse_s3_path(path)
     for page in list_path_pages(bucket, key, recursive=recursive):
         for item in page['Contents']:
+            item_path = "s3://{}/{}".format(bucket, item["Key"]) if full_path else item["Key"]
             if keys:
-                yield "s3://{}/{}".format(bucket, item["Key"]), \
+                yield item_path, \
                     [
                         item[expected_key]
                         for expected_key in keys
                         if expected_key in keys
                     ]
             else:
-                yield "s3://{}/{}".format(bucket, item["Key"])
+                yield item_path
 
 
 def get_file_path_size(path, recursive=False):
