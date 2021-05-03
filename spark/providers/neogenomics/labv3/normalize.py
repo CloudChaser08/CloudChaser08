@@ -6,11 +6,7 @@ import spark.providers.neogenomics.labv3.transactional_schemas as transactional_
 
  # ------------------------ Provider specific configuration -----------------------
 
-FEED_ID = '32'
-
-OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/neogenomics/labtests/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
-
+feed_id = '32'
 provider_name = 'neogenomics'
 output_table_names_to_schemas = {
     'neogenomics_labtests': schemas['schema_v7']
@@ -31,7 +27,7 @@ def main(args):
         args.end_to_end_test,
         load_date_explode=False,
         unload_partition_count=1,
-        vdr_feed_id=FEED_ID,
+        vdr_feed_id=feed_id,
         use_ref_gen_values=True,
         output_to_transform_path=False
     )
