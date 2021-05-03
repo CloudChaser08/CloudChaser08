@@ -5,7 +5,7 @@ import spark.providers.quest_rinse.labtests.refbuild_loinc_delta_sql as refbuild
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.lab_common_model import schemas as labtests_schemas
 import spark.common.utility.logger as logger
-import spark.helpers.hdfs_tools as hdfs_utils
+import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.file_utils as file_utils
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
