@@ -12,7 +12,7 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.records_loader as records_loader
 from spark.runner import Runner, PACKAGE_PATH
 from spark.spark_setup import init
-from .std_census import records_schemas, matching_payloads_schemas
+from spark.common.std_census import records_schemas, matching_payloads_schemas
 from spark.common.utility.logger import log
 
 GENERIC_MINIMUM_DATE = datetime.date(1901, 1, 1)
@@ -77,13 +77,15 @@ class CensusDriver(object):
     """
     Base class for census routine drivers
     """
-    def __init__(self, client_name, opportunity_id, salt=None, no_row_id=False, test=False, end_to_end_test=False):
+    def __init__(self, client_name, opportunity_id, salt=None, no_row_id=False, test=False,
+                 end_to_end_test=False, base_package=None):
         self._client_name = client_name
         self._opportunity_id = opportunity_id
         self._salt = salt
         self._no_row_id = no_row_id
         self._test = test
         self._end_to_end_test = end_to_end_test
+        self._base_package = base_package or self.__module__.replace('.' + DRIVER_MODULE_NAME, '')
         log("Starting Census Routine - {}: {}".format(client_name, opportunity_id))
         # if a salt is not specified, default to the opp id
         if self._salt is None:
@@ -198,16 +200,19 @@ class CensusDriver(object):
     def load(self, batch_date, batch_id, chunk_records_files=None):
         log("Loading input")
 
-        if self.__class__.__name__ == CensusDriver.__name__:
-            records_schemas = std_census.records_schemas
-            matching_payloads_schemas = std_census.matching_payloads_schemas
-        else:
+        try:
             records_schemas = importlib.import_module(
-                self.__module__.replace(DRIVER_MODULE_NAME, self._records_module_name)
+                self._base_package + '.' + self._records_module_name
             )
+        except:
+            records_schemas = std_census.records_schemas
+
+        try:
             matching_payloads_schemas = importlib.import_module(
-                self.__module__.replace(DRIVER_MODULE_NAME, self._matching_payloads_module_name)
+                self._base_package + '.' + self._matching_payloads_module_name
             )
+        except:
+            matching_payloads_schemas = std_census.matching_payloads_schemas
 
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
         records_path = self._records_path_template.format(
@@ -235,7 +240,7 @@ class CensusDriver(object):
         if self.__class__.__name__ == CensusDriver.__name__:
             census_module = std_census
         else:
-            census_module = importlib.import_module(self.__module__)
+            census_module = importlib.import_module(self._base_package)
 
         # Since this module is in the package, its file path will contain the
         # package path. Remove that in order to find the location of the

@@ -1,9 +1,9 @@
 import argparse
-import sys
+from datetime import datetime
 import importlib
 import inspect
+import sys
 
-from datetime import datetime
 from spark.common.census_driver import CensusDriver
 
 
@@ -12,6 +12,20 @@ def split_into_chunks(input_list, number_of_chunks):
     for i in range(0, len(input_list), number_of_chunks):
         yield input_list[i:i + number_of_chunks]
 
+def create_driver(census_module, driver_kwargs):
+    """Create a CensusDriver-derived instance from a custom census module"""
+    mod = importlib.import_module(census_module)
+
+    # Find the driver subclass in this module
+    for an in dir(mod):
+        attribute = getattr(mod, an)
+        if type(attribute) == type(CensusDriver) and attribute.__base__.__name__ == 'CensusDriver':
+            params = inspect.getfullargspec(attribute.__init__).args
+            kwargs = {param: driver_kwargs[param] for param in params if param != 'self'}
+            driver = attribute(**kwargs)
+            return driver
+
+    return None
 
 def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=None,
          census_module=None, end_to_end_test=False, test=False, no_row_id=False,
@@ -22,23 +36,22 @@ def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=
 
     driver = None
     if census_module:
-        mod = importlib.import_module(census_module)
-
-        # Find the driver subclass in this module
-        for an in dir(mod):
-            attribute = getattr(mod, an)
-            if type(attribute) == type(CensusDriver) and attribute.__base__.__name__ == 'CensusDriver':
-                params = inspect.getargspec(attribute.__init__).args
-                local_args = locals()
-                kwargs = {param: local_args[param] for param in params if param != 'self'}
-                driver = attribute(**kwargs)
-                break
+        driver = create_driver(census_module, locals())
 
         if not driver:
             raise AttributeError("Module {} does not contain a CensusDriver subclass".format(census_module))
     else:
-        driver = CensusDriver(client_name, opportunity_id, salt=salt, no_row_id=no_row_id,
-                              end_to_end_test=end_to_end_test, test=test)
+        census_module = f'spark.census.{client_name}.{opportunity_id}.driver'
+        try:
+            custom_module = importlib.util.find_spec(census_module)
+        except ImportError:
+            custom_module = None
+
+        if custom_module:
+            driver = create_driver(census_module, locals())
+        else:
+            driver = CensusDriver(client_name, opportunity_id, salt=salt, no_row_id=no_row_id,
+                                end_to_end_test=end_to_end_test, test=test, base_package=census_module.replace('.driver', ''))
 
     batch_date = datetime.strptime(batch_date, '%Y-%m-%d').date()
     header = not no_header

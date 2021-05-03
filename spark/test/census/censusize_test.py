@@ -15,10 +15,10 @@ def test_driver_init(patch_spark_init, monkeypatch):
     Ensure that the appropriate class got instantiated based on the input
     parameters
     """
-    driver_class = [None]
+    driver = [None]
 
     def capture_call(self, *args, **kwargs):
-        driver_class[0] = self.__class__.__name__
+        driver[0] = self
         return
 
     for step in CENSUS_STEPS:
@@ -26,10 +26,17 @@ def test_driver_init(patch_spark_init, monkeypatch):
         monkeypatch.setattr(CensusDriver, step, capture_call)
 
     censusize.main('2018-01-01', census_module='spark.test.resources.census.not_empty_module')
-    assert driver_class[0] == 'TestCensusDriver'
+    assert driver[0].__class__.__name__ == 'TestCensusDriver'
+
+    censusize.main('2018-01-01', client_name='example', opportunity_id='hvXXXXX1')
+    assert driver[0].__class__.__name__ == 'SimpleExampleCensusDriver'
+
+    censusize.main('2018-01-01', client_name='example', opportunity_id='hvXXXXX3')
+    assert driver[0].__class__.__name__ == 'CensusDriver'
+    assert driver[0]._base_package == 'spark.census.example.hvXXXXX3'
 
     censusize.main('2018-01-01', client_name='TEST', opportunity_id='TEST123')
-    assert driver_class[0] == 'CensusDriver'
+    assert driver[0].__class__.__name__ == 'CensusDriver'
 
 
 @pytest.mark.usefixtures("patch_spark_init")
