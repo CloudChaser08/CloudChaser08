@@ -41,7 +41,7 @@ def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=
         if not driver:
             raise AttributeError("Module {} does not contain a CensusDriver subclass".format(census_module))
     else:
-        census_module = f'spark.census.{client_name}.{opportunity_id}.driver'
+        census_module = 'spark.census.{}.{}.driver'.format(client_name, opportunity_id)
         try:
             custom_module = importlib.util.find_spec(census_module)
         except ImportError:
