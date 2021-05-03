@@ -200,5 +200,5 @@ if __name__ == '__main__':
     parser.add_argument('--matching_path', help='Overwrite default matching path with this value')
     parser.add_argument('--output_path', help='Overwrite default output path with this value')
     parser.add_argument('--models', help='Comma-separated list of models to normalize instead of all models')
-    args = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
     main(args)

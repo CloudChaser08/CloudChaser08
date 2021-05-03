@@ -14,7 +14,7 @@ parser.add_argument('--rs_user', type=str)
 parser.add_argument('--rs_password', type=str)
 parser.add_argument('--start_date', type=str)
 parser.add_argument('--end_date', type=str)
-args = parser.parse_known_args()
+args = parser.parse_known_args()[0]
 
 db = 'dev'
 psql = ['psql', '-h', args.cluster_endpoint, '-p', '5439']

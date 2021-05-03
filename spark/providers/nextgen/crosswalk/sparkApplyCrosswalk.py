@@ -34,5 +34,5 @@ if __name__ == '__main__':
     parser.add_argument('--nextgen_source', type=str)
     parser.add_argument('--crosswalk_source', type=str)
     parser.add_argument('--nextgen_output', type=str)
-    args = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
     main(args)

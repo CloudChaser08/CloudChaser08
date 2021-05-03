@@ -13,7 +13,7 @@ parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--iam_role', type=str)
 parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
-args = parser.parse_known_args()
+args = parser.parse_known_args()[0]
 
 input_path = 's3://salusv/incoming/medicalclaims/navicure/{}/'.format(args.date.replace('-', '/'))
 matching_path = 's3://salusv/matching/payload/medicalclaims/navicure/{}/'.format(args.date.replace('-', '/'))

@@ -16,7 +16,7 @@ parser.add_argument('--cluster_endpoint', type=str, nargs='?')
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--rs_user', type=str, nargs='?')
 parser.add_argument('--rs_password', type=str, nargs='?')
-args = parser.parse_known_args()
+args = parser.parse_known_args()[0]
 
 db = args.database if args.database else 'dev'
 

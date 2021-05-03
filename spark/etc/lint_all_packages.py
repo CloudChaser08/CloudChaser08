@@ -72,7 +72,7 @@ def parse_args():
     parser.add_argument('--errors-only',
                         action='store_true',
                         help='Whether to only collect errors')
-    args = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
     return {
         'threshold': args.threshold,
         'errors_only': args.errors_only,

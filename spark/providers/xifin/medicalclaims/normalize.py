@@ -179,6 +179,6 @@ if __name__ == '__main__':
     parser.add_argument('--date', type=str)
     parser.add_argument('--in_parts', default=False, action='store_true')
     parser.add_argument('--airflow_test', default=False, action='store_true')
-    args = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
     main(args)
 

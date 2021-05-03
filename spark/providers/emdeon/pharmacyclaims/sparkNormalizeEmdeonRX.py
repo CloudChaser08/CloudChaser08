@@ -43,7 +43,7 @@ parser.add_argument('--setid', type=str)
 parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
 parser.add_argument('--sample', default=False, action='store_true')
-args = parser.parse_known_args()
+args = parser.parse_known_args()[0]
 
 if args.first_run:
     runner.run_spark_script(get_rel_path('../../../common/zip3_to_state.sql'))

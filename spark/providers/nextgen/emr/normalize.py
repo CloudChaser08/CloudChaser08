@@ -667,5 +667,5 @@ if __name__ == "__main__":
     parser.add_argument('--output_enc_ref', default=S3_ENCOUNTER_REFERENCE, type=str)
     parser.add_argument('--dont_normalize_encounter', default=True, action='store_false', dest='normalize_encounter')
     parser.add_argument('--airflow_test', default=False, action='store_true')
-    args = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
     main(args)

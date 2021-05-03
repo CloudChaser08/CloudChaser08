@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
-    args = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 

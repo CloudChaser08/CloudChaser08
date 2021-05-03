@@ -291,6 +291,6 @@ if __name__ == "__main__":
                         help='transform loc: skipped steps are, archive and external table create')
     parser.add_argument('--end_to_end_test', default=False, action='store_true',
                         help='run end to end test')
-    args = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
     main(args)
 

@@ -31,7 +31,7 @@ parser.add_argument('--date', type=str)
 parser.add_argument('--setid', type=str)
 parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
-args = parser.parse_known_args()
+args = parser.parse_known_args()[0]
 
 def run_spark_script(script, variables=[]):
     content = ''

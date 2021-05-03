@@ -522,5 +522,5 @@ if __name__ == "__main__":
     parser.add_argument('--input_path', type=str)
     parser.add_argument('--matching_path', type=str)
     parser.add_argument('--output_path', type=str)
-    args = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
     main(args)
