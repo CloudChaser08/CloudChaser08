@@ -2,6 +2,7 @@
 import os
 import inspect
 import datetime
+import argparse
 
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -136,6 +137,14 @@ class MarketplaceDriver(object):
         )
 
         self.output_path = MODE_OUTPUT_PATH[mode]
+        self.parse_args()
+
+    def parse_args(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--output_to_transformed", default=False, action='store_true')
+        args = parser.parse_args()
+        
+        self.output_to_transform_path = args.output_to_transformed or self.output_to_transform_path 
 
     def init_spark_context(self, conf_parameters=None):
         if not self.spark:
