@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--period', type=str)
 parser.add_argument('--date', type=str)
 parser.add_argument('--s3_credentials', type=str)
-args = parser.parse_args()
+args = parser.parse_known_args()
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 

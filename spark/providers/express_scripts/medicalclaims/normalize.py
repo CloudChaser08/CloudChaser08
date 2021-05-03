@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # RX and DX data does not come in at the same time.
     # This argument allows you to point to the correct Rx PHI date
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_known_args()
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 

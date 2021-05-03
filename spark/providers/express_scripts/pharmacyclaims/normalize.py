@@ -200,7 +200,7 @@ if __name__ == '__main__':
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     parser.add_argument('--first_run', default=False, action='store_true')
     parser.add_argument('--reversal_apply_nbr_of_hist_months', type=str)
-    args = parser.parse_args()
+    args = parser.parse_known_args()
     rev_apply_hist_months = int(args.reversal_apply_nbr_of_hist_months) \
         if args.reversal_apply_nbr_of_hist_months else REVERSAL_APPLY_HIST_MONTHS
 

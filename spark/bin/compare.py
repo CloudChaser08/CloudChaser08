@@ -85,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument("src_loc", type=str, help="source location")
     parser.add_argument("trg_loc", type=str, help="target location")
     parser.add_argument("--drop", type=str, nargs='+', help="the list of columns to drop from both tables")
-    args = parser.parse_args()
+    args = parser.parse_known_args()
 
     # initialize spark context.
     spark, sqlContext = init("Comparison")

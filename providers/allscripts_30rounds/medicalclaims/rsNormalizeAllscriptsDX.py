@@ -15,7 +15,7 @@ parser.add_argument('--setid', type=str)
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--first_run', default=False, action='store_true')
 parser.add_argument('--debug', default=False, action='store_true')
-args = parser.parse_args()
+args = parser.parse_known_args()
 
 def run_psql_script(script, variables=[]):
     args = ['psql', '-f', script]

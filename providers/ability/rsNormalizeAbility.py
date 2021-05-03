@@ -35,7 +35,7 @@ parser.add_argument('--rs_password', type=str, nargs='?')
 # switch is useful for loading the table only on the first run.
 parser.add_argument('--load_claimaffiliation', default=False, action='store_true')
 
-args = parser.parse_args()
+args = parser.parse_known_args()
 
 db = args.database if args.database else 'dev'
 

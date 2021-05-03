@@ -89,7 +89,7 @@ if __name__ == "__main__":
                         , help="Number of input files in each chunk of census data we will process in a loop")
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     parser.add_argument('--test', default=False, action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_known_args()
 
     if not args.client_name and not args.opportunity_id and not args.census_module:
         print("Client name and opportunity ID (standard Census) or census "

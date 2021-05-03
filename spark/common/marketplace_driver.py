@@ -142,7 +142,7 @@ class MarketplaceDriver(object):
     def parse_args(self):
         parser = argparse.ArgumentParser()
         parser.add_argument("--output_to_transformed", default=False, action='store_true')
-        args = parser.parse_args()
+        args = parser.parse_known_args()
         
         self.output_to_transform_path = args.output_to_transformed or self.output_to_transform_path 
 

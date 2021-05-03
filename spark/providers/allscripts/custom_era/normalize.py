@@ -53,5 +53,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_known_args()
     run(args.date, args.end_to_end_test)
