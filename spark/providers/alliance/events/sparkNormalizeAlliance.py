@@ -192,5 +192,5 @@ if __name__ == '__main__':
     parser.add_argument('--airflow_test', default=False, action='store_true')
     parser.add_argument('--output_path', type=str)
     parser.add_argument('--project_id', type=str, default=None)
-    args = parser.parse_args()
+    args = parser.parse_known_args()[0]
     main(args)

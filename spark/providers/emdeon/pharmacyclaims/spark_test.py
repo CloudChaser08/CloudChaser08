@@ -28,7 +28,7 @@ S3_EMDEON_WAREHOUSE = 's3://salusv/warehouse/text/pharmacyclaims/2017-02-28/part
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
-args = parser.parse_args()
+args = parser.parse_known_args()[0]
 
 runner.run_spark_script(get_rel_path('load_warehouse_data.sql'), [
     ['input_path', S3_EMDEON_WAREHOUSE + 'part_best_date=2013-01/']

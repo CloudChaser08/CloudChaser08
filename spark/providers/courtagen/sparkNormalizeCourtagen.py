@@ -24,7 +24,7 @@ S3_COURTAGEN_MATCHING = 's3a://salusv/matching/payload/labtests/courtagen/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
-args = parser.parse_args()
+args = parser.parse_known_args()[0]
 
 setid = args.date + '_plain.out'
 

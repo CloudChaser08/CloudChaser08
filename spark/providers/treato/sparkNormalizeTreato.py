@@ -234,5 +234,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--diagnosis_mapfile', type=argparse.FileType())
-    args = parser.parse_args()
+    args = parser.parse_known_args()[0]
     main(args)

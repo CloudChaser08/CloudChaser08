@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--date', type=str)
 parser.add_argument('--output_path', type=str)
 parser.add_argument('--debug', default=False, action='store_true')
-args = parser.parse_args()
+args = parser.parse_known_args()[0]
 
 date_obj = datetime.strptime(args.date, '%Y-%m-%d')
 

@@ -291,5 +291,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--airflow_test', default=False, action='store_true')
     parser.add_argument('--is_prod', default=False, action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_known_args()[0]
     main(args)

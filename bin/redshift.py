@@ -15,7 +15,7 @@ parser.add_argument('--rs_password', type=str, nargs='?', help='Password for the
 parser.add_argument('--num_nodes', type=int, nargs='?', help='Number of nodes for the Redshift cluster')
 parser.add_argument('--node_type', type=str, nargs='?', help='EC2 node type for the Redshift cluster')
 parser.add_argument('--debug', help='Show debugging messages', action='store_true')
-args = parser.parse_args()
+args = parser.parse_known_args()[0]
 
 # We're going to pipe stdout and stderr from some commands to /dev/null
 FNULL = open(os.devnull, 'w')

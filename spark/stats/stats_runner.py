@@ -133,5 +133,5 @@ if __name__ == '__main__':
     parser.add_argument('--start_date', type=str)
     parser.add_argument('--end_date', type=str)
     parser.add_argument('--stats', nargs='+', default=None)
-    args = parser.parse_args()
+    args = parser.parse_known_args()[0]
     main(args)

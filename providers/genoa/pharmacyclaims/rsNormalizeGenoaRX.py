@@ -11,7 +11,7 @@ parser.add_argument('--date', type=str)
 parser.add_argument('--s3_credentials', type=str)
 parser.add_argument('--create_reversal_table', default=False, action='store_true')
 parser.add_argument('--first_run', default=False, action='store_true')
-args = parser.parse_args()
+args = parser.parse_known_args()[0]
 
 psql = ['psql']
 

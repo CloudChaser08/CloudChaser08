@@ -36,7 +36,7 @@ if __name__ == "__main__":
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     parser.add_argument('--skip_filter_duplicates', default=False, action='store_true')
 
-    args = parser.parse_args()
+    args = parser.parse_known_args()[0]
     date_input = args.date
     end_to_end_test = args.end_to_end_test
     skip_filter_duplicates = args.skip_filter_duplicates
