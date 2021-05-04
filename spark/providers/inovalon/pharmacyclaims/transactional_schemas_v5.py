@@ -3,7 +3,9 @@ from spark.helpers.source_table import SourceTable
 TABLE_CONF = {
     'mbr': SourceTable(
         'csv',
+        trimmify_nullify=True,
         separator='|',
+        confirm_schema=True,
         columns=[
             'memberuid',
             'birthyear',
@@ -16,7 +18,9 @@ TABLE_CONF = {
     ),
     'prv': SourceTable(
         'csv',
+        trimmify_nullify=True,
         separator='|',
+        confirm_schema=True,
         columns=[
             'provideruid',
             'lastname',
@@ -56,7 +60,9 @@ TABLE_CONF = {
     ),
     'psp': SourceTable(
         'csv',
+        trimmify_nullify=True,
         separator='|',
+        confirm_schema=True,
         columns=[
             'provideruid',
             'nameprefix',
@@ -76,7 +82,9 @@ TABLE_CONF = {
     ),
     'rxc': SourceTable(
         'csv',
+        trimmify_nullify=True,
         separator='|',
+        confirm_schema=True,
         columns=[
             'rxclaimuid',
             'memberuid',
@@ -93,7 +101,34 @@ TABLE_CONF = {
             'costamount',
             'prescribingnpi',
             'dispensingnpi',
+            'sourcemodifieddate',
             'createddate'
+        ]
+    ),
+    'rxcc': SourceTable(
+        'csv',
+        trimmify_nullify=True,
+        separator='|',
+        confirm_schema=True,
+        columns=[
+            'rxfilluid',
+            'memberuid',
+            'filldate',
+            'ndc11code',
+            'supplydayscount',
+            'unitquantity',
+            'unadjustedprice'
+        ]
+    ),
+    'rxcw': SourceTable(
+        'csv',
+        trimmify_nullify=True,
+        separator='|',
+        confirm_schema=True,
+        columns=[
+            'rxclaimuid',
+            'rxfilluid',
+            'memberuid'
         ]
     )
 }
