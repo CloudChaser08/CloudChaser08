@@ -23,7 +23,6 @@ def main(args):
         transactional_schemas,
         output_table_names_to_schemas,
         args.date,
-        args.test,
         args.end_to_end_test,
         load_date_explode=False,
         unload_partition_count=1,
