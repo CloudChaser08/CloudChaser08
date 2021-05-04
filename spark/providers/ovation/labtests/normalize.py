@@ -25,9 +25,9 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
-    if date_input >= '2021-05-03':  # changed schema to support 2 new client columns as of 28-29
+    if date_input >= '2021-05-03':  # changed schema to support 2 new client columns
         source_table_schemas = source_schema_v3
-    elif date_input >= '2020-09-21':  # changed schema to support 4 new client columns as of 9-21
+    elif date_input >= '2020-09-21':  # changed schema to support 4 new client columns
         source_table_schemas = source_schema_v2
     else:
         source_table_schemas = source_schema
