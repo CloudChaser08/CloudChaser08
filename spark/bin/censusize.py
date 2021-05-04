@@ -35,6 +35,7 @@ def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=
     """
 
     driver = None
+    base_package = None
     if census_module:
         driver = create_driver(census_module, locals())
 
