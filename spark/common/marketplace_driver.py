@@ -144,7 +144,7 @@ class MarketplaceDriver(object):
         parser.add_argument("--output_to_transformed", default=False, action='store_true')
         args = parser.parse_known_args()[0]
         
-        self.output_to_transform_path = args.output_to_transformed or self.output_to_transform_path 
+        self.output_to_transform_path = args.output_to_transformed or self.output_to_transform_path
 
     def init_spark_context(self, conf_parameters=None):
         if not self.spark:
