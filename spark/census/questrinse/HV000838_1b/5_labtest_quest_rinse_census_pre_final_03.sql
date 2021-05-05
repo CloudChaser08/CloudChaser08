@@ -21,14 +21,14 @@ SELECT
     CASE
         WHEN norm_pre01.hv_loinc_code NOT RLIKE '^[0-9-]+$'   THEN NULL
         ELSE norm_pre01.hv_loinc_code
-    END             AS hv_loinc_code   ,    
+    END             AS hv_loinc_code   ,
     norm_pre01.lab_id                  ,
     norm_pre01.test_id                 ,
     norm_pre01.HV_test_number          ,
     norm_pre01.test_battery_local_id   ,
     norm_pre01.test_battery_std_id     ,
     norm_pre01.test_battery_name       ,
-    norm_pre01.test_ordered_local_id   ,    
+    norm_pre01.test_ordered_local_id   ,
     norm_pre01.test_ordered_std_id     ,
     norm_pre01.test_ordered_name       ,
     norm_pre01.result_id               ,
@@ -84,7 +84,7 @@ SELECT
     norm_pre01.non_physician_name      ,
     norm_pre01.non_physician_id        ,
     norm_pre01.long_description        ,
-    norm_pre01.phy_name                ,    
+    norm_pre01.phy_name                ,
     norm_pre01.suffix                  ,
     norm_pre01.degree                  ,
     norm_pre01.idw_analyte_code        ,
@@ -139,7 +139,7 @@ SELECT
     norm_pre01.date_reported           ,
     norm_pre01.ref_range_low           ,
     norm_pre01.ref_range_high          ,
-    norm_pre01.ref_range_alpha         ,    
+    norm_pre01.ref_range_alpha         ,
 -------------------------------------------------------------------------------------------------
 ---------- New fields added per request from QUEST 2020-06-08
 -------------------------------------------------------------------------------------------------
@@ -153,13 +153,14 @@ SELECT
     norm_pre01.acct_state              ,
     ----- if the numeric value is date, nullify it  (HV_result_value_operator)
     CASE
-        WHEN 
+         ----- if the numeric value is date, nullify it  (HV_result_value_numeric)
+        WHEN
         (
           SUBSTR(HV_result_value_numeric,2,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,3,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,4,1) = '/'         AND
           SUBSTR(HV_result_value_numeric,5,1) rlike '[0-9]' AND
-          SUBSTR(HV_result_value_numeric,6,1) rlike '[0-9]' 
+          SUBSTR(HV_result_value_numeric,6,1) rlike '[0-9]'
         )
          OR
         (
@@ -174,21 +175,21 @@ SELECT
          )                                                        THEN NULL
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[]'
          AND HV_result_value_alpha IS NULL                         THEN NULL
-        
-    ELSE     norm_pre01.HV_result_value_operator 
+
+    ELSE     norm_pre01.HV_result_value_operator
     END AS HV_result_value_operator,
     CASE
         ----- if the numeric value has one word and that is alphabet - nullify it
         WHEN SPLIT(HV_result_value_numeric,' ')[0]  rlike '[A-Za-z]' AND SPLIT(HV_result_value_numeric,' ')[1]  IS NULL THEN NULL
-        
+
         ----- if the numeric value is date, nullify it  (HV_result_value_numeric)
-        WHEN 
+        WHEN
         (
           SUBSTR(HV_result_value_numeric,2,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,3,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,4,1) = '/'         AND
           SUBSTR(HV_result_value_numeric,5,1) rlike '[0-9]' AND
-          SUBSTR(HV_result_value_numeric,6,1) rlike '[0-9]' 
+          SUBSTR(HV_result_value_numeric,6,1) rlike '[0-9]'
          )
          OR
          (
@@ -201,24 +202,24 @@ SELECT
           SUBSTR(HV_result_value_numeric,8,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,9,1) rlike '[0-9]'
          )                                                          THEN NULL
-        
+
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[:'  THEN REPLACE(CONCAT('['  ,SUBSTR(norm_pre01.HV_result_value_numeric,3)), ' ', '')
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[/'  THEN REPLACE(CONCAT('['  ,SUBSTR(norm_pre01.HV_result_value_numeric,3)), ' ', '')
-        WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[.'  
+        WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[.'
                 AND LOCATE ('/.', norm_pre01.HV_result_value_numeric) <> 0            THEN REPLACE(CONCAT('[0.', SUBSTR(norm_pre01.HV_result_value_numeric,3)) , '/.', '/0.')
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[.'                    THEN  CONCAT('[0.', SUBSTR(norm_pre01.HV_result_value_numeric,3))
         WHEN LOCATE ('/.', norm_pre01.HV_result_value_numeric) <> 0                   THEN REPLACE(norm_pre01.HV_result_value_numeric , '/.', '/0.')
-        
+
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[]'  THEN NULL
-        WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,3) = '[-]' THEN NULL        
-        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,1) = '/'  THEN REPLACE(norm_pre01.HV_result_value_numeric, '/', '')        
-        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,2) = ']+' THEN REPLACE(norm_pre01.HV_result_value_numeric, '+]', ']')        
-        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,3) = ']/ ' THEN REPLACE(norm_pre01.HV_result_value_numeric, ' /]', ']')        
+        WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,3) = '[-]' THEN NULL
+        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,1) = '/'  THEN REPLACE(norm_pre01.HV_result_value_numeric, '/', '')
+        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,2) = ']+' THEN REPLACE(norm_pre01.HV_result_value_numeric, '+]', ']')
+        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,3) = ']/ ' THEN REPLACE(norm_pre01.HV_result_value_numeric, ' /]', ']')
     ELSE norm_pre01.HV_result_value_numeric
     END AS HV_result_value_numeric,
         -----------------------------Nullify alfa
     CASE
-        WHEN gold.gen_ref_desc IS NOT NULL                      THEN gold.gen_ref_desc 
+        WHEN gold.gen_ref_desc IS NOT NULL                      THEN gold.gen_ref_desc
         ---- nullify if only - is present
         WHEN TRIM(norm_pre01.HV_result_value_alpha) IN ( '-' , '*') THEN NULL
         ------------- NEW CODE (if there is date in the numberic column make the alfa NULL)

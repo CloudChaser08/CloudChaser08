@@ -22,7 +22,7 @@ SELECT
     norm_pre04.test_battery_local_id   ,
     norm_pre04.test_battery_std_id     ,
     norm_pre04.test_battery_name       ,
-    norm_pre04.test_ordered_local_id   ,    
+    norm_pre04.test_ordered_local_id   ,
     norm_pre04.test_ordered_std_id     ,
     norm_pre04.test_ordered_name       ,
     norm_pre04.result_id               ,
@@ -78,7 +78,7 @@ SELECT
     norm_pre04.non_physician_name      ,
     norm_pre04.non_physician_id        ,
     norm_pre04.long_description        ,
-    norm_pre04.phy_name                ,    
+    norm_pre04.phy_name                ,
     norm_pre04.suffix                  ,
     norm_pre04.degree                  ,
     norm_pre04.idw_analyte_code        ,
@@ -130,7 +130,7 @@ SELECT
     norm_pre04.date_reported           ,
     norm_pre04.ref_range_low           ,
     norm_pre04.ref_range_high          ,
-    norm_pre04.ref_range_alpha         ,    
+    norm_pre04.ref_range_alpha         ,
     norm_pre04.requisition_number      ,
     norm_pre04.fasting_ind             ,
     norm_pre04.cpt_code                ,
@@ -145,7 +145,7 @@ SELECT
     END                                 AS HV_result_value_operator,
     CASE
         WHEN LENGTH(TRIM(COALESCE(norm_pre04.HV_result_value_numeric,''))) = 0 THEN NULL
-        
+
     ELSE norm_pre04.HV_result_value_numeric
     END                                 AS HV_result_value_numeric,
 
@@ -162,8 +162,8 @@ SELECT
          AND ( norm_pre04.HV_result_value_alpha IS NUll  OR LENGTH(TRIM(COALESCE(norm_pre04.HV_result_value_alpha,''))) = 0)
                     THEN norm_pre04.result
     ELSE NULL
-    END   AS HV_result_value, 
-    
+    END   AS HV_result_value,
+
     norm_pre04.date_final_report       ,
     norm_pre04.profile_name_qtim       ,
     norm_pre04.order_name_qtim         ,
@@ -172,8 +172,8 @@ SELECT
     norm_pre04.result_name_qtim        ,
     norm_pre04.unit_of_measure_qtim    ,
     norm_pre04.loinc_number_qtim       ,
-    
+
     norm_pre04.s_diag_code_codeset_ind ,
     norm_pre04.HV_s_diag_code_codeset_ind
-    
+
 FROM labtest_quest_rinse_census_pre_final_04 norm_pre04
