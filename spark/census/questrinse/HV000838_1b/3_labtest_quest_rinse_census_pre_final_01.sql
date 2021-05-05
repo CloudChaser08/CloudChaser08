@@ -7,15 +7,15 @@ SELECT
         COALESCE(CONCAT('_',    rslt.res_seq),''),
         COALESCE(CONCAT('_',    rslt.ins_seq),'')
         )                                                                               AS HV_claim_id,
-    CASE 
-        WHEN pay.hvid           IS NOT NULL THEN obfuscate_hvid(pay.hvid, 'questrinse') 
+    CASE
+        WHEN pay.hvid           IS NOT NULL THEN obfuscate_hvid(pay.hvid, 'questrinse')
         ELSE NULL
     END                                                                                     AS hvid,
 
     CAST(CURRENT_DATE() AS STRING)                                                          AS created,
 	'09'                                                                                    AS model_version,
     ---------------------------------------------------------------------------------------------------------------------
-    ------- This is a boiler plate code needed for every census feed (added after consultation with Ilia JKS 2020-09-08 ) 
+    ------- This is a boiler plate code needed for every census feed (added after consultation with Ilia JKS 2020-09-08 )
     ---------------------------------------------------------------------------------------------------------------------
     REPLACE
     (
@@ -30,14 +30,14 @@ SELECT
         	CASE
         	    WHEN SUBSTR(UPPER(ptnt.gender), 1, 1) IN ('F', 'M','U') THEN SUBSTR(UPPER(ptnt.gender), 1, 1)
         	    WHEN SUBSTR(UPPER(pay.gender ), 1, 1) IN ('F', 'M','U') THEN SUBSTR(UPPER(pay.gender ), 1, 1)
-        	    ELSE NULL 
+        	    ELSE 'U'
         	END
 	    )                                                                                   AS HV_patient_gender,
-	/* patient_age - (Notes for me - Per our transformation - if the pay.age is NULL the patient_age becomes NULL)  
+	/* patient_age - (Notes for me - Per our transformation - if the pay.age is NULL the patient_age becomes NULL)
 	   CASE is added to increase the performance UDF cap_year_of_birth(age, date_service, year_of_birth)  EXTRACT_DATE('01/31/2017', '%Y-%m-%d') */
 	CASE
 	    WHEN ptnt.numeric_age IS NULL AND pay.age IS NULL THEN NULL
-	    ELSE 
+	    ELSE
 	    CAP_AGE(COALESCE(ptnt.numeric_age, pay.age))
 	END                                                                                     AS HV_patient_age,
     ---------------------------------------------------------------------------------------------------------------------
@@ -55,10 +55,10 @@ SELECT
     ------------------- Removing all the transformation for  (2020-05-06)
     ------------------- date_service, date_specimen, date_report, loinc_code, diagnosis_code
     ---------------------------------------------------------------------------------------------------------
-    rslt.date_of_service                                                                     AS date_service,  
-    rslt.date_of_collection                                                                  AS date_specimen, 
+    rslt.date_of_service                                                                     AS date_service,
+    rslt.date_of_collection                                                                  AS date_specimen,
     COALESCE(rslt.date_final_report,rslt.date_reported)                                      AS HV_date_report,
-    rslt.loinc_code	                                                                         AS loinc_code,    
+    rslt.loinc_code	                                                                         AS loinc_code,
     ----------------------------------------------------------------------------------------------------------------> LOINC From HV
     --When the rslt.loinc_code is NULL or starts with the letter L, or when the lab_id is liste code
     --then populate target with hv_loinc.loinc_code where available. Else populate rslt.loinc_code
@@ -77,19 +77,19 @@ SELECT
     END                                                                                      AS hv_loinc_code,
     ---------------------------------------------------------------------------------------------------------------->
     rslt.lab_id                                                                              AS lab_id                ,
-    rslt.obs_id                                                                              AS test_id               ,   
+    rslt.obs_id                                                                              AS test_id               ,
     CASE
         WHEN UPPER(rslt.requisition_number) = 'NONE' THEN NULL
         ELSE rslt.requisition_number
     END                                                                                      AS HV_test_number        ,
     rslt.local_profile_code                                                                  AS test_battery_local_id ,
     rslt.standard_profile_code                                                               AS test_battery_std_id   ,
-    rslt.profile_name                                                                        AS test_battery_name     ,	    
+    rslt.profile_name                                                                        AS test_battery_name     ,
     rslt.idw_local_order_code                                                                AS test_ordered_local_id ,
     rslt.standard_order_code                                                                 AS test_ordered_std_id   ,
-    rslt.order_name                                                                          AS test_ordered_name     ,	
-    rslt.local_result_code                                                                   AS result_id             ,	
-    rslt.result_value                                                                        AS result                ,	
+    rslt.order_name                                                                          AS test_ordered_name     ,
+    rslt.local_result_code                                                                   AS result_id             ,
+    rslt.result_value                                                                        AS result                ,
     rslt.result_name                                                                         AS result_name           ,
     rslt.units                                                                               AS result_unit_of_measure,
     rslt.result_type                                                                         AS  result_desc          ,
@@ -104,25 +104,25 @@ SELECT
     --------------------------------------------------------------------------------------------------------------
     ------------------- Add COALESCE U (2020-05-28) This is request from QUEST via Will V
     --------------------------------------------------------------------------------------------------------------
-    CASE 
-        WHEN COALESCE(rslt.fasting_ind,'') IN ('Y', 'N', 'U') THEN rslt.fasting_ind 
-        ELSE 'U' 
+    CASE
+        WHEN COALESCE(rslt.fasting_ind,'') IN ('Y', 'N', 'U') THEN rslt.fasting_ind
+        ELSE 'U'
     END	                                                                                     AS HV_fasting_status,
- 
+
     -- --------------------------------------------------------------------------------------------------------------
     -- ------------------- Changed on 2020-07-24 "clean_up_diagnosis_code(diagnosis_code, diagnosis_code_qual, date_service)"
-    -- --------------------------------------------------------------------------------------------------------------  
+    -- --------------------------------------------------------------------------------------------------------------
     CASE
         WHEN diag.s_diag_code IS NULL THEN NULL
-        WHEN CLEAN_UP_DIAGNOSIS_CODE(diag.s_diag_code, 
+        WHEN CLEAN_UP_DIAGNOSIS_CODE(diag.s_diag_code,
             CASE
                 WHEN diag.s_icd_codeset_ind = '9'  THEN '01'
                 WHEN diag.s_icd_codeset_ind = '10' THEN '02'
             ELSE NULL
             END, CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)) IS NULL THEN NULL
     ELSE
-        CONCAT(diag.s_icd_codeset_ind, '^', UPPER(diag.s_diag_code))                             
-    END                                                                                      AS HV_ONE_diagnosis_code ,     
+        CONCAT(diag.s_icd_codeset_ind, '^', UPPER(diag.s_diag_code))
+    END                                                                                      AS HV_ONE_diagnosis_code ,
     CLEAN_UP_PROCEDURE_CODE(rslt.cpt_code)                                                   AS HV_procedure_code     ,
     CASE
         WHEN CLEAN_UP_PROCEDURE_CODE(rslt.cpt_code)  IS NOT NULL THEN 'CPT'
@@ -140,9 +140,9 @@ SELECT
     rslt.acct_address_1                                                                      AS ordering_address_1    ,
     rslt.acct_address_2                                                                      AS ordering_address_2    ,
     rslt.acct_city                                                                           AS ordering_city         ,
-    
+
     VALIDATE_STATE_CODE(UPPER(rslt.acct_state))                                              AS HV_ordering_state     ,
-    
+
     rslt.acct_zip                                                                            AS ordering_zip          ,
     'quest_rinse'                                                                            AS part_provider         ,
     /* part_best_date */
@@ -150,7 +150,7 @@ SELECT
 	    (
                     SUBSTR(rslt.date_of_service, 1, 4), '-',
                     SUBSTR(rslt.date_of_service, 6, 2), '-01'
-        )	                                                                                         AS HV_part_best_date     , 
+        )	                                                                                         AS HV_part_best_date     ,
 -------------------------------------------------------------------------------------------------
 ---------- Census Fields not captured by our Model
 -------------------------------------------------------------------------------------------------
@@ -234,7 +234,7 @@ SELECT
     rslt.date_reported                AS date_reported            ,
     rslt.ref_range_low                AS ref_range_low            ,
     rslt.ref_range_high               AS ref_range_high           ,
-    rslt.ref_range_alpha              As ref_range_alpha          , 
+    rslt.ref_range_alpha              As ref_range_alpha          ,
     rslt.requisition_number           AS requisition_number       ,
     rslt.fasting_ind                  AS fasting_ind              ,
     rslt.cpt_code                     AS cpt_code                 ,
@@ -246,10 +246,10 @@ SELECT
     rslt.date_final_report            AS date_final_report        ,
     CASE
         WHEN diag.s_diag_code IS NULL THEN NULL
-    ELSE CONCAT(diag.s_icd_codeset_ind, '^', UPPER(diag.s_diag_code))    
+    ELSE CONCAT(diag.s_icd_codeset_ind, '^', UPPER(diag.s_diag_code))
     END                              AS s_diag_code_codeset_ind   ,
 ---------- New fields added per Operator
-     CASE 
+     CASE
         --- Check if more than one opeators
         WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1
          AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')                                                                  THEN  NULL
@@ -443,7 +443,7 @@ FROM order_result rslt
 LEFT OUTER JOIN diagnosis diag ON rslt.unique_accession_id = diag.unique_accession_id
 LEFT OUTER JOIN transactions  ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id
 LEFT OUTER JOIN matching_payload  pay  ON ptnt.hvjoinkey           = pay.hvJoinKey
-LEFT OUTER JOIN loinc as loinc_delta   ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)  = CAST(TO_DATE(loinc_delta.date_of_service, 'yyyy-MM-dd') AS DATE)
+LEFT OUTER JOIN loinc_delta           ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)  = CAST(TO_DATE(loinc_delta.date_of_service, 'yyyy-MM-dd') AS DATE)
                                        AND UPPER(rslt.result_name) = UPPER(loinc_delta.upper_result_name)
                                        AND rslt.local_result_code = loinc_delta.local_result_code
                                        AND rslt.units             = loinc_delta.units
@@ -457,7 +457,7 @@ LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim2 qtim2 ON rslt.lab_code 
 LEFT OUTER JOIN labtest_quest_rinse_result_gold_alpha gold          ON UPPER(TRIM(gold.gen_ref_cd)) = UPPER(TRIM(rslt.result_value))
 
 WHERE
- LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
+LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
 AND
 -- (
 --      ---------------- 1. The COUNTRY is NOT NULL  (from patient) ------------------------------
@@ -498,3 +498,4 @@ AND
     --   OR CAST(pay.threedigitzip AS INT) <> 0
 
   )
+

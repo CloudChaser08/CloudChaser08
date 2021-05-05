@@ -11,17 +11,18 @@ import spark.helpers.postprocessor as postprocessor
 import spark.census.questrinse.HV000838_1b.refbuild_loinc_delta_sql as refbuild_loinc_delta
 
 PARQUET_FILE_SIZE = 1024 * 1024 * 1024
-REFERENCE_OUTPUT_PATH = 's3://salusv/reference/questrinse/loinc_ref/'
+REFERENCE_OUTPUT_PATH = 's3://salusv/reference/questrinse_1b/loinc_ref/'
 
 REFERENCE_HDFS_OUTPUT_PATH = '/reference/'
 REFERENCE_LOINC_DELTA = "loinc_delta"
 
 POC_1B = True
-poc_output_path = 's3a://salusv/deliverable/1b_test_qtim/questrinse/HV000838/'
+poc_output_path = 's3a://salusv/deliverable/questrinse_1b/HV000838/'
 
 
 class QuestRinseCensusDriver(CensusDriver):
     def load(self, batch_date, batch_id, chunk_records_files=None):
+        file_utils.clean_up_output_hdfs('/staging/')
         super().load(batch_date, batch_id, chunk_records_files)
 
         matching_payload_df = self._spark.table('matching_payload')
@@ -67,20 +68,26 @@ class QuestRinseCensusDriver(CensusDriver):
         self._spark.sql(loinc_dedup_sql).createOrReplaceTempView('loinc')
         self._spark.table('loinc').count()
 
-        logger.log('Loading external table: ref_questrinse_qtim1')
-        self._spark.sql("refresh table default.ref_questrinse_qtim1")
-        external_table_loader.load_analytics_db_table(
-            self._sqlContext, 'default', 'ref_questrinse_qtim1', 'ref_questrinse_qtim1'
-        )
-        self._spark.table('ref_questrinse_qtim1').cache().createOrReplaceTempView('qtim1')
+        # logger.log('Loading external table: ref_questrinse_qtim1')
+        # self._spark.sql("refresh table default.ref_questrinse_qtim1")
+        # external_table_loader.load_analytics_db_table(
+        #     self._sqlContext, 'default', 'ref_questrinse_qtim1', 'ref_questrinse_qtim1'
+        # )
+        # self._spark.table('ref_questrinse_qtim1').cache().createOrReplaceTempView('qtim1')
+        #
+        # logger.log('Loading external table: ref_questrinse_qtim2')
+        # self._spark.sql("refresh table default.ref_questrinse_qtim2")
+        # external_table_loader.load_analytics_db_table(
+        #     self._sqlContext, 'default', 'ref_questrinse_qtim2', 'ref_questrinse_qtim2'
+        # )
+        # self._spark.table('ref_questrinse_qtim2').cache().createOrReplaceTempView('qtim2')
 
-        logger.log('Loading external table: ref_questrinse_qtim2')
-        self._spark.sql("refresh table default.ref_questrinse_qtim2")
+        logger.log('Loading external table: ref_questrinse_qtim')
         external_table_loader.load_analytics_db_table(
-            self._sqlContext, 'default', 'ref_questrinse_qtim2', 'ref_questrinse_qtim2'
+            self._sqlContext, 'default', 'ref_questrinse_qtim', 'ref_questrinse_qtim'
         )
-        self._spark.table('ref_questrinse_qtim2').cache().createOrReplaceTempView('qtim2')
-
+        cleaned_ref_questrinse_qtim_df = postprocessor.nullify(postprocessor.trimmify(self._spark.table('ref_questrinse_qtim')), ['NULL', 'Null', 'null', 'N/A', ''])
+        cleaned_ref_questrinse_qtim_df.createOrReplaceTempView("ref_questrinse_qtim")
 
         df = self._spark.table('order_result')
         df = df.repartition(int(
@@ -110,11 +117,37 @@ class QuestRinseCensusDriver(CensusDriver):
 
         if hdfs_utils.list_parquet_files(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)[0].strip():
             logger.log('Loading Delta LOINC reference data from HDFS')
+            # self._spark.read.parquet(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)\
+            #     .cache().createOrReplaceTempView(REFERENCE_LOINC_DELTA)
             self._spark.read.parquet(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)\
-                .cache().createOrReplaceTempView(REFERENCE_LOINC_DELTA)
+                .createOrReplaceTempView('loinc_delta_new')
+            loinc_delta_dedup_sql = """
+            SELECT
+                date_of_service,
+                upper_result_name,
+                local_result_code,
+                units,
+                MAX(loinc_code) AS loinc_code,
+                year
+            FROM loinc_delta_new
+            GROUP BY 
+                date_of_service,
+                upper_result_name,
+                local_result_code,
+                units,
+                year
+            ORDER BY 
+                date_of_service,
+                upper_result_name,
+                local_result_code,
+                units,
+                year
+            """
+            self._spark.sql(loinc_delta_dedup_sql).createOrReplaceTempView(REFERENCE_LOINC_DELTA)
         else:
             logger.log('No Delta LOINC reference data for this cycle')
             self._spark.table("loinc").cache().createOrReplaceTempView(REFERENCE_LOINC_DELTA)
+
         self._spark.table(REFERENCE_LOINC_DELTA).count()
 
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None, header=True):
@@ -138,7 +171,7 @@ class QuestRinseCensusDriver(CensusDriver):
         if not POC_1B:
             output_file_name_template = 'Data_Set_{}_response_{{:05d}}.gz.parquet'.format(batch_id)
         else:
-            output_file_name_template = 'Test_Data_Set_{}_response_{{:05d}}.gz.parquet'.format(batch_id)
+            output_file_name_template = 'Restate_Data_Set_{}_response_{{:05d}}.gz.parquet'.format(batch_id)
 
         for filename in [f for f in hdfs_utils.get_files_from_hdfs_path('hdfs://' + local_output_path)
                          if not f.startswith('.') and f != "_SUCCESS"]:
@@ -151,7 +184,7 @@ class QuestRinseCensusDriver(CensusDriver):
             manifest_file_name = 'Data_Set_{}_manifest.tsv'.format(batch_id)
             manifest_file_path = self._output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(batch_id_path=_batch_id_path)
         else:
-            manifest_file_name = 'Test_Data_Set_{}_manifest.tsv'.format(batch_id)
+            manifest_file_name = 'Restate_Data_Set_{}_manifest.tsv'.format(batch_id)
             manifest_file_path = poc_output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(batch_id_path=_batch_id_path)
 
         file_utils.create_parquet_row_count_file(
@@ -167,13 +200,12 @@ class QuestRinseCensusDriver(CensusDriver):
         else:
             normalized_records_unloader.distcp(poc_output_path)
 
-        if not POC_1B:
-            if hdfs_utils.list_parquet_files(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)[0].strip():
-                logger.log("Copying reference files to: " + REFERENCE_OUTPUT_PATH)
-                normalized_records_unloader.distcp(
-                    REFERENCE_OUTPUT_PATH, REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)
-            logger.log('Deleting ' + REFERENCE_HDFS_OUTPUT_PATH)
-            file_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
+        if hdfs_utils.list_parquet_files(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)[0].strip():
+            logger.log("Copying reference files to: " + REFERENCE_OUTPUT_PATH)
+            normalized_records_unloader.distcp(
+                REFERENCE_OUTPUT_PATH, REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)
+        logger.log('Deleting ' + REFERENCE_HDFS_OUTPUT_PATH)
+        file_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
 
         # Quest doesn't want to see the _SUCCESS file that spark prints out
         logger.log('Deleting _SUCCESS file')

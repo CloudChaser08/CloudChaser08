@@ -80,7 +80,7 @@ SELECT
     non_physician_name                                      ,
     non_physician_id                                        ,
     long_description                                        ,
-    phy_name                                                , --- JKS 2020-06-08    
+    phy_name                                                , --- JKS 2020-06-08
     suffix                                                  ,
     degree                                                  ,
     idw_analyte_code                                        ,
@@ -119,7 +119,7 @@ SELECT
     species                                                 ,
     pat_country                                             ,
     external_patient_id                                     ,
-    CAST(pat_master_id AS BIGINT)      AS pat_master_id     ,    
+    CAST(pat_master_id AS BIGINT)      AS pat_master_id     ,
     lab_reference_number                                    ,
     room_number                                             ,
     bed_number                                              ,
@@ -127,7 +127,7 @@ SELECT
     ward                                                    ,
     admission_date                                          ,
     health_id                                               ,
-    CAST(pm_eid AS BIGINT)             AS pm_eid            ,   
+    CAST(pm_eid AS BIGINT)             AS pm_eid            ,
     CAST(idw_pm_email_address AS STRING) AS idw_pm_email_address ,
     CAST(date_reported   AS STRING)    AS date_reported     ,
     ----------------- 2020-05-28
@@ -145,7 +145,7 @@ SELECT
     phy_last_name                                           ,
     phy_first_name                                          ,
     phy_middle_name                                         ,
-    acct_state                                              ,        
+    acct_state                                              ,
 -------------------------------------------------------------------------------------------------
 ---------- New fields added per request from QUEST 2020-06-17
 -------------------------------------------------------------------------------------------------
@@ -155,9 +155,9 @@ SELECT
 ---------- New fields added per request from QUEST 2020-10-27
 -------------------------------------------------------------------------------------------------
     TRIM(HV_result_value_operator) AS HV_result_value_operator   ,
-    TRIM(HV_result_value_numeric)  AS HV_result_value_numeric ,
+    --TRIM(HV_result_value_numeric)  AS HV_result_value_numeric ,
     --------------- ONLY FOR AUTOATION
-    --REPLACE(REPLACE(TRIM(HV_result_value_numeric), '[',''),']','') AS HV_result_value_numeric ,
+    REPLACE(REPLACE(TRIM(HV_result_value_numeric), '[',''),']','') AS HV_result_value_numeric ,
     TRIM(REPLACE(HV_result_value_alpha, '"','')) AS HV_result_value_alpha,
     TRIM(HV_result_value) AS   HV_result_value                   ,
 -------------------------------------------------------------------------------------------------
