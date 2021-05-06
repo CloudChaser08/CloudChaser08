@@ -14,13 +14,13 @@ SELECT
     mp.threeDigitZip                         AS patient_zip3,
     TRIM(UPPER(mp.state))                    AS patient_state,
     extract_date(
-        t.datefilled, '%m/%d/%Y', CAST('{EARLIEST_SERVICE_DATE}' AS DATE), CAST('{AVAILABLE_START_DATE}' AS DATE)
+        t.datefilled, '%m/%d/%Y', CAST('{EARLIEST_SERVICE_DATE}' AS DATE), CAST('{VDR_FILE_DT}' AS DATE)
         )                                    AS date_service,
     extract_date(
-        t.datewritten, '%m/%d/%Y', CAST('{EARLIEST_SERVICE_DATE}' AS DATE), CAST('{AVAILABLE_START_DATE}' AS DATE)
+        t.datewritten, '%m/%d/%Y', CAST('{EARLIEST_SERVICE_DATE}' AS DATE), CAST('{VDR_FILE_DT}' AS DATE)
         )                                    AS date_written,
     extract_date(
-        t.claimtransactiondate, '%Y/%m/%d', CAST('1999-01-01' AS DATE), CAST('{AVAILABLE_START_DATE}' AS DATE)
+        t.claimtransactiondate, '%Y/%m/%d', CAST('1999-01-01' AS DATE), CAST('{VDR_FILE_DT}' AS DATE)
         )                                    AS date_authorized,
     t.fillertransactiontime                  AS time_authorized,
     CASE
