@@ -1,5 +1,5 @@
 import spark.common.utility.logger as logger
-import spark.helpers.file_utils as file_utils
+import spark.helpers.hdfs_utils as hdfs_utils
 import spark.datamart.covid19_custom.context as context
 import spark.datamart.datamart_util as dmutil
 from spark.runner import PACKAGE_PATH

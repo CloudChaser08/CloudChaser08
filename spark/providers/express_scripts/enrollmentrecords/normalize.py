@@ -9,6 +9,7 @@ import spark.providers.express_scripts.enrollmentrecords.transactional_schemas a
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils
+import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.s3_utils as s3_utils
 
 S3_EXPRESS_SCRIPTS_RX_MATCHING = 's3://salusv/matching/payload/pharmacyclaims/express_scripts/'
