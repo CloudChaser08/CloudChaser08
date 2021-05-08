@@ -12,9 +12,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     logger.log("Mckesson-Restricted Normalize ")
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'mckesson_res'
-    schema = schemas['schema_v6']
     output_table_names_to_schemas = {
-        'mckesson_res_norm_final': schema
+        'mckesson_res_norm_final': schemas['schema_v6']
     }
     provider_partition_name = 'mckesson_res'
 
@@ -89,8 +88,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     driver.transform()
     if not test:
         driver.save_to_disk()
-        driver.log_run()
         driver.stop_spark()
+        driver.log_run()
         driver.copy_to_output_path()
     logger.log("Done")
 
